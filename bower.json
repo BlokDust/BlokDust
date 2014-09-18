@@ -7,6 +7,7 @@
     "fayde": "*",
     "fayde.controls": "~0.10.0",
     "fayde.drawing": "0.1.2",
-    "exjs": "~0.2.0"
+    "exjs": "~0.2.0",
+    "Tone.js": "0.1.0"
   }
 }

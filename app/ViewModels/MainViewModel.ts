@@ -2,6 +2,7 @@
 /// <reference path="../lib/fayde.drawing/Fayde.Drawing.d.ts" />
 
 import Clock = require("../Clock");
+import Tone = require("../lib/Tone.js/build/Tone.js");
 
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
@@ -34,6 +35,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
         this._LondonClock = new Clock(0); // UTC
         this._AucklandClock = new Clock(11); // UTC + 11 hrs
+
+        var tone = new Tone();
     }
 
     LondonClock_Draw(e: Fayde.IEventBindingArgs<Fayde.Drawing.SketchDrawEventArgs>){
