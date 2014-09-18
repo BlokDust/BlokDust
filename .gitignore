@@ -1,0 +1,5 @@
+.idea
+.tscache
+node_modules
+app/.build
+app/lib

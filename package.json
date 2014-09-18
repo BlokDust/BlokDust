@@ -1,0 +1,14 @@
+{
+  "name": "BlokDust",
+  "version": "0.1.0",
+  "main": "Gruntfile.js",
+  "devDependencies": {
+    "connect-livereload": "^0.4.0",
+    "grunt": "~0.4.4",
+    "grunt-contrib-connect": "^0.8.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-open": "^0.2.3",
+    "grunt-typescript": "~0.3.0",
+    "typescript": "^1.0.1"
+  }
+}

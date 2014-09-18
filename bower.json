@@ -1,0 +1,12 @@
+{
+  "name": "BlokDust",
+  "version": "0.1.0",
+  "dependencies": {
+    "requirejs": "*",
+    "requirejs-text": "*",
+    "fayde": "*",
+    "fayde.controls": "~0.10.0",
+    "fayde.drawing": "0.1.2",
+    "exjs": "~0.2.0"
+  }
+}

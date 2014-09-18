@@ -1,0 +1,26 @@
+<Application
+        xmlns="http://schemas.wsick.com/fayde"
+        xmlns:x="http://schemas.wsick.com/fayde/x"
+        xmlns:vms="ViewModels"
+        xmlns:drawing="lib:Fayde.Drawing"
+        ThemeName="Metro">
+    <Application.Resources>
+    </Application.Resources>
+    <Grid x:Name="LayoutRoot">
+        <Grid.DataContext>
+            <vms:MainViewModel/>
+        </Grid.DataContext>
+        <StackPanel Orientation="Horizontal" Margin="20,20,20,20">
+            <StackPanel Orientation="Vertical">
+                <TextBlock TextAlignment="Center" Text="London"></TextBlock>
+                <drawing:Sketch x:Name="LondonClock" Width="150" Height="150" IsAnimated="true" Draw="{EventBinding LondonClock_Draw}" />
+                <TextBlock TextAlignment="Center" Text="{Binding LondonMeridian}"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <TextBlock TextAlignment="Center" Text="Auckland"></TextBlock>
+                <drawing:Sketch x:Name="Auckland" Width="150" Height="150" IsAnimated="true" Draw="{EventBinding AucklandClock_Draw}" />
+                <TextBlock TextAlignment="Center" Text="{Binding AucklandMeridian}"></TextBlock>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Application>

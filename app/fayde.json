@@ -1,0 +1,14 @@
+{
+  "libs": {
+    "exjs": {
+      "path": "lib/exjs/dist/ex.min",
+      "exports": "exjs"
+    },
+    "Fayde.Controls": {
+      "exports": "Fayde.Controls"
+    },
+    "Fayde.Drawing": {
+      "exports": "Fayde.Drawing"
+    }
+  }
+}
