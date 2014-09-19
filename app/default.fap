@@ -2,7 +2,7 @@
         xmlns="http://schemas.wsick.com/fayde"
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
-        xmlns:drawing="lib:Fayde.Drawing"
+        xmlns:draw="lib:Fayde.Drawing"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
@@ -20,7 +20,7 @@
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
 
-        <drawing:Sketch x:Name="Blocks" Grid.Row="1" Width="*" Height="*" IsAnimated="true" Draw="{EventBinding Blocks_Draw}" />
+        <draw:Sketch x:Name="Blocks" Grid.Row="1" Width="*" Height="*" IsAnimated="true" Draw="{EventBinding Blocks_Draw}" />
 
     </Grid>
 </Application>
