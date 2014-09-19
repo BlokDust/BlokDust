@@ -1,4 +1,4 @@
-/// <reference path="./lib/fayde.utils/Fayde.Utils.d.ts" />
+/// <reference path="./refs" />
 
 import Vector = Fayde.Utils.Vector;
 
