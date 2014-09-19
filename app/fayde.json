@@ -9,6 +9,9 @@
     },
     "Fayde.Drawing": {
       "exports": "Fayde.Drawing"
+    },
+    "Fayde.Utils": {
+      "exports": "Fayde.Utils"
     }
   }
 }

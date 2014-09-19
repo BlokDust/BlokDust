@@ -9,6 +9,7 @@ declare module Tone {
         setVolume(volume: number): void;
         detune: Signal;
         start(): void;
+        stop(time?: number): void;
     }
 
     interface OscillatorFactory {

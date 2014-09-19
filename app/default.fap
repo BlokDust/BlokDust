@@ -6,21 +6,21 @@
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
-    <Grid x:Name="LayoutRoot">
+    <Grid x:Name="LayoutRoot" ShowGridLines="false">
         <Grid.DataContext>
             <vms:MainViewModel/>
         </Grid.DataContext>
-        <StackPanel Orientation="Horizontal" Margin="20,20,20,20">
-            <StackPanel Orientation="Vertical">
-                <TextBlock TextAlignment="Center" Text="London"></TextBlock>
-                <drawing:Sketch x:Name="LondonClock" Width="150" Height="150" IsAnimated="true" Draw="{EventBinding LondonClock_Draw}" />
-                <TextBlock TextAlignment="Center" Text="{Binding LondonMeridian}"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Vertical">
-                <TextBlock TextAlignment="Center" Text="Auckland"></TextBlock>
-                <drawing:Sketch x:Name="Auckland" Width="150" Height="150" IsAnimated="true" Draw="{EventBinding AucklandClock_Draw}" />
-                <TextBlock TextAlignment="Center" Text="{Binding AucklandMeridian}"></TextBlock>
-            </StackPanel>
-        </StackPanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
+
+        <drawing:Sketch x:Name="Blocks" Grid.Row="1" Width="*" Height="*" IsAnimated="true" Draw="{EventBinding Blocks_Draw}" />
+
     </Grid>
 </Application>
