@@ -2,34 +2,53 @@
 
 class SketchContext {
 
-    public _Ctx: CanvasRenderingContext2D;
-    private _Width: number;
-    private _Height: number;
+    private _IsSetup: boolean = false;
+    private _SketchSession: Fayde.Drawing.SketchSession;
+    public FrameCount: number = 0;
 
-    get Ctx(): CanvasRenderingContext2D {
-        return this._Ctx;
+    set SketchSession(value: Fayde.Drawing.SketchSession){
+        // if this is the first time the SketchSession has been set, call Setup
+        // as there is now a context with dimensions to work with.
+        this._SketchSession = value;
+
+        if (!this._IsSetup){
+            this.Setup();
+            this._IsSetup = true;
+        }
+
+        this.Draw();
     }
 
-    set Ctx(value: CanvasRenderingContext2D){
-        this._Ctx = value;
-        this._Width = this.Ctx.canvas.width;
-        this._Height = this.Ctx.canvas.height;
+    get SketchSession (): Fayde.Drawing.SketchSession{
+        return this._SketchSession;
+    }
+
+    get Ctx(): CanvasRenderingContext2D {
+        return this.SketchSession.Ctx;
     }
 
     get Width(): number {
-        return this._Width;
+        return this.Ctx.canvas.width;
     }
 
     get Height(): number {
-        return this._Height;
+        return this.Ctx.canvas.height;
+    }
+
+    get Milliseconds(): number {
+        return this.SketchSession.Milliseconds;
     }
 
     constructor() {
 
     }
 
-    Draw(){
+    Setup() {
 
+    }
+
+    Draw(){
+        this.FrameCount++;
     }
 }
 

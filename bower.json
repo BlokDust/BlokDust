@@ -6,9 +6,9 @@
     "requirejs-text": "*",
     "fayde": "*",
     "fayde.controls": "~0.10.0",
-    "fayde.drawing": "0.1.2",
+    "fayde.drawing": "0.1.7",
     "exjs": "~0.2.0",
     "Tone.js": "0.1.0",
-    "fayde.utils": "0.1.4"
+    "fayde.utils": "0.1.6"
   }
 }

@@ -20,7 +20,7 @@
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
 
-        <draw:Sketch x:Name="Blocks" Grid.Row="1" Width="*" Height="*" IsAnimated="true" Draw="{EventBinding Blocks_Draw}" />
+        <draw:Sketch x:Name="Blocks" Grid.Row="1" Width="*" Height="*" MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}" IsAnimated="true" Draw="{EventBinding BlocksView_Draw}" />
 
     </Grid>
 </Application>
