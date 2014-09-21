@@ -7,6 +7,7 @@ class BlocksView extends SketchContext {
 
     private _Blocks: Array<Block> = [];
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    private _SelectedBlock: Block;
 
     constructor() {
         super();
@@ -42,24 +43,26 @@ class BlocksView extends SketchContext {
     }
 
     MouseDown(point: Point){
-        this._Blocks.forEach((block: Block) => {
-            block.MouseDown(point);
-        });
+        for (var i = 0; i < this._Blocks.length; i++){
+            var block = this._Blocks[i];
+            if (block.HitTest(point)) break;
+        }
     }
 
     MouseUp(point: Point){
-        this._Blocks.forEach((block: Block) => {
-            block.MouseUp(point);
-        });
+        if (this._SelectedBlock){
+            this._SelectedBlock.MouseUp();
+        }
     }
 
     MouseMove(point: Point){
-        this._Blocks.forEach((block: Block) => {
-            block.MouseMove(point);
-        });
+        if (this._SelectedBlock){
+            this._SelectedBlock.MouseMove(point);
+        }
     }
 
     OnBlockSelected(block: Block){
+        this._SelectedBlock = block;
         this.BlockSelected.Raise(block, new Fayde.RoutedEventArgs());
     }
 }

@@ -9,8 +9,8 @@ class Block {
     private _Radius: number = 20;
     private _IsPressed: boolean = false;
 
-    constructor(index: number, x: number, y: number){
-        this.Id = index;
+    constructor(id: number, x: number, y: number){
+        this.Id = id;
         this._Position = new Point(x, y);
         this._Osc = new Tone.Oscillator(440, "sine");
 
@@ -37,16 +37,13 @@ class Block {
         this._Osc.stop();
     }
 
-    MouseDown(point: Point) {
-        if (!this._Collides(point)) return;
-
+    MouseDown() {
         this._StartSound();
-
         this._IsPressed = true;
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
-    MouseUp(point: Point) {
+    MouseUp() {
         this._IsPressed = false;
         this._StopSound();
     }
@@ -57,9 +54,15 @@ class Block {
         }
     }
 
-    _Collides(point: Point): boolean{
+    HitTest(point: Point): boolean{
         var distance = Math.distanceBetween(this._Position.X, this._Position.Y, point.X, point.Y);
-        return distance <= this._Radius;
+
+        if (distance <= this._Radius){
+            this.MouseDown();
+            return true;
+        }
+        
+        return false;
     }
 }
 
