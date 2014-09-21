@@ -26,7 +26,7 @@ interface Tone {
     notationToSeconds(notation: string, bpm?: number, timeSignature?: number): number;
     noteToFrequency(note: string): number;
     now(): number;
-    optionsObject(values: Array, keys: Array<string>, defaults?:Object): Object;
+    optionsObject(values: Array<any>, keys: Array<string>, defaults?:Object): Object;
     receive(channelName: string, input?: AudioNode): void;
     samplesToSeconds(samples: number): number;
     secondsToFrequency(seconds: number): number;
@@ -54,8 +54,8 @@ declare module Tone {
         State: string;
         pause(time: Tone.Time): void;
         setVolume(db: number, fadeTime?: Tone.Time): void;
-        start(time: Tone.Time): void;
-        stop(time: Tone.Time): void;
+        start(time?: Tone.Time): void;
+        stop(time?: Tone.Time): void;
         sync(delay?: Tone.Time): void;
         unsync(): void;
         state: Tone.Source.State;
@@ -98,7 +98,6 @@ declare module Tone {
 
         frequency: Tone.Signal;
         oscillator: Tone.Oscillator;
-        output: Tone.Scale;
         set(params: Object): void;
         setFrequency(val: Tone.Time, rampTime: Tone.Time): void;
         setPhase(degrees: number): void;
@@ -131,4 +130,15 @@ declare module Tone {
     }
 
 
+    // SCALE
+    var Scale: ScaleFactory;
+
+    interface ScaleFactory {
+        new(inputMin: number, inputMax: number, outputMin: number, outputMax: number): Scale;
+        (inputMin: number, inputMax: number, outputMin: number, outputMax: number): Scale;
+    }
+
+    interface Scale extends Tone {
+
+    }
 }

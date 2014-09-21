@@ -13,12 +13,12 @@ class Block {
         this._Position = new Point(x, y);
         this._Osc = new Tone.Oscillator(440, "sine");
 
-        var vibrato = new Tone.LFO(6, -25, 25);
-        vibrato.start();
-
+//        var vibrato = new Tone.LFO(6, -25, 25);
+//        vibrato.start();
+//
         this._Osc.toMaster();
         this._Osc.setVolume(-10);
-        vibrato.connect(this._Osc.detune);
+//        vibrato.connect(this._Osc.detune);
     }
 
     Draw(ctx: CanvasRenderingContext2D) {
