@@ -20,7 +20,16 @@
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
 
-        <draw:Sketch x:Name="Blocks" Grid.Row="1" Width="*" Height="*" MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}" IsAnimated="true" Draw="{EventBinding BlocksView_Draw}" />
+        <draw:Sketch x:Name="Blocks"
+                     Grid.Row="1"
+                     Width="*"
+                     Height="*"
+                     MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}"
+                     MouseLeftButtonUp="{EventBinding BlocksView_MouseUp}"
+                     IsAnimated="true"
+                     Draw="{EventBinding BlocksView_Draw}" />
+
+        <TextBlock Text="{Binding SelectedBlock.Id}" Grid.Row="2" Padding="10,10,10,10"></TextBlock>
 
     </Grid>
 </Application>

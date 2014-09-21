@@ -2,14 +2,14 @@
 
 class Block {
 
-    private _Index: number;
+    public Id: number;
     private _Osc: Tone.Oscillator;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
     private _Radius: number = 20;
 
     constructor(index: number, x: number, y: number){
-        this._Index = index;
+        this.Id = index;
         this._Position = new Point(x, y);
         this._Osc = new Tone.Oscillator(440, "sine");
 
@@ -28,25 +28,32 @@ class Block {
         ctx.fill();
     }
 
-    _Beep(){
+    _StartSound(){
         this._Osc.start();
-        setTimeout(
-            () => {
-                this._Osc.stop();
-            }
-            , 100);
+    }
+
+    _StopSound(){
+        this._Osc.stop();
     }
 
     OnClick(){
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
-    TestCollision(point: Point) {
-        var distance = Math.distanceBetween(this._Position.X, this._Position.Y, point.X, point.Y);
-
-        if (distance <= this._Radius) {
-            this._Beep();
+    MouseDown(point: Point) {
+        if (this._Collides(point)){
+            this._StartSound();
+            this.OnClick();
         }
+    }
+
+    MouseUp(point: Point) {
+        this._StopSound();
+    }
+
+    _Collides(point: Point): boolean{
+        var distance = Math.distanceBetween(this._Position.X, this._Position.Y, point.X, point.Y);
+        return distance <= this._Radius;
     }
 }
 

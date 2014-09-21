@@ -6,6 +6,7 @@ import Block = require("./Block");
 class BlocksView extends SketchContext {
 
     private _Blocks: Array<Block> = [];
+    public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
     constructor() {
         super();
@@ -18,8 +19,8 @@ class BlocksView extends SketchContext {
         for (var i = 0; i < 20; i++) {
             var block = new Block(i, Math.randomBetween(this.Width), Math.randomBetween(this.Height));
 
-            block.Click.Subscribe((sender: Block) => {
-                console.log("clicked");
+            block.Click.Subscribe((block: Block) => {
+                this.OnBlockSelected(block);
             }, this);
 
             this._Blocks[i] = block;
@@ -41,10 +42,19 @@ class BlocksView extends SketchContext {
     }
 
     MouseDown(point: Point){
-        for (var i = 0; i < this._Blocks.length; i++) {
-            var block = this._Blocks[i];
-            block.TestCollision(point);
-        }
+        this._Blocks.forEach((block: Block) => {
+            block.MouseDown(point);
+        });
+    }
+
+    MouseUp(point: Point){
+        this._Blocks.forEach((block: Block) => {
+            block.MouseUp(point);
+        });
+    }
+
+    OnBlockSelected(block: Block){
+        this.BlockSelected.Raise(block, new Fayde.RoutedEventArgs());
     }
 }
 
