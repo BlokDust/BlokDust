@@ -7,6 +7,7 @@ class Block {
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
     private _Radius: number = 20;
+    private _IsPressed: boolean = false;
 
     constructor(index: number, x: number, y: number){
         this.Id = index;
@@ -24,7 +25,7 @@ class Block {
     Draw(ctx: CanvasRenderingContext2D) {
         ctx.beginPath();
         ctx.arc(this._Position.X, this._Position.Y, this._Radius, 0, Math.TAU, false);
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = this._IsPressed ? "#BBB" : "#000";
         ctx.fill();
     }
 
@@ -36,19 +37,24 @@ class Block {
         this._Osc.stop();
     }
 
-    OnClick(){
+    MouseDown(point: Point) {
+        if (!this._Collides(point)) return;
+
+        this._StartSound();
+
+        this._IsPressed = true;
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
-    MouseDown(point: Point) {
-        if (this._Collides(point)){
-            this._StartSound();
-            this.OnClick();
-        }
+    MouseUp(point: Point) {
+        this._IsPressed = false;
+        this._StopSound();
     }
 
-    MouseUp(point: Point) {
-        this._StopSound();
+    MouseMove(point: Point){
+        if (this._IsPressed){
+            this._Position = point;
+        }
     }
 
     _Collides(point: Point): boolean{

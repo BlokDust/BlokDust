@@ -53,6 +53,12 @@ class BlocksView extends SketchContext {
         });
     }
 
+    MouseMove(point: Point){
+        this._Blocks.forEach((block: Block) => {
+            block.MouseMove(point);
+        });
+    }
+
     OnBlockSelected(block: Block){
         this.BlockSelected.Raise(block, new Fayde.RoutedEventArgs());
     }

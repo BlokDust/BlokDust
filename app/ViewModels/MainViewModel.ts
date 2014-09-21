@@ -40,6 +40,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.MouseUp(e.args.Source.MousePosition);
     }
 
+    BlocksView_MouseMove(e: any){
+        this._BlocksView.MouseMove(e.args.Source.MousePosition);
+    }
+
     _OnBlockSelected(block: Block){
         this.SelectedBlock = block;
     }
