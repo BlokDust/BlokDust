@@ -1,9 +1,8 @@
 /// <reference path="./refs" />
 
-import SketchContext = require("./SketchContext");
 import Block = require("./Block");
 
-class BlocksView extends SketchContext {
+class BlocksView extends Fayde.Drawing.SketchContext {
 
     private _Blocks: Array<Block> = [];
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
