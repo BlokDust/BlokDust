@@ -214,6 +214,43 @@ declare module Tone {
     }
 
 
+    // FEEDBACK EFFECT
+    var FeedbackEffect: FeedbackEffectFactory;
+
+    interface FeedbackEffectFactory {
+        new(initialFeedback?: any): FeedbackEffect;
+        (initialFeedback?: any): FeedbackEffect;
+    }
+
+    interface FeedbackEffect extends Tone.Effect {
+        feedback: Tone.Signal;
+        setFeedback(value: number, rampTime?: Tone.Time): void;
+    }
+
+
+    // EQ
+    var EQ: EQFactory;
+
+    interface EQFactory {
+        new(lowLevel?, midLevel?: number, highLevel?: number): EQ;
+        (lowLevel?, midLevel?: number, highLevel?: number): EQ;
+    }
+
+    interface EQ extends Tone {
+        highFrequency: Tone.Signal;
+        highGain: GainNode;
+        input: GainNode;
+        lowFrequency: Tone.Signal;
+        lowGain: GainNode;
+        midGain: GainNode;
+        output: GainNode;
+        set(params: Object): void;
+        setHigh(db: number): void;
+        setLow(db: number): void;
+        setMid(db: number): void;
+    }
+
+
 
     // FILTER
     var Filter: FilterFactory;
@@ -238,6 +275,21 @@ declare module Tone {
     }
 
 
+    // MASTER
+    var Master: MasterFactory;
+
+    interface MasterFactory {
+        new(): Master;
+        (): Master;
+    }
+
+    interface Master extends Tone {
+        limiter: DynamicsCompressorNode;
+        mute(muted: boolean): void;
+        setVolume(db: number, fadeTime?: Tone.Time): void;
+    }
+
+
     // NOISE
     var Noise: NoiseFactory;
 
@@ -255,7 +307,58 @@ declare module Tone {
     }
 
 
+    // PANNER
+    var Panner: PannerFactory;
 
+    interface PannerFactory {
+        new(initialPan?: number): Panner;
+        (initialPan?: number): Panner;
+    }
+
+    interface Panner extends Tone {
+        pan: Tone.Signal;
+        setPan(pan: number; rampTime?: Tone.Time): void;
+    }
+
+
+
+    // PLAYER
+    var Player: PlayerFactory;
+
+    interface PlayerFactory {
+        new(url?: string, onload?: Function): Player;
+        (url?: string, onload?: Function): Player;
+    }
+
+    interface Player extends Source {
+        duration: number;
+        loop: boolean;
+        loopEnd: number;
+        loopStart: number;
+        retrigger: boolean;
+        load(url: string, callback?: Function): void;
+        onended(): void;
+        setBuffer(buffer: AudioBuffer);
+        setPlaybackRate(rate: number, rampTime?: Tone.Time): void;
+        start(startTime?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time): void;
+    }
+
+
+    // PulseOscillator
+    var PulseOscillator: PulseOscillatorFactory;
+
+    interface PulseOscillatorFactory {
+        new(frequency?: number): PulseOscillator;
+        (width?: number): PulseOscillator;
+    }
+
+    interface PulseOscillator extends Source {
+        detune: Tone.Signal;
+        frequency: Tone.Signal;
+        state: Tone.Source.State;
+        width: Tone.Signal;
+        setWidth(width: number): void;
+    }
 
 
     // SCALE
@@ -267,6 +370,49 @@ declare module Tone {
     }
 
     interface Scale extends Tone {
+        //TODO
+    }
 
+
+
+    // TRANSPORT
+    var Transport: TransportFactory;
+
+    interface TransportFactory {
+        new(): Transport;
+        (): Transport;
+    }
+
+    interface Transport extends Tone {
+        loop: boolean;
+        state: TransportState;
+
+        clearInterval(rmInterval: number): boolean;
+        clearIntervals(): void;
+        clearTimeline(timelineID: number): boolean;
+        clearTimelines(): void;
+        clearTimeout(timeoutID: number): boolean;
+        clearTimeouts(): void;
+        getBpm(): number;
+        getTimeSignature(): number;
+        getTransportTime(): string;
+        pause(time: Tone.Time): void;
+        setBpm(bpm: number, rampTime?: Tone.Time): void;
+        setInterval(callback: Function, interval: Tone.Time, ctx: Object): number;
+        setLoopEnd(endPosition: Tone.Time): void;
+        setLoopPoints(startPosition: Tone.Time, endPosition: Tone.Time): void;
+        setLoopStart(startPosition: Tone.Time): void;
+        setTimeline(callback: Function, timeout: Tone.Time, ctx: Object): number;
+        setTimeout(callback: Function, time: Tone.Time, ctx: Object): number;
+        setTimeSignature(numerator: number, denominator?: number): void;
+        setTransportTime(progress: Tone.Time): void;
+        start(time: Tone.Time): void;
+        stop(time: Tone.Time): void;
+        syncSignal(signal: Tone.Signal): void;
+        syncSource(source: Tone.Source, delay: Tone.Time): void;
+        toTicks(time: Tone.Time): number;
+        unsyncSource(source: Tone.Source): void;
     }
 }
+
+interface TransportState {}
