@@ -34,6 +34,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     get Blocks(): IBlock[]{
         if (!this._Blocks){
+            console.log("create");
             this._Blocks = [].concat(this.Sources.ToArray(), this.Modifiers.ToArray());
         }
 
@@ -66,6 +67,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }, this);
 
         this.Sources.Add(source);
+
+        this.Update();
     }
 
     CreateModifier<T extends IModifier>(m: {new(position: Point): T; }){
@@ -77,6 +80,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }, this);
 
         this.Modifiers.Add(modifier);
+
+        this.Update();
     }
 
     GetId(): number {
@@ -87,6 +92,35 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         return new Point(Math.randomBetween(this.Width), Math.randomBetween(this.Height));
     }
 
+    Update() {
+        super.Update();
+
+        // loop through all Modifier blocks checking proximity to Source blocks.
+        // if within CatchmentArea, add to Targets.
+        var modifiers = this.Modifiers.ToArray();
+        var sources = this.Sources.ToArray();
+
+        for (var i = 0; i < modifiers.length; i++){
+            var modifier: IModifier = modifiers[i];
+
+            // clear targets
+            modifier.Targets = new ObservableCollection<IModifiable>();
+
+            for (var j = 0; j < sources.length; j++) {
+                var source: IModifiable = sources[j];
+                if (source.DistanceFrom(modifier.Position) <= modifier.CatchmentArea) {
+                    modifier.Targets.Add(source);
+                }
+            }
+        }
+
+        // update blocks
+        for (var i = 0; i < this.Blocks.length; i++) {
+            var block = this.Blocks[i];
+            block.Update();
+        }
+    }
+
     Draw(){
         super.Draw();
 
@@ -94,10 +128,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Ctx.fillStyle = "#d7d7d7";
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
-        // update and draw blocks
+        // draw blocks
         for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[i];
-            block.Update();
             block.Draw(this.Ctx);
         }
     }
@@ -118,7 +151,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this._SelectedBlock.MouseUp();
         }
 
-        this.CheckModifierProximity();
+        this.Update();
     }
 
     MouseMove(point: Point){
@@ -128,28 +161,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         if (!this._IsMouseDown) return;
 
-        this.CheckModifierProximity();
-    }
-
-    CheckModifierProximity() {
-        // loop through all Modifier blocks checking proximity to Source blocks.
-        // if within CatchmentArea, add to Targets.
-        var modifiers = this.Modifiers.ToArray();
-        var sources = this.Sources.ToArray();
-
-        for (var i = 0; i < modifiers.length; i++){
-            var modifier: IModifier = modifiers[i];
-
-            // clear targets
-            modifier.Targets = new ObservableCollection<IModifiable>();
-
-            for (var j = 0; j < sources.length; j++) {
-                var source: IModifiable = sources[j];
-                if (source.DistanceFrom(modifier.Position) <= modifier.CatchmentArea) {
-                    modifier.Targets.Add(source);
-                }
-            }
-        }
+        this.Update();
     }
 
     OnSourceSelected(source: IModifiable){
@@ -165,12 +177,12 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     DeleteSelectedBlock(){
         if (this.Sources.Contains(<any>this._SelectedBlock)){
             this.Sources.Remove(<any>this._SelectedBlock);
-            this.CheckModifierProximity();
+            this.Update();
         }
 
         if (this.Modifiers.Contains(<any>this._SelectedBlock)){
             this.Modifiers.Remove(<any>this._SelectedBlock);
-            this.CheckModifierProximity();
+            this.Update();
         }
     }
 }

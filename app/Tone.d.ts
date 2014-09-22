@@ -317,7 +317,7 @@ declare module Tone {
 
     interface Panner extends Tone {
         pan: Tone.Signal;
-        setPan(pan: number; rampTime?: Tone.Time): void;
+        setPan(pan: number, rampTime?: Tone.Time): void;
     }
 
 
