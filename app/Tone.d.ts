@@ -12,16 +12,21 @@ interface Tone {
     chain(): void;
     connect(unit: AudioNode, outputNum?:number, inputNum?:number): void;
     dbToGain(db: number): number;
+    defaultArg(given: any, fallback: any): any; // if both args are objects, properties added to fallback
     disconnect(): void;
     dispose(): void;
     equalPowerScale(percent:number): number;
     expScale(gain: number): number;
+    extend(child: Function, parent?: Function): void;
     fan(): void; // connects first argument to all the other arguments
     frequencyToNote(freq:number):string;
     frequencyToSeconds(freq:number):number;
     gainToDb(gain: number): number;
+    interpolate(input: number, outputMin: number, outputMax: number): number;
     isUndef(arg: any): boolean;
+    logScale(gain: number): number;
     midiToNote(midiNumber: number): string;
+    noGC(): void;
     normalize(input: number, inputMin: number, inputMax: number): number;
     notationToSeconds(notation: string, bpm?: number, timeSignature?: number): number;
     noteToFrequency(note: string): number;
@@ -31,6 +36,8 @@ interface Tone {
     samplesToSeconds(samples: number): number;
     secondsToFrequency(seconds: number): number;
     send(channelName: string, amount: number): GainNode;
+    setContext(): void;
+    startMobile(): void; // Bind to touchstart to fix IOS6
     ticksToSeconds(transportTime: string, bpm?: number, timeSignature?: number): number;
     toFrequency(time: Tone.Time): number;
     toMaster(): void;
@@ -41,8 +48,24 @@ interface Tone {
 
 declare module Tone {
 
-    // This section is probably wrong. Ask Ed.
-    interface Signal{}
+    // SIGNAL
+    interface Signal extends Tone {
+
+        cancelScheduledValues(startTime: Tone.Time): void;
+        exponentialRampToValueAtTime(value: number, endTime: Tone.Time): void;
+        exponentialRampToValueNow(value: number, endTime: Tone.Time): void;
+        getValue(): number;
+        linearRampToValueAtTime(value: number, endTime: Tone.Time): void;
+        linearRampToValueNow(value: number, endTime: Tone.Time): void;
+        setCurrentValueNow(now?: number): number;
+        setTargetAtTime(value: number, startTime: Tone.Time, timeConstant: number): void;
+        setValue(value: number): void;
+        setValueAtTime(value: number, time: Tone.Time): void;
+        setValueCurveAtTime(values: Array<number>, startTime: Tone.Time, duration: Tone.Time): void;
+        sync(signal: Tone.Signal, ratio?: number): void;
+        unsync(): void;
+    }
+
     interface Time{}
     module Source {
         interface State{}
