@@ -6,25 +6,34 @@ import IModifiable = require("./IModifiable");
 
 class Input extends Block implements IModifiable {
 
+    private _Osc: Tone.Oscillator;
+
     constructor(position:Point) {
         super(position);
+
+        this._Osc = new Tone.Oscillator(440, "sine");
+        this._Osc.toMaster();
+        this._Osc.setVolume(-10);
     }
 
     Modify(effect: Tone.LFO) {
         // apply the effect
         console.log("modifying:" + this.Id);
+        //effect.connect(this._Osc.frequency);
     }
 
     MouseDown() {
         super.MouseDown();
 
         // play a sound
+        this._Osc.start();
     }
 
     MouseUp() {
         super.MouseUp();
 
         // stop a sound
+        this._Osc.stop();
     }
 
     Update() {

@@ -10,12 +10,14 @@ class Modifier extends Block implements IModifier {
 
     public Targets: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
     public CatchmentArea: number = 100;
+    Effect: Tone.LFO;
 
     constructor(position:Point) {
         super(position);
-    }
 
-    Effect:Tone.LFO;
+        this.Effect = new Tone.LFO(0.1, 80, 160);
+        this.Effect.setType("square");
+    }
 
     // loop through Targets applying Effect
     Modify() {
