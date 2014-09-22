@@ -49,6 +49,12 @@ interface Tone {
 declare module Tone {
 
     // SIGNAL
+    var Signal: SignalFactory;
+
+    interface SignalFactory {
+        new(value?: number): Signal;
+        (value?: number): Signal;
+    }
     interface Signal extends Tone {
 
         cancelScheduledValues(startTime: Tone.Time): void;
@@ -67,10 +73,15 @@ declare module Tone {
     }
 
     interface Time{}
-    module Source {
-        interface State{}
-    }
 
+
+    // SOURCE
+    var Source: SourceFactory;
+
+    interface SourceFactory {
+        new(): Source;
+        (): Source;
+    }
 
     interface Source extends Tone {
 
@@ -84,6 +95,11 @@ declare module Tone {
         state: Tone.Source.State;
 
     }
+
+    module Source {
+        interface State{}
+    }
+
 
 
     // OSCILLATOR
@@ -100,11 +116,12 @@ declare module Tone {
         detune: Tone.Signal;
         frequency: Tone.Signal;
         state: Tone.Source.State;
-        onended(func: Function);
+        onended();
         set(params: Object): void;
         setFrequency(val: Tone.Time, rampTime: Tone.Time): void;
         setPhase(degrees: number): void;
         setType(type: string): void;
+
 
     }
 
@@ -117,15 +134,45 @@ declare module Tone {
         (rate: number, outputMin?: number, outputMax?: number): LFO;
     }
 
-    interface LFO extends Tone {
+    interface LFO extends Source {
 
         frequency: Tone.Signal;
         oscillator: Tone.Oscillator;
         set(params: Object): void;
         setFrequency(val: Tone.Time, rampTime: Tone.Time): void;
+        setMax(max: number): void;
+        setMin(min: number): void;
         setPhase(degrees: number): void;
         setType(type: string): void;
 
+    }
+
+
+
+    // ENVELOPE
+    var Envelope: EnvelopeFactory;
+
+    interface EnvelopeFactory {
+        new(attack: any, decay?: Tone.Time, sustain?: number, release?: Tone.Time): Envelope;
+        (type: string): Envelope;
+    }
+
+    interface Envelope extends Tone {
+        attack: number;
+        decay: number;
+        max: number;
+        min: number;
+        release: number;
+        sustain: number;
+        set(params: Object): void;
+        setAttack(time: Tone.Time): void;
+        setDecay(time: Tone.Time): void;
+        setMax(max: number): void;
+        setMin(min: number): void;
+        setRelease(time: Tone.Time): void;
+        setSustain(time: Tone.Time): void;
+        triggerAttack(time?: Tone.Time, velocity?: number): void;
+        triggerRelease(time?: Tone.Time): void;
     }
 
 
@@ -151,6 +198,26 @@ declare module Tone {
         setRolloff(rolloff: number);
         setType(type: string): void;
     }
+
+
+    // NOISE
+    var Noise: NoiseFactory;
+
+    interface NoiseFactory {
+        new(type: string): Noise;
+        (type: string): Noise;
+    }
+
+    interface Noise extends Source {
+        onended();
+        setType(type: string, time?: Tone.Time);
+        start(time?: Tone.Time): void;
+        stop(time?: Tone.Time): void;
+
+    }
+
+
+
 
 
     // SCALE
