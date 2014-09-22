@@ -20,6 +20,13 @@
             <RowDefinition Height="50" />
         </Grid.RowDefinitions>
 
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">New Power Block</Button>
+            <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">New Input Block</Button>
+            <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
+            <Button x:Name="ModifierBlockBtn" Click="{EventBinding ModifierBlockBtn_Click}">New Modifier Block</Button>
+        </StackPanel>
+
         <draw:Sketch x:Name="Blocks"
                      Grid.Row="1"
                      Width="*"
@@ -30,7 +37,10 @@
                      IsAnimated="true"
                      Draw="{EventBinding BlocksView_Draw}" />
 
-        <TextBlock Text="{Binding SelectedBlock.Id}" Grid.Row="2" Padding="10,10,10,10"></TextBlock>
+        <StackPanel Orientation="Horizontal" Grid.Row="2">
+            <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
+        </StackPanel>
+
 
     </Grid>
 </Application>

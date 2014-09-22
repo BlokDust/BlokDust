@@ -1,12 +1,17 @@
 /// <reference path="./refs" />
 
-import Block = require("./Block");
+import IBlock = require("./Blocks/IBlock");
+import Input = require("./Blocks/Input");
+import Modifier = require("./Blocks/Modifier");
+import Output = require("./Blocks/Output");
+import Power = require("./Blocks/Power");
 
 class BlocksView extends Fayde.Drawing.SketchContext {
 
-    private _Blocks: Array<Block> = [];
+    private _Blocks: Array<IBlock> = [];
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    private _SelectedBlock: Block;
+    private _SelectedBlock: IBlock;
+    private Id: number = 0;
 
     constructor() {
         super();
@@ -14,17 +19,22 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     Setup(){
         super.Setup();
+    }
 
-        // create blocks
-        for (var i = 0; i < 20; i++) {
-            var block = new Block(i, Math.randomBetween(this.Width), Math.randomBetween(this.Height));
+    CreateBlock<T extends IBlock>(c: {new(id: number, position: Point): T; }){
+        var block = new c(this.GetId(), this.GetRandomPosition());
+        block.Click.Subscribe((b: IBlock) => {
+            this.OnBlockSelected(b);
+        }, this);
+        this._Blocks.push(block);
+    }
 
-            block.Click.Subscribe((block: Block) => {
-                this.OnBlockSelected(block);
-            }, this);
+    GetId(): number {
+        return this.Id++;
+    }
 
-            this._Blocks[i] = block;
-        }
+    GetRandomPosition(): Point{
+        return new Point(Math.randomBetween(this.Width), Math.randomBetween(this.Height));
     }
 
     Draw(){
@@ -60,7 +70,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
-    OnBlockSelected(block: Block){
+    OnBlockSelected(block: IBlock){
         this._SelectedBlock = block;
         this.BlockSelected.Raise(block, new Fayde.RoutedEventArgs());
     }
