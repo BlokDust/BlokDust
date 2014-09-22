@@ -4,18 +4,22 @@ import IBlock = require("./IBlock");
 
 class Block implements IBlock {
 
-    public Id:number;
-    public Click:Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    public Position:Point;
-    public Radius:number = 20;
-    public IsPressed:boolean = false;
+    public Id: number;
+    public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    public Position: Point;
+    public Radius: number = 20;
+    public IsPressed: boolean = false;
+    public IsSelected: boolean = false;
 
-    constructor(id:number, position:Point) {
-        this.Id = id;
+    constructor(position: Point) {
         this.Position = position;
     }
 
-    Draw(ctx:CanvasRenderingContext2D) {
+    Update() {
+
+    }
+
+    Draw(ctx: CanvasRenderingContext2D) {
 
     }
 
@@ -28,14 +32,14 @@ class Block implements IBlock {
         this.IsPressed = false;
     }
 
-    MouseMove(point:Point) {
+    MouseMove(point: Point) {
         if (this.IsPressed) {
             this.Position = point;
         }
     }
 
-    HitTest(point:Point):boolean {
-        var distance = Math.distanceBetween(this.Position.X, this.Position.Y, point.X, point.Y);
+    HitTest(point: Point):boolean {
+        var distance = this.DistanceFrom(point);
 
         if (distance <= this.Radius) {
             this.MouseDown();
@@ -43,6 +47,10 @@ class Block implements IBlock {
         }
 
         return false;
+    }
+
+    DistanceFrom(point: Point): number{
+        return Math.distanceBetween(this.Position.X, this.Position.Y, point.X, point.Y);
     }
 }
 

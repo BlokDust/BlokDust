@@ -17,7 +17,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="50" />
+            <RowDefinition Height="100" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
@@ -25,6 +25,7 @@
             <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">New Input Block</Button>
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
             <Button x:Name="ModifierBlockBtn" Click="{EventBinding ModifierBlockBtn_Click}">New Modifier Block</Button>
+            <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
         </StackPanel>
 
         <draw:Sketch x:Name="Blocks"
@@ -39,8 +40,15 @@
 
         <StackPanel Orientation="Horizontal" Grid.Row="2">
             <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
-        </StackPanel>
 
+            <!--<ListBox Width="200" ItemsSource="{Binding Targets}" ScrollViewer.VerticalScrollBarVisibility="Visible">-->
+                <!--<ListBox.ItemTemplate>-->
+                    <!--<DataTemplate>-->
+                        <!--<TextBlock Text="{Binding Id}" />-->
+                    <!--</DataTemplate>-->
+                <!--</ListBox.ItemTemplate>-->
+            <!--</ListBox>-->
+        </StackPanel>
 
     </Grid>
 </Application>
