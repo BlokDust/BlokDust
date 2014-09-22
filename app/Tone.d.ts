@@ -148,6 +148,44 @@ declare module Tone {
     }
 
 
+    // DRY WET
+    var DryWet: DryWetFactory;
+
+    interface DryWetFactory {
+        new(initialDry?: number): DryWet;
+        (initialDry?: number): DryWet;
+    }
+
+    interface DryWet extends Tone {
+        dry: GainNode;
+        wet: GainNode;
+        wetness: Tone.Signal;
+        setDry(val: number, rampTime?: Tone.Time): void; // 0 - 1
+        setWet(val: number, rampTime?: Tone.Time): void;
+    }
+
+
+    // EFFECT
+    var Effect: EffectFactory;
+
+    interface EffectFactory {
+        new(initialDry?: number): Effect;
+        (initialDry?: number): Effect;
+    }
+
+    interface Effect extends Tone {
+        dryWet: Tone.DryWet;
+        effectReturn: GainNode;
+        effectSend: GainNode;
+        bypass(): void;
+        connectEffect(effect: Tone): void;
+        set(param: Object): void;
+        setDry(dryness: number, rampTime?: Tone.Time): void;
+        setPreset(presetName: string): void;
+        setWet(wetness: number, rampTime?: Tone.Time): void;
+    }
+
+
 
     // ENVELOPE
     var Envelope: EnvelopeFactory;
