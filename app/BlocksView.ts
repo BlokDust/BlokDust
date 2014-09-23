@@ -121,18 +121,30 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         var modifiers = this.Modifiers.ToArray();
         var sources = this.Sources.ToArray();
 
+        var targets = new ObservableCollection<IModifiable>();
+
         for (var i = 0; i < modifiers.length; i++) {
             var modifier:IModifier = modifiers[i];
-
-            // clear targets
-            modifier.Targets = new ObservableCollection<IModifiable>();
 
             for (var j = 0; j < sources.length; j++) {
                 var source:IModifiable = sources[j];
                 if (source.DistanceFrom(modifier.Position) <= modifier.CatchmentArea) {
-                    modifier.Targets.Add(source);
+                    targets.Add(source);
                 }
             }
+
+            // todo
+            // compare the new targets to the modifier's current list of targets.
+            // for those IModifiables no longer on the list, call RemoveModifier(modifier)
+            for (var k = 0; k < targets.Count; k++){
+                var t: IModifiable = targets[k];
+
+                if (!modifier.Targets.Contains(t)){
+                    t.RemoveModifier(modifier);;
+                }
+            }
+
+            modifier.Targets = targets;
         }
     }
 

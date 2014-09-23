@@ -3,16 +3,12 @@
 import IBlock = require("./IBlock");
 import Block = require("./Block");
 import IModifiable = require("./IModifiable");
+import Modifiable = require("./Modifiable");
 
-class Output extends Block implements IModifiable {
+class Output extends Modifiable {
 
     constructor(position: Point) {
         super(position);
-    }
-
-    Modify(effect: Tone.LFO) {
-        // apply the effect
-        console.log("modifying:" + this.Id);
     }
 
     Update() {

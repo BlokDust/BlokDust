@@ -2,9 +2,10 @@
 
 import IBlock = require("./IBlock");
 import Block = require("./Block");
-import IModifiable = require("./IModifiable");
+import IModifier = require("./IModifier");
+import Modifiable = require("./Modifiable");
 
-class Input extends Block implements IModifiable {
+class Input extends Modifiable {
 
     private _Osc: Tone.Oscillator;
 
@@ -13,12 +14,6 @@ class Input extends Block implements IModifiable {
         this._Osc = new Tone.Oscillator(440, "sine");
         this._Osc.toMaster();
         this._Osc.setVolume(-10);
-    }
-
-    Modify(effect: Tone.LFO) {
-        // apply the effect
-        console.log("modifying:" + this.Id);
-        effect.connect(this._Osc.frequency);
     }
 
     MouseDown() {

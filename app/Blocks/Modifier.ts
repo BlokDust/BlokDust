@@ -10,36 +10,28 @@ class Modifier extends Block implements IModifier {
 
     public Targets: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
     public CatchmentArea: number = 100;
-    Effect: Tone.LFO;
+    Effects: ObservableCollection<Tone.LFO> = new ObservableCollection<Tone.LFO>();
 
     constructor(position:Point) {
         super(position);
 
-        this.Effect = new Tone.LFO(0.3, -80, 80);
-        this.Effect.setType("triangle");
+        var effect: Tone.LFO = new Tone.LFO(0.3, -80, 80);
+        effect.setType("triangle");
 
-    }
-
-    // loop through Targets applying Effect
-    Modify() {
-
-        for (var i = 0; i < this.Targets.Count; i++){
-            var target = this.Targets[i];
-            target.Modify(this.Effect);
-        }
+        this.Effects.Add(effect);
     }
 
     Update() {
         super.Update();
 
         // modify targets
-        var targets = this.Targets.ToArray();
-
-        for(var i = 0; i < targets.length; i++){
-            var target: IModifiable = targets[i];
-
-            target.Modify(this.Effect);
-        }
+//        var targets = this.Targets.ToArray();
+//
+//        for(var i = 0; i < targets.length; i++){
+//            var target: IModifiable = targets[i];
+//
+//            target.AddModifier(this.Effect);
+//        }
     }
 
     // modifier blocks are black squares
