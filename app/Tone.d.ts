@@ -301,9 +301,6 @@ declare module Tone {
     interface Noise extends Source {
         onended();
         setType(type: string, time?: Tone.Time);
-        start(time?: Tone.Time): void;
-        stop(time?: Tone.Time): void;
-
     }
 
 
