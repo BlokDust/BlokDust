@@ -15,8 +15,9 @@ class Modifier extends Block implements IModifier {
     constructor(position:Point) {
         super(position);
 
-        this.Effect = new Tone.LFO(0.1, 80, 160);
-        this.Effect.setType("square");
+        this.Effect = new Tone.LFO(0.3, -80, 80);
+        this.Effect.setType("triangle");
+
     }
 
     // loop through Targets applying Effect

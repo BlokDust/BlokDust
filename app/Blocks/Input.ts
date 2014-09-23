@@ -10,7 +10,6 @@ class Input extends Block implements IModifiable {
 
     constructor(position:Point) {
         super(position);
-
         this._Osc = new Tone.Oscillator(440, "sine");
         this._Osc.toMaster();
         this._Osc.setVolume(-10);
@@ -19,7 +18,7 @@ class Input extends Block implements IModifiable {
     Modify(effect: Tone.LFO) {
         // apply the effect
         console.log("modifying:" + this.Id);
-        //effect.connect(this._Osc.frequency);
+        effect.connect(this._Osc.frequency);
     }
 
     MouseDown() {

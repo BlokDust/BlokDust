@@ -10,7 +10,7 @@ interface Tone {
     output: GainNode;
 
     chain(): void;
-    connect(unit: AudioNode, outputNum?:number, inputNum?:number): void;
+    connect(unit: any, outputNum?:number, inputNum?:number): void;
     dbToGain(db: number): number;
     defaultArg(given: any, fallback: any): any; // if both args are objects, properties added to fallback
     disconnect(): void;
@@ -301,9 +301,6 @@ declare module Tone {
     interface Noise extends Source {
         onended();
         setType(type: string, time?: Tone.Time);
-        start(time?: Tone.Time): void;
-        stop(time?: Tone.Time): void;
-
     }
 
 
