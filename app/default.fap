@@ -24,7 +24,7 @@
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">New Power Block</Button>
             <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">New Input Block</Button>
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
-            <Button x:Name="ModifierBlockBtn" Click="{EventBinding ModifierBlockBtn_Click}">New Modifier Block</Button>
+            <Button x:Name="LFOModifierBlockBtn" Click="{EventBinding LFOModifierBlockBtn_Click}">New LFO Modifier Block</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
         </StackPanel>
 

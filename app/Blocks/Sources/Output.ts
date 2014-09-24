@@ -1,9 +1,9 @@
-/// <reference path="../Refs.ts" />
+/// <reference path="../../refs.ts" />
 
-import IBlock = require("./IBlock");
-import Block = require("./Block");
-import IModifiable = require("./IModifiable");
-import Modifiable = require("./Modifiable");
+import IBlock = require("../IBlock");
+import Block = require("../Block");
+import IModifiable = require("../IModifiable");
+import Modifiable = require("../Modifiable");
 
 class Output extends Modifiable {
 

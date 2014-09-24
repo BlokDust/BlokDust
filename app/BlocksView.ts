@@ -2,10 +2,7 @@
 
 import IBlock = require("./Blocks/IBlock");
 import IModifiable = require("./Blocks/IModifiable");
-import Input = require("./Blocks/Input");
 import IModifier = require("./Blocks/IModifier");
-import Output = require("./Blocks/Output");
-import Power = require("./Blocks/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class BlocksView extends Fayde.Drawing.SketchContext {
@@ -117,34 +114,30 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     _CheckProximity(){
         // loop through all Modifier blocks checking proximity to Source blocks.
-        // if within CatchmentArea, add to Targets.
+        // if within CatchmentArea, add Source to Targets.
         var modifiers = this.Modifiers.ToArray();
         var sources = this.Sources.ToArray();
-
-        var targets = new ObservableCollection<IModifiable>();
 
         for (var i = 0; i < modifiers.length; i++) {
             var modifier:IModifier = modifiers[i];
 
             for (var j = 0; j < sources.length; j++) {
                 var source:IModifiable = sources[j];
+
+                // if a source is close enough to the modifier, add the modifier
+                // to its internal list.
                 if (source.DistanceFrom(modifier.Position) <= modifier.CatchmentArea) {
-                    targets.Add(source);
+                    if (!source.Modifiers.Contains(modifier)){
+                        source.AddModifier(modifier);
+                    }
+                } else {
+                    // if the source already has the modifier on its internal list
+                    // remove it as it's now too far away.
+                    if (source.Modifiers.Contains(modifier)){
+                        source.RemoveModifier(modifier);
+                    }
                 }
             }
-
-            // todo
-            // compare the new targets to the modifier's current list of targets.
-            // for those IModifiables no longer on the list, call RemoveModifier(modifier)
-            for (var k = 0; k < targets.Count; k++){
-                var t: IModifiable = targets[k];
-
-                if (!modifier.Targets.Contains(t)){
-                    t.RemoveModifier(modifier);;
-                }
-            }
-
-            modifier.Targets = targets;
         }
     }
 

@@ -4,10 +4,10 @@ import BlocksView = require("../BlocksView");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
-import Input = require("../Blocks/Input");
-import Modifier = require("../Blocks/Modifier");
-import Output = require("../Blocks/Output");
-import Power = require("../Blocks/Power");
+import Input = require("../Blocks/Sources/Input");
+import LFOModifier = require("../Blocks/Modifiers/LFOModifier");
+import Output = require("../Blocks/Sources/Output");
+import Power = require("../Blocks/Sources/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
@@ -76,8 +76,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateSource(Output);
     }
 
-    ModifierBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(Modifier);
+    LFOModifierBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(LFOModifier);
     }
 
     DeleteBlockBtn_Click(e: any){
