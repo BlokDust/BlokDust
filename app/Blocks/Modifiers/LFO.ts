@@ -1,7 +1,7 @@
 
 import Modifier = require("./../Modifier");
 
-class LFOModifier extends Modifier {
+class LFO extends Modifier {
 
     constructor(point: Point){
         super(point);
@@ -14,4 +14,4 @@ class LFOModifier extends Modifier {
 
 }
 
-export = LFOModifier;
+export = LFO;

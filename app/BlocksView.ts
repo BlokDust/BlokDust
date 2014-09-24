@@ -114,7 +114,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     _CheckProximity(){
         // loop through all Modifier blocks checking proximity to Source blocks.
-        // if within CatchmentArea, add Source to Targets.
+        // if within CatchmentArea, add Modifier to Source.Modifiers.
         var modifiers = this.Modifiers.ToArray();
         var sources = this.Sources.ToArray();
 
@@ -183,12 +183,31 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     DeleteSelectedBlock(){
         if (this.Sources.Contains(<any>this._SelectedBlock)){
             this.Sources.Remove(<any>this._SelectedBlock);
+            this._SelectedBlock = null;
             this._CheckProximity();
+            return;
         }
 
         if (this.Modifiers.Contains(<any>this._SelectedBlock)){
+            this.DeleteModifier(<IModifier>this._SelectedBlock);
             this.Modifiers.Remove(<any>this._SelectedBlock);
+            this._SelectedBlock = null;
             this._CheckProximity();
+            return;
+        }
+    }
+
+    DeleteModifier(modifier: IModifier){
+        // loop through sources.
+        // for each source with this modifier, remove it.
+        var sources = this.Sources.ToArray();
+
+        for (var i = 0; i < sources.length; i++){
+            var source = sources[i];
+
+            if (source.Modifiers.Contains(modifier)){
+                source.Modifiers.Remove(modifier);
+            }
         }
     }
 }
