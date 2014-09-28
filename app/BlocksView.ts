@@ -77,10 +77,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnSourceSelected(e);
         }, this);
 
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(source, this.Sources);
-        this._OperationManager.AddOperation(op);
+//        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(source, this.Sources);
+//        this._OperationManager.AddOperation(op);
 
-        //this.Sources.Add(source);
+        this.Sources.Add(source);
     }
 
     CreateModifier<T extends IModifier>(m: {new(position: Point): T; }){
@@ -91,10 +91,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnModifierSelected(e);
         }, this);
 
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Sources);
-        this._OperationManager.AddOperation(op);
+//        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Sources);
+//        this._OperationManager.AddOperation(op);
 
-        //this.Modifiers.Add(modifier);
+        this.Modifiers.Add(modifier);
     }
 
     GetId(): number {
