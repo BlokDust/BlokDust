@@ -26,6 +26,7 @@
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
             <Button x:Name="LFOModifierBlockBtn" Click="{EventBinding LFOModifierBlockBtn_Click}">New LFO Modifier Block</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
+            <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
         </StackPanel>
 
         <draw:Sketch x:Name="Blocks"

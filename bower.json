@@ -9,6 +9,6 @@
     "fayde.drawing": "0.2.0",
     "exjs": "~0.2.0",
     "Tone.js": "0.1.0",
-    "fayde.utils": "0.1.6"
+    "fayde.utils": "0.1.9"
   }
 }

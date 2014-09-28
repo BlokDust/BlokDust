@@ -3,7 +3,11 @@
 import IBlock = require("./Blocks/IBlock");
 import IModifiable = require("./Blocks/IModifiable");
 import IModifier = require("./Blocks/IModifier");
+import AddItemToObservableCollectionOperation = require("./Operations/AddItemToObservableCollectionOperation");
+import OperationManager = require("./Operations/OperationManager");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
+import IOperation = require("./Operations/IOperation");
+import IUndoableOperation = require("./Operations/IUndoableOperation");
 
 class BlocksView extends Fayde.Drawing.SketchContext {
 
@@ -15,6 +19,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _Id: number = 0;
     private _Blocks: IBlock[];
     private _IsMouseDown: boolean = false;
+    private _OperationManager: OperationManager;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -40,14 +45,24 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     constructor() {
         super();
 
-        // invalidate Blocks list so it gets recreated.
+        this._OperationManager = new OperationManager();
+
         this.Sources.CollectionChanged.Subscribe(() => {
-            this._Blocks = null;
+            this._Invalidate();
         }, this);
 
         this.Modifiers.CollectionChanged.Subscribe(() => {
-            this._Blocks = null;
+            this._Invalidate();
         }, this);
+    }
+
+    // called whenever the Sources or Modifiers collections change.
+    _Invalidate(){
+
+        // invalidate Blocks list so it gets recreated.
+        this._Blocks = null;
+
+        this._CheckProximity();
     }
 
     Setup(){
@@ -62,9 +77,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnSourceSelected(e);
         }, this);
 
-        this.Sources.Add(source);
+        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(source, this.Sources);
+        this._OperationManager.AddOperation(op);
 
-        this._CheckProximity();
+        //this.Sources.Add(source);
     }
 
     CreateModifier<T extends IModifier>(m: {new(position: Point): T; }){
@@ -75,9 +91,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnModifierSelected(e);
         }, this);
 
-        this.Modifiers.Add(modifier);
+        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Sources);
+        this._OperationManager.AddOperation(op);
 
-        this._CheckProximity();
+        //this.Modifiers.Add(modifier);
     }
 
     GetId(): number {
@@ -209,6 +226,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
                 source.Modifiers.Remove(modifier);
             }
         }
+    }
+
+    Undo(){
+        //this._OperationManager.UndoOperation();
     }
 }
 

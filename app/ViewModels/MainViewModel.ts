@@ -83,6 +83,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     DeleteBlockBtn_Click(e: any){
         this._BlocksView.DeleteSelectedBlock();
     }
+
+    UndoBtn_Click(e: any){
+        this._BlocksView.Undo();
+    }
 }
 
 export = MainViewModel;
