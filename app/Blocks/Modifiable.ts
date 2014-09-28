@@ -5,9 +5,14 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
+    public OldModifiers: ObservableCollection<IModifier>;
 
     constructor(position:Point) {
         super(position);
+
+        this.Modifiers.CollectionChanged.Subscribe(() => {
+            this.OnModifiersChanged();
+        }, this);
     }
 
     AddModifier(modifier: IModifier) {
@@ -33,6 +38,54 @@ class Modifiable extends Block implements IModifiable{
             }
         }
     }
+
+    OnModifiersChanged() {
+
+        console.log("modifiers changed");
+
+        if (this.OldModifiers && this.OldModifiers.Count){
+            var oldmods: IModifier[] = this.OldModifiers.ToArray();
+
+            for (var k = 0; k < oldmods.length; k++) {
+                var oldmod = oldmods[k];
+
+                var effects = oldmod.Effects.ToArray();
+
+                for (var l = 0; l < effects.length; l++){
+                    var effect = effects[l];
+
+                    this.DisconnectEffect(effect);
+                }
+            }
+        }
+
+        // loop through modifier effects adding/removing to oscillator
+        var mods: IModifier[] = this.Modifiers.ToArray();
+
+        for (var i = 0; i < mods.length; i++) {
+            var mod: IModifier = mods[i];
+
+            var effects = mod.Effects.ToArray();
+
+            for (var j = 0; j < effects.length; j++){
+                var effect = effects[j];
+
+                this.ConnectEffect(effect);
+            }
+        }
+
+        this.OldModifiers = new ObservableCollection<IModifier>();
+        this.OldModifiers.AddRange(this.Modifiers.ToArray());
+    }
+
+    ConnectEffect(effect: Tone.LFO) {
+
+    }
+
+    DisconnectEffect(effect: Tone.LFO){
+
+    }
+
 }
 
 export = Modifiable;

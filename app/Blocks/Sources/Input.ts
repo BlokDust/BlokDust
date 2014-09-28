@@ -7,27 +7,31 @@ import Modifiable = require("../Modifiable");
 
 class Input extends Modifiable {
 
-    private _Osc: Tone.Oscillator;
+    public Osc: Tone.Oscillator;
 
     constructor(position:Point) {
         super(position);
-        this._Osc = new Tone.Oscillator(440, "sine");
-        this._Osc.toMaster();
-        this._Osc.setVolume(-10);
+        this.Osc = new Tone.Oscillator(440, "sine");
+        this.Osc.toMaster();
+        this.Osc.setVolume(-10);
+
+
     }
 
     MouseDown() {
         super.MouseDown();
 
         // play a sound
-        this._Osc.start();
+
+
+        this.Osc.start();
     }
 
     MouseUp() {
         super.MouseUp();
 
         // stop a sound
-        this._Osc.stop();
+        this.Osc.stop();
     }
 
     Update() {
@@ -42,6 +46,16 @@ class Input extends Modifiable {
         ctx.arc(this.Position.X, this.Position.Y, this.Radius, 0, Math.TAU, false);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
         ctx.fill();
+    }
+
+    ConnectEffect(effect: Tone.LFO) {
+        console.log("connect effect");
+        effect.connect(this.Osc.frequency);
+    }
+
+    DisconnectEffect(effect: Tone.LFO) {
+        console.log("disconnect effect");
+        effect.disconnect();
     }
 }
 
