@@ -8,14 +8,23 @@ import Modifiable = require("../Modifiable");
 class Input extends Modifiable {
 
     public Osc: Tone.Oscillator;
+    private _OscGain: GainNode;
+
 
     constructor(position:Point) {
         super(position);
         this.Osc = new Tone.Oscillator(440, "sine");
-        this.Osc.toMaster();
-        this.Osc.setVolume(-10);
 
+        this._OscGain = this.Osc.context.createGain(); //TODO: AudioContext is a static so should point to it
+        this.Osc.connect(this._OscGain);
+        this._OscGain.gain.value = 0.3;
+        this._OscGain.connect(this.Osc.context.destination); //TODO: Need to create a master audio output with Compression to link to (in BlockView?)
 
+        this.ModifiableAttributes = {
+            pitch: this.Osc.frequency,
+            detune: this.Osc.detune,
+            volume: this._OscGain.gain
+        };
     }
 
     MouseDown() {
@@ -50,7 +59,7 @@ class Input extends Modifiable {
 
     ConnectEffect(effect: Tone.LFO) {
         console.log("connect effect");
-        effect.connect(this.Osc.frequency);
+        effect.connect(this.ModifiableAttributes.volume);
     }
 
     DisconnectEffect(effect: Tone.LFO) {

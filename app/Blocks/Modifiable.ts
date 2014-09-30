@@ -6,6 +6,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
+    public ModifiableAttributes: any; //TODO: Change this any to type Object containing Audio Nodes
 
     constructor(position:Point) {
         super(position);
@@ -78,11 +79,11 @@ class Modifiable extends Block implements IModifiable{
         this.OldModifiers.AddRange(this.Modifiers.ToArray());
     }
 
-    ConnectEffect(effect: Tone.LFO) {
+    ConnectEffect(effect: Tone) {
 
     }
 
-    DisconnectEffect(effect: Tone.LFO){
+    DisconnectEffect(effect: Tone){
 
     }
 

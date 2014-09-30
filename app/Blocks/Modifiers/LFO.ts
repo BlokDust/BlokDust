@@ -8,7 +8,7 @@ class LFO extends Modifier {
     constructor(point: Point){
         super(point);
 
-        this.effect = new Tone.LFO(1, 440, 440);
+        this.effect = new Tone.LFO(10, 0.3, 0);
         this.effect.setType("triangle");
         this.effect.start();
 

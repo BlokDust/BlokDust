@@ -65,7 +65,7 @@ declare module Tone {
         linearRampToValueNow(value: number, endTime: Tone.Time): void;
         setCurrentValueNow(now?: number): number;
         setTargetAtTime(value: number, startTime: Tone.Time, timeConstant: number): void;
-        setValue(value: number): void;
+        setValue(value?: number): void;
         setValueAtTime(value: number, time: Tone.Time): void;
         setValueCurveAtTime(values: Array<number>, startTime: Tone.Time, duration: Tone.Time): void;
         sync(signal: Tone.Signal, ratio?: number): void;
