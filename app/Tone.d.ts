@@ -317,6 +317,15 @@ declare module Tone {
         setPan(pan: number, rampTime?: Tone.Time): void;
     }
 
+    // PING PONG DELAY
+    var PingPongDelay: PingPongDelayFactory;
+
+    interface PingPongDelayFactory {
+        new(delayTime: any): PingPongDelay;
+        (delayTime: any): PingPongDelay;
+    }
+
+    interface PingPongDelay extends StereoXFeedbackEffect {}
 
 
     // PLAYER
@@ -369,6 +378,17 @@ declare module Tone {
     interface Scale extends Tone {
         //TODO
     }
+
+
+    // StereoXFeedbackEffect
+    var StereoXFeedbackEffect: StereoXFeedbackEffectFactory;
+
+    interface StereoXFeedbackEffectFactory {
+        new(): StereoXFeedbackEffect;
+        (): StereoXFeedbackEffect;
+    }
+
+    interface StereoXFeedbackEffect extends FeedbackEffect {}
 
 
 

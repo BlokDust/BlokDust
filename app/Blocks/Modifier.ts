@@ -9,7 +9,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Modifier extends Block implements IModifier {
 
     public CatchmentArea: number = 100;
-    Effects: ObservableCollection<Tone.LFO> = new ObservableCollection<Tone.LFO>();
+    Effects: ObservableCollection<Tone> = new ObservableCollection<Tone>();
 
     constructor(position:Point) {
         super(position);

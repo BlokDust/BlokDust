@@ -15,10 +15,10 @@ class Input extends Modifiable {
         super(position);
         this.Osc = new Tone.Oscillator(440, "sine");
 
-        this._OscGain = this.Osc.context.createGain(); //TODO: AudioContext is a static so should point to it
+        this._OscGain = this.Osc.context.createGain();
         this.Osc.connect(this._OscGain);
         this._OscGain.gain.value = 0.3;
-        this._OscGain.connect(this.Osc.context.destination); //TODO: Need to create a master audio output with Compression to link to (in BlockView?)
+        this._OscGain.connect(this.Osc.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
 
         this.ModifiableAttributes = {
             pitch: this.Osc.frequency,
