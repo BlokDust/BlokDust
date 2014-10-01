@@ -9,13 +9,11 @@ class Input extends Modifiable {
 
     public Osc: Tone.Oscillator;
 
-    constructor(position:Point) {
-        super(position);
+    constructor(ctx:CanvasRenderingContext2D, position:Point) {
+        super(ctx, position);
         this.Osc = new Tone.Oscillator(440, "sine");
         this.Osc.toMaster();
         this.Osc.setVolume(-10);
-
-
     }
 
     MouseDown() {
@@ -34,8 +32,8 @@ class Input extends Modifiable {
         this.Osc.stop();
     }
 
-    Update() {
-        super.Update();
+    Update(ctx:CanvasRenderingContext2D) {
+        super.Update(ctx);
     }
 
     // input blocks are red circles

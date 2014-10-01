@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
         xmlns:draw="lib:Fayde.Drawing"
+        xmlns:zoom="lib:Fayde.Zoomer"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
@@ -20,27 +21,37 @@
             <RowDefinition Height="100" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
+        <StackPanel Grid.ZIndex="2" Grid.Row="0" Orientation="Horizontal">
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">New Power Block</Button>
             <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">New Input Block</Button>
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
             <Button x:Name="LFOModifierBlockBtn" Click="{EventBinding LFOModifierBlockBtn_Click}">New LFO Modifier Block</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ZoomIn" Width="100" Click="{EventBinding ZoomIn_Click}">+</Button>
+                <Button x:Name="ZoomOut" Width="100" Click="{EventBinding ZoomOut_Click}">-</Button>
+            </StackPanel>
         </StackPanel>
 
-        <draw:Sketch x:Name="Blocks"
-                     Grid.Row="1"
-                     Width="*"
-                     Height="*"
-                     MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}"
-                     MouseLeftButtonUp="{EventBinding BlocksView_MouseUp}"
-                     MouseMove="{EventBinding BlocksView_MouseMove}"
-                     IsAnimated="true"
-                     Draw="{EventBinding BlocksView_Draw}" />
+        <zoom:Zoomer Grid.ZIndex="1" Grid.Row="1" Width="800" Height="600" ZoomLevels="5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}">
+            <Canvas>
+                <draw:Sketch x:Name="Blocks"
+                             Canvas.Left="{Binding ZoomContentOffset.X}"
+                             Canvas.Top="{Binding ZoomContentOffset.Y}"
+                             Width="{Binding ZoomContentSize.Width}"
+                             Height="{Binding ZoomContentSize.Height}"
+                             MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}"
+                             MouseLeftButtonUp="{EventBinding BlocksView_MouseUp}"
+                             MouseMove="{EventBinding BlocksView_MouseMove}"
+                             IsAnimated="true"
+                             Draw="{EventBinding BlocksView_Draw}" />
+            </Canvas>
+        </zoom:Zoomer>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="2">
+        <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
             <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
+            <TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>
 
             <!--<ListBox Width="200" ItemsSource="{Binding Targets}" ScrollViewer.VerticalScrollBarVisibility="Visible">-->
                 <!--<ListBox.ItemTemplate>-->

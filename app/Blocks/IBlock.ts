@@ -1,11 +1,15 @@
+/// <reference path="../refs" />
+
+import Size = Fayde.Utils.Size;
+
 interface IBlock{
     Id: number;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
-    Position: Point;
     Radius: number;
     IsPressed: boolean;
     IsSelected: boolean;
-    Update(): void;
+    Position: Point;
+    Update(ctx: CanvasRenderingContext2D): void;
     Draw(ctx: CanvasRenderingContext2D): void;
     MouseDown(): void;
     MouseUp(): void;

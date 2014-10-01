@@ -8,15 +8,15 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Modifier extends Block implements IModifier {
 
-    public CatchmentArea: number = 100;
+    public CatchmentArea: number = .1; // normalised to 1/10 of blocks view default width
     Effects: ObservableCollection<Tone.LFO> = new ObservableCollection<Tone.LFO>();
 
-    constructor(position:Point) {
-        super(position);
+    constructor(ctx:CanvasRenderingContext2D, position:Point) {
+        super(ctx, position);
     }
 
-    Update() {
-        super.Update();
+    Update(ctx:CanvasRenderingContext2D) {
+        super.Update(ctx);
     }
 
     // modifier blocks are black squares

@@ -12,6 +12,9 @@
     },
     "Fayde.Utils": {
       "exports": "Fayde.Utils"
+    },
+    "Fayde.Zoomer": {
+      "exports": "Fayde.Zoomer"
     }
   }
 }

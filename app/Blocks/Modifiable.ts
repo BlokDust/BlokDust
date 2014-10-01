@@ -7,8 +7,8 @@ class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
 
-    constructor(position:Point) {
-        super(position);
+    constructor(ctx:CanvasRenderingContext2D, position:Point) {
+        super(ctx, position);
 
         this.Modifiers.CollectionChanged.Subscribe(() => {
             this.OnModifiersChanged();
@@ -24,6 +24,8 @@ class Modifiable extends Block implements IModifiable{
     }
 
     Draw(ctx:CanvasRenderingContext2D){
+        super.Draw(ctx);
+
         if (window.debug){
             // draw lines to targets
             var modifiers = this.Modifiers.ToArray();

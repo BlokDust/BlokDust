@@ -7,12 +7,12 @@ import Modifiable = require("../Modifiable");
 
 class Power extends Modifiable{
 
-    constructor(position:Point) {
-        super(position);
+    constructor(ctx:CanvasRenderingContext2D, position:Point) {
+        super(ctx, position);
     }
 
-    Update() {
-        super.Update();
+    Update(ctx:CanvasRenderingContext2D) {
+        super.Update(ctx);
     }
 
     // power blocks are green circles

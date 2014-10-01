@@ -17,7 +17,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
-    private _Blocks: IBlock[];
+    Blocks: IBlock[];
     private _IsMouseDown: boolean = false;
     private _OperationManager: OperationManager;
 
@@ -34,14 +34,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this._SelectedBlock = block;
     }
 
-    get Blocks(): IBlock[]{
-        if (!this._Blocks){
-            this._Blocks = [].concat(this.Sources.ToArray(), this.Modifiers.ToArray());
-        }
-
-        return this._Blocks;
-    }
-
     constructor() {
         super();
 
@@ -54,24 +46,21 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Modifiers.CollectionChanged.Subscribe(() => {
             this._Invalidate();
         }, this);
+
+        this._Invalidate();
     }
 
     // called whenever the Sources or Modifiers collections change.
-    _Invalidate(){
+    private _Invalidate(){
 
-        // invalidate Blocks list so it gets recreated.
-        this._Blocks = null;
+        this.Blocks = [].concat(this.Sources.ToArray(), this.Modifiers.ToArray());
 
         this._CheckProximity();
     }
 
-    Setup(){
-        super.Setup();
-    }
-
-    CreateSource<T extends IModifiable>(m: {new(position: Point): T; }){
-        var source: IModifiable = new m(this.GetRandomPosition());
-        source.Id = this.GetId();
+    CreateSource<T extends IModifiable>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+        var source: IModifiable = new m(this.Ctx, this._GetRandomPosition());
+        source.Id = this._GetId();
 
         source.Click.Subscribe((e: IModifiable) => {
             this.OnSourceSelected(e);
@@ -83,9 +72,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Sources.Add(source);
     }
 
-    CreateModifier<T extends IModifier>(m: {new(position: Point): T; }){
-        var modifier: IModifier = new m(this.GetRandomPosition());
-        modifier.Id = this.GetId();
+    CreateModifier<T extends IModifier>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+        var modifier: IModifier = new m(this.Ctx, this._GetRandomPosition());
+        modifier.Id = this._GetId();
 
         modifier.Click.Subscribe((e: IModifier) => {
             this.OnModifierSelected(e);
@@ -97,12 +86,16 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Modifiers.Add(modifier);
     }
 
-    GetId(): number {
+    private _GetId(): number {
         return this._Id++;
     }
 
-    GetRandomPosition(): Point{
-        return new Point(Math.randomBetween(this.Width), Math.randomBetween(this.Height));
+    private _GetRandomPosition(): Point{
+        return new Point(Math.random(), Math.random());
+    }
+
+    Setup(){
+        super.Setup();
     }
 
     Update() {
@@ -111,7 +104,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         // update blocks
         for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[i];
-            block.Update();
+            block.Update(this.Ctx);
         }
     }
 
@@ -129,7 +122,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
-    _CheckProximity(){
+    private _CheckProximity(){
         // loop through all Modifier blocks checking proximity to Source blocks.
         // if within CatchmentArea, add Modifier to Source.Modifiers.
         var modifiers = this.Modifiers.ToArray();
@@ -143,7 +136,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
                 // if a source is close enough to the modifier, add the modifier
                 // to its internal list.
-                if (source.DistanceFrom(modifier.Position) <= modifier.CatchmentArea) {
+                if (source.DistanceFrom(modifier.Position) <= this.Ctx.canvas.width * modifier.CatchmentArea) {
                     if (!source.Modifiers.Contains(modifier)){
                         source.AddModifier(modifier);
                     }
@@ -158,12 +151,21 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
-    MouseDown(point: Point){
+    private _NormalisePoint(point: Point): Point {
+        return new Point(Math.normalise(point.X, 0, this.Ctx.canvas.width), Math.normalise(point.Y, 0, this.Ctx.canvas.height));
+    }
+
+    MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
+
+        //var point = e.args.Source.MousePosition;
+        var point = (<any>e).args.Source.MousePosition;
 
         for (var i = 0; i < this.Blocks.length; i++){
             var block = this.Blocks[i];
-            if (block.HitTest(point)) break;
+            if (block.HitTest(point)){
+                (<any>e).args.Handled = true;
+            }
         }
     }
 
@@ -179,7 +181,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     MouseMove(point: Point){
         if (this._SelectedBlock){
-            this._SelectedBlock.MouseMove(point);
+            this._SelectedBlock.MouseMove(this._NormalisePoint(point));
         }
 
         if (!this._IsMouseDown) return;

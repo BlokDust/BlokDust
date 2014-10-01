@@ -4,7 +4,8 @@ var require = {
         "text": "lib/requirejs-text/text",
         "Fayde": "lib/fayde/Fayde",
         "Utils": "lib/fayde.utils/Fayde.Utils",
-        "Tone": "lib/Tone.js/Tone"
+        "Tone": "lib/Tone.js/Tone",
+        "Tween": "lib/tween.ts/build/tween.min"
     },
     deps: [
         "text",
@@ -13,7 +14,8 @@ var require = {
         "Tone/core/Tone",
         "Tone/core/Master",
         "Tone/source/Oscillator",
-        "Tone/component/LFO"
+        "Tone/component/LFO",
+        "Tween"
     ],
     callback: function (
         text,
@@ -22,7 +24,8 @@ var require = {
         Tone,
         Master,
         Oscillator,
-        LFO
+        LFO,
+        Tween
         ) {
         window.Tone = Tone;
 
