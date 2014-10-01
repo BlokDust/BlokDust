@@ -26,6 +26,7 @@
             <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">New Input Block</Button>
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
             <Button x:Name="LFOModifierBlockBtn" Click="{EventBinding LFOModifierBlockBtn_Click}">New LFO Modifier Block</Button>
+            <Button x:Name="DelayModifierBlockBtn" Click="{EventBinding DelayModifierBlockBtn_Click}">New Delay Modifier Block</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <StackPanel Orientation="Horizontal">

@@ -15,6 +15,7 @@ var require = {
         "Tone/core/Master",
         "Tone/source/Oscillator",
         "Tone/component/LFO",
+        "Tone/effect/PingPongDelay",
         "Tween"
     ],
     callback: function (
@@ -25,6 +26,7 @@ var require = {
         Master,
         Oscillator,
         LFO,
+        PingPonDelay,
         Tween
         ) {
         window.Tone = Tone;

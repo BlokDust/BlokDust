@@ -5,8 +5,8 @@ class Delay extends Modifier {
 
     effect: Tone.PingPongDelay;
 
-    constructor(point: Point){
-        super(point);
+    constructor(ctx:CanvasRenderingContext2D, point: Point){
+        super(ctx, point);
 
         this.effect = new Tone.PingPongDelay(1);
         this.effect.setFeedback(0.5);

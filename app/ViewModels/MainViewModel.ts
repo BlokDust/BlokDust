@@ -6,6 +6,7 @@ import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import Input = require("../Blocks/Sources/Input");
 import LFO = require("../Blocks/Modifiers/LFO");
+import Delay = require("../Blocks/Modifiers/Delay");
 import Output = require("../Blocks/Sources/Output");
 import Power = require("../Blocks/Sources/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -128,6 +129,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     LFOModifierBlockBtn_Click(e: any){
         this._BlocksView.CreateModifier(LFO);
+    }
+
+    DelayModifierBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(Delay);
     }
 
     DeleteBlockBtn_Click(e: any){
