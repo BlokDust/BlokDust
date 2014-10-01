@@ -26,7 +26,7 @@ var require = {
         Master,
         Oscillator,
         LFO,
-        PingPonDelay,
+        PingPongDelay,
         Tween
         ) {
         window.Tone = Tone;
