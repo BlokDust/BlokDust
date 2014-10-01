@@ -9,7 +9,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Modifier extends Block implements IModifier {
 
     public CatchmentArea: number = .1; // normalised to 1/10 of blocks view default width
-    Effects: ObservableCollection<Tone.LFO> = new ObservableCollection<Tone.LFO>();
+    Effects: ObservableCollection<Tone> = new ObservableCollection<Tone>();
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);

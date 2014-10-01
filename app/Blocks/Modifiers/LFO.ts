@@ -8,7 +8,7 @@ class LFO extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        this.effect = new Tone.LFO(1, 440, 440);
+        this.effect = new Tone.LFO(10, 0.3, 0);
         this.effect.setType("triangle");
         this.effect.start();
 
