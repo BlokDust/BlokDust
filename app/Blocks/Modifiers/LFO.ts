@@ -1,7 +1,7 @@
 
-import Modifier = require("./../Modifier");
+import Effect = require("./../Effect");
 
-class LFO extends Modifier {
+class LFO extends Effect {
 
     effect: Tone.LFO;
 
