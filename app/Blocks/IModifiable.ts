@@ -5,6 +5,8 @@ interface IModifiable extends IBlock{
     Modifiers: Fayde.Collections.ObservableCollection<IModifier>;
     AddModifier(modifier: IModifier): void;
     RemoveModifier(modifier: IModifier): void;
+    Osc: Tone.Oscillator;
+    OscOutput: GainNode; //
 }
 
 export = IModifiable;

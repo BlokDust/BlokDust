@@ -81,12 +81,15 @@ class Modifiable extends Block implements IModifiable{
         this.OldModifiers.AddRange(this.Modifiers.ToArray());
     }
 
-    ConnectEffect(effect: Tone) {
-
+    ConnectEffect(effect: IEffect, ) {
+        //console.log("connect effect");
+        effect.Connect(this);
     }
 
-    DisconnectEffect(effect: Tone){
 
+    DisconnectEffect(effect: IEffect) {
+        //console.log("disconnect effect");
+        effect.Disconnect(this);
     }
 
 }

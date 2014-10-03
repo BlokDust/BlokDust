@@ -1,7 +1,6 @@
 
-import Effect = require("./../Effect");
 
-class LFO extends Effect {
+class LFO extends Modifier {
 
     effect: Tone.LFO;
 

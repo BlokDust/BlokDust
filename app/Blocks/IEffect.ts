@@ -1,11 +1,8 @@
-import IModifier = require("./IModifier");
+import IModifiable = require("IModifiable");
 
-interface IEffect extends IModifier{
-    Effects: Fayde.Collections.ObservableCollection<Tone>;
+interface IEffect {
 
-    input?: AudioNode;
-    output?: AudioNode;
-    params: Object;
+    Connect(modifiable: IModifiable): void;
 
 }
 
