@@ -25,8 +25,8 @@
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">New Power Block</Button>
             <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">New Input Block</Button>
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">New Output Block</Button>
-            <Button x:Name="LFOModifierBlockBtn" Click="{EventBinding LFOModifierBlockBtn_Click}">New LFO Modifier Block</Button>
-            <Button x:Name="DelayModifierBlockBtn" Click="{EventBinding DelayModifierBlockBtn_Click}">New Delay Modifier Block</Button>
+            <Button x:Name="VolumeDoublerBlockBtn" Click="{EventBinding VolumeDoublerBlockBtn_Click}">New VolumeDoubler Block</Button>
+            <Button x:Name="PitchDoublerBlockBtn" Click="{EventBinding PitchDoublerBlockBtn_Click}">New PitchDoubler Block</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <StackPanel Orientation="Horizontal">

@@ -1,5 +1,6 @@
 import IModifier = require("./IModifier");
 import IModifiable = require("./IModifiable");
+import IEffect = require("./IEffect");
 import Block = require("./Block");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
@@ -7,6 +8,8 @@ class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
     public ModifiableAttributes: any; //TODO: Change this any to type Object containing Audio Nodes
+    public Osc: Tone.Oscillator;
+    public OscOutput: GainNode;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
@@ -55,7 +58,7 @@ class Modifiable extends Block implements IModifiable{
                 var effects = oldmod.Effects.ToArray();
 
                 for (var l = 0; l < effects.length; l++){
-                    var effect = effects[l];
+                    var effect: IEffect = effects[l];
 
                     this.DisconnectEffect(effect);
                 }
@@ -71,7 +74,7 @@ class Modifiable extends Block implements IModifiable{
             var effects = mod.Effects.ToArray();
 
             for (var j = 0; j < effects.length; j++){
-                var effect = effects[j];
+                var effect: IEffect = effects[j];
 
                 this.ConnectEffect(effect);
             }
@@ -81,7 +84,7 @@ class Modifiable extends Block implements IModifiable{
         this.OldModifiers.AddRange(this.Modifiers.ToArray());
     }
 
-    ConnectEffect(effect: IEffect, ) {
+    ConnectEffect(effect: IEffect ) {
         //console.log("connect effect");
         effect.Connect(this);
     }

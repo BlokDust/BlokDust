@@ -1,20 +1,19 @@
-import VolumeDoublerEffect = require("../Effects/VolumeDoubler");
+import PitchDoublerEffect = require("../Effects/PitchDoubler");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 
-class VolumeDoubler extends Modifier {
+class PitchDoubler extends Modifier {
 
-    //effect: Tone.LFO;
 
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
 
-        var effect = new VolumeDoublerEffect();
+        var effect = new PitchDoublerEffect();
 
         this.Effects.Add(effect);
     }
 
 }
 
-export = VolumeDoubler;
+export = PitchDoubler;

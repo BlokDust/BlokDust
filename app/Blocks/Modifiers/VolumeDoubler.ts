@@ -1,4 +1,6 @@
 import VolumeDoublerEffect = require("../Effects/VolumeDoubler");
+import IModifier = require("../IModifier");
+import Modifier = require("../Modifier");
 
 class VolumeDoubler extends Modifier {
 

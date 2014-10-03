@@ -10,14 +10,14 @@ class PitchDoubler implements IEffect {
 
     Connect(modifiable: IModifiable): void{
 
-        // Connect them
-        modifiable.Osc.frequency = new Tone.Signal(modifiable.Osc.frequency * 2);
+        modifiable.Osc.setFrequency(880);
+
     }
 
     Disconnect(modifiable: IModifiable): void{
 
-        modifiable.Osc.frequency = new Tone.Signal(modifiable.Osc.frequency / 2);
+        modifiable.Osc.setFrequency(440);
     }
 }
 
-export = VolumeDoubler;
+export = PitchDoubler;

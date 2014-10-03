@@ -114,14 +114,14 @@ declare module Tone {
 
         defaults: Object;
         detune: Tone.Signal;
-        frequency: Tone.Signal;
+        frequency: any; //Should be a Tone.Signal really
         state: Tone.Source.State;
         onended();
         set(params: Object): void;
-        setFrequency(val: Tone.Time, rampTime: Tone.Time): void;
+        setFrequency(val: Tone.Time, rampTime?: Tone.Time): void;
         setPhase(degrees: number): void;
         setType(type: string): void;
-
+        oscillator: OscillatorNode;
 
     }
 

@@ -14,6 +14,7 @@ class Input extends Modifiable {
         super(ctx, position);
 
         this.Osc = new Tone.Oscillator(440, "sine");
+
         this.OscOutput = this.Osc.context.createGain();
         this.Osc.connect(this.OscOutput);
         this.OscOutput.gain.value = 0.3;
