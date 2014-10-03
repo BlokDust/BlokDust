@@ -114,7 +114,7 @@ declare module Tone {
 
         defaults: Object;
         detune: Tone.Signal;
-        frequency: any; //Should be a Tone.Signal really
+        frequency: Tone.Signal;
         state: Tone.Source.State;
         onended();
         set(params: Object): void;

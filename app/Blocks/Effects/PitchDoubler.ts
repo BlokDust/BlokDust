@@ -10,13 +10,13 @@ class PitchDoubler implements IEffect {
 
     Connect(modifiable: IModifiable): void{
 
-        modifiable.Osc.setFrequency(880);
+        modifiable.Osc.setFrequency(modifiable.Osc.frequency.getValue() * 1.5);
 
     }
 
     Disconnect(modifiable: IModifiable): void{
 
-        modifiable.Osc.setFrequency(440);
+        modifiable.Osc.setFrequency(modifiable.Osc.frequency.getValue() / 1.5);
     }
 }
 
