@@ -32,6 +32,7 @@ class Delay implements IEffect {
     Disconnect(modifiable: IModifiable): void {
         modifiable.OscOutput.disconnect();
         modifiable.OscOutput.connect(modifiable.Osc.context.destination);
+        //TODO: Do some sort of fade out to stop clicking
     }
 }
 

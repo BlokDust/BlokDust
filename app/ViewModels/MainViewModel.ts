@@ -9,6 +9,7 @@ import VolumeDoubler = require("../Blocks/Modifiers/VolumeDoubler");
 import PitchDoubler = require("../Blocks/Modifiers/PitchDoubler");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
+import Scuzz = require("../Blocks/Modifiers/Scuzz");
 
 import Output = require("../Blocks/Sources/Output");
 import Power = require("../Blocks/Sources/Power");
@@ -144,6 +145,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     DelayBlockBtn_Click(e: any){
         this._BlocksView.CreateModifier(Delay);
+    }
+
+    ScuzzBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(Scuzz);
     }
 
     DeleteBlockBtn_Click(e: any){
