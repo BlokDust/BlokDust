@@ -158,13 +158,12 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
 
-        //var point = e.args.Source.MousePosition;
         var point = (<any>e).args.Source.MousePosition;
 
         for (var i = 0; i < this.Blocks.length; i++){
             var block = this.Blocks[i];
             if (block.HitTest(point)){
-                (<any>e).args.Handled = true;
+                (<any>e).args.Handled = true; // todo: need to handle on event tunneling or sketch handles it first
             }
         }
     }
@@ -203,7 +202,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         if (this.Sources.Contains(<any>this._SelectedBlock)){
             this.Sources.Remove(<any>this._SelectedBlock);
             this._SelectedBlock = null;
-            this._CheckProximity();
             return;
         }
 
@@ -211,7 +209,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.DeleteModifier(<IModifier>this._SelectedBlock);
             this.Modifiers.Remove(<any>this._SelectedBlock);
             this._SelectedBlock = null;
-            this._CheckProximity();
             return;
         }
     }

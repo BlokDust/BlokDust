@@ -7,15 +7,14 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
-    public ModifiableAttributes: any; //TODO: Change this any to type Object containing Audio Nodes
     public Osc: Tone.Oscillator;
-    public OscOutput: GainNode;
+    public OscOutput: GainNode; // todo: definitely necessary?
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
 
         this.Modifiers.CollectionChanged.Subscribe(() => {
-            this.OnModifiersChanged();
+            this._OnModifiersChanged();
         }, this);
     }
 
@@ -45,10 +44,9 @@ class Modifiable extends Block implements IModifiable{
         }
     }
 
-    OnModifiersChanged() {
+    private _OnModifiersChanged() {
 
-        console.log("modifiers changed");
-
+        // disconnect modifiers in old collection.
         if (this.OldModifiers && this.OldModifiers.Count){
             var oldmods: IModifier[] = this.OldModifiers.ToArray();
 
@@ -60,12 +58,12 @@ class Modifiable extends Block implements IModifiable{
                 for (var l = 0; l < effects.length; l++){
                     var effect: IEffect = effects[l];
 
-                    this.DisconnectEffect(effect);
+                    this._DisconnectEffect(effect);
                 }
             }
         }
 
-        // loop through modifier effects adding/removing to oscillator
+        // connect modifiers in new collection.
         var mods: IModifier[] = this.Modifiers.ToArray();
 
         for (var i = 0; i < mods.length; i++) {
@@ -76,7 +74,7 @@ class Modifiable extends Block implements IModifiable{
             for (var j = 0; j < effects.length; j++){
                 var effect: IEffect = effects[j];
 
-                this.ConnectEffect(effect);
+                this._ConnectEffect(effect);
             }
         }
 
@@ -84,14 +82,11 @@ class Modifiable extends Block implements IModifiable{
         this.OldModifiers.AddRange(this.Modifiers.ToArray());
     }
 
-    ConnectEffect(effect: IEffect ) {
-        //console.log("connect effect");
+    private _ConnectEffect(effect: IEffect ) {
         effect.Connect(this);
     }
 
-
-    DisconnectEffect(effect: IEffect) {
-        //console.log("disconnect effect");
+    private _DisconnectEffect(effect: IEffect) {
         effect.Disconnect(this);
     }
 

@@ -17,14 +17,8 @@ class Input extends Modifiable {
 
         this.OscOutput = this.Osc.context.createGain();
         this.Osc.connect(this.OscOutput);
-        this.OscOutput.gain.value = 0.3;
+        this.OscOutput.gain.value = 0.1;
         this.OscOutput.connect(this.Osc.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
-
-        this.ModifiableAttributes = {
-            pitch: this.Osc.frequency,
-            detune: this.Osc.detune,
-            volume: this.OscOutput.gain
-        };
     }
 
     MouseDown() {
