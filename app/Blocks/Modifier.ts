@@ -20,15 +20,6 @@ class Modifier extends Block implements IModifier {
         super.Update(ctx);
     }
 
-    // modifier blocks are black squares
-    Draw(ctx:CanvasRenderingContext2D) {
-        super.Draw(ctx);
-
-        ctx.beginPath();
-        ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 40, 40);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#BBB" : "#000";
-        ctx.fill();
-    }
 }
 
 export = Modifier;

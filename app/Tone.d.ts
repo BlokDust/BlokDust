@@ -114,7 +114,7 @@ declare module Tone {
 
         defaults: Object;
         detune: Tone.Signal;
-        frequency: any; //Should be a Tone.Signal really
+        frequency: Tone.Signal;
         state: Tone.Source.State;
         onended();
         set(params: Object): void;
@@ -139,7 +139,7 @@ declare module Tone {
         frequency: Tone.Signal;
         oscillator: Tone.Oscillator;
         set(params: Object): void;
-        setFrequency(val: Tone.Time, rampTime: Tone.Time): void;
+        setFrequency(val: Tone.Time, rampTime?: Tone.Time): void;
         setMax(max: number): void;
         setMin(min: number): void;
         setPhase(degrees: number): void;
