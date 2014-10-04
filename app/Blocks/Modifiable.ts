@@ -7,9 +7,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
-    public ModifiableAttributes: any; //TODO: Change this any to type Object containing Audio Nodes
     public Osc: Tone.Oscillator;
-    public OscOutput: GainNode;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);

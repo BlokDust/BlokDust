@@ -4,34 +4,27 @@ import IModifiable = require("../IModifiable");
 
 class Delay implements IEffect {
 
-    private _input: GainNode;
-    private _output: GainNode;
-    feedbackDelay: any;
+    feedbackDelay: Tone.PingPongDelay;
 
     constructor() {
         this.feedbackDelay = new Tone.PingPongDelay("8n");
 
-        this._input = this.feedbackDelay.context.createGain();
-        this._output = this.feedbackDelay.context.createGain();
+        this.feedbackDelay.setFeedback(0.9); // 90% feedback
+        this.feedbackDelay.setWet(1); // 100% wet
 
-
-        //60% feedback
-        this.feedbackDelay.setFeedback(0.9);
-        this.feedbackDelay.setWet(1);
-        this._input.connect(this.feedbackDelay);
-        this.feedbackDelay.connect(this._output)
     }
 
     Connect(modifiable: IModifiable): void{
 
-        modifiable.OscOutput.connect(this._input);
-        this._output.connect(this.feedbackDelay.context.destination);
+        modifiable.Osc.connect(this.feedbackDelay);
+        this.feedbackDelay.toMaster();
 
     }
 
     Disconnect(modifiable: IModifiable): void {
-        modifiable.OscOutput.disconnect();
-        modifiable.OscOutput.connect(modifiable.Osc.context.destination);
+        modifiable.Osc.disconnect();
+        modifiable.Osc.toMaster();
+
         //TODO: Do some sort of fade out to stop clicking
     }
 }

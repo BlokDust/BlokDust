@@ -11,13 +11,13 @@ class VolumeDoubler implements IEffect {
 
     Connect(modifiable: IModifiable): void{
 
-        modifiable.OscOutput.gain.value *= 2;
+        modifiable.Osc.output.gain.value *= 2;
 
     }
 
     Disconnect(modifiable: IModifiable): void{
 
-        modifiable.OscOutput.gain.value /= 2;
+        modifiable.Osc.output.gain.value /= 2;
 
     }
 }
