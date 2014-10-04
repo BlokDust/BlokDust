@@ -47,8 +47,6 @@ class Modifiable extends Block implements IModifiable{
 
     OnModifiersChanged() {
 
-        console.log("modifiers changed");
-
         if (this.OldModifiers && this.OldModifiers.Count){
             var oldmods: IModifier[] = this.OldModifiers.ToArray();
 
@@ -85,13 +83,11 @@ class Modifiable extends Block implements IModifiable{
     }
 
     ConnectEffect(effect: IEffect ) {
-        //console.log("connect effect");
         effect.Connect(this);
     }
 
 
     DisconnectEffect(effect: IEffect) {
-        //console.log("disconnect effect");
         effect.Disconnect(this);
     }
 

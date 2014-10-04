@@ -27,6 +27,8 @@
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">Output</Button>
             <Button x:Name="VolumeDoublerBlockBtn" Click="{EventBinding VolumeDoublerBlockBtn_Click}">VolumeDoubler</Button>
             <Button x:Name="PitchDoublerBlockBtn" Click="{EventBinding PitchDoublerBlockBtn_Click}">PitchDoubler</Button>
+            <Button x:Name="LFOBlockBtn" Click="{EventBinding LFOBlockBtn_Click}">LFO</Button>
+            <Button x:Name="DelayBlockBtn" Click="{EventBinding DelayBlockBtn_Click}">Delay</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <StackPanel Orientation="Horizontal">
