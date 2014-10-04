@@ -13,35 +13,26 @@ class Input extends Modifiable {
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
 
-        this.Osc = new Tone.Oscillator(440, "sine");
-        this.Envelope = new Tone.Envelope(0.05, 0.01, 0.4, 0.2); //TODO: Use an envelope to stop clicking on start & stop
-
-        //TODO : Fucking work out how to ramp signals!!!
-
-
-        this.Osc.output.gain.value = 0.3;
+        this.Osc = new Tone.Oscillator(440, "square");
+        this.Envelope = new Tone.Envelope(0.1, 0.5, 0.2, 0.1);
+        this.Envelope.connect(this.Osc.output.gain);
 
         this.Osc.toMaster(); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
-
+        this.Osc.start();
     }
 
     MouseDown() {
         super.MouseDown();
 
-        // play a sound
-        this.Osc.start();
+        // play tone
+        this.Envelope.triggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
 
-
-        // stop a sound
-
-        var _this = this;
-        setTimeout(function() {
-            _this.Osc.stop();
-        }, 100);
+        // stop tone
+        this.Envelope.triggerRelease();
 
     }
 
