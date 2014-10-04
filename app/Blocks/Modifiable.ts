@@ -8,7 +8,6 @@ class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
     public Osc: Tone.Oscillator;
-    public OscOutput: GainNode; // todo: definitely necessary?
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);

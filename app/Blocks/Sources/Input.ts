@@ -8,17 +8,21 @@ import Modifiable = require("../Modifiable");
 class Input extends Modifiable {
 
     public Osc: Tone.Oscillator;
-    public OscOutput: GainNode;
+    public Envelope: Tone.Envelope;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
 
         this.Osc = new Tone.Oscillator(440, "sine");
+        this.Envelope = new Tone.Envelope(0.05, 0.01, 0.4, 0.2); //TODO: Use an envelope to stop clicking on start & stop
 
-        this.OscOutput = this.Osc.context.createGain();
-        this.Osc.connect(this.OscOutput);
-        this.OscOutput.gain.value = 0.1;
-        this.OscOutput.connect(this.Osc.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        //TODO : Fucking work out how to ramp signals!!!
+
+
+        this.Osc.output.gain.value = 0.3;
+
+        this.Osc.toMaster(); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+
     }
 
     MouseDown() {
@@ -31,8 +35,14 @@ class Input extends Modifiable {
     MouseUp() {
         super.MouseUp();
 
+
         // stop a sound
-        this.Osc.stop();
+
+        var _this = this;
+        setTimeout(function() {
+            _this.Osc.stop();
+        }, 100);
+
     }
 
     Update(ctx:CanvasRenderingContext2D) {

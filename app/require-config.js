@@ -15,6 +15,7 @@ var require = {
         "Tone/core/Master",
         "Tone/source/Oscillator",
         "Tone/component/LFO",
+        "Tone/component/Envelope",
         "Tone/effect/PingPongDelay",
         "Tween"
     ],
