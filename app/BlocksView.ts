@@ -5,9 +5,9 @@ import IModifiable = require("./Blocks/IModifiable");
 import IModifier = require("./Blocks/IModifier");
 import AddItemToObservableCollectionOperation = require("./Operations/AddItemToObservableCollectionOperation");
 import OperationManager = require("./Operations/OperationManager");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 import IOperation = require("./Operations/IOperation");
 import IUndoableOperation = require("./Operations/IUndoableOperation");
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class BlocksView extends Fayde.Drawing.SketchContext {
 
@@ -163,7 +163,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         for (var i = 0; i < this.Blocks.length; i++){
             var block = this.Blocks[i];
             if (block.HitTest(point)){
-                (<any>e).args.Handled = true; // todo: need to handle on event tunneling or sketch handles it first
+                (<any>e).args.Handled = true;
             }
         }
     }

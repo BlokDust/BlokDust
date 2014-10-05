@@ -13,7 +13,7 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
         this.Index = index || -1;
     }
 
-    Execute():void {
+    Do():void {
         if (this.Index == -1 || this.Index >= this.Collection.Count){
             this.Collection.Add(this.Item);
         } else {
@@ -23,10 +23,6 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
 
     Undo():void {
         this.Collection.Remove(this.Item);
-    }
-
-    get Label():string{
-        return "Add item";
     }
 }
 
