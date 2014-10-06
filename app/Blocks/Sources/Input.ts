@@ -9,15 +9,24 @@ class Input extends Modifiable {
 
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
+    public OscOutput: GainNode;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
 
         this.Osc = new Tone.Oscillator(440, "square");
         this.Envelope = new Tone.Envelope(0.1, 0.5, 0.5, 0.1);
-        this.Envelope.connect(this.Osc.output.gain);
+        this.OscOutput = this.Osc.context.createGain();
+        this.OscOutput.gain.value = 0.5;
 
-        this.Osc.toMaster(); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        this.Envelope.connect(this.Osc.output.gain);
+        this.Osc.chain(this.Osc, this.OscOutput, this.OscOutput.context.destination);
+//        this.Osc.connect(this.OscOutput);
+//        this.OscOutput.connect(this.OscOutput.context.destination);
+
+
+
+        //TODO: Should connect to a master audio gain output with compression (in BlockView?)
         this.Osc.start();
     }
 

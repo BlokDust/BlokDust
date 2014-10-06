@@ -25,7 +25,8 @@
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="InputBlockBtn" Click="{EventBinding InputBlockBtn_Click}">Input</Button>
             <Button x:Name="OutputBlockBtn" Click="{EventBinding OutputBlockBtn_Click}">Output</Button>
-            <Button x:Name="VolumeDoublerBlockBtn" Click="{EventBinding VolumeDoublerBlockBtn_Click}">VolumeDoubler</Button>
+            <Button x:Name="VolumeIncreaseBlockBtn" Click="{EventBinding VolumeIncreaseBlockBtn_Click}">Volume +</Button>
+            <Button x:Name="VolumeDecreaseBlockBtn" Click="{EventBinding VolumeDecreaseBlockBtn_Click}">Volume -</Button>
             <Button x:Name="PitchIncreaseBlockBtn" Click="{EventBinding PitchIncreaseBlockBtn_Click}">Pitch +</Button>
             <Button x:Name="PitchDecreaseBlockBtn" Click="{EventBinding PitchDecreaseBlockBtn_Click}">Pitch -</Button>
             <Button x:Name="LFOBlockBtn" Click="{EventBinding LFOBlockBtn_Click}">LFO</Button>

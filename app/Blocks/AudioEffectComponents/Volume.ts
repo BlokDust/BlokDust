@@ -2,7 +2,7 @@ import IEffect = require("../IEffect");
 import IModifiable = require("../IModifiable");
 
 
-class VolumeDoubler implements IEffect {
+class Volume implements IEffect {
 
     public increment: number;
 
@@ -12,15 +12,15 @@ class VolumeDoubler implements IEffect {
 
     Connect(modifiable: IModifiable): void{
 
-        modifiable.Osc.output.gain.value *= this.increment;
+        modifiable.OscOutput.gain.value *= this.increment;
 
     }
 
     Disconnect(modifiable: IModifiable): void{
 
-        modifiable.Osc.output.gain.value /= this.increment;
+        modifiable.OscOutput.gain.value /= this.increment;
 
     }
 }
 
-export = VolumeDoubler;
+export = Volume;
