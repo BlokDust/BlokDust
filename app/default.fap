@@ -33,6 +33,7 @@
             <Button x:Name="LFOBlockBtn" Click="{EventBinding LFOBlockBtn_Click}">LFO</Button>
             <Button x:Name="DelayBlockBtn" Click="{EventBinding DelayBlockBtn_Click}">Delay</Button>
             <Button x:Name="ScuzzBlockBtn" Click="{EventBinding ScuzzBlockBtn_Click}">Scuzz</Button>
+            <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyboard</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <StackPanel Orientation="Horizontal">

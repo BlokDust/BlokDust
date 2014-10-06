@@ -15,6 +15,7 @@ import Envelope = require("../Blocks/Modifiers/Envelope");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
+import Keyboard = require("../Blocks/Modifiers/Keyboard");
 
 import Power = require("../Blocks/Sources/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -177,6 +178,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     ScuzzBlockBtn_Click(e: any){
         this._BlocksView.CreateModifier(Scuzz);
+    }
+
+    KeyboardBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(Keyboard);
     }
 
     DeleteBlockBtn_Click(e: any){
