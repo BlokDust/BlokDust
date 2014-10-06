@@ -6,9 +6,9 @@ class LFO implements IEffect {
 
     _LFO: Tone.LFO;
 
-    constructor() {
-        this._LFO = new Tone.LFO(3, -240, 480);
-        this._LFO.setType("triangle");
+    constructor(rate, outputMin, outputMax, waveform) {
+        this._LFO = new Tone.LFO(rate, outputMin, outputMax);
+        this._LFO.setType(waveform);
     }
 
     Connect(modifiable: IModifiable): void{

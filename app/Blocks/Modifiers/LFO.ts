@@ -8,7 +8,7 @@ class LFO extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new LFOComponent();
+        var effect = new LFOComponent(3, -240, 480, 'triangle');
 
         this.Effects.Add(effect);
 
