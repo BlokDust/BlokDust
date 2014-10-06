@@ -10,7 +10,7 @@
     "exjs": "~0.2.0",
     "Tone.js": "0.1.0",
     "fayde.utils": "0.1.9",
-    "fayde.zoomer": "0.1.2",
+    "fayde.zoomer": "0.1.4",
     "tween.ts": "0.1.1"
   }
 }
