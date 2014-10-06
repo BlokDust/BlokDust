@@ -97,7 +97,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this.ZoomContentSize = e.args.Size;
         this.ZoomContentOffset = e.args.Offset;
     }
-
+    
     ZoomIn_Click(){
         if (this.ZoomLevel < this._ZoomLevels){
             this.ZoomLevel += 1;
