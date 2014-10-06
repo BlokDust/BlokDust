@@ -5,8 +5,11 @@ import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import Input = require("../Blocks/Sources/Input");
-import VolumeDoubler = require("../Blocks/Modifiers/VolumeDoubler");
-import PitchDoubler = require("../Blocks/Modifiers/PitchDoubler");
+import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
+import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
+import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
+import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
+import Envelope = require("../Blocks/Modifiers/Envelope");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
@@ -143,12 +146,24 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateSource(Output);
     }
 
-    VolumeDoublerBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(VolumeDoubler);
+    VolumeIncreaseBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(VolumeIncrease);
     }
 
-    PitchDoublerBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(PitchDoubler);
+    VolumeDecreaseBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(VolumeDecrease);
+    }
+
+    PitchIncreaseBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(PitchIncrease);
+    }
+
+    PitchDecreaseBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(PitchDecrease);
+    }
+
+    EnvelopeBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(Envelope);
     }
 
     LFOBlockBtn_Click(e: any){

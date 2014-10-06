@@ -1,14 +1,14 @@
-import LFOComponent = require("../AudioEffectComponents/LFO");
+import EnvelopeComponent = require("../AudioEffectComponents/Envelope");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 
-class LFO extends Modifier {
+class Envelope extends Modifier {
 
 
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new LFOComponent(3, -240, 480, 'triangle');
+        var effect = new EnvelopeComponent(0.8, 0.9, 0.2, 0.9);
 
         this.Effects.Add(effect);
 
@@ -25,4 +25,4 @@ class LFO extends Modifier {
 
 }
 
-export = LFO;
+export = Envelope;

@@ -1,4 +1,4 @@
-import LFOEffect = require("../Effects/LFO");
+import LFOComponent = require("../AudioEffectComponents/LFO");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 
@@ -8,11 +8,11 @@ class Scuzz extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new LFOEffect();
+        var effect = new LFOComponent(440, 200, 1800, 'sawtooth');
         effect._LFO.setType('sawtooth');
-        effect._LFO.setFrequency(440);
-        effect._LFO.setMax(1800);
-        effect._LFO.setMin(200);
+//        effect._LFO.setFrequency(440);
+//        effect._LFO.setMax(1800);
+//        effect._LFO.setMin(200);
 
 
         this.Effects.Add(effect);

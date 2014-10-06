@@ -7,6 +7,25 @@ interface IModifiable extends IBlock{
     AddModifier(modifier: IModifier): void;
     RemoveModifier(modifier: IModifier): void;
     Osc: Tone.Oscillator;
+    Envelope: Tone.Envelope;
+    OscOutput: GainNode;
+
+    params?: {
+        oscillator: {
+            frequency: number;
+            waveform: string;
+        }
+        envelope: {
+            attack: number;
+            decay: number;
+            sustain: number;
+            release: number;
+        }
+        output: {
+            volume: number;
+        }
+    };
+
 }
 
 export = IModifiable;

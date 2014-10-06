@@ -9,7 +9,7 @@ interface Tone {
     input: GainNode;
     output: GainNode;
 
-    chain(): void;
+    chain(...args: any[]): void;
     connect(unit: any, outputNum?:number, inputNum?:number): void;
     dbToGain(db: number): number;
     defaultArg(given: any, fallback: any): any; // if both args are objects, properties added to fallback

@@ -15,15 +15,14 @@ class Delay implements IEffect {
     }
 
     Connect(modifiable: IModifiable): void{
-
         modifiable.Osc.connect(this.feedbackDelay);
-        this.feedbackDelay.toMaster();
+        this.feedbackDelay.connect(modifiable.OscOutput);
 
     }
 
     Disconnect(modifiable: IModifiable): void {
         modifiable.Osc.disconnect();
-        modifiable.Osc.toMaster();
+        modifiable.Osc.connect(modifiable.OscOutput);
 
         //TODO: Do some sort of fade out to stop clicking
     }

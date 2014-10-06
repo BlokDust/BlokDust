@@ -1,13 +1,13 @@
-import VolumeDoublerEffect = require("../Effects/VolumeDoubler");
+import VolumeComponent = require("../AudioEffectComponents/Volume");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 
-class VolumeDoubler extends Modifier {
+class VolumeDecrease extends Modifier {
 
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new VolumeDoublerEffect();
+        var effect = new VolumeComponent(0.5);
         this.Effects.Add(effect);
     }
 
@@ -22,4 +22,4 @@ class VolumeDoubler extends Modifier {
 
 }
 
-export = VolumeDoubler;
+export = VolumeDecrease;
