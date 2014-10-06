@@ -1,8 +1,7 @@
 
 interface IOperation
 {
-    Execute():void;
-    Label:String;
+    Do():void;
 }
 
 export = IOperation;
