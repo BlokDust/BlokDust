@@ -12,13 +12,13 @@ class Volume implements IEffect {
 
     Connect(modifiable: IModifiable): void{
 
-        modifiable.OscOutput.gain.value *= this.increment;
+        modifiable.OutputGain.gain.value *= this.increment;
 
     }
 
     Disconnect(modifiable: IModifiable): void{
 
-        modifiable.OscOutput.gain.value /= this.increment;
+        modifiable.OutputGain.gain.value /= this.increment;
 
     }
 }

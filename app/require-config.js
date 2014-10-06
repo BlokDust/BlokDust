@@ -14,6 +14,7 @@ var require = {
         "Tone/core/Tone",
         "Tone/core/Master",
         "Tone/source/Oscillator",
+        "Tone/source/Noise",
         "Tone/component/LFO",
         "Tone/component/Envelope",
         "Tone/effect/PingPongDelay",

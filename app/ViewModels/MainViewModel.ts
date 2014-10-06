@@ -4,7 +4,9 @@ import BlocksView = require("../BlocksView");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
-import Input = require("../Blocks/Sources/Input");
+import ToneSource = require("../Blocks/Sources/ToneSource");
+import Noise = require("../Blocks/Sources/Noise");
+
 import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
 import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
@@ -14,7 +16,6 @@ import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
 
-import Output = require("../Blocks/Sources/Output");
 import Power = require("../Blocks/Sources/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Size = Fayde.Utils.Size;
@@ -126,12 +127,12 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateSource(Power);
     }
 
-    InputBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(Input);
+    ToneBlockBtn_Click(e: EventArgs){
+        this._BlocksView.CreateSource(ToneSource);
     }
 
-    OutputBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(Output);
+    NoiseBlockBtn_Click(e: EventArgs){
+        this._BlocksView.CreateSource(Noise);
     }
 
     VolumeIncreaseBlockBtn_Click(e: any){

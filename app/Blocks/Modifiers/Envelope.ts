@@ -19,7 +19,7 @@ class Envelope extends Modifier {
 
         ctx.beginPath();
         ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 30, 30);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(161, 191, 114)" : "rgb(168, 192, 124)";
+        ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(121, 191, 184)" : "rgb(128, 192, 184)";
         ctx.fill();
     }
 

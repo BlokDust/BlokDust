@@ -12,19 +12,25 @@ class LFO implements IEffect {
     }
 
     Connect(modifiable: IModifiable): void{
+        if (modifiable.params.noise){
+            // LFO's and pitches cannot work on Noise Blocks
+            return;
+        }
 
-        console.log(modifiable.Osc.detune.getValue());
         this._LFO.connect(modifiable.Osc.detune);
         this._LFO.start();
-        console.log(modifiable.Osc.detune.getValue());
 
     }
 
     Disconnect(modifiable: IModifiable): void {
+        if (modifiable.params.noise){
+            // LFO's and pitches cannot work on Noise Blocks
+            return;
+        }
+
         this._LFO.stop();
         this._LFO.disconnect();
         modifiable.Osc.detune.setValue(0);
-        console.log(modifiable.Osc.detune.getValue());
 
         //TODO: There is a bug where LFO effect isn't consistent. I've submitted an issue to Yotam
     }

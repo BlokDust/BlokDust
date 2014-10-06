@@ -5,11 +5,11 @@ import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 
-class Input extends Modifiable {
+class ToneSource extends Modifiable {
 
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
-    public OscOutput: GainNode;
+    public OutputGain: GainNode;
     public params: {
         oscillator: {
             frequency: number;
@@ -49,11 +49,11 @@ class Input extends Modifiable {
 
         this.Osc = new Tone.Oscillator(this.params.oscillator.frequency, this.params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.params.envelope.attack, this.params.envelope.decay, this.params.envelope.sustain, this.params.envelope.release);
-        this.OscOutput = this.Osc.context.createGain();
-        this.OscOutput.gain.value = this.params.output.volume;
+        this.OutputGain = this.Osc.context.createGain();
+        this.OutputGain.gain.value = this.params.output.volume;
 
         this.Envelope.connect(this.Osc.output.gain);
-        this.Osc.chain(this.Osc, this.OscOutput, this.OscOutput.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
         this.Osc.start();
     }
 
@@ -87,4 +87,4 @@ class Input extends Modifiable {
     }
 }
 
-export = Input;
+export = ToneSource;

@@ -15,16 +15,28 @@ class Delay implements IEffect {
     }
 
     Connect(modifiable: IModifiable): void{
-        modifiable.Osc.connect(this.feedbackDelay);
-        this.feedbackDelay.connect(modifiable.OscOutput);
+        // Check if it's an Tone or a Noise
+        if (modifiable.params.oscillator){
+            modifiable.Osc.connect(this.feedbackDelay);
+        } else {
+            modifiable.Noise.connect(this.feedbackDelay);
+        }
+
+        this.feedbackDelay.connect(modifiable.OutputGain);
 
     }
 
     Disconnect(modifiable: IModifiable): void {
-        modifiable.Osc.disconnect();
-        modifiable.Osc.connect(modifiable.OscOutput);
 
-        //TODO: Do some sort of fade out to stop clicking
+        if (modifiable.params.oscillator){
+            modifiable.Osc.disconnect();
+            modifiable.Osc.connect(modifiable.OutputGain);
+        }
+
+        else {
+            modifiable.Noise.disconnect();
+            modifiable.Noise.connect(modifiable.OutputGain);
+        }
     }
 }
 
