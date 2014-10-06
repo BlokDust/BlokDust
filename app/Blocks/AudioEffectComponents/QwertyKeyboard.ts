@@ -41,7 +41,6 @@ class KeyboardComponent implements IEffect {
 
     Disconnect(modifiable: IModifiable): void{
         this.removeListeners();
-        console.log('disconnect');
     }
 
     KeyDown(): void {
@@ -53,7 +52,6 @@ class KeyboardComponent implements IEffect {
     }
 
     addListeners() {
-        var _this = this;
         window.addEventListener('keydown', this.KeyDown);
         window.addEventListener('keyup', this.KeyUp);
     }

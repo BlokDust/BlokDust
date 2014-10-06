@@ -18,8 +18,7 @@ class Keyboard extends Modifier {
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 30, 30);
-        ctx.rect(this.Position.X+15 - this.Radius, this.Position.Y - this.Radius, 30, 30);
+        ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 50, 30);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(121, 191, 184)" : "rgb(128, 192, 184)";
         ctx.fill();
     }
