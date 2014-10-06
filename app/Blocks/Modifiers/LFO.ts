@@ -1,4 +1,4 @@
-import LFOEffect = require("../Effects/LFO");
+import LFOComponent = require("../AudioEffectComponents/LFO");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 
@@ -8,7 +8,7 @@ class LFO extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new LFOEffect();
+        var effect = new LFOComponent();
 
         this.Effects.Add(effect);
 

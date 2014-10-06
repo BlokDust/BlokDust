@@ -1,4 +1,4 @@
-import PitchModule = require("../Effects/Pitch");
+import PitchModule = require("../AudioEffectComponents/Pitch");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 

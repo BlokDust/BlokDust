@@ -1,4 +1,4 @@
-import DelayEffect = require("../Effects/Delay");
+import DelayComponent = require("../AudioEffectComponents/Delay");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 
@@ -8,7 +8,7 @@ class Delay extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new DelayEffect();
+        var effect = new DelayComponent();
 
         this.Effects.Add(effect);
 
