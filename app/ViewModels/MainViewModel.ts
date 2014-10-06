@@ -26,6 +26,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     private _BlocksView: BlocksView;
     private _SelectedBlock: IBlock;
     private _ZoomLevel: number = 0;
+    private _ZoomLevels: number = 3;
     private _ZoomContentOffset: Vector;
     private _ZoomContentSize: Size;
 
@@ -43,10 +44,17 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     set ZoomLevel(value: number) {
-
         this._ZoomLevel = value;
-
         this.OnPropertyChanged("ZoomLevel");
+    }
+
+    get ZoomLevels(): number {
+        return this._ZoomLevels;
+    }
+
+    set ZoomLevels(value: number) {
+        this._ZoomLevels = value;
+        this.OnPropertyChanged("ZoomLevels");
     }
 
     get ZoomContentSize(): Size {
@@ -90,13 +98,17 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this.ZoomContentSize = e.args.Size;
         this.ZoomContentOffset = e.args.Offset;
     }
-
+    
     ZoomIn_Click(){
-        this.ZoomLevel += 1;
+        if (this.ZoomLevel < this._ZoomLevels){
+            this.ZoomLevel += 1;
+        }
     }
 
     ZoomOut_Click(){
-        this.ZoomLevel -= 1;
+        if (this.ZoomLevel > 0){
+            this.ZoomLevel -= 1;
+        }
     }
 
     BlocksView_Draw(e: Fayde.IEventBindingArgs<Fayde.Drawing.SketchDrawEventArgs>){
