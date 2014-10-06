@@ -6,7 +6,8 @@ import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import Input = require("../Blocks/Sources/Input");
 import VolumeDoubler = require("../Blocks/Modifiers/VolumeDoubler");
-import PitchDoubler = require("../Blocks/Modifiers/PitchDoubler");
+import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
+import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
@@ -135,8 +136,12 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateModifier(VolumeDoubler);
     }
 
-    PitchDoublerBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(PitchDoubler);
+    PitchIncreaseBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(PitchIncrease);
+    }
+
+    PitchDecreaseBlockBtn_Click(e: any){
+        this._BlocksView.CreateModifier(PitchDecrease);
     }
 
     LFOBlockBtn_Click(e: any){

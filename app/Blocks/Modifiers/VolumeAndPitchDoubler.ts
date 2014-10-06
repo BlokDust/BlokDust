@@ -7,7 +7,7 @@ class VolumeDoubler extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new VolumeDoublerEffect();
+        var effect = new VolumeDoublerEffect(2);
         this.Effects.Add(effect);
     }
 }

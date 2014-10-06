@@ -14,7 +14,7 @@ class Input extends Modifiable {
         super(ctx, position);
 
         this.Osc = new Tone.Oscillator(440, "square");
-        this.Envelope = new Tone.Envelope(0.1, 0.5, 0.2, 0.1);
+        this.Envelope = new Tone.Envelope(0.1, 0.5, 0.5, 0.1);
         this.Envelope.connect(this.Osc.output.gain);
 
         this.Osc.toMaster(); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
