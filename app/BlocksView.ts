@@ -186,7 +186,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this._SelectedBlock.MouseMove(this._NormalisePoint(point));
         }
 
-        if (!this._IsMouseDown) return;
+        //if (!this._IsMouseDown) return;
 
         this._CheckProximity();
     }
