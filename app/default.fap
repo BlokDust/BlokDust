@@ -24,7 +24,9 @@
         <StackPanel Grid.ZIndex="2" Grid.Row="0" Orientation="Horizontal">
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="ToneBlockBtn" Click="{EventBinding ToneBlockBtn_Click}">Tone</Button>
+            <Button x:Name="KeyboardInputBlockBtn" Click="{EventBinding KeyboardInputBlockBtn_Click}">KeyboardInput</Button>
             <Button x:Name="MouseFollowerBlockBtn" Click="{EventBinding MouseFollowerBlockBtn_Click}">Mouse Follower</Button>
+
             <Button x:Name="NoiseBlockBtn" Click="{EventBinding NoiseBlockBtn_Click}">Noise</Button>
             <Button x:Name="VolumeIncreaseBlockBtn" Click="{EventBinding VolumeIncreaseBlockBtn_Click}">Volume +</Button>
             <Button x:Name="VolumeDecreaseBlockBtn" Click="{EventBinding VolumeDecreaseBlockBtn_Click}">Volume -</Button>

@@ -7,7 +7,7 @@ class PitchDecrease extends Modifier {
     constructor(ctx:CanvasRenderingContext2D, point: Point){
         super(ctx, point);
 
-        var effect = new PitchModule(0.75); // Pitch decreases by 4ths
+        var effect = new PitchModule(0.5); // Pitch decreases by 4ths
 
         //TODO: Make pitch modifier take parameter scaled to musical notation: (EXAMPLE 1=A4, 2=Bb4 3=B4, 4=C4...)
 

@@ -18,7 +18,7 @@ class ToneSource extends Modifiable {
         this.Params = {
             oscillator: {
                 frequency: 340,
-                waveform: 'square'
+                waveform: 'sawtooth'
             },
             envelope: {
                 attack: 0.02,

@@ -1,9 +1,17 @@
-import IEffect = require("../IEffect");
-import Effect = require("../Effect");
-import IModifiable = require("../IModifiable");
+/// <reference path="../../refs.ts" />
+
+import IBlock = require("../IBlock");
+import Block = require("../Block");
+import IModifier = require("../IModifier");
+import Modifiable = require("../Modifiable");
 
 
-class KeyboardComponent extends Effect implements IEffect {
+class KeyboardInput extends Modifiable {
+
+    public Osc: Tone.Oscillator;
+    public Envelope: Tone.Envelope;
+    public OutputGain: GainNode;
+    public Params: ToneSettings;
 
     keysDown = {};
     key_map = {
@@ -39,43 +47,59 @@ class KeyboardComponent extends Effect implements IEffect {
     };
 
 
-    constructor() {
-        super();
+    constructor(ctx:CanvasRenderingContext2D, position:Point) {
+        super(ctx, position);
+
+        this.Params = {
+            oscillator: {
+                frequency: 340,
+                waveform: 'sawtooth'
+            },
+            envelope: {
+                attack: 0.02,
+                decay: 0.5,
+                sustain: 0.5,
+                release: 0.02
+            },
+            output: {
+                volume: 0.5
+            }
+
+        };
+
+        this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
+        this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
+        this.OutputGain = this.Osc.context.createGain();
+        this.OutputGain.gain.value = this.Params.output.volume;
+
+        this.Envelope.connect(this.Osc.output.gain);
+        this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        this.Osc.start();
+
         //Get the Start Octave from the start Note
         this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
-    }
 
-    Connect(modifiable: IModifiable): void{
-        super.Connect(modifiable);
         this.addListeners();
     }
 
-    Disconnect(): void{
-
-        this.removeListeners();
+    Update(ctx:CanvasRenderingContext2D) {
+        super.Update(ctx);
     }
+
+
 
     KeyDown(frequency): void {
         console.log('Play '+frequency);
-        if (this.Modifiable.Params.noise){
-            // Pitches cannot work on Noise Blocks
-            this.Modifiable.Envelope.triggerAttack();
-            return;
-        }
-        this.Modifiable.Osc.frequency.setValue(frequency);
-        this.Modifiable.Envelope.triggerAttack();
-        //TODO: if two keys pressed slide frequendcy
+        this.Osc.frequency.setValue(frequency);
+        this.Envelope.triggerAttack();
+
+        //TODO: if two keys pressed slide frequency
     }
 
     KeyUp(frequency): void {
         console.log('Stop '+frequency);
 
-        if (this.Modifiable.Params.noise){
-            // Pitches cannot work on Noise Blocks
-            this.Modifiable.Envelope.triggerRelease();
-            return;
-        }
-        this.Modifiable.Envelope.triggerRelease();
+        this.Envelope.triggerRelease();
         //TODO: Fix release bug
     }
 
@@ -161,6 +185,16 @@ class KeyboardComponent extends Effect implements IEffect {
         return 440 * Math.pow(2, (key_number - 49) / 12);
     }
 
+    // input blocks are red circles
+    Draw(ctx:CanvasRenderingContext2D) {
+        super.Draw(ctx);
+
+        ctx.beginPath();
+        ctx.arc(this.Position.X, this.Position.Y, this.Radius, 0, Math.TAU, false);
+        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e1b1e1" : "#f1b0e0";
+        ctx.fill();
+    }
+
 }
 
-export = KeyboardComponent;
+export = KeyboardInput;
