@@ -6,4 +6,5 @@
 /// <reference path="./lib/tween.ts/src/Tween.d.ts" />
 /// <reference path="./Tone.d.ts" />
 /// <reference path="./waa.d.ts" />
+/// <reference path="./ToneSettings.d.ts" />
 /// <reference path="./es6-promise.d.ts" />

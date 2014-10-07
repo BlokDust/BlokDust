@@ -10,25 +10,12 @@ class Noise extends Modifiable {
     public Noise: Tone.Noise;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
-    public params: {
-        noise: {
-            waveform: string;
-        }
-        envelope: {
-            attack: number;
-            decay: number;
-            sustain: number;
-            release: number;
-        }
-        output: {
-            volume: number;
-        }
-    };
+    public Params: ToneSettings;
 
     constructor(ctx:CanvasRenderingContext2D, position: Point) {
         super(ctx, position);
 
-        this.params = {
+        this.Params = {
             noise: {
                 waveform: 'brown'
             },
@@ -44,10 +31,10 @@ class Noise extends Modifiable {
 
         };
 
-        this.Noise = new Tone.Noise(this.params.noise.waveform);
-        this.Envelope = new Tone.Envelope(this.params.envelope.attack, this.params.envelope.decay, this.params.envelope.sustain, this.params.envelope.release);
+        this.Noise = new Tone.Noise(this.Params.noise.waveform);
+        this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
         this.OutputGain = this.Noise.context.createGain();
-        this.OutputGain.gain.value = this.params.output.volume;
+        this.OutputGain.gain.value = this.Params.output.volume;
 
         this.Envelope.connect(this.Noise.output.gain);
         this.Noise.chain(this.Noise, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)

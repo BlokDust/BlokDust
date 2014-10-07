@@ -11,6 +11,7 @@ class Modifiable extends Block implements IModifiable{
     public Noise: Tone.Noise;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
+    public Params: ToneSettings;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
@@ -89,7 +90,7 @@ class Modifiable extends Block implements IModifiable{
     }
 
     private _DisconnectEffect(effect: IEffect) {
-        effect.Disconnect(this);
+        effect.Disconnect();
     }
 
 }

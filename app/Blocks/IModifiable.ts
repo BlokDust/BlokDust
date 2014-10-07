@@ -10,25 +10,8 @@ interface IModifiable extends IBlock{
     Noise: Tone.Noise;
     Envelope: Tone.Envelope;
     OutputGain: GainNode;
+    Params: ToneSettings;
 
-    params?: {
-        oscillator?: {
-            frequency: number;
-            waveform: string;
-        }
-        noise?: {
-            waveform: string;
-        }
-        envelope: {
-            attack: number;
-            decay: number;
-            sustain: number;
-            release: number;
-        }
-        output: {
-            volume: number;
-        }
-    };
 
 }
 

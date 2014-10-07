@@ -1,31 +1,33 @@
 import IEffect = require("../IEffect");
+import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 
 
-class PitchComponent implements IEffect {
+class PitchComponent extends Effect implements IEffect {
 
     public increment: number;
 
     constructor(increment) {
+        super();
         this.increment = increment;
     }
 
     Connect(modifiable: IModifiable): void{
-        if (modifiable.params.noise){
+        if (this.Modifiable.Params.noise){
             // LFO's and pitches cannot work on Noise Blocks
             return;
         }
-        var _value = modifiable.Osc.frequency.getValue();
-        modifiable.Osc.frequency.setValue(_value * this.increment);
+        var _value = this.Modifiable.Osc.frequency.getValue();
+        this.Modifiable.Osc.frequency.setValue(_value * this.increment);
     }
 
-    Disconnect(modifiable: IModifiable): void{
-        if (modifiable.params.noise){
+    Disconnect(): void{
+        if (this.Modifiable.Params.noise){
             // LFO's and pitches cannot work on Noise Blocks
             return;
         }
-        var _value = modifiable.Osc.frequency.getValue();
-        modifiable.Osc.frequency.setValue(_value / this.increment);
+        var _value = this.Modifiable.Osc.frequency.getValue();
+        this.Modifiable.Osc.frequency.setValue(_value / this.increment);
     }
 }
 

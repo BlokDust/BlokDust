@@ -10,27 +10,12 @@ class ToneSource extends Modifiable {
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
-    public params: {
-        oscillator: {
-            frequency: number;
-            waveform: string;
-        }
-        envelope: {
-            attack: number;
-            decay: number;
-            sustain: number;
-            release: number;
-        }
-        output: {
-            volume: number;
-        }
-    };
+    public Params: ToneSettings;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
 
-        //TODO: Shall we save these default parameters in a separate options file?
-        this.params = {
+        this.Params = {
             oscillator: {
                 frequency: 340,
                 waveform: 'square'
@@ -47,10 +32,10 @@ class ToneSource extends Modifiable {
 
         };
 
-        this.Osc = new Tone.Oscillator(this.params.oscillator.frequency, this.params.oscillator.waveform);
-        this.Envelope = new Tone.Envelope(this.params.envelope.attack, this.params.envelope.decay, this.params.envelope.sustain, this.params.envelope.release);
+        this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
+        this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
         this.OutputGain = this.Osc.context.createGain();
-        this.OutputGain.gain.value = this.params.output.volume;
+        this.OutputGain.gain.value = this.Params.output.volume;
 
         this.Envelope.connect(this.Osc.output.gain);
         this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
