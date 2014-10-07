@@ -137,7 +137,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
                 // if a source is close enough to the modifier, add the modifier
                 // to its internal list.
                 var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
-                var distanceFromModifier = source.DistanceFrom(modifier.Position);
+                var distanceFromModifier = source.DistanceFrom(modifier.AbsPosition);
 
                 if (distanceFromModifier <= catchmentArea) {
                     if (!source.Modifiers.Contains(modifier)){

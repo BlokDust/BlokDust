@@ -18,7 +18,7 @@ class Delay extends Modifier {
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 30, 30);
+        ctx.rect(this.AbsPosition.X - this.Radius, this.AbsPosition.Y - this.Radius, 30, 30);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(161, 131, 184)" : "rgb(168, 132, 184)";
         ctx.fill();
     }

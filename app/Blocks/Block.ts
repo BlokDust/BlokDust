@@ -7,7 +7,7 @@ class Block implements IBlock {
 
     public Id: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    private _Position: Point;
+    public Position: Point;
     public Radius: number = 20;
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
@@ -17,13 +17,13 @@ class Block implements IBlock {
     // normalised point
     constructor(ctx: CanvasRenderingContext2D, position: Point) {
         this.Ctx = ctx;
-        this._Position = position;
+        this.Position = position;
         this.Update(ctx);
     }
 
     // returns the Block's absolute position
-    get Position(): Point {
-        return new Point(this._Position.X * this._CtxSize.Width, this._Position.Y * this._CtxSize.Height);
+    get AbsPosition(): Point {
+        return new Point(this.Position.X * this._CtxSize.Width, this.Position.Y * this._CtxSize.Height);
     }
 
     Update(ctx: CanvasRenderingContext2D) {
@@ -39,7 +39,7 @@ class Block implements IBlock {
 
     MouseDown() {
         this.IsPressed = true;
-        this.Click.Raise(this, new Fayde.RoutedEventArgs());
+        this.OnClick();
     }
 
     MouseUp() {
@@ -49,8 +49,12 @@ class Block implements IBlock {
     // relative point
     MouseMove(point: Point) {
         if (this.IsPressed) {
-            this._Position = point;
+            this.Position = point;
         }
+    }
+
+    OnClick() {
+        this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
     // absolute point
@@ -67,7 +71,7 @@ class Block implements IBlock {
 
     // absolute point
     DistanceFrom(point: Point): number{
-        return Math.distanceBetween(this.Position.X, this.Position.Y, point.X, point.Y);
+        return Math.distanceBetween(this.AbsPosition.X, this.AbsPosition.Y, point.X, point.Y);
     }
 }
 

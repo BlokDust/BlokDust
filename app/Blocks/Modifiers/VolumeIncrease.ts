@@ -15,7 +15,7 @@ class VolumeIncrease extends Modifier {
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 40, 40);
+        ctx.rect(this.AbsPosition.X - this.Radius, this.AbsPosition.Y - this.Radius, 40, 40);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#DDD" : "#333";
         ctx.fill();
     }

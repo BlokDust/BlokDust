@@ -65,7 +65,7 @@ class Noise extends Modifiable {
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.arc(this.Position.X, this.Position.Y, this.Radius, 0, Math.TAU, false);
+        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#7176e1" : "#000be6";
         ctx.fill();
     }
