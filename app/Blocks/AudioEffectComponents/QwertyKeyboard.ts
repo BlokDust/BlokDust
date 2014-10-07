@@ -32,6 +32,8 @@ class KeyboardComponent implements IEffect {
         startOctave: null,
         startNote: 'A3',
         keyPressOffset: null
+
+        //TODO: Monophonic & polyphonic settings
     };
 
 
@@ -41,44 +43,50 @@ class KeyboardComponent implements IEffect {
     }
 
     Connect(modifiable: IModifiable): void{
-        this.addListeners();
+        this.addListeners(modifiable);
     }
 
     Disconnect(modifiable: IModifiable): void{
-        this.removeListeners();
+        this.removeListeners(modifiable);
     }
 
-    KeyDown(frequency): void {
+    KeyDown(frequency, modifiable: IModifiable): void {
         console.log('Play '+frequency);
-        //TODO: Pass this frequency to modifiable.Osc.frequency
+        modifiable.Osc.frequency.setValue(frequency);
+        modifiable.Envelope.triggerAttack();
+        //TODO: if two keys pressed slide frequency
     }
 
-    KeyUp(frequency): void {
+    KeyUp(frequency, modifiable: IModifiable): void {
         console.log('Stop '+frequency);
-        //TODO: Pass this frequency to modifiable.Osc.frequency
+        modifiable.Osc.frequency.setValue(frequency);
+        modifiable.Envelope.triggerRelease();
+        //TODO: Fix release bug
     }
 
-    addListeners(): void {
+    addListeners(modifiable): void {
         var _this = this;
         window.addEventListener('keydown', function(key) {
-            _this.keyboardDown(key);
+            _this.keyboardDown(key, modifiable);
         });
         window.addEventListener('keyup', function(key) {
-            _this.keyboardUp(key);
+            _this.keyboardUp(key, modifiable);
         });
     }
 
-    removeListeners(): void {
+    removeListeners(modifiable): void {
         var _this = this;
         window.removeEventListener('keydown', function(key) {
-            _this.keyboardDown(key);
+            _this.keyboardDown(key, modifiable);
         });
         window.removeEventListener('keyup', function(key) {
-            _this.keyboardUp(key);
+            _this.keyboardUp(key, modifiable);
         });
+
+        //TODO: Fix remove listeners on disconnect
     }
 
-    keyboardDown(key): void {
+    keyboardDown(key, modifiable: IModifiable): void {
         //if it's already pressed (holding note)
         if (key.keyCode in this.keysDown) {
             return;
@@ -90,11 +98,11 @@ class KeyboardComponent implements IEffect {
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
             var keyPressed = this.getKeyPressed(key.keyCode);
             var frequency = this.getFrequencyOfNote(keyPressed);
-            this.KeyDown(frequency);
+            this.KeyDown(frequency, modifiable);
         }
     }
 
-    keyboardUp(key): void {
+    keyboardUp(key, modifiable: IModifiable): void {
         // remove this key from the keysDown object
         delete this.keysDown[key.keyCode];
 
@@ -102,7 +110,7 @@ class KeyboardComponent implements IEffect {
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
             var keyPressed = this.getKeyPressed(key.keyCode);
             var frequency = this.getFrequencyOfNote(keyPressed);
-            this.KeyUp(frequency);
+            this.KeyUp(frequency, modifiable);
         }
     }
 
