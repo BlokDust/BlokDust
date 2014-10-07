@@ -1,12 +1,14 @@
 import IEffect = require("../IEffect");
+import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 
 
-class Delay implements IEffect {
+class Delay extends Effect implements IEffect {
 
     feedbackDelay: Tone.PingPongDelay;
 
     constructor() {
+        super();
         this.feedbackDelay = new Tone.PingPongDelay("8n");
 
         this.feedbackDelay.setFeedback(0.9); // 90% feedback
@@ -14,28 +16,29 @@ class Delay implements IEffect {
 
     }
 
-    Connect(modifiable: IModifiable): void{
+    Connect(modifiable: IModifiable): void {
+        super.Connect(modifiable);
         // Check if it's an Tone or a Noise
-        if (modifiable.params.oscillator){
-            modifiable.Osc.connect(this.feedbackDelay);
+        if (this.Modifiable.Params.oscillator){
+            this.Modifiable.Osc.connect(this.feedbackDelay);
         } else {
-            modifiable.Noise.connect(this.feedbackDelay);
+            this.Modifiable.Noise.connect(this.feedbackDelay);
         }
 
-        this.feedbackDelay.connect(modifiable.OutputGain);
+        this.feedbackDelay.connect(this.Modifiable.OutputGain);
 
     }
 
-    Disconnect(modifiable: IModifiable): void {
+    Disconnect(): void {
 
-        if (modifiable.params.oscillator){
-            modifiable.Osc.disconnect();
-            modifiable.Osc.connect(modifiable.OutputGain);
+        if (this.Modifiable.Params.oscillator){
+            this.Modifiable.Osc.disconnect();
+            this.Modifiable.Osc.connect(this.Modifiable.OutputGain);
         }
 
         else {
-            modifiable.Noise.disconnect();
-            modifiable.Noise.connect(modifiable.OutputGain);
+            this.Modifiable.Noise.disconnect();
+            this.Modifiable.Noise.connect(this.Modifiable.OutputGain);
         }
     }
 }

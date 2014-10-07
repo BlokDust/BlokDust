@@ -1,8 +1,9 @@
 import IEffect = require("../IEffect");
+import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 
 
-class EnvelopeComponent implements IEffect {
+class EnvelopeComponent extends Effect implements IEffect {
 
     public attack: number;
     public decay: number;
@@ -11,6 +12,7 @@ class EnvelopeComponent implements IEffect {
 
 
     constructor(attack, decay, sustain, release) {
+        super();
         this.attack = attack;
         this.decay = decay;
         this.sustain = sustain;
@@ -18,17 +20,18 @@ class EnvelopeComponent implements IEffect {
     }
 
     Connect(modifiable: IModifiable): void{
-        modifiable.Envelope.setAttack(this.attack);
-        modifiable.Envelope.setDecay(this.decay);
-        modifiable.Envelope.setSustain(this.sustain);
-        modifiable.Envelope.setRelease(this.release);
+        super.Connect(modifiable);
+        this.Modifiable.Envelope.setAttack(this.attack);
+        this.Modifiable.Envelope.setDecay(this.decay);
+        this.Modifiable.Envelope.setSustain(this.sustain);
+        this.Modifiable.Envelope.setRelease(this.release);
     }
 
-    Disconnect(modifiable: IModifiable): void{
-        modifiable.Envelope.setAttack(modifiable.params.envelope.attack);
-        modifiable.Envelope.setDecay(modifiable.params.envelope.decay);
-        modifiable.Envelope.setSustain(modifiable.params.envelope.sustain);
-        modifiable.Envelope.setRelease(modifiable.params.envelope.release);
+    Disconnect(): void{
+        this.Modifiable.Envelope.setAttack(this.Modifiable.Params.envelope.attack);
+        this.Modifiable.Envelope.setDecay(this.Modifiable.Params.envelope.decay);
+        this.Modifiable.Envelope.setSustain(this.Modifiable.Params.envelope.sustain);
+        this.Modifiable.Envelope.setRelease(this.Modifiable.Params.envelope.release);
     }
 }
 
