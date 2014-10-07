@@ -20,7 +20,7 @@ class Power extends Modifiable{
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.arc(this.Position.X, this.Position.Y, this.Radius, 0, Math.TAU, false);
+        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#74d544" : "#3cb500";
         ctx.fill();
     }

@@ -19,7 +19,7 @@ class PitchDecrease extends Modifier {
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.rect(this.Position.X - this.Radius, this.Position.Y - this.Radius, 40, 40);
+        ctx.rect(this.AbsPosition.X - this.Radius, this.AbsPosition.Y - this.Radius, 40, 40);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(171, 161, 114)" : "rgb(178, 171, 124)";
         ctx.fill();
     }

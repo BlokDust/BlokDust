@@ -5,6 +5,7 @@ import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
+import MouseFollower = require("../Blocks/Sources/MouseFollower");
 import Noise = require("../Blocks/Sources/Noise");
 import KeyboardInput = require("../Blocks/Sources/Keyboard");
 
@@ -100,7 +101,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this.ZoomContentSize = e.args.Size;
         this.ZoomContentOffset = e.args.Offset;
     }
-    
+
     ZoomIn_Click(){
         if (this.ZoomLevel < this._ZoomLevels){
             this.ZoomLevel += 1;
@@ -143,6 +144,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     ToneBlockBtn_Click(e: EventArgs){
         this._BlocksView.CreateSource(ToneSource);
+    }
+
+    MouseFollowerBlockBtn_Click(e: EventArgs){
+        this._BlocksView.CreateSource(MouseFollower);
     }
 
     NoiseBlockBtn_Click(e: EventArgs){

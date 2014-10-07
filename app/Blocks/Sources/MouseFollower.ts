@@ -5,12 +5,13 @@ import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 
-class ToneSource extends Modifiable {
+class MouseFollower extends Modifiable {
 
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
     public Params: ToneSettings;
+    private _FollowMouse: boolean = false;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
@@ -18,7 +19,7 @@ class ToneSource extends Modifiable {
         this.Params = {
             oscillator: {
                 frequency: 340,
-                waveform: 'sawtooth'
+                waveform: 'square'
             },
             envelope: {
                 attack: 0.02,
@@ -40,21 +41,51 @@ class ToneSource extends Modifiable {
         this.Envelope.connect(this.Osc.output.gain);
         this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
         this.Osc.start();
+
+        window.addEventListener('keydown', (key: any) => {
+            if (key.keyCode == 32){
+                this.KeyDown();
+            }
+        });
+        window.addEventListener('keyup', (key: any) => {
+            if (key.keyCode == 32){
+                this.KeyUp();
+            }
+        });
     }
 
     MouseDown() {
         super.MouseDown();
-
-        // play tone
-        this.Envelope.triggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
+    }
 
+    MouseMove(point: Point) {
+        if (this._FollowMouse){
+            this.Position = point;
+        }
+    }
+
+    OnClick(){
+        super.OnClick();
+
+        this._FollowMouse = !this._FollowMouse;
+    }
+
+    KeyDown() {
+        // play tone
+        if (this.IsSelected){
+            this.Envelope.triggerAttack();
+        }
+    }
+
+    KeyUp() {
         // stop tone
-        this.Envelope.triggerRelease();
-
+        if (this.IsSelected) {
+            this.Envelope.triggerRelease();
+        }
     }
 
     Update(ctx:CanvasRenderingContext2D) {
@@ -72,4 +103,4 @@ class ToneSource extends Modifiable {
     }
 }
 
-export = ToneSource;
+export = MouseFollower;
