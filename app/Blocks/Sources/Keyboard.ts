@@ -190,7 +190,7 @@ class KeyboardInput extends Modifiable {
         super.Draw(ctx);
 
         ctx.beginPath();
-        ctx.arc(this.Position.X, this.Position.Y, this.Radius, 0, Math.TAU, false);
+        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e1b1e1" : "#f1b0e0";
         ctx.fill();
     }
