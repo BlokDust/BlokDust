@@ -5,7 +5,7 @@ import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
-import MouseFollower = require("../Blocks/Sources/MouseFollower");
+import Sticky = require("../Blocks/Sources/Sticky");
 import Noise = require("../Blocks/Sources/Noise");
 import KeyboardInput = require("../Blocks/Sources/Keyboard");
 
@@ -146,8 +146,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateSource(ToneSource);
     }
 
-    MouseFollowerBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(MouseFollower);
+    StickyBlockBtn_Click(e: EventArgs){
+        this._BlocksView.CreateSource(Sticky);
     }
 
     NoiseBlockBtn_Click(e: EventArgs){

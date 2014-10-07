@@ -11,6 +11,7 @@ class Block implements IBlock {
     public Radius: number = 20;
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
+    public IsSticky: boolean = false;
     Ctx: CanvasRenderingContext2D;
     private _CtxSize: Size;
 
@@ -48,12 +49,19 @@ class Block implements IBlock {
 
     // relative point
     MouseMove(point: Point) {
-        if (this.IsPressed) {
+        if (this.IsPressed || (this.IsSticky && this.IsSelected)) {
             this.Position = point;
         }
     }
 
     OnClick() {
+        // if the block is 'sticky', clicking it toggles the IsSelected property.
+        if (this.IsSticky){
+            this.IsSelected = !this.IsSelected;
+        } else {
+            this.IsSelected = true;
+        }
+
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 

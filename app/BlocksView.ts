@@ -26,11 +26,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     set SelectedBlock(block: IBlock) {
-        if (this.SelectedBlock != null){
-            this.SelectedBlock.IsSelected = false;
-        }
-
-        block.IsSelected = true;
         this._SelectedBlock = block;
     }
 
@@ -112,8 +107,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         super.Draw();
 
         // clear
-        this.Ctx.fillStyle = "#d7d7d7";
-        this.Ctx.fillRect(0, 0, this.Width, this.Height);
+        //this.Ctx.fillStyle = "#d7d7d7";
+        //this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
         for (var i = 0; i < this.Blocks.length; i++) {
@@ -184,11 +179,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     MouseMove(point: Point){
         if (this._SelectedBlock){
             this._SelectedBlock.MouseMove(this._NormalisePoint(point));
+            this._CheckProximity();
         }
-
-        //if (!this._IsMouseDown) return;
-
-        this._CheckProximity();
     }
 
     OnSourceSelected(source: IModifiable){

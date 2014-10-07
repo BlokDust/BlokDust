@@ -45,12 +45,14 @@ class OperationManager {
 
     private _DoOperation(operation:IOperation):void {
 
-        this.OperationBegin.Raise(this, new OperationManagerEventArgs(operation));
+        //this.OperationBegin.Raise(this, new OperationManagerEventArgs(operation));
 
         operation.Do().then(() => {
             this.OperationComplete.Raise(this, new OperationManagerEventArgs((operation)));
         });
     }
+
+
 
     private _UndoOperation(operation:IUndoableOperation):void {
 //        operation.Undo().Then(() => {

@@ -5,16 +5,17 @@ import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 
-class MouseFollower extends Modifiable {
+class Sticky extends Modifiable {
 
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
     public Params: ToneSettings;
-    private _FollowMouse: boolean = false;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
+
+        this.IsSticky = true;
 
         this.Params = {
             oscillator: {
@@ -30,7 +31,6 @@ class MouseFollower extends Modifiable {
             output: {
                 volume: 0.5
             }
-
         };
 
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
@@ -47,31 +47,12 @@ class MouseFollower extends Modifiable {
                 this.KeyDown();
             }
         });
+
         window.addEventListener('keyup', (key: any) => {
             if (key.keyCode == 32){
                 this.KeyUp();
             }
         });
-    }
-
-    MouseDown() {
-        super.MouseDown();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-    }
-
-    MouseMove(point: Point) {
-        if (this._FollowMouse){
-            this.Position = point;
-        }
-    }
-
-    OnClick(){
-        super.OnClick();
-
-        this._FollowMouse = !this._FollowMouse;
     }
 
     KeyDown() {
@@ -92,15 +73,15 @@ class MouseFollower extends Modifiable {
         super.Update(ctx);
     }
 
-    // input blocks are red circles
+    // sticky blocks are orange circles
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
         ctx.beginPath();
         ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
+        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#ff9b30" : "#f17d00";
         ctx.fill();
     }
 }
 
-export = MouseFollower;
+export = Sticky;

@@ -15,7 +15,7 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
         this.Index = index || -1;
     }
 
-    Do(): Promise<any> {
+    Do(): Promise<ObservableCollection<T>> {
         return new Promise(function(resolve, reject) {
 
             if (this.Index == -1 || this.Index >= this.Collection.Count){
@@ -25,7 +25,7 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
             }
 
 //            if (/* everything turned out fine */) {
-                resolve();
+                resolve(this.Collection);
 //            }
 //            else {
 //                reject(Error("It broke"));
@@ -33,10 +33,10 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
         });
     }
 
-    Undo(): Promise<any> {
-        return new Promise(function(resolve, reject) {
+    Undo(): Promise<ObservableCollection<T>> {
+        return new Promise(function(resolve) {
             this.Collection.Remove(this.Item);
-            resolve();
+            resolve(this.Collection);
         });
     }
 }

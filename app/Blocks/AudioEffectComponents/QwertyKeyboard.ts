@@ -47,12 +47,11 @@ class KeyboardComponent extends Effect implements IEffect {
 
     Connect(modifiable: IModifiable): void{
         super.Connect(modifiable);
-        this.addListeners();
+        this.AddListeners();
     }
 
     Disconnect(): void{
-
-        this.removeListeners();
+        this.RemoveListeners();
     }
 
     KeyDown(frequency): void {
@@ -64,7 +63,7 @@ class KeyboardComponent extends Effect implements IEffect {
         }
         this.Modifiable.Osc.frequency.setValue(frequency);
         this.Modifiable.Envelope.triggerAttack();
-        //TODO: if two keys pressed slide frequendcy
+        //TODO: if two keys pressed slide frequency
     }
 
     KeyUp(frequency): void {
@@ -79,29 +78,29 @@ class KeyboardComponent extends Effect implements IEffect {
         //TODO: Fix release bug
     }
 
-    addListeners(): void {
+    AddListeners(): void {
 
         window.addEventListener('keydown', (key) => {
-            this.keyboardDown(key);
+            this.OnKeyDown(key);
         });
         window.addEventListener('keyup', (key) => {
-            this.keyboardUp(key);
+            this.OnKeyUp(key);
         });
     }
 
-    removeListeners(): void {
+    RemoveListeners(): void {
 
         window.removeEventListener('keydown', (key) => {
-            this.keyboardDown(key);
+            this.OnKeyDown(key);
         });
         window.removeEventListener('keyup', (key) => {
-            this.keyboardUp(key);
+            this.OnKeyUp(key);
         });
 
         //TODO: Fix remove listeners on disconnect
     }
 
-    keyboardDown(key): void {
+    OnKeyDown(key): void {
         console.log(key.keyCode);
         //if it's already pressed (holding note)
         if (key.keyCode in this.keysDown) {
@@ -112,25 +111,25 @@ class KeyboardComponent extends Effect implements IEffect {
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
-            var keyPressed = this.getKeyPressed(key.keyCode);
-            var frequency = this.getFrequencyOfNote(keyPressed);
+            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var frequency = this.GetFrequencyOfNote(keyPressed);
             this.KeyDown(frequency);
         }
     }
 
-    keyboardUp(key): void {
+    OnKeyUp(key): void {
         // remove this key from the keysDown object
         delete this.keysDown[key.keyCode];
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
-            var keyPressed = this.getKeyPressed(key.keyCode);
-            var frequency = this.getFrequencyOfNote(keyPressed);
+            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var frequency = this.GetFrequencyOfNote(keyPressed);
             this.KeyUp(frequency);
         }
     }
 
-    getKeyPressed(keyCode): string {
+    GetKeyPressed(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (this.key_map[keyCode]
             .replace('l', parseInt(this.settings.startOctave, 10) + this.settings.keyPressOffset)
@@ -138,7 +137,7 @@ class KeyboardComponent extends Effect implements IEffect {
                 .toString()));
     }
 
-    getFrequencyOfNote(note): number {
+    GetFrequencyOfNote(note): number {
         var notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
             key_number,
             octave;
