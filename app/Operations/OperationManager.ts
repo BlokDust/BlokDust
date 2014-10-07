@@ -1,3 +1,4 @@
+/// <reference path="../refs" />
 
 import IOperation = require("./IOperation");
 import IUndoableOperation = require("./IUndoableOperation");
@@ -46,9 +47,9 @@ class OperationManager {
 
         this.OperationBegin.Raise(this, new OperationManagerEventArgs(operation));
 
-//        operation.Do().Then(() => {
-//            this.OperationComplete.Raise(this, new OperationEventArgs((operation)));
-//        });
+        operation.Do().then(() => {
+            this.OperationComplete.Raise(this, new OperationManagerEventArgs((operation)));
+        });
     }
 
     private _UndoOperation(operation:IUndoableOperation):void {

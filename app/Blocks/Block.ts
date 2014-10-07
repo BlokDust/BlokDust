@@ -12,12 +12,13 @@ class Block implements IBlock {
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     Ctx: CanvasRenderingContext2D;
-    private _CtxSize: Size = new Size(0, 0);
+    private _CtxSize: Size;
 
     // normalised point
     constructor(ctx: CanvasRenderingContext2D, position: Point) {
         this.Ctx = ctx;
         this._Position = position;
+        this.Update(ctx);
     }
 
     // returns the Block's absolute position
@@ -27,7 +28,7 @@ class Block implements IBlock {
 
     Update(ctx: CanvasRenderingContext2D) {
         // only recreate the _CtxSize object if the ctx size has changed.
-        if (this.Ctx.canvas.width != this._CtxSize.Width || this.Ctx.canvas.height != this._CtxSize.Height){
+        if (!this._CtxSize || this.Ctx.canvas.width != this._CtxSize.Width || this.Ctx.canvas.height != this._CtxSize.Height){
             this._CtxSize = new Size(ctx.canvas.width, ctx.canvas.height);
         }
     }

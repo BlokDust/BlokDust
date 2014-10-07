@@ -1,7 +1,7 @@
 
 interface IOperation
 {
-    Do():void;
+    Do(): Promise<any>;
 }
 
 export = IOperation;

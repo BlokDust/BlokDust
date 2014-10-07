@@ -1,3 +1,5 @@
+/// <reference path="../refs" />
+
 import IUndoableOperation = require("./IUndoableOperation");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
@@ -13,16 +15,29 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
         this.Index = index || -1;
     }
 
-    Do():void {
-        if (this.Index == -1 || this.Index >= this.Collection.Count){
-            this.Collection.Add(this.Item);
-        } else {
-            this.Collection.Insert(this.Item, this.Index);
-        }
+    Do(): Promise<any> {
+        return new Promise(function(resolve, reject) {
+
+            if (this.Index == -1 || this.Index >= this.Collection.Count){
+                this.Collection.Add(this.Item);
+            } else {
+                this.Collection.Insert(this.Item, this.Index);
+            }
+
+//            if (/* everything turned out fine */) {
+                resolve();
+//            }
+//            else {
+//                reject(Error("It broke"));
+//            }
+        });
     }
 
-    Undo():void {
-        this.Collection.Remove(this.Item);
+    Undo(): Promise<any> {
+        return new Promise(function(resolve, reject) {
+            this.Collection.Remove(this.Item);
+            resolve();
+        });
     }
 }
 
