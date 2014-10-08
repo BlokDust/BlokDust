@@ -201,6 +201,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     UndoBtn_Click(e: any){
         this._BlocksView.Undo();
     }
+
+    RedoBtn_Click(e: any){
+        this._BlocksView.Redo();
+    }
 }
 
 export = MainViewModel;

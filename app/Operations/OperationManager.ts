@@ -14,59 +14,97 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class OperationManager {
 
     private _Operations: ObservableCollection<IOperation>;
+    private _Head: number = 0;
 
-    private _CurrentOperation:IOperation;
-
-    OperationAdded = new MulticastEvent<OperationManagerEventArgs>();
-    OperationBegin = new MulticastEvent<OperationManagerEventArgs>();
-    OperationComplete = new MulticastEvent<OperationManagerEventArgs>();
+//    private _CurrentOperation:IOperation;
+//
+//    OperationAdded = new MulticastEvent<OperationManagerEventArgs>();
+//    OperationBegin = new MulticastEvent<OperationManagerEventArgs>();
+//    OperationComplete = new MulticastEvent<OperationManagerEventArgs>();
 //    AllOperationsComplete = new MulticastEvent<OperationManagerEventArgs>();
 
 
-    get CurrentOperation():IOperation {
-        return this._CurrentOperation;
+//    get CurrentOperation():IOperation {
+//        return this._CurrentOperation;
+//    }
+//
+//    get CurrentOperationIndex(): number {
+//        return this._Operations.IndexOf(this.CurrentOperation);
+//    }
+
+    set Head(value: number){
+        this._Head = value;
+        console.log("Head at: " + this._Head);
     }
 
-    get CurrentOperationIndex(): number {
-        return this._Operations.IndexOf(this.CurrentOperation);
+    get Head(): number {
+        return this._Head;
     }
 
     constructor() {
         this._Operations = new ObservableCollection<IOperation>();
+
+        this._Operations.CollectionChanged.Subscribe(() => {
+            console.log("operations length: " + this._Operations.Count);
+        }, this);
     }
 
-    public AddOperation(operation:IOperation, autoExecute:boolean = true):void {
+    public Do(operation:IOperation): Promise<any> {
+
+        // if a non-undoable operation is added, warn the user
+        // and clear _Operations.
+        if (!(<IUndoableOperation>operation).Undo){
+            console.warn("this operation is not undoable");
+            this._Operations.Clear();
+        } else if (this.Head != this._Operations.Count){
+            // if Head isn't at end of _Operations, trim those ahead of it.
+            var trimmed = this._Operations.ToArray().splice(0, this.Head);
+            this._Operations.Clear();
+            this._Operations.AddRange(trimmed);
+        }
+
         this._Operations.Add(operation);
 
-        if (autoExecute) {
-            this._DoOperation(operation);
-        }
+        this.Head = this._Operations.Count;
+
+        return operation.Do();
     }
 
-    private _DoOperation(operation:IOperation):void {
+    public Undo(): Promise<any> {
 
-        //this.OperationBegin.Raise(this, new OperationManagerEventArgs(operation));
+        if (!this._CanUndo()) return this.RejectedPromise;
 
-        operation.Do().then(() => {
-            this.OperationComplete.Raise(this, new OperationManagerEventArgs((operation)));
+        this.Head--;
+
+        var operation = this._Operations.GetValueAt(this.Head);
+
+        return (<IUndoableOperation>operation).Undo();
+    }
+
+    public Redo(): Promise<any> {
+
+        if (!this._CanRedo()) return this.RejectedPromise;
+
+        var operation = this._Operations.GetValueAt(this.Head);
+
+        this.Head++;
+
+        return operation.Do();
+    }
+
+    private get RejectedPromise(): Promise<any>{
+        return new Promise(function(undefined, reject) {
+            reject(Error("rejected"));
         });
     }
 
-
-
-    private _UndoOperation(operation:IUndoableOperation):void {
-//        operation.Undo().Then(() => {
-//            this.OperationComplete.Raise(this, new OperationManagerEventArgs(operation));
-//        });
+    private _CanUndo(): boolean {
+        return this.Head > 0;
     }
 
-//    private _IsUndoAvailable():Boolean {
-//        return this.CurrentOperationIndex > -1;
-//    }
-//
-//    private _IsRedoAvailable():Boolean {
-//        return this.CurrentOperationIndex < this._Operations.Count - 1;
-//    }
+    private _CanRedo(): boolean {
+        return this.Head < this._Operations.Count;
+    }
 }
 
 export = OperationManager;

@@ -39,10 +39,9 @@
             <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyboard</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="ZoomIn" Width="100" Click="{EventBinding ZoomIn_Click}">+</Button>
-                <Button x:Name="ZoomOut" Width="100" Click="{EventBinding ZoomOut_Click}">-</Button>
-            </StackPanel>
+            <Button x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}">Redo</Button>
+            <Button x:Name="ZoomIn" Width="100" Click="{EventBinding ZoomIn_Click}">+</Button>
+            <Button x:Name="ZoomOut" Width="100" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
         <zoom:Zoomer Grid.Row="1" ZoomLevels="{Binding ZoomLevels}" ZoomFactor="1.5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}">

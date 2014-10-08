@@ -11,7 +11,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class BlocksView extends Fayde.Drawing.SketchContext {
 
-    public Sources: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
+    public Modifiables: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public SourceSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
@@ -34,7 +34,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         this._OperationManager = new OperationManager();
 
-        this.Sources.CollectionChanged.Subscribe(() => {
+        this.Modifiables.CollectionChanged.Subscribe(() => {
             this._Invalidate();
         }, this);
 
@@ -48,9 +48,24 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     // called whenever the Sources or Modifiers collections change.
     private _Invalidate(){
 
-        this.Blocks = [].concat(this.Sources.ToArray(), this.Modifiers.ToArray());
+        this.Blocks = [].concat(this.Modifiables.ToArray(), this.Modifiers.ToArray());
+
+        this._ValidateBlocks();
 
         this._CheckProximity();
+    }
+
+    _ValidateBlocks() {
+        var modifiables = this.Modifiables.ToArray();
+
+        // for each Modifiable, pass it the new list of Modifiers.
+        // if the Modifiable contains a Modifier that no longer
+        // exists, remove it.
+        for (var i = 0; i < modifiables.length; i++){
+            var modifiable: IModifiable = modifiables[i];
+
+            modifiable.ValidateModifiers(this.Modifiers);
+        }
     }
 
     CreateSource<T extends IModifiable>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
@@ -61,10 +76,13 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnSourceSelected(e);
         }, this);
 
-//        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(source, this.Sources);
-//        this._OperationManager.AddOperation(op);
+        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(source, this.Modifiables);
 
-        this.Sources.Add(source);
+        //console.log("disable operations");
+
+        this._OperationManager.Do(op).then((list) => {
+            console.log(list);
+        });
     }
 
     CreateModifier<T extends IModifier>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
@@ -75,10 +93,13 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnModifierSelected(e);
         }, this);
 
-//        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Sources);
-//        this._OperationManager.AddOperation(op);
+        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Modifiers);
 
-        this.Modifiers.Add(modifier);
+        //console.log("disable operations");
+
+        this._OperationManager.Do(op).then((list) => {
+            console.log(list);
+        });
     }
 
     private _GetId(): number {
@@ -118,16 +139,16 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     private _CheckProximity(){
-        // loop through all Modifier blocks checking proximity to Source blocks.
-        // if within CatchmentArea, add Modifier to Source.Modifiers.
+        // loop through all Modifiable blocks checking proximity to Modifier blocks.
+        // if within CatchmentArea, add Modifier to Modifiable.Modifiers.
+        var modifiables = this.Modifiables.ToArray();
         var modifiers = this.Modifiers.ToArray();
-        var sources = this.Sources.ToArray();
 
-        for (var i = 0; i < modifiers.length; i++) {
-            var modifier:IModifier = modifiers[i];
+        for (var j = 0; j < modifiables.length; j++) {
+            var source:IModifiable = modifiables[j];
 
-            for (var j = 0; j < sources.length; j++) {
-                var source:IModifiable = sources[j];
+            for (var i = 0; i < modifiers.length; i++) {
+                var modifier:IModifier = modifiers[i];
 
                 // if a source is close enough to the modifier, add the modifier
                 // to its internal list.
@@ -193,37 +214,52 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.ModifierSelected.Raise(modifier, new Fayde.RoutedEventArgs());
     }
 
+    // todo: this should just be removing the block from the collection.
+    // when the collection changes, the block should handle its own
+    // deregistration
     DeleteSelectedBlock(){
-        if (this.Sources.Contains(<any>this._SelectedBlock)){
-            this.Sources.Remove(<any>this._SelectedBlock);
+        if (this.Modifiables.Contains(<any>this._SelectedBlock)){
+            this.Modifiables.Remove(<any>this._SelectedBlock);
             this._SelectedBlock = null;
             return;
         }
 
         if (this.Modifiers.Contains(<any>this._SelectedBlock)){
-            this.DeleteModifier(<IModifier>this._SelectedBlock);
+            //this.DeleteModifier(<IModifier>this._SelectedBlock);
             this.Modifiers.Remove(<any>this._SelectedBlock);
             this._SelectedBlock = null;
             return;
         }
     }
 
-    DeleteModifier(modifier: IModifier){
-        // loop through sources.
-        // for each source with this modifier, remove it.
-        var sources = this.Sources.ToArray();
-
-        for (var i = 0; i < sources.length; i++){
-            var source = sources[i];
-
-            if (source.Modifiers.Contains(modifier)){
-                source.Modifiers.Remove(modifier);
-            }
-        }
-    }
+//    DeleteModifier(modifier: IModifier){
+//        // loop through modifiables.
+//        // for each modifiable with this modifier, remove it.
+//        var modifiables = this.Modifiables.ToArray();
+//
+//        for (var i = 0; i < modifiables.length; i++){
+//            var modifiable = modifiables[i];
+//
+//            if (modifiable.Modifiers.Contains(modifier)){
+//                modifiable.Modifiers.Remove(modifier);
+//            }
+//        }
+//    }
 
     Undo(){
-        //this._OperationManager.UndoOperation();
+        console.log("disable operations");
+
+        this._OperationManager.Undo().then(() => {
+            console.log("enable operations");
+        });
+    }
+
+    Redo(){
+        console.log("disable operations");
+
+        this._OperationManager.Redo().then(() => {
+            console.log("enable operations");
+        });
     }
 }
 

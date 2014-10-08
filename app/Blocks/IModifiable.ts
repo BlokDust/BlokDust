@@ -1,6 +1,7 @@
 import IBlock = require("./IBlock");
 import IModifier = require("./IModifier");
 import IEffect = require("./IEffect");
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface IModifiable extends IBlock{
     Modifiers: Fayde.Collections.ObservableCollection<IModifier>;
@@ -11,8 +12,7 @@ interface IModifiable extends IBlock{
     Envelope: Tone.Envelope;
     OutputGain: GainNode;
     Params: ToneSettings;
-
-
+    ValidateModifiers(modifiers: ObservableCollection<IModifier>): void;
 }
 
 export = IModifiable;

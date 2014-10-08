@@ -16,16 +16,18 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
     }
 
     Do(): Promise<ObservableCollection<T>> {
-        return new Promise(function(resolve, reject) {
+        var that = this;
 
-            if (this.Index == -1 || this.Index >= this.Collection.Count){
-                this.Collection.Add(this.Item);
+        return new Promise((resolve, reject) => {
+
+            if (that.Index == -1 || that.Index >= that.Collection.Count){
+                that.Collection.Add(that.Item);
             } else {
-                this.Collection.Insert(this.Item, this.Index);
+                that.Collection.Insert(that.Item, that.Index);
             }
 
 //            if (/* everything turned out fine */) {
-                resolve(this.Collection);
+                resolve(that.Collection);
 //            }
 //            else {
 //                reject(Error("It broke"));
@@ -34,9 +36,11 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
     }
 
     Undo(): Promise<ObservableCollection<T>> {
-        return new Promise(function(resolve) {
-            this.Collection.Remove(this.Item);
-            resolve(this.Collection);
+        var that = this;
+
+        return new Promise((resolve) => {
+            that.Collection.Remove(that.Item);
+            resolve(that.Collection);
         });
     }
 }

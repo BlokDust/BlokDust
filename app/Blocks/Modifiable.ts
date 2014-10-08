@@ -33,7 +33,7 @@ class Modifiable extends Block implements IModifiable{
         super.Draw(ctx);
 
         if (window.debug){
-            // draw lines to targets
+            // draw connections to modifiers
             var modifiers = this.Modifiers.ToArray();
 
             for(var i = 0; i < modifiers.length; i++){
@@ -43,6 +43,20 @@ class Modifiable extends Block implements IModifiable{
                 ctx.moveTo(this.AbsPosition.X, this.AbsPosition.Y);
                 ctx.lineTo(target.AbsPosition.X, target.AbsPosition.Y);
                 ctx.stroke();
+            }
+        }
+    }
+
+    /*
+    * Validate that the block's modifiers still exist
+    * @param {ObservableCollection<IModifier>} modifiers - Parent's full list of Modifiers.
+    */
+    public ValidateModifiers(modifiers: ObservableCollection<IModifier>){
+        for (var i = 0; i < this.Modifiers.Count; i++){
+            var modifier:IModifier = this.Modifiers.GetValueAt(i);
+
+            if (!modifiers.Contains(modifier)){
+                this.RemoveModifier(modifier);
             }
         }
     }
