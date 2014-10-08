@@ -69,6 +69,9 @@ class ToneSource extends Modifiable {
         ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
         ctx.fill();
+
+        console.log("IsPressed: " + this.IsPressed);
+        console.log("IsSelected: " + this.IsSelected);
     }
 }
 

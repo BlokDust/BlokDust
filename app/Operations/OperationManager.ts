@@ -16,25 +16,12 @@ class OperationManager {
     private _Operations: ObservableCollection<IOperation>;
     private _Head: number = 0;
 
-//    private _CurrentOperation:IOperation;
-//
-//    OperationAdded = new MulticastEvent<OperationManagerEventArgs>();
-//    OperationBegin = new MulticastEvent<OperationManagerEventArgs>();
-//    OperationComplete = new MulticastEvent<OperationManagerEventArgs>();
-//    AllOperationsComplete = new MulticastEvent<OperationManagerEventArgs>();
-
-
-//    get CurrentOperation():IOperation {
-//        return this._CurrentOperation;
-//    }
-//
-//    get CurrentOperationIndex(): number {
-//        return this._Operations.IndexOf(this.CurrentOperation);
-//    }
+    OperationAdded = new MulticastEvent<OperationManagerEventArgs>();
+    OperationBegin = new MulticastEvent<OperationManagerEventArgs>();
+    OperationComplete = new MulticastEvent<OperationManagerEventArgs>();
 
     set Head(value: number){
         this._Head = value;
-        console.log("Head at: " + this._Head);
     }
 
     get Head(): number {
@@ -45,7 +32,7 @@ class OperationManager {
         this._Operations = new ObservableCollection<IOperation>();
 
         this._Operations.CollectionChanged.Subscribe(() => {
-            console.log("operations length: " + this._Operations.Count);
+
         }, this);
     }
 
@@ -67,7 +54,10 @@ class OperationManager {
 
         this.Head = this._Operations.Count;
 
-        return operation.Do();
+        return operation.Do().then((result) => {
+            this.OperationAdded.Raise(this, new OperationManagerEventArgs(operation));
+            return result;
+        });
     }
 
     public Undo(): Promise<any> {
@@ -78,7 +68,10 @@ class OperationManager {
 
         var operation = this._Operations.GetValueAt(this.Head);
 
-        return (<IUndoableOperation>operation).Undo();
+        return (<IUndoableOperation>operation).Undo().then((result) => {
+            this.OperationComplete.Raise(this, new OperationManagerEventArgs(operation));
+            return result;
+        });
     }
 
     public Redo(): Promise<any> {
@@ -89,7 +82,10 @@ class OperationManager {
 
         this.Head++;
 
-        return operation.Do();
+        return operation.Do().then((result) => {
+            this.OperationComplete.Raise(this, new OperationManagerEventArgs(operation));
+            return result;
+        });
     }
 
     private get RejectedPromise(): Promise<any>{

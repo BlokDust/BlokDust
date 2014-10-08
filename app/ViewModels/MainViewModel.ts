@@ -144,23 +144,23 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     PowerBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(Power);
+        this._BlocksView.CreateModifiable(Power);
     }
 
     ToneBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(ToneSource);
+        this._BlocksView.CreateModifiable(ToneSource);
     }
 
     StickyBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(Sticky);
+        this._BlocksView.CreateModifiable(Sticky);
     }
 
     NoiseBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(Noise);
+        this._BlocksView.CreateModifiable(Noise);
     }
 
     KeyboardBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(Keyboard);
+        this._BlocksView.CreateModifiable(Keyboard);
     }
 
     VolumeIncreaseBlockBtn_Click(e: any){

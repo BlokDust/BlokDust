@@ -8,6 +8,8 @@ interface IBlock{
     Radius: number;
     IsPressed: boolean;
     IsSelected: boolean;
+    Position: Point;
+    LastPosition: Point;
     AbsPosition: Point;
     Update(ctx: CanvasRenderingContext2D): void;
     Draw(ctx: CanvasRenderingContext2D): void;
