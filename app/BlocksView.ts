@@ -7,6 +7,7 @@ import AddItemToObservableCollectionOperation = require("./Operations/AddItemToO
 import RemoveItemFromObservableCollectionOperation = require("./Operations/RemoveItemFromObservableCollectionOperation");
 import MovePointOperation = require("./Operations/MovePointOperation");
 import OperationManager = require("./Operations/OperationManager");
+import OperationManagerEventArgs = require("./Operations/OperationManagerEventArgs");
 import IOperation = require("./Operations/IOperation");
 import IUndoableOperation = require("./Operations/IUndoableOperation");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -40,16 +41,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this._Invalidate();
         }, this);
 
-        // todo: investigate whether invalidate definitely necessary
         this._OperationManager.OperationComplete.Subscribe((operation: IOperation) => {
-            this._Invalidate();
-        }, this);
-
-        this.Modifiables.CollectionChanged.Subscribe(() => {
-            this._Invalidate();
-        }, this);
-
-        this.Modifiers.CollectionChanged.Subscribe(() => {
             this._Invalidate();
         }, this);
 
@@ -82,14 +74,12 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         modifiable.Id = this._GetId();
 
         modifiable.Click.Subscribe((e: IModifiable) => {
-            this.OnSourceSelected(e);
+            this.OnModifiableSelected(e);
         }, this);
 
         var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifiable, this.Modifiables);
 
-        this._OperationManager.Do(op).then((list) => {
-            console.log(list);
-        });
+        this._OperationManager.Do(op);
     }
 
     CreateModifier<T extends IModifier>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
@@ -102,9 +92,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Modifiers);
 
-        this._OperationManager.Do(op).then((list) => {
-//            console.log(list);
-        });
+        this._OperationManager.Do(op);
     }
 
     private _GetId(): number {
@@ -146,29 +134,27 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _CheckProximity(){
         // loop through all Modifiable blocks checking proximity to Modifier blocks.
         // if within CatchmentArea, add Modifier to Modifiable.Modifiers.
-        var modifiables = this.Modifiables.ToArray();
-        var modifiers = this.Modifiers.ToArray();
 
-        for (var j = 0; j < modifiables.length; j++) {
-            var source:IModifiable = modifiables[j];
+        for (var j = 0; j < this.Modifiables.Count; j++) {
+            var modifiable:IModifiable = this.Modifiables.GetValueAt(j);
 
-            for (var i = 0; i < modifiers.length; i++) {
-                var modifier:IModifier = modifiers[i];
+            for (var i = 0; i < this.Modifiers.Count; i++) {
+                var modifier:IModifier = this.Modifiers.GetValueAt(i);
 
-                // if a source is close enough to the modifier, add the modifier
+                // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
                 var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
-                var distanceFromModifier = source.DistanceFrom(modifier.AbsPosition);
+                var distanceFromModifier = modifiable.DistanceFrom(modifier.AbsPosition);
 
                 if (distanceFromModifier <= catchmentArea) {
-                    if (!source.Modifiers.Contains(modifier)){
-                        source.AddModifier(modifier);
+                    if (!modifiable.Modifiers.Contains(modifier)){
+                        modifiable.AddModifier(modifier);
                     }
                 } else {
-                    // if the source already has the modifier on its internal list
+                    // if the modifiable already has the modifier on its internal list
                     // remove it as it's now too far away.
-                    if (source.Modifiers.Contains(modifier)){
-                        source.RemoveModifier(modifier);
+                    if (modifiable.Modifiers.Contains(modifier)){
+                        modifiable.RemoveModifier(modifier);
                     }
                 }
             }
@@ -200,11 +186,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
             var op:IUndoableOperation = new MovePointOperation(this._SelectedBlock.Position, this._SelectedBlock.LastPosition, this._SelectedBlock.Position);
 
-            this._OperationManager.Do(op).then((point) => {
-            });
+            this._OperationManager.Do(op);
         }
-
-        this._CheckProximity();
     }
 
     MouseMove(point: Point){
@@ -214,9 +197,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
-    OnSourceSelected(source: IModifiable){
-        this.SelectedBlock = source;
-        this.SourceSelected.Raise(source, new Fayde.RoutedEventArgs());
+    OnModifiableSelected(modifiable: IModifiable){
+        this.SelectedBlock = modifiable;
+        this.SourceSelected.Raise(modifiable, new Fayde.RoutedEventArgs());
     }
 
     OnModifierSelected(modifier: IModifier){
@@ -244,15 +227,11 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     Undo(){
-        this._OperationManager.Undo().then(() => {
-
-        });
+        this._OperationManager.Undo();
     }
 
     Redo(){
-        this._OperationManager.Redo().then(() => {
-
-        });
+        this._OperationManager.Redo();
     }
 }
 

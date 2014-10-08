@@ -5,20 +5,14 @@ import IUndoableOperation = require("./IUndoableOperation");
 import OperationManagerEventArgs = require("./OperationManagerEventArgs");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-// todo: use promises for all operations, so there's no difference between sync and async
-// operations return a 'thenable' promise.
-// manager maintains a stack of promises moving a 'head' index back and forth.
-// when the head isn't at the end of the stack and an operation is added to the stack
-// this invalidates future operations, so remove them.
-
 class OperationManager {
 
     private _Operations: ObservableCollection<IOperation>;
     private _Head: number = 0;
 
-    OperationAdded = new MulticastEvent<OperationManagerEventArgs>();
-    OperationBegin = new MulticastEvent<OperationManagerEventArgs>();
-    OperationComplete = new MulticastEvent<OperationManagerEventArgs>();
+    OperationAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    OperationComplete: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
     set Head(value: number){
         this._Head = value;
@@ -31,9 +25,9 @@ class OperationManager {
     constructor() {
         this._Operations = new ObservableCollection<IOperation>();
 
-        this._Operations.CollectionChanged.Subscribe(() => {
-
-        }, this);
+//        this._Operations.CollectionChanged.Subscribe(() => {
+//
+//        }, this);
     }
 
     public Do(operation:IOperation): Promise<any> {
@@ -55,35 +49,35 @@ class OperationManager {
         this.Head = this._Operations.Count;
 
         return operation.Do().then((result) => {
-            this.OperationAdded.Raise(this, new OperationManagerEventArgs(operation));
+            this.OperationAdded.Raise(operation, new Fayde.RoutedEventArgs());
             return result;
         });
     }
 
     public Undo(): Promise<any> {
 
-        if (!this._CanUndo()) return this.RejectedPromise;
+        if (!this.CanUndo()) return this.RejectedPromise;
 
         this.Head--;
 
         var operation = this._Operations.GetValueAt(this.Head);
 
         return (<IUndoableOperation>operation).Undo().then((result) => {
-            this.OperationComplete.Raise(this, new OperationManagerEventArgs(operation));
+            this.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
             return result;
         });
     }
 
     public Redo(): Promise<any> {
 
-        if (!this._CanRedo()) return this.RejectedPromise;
+        if (!this.CanRedo()) return this.RejectedPromise;
 
         var operation = this._Operations.GetValueAt(this.Head);
 
         this.Head++;
 
         return operation.Do().then((result) => {
-            this.OperationComplete.Raise(this, new OperationManagerEventArgs(operation));
+            this.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
             return result;
         });
     }
@@ -94,11 +88,11 @@ class OperationManager {
         });
     }
 
-    private _CanUndo(): boolean {
+    public CanUndo(): boolean {
         return this.Head > 0;
     }
 
-    private _CanRedo(): boolean {
+    public CanRedo(): boolean {
         return this.Head < this._Operations.Count;
     }
 }

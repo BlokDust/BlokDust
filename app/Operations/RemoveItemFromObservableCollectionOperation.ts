@@ -17,8 +17,6 @@ class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperati
     Do(): Promise<ObservableCollection<T>> {
         this.Index = this.Collection.IndexOf(this.Item);
 
-        console.log("index: " + this.Index);
-
         var that = this;
 
         return new Promise((resolve) => {
@@ -32,8 +30,6 @@ class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperati
 
         return new Promise((resolve) => {
             that.Collection.Insert(that.Item, that.Index);
-
-            console.log("index: " + that.Index);
 
             resolve(that.Collection);
         });
