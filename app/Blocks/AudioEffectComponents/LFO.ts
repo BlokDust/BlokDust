@@ -38,7 +38,7 @@ class LFO extends Effect implements IEffect {
         this._LFO.disconnect();
         this.Modifiable.Osc.detune.setValue(0);
 
-        //TODO: There is a bug where LFO effect isn't consistent. I've submitted an issue to Yotam
+        //TODO: There is a bug where LFO.stop() isn't calling consistently. Will be fixed in next Tone release
     }
 }
 

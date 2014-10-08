@@ -18,9 +18,6 @@ class PitchComponent extends Effect implements IEffect {
             // LFO's and pitches cannot work on Noise Blocks
             return;
         }
-//        if this is a keyboard {
-//            updateFrequency()
-    //}
         var _value = this.Modifiable.Osc.frequency.getValue();
         this.Modifiable.Osc.frequency.setValue(_value * this.increment);
     }

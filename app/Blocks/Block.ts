@@ -43,6 +43,11 @@ class Block implements IBlock {
         this.OnClick();
     }
 
+    TouchDown() {
+        this.IsPressed = true;
+        this.OnClick();
+    }
+
     MouseUp() {
         this.IsPressed = false;
     }

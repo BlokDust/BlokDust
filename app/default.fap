@@ -51,6 +51,7 @@
                              Width="{Binding ZoomContentSize.Width}"
                              Height="{Binding ZoomContentSize.Height}"
                              MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}"
+                             TouchDown="{EventBinding BlocksView_TouchDown}"
                              MouseLeftButtonUp="{EventBinding BlocksView_MouseUp}"
                              MouseMove="{EventBinding BlocksView_MouseMove}"
                              IsAnimated="true"

@@ -10,10 +10,13 @@ interface ToneSettings {
 
 }
 
-
 interface NoiseSettings {
     waveform?: string;
 }
+
+    interface OscillatorSettings extends NoiseSettings {
+        frequency: number;
+    }
 
 interface EnvelopeSettings {
     attack?: number;
@@ -24,12 +27,6 @@ interface EnvelopeSettings {
 
 interface OutputSettings {
     volume?: number;
-}
-
-
-interface OscillatorSettings {
-    frequency: number;
-    waveform: string;
 }
 
 

@@ -11,6 +11,7 @@ class KeyboardInput extends Modifiable {
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
+    public Keyboard: boolean;
     public Params: ToneSettings;
 
     keysDown = {};
@@ -36,7 +37,9 @@ class KeyboardInput extends Modifiable {
         186: 'Eu',
         222: 'Fu',
         221: 'F#u',
-        220: 'Gu'
+        220: 'Gu',
+        187: 'OctaveUp',
+        189: 'OctaveDown'
     };
     settings = {
         startOctave: null,
@@ -69,6 +72,7 @@ class KeyboardInput extends Modifiable {
 
         this.IsSticky = true;
 
+
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
         this.OutputGain = this.Osc.context.createGain();
@@ -91,17 +95,13 @@ class KeyboardInput extends Modifiable {
 
 
     KeyDown(frequency): void {
-        console.log('Play '+frequency);
+
         this.Osc.frequency.setValue(frequency);
-        //set keyboard-frequency + any frequency modifiers
-
         this.Envelope.triggerAttack();
-
         //TODO: if two keys pressed slide frequency
     }
 
     KeyUp(frequency): void {
-        console.log('Stop '+frequency);
 
         this.Envelope.triggerRelease();
         //TODO: Fix release bug
@@ -130,7 +130,7 @@ class KeyboardInput extends Modifiable {
     }
 
     keyboardDown(key): void {
-        console.log(key.keyCode);
+
         //if it's already pressed (holding note)
         if (key.keyCode in this.keysDown) {
             return;
@@ -140,10 +140,13 @@ class KeyboardInput extends Modifiable {
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
+//            if (this.key_map[key.keyCode] ==)
+
             var keyPressed = this.getKeyPressed(key.keyCode);
             var frequency = this.getFrequencyOfNote(keyPressed);
             this.KeyDown(frequency);
         }
+
     }
 
     keyboardUp(key): void {
@@ -186,6 +189,10 @@ class KeyboardInput extends Modifiable {
         } else {
             key_number = key_number + ((octave - 1) * 12) + 1;
         }
+
+        // Are there pitch modifiers attached? If so get all the PitchComponent.increment
+        // (return 440 * Math.pow(2, (key_number - 49) / 12)) * increment;
+
         return 440 * Math.pow(2, (key_number - 49) / 12);
     }
 

@@ -19,6 +19,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _Id: number = 0;
     Blocks: IBlock[];
     private _IsMouseDown: boolean = false;
+    private _IsTouchDown: boolean = false;
     private _OperationManager: OperationManager;
 
     get SelectedBlock(): IBlock {
@@ -176,9 +177,17 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
+        this._CheckCollision(e);
+    }
 
+    TouchDown(e: Fayde.Input.TouchEventArgs){
+        this._IsTouchDown = true;
+        this._CheckCollision(e);
+    }
+
+    private _CheckCollision(e) {
         var point = (<any>e).args.Source.MousePosition;
-
+        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
         for (var i = 0; i < this.Blocks.length; i++){
             var block = this.Blocks[i];
             if (block.HitTest(point)){
