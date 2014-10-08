@@ -7,7 +7,7 @@ import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Sticky = require("../Blocks/Sources/Sticky");
 import Noise = require("../Blocks/Sources/Noise");
-import KeyboardInput = require("../Blocks/Sources/Keyboard");
+import Keyboard = require("../Blocks/Sources/Keyboard");
 
 import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
 import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
@@ -17,7 +17,6 @@ import Envelope = require("../Blocks/Modifiers/Envelope");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
-import Keyboard = require("../Blocks/Modifiers/Keyboard");
 
 import Power = require("../Blocks/Sources/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -154,8 +153,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateSource(Noise);
     }
 
-    KeyboardInputBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateSource(KeyboardInput);
+    KeyboardBlockBtn_Click(e: EventArgs){
+        this._BlocksView.CreateSource(Keyboard);
     }
 
     VolumeIncreaseBlockBtn_Click(e: any){
@@ -190,9 +189,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateModifier(Scuzz);
     }
 
-    KeyboardBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(Keyboard);
-    }
 
     DeleteBlockBtn_Click(e: any){
         this._BlocksView.DeleteSelectedBlock();

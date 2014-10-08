@@ -93,6 +93,8 @@ class KeyboardInput extends Modifiable {
     KeyDown(frequency): void {
         console.log('Play '+frequency);
         this.Osc.frequency.setValue(frequency);
+        //set keyboard-frequency + any frequency modifiers
+
         this.Envelope.triggerAttack();
 
         //TODO: if two keys pressed slide frequency
