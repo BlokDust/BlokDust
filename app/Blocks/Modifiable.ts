@@ -7,11 +7,6 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
-    public Osc: Tone.Oscillator;
-    public Noise: Tone.Noise;
-    public Envelope: Tone.Envelope;
-    public OutputGain: GainNode;
-    public Params: ToneSettings;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);

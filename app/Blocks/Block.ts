@@ -52,6 +52,11 @@ class Block implements IBlock {
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
+    TouchDown() {
+        this.IsPressed = true;
+        //this.OnClick();
+    }
+
     MouseUp() {
         this.IsPressed = false;
     }

@@ -12,9 +12,9 @@ class PitchComponent extends Effect implements IEffect {
         this.increment = increment;
     }
 
-    Connect(modifiable: IModifiable): void{
+    Connect(modifiable: IModifiable): void {
         super.Connect(modifiable);
-        if (this.Modifiable.Params.noise){
+        if (this.Modifiable.Params.noise) {
             // LFO's and pitches cannot work on Noise Blocks
             return;
         }

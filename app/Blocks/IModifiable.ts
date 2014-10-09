@@ -7,11 +7,11 @@ interface IModifiable extends IBlock{
     Modifiers: Fayde.Collections.ObservableCollection<IModifier>;
     AddModifier(modifier: IModifier): void;
     RemoveModifier(modifier: IModifier): void;
-    Osc: Tone.Oscillator;
-    Noise: Tone.Noise;
-    Envelope: Tone.Envelope;
-    OutputGain: GainNode;
-    Params: ToneSettings;
+    Osc?: Tone.Oscillator;
+    Noise?: Tone.Noise;
+    Envelope?: Tone.Envelope;
+    OutputGain?: GainNode;
+    Params?: ToneSettings;
     ValidateModifiers(modifiers: ObservableCollection<IModifier>): void;
 }
 

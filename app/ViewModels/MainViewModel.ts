@@ -6,7 +6,7 @@ import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
-import KeyboardInput = require("../Blocks/Sources/Keyboard");
+import Keyboard = require("../Blocks/Sources/Keyboard");
 
 import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
 import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
@@ -16,7 +16,6 @@ import Envelope = require("../Blocks/Modifiers/Envelope");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
-import Keyboard = require("../Blocks/Modifiers/Keyboard");
 
 import Power = require("../Blocks/Sources/Power");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -94,6 +93,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.ModifierSelected.Subscribe((modifier: IModifier) => {
             this._OnModifierSelected(modifier);
         }, this);
+
+
     }
 
     ZoomUpdated(e: Fayde.IEventBindingArgs<Fayde.Zoomer.ZoomerEventArgs>){
@@ -119,6 +120,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     BlocksView_MouseDown(e: Fayde.Input.MouseEventArgs){
         this._BlocksView.MouseDown(e);
+    }
+
+    BlocksView_TouchDown(e: Fayde.Input.TouchEventArgs){
+        this._BlocksView.TouchDown(e);
     }
 
     BlocksView_MouseUp(e: Fayde.Input.MouseEventArgs){
@@ -149,8 +154,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateModifiable(Noise);
     }
 
-    KeyboardInputBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateModifiable(KeyboardInput);
+    KeyboardBlockBtn_Click(e: EventArgs){
+        this._BlocksView.CreateModifiable(Keyboard);
     }
 
     VolumeIncreaseBlockBtn_Click(e: any){
@@ -185,9 +190,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateModifier(Scuzz);
     }
 
-    KeyboardBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(Keyboard);
-    }
 
     DeleteBlockBtn_Click(e: any){
         this._BlocksView.DeleteSelectedBlock();
