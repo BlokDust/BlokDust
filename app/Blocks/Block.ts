@@ -12,17 +12,11 @@ class Block implements IBlock {
     public Radius: number = 20;
     public IsPressed: boolean = false;
     private _IsSelected: boolean = false;
-    public IsSticky: boolean = false;
     Ctx: CanvasRenderingContext2D;
     private _CtxSize: Size;
 
     set IsSelected(value: boolean){
         this._IsSelected = value;
-
-        // store position for move undo
-        if (this._IsSelected) {
-            this.LastPosition = new Point(this.Position.X, this.Position.Y);
-        }
     }
 
     get IsSelected(): boolean {
@@ -54,33 +48,19 @@ class Block implements IBlock {
 
     MouseDown() {
         this.IsPressed = true;
-        this.OnClick();
+        this.LastPosition = new Point(this.Position.X, this.Position.Y);
+        this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
     MouseUp() {
         this.IsPressed = false;
-
-        if (!this.IsSticky) {
-            this.IsSelected = false;
-        }
     }
 
     // relative point
     MouseMove(point: Point) {
-        if ((!this.IsSticky && this.IsPressed) || (this.IsSticky && this.IsSelected)) {
+        if (this.IsPressed){
             this.Position = point;
         }
-    }
-
-    OnClick() {
-        // if the block is 'sticky', clicking it toggles the IsSelected property.
-        //if (this.IsSticky){
-            this.IsSelected = !this.IsSelected;
-        //} else {
-        //    this.IsSelected = true;
-        //}
-
-        this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
     // absolute point
@@ -88,7 +68,6 @@ class Block implements IBlock {
         var distance = this.DistanceFrom(point);
 
         if (distance <= this.Radius) {
-            this.MouseDown();
             return true;
         }
 

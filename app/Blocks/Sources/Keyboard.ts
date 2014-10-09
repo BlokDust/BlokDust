@@ -67,8 +67,6 @@ class KeyboardInput extends Modifiable {
 
         };
 
-        this.IsSticky = true;
-
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
         this.OutputGain = this.Osc.context.createGain();

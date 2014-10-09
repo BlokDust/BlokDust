@@ -6,17 +6,13 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class MovePointOperation implements IUndoableOperation
 {
     private _Point: Point;
-    private _OldX: number;
-    private _OldY: number;
-    private _NewX: number;
-    private _NewY: number;
+    private _OldPos: Point;
+    private _NewPos: Point;
 
     constructor(point: Point, oldPos: Point, newPos: Point) {
         this._Point = point;
-        this._OldX = oldPos.X;
-        this._OldY = oldPos.Y;
-        this._NewX = newPos.X;
-        this._NewY = newPos.Y;
+        this._OldPos = oldPos;
+        this._NewPos = newPos;
     }
 
     Do(): Promise<Point> {
@@ -24,8 +20,11 @@ class MovePointOperation implements IUndoableOperation
 
         return new Promise((resolve) => {
 
-            that._Point.X = that._NewX;
-            that._Point.Y = that._NewY;
+            that._Point.X = that._NewPos.X;
+            that._Point.Y = that._NewPos.Y;
+
+            console.log("oldpos: " + that._OldPos.X);
+            console.log("newpos: " + that._NewPos.X);
 
             resolve(that._Point);
         });
@@ -36,8 +35,11 @@ class MovePointOperation implements IUndoableOperation
 
         return new Promise((resolve) => {
 
-            that._Point.X = that._OldX;
-            that._Point.Y = that._OldY;
+            that._Point.X = that._OldPos.X;
+            that._Point.Y = that._OldPos.Y;
+
+            console.log("oldpos: " + that._OldPos.X);
+            console.log("newpos: " + that._NewPos.X);
 
             resolve(that._Point);
         });

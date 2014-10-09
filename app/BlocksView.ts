@@ -16,7 +16,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     public Modifiables: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
-    public SourceSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
@@ -29,7 +29,19 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     set SelectedBlock(block: IBlock) {
-        this._SelectedBlock = block;
+        // if setting the selected block to null (or falsey)
+        // if there's already a selected block, set its
+        // IsSelected to false.
+        if (!block && this._SelectedBlock){
+            this._SelectedBlock.IsSelected = false;
+            this._SelectedBlock = null;
+        } else {
+            if (this._SelectedBlock){
+                this._SelectedBlock.IsSelected = false;
+            }
+            block.IsSelected = true;
+            this._SelectedBlock = block;
+        }
     }
 
     constructor() {
@@ -174,54 +186,66 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             var block = this.Blocks[i];
             if (block.HitTest(point)){
                 (<any>e).args.Handled = true;
+
+                block.MouseDown();
+
+                this.SelectedBlock = block;
             }
         }
     }
 
-    MouseUp(point: Point){
+    MouseUp(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = false;
 
-        if (this._SelectedBlock){
-            this._SelectedBlock.MouseUp();
+        var point = (<any>e).args.Source.MousePosition;
 
-            var op:IUndoableOperation = new MovePointOperation(this._SelectedBlock.Position, this._SelectedBlock.LastPosition, this._SelectedBlock.Position);
+        if (this.SelectedBlock){
 
-            this._OperationManager.Do(op);
+            if (this.SelectedBlock.HitTest(point)){
+                (<any>e).args.Handled = true;
+                this.SelectedBlock.MouseUp();
+
+                // if the block has moved, create an undoable operation.
+                if (!this.SelectedBlock.Position.Equals(this.SelectedBlock.LastPosition)){
+                    var op:IUndoableOperation = new MovePointOperation(this.SelectedBlock.Position, this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                    this._OperationManager.Do(op);
+                }
+            }
         }
     }
 
-    MouseMove(point: Point){
-        if (this._SelectedBlock){
-            this._SelectedBlock.MouseMove(this._NormalisePoint(point));
+    MouseMove(e: Fayde.Input.MouseEventArgs){
+        var point = (<any>e).args.Source.MousePosition;
+
+        if (this.SelectedBlock){
+            this.SelectedBlock.MouseMove(this._NormalisePoint(point));
             this._CheckProximity();
         }
     }
 
     OnModifiableSelected(modifiable: IModifiable){
-        this.SelectedBlock = modifiable;
-        this.SourceSelected.Raise(modifiable, new Fayde.RoutedEventArgs());
+        this.ModifiableSelected.Raise(modifiable, new Fayde.RoutedEventArgs());
     }
 
     OnModifierSelected(modifier: IModifier){
-        this.SelectedBlock = modifier;
         this.ModifierSelected.Raise(modifier, new Fayde.RoutedEventArgs());
     }
 
     DeleteSelectedBlock(){
-        if (this.Modifiables.Contains(<any>this._SelectedBlock)){
+        if (this.Modifiables.Contains(<any>this.SelectedBlock)){
 
-            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this._SelectedBlock, this.Modifiables);
+            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, this.Modifiables);
 
             this._OperationManager.Do(op).then((list) => {
-                this._SelectedBlock = null;
+                this.SelectedBlock = null;
             });
         }
 
-        if (this.Modifiers.Contains(<any>this._SelectedBlock)){
-            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this._SelectedBlock, this.Modifiers);
+        if (this.Modifiers.Contains(<any>this.SelectedBlock)){
+            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, this.Modifiers);
 
             this._OperationManager.Do(op).then((list) => {
-                this._SelectedBlock = null;
+                this.SelectedBlock = null;
             });
         }
     }

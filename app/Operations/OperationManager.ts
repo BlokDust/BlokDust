@@ -7,8 +7,9 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class OperationManager {
 
+    private _DebugEnabled: boolean = true;
     private _Operations: ObservableCollection<IOperation>;
-    private _Head: number = 0;
+    private _Head: number = -1;
 
     OperationAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
@@ -37,19 +38,23 @@ class OperationManager {
         if (!(<IUndoableOperation>operation).Undo){
             console.warn("this operation is not undoable");
             this._Operations.Clear();
-        } else if (this.Head != this._Operations.Count){
+        } else if (this.Head != this._Operations.Count - 1){
             // if Head isn't at end of _Operations, trim those ahead of it.
-            var trimmed = this._Operations.ToArray().splice(0, this.Head);
+            var trimmed = this._Operations.ToArray().splice(0, this.Head + 1);
             this._Operations.Clear();
             this._Operations.AddRange(trimmed);
         }
 
         this._Operations.Add(operation);
 
-        this.Head = this._Operations.Count;
+        var that = this;
 
         return operation.Do().then((result) => {
-            this.OperationAdded.Raise(operation, new Fayde.RoutedEventArgs());
+            that.Head = this._Operations.Count - 1;
+            that.OperationAdded.Raise(operation, new Fayde.RoutedEventArgs());
+
+            that._Debug();
+
             return result;
         });
     }
@@ -58,12 +63,16 @@ class OperationManager {
 
         if (!this.CanUndo()) return this.RejectedPromise;
 
-        this.Head--;
-
         var operation = this._Operations.GetValueAt(this.Head);
 
+        var that = this;
+
         return (<IUndoableOperation>operation).Undo().then((result) => {
-            this.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
+            that.Head--;
+            that.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
+
+            that._Debug();
+
             return result;
         });
     }
@@ -72,14 +81,38 @@ class OperationManager {
 
         if (!this.CanRedo()) return this.RejectedPromise;
 
-        var operation = this._Operations.GetValueAt(this.Head);
+        var operation = this._Operations.GetValueAt(this.Head + 1);
 
-        this.Head++;
+        var that = this;
 
         return operation.Do().then((result) => {
-            this.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
+            that.Head++;
+            that.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
+
+            that._Debug();
+
             return result;
         });
+    }
+
+    private _Debug() {
+
+        // draw the operations to the console.
+        // ###[]######
+        // # = operation
+        // [] = head
+
+        var str:string = "";
+
+        for (var i = 0; i < this._Operations.Count; i++) {
+            if (this.Head == i){
+                str += "[]";
+            } else {
+                str += "#"
+            }
+        }
+
+        console.log(str);
     }
 
     private get RejectedPromise(): Promise<any>{
@@ -89,11 +122,11 @@ class OperationManager {
     }
 
     public CanUndo(): boolean {
-        return this.Head > 0;
+        return this.Head > -1;
     }
 
     public CanRedo(): boolean {
-        return this.Head < this._Operations.Count;
+        return this.Head < this._Operations.Count - 1;
     }
 }
 
