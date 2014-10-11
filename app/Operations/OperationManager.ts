@@ -2,7 +2,6 @@
 
 import IOperation = require("./IOperation");
 import IUndoableOperation = require("./IUndoableOperation");
-import OperationManagerEventArgs = require("./OperationManagerEventArgs");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class OperationManager {

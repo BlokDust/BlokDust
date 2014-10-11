@@ -7,13 +7,31 @@ class Block implements IBlock {
 
     public Id: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    public Position: Point;
-    public LastPosition: Point;
+    private _Position: Point;
+    private _LastPosition: Point;
     public Radius: number = 20;
     public IsPressed: boolean = false;
     private _IsSelected: boolean = false;
     Ctx: CanvasRenderingContext2D;
     private _CtxSize: Size;
+
+    set Position(value: Point){
+        console.log("set position. x=" + value.X + ", y=" + value.Y);
+        this._Position = value;
+    }
+
+    get Position(): Point{
+        return this._Position;
+    }
+
+    set LastPosition(value: Point){
+        console.log("set last position. x=" + value.X + ", y=" + value.Y);
+        this._LastPosition = value;
+    }
+
+    get LastPosition(): Point{
+        return this._LastPosition;
+    }
 
     set IsSelected(value: boolean){
         this._IsSelected = value;
@@ -48,7 +66,7 @@ class Block implements IBlock {
 
     MouseDown() {
         this.IsPressed = true;
-        this.LastPosition = new Point(this.Position.X, this.Position.Y);
+        this.LastPosition = this.Position.Clone();
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 

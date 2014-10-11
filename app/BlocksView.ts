@@ -5,25 +5,24 @@ import IModifiable = require("./Blocks/IModifiable");
 import IModifier = require("./Blocks/IModifier");
 import AddItemToObservableCollectionOperation = require("./Operations/AddItemToObservableCollectionOperation");
 import RemoveItemFromObservableCollectionOperation = require("./Operations/RemoveItemFromObservableCollectionOperation");
-import MovePointOperation = require("./Operations/MovePointOperation");
+import ChangePropertyOperation = require("./Operations/ChangePropertyOperation");
 import OperationManager = require("./Operations/OperationManager");
-import OperationManagerEventArgs = require("./Operations/OperationManagerEventArgs");
 import IOperation = require("./Operations/IOperation");
 import IUndoableOperation = require("./Operations/IUndoableOperation");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class BlocksView extends Fayde.Drawing.SketchContext {
 
+    private _SelectedBlock: IBlock;
+    private _Id: number = 0;
+    private _IsMouseDown: boolean = false;
+    private _IsTouchDown: boolean = false;
+    private _OperationManager: OperationManager;
     public Modifiables: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    private _SelectedBlock: IBlock;
-    private _Id: number = 0;
-    Blocks: IBlock[];
-    private _IsMouseDown: boolean = false;
-    private _IsTouchDown: boolean = false;
-    private _OperationManager: OperationManager;
+    public Blocks: IBlock[];
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -61,7 +60,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this._Invalidate();
     }
 
-    // called whenever the Sources or Modifiers collections change.
     private _Invalidate(){
 
         this.Blocks = [].concat(this.Modifiables.ToArray(), this.Modifiers.ToArray());
@@ -91,7 +89,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }, this);
 
         var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifiable, this.Modifiables);
-
         this._OperationManager.Do(op);
     }
 
@@ -104,7 +101,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }, this);
 
         var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Modifiers);
-
         this._OperationManager.Do(op);
     }
 
@@ -216,7 +212,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
                 // if the block has moved, create an undoable operation.
                 if (!this.SelectedBlock.Position.Equals(this.SelectedBlock.LastPosition)){
-                    var op:IUndoableOperation = new MovePointOperation(this.SelectedBlock.Position, this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
                     this._OperationManager.Do(op);
                 }
             }
