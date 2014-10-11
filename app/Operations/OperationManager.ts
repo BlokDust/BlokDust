@@ -9,10 +9,15 @@ class OperationManager {
     private _DebugEnabled: boolean = true;
     private _Operations: ObservableCollection<IOperation>;
     private _Head: number = -1;
+    private _CurrentOperation: Promise<any>;
 
     OperationAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationComplete: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+
+    static CANNOT_UNDO:string = "Cannot undo";
+    static CANNOT_REDO:string = "Cannot redo";
+    static OPERATION_IN_PROGRESS:string = "Operation in progress";
 
     set Head(value: number){
         this._Head = value;
@@ -32,6 +37,8 @@ class OperationManager {
 
     public Do(operation:IOperation): Promise<any> {
 
+        if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
+
         // if a non-undoable operation is added, warn the user
         // and clear _Operations.
         if (!(<IUndoableOperation>operation).Undo){
@@ -48,7 +55,8 @@ class OperationManager {
 
         var that = this;
 
-        return operation.Do().then((result) => {
+        return this._CurrentOperation = operation.Do().then((result) => {
+            that._CurrentOperation = null;
             that.Head = this._Operations.Count - 1;
             that.OperationAdded.Raise(operation, new Fayde.RoutedEventArgs());
 
@@ -60,13 +68,15 @@ class OperationManager {
 
     public Undo(): Promise<any> {
 
-        if (!this.CanUndo()) return this.RejectedPromise;
+        if (!this.CanUndo()) return this._Reject(OperationManager.CANNOT_UNDO);
+        if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
 
         var operation = this._Operations.GetValueAt(this.Head);
 
         var that = this;
 
-        return (<IUndoableOperation>operation).Undo().then((result) => {
+        return this._CurrentOperation = (<IUndoableOperation>operation).Undo().then((result) => {
+            that._CurrentOperation = null;
             that.Head--;
             that.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
 
@@ -78,13 +88,15 @@ class OperationManager {
 
     public Redo(): Promise<any> {
 
-        if (!this.CanRedo()) return this.RejectedPromise;
+        if (!this.CanRedo()) return this._Reject(OperationManager.CANNOT_REDO);
+        if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
 
         var operation = this._Operations.GetValueAt(this.Head + 1);
 
         var that = this;
 
-        return operation.Do().then((result) => {
+        return this._CurrentOperation = operation.Do().then((result) => {
+            that._CurrentOperation = null;
             that.Head++;
             that.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
 
@@ -101,6 +113,8 @@ class OperationManager {
         // # = operation
         // [] = head
 
+        if (!this._DebugEnabled) return;
+
         var str:string = "";
 
         for (var i = 0; i < this._Operations.Count; i++) {
@@ -114,9 +128,9 @@ class OperationManager {
         console.log(str);
     }
 
-    private get RejectedPromise(): Promise<any>{
-        return new Promise(function(undefined, reject) {
-            reject(Error("rejected"));
+    private _Reject(errorMessage: string): Promise<any>{
+        return new Promise<any>(function(undefined, reject) {
+            reject(Error(errorMessage));
         });
     }
 

@@ -16,7 +16,6 @@ class Block implements IBlock {
     private _CtxSize: Size;
 
     set Position(value: Point){
-        console.log("set position. x=" + value.X + ", y=" + value.Y);
         this._Position = value;
     }
 
@@ -25,7 +24,6 @@ class Block implements IBlock {
     }
 
     set LastPosition(value: Point){
-        console.log("set last position. x=" + value.X + ", y=" + value.Y);
         this._LastPosition = value;
     }
 

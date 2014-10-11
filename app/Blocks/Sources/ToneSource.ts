@@ -65,8 +65,6 @@ class ToneSource extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        console.log(this.Position.X);
-
         ctx.beginPath();
         ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
