@@ -7,7 +7,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class OperationManager {
 
     private _DebugEnabled: boolean = true;
-    private _Operations: ObservableCollection<IOperation>;
+    private _Operations: ObservableCollection<IOperation> = new ObservableCollection<IOperation>();
     private _Head: number = -1;
     private _CurrentOperation: Promise<any>;
 
@@ -28,11 +28,7 @@ class OperationManager {
     }
 
     constructor() {
-        this._Operations = new ObservableCollection<IOperation>();
 
-//        this._Operations.CollectionChanged.Subscribe(() => {
-//
-//        }, this);
     }
 
     public Do(operation:IOperation): Promise<any> {
