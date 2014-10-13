@@ -1,4 +1,4 @@
-/// <reference path="../refs" />
+/// <reference path="../../refs" />
 
 import IOperation = require("./IOperation");
 import IUndoableOperation = require("./IUndoableOperation");
