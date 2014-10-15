@@ -23,8 +23,8 @@ class App{
         App.OperationManager = new OperationManager();
         App.ResourceManager = new ResourceManager();
         App.CommandManager = new CommandManager(App.ResourceManager);
-        App.Modifiables = new ObservableCollection<IModifiable>();
-        App.Modifiers = new ObservableCollection<IModifier>();
+        App.Modifiables = new ObservableCollection<IModifiable>(); //todo: make this a resource?
+        App.Modifiers = new ObservableCollection<IModifier>(); //todo: make this a resource?
     }
 }
 

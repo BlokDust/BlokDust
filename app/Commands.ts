@@ -4,8 +4,8 @@ class Commands {
 
     }
 
-    static CREATE_MODIFIER:string = "createModifier";
-    static CREATE_MODIFIABLE:string = "createModifiable";
+    static CREATE_MODIFIER: string = "createModifier";
+    static CREATE_MODIFIABLE: string = "createModifiable";
 }
 
 export = Commands;

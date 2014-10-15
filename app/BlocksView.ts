@@ -12,6 +12,7 @@ import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
 import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
 import CreateModifierCommandHandler = require("./CommandHandlers/CreateModifierCommandHandler");
+import CreateModifiableCommandHandler = require("./CommandHandlers/CreateModifiableCommandHandler");
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
@@ -51,6 +52,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         App.Init();
 
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_MODIFIER, CreateModifierCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_MODIFIABLE, CreateModifiableCommandHandler.prototype));
 
         App.OperationManager.OperationAdded.Subscribe((operation: IOperation) => {
             this._Invalidate();
@@ -84,6 +86,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     CreateModifiable<T extends IModifiable>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+
         var modifiable: IModifiable = new m(this.Ctx, this._GetRandomPosition());
         modifiable.Id = this._GetId();
 
@@ -91,8 +94,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             this.OnModifiableSelected(e);
         }, this);
 
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifiable, App.Modifiables);
-        App.OperationManager.Do(op);
+        App.CommandManager.ExecuteCommand(Commands.CREATE_MODIFIABLE, modifiable);
     }
 
     CreateModifier<T extends IModifier>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
