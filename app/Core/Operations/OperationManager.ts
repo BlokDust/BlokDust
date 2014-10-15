@@ -28,6 +28,18 @@ class OperationManager {
         return this._Head;
     }
 
+    set MaxOperations(value: number){
+        if (value > 0 && value < 100000){
+            this._MaxOperations = value;
+        } else {
+            throw new Exception("Invalid range");
+        }
+    }
+
+    get MaxOperations(): number {
+        return this._MaxOperations;
+    }
+
     constructor() {
 
     }
@@ -37,7 +49,7 @@ class OperationManager {
         if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
 
         // if about to exceed max number of operations, start trimming from start of array.
-        if (this._Operations.Count == this._MaxOperations){
+        if (this._Operations.Count == this.MaxOperations){
             var trimmed = this._Operations.ToArray().splice(1, this._Operations.Count - 1);
             this._Operations.Clear();
             this._Operations.AddRange(trimmed);
