@@ -68,6 +68,7 @@ class Block implements IBlock {
         this.Ctx.beginPath();
         var pos = this._GetGridPosition(new Point(x, y));
         this.Ctx.moveTo(pos.X, pos.Y);
+        //test
     }
 
     DrawLineTo(x,y) {
