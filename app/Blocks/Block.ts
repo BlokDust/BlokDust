@@ -62,6 +62,23 @@ class Block implements IBlock {
 
     }
 
+    // x and y are grid units. grid units are the divisor of the blocks view (1/50)
+    // so if x = -1, that's (width/50)*-1
+    DrawMoveTo(x, y) {
+        this.Ctx.beginPath();
+        var pos = this._GetGridPosition(new Point(x, y));
+        this.Ctx.moveTo(pos.X, pos.Y);
+    }
+
+    DrawLineTo(x,y) {
+        var pos = this._GetGridPosition(new Point(x, y));
+        this.Ctx.lineTo(pos.X, pos.Y);
+    }
+
+    _GetGridPosition(point: Point) {
+        return new Point(this.AbsPosition.X + (this.Ctx.canvas.width/this.Ctx.divisor) * point.X, this.AbsPosition.Y + (this.Ctx.canvas.width/this.Ctx.divisor) * point.Y);
+    }
+
     MouseDown() {
         this.IsPressed = true;
         this.LastPosition = this.Position.Clone();
@@ -99,6 +116,8 @@ class Block implements IBlock {
     DistanceFrom(point: Point): number{
         return Math.distanceBetween(this.AbsPosition.X, this.AbsPosition.Y, point.X, point.Y);
     }
+
+
 }
 
 export = Block;

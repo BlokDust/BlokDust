@@ -22,6 +22,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
+    private _Divisor: number = 100;
     public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Blocks: IBlock[];
@@ -119,6 +120,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     Setup(){
         super.Setup();
+
+        // set up the grid
+        this.Ctx.divisor = this._Divisor;
     }
 
     Update() {

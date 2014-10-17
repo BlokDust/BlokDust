@@ -65,9 +65,13 @@ class ToneSource extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
+        this.DrawMoveTo(-1, -1);
+        this.DrawLineTo(1, -1);
+        this.DrawLineTo(1, 1);
+        this.DrawLineTo(-1, 1);
+
         ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
+        ctx.closePath();
         ctx.fill();
     }
 }
