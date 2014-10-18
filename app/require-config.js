@@ -3,8 +3,7 @@ var require = {
     paths: {
         "text": "lib/requirejs-text/text",
         "Fayde": "lib/fayde/Fayde",
-        "Tone": "lib/Tone.js/Tone",
-        "pixelPalette": "lib/pixel-palette"
+        "Tone": "lib/Tone.js/Tone"
     },
     deps: [
         "text",
@@ -16,7 +15,9 @@ var require = {
         "Tone/component/LFO",
         "Tone/component/Envelope",
         "Tone/effect/PingPongDelay",
-        "pixelPalette"
+        "lib/pixel-palette/js/pixelPalette.js",
+        "lib/pixel-palette/js/PxLoader.js",
+        "lib/pixel-palette/js/PxLoaderImage.js"
     ],
     callback: function (
         text,

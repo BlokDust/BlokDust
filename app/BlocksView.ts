@@ -64,6 +64,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }, this);
 
         this._Invalidate();
+
+        // console is picking this function up, just not here
+        //loadPalette("img/palette.gif",function() {alert("palette load happened")});
     }
 
     private _Invalidate(){
