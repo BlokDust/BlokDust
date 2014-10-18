@@ -40,6 +40,9 @@ class ToneSource extends Modifiable {
         this.Envelope.connect(this.Osc.output.gain);
         this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
         this.Osc.start();
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(1, 1),new Point(-1, 1));
     }
 
     MouseDown() {

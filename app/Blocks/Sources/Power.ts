@@ -9,6 +9,9 @@ class Power extends Modifiable{
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
         super(ctx, position);
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-1,0), new Point(1,-2), new Point(2,-1), new Point(2,0), new Point(0,2), new Point(-1,1));
     }
 
     Update(ctx:CanvasRenderingContext2D) {

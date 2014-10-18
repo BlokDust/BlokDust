@@ -84,6 +84,9 @@ class KeyboardInput extends Modifiable {
         this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
 
         this.addListeners();
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
     }
 
     Update(ctx:CanvasRenderingContext2D) {

@@ -14,6 +14,7 @@ class Block implements IBlock {
     private _IsSelected: boolean = false;
     Ctx: CanvasRenderingContext2D;
     private _CtxSize: Size;
+    public Outline: Point[] = [];
 
     set Position(value: Point){
         this._Position = this._GetAbsGridPosition(value);
@@ -52,6 +53,8 @@ class Block implements IBlock {
         return new Point(this.Position.X * this._CtxSize.Width, this.Position.Y * this._CtxSize.Height);
     }
 
+
+
     Update(ctx: CanvasRenderingContext2D) {
         // only recreate the _CtxSize object if the ctx size has changed.
         if (!this._CtxSize || this.Ctx.canvas.width != this._CtxSize.Width || this.Ctx.canvas.height != this._CtxSize.Height){
@@ -76,6 +79,9 @@ class Block implements IBlock {
         var pos = this._GetRelativeGridPosition(new Point(x, y));
         this.Ctx.lineTo(pos.X, pos.Y);
     }
+
+
+
 
     /*
     * @param {point} point - specifies number of units relative to AbsPosition. (-1, -1) means "one unit left and one unit up".
@@ -115,9 +121,18 @@ class Block implements IBlock {
 
     // absolute point
     HitTest(point: Point):boolean {
-        var distance = this.DistanceFrom(point);
+//        var distance = this.DistanceFrom(point);
+//        if (distance <= this.Radius) {
+//            return true;
+//        }
+        var ref = this.Outline;
+        var i;
 
-        if (distance <= this.Radius) {
+        this.DrawMoveTo(ref[0].X,ref[0].Y);
+        for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].X, ref[i].Y);
+        this.Ctx.closePath();
+
+        if (this.Ctx.isPointInPath(point.X,point.Y)) {
             return true;
         }
 
