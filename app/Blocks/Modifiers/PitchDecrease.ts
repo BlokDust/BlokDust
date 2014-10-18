@@ -18,9 +18,13 @@ class PitchDecrease extends Modifier {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.rect(this.AbsPosition.X - this.Radius, this.AbsPosition.Y - this.Radius, 40, 40);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(171, 161, 114)" : "rgb(178, 171, 124)";
+        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
+        ctx.fillStyle = "#fff";
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(0,1);
+        ctx.closePath();
         ctx.fill();
     }
 

@@ -19,9 +19,34 @@ class Power extends Modifiable{
     Draw(ctx: CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#74d544" : "#3cb500";
+        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
+        //color(col[0]);// BLUE
+        ctx.fillStyle = "#40e6ff";
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(1,-2);
+        this.DrawLineTo(2,-1);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(0,2);
+        this.DrawLineTo(-1,1);
+        ctx.closePath();
+        ctx.fill();
+
+        //color(col[1]); // GREEN
+        ctx.fillStyle = "#1add8d";
+        this.DrawMoveTo(0,0);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(0,2);
+        ctx.closePath();
+        ctx.fill();
+
+        //color(col[5]); // WHITE
+        ctx.fillStyle = "#fff";
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(1,-2);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(0,0);
+        ctx.closePath();
         ctx.fill();
     }
 }

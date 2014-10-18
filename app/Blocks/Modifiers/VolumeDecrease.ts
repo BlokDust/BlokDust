@@ -14,9 +14,13 @@ class VolumeDecrease extends Modifier {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.rect(this.AbsPosition.X - this.Radius, this.AbsPosition.Y - this.Radius, 40, 40);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#BBB" : "#000";
+        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
+        ctx.fillStyle = "#40e6ff";
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(0,1);
+        ctx.closePath();
         ctx.fill();
     }
 

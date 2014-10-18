@@ -198,9 +198,13 @@ class KeyboardInput extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e1b1e1" : "#f1b0e0";
+        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
+        ctx.fillStyle = "#1add8d";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(0,2);
+        ctx.closePath();
         ctx.fill();
     }
 

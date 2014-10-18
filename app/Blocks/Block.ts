@@ -16,7 +16,11 @@ class Block implements IBlock {
     private _CtxSize: Size;
 
     set Position(value: Point){
-        this._Position = value;
+        var aspect = (this.Ctx.canvas.height/this.Ctx.canvas.width);
+        var x = Math.round( value.X / (1/this.Ctx.divisor) ) * (1/this.Ctx.divisor);
+        var y = Math.round( value.Y / (1/(this.Ctx.divisor*aspect)) ) * (1/(this.Ctx.divisor*aspect));
+        this._Position = new Point(x,y);
+        //console.log(value.Y+" | "+this._Position.Y);
     }
 
     get Position(): Point{

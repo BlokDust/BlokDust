@@ -65,14 +65,37 @@ class ToneSource extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        this.DrawMoveTo(-1, -1);
-        this.DrawLineTo(1, -1);
-        this.DrawLineTo(1, 1);
-        this.DrawLineTo(-1, 1);
-
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
+        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
+        //color(col[2]); // PURPLE
+        ctx.fillStyle = "#730081";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(1,1);
+        this.DrawLineTo(-1,1);
         ctx.closePath();
         ctx.fill();
+
+        //color(col[5]); // WHITE
+        ctx.fillStyle = "#fff";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(0,0);
+        this.DrawLineTo(-1,1);
+        ctx.closePath();
+        ctx.fill();
+
+        //color(col[1]); // GREEN
+        ctx.fillStyle = "#1add8d";
+        this.DrawMoveTo(0,-2);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(0,0);
+        ctx.closePath();
+        ctx.fill();
+
+//        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
+//        ctx.closePath();
+//        ctx.fill();
     }
 }
 

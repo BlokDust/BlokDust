@@ -22,7 +22,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
-    private _Divisor: number = 100;
+    private _Divisor: number = 75;
     public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Blocks: IBlock[];
@@ -139,8 +139,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         super.Draw();
 
         // clear
-        //this.Ctx.fillStyle = "#d7d7d7";
-        //this.Ctx.fillRect(0, 0, this.Width, this.Height);
+        this.Ctx.fillStyle = "#2c243e";
+        this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
         for (var i = 0; i < this.Blocks.length; i++) {
