@@ -16,10 +16,7 @@ class Block implements IBlock {
     private _CtxSize: Size;
 
     set Position(value: Point){
-        var aspect = (this.Ctx.canvas.height/this.Ctx.canvas.width);
-        var x = Math.round( value.X / (1/this.Ctx.divisor) ) * (1/this.Ctx.divisor);
-        var y = Math.round( value.Y / (1/(this.Ctx.divisor*aspect)) ) * (1/(this.Ctx.divisor*aspect));
-        this._Position = new Point(x,y);
+        this._Position = this._GetAbsGridPosition(value);
         //console.log(value.Y+" | "+this._Position.Y);
     }
 
@@ -70,18 +67,28 @@ class Block implements IBlock {
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
         this.Ctx.beginPath();
-        var pos = this._GetGridPosition(new Point(x, y));
+        var pos = this._GetRelativeGridPosition(new Point(x, y));
         this.Ctx.moveTo(pos.X, pos.Y);
         //test
     }
 
     DrawLineTo(x,y) {
-        var pos = this._GetGridPosition(new Point(x, y));
+        var pos = this._GetRelativeGridPosition(new Point(x, y));
         this.Ctx.lineTo(pos.X, pos.Y);
     }
 
-    _GetGridPosition(point: Point) {
+    /*
+    * @param {point} point - specifies number of units relative to AbsPosition. (-1, -1) means "one unit left and one unit up".
+     */
+    private _GetRelativeGridPosition(point: Point): Point {
         return new Point(this.AbsPosition.X + (this.Ctx.canvas.width/this.Ctx.divisor) * point.X, this.AbsPosition.Y + (this.Ctx.canvas.width/this.Ctx.divisor) * point.Y);
+    }
+
+    private _GetAbsGridPosition(point: Point): Point {
+        var aspect = (this.Ctx.canvas.height/this.Ctx.canvas.width);
+        var x = Math.round(point.X / (1/this.Ctx.divisor)) * (1/this.Ctx.divisor);
+        var y = Math.round(point.Y / (1/(this.Ctx.divisor*aspect))) * (1/(this.Ctx.divisor*aspect));
+        return new Point(x, y);
     }
 
     MouseDown() {
