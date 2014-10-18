@@ -5,7 +5,6 @@ import Size = Fayde.Utils.Size;
 interface IBlock{
     Id: number;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
-    Radius: number;
     Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;

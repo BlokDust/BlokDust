@@ -9,7 +9,6 @@ class Block implements IBlock {
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
     private _LastPosition: Point;
-    public Radius: number = 20;
     public IsPressed: boolean = false;
     private _IsSelected: boolean = false;
     Ctx: CanvasRenderingContext2D;
@@ -18,7 +17,6 @@ class Block implements IBlock {
 
     set Position(value: Point){
         this._Position = this._GetAbsGridPosition(value);
-        //console.log(value.Y+" | "+this._Position.Y);
     }
 
     get Position(): Point{
@@ -53,8 +51,6 @@ class Block implements IBlock {
         return new Point(this.Position.X * this._CtxSize.Width, this.Position.Y * this._CtxSize.Height);
     }
 
-
-
     Update(ctx: CanvasRenderingContext2D) {
         // only recreate the _CtxSize object if the ctx size has changed.
         if (!this._CtxSize || this.Ctx.canvas.width != this._CtxSize.Width || this.Ctx.canvas.height != this._CtxSize.Height){
@@ -70,23 +66,19 @@ class Block implements IBlock {
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
         this.Ctx.beginPath();
-        var pos = this._GetRelativeGridPosition(new Point(x, y));
+        var pos = this._GetRelGridPosition(new Point(x, y));
         this.Ctx.moveTo(pos.X, pos.Y);
-        //test
     }
 
     DrawLineTo(x,y) {
-        var pos = this._GetRelativeGridPosition(new Point(x, y));
+        var pos = this._GetRelGridPosition(new Point(x, y));
         this.Ctx.lineTo(pos.X, pos.Y);
     }
-
-
-
 
     /*
     * @param {point} point - specifies number of units relative to AbsPosition. (-1, -1) means "one unit left and one unit up".
      */
-    private _GetRelativeGridPosition(point: Point): Point {
+    private _GetRelGridPosition(point: Point): Point {
         return new Point(this.AbsPosition.X + (this.Ctx.canvas.width/this.Ctx.divisor) * point.X, this.AbsPosition.Y + (this.Ctx.canvas.width/this.Ctx.divisor) * point.Y);
     }
 
@@ -121,10 +113,6 @@ class Block implements IBlock {
 
     // absolute point
     HitTest(point: Point):boolean {
-//        var distance = this.DistanceFrom(point);
-//        if (distance <= this.Radius) {
-//            return true;
-//        }
         var ref = this.Outline;
         var i;
 
@@ -132,11 +120,7 @@ class Block implements IBlock {
         for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].X, ref[i].Y);
         this.Ctx.closePath();
 
-        if (this.Ctx.isPointInPath(point.X,point.Y)) {
-            return true;
-        }
-
-        return false;
+        return this.Ctx.isPointInPath(point.X,point.Y);
     }
 
     // absolute point
