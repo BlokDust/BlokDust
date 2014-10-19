@@ -156,11 +156,12 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
-/*        for (var i = 0; i < this.Blocks.length; i++) {
+        /*
+       for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[i];
             block.Draw(this.Ctx);
-        }*/
-
+        }
+         */
         for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[this.DrawOrder[i]];
             block.Draw(this.Ctx);
@@ -225,14 +226,23 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             }
         }
         // Bring Selected Block To the Front
-        var pre = this.DrawOrder.slice(0,(this.SelectedBlock.IndexZ));
-        var post = this.DrawOrder.slice((this.SelectedBlock.IndexZ+1));
+        this.ShuffleZ(this.SelectedBlock,false);
+    }
+
+    ShuffleZ(block,deleteBlock) {
+        var pre = this.DrawOrder.slice(0,(block.IndexZ));
+        var post = this.DrawOrder.slice((block.IndexZ+1));
         var joined = pre.concat(post);
-        joined.push(this.DrawOrder[this.SelectedBlock.IndexZ]);
+        if (deleteBlock!==true) {
+            joined.push(this.DrawOrder[block.IndexZ]);
+        }
         this.DrawOrder = joined;
         var j;
         for (j=0;j<this.DrawOrder.length;j++) this.Blocks[this.DrawOrder[j]].IndexZ = j;
     }
+
+
+
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = false;
@@ -272,6 +282,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     DeleteSelectedBlock(){
+
         if (App.Modifiables.Contains(<any>this.SelectedBlock)){
 
             var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiables);
