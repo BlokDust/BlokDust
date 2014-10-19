@@ -93,8 +93,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.ModifierSelected.Subscribe((modifier: IModifier) => {
             this._OnModifierSelected(modifier);
         }, this);
-
-
     }
 
     ZoomUpdated(e: Fayde.IEventBindingArgs<Fayde.Zoomer.ZoomerEventArgs>){

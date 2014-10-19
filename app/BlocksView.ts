@@ -44,8 +44,23 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             }
             block.IsSelected = true;
             this._SelectedBlock = block;
+
+            // Bring Selected Block To the Front
+            var pre = this.Blocks.slice(0,(block.Id));
+            var post = this.Blocks.slice((block.Id+1));
+            var joined = pre.concat(post);
+            joined.push(this.Blocks[block.Id]);
+            this.Blocks = joined;
+            console.log(pre);
+            console.log(post);
+            console.log(joined);
+            var i;
+            for (i=0;i<this.Blocks.length;i++) this.Blocks[i].Id = i;
+
         }
     }
+
+
 
     constructor() {
         super();
@@ -126,6 +141,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         // set up the grid
         this.Ctx.divisor = this._Divisor;
+
     }
 
     Update() {

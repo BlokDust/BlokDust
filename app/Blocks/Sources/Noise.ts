@@ -67,7 +67,6 @@ class Noise extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
         ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);

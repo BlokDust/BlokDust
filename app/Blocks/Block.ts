@@ -59,7 +59,7 @@ class Block implements IBlock {
     }
 
     Draw(ctx: CanvasRenderingContext2D) {
-
+        ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
     }
 
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
@@ -89,10 +89,14 @@ class Block implements IBlock {
         return new Point(x, y);
     }
 
+
+
     MouseDown() {
         this.IsPressed = true;
         this.LastPosition = this.Position.Clone();
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
+        console.log(this.Id);
+
     }
 
     TouchDown() {
@@ -122,6 +126,8 @@ class Block implements IBlock {
 
         return this.Ctx.isPointInPath(point.X,point.Y);
     }
+
+
 
     // absolute point
     DistanceFrom(point: Point): number{

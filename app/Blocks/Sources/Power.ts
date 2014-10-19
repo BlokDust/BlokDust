@@ -22,7 +22,6 @@ class Power extends Modifiable{
     Draw(ctx: CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
         //color(col[0]);// BLUE
         ctx.fillStyle = "#40e6ff";
         this.DrawMoveTo(-1,0);
