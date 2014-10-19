@@ -96,6 +96,12 @@ class KeyboardInput extends Modifiable {
 
     KeyDown(frequency): void {
 
+//        for (var i = 0; i < this.Modifiers.Count; i++){
+//            var mod = this.Modifiers.GetValueAt(i);
+//            if ((<any>mod).PitchIncrement){
+//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
+//            }
+//        }
         this.Osc.frequency.setValue(frequency);
         this.Envelope.triggerAttack();
         //TODO: if two keys pressed slide frequency
