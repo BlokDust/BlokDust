@@ -6,6 +6,9 @@ import Size = Fayde.Utils.Size;
 class Block implements IBlock {
 
     public Id: number;
+    //public DrawZ: number;
+    //public SlotZ: number;
+    public IndexZ: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
     private _LastPosition: Point;
@@ -95,8 +98,6 @@ class Block implements IBlock {
         this.IsPressed = true;
         this.LastPosition = this.Position.Clone();
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
-        console.log(this.Id);
-
     }
 
     TouchDown() {

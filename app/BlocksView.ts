@@ -26,6 +26,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Blocks: IBlock[];
+    public DrawOrder: number[] = [];
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -44,19 +45,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             }
             block.IsSelected = true;
             this._SelectedBlock = block;
-
-            // Bring Selected Block To the Front
-            var pre = this.Blocks.slice(0,(block.Id));
-            var post = this.Blocks.slice((block.Id+1));
-            var joined = pre.concat(post);
-            joined.push(this.Blocks[block.Id]);
-            this.Blocks = joined;
-            console.log(pre);
-            console.log(post);
-            console.log(joined);
-            var i;
-            for (i=0;i<this.Blocks.length;i++) this.Blocks[i].Id = i;
-
         }
     }
 
@@ -109,6 +97,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         var modifiable: IModifiable = new m(this.Ctx, this._GetRandomPosition());
         modifiable.Id = this._GetId();
 
+        modifiable.IndexZ = modifiable.Id;
+        this.DrawOrder.push(modifiable.IndexZ);
+
         modifiable.Click.Subscribe((e: IModifiable) => {
             this.OnModifiableSelected(e);
         }, this);
@@ -120,6 +111,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         var modifier: IModifier = new m(this.Ctx, this._GetRandomPosition());
         modifier.Id = this._GetId();
+
+        modifier.IndexZ = modifier.Id;
+        this.DrawOrder.push(modifier.IndexZ);
 
         modifier.Click.Subscribe((e: IModifier) => {
             this.OnModifierSelected(e);
@@ -162,8 +156,13 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
-        for (var i = 0; i < this.Blocks.length; i++) {
+/*        for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[i];
+            block.Draw(this.Ctx);
+        }*/
+
+        for (var i = 0; i < this.Blocks.length; i++) {
+            var block = this.Blocks[this.DrawOrder[i]];
             block.Draw(this.Ctx);
         }
     }
@@ -205,6 +204,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
         this._CheckCollision(e);
+
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
@@ -221,10 +221,17 @@ class BlocksView extends Fayde.Drawing.SketchContext {
                 (<any>e).args.Handled = true;
 
                 block.MouseDown();
-
                 this.SelectedBlock = block;
             }
         }
+        // Bring Selected Block To the Front
+        var pre = this.DrawOrder.slice(0,(this.SelectedBlock.IndexZ));
+        var post = this.DrawOrder.slice((this.SelectedBlock.IndexZ+1));
+        var joined = pre.concat(post);
+        joined.push(this.DrawOrder[this.SelectedBlock.IndexZ]);
+        this.DrawOrder = joined;
+        var j;
+        for (j=0;j<this.DrawOrder.length;j++) this.Blocks[this.DrawOrder[j]].IndexZ = j;
     }
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
