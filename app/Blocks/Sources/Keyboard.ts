@@ -70,8 +70,6 @@ class KeyboardInput extends Modifiable {
 
         };
 
-        this.IsSticky = true;
-
 
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
@@ -86,6 +84,9 @@ class KeyboardInput extends Modifiable {
         this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
 
         this.addListeners();
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
     }
 
     Update(ctx:CanvasRenderingContext2D) {
@@ -206,9 +207,12 @@ class KeyboardInput extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e1b1e1" : "#f1b0e0";
+        ctx.fillStyle = "#1add8d";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(0,2);
+        ctx.closePath();
         ctx.fill();
     }
 

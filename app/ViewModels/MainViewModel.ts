@@ -5,7 +5,6 @@ import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
-import Sticky = require("../Blocks/Sources/Sticky");
 import Noise = require("../Blocks/Sources/Noise");
 import Keyboard = require("../Blocks/Sources/Keyboard");
 
@@ -87,15 +86,13 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
         this._BlocksView = new BlocksView();
 
-        this._BlocksView.SourceSelected.Subscribe((source: IModifiable) => {
+        this._BlocksView.ModifiableSelected.Subscribe((source: IModifiable) => {
             this._OnSourceSelected(source);
         }, this);
 
         this._BlocksView.ModifierSelected.Subscribe((modifier: IModifier) => {
             this._OnModifierSelected(modifier);
         }, this);
-
-
     }
 
     ZoomUpdated(e: Fayde.IEventBindingArgs<Fayde.Zoomer.ZoomerEventArgs>){
@@ -127,12 +124,12 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.TouchDown(e);
     }
 
-    BlocksView_MouseUp(e: any){
-        this._BlocksView.MouseUp(e.args.Source.MousePosition);
+    BlocksView_MouseUp(e: Fayde.Input.MouseEventArgs){
+        this._BlocksView.MouseUp(e);
     }
 
-    BlocksView_MouseMove(e: any){
-        this._BlocksView.MouseMove(e.args.Source.MousePosition);
+    BlocksView_MouseMove(e: Fayde.Input.MouseEventArgs){
+        this._BlocksView.MouseMove(e);
     }
 
     _OnSourceSelected(source: IModifiable){
@@ -149,10 +146,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     ToneBlockBtn_Click(e: EventArgs){
         this._BlocksView.CreateModifiable(ToneSource);
-    }
-
-    StickyBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateModifiable(Sticky);
     }
 
     NoiseBlockBtn_Click(e: EventArgs){

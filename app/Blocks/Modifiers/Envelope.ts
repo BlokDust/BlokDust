@@ -12,14 +12,19 @@ class Envelope extends Modifier {
 
         this.Effects.Add(effect);
 
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
     }
 
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.rect(this.AbsPosition.X - this.Radius, this.AbsPosition.Y - this.Radius, 30, 30);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "rgb(121, 191, 184)" : "rgb(128, 192, 184)";
+        ctx.fillStyle = "#f22a54";
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(0,1);
+        ctx.closePath();
         ctx.fill();
     }
 

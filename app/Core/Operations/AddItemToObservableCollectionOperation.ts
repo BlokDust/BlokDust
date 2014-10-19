@@ -1,18 +1,18 @@
-/// <reference path="../refs" />
+/// <reference path="../../refs" />
 
 import IUndoableOperation = require("./IUndoableOperation");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
 {
-    Item:T;
-    Collection:ObservableCollection<T>;
-    Index:number;
+    private _Item:T;
+    private _Collection:ObservableCollection<T>;
+    private _Index:number;
 
     constructor(item:T, collection:ObservableCollection<T>, index?:number) {
-        this.Item = item;
-        this.Collection = collection;
-        this.Index = index || -1;
+        this._Item = item;
+        this._Collection = collection;
+        this._Index = index || -1;
     }
 
     Do(): Promise<ObservableCollection<T>> {
@@ -20,14 +20,14 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
 
         return new Promise((resolve, reject) => {
 
-            if (that.Index == -1 || that.Index >= that.Collection.Count){
-                that.Collection.Add(that.Item);
+            if (that._Index == -1 || that._Index >= that._Collection.Count){
+                that._Collection.Add(that._Item);
             } else {
-                that.Collection.Insert(that.Item, that.Index);
+                that._Collection.Insert(that._Item, that._Index);
             }
 
 //            if (/* everything turned out fine */) {
-                resolve(that.Collection);
+                resolve(that._Collection);
 //            }
 //            else {
 //                reject(Error("It broke"));
@@ -39,8 +39,8 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
         var that = this;
 
         return new Promise((resolve) => {
-            that.Collection.Remove(that.Item);
-            resolve(that.Collection);
+            that._Collection.Remove(that._Item);
+            resolve(that._Collection);
         });
     }
 }

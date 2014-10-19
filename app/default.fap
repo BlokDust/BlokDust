@@ -25,7 +25,6 @@
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="ToneBlockBtn" Click="{EventBinding ToneBlockBtn_Click}">Tone</Button>
             <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyboard</Button>
-            <Button x:Name="StickyBlockBtn" Click="{EventBinding StickyBlockBtn_Click}">Sticky</Button>
 
             <Button x:Name="NoiseBlockBtn" Click="{EventBinding NoiseBlockBtn_Click}">Noise</Button>
             <Button x:Name="VolumeIncreaseBlockBtn" Click="{EventBinding VolumeIncreaseBlockBtn_Click}">Volume +</Button>

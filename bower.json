@@ -11,6 +11,7 @@
     "Tone.js": "0.1.0",
     "fayde.utils": "0.1.9",
     "fayde.zoomer": "0.1.5",
-    "tween.ts": "0.1.1"
+    "tween.ts": "0.1.1",
+    "pixel-palette": "*"
   }
 }

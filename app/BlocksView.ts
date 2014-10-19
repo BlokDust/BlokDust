@@ -1,66 +1,80 @@
 /// <reference path="./refs" />
 
+import App = require("./App");
 import IBlock = require("./Blocks/IBlock");
 import IModifiable = require("./Blocks/IModifiable");
 import IModifier = require("./Blocks/IModifier");
-import AddItemToObservableCollectionOperation = require("./Operations/AddItemToObservableCollectionOperation");
-import RemoveItemFromObservableCollectionOperation = require("./Operations/RemoveItemFromObservableCollectionOperation");
-import MovePointOperation = require("./Operations/MovePointOperation");
-import OperationManager = require("./Operations/OperationManager");
-import IOperation = require("./Operations/IOperation");
-import IUndoableOperation = require("./Operations/IUndoableOperation");
+import AddItemToObservableCollectionOperation = require("./Core/Operations/AddItemToObservableCollectionOperation");
+import RemoveItemFromObservableCollectionOperation = require("./Core/Operations/RemoveItemFromObservableCollectionOperation");
+import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
+import IOperation = require("./Core/Operations/IOperation");
+import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
+import Commands = require("./Commands");
+import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
+import CreateModifierCommandHandler = require("./CommandHandlers/CreateModifierCommandHandler");
+import CreateModifiableCommandHandler = require("./CommandHandlers/CreateModifiableCommandHandler");
+import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class BlocksView extends Fayde.Drawing.SketchContext {
 
-    public Modifiables: ObservableCollection<IModifiable> = new ObservableCollection<IModifiable>();
-    public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
-    public SourceSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
-    Blocks: IBlock[];
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
-    private _OperationManager: OperationManager;
+    private _Divisor: number = 75;
+    public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    public Blocks: IBlock[];
+    public DrawOrder: number[] = [];
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
     }
 
     set SelectedBlock(block: IBlock) {
-        this._SelectedBlock = block;
+        // if setting the selected block to null (or falsey)
+        // if there's already a selected block, set its
+        // IsSelected to false.
+        if (!block && this._SelectedBlock){
+            this._SelectedBlock.IsSelected = false;
+            this._SelectedBlock = null;
+        } else {
+            if (this._SelectedBlock){
+                this._SelectedBlock.IsSelected = false;
+            }
+            block.IsSelected = true;
+            this._SelectedBlock = block;
+        }
     }
+
+
 
     constructor() {
         super();
 
-        this._OperationManager = new OperationManager();
+        App.Init();
 
-        this._OperationManager.OperationAdded.Subscribe((operation: IOperation) => {
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_MODIFIER, CreateModifierCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_MODIFIABLE, CreateModifiableCommandHandler.prototype));
+
+        App.OperationManager.OperationAdded.Subscribe((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
-        // todo: investigate whether invalidate definitely necessary
-        this._OperationManager.OperationComplete.Subscribe((operation: IOperation) => {
-            this._Invalidate();
-        }, this);
-
-        this.Modifiables.CollectionChanged.Subscribe(() => {
-            this._Invalidate();
-        }, this);
-
-        this.Modifiers.CollectionChanged.Subscribe(() => {
+        App.OperationManager.OperationComplete.Subscribe((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
         this._Invalidate();
+
+        // console is picking this function up, just not here
+        //loadPalette("img/palette.gif",function() {alert("palette load happened")});
     }
 
-    // called whenever the Sources or Modifiers collections change.
     private _Invalidate(){
 
-        this.Blocks = [].concat(this.Modifiables.ToArray(), this.Modifiers.ToArray());
+        this.Blocks = [].concat(App.Modifiables.ToArray(), App.Modifiers.ToArray());
 
         this._ValidateBlocks();
 
@@ -71,41 +85,41 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         // for each Modifiable, pass it the new list of Modifiers.
         // if the Modifiable contains a Modifier that no longer
         // exists, remove it.
-        for (var i = 0; i < this.Modifiables.Count; i++){
-            var modifiable: IModifiable = this.Modifiables.GetValueAt(i);
+        for (var i = 0; i < App.Modifiables.Count; i++){
+            var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
 
-            modifiable.ValidateModifiers(this.Modifiers);
+            modifiable.ValidateModifiers(App.Modifiers);
         }
     }
 
     CreateModifiable<T extends IModifiable>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+
         var modifiable: IModifiable = new m(this.Ctx, this._GetRandomPosition());
         modifiable.Id = this._GetId();
 
+        modifiable.IndexZ = modifiable.Id;
+        this.DrawOrder.push(modifiable.IndexZ);
+
         modifiable.Click.Subscribe((e: IModifiable) => {
-            this.OnSourceSelected(e);
+            this.OnModifiableSelected(e);
         }, this);
 
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifiable, this.Modifiables);
-
-        this._OperationManager.Do(op).then((list) => {
-            console.log(list);
-        });
+        App.CommandManager.ExecuteCommand(Commands.CREATE_MODIFIABLE, modifiable);
     }
 
     CreateModifier<T extends IModifier>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+
         var modifier: IModifier = new m(this.Ctx, this._GetRandomPosition());
         modifier.Id = this._GetId();
+
+        modifier.IndexZ = modifier.Id;
+        this.DrawOrder.push(modifier.IndexZ);
 
         modifier.Click.Subscribe((e: IModifier) => {
             this.OnModifierSelected(e);
         }, this);
 
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifier, this.Modifiers);
-
-        this._OperationManager.Do(op).then((list) => {
-//            console.log(list);
-        });
+        App.CommandManager.ExecuteCommand(Commands.CREATE_MODIFIER, modifier);
     }
 
     private _GetId(): number {
@@ -118,6 +132,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     Setup(){
         super.Setup();
+
+        // set up the grid
+        this.Ctx.divisor = this._Divisor;
+
     }
 
     Update() {
@@ -134,12 +152,18 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         super.Draw();
 
         // clear
-        //this.Ctx.fillStyle = "#d7d7d7";
-        //this.Ctx.fillRect(0, 0, this.Width, this.Height);
+        this.Ctx.fillStyle = "#2c243e";
+        this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
-        for (var i = 0; i < this.Blocks.length; i++) {
+        /*
+       for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[i];
+            block.Draw(this.Ctx);
+        }
+         */
+        for (var i = 0; i < this.Blocks.length; i++) {
+            var block = this.Blocks[this.DrawOrder[i]];
             block.Draw(this.Ctx);
         }
     }
@@ -147,29 +171,27 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _CheckProximity(){
         // loop through all Modifiable blocks checking proximity to Modifier blocks.
         // if within CatchmentArea, add Modifier to Modifiable.Modifiers.
-        var modifiables = this.Modifiables.ToArray();
-        var modifiers = this.Modifiers.ToArray();
 
-        for (var j = 0; j < modifiables.length; j++) {
-            var source:IModifiable = modifiables[j];
+        for (var j = 0; j < App.Modifiables.Count; j++) {
+            var modifiable:IModifiable = App.Modifiables.GetValueAt(j);
 
-            for (var i = 0; i < modifiers.length; i++) {
-                var modifier:IModifier = modifiers[i];
+            for (var i = 0; i < App.Modifiers.Count; i++) {
+                var modifier:IModifier = App.Modifiers.GetValueAt(i);
 
-                // if a source is close enough to the modifier, add the modifier
+                // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
                 var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
-                var distanceFromModifier = source.DistanceFrom(modifier.AbsPosition);
+                var distanceFromModifier = modifiable.DistanceFrom(modifier.AbsPosition);
 
                 if (distanceFromModifier <= catchmentArea) {
-                    if (!source.Modifiers.Contains(modifier)){
-                        source.AddModifier(modifier);
+                    if (!modifiable.Modifiers.Contains(modifier)){
+                        modifiable.AddModifier(modifier);
                     }
                 } else {
-                    // if the source already has the modifier on its internal list
+                    // if the modifiable already has the modifier on its internal list
                     // remove it as it's now too far away.
-                    if (source.Modifiers.Contains(modifier)){
-                        source.RemoveModifier(modifier);
+                    if (modifiable.Modifiers.Contains(modifier)){
+                        modifiable.RemoveModifier(modifier);
                     }
                 }
             }
@@ -183,6 +205,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
         this._CheckCollision(e);
+
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
@@ -197,71 +220,93 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             var block = this.Blocks[i];
             if (block.HitTest(point)){
                 (<any>e).args.Handled = true;
+
+                block.MouseDown();
+                this.SelectedBlock = block;
+            }
+        }
+        // Bring Selected Block To the Front
+        this.ShuffleZ(this.SelectedBlock,false);
+    }
+
+    ShuffleZ(block,deleteBlock) {
+        var pre = this.DrawOrder.slice(0,(block.IndexZ));
+        var post = this.DrawOrder.slice((block.IndexZ+1));
+        var joined = pre.concat(post);
+        if (deleteBlock!==true) {
+            joined.push(this.DrawOrder[block.IndexZ]);
+        }
+        this.DrawOrder = joined;
+        var j;
+        for (j=0;j<this.DrawOrder.length;j++) this.Blocks[this.DrawOrder[j]].IndexZ = j;
+    }
+
+
+
+
+    MouseUp(e: Fayde.Input.MouseEventArgs){
+        this._IsMouseDown = false;
+
+        var point = (<any>e).args.Source.MousePosition;
+
+        if (this.SelectedBlock){
+
+            if (this.SelectedBlock.HitTest(point)){
+                (<any>e).args.Handled = true;
+                this.SelectedBlock.MouseUp();
+
+                // if the block has moved, create an undoable operation.
+                if (!this.SelectedBlock.Position.Equals(this.SelectedBlock.LastPosition)){
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                    App.OperationManager.Do(op);
+                }
             }
         }
     }
 
-    MouseUp(point: Point){
-        this._IsMouseDown = false;
+    MouseMove(e: Fayde.Input.MouseEventArgs){
+        var point = (<any>e).args.Source.MousePosition;
 
-        if (this._SelectedBlock){
-            this._SelectedBlock.MouseUp();
-
-            var op:IUndoableOperation = new MovePointOperation(this._SelectedBlock.Position, this._SelectedBlock.LastPosition, this._SelectedBlock.Position);
-
-            this._OperationManager.Do(op).then((point) => {
-            });
-        }
-
-        this._CheckProximity();
-    }
-
-    MouseMove(point: Point){
-        if (this._SelectedBlock){
-            this._SelectedBlock.MouseMove(this._NormalisePoint(point));
+        if (this.SelectedBlock){
+            this.SelectedBlock.MouseMove(this._NormalisePoint(point));
             this._CheckProximity();
         }
     }
 
-    OnSourceSelected(source: IModifiable){
-        this.SelectedBlock = source;
-        this.SourceSelected.Raise(source, new Fayde.RoutedEventArgs());
+    OnModifiableSelected(modifiable: IModifiable){
+        this.ModifiableSelected.Raise(modifiable, new Fayde.RoutedEventArgs());
     }
 
     OnModifierSelected(modifier: IModifier){
-        this.SelectedBlock = modifier;
         this.ModifierSelected.Raise(modifier, new Fayde.RoutedEventArgs());
     }
 
     DeleteSelectedBlock(){
-        if (this.Modifiables.Contains(<any>this._SelectedBlock)){
 
-            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this._SelectedBlock, this.Modifiables);
+        if (App.Modifiables.Contains(<any>this.SelectedBlock)){
 
-            this._OperationManager.Do(op).then((list) => {
-                this._SelectedBlock = null;
+            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiables);
+
+            App.OperationManager.Do(op).then((list) => {
+                this.SelectedBlock = null;
             });
         }
 
-        if (this.Modifiers.Contains(<any>this._SelectedBlock)){
-            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this._SelectedBlock, this.Modifiers);
+        if (App.Modifiers.Contains(<any>this.SelectedBlock)){
+            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiers);
 
-            this._OperationManager.Do(op).then((list) => {
-                this._SelectedBlock = null;
+            App.OperationManager.Do(op).then((list) => {
+                this.SelectedBlock = null;
             });
         }
     }
 
     Undo(){
-        this._OperationManager.Undo().then(() => {
-
-        });
+        App.OperationManager.Undo();
     }
 
     Redo(){
-        this._OperationManager.Redo().then(() => {
-
-        });
+        App.OperationManager.Redo();
     }
 }
 

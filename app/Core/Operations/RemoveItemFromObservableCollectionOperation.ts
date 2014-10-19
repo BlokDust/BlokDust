@@ -1,29 +1,27 @@
-/// <reference path="../refs" />
+/// <reference path="../../refs" />
 
 import IUndoableOperation = require("./IUndoableOperation");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperation
 {
-    Item:T;
-    Collection:ObservableCollection<T>;
-    Index:number;
+    private _Item:T;
+    private _Collection:ObservableCollection<T>;
+    private _Index:number;
 
     constructor(item:T, collection:ObservableCollection<T>) {
-        this.Item = item;
-        this.Collection = collection;
+        this._Item = item;
+        this._Collection = collection;
     }
 
     Do(): Promise<ObservableCollection<T>> {
-        this.Index = this.Collection.IndexOf(this.Item);
-
-        console.log("index: " + this.Index);
+        this._Index = this._Collection.IndexOf(this._Item);
 
         var that = this;
 
         return new Promise((resolve) => {
-            that.Collection.Remove(that.Item);
-            resolve(that.Collection);
+            that._Collection.Remove(that._Item);
+            resolve(that._Collection);
         });
     }
 
@@ -31,11 +29,9 @@ class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperati
         var that = this;
 
         return new Promise((resolve) => {
-            that.Collection.Insert(that.Item, that.Index);
+            that._Collection.Insert(that._Item, that._Index);
 
-            console.log("index: " + that.Index);
-
-            resolve(that.Collection);
+            resolve(that._Collection);
         });
     }
 }

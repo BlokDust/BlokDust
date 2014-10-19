@@ -39,6 +39,9 @@ class Noise extends Modifiable {
         this.Envelope.connect(this.Noise.output.gain);
         this.Noise.chain(this.Noise, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
         this.Noise.start();
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
     }
 
     MouseDown() {
@@ -64,9 +67,12 @@ class Noise extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#7176e1" : "#000be6";
+        ctx.fillStyle = "#730081";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(0,2);
+        ctx.closePath();
         ctx.fill();
     }
 }

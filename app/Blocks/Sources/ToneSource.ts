@@ -40,6 +40,9 @@ class ToneSource extends Modifiable {
         this.Envelope.connect(this.Osc.output.gain);
         this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
         this.Osc.start();
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(1, 1),new Point(-1, 1));
     }
 
     MouseDown() {
@@ -65,13 +68,32 @@ class ToneSource extends Modifiable {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.beginPath();
-        ctx.arc(this.AbsPosition.X, this.AbsPosition.Y, this.Radius, 0, Math.TAU, false);
-        ctx.fillStyle = this.IsPressed || this.IsSelected ? "#e17171" : "#f10000";
+        //color(col[2]); // PURPLE
+        ctx.fillStyle = "#730081";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(1,1);
+        this.DrawLineTo(-1,1);
+        ctx.closePath();
         ctx.fill();
 
-        console.log("IsPressed: " + this.IsPressed);
-        console.log("IsSelected: " + this.IsSelected);
+        //color(col[5]); // WHITE
+        ctx.fillStyle = "#fff";
+        this.DrawMoveTo(-2,0);
+        this.DrawLineTo(0,-2);
+        this.DrawLineTo(0,0);
+        this.DrawLineTo(-1,1);
+        ctx.closePath();
+        ctx.fill();
+
+        //color(col[1]); // GREEN
+        ctx.fillStyle = "#1add8d";
+        this.DrawMoveTo(0,-2);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(0,0);
+        ctx.closePath();
+        ctx.fill();
     }
 }
 
