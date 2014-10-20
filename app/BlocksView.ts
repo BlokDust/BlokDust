@@ -26,7 +26,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Blocks: IBlock[];
+    public BlocksIndexed: IBlock[] = [];
     public DrawOrder: number[] = [];
+
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -97,8 +99,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         var modifiable: IModifiable = new m(this.Ctx, this._GetRandomPosition());
         modifiable.Id = this._GetId();
 
-        modifiable.IndexZ = modifiable.Id;
-        this.DrawOrder.push(modifiable.IndexZ);
+        this.AddZ(modifiable);
 
         modifiable.Click.Subscribe((e: IModifiable) => {
             this.OnModifiableSelected(e);
@@ -112,8 +113,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         var modifier: IModifier = new m(this.Ctx, this._GetRandomPosition());
         modifier.Id = this._GetId();
 
-        modifier.IndexZ = modifier.Id;
-        this.DrawOrder.push(modifier.IndexZ);
+        this.AddZ(modifier);
 
         modifier.Click.Subscribe((e: IModifier) => {
             this.OnModifierSelected(e);
@@ -162,8 +162,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             block.Draw(this.Ctx);
         }
          */
-        for (var i = 0; i < this.Blocks.length; i++) {
-            var block = this.Blocks[this.DrawOrder[i]];
+        for (var i = 0; i < this.BlocksIndexed.length; i++) {
+            var block = this.BlocksIndexed[this.DrawOrder[i]];
             block.Draw(this.Ctx);
         }
     }
@@ -226,22 +226,51 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             }
         }
         // Bring Selected Block To the Front
-        this.ShuffleZ(this.SelectedBlock,false);
+        this.ShuffleZ(this.SelectedBlock);
     }
 
-    ShuffleZ(block,deleteBlock) {
-        var pre = this.DrawOrder.slice(0,(block.IndexZ));
-        var post = this.DrawOrder.slice((block.IndexZ+1));
-        var joined = pre.concat(post);
-        if (deleteBlock!==true) {
+    // Shuffle Z indexing, move 'block' to front
+    ShuffleZ(block) {
+        if (block) {
+            var pre = this.DrawOrder.slice(0, (block.IndexZ));
+            var post = this.DrawOrder.slice((block.IndexZ + 1));
+            var joined = pre.concat(post);
             joined.push(this.DrawOrder[block.IndexZ]);
+
+            this.DrawOrder = joined;
+
+            var j;
+            for (j = 0; j < this.DrawOrder.length; j++) this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
         }
-        this.DrawOrder = joined;
-        var j;
-        for (j=0;j<this.DrawOrder.length;j++) this.Blocks[this.DrawOrder[j]].IndexZ = j;
     }
 
+    // Add block to Z indexing
+    AddZ(block) {
+        this.BlocksIndexed.push(block);
+        block.IndexZ = this.BlocksIndexed.indexOf(block);
+        this.DrawOrder.push(block.IndexZ);
+    }
 
+    //remove block from Z indexing
+    RemoveZ(block) {
+        if (block) {
+            var pre = this.DrawOrder.slice(0, this.DrawOrder.indexOf(block.IndexZ));
+            var post = this.DrawOrder.slice(this.DrawOrder.indexOf(block.IndexZ) + 1);
+            var joined = pre.concat(post);
+
+            var pre2 = this.BlocksIndexed.slice(0, this.BlocksIndexed.indexOf(block));
+            var post2 = this.BlocksIndexed.slice(this.BlocksIndexed.indexOf(block) + 1);
+            var shortened = pre2.concat(post2);
+
+            this.DrawOrder = joined;
+            this.BlocksIndexed = shortened;
+
+            var j;
+            for (j = 0; j < this.BlocksIndexed.length; j++) {
+                this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
+            }
+        }
+    }
 
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
@@ -283,6 +312,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     DeleteSelectedBlock(){
 
+        //TODO: add the following as undoable operation
+        this.RemoveZ(this.SelectedBlock);
+        
         if (App.Modifiables.Contains(<any>this.SelectedBlock)){
 
             var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiables);
