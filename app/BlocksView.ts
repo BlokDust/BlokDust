@@ -254,21 +254,21 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     //remove block from Z indexing
     RemoveZ(block) {
         if (block) {
-            var pre = this.DrawOrder.slice(0, this.DrawOrder.indexOf(block.IndexZ));
-            var post = this.DrawOrder.slice(this.DrawOrder.indexOf(block.IndexZ) + 1);
-            var joined = pre.concat(post);
+            var thisIndex = this.DrawOrder[this.DrawOrder.length-1];
+            var shortened = this.DrawOrder;
+            var j;
+            for (j=thisIndex; j<shortened.length;j++) shortened[shortened.indexOf(j)] -= 1;
+            var shortened = shortened.slice(0, shortened.length-1);
 
             var pre2 = this.BlocksIndexed.slice(0, this.BlocksIndexed.indexOf(block));
             var post2 = this.BlocksIndexed.slice(this.BlocksIndexed.indexOf(block) + 1);
-            var shortened = pre2.concat(post2);
+            var shortened2 = pre2.concat(post2);
 
-            this.DrawOrder = joined;
-            this.BlocksIndexed = shortened;
+            this.DrawOrder = shortened;
+            this.BlocksIndexed = shortened2;
 
             var j;
-            for (j = 0; j < this.BlocksIndexed.length; j++) {
-                this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
-            }
+            for (j = 0; j < this.DrawOrder.length; j++) this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
         }
     }
 
@@ -314,7 +314,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         //TODO: add the following as undoable operation
         this.RemoveZ(this.SelectedBlock);
-        
+
         if (App.Modifiables.Contains(<any>this.SelectedBlock)){
 
             var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiables);
