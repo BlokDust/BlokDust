@@ -1,13 +1,12 @@
 /// <reference path="../refs" />
 
 import IBlock = require("./IBlock");
+import BlocksView = require("../BlocksView");
 import Size = Fayde.Utils.Size;
 
 class Block implements IBlock {
 
     public Id: number;
-    //public DrawZ: number;
-    public ArrayIndex: number;
     public IndexZ: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
@@ -65,8 +64,8 @@ class Block implements IBlock {
         ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 
         ctx.fillStyle = "#fff";
-        var pos = this._GetRelGridPosition(new Point(-2, -1));
-        ctx.fillText(""+this.Id,pos.X,pos.Y);
+        var pos = this._GetRelGridPosition(new Point(-2, -2));
+        ctx.fillText(""+this.IndexZ,pos.X,pos.Y);
     }
 
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
