@@ -14,6 +14,8 @@ class KeyboardInput extends Modifiable {
     public Keyboard: boolean;
     public Params: ToneSettings;
 
+    //TODO: Polyphonic option
+
     keysDown = {};
     key_map = {
         65: 'Cl',
@@ -94,26 +96,6 @@ class KeyboardInput extends Modifiable {
     }
 
 
-
-    KeyDown(frequency): void {
-
-//        for (var i = 0; i < this.Modifiers.Count; i++){
-//            var mod = this.Modifiers.GetValueAt(i);
-//            if ((<any>mod).PitchIncrement){
-//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
-//            }
-//        }
-        this.Osc.frequency.setValue(frequency);
-        this.Envelope.triggerAttack();
-        //TODO: if two keys pressed slide frequency
-    }
-
-    KeyUp(frequency): void {
-
-        this.Envelope.triggerRelease();
-        //TODO: Fix release bug
-    }
-
     addListeners(): void {
 
         window.addEventListener('keydown', (key) => {
@@ -147,11 +129,20 @@ class KeyboardInput extends Modifiable {
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
-//            if (this.key_map[key.keyCode] ==)
 
             var keyPressed = this.getKeyPressed(key.keyCode);
             var frequency = this.getFrequencyOfNote(keyPressed);
-            this.KeyDown(frequency);
+
+            // If no other keys already pressed trigger attack
+            if (Object.keys(this.keysDown).length === 1) {
+                this.Osc.frequency.setValue(frequency);
+                this.Envelope.triggerAttack();
+
+            // Else ramp to new frequency over time (using portamento)
+            } else {
+                this.Osc.frequency.setValue(frequency);
+                //TODO: Glide the frequency
+            }
         }
 
     }
@@ -162,9 +153,10 @@ class KeyboardInput extends Modifiable {
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
-            var keyPressed = this.getKeyPressed(key.keyCode);
-            var frequency = this.getFrequencyOfNote(keyPressed);
-            this.KeyUp(frequency);
+
+            if (Object.keys(this.keysDown).length === 0){
+                this.Envelope.triggerRelease();
+            }
         }
     }
 
