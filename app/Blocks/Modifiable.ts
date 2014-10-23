@@ -33,7 +33,7 @@ class Modifiable extends Block implements IModifiable{
 
             for(var i = 0; i < modifiers.length; i++){
                 var target: IModifier = modifiers[i];
-
+                ctx.strokeStyle = "#fff";
                 ctx.beginPath();
                 ctx.moveTo(this.AbsPosition.X, this.AbsPosition.Y);
                 ctx.lineTo(target.AbsPosition.X, target.AbsPosition.Y);

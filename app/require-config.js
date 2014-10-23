@@ -14,12 +14,20 @@ var require = {
         "Tone/source/Noise",
         "Tone/component/LFO",
         "Tone/component/Envelope",
-        "Tone/effect/PingPongDelay"
+        "Tone/effect/PingPongDelay",
+        "lib/pixel-palette/js/pixelPalette.js",
+        "lib/pixel-palette/js/PxLoader.js",
+        "lib/pixel-palette/js/PxLoaderImage.js"
     ],
     callback: function (
         text,
         Fayde,
-        Tone
+        Tone,
+        pixelPalette,
+        Master,
+        Oscillator,
+        LFO,
+        PingPongDelay
         ) {
         window.Tone = Tone;
 

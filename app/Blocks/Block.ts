@@ -1,11 +1,13 @@
 /// <reference path="../refs" />
 
 import IBlock = require("./IBlock");
+import BlocksView = require("../BlocksView");
 import Size = Fayde.Utils.Size;
 
 class Block implements IBlock {
 
     public Id: number;
+    public IndexZ: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
     private _LastPosition: Point;
@@ -59,7 +61,11 @@ class Block implements IBlock {
     }
 
     Draw(ctx: CanvasRenderingContext2D) {
+        ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 
+        ctx.fillStyle = "#fff";
+        var pos = this._GetRelGridPosition(new Point(-2, -2));
+        ctx.fillText(""+this.IndexZ,pos.X,pos.Y);
     }
 
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
@@ -88,6 +94,8 @@ class Block implements IBlock {
         var y = Math.round(point.Y / (1/(this.Ctx.divisor*aspect))) * (1/(this.Ctx.divisor*aspect));
         return new Point(x, y);
     }
+
+
 
     MouseDown() {
         this.IsPressed = true;
@@ -122,6 +130,8 @@ class Block implements IBlock {
 
         return this.Ctx.isPointInPath(point.X,point.Y);
     }
+
+
 
     // absolute point
     DistanceFrom(point: Point): number{

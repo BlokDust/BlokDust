@@ -26,6 +26,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Blocks: IBlock[];
+    public BlocksIndexed: IBlock[] = [];
+    public DrawOrder: number[] = [];
+
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -47,6 +50,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
+
+
     constructor() {
         super();
 
@@ -64,6 +69,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }, this);
 
         this._Invalidate();
+
+        // console is picking this function up, just not here
+        //loadPalette("img/palette.gif",function() {alert("palette load happened")});
     }
 
     private _Invalidate(){
@@ -91,6 +99,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         var modifiable: IModifiable = new m(this.Ctx, this._GetRandomPosition());
         modifiable.Id = this._GetId();
 
+        this.AddZ(modifiable);
+
         modifiable.Click.Subscribe((e: IModifiable) => {
             this.OnModifiableSelected(e);
         }, this);
@@ -102,6 +112,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         var modifier: IModifier = new m(this.Ctx, this._GetRandomPosition());
         modifier.Id = this._GetId();
+
+        this.AddZ(modifier);
 
         modifier.Click.Subscribe((e: IModifier) => {
             this.OnModifierSelected(e);
@@ -123,6 +135,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
         // set up the grid
         this.Ctx.divisor = this._Divisor;
+
     }
 
     Update() {
@@ -143,8 +156,14 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
-        for (var i = 0; i < this.Blocks.length; i++) {
+        /*
+       for (var i = 0; i < this.Blocks.length; i++) {
             var block = this.Blocks[i];
+            block.Draw(this.Ctx);
+        }
+         */
+        for (var i = 0; i < this.BlocksIndexed.length; i++) {
+            var block = this.BlocksIndexed[this.DrawOrder[i]];
             block.Draw(this.Ctx);
         }
     }
@@ -186,6 +205,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
         this._CheckCollision(e);
+
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
@@ -202,11 +222,56 @@ class BlocksView extends Fayde.Drawing.SketchContext {
                 (<any>e).args.Handled = true;
 
                 block.MouseDown();
-
                 this.SelectedBlock = block;
             }
         }
+        // Bring Selected Block To the Front
+        this.ShuffleZ(this.SelectedBlock);
     }
+
+    // Shuffle Z indexing, move 'block' to front
+    ShuffleZ(block) {
+        if (block) {
+            var pre = this.DrawOrder.slice(0, (block.IndexZ));
+            var post = this.DrawOrder.slice((block.IndexZ + 1));
+            var joined = pre.concat(post);
+            joined.push(this.DrawOrder[block.IndexZ]);
+
+            this.DrawOrder = joined;
+
+            var j;
+            for (j = 0; j < this.DrawOrder.length; j++) this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
+        }
+    }
+
+    // Add block to Z indexing
+    AddZ(block) {
+        this.BlocksIndexed.push(block);
+        block.IndexZ = this.BlocksIndexed.indexOf(block);
+        this.DrawOrder.push(block.IndexZ);
+    }
+
+    //remove block from Z indexing
+    RemoveZ(block) {
+        if (block) {
+            var thisIndex = this.DrawOrder[this.DrawOrder.length-1];
+            var shortened = this.DrawOrder;
+            var j;
+            for (j=thisIndex; j<shortened.length;j++) shortened[shortened.indexOf(j)] -= 1;
+            var shortened = shortened.slice(0, shortened.length-1);
+
+            var pre2 = this.BlocksIndexed.slice(0, this.BlocksIndexed.indexOf(block));
+            var post2 = this.BlocksIndexed.slice(this.BlocksIndexed.indexOf(block) + 1);
+            var shortened2 = pre2.concat(post2);
+
+            this.DrawOrder = shortened;
+            this.BlocksIndexed = shortened2;
+
+            var j;
+            for (j = 0; j < this.DrawOrder.length; j++) this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
+        }
+    }
+
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = false;
@@ -246,6 +311,10 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     DeleteSelectedBlock(){
+
+        //TODO: add the following as undoable operation
+        this.RemoveZ(this.SelectedBlock);
+
         if (App.Modifiables.Contains(<any>this.SelectedBlock)){
 
             var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiables);

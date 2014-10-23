@@ -11,8 +11,10 @@ class KeyboardInput extends Modifiable {
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
     public OutputGain: GainNode;
-    public Keyboard: boolean;
     public Params: ToneSettings;
+
+
+    //TODO: Add Octave up & down button
 
     keysDown = {};
     key_map = {
@@ -43,11 +45,17 @@ class KeyboardInput extends Modifiable {
     };
     settings = {
         startOctave: null,
-        startNote: 'A5',
+        startNote: 'A2',
         keyPressOffset: null
 
         //TODO: Monophonic & polyphonic settings
     };
+
+//        for (var i = 0; i < this.Modifiers.Count; i++){
+//            var mod = this.Modifiers.GetValueAt(i);
+//            if ((<any>mod).PitchIncrement){
+//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
+//            }
 
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
@@ -56,7 +64,7 @@ class KeyboardInput extends Modifiable {
         this.Params = {
             oscillator: {
                 frequency: 340,
-                waveform: 'sawtooth'
+                waveform: 'square'
             },
             envelope: {
                 attack: 0.02,
@@ -66,6 +74,10 @@ class KeyboardInput extends Modifiable {
             },
             output: {
                 volume: 0.5
+            },
+            keyboard: {
+                isPolyphonic: false,
+                glide: 0.1
             }
 
         };
@@ -83,7 +95,7 @@ class KeyboardInput extends Modifiable {
         //Get the Start Octave from the start Note
         this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
 
-        this.addListeners();
+        this.AddListeners();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
@@ -93,76 +105,93 @@ class KeyboardInput extends Modifiable {
         super.Update(ctx);
     }
 
-
-
-    KeyDown(frequency): void {
-
-        this.Osc.frequency.setValue(frequency);
-        this.Envelope.triggerAttack();
-        //TODO: if two keys pressed slide frequency
-    }
-
-    KeyUp(frequency): void {
-
-        this.Envelope.triggerRelease();
-        //TODO: Fix release bug
-    }
-
-    addListeners(): void {
+    //TODO: move event listeners to a controls class
+    AddListeners(): void {
 
         window.addEventListener('keydown', (key) => {
-            this.keyboardDown(key);
+            this.KeyboardDown(key);
         });
         window.addEventListener('keyup', (key) => {
-            this.keyboardUp(key);
+            this.KeyboardUp(key);
         });
     }
 
-    removeListeners(): void {
+    RemoveListeners(): void {
 
         window.removeEventListener('keydown', (key) => {
-            this.keyboardDown(key);
+            this.KeyboardDown(key);
         });
         window.removeEventListener('keyup', (key) => {
-            this.keyboardUp(key);
+            this.KeyboardUp(key);
         });
 
         //TODO: Fix remove listeners on disconnect
     }
 
-    keyboardDown(key): void {
+    KeyboardDown(key): void {
 
         //if it's already pressed (holding note)
         if (key.keyCode in this.keysDown) {
             return;
         }
         //pressed first time, add to object
-        this.keysDown[key.keyCode] = true;
+        this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
+
+        // Octave UP (Plus button)
+        if (key.keyCode === 187 && this.settings.startOctave != 8) {
+            this.settings.startOctave++;
+        }
+
+        // Octave DOWN (Minus button)
+        if (key.keyCode === 189 && this.settings.startOctave != 0) {
+            this.settings.startOctave--;
+        }
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
-//            if (this.key_map[key.keyCode] ==)
 
-            var keyPressed = this.getKeyPressed(key.keyCode);
-            var frequency = this.getFrequencyOfNote(keyPressed);
-            this.KeyDown(frequency);
+            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var frequency = this.GetFrequencyOfNote(keyPressed);
+
+            if (this.Params.keyboard.isPolyphonic){
+                // POLYPHONIC
+                    //TODO: polyphonic needs to create new oscillators for every keypressed
+
+            } else {
+                // MONOPHONIC
+
+                // If no other keys already pressed trigger attack
+                if (Object.keys(this.keysDown).length === 1) {
+//                this.Osc.frequency.setValue(frequency);
+                    this.Osc.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
+                    this.Envelope.triggerAttack();
+
+                    // Else ramp to new frequency over time (using portamento)
+                } else {
+                    this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide); //GLIDE
+                    //TODO: Glide the frequency
+                }
+            }
         }
-
     }
 
-    keyboardUp(key): void {
+    KeyboardUp(key): void {
         // remove this key from the keysDown object
         delete this.keysDown[key.keyCode];
 
-        //If this is key is in our key_map get the pressed key and pass to getFrequency
-        if (typeof this.key_map[key.keyCode] !== 'undefined') {
-            var keyPressed = this.getKeyPressed(key.keyCode);
-            var frequency = this.getFrequencyOfNote(keyPressed);
-            this.KeyUp(frequency);
+        if (this.Params.keyboard.isPolyphonic){
+            // POLYPHONIC
+            //TODO: polyphonic needs to stop corresponding oscillators for every keyup
+
+        } else {
+            // MONOPHONIC
+            if (Object.keys(this.keysDown).length === 0) {
+                this.Envelope.triggerRelease();
+            }
         }
     }
 
-    getKeyPressed(keyCode): string {
+    GetKeyPressed(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (this.key_map[keyCode]
             .replace('l', parseInt(this.settings.startOctave, 10) + this.settings.keyPressOffset)
@@ -170,7 +199,7 @@ class KeyboardInput extends Modifiable {
                 .toString()));
     }
 
-    getFrequencyOfNote(note): number {
+    GetFrequencyOfNote(note): number {
         var notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
             key_number,
             octave;
@@ -191,17 +220,18 @@ class KeyboardInput extends Modifiable {
             key_number = key_number + ((octave - 1) * 12) + 1;
         }
 
-        // Are there pitch modifiers attached? If so get all the PitchComponent.increment
-        // (return 440 * Math.pow(2, (key_number - 49) / 12)) * increment;
-
         return 440 * Math.pow(2, (key_number - 49) / 12);
+    }
+
+    GetConnectedPitchModifiers() {
+        //TODO: Get all pitch modifiers attached and..
+        // return the modified frequency multiplier
     }
 
     // input blocks are red circles
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
-        ctx.globalAlpha = this.IsPressed ? 0.5 : 1;
         ctx.fillStyle = "#1add8d";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);

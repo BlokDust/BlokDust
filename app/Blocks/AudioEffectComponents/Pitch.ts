@@ -5,11 +5,11 @@ import IModifiable = require("../IModifiable");
 
 class PitchComponent extends Effect implements IEffect {
 
-    public increment: number;
+    public PitchIncrement: number;
 
     constructor(increment) {
         super();
-        this.increment = increment;
+        this.PitchIncrement = increment;
     }
 
     Connect(modifiable: IModifiable): void {
@@ -19,7 +19,7 @@ class PitchComponent extends Effect implements IEffect {
             return;
         }
         var _value = this.Modifiable.Osc.frequency.getValue();
-        this.Modifiable.Osc.frequency.setValue(_value * this.increment);
+        this.Modifiable.Osc.frequency.setValue(_value * this.PitchIncrement);
     }
 
     Disconnect(): void{
@@ -28,7 +28,7 @@ class PitchComponent extends Effect implements IEffect {
             return;
         }
         var _value = this.Modifiable.Osc.frequency.getValue();
-        this.Modifiable.Osc.frequency.setValue(_value / this.increment);
+        this.Modifiable.Osc.frequency.setValue(_value / this.PitchIncrement);
     }
 }
 
