@@ -14,7 +14,6 @@ class KeyboardInput extends Modifiable {
     public Params: ToneSettings;
 
 
-    //TODO: Polyphonic option
     //TODO: Add Octave up & down button
 
     keysDown = {};
@@ -46,7 +45,7 @@ class KeyboardInput extends Modifiable {
     };
     settings = {
         startOctave: null,
-        startNote: 'A2aa',
+        startNote: 'A2',
         keyPressOffset: null
 
         //TODO: Monophonic & polyphonic settings
@@ -136,7 +135,17 @@ class KeyboardInput extends Modifiable {
             return;
         }
         //pressed first time, add to object
-        this.keysDown[key.keyCode] = true;
+        this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
+
+        // Octave UP (Plus button)
+        if (key.keyCode === 187 && this.settings.startOctave != 8) {
+            this.settings.startOctave++;
+        }
+
+        // Octave DOWN (Minus button)
+        if (key.keyCode === 189 && this.settings.startOctave != 0) {
+            this.settings.startOctave--;
+        }
 
         //If this is key is in our key_map get the pressed key and pass to getFrequency
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
