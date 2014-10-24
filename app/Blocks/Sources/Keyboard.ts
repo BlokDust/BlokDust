@@ -12,6 +12,7 @@ class KeyboardInput extends Modifiable {
     public Envelope: Tone.Envelope;
     public OutputGain: Tone.Signal;
     public Params: ToneSettings;
+    private _nodes = [];
 
 
     keysDown = {};
@@ -44,8 +45,6 @@ class KeyboardInput extends Modifiable {
     settings = {
         startOctave: null,
         startNote: 'C2'
-
-        //TODO: Monophonic & polyphonic settings
     };
 
 
@@ -68,7 +67,7 @@ class KeyboardInput extends Modifiable {
                 volume: 0.5
             },
             keyboard: {
-                isPolyphonic: false,
+                isPolyphonic: true,
                 glide: 0.1
             }
 
@@ -152,7 +151,25 @@ class KeyboardInput extends Modifiable {
 
             if (this.Params.keyboard.isPolyphonic){
                 // POLYPHONIC
-                    //TODO: polyphonic needs to create new oscillators for every keypressed
+
+                //TODO: make LFO's and scuzzes work in polyphonic mode
+
+                // Create throw away audio nodes for each keydown
+                var _oscillator = new Tone.Oscillator(frequency, this.Params.oscillator.waveform);
+                var _envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
+
+                // Connect them
+                _envelope.connect(_oscillator.output.gain);
+                _oscillator.connect(this.OutputGain);
+
+                // Play sound
+                _oscillator.start();
+                _envelope.triggerAttack();
+
+                // Add to _nodes array
+                this._nodes.push(_oscillator);
+                console.log(this._nodes);
+
 
             } else {
                 // MONOPHONIC
@@ -165,8 +182,7 @@ class KeyboardInput extends Modifiable {
 
                     // Else ramp to new frequency over time (using portamento)
                 } else {
-                    this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide); //GLIDE
-                    //TODO: Glide the frequency
+                    this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
                 }
             }
         }
@@ -175,10 +191,28 @@ class KeyboardInput extends Modifiable {
     KeyboardUp(key): void {
         // remove this key from the keysDown object
         delete this.keysDown[key.keyCode];
+        var keyPressed = this.GetKeyPressed(key.keyCode);
+        var frequency = this.GetFrequencyOfNote(keyPressed);
 
         if (this.Params.keyboard.isPolyphonic){
             // POLYPHONIC
-            //TODO: polyphonic needs to stop corresponding oscillators for every keyup
+            var new_nodes = [];
+
+            // Loop through oscillator voices
+            for (var i = 0; i < this._nodes.length; i++) {
+                // Check if voice frequency matches the keyPressed frequency
+                if (Math.round(this._nodes[i].frequency.getValue()) === Math.round(frequency)) {
+                    this._nodes[i].stop(0);
+                    this._nodes[i].disconnect();
+
+                    //TODO: trigger release and then stop & disconnect afterwards
+
+                } else {
+                    new_nodes.push(this._nodes[i]);
+                }
+            }
+
+            this._nodes = new_nodes;
 
         } else {
             // MONOPHONIC
