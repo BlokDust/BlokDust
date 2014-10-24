@@ -1,5 +1,5 @@
 /// <reference path="../../refs.ts" />
-
+import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifier = require("../IModifier");
@@ -9,7 +9,7 @@ class Noise extends Modifiable {
 
     public Noise: Tone.Noise;
     public Envelope: Tone.Envelope;
-    public OutputGain: GainNode;
+    public OutputGain: Tone.Signal;
     public Params: ToneSettings;
 
     constructor(ctx:CanvasRenderingContext2D, position: Point) {
@@ -31,13 +31,17 @@ class Noise extends Modifiable {
 
         };
 
+        // Define the audio nodes
         this.Noise = new Tone.Noise(this.Params.noise.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
-        this.OutputGain = this.Noise.context.createGain();
-        this.OutputGain.gain.value = this.Params.output.volume;
+        this.OutputGain = new Tone.Signal;
+        this.OutputGain.output.gain.value = this.Params.output.volume;
 
+        // Connect them up
         this.Envelope.connect(this.Noise.output.gain);
-        this.Noise.chain(this.Noise, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        this.Noise.chain(this.Noise, this.OutputGain, App.AudioMixer.Master);
+
+        // Start
         this.Noise.start();
 
         // Define Outline for HitTest
