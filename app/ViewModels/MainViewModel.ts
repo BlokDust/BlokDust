@@ -86,12 +86,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
         this._BlocksView = new BlocksView();
 
-        this._BlocksView.ModifiableSelected.Subscribe((source: IModifiable) => {
-            this._OnSourceSelected(source);
-        }, this);
-
-        this._BlocksView.ModifierSelected.Subscribe((modifier: IModifier) => {
-            this._OnModifierSelected(modifier);
+        this._BlocksView.BlockSelected.Subscribe((block: IModifiable) => {
+            this._OnBlockSelected(block);
         }, this);
     }
 
@@ -132,60 +128,56 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.MouseMove(e);
     }
 
-    _OnSourceSelected(source: IModifiable){
-        this.SelectedBlock = source;
-    }
-
-    _OnModifierSelected(modifier: IModifier){
-        this.SelectedBlock = modifier;
+    _OnBlockSelected(block: IModifiable){
+        this.SelectedBlock = block;
     }
 
     PowerBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateModifiable(Power);
+        this._BlocksView.CreateBlock(Power);
     }
 
     ToneBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateModifiable(ToneSource);
+        this._BlocksView.CreateBlock(ToneSource);
     }
 
     NoiseBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateModifiable(Noise);
+        this._BlocksView.CreateBlock(Noise);
     }
 
     KeyboardBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateModifiable(Keyboard);
+        this._BlocksView.CreateBlock(Keyboard);
     }
 
     VolumeIncreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(VolumeIncrease);
+        this._BlocksView.CreateBlock(VolumeIncrease);
     }
 
     VolumeDecreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(VolumeDecrease);
+        this._BlocksView.CreateBlock(VolumeDecrease);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(PitchIncrease);
+        this._BlocksView.CreateBlock(PitchIncrease);
     }
 
     PitchDecreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(PitchDecrease);
+        this._BlocksView.CreateBlock(PitchDecrease);
     }
 
     EnvelopeBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(Envelope);
+        this._BlocksView.CreateBlock(Envelope);
     }
 
     LFOBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(LFO);
+        this._BlocksView.CreateBlock(LFO);
     }
 
     DelayBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(Delay);
+        this._BlocksView.CreateBlock(Delay);
     }
 
     ScuzzBlockBtn_Click(e: any){
-        this._BlocksView.CreateModifier(Scuzz);
+        this._BlocksView.CreateBlock(Scuzz);
     }
 
 

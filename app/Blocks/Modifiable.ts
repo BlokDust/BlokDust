@@ -1,3 +1,4 @@
+import App = require("../App");
 import IModifier = require("./IModifier");
 import IModifiable = require("./IModifiable");
 import IEffect = require("./IEffect");
@@ -46,11 +47,11 @@ class Modifiable extends Block implements IModifiable{
     * Validate that the block's modifiers still exist
     * @param {ObservableCollection<IModifier>} modifiers - Parent's full list of Modifiers.
     */
-    public ValidateModifiers(modifiers: ObservableCollection<IModifier>){
+    public ValidateModifiers(){
         for (var i = 0; i < this.Modifiers.Count; i++){
             var modifier:IModifier = this.Modifiers.GetValueAt(i);
 
-            if (!modifiers.Contains(modifier)){
+            if (!App.Modifiers.Contains(modifier)){
                 this.RemoveModifier(modifier);
             }
         }

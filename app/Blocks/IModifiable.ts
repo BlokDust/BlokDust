@@ -12,7 +12,7 @@ interface IModifiable extends IBlock{
     Envelope?: Tone.Envelope;
     OutputGain?: Tone.Signal;
     Params?: ToneSettings;
-    ValidateModifiers(modifiers: ObservableCollection<IModifier>): void;
+    ValidateModifiers(): void;
 }
 
 export = IModifiable;

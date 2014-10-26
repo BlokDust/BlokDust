@@ -22,7 +22,7 @@
       "deps": ["Fayde.Utils", "TWEEN"]
     },
     "PixelPalette": {
-      "path": "lib/pixel-palette/js/PixelPdsfgalette",
+      "path": "lib/pixel-palette/js/PixelPalette",
       "exports": "PixelPalette"
     }
   }

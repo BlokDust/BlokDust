@@ -4,8 +4,8 @@ class Commands {
 
     }
 
-    static CREATE_MODIFIER: string = "createModifier";
-    static CREATE_MODIFIABLE: string = "createModifiable";
+    static CREATE_BLOCK: string = "createBlock";
+    static DELETE_BLOCK: string = "deleteBlock";
 }
 
 export = Commands;

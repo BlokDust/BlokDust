@@ -1,20 +1,20 @@
 /// <reference path="../refs" />
 import App = require("../App");
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IModifiable = require("../Blocks/IModifiable");
+import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
 import AddItemToObservableCollectionOperation = require("../Core/Operations/AddItemToObservableCollectionOperation");
 
-class CreateModifierCommandHandler implements ICommandHandler {
+class CreateBlockCommandHandler implements ICommandHandler {
 
     constructor() {
 
     }
 
-    Execute(modifiable: IModifiable): void{
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(modifiable, App.Modifiables);
+    Execute(block: IBlock): void{
+        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(block, App.Blocks);
         App.OperationManager.Do(op);
     }
 }
 
-export = CreateModifierCommandHandler;
+export = CreateBlockCommandHandler;

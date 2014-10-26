@@ -7,7 +7,6 @@ import Size = Fayde.Utils.Size;
 class Block implements IBlock {
 
     public Id: number;
-    public IndexZ: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _Position: Point;
     private _LastPosition: Point;
@@ -16,6 +15,7 @@ class Block implements IBlock {
     Ctx: CanvasRenderingContext2D;
     private _CtxSize: Size;
     public Outline: Point[] = [];
+    public ZIndex;
 
     set Position(value: Point){
         this._Position = this._GetAbsGridPosition(value);
@@ -65,7 +65,7 @@ class Block implements IBlock {
 
         ctx.fillStyle = "#fff";
         var pos = this._GetRelGridPosition(new Point(-2, -2));
-        ctx.fillText(""+this.IndexZ,pos.X,pos.Y);
+        ctx.fillText(""+this.ZIndex,pos.X,pos.Y);
     }
 
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)

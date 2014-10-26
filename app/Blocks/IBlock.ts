@@ -1,10 +1,10 @@
 /// <reference path="../refs" />
 
 import Size = Fayde.Utils.Size;
+import IDisplayObject = require("../IDisplayObject");
 
-interface IBlock{
+interface IBlock extends IDisplayObject{
     Id: number;
-    IndexZ: number;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Outline: Point[];
     IsPressed: boolean;

@@ -11,9 +11,10 @@ import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
 import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
-import CreateModifierCommandHandler = require("./CommandHandlers/CreateModifierCommandHandler");
-import CreateModifiableCommandHandler = require("./CommandHandlers/CreateModifiableCommandHandler");
+import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
+import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
+import DisplayObjectCollection = require("./DisplayObjectCollection");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class BlocksView extends Fayde.Drawing.SketchContext {
@@ -23,12 +24,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
     private _Divisor: number = 75;
-    public ModifiableSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    public ModifierSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    public Blocks: IBlock[];
-    public BlocksIndexed: IBlock[] = [];
-    public DrawOrder: number[] = [];
-
+    public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -47,18 +43,19 @@ class BlocksView extends Fayde.Drawing.SketchContext {
             }
             block.IsSelected = true;
             this._SelectedBlock = block;
+
+            App.Blocks.ToFront(block);
         }
     }
-
-
 
     constructor() {
         super();
 
         App.Init();
 
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_MODIFIER, CreateModifierCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_MODIFIABLE, CreateModifiableCommandHandler.prototype));
+        // register command handlers
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
 
         App.OperationManager.OperationAdded.Subscribe((operation: IOperation) => {
             this._Invalidate();
@@ -76,50 +73,34 @@ class BlocksView extends Fayde.Drawing.SketchContext {
 
     private _Invalidate(){
 
-        this.Blocks = [].concat(App.Modifiables.ToArray(), App.Modifiers.ToArray());
-
         this._ValidateBlocks();
 
         this._CheckProximity();
     }
 
     _ValidateBlocks() {
-        // for each Modifiable, pass it the new list of Modifiers.
-        // if the Modifiable contains a Modifier that no longer
+        // for each Modifiable, if the Modifiable contains a Modifier that no longer
         // exists, remove it.
+
+        // todo: make this a command that all blocks subscribe to?
         for (var i = 0; i < App.Modifiables.Count; i++){
             var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
 
-            modifiable.ValidateModifiers(App.Modifiers);
+            modifiable.ValidateModifiers();
         }
     }
 
-    CreateModifiable<T extends IModifiable>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+    CreateBlock<T extends IBlock>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
 
-        var modifiable: IModifiable = new m(this.Ctx, this._GetRandomPosition());
-        modifiable.Id = this._GetId();
+        var block: IBlock = new m(this.Ctx, this._GetRandomPosition());
+        block.Id = this._GetId();
 
-        this.AddZ(modifiable);
-
-        modifiable.Click.Subscribe((e: IModifiable) => {
-            this.OnModifiableSelected(e);
+        // todo: should this go in command handler?
+        block.Click.Subscribe((block: IBlock) => {
+            this.BlockSelected.Raise(block, new Fayde.RoutedEventArgs());
         }, this);
 
-        App.CommandManager.ExecuteCommand(Commands.CREATE_MODIFIABLE, modifiable);
-    }
-
-    CreateModifier<T extends IModifier>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
-
-        var modifier: IModifier = new m(this.Ctx, this._GetRandomPosition());
-        modifier.Id = this._GetId();
-
-        this.AddZ(modifier);
-
-        modifier.Click.Subscribe((e: IModifier) => {
-            this.OnModifierSelected(e);
-        }, this);
-
-        App.CommandManager.ExecuteCommand(Commands.CREATE_MODIFIER, modifier);
+        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
     }
 
     private _GetId(): number {
@@ -142,8 +123,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         super.Update();
 
         // update blocks
-        for (var i = 0; i < this.Blocks.length; i++) {
-            var block = this.Blocks[i];
+        for (var i = 0; i < App.Blocks.Count; i++) {
+            var block: IBlock = App.Blocks.GetValueAt(i);
             block.Update(this.Ctx);
         }
     }
@@ -156,14 +137,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // draw blocks
-        /*
-       for (var i = 0; i < this.Blocks.length; i++) {
-            var block = this.Blocks[i];
-            block.Draw(this.Ctx);
-        }
-         */
-        for (var i = 0; i < this.BlocksIndexed.length; i++) {
-            var block = this.BlocksIndexed[this.DrawOrder[i]];
+        for (var i = 0; i < App.Blocks.Count; i++) {
+            var block: IBlock = App.Blocks.GetValueAt(i);
             block.Draw(this.Ctx);
         }
     }
@@ -205,7 +180,6 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
         this._CheckCollision(e);
-
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
@@ -216,8 +190,8 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _CheckCollision(e) {
         var point = (<any>e).args.Source.MousePosition;
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
-        for (var i = 0; i < this.Blocks.length; i++){
-            var block = this.Blocks[i];
+        for (var i = 0; i < App.Blocks.Count; i++){
+            var block: IBlock = App.Blocks.GetValueAt(i);
             if (block.HitTest(point)){
                 (<any>e).args.Handled = true;
 
@@ -225,53 +199,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
                 this.SelectedBlock = block;
             }
         }
-        // Bring Selected Block To the Front
-        this.ShuffleZ(this.SelectedBlock);
     }
-
-    // Shuffle Z indexing, move 'block' to front
-    ShuffleZ(block) {
-        if (block) {
-            var pre = this.DrawOrder.slice(0, (block.IndexZ));
-            var post = this.DrawOrder.slice((block.IndexZ + 1));
-            var joined = pre.concat(post);
-            joined.push(this.DrawOrder[block.IndexZ]);
-
-            this.DrawOrder = joined;
-
-            var j;
-            for (j = 0; j < this.DrawOrder.length; j++) this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
-        }
-    }
-
-    // Add block to Z indexing
-    AddZ(block) {
-        this.BlocksIndexed.push(block);
-        block.IndexZ = this.BlocksIndexed.indexOf(block);
-        this.DrawOrder.push(block.IndexZ);
-    }
-
-    //remove block from Z indexing
-    RemoveZ(block) {
-        if (block) {
-            var thisIndex = this.DrawOrder[this.DrawOrder.length-1];
-            var shortened = this.DrawOrder;
-            var j;
-            for (j=thisIndex; j<shortened.length;j++) shortened[shortened.indexOf(j)] -= 1;
-            var shortened = shortened.slice(0, shortened.length-1);
-
-            var pre2 = this.BlocksIndexed.slice(0, this.BlocksIndexed.indexOf(block));
-            var post2 = this.BlocksIndexed.slice(this.BlocksIndexed.indexOf(block) + 1);
-            var shortened2 = pre2.concat(post2);
-
-            this.DrawOrder = shortened;
-            this.BlocksIndexed = shortened2;
-
-            var j;
-            for (j = 0; j < this.DrawOrder.length; j++) this.BlocksIndexed[this.DrawOrder[j]].IndexZ = j;
-        }
-    }
-
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = false;
@@ -302,35 +230,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
-    OnModifiableSelected(modifiable: IModifiable){
-        this.ModifiableSelected.Raise(modifiable, new Fayde.RoutedEventArgs());
-    }
-
-    OnModifierSelected(modifier: IModifier){
-        this.ModifierSelected.Raise(modifier, new Fayde.RoutedEventArgs());
-    }
-
     DeleteSelectedBlock(){
-
-        //TODO: add the following as undoable operation
-        this.RemoveZ(this.SelectedBlock);
-
-        if (App.Modifiables.Contains(<any>this.SelectedBlock)){
-
-            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiables);
-
-            App.OperationManager.Do(op).then((list) => {
-                this.SelectedBlock = null;
-            });
-        }
-
-        if (App.Modifiers.Contains(<any>this.SelectedBlock)){
-            var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(<any>this.SelectedBlock, App.Modifiers);
-
-            App.OperationManager.Do(op).then((list) => {
-                this.SelectedBlock = null;
-            });
-        }
+        App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
+        this.SelectedBlock = null;
     }
 
     Undo(){
