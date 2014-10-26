@@ -1,5 +1,5 @@
 /// <reference path="../../refs.ts" />
-
+import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifier = require("../IModifier");
@@ -9,7 +9,7 @@ class ToneSource extends Modifiable {
 
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
-    public OutputGain: GainNode;
+    public OutputGain: Tone.Signal;
     public Params: ToneSettings;
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
@@ -32,13 +32,17 @@ class ToneSource extends Modifiable {
 
         };
 
+        // Define the audio nodes
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
-        this.OutputGain = this.Osc.context.createGain();
-        this.OutputGain.gain.value = this.Params.output.volume;
+        this.OutputGain = new Tone.Signal;
+        this.OutputGain.output.gain.value = this.Params.output.volume;
 
+        // Connect them up
         this.Envelope.connect(this.Osc.output.gain);
-        this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        this.Osc.chain(this.Osc, this.OutputGain, App.AudioMixer.Master);
+
+        // Start
         this.Osc.start();
 
         // Define Outline for HitTest

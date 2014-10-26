@@ -14,13 +14,13 @@ class Volume extends Effect implements IEffect {
 
     Connect(modifiable: IModifiable): void{
         super.Connect(modifiable);
-        this.Modifiable.OutputGain.gain.value *= this.increment;
+        this.Modifiable.OutputGain.input.gain.value *= this.increment;
 
     }
 
     Disconnect(): void{
 
-        this.Modifiable.OutputGain.gain.value /= this.increment;
+        this.Modifiable.OutputGain.input.gain.value /= this.increment;
 
     }
 }

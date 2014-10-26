@@ -1,5 +1,5 @@
 /// <reference path="../../refs.ts" />
-
+import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifier = require("../IModifier");
@@ -10,11 +10,10 @@ class KeyboardInput extends Modifiable {
 
     public Osc: Tone.Oscillator;
     public Envelope: Tone.Envelope;
-    public OutputGain: GainNode;
+    public OutputGain: Tone.Signal;
     public Params: ToneSettings;
+    private _nodes = [];
 
-
-    //TODO: Add Octave up & down button
 
     keysDown = {};
     key_map = {
@@ -45,17 +44,9 @@ class KeyboardInput extends Modifiable {
     };
     settings = {
         startOctave: null,
-        startNote: 'A2',
-        keyPressOffset: null
-
-        //TODO: Monophonic & polyphonic settings
+        startNote: 'C2'
     };
 
-//        for (var i = 0; i < this.Modifiers.Count; i++){
-//            var mod = this.Modifiers.GetValueAt(i);
-//            if ((<any>mod).PitchIncrement){
-//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
-//            }
 
 
     constructor(ctx:CanvasRenderingContext2D, position:Point) {
@@ -63,8 +54,8 @@ class KeyboardInput extends Modifiable {
 
         this.Params = {
             oscillator: {
-                frequency: 340,
-                waveform: 'square'
+                frequency: 440,
+                waveform: 'square' //TODO: add noise waveform options to keyboard
             },
             envelope: {
                 attack: 0.02,
@@ -77,22 +68,25 @@ class KeyboardInput extends Modifiable {
             },
             keyboard: {
                 isPolyphonic: false,
-                glide: 0.1
+                glide: 0.1 // glide only works in monophonic mode
             }
 
         };
 
-
+        // Define the audio nodes
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
-        this.OutputGain = this.Osc.context.createGain();
-        this.OutputGain.gain.value = this.Params.output.volume;
+        this.OutputGain = new Tone.Signal;
+        this.OutputGain.output.gain.value = this.Params.output.volume;
 
+        // Connect them up
         this.Envelope.connect(this.Osc.output.gain);
-        this.Osc.chain(this.Osc, this.OutputGain, this.OutputGain.context.destination); //TODO: Should connect to a master audio gain output with compression (in BlockView?)
+        this.Osc.chain(this.Osc, this.OutputGain, App.AudioMixer.Master);
+
+        // Start
         this.Osc.start();
 
-        //Get the Start Octave from the start Note
+        // Get the Start Octave from the start Note
         this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
 
         this.AddListeners();
@@ -130,32 +124,52 @@ class KeyboardInput extends Modifiable {
 
     KeyboardDown(key): void {
 
-        //if it's already pressed (holding note)
-        if (key.keyCode in this.keysDown) {
-            return;
-        }
-        //pressed first time, add to object
-        this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
-
-        // Octave UP (Plus button)
-        if (key.keyCode === 187 && this.settings.startOctave != 8) {
-            this.settings.startOctave++;
-        }
-
-        // Octave DOWN (Minus button)
-        if (key.keyCode === 189 && this.settings.startOctave != 0) {
-            this.settings.startOctave--;
-        }
-
-        //If this is key is in our key_map get the pressed key and pass to getFrequency
+        //Check if this key pressed is in out key_map
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
+
+            //if it's already pressed (holding note)
+            if (key.keyCode in this.keysDown) {
+                return;
+            }
+            //pressed first time, add to object
+            this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
+
+            // Octave UP (Plus button)
+            if (key.keyCode === 187 && this.settings.startOctave != 8) {
+                this.settings.startOctave++;
+                return;
+            }
+
+            // Octave DOWN (Minus button)
+            if (key.keyCode === 189 && this.settings.startOctave != 0) {
+                this.settings.startOctave--;
+                return;
+            }
 
             var keyPressed = this.GetKeyPressed(key.keyCode);
             var frequency = this.GetFrequencyOfNote(keyPressed);
 
             if (this.Params.keyboard.isPolyphonic){
                 // POLYPHONIC
-                    //TODO: polyphonic needs to create new oscillators for every keypressed
+
+                //TODO: make LFO's and scuzzes work in polyphonic mode
+
+                // Create throwaway audio nodes for each keydown
+                var _oscillator = new Tone.Oscillator(frequency, this.Params.oscillator.waveform);
+                var _envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
+
+                // Connect them
+                _envelope.connect(_oscillator.output.gain);
+                _oscillator.connect(this.OutputGain);
+
+                // Play sound
+                _oscillator.start();
+                _envelope.triggerAttack();
+
+                // Add to _nodes array
+                this._nodes.push(_oscillator);
+                console.log(this._nodes);
+
 
             } else {
                 // MONOPHONIC
@@ -166,27 +180,49 @@ class KeyboardInput extends Modifiable {
                     this.Osc.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
                     this.Envelope.triggerAttack();
 
-                    // Else ramp to new frequency over time (using portamento)
+                    // Else ramp to new frequency over time (portamento)
                 } else {
-                    this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide); //GLIDE
-                    //TODO: Glide the frequency
+                    this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
                 }
             }
         }
     }
 
     KeyboardUp(key): void {
-        // remove this key from the keysDown object
-        delete this.keysDown[key.keyCode];
 
-        if (this.Params.keyboard.isPolyphonic){
-            // POLYPHONIC
-            //TODO: polyphonic needs to stop corresponding oscillators for every keyup
+        //Check if this key released is in out key_map
+        if (typeof this.key_map[key.keyCode] !== 'undefined') {
+            // remove this key from the keysDown object
+            delete this.keysDown[key.keyCode];
 
-        } else {
-            // MONOPHONIC
-            if (Object.keys(this.keysDown).length === 0) {
-                this.Envelope.triggerRelease();
+            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var frequency = this.GetFrequencyOfNote(keyPressed);
+
+            if (this.Params.keyboard.isPolyphonic) {
+                // POLYPHONIC
+                var new_nodes = [];
+
+                // Loop through oscillator voices
+                for (var i = 0; i < this._nodes.length; i++) {
+                    // Check if voice frequency matches the keyPressed frequency
+                    if (Math.round(this._nodes[i].frequency.getValue()) === Math.round(frequency)) {
+                        this._nodes[i].stop(0);
+                        this._nodes[i].disconnect();
+
+                        //TODO: trigger release and then stop & disconnect afterwards
+
+                    } else {
+                        new_nodes.push(this._nodes[i]);
+                    }
+                }
+
+                this._nodes = new_nodes;
+
+            } else {
+                // MONOPHONIC
+                if (Object.keys(this.keysDown).length === 0) {
+                    this.Envelope.triggerRelease();
+                }
             }
         }
     }
@@ -194,8 +230,8 @@ class KeyboardInput extends Modifiable {
     GetKeyPressed(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (this.key_map[keyCode]
-            .replace('l', parseInt(this.settings.startOctave, 10) + this.settings.keyPressOffset)
-            .replace('u', (parseInt(this.settings.startOctave, 10) + this.settings.keyPressOffset + 1)
+            .replace('l', parseInt(this.settings.startOctave, 10))
+            .replace('u', (parseInt(this.settings.startOctave, 10) + 1)
                 .toString()));
     }
 
@@ -204,6 +240,10 @@ class KeyboardInput extends Modifiable {
             key_number,
             octave;
 
+        if (note.length === 4) {
+            octave = note.charAt(3) + 10;
+        }
+
         if (note.length === 3) {
             //sharp note - octave is 3rd char
             octave = note.charAt(2);
@@ -211,6 +251,8 @@ class KeyboardInput extends Modifiable {
             //natural note - octave number is 2nd char
             octave = note.charAt(1);
         }
+
+        this.GetConnectedPitchModifiers();
 
         // math to return frequency number from note & octave
         key_number = notes.indexOf(note.slice(0, -1));
@@ -226,6 +268,35 @@ class KeyboardInput extends Modifiable {
     GetConnectedPitchModifiers() {
         //TODO: Get all pitch modifiers attached and..
         // return the modified frequency multiplier
+
+        for (var i = 0; i < this.Modifiers.Count; i++) {
+            var mod = this.Modifiers.GetValueAt(i);
+            console.log(mod);
+
+//            console.log(t)
+//            if ((<any>mod).PitchIncrement) {
+//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
+//            }
+
+            // return pitchIncrement;
+        }
+    }
+
+    GetConnectedLFOModifiers() {
+        //TODO: Get all LFO modifiers attached and..
+        // return the modified frequency multiplier
+
+        for (var i = 0; i < this.Modifiers.Count; i++) {
+            var mod = this.Modifiers.GetValueAt(i);
+            console.log(mod);
+
+//            console.log(t)
+//            if ((<any>mod).PitchIncrement) {
+//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
+//            }
+
+            // return LFO;
+        }
     }
 
     // input blocks are red circles

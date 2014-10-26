@@ -10,7 +10,7 @@ interface IModifiable extends IBlock{
     Osc?: Tone.Oscillator;
     Noise?: Tone.Noise;
     Envelope?: Tone.Envelope;
-    OutputGain?: GainNode;
+    OutputGain?: Tone.Signal;
     Params?: ToneSettings;
     ValidateModifiers(modifiers: ObservableCollection<IModifier>): void;
 }
