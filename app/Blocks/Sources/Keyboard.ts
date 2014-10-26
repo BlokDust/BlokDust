@@ -55,7 +55,7 @@ class KeyboardInput extends Modifiable {
         this.Params = {
             oscillator: {
                 frequency: 440,
-                waveform: 'square'
+                waveform: 'square' //TODO: add noise waveform options to keyboard
             },
             envelope: {
                 attack: 0.02,
@@ -67,8 +67,8 @@ class KeyboardInput extends Modifiable {
                 volume: 0.5
             },
             keyboard: {
-                isPolyphonic: true,
-                glide: 0.1
+                isPolyphonic: false,
+                glide: 0.1 // glide only works in monophonic mode
             }
 
         };
@@ -154,7 +154,7 @@ class KeyboardInput extends Modifiable {
 
                 //TODO: make LFO's and scuzzes work in polyphonic mode
 
-                // Create throw away audio nodes for each keydown
+                // Create throwaway audio nodes for each keydown
                 var _oscillator = new Tone.Oscillator(frequency, this.Params.oscillator.waveform);
                 var _envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
 
@@ -180,7 +180,7 @@ class KeyboardInput extends Modifiable {
                     this.Osc.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
                     this.Envelope.triggerAttack();
 
-                    // Else ramp to new frequency over time (using portamento)
+                    // Else ramp to new frequency over time (portamento)
                 } else {
                     this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
                 }
@@ -274,6 +274,23 @@ class KeyboardInput extends Modifiable {
 //            }
 
             // return pitchIncrement;
+        }
+    }
+
+    GetConnectedLFOModifiers() {
+        //TODO: Get all LFO modifiers attached and..
+        // return the modified frequency multiplier
+
+        for (var i = 0; i < this.Modifiers.Count; i++) {
+            var mod = this.Modifiers.GetValueAt(i);
+            console.log(mod);
+
+//            console.log(t)
+//            if ((<any>mod).PitchIncrement) {
+//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
+//            }
+
+            // return LFO;
         }
     }
 

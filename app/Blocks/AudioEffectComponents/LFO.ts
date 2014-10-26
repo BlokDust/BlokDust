@@ -22,6 +22,14 @@ class LFO extends Effect implements IEffect {
 //            this._LFO.start();
             return;
         }
+//        if (this.Modifiable.Params.keyboard) {
+//            if (this.Modifiable.Params.keyboard.isPolyphonic) {
+//                //TODO: All disposable oscillators to go through LFO in polyphonic keyboard mode
+//            }
+//            else {
+//
+//            }
+//        }
 
         this._LFO.connect(this.Modifiable.Osc.detune);
         this._LFO.start();
