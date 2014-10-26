@@ -124,27 +124,27 @@ class KeyboardInput extends Modifiable {
 
     KeyboardDown(key): void {
 
-        //if it's already pressed (holding note)
-        if (key.keyCode in this.keysDown) {
-            return;
-        }
-        //pressed first time, add to object
-        this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
-
-        // Octave UP (Plus button)
-        if (key.keyCode === 187 && this.settings.startOctave != 8) {
-            this.settings.startOctave++;
-            return;
-        }
-
-        // Octave DOWN (Minus button)
-        if (key.keyCode === 189 && this.settings.startOctave != 0) {
-            this.settings.startOctave--;
-            return;
-        }
-
-        //If this is key is in our key_map get the pressed key and pass to getFrequency
+        //Check if this key pressed is in out key_map
         if (typeof this.key_map[key.keyCode] !== 'undefined') {
+
+            //if it's already pressed (holding note)
+            if (key.keyCode in this.keysDown) {
+                return;
+            }
+            //pressed first time, add to object
+            this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
+
+            // Octave UP (Plus button)
+            if (key.keyCode === 187 && this.settings.startOctave != 8) {
+                this.settings.startOctave++;
+                return;
+            }
+
+            // Octave DOWN (Minus button)
+            if (key.keyCode === 189 && this.settings.startOctave != 0) {
+                this.settings.startOctave--;
+                return;
+            }
 
             var keyPressed = this.GetKeyPressed(key.keyCode);
             var frequency = this.GetFrequencyOfNote(keyPressed);
@@ -189,35 +189,40 @@ class KeyboardInput extends Modifiable {
     }
 
     KeyboardUp(key): void {
-        // remove this key from the keysDown object
-        delete this.keysDown[key.keyCode];
-        var keyPressed = this.GetKeyPressed(key.keyCode);
-        var frequency = this.GetFrequencyOfNote(keyPressed);
 
-        if (this.Params.keyboard.isPolyphonic){
-            // POLYPHONIC
-            var new_nodes = [];
+        //Check if this key released is in out key_map
+        if (typeof this.key_map[key.keyCode] !== 'undefined') {
+            // remove this key from the keysDown object
+            delete this.keysDown[key.keyCode];
 
-            // Loop through oscillator voices
-            for (var i = 0; i < this._nodes.length; i++) {
-                // Check if voice frequency matches the keyPressed frequency
-                if (Math.round(this._nodes[i].frequency.getValue()) === Math.round(frequency)) {
-                    this._nodes[i].stop(0);
-                    this._nodes[i].disconnect();
+            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var frequency = this.GetFrequencyOfNote(keyPressed);
 
-                    //TODO: trigger release and then stop & disconnect afterwards
+            if (this.Params.keyboard.isPolyphonic) {
+                // POLYPHONIC
+                var new_nodes = [];
 
-                } else {
-                    new_nodes.push(this._nodes[i]);
+                // Loop through oscillator voices
+                for (var i = 0; i < this._nodes.length; i++) {
+                    // Check if voice frequency matches the keyPressed frequency
+                    if (Math.round(this._nodes[i].frequency.getValue()) === Math.round(frequency)) {
+                        this._nodes[i].stop(0);
+                        this._nodes[i].disconnect();
+
+                        //TODO: trigger release and then stop & disconnect afterwards
+
+                    } else {
+                        new_nodes.push(this._nodes[i]);
+                    }
                 }
-            }
 
-            this._nodes = new_nodes;
+                this._nodes = new_nodes;
 
-        } else {
-            // MONOPHONIC
-            if (Object.keys(this.keysDown).length === 0) {
-                this.Envelope.triggerRelease();
+            } else {
+                // MONOPHONIC
+                if (Object.keys(this.keysDown).length === 0) {
+                    this.Envelope.triggerRelease();
+                }
             }
         }
     }
