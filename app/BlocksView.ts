@@ -190,13 +190,14 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     private _CheckCollision(e) {
         var point = (<any>e).args.Source.MousePosition;
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
-        for (var i = 0; i < App.Blocks.Count; i++){
+        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
             var block: IBlock = App.Blocks.GetValueAt(i);
             if (block.HitTest(point)){
                 (<any>e).args.Handled = true;
 
                 block.MouseDown();
                 this.SelectedBlock = block;
+                return;
             }
         }
     }
