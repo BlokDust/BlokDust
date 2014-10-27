@@ -14,10 +14,7 @@ var require = {
         "Tone/source/Noise",
         "Tone/component/LFO",
         "Tone/component/Envelope",
-        "Tone/effect/PingPongDelay",
-        "lib/pixel-palette/js/pixelPalette.js",
-        "lib/pixel-palette/js/PxLoader.js",
-        "lib/pixel-palette/js/PxLoaderImage.js"
+        "Tone/effect/PingPongDelay"
     ],
     callback: function (
         text,
