@@ -19,12 +19,7 @@ var require = {
     callback: function (
         text,
         Fayde,
-        Tone,
-        pixelPalette,
-        Master,
-        Oscillator,
-        LFO,
-        PingPongDelay
+        Tone
         ) {
         window.Tone = Tone;
 
