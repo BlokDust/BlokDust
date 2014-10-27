@@ -231,6 +231,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     DeleteSelectedBlock(){
+        if (!this.SelectedBlock) return;
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
     }
