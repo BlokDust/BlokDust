@@ -17,11 +17,9 @@ class Block implements IBlock {
     public Outline: Point[] = [];
     public ZIndex;
 
-    // receives a normalised point.
-    // convert this into units. so if the canvas is 100 * 50 units
-    // a point of x:0.5, y:0.5 = 50 * 25 units
+    // value is a grid position.
     set Position(value: Point){
-        this._Position = this._GetGridPosition(value);
+        this._Position = value;
     }
 
     get Position(): Point{
@@ -47,7 +45,7 @@ class Block implements IBlock {
     // normalised point
     constructor(ctx: CanvasRenderingContext2D, position: Point) {
         this.Ctx = ctx;
-        this.Position = position;
+        this.Position = this._GetGridPosition(position);
         this.Update(ctx);
     }
 
@@ -71,9 +69,11 @@ class Block implements IBlock {
     Draw(ctx: CanvasRenderingContext2D) {
         ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 
-        ctx.fillStyle = "#fff";
-        var pos = this._GetRelGridPosition(new Point(-2, -2));
-        ctx.fillText(""+this.ZIndex,pos.X,pos.Y);
+        if (window.debug){
+            ctx.fillStyle = "#fff";
+            var pos = this._GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
+            ctx.fillText(""+this.ZIndex,pos.X,pos.Y);
+        }
     }
 
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
@@ -140,7 +140,7 @@ class Block implements IBlock {
     // normalised point
     MouseMove(point: Point) {
         if (this.IsPressed){
-            this.Position = point;
+            this.Position = this._GetGridPosition(point);
         }
     }
 
