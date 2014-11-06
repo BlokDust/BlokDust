@@ -17,8 +17,11 @@ class Block implements IBlock {
     public Outline: Point[] = [];
     public ZIndex;
 
+    // receives a normalised point.
+    // convert this into units. so if the canvas is 100 * 50 units
+    // a point of x:0.5, y:0.5 = 50 * 25 units
     set Position(value: Point){
-        this._Position = this._GetAbsGridPosition(value);
+        this._Position = this._GetGridPosition(value);
     }
 
     get Position(): Point{
@@ -48,9 +51,14 @@ class Block implements IBlock {
         this.Update(ctx);
     }
 
-    // returns the Block's absolute position
+    // returns the Block's absolute position in pixels
     get AbsPosition(): Point {
-        return new Point(this.Position.X * this._CtxSize.Width, this.Position.Y * this._CtxSize.Height);
+        return this._GetAbsPosition(this.Position);
+    }
+
+    get Unit(): Size{
+        var u = this.Ctx.canvas.width / this.Ctx.divisor;
+        return new Size(u, u);
     }
 
     Update(ctx: CanvasRenderingContext2D) {
@@ -72,30 +80,48 @@ class Block implements IBlock {
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
         this.Ctx.beginPath();
-        var pos = this._GetRelGridPosition(new Point(x, y));
+        var pos = this._GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
         this.Ctx.moveTo(pos.X, pos.Y);
     }
 
     DrawLineTo(x,y) {
-        var pos = this._GetRelGridPosition(new Point(x, y));
+        var pos = this._GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
         this.Ctx.lineTo(pos.X, pos.Y);
     }
 
     /*
-    * @param {point} point - specifies number of units relative to AbsPosition. (-1, -1) means "one unit left and one unit up".
+    * @param {point} point - specifies number of units relative to Position. (-1, -1) means "one unit left and one unit up".
      */
-    private _GetRelGridPosition(point: Point): Point {
-        return new Point(this.AbsPosition.X + (this.Ctx.canvas.width/this.Ctx.divisor) * point.X, this.AbsPosition.Y + (this.Ctx.canvas.width/this.Ctx.divisor) * point.Y);
+    private _GetRelGridPosition(units: Point): Point {
+        return new Point(
+            this.Position.X + units.X,
+            this.Position.Y + units.Y);
     }
 
-    private _GetAbsGridPosition(point: Point): Point {
-        var aspect = (this.Ctx.canvas.height/this.Ctx.canvas.width);
-        var x = Math.round(point.X / (1/this.Ctx.divisor)) * (1/this.Ctx.divisor);
-        var y = Math.round(point.Y / (1/(this.Ctx.divisor*aspect))) * (1/(this.Ctx.divisor*aspect));
+    // rounds the normalised position to nearest grid intersection in grid units.
+    private _GetGridPosition(point: Point): Point {
+        var x = Math.round(point.X * this.Ctx.divisor);// / this.Ctx.divisor;
+
+        // the vertical divisor is the amount you need to divide the canvas height by in order to get the cell width
+
+        // width  / 75 = 10
+        // height / x  = 10
+        // x = 1 / 10 * height
+
+        var y = Math.round(point.Y * this._GetHeightDivisor());// / divisor;
         return new Point(x, y);
     }
 
+    // get position in pixels.
+    private _GetAbsPosition(position: Point): Point {
+        var x = (position.X / this.Ctx.divisor) * this.Ctx.canvas.width;
+        var y = (position.Y / this._GetHeightDivisor()) * this.Ctx.canvas.height;
+        return new Point(x, y);
+    }
 
+    private _GetHeightDivisor(): number {
+        return (1 / this.Unit.Height) * this.Ctx.canvas.height;
+    }
 
     MouseDown() {
         this.IsPressed = true;
@@ -105,14 +131,13 @@ class Block implements IBlock {
 
     TouchDown() {
         this.IsPressed = true;
-        //this.OnClick();
     }
 
     MouseUp() {
         this.IsPressed = false;
     }
 
-    // relative point
+    // normalised point
     MouseMove(point: Point) {
         if (this.IsPressed){
             this.Position = point;
@@ -131,13 +156,10 @@ class Block implements IBlock {
         return this.Ctx.isPointInPath(point.X,point.Y);
     }
 
-
-
     // absolute point
     DistanceFrom(point: Point): number{
         return Math.distanceBetween(this.AbsPosition.X, this.AbsPosition.Y, point.X, point.Y);
     }
-
 
 }
 

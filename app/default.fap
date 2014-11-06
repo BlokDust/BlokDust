@@ -42,7 +42,7 @@
             <Button x:Name="ZoomOut" Width="100" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
-        <zoom:Zoomer Grid.Row="1" ZoomLevels="{Binding ZoomLevels}" ZoomFactor="1.5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}" ConstrainToViewport="false">
+        <zoom:Zoomer Grid.Row="1" ZoomLevels="{Binding ZoomLevels}" ZoomFactor="1.5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}" ConstrainToViewport="true">
             <Canvas>
                 <draw:Sketch x:Name="Blocks"
                              Canvas.Left="{Binding ZoomContentOffset.X}"

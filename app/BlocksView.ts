@@ -136,6 +136,32 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         this.Ctx.fillStyle = "#2c243e";
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
+        // draw grid
+        if (window.debug) {
+            var cellWidth = this.Ctx.canvas.width / this.Ctx.divisor;
+
+            this.Ctx.lineWidth = 1;
+            this.Ctx.strokeStyle = '#3d3256';
+
+            for (var i = 0; i < this.Ctx.divisor; i++) {
+                var x = Math.floor(cellWidth * i);
+                this.Ctx.beginPath();
+                this.Ctx.moveTo(x, 0);
+                this.Ctx.lineTo(x, this.Ctx.canvas.height);
+                this.Ctx.stroke();
+                this.Ctx.closePath();
+            }
+
+            for (var j = 0; j < this.Ctx.divisor; j++) {
+                var y = Math.floor(cellWidth * j);
+                this.Ctx.beginPath();
+                this.Ctx.moveTo(0, y);
+                this.Ctx.lineTo(this.Ctx.canvas.width, y);
+                this.Ctx.stroke();
+                this.Ctx.closePath();
+            }
+        }
+
         // draw blocks
         for (var i = 0; i < App.Blocks.Count; i++) {
             var block: IBlock = App.Blocks.GetValueAt(i);
