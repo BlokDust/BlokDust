@@ -2,6 +2,7 @@
 
 import IBlock = require("./IBlock");
 import BlocksView = require("../BlocksView");
+import Grid = require("../Grid");
 import Size = Fayde.Utils.Size;
 
 class Block implements IBlock {
@@ -12,11 +13,15 @@ class Block implements IBlock {
     private _LastPosition: Point;
     public IsPressed: boolean = false;
     private _IsSelected: boolean = false;
-    Ctx: CanvasRenderingContext2D;
+    Grid: Grid;
     private _CtxSize: Size;
     public Outline: Point[] = [];
     public ZIndex;
 
+    get Ctx(): CanvasRenderingContext2D{
+        return this.Grid.Ctx;
+    }
+    
     // value is a grid position.
     set Position(value: Point){
         this._Position = value;
@@ -43,22 +48,18 @@ class Block implements IBlock {
     }
 
     // normalised point
-    constructor(ctx: CanvasRenderingContext2D, position: Point) {
-        this.Ctx = ctx;
-        this.Position = this._GetGridPosition(position);
-        this.Update(ctx);
+    constructor(grid: Grid, position: Point) {
+        this.Grid = grid;
+        this.Position = this.Grid.GetGridPosition(position);
+        this.Update(this.Ctx);
     }
 
     // returns the Block's absolute position in pixels
     get AbsPosition(): Point {
-        return this._GetAbsPosition(this.Position);
+        return this.Grid.GetAbsPosition(this.Position);
     }
 
-    get Unit(): Size{
-        var u = this.Ctx.canvas.width / this.Ctx.divisor;
-        return new Size(u, u);
-    }
-
+    // todo: necessary to pass ctx to update and draw?
     Update(ctx: CanvasRenderingContext2D) {
         // only recreate the _CtxSize object if the ctx size has changed.
         if (!this._CtxSize || this.Ctx.canvas.width != this._CtxSize.Width || this.Ctx.canvas.height != this._CtxSize.Height){
@@ -71,7 +72,7 @@ class Block implements IBlock {
 
         if (window.debug){
             ctx.fillStyle = "#fff";
-            var pos = this._GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
+            var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
             ctx.fillText(""+this.ZIndex,pos.X,pos.Y);
         }
     }
@@ -80,12 +81,12 @@ class Block implements IBlock {
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
         this.Ctx.beginPath();
-        var pos = this._GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
+        var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
         this.Ctx.moveTo(pos.X, pos.Y);
     }
 
     DrawLineTo(x,y) {
-        var pos = this._GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
+        var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
         this.Ctx.lineTo(pos.X, pos.Y);
     }
 
@@ -96,31 +97,6 @@ class Block implements IBlock {
         return new Point(
             this.Position.X + units.X,
             this.Position.Y + units.Y);
-    }
-
-    // rounds the normalised position to nearest grid intersection in grid units.
-    private _GetGridPosition(point: Point): Point {
-        var x = Math.round(point.X * this.Ctx.divisor);// / this.Ctx.divisor;
-
-        // the vertical divisor is the amount you need to divide the canvas height by in order to get the cell width
-
-        // width  / 75 = 10
-        // height / x  = 10
-        // x = 1 / 10 * height
-
-        var y = Math.round(point.Y * this._GetHeightDivisor());// / divisor;
-        return new Point(x, y);
-    }
-
-    // get position in pixels.
-    private _GetAbsPosition(position: Point): Point {
-        var x = (position.X / this.Ctx.divisor) * this.Ctx.canvas.width;
-        var y = (position.Y / this._GetHeightDivisor()) * this.Ctx.canvas.height;
-        return new Point(x, y);
-    }
-
-    private _GetHeightDivisor(): number {
-        return (1 / this.Unit.Height) * this.Ctx.canvas.height;
     }
 
     MouseDown() {
@@ -140,7 +116,7 @@ class Block implements IBlock {
     // normalised point
     MouseMove(point: Point) {
         if (this.IsPressed){
-            this.Position = this._GetGridPosition(point);
+            this.Position = this.Grid.GetGridPosition(point);
         }
     }
 

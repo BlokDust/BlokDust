@@ -1,12 +1,13 @@
 import EnvelopeComponent = require("../AudioEffectComponents/Envelope");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import Grid = require("../../Grid");
 
 class Envelope extends Modifier {
 
 
-    constructor(ctx:CanvasRenderingContext2D, point: Point){
-        super(ctx, point);
+    constructor(grid: Grid, position: Point){
+        super(grid, position);
 
         var effect = new EnvelopeComponent(0.8, 0.9, 0.2, 0.9);
 

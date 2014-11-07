@@ -3,14 +3,15 @@ import IModifier = require("./IModifier");
 import IModifiable = require("./IModifiable");
 import IEffect = require("./IEffect");
 import Block = require("./Block");
+import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Modifiable extends Block implements IModifiable{
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
 
-    constructor(ctx:CanvasRenderingContext2D, position:Point) {
-        super(ctx, position);
+    constructor(grid: Grid, position: Point) {
+        super(grid, position);
 
         this.Modifiers.CollectionChanged.Subscribe(() => {
             this._OnModifiersChanged();

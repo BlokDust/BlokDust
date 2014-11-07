@@ -1,12 +1,13 @@
 import DelayComponent = require("../AudioEffectComponents/Delay");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import Grid = require("../../Grid");
 
 class Delay extends Modifier {
 
 
-    constructor(ctx:CanvasRenderingContext2D, point: Point){
-        super(ctx, point);
+    constructor(grid: Grid, position: Point){
+        super(grid, position);
 
         var effect = new DelayComponent();
 

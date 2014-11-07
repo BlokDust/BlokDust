@@ -1,11 +1,12 @@
 import PitchModule = require("../AudioEffectComponents/Pitch");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import Grid = require("../../Grid");
 
 class PitchIncrease extends Modifier {
 
-    constructor(ctx:CanvasRenderingContext2D, point: Point){
-        super(ctx, point);
+    constructor(grid: Grid, position: Point){
+        super(grid, position);
 
         var effect = new PitchModule(1.5); // Pitch decreases by 4ths
 

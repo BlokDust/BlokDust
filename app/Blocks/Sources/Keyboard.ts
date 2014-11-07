@@ -4,7 +4,7 @@ import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
-
+import Grid = require("../../Grid");
 
 class KeyboardInput extends Modifiable {
 
@@ -49,8 +49,8 @@ class KeyboardInput extends Modifiable {
 
 
 
-    constructor(ctx:CanvasRenderingContext2D, position:Point) {
-        super(ctx, position);
+    constructor(grid: Grid, position: Point) {
+        super(grid, position);
 
         this.Params = {
             oscillator: {

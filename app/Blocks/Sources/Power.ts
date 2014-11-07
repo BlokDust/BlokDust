@@ -4,11 +4,12 @@ import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifiable = require("../IModifiable");
 import Modifiable = require("../Modifiable");
+import Grid = require("../../Grid");
 
 class Power extends Modifiable{
 
-    constructor(ctx:CanvasRenderingContext2D, position:Point) {
-        super(ctx, position);
+    constructor(grid: Grid, position: Point) {
+        super(grid, position);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1,0), new Point(1,-2), new Point(2,-1), new Point(2,0), new Point(0,2), new Point(-1,1));

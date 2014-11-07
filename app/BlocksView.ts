@@ -15,15 +15,15 @@ import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommand
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
+import Grid = require("./Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-class BlocksView extends Fayde.Drawing.SketchContext {
+class BlocksView extends Grid {
 
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
-    private _Divisor: number = 75;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
     get SelectedBlock(): IBlock {
@@ -90,9 +90,9 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         }
     }
 
-    CreateBlock<T extends IBlock>(m: {new(ctx: CanvasRenderingContext2D, position: Point): T; }){
+    CreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
 
-        var block: IBlock = new m(this.Ctx, this._GetRandomPosition());
+        var block: IBlock = new m(this, this._GetRandomPosition());
         block.Id = this._GetId();
 
         // todo: should this go in command handler?
@@ -115,7 +115,7 @@ class BlocksView extends Fayde.Drawing.SketchContext {
         super.Setup();
 
         // set up the grid
-        this.Ctx.divisor = this._Divisor;
+        this.Divisor = 75;
 
     }
 
@@ -130,37 +130,11 @@ class BlocksView extends Fayde.Drawing.SketchContext {
     }
 
     Draw(){
-        super.Draw();
-
         // clear
         this.Ctx.fillStyle = "#2c243e";
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
-        // draw grid
-        if (window.debug) {
-            var cellWidth = this.Ctx.canvas.width / this.Ctx.divisor;
-
-            this.Ctx.lineWidth = 1;
-            this.Ctx.strokeStyle = '#3d3256';
-
-            for (var i = 0; i < this.Ctx.divisor; i++) {
-                var x = Math.floor(cellWidth * i);
-                this.Ctx.beginPath();
-                this.Ctx.moveTo(x, 0);
-                this.Ctx.lineTo(x, this.Ctx.canvas.height);
-                this.Ctx.stroke();
-                this.Ctx.closePath();
-            }
-
-            for (var j = 0; j < this.Ctx.divisor; j++) {
-                var y = Math.floor(cellWidth * j);
-                this.Ctx.beginPath();
-                this.Ctx.moveTo(0, y);
-                this.Ctx.lineTo(this.Ctx.canvas.width, y);
-                this.Ctx.stroke();
-                this.Ctx.closePath();
-            }
-        }
+        super.Draw();
 
         // draw blocks
         for (var i = 0; i < App.Blocks.Count; i++) {

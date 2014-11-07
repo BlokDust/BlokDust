@@ -1,11 +1,12 @@
 import VolumeComponent = require("../AudioEffectComponents/Volume");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import Grid = require("../../Grid");
 
 class VolumeDecrease extends Modifier {
 
-    constructor(ctx:CanvasRenderingContext2D, point: Point){
-        super(ctx, point);
+    constructor(grid: Grid, position: Point){
+        super(grid, position);
 
         var effect = new VolumeComponent(0.5);
         this.Effects.Add(effect);

@@ -1,12 +1,13 @@
 import LFOComponent = require("../AudioEffectComponents/LFO");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import Grid = require("../../Grid");
 
 class Scuzz extends Modifier {
 
 
-    constructor(ctx:CanvasRenderingContext2D, point: Point){
-        super(ctx, point);
+    constructor(grid: Grid, position: Point){
+        super(grid, position);
 
         var effect = new LFOComponent(440, 200, 1800, 'sawtooth');
         effect._LFO.setType('sawtooth');

@@ -4,6 +4,7 @@ import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
+import Grid = require("../../Grid");
 
 class ToneSource extends Modifiable {
 
@@ -12,8 +13,8 @@ class ToneSource extends Modifiable {
     public OutputGain: Tone.Signal;
     public Params: ToneSettings;
 
-    constructor(ctx:CanvasRenderingContext2D, position:Point) {
-        super(ctx, position);
+    constructor(grid: Grid, position: Point) {
+        super(grid, position);
 
         this.Params = {
             oscillator: {
