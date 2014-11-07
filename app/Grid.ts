@@ -4,6 +4,7 @@ import Size = Fayde.Utils.Size;
 
 class Grid extends Fayde.Drawing.SketchContext {
 
+    // number of units to divide width by.
     public Divisor: number;
 
     constructor() {
@@ -16,16 +17,9 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
 
     // rounds the normalised position to nearest grid intersection in grid units.
-    public GetGridPosition(point: Point): Point {
-        var x = Math.round(point.X * this.Divisor);
-
-        // the vertical divisor is the amount you need to divide the canvas height by in order to get the cell width
-
-        // width  / 75 = 10
-        // height / x  = 10
-        // x = 1 / 10 * height
-
-        var y = Math.round(point.Y * this.GetHeightDivisor());
+    public GetGridPosition(position: Point): Point {
+        var x = Math.round(position.X * this.Divisor);
+        var y = Math.round(position.Y * this.GetHeightDivisor());
         return new Point(x, y);
     }
 
@@ -37,6 +31,10 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
 
     public GetHeightDivisor(): number {
+        // the vertical divisor is the amount you need to divide the canvas height by in order to get the cell width
+        // width  / 75 = 10
+        // height / x  = 10
+        // x = 1 / 10 * height
         return (1 / this.Unit.Height) * this.Ctx.canvas.height;
     }
 

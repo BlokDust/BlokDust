@@ -4,7 +4,7 @@
   "dependencies": {
     "requirejs": "*",
     "requirejs-text": "*",
-    "fayde": "*",
+    "fayde": "0.11.4",
     "fayde.controls": "~0.10.0",
     "fayde.drawing": "0.2.0",
     "exjs": "~0.2.0",

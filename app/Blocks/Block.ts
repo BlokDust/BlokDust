@@ -13,7 +13,7 @@ class Block implements IBlock {
     private _LastPosition: Point;
     public IsPressed: boolean = false;
     private _IsSelected: boolean = false;
-    Grid: Grid;
+    public Grid: Grid;
     private _CtxSize: Size;
     public Outline: Point[] = [];
     public ZIndex;
@@ -21,7 +21,7 @@ class Block implements IBlock {
     get Ctx(): CanvasRenderingContext2D{
         return this.Grid.Ctx;
     }
-    
+
     // value is a grid position.
     set Position(value: Point){
         this._Position = value;
