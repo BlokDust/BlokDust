@@ -12,6 +12,6 @@
     "fayde.utils": "0.1.9",
     "fayde.zoomer": "0.1.6",
     "tween.ts": "0.1.1",
-    "pixel-palette": "*"
+    "pixelpalette": "0.1.5"
   }
 }

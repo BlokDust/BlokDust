@@ -128,7 +128,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.MouseMove(e);
     }
 
-    _OnBlockSelected(block: IModifiable){
+    _OnBlockSelected(block: IBlock){
         this.SelectedBlock = block;
     }
 

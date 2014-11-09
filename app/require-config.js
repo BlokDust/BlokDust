@@ -3,11 +3,13 @@ var require = {
     paths: {
         "text": "lib/requirejs-text/text",
         "Fayde": "lib/fayde/Fayde",
+        "PixelPalette": "lib/pixelpalette/dist/PixelPalette",
         "Tone": "lib/Tone.js/Tone"
     },
     deps: [
         "text",
         "Fayde",
+        "PixelPalette",
         "Tone/core/Tone",
         "Tone/core/Master",
         "Tone/source/Oscillator",
@@ -19,8 +21,10 @@ var require = {
     callback: function (
         text,
         Fayde,
+        PixelPalette,
         Tone
         ) {
+        window.PixelPalette = PixelPalette;
         window.Tone = Tone;
 
         Fayde.LoadConfigJson(function (config, err) {

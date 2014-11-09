@@ -18,6 +18,8 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
+declare var PixelPalette;
+
 class BlocksView extends Grid {
 
     private _SelectedBlock: IBlock;
@@ -66,9 +68,6 @@ class BlocksView extends Grid {
         }, this);
 
         this._Invalidate();
-
-        // console is picking this function up, just not here
-        //loadPalette("img/palette.gif",function() {alert("palette load happened")});
     }
 
     private _Invalidate(){
@@ -117,6 +116,11 @@ class BlocksView extends Grid {
         // set up the grid
         this.Divisor = 75;
 
+        var pixelPalette = new PixelPalette(this.Ctx, "img/palette.gif");
+
+        pixelPalette.Load((palette: string[]) => {
+            console.log(palette);
+        });
     }
 
     Update() {

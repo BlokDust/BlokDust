@@ -16,9 +16,9 @@ interface NoiseSettings {
     waveform?: string;
 }
 
-    interface OscillatorSettings extends NoiseSettings {
-        frequency: number;
-    }
+interface OscillatorSettings extends NoiseSettings {
+    frequency: number;
+}
 
 interface EnvelopeSettings {
     attack?: number;
