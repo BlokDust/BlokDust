@@ -1,5 +1,3 @@
-/// <reference path="./refs" />
-
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");

@@ -1,5 +1,3 @@
-/// <reference path="./refs" />
-
 import App = require("./App");
 import IBlock = require("./Blocks/IBlock");
 import IModifiable = require("./Blocks/IModifiable");
@@ -18,7 +16,7 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-declare var PixelPalette;
+import PixelPalette = require("lib/pixelpalette/dist/PixelPalette");
 
 class BlocksView extends Grid {
 
@@ -26,7 +24,7 @@ class BlocksView extends Grid {
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
-    public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    public BlockSelected = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -178,7 +176,7 @@ class BlocksView extends Grid {
     }
 
     private _NormalisePoint(point: Point): Point {
-        return new Point(Math.normalise(point.X, 0, this.Ctx.canvas.width), Math.normalise(point.Y, 0, this.Ctx.canvas.height));
+        return new Point(Math.normalise(point.x, 0, this.Ctx.canvas.width), Math.normalise(point.y, 0, this.Ctx.canvas.height));
     }
 
     MouseDown(e: Fayde.Input.MouseEventArgs){
@@ -218,7 +216,7 @@ class BlocksView extends Grid {
                 this.SelectedBlock.MouseUp();
 
                 // if the block has moved, create an undoable operation.
-                if (!this.SelectedBlock.Position.Equals(this.SelectedBlock.LastPosition)){
+                if (!minerva.Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
                     var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
                     App.OperationManager.Do(op);
                 }

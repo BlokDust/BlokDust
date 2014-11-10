@@ -1,4 +1,5 @@
-/// <reference path="../refs" />
+/// <amd-dependency path="Fayde.Drawing" />
+/// <amd-dependency path="Fayde.Zoomer" />
 
 import BlocksView = require("../BlocksView");
 import IBlock = require("../Blocks/IBlock");

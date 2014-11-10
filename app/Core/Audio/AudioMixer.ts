@@ -1,7 +1,3 @@
-/// <reference path="../../refs" />
-
-
-
 class AudioMixer {
 
     public Master: Tone.Signal;

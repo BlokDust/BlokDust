@@ -1,5 +1,3 @@
-/// <reference path="../../refs" />
-
 import IOperation = require("./IOperation");
 import IUndoableOperation = require("./IUndoableOperation");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
