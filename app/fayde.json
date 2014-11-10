@@ -20,6 +20,9 @@
     "Fayde.Zoomer": {
       "exports": "Fayde.Zoomer",
       "deps": ["Fayde.Utils", "TWEEN"]
+    },
+    "pixelpalette": {
+      "path": "lib/pixelpalette/dist/PixelPalette.min"
     }
   }
 }

@@ -1,5 +1,3 @@
-/// <reference path="../../refs" />
-
 import IResource = require("./IResource");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 

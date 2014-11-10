@@ -1,5 +1,3 @@
-/// <reference path="../refs" />
-
 import Size = Fayde.Utils.Size;
 import IDisplayObject = require("../IDisplayObject");
 
