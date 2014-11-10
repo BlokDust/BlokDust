@@ -4,7 +4,7 @@ var require = {
         "text": "lib/requirejs-text/text",
         "Fayde": "lib/fayde/Fayde",
         "PixelPalette": "lib/pixelpalette/dist/PixelPalette",
-        "Tone": "lib/Tone.js/Tone"
+        "Tone": "lib/tone/Tone"
     },
     deps: [
         "text",
