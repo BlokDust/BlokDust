@@ -1,6 +1,3 @@
-/// <amd-dependency path="Fayde.Drawing" />
-/// <amd-dependency path="Fayde.Zoomer" />
-
 import BlocksView = require("../BlocksView");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");

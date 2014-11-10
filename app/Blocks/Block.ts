@@ -71,7 +71,7 @@ class Block implements IBlock {
         if (window.debug){
             ctx.fillStyle = "#fff";
             var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
-            ctx.fillText(""+this.ZIndex,pos.x,pos.y);
+            ctx.fillText("" + this.ZIndex, pos.x, pos.y);
         }
     }
 
@@ -123,11 +123,11 @@ class Block implements IBlock {
         var ref = this.Outline;
         var i;
 
-        this.DrawMoveTo(ref[0].x,ref[0].y);
+        this.DrawMoveTo(ref[0].x, ref[0].y);
         for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].x, ref[i].y);
         this.Ctx.closePath();
 
-        return this.Ctx.isPointInPath(point.x,point.y);
+        return this.Ctx.isPointInPath(point.x, point.y);
     }
 
     // absolute point
