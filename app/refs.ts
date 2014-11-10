@@ -8,4 +8,4 @@
 /// <reference path="./waa.d.ts" />
 /// <reference path="./ToneSettings.d.ts" />
 /// <reference path="./es6-promise.d.ts" />
-/// <reference path="./lib/pixelpalette/PixelPalette.d.ts" />
+/// <reference path="./lib/pixelpalette/dist/PixelPalette.d.ts" />
