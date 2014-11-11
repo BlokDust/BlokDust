@@ -1,5 +1,3 @@
-/// <reference path="./refs" />
-
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
@@ -12,7 +10,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 import FilteredCollection = Fayde.Collections.FilteredCollection;
 
 class App{
-
+    
     static OperationManager: OperationManager;
     static ResourceManager: ResourceManager;
     static CommandManager: CommandManager;

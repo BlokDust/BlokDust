@@ -1,5 +1,3 @@
-/// <reference path="../../refs" />
-
 import IFactoryResource = require("./IFactoryResource");
 
 class FactoryResource<T> implements IFactoryResource<T> {

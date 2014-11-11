@@ -1,5 +1,3 @@
-/// <reference path="../../refs" />
-
 import ICommandHandler = require("../Commands/ICommandHandler");
 import IFactoryResource = require("./IFactoryResource");
 import IValidator = require("../Validators/IValidator");

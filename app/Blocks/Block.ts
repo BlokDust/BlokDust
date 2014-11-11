@@ -1,5 +1,3 @@
-/// <reference path="../refs" />
-
 import IBlock = require("./IBlock");
 import BlocksView = require("../BlocksView");
 import Grid = require("../Grid");
@@ -73,7 +71,7 @@ class Block implements IBlock {
         if (window.debug){
             ctx.fillStyle = "#fff";
             var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
-            ctx.fillText(""+this.ZIndex,pos.X,pos.Y);
+            ctx.fillText("" + this.ZIndex, pos.x, pos.y);
         }
     }
 
@@ -82,12 +80,12 @@ class Block implements IBlock {
     DrawMoveTo(x, y) {
         this.Ctx.beginPath();
         var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
-        this.Ctx.moveTo(pos.X, pos.Y);
+        this.Ctx.moveTo(pos.x, pos.y);
     }
 
     DrawLineTo(x,y) {
         var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
-        this.Ctx.lineTo(pos.X, pos.Y);
+        this.Ctx.lineTo(pos.x, pos.y);
     }
 
     /*
@@ -95,8 +93,8 @@ class Block implements IBlock {
      */
     private _GetRelGridPosition(units: Point): Point {
         return new Point(
-            this.Position.X + units.X,
-            this.Position.Y + units.Y);
+            this.Position.x + units.x,
+            this.Position.y + units.y);
     }
 
     MouseDown() {
@@ -125,16 +123,16 @@ class Block implements IBlock {
         var ref = this.Outline;
         var i;
 
-        this.DrawMoveTo(ref[0].X,ref[0].Y);
-        for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].X, ref[i].Y);
+        this.DrawMoveTo(ref[0].x, ref[0].y);
+        for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].x, ref[i].y);
         this.Ctx.closePath();
 
-        return this.Ctx.isPointInPath(point.X,point.Y);
+        return this.Ctx.isPointInPath(point.x, point.y);
     }
 
     // absolute point
     DistanceFrom(point: Point): number{
-        return Math.distanceBetween(this.AbsPosition.X, this.AbsPosition.Y, point.X, point.Y);
+        return Math.distanceBetween(this.AbsPosition.x, this.AbsPosition.y, point.x, point.y);
     }
 
 }

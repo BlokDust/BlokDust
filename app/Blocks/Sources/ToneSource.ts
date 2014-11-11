@@ -1,4 +1,3 @@
-/// <reference path="../../refs.ts" />
 import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");

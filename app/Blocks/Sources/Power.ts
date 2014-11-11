@@ -1,5 +1,3 @@
-/// <reference path="../../refs.ts" />
-
 import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifiable = require("../IModifiable");

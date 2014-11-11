@@ -1,5 +1,3 @@
-/// <reference path="../refs" />
-
 import BlocksView = require("../BlocksView");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");

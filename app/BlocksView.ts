@@ -1,5 +1,3 @@
-/// <reference path="./refs" />
-
 import App = require("./App");
 import IBlock = require("./Blocks/IBlock");
 import IModifiable = require("./Blocks/IModifiable");
@@ -116,11 +114,11 @@ class BlocksView extends Grid {
         // set up the grid
         this.Divisor = 75;
 
-        var pixelPalette = new PixelPalette(this.Ctx, "img/palette.gif");
-
-        pixelPalette.Load((palette: string[]) => {
-            console.log(palette);
-        });
+        //var pixelPalette = new PixelPalette(this.Ctx, "img/palette.gif");
+        //
+        //pixelPalette.Load((palette: string[]) => {
+        //    console.log(palette);
+        //});
     }
 
     Update() {
@@ -178,7 +176,7 @@ class BlocksView extends Grid {
     }
 
     private _NormalisePoint(point: Point): Point {
-        return new Point(Math.normalise(point.X, 0, this.Ctx.canvas.width), Math.normalise(point.Y, 0, this.Ctx.canvas.height));
+        return new Point(Math.normalise(point.x, 0, this.Ctx.canvas.width), Math.normalise(point.y, 0, this.Ctx.canvas.height));
     }
 
     MouseDown(e: Fayde.Input.MouseEventArgs){
@@ -218,7 +216,7 @@ class BlocksView extends Grid {
                 this.SelectedBlock.MouseUp();
 
                 // if the block has moved, create an undoable operation.
-                if (!this.SelectedBlock.Position.Equals(this.SelectedBlock.LastPosition)){
+                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
                     var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
                     App.OperationManager.Do(op);
                 }
