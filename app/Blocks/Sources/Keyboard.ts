@@ -4,6 +4,7 @@ import IBlock = require("../IBlock");
 import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
+import PitchComponent = require("../AudioEffectComponents/Pitch");
 import Grid = require("../../Grid");
 
 class KeyboardInput extends Modifiable {
@@ -67,7 +68,7 @@ class KeyboardInput extends Modifiable {
                 volume: 0.5
             },
             keyboard: {
-                isPolyphonic: false,
+                isPolyphonic: true,
                 glide: 0.1 // glide only works in monophonic mode
             }
 
@@ -102,20 +103,20 @@ class KeyboardInput extends Modifiable {
     //TODO: move event listeners to a controls class
     AddListeners(): void {
 
-        window.addEventListener('keydown', (key) => {
+        document.addEventListener('keydown', (key) => {
             this.KeyboardDown(key);
         });
-        window.addEventListener('keyup', (key) => {
+        document.addEventListener('keyup', (key) => {
             this.KeyboardUp(key);
         });
     }
 
     RemoveListeners(): void {
 
-        window.removeEventListener('keydown', (key) => {
+        document.removeEventListener('keydown', (key) => {
             this.KeyboardDown(key);
         });
-        window.removeEventListener('keyup', (key) => {
+        document.removeEventListener('keyup', (key) => {
             this.KeyboardUp(key);
         });
 
@@ -176,7 +177,6 @@ class KeyboardInput extends Modifiable {
 
                 // If no other keys already pressed trigger attack
                 if (Object.keys(this.keysDown).length === 1) {
-//                this.Osc.frequency.setValue(frequency);
                     this.Osc.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
                     this.Envelope.triggerAttack();
 
@@ -207,7 +207,7 @@ class KeyboardInput extends Modifiable {
                     // Check if voice frequency matches the keyPressed frequency
                     if (Math.round(this._nodes[i].frequency.getValue()) === Math.round(frequency)) {
                         this._nodes[i].stop(0);
-                        this._nodes[i].disconnect();
+                        this._nodes[i].dispose();
 
                         //TODO: trigger release and then stop & disconnect afterwards
 
@@ -263,6 +263,7 @@ class KeyboardInput extends Modifiable {
         }
 
         return 440 * Math.pow(2, (key_number - 49) / 12);
+        //return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
     }
 
     GetConnectedPitchModifiers() {
@@ -271,9 +272,19 @@ class KeyboardInput extends Modifiable {
 
         for (var i = 0; i < this.Modifiers.Count; i++) {
             var mod = this.Modifiers.GetValueAt(i);
-            console.log(mod);
+            var pitchIncrement;
+            for (var j = 0; j < mod.Effects.Count; j++) {
+                var effect = mod.Effects.GetValueAt(j);
+                //TODO: Use reflection when available
+                if ((<PitchComponent>effect).PitchIncrement) {
+                    pitchIncrement = (<PitchComponent>effect).PitchIncrement;
+                    console.log(pitchIncrement);
+                }
+            }
 
-//            console.log(t)
+
+            //console.log(mod.Effects._ht.0.PitchIncrement);
+
 //            if ((<any>mod).PitchIncrement) {
 //                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
 //            }
