@@ -23,6 +23,7 @@
                 "Tone/effect/PingPongDelay"
             ],
             callback: function (text, config, PixelPalette, Tone) {
+                window.PixelPalette = PixelPalette;
                 window.Tone = Tone;
                 Fayde.Bootstrap();
             }

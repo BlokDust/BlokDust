@@ -18,7 +18,7 @@ class App{
     static Modifiables: ObservableCollection<IModifiable>;
     static Modifiers: ObservableCollection<IModifier>;
     static AudioMixer: AudioMixer;
-    
+
     constructor() {
 
     }

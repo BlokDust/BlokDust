@@ -65,6 +65,8 @@ class BlocksView extends Grid {
             this._Invalidate();
         }, this);
 
+
+
         this._Invalidate();
     }
 
@@ -114,11 +116,11 @@ class BlocksView extends Grid {
         // set up the grid
         this.Divisor = 75;
 
-        //var pixelPalette = new PixelPalette(this.Ctx, "img/palette.gif");
-        //
-        //pixelPalette.Load((palette: string[]) => {
-        //    console.log(palette);
-        //});
+        var pixelPalette = new PixelPalette(this.Ctx, "img/palette.gif");
+
+        pixelPalette.Load((palette: string[]) => {
+            console.log(palette);
+        });
     }
 
     Update() {
