@@ -21,6 +21,9 @@ class EnvelopeComponent extends Effect implements IEffect {
 
     Connect(modifiable: IModifiable): void{
         super.Connect(modifiable);
+
+        //TODO: envelope should increment values like pitch and volume do
+
         this.Modifiable.Envelope.setAttack(this.attack);
         this.Modifiable.Envelope.setDecay(this.decay);
         this.Modifiable.Envelope.setSustain(this.sustain);
@@ -28,6 +31,9 @@ class EnvelopeComponent extends Effect implements IEffect {
     }
 
     Disconnect(): void{
+
+        //TODO: envelope is not disconnecting properly with multiple sources
+
         this.Modifiable.Envelope.setAttack(this.Modifiable.Params.envelope.attack);
         this.Modifiable.Envelope.setDecay(this.Modifiable.Params.envelope.decay);
         this.Modifiable.Envelope.setSustain(this.Modifiable.Params.envelope.sustain);

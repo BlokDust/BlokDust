@@ -68,7 +68,7 @@ class KeyboardInput extends Modifiable {
             },
             keyboard: {
                 isPolyphonic: false,
-                glide: 0.1 // glide only works in monophonic mode
+                glide: 0.05 // glide only works in monophonic mode
             }
 
         };
@@ -250,8 +250,6 @@ class KeyboardInput extends Modifiable {
             octave = note.charAt(1);
         }
 
-        this.GetConnectedPitchModifiers();
-
         // math to return frequency number from note & octave
         key_number = notes.indexOf(note.slice(0, -1));
         if (key_number < 3) {
@@ -260,13 +258,11 @@ class KeyboardInput extends Modifiable {
             key_number = key_number + ((octave - 1) * 12) + 1;
         }
 
-        //return 440 * Math.pow(2, (key_number - 49) / 12);
         return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
     }
 
     GetConnectedPitchModifiers() {
-        //TODO: Get all pitch modifiers attached and..
-        // return the modified frequency multiplier
+
         var totalPitchIncrement = 1;
 
         for (var i = 0; i < this.Modifiers.Count; i++) {
@@ -284,28 +280,10 @@ class KeyboardInput extends Modifiable {
             }
         }
 
-        console.log('total pitch inc = '+totalPitchIncrement);
         return totalPitchIncrement;
     }
 
-    GetConnectedLFOModifiers() {
-        //TODO: Get all LFO modifiers attached and..
-        // return the modified frequency multiplier
 
-        for (var i = 0; i < this.Modifiers.Count; i++) {
-            var mod = this.Modifiers.GetValueAt(i);
-            console.log(mod);
-
-//            console.log(t)
-//            if ((<any>mod).PitchIncrement) {
-//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
-//            }
-
-            // return LFO;
-        }
-    }
-
-    // input blocks are red circles
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 

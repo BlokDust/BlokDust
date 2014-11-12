@@ -9,7 +9,7 @@ class Envelope extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new EnvelopeComponent(0.8, 0.9, 0.2, 0.9);
+        var effect = new EnvelopeComponent(0.8, 0.9, 0.9, 0.9);
 
         this.Effects.Add(effect);
 

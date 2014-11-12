@@ -27,9 +27,13 @@ class Delay extends Effect implements IEffect {
 
         this.feedbackDelay.connect(this.Modifiable.OutputGain);
 
+        //TODO: delay should increment values like pitch and volume do
+        // If two delays with time of 8n
     }
 
     Disconnect(): void {
+
+        //TODO: delay is not disconnecting properly with multiple sources
 
         if (this.Modifiable.Params.oscillator){
             this.Modifiable.Osc.disconnect();
