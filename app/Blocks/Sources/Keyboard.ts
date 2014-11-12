@@ -67,7 +67,7 @@ class KeyboardInput extends Modifiable {
                 volume: 0.5
             },
             keyboard: {
-                isPolyphonic: true,
+                isPolyphonic: false,
                 glide: 0.1 // glide only works in monophonic mode
             }
 
@@ -168,7 +168,6 @@ class KeyboardInput extends Modifiable {
 
                 // Add to _nodes array
                 this._nodes.push(_oscillator);
-                console.log(this._nodes);
 
 
             } else {
@@ -261,35 +260,32 @@ class KeyboardInput extends Modifiable {
             key_number = key_number + ((octave - 1) * 12) + 1;
         }
 
-        return 440 * Math.pow(2, (key_number - 49) / 12);
-        //return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
+        //return 440 * Math.pow(2, (key_number - 49) / 12);
+        return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
     }
 
     GetConnectedPitchModifiers() {
         //TODO: Get all pitch modifiers attached and..
         // return the modified frequency multiplier
+        var totalPitchIncrement = 1;
 
         for (var i = 0; i < this.Modifiers.Count; i++) {
             var mod = this.Modifiers.GetValueAt(i);
-            var pitchIncrement;
+
+
             for (var j = 0; j < mod.Effects.Count; j++) {
                 var effect = mod.Effects.GetValueAt(j);
+
                 //TODO: Use reflection when available
                 if ((<PitchComponent>effect).PitchIncrement) {
-                    pitchIncrement = (<PitchComponent>effect).PitchIncrement;
-                    console.log(pitchIncrement);
+                    var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
+                    totalPitchIncrement *= thisPitchIncrement;
                 }
             }
-
-
-            //console.log(mod.Effects._ht.0.PitchIncrement);
-
-//            if ((<any>mod).PitchIncrement) {
-//                console.log((<any>mod).PitchIncrement); //TODO: This frequency * Pitch Increment
-//            }
-
-            // return pitchIncrement;
         }
+
+        console.log('total pitch inc = '+totalPitchIncrement);
+        return totalPitchIncrement;
     }
 
     GetConnectedLFOModifiers() {
