@@ -31,9 +31,8 @@ class Delay extends Effect implements IEffect {
         // If two delays with time of 8n
     }
 
-    Disconnect(): void {
-
-        //TODO: delay is not disconnecting properly with multiple sources
+    Disconnect(modifiable: IModifiable): void {
+        super.Disconnect(modifiable);
 
         if (this.Modifiable.Params.oscillator){
             this.Modifiable.Osc.disconnect();

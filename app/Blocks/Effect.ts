@@ -15,8 +15,8 @@ class Effect implements IEffect {
     Connect(modifiable: IModifiable): void {
         this.Modifiable = modifiable;
     }
-    Disconnect(): void {
-
+    Disconnect(modifiable: IModifiable): void {
+        this.Modifiable = modifiable;
     }
 }
 

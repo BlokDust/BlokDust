@@ -22,7 +22,8 @@ class PitchComponent extends Effect implements IEffect {
         this.Modifiable.Osc.frequency.setValue(_value * this.PitchIncrement);
     }
 
-    Disconnect(): void{
+    Disconnect(modifiable: IModifiable): void{
+        super.Disconnect(modifiable);
         if (this.Modifiable.Params.noise){
             // LFO's and pitches cannot work on Noise Blocks
             return;

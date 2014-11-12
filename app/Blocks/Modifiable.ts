@@ -101,7 +101,7 @@ class Modifiable extends Block implements IModifiable{
     }
 
     private _DisconnectEffect(effect: IEffect) {
-        effect.Disconnect();
+        effect.Disconnect(this);
     }
 
 }

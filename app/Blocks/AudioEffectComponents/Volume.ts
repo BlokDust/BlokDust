@@ -18,8 +18,8 @@ class Volume extends Effect implements IEffect {
 
     }
 
-    Disconnect(): void{
-
+    Disconnect(modifiable: IModifiable): void{
+        super.Disconnect(modifiable);
         this.Modifiable.OutputGain.input.gain.value /= this.increment;
 
     }

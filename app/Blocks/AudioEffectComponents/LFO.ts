@@ -36,7 +36,9 @@ class LFO extends Effect implements IEffect {
 
     }
 
-    Disconnect(): void {
+    Disconnect(modifiable:IModifiable): void {
+        super.Disconnect(modifiable);
+
         if (this.Modifiable.Params.noise){
             // LFO's and pitches cannot work on Noise Blocks
             return;

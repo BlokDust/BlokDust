@@ -30,9 +30,8 @@ class EnvelopeComponent extends Effect implements IEffect {
         this.Modifiable.Envelope.setRelease(this.release);
     }
 
-    Disconnect(): void{
-
-        //TODO: envelope is not disconnecting properly with multiple sources
+    Disconnect(modifiable: IModifiable): void{
+        super.Disconnect(modifiable);
 
         this.Modifiable.Envelope.setAttack(this.Modifiable.Params.envelope.attack);
         this.Modifiable.Envelope.setDecay(this.Modifiable.Params.envelope.decay);
