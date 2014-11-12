@@ -8,11 +8,6 @@ import Grid = require("../../Grid");
 
 class KeyboardInput extends Modifiable {
 
-    public Osc: Tone.Oscillator;
-    public Envelope: Tone.Envelope;
-    public Delay: Tone.PingPongDelay;
-    public OutputGain: Tone.Signal;
-    public Params: ToneSettings;
     private _nodes = [];
 
 

@@ -7,11 +7,6 @@ import Grid = require("../../Grid");
 
 class Noise extends Modifiable {
 
-    public Noise: Tone.Noise;
-    public Envelope: Tone.Envelope;
-    public OutputGain: Tone.Signal;
-    public Params: ToneSettings;
-
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 

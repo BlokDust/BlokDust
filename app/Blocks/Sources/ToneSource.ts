@@ -7,11 +7,6 @@ import Grid = require("../../Grid");
 
 class ToneSource extends Modifiable {
 
-    public Osc: Tone.Oscillator;
-    public Envelope: Tone.Envelope;
-    public OutputGain: Tone.Signal;
-    public Params: ToneSettings;
-
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
@@ -35,9 +30,11 @@ class ToneSource extends Modifiable {
         // Define the audio nodes
         this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
+        this.Delay = new Tone.PingPongDelay(1);
+        this.Delay.setWet(0);
         this.OutputGain = new Tone.Signal;
         this.OutputGain.output.gain.value = this.Params.output.volume;
-
+        
         // Connect them up
         this.Envelope.connect(this.Osc.output.gain);
         this.Osc.chain(this.Osc, this.OutputGain, App.AudioMixer.Master);
