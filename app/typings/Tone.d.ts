@@ -233,7 +233,11 @@ declare module Tone {
                     new(delayTime: any): Tone.PingPongDelay;
                 }
 
-                interface PingPongDelay extends Tone.StereoXFeedbackEffect {}
+                interface PingPongDelay extends Tone.StereoXFeedbackEffect {
+                    defaults: Object;
+                    delayTime: Tone.Signal;
+                    setDelayTime(delayTime)
+                }
 
 
             var FeedbackDelay: {

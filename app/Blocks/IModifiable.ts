@@ -10,6 +10,7 @@ interface IModifiable extends IBlock{
     Osc?: Tone.Oscillator;
     Noise?: Tone.Noise;
     Envelope?: Tone.Envelope;
+    Delay?: Tone.PingPongDelay;
     OutputGain?: Tone.Signal;
     Params?: ToneSettings;
     ValidateModifiers(): void;

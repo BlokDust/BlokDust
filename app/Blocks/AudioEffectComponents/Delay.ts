@@ -5,44 +5,44 @@ import IModifiable = require("../IModifiable");
 
 class Delay extends Effect implements IEffect {
 
-    feedbackDelay: Tone.PingPongDelay;
 
-    constructor() {
+    public DelayTimeIncrement: number;
+    public DelayFeedbackIncrement: number;
+    public DryWet: number;
+
+    PingPongDelay: Tone.PingPongDelay;
+
+    constructor(delayTimeIncrement, delayFeedbackIncrement) {
         super();
-        this.feedbackDelay = new Tone.PingPongDelay("8n");
 
-        this.feedbackDelay.setFeedback(0.9); // 90% feedback
-        this.feedbackDelay.setWet(1); // 100% wet
+        this.DelayTimeIncrement = delayTimeIncrement;
+        this.DelayFeedbackIncrement = delayFeedbackIncrement;
 
     }
 
     Connect(modifiable: IModifiable): void {
         super.Connect(modifiable);
-        // Check if it's an Tone or a Noise
-        if (this.Modifiable.Params.oscillator){
-            this.Modifiable.Osc.connect(this.feedbackDelay);
-        } else {
-            this.Modifiable.Noise.connect(this.feedbackDelay);
-        }
 
-        this.feedbackDelay.connect(this.Modifiable.OutputGain);
+        var _delayTime = this.Modifiable.Delay.delayTime.getValue();
+        this.Modifiable.Delay.setDelayTime(_delayTime * this.DelayTimeIncrement);
 
-        //TODO: delay should increment values like pitch and volume do
-        // If two delays with time of 8n
+        var _feedback = this.Modifiable.Delay.feedback.getValue();
+        this.Modifiable.Delay.setFeedback(_feedback * this.DelayFeedbackIncrement);
+
+        this.Modifiable.Delay.setWet(0.5);
+
     }
 
     Disconnect(modifiable: IModifiable): void {
         super.Disconnect(modifiable);
 
-        if (this.Modifiable.Params.oscillator){
-            this.Modifiable.Osc.disconnect();
-            this.Modifiable.Osc.connect(this.Modifiable.OutputGain);
-        }
+        var _value = this.Modifiable.Delay.delayTime.getValue();
+        this.Modifiable.Delay.setDelayTime(_value / this.DelayTimeIncrement);
 
-        else {
-            this.Modifiable.Noise.disconnect();
-            this.Modifiable.Noise.connect(this.Modifiable.OutputGain);
-        }
+        var _feedback = this.Modifiable.Delay.feedback.getValue();
+        this.Modifiable.Delay.setFeedback(_feedback / this.DelayFeedbackIncrement);
+
+        this.Modifiable.Delay.dryWet.setWet(0);
     }
 }
 

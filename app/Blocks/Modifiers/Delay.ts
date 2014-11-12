@@ -9,7 +9,7 @@ class Delay extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new DelayComponent();
+        var effect = new DelayComponent(0.5, 1.5);  // (DelayTime, Feedback, Dry/Wet) //TODO: Bug in tone where feedback = 2 is infinite feedback and feedback = 0 still has some feedback when it shouldn't. Submitted issue
 
         this.Effects.Add(effect);
 
