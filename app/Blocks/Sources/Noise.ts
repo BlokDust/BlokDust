@@ -27,7 +27,7 @@ class Noise extends Modifiable {
                 release: 0.02
             },
             output: {
-                volume: 0.5
+                volume: 1
             }
 
         };

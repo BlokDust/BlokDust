@@ -18,7 +18,7 @@ class ToneSource extends Modifiable {
 
         this.Params = {
             oscillator: {
-                frequency: 340,
+                frequency: 440,
                 waveform: 'sawtooth'
             },
             envelope: {
@@ -40,7 +40,7 @@ class ToneSource extends Modifiable {
         this.Delay.setWet(0);
         this.OutputGain = new Tone.Signal;
         this.OutputGain.output.gain.value = this.Params.output.volume;
-        
+
         // Connect them up
         this.Envelope.connect(this.Osc.output.gain);
         this.Osc.chain(this.Osc, this.Delay, this.OutputGain, App.AudioMixer.Master);
