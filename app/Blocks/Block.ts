@@ -1,6 +1,8 @@
 import IBlock = require("./IBlock");
 import BlocksView = require("../BlocksView");
 import Grid = require("../Grid");
+import Type = require("./BlockType");
+import BlockType = Type.BlockType;
 import Size = Fayde.Utils.Size;
 
 class Block implements IBlock {
@@ -15,6 +17,8 @@ class Block implements IBlock {
     private _CtxSize: Size;
     public Outline: Point[] = [];
     public ZIndex;
+
+    public BlockType: BlockType;
 
     get Ctx(): CanvasRenderingContext2D{
         return this.Grid.Ctx;

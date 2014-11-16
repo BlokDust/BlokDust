@@ -4,6 +4,8 @@ import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
 
 class Source extends Modifiable{
 
@@ -13,6 +15,7 @@ class Source extends Modifiable{
     public OutputGain: Tone.Signal;
     public Noise: Tone.Noise;
     private _Params: ToneSettings = {
+
         oscillator: {
             frequency: 440,
             waveform: 'sawtooth'
@@ -42,22 +45,13 @@ class Source extends Modifiable{
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
-        // Set Default Parameters here
-
-        //this.Params = {
-        //
-        //}
-
-        console.log(this);
-
-
-        //if (this.Source == ){
+        if (this.BlockType == BlockType.Noise){
             this.Source = new Tone.Noise(this._Params.noise.waveform);
-        //}
-
-        //if (this == Noise) {
-        //    this.Source = new Tone.Oscillator(this._Params.oscillator.frequency, this._Params.oscillator.waveform);
-        //}
+        } else if (this.BlockType == BlockType.ToneSource) {
+            this.Source = new Tone.Oscillator(this._Params.oscillator.frequency, this._Params.oscillator.waveform);
+        } else {
+            console.log('this typeof Source does not have a matching BlockType');
+        }
 
         // Define the audio nodes
         this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);

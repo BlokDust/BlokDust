@@ -5,10 +5,14 @@ import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
 import Source = require("./Source");
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
 
 class ToneSource extends Source {
 
     constructor(grid: Grid, position: Point) {
+        this.BlockType = BlockType.ToneSource;
+
         super(grid, position);
 
         this.Params = {
@@ -27,9 +31,6 @@ class ToneSource extends Source {
             }
 
         };
-
-
-
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(1, 1),new Point(-1, 1));

@@ -5,10 +5,14 @@ import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
 import Source = require("./Source");
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
 
 class Noise extends Source {
 
     constructor(grid: Grid, position: Point) {
+        this.BlockType = BlockType.Noise;
+
         super(grid, position);
 
         this.Params = {
