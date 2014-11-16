@@ -18,7 +18,7 @@ class LFO extends Effect implements IEffect {
 
         if (this.Modifiable.Params.noise) return;
 
-        this._LFO.connect(this.Modifiable.Osc.detune);
+        this._LFO.connect(this.Modifiable.Source.detune);
         this._LFO.start();
 
     }
@@ -30,7 +30,7 @@ class LFO extends Effect implements IEffect {
 
         this._LFO.stop();
         this._LFO.disconnect();
-        this.Modifiable.Osc.detune.setValue(0);
+        this.Modifiable.Source.detune.setValue(0);
 
         //TODO: There is a bug where LFO.stop() isn't calling consistently. Will be fixed in next Tone release
     }

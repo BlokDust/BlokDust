@@ -1,8 +1,8 @@
-import IEffect = require("../IEffect");
-import Effect = require("../Effect");
-import IModifiable = require("../IModifiable");
-
-
+//import IEffect = require("../IEffect");
+//import Effect = require("../Effect");
+//import IModifiable = require("../IModifiable");
+//
+//
 //class Keyboard extends Effect implements IEffect {
 //
 //    private _nodes = [];
@@ -64,8 +64,7 @@ import IModifiable = require("../IModifiable");
 //
 //        };
 //
-//
-//
+//        // Define the audio nodes
 //        //this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
 //        //this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
 //        //this.Delay = new Tone.PingPongDelay(1);
@@ -84,6 +83,9 @@ import IModifiable = require("../IModifiable");
 //        //this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
 //        //
 //        //this.AddListeners();
+//
+//
+//        this.
 //
 //    }
 //

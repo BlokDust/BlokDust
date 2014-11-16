@@ -8,12 +8,6 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Modifiable extends Block implements IModifiable{
 
-    public Osc: Tone.Oscillator;
-    public Envelope: Tone.Envelope;
-    public Delay: Tone.PingPongDelay;
-    public OutputGain: Tone.Signal;
-    public Noise: Tone.Noise;
-    public Params: ToneSettings;
 
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
