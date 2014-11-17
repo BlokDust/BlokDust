@@ -1,13 +1,9 @@
-import App = require("../../App");
-import IBlock = require("../IBlock");
-import Block = require("../Block");
-import IModifier = require("../IModifier");
-import Modifiable = require("../Modifiable");
-import PitchComponent = require("../AudioEffectComponents/Pitch");
-import Grid = require("../../Grid");
-import Source = require("./Source");
+import IEffect = require("../IEffect");
+import Effect = require("../Effect");
+import IModifiable = require("../IModifiable");
 
-class KeyboardInput extends Source {
+
+class Keyboard extends Effect implements IEffect {
 
     private _nodes = [];
 
@@ -44,9 +40,8 @@ class KeyboardInput extends Source {
     };
 
 
-
-    constructor(grid: Grid, position: Point) {
-        super(grid, position);
+    constructor() {
+        super();
 
         this.Params = {
             oscillator: {
@@ -69,17 +64,20 @@ class KeyboardInput extends Source {
 
         };
 
-        // Get the Start Octave from the start Note
-        this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
+    }
+
+    Connect(modifiable:IModifiable): void{
+        super.Connect(modifiable);
 
         this.AddListeners();
 
-        // Define Outline for HitTest
-        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
     }
 
-    Update(ctx:CanvasRenderingContext2D) {
-        super.Update(ctx);
+    Disconnect(modifiable:IModifiable): void {
+        super.Disconnect(modifiable);
+
+        this.RemoveListeners();
+
     }
 
     //TODO: move event listeners to a controls class
@@ -143,7 +141,7 @@ class KeyboardInput extends Source {
 
                 // Connect them
                 _envelope.connect(_oscillator.output.gain);
-                _oscillator.connect(this.OutputGain);
+                _oscillator.connect(this.Modifiable.OutputGain);
 
                 // Play sound
                 _oscillator.start();
@@ -158,12 +156,12 @@ class KeyboardInput extends Source {
 
                 // If no other keys already pressed trigger attack
                 if (Object.keys(this.keysDown).length === 1) {
-                    this.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
-                    this.Envelope.triggerAttack();
+                    this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
+                    this.Modifiable.Envelope.triggerAttack();
 
                     // Else ramp to new frequency over time (portamento)
                 } else {
-                    this.Source.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
+                    this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
                 }
             }
         }
@@ -202,7 +200,7 @@ class KeyboardInput extends Source {
             } else {
                 // MONOPHONIC
                 if (Object.keys(this.keysDown).length === 0) {
-                    this.Envelope.triggerRelease();
+                    this.Modifiable.Envelope.triggerRelease();
                 }
             }
         }
@@ -241,44 +239,31 @@ class KeyboardInput extends Source {
             key_number = key_number + ((octave - 1) * 12) + 1;
         }
 
-        return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
+        //return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
+        return (440 * Math.pow(2, (key_number - 49) / 12)) ;
     }
 
-    GetConnectedPitchModifiers() {
-
-        var totalPitchIncrement = 1;
-
-        for (var i = 0; i < this.Modifiers.Count; i++) {
-            var mod = this.Modifiers.GetValueAt(i);
-
-
-            for (var j = 0; j < mod.Effects.Count; j++) {
-                var effect = mod.Effects.GetValueAt(j);
-
-                //TODO: Use reflection when available
-                if ((<PitchComponent>effect).PitchIncrement) {
-                    var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
-                    totalPitchIncrement *= thisPitchIncrement;
-                }
-            }
-        }
-
-        return totalPitchIncrement;
-    }
-
-
-    Draw(ctx:CanvasRenderingContext2D) {
-        super.Draw(ctx);
-
-        ctx.fillStyle = "#1add8d";
-        this.DrawMoveTo(-2,0);
-        this.DrawLineTo(0,-2);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(0,2);
-        ctx.closePath();
-        ctx.fill();
-    }
-
+    //GetConnectedPitchModifiers() {
+    //
+    //    var totalPitchIncrement = 1;
+    //
+    //    for (var i = 0; i < this.Modifiers.Count; i++) {
+    //        var mod = this.Modifiers.GetValueAt(i);
+    //
+    //
+    //        for (var j = 0; j < mod.Effects.Count; j++) {
+    //            var effect = mod.Effects.GetValueAt(j);
+    //
+    //            //TODO: Use reflection when available
+    //            if ((<PitchComponent>effect).PitchIncrement) {
+    //                var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
+    //                totalPitchIncrement *= thisPitchIncrement;
+    //            }
+    //        }
+    //    }
+    //
+    //    return totalPitchIncrement;
+    //}
 }
 
-export = KeyboardInput;
+export = Keyboard;

@@ -4,8 +4,8 @@ import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
-import Keyboard = require("../Blocks/Sources/Keyboard");
 
+import Keyboard = require("../Blocks/Modifiers/Keyboard");
 import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
 import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
@@ -142,7 +142,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksView.CreateBlock(Noise);
     }
 
-    KeyboardBlockBtn_Click(e: EventArgs){
+    KeyboardBlockBtn_Click(e: any){
         this._BlocksView.CreateBlock(Keyboard);
     }
 
