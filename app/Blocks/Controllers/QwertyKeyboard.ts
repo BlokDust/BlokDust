@@ -1,39 +1,42 @@
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
+import App = require("../../App");
 
 
 class Keyboard extends Effect implements IEffect {
 
     private _nodes = [];
 
-    keysDown = {};
-    key_map = {
-        65: 'Cl',
-        87: 'C#l',
-        83: 'Dl',
-        69: 'D#l',
-        68: 'El',
-        70: 'Fl',
-        84: 'F#l',
-        71: 'Gl',
-        89: 'G#l',
-        90: 'G#l',
-        72: 'Al',
-        85: 'A#l',
-        74: 'Bl',
-        75: 'Cu',
-        79: 'C#u',
-        76: 'Du',
-        80: 'D#u',
-        59: 'Eu',
-        186: 'Eu',
-        222: 'Fu',
-        221: 'F#u',
-        220: 'Gu',
-        187: 'OctaveUp',
-        189: 'OctaveDown'
-    };
+    //keysDown = {};
+
+    //TODO: KEYMAP SHOULD BE IN AN INPUTS MANAGER
+    //public keyMap = {
+    //    65: 'Cl',
+    //    87: 'C#l',
+    //    83: 'Dl',
+    //    69: 'D#l',
+    //    68: 'El',
+    //    70: 'Fl',
+    //    84: 'F#l',
+    //    71: 'Gl',
+    //    89: 'G#l',
+    //    90: 'G#l',
+    //    72: 'Al',
+    //    85: 'A#l',
+    //    74: 'Bl',
+    //    75: 'Cu',
+    //    79: 'C#u',
+    //    76: 'Du',
+    //    80: 'D#u',
+    //    59: 'Eu',
+    //    186: 'Eu',
+    //    222: 'Fu',
+    //    221: 'F#u',
+    //    220: 'Gu',
+    //    187: 'OctaveUp',
+    //    189: 'OctaveDown'
+    //};
     settings = {
         startOctave: null,
         startNote: 'C2'
@@ -64,6 +67,9 @@ class Keyboard extends Effect implements IEffect {
 
         };
 
+        this.KeyboardDown = <any>this.KeyboardDown.bind(this);
+        this.KeyboardUp = <any>this.KeyboardUp.bind(this);
+
     }
 
     Connect(modifiable:IModifiable): void{
@@ -83,37 +89,33 @@ class Keyboard extends Effect implements IEffect {
     //TODO: move event listeners to a controls class
     AddListeners(): void {
 
-        document.addEventListener('keydown', (key) => {
-            this.KeyboardDown(key);
-        });
-        document.addEventListener('keyup', (key) => {
-            this.KeyboardUp(key);
-        });
+        document.addEventListener('keydown', this.KeyboardDown);
+        document.addEventListener('keyup', this.KeyboardUp);
+
     }
 
     RemoveListeners(): void {
 
-        document.removeEventListener('keydown', (key) => {
-            this.KeyboardDown(key);
-        });
-        document.removeEventListener('keyup', (key) => {
-            this.KeyboardUp(key);
-        });
+        document.removeEventListener('keydown', this.KeyboardDown);
+        document.removeEventListener('keyup', this.KeyboardUp);
+
 
         //TODO: Fix remove listeners on disconnect
     }
 
     KeyboardDown(key): void {
 
+        console.log(this);
+
         //Check if this key pressed is in out key_map
-        if (typeof this.key_map[key.keyCode] !== 'undefined') {
+        if (typeof App.InputManager.KeyMap[key.keyCode] !== 'undefined') {
 
             //if it's already pressed (holding note)
-            if (key.keyCode in this.keysDown) {
+            if (key.keyCode in App.InputManager.KeysDown) {
                 return;
             }
             //pressed first time, add to object
-            this.keysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
+            App.InputManager.KeysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
 
             // Octave UP (Plus button)
             if (key.keyCode === 187 && this.settings.startOctave != 8) {
@@ -155,7 +157,7 @@ class Keyboard extends Effect implements IEffect {
                 // MONOPHONIC
 
                 // If no other keys already pressed trigger attack
-                if (Object.keys(this.keysDown).length === 1) {
+                if (Object.keys(App.InputManager.KeysDown).length === 1) {
                     this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
                     this.Modifiable.Envelope.triggerAttack();
 
@@ -170,9 +172,9 @@ class Keyboard extends Effect implements IEffect {
     KeyboardUp(key): void {
 
         //Check if this key released is in out key_map
-        if (typeof this.key_map[key.keyCode] !== 'undefined') {
+        if (typeof App.InputManager.KeyMap[key.keyCode] !== 'undefined') {
             // remove this key from the keysDown object
-            delete this.keysDown[key.keyCode];
+            delete App.InputManager.KeysDown[key.keyCode];
 
             var keyPressed = this.GetKeyPressed(key.keyCode);
             var frequency = this.GetFrequencyOfNote(keyPressed);
@@ -199,7 +201,7 @@ class Keyboard extends Effect implements IEffect {
 
             } else {
                 // MONOPHONIC
-                if (Object.keys(this.keysDown).length === 0) {
+                if (Object.keys(App.InputManager.KeysDown).length === 0) {
                     this.Modifiable.Envelope.triggerRelease();
                 }
             }
@@ -208,7 +210,7 @@ class Keyboard extends Effect implements IEffect {
 
     GetKeyPressed(keyCode): string {
         // Replaces keycode with keynote & octave string
-        return (this.key_map[keyCode]
+        return (App.InputManager.KeyMap[keyCode]
             .replace('l', parseInt(this.settings.startOctave, 10))
             .replace('u', (parseInt(this.settings.startOctave, 10) + 1)
                 .toString()));

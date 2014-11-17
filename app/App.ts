@@ -2,6 +2,7 @@ import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
 import AudioMixer = require("./Core/Audio/AudioMixer");
+import InputManager = require("./Core/Inputs/InputManager");
 import IModifier = require("./Blocks/IModifier");
 import IModifiable = require("./Blocks/IModifiable");
 import IBlock = require("./Blocks/IBlock");
@@ -18,6 +19,7 @@ class App{
     static Modifiables: ObservableCollection<IModifiable>;
     static Modifiers: ObservableCollection<IModifier>;
     static AudioMixer: AudioMixer;
+    static InputManager: InputManager;
 
     constructor() {
 
@@ -58,6 +60,7 @@ class App{
         }, this);
 
         App.AudioMixer = new AudioMixer();
+        App.InputManager = new InputManager();
     }
 }
 
