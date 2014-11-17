@@ -49,16 +49,20 @@
                              Canvas.Top="{Binding ZoomContentOffset.Y}"
                              Width="{Binding ZoomContentSize.Width}"
                              Height="{Binding ZoomContentSize.Height}"
-                             MouseLeftButtonDown="{EventBinding BlocksView_MouseDown}"
-                             TouchDown="{EventBinding BlocksView_TouchDown}"
-                             MouseLeftButtonUp="{EventBinding BlocksView_MouseUp}"
-                             MouseMove="{EventBinding BlocksView_MouseMove}"
+                             MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
+                             TouchDown="{EventBinding BlocksSketch_TouchDown}"
+                             MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
+                             MouseMove="{EventBinding BlocksSketch_MouseMove}"
                              IsAnimated="true"
-                             Draw="{EventBinding BlocksView_Draw}" />
+                             Draw="{EventBinding BlocksSketch_Draw}" />
             </Canvas>
         </zoom:Zoomer>
 
         <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
+            <StackPanel.DataContext>
+                <vms:InfoViewModel/>
+            </StackPanel.DataContext>
+
             <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
             <TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>
 

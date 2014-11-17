@@ -1,11 +1,10 @@
-import BlocksView = require("../BlocksView");
+import BlocksSketch = require("../BlocksSketch");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
 import Keyboard = require("../Blocks/Sources/Keyboard");
-
 import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
 import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
@@ -14,27 +13,33 @@ import Envelope = require("../Blocks/Modifiers/Envelope");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
-
 import Power = require("../Blocks/Sources/Power");
+
+import InfoViewModel = require("./InfoViewModel");
+
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Size = Fayde.Utils.Size;
 import Vector = Fayde.Utils.Vector;
 
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
-    private _BlocksView: BlocksView;
+    private _BlocksSketch: BlocksSketch;
     private _SelectedBlock: IBlock;
     private _ZoomLevel: number = 0;
     private _ZoomLevels: number = 3;
     private _ZoomContentOffset: Vector;
     private _ZoomContentSize: Size;
 
+    private _InfoViewModel: InfoViewModel;
+
     get SelectedBlock(): IBlock{
+        //return this._InfoViewModel.SelectedBlock;
         return this._SelectedBlock;
     }
 
     set SelectedBlock(value: IBlock){
         this._SelectedBlock = value;
+        //this._InfoViewModel.SelectedBlock = value;
         this.OnPropertyChanged("SelectedBlock");
     }
 
@@ -82,11 +87,13 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
         window.debug = true;
 
-        this._BlocksView = new BlocksView();
+        this._BlocksSketch = new BlocksSketch();
 
-        this._BlocksView.BlockSelected.Subscribe((block: IModifiable) => {
+        this._BlocksSketch.BlockSelected.Subscribe((block: IModifiable) => {
             this._OnBlockSelected(block);
         }, this);
+
+        this._InfoViewModel = new InfoViewModel();
     }
 
     ZoomUpdated(e: Fayde.IEventBindingArgs<Fayde.Zoomer.ZoomerEventArgs>){
@@ -106,24 +113,24 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         }
     }
 
-    BlocksView_Draw(e: Fayde.IEventBindingArgs<Fayde.Drawing.SketchDrawEventArgs>){
-        this._BlocksView.SketchSession = <Fayde.Drawing.SketchSession>e.args.SketchSession;
+    BlocksSketch_Draw(e: Fayde.IEventBindingArgs<Fayde.Drawing.SketchDrawEventArgs>){
+        this._BlocksSketch.SketchSession = <Fayde.Drawing.SketchSession>e.args.SketchSession;
     }
 
-    BlocksView_MouseDown(e: Fayde.Input.MouseEventArgs){
-        this._BlocksView.MouseDown(e);
+    BlocksSketch_MouseDown(e: Fayde.Input.MouseEventArgs){
+        this._BlocksSketch.MouseDown(e);
     }
 
-    BlocksView_TouchDown(e: Fayde.Input.TouchEventArgs){
-        this._BlocksView.TouchDown(e);
+    BlocksSketch_TouchDown(e: Fayde.Input.TouchEventArgs){
+        this._BlocksSketch.TouchDown(e);
     }
 
-    BlocksView_MouseUp(e: Fayde.Input.MouseEventArgs){
-        this._BlocksView.MouseUp(e);
+    BlocksSketch_MouseUp(e: Fayde.Input.MouseEventArgs){
+        this._BlocksSketch.MouseUp(e);
     }
 
-    BlocksView_MouseMove(e: Fayde.Input.MouseEventArgs){
-        this._BlocksView.MouseMove(e);
+    BlocksSketch_MouseMove(e: Fayde.Input.MouseEventArgs){
+        this._BlocksSketch.MouseMove(e);
     }
 
     _OnBlockSelected(block: IBlock){
@@ -131,64 +138,64 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     PowerBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateBlock(Power);
+        this._BlocksSketch.CreateBlock(Power);
     }
 
     ToneBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateBlock(ToneSource);
+        this._BlocksSketch.CreateBlock(ToneSource);
     }
 
     NoiseBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateBlock(Noise);
+        this._BlocksSketch.CreateBlock(Noise);
     }
 
     KeyboardBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateBlock(Keyboard);
+        this._BlocksSketch.CreateBlock(Keyboard);
     }
 
     VolumeIncreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(VolumeIncrease);
+        this._BlocksSketch.CreateBlock(VolumeIncrease);
     }
 
     VolumeDecreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(VolumeDecrease);
+        this._BlocksSketch.CreateBlock(VolumeDecrease);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(PitchIncrease);
+        this._BlocksSketch.CreateBlock(PitchIncrease);
     }
 
     PitchDecreaseBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(PitchDecrease);
+        this._BlocksSketch.CreateBlock(PitchDecrease);
     }
 
     EnvelopeBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(Envelope);
+        this._BlocksSketch.CreateBlock(Envelope);
     }
 
     LFOBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(LFO);
+        this._BlocksSketch.CreateBlock(LFO);
     }
 
     DelayBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(Delay);
+        this._BlocksSketch.CreateBlock(Delay);
     }
 
     ScuzzBlockBtn_Click(e: any){
-        this._BlocksView.CreateBlock(Scuzz);
+        this._BlocksSketch.CreateBlock(Scuzz);
     }
 
 
     DeleteBlockBtn_Click(e: any){
-        this._BlocksView.DeleteSelectedBlock();
+        this._BlocksSketch.DeleteSelectedBlock();
     }
 
     UndoBtn_Click(e: any){
-        this._BlocksView.Undo();
+        this._BlocksSketch.Undo();
     }
 
     RedoBtn_Click(e: any){
-        this._BlocksView.Redo();
+        this._BlocksSketch.Redo();
     }
 }
 

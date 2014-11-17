@@ -10,7 +10,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 import FilteredCollection = Fayde.Collections.FilteredCollection;
 
 class App{
-    
+
     static OperationManager: OperationManager;
     static ResourceManager: ResourceManager;
     static CommandManager: CommandManager;

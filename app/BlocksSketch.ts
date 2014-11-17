@@ -18,7 +18,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 declare var PixelPalette;
 
-class BlocksView extends Grid {
+class BlocksSketch extends Grid {
 
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
@@ -250,4 +250,4 @@ class BlocksView extends Grid {
     }
 }
 
-export = BlocksView;
+export = BlocksSketch;
