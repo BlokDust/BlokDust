@@ -1,6 +1,8 @@
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
 
 
 class PitchComponent extends Effect implements IEffect {
@@ -14,23 +16,24 @@ class PitchComponent extends Effect implements IEffect {
 
     Connect(modifiable: IModifiable): void {
         super.Connect(modifiable);
-        if (this.Modifiable.Params.noise) {
-            // LFO's and pitches cannot work on Noise Blocks
-            return;
+
+        if (this.Modifiable.Source.frequency){
+            var _value = this.Modifiable.Source.frequency.getValue();
+            //var _value = this.Modifiable.Source.StartFrequency;
+            this.Modifiable.Source.frequency.setValue(_value * this.PitchIncrement);
         }
-        var _value = this.Modifiable.Source.frequency.getValue();
-        this.Modifiable.Source.frequency.setValue(_value * this.PitchIncrement);
-        this.Modifiable
+
     }
 
     Disconnect(modifiable: IModifiable): void{
         super.Disconnect(modifiable);
-        if (this.Modifiable.Params.noise){
-            // LFO's and pitches cannot work on Noise Blocks
-            return;
+
+        if (this.Modifiable.Source.frequency) {
+            var _value = this.Modifiable.Source.frequency.getValue();
+            //var _value = this.Modifiable.Source.StartFrequency;
+            this.Modifiable.Source.frequency.setValue(_value / this.PitchIncrement);
         }
-        var _value = this.Modifiable.Source.frequency.getValue();
-        this.Modifiable.Source.frequency.setValue(_value / this.PitchIncrement);
+
     }
 }
 

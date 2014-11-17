@@ -13,7 +13,7 @@ class Source extends Modifiable{
     public Envelope: Tone.Envelope;
     public Delay: Tone.PingPongDelay;
     public OutputGain: Tone.Signal;
-    public Noise: Tone.Noise;
+    public StartFrequency: number;
     private _Params: ToneSettings = {
 
         oscillator: {
@@ -44,6 +44,8 @@ class Source extends Modifiable{
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
+
+        this.StartFrequency = this._Params.oscillator.frequency;
 
         if (this.BlockType == BlockType.Noise){
             this.Source = new Tone.Noise(this._Params.noise.waveform);

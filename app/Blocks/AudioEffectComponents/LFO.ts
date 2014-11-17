@@ -16,21 +16,22 @@ class LFO extends Effect implements IEffect {
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
 
-        if (this.Modifiable.Params.noise) return;
-
-        this._LFO.connect(this.Modifiable.Source.detune);
-        this._LFO.start();
+        if (this.Modifiable.Source.detune) {
+            this._LFO.connect(this.Modifiable.Source.detune);
+            this._LFO.start();
+        }
 
     }
 
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
 
-        if (this.Modifiable.Params.noise) return;
-
-        this._LFO.stop();
-        this._LFO.disconnect();
-        this.Modifiable.Source.detune.setValue(0);
+        if (this.Modifiable.Source.detune) {
+            this._LFO.stop();
+            //this._LFO.disconnect();
+            //this.Modifiable.Source.detune.setValue(0);
+            //TODO: FIX LFO DISCONNECTING MULTIPLE BLOCKS BUG
+        }
 
         //TODO: There is a bug where LFO.stop() isn't calling consistently. Will be fixed in next Tone release
     }
