@@ -1,6 +1,7 @@
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
+import PitchComponent = require("../AudioEffectComponents/Pitch");
 import App = require("../../App");
 
 
@@ -9,7 +10,7 @@ class Keyboard extends Effect implements IEffect {
     private _nodes = [];
 
     settings = {
-        startOctave: null,
+        startOctave: 2,
         startNote: 'C2'
     };
 
@@ -182,9 +183,9 @@ class Keyboard extends Effect implements IEffect {
     GetKeyPressed(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (App.InputManager.KeyMap[keyCode]
-            .replace('l', parseInt(this.settings.startOctave, 10))
-            .replace('u', (parseInt(this.settings.startOctave, 10) + 1)
-                .toString()));
+            .replace('l', this.settings.startOctave)
+            .replace('u', this.settings.startOctave + 1)
+                .toString());
     }
 
     GetFrequencyOfNote(note): number {
@@ -212,31 +213,32 @@ class Keyboard extends Effect implements IEffect {
             key_number = key_number + ((octave - 1) * 12) + 1;
         }
 
-        //return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
-        return (440 * Math.pow(2, (key_number - 49) / 12)) ;
+        return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
     }
 
-    //GetConnectedPitchModifiers() {
-    //
-    //    var totalPitchIncrement = 1;
-    //
-    //    for (var i = 0; i < this.Modifiers.Count; i++) {
-    //        var mod = this.Modifiers.GetValueAt(i);
-    //
-    //
-    //        for (var j = 0; j < mod.Effects.Count; j++) {
-    //            var effect = mod.Effects.GetValueAt(j);
-    //
-    //            //TODO: Use reflection when available
-    //            if ((<PitchComponent>effect).PitchIncrement) {
-    //                var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
-    //                totalPitchIncrement *= thisPitchIncrement;
-    //            }
-    //        }
-    //    }
-    //
-    //    return totalPitchIncrement;
-    //}
+    GetConnectedPitchModifiers() {
+
+        var totalPitchIncrement = 1;
+
+
+
+        for (var i = 0; i < this.Modifiable.Modifiers.Count; i++) {
+            var mod = this.Modifiable.Modifiers.GetValueAt(i);
+
+
+            for (var j = 0; j < mod.Effects.Count; j++) {
+                var effect = mod.Effects.GetValueAt(j);
+
+                //TODO: Use reflection when available
+                if ((<PitchComponent>effect).PitchIncrement) {
+                    var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
+                    totalPitchIncrement *= thisPitchIncrement;
+                }
+            }
+        }
+
+        return totalPitchIncrement;
+    }
 }
 
 export = Keyboard;
