@@ -5,6 +5,7 @@ class InputManager {
 
     constructor() {
 
+
         this.KeysDown = {};
 
         this.KeyMap = {

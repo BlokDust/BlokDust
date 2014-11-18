@@ -13,6 +13,7 @@ class Source extends Modifiable{
     public Envelope: Tone.Envelope;
     public Delay: Tone.PingPongDelay;
     public OutputGain: Tone.Signal;
+    public ConnectedKeyboards: number = 0;
     public StartFrequency: number;
     private _Params: ToneSettings = {
 

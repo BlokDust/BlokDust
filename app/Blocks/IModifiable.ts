@@ -12,6 +12,7 @@ interface IModifiable extends IBlock{
     Delay?: Tone.PingPongDelay;
     OutputGain?: Tone.Signal;
     Params?: ToneSettings;
+    ConnectedKeyboards?: number;
     ValidateModifiers(): void;
 }
 

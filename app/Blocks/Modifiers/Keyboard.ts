@@ -5,6 +5,8 @@ import Grid = require("../../Grid");
 
 class Keyboard extends Modifier {
 
+    public Name: string = 'Keyboard';
+
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
@@ -14,6 +16,7 @@ class Keyboard extends Modifier {
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
     }
+
 
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);

@@ -2,18 +2,17 @@ import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 import PitchComponent = require("../AudioEffectComponents/Pitch");
+import QwertyKeyboard = require("../Controllers/QwertyKeyboard");
 import App = require("../../App");
-
 
 class Keyboard extends Effect implements IEffect {
 
     private _nodes = [];
 
     settings = {
-        startOctave: 2,
-        startNote: 'C2'
+        startOctave: 3,
+        startNote: 'C3'
     };
-
 
     constructor() {
         super();
@@ -36,7 +35,6 @@ class Keyboard extends Effect implements IEffect {
                 isPolyphonic: false,
                 glide: 0.05 // glide only works in monophonic mode
             }
-
         };
 
         this.KeyboardDown = this.KeyboardDown.bind(this);
@@ -46,38 +44,40 @@ class Keyboard extends Effect implements IEffect {
 
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
-
         this.AddListeners();
-
     }
 
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
-
         this.RemoveListeners();
-
     }
 
     //TODO: move event listeners to a controls class
     AddListeners(): void {
 
-        document.addEventListener('keydown', this.KeyboardDown);
-        document.addEventListener('keyup', this.KeyboardUp);
+        if (this.Modifiable.ConnectedKeyboards == 0) {
+            document.addEventListener('keydown', this.KeyboardDown);
+            document.addEventListener('keyup', this.KeyboardUp);
+        } else {
+            console.log('keyboard already attached to this block');
+        }
+
+        this.Modifiable.ConnectedKeyboards++;
 
     }
 
     RemoveListeners(): void {
 
-        document.removeEventListener('keydown', this.KeyboardDown);
-        document.removeEventListener('keyup', this.KeyboardUp);
+        if (this.Modifiable.ConnectedKeyboards > 0) {
+            document.removeEventListener('keydown', this.KeyboardDown);
+            document.removeEventListener('keyup', this.KeyboardUp);
+        }
 
+        this.Modifiable.ConnectedKeyboards--;
 
-        //TODO: Fix remove listeners on disconnect
     }
 
     KeyboardDown(key): void {
-
-        console.log(this);
 
         //Check if this key pressed is in out key_map
         if (typeof App.InputManager.KeyMap[key.keyCode] !== 'undefined') {
@@ -130,12 +130,16 @@ class Keyboard extends Effect implements IEffect {
 
                 // If no other keys already pressed trigger attack
                 if (Object.keys(App.InputManager.KeysDown).length === 1) {
-                    this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
+                    if (this.Modifiable.Source.frequency){
+                        this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
+                    }
                     this.Modifiable.Envelope.triggerAttack();
 
                     // Else ramp to new frequency over time (portamento)
                 } else {
-                    this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
+                    if (this.Modifiable.Source.frequency) {
+                        this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
+                    }
                 }
             }
         }
@@ -220,11 +224,8 @@ class Keyboard extends Effect implements IEffect {
 
         var totalPitchIncrement = 1;
 
-
-
         for (var i = 0; i < this.Modifiable.Modifiers.Count; i++) {
             var mod = this.Modifiable.Modifiers.GetValueAt(i);
-
 
             for (var j = 0; j < mod.Effects.Count; j++) {
                 var effect = mod.Effects.GetValueAt(j);
