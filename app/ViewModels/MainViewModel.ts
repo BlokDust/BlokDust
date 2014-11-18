@@ -17,6 +17,7 @@ import Power = require("../Blocks/Sources/Power");
 
 import InfoViewModel = require("./InfoViewModel");
 
+import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Size = Fayde.Utils.Size;
 import Vector = Fayde.Utils.Vector;
@@ -138,7 +139,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     PowerBlockBtn_Click(e: EventArgs){
-        this._BlocksSketch.CreateBlock(Power);
+        this._BlocksView.CreateBlock(ParticleEmitter);
     }
 
     ToneBlockBtn_Click(e: EventArgs){
