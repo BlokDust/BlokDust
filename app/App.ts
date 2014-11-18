@@ -8,6 +8,7 @@ import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import FilteredCollection = Fayde.Collections.FilteredCollection;
+import Particle = require("./Particle");
 
 class App{
     
@@ -18,6 +19,7 @@ class App{
     static Modifiables: ObservableCollection<IModifiable>;
     static Modifiers: ObservableCollection<IModifier>;
     static AudioMixer: AudioMixer;
+    static Particles: Particle[];
 
     constructor() {
 
@@ -58,6 +60,7 @@ class App{
         }, this);
 
         App.AudioMixer = new AudioMixer();
+        App.Particles = [];
     }
 }
 

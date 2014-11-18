@@ -38,7 +38,7 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     Draw() {
         // draw grid
-        if (window.debug) {
+/*        if (window.debug) {
             var cellWidth = this.Ctx.canvas.width / this.Divisor;
 
             this.Ctx.lineWidth = 1;
@@ -61,7 +61,7 @@ class Grid extends Fayde.Drawing.SketchContext {
                 this.Ctx.stroke();
                 this.Ctx.closePath();
             }
-        }
+        }*/
     }
 }
 
