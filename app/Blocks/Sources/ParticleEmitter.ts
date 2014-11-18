@@ -21,7 +21,7 @@ class ParticleEmitter extends Modifiable{
             angle: 0,
             speed: 2,
             rate: 10,
-            range: 200
+            range: 250
         };
 
         this._rateCounter = 0;
@@ -57,10 +57,10 @@ class ParticleEmitter extends Modifiable{
             //this.Params.angle = Math.random()*360;
 
             // ROTATE //
-            this.Params.angle += 1;
+            /*this.Params.angle += 1;
             if (this.Params.angle>360) {
                 this.Params.angle = 1;
-            }
+            }*/
 
         }
 
