@@ -9,7 +9,7 @@ class LFO extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new LFOComponent(3, -240, 480, 'triangle');
+        var effect = new LFOComponent(2, -20, 20, 'triangle');
 
         this.Effects.Add(effect);
 

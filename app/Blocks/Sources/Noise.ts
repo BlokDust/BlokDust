@@ -4,16 +4,15 @@ import Block = require("../Block");
 import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
+import Source = require("./Source");
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
 
-class Noise extends Modifiable {
-
-    public Noise: Tone.Noise;
-    public Envelope: Tone.Envelope;
-    public Delay: Tone.PingPongDelay;
-    public OutputGain: Tone.Signal;
-    public Params: ToneSettings;
+class Noise extends Source {
 
     constructor(grid: Grid, position: Point) {
+        this.BlockType = BlockType.Noise;
+
         super(grid, position);
 
         this.Params = {
@@ -27,25 +26,10 @@ class Noise extends Modifiable {
                 release: 0.02
             },
             output: {
-                volume: 0.5
+                volume: 1
             }
 
         };
-
-        // Define the audio nodes
-        this.Noise = new Tone.Noise(this.Params.noise.waveform);
-        this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
-        this.Delay = new Tone.PingPongDelay(1);
-        this.Delay.setWet(0);
-        this.OutputGain = new Tone.Signal;
-        this.OutputGain.output.gain.value = this.Params.output.volume;
-
-        // Connect them up
-        this.Envelope.connect(this.Noise.output.gain);
-        this.Noise.chain(this.Noise, this.Delay, this.OutputGain, App.AudioMixer.Master);
-
-        // Start
-        this.Noise.start();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
@@ -63,7 +47,6 @@ class Noise extends Modifiable {
 
         // stop tone
         this.Envelope.triggerRelease();
-
     }
 
     Update(ctx:CanvasRenderingContext2D) {

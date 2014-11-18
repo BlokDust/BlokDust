@@ -5,11 +5,11 @@ import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import PitchComponent = require("../AudioEffectComponents/Pitch");
 import Grid = require("../../Grid");
+import Source = require("./Source");
 
-class KeyboardInput extends Modifiable {
+class KeyboardInput extends Source {
 
     private _nodes = [];
-
 
     keysDown = {};
     key_map = {
@@ -68,21 +68,6 @@ class KeyboardInput extends Modifiable {
             }
 
         };
-
-        // Define the audio nodes
-        this.Osc = new Tone.Oscillator(this.Params.oscillator.frequency, this.Params.oscillator.waveform);
-        this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
-        this.Delay = new Tone.PingPongDelay(1);
-        this.Delay.setWet(0);
-        this.OutputGain = new Tone.Signal;
-        this.OutputGain.output.gain.value = this.Params.output.volume;
-
-        // Connect them up
-        this.Envelope.connect(this.Osc.output.gain);
-        this.Osc.chain(this.Osc, this.Delay, this.OutputGain, App.AudioMixer.Master);
-
-        // Start
-        this.Osc.start();
 
         // Get the Start Octave from the start Note
         this.settings.startOctave = parseInt(this.settings.startNote.charAt(1), 10);
@@ -173,12 +158,12 @@ class KeyboardInput extends Modifiable {
 
                 // If no other keys already pressed trigger attack
                 if (Object.keys(this.keysDown).length === 1) {
-                    this.Osc.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
+                    this.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
                     this.Envelope.triggerAttack();
 
                     // Else ramp to new frequency over time (portamento)
                 } else {
-                    this.Osc.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
+                    this.Source.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
                 }
             }
         }

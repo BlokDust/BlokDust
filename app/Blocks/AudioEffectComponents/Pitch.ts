@@ -18,8 +18,9 @@ class PitchComponent extends Effect implements IEffect {
             // LFO's and pitches cannot work on Noise Blocks
             return;
         }
-        var _value = this.Modifiable.Osc.frequency.getValue();
-        this.Modifiable.Osc.frequency.setValue(_value * this.PitchIncrement);
+        var _value = this.Modifiable.Source.frequency.getValue();
+        this.Modifiable.Source.frequency.setValue(_value * this.PitchIncrement);
+        this.Modifiable
     }
 
     Disconnect(modifiable: IModifiable): void{
@@ -28,8 +29,8 @@ class PitchComponent extends Effect implements IEffect {
             // LFO's and pitches cannot work on Noise Blocks
             return;
         }
-        var _value = this.Modifiable.Osc.frequency.getValue();
-        this.Modifiable.Osc.frequency.setValue(_value / this.PitchIncrement);
+        var _value = this.Modifiable.Source.frequency.getValue();
+        this.Modifiable.Source.frequency.setValue(_value / this.PitchIncrement);
     }
 }
 
