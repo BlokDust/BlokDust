@@ -3,7 +3,6 @@ import Block = require("../Block");
 import IModifiable = require("../IModifiable");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
-import BlocksView = require("../../BlocksView");
 import Particle = require("../../Particle");
 import App = require("../../App");
 import Vector = Fayde.Utils.Vector;
