@@ -8,34 +8,17 @@ import App = require("../../App");
 class Keyboard extends Effect implements IEffect {
 
     private _nodes = [];
+    public BaseFrequency: number;
+    public CurrentOctave: number;
 
-    settings = {
-        startOctave: 3,
-        startNote: 'C3'
+    public Settings = {
+        isPolyphonic: false,
+        glide: 0.05 // glide only works in monophonic mode
     };
+
 
     constructor() {
         super();
-
-        this.Params = {
-            oscillator: {
-                frequency: 440,
-                waveform: 'square' //TODO: add noise waveform options to keyboard
-            },
-            envelope: {
-                attack: 0.02,
-                decay: 0.5,
-                sustain: 0.5,
-                release: 0.02
-            },
-            output: {
-                volume: 1
-            },
-            keyboard: {
-                isPolyphonic: false,
-                glide: 0.05 // glide only works in monophonic mode
-            }
-        };
 
         this.KeyboardDown = this.KeyboardDown.bind(this);
         this.KeyboardUp = this.KeyboardUp.bind(this);
@@ -44,23 +27,33 @@ class Keyboard extends Effect implements IEffect {
 
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
+
+        if (this.Modifiable.Settings.oscillator){
+            this.BaseFrequency = this.Modifiable.Settings.oscillator.frequency;
+            this.CurrentOctave = this.GetStartOctave();
+        }
+
         this.AddListeners();
     }
 
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
         this.RemoveListeners();
+
+        if (this.Modifiable.Source.frequency) {
+            this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Modifiable.Settings.oscillator.frequency, 0.05);
+        }
     }
 
     //TODO: move event listeners to a controls class
     AddListeners(): void {
 
-        if (this.Modifiable.ConnectedKeyboards == 0) {
-            document.addEventListener('keydown', this.KeyboardDown);
-            document.addEventListener('keyup', this.KeyboardUp);
-        } else {
-            console.log('keyboard already attached to this block');
-        }
+        //if (this.Modifiable.ConnectedKeyboards == 0) {
+            App.InputManager.AddEventListener('keydown', this.KeyboardDown, this);
+            App.InputManager.AddEventListener('keyup', this.KeyboardUp, this);
+        //} else {
+        //    console.log('keyboard already attached to this block');
+        //}
 
         this.Modifiable.ConnectedKeyboards++;
 
@@ -68,13 +61,26 @@ class Keyboard extends Effect implements IEffect {
 
     RemoveListeners(): void {
 
-        if (this.Modifiable.ConnectedKeyboards > 0) {
-            document.removeEventListener('keydown', this.KeyboardDown);
-            document.removeEventListener('keyup', this.KeyboardUp);
-        }
+        //if (this.Modifiable.ConnectedKeyboards > 0) {
+            App.InputManager.RemoveEventListener('keydown', this.KeyboardDown);
+            App.InputManager.RemoveEventListener('keyup', this.KeyboardUp);
+        //}
 
         this.Modifiable.ConnectedKeyboards--;
 
+    }
+
+    GetStartOctave(): number {
+        var octave,
+            note = this.Modifiable.Source.frequencyToNote(this.BaseFrequency);
+
+        if (note.length === 3) {
+            octave = parseInt(note.charAt(2));
+        } else {
+            octave = parseInt(note.charAt(1));
+        }
+
+        return octave;
     }
 
     KeyboardDown(key): void {
@@ -90,28 +96,28 @@ class Keyboard extends Effect implements IEffect {
             App.InputManager.KeysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
 
             // Octave UP (Plus button)
-            if (key.keyCode === 187 && this.settings.startOctave != 8) {
-                this.settings.startOctave++;
+            if (key.keyCode === 187 && this.CurrentOctave != 8) {
+                this.CurrentOctave++;
                 return;
             }
 
             // Octave DOWN (Minus button)
-            if (key.keyCode === 189 && this.settings.startOctave != 0) {
-                this.settings.startOctave--;
+            if (key.keyCode === 189 && this.CurrentOctave != 0) {
+                this.CurrentOctave--;
                 return;
             }
 
-            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var keyPressed = this.GetKeyNoteOctaveString(key.keyCode);
             var frequency = this.GetFrequencyOfNote(keyPressed);
 
-            if (this.Params.keyboard.isPolyphonic){
+            if (this.Settings.isPolyphonic){
                 // POLYPHONIC
 
                 //TODO: make LFO's and scuzzes work in polyphonic mode
 
                 // Create throwaway audio nodes for each keydown
-                var _oscillator = new Tone.Oscillator(frequency, this.Params.oscillator.waveform);
-                var _envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
+                var _oscillator = new Tone.Oscillator(frequency, this.Modifiable.Settings.oscillator.waveform);
+                var _envelope = new Tone.Envelope(this.Modifiable.Settings.envelope.attack, this.Modifiable.Settings.envelope.decay, this.Modifiable.Settings.envelope.sustain, this.Modifiable.Settings.envelope.release);
 
                 // Connect them
                 _envelope.connect(_oscillator.output.gain);
@@ -138,7 +144,7 @@ class Keyboard extends Effect implements IEffect {
                     // Else ramp to new frequency over time (portamento)
                 } else {
                     if (this.Modifiable.Source.frequency) {
-                        this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, this.Params.keyboard.glide);
+                        this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, this.Settings.glide);
                     }
                 }
             }
@@ -152,10 +158,10 @@ class Keyboard extends Effect implements IEffect {
             // remove this key from the keysDown object
             delete App.InputManager.KeysDown[key.keyCode];
 
-            var keyPressed = this.GetKeyPressed(key.keyCode);
+            var keyPressed = this.GetKeyNoteOctaveString(key.keyCode);
             var frequency = this.GetFrequencyOfNote(keyPressed);
 
-            if (this.Params.keyboard.isPolyphonic) {
+            if (this.Settings.isPolyphonic) {
                 // POLYPHONIC
                 var new_nodes = [];
 
@@ -184,40 +190,16 @@ class Keyboard extends Effect implements IEffect {
         }
     }
 
-    GetKeyPressed(keyCode): string {
+    GetKeyNoteOctaveString(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (App.InputManager.KeyMap[keyCode]
-            .replace('l', this.settings.startOctave)
-            .replace('u', this.settings.startOctave + 1)
+            .replace('l', this.CurrentOctave)
+            .replace('u', this.CurrentOctave + 1)
                 .toString());
     }
 
     GetFrequencyOfNote(note): number {
-        var notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'],
-            key_number,
-            octave;
-
-        if (note.length === 4) {
-            octave = note.charAt(3) + 10;
-        }
-
-        if (note.length === 3) {
-            //sharp note - octave is 3rd char
-            octave = note.charAt(2);
-        } else {
-            //natural note - octave number is 2nd char
-            octave = note.charAt(1);
-        }
-
-        // math to return frequency number from note & octave
-        key_number = notes.indexOf(note.slice(0, -1));
-        if (key_number < 3) {
-            key_number = key_number + 12 + ((octave - 1) * 12) + 1;
-        } else {
-            key_number = key_number + ((octave - 1) * 12) + 1;
-        }
-
-        return (440 * Math.pow(2, (key_number - 49) / 12)) * this.GetConnectedPitchModifiers();
+        return this.Modifiable.Source.noteToFrequency(note) * this.GetConnectedPitchModifiers();
     }
 
     GetConnectedPitchModifiers() {

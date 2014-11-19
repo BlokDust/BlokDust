@@ -1,11 +1,18 @@
+import IInputManager = require("../Inputs/IInputManager");
+
 class InputManager {
 
     public KeyMap: Object;
     public KeysDown: Object;
+    public EventListenerCount: number = 0;
+    public EventsInUse;
+
+
 
     constructor() {
 
 
+        this.EventsInUse = [];
         this.KeysDown = {};
 
         this.KeyMap = {
@@ -34,6 +41,18 @@ class InputManager {
             187: 'OctaveUp',
             189: 'OctaveDown'
         };
+    }
+
+    AddEventListener(event, eventHandler, _this): void {
+        document.addEventListener(event, eventHandler);
+        this.EventListenerCount ++;
+
+    }
+
+    RemoveEventListener(event, eventHandler): void {
+        document.removeEventListener(event, eventHandler);
+
+
     }
 
 }

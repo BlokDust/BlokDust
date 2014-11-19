@@ -28,8 +28,8 @@ class LFO extends Effect implements IEffect {
 
         if (this.Modifiable.Source.detune) {
             this._LFO.stop();
-            //this._LFO.disconnect();
-            //this.Modifiable.Source.detune.setValue(0);
+            this._LFO.disconnect();
+            this.Modifiable.Source.detune.setValue(0);
             //TODO: FIX LFO DISCONNECTING MULTIPLE BLOCKS BUG
         }
 

@@ -41,6 +41,7 @@ class ToneSource extends Source {
 
         // play tone
         this.Envelope.triggerAttack();
+
     }
 
     MouseUp() {
