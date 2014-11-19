@@ -4,6 +4,7 @@ import Grid = require("../Grid");
 import Type = require("./BlockType");
 import BlockType = Type.BlockType;
 import Size = Fayde.Utils.Size;
+import Particle = require("../Particle");
 
 class Block implements IBlock {
 
@@ -99,6 +100,10 @@ class Block implements IBlock {
         return new Point(
             this.Position.x + units.x,
             this.Position.y + units.y);
+    }
+
+    ParticleCollision(particle: Particle) {
+
     }
 
     MouseDown() {

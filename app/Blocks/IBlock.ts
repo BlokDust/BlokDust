@@ -1,5 +1,6 @@
 import Size = Fayde.Utils.Size;
 import IDisplayObject = require("../IDisplayObject");
+import Particle = require("../Particle");
 
 interface IBlock extends IDisplayObject{
     Id: number;
@@ -13,6 +14,7 @@ interface IBlock extends IDisplayObject{
     Update(ctx: CanvasRenderingContext2D): void;
     Draw(ctx: CanvasRenderingContext2D): void;
     MouseDown(): void;
+    ParticleCollision(particle: Particle): void;
     MouseUp(): void;
     MouseMove(point: Point): void;
     HitTest(point: Point): boolean;
