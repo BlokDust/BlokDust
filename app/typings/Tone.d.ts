@@ -289,6 +289,7 @@ declare module Tone {
         setRelease(time: Tone.Time): void;
         setSustain(time: Tone.Time): void;
         triggerAttack(time?: Tone.Time, velocity?: number): void;
+        triggerAttackRelease(duration: Tone.Time, time?: Tone.Time, velocity?: number): void;
         triggerRelease(time?: Tone.Time): void;
     }
 
