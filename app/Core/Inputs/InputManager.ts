@@ -2,8 +2,7 @@ import IInputManager = require("../Inputs/IInputManager");
 
 class InputManager {
 
-    public KeyMap: Object;
-    public KeysDown: Object;
+    public KeyboardMap: Object;
     public EventListenerCount: number = 0;
     public EventsInUse;
 
@@ -13,9 +12,8 @@ class InputManager {
 
 
         this.EventsInUse = [];
-        this.KeysDown = {};
 
-        this.KeyMap = {
+        this.KeyboardMap = {
             65: 'Cl',
             87: 'C#l',
             83: 'Dl',

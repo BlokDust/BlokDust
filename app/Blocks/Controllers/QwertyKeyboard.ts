@@ -10,6 +10,8 @@ class Keyboard extends Effect implements IEffect {
     private _nodes = [];
     public BaseFrequency: number;
     public CurrentOctave: number;
+    public KeysDown = {};
+    public KeyMap: Object;
 
     public Settings = {
         isPolyphonic: false,
@@ -19,6 +21,8 @@ class Keyboard extends Effect implements IEffect {
 
     constructor() {
         super();
+
+        this.KeyMap = App.InputManager.KeyboardMap;
 
         this.KeyboardDown = this.KeyboardDown.bind(this);
         this.KeyboardUp = this.KeyboardUp.bind(this);
@@ -86,14 +90,14 @@ class Keyboard extends Effect implements IEffect {
     KeyboardDown(key): void {
 
         //Check if this key pressed is in out key_map
-        if (typeof App.InputManager.KeyMap[key.keyCode] !== 'undefined') {
+        if (typeof this.KeyMap[key.keyCode] !== 'undefined') {
 
             //if it's already pressed (holding note)
-            if (key.keyCode in App.InputManager.KeysDown) {
+            if (key.keyCode in this.KeysDown) {
                 return;
             }
             //pressed first time, add to object
-            App.InputManager.KeysDown[key.keyCode] = true; //TODO: push to array instead of object with true values
+            this.KeysDown[key.keyCode] = true;
 
             // Octave UP (Plus button)
             if (key.keyCode === 187 && this.CurrentOctave != 8) {
@@ -135,7 +139,7 @@ class Keyboard extends Effect implements IEffect {
                 // MONOPHONIC
 
                 // If no other keys already pressed trigger attack
-                if (Object.keys(App.InputManager.KeysDown).length === 1) {
+                if (Object.keys(this.KeysDown).length === 1) {
                     if (this.Modifiable.Source.frequency){
                         this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, 0); //TODO: Check this setValue not working as it should
                     }
@@ -149,14 +153,15 @@ class Keyboard extends Effect implements IEffect {
                 }
             }
         }
+
     }
 
     KeyboardUp(key): void {
 
         //Check if this key released is in out key_map
-        if (typeof App.InputManager.KeyMap[key.keyCode] !== 'undefined') {
+        if (typeof this.KeyMap[key.keyCode] !== 'undefined') {
             // remove this key from the keysDown object
-            delete App.InputManager.KeysDown[key.keyCode];
+            delete this.KeysDown[key.keyCode];
 
             var keyPressed = this.GetKeyNoteOctaveString(key.keyCode);
             var frequency = this.GetFrequencyOfNote(keyPressed);
@@ -183,7 +188,7 @@ class Keyboard extends Effect implements IEffect {
 
             } else {
                 // MONOPHONIC
-                if (Object.keys(App.InputManager.KeysDown).length === 0) {
+                if (Object.keys(this.KeysDown).length === 0) {
                     this.Modifiable.Envelope.triggerRelease();
                 }
             }
@@ -192,7 +197,7 @@ class Keyboard extends Effect implements IEffect {
 
     GetKeyNoteOctaveString(keyCode): string {
         // Replaces keycode with keynote & octave string
-        return (App.InputManager.KeyMap[keyCode]
+        return (this.KeyMap[keyCode]
             .replace('l', this.CurrentOctave)
             .replace('u', this.CurrentOctave + 1)
                 .toString());
