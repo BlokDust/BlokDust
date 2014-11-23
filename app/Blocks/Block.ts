@@ -130,6 +130,7 @@ class Block implements IBlock {
         var ref = this.Outline;
         var i;
 
+        this.Ctx.beginPath();
         this.DrawMoveTo(ref[0].x, ref[0].y);
         for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].x, ref[i].y);
         this.Ctx.closePath();
