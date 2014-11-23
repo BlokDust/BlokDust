@@ -38,6 +38,7 @@ class Keyboard extends Effect implements IEffect {
             this.CurrentOctave--;
         }
 
+        this.KeysDown = {};
         this.AddListeners();
     }
 
