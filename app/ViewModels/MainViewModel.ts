@@ -139,7 +139,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     PowerBlockBtn_Click(e: EventArgs){
-        this._BlocksView.CreateBlock(ParticleEmitter);
+        this._BlocksSketch.CreateBlock(ParticleEmitter);
     }
 
     ToneBlockBtn_Click(e: EventArgs){
