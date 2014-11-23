@@ -74,6 +74,7 @@ class ToneSource extends Source {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         //color(col[2]); // PURPLE
         ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
@@ -84,6 +85,7 @@ class ToneSource extends Source {
         ctx.closePath();
         ctx.fill();
 
+        this.Ctx.beginPath();
         //color(col[5]); // WHITE
         ctx.fillStyle = "#fff";
         this.DrawMoveTo(-2,0);
@@ -93,6 +95,7 @@ class ToneSource extends Source {
         ctx.closePath();
         ctx.fill();
 
+        this.Ctx.beginPath();
         //color(col[1]); // GREEN
         ctx.fillStyle = "#1add8d";
         this.DrawMoveTo(0,-2);

@@ -20,6 +20,7 @@ class LFO extends Modifier {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         ctx.fillStyle = "#ff90a7";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);

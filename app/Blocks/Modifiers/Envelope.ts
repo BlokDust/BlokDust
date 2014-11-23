@@ -20,6 +20,7 @@ class Envelope extends Modifier {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         ctx.fillStyle = "#f22a54";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);

@@ -21,6 +21,7 @@ class Power extends Modifiable{
     Draw(ctx: CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         //color(col[0]);// BLUE
         ctx.fillStyle = "#40e6ff";
         this.DrawMoveTo(-1,0);
@@ -32,6 +33,7 @@ class Power extends Modifiable{
         ctx.closePath();
         ctx.fill();
 
+        this.Ctx.beginPath();
         //color(col[1]); // GREEN
         ctx.fillStyle = "#1add8d";
         this.DrawMoveTo(0,0);
@@ -41,6 +43,7 @@ class Power extends Modifiable{
         ctx.closePath();
         ctx.fill();
 
+        this.Ctx.beginPath();
         //color(col[5]); // WHITE
         ctx.fillStyle = "#fff";
         this.DrawMoveTo(-1,0);

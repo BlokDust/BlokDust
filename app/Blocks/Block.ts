@@ -82,7 +82,6 @@ class Block implements IBlock {
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
-        this.Ctx.beginPath();
         var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
         this.Ctx.moveTo(pos.x, pos.y);
     }

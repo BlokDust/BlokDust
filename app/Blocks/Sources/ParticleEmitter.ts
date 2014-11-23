@@ -69,6 +69,7 @@ class ParticleEmitter extends Modifiable{
     Draw(ctx: CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         //color(col[2]);// PURPLE
         ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
@@ -77,6 +78,7 @@ class ParticleEmitter extends Modifiable{
         ctx.closePath();
         ctx.fill();
 
+        this.Ctx.beginPath();
         //color(col[4]); // RED
         ctx.fillStyle = "#f22a54";
         this.DrawMoveTo(-1,0);

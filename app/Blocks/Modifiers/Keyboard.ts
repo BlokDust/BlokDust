@@ -21,6 +21,7 @@ class Keyboard extends Modifier {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         ctx.fillStyle = "#1add8d";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);

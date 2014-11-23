@@ -18,6 +18,7 @@ class VolumeIncrease extends Modifier {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         ctx.fillStyle = "#40e6ff";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);

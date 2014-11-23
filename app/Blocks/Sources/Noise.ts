@@ -79,6 +79,7 @@ class Noise extends Source {
     Draw(ctx:CanvasRenderingContext2D) {
         super.Draw(ctx);
 
+        this.Ctx.beginPath();
         ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);
