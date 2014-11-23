@@ -11,7 +11,8 @@ interface IModifiable extends IBlock{
     Envelope?: Tone.Envelope;
     Delay?: Tone.PingPongDelay;
     OutputGain?: Tone.Signal;
-    Params?: ToneSettings;
+    Settings?: ToneSettings;
+    ConnectedKeyboards?: number;
     ValidateModifiers(): void;
 }
 

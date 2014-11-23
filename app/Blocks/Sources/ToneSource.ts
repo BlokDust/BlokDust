@@ -11,11 +11,9 @@ import Particle = require("../../Particle");
 
 class ToneSource extends Source {
 
-    public DelayedRelease: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.ToneSource;
-        this.DelayedRelease = 0;
 
         super(grid, position);
 
@@ -45,6 +43,7 @@ class ToneSource extends Source {
 
         // play tone
         this.Envelope.triggerAttack();
+
     }
 
     MouseUp() {
@@ -62,20 +61,13 @@ class ToneSource extends Source {
 
         // USE SIGNAL? So we can schedule a sound length properly
         // play tone
-        this.Envelope.triggerAttack();
-        this.DelayedRelease = 5; //TODO, THIS IS SHIT
+        this.Envelope.triggerAttackRelease(0.1);
     }
 
 
     Update(ctx:CanvasRenderingContext2D) {
         super.Update(ctx);
 
-        if (this.DelayedRelease>0) { //TODO, THIS IS SHIT
-            this.DelayedRelease -= 1;
-            if (this.DelayedRelease==0) {
-                this.Envelope.triggerRelease();
-            }
-        }
     }
 
     // input blocks are red circles

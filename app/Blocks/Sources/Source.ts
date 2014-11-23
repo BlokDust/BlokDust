@@ -7,14 +7,15 @@ import Grid = require("../../Grid");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 
-class Source extends Modifiable{
+class Source extends Modifiable {
 
-    public Source: any; // Use this when available: Tone.Oscillator || Tone.Noise
+    public Source: any; // TODO: Set type of Source to.. "Tone.Oscillator || Tone.Noise" when available:
     public Envelope: Tone.Envelope;
     public Delay: Tone.PingPongDelay;
     public OutputGain: Tone.Signal;
-    public Noise: Tone.Noise;
-    private _Params: ToneSettings = {
+    public ConnectedKeyboards: number = 0;
+    public Frequency: number;
+    public Settings: ToneSettings = {
 
         oscillator: {
             frequency: 440,
@@ -35,30 +36,32 @@ class Source extends Modifiable{
     };
 
     get Params(): ToneSettings {
-        return this._Params;
+        return this.Settings;
     }
 
     set Params(value: ToneSettings) {
-        this._Params = value;
+        this.Settings = value;
     }
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
+        this.Frequency = this.Settings.oscillator.frequency;
+
         if (this.BlockType == BlockType.Noise){
-            this.Source = new Tone.Noise(this._Params.noise.waveform);
+            this.Source = new Tone.Noise(this.Settings.noise.waveform);
         } else if (this.BlockType == BlockType.ToneSource) {
-            this.Source = new Tone.Oscillator(this._Params.oscillator.frequency, this._Params.oscillator.waveform);
+            this.Source = new Tone.Oscillator(this.Settings.oscillator.frequency, this.Settings.oscillator.waveform);
         } else {
             console.log('this typeof Source does not have a matching BlockType');
         }
 
         // Define the audio nodes
-        this.Envelope = new Tone.Envelope(this.Params.envelope.attack, this.Params.envelope.decay, this.Params.envelope.sustain, this.Params.envelope.release);
+        this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Delay = new Tone.PingPongDelay(1);
         this.Delay.setWet(0);
         this.OutputGain = new Tone.Signal;
-        this.OutputGain.output.gain.value = this.Params.output.volume;
+        this.OutputGain.output.gain.value = this.Settings.output.volume;
 
         // Connect them up
         this.Envelope.connect(this.Source.output.gain);
@@ -67,6 +70,8 @@ class Source extends Modifiable{
         // Start
         this.Source.start();
     }
+
+
 }
 
 export = Source;
