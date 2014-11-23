@@ -22,7 +22,7 @@ class Keyboard extends Effect implements IEffect {
     constructor() {
         super();
 
-        this.KeyMap = App.InputManager.KeyboardMap;
+        this.KeyMap = App.InputManager.MasterKeyboardMap;
 
         this.KeyboardDown = this.KeyboardDown.bind(this);
         this.KeyboardUp = this.KeyboardUp.bind(this);
@@ -34,7 +34,8 @@ class Keyboard extends Effect implements IEffect {
 
         if (this.Modifiable.Settings.oscillator){
             this.BaseFrequency = this.Modifiable.Settings.oscillator.frequency;
-            this.CurrentOctave = this.GetStartOctave();
+            this.CurrentOctave = this.GetStartOctave(); //TODO: Fix octave up & down
+            this.CurrentOctave--;
         }
 
         this.AddListeners();
@@ -100,13 +101,14 @@ class Keyboard extends Effect implements IEffect {
             this.KeysDown[key.keyCode] = true;
 
             // Octave UP (Plus button)
-            if (key.keyCode === 187 && this.CurrentOctave != 8) {
+            if (this.KeyMap[key.keyCode] == 'OctaveUp' && this.CurrentOctave < 9) {
                 this.CurrentOctave++;
                 return;
             }
 
             // Octave DOWN (Minus button)
-            if (key.keyCode === 189 && this.CurrentOctave != 0) {
+            //if (key.keyCode === 189 && this.CurrentOctave != 0) {
+            if (this.KeyMap[key.keyCode] === 'OctaveDown' && this.CurrentOctave != 0) {
                 this.CurrentOctave--;
                 return;
             }
@@ -198,8 +200,10 @@ class Keyboard extends Effect implements IEffect {
     GetKeyNoteOctaveString(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (this.KeyMap[keyCode]
-            .replace('l', this.CurrentOctave)
-            .replace('u', this.CurrentOctave + 1)
+            .replace('a', this.CurrentOctave)
+            .replace('b', this.CurrentOctave + 1)
+            .replace('c', this.CurrentOctave + 2)
+            .replace('d', this.CurrentOctave + 3)
                 .toString());
     }
 
