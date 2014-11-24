@@ -9,6 +9,6 @@
     "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.2.0",
     "fayde.zoomer": "git://github.com/edsilv/fayde.zoomer#~0.2.0",
     "tone": "*",
-    "pixelpalette": "0.1.5"
+    "pixelpalette": "0.1.8"
   }
 }

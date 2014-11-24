@@ -3,9 +3,10 @@ import Grid = require("../Grid");
 import Type = require("./BlockType");
 import BlockType = Type.BlockType;
 import Size = Fayde.Utils.Size;
-import Particle = require("../Particle");
+//import Particle = require("../Particle");
+import DisplayObject = require("../DisplayObject");
 
-class Block implements IBlock {
+class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
@@ -14,7 +15,6 @@ class Block implements IBlock {
     public IsPressed: boolean = false;
     private _IsSelected: boolean = false;
     public Grid: Grid;
-    private _CtxSize: Size;
     public Outline: Point[] = [];
     public ZIndex;
 
@@ -51,9 +51,11 @@ class Block implements IBlock {
 
     // normalised point
     constructor(grid: Grid, position: Point) {
+        super(grid.Ctx);
+
         this.Grid = grid;
         this.Position = this.Grid.GetGridPosition(position);
-        this.Update(this.Ctx);
+        this.Update();
     }
 
     // returns the Block's absolute position in pixels
@@ -62,20 +64,17 @@ class Block implements IBlock {
     }
 
     // todo: necessary to pass ctx to update and draw?
-    Update(ctx: CanvasRenderingContext2D) {
-        // only recreate the _CtxSize object if the ctx size has changed.
-        if (!this._CtxSize || this.Ctx.canvas.width != this._CtxSize.Width || this.Ctx.canvas.height != this._CtxSize.Height){
-            this._CtxSize = new Size(ctx.canvas.width, ctx.canvas.height);
-        }
+    Update() {
+
     }
 
-    Draw(ctx: CanvasRenderingContext2D) {
-        ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
+    Draw() {
+        this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 
         if (window.debug){
-            ctx.fillStyle = "#fff";
+            this.Ctx.fillStyle = "#fff";
             var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
-            ctx.fillText("" + this.ZIndex, pos.x, pos.y);
+            this.Ctx.fillText("" + this.ZIndex, pos.x, pos.y);
         }
     }
 
@@ -100,9 +99,9 @@ class Block implements IBlock {
             this.Position.y + units.y);
     }
 
-    ParticleCollision(particle: Particle) {
-
-    }
+    //ParticleCollision(particle: Particle) {
+    //
+    //}
 
     MouseDown() {
         this.IsPressed = true;
