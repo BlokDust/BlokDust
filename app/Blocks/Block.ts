@@ -3,72 +3,46 @@ import Grid = require("../Grid");
 import Type = require("./BlockType");
 import BlockType = Type.BlockType;
 import Size = Fayde.Utils.Size;
-//import Particle = require("../Particle");
+import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 
 class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    private _Position: Point;
-    private _LastPosition: Point;
+    public GridPosition: Point;
+    public LastGridPosition: Point;
     public IsPressed: boolean = false;
-    private _IsSelected: boolean = false;
+    public IsSelected: boolean = false;
     public Grid: Grid;
     public Outline: Point[] = [];
     public ZIndex;
 
     public BlockType: BlockType;
 
-    get Ctx(): CanvasRenderingContext2D{
-        return this.Grid.Ctx;
-    }
-
-    // value is a grid position.
-    set Position(value: Point){
-        this._Position = value;
-    }
-
-    get Position(): Point{
-        return this._Position;
-    }
-
-    set LastPosition(value: Point){
-        this._LastPosition = value;
-    }
-
-    get LastPosition(): Point{
-        return this._LastPosition;
-    }
-
-    set IsSelected(value: boolean){
-        this._IsSelected = value;
-    }
-
-    get IsSelected(): boolean {
-        return this._IsSelected;
-    }
-
-    // normalised point
+    // position: normalised point
     constructor(grid: Grid, position: Point) {
         super(grid.Ctx);
 
         this.Grid = grid;
-        this.Position = this.Grid.GetGridPosition(position);
+        this.GridPosition = this.Grid.GetGridPosition(position);
         this.Update();
     }
 
     // returns the Block's absolute position in pixels
-    get AbsPosition(): Point {
-        return this.Grid.GetAbsPosition(this.Position);
+    get Position(): Point {
+        return this.Grid.GetAbsPosition(this.GridPosition);
     }
 
-    // todo: necessary to pass ctx to update and draw?
     Update() {
 
     }
 
     Draw() {
+        super.Draw();
+
+        if (this.IsRenderCached) return;
+
         this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 
         if (window.debug){
@@ -95,17 +69,17 @@ class Block extends DisplayObject implements IBlock {
      */
     private _GetRelGridPosition(units: Point): Point {
         return new Point(
-            this.Position.x + units.x,
-            this.Position.y + units.y);
+            this.GridPosition.x + units.x,
+            this.GridPosition.y + units.y);
     }
 
-    //ParticleCollision(particle: Particle) {
-    //
-    //}
+    ParticleCollision(particle: Particle) {
+        particle.Life = -1; // DESTROY PARTICLE
+    }
 
     MouseDown() {
         this.IsPressed = true;
-        this.LastPosition = this.Position.Clone();
+        this.LastGridPosition = this.GridPosition.Clone();
         this.Click.Raise(this, new Fayde.RoutedEventArgs());
     }
 
@@ -120,18 +94,20 @@ class Block extends DisplayObject implements IBlock {
     // normalised point
     MouseMove(point: Point) {
         if (this.IsPressed){
-            this.Position = this.Grid.GetGridPosition(point);
+            this.GridPosition = this.Grid.GetGridPosition(point);
         }
     }
 
     // absolute point
-    HitTest(point: Point):boolean {
-        var ref = this.Outline;
-        var i;
+    HitTest(point: Point): boolean {
 
         this.Ctx.beginPath();
-        this.DrawMoveTo(ref[0].x, ref[0].y);
-        for (i=1;i<ref.length;i++) this.DrawLineTo(ref[i].x, ref[i].y);
+        this.DrawMoveTo(this.Outline[0].x, this.Outline[0].y);
+
+        for (var i = 1; i < this.Outline.length; i++) {
+            this.DrawLineTo(this.Outline[i].x, this.Outline[i].y);
+        }
+
         this.Ctx.closePath();
 
         return this.Ctx.isPointInPath(point.x, point.y);
@@ -139,7 +115,7 @@ class Block extends DisplayObject implements IBlock {
 
     // absolute point
     DistanceFrom(point: Point): number{
-        return Math.distanceBetween(this.AbsPosition.x, this.AbsPosition.y, point.x, point.y);
+        return Math.distanceBetween(this.Position.x, this.Position.y, point.x, point.y);
     }
 
 }

@@ -4,21 +4,20 @@ import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
-//import Noise = require("../Blocks/Sources/Noise");
-//import Keyboard = require("../Blocks/Modifiers/Keyboard");
-//import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
-//import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
-//import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
-//import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
-//import Envelope = require("../Blocks/Modifiers/Envelope");
-//import LFO = require("../Blocks/Modifiers/LFO");
-//import Delay = require("../Blocks/Modifiers/Delay");
-//import Scuzz = require("../Blocks/Modifiers/Scuzz");
-//import Power = require("../Blocks/Sources/Power");
-
+import Noise = require("../Blocks/Sources/Noise");
+import Keyboard = require("../Blocks/Modifiers/Keyboard");
+import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
+import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
+import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
+import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
+import Envelope = require("../Blocks/Modifiers/Envelope");
+import LFO = require("../Blocks/Modifiers/LFO");
+import Delay = require("../Blocks/Modifiers/Delay");
+import Scuzz = require("../Blocks/Modifiers/Scuzz");
+import Power = require("../Blocks/Sources/Power");
+import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
 
-//import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Size = Fayde.Utils.Size;
 import Vector = Fayde.Utils.Vector;
@@ -141,54 +140,53 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this.SelectedBlock = block;
     }
 
-    //PowerBlockBtn_Click(e: EventArgs){
-    //    this._BlocksSketch.CreateBlock(ParticleEmitter);
-    //}
+    PowerBlockBtn_Click(e: EventArgs){
+        this._BlocksSketch.CreateBlock(ParticleEmitter);
+    }
 
     ToneBlockBtn_Click(e: EventArgs){
         this._BlocksSketch.CreateBlock(ToneSource);
     }
 
-    //NoiseBlockBtn_Click(e: EventArgs){
-    //    this._BlocksSketch.CreateBlock(Noise);
-    //}
-    //
-    //KeyboardBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(Keyboard);
-    //}
-    //
-    //VolumeIncreaseBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(VolumeIncrease);
-    //}
-    //
-    //VolumeDecreaseBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(VolumeDecrease);
-    //}
-    //
-    //PitchIncreaseBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(PitchIncrease);
-    //}
-    //
-    //PitchDecreaseBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(PitchDecrease);
-    //}
-    //
-    //EnvelopeBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(Envelope);
-    //}
-    //
-    //LFOBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(LFO);
-    //}
-    //
-    //DelayBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(Delay);
-    //}
-    //
-    //ScuzzBlockBtn_Click(e: any){
-    //    this._BlocksSketch.CreateBlock(Scuzz);
-    //}
+    NoiseBlockBtn_Click(e: EventArgs){
+        this._BlocksSketch.CreateBlock(Noise);
+    }
 
+    KeyboardBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Keyboard);
+    }
+
+    VolumeIncreaseBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(VolumeIncrease);
+    }
+
+    VolumeDecreaseBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(VolumeDecrease);
+    }
+
+    PitchIncreaseBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(PitchIncrease);
+    }
+
+    PitchDecreaseBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(PitchDecrease);
+    }
+
+    EnvelopeBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Envelope);
+    }
+
+    LFOBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(LFO);
+    }
+
+    DelayBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Delay);
+    }
+
+    ScuzzBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Scuzz);
+    }
 
     DeleteBlockBtn_Click(e: any){
         this._BlocksSketch.DeleteSelectedBlock();

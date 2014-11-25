@@ -7,7 +7,7 @@ import Grid = require("../../Grid");
 import Source = require("./Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
-//import Particle = require("../../Particle");
+import Particle = require("../../Particle");
 
 class ToneSource extends Source {
 
@@ -34,8 +34,11 @@ class ToneSource extends Source {
 
         };
 
+        this.Width = 150;
+        this.Height = 150;
+
         // Define Outline for HitTest
-        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(1, 1),new Point(-1, 1));
+        this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
     }
 
     MouseDown() {
@@ -54,16 +57,14 @@ class ToneSource extends Source {
 
     }
 
-    //ParticleCollision(particle: Particle) {
-    //
-    //    super.ParticleCollision(particle);
-    //    particle.Life = -1; // DESTROY PARTICLE
-    //
-    //    // USE SIGNAL? So we can schedule a sound length properly
-    //    // play tone
-    //    this.Envelope.triggerAttackRelease(0.1);
-    //}
+    ParticleCollision(particle: Particle) {
 
+        super.ParticleCollision(particle);
+
+        // USE SIGNAL? So we can schedule a sound length properly
+        // play tone
+        this.Envelope.triggerAttackRelease(0.1);
+    }
 
     Update() {
         super.Update();
@@ -73,6 +74,9 @@ class ToneSource extends Source {
     // input blocks are red circles
     Draw() {
         super.Draw();
+
+        //if (this.IsRenderCached) return;
+        //console.log("drawing to render cache");
 
         this.Ctx.beginPath();
         //color(col[2]); // PURPLE
@@ -103,6 +107,8 @@ class ToneSource extends Source {
         this.DrawLineTo(0,0);
         this.Ctx.closePath();
         this.Ctx.fill();
+
+        //this.IsRenderCached = true;
     }
 }
 

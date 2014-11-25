@@ -212,7 +212,7 @@ class BlocksSketch extends Grid {
                 // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
                 var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
-                var distanceFromModifier = modifiable.DistanceFrom(modifier.AbsPosition);
+                var distanceFromModifier = modifiable.DistanceFrom(modifier.Position);
 
                 if (distanceFromModifier <= catchmentArea) {
                     if (!modifiable.Modifiers.Contains(modifier)){
@@ -270,8 +270,8 @@ class BlocksSketch extends Grid {
                 this.SelectedBlock.MouseUp();
 
                 // if the block has moved, create an undoable operation.
-                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastGridPosition)){
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "GridPosition", this.SelectedBlock.LastGridPosition.Clone(), this.SelectedBlock.GridPosition.Clone());
                     App.OperationManager.Do(op);
                 }
             }

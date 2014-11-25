@@ -9,7 +9,7 @@ import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import FilteredCollection = Fayde.Collections.FilteredCollection;
-//import Particle = require("./Particle");
+import Particle = require("./Particle");
 
 class App{
 
@@ -21,7 +21,7 @@ class App{
     static Modifiers: ObservableCollection<IModifier>;
     static AudioMixer: AudioMixer;
     static InputManager: InputManager;
-    //static Particles: Particle[];
+    static Particles: Particle[];
 
     constructor() {
 
@@ -65,7 +65,7 @@ class App{
 
         App.InputManager = new InputManager();
 
-        //App.Particles = [];
+        App.Particles = [];
 
     }
 }

@@ -27,7 +27,6 @@ class DisplayList {
     public Draw(){
         for (var i = 0; i < this._DisplayObjects.Count; i++){
             var displayObject: IDisplayObject = this._DisplayObjects.GetValueAt(i);
-
             displayObject.Draw();
         }
     }

@@ -2,11 +2,13 @@ import Size = Fayde.Utils.Size;
 
 interface IDisplayObject {
     ZIndex: number;
-    RenderCache: any; // image, canvas or video
-    //CtxSize: Size;
+    RenderCacheCanvas: HTMLCanvasElement;
+    RenderCacheCtx: CanvasRenderingContext2D;
     Ctx: CanvasRenderingContext2D;
-    //Update: (ctx: CanvasRenderingContext2D) => void;
     Draw: () => void;
+    Width: number;
+    Height: number;
+    Position: Point;
 }
 
 export = IDisplayObject;

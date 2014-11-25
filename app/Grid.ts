@@ -16,15 +16,15 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     // rounds the normalised position to nearest grid intersection in grid units.
     public GetGridPosition(position: Point): Point {
-        var x = Math.floor(position.x * this.Divisor);
-        var y = Math.floor(position.y * this.GetHeightDivisor());
+        var x = Math.round(position.x * this.Divisor);
+        var y = Math.round(position.y * this.GetHeightDivisor());
         return new Point(x, y);
     }
 
     // get position in pixels.
     public GetAbsPosition(position: Point): Point {
-        var x = Math.floor((position.x / this.Divisor) * this.Ctx.canvas.width);
-        var y = Math.floor((position.y / this.GetHeightDivisor()) * this.Ctx.canvas.height);
+        var x = (position.x / this.Divisor) * this.Ctx.canvas.width;
+        var y = (position.y / this.GetHeightDivisor()) * this.Ctx.canvas.height;
         return new Point(x, y);
     }
 
