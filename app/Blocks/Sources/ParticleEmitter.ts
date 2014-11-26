@@ -31,9 +31,9 @@ class ParticleEmitter extends Modifiable{
 
 
     EmitParticle() {
-        var position = this.Grid.GetAbsPosition(new Point(this.Position.x, this.Position.y));
+        var position = this.Grid.GetAbsPosition(new Point(this.GridPosition.x, this.GridPosition.y));
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
-            vector.Mult(this.Params.speed);
+        vector.Mult(this.Params.speed);
         var size = 3 + (Math.random()*2);
         var life = Math.round(this.Params.range/this.Params.speed);
         App.Particles.push(new Particle(position,vector,size,life));

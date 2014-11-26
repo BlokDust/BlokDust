@@ -23,6 +23,10 @@ class Particle {
         this.Position.y += this.Vector.Y;
     }
 
+    Destroy() {
+        this.Life = -1;
+    }
+
 }
 
 export = Particle;

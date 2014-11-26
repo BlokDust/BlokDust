@@ -16,7 +16,7 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-//import Particle = require("./Particle");
+import Particle = require("./Particle");
 
 declare var PixelPalette;
 
@@ -133,9 +133,9 @@ class BlocksSketch extends Grid {
             block.Update();
         }
 
-        //if (App.Particles.length>0) {
-        //    this.MoveParticles();
-        //}
+        if (App.Particles.length>0) {
+            this.MoveParticles();
+        }
     }
 
     Draw(){
@@ -148,54 +148,55 @@ class BlocksSketch extends Grid {
         // draw blocks
         this._DisplayList.Draw();
 
-        //this.DrawParticles(this.Ctx);
+        this.DrawParticles();
     }
 
     // PARTICLES //
 
-    //MoveParticles() {
-    //    var currentParticles = [];
-    //    for (var i = 0; i < App.Particles.length; i++) {
-    //        var particle = App.Particles[i];
-    //        particle.Life -= 1;
-    //
-    //        if (particle.Life<1) continue;
-    //
-    //        this.ParticleCollision(particle.Position,particle);
-    //        particle.Move();
-    //        currentParticles.push(particle);
-    //    }
-    //    App.Particles = currentParticles;
-    //}
-    //
-    //ParticleCollision(point: Point,particle: Particle) {
-    //    for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-    //        var block: IBlock = App.Blocks.GetValueAt(i);
-    //        if (block.HitTest(point)){
-    //            block.ParticleCollision(particle);
-    //        }
-    //    }
-    //}
+    MoveParticles() {
+        var currentParticles = [];
+        for (var i = 0; i < App.Particles.length; i++) {
+            var particle = App.Particles[i];
+            particle.Life -= 1;
 
-    //DrawParticles(ctx:CanvasRenderingContext2D) {
-    //    for (var i = 0; i < App.Particles.length; i++) {
-    //
-    //        var sx = App.Particles[i].Position.x;
-    //        var sy = App.Particles[i].Position.y;
-    //        var size = App.Particles[i].Size;
-    //
-    //        ctx.fillStyle = "#ff90a7";
-    //        ctx.globalAlpha = 1;
-    //        ctx.beginPath();
-    //        ctx.moveTo(sx-(size),sy); //l
-    //        ctx.lineTo(sx,sy-(size)); //t
-    //        ctx.lineTo(sx+(size),sy); //r
-    //        ctx.lineTo(sx,sy+(size)); //b
-    //        ctx.closePath();
-    //        ctx.fill();
-    //    }
-    //
-    //}
+            if (particle.Life<1) continue;
+
+            this.ParticleCollision(particle.Position, particle);
+            particle.Move();
+            currentParticles.push(particle);
+        }
+        App.Particles = currentParticles;
+    }
+
+    ParticleCollision(point: Point, particle: Particle) {
+        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+            var block: IBlock = App.Blocks.GetValueAt(i);
+            if (block.HitTest(point)){
+                block.ParticleCollision(particle);
+            }
+        }
+    }
+
+    DrawParticles() {
+        for (var i = 0; i < App.Particles.length; i++) {
+
+            // todo: pre-render these in a single canvas
+            var sx = App.Particles[i].Position.x;
+            var sy = App.Particles[i].Position.y;
+            var size = App.Particles[i].Size;
+
+            this.Ctx.fillStyle = "#ff90a7";
+            this.Ctx.globalAlpha = 1;
+            this.Ctx.beginPath();
+            this.Ctx.moveTo(sx-(size),sy); //l
+            this.Ctx.lineTo(sx,sy-(size)); //t
+            this.Ctx.lineTo(sx+(size),sy); //r
+            this.Ctx.lineTo(sx,sy+(size)); //b
+            this.Ctx.closePath();
+            this.Ctx.fill();
+        }
+
+    }
 
     // PROXIMITY CHECK //
 

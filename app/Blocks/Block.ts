@@ -74,7 +74,7 @@ class Block extends DisplayObject implements IBlock {
     }
 
     ParticleCollision(particle: Particle) {
-        particle.Life = -1; // DESTROY PARTICLE
+
     }
 
     MouseDown() {

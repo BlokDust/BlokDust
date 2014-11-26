@@ -64,6 +64,8 @@ class ToneSource extends Source {
         // USE SIGNAL? So we can schedule a sound length properly
         // play tone
         this.Envelope.triggerAttackRelease(0.1);
+
+        particle.Destroy();
     }
 
     Update() {
