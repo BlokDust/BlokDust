@@ -41,7 +41,7 @@ class Block extends DisplayObject implements IBlock {
     Draw() {
         super.Draw();
 
-        if (this.IsRenderCached) return;
+        //if (this.IsRenderCached) return;
 
         this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 

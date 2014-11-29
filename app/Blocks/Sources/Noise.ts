@@ -61,7 +61,7 @@ class Noise extends Source {
         this.Envelope.triggerAttack();
         this.DelayedRelease = 5; //TODO, THIS IS SHIT
 
-        particle.Destroy();
+        particle.Dispose();
     }
 
     Update() {

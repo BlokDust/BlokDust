@@ -65,7 +65,7 @@ class ToneSource extends Source {
         // play tone
         this.Envelope.triggerAttackRelease(0.1);
 
-        particle.Destroy();
+        particle.Dispose();
     }
 
     Update() {

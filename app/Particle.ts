@@ -23,7 +23,7 @@ class Particle {
         this.Position.y += this.Vector.Y;
     }
 
-    Destroy() {
+    Dispose() {
         this.Life = -1;
     }
 
