@@ -2,10 +2,12 @@
  * Created by luketwyman on 16/11/2014.
  */
 
+import IPooledObject = require("./Core/Resources/IPooledObject");
 import Vector = Fayde.Utils.Vector;
 
-class Particle {
+class Particle implements IPooledObject {
 
+    public Disposed: boolean = false;
     public Life: number;
     public Vector: Vector;
     public Position: Point;
@@ -23,10 +25,22 @@ class Particle {
         this.Position.y += this.Vector.Y;
     }
 
-    Dispose() {
-        this.Life = -1;
+    Reset(): boolean {
+        this.Position = null;
+        this.Vector = null;
+        this.Size = null;
+        this.Life = null;
+        return true;
     }
 
+    Dispose() {
+        this.Life = -1;
+        this.Disposed = true;
+    }
+
+    ReturnToPool(): void {
+
+    }
 }
 
 export = Particle;

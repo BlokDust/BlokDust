@@ -6,6 +6,7 @@ class CommandHandlerFactory<T extends ICommandHandler> implements IFactoryResour
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
+
     private _Type: T;
     public Command: string;
     private _Validators: IValidator[];

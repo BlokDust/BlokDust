@@ -36,7 +36,15 @@ class ParticleEmitter extends Modifiable{
         vector.Mult(this.Params.speed);
         var size = 3 + (Math.random()*2);
         var life = Math.round(this.Params.range/this.Params.speed);
-        App.Particles.push(new Particle(position, vector, size, life));
+
+        var p: Particle = App.ParticlesPool.GetObject();
+
+        p.Position = position;
+        p.Vector = vector;
+        p.Life = life;
+        p.Size = size;
+
+        App.Particles.push(p);
     }
 
 

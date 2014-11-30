@@ -17,6 +17,8 @@ import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Particle = require("./Particle");
+import IPooledObject = require("./Core/Resources/IPooledObject");
+import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 
 declare var PixelPalette;
 
@@ -67,6 +69,8 @@ class BlocksSketch extends Grid {
         App.OperationManager.OperationComplete.Subscribe((operation: IOperation) => {
             this._Invalidate();
         }, this);
+
+        App.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         var pixelPalette = new PixelPalette("img/palette.gif");
 
@@ -133,8 +137,8 @@ class BlocksSketch extends Grid {
             block.Update();
         }
 
-        if (App.Particles.length>0) {
-            this.MoveParticles();
+        if (App.Particles.length) {
+            this.UpdateParticles();
         }
     }
 
@@ -153,18 +157,25 @@ class BlocksSketch extends Grid {
 
     // PARTICLES //
 
-    MoveParticles() {
+    UpdateParticles() {
+
         var currentParticles = [];
+
         for (var i = 0; i < App.Particles.length; i++) {
-            var particle = App.Particles[i];
+            var particle: Particle = App.Particles[i];
             particle.Life -= 1;
 
-            if (particle.Life<1) continue;
+            if (particle.Life < 1) {
+                particle.Reset();
+                particle.ReturnToPool();
+                continue;
+            }
 
             this.ParticleCollision(particle.Position, particle);
             particle.Move();
             currentParticles.push(particle);
         }
+
         App.Particles = currentParticles;
     }
 

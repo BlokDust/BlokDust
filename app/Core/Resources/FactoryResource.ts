@@ -4,6 +4,7 @@ class FactoryResource<T> implements IFactoryResource<T> {
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
+
     private _Type: T;
     private _PropertyDescriptor: PropertyDescriptorMap;
 
