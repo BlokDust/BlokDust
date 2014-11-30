@@ -51,15 +51,10 @@ class Keyboard extends Effect implements IEffect {
         }
     }
 
-    //TODO: move event listeners to a controls class
     AddListeners(): void {
 
-        //if (this.Modifiable.ConnectedKeyboards == 0) {
-            App.InputManager.AddEventListener('keydown', this.KeyboardDown, this);
-            App.InputManager.AddEventListener('keyup', this.KeyboardUp, this);
-        //} else {
-        //    console.log('keyboard already attached to this block');
-        //}
+        App.InputManager.AddEventListener('keydown', this.KeyboardDown, this);
+        App.InputManager.AddEventListener('keyup', this.KeyboardUp, this);
 
         this.Modifiable.ConnectedKeyboards++;
 
@@ -67,10 +62,8 @@ class Keyboard extends Effect implements IEffect {
 
     RemoveListeners(): void {
 
-        //if (this.Modifiable.ConnectedKeyboards > 0) {
-            App.InputManager.RemoveEventListener('keydown', this.KeyboardDown);
-            App.InputManager.RemoveEventListener('keyup', this.KeyboardUp);
-        //}
+        App.InputManager.RemoveEventListener('keydown', this.KeyboardDown);
+        App.InputManager.RemoveEventListener('keyup', this.KeyboardUp);
 
         this.Modifiable.ConnectedKeyboards--;
 
@@ -123,6 +116,7 @@ class Keyboard extends Effect implements IEffect {
                 //TODO: make LFO's and scuzzes work in polyphonic mode
 
                 // Create throwaway audio nodes for each keydown
+                //TODO: Delete these Oscillators and envelopes properly after keyup
                 var _oscillator = new Tone.Oscillator(frequency, this.Modifiable.Settings.oscillator.waveform);
                 var _envelope = new Tone.Envelope(this.Modifiable.Settings.envelope.attack, this.Modifiable.Settings.envelope.decay, this.Modifiable.Settings.envelope.sustain, this.Modifiable.Settings.envelope.release);
 
