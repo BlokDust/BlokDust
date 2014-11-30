@@ -117,7 +117,6 @@ class InputManager {
 
     AddEventListener(event, eventHandler, _this): void {
         document.addEventListener(event, eventHandler);
-        this.EventListenerCount ++;
 
     }
 

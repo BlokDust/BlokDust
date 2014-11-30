@@ -36,7 +36,8 @@ module.exports = function (grunt) {
                     '<%= dirs.lib %>/fayde.drawing/fayde.drawing.d.ts',
                     '<%= dirs.lib %>/fayde.utils/fayde.utils.d.ts',
                     '<%= dirs.lib %>/fayde.zoomer/fayde.zoomer.d.ts',
-                    '<%= dirs.lib %>/tween.ts/src/Tween.d.ts'
+                    '<%= dirs.lib %>/tween.ts/src/Tween.d.ts',
+                    '<%= dirs.lib %>/tone/utils/Typescript/Tone.d.ts'
                 ],
                 dest: '<%= dirs.build %>',
                 options: {
