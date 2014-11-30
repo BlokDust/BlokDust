@@ -15,8 +15,8 @@ class Modifier extends Block implements IModifier {
         super(grid, position);
     }
 
-    Update(ctx:CanvasRenderingContext2D) {
-        super.Update(ctx);
+    Update() {
+        super.Update();
     }
 
 }

@@ -17,17 +17,17 @@ class LFO extends Modifier {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
     }
 
-    Draw(ctx:CanvasRenderingContext2D) {
-        super.Draw(ctx);
+    Draw() {
+        super.Draw();
 
         this.Ctx.beginPath();
-        ctx.fillStyle = "#ff90a7";
+        this.Ctx.fillStyle = "#ff90a7";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
     }
 
 }

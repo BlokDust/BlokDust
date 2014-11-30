@@ -1,3 +1,4 @@
+import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
@@ -14,10 +15,9 @@ import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
 import Power = require("../Blocks/Sources/Power");
-
+import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
 
-import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Size = Fayde.Utils.Size;
 import Vector = Fayde.Utils.Vector;
@@ -87,6 +87,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         super();
 
         window.debug = true;
+
+        App.Init();
 
         this._BlocksSketch = new BlocksSketch();
 
@@ -185,7 +187,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     ScuzzBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Scuzz);
     }
-
 
     DeleteBlockBtn_Click(e: any){
         this._BlocksSketch.DeleteSelectedBlock();

@@ -13,45 +13,45 @@ class Power extends Modifiable{
         this.Outline.push(new Point(-1,0), new Point(1,-2), new Point(2,-1), new Point(2,0), new Point(0,2), new Point(-1,1));
     }
 
-    Update(ctx:CanvasRenderingContext2D) {
-        super.Update(ctx);
+    Update() {
+        super.Update();
     }
 
     // power blocks are green circles
-    Draw(ctx: CanvasRenderingContext2D) {
-        super.Draw(ctx);
+    Draw() {
+        super.Draw();
 
         this.Ctx.beginPath();
         //color(col[0]);// BLUE
-        ctx.fillStyle = "#40e6ff";
+        this.Ctx.fillStyle = "#40e6ff";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(1,-2);
         this.DrawLineTo(2,-1);
         this.DrawLineTo(2,0);
         this.DrawLineTo(0,2);
         this.DrawLineTo(-1,1);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
 
         this.Ctx.beginPath();
         //color(col[1]); // GREEN
-        ctx.fillStyle = "#1add8d";
+        this.Ctx.fillStyle = "#1add8d";
         this.DrawMoveTo(0,0);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(2,0);
         this.DrawLineTo(0,2);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
 
         this.Ctx.beginPath();
         //color(col[5]); // WHITE
-        ctx.fillStyle = "#fff";
+        this.Ctx.fillStyle = "#fff";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(1,-2);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(0,0);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
     }
 }
 

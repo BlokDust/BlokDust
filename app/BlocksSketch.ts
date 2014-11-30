@@ -14,6 +14,7 @@ import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommand
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
+import DisplayList = require("./DisplayList");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Particle = require("./Particle");
 
@@ -26,11 +27,11 @@ class BlocksSketch extends Grid {
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    //private _Particles: Particle[];
+    private _DisplayList: DisplayList;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
-    } //
+    }
 
     set SelectedBlock(block: IBlock) {
         // if setting the selected block to null (or falsey)
@@ -46,16 +47,14 @@ class BlocksSketch extends Grid {
             block.IsSelected = true;
             this._SelectedBlock = block;
 
-            App.Blocks.ToFront(block);
+            this._DisplayList.ToFront(block);
         }
     }
-
-
 
     constructor() {
         super();
 
-        App.Init();
+        this._DisplayList = new DisplayList(App.Blocks);
 
         // register command handlers
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
@@ -69,7 +68,11 @@ class BlocksSketch extends Grid {
             this._Invalidate();
         }, this);
 
+        var pixelPalette = new PixelPalette("img/palette.gif");
 
+        pixelPalette.Load((palette: string[]) => {
+            console.log(palette);
+        });
 
         this._Invalidate();
     }
@@ -119,12 +122,6 @@ class BlocksSketch extends Grid {
 
         // set up the grid
         this.Divisor = 75;
-
-        var pixelPalette = new PixelPalette(this.Ctx, "img/palette.gif");
-
-        pixelPalette.Load((palette: string[]) => {
-            console.log(palette);
-        });
     }
 
     Update() {
@@ -133,7 +130,7 @@ class BlocksSketch extends Grid {
         // update blocks
         for (var i = 0; i < App.Blocks.Count; i++) {
             var block: IBlock = App.Blocks.GetValueAt(i);
-            block.Update(this.Ctx);
+            block.Update();
         }
 
         if (App.Particles.length>0) {
@@ -149,12 +146,9 @@ class BlocksSketch extends Grid {
         super.Draw();
 
         // draw blocks
-        for (var i = 0; i < App.Blocks.Count; i++) {
-            var block: IBlock = App.Blocks.GetValueAt(i);
-            block.Draw(this.Ctx);
-        }
+        this._DisplayList.Draw();
 
-        this.DrawParticles(this.Ctx);
+        this.DrawParticles();
     }
 
     // PARTICLES //
@@ -167,14 +161,14 @@ class BlocksSketch extends Grid {
 
             if (particle.Life<1) continue;
 
-            this.ParticleCollision(particle.Position,particle);
+            this.ParticleCollision(particle.Position, particle);
             particle.Move();
             currentParticles.push(particle);
         }
         App.Particles = currentParticles;
     }
 
-    ParticleCollision(point: Point,particle: Particle) {
+    ParticleCollision(point: Point, particle: Particle) {
         for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
             var block: IBlock = App.Blocks.GetValueAt(i);
             if (block.HitTest(point)){
@@ -183,22 +177,23 @@ class BlocksSketch extends Grid {
         }
     }
 
-    DrawParticles(ctx:CanvasRenderingContext2D) {
+    DrawParticles() {
         for (var i = 0; i < App.Particles.length; i++) {
 
+            // todo: pre-render these in a single canvas
             var sx = App.Particles[i].Position.x;
             var sy = App.Particles[i].Position.y;
             var size = App.Particles[i].Size;
 
-            ctx.fillStyle = "#ff90a7";
-            ctx.globalAlpha = 1;
-            ctx.beginPath();
-            ctx.moveTo(sx-(size),sy); //l
-            ctx.lineTo(sx,sy-(size)); //t
-            ctx.lineTo(sx+(size),sy); //r
-            ctx.lineTo(sx,sy+(size)); //b
-            ctx.closePath();
-            ctx.fill();
+            this.Ctx.fillStyle = "#ff90a7";
+            this.Ctx.globalAlpha = 1;
+            this.Ctx.beginPath();
+            this.Ctx.moveTo(sx-(size),sy); //l
+            this.Ctx.lineTo(sx,sy-(size)); //t
+            this.Ctx.lineTo(sx+(size),sy); //r
+            this.Ctx.lineTo(sx,sy+(size)); //b
+            this.Ctx.closePath();
+            this.Ctx.fill();
         }
 
     }
@@ -218,7 +213,7 @@ class BlocksSketch extends Grid {
                 // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
                 var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
-                var distanceFromModifier = modifiable.DistanceFrom(modifier.AbsPosition);
+                var distanceFromModifier = modifiable.DistanceFrom(modifier.Position);
 
                 if (distanceFromModifier <= catchmentArea) {
                     if (!modifiable.Modifiers.Contains(modifier)){
@@ -276,8 +271,8 @@ class BlocksSketch extends Grid {
                 this.SelectedBlock.MouseUp();
 
                 // if the block has moved, create an undoable operation.
-                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastGridPosition)){
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "GridPosition", this.SelectedBlock.LastGridPosition.Clone(), this.SelectedBlock.GridPosition.Clone());
                     App.OperationManager.Do(op);
                 }
             }

@@ -31,17 +31,17 @@ class ParticleEmitter extends Modifiable{
 
 
     EmitParticle() {
-        var position = this.Grid.GetAbsPosition(new Point(this.Position.x, this.Position.y));
+        var position = this.Grid.GetAbsPosition(new Point(this.GridPosition.x, this.GridPosition.y));
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
-            vector.Mult(this.Params.speed);
+        vector.Mult(this.Params.speed);
         var size = 3 + (Math.random()*2);
         var life = Math.round(this.Params.range/this.Params.speed);
-        App.Particles.push(new Particle(position,vector,size,life));
+        App.Particles.push(new Particle(position, vector, size, life));
     }
 
 
-    Update(ctx:CanvasRenderingContext2D) {
-        super.Update(ctx);
+    Update() {
+        super.Update();
 
         if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
 
@@ -66,32 +66,32 @@ class ParticleEmitter extends Modifiable{
 
     }
 
-    Draw(ctx: CanvasRenderingContext2D) {
-        super.Draw(ctx);
+    Draw() {
+        super.Draw();
 
         this.Ctx.beginPath();
         //color(col[2]);// PURPLE
-        ctx.fillStyle = "#730081";
+        this.Ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(2,0);
         this.DrawLineTo(0,2);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
 
         this.Ctx.beginPath();
         //color(col[4]); // RED
-        ctx.fillStyle = "#f22a54";
+        this.Ctx.fillStyle = "#f22a54";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
 
         if (window.debug){
-            ctx.fillStyle = "#fff";
+            this.Ctx.fillStyle = "#fff";
             var pos = this.Grid.GetAbsPosition(new Point(this.Position.x+2, this.Position.y-2));
-            ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
+            this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
         }
 
     }

@@ -18,17 +18,17 @@ class Keyboard extends Modifier {
     }
 
 
-    Draw(ctx:CanvasRenderingContext2D) {
-        super.Draw(ctx);
+    Draw() {
+        super.Draw();
 
         this.Ctx.beginPath();
-        ctx.fillStyle = "#1add8d";
+        this.Ctx.fillStyle = "#1add8d";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);
         this.DrawLineTo(2,0);
         this.DrawLineTo(0,2);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
     }
 
 }

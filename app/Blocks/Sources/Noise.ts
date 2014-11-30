@@ -54,18 +54,18 @@ class Noise extends Source {
     }
 
     ParticleCollision(particle: Particle) {
-
         super.ParticleCollision(particle);
-        particle.Life = -1; // DESTROY PARTICLE
 
         // USE SIGNAL? So we can schedule a sound length properly
         // play tone
         this.Envelope.triggerAttack();
         this.DelayedRelease = 5; //TODO, THIS IS SHIT
+
+        particle.Dispose();
     }
 
-    Update(ctx:CanvasRenderingContext2D) {
-        super.Update(ctx);
+    Update() {
+        super.Update();
 
         if (this.DelayedRelease>0) { //TODO, THIS IS SHIT
             this.DelayedRelease -= 1;
@@ -76,17 +76,17 @@ class Noise extends Source {
     }
 
     // output blocks are blue circles
-    Draw(ctx:CanvasRenderingContext2D) {
-        super.Draw(ctx);
+    Draw() {
+        super.Draw();
 
         this.Ctx.beginPath();
-        ctx.fillStyle = "#730081";
+        this.Ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);
         this.DrawLineTo(2,0);
         this.DrawLineTo(0,2);
-        ctx.closePath();
-        ctx.fill();
+        this.Ctx.closePath();
+        this.Ctx.fill();
     }
 }
 

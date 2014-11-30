@@ -28,8 +28,8 @@ class Modifiable extends Block implements IModifiable{
         this.Modifiers.Remove(modifier);
     }
 
-    Draw(ctx:CanvasRenderingContext2D){
-        super.Draw(ctx);
+    Draw(){
+        super.Draw();
 
         if (window.debug){
             // draw connections to modifiers
@@ -37,11 +37,11 @@ class Modifiable extends Block implements IModifiable{
 
             for(var i = 0; i < modifiers.length; i++){
                 var target: IModifier = modifiers[i];
-                ctx.strokeStyle = "#fff";
-                ctx.beginPath();
-                ctx.moveTo(this.AbsPosition.x, this.AbsPosition.y);
-                ctx.lineTo(target.AbsPosition.x, target.AbsPosition.y);
-                ctx.stroke();
+                this.Ctx.strokeStyle = "#fff";
+                this.Ctx.beginPath();
+                this.Ctx.moveTo(this.Position.x, this.Position.y);
+                this.Ctx.lineTo(target.Position.x, target.Position.y);
+                this.Ctx.stroke();
             }
         }
     }
