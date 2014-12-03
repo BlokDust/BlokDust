@@ -11,6 +11,7 @@ import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
 import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
 import Envelope = require("../Blocks/Modifiers/Envelope");
+import Filter = require("../Blocks/Modifiers/Filter");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
@@ -174,6 +175,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     EnvelopeBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Envelope);
+    }
+
+    FilterBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Filter);
     }
 
     LFOBlockBtn_Click(e: any){

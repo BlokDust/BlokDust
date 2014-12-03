@@ -3,11 +3,11 @@ import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 
 
-class Filter extends Effect implements IEffect {
+class FilterComponent extends Effect implements IEffect {
 
-    Filter: Tone.Filter;
+    public Filter: Tone.Filter;
 
-    constructor(frequency:Tone.Signal, type: string, rolloff: number, Q: number) {
+    constructor(frequency: number, type: string, rolloff: number, Q: number) {
         super();
         this.Filter = new Tone.Filter(frequency, type, rolloff);
         this.Filter.setQ(Q);
@@ -29,4 +29,4 @@ class Filter extends Effect implements IEffect {
     }
 }
 
-export = Filter;
+export = FilterComponent;
