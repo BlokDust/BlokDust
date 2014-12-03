@@ -17,6 +17,7 @@ import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Particle = require("./Particle");
+import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 
@@ -71,6 +72,7 @@ class BlocksSketch extends Grid {
         }, this);
 
         App.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
+        App.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
         var pixelPalette = new PixelPalette("img/palette.gif");
 

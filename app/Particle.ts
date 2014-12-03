@@ -1,7 +1,3 @@
-/**
- * Created by luketwyman on 16/11/2014.
- */
-
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import Vector = Fayde.Utils.Vector;
 
