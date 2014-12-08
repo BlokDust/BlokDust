@@ -24,5 +24,11 @@
     "pixelpalette": {
       "path": "lib/pixelpalette/dist/PixelPalette.min"
     }
+  },
+  "themes": {
+    "exjs": "none",
+    "Fayde.Utils": "none",
+    "TWEEN": "none",
+    "pixelpalette": "none"
   }
 }

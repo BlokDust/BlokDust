@@ -31,15 +31,16 @@ module.exports = function (grunt) {
                     '<%= dirs.app %>/**/*.ts',
                     '!<%= dirs.lib %>/**/*.ts',
                     'typings/*.d.ts',
-                    '<%= dirs.lib %>/minerva/minerva.d.ts',
-                    '<%= dirs.lib %>/fayde/fayde.d.ts',
-                    '<%= dirs.lib %>/fayde.drawing/fayde.drawing.d.ts',
-                    '<%= dirs.lib %>/fayde.utils/fayde.utils.d.ts',
-                    '<%= dirs.lib %>/fayde.zoomer/fayde.zoomer.d.ts',
+                    '<%= dirs.lib %>/nullstone/dist/nullstone.d.ts',
+                    '<%= dirs.lib %>/minerva/dist/minerva.d.ts',
+                    '<%= dirs.lib %>/fayde/dist/fayde.d.ts',
+                    '<%= dirs.lib %>/fayde.drawing/dist/fayde.drawing.d.ts',
+                    '<%= dirs.lib %>/fayde.utils/dist/fayde.utils.d.ts',
+                    '<%= dirs.lib %>/fayde.zoomer/dist/fayde.zoomer.d.ts',
                     '<%= dirs.lib %>/tween.ts/src/Tween.d.ts',
                     '<%= dirs.lib %>/tone/utils/Typescript/Tone.d.ts'
                 ],
-                dest: '<%= dirs.build %>',
+                dest: dirs.build,
                 options: {
                     basePath: dirs.app,
                     module: 'amd',
@@ -80,7 +81,10 @@ module.exports = function (grunt) {
                 }
             },
             views: {
-                files: ['<%= dirs.app %>/**/*.fap', '<%= dirs.app %>/**/*.fayde'],
+                files: [
+                    '<%= dirs.app %>/**/*.fap',
+                    '<%= dirs.app %>/**/*.fayde'
+                ],
                 options: {
                     livereload: ports.livereload
                 }

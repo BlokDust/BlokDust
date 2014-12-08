@@ -80,7 +80,7 @@ class Block extends DisplayObject implements IBlock {
     MouseDown() {
         this.IsPressed = true;
         this.LastGridPosition = this.GridPosition.Clone();
-        this.Click.Raise(this, new Fayde.RoutedEventArgs());
+        this.Click.raise(this, new Fayde.RoutedEventArgs());
     }
 
     TouchDown() {

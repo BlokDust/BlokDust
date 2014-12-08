@@ -92,7 +92,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
         this._BlocksSketch = new BlocksSketch();
 
-        this._BlocksSketch.BlockSelected.Subscribe((block: IModifiable) => {
+        this._BlocksSketch.BlockSelected.on((block: IModifiable) => {
             this._OnBlockSelected(block);
         }, this);
 
@@ -140,15 +140,15 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this.SelectedBlock = block;
     }
 
-    PowerBlockBtn_Click(e: EventArgs){
+    PowerBlockBtn_Click(e: Fayde.Input.MouseButtonEventArgs){
         this._BlocksSketch.CreateBlock(ParticleEmitter);
     }
 
-    ToneBlockBtn_Click(e: EventArgs){
+    ToneBlockBtn_Click(e: Fayde.Input.MouseButtonEventArgs){
         this._BlocksSketch.CreateBlock(ToneSource);
     }
 
-    NoiseBlockBtn_Click(e: EventArgs){
+    NoiseBlockBtn_Click(e: Fayde.Input.MouseButtonEventArgs){
         this._BlocksSketch.CreateBlock(Noise);
     }
 

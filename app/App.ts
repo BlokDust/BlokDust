@@ -39,7 +39,7 @@ class App{
         App.Modifiables = new ObservableCollection<IModifiable>();
         App.Modifiers = new ObservableCollection<IModifier>();
 
-        App.Blocks.CollectionChanged.Subscribe(() => {
+        App.Blocks.CollectionChanged.on(() => {
             App.Modifiables.Clear();
 
             for (var i = 0; i < App.Blocks.Count; i++) {

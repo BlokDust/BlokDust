@@ -13,7 +13,7 @@ class CommandManager {
 
     constructor(resourceManager: ResourceManager) {
         this._ResourceManager = resourceManager;
-        this._ResourceManager.ResourceAdded.Subscribe((resource: IResource<any>) => {
+        this._ResourceManager.ResourceAdded.on((resource: IResource<any>) => {
             this._OnResourceAdded(resource);
         }, this);
     }
