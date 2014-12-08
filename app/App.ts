@@ -8,6 +8,7 @@ import IModifiable = require("./Blocks/IModifiable");
 import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
+import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import FilteredCollection = Fayde.Collections.FilteredCollection;
@@ -24,6 +25,7 @@ class App{
     static InputManager: InputManager;
     static ParticlesPool: PooledFactoryResource<Particle>;
     static Particles: Particle[];
+    static OscillatorsPool: PooledFactoryResource<Oscillator>;
 
     constructor() {
 

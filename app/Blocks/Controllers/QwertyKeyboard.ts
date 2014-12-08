@@ -4,6 +4,7 @@ import IModifiable = require("../IModifiable");
 import PitchComponent = require("../AudioEffectComponents/Pitch");
 import QwertyKeyboard = require("../Controllers/QwertyKeyboard");
 import App = require("../../App");
+import PooledOscillator = require("../../PooledOscillator");
 
 class Keyboard extends Effect implements IEffect {
 
@@ -34,7 +35,7 @@ class Keyboard extends Effect implements IEffect {
 
         if (this.Modifiable.Settings.oscillator){
             this.BaseFrequency = this.Modifiable.Settings.oscillator.frequency;
-            this.CurrentOctave = this.GetStartOctave(); //TODO: Fix octave up & down
+            this.CurrentOctave = this.GetStartOctave();
             this.CurrentOctave--;
         }
 
@@ -94,14 +95,11 @@ class Keyboard extends Effect implements IEffect {
             //pressed first time, add to object
             this.KeysDown[key.keyCode] = true;
 
-            // Octave UP (Plus button)
             if (this.KeyMap[key.keyCode] == 'OctaveUp' && this.CurrentOctave < 9) {
                 this.CurrentOctave++;
                 return;
             }
 
-            // Octave DOWN (Minus button)
-            //if (key.keyCode === 189 && this.CurrentOctave != 0) {
             if (this.KeyMap[key.keyCode] === 'OctaveDown' && this.CurrentOctave != 0) {
                 this.CurrentOctave--;
                 return;
@@ -113,24 +111,28 @@ class Keyboard extends Effect implements IEffect {
             if (this.Settings.isPolyphonic){
                 // POLYPHONIC
 
-                //TODO: make LFO's and scuzzes work in polyphonic mode
+                //TODO: Allow Object Pooling to construct Oscillators and Envelopes
 
-                // Create throwaway audio nodes for each keydown
-                //TODO: Delete these Oscillators and envelopes properly after keyup
-                var _oscillator = new Tone.Oscillator(frequency, this.Modifiable.Settings.oscillator.waveform);
-                var _envelope = new Tone.Envelope(this.Modifiable.Settings.envelope.attack, this.Modifiable.Settings.envelope.decay, this.Modifiable.Settings.envelope.sustain, this.Modifiable.Settings.envelope.release);
+                var PooledOscillator: PooledOscillator = App.OscillatorsPool.GetObject();
 
-                // Connect them
-                _envelope.connect(_oscillator.output.gain);
-                _oscillator.connect(this.Modifiable.OutputGain);
+                PooledOscillator.Oscillator.setFrequency(frequency);
+                PooledOscillator.Oscillator.setType(this.Modifiable.Settings.oscillator.waveform);
 
-                // Play sound
-                _oscillator.start();
-                _envelope.triggerAttack();
+                PooledOscillator.Envelope.set({
+                    attack: this.Modifiable.Settings.envelope.attack,
+                    decay: this.Modifiable.Settings.envelope.decay,
+                    sustain: this.Modifiable.Settings.envelope.sustain,
+                    release: this.Modifiable.Settings.envelope.release
+                });
 
-                // Add to _nodes array
-                this._nodes.push(_oscillator);
+                PooledOscillator.Oscillator.connect(this.Modifiable.OutputGain);
 
+                PooledOscillator.Oscillator.start();
+                PooledOscillator.Envelope.triggerAttack();
+
+                this._nodes.push(PooledOscillator);
+
+                //TODO: make all modifiers work in polyphonic mode
 
             } else {
                 // MONOPHONIC
@@ -169,15 +171,16 @@ class Keyboard extends Effect implements IEffect {
 
                 // Loop through oscillator voices
                 for (var i = 0; i < this._nodes.length; i++) {
+                    var o = this._nodes[i];
                     // Check if voice frequency matches the keyPressed frequency
-                    if (Math.round(this._nodes[i].frequency.getValue()) === Math.round(frequency)) {
-                        this._nodes[i].stop(0);
-                        this._nodes[i].dispose();
+                    if (Math.round(o.Oscillator.frequency.getValue()) === Math.round(frequency)) {
 
-                        //TODO: trigger release and then stop & disconnect afterwards
+                        o.Envelope.triggerRelease();
+                        o.Reset();
+                        o.ReturnToPool();
 
                     } else {
-                        new_nodes.push(this._nodes[i]);
+                        new_nodes.push(o);
                     }
                 }
 
