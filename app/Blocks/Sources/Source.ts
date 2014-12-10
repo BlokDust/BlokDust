@@ -65,7 +65,7 @@ class Source extends Modifiable {
 
         // Connect them up
         this.Envelope.connect(this.Source.output.gain);
-        this.Source.chain(this.Source, this.Delay, this.OutputGain, App.AudioMixer.Master);
+        this.Source.connectSeries(this.Source, this.Delay, this.OutputGain, App.AudioMixer.Master);
 
         // Start
         this.Source.start();
