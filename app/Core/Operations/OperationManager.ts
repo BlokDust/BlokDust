@@ -73,7 +73,7 @@ class OperationManager {
         return this._CurrentOperation = operation.Do().then((result) => {
             that._CurrentOperation = null;
             that.Head = this._Operations.Count - 1;
-            that.OperationAdded.Raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationAdded.raise(operation, new Fayde.RoutedEventArgs());
 
             that._Debug();
 
@@ -93,7 +93,7 @@ class OperationManager {
         return this._CurrentOperation = (<IUndoableOperation>operation).Undo().then((result) => {
             that._CurrentOperation = null;
             that.Head--;
-            that.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationComplete.raise(operation, new Fayde.RoutedEventArgs());
 
             that._Debug();
 
@@ -113,7 +113,7 @@ class OperationManager {
         return this._CurrentOperation = operation.Do().then((result) => {
             that._CurrentOperation = null;
             that.Head++;
-            that.OperationComplete.Raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationComplete.raise(operation, new Fayde.RoutedEventArgs());
 
             that._Debug();
 

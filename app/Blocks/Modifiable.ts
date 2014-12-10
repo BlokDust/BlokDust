@@ -15,7 +15,7 @@ class Modifiable extends Block implements IModifiable{
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
-        this.Modifiers.CollectionChanged.Subscribe(() => {
+        this.Modifiers.CollectionChanged.on(() => {
             this._OnModifiersChanged();
         }, this);
     }

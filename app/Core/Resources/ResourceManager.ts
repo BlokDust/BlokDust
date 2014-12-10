@@ -14,7 +14,7 @@ class ResourceManager {
     public AddResource(resource: IResource<any>): void{
         this._Resources.Add(resource);
 
-        this.ResourceAdded.Raise(resource, new Fayde.RoutedEventArgs());
+        this.ResourceAdded.raise(resource, new Fayde.RoutedEventArgs());
     }
 }
 

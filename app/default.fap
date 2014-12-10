@@ -2,8 +2,8 @@
         xmlns="http://schemas.wsick.com/fayde"
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
-        xmlns:draw="lib:Fayde.Drawing"
-        xmlns:zoom="lib:Fayde.Zoomer"
+        xmlns:draw="lib://Fayde.Drawing"
+        xmlns:zoom="lib://Fayde.Zoomer"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>

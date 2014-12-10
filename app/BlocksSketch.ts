@@ -63,11 +63,11 @@ class BlocksSketch extends Grid {
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
 
-        App.OperationManager.OperationAdded.Subscribe((operation: IOperation) => {
+        App.OperationManager.OperationAdded.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
-        App.OperationManager.OperationComplete.Subscribe((operation: IOperation) => {
+        App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
@@ -108,8 +108,8 @@ class BlocksSketch extends Grid {
         block.Id = this._GetId();
 
         // todo: should this go in command handler?
-        block.Click.Subscribe((block: IBlock) => {
-            this.BlockSelected.Raise(block, new Fayde.RoutedEventArgs());
+        block.Click.on((block: IBlock) => {
+            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
         }, this);
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
