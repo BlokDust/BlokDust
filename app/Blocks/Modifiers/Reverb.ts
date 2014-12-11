@@ -9,7 +9,7 @@ class Reverb extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new ReverbComponent(440, "lowpass", -12, 1);
+        var effect = new ReverbComponent(0.7, 0.5);
 
         this.Effects.Add(effect);
 

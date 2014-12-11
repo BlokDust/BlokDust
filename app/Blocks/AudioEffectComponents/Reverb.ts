@@ -6,12 +6,11 @@ import App = require("../../App");
 
 class ReverbComponent extends Effect implements IEffect {
 
-    public Reverb: Tone.Filter;
+    public Reverb: Tone.Freeverb;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(roomSize?: number, dampening?: number) {
         super();
-        this.Reverb = new Tone.Filter(frequency, type, rolloff);
-        this.Reverb.setQ(Q);
+        this.Reverb = new Tone.Freeverb(roomSize, dampening);
     }
 
     Connect(modifiable:IModifiable): void{
