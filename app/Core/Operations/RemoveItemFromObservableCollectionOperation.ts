@@ -27,7 +27,7 @@ class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperati
         var that = this;
 
         return new Promise((resolve) => {
-            that._Collection.Insert(that._Item, that._Index);
+            that._Collection.Insert(that._Index, that._Item);
 
             resolve(that._Collection);
         });
