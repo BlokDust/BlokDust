@@ -9,7 +9,7 @@ class Chorus extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new ChorusComponent(440, "lowpass", -12, 1);
+        var effect = new ChorusComponent(1, 2.5, 0.4);
 
         this.Effects.Add(effect);
 

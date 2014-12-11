@@ -6,12 +6,11 @@ import App = require("../../App");
 
 class ChorusComponent extends Effect implements IEffect {
 
-    public Chorus: Tone.Filter;
+    public Chorus: Tone.Chorus;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(rate?: number, delayTime?: number, depth?: number) {
         super();
-        this.Chorus = new Tone.Filter(frequency, type, rolloff);
-        this.Chorus.setQ(Q);
+        this.Chorus = new Tone.Chorus(rate, delayTime, depth);
     }
 
     Connect(modifiable:IModifiable): void{
