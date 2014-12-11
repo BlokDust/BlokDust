@@ -1,6 +1,7 @@
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
+import App = require("../../App");
 
 
 class FilterComponent extends Effect implements IEffect {
@@ -24,7 +25,8 @@ class FilterComponent extends Effect implements IEffect {
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
 
-        this.Filter.disconnect();
+        this.Modifiable.Source.disconnect();
+        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.Delay, this.Modifiable.OutputGain, App.AudioMixer.Master);
 
     }
 }

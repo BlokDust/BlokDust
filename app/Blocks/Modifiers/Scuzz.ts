@@ -10,7 +10,7 @@ class Scuzz extends Modifier {
         super(grid, position);
 
         var effect = new LFOComponent(440, 200, 1800, 'sawtooth');
-        effect._LFO.setType('sawtooth');
+        effect.LFO.setType('sawtooth');
 
         this.Effects.Add(effect);
 
