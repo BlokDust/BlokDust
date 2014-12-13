@@ -9,7 +9,7 @@ class Phaser extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new PhaserComponent(440, "lowpass", -12, 1);
+        var effect = new PhaserComponent(0.5, 5, 8, 250);
 
         this.Effects.Add(effect);
 

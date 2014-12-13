@@ -173,7 +173,7 @@ class BlocksSketch extends Grid {
                 continue;
             }
 
-            this.ParticleCollision(particle.Position, particle);
+            //this.ParticleCollision(particle.Position, particle);
             particle.Move();
             currentParticles.push(particle);
         }

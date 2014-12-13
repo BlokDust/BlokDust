@@ -6,12 +6,16 @@ import App = require("../../App");
 
 class PhaserComponent extends Effect implements IEffect {
 
-    public Phaser: Tone.Filter;
+    public Phaser: Tone.Phaser;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(rate: number, depth: number, baseFrequency: number, Q:number) {
         super();
-        this.Phaser = new Tone.Filter(frequency, type, rolloff);
-        this.Phaser.setQ(Q);
+        this.Phaser = new Tone.Phaser({
+            "rate" : rate,
+            "depth" : depth,
+            "Q" : Q,
+            "baseFrequency" : baseFrequency
+        });
     }
 
     Connect(modifiable:IModifiable): void{

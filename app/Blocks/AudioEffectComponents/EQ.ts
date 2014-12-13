@@ -6,27 +6,30 @@ import App = require("../../App");
 
 class EQComponent extends Effect implements IEffect {
 
-    public EQ: Tone.Filter;
+    public EQ: Tone.EQ;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(lowLevel: number, midLevel: number, highLevel: number) {
         super();
-        this.EQ = new Tone.Filter(frequency, type, rolloff);
-        this.EQ.setQ(Q);
+        this.EQ = new Tone.EQ({
+            lowLevel: lowLevel,
+            midLevel: midLevel,
+            highLevel: highLevel
+        });
     }
 
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
 
-        this.Modifiable.Source.connect(this.EQ);
-        this.EQ.connect(this.Modifiable.OutputGain);
+        this.Modifiable.OutputGain.connect(this.EQ);
+        this.EQ.connect(App.AudioMixer.Master);
 
     }
 
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
 
-        this.Modifiable.Source.disconnect();
-        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.Delay, this.Modifiable.OutputGain, App.AudioMixer.Master);
+        this.Modifiable.OutputGain.disconnect();
+        this.Modifiable.OutputGain.connect(App.AudioMixer.Master);
 
     }
 }
