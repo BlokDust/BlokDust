@@ -48,8 +48,7 @@ class Modifiable extends Block implements IModifiable{
                 var xDif = (target.Position.x - this.Position.x) / grd;
                 var yDif = (target.Position.y - this.Position.y) / grd;
 
-
-                this.Ctx.strokeStyle = "#40e6ff";
+                this.Ctx.strokeStyle = App.Palette[3];// BLUE
                 this.Ctx.beginPath();
                 this.Ctx.moveTo(myX, myY);
 
