@@ -128,10 +128,8 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
-        // set up the grid
-
     }
-//arbitrary
+
     Update() {
         super.Update();
 
