@@ -78,6 +78,7 @@ class BlocksSketch extends Grid {
 
         pixelPalette.Load((palette: string[]) => {
             console.log(palette);
+            App.Palette = palette;
         });
 
         this._Invalidate();

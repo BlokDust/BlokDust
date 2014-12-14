@@ -35,12 +35,79 @@ class Modifiable extends Block implements IModifiable{
             // draw connections to modifiers
             var modifiers = this.Modifiers.ToArray();
 
+            var grd = this.Grid.Ctx.canvas.width / this.Grid.Divisor;
+
             for(var i = 0; i < modifiers.length; i++){
                 var target: IModifier = modifiers[i];
-                this.Ctx.strokeStyle = "#fff";
+
+                var myX = this.Position.x;
+                var myY = this.Position.y;
+                var toX = target.Position.x;
+                var toY = target.Position.y;
+
+                var xDif = (target.Position.x - this.Position.x) / grd;
+                var yDif = (target.Position.y - this.Position.y) / grd;
+
+
+                this.Ctx.strokeStyle = "#40e6ff";
                 this.Ctx.beginPath();
-                this.Ctx.moveTo(this.Position.x, this.Position.y);
-                this.Ctx.lineTo(target.Position.x, target.Position.y);
+                this.Ctx.moveTo(myX, myY);
+
+                if (xDif > 0) { // RIGHT HALF
+
+                    if (yDif < 0) { // UPPER
+
+                        if (-yDif < xDif) {
+                            this.Ctx.lineTo(myX + ((xDif - (-yDif))*grd), myY);
+                        }
+
+                        if (-yDif > xDif) {
+                            this.Ctx.lineTo(myX, myY - (((-yDif) - xDif)*grd));
+                        }
+
+                    }
+
+                    if (yDif > 0) { // LOWER
+
+                        if (yDif < xDif) {
+                            this.Ctx.lineTo(myX + ((xDif - yDif)*grd), myY);
+                        }
+
+                        if (yDif > xDif) {
+                            this.Ctx.lineTo(myX, myY + ((yDif - xDif)*grd));
+                        }
+                    }
+                }
+
+                if (xDif < 0) { // LEFT HALF
+
+                    if (yDif < 0) { // UPPER
+
+                        if (yDif > xDif) {
+                            this.Ctx.lineTo(myX - ((yDif - xDif)*grd), myY);
+                        }
+
+                        if (yDif < xDif) {
+                            this.Ctx.lineTo(myX, myY - ((xDif - yDif)*grd));
+                        }
+
+                    }
+
+                    if (yDif > 0) { // LOWER
+
+                        if (yDif < -xDif) {
+                            this.Ctx.lineTo(myX - (((-xDif) - yDif)*grd), myY);
+                        }
+
+                        if (yDif > -xDif) {
+                            this.Ctx.lineTo(myX, myY + ((yDif - (-xDif))*grd));
+                        }
+
+                    }
+
+                }
+
+                this.Ctx.lineTo(toX, toY);
                 this.Ctx.stroke();
             }
         }
