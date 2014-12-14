@@ -9,7 +9,12 @@ class Phaser extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new PhaserComponent(0.5, 5, 8, 250);
+        var effect = new PhaserComponent({
+            rate: 0.8,
+            depth: 10,
+            Q: 10,
+            baseFrequency: 1850
+        });
 
         this.Effects.Add(effect);
 

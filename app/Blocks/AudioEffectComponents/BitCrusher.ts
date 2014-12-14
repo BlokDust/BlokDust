@@ -6,12 +6,11 @@ import App = require("../../App");
 
 class BitCrusherComponent extends Effect implements IEffect {
 
-    public BitCrusher: Tone.Filter;
+    public BitCrusher: Tone.BitCrusher;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(Settings) {
         super();
-        this.BitCrusher = new Tone.Filter(frequency, type, rolloff);
-        this.BitCrusher.setQ(Q);
+        this.BitCrusher = new Tone.BitCrusher(Settings.bits);
     }
 
     Connect(modifiable:IModifiable): void{
@@ -26,8 +25,7 @@ class BitCrusherComponent extends Effect implements IEffect {
         super.Disconnect(modifiable);
 
         this.Modifiable.Source.disconnect();
-        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.Delay, this.Modifiable.OutputGain, App.AudioMixer.Master);
-
+        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
     }
 }
 

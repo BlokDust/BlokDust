@@ -3,5 +3,5 @@
 export enum BlockType {
     Noise,
     ToneSource,
-    LFO
+    Microphone
 }

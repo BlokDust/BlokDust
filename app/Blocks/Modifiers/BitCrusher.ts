@@ -9,7 +9,9 @@ class BitCrusher extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new BitCrusherComponent(440, "lowpass", -12, 1);
+        var effect = new BitCrusherComponent({
+            bits: 2
+        });
 
         this.Effects.Add(effect);
 

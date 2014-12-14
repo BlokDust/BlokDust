@@ -42,9 +42,9 @@
             <Button x:Name="EQBlockBtn" Click="{EventBinding EQBlockBtn_Click}">EQ</Button>
             <Button x:Name="PhaserBlockBtn" Click="{EventBinding PhaserBlockBtn_Click}">Phaser</Button>
             <Button x:Name="AutoWahBlockBtn" Click="{EventBinding AutoWahBlockBtn_Click}">Wah</Button>
-            <Button x:Name="GateBlockBtn" Click="{EventBinding GateBlockBtn_Click}">Gate</Button>
+            <Button x:Name="MicrophoneBlockBtn" Click="{EventBinding MicrophoneBlockBtn_Click}">Mic</Button>
             <Button x:Name="PannerBlockBtn" Click="{EventBinding PannerBlockBtn_Click}">Pan</Button>
-            <Button x:Name="CompressorBlockBtn" Click="{EventBinding CompressorBlockBtn_Click}">Comp</Button>
+            <Button x:Name="BitCrusherBlockBtn" Click="{EventBinding BitCrusherBlockBtn_Click}">BitCrush</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <Button x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}">Redo</Button>
