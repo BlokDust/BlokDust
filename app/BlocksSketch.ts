@@ -25,6 +25,7 @@ declare var PixelPalette;
 
 class BlocksSketch extends Grid {
 
+    private _Unit: number;
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
@@ -128,11 +129,14 @@ class BlocksSketch extends Grid {
         super.Setup();
 
         // set up the grid
-        this.Divisor = 75;
+
     }
 
     Update() {
         super.Update();
+
+        this._Unit = this.Ctx.canvas.width / 1000;
+        this.Divisor = this._Unit * 50;
 
         // update blocks
         for (var i = 0; i < App.Blocks.Count; i++) {

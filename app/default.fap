@@ -68,6 +68,10 @@
             </Canvas>
         </zoom:Zoomer>
 
+        <Canvas Grid.Row="1">
+
+        </Canvas>
+
         <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
             <StackPanel.DataContext>
                 <vms:InfoViewModel/>
