@@ -9,7 +9,7 @@ class EQ extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new EQComponent(1, 1, 100);
+        var effect = new EQComponent(0, -500, 500);
 
         this.Effects.Add(effect);
 

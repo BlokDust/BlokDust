@@ -1,4 +1,4 @@
-import PannerComponent = require("../AudioEffectComponents/Filter");
+import PannerComponent = require("../AudioEffectComponents/Panner");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
@@ -9,7 +9,9 @@ class Panner extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new PannerComponent(440, "lowpass", -12, 1);
+        var effect = new PannerComponent({
+            frequency: 1
+        });
 
         this.Effects.Add(effect);
 
