@@ -36,7 +36,7 @@ class Noise extends Source {
         };
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(0, 1),new Point(-1, 2));
     }
 
     MouseDown() {
@@ -80,11 +80,21 @@ class Noise extends Source {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = "#730081";
-        this.DrawMoveTo(-2,0);
-        this.DrawLineTo(0,-2);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(0,2);
+        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(-1,2);
+        this.Ctx.closePath();
+        this.Ctx.fill();
+
+        this.Ctx.beginPath();
+        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(0,0);
         this.Ctx.closePath();
         this.Ctx.fill();
     }

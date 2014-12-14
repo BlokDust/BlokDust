@@ -25,6 +25,7 @@ class App{
     static InputManager: InputManager;
     static ParticlesPool: PooledFactoryResource<Particle>;
     static Particles: Particle[];
+    static Palette: string[];
     static OscillatorsPool: PooledFactoryResource<Oscillator>;
 
     constructor() {
@@ -70,6 +71,7 @@ class App{
         App.InputManager = new InputManager();
 
         App.Particles = [];
+        App.Palette = [];
 
     }
 }
