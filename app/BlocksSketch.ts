@@ -78,6 +78,7 @@ class BlocksSketch extends Grid {
 
         pixelPalette.Load((palette: string[]) => {
             console.log(palette);
+            App.Palette = palette;
         });
 
         this._Invalidate();
@@ -146,7 +147,7 @@ class BlocksSketch extends Grid {
 
     Draw(){
         // clear
-        this.Ctx.fillStyle = "#2c243e";
+        this.Ctx.fillStyle = App.Palette[0];// BG
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         super.Draw();

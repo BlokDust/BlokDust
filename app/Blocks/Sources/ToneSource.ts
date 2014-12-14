@@ -81,8 +81,7 @@ class ToneSource extends Source {
         //console.log("drawing to render cache");
 
         this.Ctx.beginPath();
-        //color(col[2]); // PURPLE
-        this.Ctx.fillStyle = "#730081";
+        this.Ctx.fillStyle = App.Palette[5];// PURPLE
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);
         this.DrawLineTo(2,0);
@@ -92,8 +91,7 @@ class ToneSource extends Source {
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        //color(col[5]); // WHITE
-        this.Ctx.fillStyle = "#fff";
+        this.Ctx.fillStyle = App.Palette[8];// WHITE
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);
         this.DrawLineTo(0,0);
@@ -102,8 +100,7 @@ class ToneSource extends Source {
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        //color(col[1]); // GREEN
-        this.Ctx.fillStyle = "#1add8d";
+        this.Ctx.fillStyle = App.Palette[4];// GREEN
         this.DrawMoveTo(0,-2);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(0,0);
