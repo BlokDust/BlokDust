@@ -8,9 +8,15 @@ class ChorusComponent extends Effect implements IEffect {
 
     public Chorus: Tone.Chorus;
 
-    constructor(rate?: number, delayTime?: number, depth?: number) {
+    constructor(Settings) {
         super();
-        this.Chorus = new Tone.Chorus(rate, delayTime, depth);
+        this.Chorus = new Tone.Chorus({
+            "rate" : Settings.rate,
+            "delayTime" : Settings.delayTime,
+            "type" : Settings.type,
+            "depth" : Settings.depth,
+            "feedback" : Settings.feedback
+        });
     }
 
     Connect(modifiable:IModifiable): void{

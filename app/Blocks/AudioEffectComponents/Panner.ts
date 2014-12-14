@@ -6,12 +6,14 @@ import App = require("../../App");
 
 class PannerComponent extends Effect implements IEffect {
 
-    public Panner: Tone.Filter;
+    public Panner: Tone.AutoPanner;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(Settings) {
         super();
-        this.Panner = new Tone.Filter(frequency, type, rolloff);
-        this.Panner.setQ(Q);
+
+        this.Panner = new Tone.AutoPanner(
+            1
+        );
     }
 
     Connect(modifiable:IModifiable): void{

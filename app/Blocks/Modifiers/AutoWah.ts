@@ -9,7 +9,20 @@ class AutoWah extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new AutoWahComponent(440, "lowpass", -12, 1);
+        var effect = new AutoWahComponent({
+
+            baseFrequency: 1000,
+            octaves: 8,
+            sensitivity: 0,
+            gain : 40,
+            rolloff : -48,
+
+            follower : {
+                attack: 0.2,
+                release: 1
+            }
+
+        });
 
         this.Effects.Add(effect);
 

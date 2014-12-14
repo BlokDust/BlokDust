@@ -9,7 +9,13 @@ class Chorus extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new ChorusComponent(1, 2.5, 0.4);
+        var effect = new ChorusComponent({
+            rate : 1,
+            delayTime : 2.5,
+            type : "triangle",
+            depth : 0.4,
+            feedback : 0.2
+        });
 
         this.Effects.Add(effect);
 

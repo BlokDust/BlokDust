@@ -6,12 +6,24 @@ import App = require("../../App");
 
 class AutoWahComponent extends Effect implements IEffect {
 
-    public AutoWah: Tone.Filter;
+    public AutoWah: Tone.AutoWah;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+
+    constructor(Settings) {
         super();
-        this.AutoWah = new Tone.Filter(frequency, type, rolloff);
-        this.AutoWah.setQ(Q);
+
+        this.AutoWah = new Tone.AutoWah({
+            "baseFrequency": Settings.baseFrequency,
+            "octaves": Settings.octaves,
+            "sensitivity": Settings.sensitivity,
+            "gain" : Settings.gain,
+            "rolloff" : Settings.rolloff,
+
+            "follower" : {
+                "attack": Settings.follower.attack,
+                "release": Settings.follower.release
+            }
+        });
     }
 
     Connect(modifiable:IModifiable): void{
