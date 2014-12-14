@@ -8,14 +8,15 @@ class PhaserComponent extends Effect implements IEffect {
 
     public Phaser: Tone.Phaser;
 
-    constructor(rate: number, depth: number, baseFrequency: number, Q:number) {
+    constructor(Settings) {
         super();
         this.Phaser = new Tone.Phaser({
-            "rate" : rate,
-            "depth" : depth,
-            "Q" : Q,
-            "baseFrequency" : baseFrequency
+            "rate" : Settings.rate,
+            "depth" : Settings.depth,
+            "Q" : Settings.Q,
+            "baseFrequency" : Settings.baseFrequency
         });
+        this.Phaser.output.gain.value = 0.2; //TODO: Find out why the phaser is amplifying the sound instead of this
     }
 
     Connect(modifiable:IModifiable): void{
@@ -30,7 +31,7 @@ class PhaserComponent extends Effect implements IEffect {
         super.Disconnect(modifiable);
 
         this.Modifiable.Source.disconnect();
-        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.Delay, this.Modifiable.OutputGain, App.AudioMixer.Master);
+        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
 
     }
 }

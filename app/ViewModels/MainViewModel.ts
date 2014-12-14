@@ -5,6 +5,7 @@ import IModifiable = require("../Blocks/IModifiable");
 import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
+import Microphone = require("../Blocks/Sources/Microphone");
 import Keyboard = require("../Blocks/Modifiers/Keyboard");
 import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
 import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
@@ -235,8 +236,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlock(Compressor);
     }
 
-    GateBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Gate);
+    MicrophoneBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Microphone);
     }
 
     PannerBlockBtn_Click(e: any){

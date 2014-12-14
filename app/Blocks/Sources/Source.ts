@@ -52,6 +52,9 @@ class Source extends Modifiable {
             this.Source = new Tone.Noise(this.Settings.noise.waveform);
         } else if (this.BlockType == BlockType.ToneSource) {
             this.Source = new Tone.Oscillator(this.Settings.oscillator.frequency, this.Settings.oscillator.waveform);
+        } else if (this.BlockType == BlockType.Microphone) {
+            this.Source = new Tone.Microphone();
+
         } else {
             console.log('this typeof Source does not have a matching BlockType');
         }
@@ -64,8 +67,11 @@ class Source extends Modifiable {
         this.OutputGain.output.gain.value = this.Settings.output.volume;
 
         // Connect them up
-        this.Envelope.connect(this.Source.output.gain);
-        this.Source.connectSeries(this.Source, this.Delay, this.OutputGain, App.AudioMixer.Master);
+        if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource ) {
+            this.Envelope.connect(this.Source.output.gain);
+        }
+
+        this.Source.connectSeries(this.Source, this.OutputGain, this.Delay, App.AudioMixer.Master);
 
         // Start
         this.Source.start();
