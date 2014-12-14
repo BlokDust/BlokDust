@@ -21,7 +21,7 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
             if (that._Index == -1 || that._Index >= that._Collection.Count){
                 that._Collection.Add(that._Item);
             } else {
-                that._Collection.Insert(that._Index, that._Item);
+                that._Collection.Insert(that._Item, that._Index);
             }
 
 //            if (/* everything turned out fine */) {

@@ -36,7 +36,7 @@ class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collection
         }
 
         this.Remove(obj);
-        this.Insert(index, obj);
+        this.Insert(obj, index);
     }
 
     get Top(): T{
