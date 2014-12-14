@@ -6,12 +6,11 @@ import App = require("../../App");
 
 class BitCrusherComponent extends Effect implements IEffect {
 
-    public BitCrusher: Tone.Filter;
+    public BitCrusher: Tone.BitCrusher;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(Settings) {
         super();
-        this.BitCrusher = new Tone.Filter(frequency, type, rolloff);
-        this.BitCrusher.setQ(Q);
+        this.BitCrusher = new Tone.BitCrusher(Settings.bits);
     }
 
     Connect(modifiable:IModifiable): void{
