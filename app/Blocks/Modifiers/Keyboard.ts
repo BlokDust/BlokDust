@@ -2,6 +2,7 @@ import QwertyKeyboard = require("../Controllers/QwertyKeyboard");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
+import App = require("../../App");
 
 class Keyboard extends Modifier {
 
@@ -14,7 +15,7 @@ class Keyboard extends Modifier {
         this.Effects.Add(effect);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-2, 0),new Point(0, -2),new Point(2, 0),new Point(0, 2));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
 
@@ -22,11 +23,21 @@ class Keyboard extends Modifier {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = "#1add8d";
-        this.DrawMoveTo(-2,0);
-        this.DrawLineTo(0,-2);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(0,2);
+        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(2,1);
+        this.DrawLineTo(1,2);
+        this.DrawLineTo(-1,2);
+        this.Ctx.closePath();
+        this.Ctx.fill();
+
+        this.Ctx.beginPath();
+        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(0,1);
+        this.DrawLineTo(1,1);
+        this.DrawLineTo(1,0);
         this.Ctx.closePath();
         this.Ctx.fill();
     }

@@ -24,23 +24,32 @@
         <StackPanel Grid.ZIndex="2" Grid.Row="0" Orientation="Horizontal">
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="ToneBlockBtn" Click="{EventBinding ToneBlockBtn_Click}">Tone</Button>
-            <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyboard</Button>
+            <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyb</Button>
 
             <Button x:Name="NoiseBlockBtn" Click="{EventBinding NoiseBlockBtn_Click}">Noise</Button>
-            <Button x:Name="VolumeIncreaseBlockBtn" Click="{EventBinding VolumeIncreaseBlockBtn_Click}">Volume +</Button>
-            <Button x:Name="VolumeDecreaseBlockBtn" Click="{EventBinding VolumeDecreaseBlockBtn_Click}">Volume -</Button>
-            <Button x:Name="EnvelopeBlockBtn" Click="{EventBinding EnvelopeBlockBtn_Click}">Envelope</Button>
+            <Button x:Name="VolumeIncreaseBlockBtn" Click="{EventBinding VolumeIncreaseBlockBtn_Click}">Vol +</Button>
+            <Button x:Name="VolumeDecreaseBlockBtn" Click="{EventBinding VolumeDecreaseBlockBtn_Click}">Vol -</Button>
+            <Button x:Name="EnvelopeBlockBtn" Click="{EventBinding EnvelopeBlockBtn_Click}">Env</Button>
             <Button x:Name="FilterBlockBtn" Click="{EventBinding FilterBlockBtn_Click}">Filter</Button>
             <Button x:Name="PitchIncreaseBlockBtn" Click="{EventBinding PitchIncreaseBlockBtn_Click}">Pitch +</Button>
             <Button x:Name="PitchDecreaseBlockBtn" Click="{EventBinding PitchDecreaseBlockBtn_Click}">Pitch -</Button>
             <Button x:Name="LFOBlockBtn" Click="{EventBinding LFOBlockBtn_Click}">LFO</Button>
             <Button x:Name="DelayBlockBtn" Click="{EventBinding DelayBlockBtn_Click}">Delay</Button>
             <Button x:Name="ScuzzBlockBtn" Click="{EventBinding ScuzzBlockBtn_Click}">Scuzz</Button>
-            <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete Block</Button>
+            <Button x:Name="DistortionBlockBtn" Click="{EventBinding DistortionBlockBtn_Click}">Dist</Button>
+            <Button x:Name="ReverbBlockBtn" Click="{EventBinding ReverbBlockBtn_Click}">Reverb</Button>
+            <Button x:Name="ChorusBlockBtn" Click="{EventBinding ChorusBlockBtn_Click}">Chorus</Button>
+            <Button x:Name="EQBlockBtn" Click="{EventBinding EQBlockBtn_Click}">EQ</Button>
+            <Button x:Name="PhaserBlockBtn" Click="{EventBinding PhaserBlockBtn_Click}">Phaser</Button>
+            <Button x:Name="AutoWahBlockBtn" Click="{EventBinding AutoWahBlockBtn_Click}">Wah</Button>
+            <Button x:Name="GateBlockBtn" Click="{EventBinding GateBlockBtn_Click}">Gate</Button>
+            <Button x:Name="PannerBlockBtn" Click="{EventBinding PannerBlockBtn_Click}">Pan</Button>
+            <Button x:Name="CompressorBlockBtn" Click="{EventBinding CompressorBlockBtn_Click}">Comp</Button>
+            <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <Button x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}">Redo</Button>
-            <Button x:Name="ZoomIn" Width="100" Click="{EventBinding ZoomIn_Click}">+</Button>
-            <Button x:Name="ZoomOut" Width="100" Click="{EventBinding ZoomOut_Click}">-</Button>
+            <Button x:Name="ZoomIn" Click="{EventBinding ZoomIn_Click}">+</Button>
+            <Button x:Name="ZoomOut" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
         <zoom:Zoomer Grid.Row="1" ZoomLevels="{Binding ZoomLevels}" ZoomFactor="1.5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}" ConstrainToViewport="true">
@@ -58,6 +67,10 @@
                              Draw="{EventBinding BlocksSketch_Draw}" />
             </Canvas>
         </zoom:Zoomer>
+
+        <Canvas Grid.Row="1">
+
+        </Canvas>
 
         <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
             <StackPanel.DataContext>

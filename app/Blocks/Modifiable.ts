@@ -35,7 +35,6 @@ class Modifiable extends Block implements IModifiable{
             // draw connections to modifiers
             var modifiers = this.Modifiers.ToArray();
 
-
             var grd = this.Grid.Ctx.canvas.width / this.Grid.Divisor;
 
             for(var i = 0; i < modifiers.length; i++){
@@ -49,8 +48,8 @@ class Modifiable extends Block implements IModifiable{
                 var xDif = (target.Position.x - this.Position.x) / grd;
                 var yDif = (target.Position.y - this.Position.y) / grd;
 
+                this.Ctx.strokeStyle = App.Palette[3];// BLUE
 
-                this.Ctx.strokeStyle = "#40e6ff";
                 this.Ctx.beginPath();
                 this.Ctx.moveTo(myX, myY);
 

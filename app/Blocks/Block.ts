@@ -45,11 +45,11 @@ class Block extends DisplayObject implements IBlock {
 
         this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
 
-        if (window.debug){
+        /*if (window.debug){
             this.Ctx.fillStyle = "#fff";
             var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
             this.Ctx.fillText("" + this.ZIndex, pos.x, pos.y);
-        }
+        }*/
     }
 
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)

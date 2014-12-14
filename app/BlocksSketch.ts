@@ -25,6 +25,7 @@ declare var PixelPalette;
 
 class BlocksSketch extends Grid {
 
+    private _Unit: number;
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
@@ -78,6 +79,7 @@ class BlocksSketch extends Grid {
 
         pixelPalette.Load((palette: string[]) => {
             console.log(palette);
+            App.Palette = palette;
         });
 
         this._Invalidate();
@@ -127,11 +129,14 @@ class BlocksSketch extends Grid {
         super.Setup();
 
         // set up the grid
-        this.Divisor = 75;
-    }
 
+    }
+//arbitrary
     Update() {
         super.Update();
+
+        this._Unit = this.Ctx.canvas.width / 1000;
+        this.Divisor = this._Unit * 50;
 
         // update blocks
         for (var i = 0; i < App.Blocks.Count; i++) {
@@ -146,7 +151,7 @@ class BlocksSketch extends Grid {
 
     Draw(){
         // clear
-        this.Ctx.fillStyle = "#2c243e";
+        this.Ctx.fillStyle = App.Palette[0];// BG
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         super.Draw();
@@ -173,7 +178,7 @@ class BlocksSketch extends Grid {
                 continue;
             }
 
-            this.ParticleCollision(particle.Position, particle);
+            //this.ParticleCollision(particle.Position, particle);
             particle.Move();
             currentParticles.push(particle);
         }

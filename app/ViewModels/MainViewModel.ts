@@ -15,6 +15,16 @@ import Filter = require("../Blocks/Modifiers/Filter");
 import LFO = require("../Blocks/Modifiers/LFO");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
+import Distortion = require("../Blocks/Modifiers/Distortion");
+import Chorus = require("../Blocks/Modifiers/Chorus");
+import Reverb = require("../Blocks/Modifiers/Reverb");
+import Phaser = require("../Blocks/Modifiers/Phaser");
+import EQ = require("../Blocks/Modifiers/EQ");
+import BitCrusher = require("../Blocks/Modifiers/BitCrusher");
+import AutoWah = require("../Blocks/Modifiers/AutoWah");
+import Compressor = require("../Blocks/Modifiers/Compressor");
+import Gate = require("../Blocks/Modifiers/Gate");
+import Panner = require("../Blocks/Modifiers/Panner");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
@@ -191,6 +201,46 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     ScuzzBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Scuzz);
+    }
+
+    DistortionBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Distortion);
+    }
+
+    ChorusBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Chorus);
+    }
+
+    ReverbBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Reverb);
+    }
+
+    PhaserBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Phaser);
+    }
+
+    EQBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(EQ);
+    }
+
+    BitCrusherBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(BitCrusher);
+    }
+
+    AutoWahBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(AutoWah);
+    }
+
+    CompressorBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Compressor);
+    }
+
+    GateBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Gate);
+    }
+
+    PannerBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Panner);
     }
 
     DeleteBlockBtn_Click(e: any){
