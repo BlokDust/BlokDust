@@ -2,14 +2,16 @@ import AutoWahComponent = require("../AudioEffectComponents/AutoWah");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
+import IEffect = require("../IEffect");
 
 class AutoWah extends Modifier {
 
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new AutoWahComponent({
+        this.effect = new AutoWahComponent({
 
             baseFrequency: 1000,
             octaves: 8,
@@ -24,7 +26,7 @@ class AutoWah extends Modifier {
 
         });
 
-        this.Effects.Add(effect);
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
@@ -41,6 +43,10 @@ class AutoWah extends Modifier {
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+       this.effect.Delete();
     }
 
 }

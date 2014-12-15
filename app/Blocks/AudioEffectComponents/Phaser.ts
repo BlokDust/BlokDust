@@ -16,7 +16,7 @@ class PhaserComponent extends Effect implements IEffect {
             "Q" : Settings.Q,
             "baseFrequency" : Settings.baseFrequency
         });
-        this.Phaser.output.gain.value = 0.2; //TODO: Find out why the phaser is amplifying the sound instead of this
+        //this.Phaser.output.gain.value = 0.2; //TODO: Find out why the phaser is amplifying the sound instead of this
     }
 
     Connect(modifiable:IModifiable): void{
@@ -33,6 +33,10 @@ class PhaserComponent extends Effect implements IEffect {
         this.Modifiable.Source.disconnect();
         this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
 
+    }
+
+    Delete() {
+        this.Phaser.dispose();
     }
 }
 

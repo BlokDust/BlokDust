@@ -306,6 +306,7 @@ class BlocksSketch extends Grid {
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
+        this._SelectedBlock.Delete();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
     }

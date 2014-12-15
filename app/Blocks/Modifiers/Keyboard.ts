@@ -7,12 +7,13 @@ import App = require("../../App");
 class Keyboard extends Modifier {
 
     public Name: string = 'Keyboard';
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new QwertyKeyboard(); // mono or poly?
-        this.Effects.Add(effect);
+        this.effect = new QwertyKeyboard(); // mono or poly?
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -40,6 +41,10 @@ class Keyboard extends Modifier {
         this.DrawLineTo(1,0);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+        this.effect.Delete();
     }
 
 }

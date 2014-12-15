@@ -5,15 +5,16 @@ import Grid = require("../../Grid");
 
 class Panner extends Modifier {
 
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new PannerComponent({
+        this.effect = new PannerComponent({
             frequency: 1
         });
 
-        this.Effects.Add(effect);
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
@@ -30,6 +31,10 @@ class Panner extends Modifier {
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+        this.effect.Delete();
     }
 
 }

@@ -6,13 +6,14 @@ import App = require("../../App");
 
 class LFO extends Modifier {
 
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new LFOComponent(2, -20, 20, 'triangle');
+        this.effect = new LFOComponent(2, -20, 20, 'triangle');
 
-        this.Effects.Add(effect);
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
@@ -38,6 +39,10 @@ class LFO extends Modifier {
         this.DrawLineTo(1,1);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+        this.effect.Delete();
     }
 
 }

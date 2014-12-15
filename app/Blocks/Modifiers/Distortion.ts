@@ -6,13 +6,14 @@ import App = require("../../App");
 
 class Distortion extends Modifier {
 
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new DistortionComponent(1);
+        this.effect = new DistortionComponent(1);
 
-        this.Effects.Add(effect);
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
@@ -38,6 +39,10 @@ class Distortion extends Modifier {
         this.DrawLineTo(-1,1);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+        this.effect.Delete();
     }
 
 }

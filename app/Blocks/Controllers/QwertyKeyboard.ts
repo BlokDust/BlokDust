@@ -229,6 +229,10 @@ class Keyboard extends Effect implements IEffect {
 
         return totalPitchIncrement;
     }
+
+    Delete(){
+
+    }
 }
 
 export = Keyboard;

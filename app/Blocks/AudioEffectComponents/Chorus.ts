@@ -33,6 +33,10 @@ class ChorusComponent extends Effect implements IEffect {
         this.Modifiable.Source.disconnect();
         this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
     }
+
+    Delete() {
+        this.Chorus.dispose();
+    }
 }
 
 export = ChorusComponent;

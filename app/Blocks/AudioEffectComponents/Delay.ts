@@ -44,6 +44,10 @@ class Delay extends Effect implements IEffect {
 
         this.Modifiable.Delay.dryWet.setWet(0);
     }
+
+    Delete() {
+
+    }
 }
 
 export = Delay;

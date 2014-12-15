@@ -37,6 +37,9 @@ class LFO extends Effect implements IEffect {
         }
     }
 
+    Delete() {
+
+    }
 
 }
 

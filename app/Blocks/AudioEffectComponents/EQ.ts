@@ -32,6 +32,10 @@ class EQComponent extends Effect implements IEffect {
         this.Modifiable.OutputGain.connect(App.AudioMixer.Master);
 
     }
+
+    Delete() {
+        this.EQ.dispose();
+    }
 }
 
 export = EQComponent;

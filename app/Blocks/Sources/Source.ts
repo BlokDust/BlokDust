@@ -77,6 +77,13 @@ class Source extends Modifiable {
         this.Source.start();
     }
 
+    Delete() {
+        this.Envelope.dispose();
+        this.OutputGain.dispose();
+        this.Source.stop();
+        this.Source.dispose();
+    }
+
 
 }
 

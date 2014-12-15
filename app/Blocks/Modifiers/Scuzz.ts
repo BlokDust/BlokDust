@@ -6,14 +6,15 @@ import App = require("../../App");
 
 class Scuzz extends Modifier {
 
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new LFOComponent(440, 200, 1800, 'sawtooth');
-        effect.LFO.setType('sawtooth');
+        this.effect = new LFOComponent(440, 200, 1800, 'sawtooth');
+        this.effect.LFO.setType('sawtooth');
 
-        this.Effects.Add(effect);
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
@@ -38,6 +39,10 @@ class Scuzz extends Modifier {
         this.DrawLineTo(0,0);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+        this.effect.Delete();
     }
 
 }

@@ -38,6 +38,10 @@ class EnvelopeComponent extends Effect implements IEffect {
         this.Modifiable.Envelope.setSustain(this.Modifiable.Settings.envelope.sustain);
         this.Modifiable.Envelope.setRelease(this.Modifiable.Settings.envelope.release);
     }
+
+    Delete() {
+
+    }
 }
 
 export = EnvelopeComponent;

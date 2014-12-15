@@ -36,6 +36,10 @@ class PitchComponent extends Effect implements IEffect {
         }
 
     }
+
+    Delete() {
+
+    }
 }
 
 export = PitchComponent;

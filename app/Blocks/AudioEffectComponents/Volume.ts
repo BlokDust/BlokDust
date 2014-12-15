@@ -23,6 +23,10 @@ class Volume extends Effect implements IEffect {
         this.Modifiable.OutputGain.input.gain.value /= this.increment;
 
     }
+
+    Delete() {
+
+    }
 }
 
 export = Volume;

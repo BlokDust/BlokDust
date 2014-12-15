@@ -98,6 +98,8 @@ class Block extends DisplayObject implements IBlock {
         }
     }
 
+    Delete() {}
+
     // absolute point
     HitTest(point: Point): boolean {
 

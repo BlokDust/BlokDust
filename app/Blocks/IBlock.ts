@@ -17,6 +17,7 @@ interface IBlock extends IDisplayObject{
     ParticleCollision(particle: Particle): void;
     MouseUp(): void;
     MouseMove(point: Point): void;
+    Delete(): void;
     HitTest(point: Point): boolean;
     DistanceFrom(point: Point): number;
 }

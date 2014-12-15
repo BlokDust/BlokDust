@@ -19,6 +19,16 @@ class PannerComponent extends Effect implements IEffect {
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
 
+        this.Modifiable.Source.disconnect();
+
+        //TODO:
+        //Get an array of all connected modifiers
+        //Push this newEffect to the array list
+
+        //this.Modifiable.Source.disconnect();
+        //this.Modifiable.Source.connectSeries(this.Modifiable.Source, modifier[0], modifier[1], modifier[2]... this.Modifiable.OutputGain)
+
+
         this.Modifiable.Source.connect(this.Panner);
         this.Panner.connect(this.Modifiable.OutputGain);
 
@@ -27,9 +37,21 @@ class PannerComponent extends Effect implements IEffect {
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
 
-        this.Modifiable.Source.disconnect();
-        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.Delay, this.Modifiable.OutputGain, App.AudioMixer.Master);
+        //TODO:
+        //Remove this effect from the list
+        //Get the updated array of all connected modifiers
 
+        //this.Modifiable.Source.disconnect();
+        //this.Modifiable.Source.connectSeries(this.Modifiable.Source, modifier[0], modifier[1], modifier[2]... this.Modifiable.OutputGain)
+
+
+        this.Modifiable.Source.disconnect();
+        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
+
+    }
+
+    Delete() {
+        this.Panner.dispose();
     }
 }
 

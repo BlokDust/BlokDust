@@ -6,13 +6,14 @@ import App = require("../../App");
 
 class Envelope extends Modifier {
 
+    effect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        var effect = new EnvelopeComponent(0.8, 0.9, 0.9, 0.9);
+        this.effect = new EnvelopeComponent(0.8, 0.9, 0.9, 0.9);
 
-        this.Effects.Add(effect);
+        this.Effects.Add(this.effect);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -39,6 +40,10 @@ class Envelope extends Modifier {
         this.DrawLineTo(0,2);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    Delete(){
+        this.effect.Delete();
     }
 
 }

@@ -16,6 +16,7 @@ class BitCrusherComponent extends Effect implements IEffect {
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
 
+        this.Modifiable.Source.disconnect();
         this.Modifiable.Source.connect(this.BitCrusher);
         this.BitCrusher.connect(this.Modifiable.OutputGain);
 
@@ -26,6 +27,10 @@ class BitCrusherComponent extends Effect implements IEffect {
 
         this.Modifiable.Source.disconnect();
         this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
+    }
+
+    Delete() {
+        this.BitCrusher.dispose();
     }
 }
 
