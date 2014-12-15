@@ -2,6 +2,7 @@ import PannerComponent = require("../AudioEffectComponents/Panner");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
+import App = require("../../App");
 
 class Panner extends Modifier {
 
@@ -24,13 +25,22 @@ class Panner extends Modifier {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = "#aa3311";
+        this.Ctx.fillStyle = App.Palette[9];// PINK
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
+
+        this.Ctx.beginPath();
+        this.Ctx.fillStyle = App.Palette[7];// RED
+        this.DrawMoveTo(0,-1);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(0,1);
+        this.Ctx.closePath();
+        this.Ctx.fill();
+
     }
 
     Delete(){
