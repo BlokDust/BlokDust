@@ -2,6 +2,7 @@ import AutoWahComponent = require("../AudioEffectComponents/AutoWah");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
+import App = require("../../App");
 
 class AutoWah extends Modifier {
 
@@ -27,18 +28,26 @@ class AutoWah extends Modifier {
         this.Effects.Add(effect);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
+        this.Outline.push(new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(-2, 1));
     }
 
     Draw() {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = "#aa3311";
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(0,1);
+        this.Ctx.fillStyle = App.Palette[3];// BLUE
+        this.DrawMoveTo(0,-1);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(1,1);
+        this.DrawLineTo(-2,1);
+        this.Ctx.closePath();
+        this.Ctx.fill();
+
+        this.Ctx.beginPath();
+        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        this.DrawMoveTo(1,-1);
+        this.DrawLineTo(1,1);
+        this.DrawLineTo(-1,1);
         this.Ctx.closePath();
         this.Ctx.fill();
     }
