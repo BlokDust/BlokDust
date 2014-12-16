@@ -15,12 +15,10 @@ class Volume extends Effect implements IEffect {
 
     Connect(modifiable: IModifiable): void{
         super.Connect(modifiable);
-
     }
 
     Disconnect(modifiable: IModifiable): void{
         super.Disconnect(modifiable);
-
     }
 
     Delete() {
