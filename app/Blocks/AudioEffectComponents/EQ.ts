@@ -76,7 +76,6 @@ class EQComponent extends Effect implements IEffect {
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
 
-        this.Modifiable.Source.disconnect();
         this.Modifiable.Source.connect(this.EQInput);
         this.EQOutput.connect(this.Modifiable.OutputGain);
 
@@ -86,7 +85,7 @@ class EQComponent extends Effect implements IEffect {
         super.Disconnect(modifiable);
 
         this.Modifiable.Source.disconnect();
-        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, this.Modifiable.Delay, App.AudioMixer.Master);
+        this.Modifiable.Source.connectSeries(this.Modifiable.Source, this.Modifiable.OutputGain, App.AudioMixer.Master);
 
     }
 
