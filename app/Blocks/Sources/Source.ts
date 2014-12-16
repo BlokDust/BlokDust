@@ -61,8 +61,7 @@ class Source extends Modifiable {
 
         // Define the audio nodes
         this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
-        this.Delay = new Tone.PingPongDelay(1);
-        this.Delay.setWet(0);
+
         this.OutputGain = new Tone.Signal;
         this.OutputGain.output.gain.value = this.Settings.output.volume;
 
@@ -71,7 +70,7 @@ class Source extends Modifiable {
             this.Envelope.connect(this.Source.output.gain);
         }
 
-        this.Source.connectSeries(this.Source, this.OutputGain, this.Delay, App.AudioMixer.Master);
+        this.Source.connectSeries(this.Source, this.OutputGain, App.AudioMixer.Master);
 
         // Start
         this.Source.start();

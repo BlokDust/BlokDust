@@ -11,7 +11,11 @@ class Delay extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new DelayComponent(0.5, 1.5);  // (DelayTime, Feedback, Dry/Wet) //TODO: Bug in tone where feedback = 2 is infinite feedback and feedback = 0 still has some feedback when it shouldn't. Submitted issue
+        this.Component = new DelayComponent({
+            delayTime: '8n',
+            feedback: 0.4, // Max is 1
+            dryWet: 0.5
+        });
 
         this.Effects.Add(this.Component);
 
