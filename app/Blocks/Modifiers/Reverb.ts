@@ -6,14 +6,14 @@ import App = require("../../App");
 
 class Reverb extends Modifier {
 
-    effect;
+    Component;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new ReverbComponent(0.7, 0.5);
+        this.Component = new ReverbComponent(0.7, 0.5);
 
-        this.Effects.Add(this.effect);
+        this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
@@ -51,7 +51,7 @@ class Reverb extends Modifier {
     }
 
     Delete(){
-        this.effect.Delete();
+        this.Component.Delete();
     }
 
 }

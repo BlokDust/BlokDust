@@ -32,8 +32,6 @@ class LFO extends Effect implements IEffect {
             this.LFO.stop();
             this.LFO.disconnect();
 
-
-            //TODO: FIX LFO DISCONNECTING MULTIPLE SOURCE BLOCKS BUG
         }
     }
 

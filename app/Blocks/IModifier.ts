@@ -5,6 +5,7 @@ import IEffect = require("./IEffect");
 interface IModifier extends IBlock{
     CatchmentArea: number;
     Effects: Fayde.Collections.ObservableCollection<IEffect>;
+    Component;
 }
 
 export = IModifier;

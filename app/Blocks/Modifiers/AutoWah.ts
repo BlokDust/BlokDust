@@ -7,12 +7,12 @@ import App = require("../../App");
 
 class AutoWah extends Modifier {
 
-    effect;
+    Component;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new AutoWahComponent({
+        this.Component = new AutoWahComponent({
 
             baseFrequency: 1000,
             octaves: 8,
@@ -27,7 +27,7 @@ class AutoWah extends Modifier {
 
         });
 
-        this.Effects.Add(this.effect);
+        this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(-2, 1));
@@ -55,7 +55,7 @@ class AutoWah extends Modifier {
     }
 
     Delete(){
-       this.effect.Delete();
+       this.Component.Delete();
     }
 
 }

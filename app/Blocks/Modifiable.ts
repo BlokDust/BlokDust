@@ -11,6 +11,8 @@ class Modifiable extends Block implements IModifiable{
 
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
     public OldModifiers: ObservableCollection<IModifier>;
+    public Source: any;
+    public OutputGain: Tone.Signal;
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
@@ -149,17 +151,25 @@ class Modifiable extends Block implements IModifiable{
         // connect modifiers in new collection.
         var mods: IModifier[] = this.Modifiers.ToArray();
 
+        var _effects = [];
+
         for (var i = 0; i < mods.length; i++) {
-            var mod: IModifier = mods[i];
+            var mod:IModifier = mods[i];
 
             var effects = mod.Effects.ToArray();
 
-            for (var j = 0; j < effects.length; j++){
-                var effect: IEffect = effects[j];
+            for (var j = 0; j < effects.length; j++) {
+                var effect:IEffect = effects[j];
 
                 this._ConnectEffect(effect);
             }
+
+            if (mod.Component.Effect) {
+                _effects.push(mod.Component);
+            }
         }
+
+        this._UpdateEffectsChain(_effects);
 
         this.OldModifiers = new ObservableCollection<IModifier>();
         this.OldModifiers.AddRange(this.Modifiers.ToArray());
@@ -171,6 +181,34 @@ class Modifiable extends Block implements IModifiable{
 
     private _DisconnectEffect(effect: IEffect) {
         effect.Disconnect(this);
+    }
+
+    private _UpdateEffectsChain(effects) {
+
+        console.log(effects);
+
+        if (effects.length) {
+            var start = effects[0].Modifiable.Source;
+            var end = effects[0].Modifiable.OutputGain;
+
+            start.disconnect();
+            start.connect(effects[0].Effect);
+            var currentUnit = effects[0].Effect;
+
+            for (var i = 1; i < effects.length; i++) {
+                var toUnit = effects[i].Effect;
+                currentUnit.disconnect();
+                currentUnit.connect(toUnit);
+                currentUnit = toUnit;
+            }
+            effects[effects.length - 1].Effect.disconnect();
+            effects[effects.length - 1].Effect.connect(end);
+            end.connect(App.AudioMixer.Master);
+        } else {
+            this.Source.disconnect();
+            this.Source.connect(this.OutputGain);
+        }
+
     }
 
 }

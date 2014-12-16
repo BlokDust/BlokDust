@@ -6,12 +6,12 @@ import App = require("../../App");
 
 class Filter extends Modifier {
 
-    effect;
+    Component;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new FilterComponent({
+        this.Component = new FilterComponent({
             type : "lowpass",
             frequency : 440,
             rolloff : -12,
@@ -22,7 +22,7 @@ class Filter extends Modifier {
 
 
 
-        this.Effects.Add(this.effect);
+        this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -2),new Point(1, 0),new Point(1, 2),new Point(-1, 0));
@@ -51,7 +51,7 @@ class Filter extends Modifier {
     }
 
     Delete(){
-        this.effect.Delete();
+        this.Component.Delete();
     }
 
 }

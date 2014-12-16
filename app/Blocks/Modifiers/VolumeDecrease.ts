@@ -5,13 +5,13 @@ import Grid = require("../../Grid");
 
 class VolumeDecrease extends Modifier {
 
-    effect;
+    Component;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new VolumeComponent(0.5);
-        this.Effects.Add(this.effect);
+        this.Component = new VolumeComponent(0.5);
+        this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
@@ -31,7 +31,7 @@ class VolumeDecrease extends Modifier {
     }
 
     Delete(){
-        this.effect.Delete();
+        this.Component.Delete();
     }
 
 }

@@ -6,12 +6,12 @@ import App = require("../../App");
 
 class EQ extends Modifier {
 
-    effect;
+    Component;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new EQComponent({
+        this.Component = new EQComponent({
             band1: {
                 frequency: 80,
                 Q: 1,
@@ -44,7 +44,7 @@ class EQ extends Modifier {
             }
         });
 
-        this.Effects.Add(this.effect);
+        this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -82,7 +82,7 @@ class EQ extends Modifier {
     }
 
     Delete(){
-        this.effect.Delete();
+        this.Component.Delete();
     }
 
 }

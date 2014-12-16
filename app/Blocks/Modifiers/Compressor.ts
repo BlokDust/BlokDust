@@ -5,14 +5,14 @@ import Grid = require("../../Grid");
 
 class Compressor extends Modifier {
 
-    effect;
+    Component;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new CompressorComponent(440, "lowpass", -12, 1);
+        this.Component = new CompressorComponent(440, "lowpass", -12, 1);
 
-        this.Effects.Add(this.effect);
+        this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
@@ -32,7 +32,7 @@ class Compressor extends Modifier {
     }
 
     Delete(){
-        this.effect.Delete();
+        this.Component.Delete();
     }
 
 }
