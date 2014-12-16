@@ -12,7 +12,7 @@ class PannerComponent extends Effect implements IEffect {
         super();
 
         this.Panner = new Tone.AutoPanner(
-            1
+            Settings.frequency
         );
     }
 
@@ -22,6 +22,7 @@ class PannerComponent extends Effect implements IEffect {
         this.Modifiable.Source.disconnect();
 
         //TODO:
+        console.log(this.Modifiable.Modifiers);
         //Get an array of all connected modifiers
         //Push this newEffect to the array list
 

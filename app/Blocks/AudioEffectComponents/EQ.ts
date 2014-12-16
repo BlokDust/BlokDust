@@ -70,6 +70,7 @@ class EQComponent extends Effect implements IEffect {
         this.EQOutput = new Tone.Signal();
 
         this.EQInput.connectSeries(this.EQInput, this.Band1, this.Band2, this.Band3, this.Band4, this.Band5, this.Band6, this.EQOutput);
+        //TODO: Add this to tone instead of doing the inner connections within this constructor
     }
 
     Connect(modifiable:IModifiable): void{
