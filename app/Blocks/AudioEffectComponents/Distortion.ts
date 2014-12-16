@@ -1,8 +1,6 @@
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
-import App = require("../../App");
-
 
 class DistortionComponent extends Effect implements IEffect {
 

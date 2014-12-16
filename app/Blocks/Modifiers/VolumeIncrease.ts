@@ -10,7 +10,10 @@ class VolumeIncrease extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new VolumeComponent(2);
+        this.Component = new VolumeComponent({
+            gain: 1.5
+        });
+
         this.Effects.Add(this.Component);
 
         // Define Outline for HitTest

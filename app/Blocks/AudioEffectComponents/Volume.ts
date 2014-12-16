@@ -5,27 +5,26 @@ import IModifiable = require("../IModifiable");
 
 class Volume extends Effect implements IEffect {
 
-    public increment: number;
+    public Effect: Tone.Signal;
 
-    constructor(increment) {
+    constructor(Settings) {
         super();
-        this.increment = increment;
+        this.Effect = new Tone.Signal();
+        this.Effect.output.gain.value = Settings.gain;
     }
 
     Connect(modifiable: IModifiable): void{
         super.Connect(modifiable);
-        this.Modifiable.OutputGain.input.gain.value *= this.increment;
 
     }
 
     Disconnect(modifiable: IModifiable): void{
         super.Disconnect(modifiable);
-        this.Modifiable.OutputGain.input.gain.value /= this.increment;
 
     }
 
     Delete() {
-
+        this.Effect.dispose();
     }
 }
 
