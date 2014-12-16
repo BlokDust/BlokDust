@@ -8,10 +8,15 @@ class FilterComponent extends Effect implements IEffect {
 
     public Filter: Tone.Filter;
 
-    constructor(frequency: number, type: string, rolloff: number, Q: number) {
+    constructor(Settings) {
         super();
-        this.Filter = new Tone.Filter(frequency, type, rolloff);
-        this.Filter.setQ(Q);
+        this.Filter = new Tone.Filter({
+            "type" : Settings.type,
+            "frequency" : Settings.frequency,
+            "rolloff" : Settings.rolloff,
+            "Q" : Settings.Q,
+            "gain" : Settings.gain
+        });
     }
 
     Connect(modifiable:IModifiable): void{

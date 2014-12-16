@@ -11,7 +11,38 @@ class EQ extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new EQComponent(0, -500, 500);
+        this.effect = new EQComponent({
+            band1: {
+                frequency: 80,
+                Q: 1,
+                gain: 0
+            },
+            band2: {
+                frequency: 140,
+                Q: 1,
+                gain: 0
+            },
+            band3: {
+                frequency: 440,
+                Q: 0.5,
+                gain: -5
+            },
+            band4: {
+                frequency: 1240,
+                Q: 3,
+                gain: 5
+            },
+            band5: {
+                frequency: 3000,
+                Q: 1,
+                gain: 0
+            },
+            band6: {
+                frequency: 12000,
+                Q: 1,
+                gain: 8
+            }
+        });
 
         this.Effects.Add(this.effect);
 

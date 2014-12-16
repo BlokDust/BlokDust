@@ -11,7 +11,16 @@ class Filter extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.effect = new FilterComponent(440, "lowpass", -12, 1);
+        this.effect = new FilterComponent({
+            type : "lowpass",
+            frequency : 440,
+            rolloff : -12,
+            Q : 1,
+            gain : 0
+        });
+
+
+
 
         this.Effects.Add(this.effect);
 
