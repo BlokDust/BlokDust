@@ -17,7 +17,7 @@ class AutoWah extends Modifier {
             baseFrequency: 1000,
             octaves: 8,
             sensitivity: 0,
-            gain : 40,
+            gain : 30,
             rolloff : -48,
 
             follower : {
