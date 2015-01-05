@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
         xmlns:draw="lib://Fayde.Drawing"
-        xmlns:zoom="lib://Fayde.Zoomer"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
@@ -52,25 +51,14 @@
             <Button x:Name="ZoomOut" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
-        <zoom:Zoomer Grid.Row="1" ZoomLevels="{Binding ZoomLevels}" ZoomFactor="1.5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}" ConstrainToViewport="true">
-            <Canvas>
-                <draw:Sketch x:Name="Blocks"
-                             Canvas.Left="{Binding ZoomContentOffset.X}"
-                             Canvas.Top="{Binding ZoomContentOffset.Y}"
-                             Width="{Binding ZoomContentSize.Width}"
-                             Height="{Binding ZoomContentSize.Height}"
-                             MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
-                             TouchDown="{EventBinding BlocksSketch_TouchDown}"
-                             MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
-                             MouseMove="{EventBinding BlocksSketch_MouseMove}"
-                             IsAnimated="true"
-                             Draw="{EventBinding BlocksSketch_Draw}" />
-            </Canvas>
-        </zoom:Zoomer>
-
-        <Canvas Grid.Row="1">
-
-        </Canvas>
+        <draw:Sketch x:Name="Blocks"
+                     Grid.Row="1"
+                     MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
+                     TouchDown="{EventBinding BlocksSketch_TouchDown}"
+                     MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
+                     MouseMove="{EventBinding BlocksSketch_MouseMove}"
+                     IsAnimated="true"
+                     Draw="{EventBinding BlocksSketch_Draw}" />
 
         <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
             <StackPanel.DataContext>
@@ -80,13 +68,6 @@
             <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
             <TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>
 
-            <!--<ListBox Width="200" ItemsSource="{Binding Targets}" ScrollViewer.VerticalScrollBarVisibility="Visible">-->
-                <!--<ListBox.ItemTemplate>-->
-                    <!--<DataTemplate>-->
-                        <!--<TextBlock Text="{Binding Id}" />-->
-                    <!--</DataTemplate>-->
-                <!--</ListBox.ItemTemplate>-->
-            <!--</ListBox>-->
         </StackPanel>
 
     </Grid>

@@ -31,6 +31,8 @@ import InfoViewModel = require("./InfoViewModel");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Size = Fayde.Utils.Size;
 import Vector = Fayde.Utils.Vector;
+import ScaleTransform = Fayde.Media.ScaleTransform;
+import TranslateTransform = Fayde.Media.TranslateTransform;
 
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
@@ -38,8 +40,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     private _SelectedBlock: IBlock;
     private _ZoomLevel: number = 0;
     private _ZoomLevels: number = 3;
-    private _ZoomContentOffset: Vector;
-    private _ZoomContentSize: Size;
+    private _ZoomContentOffset: TranslateTransform;
+    private _ZoomContentSize: ScaleTransform;
 
     private _InfoViewModel: InfoViewModel;
 
@@ -72,23 +74,26 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this.OnPropertyChanged("ZoomLevels");
     }
 
-    get ZoomContentSize(): Size {
+    get ZoomContentSize(): ScaleTransform {
         return this._ZoomContentSize;
     }
 
-    set ZoomContentSize(value: Size) {
+    set ZoomContentSize(value: ScaleTransform) {
         this._ZoomContentSize = value;
         this.OnPropertyChanged("ZoomContentSize");
     }
 
-    get ZoomContentOffset(): Vector {
+    get ZoomContentOffset(): TranslateTransform {
         if(!this._ZoomContentOffset){
-            this._ZoomContentOffset = new Vector(0, 0);
+            var translateTransform = new TranslateTransform();
+            translateTransform.X = 0;
+            translateTransform.Y = 0;
+            return translateTransform;
         }
         return this._ZoomContentOffset;
     }
 
-    set ZoomContentOffset(value: Vector) {
+    set ZoomContentOffset(value: TranslateTransform) {
         this._ZoomContentOffset = value;
         this.OnPropertyChanged("ZoomContentOffset");
     }
@@ -107,11 +112,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         }, this);
 
         this._InfoViewModel = new InfoViewModel();
-    }
-
-    ZoomUpdated(e: Fayde.IEventBindingArgs<Fayde.Zoomer.ZoomerEventArgs>){
-        this.ZoomContentSize = e.args.Size;
-        this.ZoomContentOffset = e.args.Offset;
     }
 
     ZoomIn_Click(){
