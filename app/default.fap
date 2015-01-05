@@ -52,7 +52,6 @@
         </StackPanel>
 
         <draw:Sketch x:Name="Blocks"
-                     Grid.Row="1"
                      MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
                      TouchDown="{EventBinding BlocksSketch_TouchDown}"
                      MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"

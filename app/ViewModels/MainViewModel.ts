@@ -29,8 +29,6 @@ import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
 
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-import Size = Fayde.Utils.Size;
-import Vector = Fayde.Utils.Vector;
 import ScaleTransform = Fayde.Media.ScaleTransform;
 import TranslateTransform = Fayde.Media.TranslateTransform;
 
