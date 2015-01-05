@@ -28,10 +28,6 @@ import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
 
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import ScaleTransform = Fayde.Media.ScaleTransform;
-import TranslateTransform = Fayde.Media.TranslateTransform;
-
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     private _BlocksSketch: BlocksSketch;

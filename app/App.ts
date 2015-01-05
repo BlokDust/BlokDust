@@ -11,7 +11,6 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-import FilteredCollection = Fayde.Collections.FilteredCollection;
 
 class App{
 

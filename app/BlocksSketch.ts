@@ -15,7 +15,6 @@ import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
