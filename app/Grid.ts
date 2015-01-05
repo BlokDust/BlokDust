@@ -1,4 +1,3 @@
-import Size = Fayde.Utils.Size;
 
 class Grid extends Fayde.Drawing.SketchContext {
 
@@ -33,7 +32,7 @@ class Grid extends Fayde.Drawing.SketchContext {
         // width  / 75 = 10
         // height / x  = 10
         // x = 1 / 10 * height
-        return (1 / this.Unit.Height) * this.Ctx.canvas.height;
+        return (1 / this.Unit.height) * this.Ctx.canvas.height;
     }
 
     Draw() {
