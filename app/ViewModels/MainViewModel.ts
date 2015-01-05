@@ -1,3 +1,7 @@
+//todo: remove these when fayde-unify is available
+///<amd-dependency path="Fayde.Utils"/>.
+///<amd-dependency path="Fayde.Transformer"/>.
+
 import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
 import IBlock = require("../Blocks/IBlock");
@@ -32,11 +36,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     private _BlocksSketch: BlocksSketch;
     private _SelectedBlock: IBlock;
-    private _ZoomLevel: number = 0;
-    private _ZoomLevels: number = 3;
-    private _ZoomContentOffset: TranslateTransform;
-    private _ZoomContentSize: ScaleTransform;
-
     private _InfoViewModel: InfoViewModel;
 
     get SelectedBlock(): IBlock{
@@ -48,48 +47,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._SelectedBlock = value;
         //this._InfoViewModel.SelectedBlock = value;
         this.OnPropertyChanged("SelectedBlock");
-    }
-
-    get ZoomLevel(): number {
-        return this._ZoomLevel;
-    }
-
-    set ZoomLevel(value: number) {
-        this._ZoomLevel = value;
-        this.OnPropertyChanged("ZoomLevel");
-    }
-
-    get ZoomLevels(): number {
-        return this._ZoomLevels;
-    }
-
-    set ZoomLevels(value: number) {
-        this._ZoomLevels = value;
-        this.OnPropertyChanged("ZoomLevels");
-    }
-
-    get ZoomContentSize(): ScaleTransform {
-        return this._ZoomContentSize;
-    }
-
-    set ZoomContentSize(value: ScaleTransform) {
-        this._ZoomContentSize = value;
-        this.OnPropertyChanged("ZoomContentSize");
-    }
-
-    get ZoomContentOffset(): TranslateTransform {
-        if(!this._ZoomContentOffset){
-            var translateTransform = new TranslateTransform();
-            translateTransform.X = 0;
-            translateTransform.Y = 0;
-            return translateTransform;
-        }
-        return this._ZoomContentOffset;
-    }
-
-    set ZoomContentOffset(value: TranslateTransform) {
-        this._ZoomContentOffset = value;
-        this.OnPropertyChanged("ZoomContentOffset");
     }
 
     constructor() {
@@ -109,15 +66,11 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     ZoomIn_Click(){
-        if (this.ZoomLevel < this._ZoomLevels){
-            this.ZoomLevel += 1;
-        }
+        this._BlocksSketch.ZoomIn();
     }
 
     ZoomOut_Click(){
-        if (this.ZoomLevel > 0){
-            this.ZoomLevel -= 1;
-        }
+        this._BlocksSketch.ZoomOut();
     }
 
     BlocksSketch_Draw(e: Fayde.IEventBindingArgs<Fayde.Drawing.SketchDrawEventArgs>){

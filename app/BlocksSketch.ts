@@ -19,6 +19,7 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
+import Transformer = Fayde.Transformer.Transformer;
 
 declare var PixelPalette;
 
@@ -31,6 +32,8 @@ class BlocksSketch extends Grid {
     private _IsTouchDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
+    private _Transformer: Transformer;
+    private _ZoomLevels: number = 5;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -58,6 +61,8 @@ class BlocksSketch extends Grid {
         super();
 
         this._DisplayList = new DisplayList(App.Blocks);
+        this._Transformer = new Transformer();
+        this._Transformer.ZoomLevels = 5;
 
         // register command handlers
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
@@ -81,7 +86,22 @@ class BlocksSketch extends Grid {
             App.Palette = palette;
         });
 
+        this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
+
         this._Invalidate();
+    }
+
+    private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
+        var scale = e.Transforms.Children.GetValueAt(0);
+        console.log((<any>scale).ScaleX);
+    }
+
+    ZoomIn() {
+        this._Transformer.ZoomTo(this._Transformer.ZoomLevel + 1);
+    }
+
+    ZoomOut() {
+        this._Transformer.ZoomTo(this._Transformer.ZoomLevel - 1);
     }
 
     private _Invalidate(){

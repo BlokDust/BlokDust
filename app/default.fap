@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
         xmlns:d="lib://Fayde.Drawing"
-        xmlns:t="lib://Fayde.Transformer"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
@@ -52,15 +51,14 @@
             <Button x:Name="ZoomOut" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
-        <t:TransformerControl Grid.Row="1">
-            <d:Sketch x:Name="Blocks"
-                         MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
-                         TouchDown="{EventBinding BlocksSketch_TouchDown}"
-                         MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
-                         MouseMove="{EventBinding BlocksSketch_MouseMove}"
-                         IsAnimated="true"
-                         Draw="{EventBinding BlocksSketch_Draw}" />
-        </t:TransformerControl>
+        <d:Sketch x:Name="Blocks"
+                  Grid.Row="1"
+                  MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
+                  TouchDown="{EventBinding BlocksSketch_TouchDown}"
+                  MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
+                  MouseMove="{EventBinding BlocksSketch_MouseMove}"
+                  IsAnimated="true"
+                  Draw="{EventBinding BlocksSketch_Draw}" />
 
         <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
             <StackPanel.DataContext>
