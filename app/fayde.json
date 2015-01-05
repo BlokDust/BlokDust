@@ -7,11 +7,12 @@
     "Fayde.Controls": {
       "exports": "Fayde.Controls"
     },
-    "Fayde.Drawing": {
-      "exports": "Fayde.Drawing"
-    },
     "Fayde.Utils": {
       "exports": "Fayde.Utils"
+    },
+    "Fayde.Drawing": {
+      "exports": "Fayde.Drawing",
+      "deps": ["Fayde.Utils"]
     },
     "TWEEN": {
       "path": "lib/tween.ts/build/tween.min",
