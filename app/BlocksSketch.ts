@@ -33,7 +33,7 @@ class BlocksSketch extends Grid {
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
-    private _ZoomLevels: number = 5;
+    private _ScaleFactor: number = 1;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -62,7 +62,9 @@ class BlocksSketch extends Grid {
 
         this._DisplayList = new DisplayList(App.Blocks);
         this._Transformer = new Transformer();
+        this._Transformer.ZoomLevel = 0;
         this._Transformer.ZoomLevels = 5;
+        this._Transformer.ZoomFactor = 2;
 
         // register command handlers
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
@@ -82,7 +84,7 @@ class BlocksSketch extends Grid {
         var pixelPalette = new PixelPalette("img/palette.gif");
 
         pixelPalette.Load((palette: string[]) => {
-            console.log(palette);
+            //console.log(palette);
             App.Palette = palette;
         });
 
@@ -92,16 +94,17 @@ class BlocksSketch extends Grid {
     }
 
     private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
-        var scale = e.Transforms.Children.GetValueAt(0);
-        console.log((<any>scale).ScaleX);
+        this._ScaleFactor = (<any>e.Transforms.Children.GetValueAt(0)).ScaleX;
+        //scale = (<any>scale).ScaleX;
+        //console.log((<any>scale).ScaleX);
     }
 
     ZoomIn() {
-        this._Transformer.ZoomTo(this._Transformer.ZoomLevel + 1);
+        this._Transformer.Zoom(1);
     }
 
     ZoomOut() {
-        this._Transformer.ZoomTo(this._Transformer.ZoomLevel - 1);
+        this._Transformer.Zoom(-1);
     }
 
     private _Invalidate(){
@@ -152,7 +155,10 @@ class BlocksSketch extends Grid {
     Update() {
         super.Update();
 
-        this._Unit = this.Ctx.canvas.width / 1000;
+        // update transformer
+        this._Transformer.SizeChanged(new Size(this.Ctx.canvas.width, this.Ctx.canvas.height));
+
+        this._Unit = (this.Ctx.canvas.width / 1000) / this._ScaleFactor;
         this.Divisor = this._Unit * 50;
 
         // update blocks

@@ -1,6 +1,5 @@
 //todo: remove these when fayde-unify is available
 ///<amd-dependency path="Fayde.Utils"/>.
-///<amd-dependency path="Fayde.Transformer"/>.
 
 import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
