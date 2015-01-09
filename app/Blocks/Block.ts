@@ -20,7 +20,6 @@ class Block extends DisplayObject implements IBlock {
 
     public BlockType: BlockType;
 
-    // position: normalised point
     constructor(grid: Grid, position: Point) {
         super(grid.Ctx);
 
@@ -91,7 +90,6 @@ class Block extends DisplayObject implements IBlock {
         this.IsPressed = false;
     }
 
-    // normalised point
     MouseMove(point: Point) {
         if (this.IsPressed){
             this.GridPosition = this.Grid.GetGridPosition(point);

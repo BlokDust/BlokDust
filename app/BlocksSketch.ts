@@ -25,7 +25,6 @@ declare var PixelPalette;
 
 class BlocksSketch extends Grid {
 
-    private _Unit: number;
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
@@ -61,10 +60,6 @@ class BlocksSketch extends Grid {
         super();
 
         this._DisplayList = new DisplayList(App.Blocks);
-        this._Transformer = new Transformer();
-        this._Transformer.ZoomLevel = 0;
-        this._Transformer.ZoomLevels = 5;
-        this._Transformer.ZoomFactor = 2;
 
         // register command handlers
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
@@ -88,15 +83,11 @@ class BlocksSketch extends Grid {
             App.Palette = palette;
         });
 
-        this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
-
         this._Invalidate();
     }
 
     private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
-        this._ScaleFactor = (<any>e.Transforms.Children.GetValueAt(0)).ScaleX;
-        //scale = (<any>scale).ScaleX;
-        //console.log((<any>scale).ScaleX);
+        this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
     }
 
     ZoomIn() {
@@ -144,22 +135,31 @@ class BlocksSketch extends Grid {
     }
 
     private _GetRandomPosition(): Point{
-        return new Point(Math.random(), Math.random());
+        return new Point(Math.random() * this.Width, Math.random() * this.Height);
     }
 
     Setup(){
         super.Setup();
 
+        // todo: make these default values
+        this._Transformer = new Transformer();
+        this._Transformer.ZoomLevel = 0;
+        this._Transformer.ZoomLevels = 5;
+        this._Transformer.ZoomFactor = 2;
+        this._Transformer.DragAccelerationEnabled = true;
+        this._Transformer.ConstrainToViewport = true;
+        this._Transformer.AnimationSpeed = 250;
+        this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
+        this._Transformer.SizeChanged(this.Size);
     }
 
     Update() {
         super.Update();
 
-        // update transformer
-        this._Transformer.SizeChanged(new Size(this.Ctx.canvas.width, this.Ctx.canvas.height));
+        this._CalculateUnit();
 
-        this._Unit = (this.Ctx.canvas.width / 1000) / this._ScaleFactor;
-        this.Divisor = this._Unit * 50;
+        // update transformer
+        this._Transformer.SizeChanged(this.Size);
 
         // update blocks
         for (var i = 0; i < App.Blocks.Count; i++) {
@@ -183,6 +183,11 @@ class BlocksSketch extends Grid {
         this._DisplayList.Draw();
 
         this.DrawParticles();
+    }
+
+    _CalculateUnit() {
+        var unit = this.Width / 1000;
+        this.Divisor = (unit * 50) / this._ScaleFactor;
     }
 
     // PARTICLES //
@@ -253,7 +258,7 @@ class BlocksSketch extends Grid {
 
                 // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
-                var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
+                var catchmentArea = this.Width * modifier.CatchmentArea;
                 var distanceFromModifier = modifiable.DistanceFrom(modifier.Position);
 
                 if (distanceFromModifier <= catchmentArea) {
@@ -271,13 +276,11 @@ class BlocksSketch extends Grid {
         }
     }
 
-    private _NormalisePoint(point: Point): Point {
-        return new Point(Math.normalise(point.x, 0, this.Ctx.canvas.width), Math.normalise(point.y, 0, this.Ctx.canvas.height));
-    }
-
     MouseDown(e: Fayde.Input.MouseEventArgs){
+        var point = (<any>e).args.Source.MousePosition;
         this._IsMouseDown = true;
         this._CheckCollision(e);
+        this._Transformer.PointerDown(point);
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
@@ -318,15 +321,20 @@ class BlocksSketch extends Grid {
                 }
             }
         }
+
+        this._Transformer.PointerUp();
     }
 
     MouseMove(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
 
         if (this.SelectedBlock){
-            this.SelectedBlock.MouseMove(this._NormalisePoint(point));
+            //this.SelectedBlock.MouseMove(this._NormalisePoint(point));
+            this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }
+
+        this._Transformer.PointerMove(point);
     }
 
     DeleteSelectedBlock(){
