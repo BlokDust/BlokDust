@@ -1,0 +1,12 @@
+{
+  "name": "BlokDust",
+  "client": {
+    "tests": [
+      "app/fayde.json"
+    ]
+  },
+  "type": "app",
+  "typings": [
+    "app/lib/tone/utils/TypeScript/Tone.d.ts"
+  ]
+}

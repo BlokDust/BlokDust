@@ -2,17 +2,13 @@
   "name": "BlokDust",
   "version": "0.1.0",
   "dependencies": {
-    "fayde": "~0.16.0",
+    "fayde": "~0.16.8",
     "fayde.controls": "~0.16.0",
-    "exjs": "~0.2.2",
-    "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.3.0",
+    "exjs": "~0.2.8",
+    "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.3.4",
     "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.4.0",
-    "fayde.transformer": "git://github.com/edsilv/fayde.transformer#~0.5.0",
+    "fayde.transformer": "git://github.com/edsilv/fayde.transformer#~0.5.5",
     "tone": "git://github.com/lukephills/Tone.js#~0.2.8",
     "pixelpalette": "0.1.8"
-  },
-  "resolutions": {
-    "fayde": "~0.16.0",
-    "minerva": "~0.4.0"
   }
 }
