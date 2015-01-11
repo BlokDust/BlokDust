@@ -13,6 +13,7 @@ import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
 import Envelope = require("../Blocks/Modifiers/Envelope");
 import Filter = require("../Blocks/Modifiers/Filter");
 import LFO = require("../Blocks/Modifiers/LFO");
+import Tremolo = require("../Blocks/Modifiers/Tremolo");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
 import Distortion = require("../Blocks/Modifiers/Distortion");
@@ -187,6 +188,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     LFOBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(LFO);
+    }
+
+    TremeloBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Tremolo);
     }
 
     DelayBlockBtn_Click(e: any){

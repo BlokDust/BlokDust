@@ -1,18 +1,18 @@
-import LFOComponent = require("../AudioEffectComponents/LFO");
+import TremoloComponent = require("../AudioEffectComponents/Tremolo");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Tremelo extends Modifier {
+class Tremolo extends Modifier {
 
     public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new LFOComponent(2, -20, 20, 'triangle');
+        this.Component = new TremoloComponent(2, 0, 60, 'triangle');
 
         this.Effects.Add(this.Component);
 
@@ -48,4 +48,4 @@ class Tremelo extends Modifier {
 
 }
 
-export = Tremelo;
+export = Tremolo;

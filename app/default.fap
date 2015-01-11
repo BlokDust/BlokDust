@@ -33,6 +33,7 @@
             <Button x:Name="PitchIncreaseBlockBtn" Click="{EventBinding PitchIncreaseBlockBtn_Click}">Pitch +</Button>
             <Button x:Name="PitchDecreaseBlockBtn" Click="{EventBinding PitchDecreaseBlockBtn_Click}">Pitch -</Button>
             <Button x:Name="LFOBlockBtn" Click="{EventBinding LFOBlockBtn_Click}">LFO</Button>
+            <Button x:Name="TremeloBlockBtn" Click="{EventBinding TremoloBlockBtn_Click}">Tremolo</Button>
             <Button x:Name="DelayBlockBtn" Click="{EventBinding DelayBlockBtn_Click}">Delay</Button>
             <Button x:Name="ScuzzBlockBtn" Click="{EventBinding ScuzzBlockBtn_Click}">Scuzz</Button>
             <Button x:Name="DistortionBlockBtn" Click="{EventBinding DistortionBlockBtn_Click}">Dist</Button>

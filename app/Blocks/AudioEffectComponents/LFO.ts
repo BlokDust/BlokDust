@@ -11,7 +11,7 @@ class LFO extends Effect implements IEffect {
 
     constructor(rate, outputMin, outputMax, waveform) {
         super();
-        this.LFO = new Tone.LFO(rate, outputMin, outputMax); // Could do this in the same way as delay - only having one LFO that gets incremented
+        this.LFO = new Tone.LFO(rate, outputMin, outputMax);
         this.LFO.setType(waveform);
     }
 

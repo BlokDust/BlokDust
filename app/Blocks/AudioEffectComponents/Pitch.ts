@@ -19,7 +19,6 @@ class PitchComponent extends Effect implements IEffect {
 
         if (this.Modifiable.Source.frequency){
             var _value = this.Modifiable.Source.frequency.getValue();
-            //var _value = this.Modifiable.Source.StartFrequency;
             this.Modifiable.Source.frequency.setValue(_value * this.PitchIncrement, 0);
         }
 
@@ -30,7 +29,6 @@ class PitchComponent extends Effect implements IEffect {
 
         if (this.Modifiable.Source.frequency) {
             var _value = this.Modifiable.Source.frequency.getValue();
-            //var _value = this.Modifiable.Source.StartFrequency;
             this.Modifiable.Source.frequency.setValue(_value / this.PitchIncrement, 0);
         }
 

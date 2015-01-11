@@ -2,30 +2,32 @@ import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 
-class TremeloComponent extends Effect implements IEffect {
+class TremoloComponent extends Effect implements IEffect {
 
-    Effect: Tone.LFO;
+    Tremolo: Tone.LFO;
 
     constructor(rate, outputMin, outputMax, waveform) {
         super();
-        this.Effect = new Tone.LFO(rate, outputMin, outputMax);
-        this.Effect.setType(waveform);
+        this.Tremolo = new Tone.LFO(rate, outputMin, outputMax);
+        this.Tremolo.setType(waveform);
     }
 
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
-
+        this.Tremolo.connect(this.Modifiable.OutputGain);
+        this.Tremolo.start();
     }
 
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
-
+        this.Tremolo.disconnect();
+        this.Tremolo.stop();
     }
 
     Delete() {
-        this.Effect.dispose();
+        this.Tremolo.dispose();
     }
 
 }
 
-export = TremeloComponent;
+export = TremoloComponent;
