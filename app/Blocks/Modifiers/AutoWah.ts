@@ -7,7 +7,7 @@ import App = require("../../App");
 
 class AutoWah extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);

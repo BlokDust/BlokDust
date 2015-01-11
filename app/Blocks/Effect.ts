@@ -18,6 +18,9 @@ class Effect implements IEffect {
     Disconnect(modifiable: IModifiable): void {
         this.Modifiable = modifiable;
     }
+    Delete(): void {
+
+    }
 }
 
 export = Effect;

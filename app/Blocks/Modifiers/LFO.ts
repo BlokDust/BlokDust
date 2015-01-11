@@ -1,12 +1,13 @@
 import LFOComponent = require("../AudioEffectComponents/LFO");
 import IModifier = require("../IModifier");
+import IEffect = require("../IEffect");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class LFO extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);

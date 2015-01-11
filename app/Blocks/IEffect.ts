@@ -6,6 +6,7 @@ interface IEffect {
 
     Connect(modifiable: IModifiable): void;
     Disconnect(modifiable: IModifiable): void;
+    Delete(): void;
 
 }
 

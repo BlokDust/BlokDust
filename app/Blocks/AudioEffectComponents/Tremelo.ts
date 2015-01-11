@@ -1,16 +1,15 @@
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
-import App = require("../../App");
 
+class TremeloComponent extends Effect implements IEffect {
 
-class ReverbComponent extends Effect implements IEffect {
+    Effect: Tone.LFO;
 
-    public Effect: Tone.Freeverb;
-
-    constructor(roomSize?: number, dampening?: number) {
+    constructor(rate, outputMin, outputMax, waveform) {
         super();
-        this.Effect = new Tone.Freeverb(roomSize, dampening);
+        this.Effect = new Tone.LFO(rate, outputMin, outputMax);
+        this.Effect.setType(waveform);
     }
 
     Connect(modifiable:IModifiable): void{
@@ -26,6 +25,7 @@ class ReverbComponent extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
 }
 
-export = ReverbComponent;
+export = TremeloComponent;

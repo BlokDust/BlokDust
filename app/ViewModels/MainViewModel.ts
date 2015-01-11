@@ -7,8 +7,7 @@ import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
 import Microphone = require("../Blocks/Sources/Microphone");
 import Keyboard = require("../Blocks/Modifiers/Keyboard");
-import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
-import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
+import Gain = require("../Blocks/Modifiers/Gain");
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
 import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
 import Envelope = require("../Blocks/Modifiers/Envelope");
@@ -166,12 +165,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlock(Keyboard);
     }
 
-    VolumeIncreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(VolumeIncrease);
-    }
-
-    VolumeDecreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(VolumeDecrease);
+    GainBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Gain);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){

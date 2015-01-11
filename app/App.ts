@@ -27,6 +27,7 @@ class App{
     static Particles: Particle[];
     static Palette: string[];
     static OscillatorsPool: PooledFactoryResource<Oscillator>;
+    static AudioSettings: ToneSettings;
 
     constructor() {
 

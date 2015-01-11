@@ -31,12 +31,11 @@ class LFO extends Effect implements IEffect {
         if (this.Modifiable.Source.detune) {
             this.LFO.stop();
             this.LFO.disconnect();
-
         }
     }
 
     Delete() {
-
+        this.LFO.dispose();
     }
 
 }

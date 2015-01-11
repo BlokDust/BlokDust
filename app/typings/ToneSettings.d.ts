@@ -10,6 +10,8 @@ interface ToneSettings {
 
     output?: OutputSettings;
 
+    Volume?: VolumeSettings;
+
 }
 
 interface NoiseSettings {
@@ -36,4 +38,16 @@ interface OutputSettings {
     volume?: number;
 }
 
+
+
+interface VolumeSettings {
+    Gain: {
+        MinValue: number;
+        MaxValue: number;
+        CurrentValue: number;
+        Quantised: boolean;
+        CentredOrigin: boolean;
+    };
+    Name: string;
+}
 

@@ -1,17 +1,15 @@
 import IInputManager = require("../Inputs/IInputManager");
+import IModifier = require("../../Blocks/IModifier");
 
 class InputManager {
 
     public MasterKeyboardMap: Object;
-    public EventListenerCount: number = 0;
-    public EventsInUse;
+    private _keyboardModifiableInUse: any = [];
 
 
 
     constructor() {
 
-
-        this.EventsInUse = [];
 
         this.MasterKeyboardMap = {
             8: '', //backspace
@@ -115,15 +113,19 @@ class InputManager {
         }
     }
 
-    AddEventListener(event, eventHandler, _this): void {
-        document.addEventListener(event, eventHandler);
 
+    AddKeyboardListener(keyDownHandler, keyUpHandler, keyboard?): void {
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+
+        this._keyboardModifiableInUse.push(keyboard);
     }
 
-    RemoveEventListener(event, eventHandler): void {
-        document.removeEventListener(event, eventHandler);
+    RemoveKeyboardListener(keyDownHandler, keyUpHandler, keyboard?): void {
+        document.removeEventListener('keydown', keyDownHandler);
+        document.removeEventListener('keyup', keyUpHandler);
 
-
+        //todo: remove keyboard from this._keyboardModifiableInUse
     }
 
 }

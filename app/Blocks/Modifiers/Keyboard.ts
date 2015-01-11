@@ -3,11 +3,12 @@ import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
 import App = require("../../App");
+import IEffect = require("../IEffect");
 
 class Keyboard extends Modifier {
 
     public Name: string = 'Keyboard';
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);

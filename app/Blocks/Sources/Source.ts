@@ -65,12 +65,13 @@ class Source extends Modifiable {
         this.OutputGain = new Tone.Signal;
         this.OutputGain.output.gain.value = this.Settings.output.volume;
 
-        // Connect them up
+        //Connect them up
         if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource ) {
             this.Envelope.connect(this.Source.output.gain);
         }
 
-        this.Source.connectSeries(this.Source, this.OutputGain, App.AudioMixer.Master);
+        this.Source.connect(this.OutputGain);
+        this.OutputGain.connect(App.AudioMixer.Master);
 
         // Start
         this.Source.start();

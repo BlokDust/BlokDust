@@ -1,12 +1,13 @@
 import ChorusComponent = require("../AudioEffectComponents/Chorus");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class Chorus extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);

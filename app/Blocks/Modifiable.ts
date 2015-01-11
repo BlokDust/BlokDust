@@ -185,8 +185,6 @@ class Modifiable extends Block implements IModifiable{
 
     private _UpdateEffectsChain(effects) {
 
-        console.log(effects);
-
         if (effects.length) {
             var start = effects[0].Modifiable.Source;
             var end = effects[0].Modifiable.OutputGain;
