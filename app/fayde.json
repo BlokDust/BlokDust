@@ -16,7 +16,11 @@
     },
     "Fayde.Transformer": {
       "exports": "Fayde.Transformer",
-      "deps": ["Fayde.Utils", "TWEEN", "Fayde.Controls"]
+      "deps": [
+        "Fayde.Utils",
+        "TWEEN",
+        "Fayde.Controls"
+      ]
     },
     "Fayde.Drawing": {
       "exports": "Fayde.Drawing"
