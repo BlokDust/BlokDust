@@ -18,6 +18,8 @@ class Delay extends Modifier {
             dryWet: 0.5
         });
 
+
+
         this.Effects.Add(this.Component);
 
         // Define Outline for HitTest

@@ -5,6 +5,8 @@ import BlockType = Type.BlockType;
 import Size = Fayde.Utils.Size;
 import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
+import BlocksSketch = require("../BlocksSketch");
+import ParametersPanel = require("../ParametersPanel");
 
 class Block extends DisplayObject implements IBlock {
 
@@ -17,6 +19,8 @@ class Block extends DisplayObject implements IBlock {
     public Grid: Grid;
     public Outline: Point[] = [];
     public ZIndex;
+    public ParamJson;
+
 
     public BlockType: BlockType;
 
@@ -25,6 +29,7 @@ class Block extends DisplayObject implements IBlock {
         super(grid.Ctx);
 
         this.Grid = grid;
+        //this.ParamsPanel = this.Grid.SelectedBlock();
         this.GridPosition = this.Grid.GetGridPosition(position);
         this.Update();
     }
@@ -118,6 +123,10 @@ class Block extends DisplayObject implements IBlock {
     // absolute point
     DistanceFrom(point: Point): number{
         return Math.distanceBetween(this.Position.x, this.Position.y, point.x, point.y);
+    }
+
+    OpenParams() {
+
     }
 
 }

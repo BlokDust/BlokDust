@@ -23,6 +23,7 @@ class Phaser extends Modifier {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));
+
     }
 
     Draw() {
@@ -49,6 +50,62 @@ class Phaser extends Modifier {
 
     Delete(){
         this.Component.Delete();
+    }
+
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Phaser",
+            "parameters" : [
+
+                {
+                    "name" : "Frequency",
+                    "props" : {
+                        "value" : 60,
+                        "min" : 0,
+                        "max" : 88,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Gain",
+                    "props" : {
+                        "value" : 12,
+                        "min" : 10,
+                        "max" : 20,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Rotation",
+                    "props" : {
+                        "value" : 1.75,
+                        "min" : 1,
+                        "max" : 2,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Delay Time",
+                    "props" : {
+                        "value" : 0,
+                        "min" : -100,
+                        "max" : 50,
+                        "quantised" : true,
+                        "centered" : true
+                    }
+                }
+            ]
+        };
+
     }
 
 }
