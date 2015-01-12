@@ -29,13 +29,11 @@ import AutoWah = require("../Blocks/Modifiers/AutoWah");
 import Panner = require("../Blocks/Modifiers/Panner");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
-import InfoViewModel = require("./InfoViewModel");
 
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     private _BlocksSketch: BlocksSketch;
     private _SelectedBlock: IBlock;
-    private _InfoViewModel: InfoViewModel;
 
     get SelectedBlock(): IBlock{
         //return this._InfoViewModel.SelectedBlock;
@@ -60,8 +58,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.BlockSelected.on((block: IModifiable) => {
             this._OnBlockSelected(block);
         }, this);
-
-        this._InfoViewModel = new InfoViewModel();
     }
 
     ZoomIn_Click(){

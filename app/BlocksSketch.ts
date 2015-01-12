@@ -32,7 +32,6 @@ class BlocksSketch extends Grid {
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
-    private _ScaleFactor: number = 1;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -119,7 +118,7 @@ class BlocksSketch extends Grid {
 
     CreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
 
-        var block: IBlock = new m(this, this._GetRandomPosition());
+        var block: IBlock = new m(this, this.GetRandomGridPosition());
         block.Id = this._GetId();
 
         // todo: should this go in command handler?
@@ -134,10 +133,6 @@ class BlocksSketch extends Grid {
         return this._Id++;
     }
 
-    private _GetRandomPosition(): Point{
-        return new Point(Math.random() * this.Width, Math.random() * this.Height);
-    }
-
     Setup(){
         super.Setup();
 
@@ -147,7 +142,7 @@ class BlocksSketch extends Grid {
         this._Transformer.ZoomLevels = 5;
         this._Transformer.ZoomFactor = 2;
         this._Transformer.DragAccelerationEnabled = true;
-        this._Transformer.ConstrainToViewport = true;
+        this._Transformer.ConstrainToViewport = false;
         this._Transformer.AnimationSpeed = 250;
         this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
         this._Transformer.SizeChanged(this.Size);
@@ -156,7 +151,7 @@ class BlocksSketch extends Grid {
     Update() {
         super.Update();
 
-        this._CalculateUnit();
+        this._CalculateDivisor();
 
         // update transformer
         this._Transformer.SizeChanged(this.Size);
@@ -185,9 +180,9 @@ class BlocksSketch extends Grid {
         this.DrawParticles();
     }
 
-    _CalculateUnit() {
-        var unit = this.Width / 1000;
-        this.Divisor = (unit * 50) / this._ScaleFactor;
+    private _CalculateDivisor() {
+        //this.Divisor = this.Width / 65;
+        this.Divisor = 65;
     }
 
     // PARTICLES //
@@ -279,8 +274,11 @@ class BlocksSketch extends Grid {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
         this._IsMouseDown = true;
-        this._CheckCollision(e);
-        this._Transformer.PointerDown(point);
+        var collision: Boolean = this._CheckCollision(e);
+
+        if (!collision){
+            this._Transformer.PointerDown(point);
+        }
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
@@ -288,7 +286,7 @@ class BlocksSketch extends Grid {
         this._CheckCollision(e);
     }
 
-    private _CheckCollision(e) {
+    private _CheckCollision(e): Boolean {
         var point = (<any>e).args.Source.MousePosition;
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
         for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
@@ -298,9 +296,11 @@ class BlocksSketch extends Grid {
 
                 block.MouseDown();
                 this.SelectedBlock = block;
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
@@ -315,8 +315,8 @@ class BlocksSketch extends Grid {
                 this.SelectedBlock.MouseUp();
 
                 // if the block has moved, create an undoable operation.
-                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastGridPosition)){
-                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "GridPosition", this.SelectedBlock.LastGridPosition.Clone(), this.SelectedBlock.GridPosition.Clone());
+                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "GridPosition", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
                     App.OperationManager.Do(op);
                 }
             }
@@ -329,7 +329,6 @@ class BlocksSketch extends Grid {
         var point = (<any>e).args.Source.MousePosition;
 
         if (this.SelectedBlock){
-            //this.SelectedBlock.MouseMove(this._NormalisePoint(point));
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }

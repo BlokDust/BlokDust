@@ -8,9 +8,8 @@ interface IBlock extends IDisplayObject{
     Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;
-    GridPosition: Point;
-    LastGridPosition: Point;
     Position: Point;
+    LastPosition: Point;
     Update(): void;
     Draw(): void;
     MouseDown(): void;

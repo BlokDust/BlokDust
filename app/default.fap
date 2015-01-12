@@ -61,9 +61,6 @@
                   Draw="{EventBinding BlocksSketch_Draw}" />
 
         <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
-            <StackPanel.DataContext>
-                <vms:InfoViewModel/>
-            </StackPanel.DataContext>
 
             <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
             <TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>
