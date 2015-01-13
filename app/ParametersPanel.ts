@@ -24,7 +24,7 @@ class ParametersPanel {
     private _Units: number;
     private _SliderRoll: boolean[];
     private _PanelCloseRoll: boolean;
-    private _SelectedBlock: IBlock;
+    public SelectedBlock: IBlock;
 
     constructor(ctx: CanvasRenderingContext2D) {
 
@@ -142,7 +142,7 @@ class ParametersPanel {
         this.Sliders = sliderList; // update slider array
 
         if (open){
-            this.Scale = 1; // TEMP //
+            this.PanelScale(this,1,1500);
         }
 
 
@@ -156,12 +156,12 @@ class ParametersPanel {
 
         var units = this._Units;
         var ctx = this._Ctx;
-        var dataType = units*10;
-        var headerType = units*33;
+        var dataType = Math.round(units*10);
+        var headerType = Math.round(units*33);
 
         // START A TRANSFORM HERE //
         ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
-
+//
         var sx = 0;
         var sy = 0;
 
@@ -285,9 +285,10 @@ class ParametersPanel {
             ctx.fillText(this.Sliders[i].Name.toUpperCase(), this.Margin - (15 * units), sliderY + (sliderH * 0.5) + (dataType * 0.4));
 
             // VALUE TOOLTIP //
-            ctx.font = "200 " + headerType + "px Dosis";
-            if (this.Sliders[i].Selected) {
+
+            if (this.Sliders[i].Selected || i==0) {
                 ctx.textAlign = "left";
+                ctx.font = "200 " + headerType + "px Dosis";
                 ctx.fillText("" + (Math.round(this.Sliders[i].Value * 100) / 100), sliderX + this.Margin + (25 * units), sliderY + (sliderH * 0.5) + (headerType * 0.35));
             }
 
@@ -357,17 +358,16 @@ class ParametersPanel {
 
     }
 
-    PanelTween(destination,t) {
-        var psPos = {x:this.Scale};
+    PanelScale(panel,destination,t) {
 
-        var psTween = new TWEEN.Tween(psPos);
+        var psTween = new TWEEN.Tween({x:panel.Scale});
         psTween.to({ x: destination }, t);
-        psTween.start();
         psTween.onUpdate(function() {
-            this.Scale = this.x;  //TODO: can't both be 'this', loses scope. Figure out referencing.
+            panel.Scale = this.x;
         });
-
+        psTween.start();
         psTween.easing( TWEEN.Easing.Quintic.InOut );
+        TWEEN.add(psTween);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -389,7 +389,7 @@ class ParametersPanel {
         }
 
         if (this._PanelCloseRoll) {
-            this.Scale = 0;
+            this.PanelScale(this,0,1500);
         }
 
     }
@@ -443,6 +443,17 @@ class ParametersPanel {
             this.Sliders[n].Value = Math.round(this.Sliders[n].Value);
             this.Sliders[n].Position.x = (this.Range/range)*(this.Sliders[n].Value-this.Sliders[n].Min);
         }
+
+        // SET VALUE IN BLOCK //
+        /*var varName = this.Sliders[n].Name;
+        console.log(this.SelectedBlock.Component["" + varName]);
+        this.SelectedBlock.Component["" + varName] = this.Sliders[n].Value;*/
+
+        /*var newParams = {
+            "bits" : 8
+        };
+        this.SelectedBlock.Component.set(newParams);*/
+
     }
 
     RolloverCheck(mx,my) {

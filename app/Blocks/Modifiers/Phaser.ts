@@ -63,7 +63,7 @@ class Phaser extends Modifier {
                 {
                     "name" : "Frequency",
                     "props" : {
-                        "value" : 60,
+                        "value" : 68,
                         "min" : 0,
                         "max" : 88,
                         "quantised" : true,

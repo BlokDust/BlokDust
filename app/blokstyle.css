@@ -1,0 +1,33 @@
+
+html {
+    height: 100%;
+}
+
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #111;
+    height: 100%;
+    width: 100%;
+
+    -webkit-font-smoothing: antialiased !important;
+    -moz-font-smoothing: antialiased !important;
+    -o-font-smoothing: antialiased !important;
+
+    color: #fff;
+    overflow: hidden;
+}
+
+#fontTest {
+    font-family: "Dosis", Arial, Helvetica, sans;
+    font-weight: 200;
+    font-size: 56px;
+
+    position: absolute;
+    left: 1060px;
+    top: 290px;
+
+    width: 200px;
+    height: 100px;
+}

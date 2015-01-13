@@ -228,6 +228,8 @@ class BlocksSketch extends Grid {
 
     }
 
+
+
     // PROXIMITY CHECK //
 
     private _CheckProximity(){
@@ -287,7 +289,6 @@ class BlocksSketch extends Grid {
                 block.MouseDown();
                 this.SelectedBlock = block;
                 ParamTimeout = true;
-
                 setTimeout(function() {
                     ParamTimeout = false;
                 },400);
@@ -302,7 +303,6 @@ class BlocksSketch extends Grid {
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseDown(point.x,point.y);
         }
-
     }
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
@@ -327,9 +327,11 @@ class BlocksSketch extends Grid {
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseUp();
         }
+        // OPEN PANEL //
         if (ParamTimeout) {
             this.SelectedBlock.OpenParams();
             if (this.SelectedBlock.ParamJson) {
+                this._ParamsPanel.SelectedBlock = this.SelectedBlock;
                 this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
             }
         }
