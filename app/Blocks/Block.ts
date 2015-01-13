@@ -10,9 +10,8 @@ class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    // position in grid units
-    public Position: Point;
-    public LastPosition: Point;
+    public Position: Point; // in grid units
+    public LastPosition: Point; // in grid units
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     public Grid: Grid;
@@ -67,15 +66,6 @@ class Block extends DisplayObject implements IBlock {
         return this.Grid.ConvertBaseToTransformed(p);
     }
 
-    /*
-    * @param {point} point - specifies number of units relative to Position. (-1, -1) means "one unit left and one unit up".
-    */
-    private _GetRelGridPosition(units: Point): Point {
-        return new Point(
-            this.Position.x + units.x,
-            this.Position.y + units.y);
-    }
-
     ParticleCollision(particle: Particle) {
 
     }
@@ -99,7 +89,6 @@ class Block extends DisplayObject implements IBlock {
             point = this.Grid.ConvertTransformedToBase(point);
             point = this.Grid.SnapToGrid(point);
             point = this.Grid.ConvertAbsoluteToGridUnits(point);
-            console.log(point);
             this.Position = point;
         }
     }

@@ -316,7 +316,7 @@ class BlocksSketch extends Grid {
 
                 // if the block has moved, create an undoable operation.
                 if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "GridPosition", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
                     App.OperationManager.Do(op);
                 }
             }
