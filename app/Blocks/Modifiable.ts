@@ -37,34 +37,34 @@ class Modifiable extends Block implements IModifiable{
             // draw connections to modifiers
             var modifiers = this.Modifiers.ToArray();
 
-            var grd = this.Grid.Ctx.canvas.width / this.Grid.Divisor;
+            var grd = this.Grid.RenderUnit.width; // this.Grid.Width / this.Grid.Divisor;
 
             for(var i = 0; i < modifiers.length; i++){
                 var target: IModifier = modifiers[i];
 
-                var myX = this.Position.x;
-                var myY = this.Position.y;
-                var toX = target.Position.x;
-                var toY = target.Position.y;
+                var myPos = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
+                myPos = this.Grid.ConvertBaseToTransformed(myPos);
+                var targetPos = this.Grid.ConvertGridUnitsToAbsolute(target.Position);
+                targetPos = this.Grid.ConvertBaseToTransformed(targetPos);
 
-                var xDif = (target.Position.x - this.Position.x) / grd;
-                var yDif = (target.Position.y - this.Position.y) / grd;
+                var xDif = (targetPos.x - myPos.x) / grd;
+                var yDif = (targetPos.y - myPos.y) / grd;
 
                 this.Ctx.strokeStyle = App.Palette[3];// BLUE
 
                 this.Ctx.beginPath();
-                this.Ctx.moveTo(myX, myY);
+                this.Ctx.moveTo(myPos.x, myPos.y);
 
                 if (xDif > 0) { // RIGHT HALF
 
                     if (yDif < 0) { // UPPER
 
                         if (-yDif < xDif) {
-                            this.Ctx.lineTo(myX + ((xDif - (-yDif))*grd), myY);
+                            this.Ctx.lineTo(myPos.x + ((xDif - (-yDif))*grd), myPos.y);
                         }
 
                         if (-yDif > xDif) {
-                            this.Ctx.lineTo(myX, myY - (((-yDif) - xDif)*grd));
+                            this.Ctx.lineTo(myPos.x, myPos.y - (((-yDif) - xDif)*grd));
                         }
 
                     }
@@ -72,11 +72,11 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif > 0) { // LOWER
 
                         if (yDif < xDif) {
-                            this.Ctx.lineTo(myX + ((xDif - yDif)*grd), myY);
+                            this.Ctx.lineTo(myPos.x + ((xDif - yDif)*grd), myPos.y);
                         }
 
                         if (yDif > xDif) {
-                            this.Ctx.lineTo(myX, myY + ((yDif - xDif)*grd));
+                            this.Ctx.lineTo(myPos.x, myPos.y + ((yDif - xDif)*grd));
                         }
                     }
                 }
@@ -86,11 +86,11 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif < 0) { // UPPER
 
                         if (yDif > xDif) {
-                            this.Ctx.lineTo(myX - ((yDif - xDif)*grd), myY);
+                            this.Ctx.lineTo(myPos.x - ((yDif - xDif)*grd), myPos.y);
                         }
 
                         if (yDif < xDif) {
-                            this.Ctx.lineTo(myX, myY - ((xDif - yDif)*grd));
+                            this.Ctx.lineTo(myPos.x, myPos.y - ((xDif - yDif)*grd));
                         }
 
                     }
@@ -98,18 +98,18 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif > 0) { // LOWER
 
                         if (yDif < -xDif) {
-                            this.Ctx.lineTo(myX - (((-xDif) - yDif)*grd), myY);
+                            this.Ctx.lineTo(myPos.x - (((-xDif) - yDif)*grd), myPos.y);
                         }
 
                         if (yDif > -xDif) {
-                            this.Ctx.lineTo(myX, myY + ((yDif - (-xDif))*grd));
+                            this.Ctx.lineTo(myPos.x, myPos.y + ((yDif - (-xDif))*grd));
                         }
 
                     }
 
                 }
 
-                this.Ctx.lineTo(toX, toY);
+                this.Ctx.lineTo(targetPos.x, targetPos.y);
                 this.Ctx.stroke();
             }
         }

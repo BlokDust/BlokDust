@@ -8,7 +8,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Modifier extends Block implements IModifier {
 
-    public CatchmentArea: number = .1; // normalised to 1/10 of blocks view default width
+    public CatchmentArea: number = .1; // normalised to 1/10 of blocks view base width
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
     public Component;
 

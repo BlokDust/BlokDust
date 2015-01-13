@@ -31,7 +31,7 @@ class ParticleEmitter extends Modifiable{
 
 
     EmitParticle() {
-        var position = this.Grid.GetAbsPosition(new Point(this.Position.x, this.Position.y));
+        var position = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
         vector.Mult(this.Params.speed);
         var size = 3 + (Math.random()*2);
@@ -70,8 +70,6 @@ class ParticleEmitter extends Modifiable{
             }
 
         }
-
-
     }
 
     Draw() {
@@ -98,7 +96,7 @@ class ParticleEmitter extends Modifiable{
 
         if (window.debug){
             this.Ctx.fillStyle = "#fff";
-            var pos = this.Grid.GetAbsPosition(new Point(this.Position.x+2, this.Position.y-2));
+            var pos = this.Grid.ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
             this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
         }
 

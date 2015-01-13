@@ -254,7 +254,7 @@ class BlocksSketch extends Grid {
                 // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
                 var catchmentArea = this.Width * modifier.CatchmentArea;
-                var distanceFromModifier = modifiable.DistanceFrom(modifier.Position);
+                var distanceFromModifier = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(modifier.Position));
 
                 if (distanceFromModifier <= catchmentArea) {
                     if (!modifiable.Modifiers.Contains(modifier)){

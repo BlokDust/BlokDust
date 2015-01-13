@@ -64,12 +64,12 @@ class Block extends DisplayObject implements IBlock {
     // converts a point in grid units to absolute units and transforms it
     GetTransformedPoint(point: Point): Point {
         var p: Point = this.Grid.ConvertGridUnitsToAbsolute(point);
-        return this.Grid.TransformPoint(p);
+        return this.Grid.ConvertBaseToTransformed(p);
     }
 
     /*
     * @param {point} point - specifies number of units relative to Position. (-1, -1) means "one unit left and one unit up".
-     */
+    */
     private _GetRelGridPosition(units: Point): Point {
         return new Point(
             this.Position.x + units.x,
@@ -96,7 +96,11 @@ class Block extends DisplayObject implements IBlock {
 
     MouseMove(point: Point) {
         if (this.IsPressed){
-            this.Position = this.Grid.GetGridPosition(point);
+            point = this.Grid.ConvertTransformedToBase(point);
+            point = this.Grid.SnapToGrid(point);
+            point = this.Grid.ConvertAbsoluteToGridUnits(point);
+            console.log(point);
+            this.Position = point;
         }
     }
 
@@ -119,7 +123,8 @@ class Block extends DisplayObject implements IBlock {
 
     // absolute point
     DistanceFrom(point: Point): number{
-        return Math.distanceBetween(this.Position.x, this.Position.y, point.x, point.y);
+        var p = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
+        return Math.distanceBetween(p.x, p.y, point.x, point.y);
     }
 
 }

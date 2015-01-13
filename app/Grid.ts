@@ -1,4 +1,3 @@
-
 import ScaleTransform = Fayde.Media.ScaleTransform;
 import TranslateTransform = Fayde.Media.TranslateTransform;
 import TransformGroup = Fayde.Media.TransformGroup;
@@ -16,76 +15,6 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     set TransformGroup(value: TransformGroup) {
         this._TransformGroup = value;
-    }
-
-    constructor() {
-        super();
-    }
-
-    get Unit(): Size{
-        var u = this.Width / this.Divisor;
-        return new Size(u, u);
-    }
-
-    public GetRandomGridPosition(): Point{
-        var p = new Point(Math.random() * this.Width, Math.random() * this.Height);
-        p = this.SnapToGrid(p);
-        return this.ConvertAbsoluteToGridUnits(p);
-    }
-
-    // round absolute point to align with grid intersection
-    public SnapToGrid(point: Point): Point {
-        point = this.ConvertAbsoluteToNormalised(point);
-        var col = Math.round(point.x * this.Divisor);
-        var row = Math.round(point.y * this.GetHeightDivisor());
-
-        // we now have the grid col and row.
-        // convert them into absolute pixel values.
-
-        var x = (col * this.Width) / this.Divisor;
-        var y = (row * this.Height) / this.GetHeightDivisor();
-
-        return new Point(x, y);
-    }
-
-    // convert a point in actual canvas height and width coordinate space
-    // into transformed coordinate space.
-    public TransformPoint(point: Point): Point {
-
-        point = point.Clone();
-
-        point.x *= this.ScaleTransform.ScaleX;
-        point.y *= this.ScaleTransform.ScaleY;
-
-        point.x += this.TranslateTransform.X;
-        point.y += this.TranslateTransform.Y;
-
-        return point;
-    }
-
-    GetTransformedPoint (x: number, y: number): Point {
-        return this.TransformPoint(new Point(x, y));
-    }
-
-    GetRelativePoint(point: Point, offset: Point): Point {
-        return new Point(point.x + offset.x, point.y + offset.y);
-    }
-
-    public ConvertAbsoluteToNormalised(point: Point): Point {
-        return new Point(Math.normalise(point.x, 0, this.Width), Math.normalise(point.y, 0, this.Height));
-    }
-
-    // convert a normalised point into an absolute
-    public ConvertNormalisedToAbsolute(point: Point): Point {
-        return new Point(point.x * this.Width, point.y * this.Height);
-    }
-
-    public ConvertGridUnitsToAbsolute(point: Point): Point {
-        return new Point(this.Unit.width * point.x, this.Unit.height * point.y);
-    }
-
-    public ConvertAbsoluteToGridUnits(point: Point): Point {
-        return new Point(point.x / this.Unit.width, point.y / this.Unit.width);
     }
 
     get ScaleTransform(): ScaleTransform{
@@ -106,6 +35,93 @@ class Grid extends Fayde.Drawing.SketchContext {
             return translateTransform;
         }
         return <TranslateTransform>this.TransformGroup.Children.GetValueAt(1);
+    }
+
+    constructor() {
+        super();
+    }
+
+    get Unit(): Size{
+        var u = this.Width / this.Divisor;
+        return new Size(u, u);
+    }
+
+    get RenderUnit(): Size{
+        var u = this.RenderSize.width / this.Divisor;
+        return new Size(u, u);
+    }
+
+    get RenderSize(): Size {
+        return new Size(this.Width * this.ScaleTransform.ScaleX, this.Height * this.ScaleTransform.ScaleY);
+    }
+
+    public GetRandomGridPosition(): Point{
+        var p = new Point(Math.random() * this.Width, Math.random() * this.Height);
+        p = this.SnapToGrid(p);
+        return this.ConvertAbsoluteToGridUnits(p);
+    }
+
+    // round absolute point to align with grid intersection
+    // returns an absolute pixel value
+    public SnapToGrid(point: Point): Point {
+        point = this.ConvertAbsoluteToNormalised(point);
+        var col = Math.round(point.x * this.Divisor);
+        var row = Math.round(point.y * this.GetHeightDivisor());
+
+        // we now have the grid col and row.
+        // convert them into absolute pixel values.
+
+        var x = (col * this.Width) / this.Divisor;
+        var y = (row * this.Height) / this.GetHeightDivisor();
+
+        return new Point(x, y);
+    }
+
+    // convert a point in original coordinate space
+    // into transformed coordinate space.
+    public ConvertBaseToTransformed(point: Point): Point {
+
+        point = point.Clone();
+
+        point.x *= this.ScaleTransform.ScaleX;
+        point.y *= this.ScaleTransform.ScaleY;
+
+        point.x += this.TranslateTransform.X;
+        point.y += this.TranslateTransform.Y;
+
+        return point;
+    }
+
+    // pass an absolute point to get a normalised point in the transformed coordinate space.
+    public ConvertTransformedToBase(point: Point): Point {
+        var x = Math.normalise(point.x, this.TranslateTransform.X, this.TranslateTransform.X + this.RenderSize.width);
+        var y = Math.normalise(point.y, this.TranslateTransform.Y, this.TranslateTransform.Y + this.RenderSize.height);
+        var p = new Point(x, y);
+        return this.ConvertNormalisedToAbsolute(p);
+    }
+
+    public GetTransformedPoint (x: number, y: number): Point {
+        return this.ConvertBaseToTransformed(new Point(x, y));
+    }
+
+    public GetRelativePoint(point: Point, offset: Point): Point {
+        return new Point(point.x + offset.x, point.y + offset.y);
+    }
+
+    public ConvertAbsoluteToNormalised(point: Point): Point {
+        return new Point(Math.normalise(point.x, 0, this.Width), Math.normalise(point.y, 0, this.Height));
+    }
+
+    public ConvertNormalisedToAbsolute(point: Point): Point {
+        return new Point(point.x * this.Width, point.y * this.Height);
+    }
+
+    public ConvertGridUnitsToAbsolute(point: Point): Point {
+        return new Point(this.Unit.width * point.x, this.Unit.height * point.y);
+    }
+
+    public ConvertAbsoluteToGridUnits(point: Point): Point {
+        return new Point(point.x / this.Unit.width, point.y / this.Unit.width);
     }
 
     public GetHeightDivisor(): number {
@@ -150,33 +166,6 @@ class Grid extends Fayde.Drawing.SketchContext {
                 this.Ctx.closePath();
             }
         }
-    }
-
-
-
-
-
-
-    // rounds absolute position to the nearest grid intersection in grid units.
-    public GetGridPosition(point: Point): Point {
-
-        //point = this.ConvertAbsoluteToNormalised(point);
-        //var x = Math.round(point.x * this.Divisor);
-        //var y = Math.round(point.y * this.GetHeightDivisor());
-        //
-        //return this.TransformPoint(new Point(x, y));
-
-        return new Point();
-    }
-
-    // translate grid position into pixel position.
-    public GetAbsPosition(point: Point): Point {
-
-        //var x = (point.x / this.Divisor) * this.RenderSize.width;
-        //var y = (point.y / this.GetHeightDivisor()) * this.RenderSize.height;
-
-        return new Point();
-        //return this.TransformPoint(new Point(x, y));
     }
 }
 
