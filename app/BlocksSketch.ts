@@ -136,13 +136,16 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+        this.ScaleToFit = true;
+        this.Divisor = 70;
+
         // todo: make these default values
         this._Transformer = new Transformer();
         this._Transformer.ZoomLevel = 0;
         this._Transformer.ZoomLevels = 5;
         this._Transformer.ZoomFactor = 2;
         this._Transformer.DragAccelerationEnabled = true;
-        this._Transformer.ConstrainToViewport = false;
+        this._Transformer.ConstrainToViewport = true;
         this._Transformer.AnimationSpeed = 250;
         this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
         this._Transformer.SizeChanged(this.Size);
@@ -150,8 +153,6 @@ class BlocksSketch extends Grid {
 
     Update() {
         super.Update();
-
-        this._CalculateDivisor();
 
         // update transformer
         this._Transformer.SizeChanged(this.Size);
@@ -178,11 +179,6 @@ class BlocksSketch extends Grid {
         this._DisplayList.Draw();
 
         this.DrawParticles();
-    }
-
-    private _CalculateDivisor() {
-        //this.Divisor = this.Width / 65;
-        this.Divisor = 65;
     }
 
     // PARTICLES //
@@ -253,10 +249,10 @@ class BlocksSketch extends Grid {
 
                 // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
-                var catchmentArea = this.Width * modifier.CatchmentArea;
+                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(modifier.CatchmentArea, modifier.CatchmentArea));
                 var distanceFromModifier = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(modifier.Position));
 
-                if (distanceFromModifier <= catchmentArea) {
+                if (distanceFromModifier <= catchmentArea.x) {
                     if (!modifiable.Modifiers.Contains(modifier)){
                         modifiable.AddModifier(modifier);
                     }

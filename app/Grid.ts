@@ -5,9 +5,28 @@ import TransformGroup = Fayde.Media.TransformGroup;
 class Grid extends Fayde.Drawing.SketchContext {
 
     // number of units to divide width by.
-    public Divisor: number;
+    public _Divisor: number;
+    public ScaleToFit: boolean = false;
+    private _InitialUnitWidth: number;
 
     private _TransformGroup: TransformGroup;
+
+    get Divisor(): number {
+        if (!this.ScaleToFit){
+            // the amount you need to divide the canvas width by in order to get the initial unit width
+            return (1 / this._InitialUnitWidth) * this.Width;
+        } else {
+            return this._Divisor;
+        }
+    }
+
+    set Divisor(value: number) {
+        this._Divisor = value;
+
+        if (!this.ScaleToFit){
+            this._InitialUnitWidth = this.Width / this._Divisor;
+        }
+    }
 
     get TransformGroup(): TransformGroup {
         return this._TransformGroup;
@@ -100,8 +119,8 @@ class Grid extends Fayde.Drawing.SketchContext {
         return this.ConvertNormalisedToAbsolute(p);
     }
 
-    public GetTransformedPoint (x: number, y: number): Point {
-        return this.ConvertBaseToTransformed(new Point(x, y));
+    public GetTransformedPoint(point: Point): Point {
+        return this.ConvertBaseToTransformed(point);
     }
 
     public GetRelativePoint(point: Point, offset: Point): Point {
@@ -144,23 +163,25 @@ class Grid extends Fayde.Drawing.SketchContext {
 
             // rows
             for (var j = 0; j < this.GetHeightDivisor(); j++) {
-                var y = Math.floor(cellWidth * j);
+                var y = Math.round(cellWidth * j);
                 this.Ctx.beginPath();
-                startPoint = this.GetTransformedPoint(0, y);
+                startPoint = this.GetTransformedPoint(new Point(0, y));
                 this.Ctx.moveTo(startPoint.x, startPoint.y);
-                endPoint = this.GetTransformedPoint(this.Width, y);
+                endPoint = this.SnapToGrid(new Point(this.Width, y));
+                endPoint = this.GetTransformedPoint(endPoint);
                 this.Ctx.lineTo(endPoint.x, endPoint.y);
                 this.Ctx.stroke();
                 this.Ctx.closePath();
             }
 
             // cols
-            for (var i = 0; i < this.Divisor + 1; i++) {
-                var x = Math.floor(cellWidth * i);
+            for (var i = 0; i < this.Divisor; i++) {
+                var x = Math.round(cellWidth * i);
                 this.Ctx.beginPath();
-                startPoint = this.GetTransformedPoint(x, 0);
+                startPoint = this.GetTransformedPoint(new Point(x, 0));
                 this.Ctx.moveTo(startPoint.x, startPoint.y);
-                endPoint = this.GetTransformedPoint(x, this.Height);
+                endPoint = this.SnapToGrid(new Point(x, this.Height));
+                endPoint = this.GetTransformedPoint(endPoint);
                 this.Ctx.lineTo(endPoint.x, endPoint.y);
                 this.Ctx.stroke();
                 this.Ctx.closePath();
