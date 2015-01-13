@@ -97,6 +97,7 @@ class ParticleEmitter extends Modifiable{
         if (window.debug){
             this.Ctx.fillStyle = "#fff";
             var pos = this.Grid.ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
+            pos = this.Grid.ConvertBaseToTransformed(pos);
             this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
         }
 

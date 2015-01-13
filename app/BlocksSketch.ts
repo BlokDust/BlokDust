@@ -145,7 +145,7 @@ class BlocksSketch extends Grid {
         this._Transformer.ZoomLevels = 5;
         this._Transformer.ZoomFactor = 2;
         this._Transformer.DragAccelerationEnabled = true;
-        this._Transformer.ConstrainToViewport = true;
+        this._Transformer.ConstrainToViewport = false;
         this._Transformer.AnimationSpeed = 250;
         this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
         this._Transformer.SizeChanged(this.Size);
@@ -218,9 +218,12 @@ class BlocksSketch extends Grid {
         for (var i = 0; i < App.Particles.length; i++) {
 
             // todo: pre-render these in a single canvas
-            var sx = App.Particles[i].Position.x;
-            var sy = App.Particles[i].Position.y;
-            var size = App.Particles[i].Size;
+            var particle = App.Particles[i];
+            var pos = this.ConvertBaseToTransformed(particle.Position);
+
+            var sx = pos.x;
+            var sy = pos.y;
+            var size = particle.Size;
 
             this.Ctx.fillStyle = "#ff90a7";
             this.Ctx.globalAlpha = 1;
