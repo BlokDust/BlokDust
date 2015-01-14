@@ -56,7 +56,53 @@ class Delay extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
 
+        this.ParamJson =
+        {
+            "name" : "Delay",
+            "parameters" : [
+
+                {
+                    "name" : "Delay Time",
+                    "setting" :"delayTime",
+                    "props" : {
+                        "value" : 0.2,
+                        "min" : 0.05,
+                        "max" : 0.5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Feedback",
+                    "setting" :"feedback",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 0.9,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+                ,
+
+                {
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = Delay;
