@@ -66,7 +66,7 @@ class Chorus extends Modifier {
                     "props" : {
                         "value" : 1,
                         "min" : 0,
-                        "max" : 20,
+                        "max" : 5,
                         "quantised" : false,
                         "centered" : false
                     }
