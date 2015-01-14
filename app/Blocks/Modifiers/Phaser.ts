@@ -61,46 +61,38 @@ class Phaser extends Modifier {
             "parameters" : [
 
                 {
-                    "name" : "Frequency",
+                    "name" : "Rate",
+                    "setting" :"rate",
                     "props" : {
-                        "value" : 60,
+                        "value" : 0.8,
                         "min" : 0,
-                        "max" : 88,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
-
-                {
-                    "name" : "Gain",
-                    "props" : {
-                        "value" : 12,
-                        "min" : 10,
-                        "max" : 20,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
-
-                {
-                    "name" : "Rotation",
-                    "props" : {
-                        "value" : 1.75,
-                        "min" : 1,
-                        "max" : 2,
+                        "max" : 10,
                         "quantised" : false,
                         "centered" : false
                     }
                 },
 
                 {
-                    "name" : "Delay Time",
+                    "name" : "Depth",
+                    "setting" :"depth",
                     "props" : {
-                        "value" : 0,
-                        "min" : -100,
-                        "max" : 50,
+                        "value" : 10,
+                        "min" : 0,
+                        "max" : 10,
                         "quantised" : true,
-                        "centered" : true
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Frequency",
+                    "setting" :"baseFrequency",
+                    "props" : {
+                        "value" : 1850,
+                        "min" : 10,
+                        "max" : 2000,
+                        "quantised" : true,
+                        "centered" : false
                     }
                 }
             ]

@@ -6,6 +6,7 @@ import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
 import Microphone = require("../Blocks/Sources/Microphone");
+import Soundcloud = require("../Blocks/Sources/Soundcloud");
 import Keyboard = require("../Blocks/Modifiers/Keyboard");
 import Gain = require("../Blocks/Modifiers/Gain");
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
@@ -167,7 +168,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     GainBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Gain);
+        this._BlocksSketch.CreateBlock(Soundcloud);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){

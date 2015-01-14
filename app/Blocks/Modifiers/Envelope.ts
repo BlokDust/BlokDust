@@ -47,6 +47,64 @@ class Envelope extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name": "Envelope",
+            "parameters": [
+
+                {
+                    "name": "Attack",
+                    "setting": "attack",
+                    "props": {
+                        "value": this.Component.GetValue("attack"),
+                        "min": 0.005,
+                        "max": 5,
+                        "quantised": false,
+                        "centered": false
+                    }
+                },
+
+                {
+                    "name": "Decay",
+                    "setting": "decay",
+                    "props": {
+                        "value": this.Component.GetValue("decay"),
+                        "min": 0,
+                        "max": 10,
+                        "quantised": false,
+                        "centered": false
+                    }
+                },
+
+                {
+                    "name": "Sustain",
+                    "setting": "sustain",
+                    "props": {
+                        "value": this.Component.GetValue("sustain"),
+                        "min": 0,
+                        "max": 1,
+                        "quantised": false,
+                        "centered": false
+                    }
+                },
+
+                {
+                    "name": "Release",
+                    "setting": "release",
+                    "props": {
+                        "value": this.Component.GetValue("release"),
+                        "min": 0.01,
+                        "max": 15,
+                        "quantised": false,
+                        "centered": false
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = Envelope;

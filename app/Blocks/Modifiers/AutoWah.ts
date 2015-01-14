@@ -17,7 +17,7 @@ class AutoWah extends Modifier {
             baseFrequency: 1000,
             octaves: 8,
             sensitivity: 0,
-            gain : 30,
+            gain : 35,
             rolloff : -48,
 
             follower : {
@@ -58,6 +58,40 @@ class AutoWah extends Modifier {
        this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Auto Wah",
+            "parameters" : [
+
+                {
+                    "name" : "Octaves",
+                    "setting" :"octaves",
+                    "props" : {
+                        "value" : 8,
+                        "min" : 0,
+                        "max" : 10,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Frequency",
+                    "setting" :"baseFrequency",
+                    "props" : {
+                        "value" : 1000,
+                        "min" : 10,
+                        "max" : 2000,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = AutoWah;

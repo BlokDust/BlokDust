@@ -21,6 +21,12 @@ class Effect implements IEffect {
     Delete(): void {
 
     }
+    SetValue(param: string,value: number) {
+
+    }
+    GetValue(param: string) {
+
+    }
 }
 
 export = Effect;
