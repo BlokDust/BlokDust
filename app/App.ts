@@ -8,16 +8,19 @@ import IModifiable = require("./Blocks/IModifiable");
 import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
+import Fonts = require("./Fonts");
 import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import FilteredCollection = Fayde.Collections.FilteredCollection;
+
 
 class App{
 
     static OperationManager: OperationManager;
     static ResourceManager: ResourceManager;
     static CommandManager: CommandManager;
+    static Fonts: Fonts;
     static Blocks: DisplayObjectCollection<any>;
     static Modifiables: ObservableCollection<IModifiable>;
     static Modifiers: ObservableCollection<IModifier>;
@@ -29,6 +32,7 @@ class App{
     static OscillatorsPool: PooledFactoryResource<Oscillator>;
     static AudioSettings: ToneSettings;
 
+
     constructor() {
 
     }
@@ -37,6 +41,7 @@ class App{
         App.OperationManager = new OperationManager();
         App.ResourceManager = new ResourceManager();
         App.CommandManager = new CommandManager(App.ResourceManager);
+        //App.Fonts = new Fonts();
 
         //todo: make these members of BlocksContext
         App.Blocks = new DisplayObjectCollection<IBlock>();

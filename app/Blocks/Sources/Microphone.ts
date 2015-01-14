@@ -20,7 +20,7 @@ class Microphone extends Source {
         super(grid, position);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(0, 1),new Point(-1, 2));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
     }
 
     MouseDown() {
@@ -61,21 +61,21 @@ class Microphone extends Source {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// GREEN
+        this.Ctx.fillStyle = App.Palette[8];// WHITE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,-1);
         this.DrawLineTo(1,0);
-        this.DrawLineTo(-1,2);
+        this.DrawLineTo(1,1);
+        this.DrawLineTo(0,2);
+        this.DrawLineTo(-1,1);
         this.Ctx.closePath();
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// WHITE
-        this.DrawMoveTo(-1,0);
+        this.Ctx.fillStyle = App.Palette[9];// PINK
         this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(0,0);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
     }

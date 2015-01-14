@@ -20,25 +20,29 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
+import ParametersPanel = require("./ParametersPanel");
 
 declare var PixelPalette;
+declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
 class BlocksSketch extends Grid {
 
-    private _Unit: number;
+    public _Unit: number;
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
     private _IsMouseDown: boolean = false;
     private _IsTouchDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
+    private _ParamsPanel: ParametersPanel;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
     }
 
+
     set SelectedBlock(block: IBlock) {
-        // if setting the selected block to null (or falsey)
+        // if setting the selected block to null (or false)
         // if there's already a selected block, set its
         // IsSelected to false.
         if (!block && this._SelectedBlock){
@@ -81,6 +85,8 @@ class BlocksSketch extends Grid {
             console.log(palette);
             App.Palette = palette;
         });
+
+        ParamTimeout = false;
 
         this._Invalidate();
     }
@@ -128,7 +134,11 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+        this._ParamsPanel = new ParametersPanel(this.Ctx);
+
     }
+
+
 
     Update() {
         super.Update();
@@ -158,6 +168,10 @@ class BlocksSketch extends Grid {
         this._DisplayList.Draw();
 
         this.DrawParticles();
+
+        this._ParamsPanel.Draw();
+
+
     }
 
     // PARTICLES //
@@ -253,11 +267,13 @@ class BlocksSketch extends Grid {
     MouseDown(e: Fayde.Input.MouseEventArgs){
         this._IsMouseDown = true;
         this._CheckCollision(e);
+        this._CheckParamsInteract(e);
     }
 
     TouchDown(e: Fayde.Input.TouchEventArgs){
         this._IsTouchDown = true;
         this._CheckCollision(e);
+        this._CheckParamsInteract(e);
     }
 
     private _CheckCollision(e) {
@@ -270,9 +286,23 @@ class BlocksSketch extends Grid {
 
                 block.MouseDown();
                 this.SelectedBlock = block;
+                ParamTimeout = true;
+
+                setTimeout(function() {
+                    ParamTimeout = false;
+                },400);
+
                 return;
             }
         }
+    }
+
+    private _CheckParamsInteract(e) {
+        var point = (<any>e).args.Source.MousePosition;
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseDown(point.x,point.y);
+        }
+
     }
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
@@ -293,6 +323,17 @@ class BlocksSketch extends Grid {
                 }
             }
         }
+
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseUp();
+        }
+        if (ParamTimeout) {
+            this.SelectedBlock.OpenParams();
+            if (this.SelectedBlock.ParamJson) {
+                this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
+            }
+        }
+
     }
 
     MouseMove(e: Fayde.Input.MouseEventArgs){
@@ -301,6 +342,9 @@ class BlocksSketch extends Grid {
         if (this.SelectedBlock){
             this.SelectedBlock.MouseMove(this._NormalisePoint(point));
             this._CheckProximity();
+        }
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseMove(point.x,point.y);
         }
     }
 
