@@ -38,6 +38,22 @@ class LFO extends Effect implements IEffect {
         this.LFO.dispose();
     }
 
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        if (param=="rate") {
+            this.LFO.setFrequency(value);
+        } else if (param=="depth") {
+            this.LFO.setMin(-value);
+            this.LFO.setMax(value);
+        }
+
+
+        console.log(jsonVariable);
+    }
+
 }
 
 export = LFO;

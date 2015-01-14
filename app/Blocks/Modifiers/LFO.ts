@@ -46,6 +46,41 @@ class LFO extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "LFO",
+            "parameters" : [
+
+                {
+                    "name" : "Rate",
+                    "setting" :"rate",
+                    "props" : {
+                        "value" : 1,
+                        "min" : 0,
+                        "max" : 20,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Depth",
+                    "setting" :"depth",
+                    "props" : {
+                        "value" : 20,
+                        "min" : 0,
+                        "max" : 200,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+
+    }
 }
 
 export = LFO;

@@ -60,7 +60,7 @@ class Envelope extends Modifier {
                     "setting": "attack",
                     "props": {
                         "value": this.Component.GetValue("attack"),
-                        "min": 0.005,
+                        "min": 0.01,
                         "max": 5,
                         "quantised": false,
                         "centered": false
@@ -72,7 +72,7 @@ class Envelope extends Modifier {
                     "setting": "decay",
                     "props": {
                         "value": this.Component.GetValue("decay"),
-                        "min": 0,
+                        "min": 0.01,
                         "max": 10,
                         "quantised": false,
                         "centered": false

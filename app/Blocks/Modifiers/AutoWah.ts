@@ -14,9 +14,9 @@ class AutoWah extends Modifier {
 
         this.Component = new AutoWahComponent({
 
-            baseFrequency: 1000,
-            octaves: 8,
-            sensitivity: 0,
+            baseFrequency: 100,
+            octaves: 5,
+            sensitivity: -40,
             gain : 35,
             rolloff : -48,
 
@@ -67,13 +67,13 @@ class AutoWah extends Modifier {
             "parameters" : [
 
                 {
-                    "name" : "Octaves",
+                    "name" : "Range",
                     "setting" :"octaves",
                     "props" : {
-                        "value" : 8,
-                        "min" : 0,
-                        "max" : 10,
-                        "quantised" : true,
+                        "value" : 5,
+                        "min" : 1,
+                        "max" : 8,
+                        "quantised" : false,
                         "centered" : false
                     }
                 },
@@ -82,10 +82,22 @@ class AutoWah extends Modifier {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : 1000,
-                        "min" : 10,
-                        "max" : 2000,
+                        "value" : 100,
+                        "min" : 50,
+                        "max" : 1200,
                         "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.6,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
                         "centered" : false
                     }
                 }

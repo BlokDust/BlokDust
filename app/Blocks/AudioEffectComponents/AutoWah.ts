@@ -24,6 +24,10 @@ class AutoWahComponent extends Effect implements IEffect {
                 "release": Settings.follower.release
             }
         });
+        this.Effect.setSensitivity(-40);
+        this.Effect.setOctaves(5);
+        this.Effect.setBaseFrequency(100);
+        this.Effect.dryWet.setDry(0.6);
     }
 
     Connect(modifiable:IModifiable): void{
@@ -44,15 +48,14 @@ class AutoWahComponent extends Effect implements IEffect {
         super.SetValue(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        if (param=="octaves") {
-            this.Effect.setOctaves(value);
-            this.Effect.setSensitivity("now");
 
+        if (param=="dryWet") {
+            this.Effect.dryWet.setDry(1 - value);
+        } else if (param=="octaves") {
+            this.Effect.setOctaves(value);
         } else if (param=="baseFrequency") {
             this.Effect.setBaseFrequency(value);
-            this.Effect.setSensitivity("now");
         }
-        //TODO: sensitivity seems to get reset whenever another setting is changed, not sure yet how to counteract
 
         console.log(jsonVariable);
     }
