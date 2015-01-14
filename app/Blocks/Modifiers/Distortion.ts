@@ -58,9 +58,21 @@ class Distortion extends Modifier {
                     "name" : "Drive",
                     "setting" :"drive",
                     "props" : {
-                        "value" : 1.5,
+                        "value" : 0.5,
                         "min" : 0.1,
-                        "max" : 8,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 1,
                         "quantised" : false,
                         "centered" : false
                     }
