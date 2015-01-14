@@ -54,7 +54,26 @@ class Source extends Modifiable {
             this.Source = new Tone.Oscillator(this.Settings.oscillator.frequency, this.Settings.oscillator.waveform);
         } else if (this.BlockType == BlockType.Microphone) {
             this.Source = new Tone.Microphone();
+        } else if (this.BlockType == BlockType.Soundcloud) {
+            var scId = "?client_id=7bfc58cb50688730352c60eb933aee3a";
 
+            var track1 = "24456532";
+            var track2 = "25216773";
+            var track3 = "5243666";
+            var track4 = "84216161";
+            var track5 = "51167662";
+            var track6 = "145840993";
+
+
+
+
+            var audioUrl = "https://api.soundcloud.com/tracks/" + track5 + "/stream" + scId;
+            var sc = this.Source;
+            this.Source = new Tone.Player(audioUrl, function(sc){
+                console.log(sc);
+                sc.loop = true;
+                sc.start();
+            });
         } else {
             console.log('this typeof Source does not have a matching BlockType');
         }
@@ -70,11 +89,34 @@ class Source extends Modifiable {
             this.Envelope.connect(this.Source.output.gain);
         }
 
+        if (this.BlockType == BlockType.Soundcloud) {
+            /*var audioUrl;
+             SC.initialize({
+             client_id: '7bfc58cb50688730352c60eb933aee3a'
+             });
+             var rawUrl = "https://soundcloud.com/whitehawkmusic/deep-mutant";
+             SC.get('/resolve', { url: rawUrl }, function(track) {
+             audioUrl = ""+track.stream_url +
+             "?client_id=7bfc58cb50688730352c60eb933aee3a";
+             });*/
+
+            //var audioUrl = "https://api.soundcloud.com/tracks/145840993/stream?client_id=7bfc58cb50688730352c60eb933aee3a";
+            //this.Source.load(audioUrl, this.StreamLoaded(this.Source));
+        }
+
+
+
         this.Source.connect(this.OutputGain);
         this.OutputGain.connect(App.AudioMixer.Master);
 
         // Start
         this.Source.start();
+    }
+
+    StreamLoaded(source) {
+        console.log("PLAYER INITIALISED");
+        source.start();
+        console.log(source);
     }
 
     Delete() {

@@ -13,7 +13,7 @@ class Filter extends Modifier {
         super(grid, position);
 
         this.Component = new FilterComponent({
-            type : "lowpass",
+            type : "peaking",
             frequency : 440,
             rolloff : -12,
             Q : 1,
@@ -55,6 +55,40 @@ class Filter extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name": "Filter",
+            "parameters": [
+
+                {
+                    "name": "Frequency",
+                    "setting": "frequency",
+                    "props": {
+                        "value": 440,
+                        "min": 5,
+                        "max": 20000,
+                        "quantised": true,
+                        "centered": false
+                    }
+                },
+
+                {
+                    "name": "Gain",
+                    "setting": "gain",
+                    "props": {
+                        "value": 0,
+                        "min": -50,
+                        "max": 50,
+                        "quantised": false,
+                        "centered": true
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = Filter;

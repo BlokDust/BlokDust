@@ -281,21 +281,33 @@ class BlocksSketch extends Grid {
     private _CheckCollision(e) {
         var point = (<any>e).args.Source.MousePosition;
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks.GetValueAt(i);
-            if (block.HitTest(point)){
-                (<any>e).args.Handled = true;
 
-                block.MouseDown();
-                this.SelectedBlock = block;
-                ParamTimeout = true;
-                setTimeout(function() {
-                    ParamTimeout = false;
-                },400);
+        // cancel if interacting with panel
+        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        if (!panelCheck || this._ParamsPanel.Scale!==1) {
+            for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+                var block: IBlock = App.Blocks.GetValueAt(i);
+                if (block.HitTest(point)){
+                    (<any>e).args.Handled = true;
 
-                return;
+                    block.MouseDown();
+                    this.SelectedBlock = block;
+                    ParamTimeout = true;
+                    setTimeout(function() {
+                        ParamTimeout = false;
+                    },400);
+
+                    return;
+                }
             }
         }
+
+    }
+
+    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
+
+        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+
     }
 
     private _CheckParamsInteract(e) {
@@ -352,6 +364,7 @@ class BlocksSketch extends Grid {
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
+        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
         this._SelectedBlock.Delete();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;

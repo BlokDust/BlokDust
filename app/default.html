@@ -5,8 +5,9 @@
     <script src="lib/nullstone/dist/nullstone.js"></script>
     <script src="lib/minerva/dist/minerva.js"></script>
     <script src="lib/fayde/dist/fayde.js"></script>
+    <script type="text/javascript" src="http://connect.soundcloud.com/sdk.js"></script>
     <link href='http://fonts.googleapis.com/css?family=Dosis:200,300,400' rel='stylesheet' type='text/css'>
-    <link href='blokstyle.css' rel='stylesheet' type='text/css'>
+
     <script type="text/javascript">
         var require = {
             baseUrl: "./",
@@ -21,6 +22,7 @@
                 "Tone/core/Note",
                 "Tone/core/Master",
                 "Tone/source/Microphone",
+                "Tone/source/Player",
                 "Tone/source/Oscillator",
                 "Tone/source/Noise",
                 "Tone/component/Envelope",
@@ -59,9 +61,11 @@
             display: block;
         }
     </style>
+    <link href='blokstyle.css' rel='stylesheet' type='text/css'>
+
 </head>
 <body fayde-app="default.fap">
 <script src="//localhost:35353/livereload.js"></script>
-<div id="fontTest">68</div>
+<!--<div id="fontTest">68</div>-->
 </body>
 </html>

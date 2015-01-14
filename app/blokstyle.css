@@ -1,6 +1,11 @@
 
 html {
     height: 100%;
+
+    -webkit-font-smoothing: antialiased !important;
+    -moz-font-smoothing: antialiased !important;
+    -o-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 
@@ -14,6 +19,7 @@ body {
     -webkit-font-smoothing: antialiased !important;
     -moz-font-smoothing: antialiased !important;
     -o-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale;
 
     color: #fff;
     overflow: hidden;
@@ -25,8 +31,8 @@ body {
     font-size: 56px;
 
     position: absolute;
-    left: 1060px;
-    top: 290px;
+    left: 74%;
+    top: 36%;
 
     width: 200px;
     height: 100px;

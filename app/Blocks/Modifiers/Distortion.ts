@@ -46,6 +46,28 @@ class Distortion extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Distortion",
+            "parameters" : [
+
+                {
+                    "name" : "Drive",
+                    "setting" :"drive",
+                    "props" : {
+                        "value" : 1.5,
+                        "min" : 0.1,
+                        "max" : 8,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = Distortion;

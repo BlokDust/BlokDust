@@ -11,7 +11,7 @@ import Slider = require("./Slider");
 class ParametersPanel {
 
     public Position: Point;
-    private _Size: Size;
+    public Size: Size;
     public Margin: number;
     public Range: number;
     private _NameWidth: number;
@@ -31,7 +31,7 @@ class ParametersPanel {
         this._Ctx = ctx;
         this._Units = 1.7;
         this.Position = new Point(0,0);
-        this._Size = new Size(1,1);
+        this.Size = new Size(1,1);
         this.Scale = 0;
         this.Margin = 0;
         this.Range = 100;
@@ -117,8 +117,8 @@ class ParametersPanel {
         // POPULATE PANEL //
         this.Position.x = 250*units;
         this.Position.y = Math.round(this._Ctx.canvas.height/2);
-        this._Size.Width = panelW;
-        this._Size.Height = panelH;
+        this.Size.Width = panelW;
+        this.Size.Height = panelH;
         this.Margin = panelM;
         this.Range = panelR;
         this._Name = json.name;
@@ -136,8 +136,8 @@ class ParametersPanel {
             }
             var sliderX = (this.Range/range) * (json.parameters[i].props.value-json.parameters[i].props.min);
             var sliderW = (this.Range/100) * json.parameters[i].props.value;
-            var sliderY = Math.round((- (this._Size.Height*0.5)) + (20*units) + (i*sliderH));
-            sliderList.push(new Slider(new Point(sliderX,sliderY),new Size(sliderW,sliderH),sliderO,false,json.parameters[i].props.value,json.parameters[i].props.min,json.parameters[i].props.max,json.parameters[i].props.quantised,json.parameters[i].name));
+            var sliderY = Math.round((- (this.Size.Height*0.5)) + (20*units) + (i*sliderH));
+            sliderList.push(new Slider(new Point(sliderX,sliderY),new Size(sliderW,sliderH),sliderO,false,json.parameters[i].props.value,json.parameters[i].props.min,json.parameters[i].props.max,json.parameters[i].props.quantised,json.parameters[i].name,json.parameters[i].setting));
         }
         this.Sliders = sliderList; // update slider array
 
@@ -185,17 +185,17 @@ class ParametersPanel {
         ctx.strokeStyle = App.Palette[8];// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(sx + this._Size.Width - (24 * units), sy - (this._Size.Height * 0.5) + (4 * units));
-        ctx.lineTo(sx + this._Size.Width - (16 * units), sy - (this._Size.Height * 0.5) - (4 * units));
-        ctx.moveTo(sx + this._Size.Width - (24 * units), sy - (this._Size.Height * 0.5) - (4 * units));
-        ctx.lineTo(sx + this._Size.Width - (16 * units), sy - (this._Size.Height * 0.5) + (4 * units));
+        ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) + (4 * units));
+        ctx.lineTo(sx + this.Size.Width - (16 * units), sy - (this.Size.Height * 0.5) - (4 * units));
+        ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) - (4 * units));
+        ctx.lineTo(sx + this.Size.Width - (16 * units), sy - (this.Size.Height * 0.5) + (4 * units));
         ctx.stroke();
         ctx.lineWidth = 1;
 
         // TITLE //
         ctx.fillStyle = App.Palette[8];// WHITE
         ctx.textAlign = "left";
-        ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this._Size.Height * 0.5));
+        ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.Height * 0.5));
 
 
         // DRAW SLIDERS //
@@ -286,7 +286,7 @@ class ParametersPanel {
 
             // VALUE TOOLTIP //
 
-            if (this.Sliders[i].Selected || i==0) {
+            if (this.Sliders[i].Selected) {
                 ctx.textAlign = "left";
                 ctx.font = "200 " + headerType + "px Dosis";
                 ctx.fillText("" + (Math.round(this.Sliders[i].Value * 100) / 100), sliderX + this.Margin + (25 * units), sliderY + (sliderH * 0.5) + (headerType * 0.35));
@@ -305,18 +305,18 @@ class ParametersPanel {
         var ctx = this._Ctx;
 
         ctx.beginPath();
-        ctx.moveTo(x + (44*units), y - (this._Size.Height*0.5)); // tl
+        ctx.moveTo(x + (44*units), y - (this.Size.Height*0.5)); // tl
 
-        ctx.lineTo(x + this.Margin - (25*units), y - (this._Size.Height*0.5)); // name tab start
-        ctx.lineTo(x + this.Margin - (5*units), y - (this._Size.Height*0.5) - (20*units));
-        ctx.lineTo(x + this.Margin + (5*units) + this._NameWidth, y - (this._Size.Height*0.5) - (20*units));
-        ctx.lineTo(x + this.Margin + (25*units) + this._NameWidth, y - (this._Size.Height*0.5)); // name tab end
+        ctx.lineTo(x + this.Margin - (25*units), y - (this.Size.Height*0.5)); // name tab start
+        ctx.lineTo(x + this.Margin - (5*units), y - (this.Size.Height*0.5) - (20*units));
+        ctx.lineTo(x + this.Margin + (5*units) + this._NameWidth, y - (this.Size.Height*0.5) - (20*units));
+        ctx.lineTo(x + this.Margin + (25*units) + this._NameWidth, y - (this.Size.Height*0.5)); // name tab end
 
-        ctx.lineTo(x + this._Size.Width - (40*units), y - (this._Size.Height*0.5)); // close start
-        ctx.lineTo(x + this._Size.Width - (20*units), y - (this._Size.Height*0.5) - (20*units));
-        ctx.lineTo(x + this._Size.Width, y - (this._Size.Height*0.5)); // tr
-        ctx.lineTo(x + this._Size.Width, y + (this._Size.Height*0.5)); // br
-        ctx.lineTo(x + (44*units), y + (this._Size.Height*0.5)); // bl
+        ctx.lineTo(x + this.Size.Width - (40*units), y - (this.Size.Height*0.5)); // close start
+        ctx.lineTo(x + this.Size.Width - (20*units), y - (this.Size.Height*0.5) - (20*units));
+        ctx.lineTo(x + this.Size.Width, y - (this.Size.Height*0.5)); // tr
+        ctx.lineTo(x + this.Size.Width, y + (this.Size.Height*0.5)); // br
+        ctx.lineTo(x + (44*units), y + (this.Size.Height*0.5)); // bl
         ctx.lineTo(x + (44*units), y + (44*units));
         ctx.lineTo(x, y); // block
         ctx.lineTo(x + (44*units), y);
@@ -422,7 +422,7 @@ class ParametersPanel {
     SliderSet(n,mx) {
         // SLIDER POSITION //
         var mPos = mx - (this.Position.x + this.Margin);
-            this.Sliders[n].Position.x = mPos;
+        this.Sliders[n].Position.x = mPos;
 
         // FLOOR //
         if (this.Sliders[n].Position.x < 0) {
@@ -445,14 +445,7 @@ class ParametersPanel {
         }
 
         // SET VALUE IN BLOCK //
-        /*var varName = this.Sliders[n].Name;
-        console.log(this.SelectedBlock.Component["" + varName]);
-        this.SelectedBlock.Component["" + varName] = this.Sliders[n].Value;*/
-
-        /*var newParams = {
-            "bits" : 8
-        };
-        this.SelectedBlock.Component.set(newParams);*/
+        this.SelectedBlock.Component.SetValue(this.Sliders[n].Setting,this.Sliders[n].Value);
 
     }
 
@@ -463,7 +456,7 @@ class ParametersPanel {
         }
 
         if (this.Scale==1) {
-            this._PanelCloseRoll = this.HudCheck(this.Position.x + this._Size.Width - (30*this._Units),this.Position.y - (this._Size.Height*0.5) - (10*this._Units),20*this._Units,20*this._Units,mx,my);
+            this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.Width - (30*this._Units),this.Position.y - (this.Size.Height*0.5) - (10*this._Units),20*this._Units,20*this._Units,mx,my);
         }
 
     }

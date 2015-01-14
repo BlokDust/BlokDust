@@ -30,6 +30,18 @@ class ChorusComponent extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+        this.Effect.set(
+            jsonVariable
+        );
+        console.log(jsonVariable);
+    }
+
+
 }
 
 export = ChorusComponent;
