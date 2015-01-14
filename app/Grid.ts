@@ -96,7 +96,7 @@ class Grid extends Fayde.Drawing.SketchContext {
         return new Point(x, y);
     }
 
-    // convert a point in original coordinate space
+    // convert a point in base coordinate space
     // into transformed coordinate space.
     public ConvertBaseToTransformed(point: Point): Point {
 
@@ -111,7 +111,8 @@ class Grid extends Fayde.Drawing.SketchContext {
         return point;
     }
 
-    // pass an absolute point to get a normalised point in the transformed coordinate space.
+    // convert a point in transformed coordinate space
+    // into base coordinate space.
     public ConvertTransformedToBase(point: Point): Point {
         var x = Math.normalise(point.x, this.TranslateTransform.X, this.TranslateTransform.X + this.RenderSize.width);
         var y = Math.normalise(point.y, this.TranslateTransform.Y, this.TranslateTransform.Y + this.RenderSize.height);

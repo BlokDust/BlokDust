@@ -27,8 +27,7 @@ class BlocksSketch extends Grid {
 
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
-    private _IsMouseDown: boolean = false;
-    private _IsTouchDown: boolean = false;
+    private _IsPointerDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
@@ -272,45 +271,69 @@ class BlocksSketch extends Grid {
 
     MouseDown(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
-        this._IsMouseDown = true;
-        var collision: Boolean = this._CheckCollision(e);
+
+        this._PointerDown(point, () => {
+            (<any>e).args.Handled = true;
+        });
+    }
+
+    MouseUp(e: Fayde.Input.MouseEventArgs){
+        var point = (<any>e).args.Source.MousePosition;
+
+        this._PointerUp(point, () => {
+            (<any>e).args.Handled = true;
+        });
+    }
+
+    MouseMove(e: Fayde.Input.MouseEventArgs){
+        var point = (<any>e).args.Source.MousePosition;
+
+        this._PointerMove(point);
+    }
+
+    TouchDown(e: any){
+        //var pos: Fayde.Input.TouchPoint = e.GetTouchPoint(null);
+        var pos = e.args.Device.GetTouchPoint(null);
+        var point = new Point(pos.Position.x, pos.Position.y);
+
+        this._PointerDown(point, () => {
+            (<any>e).args.Handled = true;
+        });
+    }
+
+    TouchUp(e: any){
+        var pos = e.args.Device.GetTouchPoint(null);
+        var point = new Point(pos.Position.x, pos.Position.y);
+
+        this._PointerUp(point, () => {
+            (<any>e).args.Handled = true;
+        });
+    }
+
+    TouchMove(e: any){
+        var pos = e.args.Device.GetTouchPoint(null);
+        var point = new Point(pos.Position.x, pos.Position.y);
+
+        this._PointerMove(point);
+    }
+
+    private _PointerDown(point: Point, handle: () => void) {
+        this._IsPointerDown = true;
+
+        var collision: Boolean = this._CheckCollision(point, handle);
 
         if (!collision){
             this._Transformer.PointerDown(point);
         }
     }
 
-    TouchDown(e: Fayde.Input.TouchEventArgs){
-        this._IsTouchDown = true;
-        this._CheckCollision(e);
-    }
-
-    private _CheckCollision(e): Boolean {
-        var point = (<any>e).args.Source.MousePosition;
-        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks.GetValueAt(i);
-            if (block.HitTest(point)){
-                (<any>e).args.Handled = true;
-
-                block.MouseDown();
-                this.SelectedBlock = block;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    MouseUp(e: Fayde.Input.MouseEventArgs){
-        this._IsMouseDown = false;
-
-        var point = (<any>e).args.Source.MousePosition;
+    private _PointerUp(point: Point, handle: () => void) {
+        this._IsPointerDown = false;
 
         if (this.SelectedBlock){
 
             if (this.SelectedBlock.HitTest(point)){
-                (<any>e).args.Handled = true;
+                handle();
                 this.SelectedBlock.MouseUp();
 
                 // if the block has moved, create an undoable operation.
@@ -324,15 +347,28 @@ class BlocksSketch extends Grid {
         this._Transformer.PointerUp();
     }
 
-    MouseMove(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
-
+    private _PointerMove(point: Point){
         if (this.SelectedBlock){
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }
 
         this._Transformer.PointerMove(point);
+    }
+
+    private _CheckCollision(point: Point, handle: () => void): Boolean {
+        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
+        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+            var block: IBlock = App.Blocks.GetValueAt(i);
+            if (block.HitTest(point)){
+                handle();
+                block.MouseDown();
+                this.SelectedBlock = block;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     DeleteSelectedBlock(){

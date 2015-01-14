@@ -15,12 +15,22 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="50" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="100" />
+            <RowDefinition Height="50" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.ZIndex="2" Grid.Row="0" Orientation="Horizontal">
+        <d:Sketch x:Name="Blocks"
+                  Grid.Row="0"
+                  MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
+                  MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
+                  MouseMove="{EventBinding BlocksSketch_MouseMove}"
+                  TouchDown="{EventBinding BlocksSketch_TouchDown}"
+                  TouchUp="{EventBinding BlocksSketch_TouchUp}"
+                  TouchMove="{EventBinding BlocksSketch_TouchMove}"
+                  IsAnimated="true"
+                  Draw="{EventBinding BlocksSketch_Draw}" />
+
+        <StackPanel Grid.ZIndex="1" Grid.Row="2" Orientation="Horizontal">
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="ToneBlockBtn" Click="{EventBinding ToneBlockBtn_Click}">Tone</Button>
             <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyb</Button>
@@ -47,25 +57,16 @@
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
             <RepeatButton x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}" Delay="50" Interval="100">Undo</RepeatButton>
             <RepeatButton x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}" Delay="50" Interval="100">Redo</RepeatButton>
-            <Button x:Name="ZoomIn" Click="{EventBinding ZoomIn_Click}">+</Button>
-            <Button x:Name="ZoomOut" Click="{EventBinding ZoomOut_Click}">-</Button>
+            <Button x:Name="ZoomIn" Width="50" Click="{EventBinding ZoomIn_Click}">+</Button>
+            <Button x:Name="ZoomOut" Width="50" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
-        <d:Sketch x:Name="Blocks"
-                  Grid.Row="1"
-                  MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
-                  TouchDown="{EventBinding BlocksSketch_TouchDown}"
-                  MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
-                  MouseMove="{EventBinding BlocksSketch_MouseMove}"
-                  IsAnimated="true"
-                  Draw="{EventBinding BlocksSketch_Draw}" />
+        <!--<StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">-->
 
-        <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
+            <!--<TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>-->
+            <!--<TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>-->
 
-            <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
-            <TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>
-
-        </StackPanel>
+        <!--</StackPanel>-->
 
     </Grid>
 </Application>

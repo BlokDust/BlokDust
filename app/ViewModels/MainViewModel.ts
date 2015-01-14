@@ -76,16 +76,24 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.MouseDown(e);
     }
 
-    BlocksSketch_TouchDown(e: Fayde.Input.TouchEventArgs){
-        this._BlocksSketch.TouchDown(e);
-    }
-
     BlocksSketch_MouseUp(e: Fayde.Input.MouseEventArgs){
         this._BlocksSketch.MouseUp(e);
     }
 
     BlocksSketch_MouseMove(e: Fayde.Input.MouseEventArgs){
         this._BlocksSketch.MouseMove(e);
+    }
+
+    BlocksSketch_TouchDown(e: Fayde.Input.TouchEventArgs){
+        this._BlocksSketch.TouchDown(e);
+    }
+
+    BlocksSketch_TouchUp(e: Fayde.Input.TouchEventArgs){
+        this._BlocksSketch.TouchUp(e);
+    }
+
+    BlocksSketch_TouchMove(e: Fayde.Input.TouchEventArgs){
+        this._BlocksSketch.TouchMove(e);
     }
 
     _OnBlockSelected(block: IBlock){
