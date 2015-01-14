@@ -14,6 +14,9 @@ class TremoloComponent extends Effect implements IEffect {
 
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
+
+        //TODO: Make tremolo an effect within Tone that can be chained like other effects. This should stop clicking
+
         this.Tremolo.connect(this.Modifiable.OutputGain);
         this.Tremolo.start();
     }

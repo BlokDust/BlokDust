@@ -191,7 +191,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlock(LFO);
     }
 
-    TremeloBlockBtn_Click(e: any){
+    TremoloBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Tremolo);
     }
 
