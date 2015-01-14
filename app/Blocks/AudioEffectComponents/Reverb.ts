@@ -31,8 +31,9 @@ class ReverbComponent extends Effect implements IEffect {
         super.SetValue(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-
-        if (param=="dampening") {
+        if (param=="dryWet") {
+            this.Effect.dryWet.setDry(1 - value);
+        } else if (param=="dampening") {
             this.Effect.setDampening(value);
         } else if (param=="roomSize") {
             this.Effect.setRoomSize(value);

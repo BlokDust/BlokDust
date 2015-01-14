@@ -85,6 +85,18 @@ class Reverb extends Modifier {
                         "quantised" : false,
                         "centered" : false
                     }
+                },
+
+                {
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
                 }
             ]
         };

@@ -28,7 +28,11 @@ class DistortionComponent extends Effect implements IEffect {
         super.SetValue(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        this.Effect.setDistortion(value);
+        if (param=="dryWet") {
+            this.Effect.dryWet.setDry(1 - value);
+        } else {
+            this.Effect.setDistortion(value);
+        }
 
 
         console.log(jsonVariable);

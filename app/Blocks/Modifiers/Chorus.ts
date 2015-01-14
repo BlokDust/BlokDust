@@ -100,9 +100,9 @@ class Chorus extends Modifier {
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
-                        "value" : 0.2,
+                        "value" : 0.15,
                         "min" : 0,
-                        "max" : 0.25,
+                        "max" : 0.2,
                         "quantised" : false,
                         "centered" : false
                     }
