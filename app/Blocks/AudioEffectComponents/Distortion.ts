@@ -23,6 +23,16 @@ class DistortionComponent extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+        this.Effect.setDistortion(value);
+
+
+        console.log(jsonVariable);
+    }
 }
 
 export = DistortionComponent;

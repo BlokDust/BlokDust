@@ -39,6 +39,23 @@ class AutoWahComponent extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+        if (param=="octaves") {
+            this.Effect.setOctaves(value);
+            this.Effect.setSensitivity("now");
+
+        } else if (param=="baseFrequency") {
+            this.Effect.setBaseFrequency(value);
+            this.Effect.setSensitivity("now");
+        }
+        //TODO: sensitivity seems to get reset whenever another setting is changed, not sure yet how to counteract
+
+        console.log(jsonVariable);
+    }
 }
 
 export = AutoWahComponent;

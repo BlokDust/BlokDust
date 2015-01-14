@@ -55,6 +55,40 @@ class Reverb extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Reverb",
+            "parameters" : [
+
+                {
+                    "name" : "Dampening",
+                    "setting" :"dampening",
+                    "props" : {
+                        "value" : 0.33,
+                        "min" : 0.1,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Room Size",
+                    "setting" :"roomSize",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0.1,
+                        "max" : 0.95,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = Reverb;

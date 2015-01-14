@@ -16,9 +16,9 @@ class Slider {
     public Max: number;
     public Quantised: boolean;
     public Name: string;
+    public Setting: string;
 
-
-    constructor(position: Point, size: Size, origin: number, selected: boolean, value: number, min: number, max: number, quantised: boolean, name: string) {
+    constructor(position: Point, size: Size, origin: number, selected: boolean, value: number, min: number, max: number, quantised: boolean, name: string, setting: string) {
         this.Position = position;
         this.Size = size;
         this.Origin = origin;
@@ -28,6 +28,7 @@ class Slider {
         this.Max = max;
         this.Quantised = quantised;
         this.Name = name;
+        this.Setting = setting;
     }
 
 

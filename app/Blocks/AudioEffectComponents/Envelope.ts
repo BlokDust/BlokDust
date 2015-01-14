@@ -40,6 +40,38 @@ class EnvelopeComponent extends Effect implements IEffect {
     Delete() {
 
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+
+        if (param=="attack") {
+            this.attack = value;
+
+        } else if (param=="decay") {
+            this.decay = value;
+        } else if (param=="sustain") {
+            this.sustain = value;
+        } else if (param=="release") {
+            this.release = value;
+        }
+        if (this.Modifiable) {
+            this.Modifiable.Envelope.setAttack(this.attack);
+            this.Modifiable.Envelope.setDecay(this.decay);
+            this.Modifiable.Envelope.setSustain(this.sustain);
+            this.Modifiable.Envelope.setRelease(this.release);
+        }
+
+
+        var jsonVariable = {};
+        console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val = this[""+param];
+        return val;
+        console.log(val);
+    }
 }
 
 export = EnvelopeComponent;

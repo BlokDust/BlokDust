@@ -48,6 +48,28 @@ class Panner extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name": "Auto Panner",
+            "parameters": [
+
+                {
+                    "name": "Frequency",
+                    "setting": "frequency",
+                    "props": {
+                        "value": 1,
+                        "min": 0,
+                        "max": 5,
+                        "quantised": false,
+                        "centered": false
+                    }
+                }
+            ]
+        };
+    }
 }
 
 export = Panner;

@@ -52,6 +52,65 @@ class Chorus extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Chorus",
+            "parameters" : [
+
+                {
+                    "name" : "Rate",
+                    "setting" :"rate",
+                    "props" : {
+                        "value" : 1,
+                        "min" : 0,
+                        "max" : 5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Delay Time",
+                    "setting" :"delayTime",
+                    "props" : {
+                        "value" : 2.5,
+                        "min" : 0,
+                        "max" : 5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Depth",
+                    "setting" :"depth",
+                    "props" : {
+                        "value" : 0.4,
+                        "min" : 0,
+                        "max" : 3,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Feedback",
+                    "setting" :"feedback",
+                    "props" : {
+                        "value" : 0.2,
+                        "min" : 0,
+                        "max" : 0.25,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+
+    }
 }
 
 export = Chorus;

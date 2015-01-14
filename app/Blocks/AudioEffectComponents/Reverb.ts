@@ -26,6 +26,20 @@ class ReverbComponent extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        if (param=="dampening") {
+            this.Effect.setDampening(value);
+        } else if (param=="roomSize") {
+            this.Effect.setRoomSize(value);
+        }
+
+        console.log(jsonVariable);
+    }
 }
 
 export = ReverbComponent;
