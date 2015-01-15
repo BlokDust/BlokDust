@@ -104,6 +104,11 @@ class AutoWah extends Modifier {
             ]
         };
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = AutoWah;

@@ -23,6 +23,8 @@ interface IBlock extends IDisplayObject{
     HitTest(point: Point): boolean;
     DistanceFrom(point: Point): number;
     OpenParams(): void;
+    SetValue(param: string,value: number): void;
+    GetValue(param: string): void;
 }
 
 export = IBlock;

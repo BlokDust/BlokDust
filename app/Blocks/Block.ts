@@ -30,7 +30,6 @@ class Block extends DisplayObject implements IBlock {
         super(grid.Ctx);
 
         this.Grid = grid;
-        //this.ParamsPanel = this.Grid.SelectedBlock();
         this.GridPosition = this.Grid.GetGridPosition(position);
         this.Update();
     }
@@ -129,7 +128,12 @@ class Block extends DisplayObject implements IBlock {
     OpenParams() {
 
     }
+    SetValue(param: string,value: number) {
 
+    }
+    GetValue(param: string) {
+
+    }
 }
 
 export = Block;

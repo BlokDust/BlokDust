@@ -165,10 +165,12 @@ class ParametersPanel {
         var sx = 0;
         var sy = 0;
 
+
         // PANEL //
         ctx.fillStyle = "#000";
         ctx.font = "400 " + dataType + "px Dosis";
         ctx.textAlign = "right";
+
 
         // DRAW PANEL //
         ctx.globalAlpha = 0.16;
@@ -192,6 +194,7 @@ class ParametersPanel {
         ctx.stroke();
         ctx.lineWidth = 1;
 
+
         // TITLE //
         ctx.fillStyle = App.Palette[8];// WHITE
         ctx.textAlign = "left";
@@ -199,8 +202,6 @@ class ParametersPanel {
 
 
         // DRAW SLIDERS //
-
-
         var i;
         for (i = 0; i < this.Sliders.length; i++) {
 
@@ -208,7 +209,6 @@ class ParametersPanel {
             var sliderY = this.Sliders[i].Position.y;
             var sliderH = this.Sliders[i].Size.Height;
             var sliderO = this.Sliders[i].Origin;
-
 
             ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
 
@@ -222,6 +222,7 @@ class ParametersPanel {
                 ctx.closePath();
                 ctx.stroke();
             }
+
 
             // MID POINT //
             ctx.beginPath();
@@ -242,7 +243,6 @@ class ParametersPanel {
             if (sliderO == this.Margin) {
                 offset = -units;
             }
-
             ctx.globalAlpha = 1;
             var col = this._SliderColours[i - (Math.floor(i/this._SliderColours.length)*(this._SliderColours.length))];
             ctx.fillStyle = ctx.strokeStyle = col;
@@ -284,12 +284,13 @@ class ParametersPanel {
             ctx.textAlign = "right";
             ctx.fillText(this.Sliders[i].Name.toUpperCase(), this.Margin - (15 * units), sliderY + (sliderH * 0.5) + (dataType * 0.4));
 
-            // VALUE TOOLTIP //
 
+            // VALUE TOOLTIP //
             if (this.Sliders[i].Selected) {
                 ctx.textAlign = "left";
                 ctx.font = "200 " + headerType + "px Dosis";
-                ctx.fillText("" + (Math.round(this.Sliders[i].Value * 100) / 100), sliderX + this.Margin + (25 * units), sliderY + (sliderH * 0.5) + (headerType * 0.35));
+                var string = this.NumberWithCommas("" + (Math.round(this.Sliders[i].Value * 100) / 100));
+                ctx.fillText(string, sliderX + this.Margin + (25 * units), sliderY + (sliderH * 0.5) + (headerType * 0.35));
             }
 
 
@@ -351,12 +352,19 @@ class ParametersPanel {
 
             ctx.moveTo(x + pos1.x, y + pos1.y);
             ctx.lineTo(x + pos2.x, y + pos2.y);
-
-
         }
         ctx.stroke();
 
     }
+
+    NumberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  TWEEN
+    //-------------------------------------------------------------------------------------------
+
 
     PanelScale(panel,destination,t) {
 
@@ -406,20 +414,17 @@ class ParametersPanel {
 
     MouseMove(mx,my) {
 
-    this.RolloverCheck(mx,my);
-    var i;
-    for (i=0;i<this.Sliders.length;i++) {
-
-        if (this.Sliders[i].Selected) {
-
-            this.SliderSet(i,mx);
+        this.RolloverCheck(mx,my);
+        var i;
+        for (i=0;i<this.Sliders.length;i++) {
+            if (this.Sliders[i].Selected) {
+                this.SliderSet(i,mx);
+            }
         }
-
     }
 
-}
-
     SliderSet(n,mx) {
+
         // SLIDER POSITION //
         var mPos = mx - (this.Position.x + this.Margin);
         this.Sliders[n].Position.x = mPos;
@@ -445,7 +450,7 @@ class ParametersPanel {
         }
 
         // SET VALUE IN BLOCK //
-        this.SelectedBlock.Component.SetValue(this.Sliders[n].Setting,this.Sliders[n].Value);
+        this.SelectedBlock.SetValue(this.Sliders[n].Setting,this.Sliders[n].Value);
 
     }
 

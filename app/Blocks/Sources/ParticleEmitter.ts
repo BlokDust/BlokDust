@@ -17,10 +17,10 @@ class ParticleEmitter extends Modifiable{
         super(grid, position);
 
         this.Params = {
-            angle: 0,
-            speed: 2,
-            rate: 10,
-            range: 250
+            angle: -90,
+            speed: 5,
+            rate: 40,
+            range: 600
         };
 
         this._rateCounter = 0;
@@ -54,7 +54,7 @@ class ParticleEmitter extends Modifiable{
         if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
 
             this._rateCounter += 1; // POSSIBLY MOVE TO A SET TIMEOUT, IF IT WOULD PERFORM BETTER
-            if (this._rateCounter==this.Params.rate) {
+            if (this._rateCounter>=this.Params.rate) {
                 this.EmitParticle();
                 this._rateCounter = 0;
             }
@@ -64,7 +64,7 @@ class ParticleEmitter extends Modifiable{
             //this.Params.angle = Math.random()*360;
 
             // ROTATE //
-            this.Params.angle += 1;
+            //this.Params.angle += 1;
             if (this.Params.angle>360) {
                 this.Params.angle = 1;
             }
@@ -101,6 +101,79 @@ class ParticleEmitter extends Modifiable{
             var pos = this.Grid.GetAbsPosition(new Point(this.Position.x+2, this.Position.y-2));
             this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
         }
+
+    }
+
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Particle Emitter",
+            "parameters" : [
+
+                {
+                    "name" : "Angle",
+                    "setting" :"angle",
+                    "props" : {
+                        "value" : 0,
+                        "min" : -180,
+                        "max" : 180,
+                        "quantised" : true,
+                        "centered" : true
+                    }
+                },
+
+                {
+                    "name" : "Speed",
+                    "setting" :"speed",
+                    "props" : {
+                        "value" : 5,
+                        "min" : 1,
+                        "max" : 12,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Delay Time",
+                    "setting" :"rate",
+                    "props" : {
+                        "value" : 40,
+                        "min" : 1,
+                        "max" : 500,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "name" : "Range",
+                    "setting" :"range",
+                    "props" : {
+                        "value" : 600,
+                        "min" : 50,
+                        "max" : 2000,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+
+        if (param=="angle") {
+            this.Params[""+param] = (value-90);
+        } else if (param=="rate") {
+            this.Params[""+param] = (value+5);
+        } else {
+            this.Params[""+param] = value;
+        }
+
 
     }
 }
