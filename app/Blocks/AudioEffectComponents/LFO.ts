@@ -29,8 +29,10 @@ class LFO extends Effect implements IEffect {
         super.Disconnect(modifiable);
 
         if (this.Modifiable.Source.detune) {
-            this.LFO.stop();
-            this.LFO.disconnect();
+            if (this.LFO) {
+                this.LFO.stop();
+                this.LFO.disconnect();
+            }
         }
     }
 
