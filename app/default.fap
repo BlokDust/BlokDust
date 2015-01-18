@@ -2,8 +2,7 @@
         xmlns="http://schemas.wsick.com/fayde"
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
-        xmlns:draw="lib://Fayde.Drawing"
-        xmlns:zoom="lib://Fayde.Zoomer"
+        xmlns:d="lib://Fayde.Drawing"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
@@ -16,12 +15,22 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="50" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="100" />
+            <RowDefinition Height="50" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.ZIndex="2" Grid.Row="0" Orientation="Horizontal">
+        <d:Sketch x:Name="Blocks"
+                  Grid.Row="0"
+                  MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
+                  MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
+                  MouseMove="{EventBinding BlocksSketch_MouseMove}"
+                  TouchDown="{EventBinding BlocksSketch_TouchDown}"
+                  TouchUp="{EventBinding BlocksSketch_TouchUp}"
+                  TouchMove="{EventBinding BlocksSketch_TouchMove}"
+                  IsAnimated="true"
+                  Draw="{EventBinding BlocksSketch_Draw}" />
+
+        <StackPanel Grid.ZIndex="1" Grid.Row="2" Orientation="Horizontal">
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="ToneBlockBtn" Click="{EventBinding ToneBlockBtn_Click}">Tone</Button>
             <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyb</Button>
@@ -47,48 +56,18 @@
             <Button x:Name="BitCrusherBlockBtn" Click="{EventBinding BitCrusherBlockBtn_Click}">BitCrush</Button>
             <Button x:Name="ChompBlockBtn" Click="{EventBinding ChompBlockBtn_Click}">Chomp</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
-            <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
-            <Button x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}">Redo</Button>
-            <Button x:Name="ZoomIn" Click="{EventBinding ZoomIn_Click}">+</Button>
-            <Button x:Name="ZoomOut" Click="{EventBinding ZoomOut_Click}">-</Button>
+            <RepeatButton x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}" Delay="50" Interval="100">Undo</RepeatButton>
+            <RepeatButton x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}" Delay="50" Interval="100">Redo</RepeatButton>
+            <Button x:Name="ZoomIn" Width="50" Click="{EventBinding ZoomIn_Click}">+</Button>
+            <Button x:Name="ZoomOut" Width="50" Click="{EventBinding ZoomOut_Click}">-</Button>
         </StackPanel>
 
-        <zoom:Zoomer Grid.Row="1" ZoomLevels="{Binding ZoomLevels}" ZoomFactor="1.5" ZoomLevel="{Binding ZoomLevel}" ZoomUpdated="{EventBinding ZoomUpdated}" ConstrainToViewport="true">
-            <Canvas>
-                <draw:Sketch x:Name="Blocks"
-                             Canvas.Left="{Binding ZoomContentOffset.X}"
-                             Canvas.Top="{Binding ZoomContentOffset.Y}"
-                             Width="{Binding ZoomContentSize.Width}"
-                             Height="{Binding ZoomContentSize.Height}"
-                             MouseLeftButtonDown="{EventBinding BlocksSketch_MouseDown}"
-                             TouchDown="{EventBinding BlocksSketch_TouchDown}"
-                             MouseLeftButtonUp="{EventBinding BlocksSketch_MouseUp}"
-                             MouseMove="{EventBinding BlocksSketch_MouseMove}"
-                             IsAnimated="true"
-                             Draw="{EventBinding BlocksSketch_Draw}" />
-            </Canvas>
-        </zoom:Zoomer>
+        <!--<StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">-->
 
-        <Canvas Grid.Row="1">
+            <!--<TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>-->
+            <!--<TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>-->
 
-        </Canvas>
-
-        <StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">
-            <StackPanel.DataContext>
-                <vms:InfoViewModel/>
-            </StackPanel.DataContext>
-
-            <TextBlock Text="{Binding SelectedBlock.Id}" Padding="10,10,10,10"></TextBlock>
-            <TextBlock Text="{Binding ZoomLevel}" Padding="10,10,10,10"></TextBlock>
-
-            <!--<ListBox Width="200" ItemsSource="{Binding Targets}" ScrollViewer.VerticalScrollBarVisibility="Visible">-->
-                <!--<ListBox.ItemTemplate>-->
-                    <!--<DataTemplate>-->
-                        <!--<TextBlock Text="{Binding Id}" />-->
-                    <!--</DataTemplate>-->
-                <!--</ListBox.ItemTemplate>-->
-            <!--</ListBox>-->
-        </StackPanel>
+        <!--</StackPanel>-->
 
     </Grid>
 </Application>

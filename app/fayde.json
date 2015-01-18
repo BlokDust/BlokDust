@@ -1,11 +1,11 @@
 {
   "libs": {
-    "exjs": {
-      "path": "lib/exjs/dist/ex.min",
-      "exports": "exjs"
-    },
     "Fayde.Controls": {
       "exports": "Fayde.Controls"
+    },
+    "exjs": {
+      "exports": "exjs",
+      "path": "lib/exjs/dist/ex.min"
     },
     "Fayde.Drawing": {
       "exports": "Fayde.Drawing"
@@ -13,22 +13,30 @@
     "Fayde.Utils": {
       "exports": "Fayde.Utils"
     },
-    "TWEEN": {
-      "path": "lib/tween.ts/build/tween.min",
-      "exports": "TWEEN"
+    "Fayde.Transformer": {
+      "exports": "Fayde.Transformer",
+      "deps": [
+        "Fayde.Utils",
+        "tween"
+      ]
     },
-    "Fayde.Zoomer": {
-      "exports": "Fayde.Zoomer",
-      "deps": ["Fayde.Utils", "TWEEN"]
+    "tween": {
+      "exports": "TWEEN",
+      "path": "lib/tween.ts/build/tween.min"
     },
-    "pixelpalette": {
-      "path": "lib/pixelpalette/dist/PixelPalette.min"
-    }
+    "tone": {
+      "path": "lib/tone/build/Tone.js"
+    },
+    "pixelpalette": {}
   },
   "themes": {
+    "Fayde.Controls": {},
     "exjs": "none",
+    "Fayde.Drawing": {},
     "Fayde.Utils": "none",
-    "TWEEN": "none",
-    "pixelpalette": "none"
+    "Fayde.Transformer": {},
+    "tween": "none",
+    "tone": {},
+    "pixelpalette": {}
   }
 }
