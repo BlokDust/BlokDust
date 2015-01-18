@@ -67,6 +67,7 @@ class AutoWah extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Range",
                     "setting" :"octaves",
                     "props" : {
@@ -79,6 +80,7 @@ class AutoWah extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
@@ -91,6 +93,7 @@ class AutoWah extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {

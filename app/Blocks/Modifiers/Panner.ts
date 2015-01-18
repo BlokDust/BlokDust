@@ -57,6 +57,7 @@ class Panner extends Modifier {
             "parameters": [
 
                 {
+                    "type" : "slider",
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {

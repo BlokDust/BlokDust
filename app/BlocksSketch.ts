@@ -284,6 +284,7 @@ class BlocksSketch extends Grid {
 
         // cancel if interacting with panel
         var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        var blockClick = false;
         if (!panelCheck || this._ParamsPanel.Scale!==1) {
             for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
                 var block: IBlock = App.Blocks.GetValueAt(i);
@@ -291,6 +292,7 @@ class BlocksSketch extends Grid {
                     (<any>e).args.Handled = true;
 
                     block.MouseDown();
+                    blockClick = false;
                     this.SelectedBlock = block;
                     ParamTimeout = true;
                     setTimeout(function() {
@@ -299,6 +301,9 @@ class BlocksSketch extends Grid {
 
                     return;
                 }
+            }
+            if (blockClick==false) {
+                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
             }
         }
 

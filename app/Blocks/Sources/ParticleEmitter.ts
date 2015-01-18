@@ -113,6 +113,7 @@ class ParticleEmitter extends Modifiable{
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Angle",
                     "setting" :"angle",
                     "props" : {
@@ -125,6 +126,7 @@ class ParticleEmitter extends Modifiable{
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Speed",
                     "setting" :"speed",
                     "props" : {
@@ -137,6 +139,7 @@ class ParticleEmitter extends Modifiable{
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Delay Time",
                     "setting" :"rate",
                     "props" : {
@@ -149,6 +152,7 @@ class ParticleEmitter extends Modifiable{
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Range",
                     "setting" :"range",
                     "props" : {

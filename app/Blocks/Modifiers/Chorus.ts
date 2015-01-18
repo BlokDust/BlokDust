@@ -61,6 +61,7 @@ class Chorus extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
@@ -73,6 +74,7 @@ class Chorus extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
@@ -85,6 +87,7 @@ class Chorus extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
@@ -97,6 +100,7 @@ class Chorus extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {

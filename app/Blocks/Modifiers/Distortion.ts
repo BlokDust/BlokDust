@@ -55,6 +55,7 @@ class Distortion extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Drive",
                     "setting" :"drive",
                     "props" : {
@@ -67,6 +68,7 @@ class Distortion extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {

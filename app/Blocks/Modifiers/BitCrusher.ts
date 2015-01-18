@@ -60,6 +60,7 @@ class BitCrusher extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "bits",
                     "setting" : "bits",
                     "props" : {

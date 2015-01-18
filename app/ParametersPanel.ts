@@ -6,7 +6,9 @@ import Size = Fayde.Utils.Size;
 import Grid = require("./Grid");
 import IBlock = require("./Blocks/IBlock");
 import BlocksSketch = require("./BlocksSketch");
-import Slider = require("./Slider");
+import IOption = require("./IOption");
+import Slider = require("./OptionSlider");
+import Buttons = require("./OptionButtonSelect");
 
 class ParametersPanel {
 
@@ -18,7 +20,7 @@ class ParametersPanel {
     private _Name: string;
     public Scale: number;
     public Sketch;
-    public Sliders: Slider[];
+    public Options: IOption[];
     private _SliderColours: string[];
     private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
@@ -39,7 +41,7 @@ class ParametersPanel {
         this._NameWidth = 0;
 
         this.Sketch = BlocksSketch;
-        this.Sliders = [];
+        this.Options = [];
         this._SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
         this._SliderRoll = [];
 
@@ -51,6 +53,7 @@ class ParametersPanel {
             "name" : "Init",
             "parameters" : [
                 {
+                    "type" : "slider",
                     "name" : "Gain",
                     "props" : {
                         "value" : 12,
@@ -88,11 +91,34 @@ class ParametersPanel {
 
         // FIXED or ACCORDION //
         var panelH;
-        if (n<6) {
+        /*if (n<6) {
             panelH = (40 + (48 * n)) * units;
         } else {
             panelH = 280 * units;
+        }*/
+
+        var maxHeight = 240;
+        var getHeight = 0;
+        var heightScale = 1;
+        var optionHeight = [];
+        var i;
+        for (i=0;i<n;i++) {
+            if (json.parameters[i].type == "slider") {
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
+            } else if (json.parameters[i].type == "buttons") {
+                getHeight += 144;
+                optionHeight[i] = 144 * units;
+            } else {
+                console.log("Option type not recognised");
+            }
         }
+        if (getHeight > maxHeight) {
+            heightScale = (1/getHeight) * maxHeight;
+            getHeight = maxHeight;
+        }
+
+        panelH = (getHeight + 40) * units;
 
 
         // TEXT MARGIN //
@@ -125,21 +151,43 @@ class ParametersPanel {
         this._NameWidth = nameW;
 
 
-        // POPULATE SLIDERS //
-        var sliderH = Math.round((panelH - (40*units)) / n);
-        var sliderList = [];
+        // POPULATE OPTIONS //
+        var optionTotalY = 0;
+        var optionList = [];
         for (i=0;i<n;i++) {
-            var range = json.parameters[i].props.max - json.parameters[i].props.min;
-            var sliderO = this.Margin;
-            if (json.parameters[i].props.centered==true) {
-                sliderO += ((this.Range/100) * 50);
+            var option = json.parameters[i];
+
+            // SET HEIGHT //
+            optionHeight[i] = Math.round(optionHeight[i] * heightScale); // scale heights
+            var optionY = Math.round((- (this.Size.Height*0.5)) + (20*units) + optionTotalY);
+
+
+            // SLIDER //
+            if (option.type == "slider") {
+
+                var range = option.props.max - option.props.min;
+                var sliderO = this.Margin;
+                if (option.props.centered==true) {
+                    sliderO += ((this.Range/100) * 50);
+                }
+                var sliderX = (this.Range/range) * (option.props.value-option.props.min);
+                var sliderW = (this.Range/100) * option.props.value;
+
+                optionList.push(new Slider(new Point(sliderX,optionY),new Size(sliderW,optionHeight[i]),sliderO,false,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting));
+
             }
-            var sliderX = (this.Range/range) * (json.parameters[i].props.value-json.parameters[i].props.min);
-            var sliderW = (this.Range/100) * json.parameters[i].props.value;
-            var sliderY = Math.round((- (this.Size.Height*0.5)) + (20*units) + (i*sliderH));
-            sliderList.push(new Slider(new Point(sliderX,sliderY),new Size(sliderW,sliderH),sliderO,false,json.parameters[i].props.value,json.parameters[i].props.min,json.parameters[i].props.max,json.parameters[i].props.quantised,json.parameters[i].name,json.parameters[i].setting));
+
+            // BUTTONS //
+            else if (option.type == "buttons") {
+                var value = 0;
+                optionList.push(new Buttons(new Point(0,optionY),new Size(this.Range,optionHeight[i]),value,option.name,option.setting));
+
+            }
+
+            optionTotalY += optionHeight[i];
+
         }
-        this.Sliders = sliderList; // update slider array
+        this.Options = optionList; // update slider array
 
         if (open){
             this.PanelScale(this,1,1500);
@@ -201,98 +249,21 @@ class ParametersPanel {
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.Height * 0.5));
 
 
-        // DRAW SLIDERS //
+        // DRAW OPTIONS //
         var i;
-        for (i = 0; i < this.Sliders.length; i++) {
-
-            var sliderX = this.Sliders[i].Position.x;
-            var sliderY = this.Sliders[i].Position.y;
-            var sliderH = this.Sliders[i].Size.Height;
-            var sliderO = this.Sliders[i].Origin;
+        for (i = 0; i < this.Options.length; i++) {
 
             ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
 
-
-            // DIVIDERS //
-            ctx.fillStyle = ctx.strokeStyle = "#393d43";
-            if (i !== (this.Sliders.length - 1)) {
-                ctx.beginPath();
-                ctx.moveTo(this.Margin - units, sliderY + sliderH);
-                ctx.lineTo(this.Range + this.Margin + units, sliderY + sliderH);
-                ctx.closePath();
-                ctx.stroke();
+            // DRAW SLIDER //
+            if (this.Options[i].Type=="slider") {
+                this.sliderDraw(ctx,units,i,this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height,this.Options[i].Origin);
             }
 
-
-            // MID POINT //
-            ctx.beginPath();
-            ctx.moveTo((this.Range * 0.5) + this.Margin - (2 * units), sliderY + (sliderH * 0.5));
-            ctx.lineTo((this.Range * 0.5) + this.Margin, sliderY + (sliderH * 0.5) - (2 * units));
-            ctx.lineTo((this.Range * 0.5) + this.Margin + (2 * units), sliderY + (sliderH * 0.5));
-            ctx.lineTo((this.Range * 0.5) + this.Margin, sliderY + (sliderH * 0.5) + (2 * units));
-            ctx.closePath();
-            ctx.fill();
-
-
-            // BAR //
-            ctx.fillStyle = ctx.strokeStyle = "#282b31";
-            if (sliderO !== this.Margin) {
-                this.diagonalFill(this.Margin - units, sliderY + units, this.Range + (2 * units), sliderH - (2 * units), 9);
+            // DRAW BUTTONS //
+            else if (this.Options[i].Type == "buttons") {
+                this.buttonsDraw(ctx,units,i,this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height);
             }
-            var offset = 0;
-            if (sliderO == this.Margin) {
-                offset = -units;
-            }
-            ctx.globalAlpha = 1;
-            var col = this._SliderColours[i - (Math.floor(i/this._SliderColours.length)*(this._SliderColours.length))];
-            ctx.fillStyle = ctx.strokeStyle = col;
-            ctx.beginPath();
-            ctx.moveTo(sliderO + offset, sliderY);
-            ctx.lineTo(sliderX + this.Margin, sliderY);
-            ctx.lineTo(sliderX + this.Margin, sliderY + sliderH);
-            ctx.lineTo(sliderO + offset, sliderY + sliderH);
-            ctx.closePath();
-            ctx.fill();
-
-
-            // LINE //
-            ctx.fillRect(sliderX + this.Margin - (units), sliderY, 2 * units, sliderH);
-
-
-            // GRAB TRIANGLES //
-            var dragWidth = this.Sliders[i].Size.Height * 0.2;
-            ctx.beginPath();
-            ctx.moveTo(sliderX + this.Margin - dragWidth, sliderY + (sliderH * 0.5));
-            ctx.lineTo(sliderX + this.Margin, sliderY + (sliderH * 0.5) - dragWidth);
-            ctx.lineTo(sliderX + this.Margin + dragWidth, sliderY + (sliderH * 0.5));
-            ctx.lineTo(sliderX + this.Margin, sliderY + (sliderH * 0.5) + dragWidth);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = App.Palette[8];// WHITE
-            ctx.beginPath();
-            ctx.moveTo(sliderX + this.Margin - dragWidth, sliderY + (sliderH * 0.5));
-            ctx.lineTo(sliderX + this.Margin, sliderY + (sliderH * 0.5) - dragWidth);
-            ctx.lineTo(sliderX + this.Margin + (dragWidth * 0.5), sliderY + (sliderH * 0.5) - (dragWidth * 0.5));
-            ctx.lineTo(sliderX + this.Margin - (dragWidth * 0.5), sliderY + (sliderH * 0.5) + (dragWidth * 0.5));
-            ctx.closePath();
-            ctx.fill();
-
-
-            // PARAM NAME //
-            ctx.font = "400 " + dataType + "px Dosis";
-            ctx.textAlign = "right";
-            ctx.fillText(this.Sliders[i].Name.toUpperCase(), this.Margin - (15 * units), sliderY + (sliderH * 0.5) + (dataType * 0.4));
-
-
-            // VALUE TOOLTIP //
-            if (this.Sliders[i].Selected) {
-                ctx.textAlign = "left";
-                ctx.font = "200 " + headerType + "px Dosis";
-                var string = this.NumberWithCommas("" + (Math.round(this.Sliders[i].Value * 100) / 100));
-                ctx.fillText(string, sliderX + this.Margin + (25 * units), sliderY + (sliderH * 0.5) + (headerType * 0.35));
-            }
-
 
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -324,6 +295,123 @@ class ParametersPanel {
         ctx.closePath();
         ctx.fill();
     }
+
+
+
+    sliderDraw(ctx,units,i,x,y,height,origin) {
+
+        var dataType = Math.round(units*10);
+        var headerType = Math.round(units*33);
+
+        // DIVIDERS //
+        ctx.fillStyle = ctx.strokeStyle = "#393d43";
+        if (i !== (this.Options.length - 1)) {
+            ctx.beginPath();
+            ctx.moveTo(this.Margin - units, y + height);
+            ctx.lineTo(this.Range + this.Margin + units, y + height);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+
+        // MID POINT //
+        ctx.beginPath();
+        ctx.moveTo((this.Range * 0.5) + this.Margin - (2 * units), y + (height * 0.5));
+        ctx.lineTo((this.Range * 0.5) + this.Margin, y + (height * 0.5) - (2 * units));
+        ctx.lineTo((this.Range * 0.5) + this.Margin + (2 * units), y + (height * 0.5));
+        ctx.lineTo((this.Range * 0.5) + this.Margin, y + (height * 0.5) + (2 * units));
+        ctx.closePath();
+        ctx.fill();
+
+
+        // BAR //
+        ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        if (origin !== this.Margin) {
+            this.diagonalFill(this.Margin - units, y + units, this.Range + (2 * units), height - (2 * units), 9);
+        }
+        var offset = 0;
+        if (origin == this.Margin) {
+            offset = -units;
+        }
+        ctx.globalAlpha = 1;
+        var col = this._SliderColours[i - (Math.floor(i/this._SliderColours.length)*(this._SliderColours.length))];
+        ctx.fillStyle = ctx.strokeStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(origin + offset, y);
+        ctx.lineTo(x + this.Margin, y);
+        ctx.lineTo(x + this.Margin, y + height);
+        ctx.lineTo(origin + offset, y + height);
+        ctx.closePath();
+        ctx.fill();
+
+
+        // LINE //
+        ctx.fillRect(x + this.Margin - (units), y, 2 * units, height);
+
+
+        // GRAB TRIANGLES //
+        var dragWidth = height * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(x + this.Margin - dragWidth, y + (height * 0.5));
+        ctx.lineTo(x + this.Margin, y + (height * 0.5) - dragWidth);
+        ctx.lineTo(x + this.Margin + dragWidth, y + (height * 0.5));
+        ctx.lineTo(x + this.Margin, y + (height * 0.5) + dragWidth);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.beginPath();
+        ctx.moveTo(x + this.Margin - dragWidth, y + (height * 0.5));
+        ctx.lineTo(x + this.Margin, y + (height * 0.5) - dragWidth);
+        ctx.lineTo(x + this.Margin + (dragWidth * 0.5), y + (height * 0.5) - (dragWidth * 0.5));
+        ctx.lineTo(x + this.Margin - (dragWidth * 0.5), y + (height * 0.5) + (dragWidth * 0.5));
+        ctx.closePath();
+        ctx.fill();
+
+
+        // PARAM NAME //
+        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.textAlign = "right";
+        ctx.fillText(this.Options[i].Name.toUpperCase(), this.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
+
+
+        // VALUE TOOLTIP //
+        if (this.Options[i].Selected) {
+            ctx.textAlign = "left";
+            ctx.font = "200 " + headerType + "px Dosis";
+            var string = this.NumberWithCommas("" + (Math.round(this.Options[i].Value * 100) / 100));
+            ctx.fillText(string, x + this.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
+        }
+    }
+
+
+
+
+    buttonsDraw(ctx,units,i,x,y,height) {
+
+        var dataType = Math.round(units*10);
+        var headerType = Math.round(units*33);
+
+        // DIVIDERS //
+        ctx.fillStyle = ctx.strokeStyle = "#393d43";
+        if (i !== (this.Options.length - 1)) {
+            ctx.beginPath();
+            ctx.moveTo(this.Margin - units, y + height);
+            ctx.lineTo(this.Range + this.Margin + units, y + height);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // PARAM NAME //
+        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.textAlign = "right";
+        ctx.fillText(this.Options[i].Name.toUpperCase(), this.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
+
+    }
+
+
+
 
     diagonalFill(x,y,w,h,s) {
         var ctx = this._Ctx;
@@ -387,10 +475,10 @@ class ParametersPanel {
 
         this.RolloverCheck(mx,my);
         var i;
-        for (i=0;i<this.Sliders.length;i++) {
+        for (i=0;i<this.Options.length;i++) {
 
             if (this._SliderRoll[i]) {
-                this.Sliders[i].Selected = true;
+                this.Options[i].Selected = true;
                 this.SliderSet(i,mx);
             }
 
@@ -404,8 +492,8 @@ class ParametersPanel {
 
     MouseUp() {
         var i;
-        for (i=0;i<this.Sliders.length;i++) {
-            this.Sliders[i].Selected = false;
+        for (i=0;i<this.Options.length;i++) {
+            this.Options[i].Selected = false;
         }
 
     }
@@ -416,9 +504,11 @@ class ParametersPanel {
 
         this.RolloverCheck(mx,my);
         var i;
-        for (i=0;i<this.Sliders.length;i++) {
-            if (this.Sliders[i].Selected) {
-                this.SliderSet(i,mx);
+        for (i=0;i<this.Options.length;i++) {
+            if (this.Options[i].Type=="slider") {
+                if (this.Options[i].Selected) {
+                    this.SliderSet(i, mx);
+                }
             }
         }
     }
@@ -427,37 +517,39 @@ class ParametersPanel {
 
         // SLIDER POSITION //
         var mPos = mx - (this.Position.x + this.Margin);
-        this.Sliders[n].Position.x = mPos;
+        this.Options[n].Position.x = mPos;
 
         // FLOOR //
-        if (this.Sliders[n].Position.x < 0) {
-            this.Sliders[n].Position.x = 0;
+        if (this.Options[n].Position.x < 0) {
+            this.Options[n].Position.x = 0;
         }
         // CEILING //
-        if (this.Sliders[n].Position.x > this.Range) {
-            this.Sliders[n].Position.x = this.Range;
+        if (this.Options[n].Position.x > this.Range) {
+            this.Options[n].Position.x = this.Range;
         }
 
         // CALCULATE VALUE //
-        var range = this.Sliders[n].Max - this.Sliders[n].Min;
-        var perc = (this.Sliders[n].Position.x/this.Range) * 100;
-            this.Sliders[n].Value = ((range/100)*perc) + this.Sliders[n].Min;
+        var range = this.Options[n].Max - this.Options[n].Min;
+        var perc = (this.Options[n].Position.x/this.Range) * 100;
+            this.Options[n].Value = ((range/100)*perc) + this.Options[n].Min;
 
         // QUANTIZE //
-        if (this.Sliders[n].Quantised) {
-            this.Sliders[n].Value = Math.round(this.Sliders[n].Value);
-            this.Sliders[n].Position.x = (this.Range/range)*(this.Sliders[n].Value-this.Sliders[n].Min);
+        if (this.Options[n].Quantised) {
+            this.Options[n].Value = Math.round(this.Options[n].Value);
+            this.Options[n].Position.x = (this.Range/range)*(this.Options[n].Value-this.Options[n].Min);
         }
 
         // SET VALUE IN BLOCK //
-        this.SelectedBlock.SetValue(this.Sliders[n].Setting,this.Sliders[n].Value);
+        this.SelectedBlock.SetValue(this.Options[n].Setting,this.Options[n].Value);
 
     }
 
     RolloverCheck(mx,my) {
         var i;
-        for (i=0;i<this.Sliders.length;i++) {
-            this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*this._Units),this.Position.y + this.Sliders[i].Position.y,this.Range + (20*this._Units),this.Sliders[i].Size.Height,mx,my);
+        for (i=0;i<this.Options.length;i++) {
+            if (this.Options[i].Type == "slider") {
+                this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*this._Units),this.Position.y + this.Options[i].Position.y,this.Range + (20*this._Units),this.Options[i].Size.Height,mx,my);
+            }
         }
 
         if (this.Scale==1) {

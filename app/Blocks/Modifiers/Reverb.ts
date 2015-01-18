@@ -64,6 +64,7 @@ class Reverb extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Dampening",
                     "setting" :"dampening",
                     "props" : {
@@ -76,6 +77,7 @@ class Reverb extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Room Size",
                     "setting" :"roomSize",
                     "props" : {
@@ -88,6 +90,7 @@ class Reverb extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {

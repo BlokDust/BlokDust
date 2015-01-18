@@ -61,6 +61,7 @@ class Phaser extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
@@ -73,6 +74,7 @@ class Phaser extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
@@ -85,6 +87,7 @@ class Phaser extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {

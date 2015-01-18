@@ -45,6 +45,7 @@
             <Button x:Name="MicrophoneBlockBtn" Click="{EventBinding MicrophoneBlockBtn_Click}">Mic</Button>
             <Button x:Name="PannerBlockBtn" Click="{EventBinding PannerBlockBtn_Click}">Pan</Button>
             <Button x:Name="BitCrusherBlockBtn" Click="{EventBinding BitCrusherBlockBtn_Click}">BitCrush</Button>
+            <Button x:Name="ChompBlockBtn" Click="{EventBinding ChompBlockBtn_Click}">Chomp</Button>
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
             <Button x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}">Undo</Button>
             <Button x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}">Redo</Button>

@@ -55,6 +55,7 @@ class LFO extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
@@ -67,6 +68,7 @@ class LFO extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {

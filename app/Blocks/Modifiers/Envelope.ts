@@ -56,6 +56,7 @@ class Envelope extends Modifier {
             "parameters": [
 
                 {
+                    "type" : "slider",
                     "name": "Attack",
                     "setting": "attack",
                     "props": {
@@ -68,6 +69,7 @@ class Envelope extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name": "Decay",
                     "setting": "decay",
                     "props": {
@@ -80,6 +82,7 @@ class Envelope extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name": "Sustain",
                     "setting": "sustain",
                     "props": {
@@ -92,6 +95,7 @@ class Envelope extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name": "Release",
                     "setting": "release",
                     "props": {

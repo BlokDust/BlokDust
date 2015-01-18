@@ -65,6 +65,7 @@ class Delay extends Modifier {
             "parameters" : [
 
                 {
+                    "type" : "slider",
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
@@ -77,6 +78,7 @@ class Delay extends Modifier {
                 },
 
                 {
+                    "type" : "slider",
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
@@ -90,6 +92,7 @@ class Delay extends Modifier {
                 ,
 
                 {
+                    "type" : "slider",
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {

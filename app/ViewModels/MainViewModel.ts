@@ -25,6 +25,7 @@ import EQ = require("../Blocks/Modifiers/EQ");
 import BitCrusher = require("../Blocks/Modifiers/BitCrusher");
 import AutoWah = require("../Blocks/Modifiers/AutoWah");
 import Panner = require("../Blocks/Modifiers/Panner");
+import Chomp = require("../Blocks/Modifiers/Chomp");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
@@ -225,6 +226,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     BitCrusherBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(BitCrusher);
+    }
+
+    ChompBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Chomp);
     }
 
     AutoWahBlockBtn_Click(e: any){
