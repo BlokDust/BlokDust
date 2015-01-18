@@ -19,30 +19,25 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import ParametersPanel = require("./ParametersPanel");
 import Transformer = Fayde.Transformer.Transformer;
 
 declare var PixelPalette;
-declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
 class BlocksSketch extends Grid {
 
-    public _Unit: number;
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
     private _IsPointerDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
-	private _ParamsPanel: ParametersPanel;
     private _Transformer: Transformer;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
     }
 
-
     set SelectedBlock(block: IBlock) {
-        // if setting the selected block to null (or false)
+        // if setting the selected block to null (or falsey)
         // if there's already a selected block, set its
         // IsSelected to false.
         if (!block && this._SelectedBlock){
@@ -85,8 +80,6 @@ class BlocksSketch extends Grid {
             //console.log(palette);
             App.Palette = palette;
         });
-
-        ParamTimeout = false;
 
         this._Invalidate();
     }
@@ -142,7 +135,6 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
-		this._ParamsPanel = new ParametersPanel(this.Ctx);
         this.ScaleToFit = true;
         this.Divisor = 70;
 
@@ -157,8 +149,6 @@ class BlocksSketch extends Grid {
         this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
         this._Transformer.SizeChanged(this.Size);
     }
-
-
 
     Update() {
         super.Update();
@@ -188,10 +178,6 @@ class BlocksSketch extends Grid {
         this._DisplayList.Draw();
 
         this.DrawParticles();
-
-        this._ParamsPanel.Draw();
-
-
     }
 
     // PARTICLES //
@@ -251,8 +237,6 @@ class BlocksSketch extends Grid {
 
     }
 
-
-
     // PROXIMITY CHECK //
 
     private _CheckProximity(){
@@ -291,7 +275,6 @@ class BlocksSketch extends Grid {
         this._PointerDown(point, () => {
             (<any>e).args.Handled = true;
         });
-        this._CheckParamsInteract(e);
     }
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
@@ -300,7 +283,6 @@ class BlocksSketch extends Grid {
         this._PointerUp(point, () => {
             (<any>e).args.Handled = true;
         });
-        this._CheckParamsInteract(e);
     }
 
     MouseMove(e: Fayde.Input.MouseEventArgs){
@@ -342,26 +324,12 @@ class BlocksSketch extends Grid {
 
         if (!collision){
             this._Transformer.PointerDown(point);
-            if (blockClick==false) {
-                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
-            }
-        }
-
-    }
-
-    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
-
-    private _CheckParamsInteract(e) {
-        var point = (<any>e).args.Source.MousePosition;
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseDown(point.x,point.y);
         }
     }
 
-    _PointerUp(point: Point, handle: () => void){
+    private _PointerUp(point: Point, handle: () => void) {
         this._IsPointerDown = false;
+
         if (this.SelectedBlock){
 
             if (this.SelectedBlock.HitTest(point)){
@@ -377,27 +345,6 @@ class BlocksSketch extends Grid {
         }
 
         this._Transformer.PointerUp();
-
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseUp();
-        }
-        // OPEN PANEL //
-        if (ParamTimeout) {
-            this.SelectedBlock.OpenParams();
-            if (this.SelectedBlock.ParamJson) {
-                this._ParamsPanel.SelectedBlock = this.SelectedBlock;
-                this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
-            }
-        }
-
-        // OPEN PANEL //
-        if (ParamTimeout) {
-            this.SelectedBlock.OpenParams();
-            if (this.SelectedBlock.ParamJson) {
-                this._ParamsPanel.SelectedBlock = this.SelectedBlock;
-                this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
-            }
-        }
     }
 
     private _PointerMove(point: Point){
@@ -405,13 +352,8 @@ class BlocksSketch extends Grid {
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseMove(point.x,point.y);
-        }
+
         this._Transformer.PointerMove(point);
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseMove(point.x,point.y);
-        }
     }
 
     private _CheckCollision(point: Point, handle: () => void): Boolean {
@@ -431,7 +373,6 @@ class BlocksSketch extends Grid {
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
         this._SelectedBlock.Delete();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
