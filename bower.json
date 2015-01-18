@@ -8,7 +8,7 @@
     "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.3.0",
     "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.3.0",
     "fayde.zoomer": "git://github.com/edsilv/fayde.zoomer#~0.3.0",
-    "tone": "git://github.com/lukephills/Tone.js#~0.2.9",
+    "tone": "git://github.com/lukephills/Tone.js#~0.2.10",
     "pixelpalette": "0.1.8"
   }
 }
