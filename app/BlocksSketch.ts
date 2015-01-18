@@ -292,7 +292,7 @@ class BlocksSketch extends Grid {
                     (<any>e).args.Handled = true;
 
                     block.MouseDown();
-                    blockClick = false;
+                    blockClick = true;
                     this.SelectedBlock = block;
                     ParamTimeout = true;
                     setTimeout(function() {
