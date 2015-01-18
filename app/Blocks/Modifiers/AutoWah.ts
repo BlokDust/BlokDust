@@ -7,17 +7,17 @@ import App = require("../../App");
 
 class AutoWah extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
         this.Component = new AutoWahComponent({
 
-            baseFrequency: 1000,
-            octaves: 8,
-            sensitivity: 0,
-            gain : 30,
+            baseFrequency: 100,
+            octaves: 5,
+            sensitivity: -40,
+            gain : 35,
             rolloff : -48,
 
             follower : {
@@ -58,6 +58,60 @@ class AutoWah extends Modifier {
        this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Auto Wah",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Range",
+                    "setting" :"octaves",
+                    "props" : {
+                        "value" : 5,
+                        "min" : 1,
+                        "max" : 8,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Frequency",
+                    "setting" :"baseFrequency",
+                    "props" : {
+                        "value" : 100,
+                        "min" : 50,
+                        "max" : 1200,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.6,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = AutoWah;

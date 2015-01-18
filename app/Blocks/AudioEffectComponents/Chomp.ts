@@ -1,14 +1,26 @@
+/**
+ * Created by luketwyman on 17/01/2015.
+ */
+
 import IEffect = require("../IEffect");
 import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
+import App = require("../../App");
 
-class DistortionComponent extends Effect implements IEffect {
 
-    public Effect: Tone.Distortion;
+class ChompComponent extends Effect implements IEffect {
 
-    constructor(distortion: number) {
+    public Effect: Tone.Filter;
+
+    constructor(Settings) {
         super();
-        this.Effect = new Tone.Distortion(distortion);
+        this.Effect = new Tone.Filter({
+            "type" : Settings.type,
+            "frequency" : Settings.frequency,
+            "rolloff" : Settings.rolloff,
+            "Q" : Settings.Q,
+            "gain" : Settings.gain
+        });
     }
 
     Connect(modifiable:IModifiable): void{
@@ -18,6 +30,7 @@ class DistortionComponent extends Effect implements IEffect {
 
     Disconnect(modifiable:IModifiable): void {
         super.Disconnect(modifiable);
+
     }
 
     Delete() {
@@ -28,15 +41,11 @@ class DistortionComponent extends Effect implements IEffect {
         super.SetValue(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.dryWet.setDry(1 - value);
-        } else {
-            this.Effect.setDistortion(value);
-        }
-
-
-        console.log(jsonVariable);
+        this.Effect.set(
+            jsonVariable
+        );
     }
+
 }
 
-export = DistortionComponent;
+export = ChompComponent;

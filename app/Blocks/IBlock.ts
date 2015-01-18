@@ -11,6 +11,8 @@ interface IBlock extends IDisplayObject{
     GridPosition: Point;
     LastGridPosition: Point;
     Position: Point;
+    ParamJson;
+    Component;
     Update(): void;
     Draw(): void;
     MouseDown(): void;
@@ -20,6 +22,9 @@ interface IBlock extends IDisplayObject{
     Delete(): void;
     HitTest(point: Point): boolean;
     DistanceFrom(point: Point): number;
+    OpenParams(): void;
+    SetValue(param: string,value: number): void;
+    GetValue(param: string): void;
 }
 
 export = IBlock;

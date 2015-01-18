@@ -1,12 +1,13 @@
 import ReverbComponent = require("../AudioEffectComponents/Reverb");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class Reverb extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -54,6 +55,60 @@ class Reverb extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Reverb",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Dampening",
+                    "setting" :"dampening",
+                    "props" : {
+                        "value" : 0.33,
+                        "min" : 0.1,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Room Size",
+                    "setting" :"roomSize",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0.1,
+                        "max" : 0.95,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = Reverb;

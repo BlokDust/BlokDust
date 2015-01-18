@@ -1,12 +1,13 @@
 import PannerComponent = require("../AudioEffectComponents/Panner");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class Panner extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -47,6 +48,34 @@ class Panner extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name": "Auto Panner",
+            "parameters": [
+
+                {
+                    "type" : "slider",
+                    "name": "Frequency",
+                    "setting": "frequency",
+                    "props": {
+                        "value": 1,
+                        "min": 0,
+                        "max": 5,
+                        "quantised": false,
+                        "centered": false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = Panner;

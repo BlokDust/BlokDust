@@ -1,12 +1,13 @@
 import DelayComponent = require("../AudioEffectComponents/Delay");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class Delay extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -16,6 +17,8 @@ class Delay extends Modifier {
             feedback: 0.4, // Max is 1
             dryWet: 0.5
         });
+
+
 
         this.Effects.Add(this.Component);
 
@@ -53,7 +56,61 @@ class Delay extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
 
+        this.ParamJson =
+        {
+            "name" : "Delay",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Delay Time",
+                    "setting" :"delayTime",
+                    "props" : {
+                        "value" : 0.2,
+                        "min" : 0.05,
+                        "max" : 0.5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Feedback",
+                    "setting" :"feedback",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 0.9,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+                ,
+
+                {
+                    "type" : "slider",
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : 0.5,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = Delay;

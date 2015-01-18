@@ -53,21 +53,11 @@ class Keyboard extends Effect implements IEffect {
     }
 
     AddListeners(): void {
-
-        App.InputManager.AddEventListener('keydown', this.KeyboardDown, this);
-        App.InputManager.AddEventListener('keyup', this.KeyboardUp, this);
-
-        this.Modifiable.ConnectedKeyboards++;
-
+        App.InputManager.AddKeyboardListener(this.KeyboardDown, this.KeyboardUp, this);
     }
 
     RemoveListeners(): void {
-
-        App.InputManager.RemoveEventListener('keydown', this.KeyboardDown);
-        App.InputManager.RemoveEventListener('keyup', this.KeyboardUp);
-
-        this.Modifiable.ConnectedKeyboards--;
-
+        App.InputManager.RemoveKeyboardListener(this.KeyboardDown, this.KeyboardUp, this);
     }
 
     GetStartOctave(): number {
@@ -136,7 +126,6 @@ class Keyboard extends Effect implements IEffect {
 
             } else {
                 // MONOPHONIC
-
                 // If no other keys already pressed trigger attack
                 if (Object.keys(this.KeysDown).length === 1) {
                     if (this.Modifiable.Source.frequency){

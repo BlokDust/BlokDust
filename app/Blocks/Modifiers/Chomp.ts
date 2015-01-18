@@ -1,39 +1,59 @@
+/**
+ * Created by luketwyman on 17/01/2015.
+ */
+
 import FilterComponent = require("../AudioEffectComponents/Filter");
+import ChompComponent = require("../AudioEffectComponents/Chomp");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
 import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Filter extends Modifier {
+class Chomp extends Modifier {
 
-    public Component: IEffect;
+    public Rate: number;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new FilterComponent({
+        this.Component = new ChompComponent({
             type : "peaking",
             frequency : 440,
             rolloff : -12,
-            Q : 1,
-            gain : 0
+            Q : 0.6,
+            gain : 25
         });
-
-
-
 
         this.Effects.Add(this.Component);
 
+
+
+        this.Rate = 13;
+
+
+
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -2),new Point(1, 0),new Point(1, 2),new Point(-1, 0));
+
+        this.SetFrequency();
     }
+
+    SetFrequency() {
+        var me = this;
+        setTimeout(function() {
+            me.Component.SetValue("frequency",100 + Math.round(Math.random()*10000));
+            me.SetFrequency();
+        },this.Rate);
+    }
+
 
     Draw() {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        this.Ctx.fillStyle = App.Palette[5];// GREEN
         this.DrawMoveTo(-1,-2);
         this.DrawLineTo(1,0);
         this.DrawLineTo(1,2);
@@ -60,18 +80,31 @@ class Filter extends Modifier {
 
         this.ParamJson =
         {
-            "name": "Filter",
+            "name": "Chomp",
             "parameters": [
 
                 {
                     "type" : "slider",
-                    "name": "Frequency",
-                    "setting": "frequency",
+                    "name": "Rate",
+                    "setting": "rate",
                     "props": {
-                        "value": 440,
-                        "min": 5,
-                        "max": 20000,
+                        "value": 75,
+                        "min": 1,
+                        "max": 100,
                         "quantised": true,
+                        "centered": false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name": "Width",
+                    "setting": "Q",
+                    "props": {
+                        "value": 0.6,
+                        "min": 0.1,
+                        "max": 5,
+                        "quantised": false,
                         "centered": false
                     }
                 },
@@ -81,11 +114,11 @@ class Filter extends Modifier {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": 0,
-                        "min": -50,
+                        "value": 30,
+                        "min": 0,
                         "max": 50,
                         "quantised": false,
-                        "centered": true
+                        "centered": false
                     }
                 }
             ]
@@ -94,8 +127,13 @@ class Filter extends Modifier {
 
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
-        this.Component.SetValue(param,value);
+        if (param == "rate") {
+            this.Rate = Math.round((101-value)*1);
+        } else {
+            this.Component.SetValue(param, value);
+        }
+
     }
 }
 
-export = Filter;
+export = Chomp;

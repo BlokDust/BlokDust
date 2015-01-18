@@ -9,12 +9,12 @@ import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
-class Microphone extends Source {
+class Soundcloud extends Source {
 
     public DelayedRelease: number;
 
     constructor(grid: Grid, position: Point) {
-        this.BlockType = BlockType.Microphone;
+        this.BlockType = BlockType.Soundcloud;
         this.DelayedRelease = 0;
 
         super(grid, position);
@@ -61,7 +61,7 @@ class Microphone extends Source {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        this.Ctx.fillStyle = App.Palette[6];// WHITE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,0);
@@ -72,7 +72,7 @@ class Microphone extends Source {
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9];// PINK
+        this.Ctx.fillStyle = App.Palette[4];// PINK
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
@@ -81,4 +81,4 @@ class Microphone extends Source {
     }
 }
 
-export = Microphone;
+export = Soundcloud;

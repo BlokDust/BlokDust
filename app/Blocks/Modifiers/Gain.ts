@@ -1,17 +1,20 @@
 import VolumeComponent = require("../AudioEffectComponents/Volume");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
+import AudioSettings = require("../../Core/Audio/AudioSettings");
 
-class VolumeIncrease extends Modifier {
+class Volume extends Modifier {
 
-    Component;
+    public Component: IEffect;
+    public Settings: ToneSettings = new AudioSettings();
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
         this.Component = new VolumeComponent({
-            gain: 1.5
+            gain: 1
         });
 
         this.Effects.Add(this.Component);
@@ -39,4 +42,4 @@ class VolumeIncrease extends Modifier {
 
 }
 
-export = VolumeIncrease;
+export = Volume;

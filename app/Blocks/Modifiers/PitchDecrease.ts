@@ -1,11 +1,12 @@
 import PitchModule = require("../AudioEffectComponents/Pitch");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 
 class PitchDecrease extends Modifier {
 
-    effect;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);

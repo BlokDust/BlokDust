@@ -6,14 +6,15 @@ import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
 import Microphone = require("../Blocks/Sources/Microphone");
+import Soundcloud = require("../Blocks/Sources/Soundcloud");
 import Keyboard = require("../Blocks/Modifiers/Keyboard");
-import VolumeIncrease = require("../Blocks/Modifiers/VolumeIncrease");
-import VolumeDecrease = require("../Blocks/Modifiers/VolumeDecrease")
+import Gain = require("../Blocks/Modifiers/Gain");
 import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
 import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
 import Envelope = require("../Blocks/Modifiers/Envelope");
 import Filter = require("../Blocks/Modifiers/Filter");
 import LFO = require("../Blocks/Modifiers/LFO");
+import Tremolo = require("../Blocks/Modifiers/Tremolo");
 import Delay = require("../Blocks/Modifiers/Delay");
 import Scuzz = require("../Blocks/Modifiers/Scuzz");
 import Distortion = require("../Blocks/Modifiers/Distortion");
@@ -24,6 +25,7 @@ import EQ = require("../Blocks/Modifiers/EQ");
 import BitCrusher = require("../Blocks/Modifiers/BitCrusher");
 import AutoWah = require("../Blocks/Modifiers/AutoWah");
 import Panner = require("../Blocks/Modifiers/Panner");
+import Chomp = require("../Blocks/Modifiers/Chomp");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 import InfoViewModel = require("./InfoViewModel");
@@ -166,12 +168,8 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlock(Keyboard);
     }
 
-    VolumeIncreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(VolumeIncrease);
-    }
-
-    VolumeDecreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(VolumeDecrease);
+    GainBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Soundcloud);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){
@@ -192,6 +190,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     LFOBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(LFO);
+    }
+
+    TremoloBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Tremolo);
     }
 
     DelayBlockBtn_Click(e: any){
@@ -224,6 +226,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     BitCrusherBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(BitCrusher);
+    }
+
+    ChompBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Chomp);
     }
 
     AutoWahBlockBtn_Click(e: any){

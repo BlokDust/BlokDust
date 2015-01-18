@@ -185,14 +185,15 @@ class Modifiable extends Block implements IModifiable{
 
     private _UpdateEffectsChain(effects) {
 
-        console.log(effects);
-
         if (effects.length) {
             var start = effects[0].Modifiable.Source;
+            var mono = new Tone.Mono();
             var end = effects[0].Modifiable.OutputGain;
 
             start.disconnect();
-            start.connect(effects[0].Effect);
+
+            start.connect(mono);
+            mono.connect(effects[0].Effect);
             var currentUnit = effects[0].Effect;
 
             for (var i = 1; i < effects.length; i++) {

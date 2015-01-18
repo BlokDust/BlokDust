@@ -11,7 +11,7 @@ class LFO extends Effect implements IEffect {
 
     constructor(rate, outputMin, outputMax, waveform) {
         super();
-        this.LFO = new Tone.LFO(rate, outputMin, outputMax); // Could do this in the same way as delay - only having one LFO that gets incremented
+        this.LFO = new Tone.LFO(rate, outputMin, outputMax);
         this.LFO.setType(waveform);
     }
 
@@ -31,12 +31,27 @@ class LFO extends Effect implements IEffect {
         if (this.Modifiable.Source.detune) {
             this.LFO.stop();
             this.LFO.disconnect();
-
         }
     }
 
     Delete() {
+        this.LFO.dispose();
+    }
 
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        if (param=="rate") {
+            this.LFO.setFrequency(value);
+        } else if (param=="depth") {
+            this.LFO.setMin(-value);
+            this.LFO.setMax(value);
+        }
+
+
+        console.log(jsonVariable);
     }
 
 }

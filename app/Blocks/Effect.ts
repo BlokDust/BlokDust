@@ -18,6 +18,15 @@ class Effect implements IEffect {
     Disconnect(modifiable: IModifiable): void {
         this.Modifiable = modifiable;
     }
+    Delete(): void {
+
+    }
+    SetValue(param: string,value: number) {
+
+    }
+    GetValue(param: string) {
+
+    }
 }
 
 export = Effect;

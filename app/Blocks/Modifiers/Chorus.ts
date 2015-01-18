@@ -1,12 +1,13 @@
 import ChorusComponent = require("../AudioEffectComponents/Chorus");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class Chorus extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -51,6 +52,73 @@ class Chorus extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Chorus",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Rate",
+                    "setting" :"rate",
+                    "props" : {
+                        "value" : 1,
+                        "min" : 0,
+                        "max" : 5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Delay Time",
+                    "setting" :"delayTime",
+                    "props" : {
+                        "value" : 2.5,
+                        "min" : 0,
+                        "max" : 5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Depth",
+                    "setting" :"depth",
+                    "props" : {
+                        "value" : 0.4,
+                        "min" : 0,
+                        "max" : 3,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Feedback",
+                    "setting" :"feedback",
+                    "props" : {
+                        "value" : 0.15,
+                        "min" : 0,
+                        "max" : 0.2,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = Chorus;

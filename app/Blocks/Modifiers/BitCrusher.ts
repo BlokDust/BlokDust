@@ -1,24 +1,26 @@
 import BitCrusherComponent = require("../AudioEffectComponents/BitCrusher");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
+import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class BitCrusher extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
         this.Component = new BitCrusherComponent({
-            bits: 3
+            bits:3
         });
 
         this.Effects.Add(this.Component);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(1, -2),new Point(1, 0),new Point(0, 1),new Point(-1, 1));
+
     }
 
     Draw() {
@@ -49,6 +51,34 @@ class BitCrusher extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Bit Crusher",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "bits",
+                    "setting" : "bits",
+                    "props" : {
+                        "value" : 3,
+                        "min" : 1,
+                        "max" : 8,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = BitCrusher;

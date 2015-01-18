@@ -15,9 +15,6 @@ class ReverbComponent extends Effect implements IEffect {
 
     Connect(modifiable:IModifiable): void{
         super.Connect(modifiable);
-        //
-        //this.Modifiable.Source.connect(this.Effect);
-        //this.Effect.connect(this.Modifiable.OutputGain);
 
     }
 
@@ -28,6 +25,21 @@ class ReverbComponent extends Effect implements IEffect {
 
     Delete() {
         this.Effect.dispose();
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+        if (param=="dryWet") {
+            this.Effect.dryWet.setDry(1 - value);
+        } else if (param=="dampening") {
+            this.Effect.setDampening(value);
+        } else if (param=="roomSize") {
+            this.Effect.setRoomSize(value);
+        }
+
+        console.log(jsonVariable);
     }
 }
 

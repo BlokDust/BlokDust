@@ -1,12 +1,13 @@
 import LFOComponent = require("../AudioEffectComponents/LFO");
 import IModifier = require("../IModifier");
+import IEffect = require("../IEffect");
 import Modifier = require("../Modifier");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
 class LFO extends Modifier {
 
-    Component;
+    public Component: IEffect;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -45,6 +46,47 @@ class LFO extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "LFO",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Rate",
+                    "setting" :"rate",
+                    "props" : {
+                        "value" : 1,
+                        "min" : 0,
+                        "max" : 20,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Depth",
+                    "setting" :"depth",
+                    "props" : {
+                        "value" : 20,
+                        "min" : 0,
+                        "max" : 200,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
 }
 
 export = LFO;
