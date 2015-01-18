@@ -24,6 +24,13 @@ class Volume extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+
+        this.Effect.output.gain.value = value;
+
+    }
 }
 
 export = Volume;

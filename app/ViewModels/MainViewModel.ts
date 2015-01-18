@@ -168,8 +168,12 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlock(Keyboard);
     }
 
-    GainBlockBtn_Click(e: any){
+    SoundcloudBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Soundcloud);
+    }
+
+    GainBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Gain);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){
