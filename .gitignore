@@ -4,3 +4,4 @@ node_modules
 app/.build
 app/lib
 .DS_Store
+npm-debug.log

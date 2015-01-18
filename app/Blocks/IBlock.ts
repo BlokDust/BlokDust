@@ -8,12 +8,10 @@ interface IBlock extends IDisplayObject{
     Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;
-    GridPosition: Point;
-    LastGridPosition: Point;
     Position: Point;
-    ParamJson;
-    Component;
-    Update(): void;
+    LastPosition: Point;
+ParamJson;
+    Component;    Update(): void;
     Draw(): void;
     MouseDown(): void;
     ParticleCollision(particle: Particle): void;

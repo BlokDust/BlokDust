@@ -15,34 +15,29 @@ import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import ParametersPanel = require("./ParametersPanel");
+import Transformer = Fayde.Transformer.Transformer;
 
 declare var PixelPalette;
-declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
 class BlocksSketch extends Grid {
 
-    public _Unit: number;
     private _SelectedBlock: IBlock;
     private _Id: number = 0;
-    private _IsMouseDown: boolean = false;
-    private _IsTouchDown: boolean = false;
+    private _IsPointerDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
-    private _ParamsPanel: ParametersPanel;
+    private _Transformer: Transformer;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
     }
 
-
     set SelectedBlock(block: IBlock) {
-        // if setting the selected block to null (or false)
+        // if setting the selected block to null (or falsey)
         // if there's already a selected block, set its
         // IsSelected to false.
         if (!block && this._SelectedBlock){
@@ -82,13 +77,23 @@ class BlocksSketch extends Grid {
         var pixelPalette = new PixelPalette("img/palette.gif");
 
         pixelPalette.Load((palette: string[]) => {
-            console.log(palette);
+            //console.log(palette);
             App.Palette = palette;
         });
 
-        ParamTimeout = false;
-
         this._Invalidate();
+    }
+
+    private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
+        this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
+    }
+
+    ZoomIn() {
+        this._Transformer.Zoom(1);
+    }
+
+    ZoomOut() {
+        this._Transformer.Zoom(-1);
     }
 
     private _Invalidate(){
@@ -112,7 +117,7 @@ class BlocksSketch extends Grid {
 
     CreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
 
-        var block: IBlock = new m(this, this._GetRandomPosition());
+        var block: IBlock = new m(this, this.GetRandomGridPosition());
         block.Id = this._GetId();
 
         // todo: should this go in command handler?
@@ -127,24 +132,29 @@ class BlocksSketch extends Grid {
         return this._Id++;
     }
 
-    private _GetRandomPosition(): Point{
-        return new Point(Math.random(), Math.random());
-    }
-
     Setup(){
         super.Setup();
 
-        this._ParamsPanel = new ParametersPanel(this.Ctx);
+        this.ScaleToFit = true;
+        this.Divisor = 70;
 
+        // todo: make these default values
+        this._Transformer = new Transformer();
+        this._Transformer.ZoomLevel = 0;
+        this._Transformer.ZoomLevels = 5;
+        this._Transformer.ZoomFactor = 2;
+        this._Transformer.DragAccelerationEnabled = true;
+        this._Transformer.ConstrainToViewport = false;
+        this._Transformer.AnimationSpeed = 250;
+        this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
+        this._Transformer.SizeChanged(this.Size);
     }
-
-
 
     Update() {
         super.Update();
 
-        this._Unit = this.Ctx.canvas.width / 1000;
-        this.Divisor = this._Unit * 50;
+        // update transformer
+        this._Transformer.SizeChanged(this.Size);
 
         // update blocks
         for (var i = 0; i < App.Blocks.Count; i++) {
@@ -168,10 +178,6 @@ class BlocksSketch extends Grid {
         this._DisplayList.Draw();
 
         this.DrawParticles();
-
-        this._ParamsPanel.Draw();
-
-
     }
 
     // PARTICLES //
@@ -211,9 +217,12 @@ class BlocksSketch extends Grid {
         for (var i = 0; i < App.Particles.length; i++) {
 
             // todo: pre-render these in a single canvas
-            var sx = App.Particles[i].Position.x;
-            var sy = App.Particles[i].Position.y;
-            var size = App.Particles[i].Size;
+            var particle = App.Particles[i];
+            var pos = this.ConvertBaseToTransformed(particle.Position);
+
+            var sx = pos.x;
+            var sy = pos.y;
+            var size = particle.Size;
 
             this.Ctx.fillStyle = "#ff90a7";
             this.Ctx.globalAlpha = 1;
@@ -227,8 +236,6 @@ class BlocksSketch extends Grid {
         }
 
     }
-
-
 
     // PROXIMITY CHECK //
 
@@ -244,10 +251,10 @@ class BlocksSketch extends Grid {
 
                 // if a modifiable is close enough to the modifier, add the modifier
                 // to its internal list.
-                var catchmentArea = this.Ctx.canvas.width * modifier.CatchmentArea;
-                var distanceFromModifier = modifiable.DistanceFrom(modifier.Position);
+                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(modifier.CatchmentArea, modifier.CatchmentArea));
+                var distanceFromModifier = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(modifier.Position));
 
-                if (distanceFromModifier <= catchmentArea) {
+                if (distanceFromModifier <= catchmentArea.x) {
                     if (!modifiable.Modifiers.Contains(modifier)){
                         modifiable.AddModifier(modifier);
                     }
@@ -262,114 +269,110 @@ class BlocksSketch extends Grid {
         }
     }
 
-    private _NormalisePoint(point: Point): Point {
-        return new Point(Math.normalise(point.x, 0, this.Ctx.canvas.width), Math.normalise(point.y, 0, this.Ctx.canvas.height));
-    }
-
     MouseDown(e: Fayde.Input.MouseEventArgs){
-        this._IsMouseDown = true;
-        this._CheckCollision(e);
-        this._CheckParamsInteract(e);
-    }
-
-    TouchDown(e: Fayde.Input.TouchEventArgs){
-        this._IsTouchDown = true;
-        this._CheckCollision(e);
-        this._CheckParamsInteract(e);
-    }
-
-    private _CheckCollision(e) {
         var point = (<any>e).args.Source.MousePosition;
-        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
 
-        // cancel if interacting with panel
-        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
-        var blockClick = false;
-        if (!panelCheck || this._ParamsPanel.Scale!==1) {
-            for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-                var block: IBlock = App.Blocks.GetValueAt(i);
-                if (block.HitTest(point)){
-                    (<any>e).args.Handled = true;
-
-                    block.MouseDown();
-                    blockClick = false;
-                    this.SelectedBlock = block;
-                    ParamTimeout = true;
-                    setTimeout(function() {
-                        ParamTimeout = false;
-                    },400);
-
-                    return;
-                }
-            }
-            if (blockClick==false) {
-                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
-            }
-        }
-
-    }
-
-    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-
-    }
-
-    private _CheckParamsInteract(e) {
-        var point = (<any>e).args.Source.MousePosition;
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseDown(point.x,point.y);
-        }
+        this._PointerDown(point, () => {
+            (<any>e).args.Handled = true;
+        });
     }
 
     MouseUp(e: Fayde.Input.MouseEventArgs){
-        this._IsMouseDown = false;
-
         var point = (<any>e).args.Source.MousePosition;
 
-        if (this.SelectedBlock){
-
-            if (this.SelectedBlock.HitTest(point)){
-                (<any>e).args.Handled = true;
-                this.SelectedBlock.MouseUp();
-
-                // if the block has moved, create an undoable operation.
-                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastGridPosition)){
-                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "GridPosition", this.SelectedBlock.LastGridPosition.Clone(), this.SelectedBlock.GridPosition.Clone());
-                    App.OperationManager.Do(op);
-                }
-            }
-        }
-
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseUp();
-        }
-        // OPEN PANEL //
-        if (ParamTimeout) {
-            this.SelectedBlock.OpenParams();
-            if (this.SelectedBlock.ParamJson) {
-                this._ParamsPanel.SelectedBlock = this.SelectedBlock;
-                this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
-            }
-        }
-
+        this._PointerUp(point, () => {
+            (<any>e).args.Handled = true;
+        });
     }
 
     MouseMove(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
 
+        this._PointerMove(point);
+    }
+
+    TouchDown(e: any){
+        //var pos: Fayde.Input.TouchPoint = e.GetTouchPoint(null);
+        var pos = e.args.Device.GetTouchPoint(null);
+        var point = new Point(pos.Position.x, pos.Position.y);
+
+        this._PointerDown(point, () => {
+            (<any>e).args.Handled = true;
+        });
+    }
+
+    TouchUp(e: any){
+        var pos = e.args.Device.GetTouchPoint(null);
+        var point = new Point(pos.Position.x, pos.Position.y);
+
+        this._PointerUp(point, () => {
+            (<any>e).args.Handled = true;
+        });
+    }
+
+    TouchMove(e: any){
+        var pos = e.args.Device.GetTouchPoint(null);
+        var point = new Point(pos.Position.x, pos.Position.y);
+
+        this._PointerMove(point);
+    }
+
+    private _PointerDown(point: Point, handle: () => void) {
+        this._IsPointerDown = true;
+
+        var collision: Boolean = this._CheckCollision(point, handle);
+
+        if (!collision){
+            this._Transformer.PointerDown(point);
+        }
+    }
+
+    private _PointerUp(point: Point, handle: () => void) {
+        this._IsPointerDown = false;
+
         if (this.SelectedBlock){
-            this.SelectedBlock.MouseMove(this._NormalisePoint(point));
+
+            if (this.SelectedBlock.HitTest(point)){
+                handle();
+                this.SelectedBlock.MouseUp();
+
+                // if the block has moved, create an undoable operation.
+                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
+                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                    App.OperationManager.Do(op);
+                }
+            }
+        }
+
+        this._Transformer.PointerUp();
+    }
+
+    private _PointerMove(point: Point){
+        if (this.SelectedBlock){
+            this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseMove(point.x,point.y);
+
+        this._Transformer.PointerMove(point);
+    }
+
+    private _CheckCollision(point: Point, handle: () => void): Boolean {
+        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
+        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+            var block: IBlock = App.Blocks.GetValueAt(i);
+            if (block.HitTest(point)){
+                handle();
+                block.MouseDown();
+                this.SelectedBlock = block;
+                return true;
+            }
         }
+
+        return false;
     }
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
         this._SelectedBlock.Delete();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;

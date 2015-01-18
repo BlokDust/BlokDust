@@ -12,8 +12,8 @@ class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    public GridPosition: Point;
-    public LastGridPosition: Point;
+    public Position: Point; // in grid units
+    public LastPosition: Point; // in grid units
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     public Grid: Grid;
@@ -25,18 +25,12 @@ class Block extends DisplayObject implements IBlock {
 
     public BlockType: BlockType;
 
-    // position: normalised point
     constructor(grid: Grid, position: Point) {
         super(grid.Ctx);
 
         this.Grid = grid;
-        this.GridPosition = this.Grid.GetGridPosition(position);
+        this.Position = position;
         this.Update();
-    }
-
-    // returns the Block's absolute position in pixels
-    get Position(): Point {
-        return this.Grid.GetAbsPosition(this.GridPosition);
     }
 
     Update() {
@@ -60,22 +54,21 @@ class Block extends DisplayObject implements IBlock {
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
-        var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
-        this.Ctx.moveTo(pos.x, pos.y);
+        var p = this.Grid.GetRelativePoint(this.Position, new Point(x, y));
+        p = this.GetTransformedPoint(p);
+        this.Ctx.moveTo(p.x, p.y);
     }
 
-    DrawLineTo(x,y) {
-        var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(x, y)));
-        this.Ctx.lineTo(pos.x, pos.y);
+    DrawLineTo(x, y) {
+        var p = this.Grid.GetRelativePoint(this.Position, new Point(x, y));
+        p = this.GetTransformedPoint(p);
+        this.Ctx.lineTo(p.x, p.y);
     }
 
-    /*
-    * @param {point} point - specifies number of units relative to Position. (-1, -1) means "one unit left and one unit up".
-     */
-    private _GetRelGridPosition(units: Point): Point {
-        return new Point(
-            this.GridPosition.x + units.x,
-            this.GridPosition.y + units.y);
+    // converts a point in grid units to absolute units and transforms it
+    GetTransformedPoint(point: Point): Point {
+        var p: Point = this.Grid.ConvertGridUnitsToAbsolute(point);
+        return this.Grid.ConvertBaseToTransformed(p);
     }
 
     ParticleCollision(particle: Particle) {
@@ -84,7 +77,7 @@ class Block extends DisplayObject implements IBlock {
 
     MouseDown() {
         this.IsPressed = true;
-        this.LastGridPosition = this.GridPosition.Clone();
+        this.LastPosition = this.Position.Clone();
         this.Click.raise(this, new Fayde.RoutedEventArgs());
     }
 
@@ -96,10 +89,12 @@ class Block extends DisplayObject implements IBlock {
         this.IsPressed = false;
     }
 
-    // normalised point
     MouseMove(point: Point) {
         if (this.IsPressed){
-            this.GridPosition = this.Grid.GetGridPosition(point);
+            point = this.Grid.ConvertTransformedToBase(point);
+            point = this.Grid.SnapToGrid(point);
+            point = this.Grid.ConvertAbsoluteToGridUnits(point);
+            this.Position = point;
         }
     }
 
@@ -122,7 +117,8 @@ class Block extends DisplayObject implements IBlock {
 
     // absolute point
     DistanceFrom(point: Point): number{
-        return Math.distanceBetween(this.Position.x, this.Position.y, point.x, point.y);
+        var p = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
+        return Math.distanceBetween(p.x, p.y, point.x, point.y);
     }
 
     OpenParams() {
