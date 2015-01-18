@@ -13,7 +13,7 @@ class BitCrusher extends Modifier {
         super(grid, position);
 
         this.Component = new BitCrusherComponent({
-            bits:3
+            bits:7
         });
 
         this.Effects.Add(this.Component);
@@ -61,13 +61,26 @@ class BitCrusher extends Modifier {
 
                 {
                     "type" : "slider",
-                    "name" : "bits",
+                    "name" : "Bits",
                     "setting" : "bits",
                     "props" : {
-                        "value" : 3,
+                        "value" : 5,
                         "min" : 1,
                         "max" : 8,
-                        "quantised" : true,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Mix",
+                    "setting" :"wet",
+                    "props" : {
+                        "value" : 0.8,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
                         "centered" : false
                     }
                 }
