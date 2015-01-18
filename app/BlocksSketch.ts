@@ -349,12 +349,8 @@ class BlocksSketch extends Grid {
 
     }
 
-    private _PointerUp(point: Point, handle: () => void) {
-        this._IsPointerDown = false;
-private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-
+    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
         return (mx>x && mx<(x+w) && my>y && my<(y+h));
-
     }
 
     private _CheckParamsInteract(e) {
@@ -364,8 +360,8 @@ private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
         }
     }
 
-    MouseUp(e: Fayde.Input.MouseEventArgs){
-        this._IsMouseDown = false;
+    _PointerUp(point: Point, handle: () => void){
+        this._IsPointerDown = false;
         if (this.SelectedBlock){
 
             if (this.SelectedBlock.HitTest(point)){
@@ -393,7 +389,7 @@ private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
                 this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
             }
         }
-        }
+
         // OPEN PANEL //
         if (ParamTimeout) {
             this.SelectedBlock.OpenParams();
@@ -409,13 +405,14 @@ private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }
-if (this._ParamsPanel.Scale==1) {
+        if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseMove(point.x,point.y);
         }
         this._Transformer.PointerMove(point);
-if (this._ParamsPanel.Scale==1) {
+        if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseMove(point.x,point.y);
-        }    }
+        }
+    }
 
     private _CheckCollision(point: Point, handle: () => void): Boolean {
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
