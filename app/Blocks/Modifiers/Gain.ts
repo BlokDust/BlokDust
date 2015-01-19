@@ -57,7 +57,7 @@ class Volume extends Modifier {
                         "min": 0,
                         "max": 10,
                         "quantised": false,
-                        "centered": false
+                        "centered": true
                     }
                 }
             ]
@@ -66,7 +66,12 @@ class Volume extends Modifier {
 
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
-        this.Component.SetValue(param,value);
+
+        if (param == "gain") {
+            //TODO: DO SOME MATH TO MAKE THE NUMBERS BETTER
+        }
+            this.Component.SetValue(param, value);
+
     }
 
 }
