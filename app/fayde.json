@@ -1,22 +1,25 @@
 {
   "libs": {
-    "Fayde.Controls": {
+    "minerva": {
+      "exports": "minerva"
+    },
+    "fayde.controls": {
       "exports": "Fayde.Controls"
     },
     "exjs": {
       "exports": "exjs",
       "path": "lib/exjs/dist/ex.min"
     },
-    "Fayde.Drawing": {
+    "fayde.drawing": {
       "exports": "Fayde.Drawing"
     },
-    "Fayde.Utils": {
+    "fayde.utils": {
       "exports": "Fayde.Utils"
     },
-    "Fayde.Transformer": {
+    "fayde.transformer": {
       "exports": "Fayde.Transformer",
       "deps": [
-        "Fayde.Utils",
+        "fayde.utils",
         "tween"
       ]
     },
@@ -30,11 +33,12 @@
     "pixelpalette": {}
   },
   "themes": {
-    "Fayde.Controls": {},
+    "minerva": {},
+    "fayde.controls": {},
     "exjs": "none",
-    "Fayde.Drawing": {},
-    "Fayde.Utils": "none",
-    "Fayde.Transformer": {},
+    "fayde.drawing": {},
+    "fayde.utils": "none",
+    "fayde.transformer": {},
     "tween": "none",
     "tone": {},
     "pixelpalette": {}

@@ -1,6 +1,3 @@
-//todo: remove these when fayde-unify is available
-///<amd-dependency path="Fayde.Utils"/>.
-
 import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
 import IBlock = require("../Blocks/IBlock");
