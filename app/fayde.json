@@ -4,20 +4,20 @@
       "exports": "minerva"
     },
     "fayde.controls": {
-      "exports": "Fayde.Controls"
+      "exports": "fayde.controls"
     },
     "exjs": {
       "exports": "exjs",
       "path": "lib/exjs/dist/ex.min"
     },
     "fayde.drawing": {
-      "exports": "Fayde.Drawing"
+      "exports": "fayde.drawing"
     },
     "fayde.utils": {
-      "exports": "Fayde.Utils"
+      "exports": "fayde.utils"
     },
     "fayde.transformer": {
-      "exports": "Fayde.Transformer",
+      "exports": "fayde.transformer",
       "deps": [
         "fayde.utils",
         "tween"
