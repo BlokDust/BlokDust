@@ -40,6 +40,35 @@ class Volume extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name": "Gain",
+            "parameters": [
+
+                {
+                    "type" : "slider",
+                    "name": "Gain",
+                    "setting": "gain",
+                    "props": {
+                        "value": 1,
+                        "min": 0,
+                        "max": 10,
+                        "quantised": false,
+                        "centered": false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
+
 }
 
 export = Volume;

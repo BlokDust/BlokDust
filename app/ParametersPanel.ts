@@ -13,6 +13,9 @@ import Buttons = require("./OptionButtonSelect");
 import ADSR = require("./OptionADSR");
 import OptionHandle = require("./OptionHandle");
 
+var MAX_FPS: number = 100;
+var MAX_MSPF: number = 1000 / MAX_FPS;
+
 class ParametersPanel {
 
     public Position: Point;
@@ -31,6 +34,8 @@ class ParametersPanel {
     private _PanelCloseRoll: boolean;
     public SelectedBlock: IBlock;
     public InitJson;
+    private _Timer: Fayde.ClockTimer;
+    private _LastVisualTick: number = new Date(0).getTime();
 
     constructor(ctx: CanvasRenderingContext2D) {
 
@@ -49,6 +54,8 @@ class ParametersPanel {
         this._SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
         this._SliderRoll = [];
 
+        this._Timer = new Fayde.ClockTimer();
+        this._Timer.RegisterTimer(this);
 
 
 
@@ -61,6 +68,14 @@ class ParametersPanel {
 
 
         this.Populate(this.InitJson,false);
+    }
+
+    OnTicked (lastTime: number, nowTime: number) {
+        var now = new Date().getTime();
+        if (now - this._LastVisualTick < MAX_MSPF) return;
+        this._LastVisualTick = now;
+
+        TWEEN.update(nowTime);
     }
 
     //-------------------------------------------------------------------------------------------
