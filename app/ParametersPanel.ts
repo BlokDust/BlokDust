@@ -34,6 +34,7 @@ class ParametersPanel {
     private _PanelCloseRoll: boolean;
     public SelectedBlock: IBlock;
     public InitJson;
+
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
 
@@ -56,8 +57,6 @@ class ParametersPanel {
 
         this._Timer = new Fayde.ClockTimer();
         this._Timer.RegisterTimer(this);
-
-
 
         this.InitJson =
         {
@@ -259,7 +258,7 @@ class ParametersPanel {
         this.Options = optionList; // update slider array
 
         if (open){
-            this.PanelScale(this,1,1500);
+            this.PanelScale(this,1,200);
         }
 
 
@@ -685,18 +684,23 @@ class ParametersPanel {
 
     PanelScale(panel,destination,t) {
 
+        /*var psTween = new TWEEN.Tween({x:panel.Scale})
+            .to( {x: destination}, t)
+            .easing(TWEEN.Easing.Quintic.InOut)
+            .onUpdate((obj) => {
+                panel.Scale = obj;
+            }
+        );
+
+        psTween.start(this._LastVisualTick);*/
+
         var psTween = new TWEEN.Tween({x:panel.Scale});
         psTween.to({ x: destination }, t);
         psTween.onUpdate(function() {
             panel.Scale = this.x;
-            console.log(this.x);
         });
-
+        psTween.start(this._LastVisualTick);
         psTween.easing( TWEEN.Easing.Quintic.InOut );
-        psTween.start();
-
-
-
     }
 
     //-------------------------------------------------------------------------------------------
@@ -726,7 +730,7 @@ class ParametersPanel {
         }
 
         if (this._PanelCloseRoll) {
-            this.PanelScale(this,0,1500);
+            this.PanelScale(this,0,200);
         }
 
     }
