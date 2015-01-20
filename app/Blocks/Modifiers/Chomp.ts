@@ -128,7 +128,7 @@ class Chomp extends Modifier {
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
         if (param == "rate") {
-            this.Rate = Math.round((101-value)*1);
+            this.Rate = Math.round((101-value));
         } else {
             this.Component.SetValue(param, value);
         }
