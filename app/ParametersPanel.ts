@@ -6,9 +6,12 @@ import Size = Fayde.Utils.Size;
 import Grid = require("./Grid");
 import IBlock = require("./Blocks/IBlock");
 import BlocksSketch = require("./BlocksSketch");
-import IOption = require("./IOption");
+import Option = require("./Option");
+import IOptionSlider = require("./IOptionSlider");
 import Slider = require("./OptionSlider");
 import Buttons = require("./OptionButtonSelect");
+import ADSR = require("./OptionADSR");
+import OptionHandle = require("./OptionHandle");
 
 class ParametersPanel {
 
@@ -20,13 +23,14 @@ class ParametersPanel {
     private _Name: string;
     public Scale: number;
     public Sketch;
-    public Options: IOption[];
+    public Options: Option[];
     private _SliderColours: string[];
     private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
     private _SliderRoll: boolean[];
     private _PanelCloseRoll: boolean;
     public SelectedBlock: IBlock;
+    public InitJson;
 
     constructor(ctx: CanvasRenderingContext2D) {
 
@@ -48,28 +52,15 @@ class ParametersPanel {
 
 
 
-        var initJson =
+        this.InitJson =
         {
             "name" : "Init",
             "parameters" : [
-                {
-                    "type" : "slider",
-                    "name" : "Gain",
-                    "props" : {
-                        "value" : 12,
-                        "min" : 10,
-                        "max" : 20,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                }
             ]
-
         };
 
 
-
-        this.Populate(initJson,false);
+        this.Populate(this.InitJson,false);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -91,25 +82,21 @@ class ParametersPanel {
 
         // FIXED or ACCORDION //
         var panelH;
-        /*if (n<6) {
-            panelH = (40 + (48 * n)) * units;
-        } else {
-            panelH = 280 * units;
-        }*/
-
         var maxHeight = 240;
         var getHeight = 0;
         var heightScale = 1;
         var optionHeight = [];
-        var i;
-        for (i=0;i<n;i++) {
+        for (var i=0;i<n;i++) {
             if (json.parameters[i].type == "slider") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "buttons") {
                 getHeight += 144;
                 optionHeight[i] = 144 * units;
-            } else {
+            } else if (json.parameters[i].type == "ADSR") {
+                getHeight += 120;
+                optionHeight[i] = 120 * units;
+            }else {
                 console.log("Option type not recognised");
             }
         }
@@ -124,15 +111,22 @@ class ParametersPanel {
         // TEXT MARGIN //
         var panelM = 0;
         ctx.font = "300 "+dataType+"px Dosis";
-        var i;
-        for (i=0;i<n;i++) {
-            if (ctx.measureText(json.parameters[i].name.toUpperCase()).width > panelM) {
-                panelM = ctx.measureText(json.parameters[i].name.toUpperCase()).width;
+
+        if (n==1 && json.parameters[0].type=="ADSR") { // NO MARGIN FOR STANDALONE ENVELOPE
+            panelM = (69*units);
+        } else {
+            for (var i=0;i<n;i++) {
+                if (ctx.measureText(json.parameters[i].name.toUpperCase()).width > panelM) {
+                    panelM = ctx.measureText(json.parameters[i].name.toUpperCase()).width;
+                }
             }
+            panelM += (79*units);
         }
-        panelM += (79*units);
-        var panelW = 445*units;
-        var panelR = panelW - (panelM + (20*units));
+
+
+
+        var panelW = 450*units;
+        var panelR = panelW - (panelM + (25*units));
 
 
         // NAME //
@@ -154,7 +148,7 @@ class ParametersPanel {
         // POPULATE OPTIONS //
         var optionTotalY = 0;
         var optionList = [];
-        for (i=0;i<n;i++) {
+        for (var i=0;i<n;i++) {
             var option = json.parameters[i];
 
             // SET HEIGHT //
@@ -183,6 +177,66 @@ class ParametersPanel {
                 optionList.push(new Buttons(new Point(0,optionY),new Size(this.Range,optionHeight[i]),value,option.name,option.setting));
 
             }
+
+            // ENVELOPE //
+            else if (option.type == "ADSR") {
+
+                /*var nodes = [];
+
+
+                for (var j=0;j<4;j++) {
+
+                    var range = option.nodes[j].max - option.nodes[j].min;
+                    var perc = ((this.Range*0.25)/range) * (option.nodes[j].value-option.nodes[j].min);
+                    if (j==2) { // SUSTAIN (has different range) //
+                        perc = ((optionHeight[i]*0.8)/range) * (option.nodes[j].value-option.nodes[j].min);
+                    }
+                    if (j==3) { // RELEASE (has different range) //
+                        //perc = ((this.Range*0.5)/range) * (option.nodes[j].value-option.nodes[j].min);
+                        var logRange = Math.log(option.nodes[j].max+1000) - Math.log(option.nodes[j].min+1000);
+                        var scale = logRange / (this.Range*0.5);
+                        perc = (Math.log(option.nodes[j].value+1000) - option.nodes[j].min) / scale;
+                        //perc = (Math.log(option.nodes[j].value)-option.nodes[j].min) / ((this.Range*0.5)/range);
+                        console.log("perc: "+perc);
+
+                    }
+
+
+                    nodes[j] = { value:option.nodes[j].value , min:option.nodes[j].min, max:option.nodes[j].max, perc: perc};
+                }*/
+
+                var Xrange, handleX, Yrange, handleY;
+                var handles = [];
+
+
+                Xrange = option.nodes[0].max - option.nodes[0].min;
+                handleX = ( (this.Range*0.28) / Xrange ) * (option.nodes[0].value-option.nodes[0].min);
+                Yrange = option.nodes[2].max - option.nodes[2].min;
+                handleY = ( (optionHeight[i]*0.8) / Yrange ) * (option.nodes[2].value-option.nodes[2].min);
+
+                handles[0] = new OptionHandle(new Point(handleX,handleY),option.nodes[0].value,option.nodes[0].min,option.nodes[0].max,this.Range*0.28,0,0,0,0,option.nodes[0].setting,"");
+
+                Xrange = option.nodes[1].max - option.nodes[1].min;
+                handleX = ( (this.Range*0.28) / Xrange ) * (option.nodes[1].value-option.nodes[1].min);
+                Yrange = option.nodes[2].max - option.nodes[2].min;
+                handleY = ( (optionHeight[i]*0.8) / Yrange ) * (option.nodes[2].value-option.nodes[2].min);
+
+                handles[1] = new OptionHandle(new Point(handleX,handleY),option.nodes[1].value,option.nodes[1].min,option.nodes[1].max,this.Range*0.28,option.nodes[2].value,option.nodes[2].min,option.nodes[2].max,(optionHeight[i]*0.8),option.nodes[1].setting,option.nodes[2].setting);
+
+                Xrange = option.nodes[3].max - option.nodes[3].min;
+                handleX = ( (this.Range*0.4) / Xrange ) * (option.nodes[3].value-option.nodes[3].min);
+                Yrange = option.nodes[2].max - option.nodes[2].min;
+                handleY = ( (optionHeight[i]*0.8) / Yrange ) * (option.nodes[2].value-option.nodes[2].min);
+
+                handles[2] = new OptionHandle(new Point(handleX,handleY),option.nodes[3].value,option.nodes[3].min,option.nodes[3].max,this.Range*0.4,0,0,0,0,option.nodes[3].setting,"");
+
+
+
+                optionList.push(new ADSR(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2]));
+
+
+            }
+
 
             optionTotalY += optionHeight[i];
 
@@ -250,8 +304,7 @@ class ParametersPanel {
 
 
         // DRAW OPTIONS //
-        var i;
-        for (i = 0; i < this.Options.length; i++) {
+        for (var i = 0; i < this.Options.length; i++) {
 
             ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
 
@@ -265,9 +318,18 @@ class ParametersPanel {
                 this.buttonsDraw(ctx,units,i,this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height);
             }
 
+            // DRAW ENVELOPE //
+            else if (this.Options[i].Type == "ADSR") {
+                this.ADSRDraw(ctx,units,this.Options[i],this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height,this.Options[i].Handles[0].Position.x,this.Options[i].Handles[1].Position.x,this.Options[i].Handles[1].Position.y,this.Options[i].Handles[2].Position.x);
+            }
+
+
+
             ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         }
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
 
@@ -304,12 +366,12 @@ class ParametersPanel {
         var headerType = Math.round(units*33);
 
         // DIVIDERS //
+        ctx.globalAlpha = 1;
         ctx.fillStyle = ctx.strokeStyle = "#393d43";
         if (i !== (this.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(this.Margin - units, y + height);
             ctx.lineTo(this.Range + this.Margin + units, y + height);
-            ctx.closePath();
             ctx.stroke();
         }
 
@@ -385,6 +447,160 @@ class ParametersPanel {
     }
 
 
+    ADSRDraw(ctx,units,option,x,y,height,a,d,s,r) {
+        ctx.globalAlpha = 1;
+
+        var headerType = Math.round(units*33);
+
+        var curved = false;
+        var vert = 0.6;
+
+
+        // MARKERS //
+        ctx.fillStyle = ctx.strokeStyle = "#393d43";
+        ctx.beginPath();
+        ctx.moveTo(this.Margin - units, y + (height*0.1));
+        ctx.lineTo(this.Margin - units, y + (height*0.9));
+
+        ctx.moveTo((this.Range*vert) + this.Margin + units, y + (height*0.1));
+        ctx.lineTo((this.Range*vert) + this.Margin + units, y + (height*0.9));
+
+        ctx.moveTo(this.Range + this.Margin + units, y + (height*0.1));
+        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
+        ctx.stroke();
+
+
+        // ENVELOPE LINE //
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(this.Margin, y + (height*0.9));
+        ctx.lineTo(this.Margin + a, y + (height*0.1)); // ATTACK
+        if (curved) {
+            ctx.bezierCurveTo(this.Margin + a, y + (height*0.1) + (((height*0.8) - s) *0),this.Margin + a + (d*0.5),y + (height*0.9) - s, this.Margin + a + d, y + (height*0.9) - s ); // DECAY
+
+        } else {
+            ctx.lineTo(this.Margin + a + d, y + (height*0.9) - s); // DECAY
+        }
+        ctx.lineTo(this.Margin + (this.Range*vert), y + (height*0.9) - s); // SUSTAIN
+        if (curved) {
+            ctx.bezierCurveTo(this.Margin + (this.Range * vert), y + (height * 0.9) - s, this.Margin + (this.Range * 0.5) + (r * 0.5), y + (height * 0.9), this.Margin + (this.Range * 0.5) + r, y + (height * 0.9)); // RELEASE
+        } else {
+            ctx.lineTo(this.Margin + (this.Range*vert) + r, y + (height*0.9)); // RELEASE
+        }
+        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
+        ctx.closePath();
+        ctx.clip();
+        ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        this.diagonalFill(this.Margin - units, y + units, this.Range + (2 * units), height - (2 * units), 9);
+        ctx.restore();
+
+
+        /*ctx.globalAlpha = 0.2;
+        ctx.fillStyle = App.Palette[5];
+        ctx.beginPath();
+        ctx.moveTo(this.Margin, y + (height*0.9));
+        ctx.lineTo(this.Margin + a, y + (height*0.1)); // ATTACK
+        ctx.lineTo(this.Margin + a + d, y + (height*0.9) - s); // DECAY
+        ctx.lineTo(this.Margin + (this.Range*0.5), y + (height*0.9) - s); // SUSTAIN
+        ctx.lineTo(this.Margin + (this.Range*0.5) + r, y + (height*0.9)); // RELEASE
+        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
+        ctx.closePath();
+        ctx.fill();*/
+
+
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = App.Palette[8];
+        ctx.beginPath();
+        ctx.moveTo(this.Margin, y + (height*0.9));
+        ctx.lineTo(this.Margin + a, y + (height*0.1)); // ATTACK
+        if (curved) {
+            ctx.bezierCurveTo(this.Margin + a, y + (height*0.1) + (((height*0.8) - s) *0),this.Margin + a + (d*0.5),y + (height*0.9) - s, this.Margin + a + d, y + (height*0.9) - s ); // DECAY
+
+        } else {
+            ctx.lineTo(this.Margin + a + d, y + (height*0.9) - s); // DECAY
+        }
+        ctx.lineTo(this.Margin + (this.Range*vert), y + (height*0.9) - s); // SUSTAIN
+        if (curved) {
+            ctx.bezierCurveTo(this.Margin + (this.Range * vert), y + (height * 0.9) - s, this.Margin + (this.Range * vert) + (r * 0.5), y + (height * 0.9), this.Margin + (this.Range * vert) + r, y + (height * 0.9)); // RELEASE
+        } else {
+            ctx.lineTo(this.Margin + (this.Range*vert) + r, y + (height*0.9)); // RELEASE
+        }
+        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
+        ctx.stroke();
+        ctx.lineWidth = 1;
+
+        // GRAB DIAMONDS //
+        var dragWidth = height * 0.06;
+
+        ctx.fillStyle = App.Palette[3];
+        ctx.beginPath();
+        ctx.moveTo(a + this.Margin - dragWidth, y + (height * 0.1));
+        ctx.lineTo(a + this.Margin, y + (height * 0.1) - dragWidth);
+        ctx.lineTo(a + this.Margin + dragWidth, y + (height * 0.1));
+        ctx.lineTo(a + this.Margin, y + (height * 0.1) + dragWidth);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = App.Palette[4];
+        ctx.beginPath();
+        ctx.moveTo(a + d + this.Margin - dragWidth, y + (height * 0.9) - s);
+        ctx.lineTo(a + d + this.Margin, y + (height * 0.9) - dragWidth - s);
+        ctx.lineTo(a + d + this.Margin + dragWidth, y + (height * 0.9) - s);
+        ctx.lineTo(a + d + this.Margin, y + (height * 0.9) + dragWidth - s);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = App.Palette[5];
+        ctx.beginPath();
+        ctx.moveTo((this.Range*vert) + r + this.Margin - dragWidth, y + (height * 0.9));
+        ctx.lineTo((this.Range*vert) + r + this.Margin, y + (height * 0.9) - dragWidth);
+        ctx.lineTo((this.Range*vert) + r + this.Margin + dragWidth, y + (height * 0.9));
+        ctx.lineTo((this.Range*vert) + r + this.Margin, y + (height * 0.9) + dragWidth);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = App.Palette[8];
+        ctx.beginPath();
+        ctx.moveTo(a + this.Margin - dragWidth, y + (height * 0.1));
+        ctx.lineTo(a + this.Margin, y + (height * 0.1) - dragWidth);
+        ctx.lineTo(a + this.Margin + (dragWidth * 0.5), y + (height * 0.1) - (dragWidth * 0.5));
+        ctx.lineTo(a + this.Margin - (dragWidth * 0.5), y + (height * 0.1) + (dragWidth * 0.5));
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(a + d + this.Margin - dragWidth, y + (height * 0.9) - s);
+        ctx.lineTo(a + d + this.Margin, y + (height * 0.9) - dragWidth - s);
+        ctx.lineTo(a + d + this.Margin + (dragWidth * 0.5), y + (height * 0.9) - s - (dragWidth * 0.5));
+        ctx.lineTo(a + d + this.Margin - (dragWidth * 0.5), y + (height * 0.9) - s + (dragWidth * 0.5));
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo((this.Range*vert) + r + this.Margin - dragWidth, y + (height * 0.9));
+        ctx.lineTo((this.Range*vert) + r + this.Margin, y + (height * 0.9) - dragWidth);
+        ctx.lineTo((this.Range*vert) + r + this.Margin + (dragWidth * 0.5), y + (height * 0.9) - (dragWidth * 0.5));
+        ctx.lineTo((this.Range*vert) + r + this.Margin - (dragWidth * 0.5), y + (height * 0.9) + (dragWidth * 0.5));
+        ctx.closePath();
+        ctx.fill();
+
+
+
+        /*ctx.textAlign = "left";
+        ctx.font = "200 " + headerType + "px Dosis";
+
+        var logRange = Math.log(option.EMax[3]) - Math.log(option.EMin[3]);
+        var scale = logRange / (this.Range*0.5);
+
+        var pos = Math.round(( 100 / (this.Range*0.5) ) * option.EPerc[3]);
+        var math = Math.exp( pos * scale + (option.EMin[3]) );
+        math = option.Handles[2].XValue;
+        var string = this.NumberWithCommas("" + math );
+
+        ctx.fillText(string, (this.Range*0.5) + r + this.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));*/
+    }
 
 
     buttonsDraw(ctx,units,i,x,y,height) {
@@ -398,7 +614,6 @@ class ParametersPanel {
             ctx.beginPath();
             ctx.moveTo(this.Margin - units, y + height);
             ctx.lineTo(this.Range + this.Margin + units, y + height);
-            ctx.closePath();
             ctx.stroke();
         }
 
@@ -420,8 +635,7 @@ class ParametersPanel {
         var pos2 = new Point(0,0);
 
         ctx.beginPath();
-        var j;
-        for (j=0;j<lineNo;j++) {
+        for (var j=0;j<lineNo;j++) {
 
             pos1.x = (s * 0.5) + (s * j);
             pos1.y = 0;
@@ -460,10 +674,14 @@ class ParametersPanel {
         psTween.to({ x: destination }, t);
         psTween.onUpdate(function() {
             panel.Scale = this.x;
+            console.log(this.x);
         });
-        psTween.start();
+
         psTween.easing( TWEEN.Easing.Quintic.InOut );
-        TWEEN.add(psTween);
+        psTween.start();
+
+
+
     }
 
     //-------------------------------------------------------------------------------------------
@@ -474,12 +692,20 @@ class ParametersPanel {
     MouseDown(mx,my) {
 
         this.RolloverCheck(mx,my);
-        var i;
-        for (i=0;i<this.Options.length;i++) {
+        for (var i=0;i<this.Options.length;i++) {
 
             if (this._SliderRoll[i]) {
                 this.Options[i].Selected = true;
                 this.SliderSet(i,mx);
+            }
+            if (this.Options[i].Type=="ADSR") {
+                var xStart = [0, this.Options[i].Handles[0].Position.x,this.Range*0.6];
+                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                    if (this.Options[i].HandleRoll[j]) {
+                        this.Options[i].Handles[j].Selected = true;
+                        this.HandleSet(i, j, xStart[j],mx, my);
+                    }
+                }
             }
 
         }
@@ -491,9 +717,13 @@ class ParametersPanel {
     }
 
     MouseUp() {
-        var i;
-        for (i=0;i<this.Options.length;i++) {
+        for (var i=0;i<this.Options.length;i++) {
             this.Options[i].Selected = false;
+            if (this.Options[i].Type=="ADSR") {
+                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                    this.Options[i].Handles[j].Selected = false;
+                }
+            }
         }
 
     }
@@ -503,14 +733,78 @@ class ParametersPanel {
     MouseMove(mx,my) {
 
         this.RolloverCheck(mx,my);
-        var i;
-        for (i=0;i<this.Options.length;i++) {
+        for (var i=0;i<this.Options.length;i++) {
             if (this.Options[i].Type=="slider") {
                 if (this.Options[i].Selected) {
                     this.SliderSet(i, mx);
                 }
             }
+            if (this.Options[i].Type=="ADSR") {
+                var xStart = [0, this.Options[i].Handles[0].Position.x,this.Range*0.6];
+                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                    if (this.Options[i].HandleRoll[j]) {
+                        console.log("HandleRoll " + j );
+                    }
+                    if (this.Options[i].Handles[j].Selected) {
+                        this.HandleSet(i, j, xStart[j], mx, my);
+
+                    }
+                }
+            }
         }
+    }
+
+    HandleSet(n,h,xStart,mx,my) {
+        var mPosX = mx - (this.Position.x + this.Margin + xStart);
+        var mPosY = my - (this.Position.y + this.Options[n].Position.y + (this.Options[n].Size.Height*0.9));
+
+        this.Options[n].Handles[h].Position.x =  mPosX;
+        this.Options[n].Handles[h].Position.y =  -mPosY;
+
+        // FLOOR //
+        if (this.Options[n].Handles[h].Position.x < 0) {
+            this.Options[n].Handles[h].Position.x = 0;
+        }
+        // CEILING //
+        if (this.Options[n].Handles[h].Position.x > this.Options[n].Handles[h].XRange) {
+            this.Options[n].Handles[h].Position.x = this.Options[n].Handles[h].XRange;
+        }
+
+        // FLOOR //
+        if (this.Options[n].Handles[h].Position.y < 0) {
+            this.Options[n].Handles[h].Position.y = 0;
+        }
+        // CEILING //
+        if (this.Options[n].Handles[h].Position.y > this.Options[n].Handles[h].YRange) {
+            this.Options[n].Handles[h].Position.y = this.Options[n].Handles[h].YRange;
+        }
+
+        // X
+        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax","XRange","XSetting","x");
+
+        // Y
+        if (this.Options[n].Handles[h].YSetting!=="") {
+            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax","YRange","YSetting","y");
+        }
+
+
+    }
+
+    UpdateValue(object,value,min,max,thisrange,setting,axis) {
+        // CALCULATE VALUE //
+        var range = object[""+max] - object[""+min];
+        var perc = (object.Position[""+axis]/object[""+thisrange]) * 100;
+        object[""+value] = ((range/100)*perc) + object[""+min];
+
+        // QUANTIZE //
+        if (object.Quantised) {
+            object[""+value] = Math.round(object[""+value]);
+            object.Position[""+axis] = (object[""+thisrange]/range)*(object[""+value]-object[""+min]);
+        }
+
+        console.log("" + object[""+setting] +" | "+ object[""+value]);
+        // SET VALUE IN BLOCK //
+        this.SelectedBlock.SetValue(object[""+setting],object[""+value]);
     }
 
     SliderSet(n,mx) {
@@ -545,10 +839,14 @@ class ParametersPanel {
     }
 
     RolloverCheck(mx,my) {
-        var i;
-        for (i=0;i<this.Options.length;i++) {
+        for (var i=0;i<this.Options.length;i++) {
             if (this.Options[i].Type == "slider") {
                 this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*this._Units),this.Position.y + this.Options[i].Position.y,this.Range + (20*this._Units),this.Options[i].Size.Height,mx,my);
+            }
+            else if (this.Options[i].Type == "ADSR") {
+                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * this._Units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.1) - (10 * this._Units), (20 * this._Units), (20 * this._Units), mx, my);
+                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * this._Units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * this._Units), (20 * this._Units), (20 * this._Units), mx, my);
+                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * this._Units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * this._Units), (20 * this._Units), (20 * this._Units), mx, my);
             }
         }
 

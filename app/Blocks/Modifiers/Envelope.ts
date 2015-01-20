@@ -12,7 +12,7 @@ class Envelope extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new EnvelopeComponent(0.8, 0.9, 0.9, 0.9);
+        this.Component = new EnvelopeComponent(1, 5, 0.7, 4);
 
         this.Effects.Add(this.Component);
 
@@ -50,7 +50,7 @@ class Envelope extends Modifier {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        /*this.ParamJson =
         {
             "name": "Envelope",
             "parameters": [
@@ -107,7 +107,50 @@ class Envelope extends Modifier {
                     }
                 }
             ]
+        };*/
+
+        this.ParamJson =
+        {
+            "name": "Envelope",
+            "parameters": [
+
+                {
+                    "type" : "ADSR",
+                    "name": "ADSR",
+                    "setting": "adsr",
+                    "nodes": [
+                        {
+                            "setting": "attack",
+                            "value": this.Component.GetValue("attack"),
+                            "min": 0.01,
+                            "max": 10
+                        },
+
+                        {
+                            "setting": "decay",
+                            "value": this.Component.GetValue("decay"),
+                            "min": 0.01,
+                            "max": 15
+                        },
+
+                        {
+                            "setting": "sustain",
+                            "value": this.Component.GetValue("sustain"),
+                            "min": 0,
+                            "max": 1
+                        },
+
+                        {
+                            "setting": "release",
+                            "value": this.Component.GetValue("release"),
+                            "min": 0.01,
+                            "max": 15
+                        }
+                    ]
+                }
+            ]
         };
+
     }
 
     SetValue(param: string,value: number) {
