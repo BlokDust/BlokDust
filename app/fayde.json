@@ -11,13 +11,13 @@
       "path": "lib/exjs/dist/ex.min"
     },
     "fayde.drawing": {
-      "exports": "fayde.drawing"
+      "exports": "Fayde.Drawing"
     },
     "fayde.utils": {
-      "exports": "fayde.utils"
+      "exports": "Fayde.Utils"
     },
     "fayde.transformer": {
-      "exports": "fayde.transformer",
+      "exports": "Fayde.Transformer",
       "deps": [
         "fayde.utils",
         "tween"

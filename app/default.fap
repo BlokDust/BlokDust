@@ -2,7 +2,7 @@
         xmlns="http://schemas.wsick.com/fayde"
         xmlns:x="http://schemas.wsick.com/fayde/x"
         xmlns:vms="ViewModels"
-        xmlns:d="lib://Fayde.Drawing"
+        xmlns:d="lib://fayde.drawing"
         ThemeName="Metro">
     <Application.Resources>
     </Application.Resources>
