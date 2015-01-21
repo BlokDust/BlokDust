@@ -64,10 +64,10 @@ class BitCrusher extends Modifier {
                     "name" : "Bits",
                     "setting" : "bits",
                     "props" : {
-                        "value" : 5,
+                        "value" : this.Component.GetValue("bits"),
                         "min" : 1,
                         "max" : 8,
-                        "quantised" : false,
+                        "quantised" : true,
                         "centered" : false
                     }
                 },
@@ -75,9 +75,9 @@ class BitCrusher extends Modifier {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"wet",
+                    "setting" :"dryWet",
                     "props" : {
-                        "value" : 0.8,
+                        "value" : this.Component.GetValue("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

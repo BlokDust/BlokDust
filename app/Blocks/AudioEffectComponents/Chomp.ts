@@ -45,6 +45,18 @@ class ChompComponent extends Effect implements IEffect {
             jsonVariable
         );
     }
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="Q") {
+            val = this.Effect.getQ();
+        } else if (param=="gain") {
+            val = this.Effect.getGain();
+        }
+
+        return val;
+        console.log(""+param+" "+val);
+    }
 
 }
 

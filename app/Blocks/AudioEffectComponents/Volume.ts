@@ -29,7 +29,14 @@ class Volume extends Effect implements IEffect {
         super.SetValue(param,value);
 
         this.Effect.output.gain.value = value;
+        console.log(""+param+" "+value);
+    }
 
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val = (this.Effect.output.gain.value * 2) - 10;
+        return val;
+        console.log(""+param+" "+val);
     }
 }
 

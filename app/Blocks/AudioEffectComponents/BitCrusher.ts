@@ -31,10 +31,26 @@ class BitCrusherComponent extends Effect implements IEffect {
         super.SetValue(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        this.Effect.set(
-            jsonVariable
-        );
+        if (param=="dryWet") {
+            this.Effect.dryWet.setWet(value);
+        } else {
+            this.Effect.set(
+                jsonVariable
+            );
+        }
         console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="bits") {
+            val = this.Effect.getBits();
+        } else if (param=="dryWet") {
+            val = this.Effect.getWet();
+        }
+        return val;
+        console.log(""+param+" "+val);
     }
 }
 

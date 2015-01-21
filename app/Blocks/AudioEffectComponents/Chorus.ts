@@ -41,6 +41,22 @@ class ChorusComponent extends Effect implements IEffect {
         console.log(jsonVariable);
     }
 
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="rate") {
+            val = this.Effect.getRate();
+        } else if (param=="delayTime") {
+            val = this.Effect.getDelayTime();
+        } else if (param=="depth") {
+            val = this.Effect.getDepth();
+        } else if (param=="feedback") {
+            val = this.Effect.getFeedback();
+        }
+
+        return val;
+        console.log(""+param+" "+val);
+    }
 
 }
 

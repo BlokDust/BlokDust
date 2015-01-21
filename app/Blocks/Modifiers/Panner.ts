@@ -61,7 +61,7 @@ class Panner extends Modifier {
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {
-                        "value": 1,
+                        "value": this.Component.GetValue("frequency"),
                         "min": 0,
                         "max": 5,
                         "quantised": false,

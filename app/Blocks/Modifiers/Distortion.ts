@@ -12,7 +12,7 @@ class Distortion extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new DistortionComponent(1);
+        this.Component = new DistortionComponent(0.65,0.75);
 
         this.Effects.Add(this.Component);
 
@@ -59,7 +59,7 @@ class Distortion extends Modifier {
                     "name" : "Drive",
                     "setting" :"drive",
                     "props" : {
-                        "value" : 0.5,
+                        "value" : this.Component.GetValue("drive"),
                         "min" : 0.1,
                         "max" : 1,
                         "quantised" : false,
@@ -72,7 +72,7 @@ class Distortion extends Modifier {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : 0.5,
+                        "value" : this.Component.GetValue("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

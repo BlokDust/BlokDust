@@ -65,7 +65,7 @@ class Chorus extends Modifier {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : 1,
+                        "value" : this.Component.GetValue("rate"),
                         "min" : 0,
                         "max" : 5,
                         "quantised" : false,
@@ -78,7 +78,7 @@ class Chorus extends Modifier {
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
-                        "value" : 2.5,
+                        "value" : this.Component.GetValue("delayTime"),
                         "min" : 0,
                         "max" : 5,
                         "quantised" : false,
@@ -91,7 +91,7 @@ class Chorus extends Modifier {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : 0.4,
+                        "value" : this.Component.GetValue("depth"),
                         "min" : 0,
                         "max" : 3,
                         "quantised" : false,
@@ -104,7 +104,7 @@ class Chorus extends Modifier {
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
-                        "value" : 0.15,
+                        "value" : this.Component.GetValue("feedback"),
                         "min" : 0,
                         "max" : 0.2,
                         "quantised" : false,

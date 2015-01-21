@@ -50,7 +50,7 @@ class AutoWahComponent extends Effect implements IEffect {
         jsonVariable[param] = value;
 
         if (param=="dryWet") {
-            this.Effect.dryWet.setDry(1 - value);
+            this.Effect.dryWet.setWet(value);
         } else if (param=="octaves") {
             this.Effect.setOctaves(value);
         } else if (param=="baseFrequency") {
@@ -58,6 +58,21 @@ class AutoWahComponent extends Effect implements IEffect {
         }
 
         console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="octaves") {
+            val = this.Effect.getOctaves();
+        } else if (param=="baseFrequency") {
+            val = this.Effect.getBaseFrequency();
+        } else if (param=="dryWet") {
+            val = this.Effect.getWet();
+        }
+
+        return val;
+        console.log(""+param+" "+val);
     }
 }
 

@@ -88,7 +88,7 @@ class Chomp extends Modifier {
                     "name": "Rate",
                     "setting": "rate",
                     "props": {
-                        "value": 75,
+                        "value": Math.round(101-this.Rate),
                         "min": 1,
                         "max": 100,
                         "quantised": true,
@@ -101,7 +101,7 @@ class Chomp extends Modifier {
                     "name": "Width",
                     "setting": "Q",
                     "props": {
-                        "value": 0.6,
+                        "value": this.Component.GetValue("Q"),
                         "min": 0.1,
                         "max": 5,
                         "quantised": false,
@@ -114,7 +114,7 @@ class Chomp extends Modifier {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": 30,
+                        "value": this.Component.GetValue("gain"),
                         "min": 0,
                         "max": 50,
                         "quantised": false,
@@ -128,7 +128,7 @@ class Chomp extends Modifier {
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
         if (param == "rate") {
-            this.Rate = Math.round((101-value));
+            this.Rate = Math.round(101-value);
         } else {
             this.Component.SetValue(param, value);
         }

@@ -43,6 +43,18 @@ class FilterComponent extends Effect implements IEffect {
         console.log(jsonVariable);
     }
 
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="frequency") {
+            val = this.Effect.getFrequency();
+        } else if (param=="gain") {
+            val = this.Effect.getGain();
+        }
+
+        return val;
+        console.log(""+param+" "+val);
+    }
 }
 
 export = FilterComponent;
