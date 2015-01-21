@@ -35,6 +35,9 @@ class Option implements IOption {
 
     }
 
+    Draw(ctx,units,i,panel) {
+
+    }
 }
 
 export = Option;
