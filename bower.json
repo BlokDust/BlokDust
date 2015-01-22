@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "dependencies": {
     "fayde": "~0.16.15",
-    "minerva": "~0.4.7",
     "fayde.controls": "~0.17.0",
     "exjs": "~0.2.8",
     "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.4.0",
@@ -13,7 +12,6 @@
     "pixelpalette": "0.1.8"
   },
   "resolutions": {
-    "minerva": "~0.4.7",
     "fayde": "~0.16.15",
     "fayde.utils": "~0.5.0"
   }
