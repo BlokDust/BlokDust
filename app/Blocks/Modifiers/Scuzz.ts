@@ -12,7 +12,7 @@ class Scuzz extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new LFOComponent(440, 200, 1800, 'sawtooth');
+        this.Component = new LFOComponent(100, -1000, 1000, 'sawtooth');
 
         this.Effects.Add(this.Component);
 
@@ -43,6 +43,47 @@ class Scuzz extends Modifier {
 
     Delete(){
         this.Component.Delete();
+    }
+
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Scuzz",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Power",
+                    "setting" :"depth",
+                    "props" : {
+                        "value" : this.Component.GetValue("depth"),
+                        "min" : 1000,
+                        "max" : 10000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Pulverisation",
+                    "setting" :"rate",
+                    "props" : {
+                        "value" : this.Component.GetValue("frequency"),
+                        "min" : 100,
+                        "max" : 10000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
     }
 
 }
