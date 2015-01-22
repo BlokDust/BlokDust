@@ -152,7 +152,6 @@ class ToneSource extends Source {
 
     SetValue(param: string,value: any) {
 
-
         if (param == "waveform") {
             switch(Math.round(value)){
                 case 1: value = "sine";
@@ -170,7 +169,22 @@ class ToneSource extends Source {
     }
 
     GetValue(param: string){
-        super.GetValue(param);
+        var val;
+        if (param == "waveform") {
+            switch(super.GetValue(param)){
+                case "sine": val = 1;
+                    break;
+                case "square": val = 2;
+                    break;
+                case "triangle": val = 3;
+                    break;
+                case "sawtooth": val = 4;
+                    break;
+            }
+        } else {
+            val = super.GetValue(param)
+        }
+        return val;
     }
 }
 

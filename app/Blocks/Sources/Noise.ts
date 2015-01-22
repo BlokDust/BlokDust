@@ -98,6 +98,63 @@ class Noise extends Source {
         this.Ctx.closePath();
         this.Ctx.fill();
     }
+
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Noise",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Waveform",
+                    "setting" :"waveform",
+                    "props" : {
+                        "value" : this.GetValue("waveform"),
+                        "min" : 1,
+                        "max" : 3,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: any) {
+
+        if (param == "waveform") {
+            switch(Math.round(value)){
+                case 1: value = "white";
+                    break;
+                case 2: value = "pink";
+                    break;
+                case 3: value = "brown";
+                    break;
+            }
+        }
+
+        super.SetValue(param,value);
+    }
+
+    GetValue(param: string){
+        var val;
+        if (param == "waveform") {
+            switch(super.GetValue(param)){
+                case "white": val = 1;
+                    break;
+                case "pink": val = 2;
+                    break;
+                case "brown": val = 3;
+                    break;
+            }
+        } else {
+            val = super.GetValue(param)
+        }
+        return val;
+    }
 }
 
 export = Noise;

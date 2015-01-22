@@ -127,6 +127,7 @@ class Source extends Modifiable {
     }
 
     GetValue(param: string) {
+
         var val;
         switch (param){
             case "frequency": val = this.Source.getFrequency();
@@ -138,7 +139,9 @@ class Source extends Modifiable {
             case "volume": val = this.Source.getGain();
                 break;
         }
+        console.log(val);
         return val;
+
     }
 
     SetValue(param: string,value: number) {
