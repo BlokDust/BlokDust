@@ -70,6 +70,54 @@ class EQComponent extends Effect implements IEffect {
     Delete() {
         this.Effect.dispose();
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+
+        var paramWithBand = param.split("-"),
+            param = paramWithBand[0],
+            band = parseInt(paramWithBand[1]);
+
+        console.log("param "+param+"; band: "+band);
+
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        switch (param){
+            case "frequency" : this.Effect.setFrequency(value, band);
+                break;
+            case "Q" : this.Effect.setQ(value, band);
+                break;
+            case "gain" : this.Effect.setGain(value, band);
+                break;
+        }
+
+        //this.Effect.set(
+        //    jsonVariable
+        //);
+        console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+
+        var paramWithBand = param.split("-"),
+            param = paramWithBand[0],
+            band = parseInt(paramWithBand[1]),
+            val;
+
+        switch (param){
+            case "frequency": val = this.Effect.getFrequency(band);
+                break;
+            case "Q": val = this.Effect.getQ(band);
+                break;
+            case "gain": val = this.Effect.getGain(band);
+                break;
+        }
+
+        return val;
+    }
+
 }
 
 export = EQComponent;

@@ -86,6 +86,126 @@ class EQ extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "EQ",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Band 1 Frequency",
+                    "setting" :"frequency-1",
+                    "props" : {
+                        "value" : this.Component.GetValue("frequency-1"),
+                        "min" : 0,
+                        "max" : 20000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Band 1 Gain",
+                    "setting" :"gain-1",
+                    "props" : {
+                        "value" : this.Component.GetValue("gain-1"),
+                        "min" : -12,
+                        "max" : 12,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Band 2 Frequency",
+                    "setting" :"frequency-2",
+                    "props" : {
+                        "value" : this.Component.GetValue("frequency-2"),
+                        "min" : 0,
+                        "max" : 20000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Band 2 Gain",
+                    "setting" :"gain-2",
+                    "props" : {
+                        "value" : this.Component.GetValue("gain-2"),
+                        "min" : -12,
+                        "max" : 12,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Band 3 Frequency",
+                    "setting" :"frequency-3",
+                    "props" : {
+                        "value" : this.Component.GetValue("frequency-3"),
+                        "min" : 0,
+                        "max" : 20000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Band 3 Gain",
+                    "setting" :"gain-3",
+                    "props" : {
+                        "value" : this.Component.GetValue("gain-3"),
+                        "min" : -12,
+                        "max" : 12,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Band 4 Frequency",
+                    "setting" :"frequency-4",
+                    "props" : {
+                        "value" : this.Component.GetValue("frequency-4"),
+                        "min" : 0,
+                        "max" : 20000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Band 4 Gain",
+                    "setting" :"gain-4",
+                    "props" : {
+                        "value" : this.Component.GetValue("gain-4"),
+                        "min" : -12,
+                        "max" : 12,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+
+
+        this.Component.SetValue(param,value);
+
+    }
+
 }
 
 export = EQ;

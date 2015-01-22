@@ -8,6 +8,8 @@ import BlockType = Type.BlockType;
 class PitchComponent extends Effect implements IEffect {
 
     public PitchIncrement: number;
+    public Pitch: number;
+    public isConnected: boolean = false;
 
     constructor(increment) {
         super();
@@ -18,8 +20,8 @@ class PitchComponent extends Effect implements IEffect {
         super.Connect(modifiable);
 
         if (this.Modifiable.Source.frequency){
-            var _value = this.Modifiable.Source.frequency.getValue();
-            this.Modifiable.Source.frequency.setValue(_value * this.PitchIncrement, 0);
+            this.Pitch = this.Modifiable.Source.frequency.getValue();
+            this.Modifiable.Source.frequency.setValue(this.Pitch * this.PitchIncrement, 0);
         }
 
     }
@@ -28,14 +30,41 @@ class PitchComponent extends Effect implements IEffect {
         super.Disconnect(modifiable);
 
         if (this.Modifiable.Source.frequency) {
-            var _value = this.Modifiable.Source.frequency.getValue();
-            this.Modifiable.Source.frequency.setValue(_value / this.PitchIncrement, 0);
+            this.Pitch = this.Modifiable.Source.frequency.getValue();
+            this.Modifiable.Source.frequency.setValue(this.Pitch / this.PitchIncrement, 0);
         }
 
     }
 
     Delete() {
 
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        if (param == "pitchMultiplier") {
+            this.PitchIncrement = value;
+            if (this.Modifiable && this.Modifiable.Source.frequency) {
+                this.Modifiable.Source.frequency.setValue(this.Pitch * this.PitchIncrement, 0);
+            }
+        }
+
+        console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+
+        if (param == "pitchMultiplier") {
+            val = this.PitchIncrement;
+
+        }
+        return val;
+        console.log(""+param+" "+val);
     }
 }
 
