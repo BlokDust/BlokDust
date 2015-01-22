@@ -126,6 +126,40 @@ class Source extends Modifiable {
         this.Source.dispose();
     }
 
+    GetValue(param: string) {
+        var val;
+        switch (param){
+            case "frequency": val = this.Source.getFrequency();
+                break;
+            case "detune": val = this.Source.getDetune();
+                break;
+            case "waveform": val = this.Source.getType();
+                break;
+            case "volume": val = this.Source.getGain();
+                break;
+        }
+        return val;
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        switch (param){
+            case "frequency": this.Source.setFrequency(value);
+                break;
+            case "detune": this.Source.setDetune(value);
+                break;
+            case "waveform": this.Source.setType(value);
+                break;
+            case "volume": this.Source.setGain(value);
+                break;
+        }
+
+
+        console.log(jsonVariable);
+    }
 
 }
 

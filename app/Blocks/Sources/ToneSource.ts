@@ -113,6 +113,65 @@ class ToneSource extends Source {
 
         //this.IsRenderCached = true;
     }
+
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Tone",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Frequency",
+                    "setting" :"frequency",
+                    "props" : {
+                        "value" : this.GetValue("frequency"),
+                        "min" : 10,
+                        "max" : 15000,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Waveform",
+                    "setting" :"waveform",
+                    "props" : {
+                        "value" : this.GetValue("waveform"),
+                        "min" : 1,
+                        "max" : 4,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: any) {
+
+
+        if (param == "waveform") {
+            switch(Math.round(value)){
+                case 1: value = "sine";
+                    break;
+                case 2: value = "square";
+                    break;
+                case 3: value = "triangle";
+                    break;
+                case 4: value = "sawtooth";
+                    break;
+            }
+        }
+
+        super.SetValue(param,value);
+    }
+
+    GetValue(param: string){
+        super.GetValue(param);
+    }
 }
 
 export = ToneSource;
