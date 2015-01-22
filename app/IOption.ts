@@ -27,6 +27,8 @@ interface IOption {
     HandleRoll: any[];
     Handles: OptionHandle[];
 
+    Draw(ctx,units,i,panel): void;
+
 }
 
 export = IOption;

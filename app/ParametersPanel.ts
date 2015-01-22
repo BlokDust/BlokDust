@@ -27,7 +27,7 @@ class ParametersPanel {
     public Scale: number;
     public Sketch;
     public Options: Option[];
-    private _SliderColours: string[];
+    public SliderColours: string[];
     private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
     private _SliderRoll: boolean[];
@@ -52,7 +52,7 @@ class ParametersPanel {
 
         this.Sketch = BlocksSketch;
         this.Options = [];
-        this._SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
+        this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
         this._SliderRoll = [];
 
         this._Timer = new Fayde.ClockTimer();
@@ -172,7 +172,6 @@ class ParametersPanel {
 
             // SLIDER //
             if (option.type == "slider") {
-
                 var range = option.props.max - option.props.min;
                 var sliderO = this.Margin;
                 if (option.props.centered==true) {
@@ -195,63 +194,29 @@ class ParametersPanel {
             // ENVELOPE //
             else if (option.type == "ADSR") {
 
-                /*var nodes = [];
-
-
-                for (var j=0;j<4;j++) {
-
-                    var range = option.nodes[j].max - option.nodes[j].min;
-                    var perc = ((this.Range*0.25)/range) * (option.nodes[j].value-option.nodes[j].min);
-                    if (j==2) { // SUSTAIN (has different range) //
-                        perc = ((optionHeight[i]*0.8)/range) * (option.nodes[j].value-option.nodes[j].min);
-                    }
-                    if (j==3) { // RELEASE (has different range) //
-                        //perc = ((this.Range*0.5)/range) * (option.nodes[j].value-option.nodes[j].min);
-                        var logRange = Math.log(option.nodes[j].max+1000) - Math.log(option.nodes[j].min+1000);
-                        var scale = logRange / (this.Range*0.5);
-                        perc = (Math.log(option.nodes[j].value+1000) - option.nodes[j].min) / scale;
-                        //perc = (Math.log(option.nodes[j].value)-option.nodes[j].min) / ((this.Range*0.5)/range);
-                        console.log("perc: "+perc);
-
-                    }
-
-
-                    nodes[j] = { value:option.nodes[j].value , min:option.nodes[j].min, max:option.nodes[j].max, perc: perc};
-                }*/
-
                 var Xrange, handleX, Yrange, handleY;
                 var handles = [];
 
-
+                //TODO: tidy up this construction, is a mess. Move some within OptionADSR
                 Xrange = option.nodes[0].max - option.nodes[0].min;
                 handleX = ( (this.Range*0.28) / Xrange ) * (option.nodes[0].value-option.nodes[0].min);
                 Yrange = option.nodes[2].max - option.nodes[2].min;
                 handleY = ( (optionHeight[i]*0.8) / Yrange ) * (option.nodes[2].value-option.nodes[2].min);
-
                 handles[0] = new OptionHandle(new Point(handleX,handleY),option.nodes[0].value,option.nodes[0].min,option.nodes[0].max,this.Range*0.28,0,0,0,0,option.nodes[0].setting,"");
 
                 Xrange = option.nodes[1].max - option.nodes[1].min;
                 handleX = ( (this.Range*0.28) / Xrange ) * (option.nodes[1].value-option.nodes[1].min);
-                Yrange = option.nodes[2].max - option.nodes[2].min;
-                handleY = ( (optionHeight[i]*0.8) / Yrange ) * (option.nodes[2].value-option.nodes[2].min);
-
                 handles[1] = new OptionHandle(new Point(handleX,handleY),option.nodes[1].value,option.nodes[1].min,option.nodes[1].max,this.Range*0.28,option.nodes[2].value,option.nodes[2].min,option.nodes[2].max,(optionHeight[i]*0.8),option.nodes[1].setting,option.nodes[2].setting);
 
                 Xrange = option.nodes[3].max - option.nodes[3].min;
                 handleX = ( (this.Range*0.4) / Xrange ) * (option.nodes[3].value-option.nodes[3].min);
-                Yrange = option.nodes[2].max - option.nodes[2].min;
-                handleY = ( (optionHeight[i]*0.8) / Yrange ) * (option.nodes[2].value-option.nodes[2].min);
-
                 handles[2] = new OptionHandle(new Point(handleX,handleY),option.nodes[3].value,option.nodes[3].min,option.nodes[3].max,this.Range*0.4,0,0,0,0,option.nodes[3].setting,"");
-
-
 
                 optionList.push(new ADSR(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2]));
 
-
             }
 
-
+            // UPDATE TOTAL LIST HEIGHT //
             optionTotalY += optionHeight[i];
 
         }
@@ -277,7 +242,6 @@ class ParametersPanel {
 
         // START A TRANSFORM HERE //
         ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
-//
         var sx = 0;
         var sy = 0;
 
@@ -291,11 +255,9 @@ class ParametersPanel {
         // DRAW PANEL //
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
+        // SHADOW //
         ctx.globalAlpha = 0.8;
         this.panelDraw(sx, sy);
-
-
-        // DOTTED LINE //
         ctx.globalAlpha = 1;
 
 
@@ -319,34 +281,17 @@ class ParametersPanel {
 
         // DRAW OPTIONS //
         for (var i = 0; i < this.Options.length; i++) {
-
             ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
 
-            // DRAW SLIDER //
-            if (this.Options[i].Type=="slider") {
-                this.sliderDraw(ctx,units,i,this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height,this.Options[i].Origin);
-            }
-
-            // DRAW BUTTONS //
-            else if (this.Options[i].Type == "buttons") {
-                this.buttonsDraw(ctx,units,i,this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height);
-            }
-
-            // DRAW ENVELOPE //
-            else if (this.Options[i].Type == "ADSR") {
-                this.ADSRDraw(ctx,units,this.Options[i],this.Options[i].Position.x,this.Options[i].Position.y,this.Options[i].Size.Height,this.Options[i].Handles[0].Position.x,this.Options[i].Handles[1].Position.x,this.Options[i].Handles[1].Position.y,this.Options[i].Handles[2].Position.x);
-            }
-
-
+            this.Options[i].Draw(ctx,units,i,this);
 
             ctx.setTransform(1, 0, 0, 1, 0, 0);
-
         }
-
         ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
 
 
+    // PANEL BLACK BG //
     panelDraw(x,y) {
 
         var units = this._Units;
@@ -371,275 +316,6 @@ class ParametersPanel {
         ctx.closePath();
         ctx.fill();
     }
-
-
-
-    sliderDraw(ctx,units,i,x,y,height,origin) {
-
-        var dataType = Math.round(units*10);
-        var headerType = Math.round(units*33);
-
-        // DIVIDERS //
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = "#393d43";
-        if (i !== (this.Options.length - 1)) {
-            ctx.beginPath();
-            ctx.moveTo(this.Margin - units, y + height);
-            ctx.lineTo(this.Range + this.Margin + units, y + height);
-            ctx.stroke();
-        }
-
-
-        // MID POINT //
-        ctx.beginPath();
-        ctx.moveTo((this.Range * 0.5) + this.Margin - (2 * units), y + (height * 0.5));
-        ctx.lineTo((this.Range * 0.5) + this.Margin, y + (height * 0.5) - (2 * units));
-        ctx.lineTo((this.Range * 0.5) + this.Margin + (2 * units), y + (height * 0.5));
-        ctx.lineTo((this.Range * 0.5) + this.Margin, y + (height * 0.5) + (2 * units));
-        ctx.closePath();
-        ctx.fill();
-
-
-        // BAR //
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
-        if (origin !== this.Margin) {
-            this.diagonalFill(this.Margin - units, y + units, this.Range + (2 * units), height - (2 * units), 9);
-        }
-        var offset = 0;
-        if (origin == this.Margin) {
-            offset = -units;
-        }
-        ctx.globalAlpha = 1;
-        var col = this._SliderColours[i - (Math.floor(i/this._SliderColours.length)*(this._SliderColours.length))];
-        ctx.fillStyle = ctx.strokeStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(origin + offset, y);
-        ctx.lineTo(x + this.Margin, y);
-        ctx.lineTo(x + this.Margin, y + height);
-        ctx.lineTo(origin + offset, y + height);
-        ctx.closePath();
-        ctx.fill();
-
-
-        // LINE //
-        ctx.fillRect(x + this.Margin - (units), y, 2 * units, height);
-
-
-        // GRAB TRIANGLES //
-        var dragWidth = height * 0.2;
-        ctx.beginPath();
-        ctx.moveTo(x + this.Margin - dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + this.Margin, y + (height * 0.5) - dragWidth);
-        ctx.lineTo(x + this.Margin + dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + this.Margin, y + (height * 0.5) + dragWidth);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.beginPath();
-        ctx.moveTo(x + this.Margin - dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + this.Margin, y + (height * 0.5) - dragWidth);
-        ctx.lineTo(x + this.Margin + (dragWidth * 0.5), y + (height * 0.5) - (dragWidth * 0.5));
-        ctx.lineTo(x + this.Margin - (dragWidth * 0.5), y + (height * 0.5) + (dragWidth * 0.5));
-        ctx.closePath();
-        ctx.fill();
-
-
-        // PARAM NAME //
-        ctx.font = "400 " + dataType + "px Dosis";
-        ctx.textAlign = "right";
-        ctx.fillText(this.Options[i].Name.toUpperCase(), this.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
-
-
-        // VALUE TOOLTIP //
-        if (this.Options[i].Selected) {
-            ctx.textAlign = "left";
-            ctx.font = "200 " + headerType + "px Dosis";
-            var string = this.NumberWithCommas("" + (Math.round(this.Options[i].Value * 100) / 100));
-            ctx.fillText(string, x + this.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
-        }
-    }
-
-
-    ADSRDraw(ctx,units,option,x,y,height,a,d,s,r) {
-        ctx.globalAlpha = 1;
-
-        var headerType = Math.round(units*33);
-
-        var curved = false;
-        var vert = 0.6;
-
-
-        // MARKERS //
-        ctx.fillStyle = ctx.strokeStyle = "#393d43";
-        ctx.beginPath();
-        ctx.moveTo(this.Margin - units, y + (height*0.1));
-        ctx.lineTo(this.Margin - units, y + (height*0.9));
-
-        ctx.moveTo((this.Range*vert) + this.Margin + units, y + (height*0.1));
-        ctx.lineTo((this.Range*vert) + this.Margin + units, y + (height*0.9));
-
-        ctx.moveTo(this.Range + this.Margin + units, y + (height*0.1));
-        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
-        ctx.stroke();
-
-
-        // ENVELOPE LINE //
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(this.Margin, y + (height*0.9));
-        ctx.lineTo(this.Margin + a, y + (height*0.1)); // ATTACK
-        if (curved) {
-            ctx.bezierCurveTo(this.Margin + a, y + (height*0.1) + (((height*0.8) - s) *0),this.Margin + a + (d*0.5),y + (height*0.9) - s, this.Margin + a + d, y + (height*0.9) - s ); // DECAY
-
-        } else {
-            ctx.lineTo(this.Margin + a + d, y + (height*0.9) - s); // DECAY
-        }
-        ctx.lineTo(this.Margin + (this.Range*vert), y + (height*0.9) - s); // SUSTAIN
-        if (curved) {
-            ctx.bezierCurveTo(this.Margin + (this.Range * vert), y + (height * 0.9) - s, this.Margin + (this.Range * 0.5) + (r * 0.5), y + (height * 0.9), this.Margin + (this.Range * 0.5) + r, y + (height * 0.9)); // RELEASE
-        } else {
-            ctx.lineTo(this.Margin + (this.Range*vert) + r, y + (height*0.9)); // RELEASE
-        }
-        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
-        ctx.closePath();
-        ctx.clip();
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
-        this.diagonalFill(this.Margin - units, y + units, this.Range + (2 * units), height - (2 * units), 9);
-        ctx.restore();
-
-
-        /*ctx.globalAlpha = 0.2;
-        ctx.fillStyle = App.Palette[5];
-        ctx.beginPath();
-        ctx.moveTo(this.Margin, y + (height*0.9));
-        ctx.lineTo(this.Margin + a, y + (height*0.1)); // ATTACK
-        ctx.lineTo(this.Margin + a + d, y + (height*0.9) - s); // DECAY
-        ctx.lineTo(this.Margin + (this.Range*0.5), y + (height*0.9) - s); // SUSTAIN
-        ctx.lineTo(this.Margin + (this.Range*0.5) + r, y + (height*0.9)); // RELEASE
-        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
-        ctx.closePath();
-        ctx.fill();*/
-
-
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = App.Palette[8];
-        ctx.beginPath();
-        ctx.moveTo(this.Margin, y + (height*0.9));
-        ctx.lineTo(this.Margin + a, y + (height*0.1)); // ATTACK
-        if (curved) {
-            ctx.bezierCurveTo(this.Margin + a, y + (height*0.1) + (((height*0.8) - s) *0),this.Margin + a + (d*0.5),y + (height*0.9) - s, this.Margin + a + d, y + (height*0.9) - s ); // DECAY
-
-        } else {
-            ctx.lineTo(this.Margin + a + d, y + (height*0.9) - s); // DECAY
-        }
-        ctx.lineTo(this.Margin + (this.Range*vert), y + (height*0.9) - s); // SUSTAIN
-        if (curved) {
-            ctx.bezierCurveTo(this.Margin + (this.Range * vert), y + (height * 0.9) - s, this.Margin + (this.Range * vert) + (r * 0.5), y + (height * 0.9), this.Margin + (this.Range * vert) + r, y + (height * 0.9)); // RELEASE
-        } else {
-            ctx.lineTo(this.Margin + (this.Range*vert) + r, y + (height*0.9)); // RELEASE
-        }
-        ctx.lineTo(this.Range + this.Margin + units, y + (height*0.9));
-        ctx.stroke();
-        ctx.lineWidth = 1;
-
-        // GRAB DIAMONDS //
-        var dragWidth = height * 0.06;
-
-        ctx.fillStyle = App.Palette[3];
-        ctx.beginPath();
-        ctx.moveTo(a + this.Margin - dragWidth, y + (height * 0.1));
-        ctx.lineTo(a + this.Margin, y + (height * 0.1) - dragWidth);
-        ctx.lineTo(a + this.Margin + dragWidth, y + (height * 0.1));
-        ctx.lineTo(a + this.Margin, y + (height * 0.1) + dragWidth);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = App.Palette[4];
-        ctx.beginPath();
-        ctx.moveTo(a + d + this.Margin - dragWidth, y + (height * 0.9) - s);
-        ctx.lineTo(a + d + this.Margin, y + (height * 0.9) - dragWidth - s);
-        ctx.lineTo(a + d + this.Margin + dragWidth, y + (height * 0.9) - s);
-        ctx.lineTo(a + d + this.Margin, y + (height * 0.9) + dragWidth - s);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = App.Palette[5];
-        ctx.beginPath();
-        ctx.moveTo((this.Range*vert) + r + this.Margin - dragWidth, y + (height * 0.9));
-        ctx.lineTo((this.Range*vert) + r + this.Margin, y + (height * 0.9) - dragWidth);
-        ctx.lineTo((this.Range*vert) + r + this.Margin + dragWidth, y + (height * 0.9));
-        ctx.lineTo((this.Range*vert) + r + this.Margin, y + (height * 0.9) + dragWidth);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = App.Palette[8];
-        ctx.beginPath();
-        ctx.moveTo(a + this.Margin - dragWidth, y + (height * 0.1));
-        ctx.lineTo(a + this.Margin, y + (height * 0.1) - dragWidth);
-        ctx.lineTo(a + this.Margin + (dragWidth * 0.5), y + (height * 0.1) - (dragWidth * 0.5));
-        ctx.lineTo(a + this.Margin - (dragWidth * 0.5), y + (height * 0.1) + (dragWidth * 0.5));
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(a + d + this.Margin - dragWidth, y + (height * 0.9) - s);
-        ctx.lineTo(a + d + this.Margin, y + (height * 0.9) - dragWidth - s);
-        ctx.lineTo(a + d + this.Margin + (dragWidth * 0.5), y + (height * 0.9) - s - (dragWidth * 0.5));
-        ctx.lineTo(a + d + this.Margin - (dragWidth * 0.5), y + (height * 0.9) - s + (dragWidth * 0.5));
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo((this.Range*vert) + r + this.Margin - dragWidth, y + (height * 0.9));
-        ctx.lineTo((this.Range*vert) + r + this.Margin, y + (height * 0.9) - dragWidth);
-        ctx.lineTo((this.Range*vert) + r + this.Margin + (dragWidth * 0.5), y + (height * 0.9) - (dragWidth * 0.5));
-        ctx.lineTo((this.Range*vert) + r + this.Margin - (dragWidth * 0.5), y + (height * 0.9) + (dragWidth * 0.5));
-        ctx.closePath();
-        ctx.fill();
-
-
-
-        /*ctx.textAlign = "left";
-        ctx.font = "200 " + headerType + "px Dosis";
-
-        var logRange = Math.log(option.EMax[3]) - Math.log(option.EMin[3]);
-        var scale = logRange / (this.Range*0.5);
-
-        var pos = Math.round(( 100 / (this.Range*0.5) ) * option.EPerc[3]);
-        var math = Math.exp( pos * scale + (option.EMin[3]) );
-        math = option.Handles[2].XValue;
-        var string = this.NumberWithCommas("" + math );
-
-        ctx.fillText(string, (this.Range*0.5) + r + this.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));*/
-    }
-
-
-    buttonsDraw(ctx,units,i,x,y,height) {
-
-        var dataType = Math.round(units*10);
-        var headerType = Math.round(units*33);
-
-        // DIVIDERS //
-        ctx.fillStyle = ctx.strokeStyle = "#393d43";
-        if (i !== (this.Options.length - 1)) {
-            ctx.beginPath();
-            ctx.moveTo(this.Margin - units, y + height);
-            ctx.lineTo(this.Range + this.Margin + units, y + height);
-            ctx.stroke();
-        }
-
-        // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.font = "400 " + dataType + "px Dosis";
-        ctx.textAlign = "right";
-        ctx.fillText(this.Options[i].Name.toUpperCase(), this.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
-
-    }
-
-
 
 
     diagonalFill(x,y,w,h,s) {
@@ -684,16 +360,6 @@ class ParametersPanel {
 
     PanelScale(panel,destination,t) {
 
-        /*var psTween = new TWEEN.Tween({x:panel.Scale})
-            .to( {x: destination}, t)
-            .easing(TWEEN.Easing.Quintic.InOut)
-            .onUpdate((obj) => {
-                panel.Scale = obj;
-            }
-        );
-
-        psTween.start(this._LastVisualTick);*/
-
         var psTween = new TWEEN.Tween({x:panel.Scale});
         psTween.to({ x: destination }, t);
         psTween.onUpdate(function() {
@@ -707,9 +373,8 @@ class ParametersPanel {
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
 
-
+    //TODO: move into interaction functions within option components, as with drawing
     MouseDown(mx,my) {
-
         this.RolloverCheck(mx,my);
         for (var i=0;i<this.Options.length;i++) {
 
@@ -728,11 +393,9 @@ class ParametersPanel {
             }
 
         }
-
         if (this._PanelCloseRoll) {
             this.PanelScale(this,0,200);
         }
-
     }
 
     MouseUp() {
@@ -744,13 +407,11 @@ class ParametersPanel {
                 }
             }
         }
-
     }
 
 
 
     MouseMove(mx,my) {
-
         this.RolloverCheck(mx,my);
         for (var i=0;i<this.Options.length;i++) {
             if (this.Options[i].Type=="slider") {
@@ -766,7 +427,6 @@ class ParametersPanel {
                     }
                     if (this.Options[i].Handles[j].Selected) {
                         this.HandleSet(i, j, xStart[j], mx, my);
-
                     }
                 }
             }
@@ -805,8 +465,6 @@ class ParametersPanel {
         if (this.Options[n].Handles[h].YSetting!=="") {
             this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax","YRange","YSetting","y");
         }
-
-
     }
 
     UpdateValue(object,value,min,max,thisrange,setting,axis) {
@@ -827,7 +485,6 @@ class ParametersPanel {
     }
 
     SliderSet(n,mx) {
-
         // SLIDER POSITION //
         var mPos = mx - (this.Position.x + this.Margin);
         this.Options[n].Position.x = mPos;
@@ -854,7 +511,6 @@ class ParametersPanel {
 
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetValue(this.Options[n].Setting,this.Options[n].Value);
-
     }
 
     RolloverCheck(mx,my) {
@@ -872,13 +528,10 @@ class ParametersPanel {
         if (this.Scale==1) {
             this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.Width - (30*this._Units),this.Position.y - (this.Size.Height*0.5) - (10*this._Units),20*this._Units,20*this._Units,mx,my);
         }
-
     }
 
     HudCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-
         return (mx>x && mx<(x+w) && my>y && my<(y+h));
-
     }
 
 }

@@ -297,7 +297,7 @@ class BlocksSketch extends Grid {
                     ParamTimeout = true;
                     setTimeout(function() {
                         ParamTimeout = false;
-                    },400);
+                    },200);
 
                     return;
                 }
