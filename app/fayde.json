@@ -1,10 +1,7 @@
 {
   "libs": {
-    "minerva": {
-      "exports": "minerva"
-    },
     "fayde.controls": {
-      "exports": "fayde.controls"
+      "exports": "Fayde.Controls"
     },
     "exjs": {
       "exports": "exjs",
@@ -33,14 +30,13 @@
     "pixelpalette": {}
   },
   "themes": {
-    "minerva": {},
     "fayde.controls": {},
     "exjs": "none",
     "fayde.drawing": {},
     "fayde.utils": "none",
     "fayde.transformer": {},
     "tween": "none",
-    "tone": {},
-    "pixelpalette": {}
+    "tone": "none",
+    "pixelpalette": "none"
   }
 }
