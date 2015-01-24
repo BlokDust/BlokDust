@@ -533,7 +533,7 @@ class ParametersPanel {
         var minlval = Math.log(minval);
         var maxlval = Math.log(maxval);
         var scale = (maxlval - minlval) / (maxpos - minpos);
-        console.log("" +minval + " | " +maxval + " | " +value);
+        //console.log("" +minval + " | " +maxval + " | " +value);
         return minpos + (Math.log(value) - minlval) / scale;
     }
 
@@ -544,7 +544,7 @@ class ParametersPanel {
 
     linPosition(minpos,maxpos,minval,maxval,value) {
         var scale = (maxval - minval) / (maxpos - minpos);
-        console.log("" +minval + " | " +maxval + " | " +value);
+        //console.log("" +minval + " | " +maxval + " | " +value);
         return minpos + (value - minval) / scale;
     }
 

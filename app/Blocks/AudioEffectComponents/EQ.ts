@@ -95,7 +95,7 @@ class EQComponent extends Effect implements IEffect {
         //this.Effect.set(
         //    jsonVariable
         //);
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {

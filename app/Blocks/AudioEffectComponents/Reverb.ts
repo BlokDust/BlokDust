@@ -38,7 +38,7 @@ class ReverbComponent extends Effect implements IEffect {
         } else if (param=="roomSize") {
             this.Effect.setRoomSize(value);
         }
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -52,7 +52,6 @@ class ReverbComponent extends Effect implements IEffect {
             val = this.Effect.getRoomSize();
         }
         return val;
-        console.log(""+param+" "+val);
     }
 }
 

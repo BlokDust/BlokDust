@@ -38,7 +38,7 @@ class ChorusComponent extends Effect implements IEffect {
         this.Effect.set(
             jsonVariable
         );
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -55,7 +55,6 @@ class ChorusComponent extends Effect implements IEffect {
         }
 
         return val;
-        console.log(""+param+" "+val);
     }
 
 }

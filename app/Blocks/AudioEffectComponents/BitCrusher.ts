@@ -38,7 +38,7 @@ class BitCrusherComponent extends Effect implements IEffect {
                 jsonVariable
             );
         }
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -50,7 +50,6 @@ class BitCrusherComponent extends Effect implements IEffect {
             val = this.Effect.getWet();
         }
         return val;
-        console.log(""+param+" "+val);
     }
 }
 

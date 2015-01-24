@@ -34,8 +34,7 @@ class DistortionComponent extends Effect implements IEffect {
         } else {
             this.Effect.setDistortion(value);
         }
-
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -46,9 +45,7 @@ class DistortionComponent extends Effect implements IEffect {
         } else if (param=="dryWet") {
             val = this.Effect.getWet();
         }
-
         return val;
-        console.log(""+param+" "+val);
     }
 }
 

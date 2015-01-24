@@ -57,7 +57,7 @@ class AutoWahComponent extends Effect implements IEffect {
             this.Effect.setBaseFrequency(value);
         }
 
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -72,7 +72,6 @@ class AutoWahComponent extends Effect implements IEffect {
         }
 
         return val;
-        console.log(""+param+" "+val);
     }
 }
 

@@ -130,7 +130,7 @@ class ToneSource extends Source {
                         "value" : this.GetValue("frequency"),
                         "min" : 10,
                         "max" : 15000,
-                        "quantised" : false,
+                        "quantised" : true,
                         "centered" : false
                     }
                 },

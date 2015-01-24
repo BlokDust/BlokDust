@@ -51,8 +51,7 @@ class PitchComponent extends Effect implements IEffect {
                 this.Modifiable.Source.frequency.setValue(this.Pitch * this.PitchIncrement, 0);
             }
         }
-
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -61,10 +60,8 @@ class PitchComponent extends Effect implements IEffect {
 
         if (param == "pitchMultiplier") {
             val = this.PitchIncrement;
-
         }
         return val;
-        console.log(""+param+" "+val);
     }
 }
 

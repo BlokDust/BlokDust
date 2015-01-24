@@ -59,7 +59,7 @@ class LFO extends Modifier {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.Component.GetValue("frequency"),
+                        "value" : this.Component.GetValue("rate"),
                         "min" : 0,
                         "max" : 20,
                         "quantised" : false,

@@ -29,6 +29,7 @@
             <Button x:Name="NoiseBlockBtn" Click="{EventBinding NoiseBlockBtn_Click}">Noise</Button>
             <Button x:Name="SoundcloudBlockBtn" Click="{EventBinding SoundcloudBlockBtn_Click}">SndCld</Button>
             <Button x:Name="GainBlockBtn" Click="{EventBinding GainBlockBtn_Click}">Gain</Button>
+            <Button x:Name="ChopperBlockBtn" Click="{EventBinding ChopperBlockBtn_Click}">Ch</Button>
             <Button x:Name="EnvelopeBlockBtn" Click="{EventBinding EnvelopeBlockBtn_Click}">Env</Button>
             <Button x:Name="FilterBlockBtn" Click="{EventBinding FilterBlockBtn_Click}">Filter</Button>
             <Button x:Name="PitchIncreaseBlockBtn" Click="{EventBinding PitchIncreaseBlockBtn_Click}">Pitch +</Button>

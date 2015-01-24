@@ -55,7 +55,6 @@ class ChompComponent extends Effect implements IEffect {
         }
 
         return val;
-        console.log(""+param+" "+val);
     }
 
 }

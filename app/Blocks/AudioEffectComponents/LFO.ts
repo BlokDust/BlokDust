@@ -49,7 +49,7 @@ class LFO extends Effect implements IEffect {
             this.LFO.setMin(-value);
             this.LFO.setMax(value);
         }
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {
@@ -61,7 +61,6 @@ class LFO extends Effect implements IEffect {
             val = this.LFO.getMax();
         }
         return val;
-        console.log(""+param+" "+val);
     }
 }
 
