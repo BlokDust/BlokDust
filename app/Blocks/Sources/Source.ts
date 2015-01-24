@@ -67,7 +67,7 @@ class Source extends Modifiable {
 
 
 
-            var audioUrl = "https://api.soundcloud.com/tracks/" + track5 + "/stream" + scId;
+            var audioUrl = "https://api.soundcloud.com/tracks/" + track4 + "/stream" + scId;
             var sc = this.Source;
             this.Source = new Tone.Player(audioUrl, function(sc){
                 console.log(sc);

@@ -22,6 +22,8 @@ class OptionHandle {
     public XSetting: string;
     public YSetting: string;
 
+    public Log: boolean;
+
     constructor(position: Point, xval: number, xmin: number, xmax: number, xrange: number, yval: number, ymin: number, ymax: number, yrange: number, xsetting: string, ysetting: string) {
 
         this.Position = position;
@@ -38,6 +40,7 @@ class OptionHandle {
         this.YRange = yrange;
         this.YSetting = ysetting || "";
 
+        this.Log = false;
         this.Selected = false;
 
     }

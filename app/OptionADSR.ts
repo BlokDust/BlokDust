@@ -177,26 +177,7 @@ class ADSR extends Option{
         ctx.fill();
     }
 
-    logValue(options,position) {
-        options = options || {};
-        var minpos = options.minpos || 0;
-        var maxpos = options.maxpos || 100;
-        var minlval = Math.log(options.minval || 1);
-        var maxlval = Math.log(options.maxval || 100000);
-        var scale = (maxlval - minlval) / (maxpos - minpos);
-        return Math.exp((position - minpos) * scale + minlval);
 
-    }
-
-    logPosition(options,value) {
-        options = options || {};
-        var minpos = options.minpos || 0;
-        var maxpos = options.maxpos || 100;
-        var minlval = Math.log(options.minval || 1);
-        var maxlval = Math.log(options.maxval || 100000);
-        var scale = (maxlval - minlval) / (maxpos - minpos);
-        return minpos + (Math.log(value) - minlval) / scale;
-    }
 
 }
 

@@ -9,20 +9,21 @@ import ParametersPanel = require("./ParametersPanel");
 class Slider extends Option{
 
 
-    constructor(position: Point, size: Size, origin: number, selected: boolean, value: number, min: number, max: number, quantised: boolean, name: string, setting: string) {
+    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean) {
         super();
 
         this.Type = "slider";
         this.Position = position;
         this.Size = size;
         this.Origin = origin;
-        this.Selected = selected;
         this.Value = value;
         this.Min = min;
         this.Max = max;
         this.Quantised = quantised;
         this.Name = name;
         this.Setting = setting;
+        this.Log = log;
+        this.Selected = false;
     }
 
 

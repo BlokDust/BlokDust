@@ -82,7 +82,6 @@ class ParametersPanel {
     //-------------------------------------------------------------------------------------------
 
     Populate(json,open) {
-
         console.log("POPULATED PANEL");
 
         var units = this._Units;
@@ -92,7 +91,6 @@ class ParametersPanel {
 
         // GET NUMBER OF SLIDERS //
         var n = json.parameters.length;
-
 
         // FIXED or ACCORDION //
         var panelH;
@@ -172,15 +170,21 @@ class ParametersPanel {
 
             // SLIDER //
             if (option.type == "slider") {
-                var range = option.props.max - option.props.min;
                 var sliderO = this.Margin;
                 if (option.props.centered==true) {
                     sliderO += ((this.Range/100) * 50);
                 }
-                var sliderX = (this.Range/range) * (option.props.value-option.props.min);
-                var sliderW = (this.Range/100) * option.props.value;
+                var log = option.props.logarithmic;
+                var sliderX;
+                if (log==true) {
+                    sliderX = this.logPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
+                } else {
+                    sliderX = this.linPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
+                    log = false;
+                }
 
-                optionList.push(new Slider(new Point(sliderX,optionY),new Size(sliderW,optionHeight[i]),sliderO,false,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting));
+
+                optionList.push(new Slider(new Point(sliderX,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log));
 
             }
 
@@ -233,8 +237,8 @@ class ParametersPanel {
     //  DRAWING
     //-------------------------------------------------------------------------------------------
 
-    Draw() {
 
+    Draw() {
         var units = this._Units;
         var ctx = this._Ctx;
         var dataType = Math.round(units*10);
@@ -281,11 +285,7 @@ class ParametersPanel {
 
         // DRAW OPTIONS //
         for (var i = 0; i < this.Options.length; i++) {
-            ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
-
             this.Options[i].Draw(ctx,units,i,this);
-
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
         ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
@@ -293,18 +293,15 @@ class ParametersPanel {
 
     // PANEL BLACK BG //
     panelDraw(x,y) {
-
         var units = this._Units;
         var ctx = this._Ctx;
 
         ctx.beginPath();
         ctx.moveTo(x + (44*units), y - (this.Size.Height*0.5)); // tl
-
         ctx.lineTo(x + this.Margin - (25*units), y - (this.Size.Height*0.5)); // name tab start
         ctx.lineTo(x + this.Margin - (5*units), y - (this.Size.Height*0.5) - (20*units));
         ctx.lineTo(x + this.Margin + (5*units) + this._NameWidth, y - (this.Size.Height*0.5) - (20*units));
         ctx.lineTo(x + this.Margin + (25*units) + this._NameWidth, y - (this.Size.Height*0.5)); // name tab end
-
         ctx.lineTo(x + this.Size.Width - (40*units), y - (this.Size.Height*0.5)); // close start
         ctx.lineTo(x + this.Size.Width - (20*units), y - (this.Size.Height*0.5) - (20*units));
         ctx.lineTo(x + this.Size.Width, y - (this.Size.Height*0.5)); // tr
@@ -323,31 +320,26 @@ class ParametersPanel {
         var lineNo = Math.round((w+h) / s);
         var pos1 = new Point(0,0);
         var pos2 = new Point(0,0);
-
         ctx.beginPath();
         for (var j=0;j<lineNo;j++) {
-
             pos1.x = (s * 0.5) + (s * j);
             pos1.y = 0;
             pos2.x = pos1.x - h;
             pos2.y = h;
-
             if (pos2.x<0) {
                 pos2.y = h + pos2.x;
                 pos2.x = 0;
             }
-
             if (pos1.x>w) {
                 pos1.y = (pos1.x-w);
                 pos1.x = w;
             }
-
             ctx.moveTo(x + pos1.x, y + pos1.y);
             ctx.lineTo(x + pos2.x, y + pos2.y);
         }
         ctx.stroke();
-
     }
+
 
     NumberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -372,6 +364,7 @@ class ParametersPanel {
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
+
 
     //TODO: move into interaction functions within option components, as with drawing
     MouseDown(mx,my) {
@@ -398,6 +391,7 @@ class ParametersPanel {
         }
     }
 
+
     MouseUp() {
         for (var i=0;i<this.Options.length;i++) {
             this.Options[i].Selected = false;
@@ -408,7 +402,6 @@ class ParametersPanel {
             }
         }
     }
-
 
 
     MouseMove(mx,my) {
@@ -422,9 +415,6 @@ class ParametersPanel {
             if (this.Options[i].Type=="ADSR") {
                 var xStart = [0, this.Options[i].Handles[0].Position.x,this.Range*0.6];
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
-                    if (this.Options[i].HandleRoll[j]) {
-                        console.log("HandleRoll " + j );
-                    }
                     if (this.Options[i].Handles[j].Selected) {
                         this.HandleSet(i, j, xStart[j], mx, my);
                     }
@@ -433,85 +423,6 @@ class ParametersPanel {
         }
     }
 
-    HandleSet(n,h,xStart,mx,my) {
-        var mPosX = mx - (this.Position.x + this.Margin + xStart);
-        var mPosY = my - (this.Position.y + this.Options[n].Position.y + (this.Options[n].Size.Height*0.9));
-
-        this.Options[n].Handles[h].Position.x =  mPosX;
-        this.Options[n].Handles[h].Position.y =  -mPosY;
-
-        // FLOOR //
-        if (this.Options[n].Handles[h].Position.x < 0) {
-            this.Options[n].Handles[h].Position.x = 0;
-        }
-        // CEILING //
-        if (this.Options[n].Handles[h].Position.x > this.Options[n].Handles[h].XRange) {
-            this.Options[n].Handles[h].Position.x = this.Options[n].Handles[h].XRange;
-        }
-
-        // FLOOR //
-        if (this.Options[n].Handles[h].Position.y < 0) {
-            this.Options[n].Handles[h].Position.y = 0;
-        }
-        // CEILING //
-        if (this.Options[n].Handles[h].Position.y > this.Options[n].Handles[h].YRange) {
-            this.Options[n].Handles[h].Position.y = this.Options[n].Handles[h].YRange;
-        }
-
-        // X
-        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax","XRange","XSetting","x");
-
-        // Y
-        if (this.Options[n].Handles[h].YSetting!=="") {
-            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax","YRange","YSetting","y");
-        }
-    }
-
-    UpdateValue(object,value,min,max,thisrange,setting,axis) {
-        // CALCULATE VALUE //
-        var range = object[""+max] - object[""+min];
-        var perc = (object.Position[""+axis]/object[""+thisrange]) * 100;
-        object[""+value] = ((range/100)*perc) + object[""+min];
-
-        // QUANTIZE //
-        if (object.Quantised) {
-            object[""+value] = Math.round(object[""+value]);
-            object.Position[""+axis] = (object[""+thisrange]/range)*(object[""+value]-object[""+min]);
-        }
-
-        console.log("" + object[""+setting] +" | "+ object[""+value]);
-        // SET VALUE IN BLOCK //
-        this.SelectedBlock.SetValue(object[""+setting],object[""+value]);
-    }
-
-    SliderSet(n,mx) {
-        // SLIDER POSITION //
-        var mPos = mx - (this.Position.x + this.Margin);
-        this.Options[n].Position.x = mPos;
-
-        // FLOOR //
-        if (this.Options[n].Position.x < 0) {
-            this.Options[n].Position.x = 0;
-        }
-        // CEILING //
-        if (this.Options[n].Position.x > this.Range) {
-            this.Options[n].Position.x = this.Range;
-        }
-
-        // CALCULATE VALUE //
-        var range = this.Options[n].Max - this.Options[n].Min;
-        var perc = (this.Options[n].Position.x/this.Range) * 100;
-            this.Options[n].Value = ((range/100)*perc) + this.Options[n].Min;
-
-        // QUANTIZE //
-        if (this.Options[n].Quantised) {
-            this.Options[n].Value = Math.round(this.Options[n].Value);
-            this.Options[n].Position.x = (this.Range/range)*(this.Options[n].Value-this.Options[n].Min);
-        }
-
-        // SET VALUE IN BLOCK //
-        this.SelectedBlock.SetValue(this.Options[n].Setting,this.Options[n].Value);
-    }
 
     RolloverCheck(mx,my) {
         for (var i=0;i<this.Options.length;i++) {
@@ -530,8 +441,111 @@ class ParametersPanel {
         }
     }
 
-    HudCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
+    //-------------------------------------------------------------------------------------------
+    //  MATHS
+    //-------------------------------------------------------------------------------------------
+
+    // IS CLICK WITHIN THIS BOX //
+    HudCheck(x,y,w,h,mx,my) {
         return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    }
+
+    // DRAGGING A HANDLE //
+    HandleSet(n,h,xStart,mx,my) {
+        var mPosX = mx - (this.Position.x + this.Margin + xStart);
+        var mPosY = my - (this.Position.y + this.Options[n].Position.y + (this.Options[n].Size.Height*0.9));
+
+        this.Options[n].Handles[h].Position.x =  mPosX;
+        this.Options[n].Handles[h].Position.y =  -mPosY;
+
+        this.Options[n].Handles[h].Position.x = this.ValueInRange(this.Options[n].Handles[h].Position.x,0,this.Options[n].Handles[h].XRange);
+        this.Options[n].Handles[h].Position.y = this.ValueInRange(this.Options[n].Handles[h].Position.y,0,this.Options[n].Handles[h].YRange);
+
+        var log = false;
+        if (this.Options[n].Handles[h].Log==true) {
+            log = true;
+        }
+        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax",this.Options[n].Handles[h].XRange,"XSetting","x",log);
+        if (this.Options[n].Handles[h].YSetting!=="") {
+            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax",this.Options[n].Handles[h].YRange,"YSetting","y",log);
+        }
+    }
+
+    // DRAGGING A SLIDER //
+    SliderSet(n,mx) {
+        var mPos = mx - (this.Position.x + this.Margin);
+        this.Options[n].Position.x = mPos;
+
+        this.Options[n].Position.x = this.ValueInRange(this.Options[n].Position.x,0,this.Range);
+        var log = false;
+        if (this.Options[n].Log==true) {
+            log = true;
+        }
+        this.UpdateValue(this.Options[n],"Value","Min","Max",this.Range,"Setting","x",log);
+    }
+
+    // UPDATE THE VALUE IN THE BLOCK //
+    UpdateValue(object,value,min,max,thisrange,setting,axis,log) {
+
+        // CALCULATE VALUE //
+        if (log==true) {
+            object[""+value] = this.logValue(0,thisrange,object[""+min],object[""+max],object.Position[""+axis]);
+        } else {
+            object[""+value] = this.linValue(0,thisrange,object[""+min],object[""+max],object.Position[""+axis]);
+        }
+
+        // QUANTIZE //
+        if (object.Quantised) {
+            object[""+value] = Math.round(object[""+value]);
+            if (log==true) {
+                object.Position["" + axis] = this.logPosition(0, thisrange, object["" + min], object["" + max], object["" + value]);
+            } else {
+                object.Position["" + axis] = this.linPosition(0, thisrange, object["" + min], object["" + max], object["" + value]);
+            }
+        }
+
+        console.log("" + object[""+setting] +" | "+ object[""+value]);
+        // SET VALUE IN BLOCK //
+        this.SelectedBlock.SetValue(object[""+setting],object[""+value]);
+    }
+
+
+    ValueInRange(value,floor,ceiling) {
+        if (value < floor) {
+            value = floor;
+        }
+        if (value> ceiling) {
+            value = ceiling;
+        }
+        return value;
+    }
+
+
+    logValue(minpos,maxpos,minval,maxval,position) {
+        var minlval = Math.log(minval);
+        var maxlval = Math.log(maxval);
+        var scale = (maxlval - minlval) / (maxpos - minpos);
+        return Math.exp((position - minpos) * scale + minlval);
+    }
+
+
+    logPosition(minpos,maxpos,minval,maxval,value) {
+        var minlval = Math.log(minval);
+        var maxlval = Math.log(maxval);
+        var scale = (maxlval - minlval) / (maxpos - minpos);
+        console.log("" +minval + " | " +maxval + " | " +value);
+        return minpos + (Math.log(value) - minlval) / scale;
+    }
+
+    linValue(minpos,maxpos,minval,maxval,position) {
+        var scale = (maxval - minval) / (maxpos - minpos);
+        return (position - minpos) * scale + minval;
+    }
+
+    linPosition(minpos,maxpos,minval,maxval,value) {
+        var scale = (maxval - minval) / (maxpos - minpos);
+        console.log("" +minval + " | " +maxval + " | " +value);
+        return minpos + (value - minval) / scale;
     }
 
 }

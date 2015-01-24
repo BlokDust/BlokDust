@@ -16,6 +16,7 @@ class Option implements IOption {
 
     public Origin:number;
     public Selected:boolean;
+    public Log:boolean;
     public Value:number;
     public Min:number;
     public Max:number;

@@ -61,7 +61,7 @@ class Scuzz extends Modifier {
                         "value" : this.Component.GetValue("depth"),
                         "min" : 1000,
                         "max" : 10000,
-                        "quantised" : false,
+                        "quantised" : true,
                         "centered" : false
                     }
                 },
@@ -70,10 +70,10 @@ class Scuzz extends Modifier {
                     "name" : "Pulverisation",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.Component.GetValue("frequency"),
+                        "value" : this.Component.GetValue("rate"),
                         "min" : 100,
                         "max" : 10000,
-                        "quantised" : false,
+                        "quantised" : true,
                         "centered" : false
                     }
                 }

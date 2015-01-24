@@ -69,10 +69,11 @@ class Filter extends Modifier {
                     "setting": "frequency",
                     "props": {
                         "value": this.Component.GetValue("frequency"),
-                        "min": 5,
+                        "min": 20,
                         "max": 20000,
                         "quantised": true,
-                        "centered": false
+                        "centered": false,
+                        "logarithmic": true
                     }
                 },
 

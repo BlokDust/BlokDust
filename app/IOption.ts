@@ -14,6 +14,7 @@ interface IOption {
 
     Origin: number;
     Selected: boolean;
+    Log: boolean;
     Value: number;
     Min: number;
     Max: number;
