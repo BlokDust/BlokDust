@@ -55,7 +55,8 @@ class PitchDecrease extends Modifier {
                         "min" : 0.5,
                         "max" : 2,
                         "quantised" : false,
-                        "centered" : true
+                        "centered" : true,
+                        "logarithmic": true
                     }
                 }
             ]

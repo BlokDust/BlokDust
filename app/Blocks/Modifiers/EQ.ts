@@ -103,7 +103,8 @@ class EQ extends Modifier {
                         "min" : 0,
                         "max" : 20000,
                         "quantised" : false,
-                        "centered" : false
+                        "centered" : false,
+                        "logarithmic": true
                     }
                 },
 
@@ -128,7 +129,8 @@ class EQ extends Modifier {
                         "min" : 0,
                         "max" : 20000,
                         "quantised" : false,
-                        "centered" : false
+                        "centered" : false,
+                        "logarithmic": true
                     }
                 },
 
@@ -153,7 +155,8 @@ class EQ extends Modifier {
                         "min" : 0,
                         "max" : 20000,
                         "quantised" : false,
-                        "centered" : false
+                        "centered" : false,
+                        "logarithmic": true
                     }
                 },
 
@@ -178,7 +181,8 @@ class EQ extends Modifier {
                         "min" : 0,
                         "max" : 20000,
                         "quantised" : false,
-                        "centered" : false
+                        "centered" : false,
+                        "logarithmic": true
                     }
                 },
 
