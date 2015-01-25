@@ -329,8 +329,10 @@ class BlocksSketch extends Grid {
         this._IsPointerDown = true;
 
         var collision: Boolean = this._CheckCollision(point, handle);
+        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+
         this._CheckParamsInteract(point);
-        if (!collision){
+        if (!collision && !panelCheck){
             this._Transformer.PointerDown(point);
         }
     }
