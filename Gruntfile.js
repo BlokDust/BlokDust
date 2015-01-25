@@ -7,6 +7,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-open');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     var unify = gunify(grunt);
 
     var ports = {
@@ -40,6 +41,18 @@ module.exports = function (grunt) {
                     target: 'es5',
                     sourceMap: true
                 }
+            }
+        },
+        copy: {
+            main: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>/Assets/',
+                        src: ['**'],
+                        dest: '<%= dirs.build %>/Assets/'
+                    }
+                ]
             }
         },
         connect: {
@@ -85,6 +98,6 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('default', ['typescript:build']);
-    grunt.registerTask('serve', ['typescript:build', 'connect', 'open', 'watch'])
+    grunt.registerTask('default', ['typescript:build', 'copy']);
+    grunt.registerTask('serve', ['typescript:build', 'copy', 'connect', 'open', 'watch'])
 };

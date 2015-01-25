@@ -23,6 +23,7 @@ import Scuzz = require("../Blocks/Modifiers/Scuzz");
 import Distortion = require("../Blocks/Modifiers/Distortion");
 import Chorus = require("../Blocks/Modifiers/Chorus");
 import Reverb = require("../Blocks/Modifiers/Reverb");
+import Convolver = require("../Blocks/Modifiers/ConvolutionReverb");
 import Phaser = require("../Blocks/Modifiers/Phaser");
 import EQ = require("../Blocks/Modifiers/EQ");
 import BitCrusher = require("../Blocks/Modifiers/BitCrusher");
@@ -173,6 +174,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     ReverbBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Reverb);
+    }
+
+    ConvolverBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Convolver);
     }
 
     PhaserBlockBtn_Click(e: any){
