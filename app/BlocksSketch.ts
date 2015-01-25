@@ -20,8 +20,10 @@ import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Transformer = Fayde.Transformer.Transformer;
+import ParametersPanel = require("./ParametersPanel");
 
 declare var PixelPalette;
+declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
 class BlocksSketch extends Grid {
 
@@ -31,6 +33,7 @@ class BlocksSketch extends Grid {
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
+    private _ParamsPanel: ParametersPanel;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -80,6 +83,8 @@ class BlocksSketch extends Grid {
             //console.log(palette);
             App.Palette = palette;
         });
+
+        ParamTimeout = false;
 
         this._Invalidate();
     }
@@ -178,6 +183,8 @@ class BlocksSketch extends Grid {
         this._DisplayList.Draw();
 
         this.DrawParticles();
+
+        this._ParamsPanel.Draw();
     }
 
     // PARTICLES //
@@ -321,7 +328,7 @@ class BlocksSketch extends Grid {
         this._IsPointerDown = true;
 
         var collision: Boolean = this._CheckCollision(point, handle);
-
+        this._CheckParamsInteract(point);
         if (!collision){
             this._Transformer.PointerDown(point);
         }
@@ -344,6 +351,18 @@ class BlocksSketch extends Grid {
             }
         }
 
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseUp();
+        }
+        // OPEN PANEL //
+        if (ParamTimeout) {
+            this.SelectedBlock.OpenParams();
+            if (this.SelectedBlock.ParamJson) {
+                this._ParamsPanel.SelectedBlock = this.SelectedBlock;
+                this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
+            }
+        }
+
         this._Transformer.PointerUp();
     }
 
@@ -353,26 +372,57 @@ class BlocksSketch extends Grid {
             this._CheckProximity();
         }
 
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseMove(point.x,point.y);
+        }
+
         this._Transformer.PointerMove(point);
     }
 
     private _CheckCollision(point: Point, handle: () => void): Boolean {
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks.GetValueAt(i);
-            if (block.HitTest(point)){
-                handle();
-                block.MouseDown();
-                this.SelectedBlock = block;
-                return true;
+
+        // cancel if interacting with panel
+        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        var blockClick = false;
+        if (!panelCheck || this._ParamsPanel.Scale!==1) {
+            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
+                var block:IBlock = App.Blocks.GetValueAt(i);
+                if (block.HitTest(point)) {
+                    handle();
+                    block.MouseDown();
+                    blockClick = false;
+                    this.SelectedBlock = block;
+                    ParamTimeout = true;
+                    setTimeout(function() {
+                        ParamTimeout = false;
+                    },200);
+
+                    return true;
+                }
+            }
+            if (blockClick==false) {
+                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
             }
         }
 
         return false;
     }
 
+    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
+        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    }
+
+    private _CheckParamsInteract(point) {
+        //var point = (<any>e).args.Source.MousePosition;
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseDown(point.x,point.y);
+        }
+    }
+
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
+        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
         this._SelectedBlock.Delete();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
