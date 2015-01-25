@@ -1,8 +1,11 @@
 /**
- * Created by luketwyman on 17/01/2015.
+ * Created by luketwyman on 24/01/2015.
  */
 
-import FilterComponent = require("../AudioEffectComponents/Filter");
+/**
+ * Created by luketwyman on 17/01/2015.
+ */
+import VolumeComponent = require("../AudioEffectComponents/Volume");
 import ChompComponent = require("../AudioEffectComponents/Chomp");
 import IModifier = require("../IModifier");
 import Modifier = require("../Modifier");
@@ -10,41 +13,52 @@ import IEffect = require("../IEffect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Chomp extends Modifier {
+class Chopper extends Modifier {
 
     public Rate: number;
+    public Depth: number;
+    public Polarity: number;
+    public Transport;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new ChompComponent({
-            type : "peaking",
-            frequency : 440,
-            rolloff : -12,
-            Q : 0.6,
-            gain : 25
+        this.Component = new VolumeComponent({
+            gain: 5
         });
 
         this.Effects.Add(this.Component);
 
 
 
-        this.Rate = 13;
+        this.Rate = 50;
+        this.Depth = 4;
+        this.Polarity = 0;
 
 
 
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -2),new Point(1, 0),new Point(1, 2),new Point(-1, 0));
-
-        this.SetFrequency();
+        //this.Transport = Tone.Transport;
+        //this.Transport.start();
+        this.SetVolume();
     }
 
-    SetFrequency() {
+    SetVolume() {
         var me = this;
         setTimeout(function() {
-            me.Component.SetValue("frequency",100 + Math.round(Math.random()*10000));
-            me.SetFrequency();
+            if (me) {
+                if (me.Polarity==0) {
+                    me.Component.SetValue("gain",5-me.Depth);
+                    me.Polarity = 1;
+                } else {
+                    me.Component.SetValue("gain",5);
+                    me.Polarity = 0;
+                }
+                me.SetVolume();
+            }
+
         },this.Rate);
     }
 
@@ -62,7 +76,7 @@ class Chomp extends Modifier {
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[6];// YELLOW
+        this.Ctx.fillStyle = App.Palette[4];// YELLOW
         this.DrawMoveTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(1,2);
@@ -72,6 +86,7 @@ class Chomp extends Modifier {
     }
 
     Delete(){
+        this.Transport.stop();
         this.Component.Delete();
     }
 
@@ -80,7 +95,7 @@ class Chomp extends Modifier {
 
         this.ParamJson =
         {
-            "name": "Chomp",
+            "name": "Chopper",
             "parameters": [
 
                 {
@@ -88,9 +103,9 @@ class Chomp extends Modifier {
                     "name": "Rate",
                     "setting": "rate",
                     "props": {
-                        "value": Math.round(101-this.Rate),
+                        "value": Math.round(151-this.Rate),
                         "min": 1,
-                        "max": 100,
+                        "max": 125,
                         "quantised": true,
                         "centered": false
                     }
@@ -98,25 +113,12 @@ class Chomp extends Modifier {
 
                 {
                     "type" : "slider",
-                    "name": "Width",
-                    "setting": "Q",
+                    "name": "Depth",
+                    "setting": "depth",
                     "props": {
-                        "value": this.Component.GetValue("Q"),
-                        "min": 0.1,
-                        "max": 5,
-                        "quantised": false,
-                        "centered": false
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name": "Gain",
-                    "setting": "gain",
-                    "props": {
-                        "value": this.Component.GetValue("gain"),
+                        "value": this.Depth,
                         "min": 0,
-                        "max": 50,
+                        "max": 5,
                         "quantised": false,
                         "centered": false
                     }
@@ -128,12 +130,12 @@ class Chomp extends Modifier {
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
         if (param == "rate") {
-            this.Rate = Math.round(101-value);
+            this.Rate = Math.round(151-value);
         } else {
-            this.Component.SetValue(param, value);
+            this.Depth = value;
         }
 
     }
 }
 
-export = Chomp;
+export = Chopper;

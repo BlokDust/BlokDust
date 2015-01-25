@@ -36,17 +36,19 @@
             <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyb</Button>
 
             <Button x:Name="NoiseBlockBtn" Click="{EventBinding NoiseBlockBtn_Click}">Noise</Button>
+            <Button x:Name="SoundcloudBlockBtn" Click="{EventBinding SoundcloudBlockBtn_Click}">SndCld</Button>
             <Button x:Name="GainBlockBtn" Click="{EventBinding GainBlockBtn_Click}">Gain</Button>
+            <Button x:Name="ChopperBlockBtn" Click="{EventBinding ChopperBlockBtn_Click}">Ch</Button>
             <Button x:Name="EnvelopeBlockBtn" Click="{EventBinding EnvelopeBlockBtn_Click}">Env</Button>
             <Button x:Name="FilterBlockBtn" Click="{EventBinding FilterBlockBtn_Click}">Filter</Button>
             <Button x:Name="PitchIncreaseBlockBtn" Click="{EventBinding PitchIncreaseBlockBtn_Click}">Pitch +</Button>
             <Button x:Name="PitchDecreaseBlockBtn" Click="{EventBinding PitchDecreaseBlockBtn_Click}">Pitch -</Button>
             <Button x:Name="LFOBlockBtn" Click="{EventBinding LFOBlockBtn_Click}">LFO</Button>
-            <Button x:Name="TremoloBlockBtn" Click="{EventBinding TremoloBlockBtn_Click}">Tremolo</Button>
+            <!--<Button x:Name="TremoloBlockBtn" Click="{EventBinding TremoloBlockBtn_Click}">Tremolo</Button>-->
             <Button x:Name="DelayBlockBtn" Click="{EventBinding DelayBlockBtn_Click}">Delay</Button>
             <Button x:Name="ScuzzBlockBtn" Click="{EventBinding ScuzzBlockBtn_Click}">Scuzz</Button>
             <Button x:Name="DistortionBlockBtn" Click="{EventBinding DistortionBlockBtn_Click}">Dist</Button>
-            <Button x:Name="ReverbBlockBtn" Click="{EventBinding ReverbBlockBtn_Click}">Reverb</Button>
+            <Button x:Name="ReverbBlockBtn" Click="{EventBinding ReverbBlockBtn_Click}">Rev</Button>
             <Button x:Name="ChorusBlockBtn" Click="{EventBinding ChorusBlockBtn_Click}">Chorus</Button>
             <Button x:Name="EQBlockBtn" Click="{EventBinding EQBlockBtn_Click}">EQ</Button>
             <Button x:Name="PhaserBlockBtn" Click="{EventBinding PhaserBlockBtn_Click}">Phaser</Button>

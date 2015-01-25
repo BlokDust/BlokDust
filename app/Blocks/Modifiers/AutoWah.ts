@@ -71,7 +71,7 @@ class AutoWah extends Modifier {
                     "name" : "Range",
                     "setting" :"octaves",
                     "props" : {
-                        "value" : 5,
+                        "value" : this.Component.GetValue("octaves"),
                         "min" : 1,
                         "max" : 8,
                         "quantised" : false,
@@ -84,7 +84,7 @@ class AutoWah extends Modifier {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : 100,
+                        "value" : this.Component.GetValue("baseFrequency"),
                         "min" : 50,
                         "max" : 1200,
                         "quantised" : true,
@@ -97,7 +97,7 @@ class AutoWah extends Modifier {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : 0.6,
+                        "value" : this.Component.GetValue("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

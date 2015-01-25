@@ -14,7 +14,7 @@ class Volume extends Modifier {
         super(grid, position);
 
         this.Component = new VolumeComponent({
-            gain: 1
+            gain: 5
         });
 
         this.Effects.Add(this.Component);
@@ -38,6 +38,43 @@ class Volume extends Modifier {
 
     Delete(){
         this.Component.Delete();
+    }
+
+    OpenParams() {
+        super.OpenParams();
+
+
+
+        this.ParamJson =
+        {
+            "name": "Volume",
+            "parameters": [
+
+                {
+                    "type" : "slider",
+                    "name": "Gain",
+                    "setting": "gain",
+                    "props": {
+                        "value": this.Component.GetValue("gain"),
+                        "min": -10,
+                        "max": 10,
+                        "quantised": false,
+                        "centered": true
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+
+        if (param == "gain") {
+            //TODO: DO SOME MATH TO MAKE THE NUMBERS BETTER
+            value  = (value + 10) * 0.5;
+        }
+        this.Component.SetValue(param, value);
+
     }
 
 }

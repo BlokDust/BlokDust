@@ -38,6 +38,36 @@ class PitchDecrease extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Pitch",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Pitch",
+                    "setting" :"pitchMultiplier",
+                    "props" : {
+                        "value" : this.Component.GetValue('pitchMultiplier'),
+                        "min" : 0.5,
+                        "max" : 2,
+                        "quantised" : false,
+                        "centered" : true,
+                        "logarithmic": true
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
+
 }
 
 export = PitchDecrease;

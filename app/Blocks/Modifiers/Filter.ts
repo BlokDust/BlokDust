@@ -68,11 +68,12 @@ class Filter extends Modifier {
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {
-                        "value": 440,
-                        "min": 5,
+                        "value": this.Component.GetValue("frequency"),
+                        "min": 20,
                         "max": 20000,
                         "quantised": true,
-                        "centered": false
+                        "centered": false,
+                        "logarithmic": true
                     }
                 },
 
@@ -81,7 +82,7 @@ class Filter extends Modifier {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": 0,
+                        "value": this.Component.GetValue("gain"),
                         "min": -50,
                         "max": 50,
                         "quantised": false,

@@ -68,7 +68,7 @@ class Reverb extends Modifier {
                     "name" : "Dampening",
                     "setting" :"dampening",
                     "props" : {
-                        "value" : 0.33,
+                        "value" : this.Component.GetValue("dampening"),
                         "min" : 0.1,
                         "max" : 1,
                         "quantised" : false,
@@ -81,7 +81,7 @@ class Reverb extends Modifier {
                     "name" : "Room Size",
                     "setting" :"roomSize",
                     "props" : {
-                        "value" : 0.5,
+                        "value" : this.Component.GetValue("roomSize"),
                         "min" : 0.1,
                         "max" : 0.95,
                         "quantised" : false,
@@ -94,7 +94,7 @@ class Reverb extends Modifier {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : 0.5,
+                        "value" : this.Component.GetValue("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

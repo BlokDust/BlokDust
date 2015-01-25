@@ -60,17 +60,12 @@ class EnvelopeComponent extends Effect implements IEffect {
             this.Modifiable.Envelope.setSustain(this.sustain);
             this.Modifiable.Envelope.setRelease(this.release);
         }
-
-
-        var jsonVariable = {};
-        console.log(jsonVariable);
     }
 
     GetValue(param: string) {
         super.GetValue(param);
         var val = this[""+param];
         return val;
-        console.log(val);
     }
 }
 

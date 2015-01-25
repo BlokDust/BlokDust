@@ -13,10 +13,10 @@ class Phaser extends Modifier {
         super(grid, position);
 
         this.Component = new PhaserComponent({
-            rate: 0.8,
-            depth: 10,
-            Q: 10,
-            baseFrequency: 1850
+            rate: 0.5,
+            depth: 9,
+            Q: 0.1,
+            baseFrequency: 500
         });
 
         this.Effects.Add(this.Component);
@@ -65,7 +65,7 @@ class Phaser extends Modifier {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : 0.8,
+                        "value" : this.Component.GetValue("rate"),
                         "min" : 0,
                         "max" : 10,
                         "quantised" : false,
@@ -78,7 +78,7 @@ class Phaser extends Modifier {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : 10,
+                        "value" : this.Component.GetValue("depth"),
                         "min" : 0,
                         "max" : 10,
                         "quantised" : true,
@@ -91,10 +91,23 @@ class Phaser extends Modifier {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : 1850,
+                        "value" : this.Component.GetValue("baseFrequency"),
                         "min" : 10,
                         "max" : 2000,
                         "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Mix",
+                    "setting" :"dryWet",
+                    "props" : {
+                        "value" : this.Component.GetValue("dryWet"),
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
                         "centered" : false
                     }
                 }

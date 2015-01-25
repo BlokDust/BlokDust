@@ -140,6 +140,8 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+        this._ParamsPanel = new ParametersPanel(this.Ctx);
+
         this.ScaleToFit = true;
         this.Divisor = 70;
 
@@ -294,7 +296,6 @@ class BlocksSketch extends Grid {
 
     MouseMove(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
-
         this._PointerMove(point);
     }
 

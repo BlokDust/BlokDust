@@ -38,15 +38,26 @@ class Delay extends Effect implements IEffect {
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
-            this.Effect.dryWet.setDry(1 - value);
+            this.Effect.dryWet.setWet(value);
         } else {
             this.Effect.set(
                 jsonVariable
             );
         }
+        //console.log(jsonVariable);
+    }
 
-
-        console.log(jsonVariable);
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="delayTime") {
+            val = this.Effect.getDelayTime();
+        } else if (param=="feedback") {
+            val = this.Effect.getFeedback();
+        } else if (param=="dryWet") {
+            val = this.Effect.getWet();
+        }
+        return val;
     }
 }
 

@@ -36,7 +36,13 @@ class PannerComponent extends Effect implements IEffect {
         this.Effect.set(
             jsonVariable
         );
-        console.log(jsonVariable);
+        //console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val = this.Effect.getFrequency();
+        return val;
     }
 }
 

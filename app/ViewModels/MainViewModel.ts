@@ -29,6 +29,7 @@ import BitCrusher = require("../Blocks/Modifiers/BitCrusher");
 import AutoWah = require("../Blocks/Modifiers/AutoWah");
 import Panner = require("../Blocks/Modifiers/Panner");
 import Chomp = require("../Blocks/Modifiers/Chomp");
+import Chopper = require("../Blocks/Modifiers/Chopper");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 
@@ -118,8 +119,16 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlock(Keyboard);
     }
 
-    GainBlockBtn_Click(e: any){
+    SoundcloudBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Soundcloud);
+    }
+
+    GainBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Gain);
+    }
+
+    ChopperBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Chopper);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){

@@ -37,10 +37,29 @@ class PhaserComponent extends Effect implements IEffect {
         super.SetValue(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        this.Effect.set(
-            jsonVariable
-        );
-        console.log(jsonVariable);
+        if (param=="dryWet") {
+            this.Effect.dryWet.setWet(value);
+        } else {
+            this.Effect.set(
+                jsonVariable
+            );
+        }
+        //console.log(jsonVariable);
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+        if (param=="rate") {
+            val = this.Effect.getRate();
+        } else if (param=="depth") {
+            val = this.Effect.getDepth();
+        } else if (param=="baseFrequency") {
+            val = this.Effect.getBaseFrequency();
+        } else if (param=="dryWet") {
+            val = this.Effect.getWet();
+        }
+        return val;
     }
 }
 

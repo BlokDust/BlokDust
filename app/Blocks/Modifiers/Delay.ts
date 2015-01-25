@@ -69,7 +69,7 @@ class Delay extends Modifier {
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
-                        "value" : 0.2,
+                        "value" : this.Component.GetValue("delayTime"),
                         "min" : 0.05,
                         "max" : 0.5,
                         "quantised" : false,
@@ -82,21 +82,20 @@ class Delay extends Modifier {
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
-                        "value" : 0.5,
+                        "value" : this.Component.GetValue("feedback"),
                         "min" : 0,
                         "max" : 0.9,
                         "quantised" : false,
                         "centered" : false
                     }
-                }
-                ,
+                },
 
                 {
                     "type" : "slider",
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : 0.5,
+                        "value" : this.Component.GetValue("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,
