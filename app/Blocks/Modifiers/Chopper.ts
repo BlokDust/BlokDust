@@ -18,6 +18,7 @@ class Chopper extends Modifier {
     public Rate: number;
     public Depth: number;
     public Polarity: number;
+    public Transport;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -39,7 +40,8 @@ class Chopper extends Modifier {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -2),new Point(1, 0),new Point(1, 2),new Point(-1, 0));
-
+        //this.Transport = Tone.Transport;
+        //this.Transport.start();
         this.SetVolume();
     }
 
@@ -84,6 +86,7 @@ class Chopper extends Modifier {
     }
 
     Delete(){
+        this.Transport.stop();
         this.Component.Delete();
     }
 
