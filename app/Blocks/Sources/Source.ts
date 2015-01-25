@@ -62,12 +62,12 @@ class Source extends Modifiable {
             var track3 = "5243666";
             var track4 = "84216161";
             var track5 = "51167662";
-            var track6 = "145840993";
+            var track6 = "172375224";
+            var track7 = "172375481";
 
 
 
-
-            var audioUrl = "https://api.soundcloud.com/tracks/" + track4 + "/stream" + scId;
+            var audioUrl = "https://api.soundcloud.com/tracks/" + track7 + "/stream" + scId;
             var sc = this.Source;
             this.Source = new Tone.Player(audioUrl, function(sc){
                 console.log(sc);
