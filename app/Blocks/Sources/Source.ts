@@ -67,7 +67,7 @@ class Source extends Modifiable {
 
 
 
-            var audioUrl = "https://api.soundcloud.com/tracks/" + track7 + "/stream" + scId;
+            var audioUrl = "https://api.soundcloud.com/tracks/" + track4 + "/stream" + scId;
             var sc = this.Source;
             this.Source = new Tone.Player(audioUrl, function(sc){
                 console.log(sc);
@@ -138,6 +138,8 @@ class Source extends Modifiable {
                 break;
             case "volume": val = this.Source.getGain();
                 break;
+            case "playbackRate": val = this.Source.getPlaybackRate();
+                break;
         }
         console.log(val);
         return val;
@@ -158,6 +160,7 @@ class Source extends Modifiable {
                 break;
             case "volume": this.Source.setGain(value);
                 break;
+            case "playbackRate": this.Source.setPlaybackRate(value, 0.2);
         }
 
 

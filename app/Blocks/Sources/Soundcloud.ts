@@ -26,14 +26,11 @@ class Soundcloud extends Source {
     MouseDown() {
         super.MouseDown();
 
-        //TODO: Should we have arming/disarming microphone functionality
-
     }
 
     MouseUp() {
         super.MouseUp();
 
-        //TODO: Should we have arming/disarming microphone functionality
     }
 
     ParticleCollision(particle: Particle) {
@@ -78,6 +75,39 @@ class Soundcloud extends Source {
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
+    }
+
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Soundcloud",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Playback rate",
+                    "setting" :"playbackRate",
+                    "props" : {
+                        "value" : this.GetValue("playbackRate"),
+                        "min" : 0.1,
+                        "max" : 10,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: any) {
+        super.SetValue(param,value);
+    }
+
+    GetValue(param: string){
+        var val = super.GetValue(param);
+        return val;
     }
 }
 

@@ -12,7 +12,7 @@ class Convolver extends Modifier {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.Component = new ConvolverComponent("../Assets/ImpulseResponses/teufelsberg01.wav"); // 01 - 06
+        this.Component = new ConvolverComponent("../Assets/ImpulseResponses/teufelsberg04.wav"); // 01 - 06
 
         this.Effects.Add(this.Component);
 
