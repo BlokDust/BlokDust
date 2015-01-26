@@ -84,7 +84,7 @@ class ParametersPanel {
     Populate(json,open) {
         console.log("POPULATED PANEL");
 
-        var units = this.Sketch.ScaledUnit.width;
+        var units = this.Sketch.Unit.width;
         var ctx = this._Ctx;
         var dataType = units*10;
 
@@ -239,7 +239,7 @@ class ParametersPanel {
 
 
     Draw() {
-        var units = this.Sketch.ScaledUnit.width;
+        var units = this.Sketch.Unit.width;
         var ctx = this._Ctx;
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
@@ -293,7 +293,7 @@ class ParametersPanel {
 
     // PANEL BLACK BG //
     panelDraw(x,y) {
-        var units = this.Sketch.ScaledUnit.width;
+        var units = this.Sketch.Unit.width;
         var ctx = this._Ctx;
 
         ctx.beginPath();
@@ -426,7 +426,7 @@ class ParametersPanel {
 
     RolloverCheck(mx,my) {
         for (var i=0;i<this.Options.length;i++) {
-            var units = this.Sketch.ScaledUnit.width;
+            var units = this.Sketch.Unit.width;
 
             if (this.Options[i].Type == "slider") {
                 this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.Height,mx,my);

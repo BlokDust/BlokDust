@@ -60,22 +60,24 @@ class Grid extends Fayde.Drawing.SketchContext {
         super();
     }
 
-    get Unit(): Size{
+
+    // GRID CELL SIZE //
+    get CellWidth(): Size{
         var u = (this.Width / this.Divisor)*15;
         return new Size(u, u);
     }
-
-    get ScaledUnit(): Size{
+    // SINGLE GLOBAL UNIT //
+    get Unit(): Size{
         var u = this.Width / this.Divisor;
         return new Size(u, u);
     }
-
-    get RenderUnit(): Size{
+    // SCALED GRID CELL SIZE //
+    get ScaledCellWidth(): Size{
         var u = (this.RenderSize.width / this.Divisor)*15;
         return new Size(u, u);
     }
-
-    get ScaledRenderUnit(): Size{
+    // SCALED SINGLE GLOBAL UNIT //
+    get ScaledUnit(): Size{
         var u = this.RenderSize.width / this.Divisor;
         return new Size(u, u);
     }
@@ -90,21 +92,10 @@ class Grid extends Fayde.Drawing.SketchContext {
         return this.ConvertAbsoluteToGridUnits(p);
     }
 
-    // round absolute point to align with grid intersection
-    // returns an absolute pixel value
+    // BLOCK SNAPPING //
     public SnapToGrid(point: Point): Point {
-        /*point = this.ConvertAbsoluteToNormalised(point);
-        var col = Math.round(point.x * this.Unit.width);
-        var row = Math.round(point.y * this.GetHeightDivisor());
 
-        // we now have the grid col and row.
-        // convert them into absolute pixel values.
-
-        var x = (col * this.Width) / this.Unit.width;
-        var y = (row * this.Height) / this.GetHeightDivisor();
-*/
-        var grd = this.Unit.width;
-
+        var grd = this.CellWidth.width;
         var x = Math.round((point.x)/grd)*grd;
         var y = Math.round((point.y)/grd)*grd;
 
@@ -152,27 +143,27 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
 
     public ConvertGridUnitsToAbsolute(point: Point): Point {
-        return new Point(this.Unit.width * point.x, this.Unit.height * point.y);
+        return new Point(this.CellWidth.width * point.x, this.CellWidth.width * point.y);
     }
 
     public ConvertAbsoluteToGridUnits(point: Point): Point {
-        return new Point(point.x / this.Unit.width, point.y / this.Unit.width);
+        return new Point(point.x / this.CellWidth.width, point.y / this.CellWidth.width);
     }
 
-    public GetHeightDivisor(): number {
+    /*public GetHeightDivisor(): number {
         // the vertical divisor is the amount you need to divide the canvas height by in order to get the cell width
         // width  / 75 = 10
         // height / x  = 10
         // x = 1 / 10 * height
         return (1 / this.Unit.height) * this.Height;
-    }
+    }*/
 
     Draw() {
         // draw grid
         if (window.debug) {
             var startPoint: Point;
             var endPoint: Point;
-            var cellWidth = this.Unit.width;
+            var cellWidth = this.CellWidth.width;
 
             this.Ctx.lineWidth = 1;
             this.Ctx.strokeStyle = '#3d3256';

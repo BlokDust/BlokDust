@@ -37,7 +37,7 @@ class Modifiable extends Block implements IModifiable{
             // draw connections to modifiers
             var modifiers = this.Modifiers.ToArray();
 
-            var grd = this.Grid.RenderUnit.width; // this.Grid.Width / this.Grid.Divisor;
+            var grd = this.Grid.ScaledCellWidth.width; // this.Grid.Width / this.Grid.Divisor;
 
             for(var i = 0; i < modifiers.length; i++){
                 var target: IModifier = modifiers[i];

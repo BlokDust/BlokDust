@@ -28,7 +28,7 @@ class Header {
     }
 
     Draw() {
-        var units = this._Sketch.ScaledUnit.width;
+        var units = this._Sketch.Unit.width;
         var ctx = this._Ctx;
         var dataType = units*10;
         var headerType = Math.round(units*28);

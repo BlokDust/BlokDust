@@ -232,7 +232,7 @@ class BlocksSketch extends Grid {
             // todo: pre-render these in a single canvas
             var particle = App.Particles[i];
             var pos = this.ConvertBaseToTransformed(particle.Position);
-            var unit = this.ScaledRenderUnit.width;
+            var unit = this.ScaledUnit.width;
             //console.log(unit);
             var sx = pos.x;
             var sy = pos.y;
