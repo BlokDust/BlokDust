@@ -21,6 +21,7 @@ import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Transformer = Fayde.Transformer.Transformer;
 import ParametersPanel = require("./ParametersPanel");
+import Header = require("./Header");
 
 declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -34,6 +35,7 @@ class BlocksSketch extends Grid {
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
     private _ParamsPanel: ParametersPanel;
+    private _Header: Header;
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -140,10 +142,11 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
-        this._ParamsPanel = new ParametersPanel(this.Ctx);
+        this._ParamsPanel = new ParametersPanel(this.Ctx,this);
+        this._Header = new Header(this.Ctx,this);
 
         this.ScaleToFit = true;
-        this.Divisor = 70;
+        this.Divisor = 850; // 70
 
         // todo: make these default values
         this._Transformer = new Transformer();
@@ -187,6 +190,7 @@ class BlocksSketch extends Grid {
         this.DrawParticles();
 
         this._ParamsPanel.Draw();
+        this._Header.Draw();
     }
 
     // PARTICLES //
@@ -228,10 +232,11 @@ class BlocksSketch extends Grid {
             // todo: pre-render these in a single canvas
             var particle = App.Particles[i];
             var pos = this.ConvertBaseToTransformed(particle.Position);
-
+            var unit = this.ScaledRenderUnit.width;
+            //console.log(unit);
             var sx = pos.x;
             var sy = pos.y;
-            var size = particle.Size;
+            var size = particle.Size * unit;
 
             this.Ctx.fillStyle = "#ff90a7";
             this.Ctx.globalAlpha = 1;

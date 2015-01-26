@@ -61,11 +61,21 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
 
     get Unit(): Size{
+        var u = (this.Width / this.Divisor)*15;
+        return new Size(u, u);
+    }
+
+    get ScaledUnit(): Size{
         var u = this.Width / this.Divisor;
         return new Size(u, u);
     }
 
     get RenderUnit(): Size{
+        var u = (this.RenderSize.width / this.Divisor)*15;
+        return new Size(u, u);
+    }
+
+    get ScaledRenderUnit(): Size{
         var u = this.RenderSize.width / this.Divisor;
         return new Size(u, u);
     }
@@ -83,15 +93,20 @@ class Grid extends Fayde.Drawing.SketchContext {
     // round absolute point to align with grid intersection
     // returns an absolute pixel value
     public SnapToGrid(point: Point): Point {
-        point = this.ConvertAbsoluteToNormalised(point);
-        var col = Math.round(point.x * this.Divisor);
+        /*point = this.ConvertAbsoluteToNormalised(point);
+        var col = Math.round(point.x * this.Unit.width);
         var row = Math.round(point.y * this.GetHeightDivisor());
 
         // we now have the grid col and row.
         // convert them into absolute pixel values.
 
-        var x = (col * this.Width) / this.Divisor;
+        var x = (col * this.Width) / this.Unit.width;
         var y = (row * this.Height) / this.GetHeightDivisor();
+*/
+        var grd = this.Unit.width;
+
+        var x = Math.round((point.x)/grd)*grd;
+        var y = Math.round((point.y)/grd)*grd;
 
         return new Point(x, y);
     }
@@ -154,7 +169,7 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     Draw() {
         // draw grid
-        if (window.debug) {
+        /*if (window.debug) {
             var startPoint: Point;
             var endPoint: Point;
             var cellWidth = this.Width / this.Divisor;
@@ -187,7 +202,7 @@ class Grid extends Fayde.Drawing.SketchContext {
                 this.Ctx.stroke();
                 this.Ctx.closePath();
             }
-        }
+        }*/
     }
 }
 

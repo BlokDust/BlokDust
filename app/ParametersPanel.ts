@@ -38,7 +38,7 @@ class ParametersPanel {
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
 
-    constructor(ctx: CanvasRenderingContext2D) {
+    constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
 
         this._Ctx = ctx;
         this._Units = 1.7;
@@ -50,7 +50,7 @@ class ParametersPanel {
         this._Name = "";
         this._NameWidth = 0;
 
-        this.Sketch = BlocksSketch;
+        this.Sketch = sketch;
         this.Options = [];
         this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
         this._SliderRoll = [];
@@ -84,7 +84,7 @@ class ParametersPanel {
     Populate(json,open) {
         console.log("POPULATED PANEL");
 
-        var units = this._Units;
+        var units = this.Sketch.ScaledUnit.width;
         var ctx = this._Ctx;
         var dataType = units*10;
 
@@ -148,7 +148,7 @@ class ParametersPanel {
 
         // POPULATE PANEL //
         this.Position.x = 250*units;
-        this.Position.y = Math.round(this._Ctx.canvas.height/2);
+        this.Position.y = Math.round(this._Ctx.canvas.height*0.6);
         this.Size.Width = panelW;
         this.Size.Height = panelH;
         this.Margin = panelM;
@@ -239,7 +239,7 @@ class ParametersPanel {
 
 
     Draw() {
-        var units = this._Units;
+        var units = this.Sketch.ScaledUnit.width;
         var ctx = this._Ctx;
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
@@ -293,7 +293,7 @@ class ParametersPanel {
 
     // PANEL BLACK BG //
     panelDraw(x,y) {
-        var units = this._Units;
+        var units = this.Sketch.ScaledUnit.width;
         var ctx = this._Ctx;
 
         ctx.beginPath();
@@ -426,18 +426,20 @@ class ParametersPanel {
 
     RolloverCheck(mx,my) {
         for (var i=0;i<this.Options.length;i++) {
+            var units = this.Sketch.ScaledUnit.width;
+
             if (this.Options[i].Type == "slider") {
-                this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*this._Units),this.Position.y + this.Options[i].Position.y,this.Range + (20*this._Units),this.Options[i].Size.Height,mx,my);
+                this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.Height,mx,my);
             }
             else if (this.Options[i].Type == "ADSR") {
-                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * this._Units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.1) - (10 * this._Units), (20 * this._Units), (20 * this._Units), mx, my);
-                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * this._Units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * this._Units), (20 * this._Units), (20 * this._Units), mx, my);
-                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * this._Units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * this._Units), (20 * this._Units), (20 * this._Units), mx, my);
+                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.1) - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
             }
         }
 
         if (this.Scale==1) {
-            this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.Width - (30*this._Units),this.Position.y - (this.Size.Height*0.5) - (10*this._Units),20*this._Units,20*this._Units,mx,my);
+            this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.Width - (30*units),this.Position.y - (this.Size.Height*0.5) - (10*units),20*units,20*units,mx,my);
         }
     }
 
