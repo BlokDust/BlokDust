@@ -20,7 +20,7 @@ class Soundcloud extends Source {
         super(grid, position);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }
 
     MouseDown() {
@@ -58,20 +58,21 @@ class Soundcloud extends Source {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[6];// WHITE
+        this.Ctx.fillStyle = App.Palette[7];// RED
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
+        this.DrawLineTo(1,-1);
+        this.DrawLineTo(2,0);
         this.DrawLineTo(1,1);
-        this.DrawLineTo(0,2);
-        this.DrawLineTo(-1,1);
+        this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// PINK
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
+        this.Ctx.fillStyle = App.Palette[10];// ORANGE
+        this.DrawMoveTo(1,0);
+        this.DrawLineTo(2,0);
+        this.DrawLineTo(1,1);
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();

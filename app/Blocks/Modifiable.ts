@@ -60,11 +60,11 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif < 0) { // UPPER
 
                         if (-yDif < xDif) {
-                            this.Ctx.lineTo(myPos.x + ((xDif - (-yDif))*grd), myPos.y);
+                            this.Ctx.lineTo(Math.round(myPos.x + ((xDif - (-yDif))*grd)), Math.round(myPos.y));
                         }
 
                         if (-yDif > xDif) {
-                            this.Ctx.lineTo(myPos.x, myPos.y - (((-yDif) - xDif)*grd));
+                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - (((-yDif) - xDif)*grd)));
                         }
 
                     }
@@ -72,11 +72,11 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif > 0) { // LOWER
 
                         if (yDif < xDif) {
-                            this.Ctx.lineTo(myPos.x + ((xDif - yDif)*grd), myPos.y);
+                            this.Ctx.lineTo(Math.round(myPos.x + ((xDif - yDif)*grd)), Math.round(myPos.y));
                         }
 
                         if (yDif > xDif) {
-                            this.Ctx.lineTo(myPos.x, myPos.y + ((yDif - xDif)*grd));
+                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - xDif)*grd)));
                         }
                     }
                 }
@@ -86,11 +86,11 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif < 0) { // UPPER
 
                         if (yDif > xDif) {
-                            this.Ctx.lineTo(myPos.x - ((yDif - xDif)*grd), myPos.y);
+                            this.Ctx.lineTo(Math.round(myPos.x - ((yDif - xDif)*grd)), Math.round(myPos.y));
                         }
 
                         if (yDif < xDif) {
-                            this.Ctx.lineTo(myPos.x, myPos.y - ((xDif - yDif)*grd));
+                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - ((xDif - yDif)*grd)));
                         }
 
                     }
@@ -98,11 +98,11 @@ class Modifiable extends Block implements IModifiable{
                     if (yDif > 0) { // LOWER
 
                         if (yDif < -xDif) {
-                            this.Ctx.lineTo(myPos.x - (((-xDif) - yDif)*grd), myPos.y);
+                            this.Ctx.lineTo(Math.round(myPos.x - (((-xDif) - yDif)*grd)), Math.round(myPos.y));
                         }
 
                         if (yDif > -xDif) {
-                            this.Ctx.lineTo(myPos.x, myPos.y + ((yDif - (-xDif))*grd));
+                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - (-xDif))*grd)));
                         }
 
                     }

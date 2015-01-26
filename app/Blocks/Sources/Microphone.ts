@@ -73,7 +73,7 @@ class Microphone extends Source {
 
         this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[9];// PINK
-        this.DrawLineTo(0,-1);
+        this.DrawMoveTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
