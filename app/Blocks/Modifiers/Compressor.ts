@@ -14,7 +14,7 @@ class Compressor extends Modifier {
         this.Component = new CompressorComponent(440, "lowpass", -12, 1);
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
     }

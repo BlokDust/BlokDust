@@ -15,7 +15,7 @@ class Distortion extends Modifier {
         this.Component = new DistortionComponent(0.65,0.75);
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
     }

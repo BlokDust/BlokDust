@@ -15,7 +15,7 @@ class Envelope extends Modifier {
         this.Component = new EnvelopeComponent(1, 5, 0.7, 4);
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
     }

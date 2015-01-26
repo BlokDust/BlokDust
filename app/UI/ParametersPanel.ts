@@ -1,13 +1,12 @@
 /**
  * Created by luketwyman on 11/01/2015.
  */
-import App = require("./App");
+import App = require("./../App");
 import Size = Fayde.Utils.Size;
-import Grid = require("./Grid");
-import IBlock = require("./Blocks/IBlock");
-import BlocksSketch = require("./BlocksSketch");
+import Grid = require("./../Grid");
+import IBlock = require("./../Blocks/IBlock");
+import BlocksSketch = require("./../BlocksSketch");
 import Option = require("./Option");
-import IOptionSlider = require("./IOptionSlider");
 import Slider = require("./OptionSlider");
 import Buttons = require("./OptionButtonSelect");
 import ADSR = require("./OptionADSR");

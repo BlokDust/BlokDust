@@ -28,7 +28,7 @@ class AutoWah extends Modifier {
         });
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(-2, 1));
     }

@@ -28,7 +28,7 @@ class Chopper extends Modifier {
         });
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
 
 
         this.Rate = 50;

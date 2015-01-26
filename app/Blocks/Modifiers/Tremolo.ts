@@ -15,7 +15,7 @@ class Tremolo extends Modifier {
         this.Component = new TremoloComponent(2, 0, 60, 'triangle');
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
     }

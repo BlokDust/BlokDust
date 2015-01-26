@@ -1,10 +1,10 @@
 /**
  * Created by luketwyman on 25/01/2015.
  */
-import App = require("./App");
+import App = require("./../App");
 import Size = Fayde.Utils.Size;
-import Grid = require("./Grid");
-import BlocksSketch = require("./BlocksSketch");
+import Grid = require("./../Grid");
+import BlocksSketch = require("./../BlocksSketch");
 
 class Header {
 

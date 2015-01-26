@@ -15,7 +15,7 @@ class Scuzz extends Modifier {
         this.Component = new LFOComponent(100, -1000, 1000, 'sawtooth');
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
     }

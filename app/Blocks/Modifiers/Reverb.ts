@@ -15,7 +15,7 @@ class Reverb extends Modifier {
         this.Component = new ReverbComponent(0.7, 0.5);
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
     }

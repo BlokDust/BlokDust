@@ -15,7 +15,7 @@ class Convolver extends Modifier {
         this.Component = new ConvolverComponent("../Assets/ImpulseResponses/teufelsberg01.wav"); // 01 - 06
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
     }

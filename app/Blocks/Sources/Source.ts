@@ -108,6 +108,7 @@ class Source extends Modifiable {
 
         this.Source.connect(this.OutputGain);
         this.OutputGain.connect(App.AudioMixer.Master);
+        this.OpenParams();
 
         // Start
         this.Source.start();

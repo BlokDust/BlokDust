@@ -26,7 +26,7 @@ class Chomp extends Modifier {
         });
 
         this.Effects.Add(this.Component);
-
+        this.OpenParams();
 
 
         this.Rate = 13;

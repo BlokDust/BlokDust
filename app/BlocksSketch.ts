@@ -20,8 +20,9 @@ import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Transformer = Fayde.Transformer.Transformer;
-import ParametersPanel = require("./ParametersPanel");
-import Header = require("./Header");
+import ParametersPanel = require("./UI/ParametersPanel");
+import Header = require("./UI/Header");
+import ToolTip = require("./UI/ToolTip");
 
 declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -36,6 +37,9 @@ class BlocksSketch extends Grid {
     private _Transformer: Transformer;
     private _ParamsPanel: ParametersPanel;
     private _Header: Header;
+    private _ToolTip: ToolTip;
+    private _ToolTipTimeout;
+
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -144,6 +148,7 @@ class BlocksSketch extends Grid {
 
         this._ParamsPanel = new ParametersPanel(this.Ctx,this);
         this._Header = new Header(this.Ctx,this);
+        this._ToolTip = new ToolTip(this.Ctx,this);
 
         this.ScaleToFit = true;
         this.Divisor = 850; // 70
@@ -189,6 +194,7 @@ class BlocksSketch extends Grid {
 
         this.DrawParticles();
 
+        this._ToolTip.Draw();
         this._ParamsPanel.Draw();
         this._Header.Draw();
     }
@@ -297,11 +303,13 @@ class BlocksSketch extends Grid {
         this._PointerUp(point, () => {
             (<any>e).args.Handled = true;
         });
+        this._CheckHover(point);
     }
 
     MouseMove(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
         this._PointerMove(point);
+        this._CheckHover(point);
     }
 
     TouchDown(e: any){
@@ -335,6 +343,12 @@ class BlocksSketch extends Grid {
 
         var collision: Boolean = this._CheckCollision(point, handle);
 
+        // CLOSE TOOLTIP //
+        if (this._ToolTip.Open) {
+            this._ToolTipClose(this._ToolTip);
+        }
+
+        // PARAMS HIT TEST //
         var panelCheck = false;
         if (this._ParamsPanel.Scale==1) {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
@@ -390,6 +404,61 @@ class BlocksSketch extends Grid {
 
         this._Transformer.PointerMove(point);
     }
+
+
+    // CHECK FOR HOVERING OVER BLOCK (TOOLTIP) //
+    private _CheckHover(point: Point) {
+        var panelCheck = false;
+        var blockHover = false;
+        var panel = this._ToolTip;
+
+        // CHECK BLOCKS FOR HOVER //
+        if (this._ParamsPanel.Scale==1) {
+            panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        }
+        if (!panelCheck && !this._IsPointerDown) {
+            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
+                var block:IBlock = App.Blocks.GetValueAt(i);
+                if (block.HitTest(point)) {
+
+                    // GET BLOCK NAME //
+                    if (block.ParamJson) {
+                        panel.Name = block.ParamJson.name;
+                        var blockPos = this.ConvertScaledGridUnitsToAbsolute(block.Position);
+                        panel.Position.x = blockPos.x;
+                        panel.Position.y = blockPos.y;
+                        blockHover = true;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // OPEN TOOLTIP IF NOT ALREADY OPEN //
+        if (blockHover && !panel.Open) {
+            panel.Open = true;
+            this._ToolTipTimeout = setTimeout(function() {
+                if (panel.Alpha==0) {
+                    panel.AlphaTo(panel,100,800);
+                }
+            },800);
+        }
+        // CLOSE IF NO LONGER HOVERING //
+        if (!blockHover && panel.Open) {
+            this._ToolTipClose(panel);
+        }
+
+    }
+
+    private _ToolTipClose(panel) {
+        if (this._ToolTipTimeout) {
+            clearTimeout(this._ToolTipTimeout);
+        }
+        panel.AlphaTo(panel,0,100);
+        panel.Open = false;
+
+    }
+
 
     private _CheckCollision(point: Point, handle: () => void): Boolean {
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?

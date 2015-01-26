@@ -2,12 +2,9 @@
  * Created by luketwyman on 17/01/2015.
  */
 
-/**
- * Created by luketwyman on 16/01/2015.
- */
-import App = require("./App");
+
+import App = require("./../App");
 import Option = require("./Option");
-import IOptionADSR = require("./IOptionADSR");
 import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./ParametersPanel");
 import OptionHandle = require("./OptionHandle");

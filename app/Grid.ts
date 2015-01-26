@@ -146,6 +146,10 @@ class Grid extends Fayde.Drawing.SketchContext {
         return new Point(this.CellWidth.width * point.x, this.CellWidth.width * point.y);
     }
 
+    public ConvertScaledGridUnitsToAbsolute(point: Point): Point {
+        return new Point((this.ScaledCellWidth.width * point.x) + this.TranslateTransform.X, (this.ScaledCellWidth.width * point.y) + this.TranslateTransform.Y);
+    }
+
     public ConvertAbsoluteToGridUnits(point: Point): Point {
         return new Point(point.x / this.CellWidth.width, point.y / this.CellWidth.width);
     }

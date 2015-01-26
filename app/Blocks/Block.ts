@@ -6,7 +6,7 @@ import Size = Fayde.Utils.Size;
 import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
-import ParametersPanel = require("../ParametersPanel");
+import ParametersPanel = require("../UI/ParametersPanel");
 
 class Block extends DisplayObject implements IBlock {
 
@@ -30,6 +30,7 @@ class Block extends DisplayObject implements IBlock {
 
         this.Grid = grid;
         this.Position = position;
+
         this.Update();
     }
 
