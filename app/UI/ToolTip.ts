@@ -18,6 +18,7 @@ class ToolTip {
     public Alpha: number;
     public Open: boolean;
     public Position: Point;
+    private _AlphaTween: TWEEN.Tween;
 
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
@@ -51,8 +52,6 @@ class ToolTip {
 
 
     Draw() {
-
-
 
         var units = this._Sketch.Unit.width;
         var ctx = this._Ctx;
@@ -91,20 +90,22 @@ class ToolTip {
     AlphaTo(panel,destination,t) {
 
         console.log("dest: " + destination);
-
-        var psTween = new TWEEN.Tween({x: this.Alpha});
-        psTween.to({x: destination}, t);
-        psTween.onUpdate(function () {
+        if (this._AlphaTween) {
+            this._AlphaTween.stop();
+        }
+        this._AlphaTween = new TWEEN.Tween({x: this.Alpha});
+        this._AlphaTween.to({x: destination}, t);
+        this._AlphaTween.onUpdate(function () {
             panel.Alpha = this.x;
         });
-        psTween.onComplete(function () {
+        this._AlphaTween.onComplete(function () {
             if (!panel.Open) {
                 panel.Alpha = 0;
             }
 
         });
-        psTween.easing(TWEEN.Easing.Quintic.InOut);
-        psTween.start(this._LastVisualTick);
+        this._AlphaTween.easing(TWEEN.Easing.Quintic.InOut);
+        this._AlphaTween.start(this._LastVisualTick);
 
 
     }
