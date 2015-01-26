@@ -260,7 +260,7 @@ class ParametersPanel {
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
         // SHADOW //
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
 

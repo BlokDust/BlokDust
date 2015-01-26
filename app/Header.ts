@@ -36,7 +36,7 @@ class Header {
 
         // BG //
         ctx.fillStyle = "#000";
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 0.9;
         ctx.fillRect(0,0,this._Sketch.Width,this._Height*units);
 
         // TT //

@@ -169,16 +169,16 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     Draw() {
         // draw grid
-        /*if (window.debug) {
+        if (window.debug) {
             var startPoint: Point;
             var endPoint: Point;
-            var cellWidth = this.Width / this.Divisor;
+            var cellWidth = this.Unit.width;
 
             this.Ctx.lineWidth = 1;
             this.Ctx.strokeStyle = '#3d3256';
 
             // rows
-            for (var j = 0; j < this.GetHeightDivisor(); j++) {
+            for (var j = 0; j < (this.Height/cellWidth); j++) {
                 var y = Math.round(cellWidth * j);
                 this.Ctx.beginPath();
                 startPoint = this.GetTransformedPoint(new Point(0, y));
@@ -191,7 +191,7 @@ class Grid extends Fayde.Drawing.SketchContext {
             }
 
             // cols
-            for (var i = 0; i < this.Divisor; i++) {
+            for (var i = 0; i < (this.Width/cellWidth); i++) {
                 var x = Math.round(cellWidth * i);
                 this.Ctx.beginPath();
                 startPoint = this.GetTransformedPoint(new Point(x, 0));
@@ -202,7 +202,7 @@ class Grid extends Fayde.Drawing.SketchContext {
                 this.Ctx.stroke();
                 this.Ctx.closePath();
             }
-        }*/
+        }
     }
 }
 
