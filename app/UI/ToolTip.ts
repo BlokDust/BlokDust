@@ -89,7 +89,6 @@ class ToolTip {
 
     AlphaTo(panel,destination,t) {
 
-        console.log("dest: " + destination);
         if (this._AlphaTween) {
             this._AlphaTween.stop();
         }
@@ -98,16 +97,8 @@ class ToolTip {
         this._AlphaTween.onUpdate(function () {
             panel.Alpha = this.x;
         });
-        this._AlphaTween.onComplete(function () {
-            if (!panel.Open) {
-                panel.Alpha = 0;
-            }
-
-        });
         this._AlphaTween.easing(TWEEN.Easing.Quintic.InOut);
         this._AlphaTween.start(this._LastVisualTick);
-
-
     }
 
 
