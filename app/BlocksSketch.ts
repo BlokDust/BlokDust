@@ -20,6 +20,7 @@ import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Transformer = Fayde.Transformer.Transformer;
+import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./UI/ParametersPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
@@ -39,34 +40,20 @@ class BlocksSketch extends Grid {
     private _Header: Header;
     private _ToolTip: ToolTip;
     private _ToolTipTimeout;
+    private _LastSize: Size;
 
 
-    get SelectedBlock(): IBlock {
-        return this._SelectedBlock;
-    }
 
-    set SelectedBlock(block: IBlock) {
-        // if setting the selected block to null (or falsey)
-        // if there's already a selected block, set its
-        // IsSelected to false.
-        if (!block && this._SelectedBlock){
-            this._SelectedBlock.IsSelected = false;
-            this._SelectedBlock = null;
-        } else {
-            if (this._SelectedBlock){
-                this._SelectedBlock.IsSelected = false;
-            }
-            block.IsSelected = true;
-            this._SelectedBlock = block;
+    //-------------------------------------------------------------------------------------------
+    //  SETUP
+    //-------------------------------------------------------------------------------------------
 
-            this._DisplayList.ToFront(block);
-        }
-    }
 
     constructor() {
         super();
 
         this._DisplayList = new DisplayList(App.Blocks);
+
 
         // register command handlers
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
@@ -95,63 +82,18 @@ class BlocksSketch extends Grid {
         this._Invalidate();
     }
 
-    private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
-        this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
-    }
-
-    ZoomIn() {
-        this._Transformer.Zoom(1);
-    }
-
-    ZoomOut() {
-        this._Transformer.Zoom(-1);
-    }
-
-    private _Invalidate(){
-
-        this._ValidateBlocks();
-
-        this._CheckProximity();
-    }
-
-    _ValidateBlocks() {
-        // for each Modifiable, if the Modifiable contains a Modifier that no longer
-        // exists, remove it.
-
-        // todo: make this a command that all blocks subscribe to?
-        for (var i = 0; i < App.Modifiables.Count; i++){
-            var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
-
-            modifiable.ValidateModifiers();
-        }
-    }
-
-    CreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
-
-        var block: IBlock = new m(this, this.GetRandomGridPosition());
-        block.Id = this._GetId();
-
-        // todo: should this go in command handler?
-        block.Click.on((block: IBlock) => {
-            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
-        }, this);
-
-        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
-    }
 
     private _GetId(): number {
         return this._Id++;
     }
 
+
     Setup(){
         super.Setup();
 
-        this._ParamsPanel = new ParametersPanel(this.Ctx,this);
-        this._Header = new Header(this.Ctx,this);
-        this._ToolTip = new ToolTip(this.Ctx,this);
-
         this.ScaleToFit = true;
         this.Divisor = 850; // 70
+        this._LastSize = new Size(this.Width,this.Height);
 
         // todo: make these default values
         this._Transformer = new Transformer();
@@ -163,7 +105,18 @@ class BlocksSketch extends Grid {
         this._Transformer.AnimationSpeed = 250;
         this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
         this._Transformer.SizeChanged(this.Size);
+
+        // INSTANCES //
+        this._ParamsPanel = new ParametersPanel(this.Ctx,this);
+        this._Header = new Header(this.Ctx,this);
+        this._ToolTip = new ToolTip(this.Ctx,this);
     }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  UPDATE
+    //-------------------------------------------------------------------------------------------
+
 
     Update() {
         super.Update();
@@ -180,7 +133,67 @@ class BlocksSketch extends Grid {
         if (App.Particles.length) {
             this.UpdateParticles();
         }
+
+        this._CheckResize();
     }
+
+    // DIY RESIZE LISTENER //
+    private _CheckResize() {
+        if (this.Width!==this._LastSize.Width||this.Height!==this._LastSize.Height) {
+            this.SketchResize();
+        }
+        this._LastSize.Width = this.Width;
+        this._LastSize.Height = this.Height;
+    }
+
+
+    // PARTICLES //
+    UpdateParticles() {
+        var currentParticles = [];
+        for (var i = 0; i < App.Particles.length; i++) {
+            var particle: Particle = App.Particles[i];
+            particle.Life -= 1;
+
+            if (particle.Life < 1) {
+                particle.Reset();
+                particle.ReturnToPool();
+                continue;
+            }
+            //this.ParticleCollision(particle.Position, particle);
+            particle.Move();
+            currentParticles.push(particle);
+        }
+
+        App.Particles = currentParticles;
+    }
+
+    ParticleCollision(point: Point, particle: Particle) {
+        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+            var block: IBlock = App.Blocks.GetValueAt(i);
+            if (block.HitTest(point)){
+                block.ParticleCollision(particle);
+            }
+        }
+    }
+
+
+
+    SketchResize() {
+        //console.log("RESIZE");
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.SelectedBlock.OpenParams();
+            this._ParamsPanel.Populate(this._ParamsPanel.SelectedBlock.ParamJson,false);
+        }
+        this._Header.Populate(this._Header.MenuJson);
+    }
+
+
+
+
+    //-------------------------------------------------------------------------------------------
+    //  DRAW
+    //-------------------------------------------------------------------------------------------
+
 
     Draw(){
         // clear
@@ -199,38 +212,6 @@ class BlocksSketch extends Grid {
         this._Header.Draw();
     }
 
-    // PARTICLES //
-
-    UpdateParticles() {
-
-        var currentParticles = [];
-
-        for (var i = 0; i < App.Particles.length; i++) {
-            var particle: Particle = App.Particles[i];
-            particle.Life -= 1;
-
-            if (particle.Life < 1) {
-                particle.Reset();
-                particle.ReturnToPool();
-                continue;
-            }
-
-            //this.ParticleCollision(particle.Position, particle);
-            particle.Move();
-            currentParticles.push(particle);
-        }
-
-        App.Particles = currentParticles;
-    }
-
-    ParticleCollision(point: Point, particle: Particle) {
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks.GetValueAt(i);
-            if (block.HitTest(point)){
-                block.ParticleCollision(particle);
-            }
-        }
-    }
 
     DrawParticles() {
         for (var i = 0; i < App.Particles.length; i++) {
@@ -257,37 +238,11 @@ class BlocksSketch extends Grid {
 
     }
 
-    // PROXIMITY CHECK //
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
 
-    private _CheckProximity(){
-        // loop through all Modifiable blocks checking proximity to Modifier blocks.
-        // if within CatchmentArea, add Modifier to Modifiable.Modifiers.
-
-        for (var j = 0; j < App.Modifiables.Count; j++) {
-            var modifiable:IModifiable = App.Modifiables.GetValueAt(j);
-
-            for (var i = 0; i < App.Modifiers.Count; i++) {
-                var modifier:IModifier = App.Modifiers.GetValueAt(i);
-
-                // if a modifiable is close enough to the modifier, add the modifier
-                // to its internal list.
-                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(modifier.CatchmentArea, modifier.CatchmentArea));
-                var distanceFromModifier = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(modifier.Position));
-
-                if (distanceFromModifier <= catchmentArea.x) {
-                    if (!modifiable.Modifiers.Contains(modifier)){
-                        modifiable.AddModifier(modifier);
-                    }
-                } else {
-                    // if the modifiable already has the modifier on its internal list
-                    // remove it as it's now too far away.
-                    if (modifiable.Modifiers.Contains(modifier)){
-                        modifiable.RemoveModifier(modifier);
-                    }
-                }
-            }
-        }
-    }
+    // FIRST TOUCHES //
 
     MouseDown(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
@@ -337,6 +292,9 @@ class BlocksSketch extends Grid {
 
         this._PointerMove(point);
     }
+
+
+    // AGNOSTIC EVENTS //
 
     private _PointerDown(point: Point, handle: () => void) {
         this._IsPointerDown = true;
@@ -402,9 +360,74 @@ class BlocksSketch extends Grid {
             this._ParamsPanel.MouseMove(point.x,point.y);
         }
 
+        if (point.y < (this.Height*0.5)) {
+            this._Header.MouseMove(point);
+        }
+
         this._Transformer.PointerMove(point);
     }
 
+    // PROXIMITY CHECK //
+    private _CheckProximity(){
+        // loop through all Modifiable blocks checking proximity to Modifier blocks.
+        // if within CatchmentArea, add Modifier to Modifiable.Modifiers.
+
+        for (var j = 0; j < App.Modifiables.Count; j++) {
+            var modifiable:IModifiable = App.Modifiables.GetValueAt(j);
+
+            for (var i = 0; i < App.Modifiers.Count; i++) {
+                var modifier:IModifier = App.Modifiers.GetValueAt(i);
+
+                // if a modifiable is close enough to the modifier, add the modifier
+                // to its internal list.
+                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(modifier.CatchmentArea, modifier.CatchmentArea));
+                var distanceFromModifier = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(modifier.Position));
+
+                if (distanceFromModifier <= catchmentArea.x) {
+                    if (!modifiable.Modifiers.Contains(modifier)){
+                        modifiable.AddModifier(modifier);
+                    }
+                } else {
+                    // if the modifiable already has the modifier on its internal list
+                    // remove it as it's now too far away.
+                    if (modifiable.Modifiers.Contains(modifier)){
+                        modifiable.RemoveModifier(modifier);
+                    }
+                }
+            }
+        }
+    }
+
+    // COLLISION CHECK ON BLOCK //
+    private _CheckCollision(point: Point, handle: () => void): Boolean {
+        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
+
+        // cancel if interacting with panel
+        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        var blockClick = false;
+        if (!panelCheck || this._ParamsPanel.Scale!==1) {
+            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
+                var block:IBlock = App.Blocks.GetValueAt(i);
+                if (block.HitTest(point)) {
+                    handle();
+                    block.MouseDown();
+                    blockClick = false;
+                    this.SelectedBlock = block;
+                    ParamTimeout = true;
+                    setTimeout(function() {
+                        ParamTimeout = false;
+                    },200);
+
+                    return true;
+                }
+            }
+            if (blockClick==false) {
+                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
+            }
+        }
+
+        return false;
+    }
 
     // CHECK FOR HOVERING OVER BLOCK (TOOLTIP) //
     private _CheckHover(point: Point) {
@@ -459,47 +482,97 @@ class BlocksSketch extends Grid {
 
     }
 
-
-    private _CheckCollision(point: Point, handle: () => void): Boolean {
-        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
-
-        // cancel if interacting with panel
-        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
-        var blockClick = false;
-        if (!panelCheck || this._ParamsPanel.Scale!==1) {
-            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-                var block:IBlock = App.Blocks.GetValueAt(i);
-                if (block.HitTest(point)) {
-                    handle();
-                    block.MouseDown();
-                    blockClick = false;
-                    this.SelectedBlock = block;
-                    ParamTimeout = true;
-                    setTimeout(function() {
-                        ParamTimeout = false;
-                    },200);
-
-                    return true;
-                }
-            }
-            if (blockClick==false) {
-                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
-            }
-        }
-
-        return false;
-    }
-
-    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
-
     private _CheckParamsInteract(point) {
         //var point = (<any>e).args.Source.MousePosition;
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseDown(point.x,point.y);
         }
     }
+
+    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
+        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  BLOCKS
+    //-------------------------------------------------------------------------------------------
+
+
+    get SelectedBlock(): IBlock {
+        return this._SelectedBlock;
+    }
+
+    set SelectedBlock(block: IBlock) {
+        // if setting the selected block to null (or falsey)
+        // if there's already a selected block, set its
+        // IsSelected to false.
+        if (!block && this._SelectedBlock){
+            this._SelectedBlock.IsSelected = false;
+            this._SelectedBlock = null;
+        } else {
+            if (this._SelectedBlock){
+                this._SelectedBlock.IsSelected = false;
+            }
+            block.IsSelected = true;
+            this._SelectedBlock = block;
+
+            this._DisplayList.ToFront(block);
+        }
+    }
+
+    private _Invalidate(){
+
+        this._ValidateBlocks();
+
+        this._CheckProximity();
+    }
+
+    _ValidateBlocks() {
+        // for each Modifiable, if the Modifiable contains a Modifier that no longer
+        // exists, remove it.
+
+        // todo: make this a command that all blocks subscribe to?
+        for (var i = 0; i < App.Modifiables.Count; i++){
+            var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
+
+            modifiable.ValidateModifiers();
+        }
+    }
+
+    CreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
+
+        var block: IBlock = new m(this, this.GetRandomGridPosition());
+        block.Id = this._GetId();
+
+        // todo: should this go in command handler?
+        block.Click.on((block: IBlock) => {
+            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
+        }, this);
+
+        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  ZOOMING
+    //-------------------------------------------------------------------------------------------
+
+
+    private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
+        this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
+    }
+    ZoomIn() {
+        this._Transformer.Zoom(1);
+    }
+    ZoomOut() {
+        this._Transformer.Zoom(-1);
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  OPERATIONS
+    //-------------------------------------------------------------------------------------------
+
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;

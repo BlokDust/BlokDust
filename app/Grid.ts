@@ -58,7 +58,9 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     constructor() {
         super();
+
     }
+
 
 
     // GRID CELL SIZE //
