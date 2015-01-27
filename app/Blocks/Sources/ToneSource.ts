@@ -131,7 +131,8 @@ class ToneSource extends Source {
                         "min" : 10,
                         "max" : 15000,
                         "quantised" : true,
-                        "centered" : false
+                        "centered" : false,
+                        "logarithmic": true
                     }
                 },
                 {

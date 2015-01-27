@@ -92,10 +92,11 @@ class Soundcloud extends Source {
                     "setting" :"playbackRate",
                     "props" : {
                         "value" : this.GetValue("playbackRate"),
-                        "min" : 0.1,
-                        "max" : 10,
+                        "min" : 0.125,
+                        "max" : 8,
                         "quantised" : false,
-                        "centered" : false
+                        "centered" : true,
+                        "logarithmic": true
                     }
                 }
             ]
