@@ -186,12 +186,15 @@ class Header {
         var dataType = units*10;
         var headerType = Math.round(units*28);
         var gutter = 60;
+        var thisHeight = Math.round(this.Height*units);
 
 
         // BG //
         ctx.fillStyle = "#000";
+        ctx.globalAlpha = 0.16;
+        ctx.fillRect(0,0,this._Sketch.Width,thisHeight + (5*units)); // shadow
         ctx.globalAlpha = 0.9;
-        ctx.fillRect(0,0,this._Sketch.Width,this.Height*units);
+        ctx.fillRect(0,0,this._Sketch.Width,thisHeight); // solid
 
 
         // TT //
@@ -199,7 +202,7 @@ class Header {
         ctx.fillStyle = App.Palette[8];// Grey
         ctx.textAlign = "left";
         ctx.font = "200 " + headerType + "px Dosis";
-        ctx.fillText("BLOKDUST",20*units,((this.Height*units) * 0.5) + (headerType * 0.38));
+        ctx.fillText("BLOKDUST",20*units,(thisHeight * 0.5) + (headerType * 0.38));
 
 
         // MENU //
@@ -213,14 +216,14 @@ class Header {
             var menuX = this.MenuItems[i].Position.x;
             if (i>0) {
                 ctx.beginPath();
-                ctx.moveTo(menuX-((gutter*0.5)*units),((this.Height*units)*0.5)-(16*units));
-                ctx.lineTo(menuX-((gutter*0.5)*units),((this.Height*units)*0.5)+(16*units));
+                ctx.moveTo(menuX-((gutter*0.5)*units),(thisHeight*0.5)-(16*units));
+                ctx.lineTo(menuX-((gutter*0.5)*units),(thisHeight*0.5)+(16*units));
                 ctx.stroke();
             }
 
             // TEXT //
             ctx.fillStyle = App.Palette[8];// White
-            ctx.fillText(this.MenuItems[i].Name, menuX ,((this.Height*units) * 0.5) + (dataType * 0.38));
+            ctx.fillText(this.MenuItems[i].Name, menuX ,(thisHeight * 0.5) + (dataType * 0.38));
 
             // HOVER //
             if (this.MenuItems[i].Selected) {
@@ -230,9 +233,9 @@ class Header {
                 var x = cat.Position.x + (cat.Size.Width * 0.5);
 
                 ctx.beginPath();
-                ctx.moveTo(x - (10*units),(this.Height*units));
-                ctx.lineTo(x,(this.Height*units) + (10*units));
-                ctx.lineTo(x + (10*units),(this.Height*units));
+                ctx.moveTo(x - (10*units),thisHeight);
+                ctx.lineTo(x,thisHeight + (10*units));
+                ctx.lineTo(x + (10*units),thisHeight);
                 ctx.closePath();
                 ctx.fill();
 
@@ -248,7 +251,7 @@ class Header {
 
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Selected = this.HudCheck(cat.Position.x - (6*units), (5*units), cat.Size.Width + (12*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Selected = this.HudCheck(cat.Position.x - (20*units), (5*units), cat.Size.Width + (40*units), (this.Height*units) - (10*units), point.x, point.y );
         }
 
     }

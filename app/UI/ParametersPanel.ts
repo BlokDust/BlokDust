@@ -81,7 +81,6 @@ class ParametersPanel {
     //-------------------------------------------------------------------------------------------
 
     Populate(json,open) {
-        console.log("POPULATED PANEL");
 
         var units = this.Sketch.Unit.width;
         var ctx = this._Ctx;

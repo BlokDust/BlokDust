@@ -75,19 +75,6 @@ class BitCrusher extends Modifier {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"wet",
-                    "props" : {
-                        "value" : 0.8,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
                         "value" : this.Component.GetValue("dryWet"),

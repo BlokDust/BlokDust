@@ -24,6 +24,7 @@ import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./UI/ParametersPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
+import ZoomButtons = require("./UI/ZoomButtons");
 
 declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -39,6 +40,7 @@ class BlocksSketch extends Grid {
     private _ParamsPanel: ParametersPanel;
     private _Header: Header;
     private _ToolTip: ToolTip;
+    private _ZoomButtons: ZoomButtons;
     private _ToolTipTimeout;
     private _LastSize: Size;
 
@@ -110,6 +112,7 @@ class BlocksSketch extends Grid {
         this._ParamsPanel = new ParametersPanel(this.Ctx,this);
         this._Header = new Header(this.Ctx,this);
         this._ToolTip = new ToolTip(this.Ctx,this);
+        this._ZoomButtons = new ZoomButtons(this.Ctx,this);
     }
 
 
@@ -140,10 +143,12 @@ class BlocksSketch extends Grid {
     // DIY RESIZE LISTENER //
     private _CheckResize() {
         if (this.Width!==this._LastSize.Width||this.Height!==this._LastSize.Height) {
+            // Has resized, call the resize function //
             this.SketchResize();
+            // Update size record //
+            this._LastSize.Width = this.Width;
+            this._LastSize.Height = this.Height;
         }
-        this._LastSize.Width = this.Width;
-        this._LastSize.Height = this.Height;
     }
 
 
@@ -185,6 +190,7 @@ class BlocksSketch extends Grid {
             this._ParamsPanel.Populate(this._ParamsPanel.SelectedBlock.ParamJson,false);
         }
         this._Header.Populate(this._Header.MenuJson);
+        this._ZoomButtons.UpdatePositions();
     }
 
 
@@ -196,19 +202,24 @@ class BlocksSketch extends Grid {
 
 
     Draw(){
-        // clear
-        this.Ctx.fillStyle = App.Palette[0];// BG
+
+        // BG //
+        this.Ctx.fillStyle = App.Palette[0];
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
+        // DEBUG GRID //
         super.Draw();
 
-        // draw blocks
+        // BLOCKS //
         this._DisplayList.Draw();
 
+        // PARTICLES //
         this.DrawParticles();
 
+        // UI //
         this._ToolTip.Draw();
         this._ParamsPanel.Draw();
+        this._ZoomButtons.Draw();
         this._Header.Draw();
     }
 
@@ -312,6 +323,7 @@ class BlocksSketch extends Grid {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
         }
 
+        this._ZoomButtons.MouseDown(point);
         this._CheckParamsInteract(point);
         if (!collision && !panelCheck){
             this._Transformer.PointerDown(point);
@@ -360,9 +372,8 @@ class BlocksSketch extends Grid {
             this._ParamsPanel.MouseMove(point.x,point.y);
         }
 
-        if (point.y < (this.Height*0.5)) {
-            this._Header.MouseMove(point);
-        }
+        this._Header.MouseMove(point);
+        this._ZoomButtons.MouseMove(point);
 
         this._Transformer.PointerMove(point);
     }

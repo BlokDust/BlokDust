@@ -60,8 +60,8 @@
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
             <RepeatButton x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}" Delay="50" Interval="100">Undo</RepeatButton>
             <RepeatButton x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}" Delay="50" Interval="100">Redo</RepeatButton>
-            <Button x:Name="ZoomIn" Width="50" Click="{EventBinding ZoomIn_Click}">+</Button>
-            <Button x:Name="ZoomOut" Width="50" Click="{EventBinding ZoomOut_Click}">-</Button>
+            <!--<Button x:Name="ZoomIn" Width="50" Click="{EventBinding ZoomIn_Click}">+</Button>
+            <Button x:Name="ZoomOut" Width="50" Click="{EventBinding ZoomOut_Click}">-</Button>-->
         </StackPanel>
 
         <!--<StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">-->
