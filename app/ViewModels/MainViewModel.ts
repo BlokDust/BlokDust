@@ -31,6 +31,7 @@ import AutoWah = require("../Blocks/Modifiers/AutoWah");
 import Panner = require("../Blocks/Modifiers/Panner");
 import Chomp = require("../Blocks/Modifiers/Chomp");
 import Chopper = require("../Blocks/Modifiers/Chopper");
+import Recorder = require("../Blocks/Modifiers/Recorder");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 
@@ -206,6 +207,10 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     PannerBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlock(Panner);
+    }
+
+    RecorderBlockBtn_Click(e: any){
+        this._BlocksSketch.CreateBlock(Recorder);
     }
 
     DeleteBlockBtn_Click(e: any){
