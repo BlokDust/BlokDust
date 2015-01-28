@@ -1,28 +1,34 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
-import IEffect = require("../IEffect");
-import Grid = require("../../Grid");
 import App = require("../../App");
+import IBlock = require("../IBlock");
+import Block = require("../Block");
+import IModifier = require("../IModifier");
+import Modifiable = require("../Modifiable");
+import Grid = require("../../Grid");
+import Source = require("./Source");
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
+import Particle = require("../../Particle");
 
-class Recorder extends Modifier {
+class RecorderBlock extends Source {
 
-    public Component: IEffect;
-    public Recorder;
+    public Recorder: any;
     public MonoRecording: boolean = true;
-    public RecIndex: number = 0;
+    private _RecIndex: number = 0;
 
-    constructor(grid: Grid, position: Point){
+    constructor(grid: Grid, position: Point) {
         super(grid, position);
+
+        this.BlockType = BlockType.Recorder;
+
 
         this.Recorder = new Recorder(App.AudioMixer.Master);
 
-
-        this.OpenParams();
-        // Define Outline for HitTest
-        this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
     }
 
+    Update() {
+        super.Update();
 
+    }
 
     Draw() {
         super.Draw();
@@ -92,9 +98,9 @@ class Recorder extends Modifier {
     }
 
     private _doneEncoding( blob ) {
-        this.Recorder.Download( blob, "FILENAME" + ((this.RecIndex<10)?"0":"") + this.RecIndex + ".wav" );
-        this.RecIndex++;
+        this.Recorder.Download( blob, "FILENAME" + ((this._RecIndex<10)?"0":"") + this._RecIndex + ".wav" );
+        this._RecIndex++;
     }
 }
 
-export = Recorder;
+export = RecorderBlock;

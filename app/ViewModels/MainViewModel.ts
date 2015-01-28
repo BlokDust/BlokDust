@@ -31,7 +31,7 @@ import AutoWah = require("../Blocks/Modifiers/AutoWah");
 import Panner = require("../Blocks/Modifiers/Panner");
 import Chomp = require("../Blocks/Modifiers/Chomp");
 import Chopper = require("../Blocks/Modifiers/Chopper");
-import Recorder = require("../Blocks/Modifiers/Recorder");
+import Recorder = require("../Blocks/Sources/Recorder");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
 

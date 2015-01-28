@@ -14,7 +14,8 @@
             paths: {
                 "text": "lib/requirejs-text/text",
                 "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
-                "Tone": "lib/tone/Tone"
+                "Tone": "lib/tone/Tone",
+                "Recorderjs": "lib/RecorderJS"
             },
             deps: ["text", "text!fayde.json",
                 "PixelPalette",
@@ -37,7 +38,8 @@
                 "Tone/effect/Phaser",
                 "Tone/effect/BitCrusher",
                 "Tone/effect/AutoWah",
-                "Tone/effect/AutoPanner"
+                "Tone/effect/AutoPanner",
+                "Recorderjs/recorder"
             ],
             callback: function (text, config, PixelPalette, Tone) {
                 window.PixelPalette = PixelPalette;
