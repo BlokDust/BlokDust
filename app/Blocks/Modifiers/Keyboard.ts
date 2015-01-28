@@ -48,6 +48,35 @@ class Keyboard extends Modifier {
         this.Component.Delete();
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Keyboard",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Glide",
+                    "setting" :"glide",
+                    "props" : {
+                        "value" : this.Component.GetValue("glide"),
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        this.Component.SetValue(param,value);
+    }
+
 }
 
 export = Keyboard;

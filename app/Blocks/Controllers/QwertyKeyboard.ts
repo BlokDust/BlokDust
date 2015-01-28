@@ -222,6 +222,26 @@ class Keyboard extends Effect implements IEffect {
     Delete(){
 
     }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        if (param == "glide") {
+            this.Settings.glide = value;
+        }
+    }
+
+    GetValue(param: string) {
+        super.GetValue(param);
+        var val;
+
+        if (param == "glide") {
+            val = this.Settings.glide;
+        }
+        return val;
+    }
 }
 
 export = Keyboard;
