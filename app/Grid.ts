@@ -81,11 +81,11 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
     // SCALED SINGLE GLOBAL UNIT //
     get ScaledUnit(): Size{
-        var u = this.RenderSize.width / this.Divisor;
+        var u = this.ScaledSize.width / this.Divisor;
         return new Size(u, u);
     }
 
-    get RenderSize(): Size {
+    get ScaledSize(): Size {
         return new Size(this.Width * this.ScaleTransform.ScaleX, this.Height * this.ScaleTransform.ScaleY);
     }
 
@@ -123,8 +123,8 @@ class Grid extends Fayde.Drawing.SketchContext {
     // convert a point in transformed coordinate space
     // into base coordinate space.
     public ConvertTransformedToBase(point: Point): Point {
-        var x = Math.normalise(point.x, this.TranslateTransform.X, this.TranslateTransform.X + this.RenderSize.width);
-        var y = Math.normalise(point.y, this.TranslateTransform.Y, this.TranslateTransform.Y + this.RenderSize.height);
+        var x = Math.normalise(point.x, this.TranslateTransform.X, this.TranslateTransform.X + this.ScaledSize.width);
+        var y = Math.normalise(point.y, this.TranslateTransform.Y, this.TranslateTransform.Y + this.ScaledSize.height);
         var p = new Point(x, y);
         return this.ConvertNormalisedToAbsolute(p);
     }
