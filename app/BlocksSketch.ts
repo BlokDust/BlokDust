@@ -94,6 +94,7 @@ class BlocksSketch extends Grid {
         super.Setup();
 
         this.ScaleToFit = true;
+        this.GridSize = 15;
         this.Divisor = 850; // 70
         this._LastSize = new Size(this.Width,this.Height);
 

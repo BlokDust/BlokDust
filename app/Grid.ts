@@ -8,6 +8,7 @@ class Grid extends Fayde.Drawing.SketchContext {
     public _Divisor: number;
     public ScaleToFit: boolean = false;
     private _InitialUnitWidth: number;
+    public GridSize: number; // multiplier of Units to specify grid cell width
 
     private _TransformGroup: TransformGroup;
 
@@ -65,7 +66,7 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     // GRID CELL SIZE //
     get CellWidth(): Size{
-        var u = (this.Width / this.Divisor)*15;
+        var u = this.Unit.width * this.GridSize;
         return new Size(u, u);
     }
     // SINGLE GLOBAL UNIT //
@@ -75,7 +76,7 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
     // SCALED GRID CELL SIZE //
     get ScaledCellWidth(): Size{
-        var u = (this.RenderSize.width / this.Divisor)*15;
+        var u = this.ScaledUnit.width * this.GridSize;
         return new Size(u, u);
     }
     // SCALED SINGLE GLOBAL UNIT //
