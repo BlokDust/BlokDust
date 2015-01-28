@@ -13,14 +13,16 @@ class MenuCategory {
     public Size: Size;
     public Name: string;
     public Items: string[];
-    public Selected: boolean;
+    public Selected: number;
+    public Hover: boolean;
 
     constructor (position: Point, size: Size, name: string) {
         this.Position = position;
         this.Size = size;
         this.Name = name;
         this.Items = [];
-        this.Selected = false;
+        this.Selected = 0;
+        this.Hover = false;
     }
 
 }
