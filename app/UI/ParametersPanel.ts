@@ -85,6 +85,7 @@ class ParametersPanel {
         var units = this.Sketch.Unit.width;
         var ctx = this._Ctx;
         var dataType = units*10;
+        this._PanelCloseRoll = false;
 
 
         // GET NUMBER OF SLIDERS //
@@ -273,6 +274,20 @@ class ParametersPanel {
         ctx.lineTo(sx + this.Size.Width - (16 * units), sy - (this.Size.Height * 0.5) + (4 * units));
         ctx.stroke();
         ctx.lineWidth = 1;
+
+        /*var rx = sx + this.Size.Width - (20 * units);
+        var ry = sy - (this.Size.Height * 0.5);
+        var diamond = 12;
+
+        if (this._PanelCloseRoll) {
+            ctx.beginPath();
+            ctx.moveTo(rx - (diamond*units), ry);
+            ctx.lineTo(rx, ry - (diamond*units));
+            ctx.lineTo(rx + (diamond*units), ry);
+            ctx.lineTo(rx, ry + (diamond*units));
+            ctx.closePath();
+            ctx.stroke();
+        }*/
 
 
         // TITLE //

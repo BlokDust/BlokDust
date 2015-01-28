@@ -6,6 +6,7 @@ import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
 import MenuCategory = require("./MenuCategory");
+import MenuItem = require("./MenuItem");
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
@@ -19,7 +20,7 @@ class Header {
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
     private _MenuTween;
-    private _DropDownHeight: number;
+    public DropDownHeight: number;
     private _SelectedCategory: number;
     private _MenuCols: number[];
     public Hover: number[];
@@ -33,7 +34,7 @@ class Header {
         this._Units = 1.7;
         this.Height = 60;
         this.MenuItems = [];
-        this._DropDownHeight = 0;
+        this.DropDownHeight = 0;
         this._SelectedCategory = 0;
         this._MenuCols = [9,5,7,4,3];
 
@@ -43,15 +44,6 @@ class Header {
         this.MenuJson =
         {
           "categories": [
-
-              {
-                  "name": "Power",
-                  "items": [
-                      {
-                          "name": "Particle Emitter"
-                      }
-                  ]
-              },
 
               {
                   "name": "Source",
@@ -126,6 +118,15 @@ class Header {
               },
 
               {
+                  "name": "Power",
+                  "items": [
+                      {
+                          "name": "Particle Emitter"
+                      }
+                  ]
+              },
+
+              {
                   "name": "Interaction",
                   "items": [
                       {
@@ -193,15 +194,33 @@ class Header {
         var catX = ((this._Sketch.Width*0.5) - (menuWidth*0.5));
 
 
-        // POPULATE CATEGORIES //
+        // POPULATE MENU //
         for (var i=0; i<n; i++) {
             var name = json.categories[i].name.toUpperCase();
             var point = new Point(catX + (catWidth[i]*0.5),0);
             var size = new Size(catWidth[i],16);
             menuCats[i] = new MenuCategory(point,size,name);
             catX += catWidth[i];
+
+            // POPULATE CATEGORIES //
+
+            var itemN = json.categories[i].items.length;
+
+            for (var j=0; j<itemN; j++) {
+                var name = json.categories[i].items[j].name.toUpperCase();
+                var point = new Point(0,(this.Height + 60)*units);
+                var size = new Size(100*units,100*units);
+
+                menuCats[i].Items.push(new MenuItem(point,size,name));
+
+            }
+
         }
         this.MenuItems = menuCats;
+
+
+
+
     }
 
     //-------------------------------------------------------------------------------------------
@@ -214,9 +233,8 @@ class Header {
         var ctx = this._Ctx;
         var dataType = units*10;
         var headerType = Math.round(units*28);
-        var gutter = 60;
         var thisHeight = Math.round(this.Height*units);
-        var dropDown = Math.round(this._DropDownHeight*units);
+        var dropDown = Math.round(this.DropDownHeight*units);
 
 
         // BG //
@@ -236,12 +254,12 @@ class Header {
 
 
         // MENU //
-        ctx.textAlign = "center";
-        ctx.strokeStyle = "#393d43";// Grey
-        ctx.font = "400 " + dataType + "px Dosis";
+
 
         // DIVIDERS //
+        ctx.strokeStyle = "#393d43";// Grey
         ctx.globalAlpha = 1;
+
         // Horizontal //
         if (dropDown>0) {
             ctx.beginPath();
@@ -251,7 +269,6 @@ class Header {
         }
 
         // Vertical //
-
         for (var i=0;i<this.MenuItems.length;i++) {
             var cat = this.MenuItems[i];
             var menuX = cat.Position.x;
@@ -264,43 +281,32 @@ class Header {
             }
         }
 
+        // CATEGORIES //
+        ctx.textAlign = "center";
+        ctx.font = "400 " + dataType + "px Dosis";
+
         for (var i=0;i<this.MenuItems.length;i++) {
-            var cat = this.MenuItems[i];
-            var x = cat.Position.x;
-            var width = (cat.Size.Width*0.5);
+             ctx.globalAlpha = 1;
+             cat = this.MenuItems[i];
 
             // SELECTION COLOUR //
             var col = this._MenuCols[i - (Math.floor(i/this._MenuCols.length)*(this._MenuCols.length))];
             ctx.fillStyle = App.Palette[col];
 
-
-            ctx.beginPath();
-            ctx.moveTo(x - width,0);
-            ctx.lineTo(x + width ,0);
-            ctx.lineTo(x + width,thisHeight*cat.Selected);
-            ctx.lineTo(x + (10*units),thisHeight*cat.Selected);
-            ctx.lineTo(x,(thisHeight + (10*units))*cat.Selected);
-            ctx.lineTo(x - (10*units),thisHeight*cat.Selected);
-            ctx.lineTo(x - width,thisHeight*cat.Selected);
-            ctx.closePath();
-            ctx.fill();
+            // DRAW //
+            cat.Draw(ctx,units,this);
 
 
-            // TEXT //
-            ctx.fillStyle = App.Palette[8];// White
-            ctx.fillText(cat.Name, x ,(thisHeight * 0.5) + (dataType * 0.38));
+            // ITEMS //
 
-            // HOVER //
-            if (cat.Hover && dropDown<1) {
-                ctx.fillStyle = "#000";
-                ctx.globalAlpha = 0.9;
+            if (this.DropDownHeight==120 && this._SelectedCategory==i) {
 
-                ctx.beginPath();
-                ctx.moveTo(x - (10*units),thisHeight);
-                ctx.lineTo(x,thisHeight + (10*units));
-                ctx.lineTo(x + (10*units),thisHeight);
-                ctx.closePath();
-                ctx.fill();
+                for (var j=0; j<cat.Items.length; j++) {
+
+                    cat.Items[j].Draw(ctx,units,(80 + (120*j))*units);
+
+                }
+
 
             }
         }
@@ -318,10 +324,10 @@ class Header {
         if (this._MenuTween) {
             this._MenuTween.stop();
         }
-        this._MenuTween = new TWEEN.Tween({x: this._DropDownHeight});
+        this._MenuTween = new TWEEN.Tween({x: this.DropDownHeight});
         this._MenuTween.to({x: destination}, t);
         this._MenuTween.onUpdate(function () {
-            panel._DropDownHeight = this.x;
+            panel.DropDownHeight = this.x;
         });
         this._MenuTween.easing(TWEEN.Easing.Exponential.InOut);
         this._MenuTween.start(this._LastVisualTick);
@@ -361,7 +367,7 @@ class Header {
         }
 
         // CLOSE DROPDOWN //
-        if (point.y > ((this.Height + this._DropDownHeight)*this._Sketch.Unit.width)) {
+        if (point.y > ((this.Height + this.DropDownHeight)*this._Sketch.Unit.width)) {
             this.MenuTo(this,0,300);
             for (var i=0; i<this.MenuItems.length; i++) {
                 this.HoverTo(this.MenuItems[i],0,300);
