@@ -27,7 +27,10 @@
     "tone": {
       "path": "lib/tone/build/Tone.js"
     },
-    "pixelpalette": {}
+    "pixelpalette": {},
+    "RecorderJS": {
+      "path": "lib/RecorderJS/recorder.js"
+    }
   },
   "themes": {
     "fayde.controls": {},
@@ -37,6 +40,7 @@
     "fayde.transformer": {},
     "tween": "none",
     "tone": "none",
-    "pixelpalette": "none"
+    "pixelpalette": "none",
+    "RecorderJS": "none"
   }
 }

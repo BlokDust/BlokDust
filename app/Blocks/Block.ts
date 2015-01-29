@@ -125,6 +125,7 @@ class Block extends DisplayObject implements IBlock {
     OpenParams() {
 
     }
+
     SetValue(param: string,value: number) {
 
     }

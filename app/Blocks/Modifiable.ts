@@ -161,10 +161,11 @@ class Modifiable extends Block implements IModifiable{
             for (var j = 0; j < effects.length; j++) {
                 var effect:IEffect = effects[j];
 
-                this._ConnectEffect(effect);
+                if (effect) this._ConnectEffect(effect);
+
             }
 
-            if (mod.Component.Effect) {
+            if (mod.Component && mod.Component.Effect) {
                 _effects.push(mod.Component);
             }
         }
