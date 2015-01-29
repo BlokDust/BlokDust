@@ -9,11 +9,10 @@ import BlockType = Type.BlockType;
 
 class Source extends Modifiable {
 
-    public Source: any; // TODO: Set type of Source to.. "Tone.Oscillator || Tone.Noise" when available:
+    public Source: any;
     public Envelope: Tone.Envelope;
     public Delay: Tone.PingPongDelay;
     public OutputGain: Tone.Signal;
-    public ConnectedKeyboards: number = 0;
     public Frequency: number;
     public Settings: ToneSettings = {
 
@@ -48,15 +47,17 @@ class Source extends Modifiable {
 
         this.Frequency = this.Settings.oscillator.frequency;
 
-        if (this.BlockType == BlockType.Noise){
+        if (this.BlockType == BlockType.Noise) {
             this.Source = new Tone.Noise(this.Settings.noise.waveform);
+
         } else if (this.BlockType == BlockType.ToneSource) {
             this.Source = new Tone.Oscillator(this.Settings.oscillator.frequency, this.Settings.oscillator.waveform);
+
         } else if (this.BlockType == BlockType.Microphone) {
             this.Source = new Tone.Microphone();
+
         } else if (this.BlockType == BlockType.Soundcloud) {
             var scId = "?client_id=7bfc58cb50688730352c60eb933aee3a";
-
             var track1 = "24456532";
             var track2 = "25216773";
             var track3 = "5243666";
@@ -67,15 +68,18 @@ class Source extends Modifiable {
             var ubbb = "151541687";
             var johnwiz = "94492842";
 
-
-
             var audioUrl = "https://api.soundcloud.com/tracks/" + johnwiz + "/stream" + scId;
             var sc = this.Source;
-            this.Source = new Tone.Player(audioUrl, function(sc){
+
+            this.Source = new Tone.Player(audioUrl, function (sc) {
                 console.log(sc);
                 sc.loop = true;
                 sc.start();
             });
+
+        } else if (this.BlockType == BlockType.Recorder) {
+            this.Source = new Tone.Player();
+
         } else {
             console.log('this typeof Source does not have a matching BlockType');
         }

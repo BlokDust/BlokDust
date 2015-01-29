@@ -9,20 +9,24 @@ import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
+declare var RecorderJS;
+
 class RecorderBlock extends Source {
 
     public Recorder: any;
-    public MonoRecording: boolean = true;
-    private _RecIndex: number = 0;
+    //public MonoRecording: boolean = true;
+    //private _RecIndex: number = 0;
 
     constructor(grid: Grid, position: Point) {
-        super(grid, position);
-
         this.BlockType = BlockType.Recorder;
+
+        super(grid, position);
 
 
         this.Recorder = new Recorder(App.AudioMixer.Master);
 
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }
 
     Update() {
@@ -57,50 +61,57 @@ class RecorderBlock extends Source {
         super.MouseDown();
 
         console.log('start recording');
-        this.StartRecording();
+        //this.StartRecording();
     }
 
     MouseUp() {
         super.MouseUp();
 
         console.log('stop recording');
-        this.StopRecording();
+        //this.StopRecording();
     }
 
-    Delete(){
+    ParticleCollision(particle: Particle) {
+        super.ParticleCollision(particle);
 
+        particle.Dispose();
     }
 
-    StartRecording() {
-        this.Recorder.Clear();
-        this.Recorder.Record();
-    }
-
-    StopRecording() {
-        this.Recorder.Stop();
-        this.Recorder.GetBuffers( this.Recorder.exportWAV( this._doneEncoding ) )
-    }
-
-    SaveRecording() {
-        if (this.MonoRecording) {
-            this.Recorder.ExportMono( this._doneEncoding );
-        } else {
-            this.Recorder.ExportStereo( this._doneEncoding );
-        }
-    }
-
-    PlayRecording() {
-
-    }
-
-    DownloadRecording() {
-        this.Recorder.Download(this.Recorder.getBuffer());
-    }
-
-    private _doneEncoding( blob ) {
-        this.Recorder.Download( blob, "FILENAME" + ((this._RecIndex<10)?"0":"") + this._RecIndex + ".wav" );
-        this._RecIndex++;
-    }
+    //
+    //Delete(){
+    //
+    //}
+    //
+    //StartRecording() {
+    //    this.Recorder.Clear();
+    //    this.Recorder.Record();
+    //}
+    //
+    //StopRecording() {
+    //    this.Recorder.Stop();
+    //    this.Recorder.GetBuffers( this.Recorder.exportWAV( this._doneEncoding ) )
+    //}
+    //
+    //SaveRecording() {
+    //    if (this.MonoRecording) {
+    //        this.Recorder.ExportMono( this._doneEncoding );
+    //    } else {
+    //        this.Recorder.ExportStereo( this._doneEncoding );
+    //    }
+    //}
+    //
+    //PlayRecording() {
+    //
+    //}
+    //
+    //DownloadRecording() {
+    //    this.Recorder.Download(this.Recorder.getBuffer());
+    //}
+    //
+    //private _doneEncoding( blob ) {
+    //    this.Recorder.Download( blob, "FILENAME" + ((this._RecIndex<10)?"0":"") + this._RecIndex + ".wav" );
+    //    this._RecIndex++;
+    //}
 }
 
 export = RecorderBlock;
