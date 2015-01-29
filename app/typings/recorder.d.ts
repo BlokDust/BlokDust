@@ -3,12 +3,12 @@ declare var Recorder: {
 };
 
 interface Recorder {
-    Start(): void;
-    Stop(): void;
-    Clear(): void;
-    ExportStereo(callback?: any, type?: string)
-    ExportMono(callback?: any, type?: string)
-    Download(blob, filename?): void;
-    GetBuffers(callback?: any)
-    Configure(any): void;
+    record(): void;
+    stop(): void;
+    clear(): void;
+    exportWAV(callback?: any, type?: string);
+    exportMonoWAV(callback?: any, type?: string);
+    setupDownload(blob, filename?): void;
+    getBuffer(callback?: any)
+    configure(any): void;
 }

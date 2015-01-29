@@ -14,8 +14,8 @@ declare var RecorderJS;
 class RecorderBlock extends Source {
 
     public Recorder: any;
-    //public MonoRecording: boolean = true;
-    //private _RecIndex: number = 0;
+    public MonoRecording: boolean;
+    private RecIndex: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Recorder;
@@ -23,7 +23,12 @@ class RecorderBlock extends Source {
         super(grid, position);
 
 
-        this.Recorder = new Recorder(App.AudioMixer.Master);
+        this.Recorder = new Recorder(App.AudioMixer.Master, {
+            workerPath: "Assets/Recorder/recorderWorker.js"
+        });
+
+        this.RecIndex = 0;
+        this.MonoRecording = false;
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -61,14 +66,14 @@ class RecorderBlock extends Source {
         super.MouseDown();
 
         console.log('start recording');
-        //this.StartRecording();
+        this.StartRecording();
     }
 
     MouseUp() {
         super.MouseUp();
 
         console.log('stop recording');
-        //this.StopRecording();
+        this.StopRecording();
     }
 
     ParticleCollision(particle: Particle) {
@@ -77,41 +82,53 @@ class RecorderBlock extends Source {
         particle.Dispose();
     }
 
-    //
-    //Delete(){
-    //
-    //}
-    //
-    //StartRecording() {
-    //    this.Recorder.Clear();
-    //    this.Recorder.Record();
-    //}
-    //
-    //StopRecording() {
-    //    this.Recorder.Stop();
-    //    this.Recorder.GetBuffers( this.Recorder.exportWAV( this._doneEncoding ) )
-    //}
-    //
-    //SaveRecording() {
-    //    if (this.MonoRecording) {
-    //        this.Recorder.ExportMono( this._doneEncoding );
-    //    } else {
-    //        this.Recorder.ExportStereo( this._doneEncoding );
-    //    }
-    //}
-    //
-    //PlayRecording() {
-    //
-    //}
-    //
-    //DownloadRecording() {
-    //    this.Recorder.Download(this.Recorder.getBuffer());
-    //}
-    //
-    //private _doneEncoding( blob ) {
-    //    this.Recorder.Download( blob, "FILENAME" + ((this._RecIndex<10)?"0":"") + this._RecIndex + ".wav" );
-    //    this._RecIndex++;
-    //}
+
+    Delete(){
+
+    }
+
+    StartRecording() {
+        this.Recorder.clear();
+        this.Recorder.record();
+        console.log("This is recording index " + this.RecIndex);
+    }
+
+    StopRecording() {
+        this.Recorder.stop();
+        var _this = this;
+        this.Recorder.exportWAV(function(blob) {
+            console.log(blob);
+            _this.GetBuffers(blob);
+        });
+    }
+
+    SaveRecording() {
+        if (this.MonoRecording) {
+            this.Recorder.exportMonoWAV( this.DoneEncoding );
+        } else {
+            this.Recorder.exportWAV( this.DoneEncoding );
+        }
+    }
+
+    PlayRecording() {
+        console.log("Recording " + this.RecIndex + ":+ ");
+    }
+
+    DownloadRecording() {
+        this.Recorder.setupDownload(this.Recorder.getBuffer());
+    }
+
+
+    DoneEncoding( buffers ) {
+        console.log(buffers);
+    }
+
+    GetBuffers(blob) {
+        this.Recorder.getBuffers(this.DoneEncoding);
+        this.RecIndex++;
+    }
+
+
 }
 
 export = RecorderBlock;
