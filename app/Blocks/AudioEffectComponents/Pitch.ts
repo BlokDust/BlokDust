@@ -23,7 +23,7 @@ class PitchComponent extends Effect implements IEffect {
 
         if (this.Modifiable.Source.frequency){
             this.Pitch = this.Modifiable.Source.frequency.getValue();
-            this.Modifiable.Source.frequency.setValue(this.Pitch * this.PitchIncrement, 0);
+            this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Pitch * this.PitchIncrement, 0);
         } else if (this.Modifiable.Source.getPlaybackRate()){
             this.Pitch = this.Modifiable.Source.getPlaybackRate();
             this.Modifiable.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
@@ -36,7 +36,7 @@ class PitchComponent extends Effect implements IEffect {
 
         if (this.Modifiable.Source.frequency) {
             this.Pitch = this.Modifiable.Source.frequency.getValue();
-            this.Modifiable.Source.frequency.setValue(this.Pitch / this.PitchIncrement, 0);
+            this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Pitch / this.PitchIncrement, 0);
         } else if (this.Modifiable.Source.getPlaybackRate()){
             this.Pitch = this.Modifiable.Source.getPlaybackRate();
             this.Modifiable.Source.setPlaybackRate(this.Pitch / this.PitchIncrement, 0);
@@ -56,7 +56,7 @@ class PitchComponent extends Effect implements IEffect {
         if (param == "pitchMultiplier") {
             this.PitchIncrement = value;
             if (this.Modifiable && this.Modifiable.Source.frequency) {
-                this.Modifiable.Source.frequency.setValue(this.Pitch * this.PitchIncrement, 0);
+                this.Modifiable.Source.frequency.linearRampToValueAtTime(this.Pitch * this.PitchIncrement, 0 );
             } else if (this.Modifiable && this.Modifiable.Source.getPlaybackRate()) {
                 this.Modifiable.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
             }

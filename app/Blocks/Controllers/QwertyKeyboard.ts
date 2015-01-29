@@ -48,7 +48,7 @@ class Keyboard extends Effect implements IEffect {
         this.RemoveListeners();
 
         if (this.Modifiable.Source.frequency) {
-            this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Modifiable.Settings.oscillator.frequency, 0.05);
+            this.Modifiable.Source.frequency.setValue(this.Modifiable.Settings.oscillator.frequency);
         }
     }
 
