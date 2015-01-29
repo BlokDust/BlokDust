@@ -167,7 +167,7 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     Draw() {
         // draw grid
-        if (window.debug) {
+        /*if (window.debug) {
             var startPoint: Point;
             var endPoint: Point;
             var cellWidth = this.CellWidth.width;
@@ -200,7 +200,7 @@ class Grid extends Fayde.Drawing.SketchContext {
                 this.Ctx.stroke();
                 this.Ctx.closePath();
             }
-        }
+        }*/
     }
 }
 

@@ -21,9 +21,11 @@ class Header {
     public MenuJson;
     private _MenuTween;
     public DropDownHeight: number;
+    public DropDown: number;
     private _SelectedCategory: number;
     private _MenuCols: number[];
     public Hover: number[];
+    public Margin: number;
 
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
@@ -34,9 +36,11 @@ class Header {
         this._Units = 1.7;
         this.Height = 60;
         this.MenuItems = [];
-        this.DropDownHeight = 0;
+        this.DropDownHeight = 121;
+        this.DropDown = 0;
         this._SelectedCategory = 0;
         this._MenuCols = [9,5,7,4,3];
+        this.Margin = 20;
 
         this._Timer = new Fayde.ClockTimer();
         this._Timer.RegisterTimer(this);
@@ -77,6 +81,9 @@ class Header {
                       },
                       {
                           "name": "Chopper"
+                      },
+                      {
+                          "name": "Chorus"
                       },
                       {
                           "name": "Convolution"
@@ -199,7 +206,7 @@ class Header {
             var name = json.categories[i].name.toUpperCase();
             var point = new Point(catX + (catWidth[i]*0.5),0);
             var size = new Size(catWidth[i],16);
-            menuCats[i] = new MenuCategory(point,size,name);
+            menuCats[i] = new MenuCategory(point,size,name,this.DropDownHeight);
             catX += catWidth[i];
 
             // POPULATE CATEGORIES //
@@ -208,8 +215,8 @@ class Header {
 
             for (var j=0; j<itemN; j++) {
                 var name = json.categories[i].items[j].name.toUpperCase();
-                var point = new Point(0,(this.Height + 60)*units);
-                var size = new Size(100*units,100*units);
+                var point = new Point(0,(this.Height + (this.DropDownHeight*0.5))*units);
+                var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
                 menuCats[i].Items.push(new MenuItem(point,size,name));
 
@@ -217,7 +224,7 @@ class Header {
 
         }
         this.MenuItems = menuCats;
-
+        this.MenuTo(this,0,300);
 
 
 
@@ -234,7 +241,7 @@ class Header {
         var dataType = units*10;
         var headerType = Math.round(units*28);
         var thisHeight = Math.round(this.Height*units);
-        var dropDown = Math.round(this.DropDownHeight*units);
+        var dropDown = Math.round(this.DropDown*units);
 
 
         // BG //
@@ -298,20 +305,67 @@ class Header {
 
 
             // ITEMS //
+            if (this.DropDown > 0) {
 
-            if (this.DropDownHeight==120 && this._SelectedCategory==i) {
+                // CLIP RECTANGLE //
 
-                for (var j=0; j<cat.Items.length; j++) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(0,this.Height*units);
+                ctx.lineTo(this._Sketch.Width,this.Height*units);
+                ctx.lineTo(this._Sketch.Width,(this.Height + this.DropDown)*units);
+                ctx.lineTo(0,(this.Height + this.DropDown)*units);
+                ctx.closePath();
+                ctx.clip();
 
-                    cat.Items[j].Draw(ctx,units,(80 + (120*j))*units);
+
+                // PAGINATION //
+                var itemN = cat.Items.length;
+                var margin = this.Margin;
+
+                ctx.strokeStyle = "#393d43"; // White
+                ctx.lineWidth = 2;
+
+                // LEFT ARROW //
+                ctx.beginPath();
+                ctx.moveTo((margin*units) - (20*units),(this.Height + (this.DropDown*0.5) - 20)*units);
+                ctx.lineTo((margin*units) - (40*units),(this.Height + (this.DropDown*0.5))*units);
+                ctx.lineTo((margin*units) - (20*units),(this.Height + (this.DropDown*0.5) + 20)*units);
+                ctx.stroke();
+
+                ctx.strokeStyle = App.Palette[8]; // White
+
+                // RIGHT ARROW //
+                ctx.beginPath();
+                ctx.moveTo(this._Sketch.Width - (margin*units) + (20*units),(this.Height + (this.DropDown*0.5) - 20)*units);
+                ctx.lineTo(this._Sketch.Width - (margin*units) + (40*units),(this.Height + (this.DropDown*0.5))*units);
+                ctx.lineTo(this._Sketch.Width - (margin*units) + (20*units),(this.Height + (this.DropDown*0.5) + 20)*units);
+                ctx.stroke();
+
+
+                ctx.lineWidth = 1;
+
+
+                // DRAW ITEMS //
+                for (var j=0; j<itemN; j++) {
+                    var xPos = (margin + (this.DropDownHeight*0.5) + (this.DropDownHeight*j))*units;
+                    var yPos = cat.ItemOffset;
+                    // If in viewable/clickable area //
+                    if (xPos < (this._Sketch.Width - (this.DropDownHeight*0.5))) {
+                        cat.Items[j].Draw(ctx,units,xPos,yPos);
+                    }
 
                 }
-
-
+                
+                // END CLIP //
+                ctx.restore();
             }
         }
+    }
 
-
+    IsPaginated(cat,units) {
+        var itemN = cat.Items.length;
+        return ((itemN * (this.DropDownHeight*units)) > this._Sketch.Width);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -324,10 +378,10 @@ class Header {
         if (this._MenuTween) {
             this._MenuTween.stop();
         }
-        this._MenuTween = new TWEEN.Tween({x: this.DropDownHeight});
+        this._MenuTween = new TWEEN.Tween({x: this.DropDown});
         this._MenuTween.to({x: destination}, t);
         this._MenuTween.onUpdate(function () {
-            panel.DropDownHeight = this.x;
+            panel.DropDown = this.x;
         });
         this._MenuTween.easing(TWEEN.Easing.Exponential.InOut);
         this._MenuTween.start(this._LastVisualTick);
@@ -344,6 +398,31 @@ class Header {
         hoverTween.start(this._LastVisualTick);
     }
 
+    OffsetTo(panel,destination,t,delay) {
+
+        var offsetTween = new TWEEN.Tween({x: panel.ItemOffset});
+        offsetTween.to({x: destination}, t);
+        offsetTween.onUpdate(function () {
+            panel.ItemOffset = this.x;
+        });
+        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.delay(delay);
+        offsetTween.start(this._LastVisualTick);
+    }
+
+    MarginTo(panel,destination,t,delay) {
+
+        var marginTween = new TWEEN.Tween({x: panel.Margin});
+        marginTween.to({x: destination}, t);
+        marginTween.onUpdate(function () {
+            panel.Margin = this.x;
+        });
+        marginTween.easing(TWEEN.Easing.Exponential.InOut);
+        marginTween.delay(delay);
+        marginTween.start(this._LastVisualTick);
+    }
+
+
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
@@ -354,23 +433,35 @@ class Header {
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
             if (this.MenuItems[i].Hover) {
-                this.MenuTo(this,120,500);
-                this.HoverTo(this.MenuItems[i],1,500);
+                TWEEN.removeAll();
+                this.MenuTo(this,this.DropDownHeight,500);
+                this.HoverTo(this.MenuItems[i],1,400);
+                this.OffsetTo(this.MenuItems[i],0,600,250);
+                if (this.IsPaginated(this.MenuItems[i],this._Sketch.Unit.width)) {
+                    this.MarginTo(this,60,600,50);
+                } else {
+                    this.MarginTo(this,0,600,50);
+                }
+
                 this._SelectedCategory = i;
 
                 for (var j=0; j<this.MenuItems.length; j++) {
                     if (j!==i) {
-                        this.HoverTo(this.MenuItems[j],0,300);
+                        this.HoverTo(this.MenuItems[j],0,250);
+                        this.OffsetTo(this.MenuItems[j],this.DropDownHeight,250,0);
                     }
                 }
             }
         }
 
         // CLOSE DROPDOWN //
-        if (point.y > ((this.Height + this.DropDownHeight)*this._Sketch.Unit.width)) {
+        if (point.y > ((this.Height + this.DropDown)*this._Sketch.Unit.width) && this.DropDown > 0) {
+            TWEEN.removeAll();
             this.MenuTo(this,0,300);
+            this.MarginTo(this,0,600,50);
             for (var i=0; i<this.MenuItems.length; i++) {
-                this.HoverTo(this.MenuItems[i],0,300);
+                this.HoverTo(this.MenuItems[i],0,250);
+                this.OffsetTo(this.MenuItems[i],this.DropDownHeight,250,0);
             }
         }
     }
@@ -379,12 +470,10 @@ class Header {
     MouseMove(point) {
 
         var units = this._Sketch.Unit.width;
-
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
             cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.Width*0.5) + (2*units), (5*units), cat.Size.Width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
         }
-
     }
 
     // IS CLICK WITHIN THIS BOX //
