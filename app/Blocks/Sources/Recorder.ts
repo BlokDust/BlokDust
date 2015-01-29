@@ -43,23 +43,14 @@ class RecorderBlock extends Source {
         super.Draw();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9];// GREEN
-        this.DrawMoveTo(-1,-1);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(0,2);
-        this.DrawLineTo(-1,1);
+        this.Ctx.fillStyle = App.Palette[9];// PINK
+        this.DrawMoveTo(-1,0);
+        this.DrawLineTo(0,-1);
+        this.DrawLineTo(1,0);
+        this.DrawLineTo(0,1);
         this.Ctx.closePath();
         this.Ctx.fill();
 
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[1];// WHITE
-        this.DrawMoveTo(-1,-1);
-        this.DrawLineTo(0,0);
-        this.DrawLineTo(0,2);
-        this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
     }
 
     MouseDown() {
