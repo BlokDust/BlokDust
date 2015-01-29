@@ -8,6 +8,7 @@ class Grid extends Fayde.Drawing.SketchContext {
     public _Divisor: number;
     public ScaleToFit: boolean = false;
     private _InitialUnitWidth: number;
+    public GridSize: number; // multiplier of Units to specify grid cell width
 
     private _TransformGroup: TransformGroup;
 
@@ -65,7 +66,7 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     // GRID CELL SIZE //
     get CellWidth(): Size{
-        var u = (this.Width / this.Divisor)*15;
+        var u = this.Unit.width * this.GridSize;
         return new Size(u, u);
     }
     // SINGLE GLOBAL UNIT //
@@ -75,16 +76,16 @@ class Grid extends Fayde.Drawing.SketchContext {
     }
     // SCALED GRID CELL SIZE //
     get ScaledCellWidth(): Size{
-        var u = (this.RenderSize.width / this.Divisor)*15;
+        var u = this.ScaledUnit.width * this.GridSize;
         return new Size(u, u);
     }
     // SCALED SINGLE GLOBAL UNIT //
     get ScaledUnit(): Size{
-        var u = this.RenderSize.width / this.Divisor;
+        var u = this.ScaledSize.width / this.Divisor;
         return new Size(u, u);
     }
 
-    get RenderSize(): Size {
+    get ScaledSize(): Size {
         return new Size(this.Width * this.ScaleTransform.ScaleX, this.Height * this.ScaleTransform.ScaleY);
     }
 
@@ -122,8 +123,8 @@ class Grid extends Fayde.Drawing.SketchContext {
     // convert a point in transformed coordinate space
     // into base coordinate space.
     public ConvertTransformedToBase(point: Point): Point {
-        var x = Math.normalise(point.x, this.TranslateTransform.X, this.TranslateTransform.X + this.RenderSize.width);
-        var y = Math.normalise(point.y, this.TranslateTransform.Y, this.TranslateTransform.Y + this.RenderSize.height);
+        var x = Math.normalise(point.x, this.TranslateTransform.X, this.TranslateTransform.X + this.ScaledSize.width);
+        var y = Math.normalise(point.y, this.TranslateTransform.Y, this.TranslateTransform.Y + this.ScaledSize.height);
         var p = new Point(x, y);
         return this.ConvertNormalisedToAbsolute(p);
     }

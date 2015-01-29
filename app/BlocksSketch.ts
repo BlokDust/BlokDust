@@ -94,6 +94,7 @@ class BlocksSketch extends Grid {
         super.Setup();
 
         this.ScaleToFit = true;
+        this.GridSize = 15;
         this.Divisor = 850; // 70
         this._LastSize = new Size(this.Width,this.Height);
 
@@ -323,6 +324,7 @@ class BlocksSketch extends Grid {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
         }
 
+        this._Header.MouseDown(point);
         this._ZoomButtons.MouseDown(point);
         this._CheckParamsInteract(point);
         if (!collision && !panelCheck){
