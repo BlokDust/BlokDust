@@ -13,6 +13,7 @@ declare var RecorderJS;
 
 class RecorderBlock extends Source {
 
+    public Signal;
     public Recorder: any;
     public MonoRecording: boolean;
     private RecIndex: number;
@@ -29,6 +30,7 @@ class RecorderBlock extends Source {
 
         this.RecIndex = 0;
         this.MonoRecording = false;
+        var _this = this;
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -86,23 +88,49 @@ class RecorderBlock extends Source {
 
     StopRecording() {
         this.Recorder.stop();
-        var _this = this;
-        this.Recorder.exportWAV(function(blob) {
-            console.log(blob);
-            _this.GetBuffers(blob);
-        });
+        //var _this = this;
+        //this.Recorder.exportWAV(function(blob) {
+        //    //console.log(blob);
+        //    _this.GetBuffers(blob);
+        //});
+
+        this.PlayRecording();
     }
 
-    SaveRecording() {
-        if (this.MonoRecording) {
-            this.Recorder.exportMonoWAV( this.DoneEncoding );
-        } else {
-            this.Recorder.exportWAV( this.DoneEncoding );
-        }
+    gotBuffers( buffers ){
+        //this.PlayRecording(this.Recorder);
+        console.log();
+        console.log(buffers);
+
+
     }
+
+    //SaveRecording() {
+    //    if (this.MonoRecording) {
+    //        this.Recorder.exportMonoWAV( this.DoneEncoding );
+    //    } else {
+    //        this.Recorder.exportWAV( this.DoneEncoding );
+    //    }
+    //}
 
     PlayRecording() {
         console.log("Recording " + this.RecIndex + ":+ ");
+
+        this.Recorder.getBuffers(function (buffers) {
+
+            var Signal = new Tone.Signal();
+            //var startTime = thereminCtx.currentTime;
+            var source = Signal.context.createBufferSource();
+            source.buffer = Signal.context.createBuffer(1, buffers[0].length, 44100);
+
+            source.buffer.getChannelData(0).set(buffers[0]);
+            source.buffer.getChannelData(0).set(buffers[1]);
+
+            source.loop = true;
+            source.connect(Signal.context.destination);
+            source.start(0);
+
+        });
     }
 
     DownloadRecording() {
@@ -110,14 +138,10 @@ class RecorderBlock extends Source {
     }
 
 
-    DoneEncoding( buffers ) {
-        console.log(buffers);
-    }
-
-    GetBuffers(blob) {
-        this.Recorder.getBuffers(this.DoneEncoding);
-        this.RecIndex++;
-    }
+    //GetBuffers(blob) {
+    //    this.Recorder.getBuffers(this.DoneEncoding);
+    //    this.RecIndex++;
+    //}
 
 
 }
