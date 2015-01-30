@@ -15,7 +15,7 @@ class RecorderBlock extends Source {
 
     public Signal;
     public Recorder: any;
-    public MonoRecording: boolean;
+    public RecordingsArray;
     private RecIndex: number;
 
     constructor(grid: Grid, position: Point) {
@@ -23,14 +23,14 @@ class RecorderBlock extends Source {
 
         super(grid, position);
 
+        //TODO: WHEN RECORDING IT SHOULDN"T DUPLICATE THE RECORDING
 
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
         });
 
         this.RecIndex = 0;
-        this.MonoRecording = false;
-        var _this = this;
+        this.RecordingsArray = [];
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -75,11 +75,6 @@ class RecorderBlock extends Source {
         particle.Dispose();
     }
 
-
-    Delete(){
-
-    }
-
     StartRecording() {
         this.Recorder.clear();
         this.Recorder.record();
@@ -93,35 +88,50 @@ class RecorderBlock extends Source {
 
     PlayRecording() {
 
-        var Signal = new Tone.Signal();
-        var bufferSource = Signal.context.createBufferSource();
+        var Recording = new Tone.Player();
+        var bufferSource = Recording.context.createBufferSource();
+        var that = this;
 
         this.Recorder.getBuffers(function (buffers) {
 
-            bufferSource.buffer = Signal.context.createBuffer(1, buffers[0].length, 44100);
+            bufferSource.buffer = Recording.context.createBuffer(1, buffers[0].length, 44100);
             bufferSource.buffer.getChannelData(0).set(buffers[0]);
             bufferSource.buffer.getChannelData(0).set(buffers[1]);
-            bufferSource.loop = true;
-            bufferSource.connect(Signal.context.destination);
-            bufferSource.start(0);
 
-            //TODO: Here.. this = window ... How can I make a call to another function inside this class?
+            that.RecordingsArray.push(bufferSource.buffer);
 
-        }, this);
+            Recording.connect(that.Source);
+            Recording.setBuffer(bufferSource.buffer);
+            Recording.loop = true;
+            Recording.start();
 
+            that.GetRecordedBuffers();
 
-        //TODO: this is buffer is null because the code is executing before the buffer has finished encoding
-        console.log(bufferSource.buffer);
+        });
+
+        console.log();
 
         console.log("Playing recording "+this.RecIndex);
         this.RecIndex++;
+    }
+
+    GetRecordedBuffers() {
+        return this.RecordingsArray;
     }
 
     DownloadRecording() {
         this.Recorder.setupDownload(this.Recorder.getBuffers());
     }
 
+    Delete(){
+        super.Delete();
 
+        this.Recorder = null;
+
+        //TODO: DELETE EVERYTHING PROPERLY
+
+        console.log('stopped recordings');
+    }
 }
 
 export = RecorderBlock;

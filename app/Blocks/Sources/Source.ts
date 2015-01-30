@@ -78,7 +78,7 @@ class Source extends Modifiable {
             });
 
         } else if (this.BlockType == BlockType.Recorder) {
-            this.Source = new Tone.Player();
+            this.Source = new Tone.Signal();
 
         } else {
             console.log('this typeof Source does not have a matching BlockType');
@@ -131,7 +131,10 @@ class Source extends Modifiable {
     Delete() {
         this.Envelope.dispose();
         this.OutputGain.dispose();
-        this.Source.stop();
+
+        if (this.BlockType != BlockType.Recorder) {
+            this.Source.stop();
+        }
         this.Source.dispose();
     }
 
@@ -170,6 +173,7 @@ class Source extends Modifiable {
             case "volume": this.Source.setGain(value);
                 break;
             case "playbackRate": this.Source.setPlaybackRate(value, 0.2);
+                break;
         }
 
 
