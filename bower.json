@@ -11,10 +11,5 @@
     "tone": "git://github.com/lukephills/Tone.js#~0.2.16",
     "pixelpalette": "0.1.8",
     "RecorderJS": "git://github.com/lukephills/Recorderjs#~1.0.3"
-  },
-  "resolutions": {
-    "fayde": "~0.16.15",
-    "fayde.utils": "~0.5.0",
-    "minerva": "~0.4.7"
   }
 }
