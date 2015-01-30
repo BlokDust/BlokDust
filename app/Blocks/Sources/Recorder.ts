@@ -88,60 +88,38 @@ class RecorderBlock extends Source {
 
     StopRecording() {
         this.Recorder.stop();
-        //var _this = this;
-        //this.Recorder.exportWAV(function(blob) {
-        //    //console.log(blob);
-        //    _this.GetBuffers(blob);
-        //});
-
         this.PlayRecording();
     }
 
-    gotBuffers( buffers ){
-        //this.PlayRecording(this.Recorder);
-        console.log();
-        console.log(buffers);
-
-
-    }
-
-    //SaveRecording() {
-    //    if (this.MonoRecording) {
-    //        this.Recorder.exportMonoWAV( this.DoneEncoding );
-    //    } else {
-    //        this.Recorder.exportWAV( this.DoneEncoding );
-    //    }
-    //}
-
     PlayRecording() {
-        console.log("Recording " + this.RecIndex + ":+ ");
+
+        var Signal = new Tone.Signal();
+        var bufferSource = Signal.context.createBufferSource();
 
         this.Recorder.getBuffers(function (buffers) {
 
-            var Signal = new Tone.Signal();
-            //var startTime = thereminCtx.currentTime;
-            var source = Signal.context.createBufferSource();
-            source.buffer = Signal.context.createBuffer(1, buffers[0].length, 44100);
+            bufferSource.buffer = Signal.context.createBuffer(1, buffers[0].length, 44100);
+            bufferSource.buffer.getChannelData(0).set(buffers[0]);
+            bufferSource.buffer.getChannelData(0).set(buffers[1]);
+            bufferSource.loop = true;
+            bufferSource.connect(Signal.context.destination);
+            bufferSource.start(0);
 
-            source.buffer.getChannelData(0).set(buffers[0]);
-            source.buffer.getChannelData(0).set(buffers[1]);
+            //TODO: Here.. this = window ... How can I make a call to another function inside this class?
 
-            source.loop = true;
-            source.connect(Signal.context.destination);
-            source.start(0);
+        }, this);
 
-        });
+
+        //TODO: this is buffer is null because the code is executing before the buffer has finished encoding
+        console.log(bufferSource.buffer);
+
+        console.log("Playing recording "+this.RecIndex);
+        this.RecIndex++;
     }
 
     DownloadRecording() {
-        this.Recorder.setupDownload(this.Recorder.getBuffer());
+        this.Recorder.setupDownload(this.Recorder.getBuffers());
     }
-
-
-    //GetBuffers(blob) {
-    //    this.Recorder.getBuffers(this.DoneEncoding);
-    //    this.RecIndex++;
-    //}
 
 
 }

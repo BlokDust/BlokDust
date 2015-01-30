@@ -117,7 +117,9 @@ class Source extends Modifiable {
         this.OpenParams();
 
         // Start
-        this.Source.start();
+        if (this.BlockType != BlockType.Recorder){
+            this.Source.start();
+        }
     }
 
     StreamLoaded(source) {
