@@ -84,7 +84,9 @@ class ToneSource extends Source {
         //if (this.IsRenderCached) return;
         //console.log("drawing to render cache");
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"tone");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[5];// PURPLE
         this.DrawMoveTo(-2,0);
         this.DrawLineTo(0,-2);
@@ -109,7 +111,7 @@ class ToneSource extends Source {
         this.DrawLineTo(1,-1);
         this.DrawLineTo(0,0);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
 
         //this.IsRenderCached = true;
     }

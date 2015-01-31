@@ -26,7 +26,9 @@ class BitCrusher extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"bit crusher");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[7];// RED
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(1,-2);
@@ -43,7 +45,7 @@ class BitCrusher extends Modifier {
         this.DrawLineTo(1,-1);
         this.DrawLineTo(0,0);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
 
     }
 

@@ -75,7 +75,9 @@ class ParticleEmitter extends Modifiable{
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"particle emitter");
+
+        /*this.Ctx.beginPath();
         //color(col[2]);// PURPLE
         this.Ctx.fillStyle = "#730081";
         this.DrawMoveTo(-2,0);
@@ -92,7 +94,7 @@ class ParticleEmitter extends Modifiable{
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
 
         if (window.debug){
             this.Ctx.fillStyle = "#fff";

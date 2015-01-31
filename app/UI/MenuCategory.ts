@@ -16,7 +16,10 @@ class MenuCategory {
     public Items: MenuItem[] = [];
     public Selected: number;
     public Hover: boolean;
-    public ItemOffset: number;
+    public XOffset: number;
+    public YOffset: number;
+    public Pages: number;
+    public CurrentPage: number;
 
     constructor (position: Point, size: Size, name: string, offset: number) {
         this.Position = position;
@@ -24,13 +27,14 @@ class MenuCategory {
         this.Name = name;
         this.Selected = 0;
         this.Hover = false;
-        this.ItemOffset = offset;
+        this.XOffset = 0;
+        this.YOffset = offset;
+        this.CurrentPage = 0;
     }
 
     Draw(ctx,units,header: Header) {
         ctx.globalAlpha = 1;
         var dataType = units*10;
-        var headerType = Math.round(units*28);
         var thisHeight = Math.round(header.Height*units);
         var dropDown = Math.round(header.DropDown*units);
         var x = this.Position.x;

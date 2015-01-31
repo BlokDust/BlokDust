@@ -13,28 +13,20 @@ class MenuItem {
     public Name: string;
     public Selected: number;
     public Hover: boolean;
+    private _Sketch: Grid;
 
-    constructor (position: Point, size: Size, name: string) {
+    constructor (position: Point, size: Size, name: string, sketch: Grid) {
         this.Position = position;
         this.Size = size;
         this.Name = name;
         this.Selected = 0;
         this.Hover = false;
+        this._Sketch = sketch;
     }
 
     Draw(ctx,units,x: number,y: number) {
         ctx.globalAlpha = 1;
         var y = this.Position.y - (y*units);
-
-
-        // DIVIDE //
-        /*ctx.strokeStyle = "#393d43";// Grey
-        ctx.beginPath();
-        ctx.moveTo(Math.round(x - (this.Size.Width*0.5)), y - (this.Size.Height*0.5) + (20*units));
-        ctx.lineTo(Math.round(x - (this.Size.Width*0.5)), y + (this.Size.Height*0.5) - (20*units));
-        ctx.stroke();*/
-
-
 
         // NAME //
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
@@ -45,7 +37,7 @@ class MenuItem {
         // INFO //
         var ix = x - (40*units);
         var iy = y - (30*units);
-        var diamond = 12;
+        var diamond = 11;
         ctx.beginPath();
         ctx.moveTo(ix - (diamond*units), iy);
         ctx.lineTo(ix, iy - (diamond*units));
@@ -58,13 +50,17 @@ class MenuItem {
 
         // BLOCK // (TEMP)
         var by = y - (0*units);
-        ctx.beginPath();
+
+        /*ctx.beginPath();
         ctx.moveTo(x - (20*units), by - (20*units));
         ctx.lineTo(x + (20*units), by + (20*units));
         ctx.moveTo(x + (20*units), by - (20*units));
         ctx.lineTo(x - (20*units), by + (20*units));
-        ctx.stroke();
+        ctx.stroke();*/
 
+
+        // ICON //
+        this._Sketch.BlockSprites.Draw(new Point(x,y-(7.5*units)),false,this.Name.toLowerCase());
     }
 }
 

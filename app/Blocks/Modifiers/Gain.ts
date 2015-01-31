@@ -26,14 +26,16 @@ class Volume extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"gain");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = "#40e6ff";
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     Delete(){

@@ -2,9 +2,6 @@
  * Created by luketwyman on 24/01/2015.
  */
 
-/**
- * Created by luketwyman on 17/01/2015.
- */
 import VolumeComponent = require("../AudioEffectComponents/Volume");
 import ChompComponent = require("../AudioEffectComponents/Chomp");
 import IModifier = require("../IModifier");
@@ -68,7 +65,9 @@ class Chopper extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"chopper");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[3];// BLUE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
@@ -86,7 +85,7 @@ class Chopper extends Modifier {
         this.DrawLineTo(1,1);
         this.DrawLineTo(0,2);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
 
     }
 
