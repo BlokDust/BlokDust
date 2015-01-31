@@ -314,23 +314,30 @@ class BlocksSketch extends Grid {
     private _PointerDown(point: Point, handle: () => void) {
         this._IsPointerDown = true;
 
-        var collision: Boolean = this._CheckCollision(point, handle);
+        var UI: Boolean;
+        var collision: Boolean;
 
-        // CLOSE TOOLTIP //
+
+        // UI //
+        UI = this._UIInteraction(point);
         if (this._ToolTip.Open) {
             this._ToolTipClose(this._ToolTip);
         }
-
-        // PARAMS HIT TEST //
-        var panelCheck = false;
-        if (this._ParamsPanel.Scale==1) {
-            panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
-        }
-
         this._Header.MouseDown(point);
         this._ZoomButtons.MouseDown(point);
-        this._CheckParamsInteract(point);
-        if (!collision && !panelCheck){
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.MouseDown(point.x,point.y); // to do : unsplit point
+        }
+
+
+        // BLOCK CLICK //
+        if (!UI) {
+            collision = this._CheckCollision(point, handle);
+        }
+
+
+        // STAGE DRAGGING //
+        if (!collision && !UI){
             this._Transformer.PointerDown(point);
         }
     }
@@ -338,8 +345,9 @@ class BlocksSketch extends Grid {
     private _PointerUp(point: Point, handle: () => void) {
         this._IsPointerDown = false;
 
-        if (this.SelectedBlock){
 
+        // BLOCK //
+        if (this.SelectedBlock){
             if (this.SelectedBlock.HitTest(point)){
                 handle();
                 this.SelectedBlock.MouseUp();
@@ -352,6 +360,7 @@ class BlocksSketch extends Grid {
             }
         }
 
+        // UI //
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseUp();
         }
@@ -363,25 +372,26 @@ class BlocksSketch extends Grid {
                 this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
             }
         }
-
         this._Transformer.PointerUp();
     }
 
     private _PointerMove(point: Point){
+
+        // BLOCK //
         if (this.SelectedBlock){
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
         }
 
+        // UI //
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseMove(point.x,point.y);
         }
-
         this._Header.MouseMove(point);
         this._ZoomButtons.MouseMove(point);
-
         this._Transformer.PointerMove(point);
     }
+
 
     // PROXIMITY CHECK //
     private _CheckProximity(){
@@ -418,29 +428,25 @@ class BlocksSketch extends Grid {
     private _CheckCollision(point: Point, handle: () => void): Boolean {
         //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
 
-        // cancel if interacting with panel
-        var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
-        var blockClick = false;
-        if (!panelCheck || this._ParamsPanel.Scale!==1) {
-            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-                var block:IBlock = App.Blocks.GetValueAt(i);
-                if (block.HitTest(point)) {
-                    handle();
-                    block.MouseDown();
-                    blockClick = false;
-                    this.SelectedBlock = block;
-                    ParamTimeout = true;
-                    setTimeout(function() {
-                        ParamTimeout = false;
-                    },200);
+        // LOOP BLOCKS //
+        for (var i = App.Blocks.Count - 1; i >= 0; i--) {
+            var block:IBlock = App.Blocks.GetValueAt(i);
+            if (block.HitTest(point)) {
+                handle();
+                block.MouseDown();
+                this.SelectedBlock = block;
 
-                    return true;
-                }
-            }
-            if (blockClick==false) {
-                this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
+                // TIMER TO CHECK BETWEEN SINGLE CLICK OR DRAG //
+                ParamTimeout = true;
+                setTimeout(function() {
+                    ParamTimeout = false;
+                },200);
+
+                return true;
             }
         }
+        // CLOSE PARAMS IF NO BLOCK CLICKED //
+        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
 
         return false;
     }
@@ -498,12 +504,29 @@ class BlocksSketch extends Grid {
 
     }
 
-    private _CheckParamsInteract(point) {
-        //var point = (<any>e).args.Source.MousePosition;
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseDown(point.x,point.y);
+    // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
+    private _UIInteraction(point) {
+
+        var zoom = this._ZoomButtons;
+        var header = this._Header;
+
+
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver) {
+            console.log("UI INTERACTION");
+            return true;
         }
+
+        if (this._ParamsPanel.Scale==1) {
+            var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+            if (panelCheck) {
+                console.log("UI INTERACTION");
+                return true;
+            }
+        }
+
+        return false;
     }
+
 
     private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
         return (mx>x && mx<(x+w) && my>y && my<(y+h));

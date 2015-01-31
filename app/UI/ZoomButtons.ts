@@ -51,7 +51,6 @@ class ZoomButtons {
         ctx.lineTo(zin.x, zin.y + (5*units));
         ctx.moveTo(zin.x - (5*units), zin.y);
         ctx.lineTo(zin.x + (5*units), zin.y);
-        ctx.closePath();
         ctx.stroke();
 
 
@@ -59,7 +58,6 @@ class ZoomButtons {
         ctx.beginPath();
         ctx.moveTo(zout.x - (5*units), zout.y);
         ctx.lineTo(zout.x + (5*units), zout.y);
-        ctx.closePath();
         ctx.stroke();
 
 

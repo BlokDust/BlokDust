@@ -27,6 +27,7 @@ class MenuItem {
     Draw(ctx,units,x: number,y: number) {
         ctx.globalAlpha = 1;
         var y = this.Position.y - (y*units);
+        this.Position.x = x;
 
         // NAME //
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
@@ -46,17 +47,6 @@ class MenuItem {
         ctx.closePath();
         ctx.stroke();
         ctx.fillText("?",ix,iy + (dataType*0.38));
-
-
-        // BLOCK // (TEMP)
-        var by = y - (0*units);
-
-        /*ctx.beginPath();
-        ctx.moveTo(x - (20*units), by - (20*units));
-        ctx.lineTo(x + (20*units), by + (20*units));
-        ctx.moveTo(x + (20*units), by - (20*units));
-        ctx.lineTo(x - (20*units), by + (20*units));
-        ctx.stroke();*/
 
 
         // ICON //

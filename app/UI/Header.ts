@@ -28,6 +28,7 @@ class Header {
     public Margin: number;
     private _LeftOver: boolean;
     private _RightOver: boolean;
+    public MenuOver: boolean;
 
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
@@ -47,6 +48,7 @@ class Header {
 
         this._LeftOver = false;
         this._RightOver = false;
+        this.MenuOver = false;
 
         this._Timer = new Fayde.ClockTimer();
         this._Timer.RegisterTimer(this);
@@ -493,6 +495,9 @@ class Header {
         // SCROLL HITTEST //
         this._LeftOver = this.HudCheck(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
         this._RightOver = this.HudCheck(this._Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+
+        // WHOLE MENU //
+        this.MenuOver = (point.y < ((this.Height + this.DropDown)*units));
     }
 
     // IS CLICK WITHIN THIS BOX //

@@ -597,6 +597,10 @@ class BlockSprites {
 
             case "recorder":
 
+                if (!this._Scaled) {
+                    this._Position.y += (grd*0.5);
+                }
+
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(-1,0);
