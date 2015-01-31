@@ -23,7 +23,9 @@ class RecorderBlock extends Source {
 
         super(grid, position);
 
-        //TODO: WHEN RECORDING IT SHOULDN"T DUPLICATE THE RECORDING
+        //TODO: WHEN RECORDING IT SHOULDN"T DUPLICATE THE
+
+        //DO THIS BY NOT HAVING RECORDINGS ARRAY. INSTEAD JUST KEEP OVERWRITING THE RECORDING
 
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"

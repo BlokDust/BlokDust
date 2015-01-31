@@ -21,6 +21,8 @@ class PitchComponent extends Effect implements IEffect {
 
         //TODO: BUG: Pitch mods don't effect Soundcloud if Soundcloud playback has been changed in its own params
 
+        //FIX pitch for microphones
+
         if (this.Modifiable.Source.frequency){
             this.Pitch = this.Modifiable.Source.frequency.getValue();
             this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Pitch * this.PitchIncrement, 0);
