@@ -361,6 +361,7 @@ class BlocksSketch extends Grid {
         }
 
         // UI //
+        this._Header.MouseUp();
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseUp();
         }
@@ -374,6 +375,8 @@ class BlocksSketch extends Grid {
         }
         this._Transformer.PointerUp();
     }
+
+
 
     private _PointerMove(point: Point){
 
@@ -590,6 +593,23 @@ class BlocksSketch extends Grid {
         }, this);
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
+    }
+
+
+    DragCreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }) {
+
+        var block: IBlock = new m(this, new Point(0,0));
+        block.Id = this._GetId();
+        block.MouseDown();
+        this.SelectedBlock = block;
+
+        // todo: should this go in command handler?
+        block.Click.on((block: IBlock) => {
+            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
+        }, this);
+
+        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
+
     }
 
 

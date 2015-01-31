@@ -15,12 +15,16 @@ class BlockSprites {
     public Ctx: CanvasRenderingContext2D;
     private _Scaled: boolean;
     private _Position: Point;
+    private _XOffset: number;
+    private _YOffset: number;
 
     constructor(grid: Grid, ctx: CanvasRenderingContext2D) {
         this.Grid = grid;
         this.Ctx = ctx;
         this._Scaled = true;
         this._Position = new Point(0,0);
+        this._XOffset = 0;
+        this._YOffset = 0;
 
     }
 
@@ -28,6 +32,8 @@ class BlockSprites {
 
         this._Scaled = scaled;
         this._Position = pos;
+        this._XOffset = 0;
+        this._YOffset = 0;
         var grd = this.Grid.CellWidth.width;
 
         switch (block) {
@@ -37,8 +43,8 @@ class BlockSprites {
             case "autowah":
 
                 if (!this._Scaled) {
-                    this._Position.x += (grd*0.5);
-                    this._Position.y += (grd*0.5);
+                    this._XOffset = (grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -63,7 +69,7 @@ class BlockSprites {
             case "bit crusher":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd);
+                    this._YOffset =  grd;
                 }
 
                 this.Ctx.beginPath();
@@ -138,7 +144,7 @@ class BlockSprites {
             case "chorus":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -164,7 +170,7 @@ class BlockSprites {
             case "convolution":
 
                 if (!this._Scaled) {
-                    this._Position.x -= (grd*0.5);
+                    this._XOffset = -(grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -271,8 +277,8 @@ class BlockSprites {
             case "eq":
 
                 if (!this._Scaled) {
-                    this._Position.x -= (grd*0.5);
-                    this._Position.y += (grd*0.5);
+                    this._XOffset = -(grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -329,7 +335,7 @@ class BlockSprites {
             case "gain":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -411,7 +417,7 @@ class BlockSprites {
             case "pitch":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -428,7 +434,7 @@ class BlockSprites {
             case "reverb":
 
                 if (!this._Scaled) {
-                    this._Position.x -= (grd*0.5);
+                    this._XOffset = -(grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -463,7 +469,7 @@ class BlockSprites {
             case "scuzz":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd*1);
+                    this._YOffset = grd;
                 }
 
                 this.Ctx.beginPath();
@@ -488,7 +494,7 @@ class BlockSprites {
             case "tone":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -569,8 +575,8 @@ class BlockSprites {
             case "soundcloud":
 
                 if (!this._Scaled) {
-                    this._Position.x -= (grd*0.5);
-                    this._Position.y += (grd*0.5);
+                    this._XOffset = -(grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -598,7 +604,7 @@ class BlockSprites {
             case "recorder":
 
                 if (!this._Scaled) {
-                    this._Position.y += (grd*0.5);
+                    this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
@@ -638,7 +644,6 @@ class BlockSprites {
             case "particle emitter":
 
                 this.Ctx.beginPath();
-                //color(col[2]);// PURPLE
                 this.Ctx.fillStyle = "#730081";
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(2,0);
@@ -647,7 +652,6 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                //color(col[4]); // RED
                 this.Ctx.fillStyle = "#f22a54";
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
@@ -666,8 +670,9 @@ class BlockSprites {
 
     }
 
+
     DrawMoveTo(x, y) {
-        var pos = this._Position;
+        var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
         var p;
         if (this._Scaled) {
             p = this.Grid.GetRelativePoint(pos, new Point(x, y));
@@ -679,8 +684,9 @@ class BlockSprites {
         this.Ctx.moveTo(p.x, p.y);
     }
 
+
     DrawLineTo(x, y) {
-        var pos = this._Position;
+        var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
         var p;
         if (this._Scaled) {
             p = this.Grid.GetRelativePoint(pos, new Point(x, y));
@@ -691,6 +697,7 @@ class BlockSprites {
         }
         this.Ctx.lineTo(p.x, p.y);
     }
+
 
     // converts a point in grid units to absolute units and transforms it
     GetTransformedPoint(point: Point): Point {
