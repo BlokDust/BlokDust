@@ -23,7 +23,9 @@ class Envelope extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"envelope");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[6];// YELLOW
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
@@ -40,7 +42,7 @@ class Envelope extends Modifier {
         this.DrawLineTo(1,1);
         this.DrawLineTo(0,2);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     Delete(){

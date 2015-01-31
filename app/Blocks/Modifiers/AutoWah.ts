@@ -36,7 +36,9 @@ class AutoWah extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"autowah");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[3];// BLUE
         this.DrawMoveTo(0,-1);
         this.DrawLineTo(1,-1);
@@ -51,7 +53,7 @@ class AutoWah extends Modifier {
         this.DrawLineTo(1,1);
         this.DrawLineTo(-1,1);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     Delete(){

@@ -1,6 +1,7 @@
 import ScaleTransform = Fayde.Media.ScaleTransform;
 import TranslateTransform = Fayde.Media.TranslateTransform;
 import TransformGroup = Fayde.Media.TransformGroup;
+import BlockSprites = require("./Blocks/BlockSprites");
 
 class Grid extends Fayde.Drawing.SketchContext {
 
@@ -9,6 +10,7 @@ class Grid extends Fayde.Drawing.SketchContext {
     public ScaleToFit: boolean = false;
     private _InitialUnitWidth: number;
     public GridSize: number; // multiplier of Units to specify grid cell width
+    public BlockSprites: BlockSprites;
 
     private _TransformGroup: TransformGroup;
 

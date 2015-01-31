@@ -23,7 +23,9 @@ class LFO extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"lfo");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[9];// PINK
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
@@ -39,7 +41,7 @@ class LFO extends Modifier {
         this.DrawLineTo(1,0);
         this.DrawLineTo(1,1);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     Delete(){

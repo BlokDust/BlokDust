@@ -29,7 +29,9 @@ class Phaser extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"phaser");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[9];// PINK
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(-1,-2);
@@ -45,7 +47,7 @@ class Phaser extends Modifier {
         this.DrawLineTo(1,1);
         this.DrawLineTo(1,2);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     Delete(){

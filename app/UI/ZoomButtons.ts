@@ -42,7 +42,7 @@ class ZoomButtons {
 
         var zin = this._InPos;
         var zout = this._OutPos;
-        var diamond = 12;
+        var diamond = 11;
 
 
         // IN //

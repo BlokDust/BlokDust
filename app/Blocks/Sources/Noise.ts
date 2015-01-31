@@ -79,7 +79,9 @@ class Noise extends Source {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"noise");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[4];// GREEN
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
@@ -96,7 +98,7 @@ class Noise extends Source {
         this.DrawLineTo(1,-1);
         this.DrawLineTo(0,0);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     OpenParams() {

@@ -25,6 +25,7 @@ import ParametersPanel = require("./UI/ParametersPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
+import BlockSprites = require("./Blocks/BlockSprites");
 
 declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -37,6 +38,7 @@ class BlocksSketch extends Grid {
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
+    public BlockSprites: BlockSprites;
     private _ParamsPanel: ParametersPanel;
     private _Header: Header;
     private _ToolTip: ToolTip;
@@ -110,6 +112,7 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // INSTANCES //
+        this.BlockSprites = new BlockSprites(this,this.Ctx);
         this._ParamsPanel = new ParametersPanel(this.Ctx,this);
         this._Header = new Header(this.Ctx,this);
         this._ToolTip = new ToolTip(this.Ctx,this);

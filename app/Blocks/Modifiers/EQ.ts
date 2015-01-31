@@ -54,7 +54,9 @@ class EQ extends Modifier {
     Draw() {
         super.Draw();
 
-        this.Ctx.beginPath();
+        this.Grid.BlockSprites.Draw(this.Position,true,"eq");
+
+        /*this.Ctx.beginPath();
         this.Ctx.fillStyle = App.Palette[3];// BLUE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
@@ -79,7 +81,7 @@ class EQ extends Modifier {
         this.DrawLineTo(1,1);
         this.DrawLineTo(2,0);
         this.Ctx.closePath();
-        this.Ctx.fill();
+        this.Ctx.fill();*/
     }
 
     Delete(){
