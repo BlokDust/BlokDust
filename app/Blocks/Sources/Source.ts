@@ -172,7 +172,7 @@ class Source extends Modifiable {
                 break;
             case "volume": this.Source.setGain(value);
                 break;
-            case "playbackRate": this.Source.setPlaybackRate(value, 0.2);
+            case "playbackRate": this.Source.setPlaybackRate(value, 0);
                 break;
         }
 

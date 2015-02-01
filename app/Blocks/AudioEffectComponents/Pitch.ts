@@ -19,16 +19,13 @@ class PitchComponent extends Effect implements IEffect {
     Connect(modifiable: IModifiable): void {
         super.Connect(modifiable);
 
-        //TODO: BUG: Pitch mods don't effect Soundcloud if Soundcloud playback has been changed in its own params
-
         if (this.Modifiable.Source.frequency){
             this.Pitch = this.Modifiable.Source.frequency.getValue();
             this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Pitch * this.PitchIncrement, 0);
-        } else if (this.Modifiable.Source.getPlaybackRate()){
+        } else if (this.Modifiable.Source._playbackRate){
             this.Pitch = this.Modifiable.Source.getPlaybackRate();
             this.Modifiable.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
         }
-
     }
 
     Disconnect(modifiable: IModifiable): void{
@@ -37,11 +34,10 @@ class PitchComponent extends Effect implements IEffect {
         if (this.Modifiable.Source.frequency) {
             this.Pitch = this.Modifiable.Source.frequency.getValue();
             this.Modifiable.Source.frequency.exponentialRampToValueNow(this.Pitch / this.PitchIncrement, 0);
-        } else if (this.Modifiable.Source.getPlaybackRate()){
+        } else if (this.Modifiable.Source._playbackRate){
             this.Pitch = this.Modifiable.Source.getPlaybackRate();
             this.Modifiable.Source.setPlaybackRate(this.Pitch / this.PitchIncrement, 0);
         }
-
     }
 
     Delete() {
@@ -61,7 +57,6 @@ class PitchComponent extends Effect implements IEffect {
                 this.Modifiable.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
             }
         }
-        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {

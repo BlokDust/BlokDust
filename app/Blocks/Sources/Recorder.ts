@@ -13,24 +13,31 @@ declare var RecorderJS;
 
 class RecorderBlock extends Source {
 
-    public Signal;
     public Recorder: any;
-    public RecordingsArray;
-    private RecIndex: number;
+    public RecordedAudio: Tone.Player;
+    public BufferSource;
+    public Filename: string;
+    public RecordedBlob;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Recorder;
 
         super(grid, position);
 
-        //TODO: WHEN RECORDING IT SHOULDN"T DUPLICATE THE RECORDING
+        //TODO: WHEN RECORDING IT SHOULDN"T DUPLICATE THE
 
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
         });
 
-        this.RecIndex = 0;
-        this.RecordingsArray = [];
+        this.RecordedAudio = new Tone.Player();
+        this.RecordedAudio.connect(this.Source);
+        this.BufferSource = this.RecordedAudio.context.createBufferSource();
+
+        this.RecordedAudio.setVolume(10);
+        this.RecordedAudio.loop = true;
+
+        this.Filename = "BlokdustRecording.wav";
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -45,29 +52,15 @@ class RecorderBlock extends Source {
         super.Draw();
 
         this.Grid.BlockSprites.Draw(this.Position,true,"recorder");
-
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9];// PINK
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
-
     }
 
     MouseDown() {
         super.MouseDown();
-
-        console.log('start recording');
         this.StartRecording();
     }
 
     MouseUp() {
         super.MouseUp();
-
-        console.log('stop recording');
         this.StopRecording();
     }
 
@@ -79,60 +72,69 @@ class RecorderBlock extends Source {
 
     StartRecording() {
         this.Recorder.clear();
+        console.log('STARTED RECORDING...');
         this.Recorder.record();
-        console.log("This is recording index " + this.RecIndex);
     }
 
     StopRecording() {
         this.Recorder.stop();
-        this.PlayRecording();
+        this.RecordedAudio.stop();
+        console.log('STOPPED RECORDING');
+        this.SetBuffers();
     }
 
-    PlayRecording() {
+    StartPlayback() {
+        this.RecordedAudio.start();
+        console.log("STARTED PLAYBACK");
+        console.log(this.GetRecordedBlob());
+    }
 
-        var Recording = new Tone.Player();
-        var bufferSource = Recording.context.createBufferSource();
-        var that = this;
+    SetBuffers() {
 
-        this.Recorder.getBuffers(function (buffers) {
+        this.Recorder.getBuffers((buffers) => {
 
-            bufferSource.buffer = Recording.context.createBuffer(1, buffers[0].length, 44100);
-            bufferSource.buffer.getChannelData(0).set(buffers[0]);
-            bufferSource.buffer.getChannelData(0).set(buffers[1]);
+            this.BufferSource.buffer = this.RecordedAudio.context.createBuffer(1, buffers[0].length, 44100);
+            this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
+            this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            that.RecordingsArray.push(bufferSource.buffer);
+            this.RecordedAudio.setBuffer(this.BufferSource.buffer);
 
-            Recording.connect(that.Source);
-            Recording.setBuffer(bufferSource.buffer);
-            Recording.loop = true;
-            Recording.start();
-
-            that.GetRecordedBuffers();
-
+            this._OnBuffersReady();
         });
+    }
 
-        console.log();
+    private _OnBuffersReady() {
+        this.StartPlayback();
+    }
 
-        console.log("Playing recording "+this.RecIndex);
-        this.RecIndex++;
+    StopPlayback() {
+        this.RecordedAudio.stop();
+        console.log("STOPPED PLAYBACK");
     }
 
     GetRecordedBuffers() {
-        return this.RecordingsArray;
+        return this.BufferSource.buffer;
+    }
+
+    GetRecordedBlob() {
+        this.Recorder.exportWAV((blob) => {
+            this.RecordedBlob = blob;
+        });
+
+        return this.RecordedBlob;
     }
 
     DownloadRecording() {
-        this.Recorder.setupDownload(this.Recorder.getBuffers());
+        this.Recorder.setupDownload(this.GetRecordedBlob(), this.Filename);
     }
 
     Delete(){
         super.Delete();
 
+        this.RecordedAudio.stop();
+        this.RecordedAudio.dispose();
+        this.BufferSource = null;
         this.Recorder = null;
-
-        //TODO: DELETE EVERYTHING PROPERLY
-
-        console.log('stopped recordings');
     }
 }
 
