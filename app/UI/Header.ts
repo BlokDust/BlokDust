@@ -28,6 +28,7 @@ class Header {
     public Margin: number;
     private _LeftOver: boolean;
     private _RightOver: boolean;
+    public MenuOver: boolean;
 
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
@@ -47,6 +48,7 @@ class Header {
 
         this._LeftOver = false;
         this._RightOver = false;
+        this.MenuOver = false;
 
         this._Timer = new Fayde.ClockTimer();
         this._Timer.RegisterTimer(this);
@@ -59,19 +61,24 @@ class Header {
                   "name": "Source",
                   "items": [
                       {
-                          "name": "Tone"
+                          "name": "Tone",
+                          "id": "ToneSource"
                       },
                       {
-                          "name": "Noise"
+                          "name": "Noise",
+                          "id": "Noise"
                       },
                       {
-                          "name": "Microphone"
+                          "name": "Microphone",
+                          "id": "Microphone"
                       },
                       {
-                          "name": "SoundCloud"
+                          "name": "SoundCloud",
+                          "id": "Soundcloud"
                       },
                       {
-                          "name": "Recorder"
+                          "name": "Recorder",
+                          "id": "Recorder"
                       }
                   ]
               },
@@ -80,55 +87,72 @@ class Header {
                   "name": "Effects",
                   "items": [
                       {
-                          "name": "Autowah"
+                          "name": "Autowah",
+                          "id": "AutoWah"
                       },
                       {
-                          "name": "Bit Crusher"
+                          "name": "Bit Crusher",
+                          "id": "BitCrusher"
                       },
                       {
-                          "name": "Chomp"
+                          "name": "Chomp",
+                          "id": "Chomp"
                       },
                       {
-                          "name": "Chopper"
+                          "name": "Chopper",
+                          "id": "Chopper"
                       },
                       {
-                          "name": "Chorus"
+                          "name": "Chorus",
+                          "id": "Chopper"
                       },
                       {
-                          "name": "Convolution"
+                          "name": "Convolution",
+                          "id": "ConvolutionReverb"
                       },
                       {
-                          "name": "Delay"
+                          "name": "Delay",
+                          "id": "Delay"
                       },
                       {
-                          "name": "Distortion"
+                          "name": "Distortion",
+                          "id": "Distortion"
                       },
                       {
-                          "name": "Envelope"
+                          "name": "Envelope",
+                          "id": "envelope"
                       },
                       {
-                          "name": "EQ"
+                          "name": "EQ",
+                          "id": "EQ"
                       },
                       {
-                          "name": "Filter"
+                          "name": "Filter",
+                          "id": "Filter"
                       },
                       {
-                          "name": "Gain"
+                          "name": "Gain",
+                          "id": "Gain"
                       },
                       {
-                          "name": "LFO"
+                          "name": "LFO",
+                          "id": "LFO"
                       },
                       {
-                          "name": "Phaser"
+                          "name": "Phaser",
+                          "id": "Phaser"
                       },
                       {
-                          "name": "Pitch"
+                          "name": "Pitch",
+                          "id": "PitchIncrease"
                       },
                       {
-                          "name": "Reverb"
+                          "name": "Reverb",
+                          "id": "Reverb"
                       },
                       {
-                          "name": "Scuzz"
+                          "name": "Scuzz",
+                          "id": "Scuzz"
                       }
                   ]
               },
@@ -137,7 +161,8 @@ class Header {
                   "name": "Power",
                   "items": [
                       {
-                          "name": "Particle Emitter"
+                          "name": "Particle Emitter",
+                          "id": "ParticleEmitter"
                       }
                   ]
               },
@@ -146,7 +171,8 @@ class Header {
                   "name": "Interaction",
                   "items": [
                       {
-                          "name": "Keyboard"
+                          "name": "Keyboard",
+                          "id": "Keyboard"
                       }
                   ]
               }
@@ -223,10 +249,11 @@ class Header {
 
             for (var j=0; j<itemN; j++) {
                 var name = json.categories[i].items[j].name.toUpperCase();
+                var id = json.categories[i].items[j].id;
                 var point = new Point(0,(this.Height + (this.DropDownHeight*0.5))*units);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
-                menuCats[i].Items.push(new MenuItem(point,size,name,this._Sketch));
+                menuCats[i].Items.push(new MenuItem(point,size,name,id,this._Sketch));
                 menuCats[i].Pages = Math.floor(itemN/this.ItemsPerPage);
             }
 
@@ -314,13 +341,14 @@ class Header {
                 var margin = 20 + (this.Margin*0.666);
                 ctx.lineWidth = 1;
 
+
                 // CLIPPING RECTANGLE //
                 ctx.save();
                 ctx.beginPath();
                 ctx.moveTo((margin*units),(this.Height)*units);
                 ctx.lineTo(this._Sketch.Width - (margin*units),(this.Height)*units);
-                ctx.lineTo(this._Sketch.Width - (margin*units),(this.Height + this.DropDown)*units);
-                ctx.lineTo((margin*units),(this.Height + this.DropDown)*units);
+                ctx.lineTo(this._Sketch.Width - (margin*units),(this.Height + (this.DropDown*2))*units);
+                ctx.lineTo((margin*units),(this.Height + (this.DropDown*2))*units);
                 ctx.closePath();
                 ctx.clip();
 
@@ -451,6 +479,16 @@ class Header {
             }
         }
 
+        // ITEMS //
+        var cat = this.MenuItems[this._SelectedCategory];
+        for (var i = 0; i<cat.Items.length; i++) {
+            if (cat.Items[i].Hover) {
+                cat.Items[i].MouseDown(point);
+            }
+        }
+
+
+
         // SCROLL //
         if (this._LeftOver) {
             var cat = this.MenuItems[this._SelectedCategory];
@@ -470,30 +508,58 @@ class Header {
 
         // CLOSE DROPDOWN //
         if (point.y > ((this.Height + this.DropDown)*units) && this.DropDown > 0) {
-            TWEEN.removeAll();
-            this.DelayTo(this,0,300,0,"DropDown");
-            this.DelayTo(this,0,600,50,"Margin");
-            for (var i=0; i<this.MenuItems.length; i++) {
-                this.DelayTo(this.MenuItems[i],0,250,0,"Selected");
-                this.DelayTo(this.MenuItems[i],this.DropDownHeight,250,0,"YOffset");
-            }
+            this.ClosePanel();
+        }
+    }
+
+    ClosePanel() {
+        TWEEN.removeAll();
+        this.DelayTo(this,0,300,0,"DropDown");
+        this.DelayTo(this,0,600,50,"Margin");
+        for (var i=0; i<this.MenuItems.length; i++) {
+            this.DelayTo(this.MenuItems[i],0,250,0,"Selected");
+            this.DelayTo(this.MenuItems[i],this.DropDownHeight,250,0,"YOffset");
         }
     }
 
 
     MouseMove(point) {
         var units = this._Sketch.Unit.width;
+        var grd = this._Sketch.CellWidth.width;
 
-        // CATEGORY HITTEST //
+        // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
             cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.Width*0.5) + (2*units), (5*units), cat.Size.Width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+
+            //ITEMS HIT TEST //
+            for (var j=0; j<cat.Items.length; j++) {
+                var item = cat.Items[j];
+                item.Hover = this.HudCheck(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
+
+                item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
+            }
+
         }
 
-        // SCROLL HITTEST //
+        // SCROLL HIT TEST //
         this._LeftOver = this.HudCheck(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
         this._RightOver = this.HudCheck(this._Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+
+        // WHOLE MENU //
+        this.MenuOver = (point.y < ((this.Height + this.DropDown)*units));
     }
+
+    MouseUp() {
+        // ITEMS //
+        var cat = this.MenuItems[this._SelectedCategory];
+        for (var i = 0; i<cat.Items.length; i++) {
+            cat.Items[i].MouseUp();
+        }
+    }
+
+
+
 
     // IS CLICK WITHIN THIS BOX //
     HudCheck(x,y,w,h,mx,my) {
