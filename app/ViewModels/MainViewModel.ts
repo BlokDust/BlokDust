@@ -106,111 +106,111 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     }
 
     PowerBlockBtn_Click(e: Fayde.Input.MouseButtonEventArgs){
-        this._BlocksSketch.CreateBlock(ParticleEmitter);
+        this._BlocksSketch.CreateBlockFromType(ParticleEmitter);
     }
 
     ToneBlockBtn_Click(e: Fayde.Input.MouseButtonEventArgs){
-        this._BlocksSketch.CreateBlock(ToneSource);
+        this._BlocksSketch.CreateBlockFromType(ToneSource);
     }
 
     NoiseBlockBtn_Click(e: Fayde.Input.MouseButtonEventArgs){
-        this._BlocksSketch.CreateBlock(Noise);
+        this._BlocksSketch.CreateBlockFromType(Noise);
     }
 
     KeyboardBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Keyboard);
+        this._BlocksSketch.CreateBlockFromType(Keyboard);
     }
 
     SoundcloudBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Soundcloud);
+        this._BlocksSketch.CreateBlockFromType(Soundcloud);
     }
 
     GainBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Gain);
+        this._BlocksSketch.CreateBlockFromType(Gain);
     }
 
     ChopperBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Chopper);
+        this._BlocksSketch.CreateBlockFromType(Chopper);
     }
 
     PitchIncreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(PitchIncrease);
+        this._BlocksSketch.CreateBlockFromType(PitchIncrease);
     }
 
     PitchDecreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(PitchDecrease);
+        this._BlocksSketch.CreateBlockFromType(PitchDecrease);
     }
 
     EnvelopeBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Envelope);
+        this._BlocksSketch.CreateBlockFromType(Envelope);
     }
 
     FilterBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Filter);
+        this._BlocksSketch.CreateBlockFromType(Filter);
     }
 
     LFOBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(LFO);
+        this._BlocksSketch.CreateBlockFromType(LFO);
     }
 
     TremoloBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Tremolo);
+        this._BlocksSketch.CreateBlockFromType(Tremolo);
     }
 
     DelayBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Delay);
+        this._BlocksSketch.CreateBlockFromType(Delay);
     }
 
     ScuzzBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Scuzz);
+        this._BlocksSketch.CreateBlockFromType(Scuzz);
     }
 
     DistortionBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Distortion);
+        this._BlocksSketch.CreateBlockFromType(Distortion);
     }
 
     ChorusBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Chorus);
+        this._BlocksSketch.CreateBlockFromType(Chorus);
     }
 
     ReverbBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Reverb);
+        this._BlocksSketch.CreateBlockFromType(Reverb);
     }
 
     ConvolverBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Convolver);
+        this._BlocksSketch.CreateBlockFromType(Convolver);
     }
 
     PhaserBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Phaser);
+        this._BlocksSketch.CreateBlockFromType(Phaser);
     }
 
     EQBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(EQ);
+        this._BlocksSketch.CreateBlockFromType(EQ);
     }
 
     BitCrusherBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(BitCrusher);
+        this._BlocksSketch.CreateBlockFromType(BitCrusher);
     }
 
     ChompBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Chomp);
+        this._BlocksSketch.CreateBlockFromType(Chomp);
     }
 
     AutoWahBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(AutoWah);
+        this._BlocksSketch.CreateBlockFromType(AutoWah);
     }
 
     MicrophoneBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Microphone);
+        this._BlocksSketch.CreateBlockFromType(Microphone);
     }
 
     PannerBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Panner);
+        this._BlocksSketch.CreateBlockFromType(Panner);
     }
 
     RecorderBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlock(Recorder);
+        this._BlocksSketch.CreateBlockFromType(Recorder);
     }
 
     DeleteBlockBtn_Click(e: any){

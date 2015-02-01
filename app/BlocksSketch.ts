@@ -27,6 +27,38 @@ import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
 import BlockSprites = require("./Blocks/BlockSprites");
 
+// block imports
+
+import ToneSource = require("./Blocks/Sources/ToneSource");
+import Noise = require("./Blocks/Sources/Noise");
+import Microphone = require("./Blocks/Sources/Microphone");
+import Soundcloud = require("./Blocks/Sources/Soundcloud");
+import Recorder = require("./Blocks/Sources/Recorder");
+
+import AutoWah = require("./Blocks/Modifiers/AutoWah");
+import BitCrusher = require("./Blocks/Modifiers/BitCrusher");
+import Chomp = require("./Blocks/Modifiers/Chomp");
+import Chopper = require("./Blocks/Modifiers/Chopper");
+import Chorus = require("./Blocks/Modifiers/Chorus");
+import ConvolutionReverb = require("./Blocks/Modifiers/ConvolutionReverb");
+import Delay = require("./Blocks/Modifiers/Delay");
+import Distortion = require("./Blocks/Modifiers/Distortion");
+import Envelope = require("./Blocks/Modifiers/Envelope");
+import EQ = require("./Blocks/Modifiers/EQ");
+import Filter = require("./Blocks/Modifiers/Filter");
+import Gain = require("./Blocks/Modifiers/Gain");
+import LFO = require("./Blocks/Modifiers/LFO");
+import Panner = require("./Blocks/Modifiers/Panner");
+import Phaser = require("./Blocks/Modifiers/Phaser");
+import PitchIncrease = require("./Blocks/Modifiers/PitchIncrease");
+import Reverb = require("./Blocks/Modifiers/Reverb");
+import Scuzz = require("./Blocks/Modifiers/Scuzz");
+
+import ParticleEmitter = require("./Blocks/Sources/ParticleEmitter");
+
+import Keyboard = require("./Blocks/Modifiers/Keyboard");
+
+
 declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
@@ -45,7 +77,7 @@ class BlocksSketch extends Grid {
     private _ZoomButtons: ZoomButtons;
     private _ToolTipTimeout;
     private _LastSize: Size;
-
+    private _PointerPoint: Point;
 
 
     //-------------------------------------------------------------------------------------------
@@ -57,7 +89,6 @@ class BlocksSketch extends Grid {
         super();
 
         this._DisplayList = new DisplayList(App.Blocks);
-
 
         // register command handlers
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
@@ -87,7 +118,7 @@ class BlocksSketch extends Grid {
     }
 
 
-    private _GetId(): number {
+    public GetId(): number {
         return this._Id++;
     }
 
@@ -99,6 +130,8 @@ class BlocksSketch extends Grid {
         this.GridSize = 15;
         this.Divisor = 850; // 70
         this._LastSize = new Size(this.Width,this.Height);
+        this._PointerPoint = new Point();
+
 
         // todo: make these default values
         this._Transformer = new Transformer();
@@ -313,6 +346,7 @@ class BlocksSketch extends Grid {
 
     private _PointerDown(point: Point, handle: () => void) {
         this._IsPointerDown = true;
+        this._PointerPoint = point;
 
         var UI: Boolean;
         var collision: Boolean;
@@ -582,10 +616,10 @@ class BlocksSketch extends Grid {
         }
     }
 
-    CreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
+    CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
 
-        var block: IBlock = new m(this, this.GetRandomGridPosition());
-        block.Id = this._GetId();
+        var block: IBlock = new m(this, this._PointerPoint);
+        block.Id = this.GetId();
 
         // todo: should this go in command handler?
         block.Click.on((block: IBlock) => {
@@ -593,24 +627,105 @@ class BlocksSketch extends Grid {
         }, this);
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
-    }
 
-
-    DragCreateBlock<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }) {
-
-        var block: IBlock = new m(this, new Point(0,0));
-        block.Id = this._GetId();
         block.MouseDown();
         this.SelectedBlock = block;
-
-        // todo: should this go in command handler?
-        block.Click.on((block: IBlock) => {
-            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
-        }, this);
-
-        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
-
     }
+
+    CreateBlockFromString(type: string): void {
+        switch (type){
+
+            case "ToneSource" :
+                this.CreateBlockFromType(ToneSource);
+                break;
+            case "Noise" :
+                this.CreateBlockFromType(Noise);
+                break;
+            case "Recorder" :
+                this.CreateBlockFromType(Recorder);
+                break;
+            case "Soundcloud" :
+                this.CreateBlockFromType(Soundcloud);
+                break;
+            case "Microphone" :
+                this.CreateBlockFromType(Microphone);
+                break;
+
+            case "AutoWah" :
+                this.CreateBlockFromType(AutoWah);
+                break;
+            case "BitCrusher" :
+                this.CreateBlockFromType(BitCrusher);
+                break;
+            case "Chomp" :
+                this.CreateBlockFromType(Chomp);
+                break;
+            case "Chopper" :
+                this.CreateBlockFromType(Chopper);
+                break;
+            case "Chorus" :
+                this.CreateBlockFromType(Chorus);
+                break;
+            case "ConvolutionReverb" :
+                this.CreateBlockFromType(ConvolutionReverb);
+                break;
+            case "Delay" :
+                this.CreateBlockFromType(Delay);
+                break;
+            case "Distortion" :
+                this.CreateBlockFromType(Distortion);
+                break;
+            case "Envelope" :
+                this.CreateBlockFromType(Envelope);
+                break;
+            case "EQ" :
+                this.CreateBlockFromType(EQ);
+                break;
+            case "Filter" :
+                this.CreateBlockFromType(Filter);
+                break;
+            case "Gain" :
+                this.CreateBlockFromType(Gain);
+                break;
+            case "LFO" :
+                this.CreateBlockFromType(LFO);
+                break;
+            case "Panner" :
+                this.CreateBlockFromType(Panner);
+                break;
+            case "Phaser" :
+                this.CreateBlockFromType(Phaser);
+                break;
+            case "PitchIncrease" :
+                this.CreateBlockFromType(PitchIncrease);
+                break;
+            case "Reverb" :
+                this.CreateBlockFromType(Reverb);
+                break;
+            case "Scuzz" :
+                this.CreateBlockFromType(Scuzz);
+                break;
+
+
+            case "ParticleEmitter" :
+                this.CreateBlockFromType(ParticleEmitter);
+                break;
+
+
+            case "Keyboard" :
+                this.CreateBlockFromType(Keyboard);
+                break;
+
+
+        }
+    }
+
+    /*DragCreateBlock<T extends IBlock>(type: string) {
+
+        var block = this.CreateBlockFromString(type);
+
+        this.SelectedBlock = block;
+    }*/
 
 
     //-------------------------------------------------------------------------------------------

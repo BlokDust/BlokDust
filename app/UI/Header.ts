@@ -104,7 +104,7 @@ class Header {
                       },
                       {
                           "name": "Chorus",
-                          "id": "Chopper"
+                          "id": "Chorus"
                       },
                       {
                           "name": "Convolution",
@@ -120,7 +120,7 @@ class Header {
                       },
                       {
                           "name": "Envelope",
-                          "id": "envelope"
+                          "id": "Envelope"
                       },
                       {
                           "name": "EQ",
@@ -480,14 +480,15 @@ class Header {
         }
 
         // ITEMS //
-        var cat = this.MenuItems[this._SelectedCategory];
-        for (var i = 0; i<cat.Items.length; i++) {
-            if (cat.Items[i].Hover) {
-                cat.Items[i].MouseDown(point);
+
+        if (this.DropDown>0) {
+            var cat = this.MenuItems[this._SelectedCategory];
+            for (var i = 0; i<cat.Items.length; i++) {
+                if (cat.Items[i].Hover) {
+                    cat.Items[i].MouseDown(point);
+                }
             }
         }
-
-
 
         // SCROLL //
         if (this._LeftOver) {

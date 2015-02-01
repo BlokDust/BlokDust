@@ -6,6 +6,8 @@ import App = require("./../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
+import Recorder = require("../Blocks/Sources/Recorder");
+import IBlock = require("../Blocks/IBlock");
 
 class MenuItem {
 
@@ -94,7 +96,7 @@ class MenuItem {
             if (point.y > cutoff) {
                 header.ClosePanel();
                 this._MouseDown = false;
-                //this._Sketch.DragCreateBlock(this.ID);
+                this._Sketch.CreateBlockFromString(this.ID);
             }
         }
     }
