@@ -540,7 +540,6 @@ class Header {
 
                 item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
             }
-
         }
 
         // SCROLL HIT TEST //

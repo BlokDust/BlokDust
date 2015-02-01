@@ -25,6 +25,7 @@ import ParametersPanel = require("./UI/ParametersPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
+import TrashCan = require("./UI/TrashCan");
 import BlockSprites = require("./Blocks/BlockSprites");
 
 // block imports
@@ -75,9 +76,11 @@ class BlocksSketch extends Grid {
     private _Header: Header;
     private _ToolTip: ToolTip;
     private _ZoomButtons: ZoomButtons;
+    private _TrashCan: TrashCan;
     private _ToolTipTimeout;
     private _LastSize: Size;
     private _PointerPoint: Point;
+    public IsDraggingABlock: boolean = false;
 
 
     //-------------------------------------------------------------------------------------------
@@ -150,6 +153,7 @@ class BlocksSketch extends Grid {
         this._Header = new Header(this.Ctx,this);
         this._ToolTip = new ToolTip(this.Ctx,this);
         this._ZoomButtons = new ZoomButtons(this.Ctx,this);
+        this._TrashCan = new TrashCan(this);
     }
 
 
@@ -291,7 +295,6 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
     // FIRST TOUCHES //
-
     MouseDown(e: Fayde.Input.MouseEventArgs){
         var point = (<any>e).args.Source.MousePosition;
 
@@ -369,6 +372,10 @@ class BlocksSketch extends Grid {
             collision = this._CheckCollision(point, handle);
         }
 
+        if (collision) {
+            this._IsPointerDown = false;
+        }
+
 
         // STAGE DRAGGING //
         if (!collision && !UI){
@@ -378,7 +385,7 @@ class BlocksSketch extends Grid {
 
     private _PointerUp(point: Point, handle: () => void) {
         this._IsPointerDown = false;
-
+        this.IsDraggingABlock = false;
 
         // BLOCK //
         if (this.SelectedBlock){
@@ -396,6 +403,7 @@ class BlocksSketch extends Grid {
 
         // UI //
         this._Header.MouseUp();
+        this._TrashCan.MouseUp(point);
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseUp();
         }
