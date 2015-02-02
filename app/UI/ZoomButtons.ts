@@ -21,15 +21,15 @@ class ZoomButtons {
         this._Sketch = sketch;
         this.InRoll = this.OutRoll = false;
         var units = this._Sketch.Unit.width;
-        this._InPos = new Point(20*units,this._Sketch.Height - (20*units));
-        this._OutPos = new Point(60*units,this._Sketch.Height - (20*units));
+        this._InPos = new Point(30*units,this._Sketch.Height - (30*units));
+        this._OutPos = new Point(70*units,this._Sketch.Height - (30*units));
 
     }
 
     UpdatePositions() {
         var units = this._Sketch.Unit.width;
-        this._InPos = new Point(20*units,this._Sketch.Height - (20*units));
-        this._OutPos = new Point(60*units,this._Sketch.Height - (20*units));
+        this._InPos = new Point(30*units,this._Sketch.Height - (30*units));
+        this._OutPos = new Point(70*units,this._Sketch.Height - (30*units));
     }
 
     Draw() {

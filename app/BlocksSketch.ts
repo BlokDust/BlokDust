@@ -153,7 +153,7 @@ class BlocksSketch extends Grid {
         this._Header = new Header(this.Ctx,this);
         this._ToolTip = new ToolTip(this.Ctx,this);
         this._ZoomButtons = new ZoomButtons(this.Ctx,this);
-        this._TrashCan = new TrashCan(this);
+        this._TrashCan = new TrashCan(this.Ctx,this);
     }
 
 
@@ -261,6 +261,7 @@ class BlocksSketch extends Grid {
         this._ToolTip.Draw();
         this._ParamsPanel.Draw();
         this._ZoomButtons.Draw();
+        this._TrashCan.Draw();
         this._Header.Draw();
     }
 
@@ -373,7 +374,7 @@ class BlocksSketch extends Grid {
         }
 
         if (collision) {
-            this._IsPointerDown = false;
+            this.IsDraggingABlock = true;
         }
 
 
@@ -387,34 +388,41 @@ class BlocksSketch extends Grid {
         this._IsPointerDown = false;
         this.IsDraggingABlock = false;
 
-        // BLOCK //
-        if (this.SelectedBlock){
-            if (this.SelectedBlock.HitTest(point)){
-                handle();
-                this.SelectedBlock.MouseUp();
+        var blockDelete = this._TrashCan.MouseUp();
 
-                // if the block has moved, create an undoable operation.
-                if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                    var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
-                    App.OperationManager.Do(op);
+        if (!blockDelete) {
+            // BLOCK //
+            if (this.SelectedBlock){
+                if (this.SelectedBlock.HitTest(point)){
+                    handle();
+                    this.SelectedBlock.MouseUp();
+
+                    // if the block has moved, create an undoable operation.
+                    if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
+                        var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
+                        App.OperationManager.Do(op);
+                    }
+                }
+            }
+
+            // OPEN PANEL //
+            if (ParamTimeout) {
+                this.SelectedBlock.OpenParams();
+                if (this.SelectedBlock.ParamJson) {
+                    this._ParamsPanel.SelectedBlock = this.SelectedBlock;
+                    this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
                 }
             }
         }
 
+
         // UI //
         this._Header.MouseUp();
-        this._TrashCan.MouseUp(point);
+
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.MouseUp();
         }
-        // OPEN PANEL //
-        if (ParamTimeout) {
-            this.SelectedBlock.OpenParams();
-            if (this.SelectedBlock.ParamJson) {
-                this._ParamsPanel.SelectedBlock = this.SelectedBlock;
-                this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
-            }
-        }
+
         this._Transformer.PointerUp();
     }
 
@@ -434,6 +442,7 @@ class BlocksSketch extends Grid {
         }
         this._Header.MouseMove(point);
         this._ZoomButtons.MouseMove(point);
+        this._TrashCan.MouseMove(point);
         this._Transformer.PointerMove(point);
     }
 
@@ -638,6 +647,7 @@ class BlocksSketch extends Grid {
 
         block.MouseDown();
         this.SelectedBlock = block;
+        this.IsDraggingABlock = true;
     }
 
 
@@ -729,12 +739,6 @@ class BlocksSketch extends Grid {
         }
     }
 
-    /*DragCreateBlock<T extends IBlock>(type: string) {
-
-        var block = this.CreateBlockFromString(type);
-
-        this.SelectedBlock = block;
-    }*/
 
 
     //-------------------------------------------------------------------------------------------
