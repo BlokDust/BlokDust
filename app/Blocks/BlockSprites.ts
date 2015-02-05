@@ -335,6 +335,7 @@ class BlockSprites {
             case "gain":
 
                 if (!this._Scaled) {
+                    this._XOffset = -(grd*0.5);
                     this._YOffset = (grd*0.5);
                 }
 
@@ -425,6 +426,7 @@ class BlockSprites {
             case "pitch":
 
                 if (!this._Scaled) {
+                    this._XOffset = -(grd*0.5);
                     this._YOffset = (grd*0.5);
                 }
 
@@ -445,7 +447,7 @@ class BlockSprites {
                 this.DrawLineTo(0,1);
                 this.Ctx.closePath();
                 this.Ctx.fill();*/
-                
+
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-1,0);
