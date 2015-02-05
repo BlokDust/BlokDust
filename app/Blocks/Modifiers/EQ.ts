@@ -102,7 +102,7 @@ class EQ extends Modifier {
                     "setting" :"frequency-1",
                     "props" : {
                         "value" : this.Component.GetValue("frequency-1"),
-                        "min" : 0,
+                        "min" : 20,
                         "max" : 20000,
                         "quantised" : false,
                         "centered" : false,
@@ -128,7 +128,7 @@ class EQ extends Modifier {
                     "setting" :"frequency-2",
                     "props" : {
                         "value" : this.Component.GetValue("frequency-2"),
-                        "min" : 0,
+                        "min" : 20,
                         "max" : 20000,
                         "quantised" : false,
                         "centered" : false,
@@ -154,7 +154,7 @@ class EQ extends Modifier {
                     "setting" :"frequency-3",
                     "props" : {
                         "value" : this.Component.GetValue("frequency-3"),
-                        "min" : 0,
+                        "min" : 20,
                         "max" : 20000,
                         "quantised" : false,
                         "centered" : false,
@@ -180,7 +180,7 @@ class EQ extends Modifier {
                     "setting" :"frequency-4",
                     "props" : {
                         "value" : this.Component.GetValue("frequency-4"),
-                        "min" : 0,
+                        "min" : 20,
                         "max" : 20000,
                         "quantised" : false,
                         "centered" : false,

@@ -20,17 +20,14 @@ class TrashCan {
     Draw() {
         var units = this._Sketch.Unit.width;
         var ctx = this._Ctx;
-        ctx.lineWidth = 2;
-
         var tx = this._Sketch.Width - (30*units);
         var ty = this._Sketch.Height - (30*units);
-
         var s = 1;
         if (this._RollOver && this._Sketch.IsDraggingABlock) {
             s = 1.2;
         }
 
-
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(tx - ((11*s)*units), ty - ((11*s)*units)); // tl
         ctx.lineTo(tx + ((11*s)*units), ty - ((11*s)*units)); // tr
@@ -39,6 +36,7 @@ class TrashCan {
         ctx.closePath();
         ctx.stroke();
 
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(tx - ((4*s)*units), ty - ((4*s)*units));
         ctx.lineTo(tx + ((4*s)*units), ty + ((4*s)*units));

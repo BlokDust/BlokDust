@@ -386,10 +386,14 @@ class BlocksSketch extends Grid {
 
     private _PointerUp(point: Point, handle: () => void) {
         this._IsPointerDown = false;
+
+        if (this.IsDraggingABlock) {
+            var blockDelete = this._TrashCan.MouseUp();
+        }
+
+
+
         this.IsDraggingABlock = false;
-
-        var blockDelete = this._TrashCan.MouseUp();
-
         if (!blockDelete) {
             // BLOCK //
             if (this.SelectedBlock){

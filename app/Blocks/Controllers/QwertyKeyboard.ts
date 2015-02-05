@@ -229,7 +229,7 @@ class Keyboard extends Effect implements IEffect {
         jsonVariable[param] = value;
 
         if (param == "glide") {
-            this.Settings.glide = value;
+            this.Settings.glide = value/100;
         }
     }
 
@@ -238,7 +238,7 @@ class Keyboard extends Effect implements IEffect {
         var val;
 
         if (param == "glide") {
-            val = this.Settings.glide;
+            val = this.Settings.glide*100;
         }
         return val;
     }
