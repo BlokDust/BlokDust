@@ -53,7 +53,7 @@ class PitchComponent extends Effect implements IEffect {
             this.PitchIncrement = value;
             if (this.Modifiable && this.Modifiable.Source.frequency) {
                 this.Modifiable.Source.frequency.linearRampToValueAtTime(this.Pitch * this.PitchIncrement, 0 );
-            } else if (this.Modifiable && this.Modifiable.Source.getPlaybackRate()) {
+            } else if (this.Modifiable && this.Modifiable.Source._playbackRate) {
                 this.Modifiable.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
             }
         }

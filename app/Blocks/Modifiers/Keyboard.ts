@@ -67,8 +67,7 @@ class Keyboard extends Modifier {
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,
-                        "centered" : false,
-                        "logarithmic": true
+                        "centered" : false
                     }
                 }
             ]

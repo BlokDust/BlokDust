@@ -9,8 +9,6 @@ import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
-declare var RecorderJS;
-
 class RecorderBlock extends Source {
 
     public Recorder: any;
@@ -18,13 +16,12 @@ class RecorderBlock extends Source {
     public BufferSource;
     public Filename: string;
     public RecordedBlob;
+    public StopPlaybackOnRecord: boolean;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Recorder;
 
         super(grid, position);
-
-        //TODO: WHEN RECORDING IT SHOULDN"T DUPLICATE THE
 
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
@@ -36,6 +33,7 @@ class RecorderBlock extends Source {
 
         this.RecordedAudio.setVolume(10);
         this.RecordedAudio.loop = true;
+        this.StopPlaybackOnRecord = false;
 
         this.Filename = "BlokdustRecording.wav";
 
@@ -135,6 +133,7 @@ class RecorderBlock extends Source {
         this.RecordedAudio.dispose();
         this.BufferSource = null;
         this.Recorder = null;
+        this.RecordedBlob = null;
     }
 }
 
