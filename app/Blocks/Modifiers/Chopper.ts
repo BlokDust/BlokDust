@@ -16,6 +16,7 @@ class Chopper extends Modifier {
     public Depth: number;
     public Polarity: number;
     public Transport;
+    public Timer;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -38,7 +39,6 @@ class Chopper extends Modifier {
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
 
-
         //this.Transport = Tone.Transport;
         //this.Transport.start();
         this.SetVolume();
@@ -46,8 +46,8 @@ class Chopper extends Modifier {
 
     SetVolume() {
         var me = this;
-        setTimeout(function() {
-            if (me) {
+        this.Timer = setTimeout(function() {
+            if (me.Component) {
                 if (me.Polarity==0) {
                     me.Component.SetValue("gain",5-me.Depth);
                     me.Polarity = 1;
@@ -61,6 +61,24 @@ class Chopper extends Modifier {
         },this.Rate);
     }
 
+
+    /*SetVolume() {
+        var me = this;
+        this.Timer = this.Transport.setInterval(function() {
+            console.log("timeout");
+            if (me.Component) {
+                if (me.Polarity==0) {
+                    me.Component.SetValue("gain",5-me.Depth);
+                    me.Polarity = 1;
+                } else {
+                    me.Component.SetValue("gain",5);
+                    me.Polarity = 0;
+                }
+                //me.SetVolume();
+            }
+
+        },"40hz");
+    }*/
 
     Draw() {
         super.Draw();
@@ -90,7 +108,8 @@ class Chopper extends Modifier {
     }
 
     Delete(){
-        this.Transport.stop();
+        //this.Transport.stop();
+        clearTimeout(this.Timer);
         this.Component.Delete();
     }
 

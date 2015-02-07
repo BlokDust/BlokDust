@@ -34,25 +34,11 @@ class EQComponent extends Effect implements IEffect {
                 "gain" : Settings.band3.gain
             },
             {
-                "type" : "peaking",
+                "type" : "highshelf",
                 "frequency" : Settings.band4.frequency,
                 "rolloff" : -12,
                 "Q" : Settings.band4.Q,
                 "gain" : Settings.band4.gain
-            },
-            {
-                "type" : "peaking",
-                "frequency" : Settings.band5.frequency,
-                "rolloff" : -12,
-                "Q" : Settings.band5.Q,
-                "gain" : Settings.band5.gain
-            },
-            {
-                "type" : "highshelf",
-                "frequency" : Settings.band6.frequency,
-                "rolloff" : -12,
-                "Q" : Settings.band6.Q,
-                "gain" : Settings.band6.gain
             }
         ]);
     }

@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 19/01/2015.
  */
-
+import App = require("./../App");
 
 class OptionHandle {
 
@@ -23,6 +23,8 @@ class OptionHandle {
     public YSetting: string;
 
     public Log: boolean;
+    public XLog: boolean;
+    public YLog: boolean;
 
     constructor(position: Point, xval: number, xmin: number, xmax: number, xrange: number, yval: number, ymin: number, ymax: number, yrange: number, xsetting: string, ysetting: string) {
 
@@ -41,7 +43,32 @@ class OptionHandle {
         this.YSetting = ysetting || "";
 
         this.Log = false;
+        this.XLog = false;
+        this.YLog = false;
         this.Selected = false;
+
+    }
+
+    Draw(ctx,x,y,size,col) {
+
+
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(x - size, y);
+        ctx.lineTo(x, y - size);
+        ctx.lineTo(x + size, y);
+        ctx.lineTo(x, y + size);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = App.Palette[8];
+        ctx.beginPath();
+        ctx.moveTo(x - size, y);
+        ctx.lineTo(x, y - size);
+        ctx.lineTo(x + (size * 0.5), y - (size * 0.5));
+        ctx.lineTo(x - (size * 0.5), y + (size * 0.5));
+        ctx.closePath();
+        ctx.fill();
 
     }
 

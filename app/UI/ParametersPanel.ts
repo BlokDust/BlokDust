@@ -10,6 +10,7 @@ import Option = require("./Option");
 import Slider = require("./OptionSlider");
 import Buttons = require("./OptionButtonSelect");
 import ADSR = require("./OptionADSR");
+import Parametric = require("./OptionParametric");
 import OptionHandle = require("./OptionHandle");
 
 var MAX_FPS: number = 100;
@@ -104,7 +105,7 @@ class ParametersPanel {
             } else if (json.parameters[i].type == "buttons") {
                 getHeight += 144;
                 optionHeight[i] = 144 * units;
-            } else if (json.parameters[i].type == "ADSR") {
+            } else if (json.parameters[i].type == "ADSR" || json.parameters[i].type == "parametric") {
                 getHeight += 120;
                 optionHeight[i] = 120 * units;
             }else {
@@ -123,7 +124,7 @@ class ParametersPanel {
         var panelM = 0;
         ctx.font = "300 "+dataType+"px Dosis";
 
-        if (n==1 && json.parameters[0].type=="ADSR") { // NO MARGIN FOR STANDALONE ENVELOPE
+        if (n==1 && (json.parameters[0].type=="ADSR" || json.parameters[0].type=="parametric")) { // NO MARGIN FOR STANDALONE ENVELOPE
             panelM = (69*units);
         } else {
             for (var i=0;i<n;i++) {
@@ -218,6 +219,38 @@ class ParametersPanel {
                 optionList.push(new ADSR(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2]));
 
             }
+
+            // PARAMETRIC //
+            else if (option.type == "parametric") {
+
+                var handles = [];
+
+                var Xmin, Xmax, Xval, Xrange, handleX, Ymin, Ymax, Yval, Yrange, handleY;
+
+
+                for (var j=0; j<4; j++) {
+                    Xmin = option.nodes[j].x_min;
+                    Xmax = option.nodes[j].x_max;
+                    Xval = option.nodes[j].x_value;
+                    Ymin = option.nodes[j].y_min;
+                    Ymax = option.nodes[j].y_max;
+                    Yval = option.nodes[j].y_value;
+
+                    Xrange = Xmax - Xmin;
+                    handleX = ( this.Range / Xrange ) * (Xval-Xmin);
+                    handleX = this.logPosition(0, this.Range, Xmin, Xmax, Xval);
+                    Yrange = Ymax - Ymin;
+                    handleY = ( (optionHeight[i]*0.8) / Yrange ) * (Yval-Ymin);
+                    console.log("x: "+handleX+" | y: "+handleY);
+                    handles[j] = new OptionHandle(new Point(handleX,handleY),Xval,Xmin,Xmax,this.Range,Yval,Ymin,Ymax,(optionHeight[i]*0.8),option.nodes[j].x_setting,option.nodes[j].y_setting);
+                    handles[j].XLog = true;
+                }
+
+
+                optionList.push(new Parametric(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2],handles[3]));
+
+            }
+
 
             // UPDATE TOTAL LIST HEIGHT //
             optionTotalY += optionHeight[i];
@@ -397,6 +430,17 @@ class ParametersPanel {
                     }
                 }
             }
+            if (this.Options[i].Type=="parametric") {
+                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                    if (this.Options[i].HandleRoll[j]) {
+                        this.Options[i].Handles[j].Selected = true;
+                        this.HandleSet(i, j, 0,mx, my);
+                        this.Options[i].PlotGraph();
+                    }
+                }
+
+            }
+
 
         }
         if (this._PanelCloseRoll) {
@@ -408,7 +452,7 @@ class ParametersPanel {
     MouseUp() {
         for (var i=0;i<this.Options.length;i++) {
             this.Options[i].Selected = false;
-            if (this.Options[i].Type=="ADSR") {
+            if (this.Options[i].Type=="ADSR" || this.Options[i].Type=="parametric") {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     this.Options[i].Handles[j].Selected = false;
                 }
@@ -433,6 +477,14 @@ class ParametersPanel {
                     }
                 }
             }
+            if (this.Options[i].Type=="parametric") {
+                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                    if (this.Options[i].Handles[j].Selected) {
+                        this.HandleSet(i, j, 0, mx, my);
+                        this.Options[i].PlotGraph();
+                    }
+                }
+            }
         }
     }
 
@@ -449,6 +501,14 @@ class ParametersPanel {
                 this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
                 this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
             }
+            else if (this.Options[i].Type == "parametric") {
+                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[0].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[2].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[3] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[3].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[3].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+
+            }
+
         }
 
         if (this.Scale==1) {
@@ -480,9 +540,18 @@ class ParametersPanel {
         if (this.Options[n].Handles[h].Log==true) {
             log = true;
         }
-        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax",this.Options[n].Handles[h].XRange,"XSetting","x",log);
+        var xlog = false;
+        if (this.Options[n].Handles[h].XLog==true) {
+            xlog = true;
+        }
+        var ylog = false;
+        if (this.Options[n].Handles[h].YLog==true) {
+            ylog = true;
+        }
+
+        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax",this.Options[n].Handles[h].XRange,"XSetting","x",xlog);
         if (this.Options[n].Handles[h].YSetting!=="") {
-            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax",this.Options[n].Handles[h].YRange,"YSetting","y",log);
+            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax",this.Options[n].Handles[h].YRange,"YSetting","y",ylog);
         }
     }
 
@@ -540,23 +609,21 @@ class ParametersPanel {
         var minlval = Math.log(minval);
         var maxlval = Math.log(maxval);
         var scale = (maxlval - minlval) / (maxpos - minpos);
-        console.log("" +minval + " | " +maxval + " | " +position);
-        console.log("LOGVAL: " + Math.exp((position - minpos) * scale + minlval));
+        //console.log("" +minval + " | " +maxval + " | " +position);
         return Math.exp((position - minpos) * scale + minlval);
     }
-
 
     logPosition(minpos,maxpos,minval,maxval,value) {
         var minlval = Math.log(minval);
         var maxlval = Math.log(maxval);
         var scale = (maxlval - minlval) / (maxpos - minpos);
-        console.log("" +minval + " | " +maxval + " | " +value);
-        console.log("LOGPOS: " + (minpos + (Math.log(value) - minlval) / scale));
+        //console.log("" +minval + " | " +maxval + " | " +value);
         return minpos + (Math.log(value) - minlval) / scale;
     }
 
     linValue(minpos,maxpos,minval,maxval,position) {
         var scale = (maxval - minval) / (maxpos - minpos);
+        //console.log("" +minval + " | " +maxval + " | " +position);
         return (position - minpos) * scale + minval;
     }
 

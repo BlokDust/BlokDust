@@ -13,6 +13,7 @@ import App = require("../../App");
 class Chomp extends Modifier {
 
     public Rate: number;
+    public Timer;
 
     constructor(grid: Grid, position: Point){
         super(grid, position);
@@ -42,9 +43,13 @@ class Chomp extends Modifier {
 
     SetFrequency() {
         var me = this;
-        setTimeout(function() {
-            me.Component.SetValue("frequency",100 + Math.round(Math.random()*10000));
-            me.SetFrequency();
+
+        this.Timer = setTimeout(function() {
+            if (me.Component.Effect) {
+                me.Component.SetValue("frequency",100 + Math.round(Math.random()*10000));
+                me.SetFrequency();
+            }
+
         },this.Rate);
     }
 
@@ -76,6 +81,7 @@ class Chomp extends Modifier {
     }
 
     Delete(){
+        clearTimeout(this.Timer);
         this.Component.Delete();
     }
 

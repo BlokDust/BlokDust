@@ -657,6 +657,11 @@ class BlocksSketch extends Grid {
 
 
     CreateBlockFromString(type: string): void {
+
+
+        //var Type = eval(type);
+        //this.CreateBlockFromType(Type);
+
         switch (type){
 
             case "ToneSource" :

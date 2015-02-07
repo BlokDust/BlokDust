@@ -349,7 +349,7 @@ class Header {
 
 
             // ITEMS //
-            if (this.DropDown > 0) {
+            if (this.DropDown > 0 && cat.YOffset<this.DropDownHeight) {
                 var itemN = cat.Items.length;
                 var margin = 20 + (this.Margin*0.666);
                 ctx.lineWidth = 1;
@@ -376,7 +376,10 @@ class Header {
                 for (var j=0; j<itemN; j++) {
                     var xPos = (margin + (this.DropDownHeight*0.5) + (this.DropDownHeight*j) + cat.XOffset)*units;
                     var yPos = cat.YOffset;
+                    cat.Items[j].Position.x = xPos; // TODO: shouldn't really be setting position in Draw, but worth setting up update?
+                    if (xPos>0 && xPos<this._Sketch.Width) {
                         cat.Items[j].Draw(ctx,units,xPos,yPos);
+                    }
                 }
 
                 // END CLIP //

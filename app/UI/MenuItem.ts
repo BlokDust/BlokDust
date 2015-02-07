@@ -44,7 +44,6 @@ class MenuItem {
     Draw(ctx,units,x: number,y: number) {
         ctx.globalAlpha = 1;
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
-        this.Position.x = x;
 
         // NAME //
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
@@ -54,7 +53,7 @@ class MenuItem {
         ctx.fillText(this.Name,x,y + (40*units));
 
 
-        // INFO //
+        // INFO BUTTON //
         ctx.lineWidth = 1;
         var ix = x - (40*units);
         var iy = y - (30*units);
@@ -69,46 +68,33 @@ class MenuItem {
         ctx.fillText("?",ix,iy + (dataType*0.38));
 
 
-       /* ctx.globalAlpha = 0.1;
-        //ctx.fillStyle = "#161719";// DK Grey
-        ctx.fillRect(x - (this.Size.Width*0.5), y + (this.Size.Height*0.5), this.Size.Width, this.Size.Height);
-*/
-
-        // INFO  PANEL//
-
-        ctx.strokeStyle = "#393d43";// Grey
-
-        // Vertical //
-        ctx.beginPath();
-        ctx.moveTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*0.5) + (20*units));
-        ctx.lineTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*1.5) - (20*units));
-
-        ctx.moveTo(Math.round(x + (this.Size.Width*0.5))-1,y + (this.Size.Height*0.5) + (20*units));
-        ctx.lineTo(Math.round(x + (this.Size.Width*0.5))-1,y + (this.Size.Height*1.5) - (20*units));
-        ctx.stroke();
+        if (this.InfoOffset!==0) {
+            // INFO ARROW //
+            ctx.lineWidth = 2;
+            var ay = y + (this.Size.Height*1.5) - (30*units);
+            ctx.beginPath();
+            ctx.moveTo(x - (diamond*units), ay);
+            ctx.lineTo(x, ay + (diamond*units));
+            ctx.lineTo(x + (diamond*units), ay);
+            ctx.stroke();
 
 
+            // INFO TEXT //
+            ctx.textAlign = "left";
+            var bodyType = units*7.5;
+            ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
+            this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.Width*0.5) + (10*units),y + this.Size.Height - (30*units), bodyType*1.5, (this.Size.Width) - (20*units));
 
 
-
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 2;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
-        var ay = y + (this.Size.Height*1.5) - (30*units);
-        var diamond = 11;
-        ctx.beginPath();
-        ctx.moveTo(x - (diamond*units), ay);
-        ctx.lineTo(x, ay + (diamond*units));
-        ctx.lineTo(x + (diamond*units), ay);
-        ctx.stroke();
-        ctx.lineWidth = 1;
-
-        var bodyType = units*8;
-        ctx.textAlign = "left";
-        ctx.font = "400 italic " + bodyType + "px PT Sans";
-        bodyType = units*7.5;
-        ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
-        this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.Width*0.5) + (10*units),y + this.Size.Height - (30*units), bodyType*1.5, (this.Size.Width) - (20*units));
+            // VERTICAL LINES //
+            ctx.strokeStyle = "#393d43";// Grey
+            ctx.beginPath();
+            ctx.moveTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*0.5) + (20*units));
+            ctx.lineTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*1.5) - (20*units));
+            ctx.moveTo(Math.round(x + (this.Size.Width*0.5))-1,y + (this.Size.Height*0.5) + (20*units));
+            ctx.lineTo(Math.round(x + (this.Size.Width*0.5))-1,y + (this.Size.Height*1.5) - (20*units));
+            ctx.stroke();
+        }
 
 
         // ICON //
@@ -167,7 +153,7 @@ class MenuItem {
                 this._Sketch.CreateBlockFromString(this.ID);
 
                 //var b:<IBlock> (Type) => void;
-                //this._Sketch.CreateBlockFromType(b);
+                //this._Sketch.CreateBlockFromType(eval(this.ID));
             }
         }
     }

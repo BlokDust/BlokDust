@@ -14,34 +14,24 @@ class EQ extends Modifier {
 
         this.Component = new EQComponent({
             band1: {
-                frequency: 80,
+                frequency: 60,
                 Q: 1,
                 gain: 0
             },
             band2: {
-                frequency: 140,
-                Q: 1,
+                frequency: 440,
+                Q: 0.5,
                 gain: 0
             },
             band3: {
-                frequency: 440,
-                Q: 0.5,
-                gain: -5
-            },
-            band4: {
-                frequency: 1240,
-                Q: 3,
-                gain: 5
-            },
-            band5: {
-                frequency: 3000,
-                Q: 1,
+                frequency: 2000,
+                Q: 10,
                 gain: 0
             },
-            band6: {
-                frequency: 12000,
+            band4: {
+                frequency: 14000,
                 Q: 1,
-                gain: 8
+                gain: 0
             }
         });
 
@@ -56,32 +46,6 @@ class EQ extends Modifier {
 
         this.Grid.BlockSprites.Draw(this.Position,true,"eq");
 
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[3];// BLUE
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(1,1);
-        this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
-        this.DrawMoveTo(0,0);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(2,0);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
-        this.DrawLineTo(0,0);
-        this.DrawLineTo(1,1);
-        this.DrawLineTo(2,0);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
     }
 
     Delete(){
@@ -91,7 +55,7 @@ class EQ extends Modifier {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        /*this.ParamJson =
         {
             "name" : "EQ",
             "parameters" : [
@@ -200,6 +164,65 @@ class EQ extends Modifier {
                         "centered" : false
                     }
                 },
+            ]
+        };*/
+
+
+        this.ParamJson =
+        {
+            "name": "EQ",
+            "parameters": [
+
+                {
+                    "type" : "parametric",
+                    "name": "Filter",
+                    "setting": "parametric",
+                    "nodes": [
+                        {
+                            "x_setting": "frequency-1",
+                            "x_value": this.Component.GetValue("frequency-1"),
+                            "x_min": 20,
+                            "x_max": 20000,
+                            "y_setting": "gain-1",
+                            "y_value": this.Component.GetValue("gain-1"),
+                            "y_min": -50,
+                            "y_max": 50
+                        },
+
+                        {
+                            "x_setting": "frequency-2",
+                            "x_value": this.Component.GetValue("frequency-2"),
+                            "x_min": 20,
+                            "x_max": 20000,
+                            "y_setting": "gain-2",
+                            "y_value": this.Component.GetValue("gain-2"),
+                            "y_min": -50,
+                            "y_max": 50
+                        },
+
+                        {
+                            "x_setting": "frequency-3",
+                            "x_value": this.Component.GetValue("frequency-3"),
+                            "x_min": 20,
+                            "x_max": 20000,
+                            "y_setting": "gain-3",
+                            "y_value": this.Component.GetValue("gain-3"),
+                            "y_min": -50,
+                            "y_max": 50
+                        },
+
+                        {
+                            "x_setting": "frequency-4",
+                            "x_value": this.Component.GetValue("frequency-4"),
+                            "x_min": 20,
+                            "x_max": 20000,
+                            "y_setting": "gain-4",
+                            "y_value": this.Component.GetValue("gain-4"),
+                            "y_min": -50,
+                            "y_max": 50
+                        }
+                    ]
+                }
             ]
         };
     }
