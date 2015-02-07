@@ -64,8 +64,10 @@ class Keyboard extends Modifier {
                     "setting" :"glide",
                     "props" : {
                         "value" : this.Component.GetValue("glide"),
-                        "min" : 0,
-                        "max" : 1,
+                        "min" : 0.001,
+                        "max" : 100,
+                        "truemin" : 0,
+                        "truemax" : 1,
                         "quantised" : false,
                         "centered" : false
                     }

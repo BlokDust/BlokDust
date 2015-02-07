@@ -38,7 +38,7 @@ class RecorderBlock extends Source {
         this.Filename = "BlokdustRecording.wav";
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
     }
 
     Update() {
@@ -48,7 +48,6 @@ class RecorderBlock extends Source {
 
     Draw() {
         super.Draw();
-
         this.Grid.BlockSprites.Draw(this.Position,true,"recorder");
     }
 

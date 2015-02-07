@@ -335,6 +335,7 @@ class BlockSprites {
             case "gain":
 
                 if (!this._Scaled) {
+                    this._XOffset = -(grd*0.5);
                     this._YOffset = (grd*0.5);
                 }
 
@@ -342,7 +343,15 @@ class BlockSprites {
                 this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
-                this.DrawLineTo(1,0);
+                this.DrawLineTo(2,1);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
+                this.DrawMoveTo(-1,0);
+                this.DrawLineTo(0,0);
+                this.DrawLineTo(1,1);
                 this.DrawLineTo(0,1);
                 this.Ctx.closePath();
                 this.Ctx.fill();
@@ -417,14 +426,32 @@ class BlockSprites {
             case "pitch":
 
                 if (!this._Scaled) {
+                    this._XOffset = -(grd*0.5);
                     this._YOffset = (grd*0.5);
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = "#fff";
+                this.Ctx.fillStyle = App.Palette[3];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
-                this.DrawLineTo(1,0);
+                this.DrawLineTo(2,-1);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                /*this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
+                this.DrawMoveTo(0,0);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(2,-1);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();*/
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
+                this.DrawMoveTo(-1,0);
+                this.DrawLineTo(0,0);
                 this.DrawLineTo(0,1);
                 this.Ctx.closePath();
                 this.Ctx.fill();
@@ -604,17 +631,33 @@ class BlockSprites {
             case "recorder":
 
                 if (!this._Scaled) {
-                    this._YOffset = (grd*0.5);
+                    this._XOffset = -(grd*0.5);
                 }
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
-                this.DrawLineTo(1,0);
-                this.DrawLineTo(0,1);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(1,2);
                 this.Ctx.closePath();
                 this.Ctx.fill();
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
+                this.DrawMoveTo(1,-1);
+                this.DrawLineTo(2,0);
+                this.DrawLineTo(2,1);
+                this.DrawLineTo(1,2);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[7];// RED
+                this.DrawMoveTo(0,0);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(1,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
 
                 break;
 

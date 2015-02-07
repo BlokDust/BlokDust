@@ -16,7 +16,7 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="50" />
+            <!--<RowDefinition Height="50" />-->
         </Grid.RowDefinitions>
 
         <d:Sketch x:Name="Blocks"
@@ -30,7 +30,7 @@
                   IsAnimated="true"
                   Draw="{EventBinding BlocksSketch_Draw}" />
 
-        <StackPanel Grid.ZIndex="1" Grid.Row="2" Orientation="Horizontal">
+        <!--<StackPanel Grid.ZIndex="1" Grid.Row="2" Orientation="Horizontal">
             <Button x:Name="PowerBlockBtn" Click="{EventBinding PowerBlockBtn_Click}">Power</Button>
             <Button x:Name="ToneBlockBtn" Click="{EventBinding ToneBlockBtn_Click}">Tone</Button>
             <Button x:Name="KeyboardBlockBtn" Click="{EventBinding KeyboardBlockBtn_Click}">Keyb</Button>
@@ -61,7 +61,7 @@
             <Button x:Name="DeleteBlockBtn" Click="{EventBinding DeleteBlockBtn_Click}">Delete</Button>
             <RepeatButton x:Name="UndoBtn" Click="{EventBinding UndoBtn_Click}" Delay="50" Interval="100">Undo</RepeatButton>
             <RepeatButton x:Name="RedoBtn" Click="{EventBinding RedoBtn_Click}" Delay="50" Interval="100">Redo</RepeatButton>
-        </StackPanel>
+        </StackPanel>-->
 
         <!--<StackPanel Grid.ZIndex="3" Orientation="Horizontal" Grid.Row="2">-->
 

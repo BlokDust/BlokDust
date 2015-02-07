@@ -118,7 +118,7 @@ class ParticleEmitter extends Modifiable{
                     "name" : "Angle",
                     "setting" :"angle",
                     "props" : {
-                        "value" : 0,
+                        "value" : this.Params.angle+90,
                         "min" : -180,
                         "max" : 180,
                         "quantised" : true,
@@ -131,7 +131,7 @@ class ParticleEmitter extends Modifiable{
                     "name" : "Speed",
                     "setting" :"speed",
                     "props" : {
-                        "value" : 5,
+                        "value" : this.Params.speed,
                         "min" : 1,
                         "max" : 12,
                         "quantised" : false,
@@ -144,7 +144,7 @@ class ParticleEmitter extends Modifiable{
                     "name" : "Delay Time",
                     "setting" :"rate",
                     "props" : {
-                        "value" : 40,
+                        "value" : this.Params.rate-5,
                         "min" : 1,
                         "max" : 500,
                         "quantised" : true,
@@ -157,7 +157,7 @@ class ParticleEmitter extends Modifiable{
                     "name" : "Range",
                     "setting" :"range",
                     "props" : {
-                        "value" : 600,
+                        "value" : this.Params.range,
                         "min" : 50,
                         "max" : 2000,
                         "quantised" : true,

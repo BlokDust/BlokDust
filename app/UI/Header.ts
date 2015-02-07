@@ -88,39 +88,48 @@ class Header {
                   "items": [
                       {
                           "name": "Autowah",
-                          "id": "AutoWah"
+                          "id": "AutoWah",
+                          "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
                       },
                       {
                           "name": "Bit Crusher",
-                          "id": "BitCrusher"
+                          "id": "BitCrusher",
+                          "description": "Creates distortion by reducing the audio resolution when connected to any source block."
                       },
                       {
                           "name": "Chomp",
-                          "id": "Chomp"
+                          "id": "Chomp",
+                          "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
                       },
                       {
                           "name": "Chopper",
-                          "id": "Chopper"
+                          "id": "Chopper",
+                          "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
                       },
                       {
                           "name": "Chorus",
-                          "id": "Chorus"
+                          "id": "Chorus",
+                          "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
                       },
                       {
                           "name": "Convolution",
-                          "id": "ConvolutionReverb"
+                          "id": "ConvolutionReverb",
+                          "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
                       },
                       {
                           "name": "Delay",
-                          "id": "Delay"
+                          "id": "Delay",
+                          "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
                       },
                       {
                           "name": "Distortion",
-                          "id": "Distortion"
+                          "id": "Distortion",
+                          "description": "A digital clipping distortion. Can connect to any source block."
                       },
                       {
                           "name": "Envelope",
-                          "id": "Envelope"
+                          "id": "Envelope",
+                          "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
                       },
                       {
                           "name": "EQ",
@@ -250,10 +259,14 @@ class Header {
             for (var j=0; j<itemN; j++) {
                 var name = json.categories[i].items[j].name.toUpperCase();
                 var id = json.categories[i].items[j].id;
+                var description = "";
+                if (json.categories[i].items[j].description) {
+                    description = json.categories[i].items[j].description;
+                }
                 var point = new Point(0,(this.Height + (this.DropDownHeight*0.5))*units);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
-                menuCats[i].Items.push(new MenuItem(point,size,name,id,this._Sketch));
+                menuCats[i].Items.push(new MenuItem(point,size,name,id,description,this._Sketch));
                 menuCats[i].Pages = Math.floor(itemN/this.ItemsPerPage);
             }
 
@@ -343,12 +356,18 @@ class Header {
 
 
                 // CLIPPING RECTANGLE //
+
+                var clipHeight = this.DropDown - cat.YOffset;
+                if (clipHeight<0) {
+                    clipHeight = 0;
+                }
+
                 ctx.save();
                 ctx.beginPath();
-                ctx.moveTo((margin*units),(this.Height)*units);
-                ctx.lineTo(this._Sketch.Width - (margin*units),(this.Height)*units);
-                ctx.lineTo(this._Sketch.Width - (margin*units),(this.Height + (this.DropDown*2))*units);
-                ctx.lineTo((margin*units),(this.Height + (this.DropDown*2))*units);
+                ctx.moveTo(Math.floor(margin*units),(this.Height)*units);
+                ctx.lineTo(Math.ceil(this._Sketch.Width - (margin*units)),(this.Height)*units);
+                ctx.lineTo(Math.ceil(this._Sketch.Width - (margin*units)),(this.Height + clipHeight)*units);
+                ctx.lineTo(Math.floor(margin*units),(this.Height + clipHeight)*units);
                 ctx.closePath();
                 ctx.clip();
 
@@ -362,6 +381,16 @@ class Header {
 
                 // END CLIP //
                 ctx.restore();
+
+                // DRAW GHOST ITEM //
+                for (var j=0; j<itemN; j++) {
+
+                    if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
+                        ctx.globalAlpha = 0.5;
+                        this._Sketch.BlockSprites.Draw(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
+                    }
+                }
+
             }
         }
 
@@ -446,7 +475,7 @@ class Header {
 
 
     MouseDown(point) {
-
+        //this.HitTests(point);
         var units = this._Sketch.Unit.width;
 
         // SELECT CATEGORY //
@@ -457,6 +486,10 @@ class Header {
 
                 cat.CurrentPage = 0; // RESET ITEM PAGES
                 cat.XOffset = 0;
+                for (var j=0; j<cat.Items.length; j++) {
+                    cat.Items[j].InfoOffset = 0;
+                }
+
 
                 this.DelayTo(this,this.DropDownHeight,500,0,"DropDown");
                 this.DelayTo(cat,1,400,0,"Selected");
@@ -480,12 +513,29 @@ class Header {
         }
 
         // ITEMS //
-
-        if (this.DropDown>0) {
+        if (this.DropDown>0 && !this._LeftOver && !this._RightOver) {
             var cat = this.MenuItems[this._SelectedCategory];
             for (var i = 0; i<cat.Items.length; i++) {
-                if (cat.Items[i].Hover) {
-                    cat.Items[i].MouseDown(point);
+                var item = cat.Items[i];
+
+                if (item.InfoOffset==0) { // PANEL 1
+                    if (item.InfoHover) {
+                        this.DelayTo(item,this.DropDownHeight,350,0,"InfoOffset");
+
+                        // RESET OTHERS INFO PANEL
+                        for (var j = 0; j<cat.Items.length; j++) {
+                            if (i!==j) {
+                                this.DelayTo(cat.Items[j],0,350,0,"InfoOffset");
+                            }
+                        }
+                    }
+                    else if (cat.Items[i].Hover) {
+                        item.MouseDown(point);
+                    }
+                } else { // PANEL 2
+                    if (cat.Items[i].BackHover) {
+                        this.DelayTo(item,0,350,0,"InfoOffset");
+                    }
                 }
             }
         }
@@ -525,6 +575,10 @@ class Header {
 
 
     MouseMove(point) {
+        this.HitTests(point);
+    }
+
+    HitTests(point) {
         var units = this._Sketch.Unit.width;
         var grd = this._Sketch.CellWidth.width;
 
@@ -534,12 +588,18 @@ class Header {
             cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.Width*0.5) + (2*units), (5*units), cat.Size.Width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
 
             //ITEMS HIT TEST //
-            for (var j=0; j<cat.Items.length; j++) {
-                var item = cat.Items[j];
-                item.Hover = this.HudCheck(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
+            if (this._SelectedCategory==i) {
+                for (var j=0; j<cat.Items.length; j++) {
+                    var item = cat.Items[j];
 
-                item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
+                    item.Hover = this.HudCheck(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
+                    item.InfoHover = this.HudCheck(item.Position.x - (52*units), item.Position.y - (42*units), 24*units, 24*units, point.x, point.y);
+                    item.BackHover = this.HudCheck(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);
+                    item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
+
+                }
             }
+
         }
 
         // SCROLL HIT TEST //

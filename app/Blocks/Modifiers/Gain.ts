@@ -20,22 +20,13 @@ class Volume extends Modifier {
         this.Effects.Add(this.Component);
         this.OpenParams();
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(0, 1));
     }
 
     Draw() {
         super.Draw();
 
         this.Grid.BlockSprites.Draw(this.Position,true,"gain");
-
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = "#40e6ff";
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
     }
 
     Delete(){
