@@ -3,6 +3,7 @@ import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
 import AudioMixer = require("./Core/Audio/AudioMixer");
 import InputManager = require("./Core/Inputs/InputManager");
+import KeyboardInput = require("./Core/Inputs/KeyboardInput");
 import IModifier = require("./Blocks/IModifier");
 import IModifiable = require("./Blocks/IModifiable");
 import IBlock = require("./Blocks/IBlock");
@@ -25,6 +26,7 @@ class App{
     static Modifiers: ObservableCollection<IModifier>;
     static AudioMixer: AudioMixer;
     static InputManager: InputManager;
+    static KeyboardInput: KeyboardInput;
     static ParticlesPool: PooledFactoryResource<Particle>;
     static Particles: Particle[];
     static Palette: string[];
@@ -74,6 +76,7 @@ class App{
         App.AudioMixer = new AudioMixer();
 
         App.InputManager = new InputManager();
+        App.KeyboardInput = new KeyboardInput();
 
         App.Particles = [];
         App.Palette = [];

@@ -1,23 +1,21 @@
+import App = require("../../App");
 import IInputManager = require("../Inputs/IInputManager");
 import IModifier = require("../../Blocks/IModifier");
 
 class InputManager {
 
     public MasterKeyboardMap: Object;
-    private _keyboardModifiableInUse: any = [];
-
 
 
     constructor() {
-
 
         this.MasterKeyboardMap = {
             8: '', //backspace
             9: '', //tab
             13: '', //enter
-            16: '', //shift
-            17: '', //ctrl
-            18: '', //alt
+            16: 'shift', //shift
+            17: 'ctrl', //ctrl
+            18: 'alt', //alt
             19: '', //pause/break
             20: '', //caps lock
             27: '', //escape
@@ -117,15 +115,12 @@ class InputManager {
     AddKeyboardListener(keyDownHandler, keyUpHandler, keyboard?): void {
         document.addEventListener('keydown', keyDownHandler);
         document.addEventListener('keyup', keyUpHandler);
-
-        this._keyboardModifiableInUse.push(keyboard);
     }
 
     RemoveKeyboardListener(keyDownHandler, keyUpHandler, keyboard?): void {
         document.removeEventListener('keydown', keyDownHandler);
         document.removeEventListener('keyup', keyUpHandler);
 
-        //todo: remove keyboard from this._keyboardModifiableInUse
     }
 
 }
