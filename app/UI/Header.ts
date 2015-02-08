@@ -5,6 +5,7 @@ import App = require("./../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
+import BlockCreator = require("./../BlockCreator");
 import MenuCategory = require("./MenuCategory");
 import MenuItem = require("./MenuItem");
 
@@ -16,6 +17,7 @@ class Header {
     private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
     private _Sketch: BlocksSketch;
+    private _Creator: BlockCreator;
     public Height: number;
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
@@ -36,6 +38,7 @@ class Header {
     constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
         this._Ctx = ctx;
         this._Sketch = sketch;
+        this._Creator = sketch.BlockCreator;
         this._Units = 1.7;
         this.Height = 60;
         this.MenuItems = [];
@@ -53,7 +56,9 @@ class Header {
         this._Timer = new Fayde.ClockTimer();
         this._Timer.RegisterTimer(this);
 
-        this.MenuJson =
+        this.MenuJson = this._Creator.MenuJson;
+
+        /*this.MenuJson =
         {
           "categories": [
 
@@ -187,7 +192,7 @@ class Header {
               }
 
           ]
-        };
+        };*/
 
 
         this.Populate(this.MenuJson);

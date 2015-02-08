@@ -27,6 +27,7 @@ import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
 import TrashCan = require("./UI/TrashCan");
 import BlockSprites = require("./Blocks/BlockSprites");
+import BlockCreator = require("./BlockCreator");
 
 // block imports
 
@@ -81,6 +82,7 @@ class BlocksSketch extends Grid {
     private _LastSize: Size;
     private _PointerPoint: Point;
     public IsDraggingABlock: boolean = false;
+    public BlockCreator: BlockCreator;
 
 
     //-------------------------------------------------------------------------------------------
@@ -129,6 +131,7 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+
         this.ScaleToFit = true;
         this.GridSize = 15;
         this.Divisor = 850; // 70
@@ -149,6 +152,7 @@ class BlocksSketch extends Grid {
 
         // INSTANCES //
         this.BlockSprites = new BlockSprites(this,this.Ctx);
+        this.BlockCreator = new BlockCreator(this);
         this._ParamsPanel = new ParametersPanel(this.Ctx,this);
         this._Header = new Header(this.Ctx,this);
         this._ToolTip = new ToolTip(this.Ctx,this);
@@ -673,13 +677,11 @@ class BlocksSketch extends Grid {
 
 
 
-    CreateBlockFromString(type: string): void {
+
+    /*CreateBlockFromString(type: string): void {
 
 
-        /*var Type: IBlock = [""+type]();
-        this.CreateBlockFromType(Type);*/
-
-
+        // NO LONGER USED
 
 
         switch (type){
@@ -767,7 +769,7 @@ class BlocksSketch extends Grid {
 
 
         }
-    }
+    }*/
 
 
 

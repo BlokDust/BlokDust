@@ -15,7 +15,7 @@ class MenuItem {
     public Position: Point;
     public Size: Size;
     public Name: string;
-    public ID: string;
+    public ID;
     public Description: string;
     public Selected: number;
     public Hover: boolean;
@@ -26,7 +26,7 @@ class MenuItem {
     public MouseIsDown: boolean;
     public MousePoint: Point;
 
-    constructor (position: Point, size: Size, name: string, id: string, description: string, sketch: BlocksSketch) {
+    constructor (position: Point, size: Size, name: string, id, description: string, sketch: BlocksSketch) {
         this.Position = position;
         this.Size = size;
         this.Name = name;
@@ -150,10 +150,7 @@ class MenuItem {
             if (point.y > cutoff) {
                 header.ClosePanel();
                 this.MouseIsDown = false;
-                this._Sketch.CreateBlockFromString(this.ID);
-
-                //var b:<IBlock> (Type) => void;
-                //this._Sketch.CreateBlockFromType(eval(this.ID));
+                this._Sketch.CreateBlockFromType(this.ID);
             }
         }
     }
