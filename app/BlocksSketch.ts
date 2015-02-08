@@ -654,13 +654,33 @@ class BlocksSketch extends Grid {
         this.IsDraggingABlock = true;
     }
 
+    CreateBlockFromType2(m){
+
+        var block: IBlock = m;
+        block.Id = this.GetId();
+
+        // todo: should this go in command handler?
+        block.Click.on((block: IBlock) => {
+            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
+        }, this);
+
+        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
+
+        block.MouseDown();
+        this.SelectedBlock = block;
+        this.IsDraggingABlock = true;
+    }
+
 
 
     CreateBlockFromString(type: string): void {
 
 
-        //var Type = eval(type);
-        //this.CreateBlockFromType(Type);
+        /*var Type: IBlock = [""+type]();
+        this.CreateBlockFromType(Type);*/
+
+
+
 
         switch (type){
 

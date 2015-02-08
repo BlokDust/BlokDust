@@ -14,6 +14,12 @@ class Parametric extends Option{
     public Smoothness: number;
     public LineGain: number[];
 
+    private _Gain1: number[];
+    private _Gain2: number[];
+    private _Gain3: number[];
+    private _Gain4: number[];
+
+
     constructor(position: Point, size: Size, name: string, handle0, handle1, handle2, handle3) {
         super();
 
@@ -39,6 +45,8 @@ class Parametric extends Option{
         this.PlotGraph();
     }
 
+
+
     Draw(ctx,units,i,panel) {
         super.Draw(ctx, units, i, panel);
 
@@ -47,9 +55,12 @@ class Parametric extends Option{
         var y = this.Position.y;
         var height = this.Size.Height;
         ctx.globalAlpha = 1;
+        var ly = Math.round(y + (height*0.5));
+
 
 
         // MARKERS //
+        //ctx.globalAlpha = 1;
         ctx.strokeStyle = "#393d43";
         ctx.beginPath();
         ctx.moveTo(panel.Margin - units, y + (height*0.1)); // left
@@ -65,9 +76,32 @@ class Parametric extends Option{
 
         // LINE //
         ctx.lineWidth = 2;
-        ctx.strokeStyle = App.Palette[8];
-        var ly = y + (height*0.5);
+        //ctx.strokeStyle = App.Palette[8];
 
+        // COLOURS //
+        //ctx.globalAlpha = 0.2;
+        /*for (var j=1; j<5; j++) {
+            //ctx.fillStyle = App.Palette[5];
+            //ctx.strokeStyle = App.Palette[5];
+
+            ctx.beginPath();
+            ctx.moveTo(panel.Margin, ly - (this["_Gain"+j][0]));
+
+            for (var h=0; h<this.Smoothness; h++) {
+                ctx.lineTo(panel.Margin + ((panel.Range/this.Smoothness)*(h+1)), ly  - (this["_Gain"+j][h]));
+            }
+            ctx.stroke();
+            *//*ctx.lineTo(panel.Margin + panel.Range, Math.floor(ly));
+             ctx.lineTo(panel.Margin, Math.floor(ly));
+             ctx.closePath();
+             ctx.fill();*//*
+        }*/
+
+
+
+
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = App.Palette[8];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, ly - (this.LineGain[0]));
         for (var j=0; j<this.Smoothness; j++) {
@@ -89,20 +123,26 @@ class Parametric extends Option{
 
         var p = [];
         for (var j=0; j<4; j++) {
-            var x = Math.floor((this.Smoothness/this.Size.Width) * this.Handles[j].Position.x);
+            var x = Math.round((this.Smoothness/this.Size.Width) * this.Handles[j].Position.x)-1;
             var y = this.Handles[j].Position.y - (this.Size.Height*0.4);
             p[j] = new Point(x,y);
         }
 
-        var Gain1 = this.CurvePass(1,p[0].x,30,p[0].y);
-        var Gain2 = this.CurvePass(2,p[1].x,20,p[1].y);
-        var Gain3 = this.CurvePass(3,p[2].x,80,p[2].y);
-        var Gain4 = this.CurvePass(4,p[3].x,30,p[3].y);
+        var q1 = 20;
+        var q2 = 1;
+        var q1a = (this.Smoothness/37.5) * (21-q1);
+        var q2a = (this.Smoothness/37.5) * (21-q2);
+
+        this._Gain1 = this.CurvePass("lowshelf",p[0].x,30,p[0].y);
+        this._Gain2 = this.CurvePass("peaking",p[1].x,q1a,p[1].y);
+        this._Gain3 = this.CurvePass("peaking",p[2].x,q2a,p[2].y);
+        this._Gain4 = this.CurvePass("highshelf",p[3].x,30,p[3].y);
 
         // ADD //
         for (var j=0; j<this.Smoothness; j++) {
-            this.LineGain[j] = Gain1[j] + Gain2[j] + Gain3[j] + Gain4[j];
+            this.LineGain[j] = this._Gain1[j] + this._Gain2[j] + this._Gain3[j] + this._Gain4[j];
 
+            // CAP RANGE //
             if (this.LineGain[j]>(this.Size.Height*0.4)) {
                 this.LineGain[j] = (this.Size.Height*0.4);
             }
@@ -114,38 +154,27 @@ class Parametric extends Option{
 
     }
 
-    CurvePass(n: number,freq: number,q: number,gain: number) {
+    CurvePass(type: string,freq: number,q: number,gain: number) {
 
         var tempGain = [];
-        for (var j=0; j<this.Smoothness; j++) {
-            tempGain[j] = 0;
+        // BELL CURVE //
+        for (var h=0; h<(this.Smoothness); h++) {
+            tempGain[h + (freq)] = this.Bell(h,0,gain,q);
         }
-        //RAMP UP //
-        if (n>1) {
-            for (var h=0; h<q; h++) {
-                tempGain[h + (freq - q)] = this.Quadratic(h,0,gain*0.4,q);
-            }
-            for (var h=0; h<(q*0.6); h++) {
-                tempGain[h + (freq - (q*0.6))] += this.Sinusoidal(h,0,gain*0.6,q*0.6);
-            }
-        } else {
+        for (var h=0; h<(this.Smoothness); h++) {
+            tempGain[(freq) - h] = this.Bell(h,0,gain,q);
+        }
+        // PEAK
+        tempGain[freq] = gain;
+
+
+        // SHELVES //
+        if (type=="lowshelf") {
             for (var h=0; h<freq; h++) {
                 tempGain[h] = gain;
             }
         }
-
-        // PEAK
-        tempGain[freq] = gain;
-
-        //RAMP DOWN //
-        if (n<4) {
-            for (var h=0; h<q; h++) {
-                tempGain[(freq + q) - h] = this.Quadratic(h,0,gain*0.4,q);
-            }
-            for (var h=0; h<(q*0.6); h++) {
-                tempGain[(freq + (q*0.6)) - h] += this.Sinusoidal(h,0,gain*0.6,q*0.6);
-            }
-        } else {
+        if (type=="highshelf") {
             for (var h=(freq+1); h<this.Smoothness; h++) {
                 tempGain[h] = gain;
             }
@@ -154,15 +183,9 @@ class Parametric extends Option{
         return tempGain;
     }
 
-    Quadratic(t, b, c, d) {
-        t /= d/2;
-        if (t < 1) return c/2*t*t + b;
-        t--;
-        return -c/2 * (t*(t-2) - 1) + b;
-    }
 
-    Sinusoidal(t, b, c, d) {
-        return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+    Bell(t, b, c, d) {
+        return c * Math.exp( -(t*t) / Math.pow((d*0.5),2) ) + b;
     }
 
 }

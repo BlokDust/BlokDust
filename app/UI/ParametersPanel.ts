@@ -436,6 +436,7 @@ class ParametersPanel {
                         this.Options[i].Handles[j].Selected = true;
                         this.HandleSet(i, j, 0,mx, my);
                         this.Options[i].PlotGraph();
+                        break;
                     }
                 }
 

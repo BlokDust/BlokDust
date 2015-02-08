@@ -20,12 +20,12 @@ class EQ extends Modifier {
             },
             band2: {
                 frequency: 440,
-                Q: 0.5,
+                Q: 1,
                 gain: 0
             },
             band3: {
                 frequency: 2000,
-                Q: 10,
+                Q: 20,
                 gain: 0
             },
             band4: {
