@@ -3,6 +3,7 @@
  */
 import Size = Fayde.Utils.Size;
 import OptionHandle = require("./OptionHandle");
+import OptionSubHandle = require("./OptionSubHandle");
 
 interface IOption {
     Type: String;
@@ -26,7 +27,9 @@ interface IOption {
     EPerc: any[];
 
     HandleRoll: any[];
+    SubHandleRoll: any[];
     Handles: OptionHandle[];
+    SubHandles: OptionSubHandle[];
 
     Draw(ctx,units,i,panel): void;
 

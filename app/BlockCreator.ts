@@ -1,13 +1,23 @@
 /**
  * Created by luketwyman on 08/02/2015.
+ *
+ *
+ * ADDING BLOCKS TO PROJECT
+ * ------------------------
+ *
+ * 1: Import the block module below
+ * 2: Add the block Name, ID & Description to "MenuJson" for it to appear in the menu
+ *
  */
 
+// SOURCE BLOCKS //
 import ToneSource = require("./Blocks/Sources/ToneSource");
 import Noise = require("./Blocks/Sources/Noise");
 import Microphone = require("./Blocks/Sources/Microphone");
 import Soundcloud = require("./Blocks/Sources/Soundcloud");
 import Recorder = require("./Blocks/Sources/Recorder");
 
+// EFFECTS BLOCKS //
 import AutoWah = require("./Blocks/Modifiers/AutoWah");
 import BitCrusher = require("./Blocks/Modifiers/BitCrusher");
 import Chomp = require("./Blocks/Modifiers/Chomp");
@@ -27,24 +37,22 @@ import PitchIncrease = require("./Blocks/Modifiers/PitchIncrease");
 import Reverb = require("./Blocks/Modifiers/Reverb");
 import Scuzz = require("./Blocks/Modifiers/Scuzz");
 
+// POWER BLOCKS //
 import ParticleEmitter = require("./Blocks/Sources/ParticleEmitter");
 
+// INTERACTION BLOCKS //
 import Keyboard = require("./Blocks/Modifiers/Keyboard");
 
 
 
+// other //
 import BlocksSketch = require("./BlocksSketch");
-
-
 class BlockCreator {
-
     public Sketch: BlocksSketch;
     public MenuJson;
 
     constructor(sketch: BlocksSketch) {
-
         this.Sketch = sketch;
-
 
         this.MenuJson =
         {
@@ -126,7 +134,8 @@ class BlockCreator {
                         },
                         {
                             "name": "EQ",
-                            "id": EQ
+                            "id": EQ,
+                            "description": "A 'parametric' EQ with 4 filters. Can connect to any source blocks."
                         },
                         {
                             "name": "Filter",

@@ -5,6 +5,7 @@
 import IOption = require("./IOption");
 import Size = Fayde.Utils.Size;
 import OptionHandle = require("./OptionHandle");
+import OptionSubHandle = require("./OptionSubHandle");
 
 class Option implements IOption {
 
@@ -30,6 +31,9 @@ class Option implements IOption {
 
     public HandleRoll: boolean[];
     public Handles: OptionHandle[];
+    public SubHandleRoll: boolean[];
+    public SubHandles: OptionSubHandle[];
+
 
     constructor() {
 

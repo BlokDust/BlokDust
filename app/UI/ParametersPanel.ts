@@ -12,6 +12,7 @@ import Buttons = require("./OptionButtonSelect");
 import ADSR = require("./OptionADSR");
 import Parametric = require("./OptionParametric");
 import OptionHandle = require("./OptionHandle");
+import OptionSubHandle = require("./OptionSubHandle");
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
@@ -105,10 +106,13 @@ class ParametersPanel {
             } else if (json.parameters[i].type == "buttons") {
                 getHeight += 144;
                 optionHeight[i] = 144 * units;
-            } else if (json.parameters[i].type == "ADSR" || json.parameters[i].type == "parametric") {
+            } else if (json.parameters[i].type == "ADSR") {
                 getHeight += 120;
                 optionHeight[i] = 120 * units;
-            }else {
+            } else if (json.parameters[i].type == "parametric") {
+                getHeight += 140;
+                optionHeight[i] = 140 * units;
+            } else {
                 console.log("Option type not recognised");
             }
         }
@@ -223,11 +227,11 @@ class ParametersPanel {
             // PARAMETRIC //
             else if (option.type == "parametric") {
 
+                // HANDLES //
                 var handles = [];
-
+                var subHandles = [];
                 var Xmin, Xmax, Xval, Xrange, handleX, Ymin, Ymax, Yval, Yrange, handleY;
-
-
+                var Qmin, Qmax, Qval, QRmin, QRmax, QX;
                 for (var j=0; j<4; j++) {
                     Xmin = option.nodes[j].x_min;
                     Xmax = option.nodes[j].x_max;
@@ -240,15 +244,26 @@ class ParametersPanel {
                     handleX = ( this.Range / Xrange ) * (Xval-Xmin);
                     handleX = this.logPosition(0, this.Range, Xmin, Xmax, Xval);
                     Yrange = Ymax - Ymin;
-                    handleY = ( (optionHeight[i]*0.8) / Yrange ) * (Yval-Ymin);
+                    handleY = ( (optionHeight[i]*0.7) / Yrange ) * (Yval-Ymin);
                     console.log("x: "+handleX+" | y: "+handleY);
-                    handles[j] = new OptionHandle(new Point(handleX,handleY),Xval,Xmin,Xmax,this.Range,Yval,Ymin,Ymax,(optionHeight[i]*0.8),option.nodes[j].x_setting,option.nodes[j].y_setting);
+                    handles[j] = new OptionHandle(new Point(handleX,handleY),Xval,Xmin,Xmax,this.Range,Yval,Ymin,Ymax,(optionHeight[i]*0.7),option.nodes[j].x_setting,option.nodes[j].y_setting);
                     handles[j].XLog = true;
+
+                    // SUB //
+                    Qmin = option.nodes[j].q_min;
+                    Qmax = option.nodes[j].q_max;
+                    Qval = option.nodes[j].q_value;
+                    QRmin = (this.Range/100) * 2;
+                    QRmax = (this.Range/100) * 10;
+                    QX = this.logPosition(QRmin, QRmax, Qmin, Qmax, Qval);
+
+                    subHandles[j] = new OptionSubHandle(new Point(QX,handleY),Qval,Qmin,Qmax,QRmin,QRmax,option.nodes[j].q_setting);
                 }
 
-
+                // COMPONENT //
                 optionList.push(new Parametric(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2],handles[3]));
-
+                optionList[i].SubHandles = subHandles;
+                optionList[i].PlotGraph();
             }
 
 
@@ -426,7 +441,7 @@ class ParametersPanel {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
                         this.Options[i].Handles[j].Selected = true;
-                        this.HandleSet(i, j, xStart[j],mx, my);
+                        this.HandleSet(i, j, xStart[j],this.Options[i].Size.Height*0.9,mx, my);
                     }
                 }
             }
@@ -434,12 +449,19 @@ class ParametersPanel {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
                         this.Options[i].Handles[j].Selected = true;
-                        this.HandleSet(i, j, 0,mx, my);
+                        this.HandleSet(i, j, 0,this.Options[i].Size.Height*0.8,mx, my);
                         this.Options[i].PlotGraph();
                         break;
                     }
                 }
-
+                for (var j=0;j<this.Options[i].SubHandles.length;j++) {
+                    if (this.Options[i].SubHandleRoll[j]) {
+                        this.Options[i].SubHandles[j].Selected = true;
+                        this.SubHandleSet(this.Options[i].SubHandles[j],this.Options[i].Handles[j].Position.x, mx);
+                        this.Options[i].PlotGraph();
+                        break;
+                    }
+                }
             }
 
 
@@ -453,9 +475,15 @@ class ParametersPanel {
     MouseUp() {
         for (var i=0;i<this.Options.length;i++) {
             this.Options[i].Selected = false;
-            if (this.Options[i].Type=="ADSR" || this.Options[i].Type=="parametric") {
+            if (this.Options[i].Type=="ADSR") {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     this.Options[i].Handles[j].Selected = false;
+                }
+            }
+            if (this.Options[i].Type=="parametric") {
+                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                    this.Options[i].Handles[j].Selected = false;
+                    this.Options[i].SubHandles[j].Selected = false;
                 }
             }
         }
@@ -474,17 +502,25 @@ class ParametersPanel {
                 var xStart = [0, this.Options[i].Handles[0].Position.x,this.Range*0.6];
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].Handles[j].Selected) {
-                        this.HandleSet(i, j, xStart[j], mx, my);
+                        this.HandleSet(i, j, xStart[j], this.Options[i].Size.Height*0.9, mx, my);
                     }
                 }
             }
             if (this.Options[i].Type=="parametric") {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].Handles[j].Selected) {
-                        this.HandleSet(i, j, 0, mx, my);
+                        this.HandleSet(i, j, 0, this.Options[i].Size.Height*0.8, mx, my);
                         this.Options[i].PlotGraph();
                     }
                 }
+                for (var j=0;j<this.Options[i].SubHandles.length;j++) {
+                    if (this.Options[i].SubHandles[j].Selected) {
+                        this.SubHandleSet(this.Options[i].SubHandles[j],this.Options[i].Handles[j].Position.x, mx);
+                        this.Options[i].PlotGraph();
+                    }
+                }
+
+
             }
         }
     }
@@ -503,11 +539,14 @@ class ParametersPanel {
                 this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
             }
             else if (this.Options[i].Type == "parametric") {
-                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[0].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[2].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[3] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[3].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[3].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                for (var j=0; j<this.Options[i].Handles.length; j++) {
+                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.8) - this.Options[i].Handles[j].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
 
+                    if (j!==0 && j!==this.Options[i].Handles.length-1) {
+                        this.Options[i].SubHandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
+
+                    }
+                }
             }
 
         }
@@ -527,9 +566,9 @@ class ParametersPanel {
     }
 
     // DRAGGING A HANDLE //
-    HandleSet(n,h,xStart,mx,my) {
+    HandleSet(n,h,xStart,yRange,mx,my) {
         var mPosX = mx - (this.Position.x + this.Margin + xStart);
-        var mPosY = my - (this.Position.y + this.Options[n].Position.y + (this.Options[n].Size.Height*0.9));
+        var mPosY = my - (this.Position.y + this.Options[n].Position.y + (yRange));
 
         this.Options[n].Handles[h].Position.x =  mPosX;
         this.Options[n].Handles[h].Position.y =  -mPosY;
@@ -550,10 +589,26 @@ class ParametersPanel {
             ylog = true;
         }
 
-        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax",this.Options[n].Handles[h].XRange,"XSetting","x",xlog);
+        this.UpdateValue(this.Options[n].Handles[h],"XValue","XMin","XMax",0, this.Options[n].Handles[h].XRange,"XSetting","x",xlog);
         if (this.Options[n].Handles[h].YSetting!=="") {
-            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax",this.Options[n].Handles[h].YRange,"YSetting","y",ylog);
+            this.UpdateValue(this.Options[n].Handles[h],"YValue","YMin","YMax",0, this.Options[n].Handles[h].YRange,"YSetting","y",ylog);
         }
+    }
+
+    // DRAGGING A SUB HANDLE //
+    SubHandleSet(handle,origin,mx) {
+        var mPosX = mx - (this.Position.x + this.Margin + origin);
+
+        if (mPosX<0) {
+            mPosX = -mPosX;
+        }
+
+        handle.Position.x =  mPosX;
+        handle.Position.x = this.ValueInRange(handle.Position.x,handle.RangeMin,handle.RangeMax);
+
+
+        this.UpdateValue(handle,"Value","Min","Max",handle.RangeMin,handle.RangeMax,"Setting","x",true);
+
     }
 
     // DRAGGING A SLIDER //
@@ -566,26 +621,26 @@ class ParametersPanel {
         if (this.Options[n].Log==true) {
             log = true;
         }
-        this.UpdateValue(this.Options[n],"Value","Min","Max",this.Range,"Setting","x",log);
+        this.UpdateValue(this.Options[n],"Value","Min","Max",0, this.Range,"Setting","x",log);
     }
 
     // UPDATE THE VALUE IN THE BLOCK //
-    UpdateValue(object,value,min,max,thisrange,setting,axis,log) {
+    UpdateValue(object,value,min,max,rangemin,rangemax,setting,axis,log) {
 
         // CALCULATE VALUE //
         if (log==true) {
-            object[""+value] = this.logValue(0,thisrange,object[""+min],object[""+max],object.Position[""+axis]);
+            object[""+value] = this.logValue(rangemin,rangemax,object[""+min],object[""+max],object.Position[""+axis]);
         } else {
-            object[""+value] = this.linValue(0,thisrange,object[""+min],object[""+max],object.Position[""+axis]);
+            object[""+value] = this.linValue(rangemin,rangemax,object[""+min],object[""+max],object.Position[""+axis]);
         }
 
         // QUANTIZE //
         if (object.Quantised) {
             object[""+value] = Math.round(object[""+value]);
             if (log==true) {
-                object.Position["" + axis] = this.logPosition(0, thisrange, object["" + min], object["" + max], object["" + value]);
+                object.Position["" + axis] = this.logPosition(rangemin, rangemax, object["" + min], object["" + max], object["" + value]);
             } else {
-                object.Position["" + axis] = this.linPosition(0, thisrange, object["" + min], object["" + max], object["" + value]);
+                object.Position["" + axis] = this.linPosition(rangemin, rangemax, object["" + min], object["" + max], object["" + value]);
             }
         }
 

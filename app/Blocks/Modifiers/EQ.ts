@@ -14,22 +14,22 @@ class EQ extends Modifier {
 
         this.Component = new EQComponent({
             band1: {
-                frequency: 60,
+                frequency: 50,
                 Q: 1,
                 gain: 0
             },
             band2: {
-                frequency: 440,
-                Q: 1,
+                frequency: 400,
+                Q: 2.5,
                 gain: 0
             },
             band3: {
                 frequency: 2000,
-                Q: 20,
+                Q: 2.5,
                 gain: 0
             },
             band4: {
-                frequency: 14000,
+                frequency: 10000,
                 Q: 1,
                 gain: 0
             }
@@ -55,119 +55,6 @@ class EQ extends Modifier {
     OpenParams() {
         super.OpenParams();
 
-        /*this.ParamJson =
-        {
-            "name" : "EQ",
-            "parameters" : [
-
-                {
-                    "type" : "slider",
-                    "name" : "Band 1 Frequency",
-                    "setting" :"frequency-1",
-                    "props" : {
-                        "value" : this.Component.GetValue("frequency-1"),
-                        "min" : 20,
-                        "max" : 20000,
-                        "quantised" : false,
-                        "centered" : false,
-                        "logarithmic": true
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name" : "Band 1 Gain",
-                    "setting" :"gain-1",
-                    "props" : {
-                        "value" : this.Component.GetValue("gain-1"),
-                        "min" : -12,
-                        "max" : 12,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Band 2 Frequency",
-                    "setting" :"frequency-2",
-                    "props" : {
-                        "value" : this.Component.GetValue("frequency-2"),
-                        "min" : 20,
-                        "max" : 20000,
-                        "quantised" : false,
-                        "centered" : false,
-                        "logarithmic": true
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name" : "Band 2 Gain",
-                    "setting" :"gain-2",
-                    "props" : {
-                        "value" : this.Component.GetValue("gain-2"),
-                        "min" : -12,
-                        "max" : 12,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Band 3 Frequency",
-                    "setting" :"frequency-3",
-                    "props" : {
-                        "value" : this.Component.GetValue("frequency-3"),
-                        "min" : 20,
-                        "max" : 20000,
-                        "quantised" : false,
-                        "centered" : false,
-                        "logarithmic": true
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name" : "Band 3 Gain",
-                    "setting" :"gain-3",
-                    "props" : {
-                        "value" : this.Component.GetValue("gain-3"),
-                        "min" : -12,
-                        "max" : 12,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Band 4 Frequency",
-                    "setting" :"frequency-4",
-                    "props" : {
-                        "value" : this.Component.GetValue("frequency-4"),
-                        "min" : 20,
-                        "max" : 20000,
-                        "quantised" : false,
-                        "centered" : false,
-                        "logarithmic": true
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name" : "Band 4 Gain",
-                    "setting" :"gain-4",
-                    "props" : {
-                        "value" : this.Component.GetValue("gain-4"),
-                        "min" : -12,
-                        "max" : 12,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-            ]
-        };*/
-
-
         this.ParamJson =
         {
             "name": "EQ",
@@ -183,10 +70,16 @@ class EQ extends Modifier {
                             "x_value": this.Component.GetValue("frequency-1"),
                             "x_min": 20,
                             "x_max": 20000,
+
                             "y_setting": "gain-1",
                             "y_value": this.Component.GetValue("gain-1"),
                             "y_min": -50,
-                            "y_max": 50
+                            "y_max": 50,
+
+                            "q_setting": "Q-1",
+                            "q_value": this.Component.GetValue("Q-1"),
+                            "q_min": 20,
+                            "q_max": 1
                         },
 
                         {
@@ -194,10 +87,16 @@ class EQ extends Modifier {
                             "x_value": this.Component.GetValue("frequency-2"),
                             "x_min": 20,
                             "x_max": 20000,
+
                             "y_setting": "gain-2",
                             "y_value": this.Component.GetValue("gain-2"),
                             "y_min": -50,
-                            "y_max": 50
+                            "y_max": 50,
+
+                            "q_setting": "Q-2",
+                            "q_value": this.Component.GetValue("Q-2"),
+                            "q_min": 14,
+                            "q_max": 0.5
                         },
 
                         {
@@ -205,10 +104,16 @@ class EQ extends Modifier {
                             "x_value": this.Component.GetValue("frequency-3"),
                             "x_min": 20,
                             "x_max": 20000,
+
                             "y_setting": "gain-3",
                             "y_value": this.Component.GetValue("gain-3"),
                             "y_min": -50,
-                            "y_max": 50
+                            "y_max": 50,
+
+                            "q_setting": "Q-3",
+                            "q_value": this.Component.GetValue("Q-3"),
+                            "q_min": 14,
+                            "q_max": 0.5
                         },
 
                         {
@@ -216,10 +121,16 @@ class EQ extends Modifier {
                             "x_value": this.Component.GetValue("frequency-4"),
                             "x_min": 20,
                             "x_max": 20000,
+
                             "y_setting": "gain-4",
                             "y_value": this.Component.GetValue("gain-4"),
                             "y_min": -50,
-                            "y_max": 50
+                            "y_max": 50,
+
+                            "q_setting": "Q-4",
+                            "q_value": this.Component.GetValue("Q-4"),
+                            "q_min": 20,
+                            "q_max": 1
                         }
                     ]
                 }
