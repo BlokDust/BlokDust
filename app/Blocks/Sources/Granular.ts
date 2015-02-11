@@ -23,6 +23,7 @@ class Granular extends Source {
     public Filename: string;
     public GrainSettings;
     public MaxDensity: number;
+    private _NoteOn: boolean;
 
 
     constructor(grid: Grid, position: Point) {
@@ -39,22 +40,20 @@ class Granular extends Source {
             "rate": 0.3,
             "density": 9,
             "smoothness": 0.06,
-            "region": 4,
+            "region": 0,
             "spread": 1,
             "grainlength": 0.05
 
         };
-
         this.GrainSettings.rate = this.GrainSettings.grainlength*2;
         this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.49;
-
-
 
         // INIT //
         this.MaxDensity = 16;
         this._Grains = [];
         this._Envelopes = [];
         this._CurrentGrain = 0;
+        this._NoteOn = false;
         this.SetTrack();
 
 
@@ -80,17 +79,20 @@ class Granular extends Source {
                 this._Grains[i] = new Tone.Player(audioUrl, function (sc) {
                     console.log(sc);
                     gran._IsLoaded = true;
+                    gran.GrainSettings.region = gran.GetDuration()*0.5;
                 });
-            } else {
+            } else {  // remaining buffers
                 this._Grains[i] = new Tone.Player(audioUrl);
             }
-            this._Envelopes[i] = new Tone.Envelope(this.GrainSettings.smoothness,0,1,this.GrainSettings.smoothness);
+            this._Envelopes[i] = new Tone.Envelope(this.GrainSettings.smoothness,0.01,1,this.GrainSettings.smoothness);
 
             // CONNECT //
             this._Envelopes[i].connect(this._Grains[i].output.gain);
             this._Grains[i].connect(this.Source);
 
         }
+
+
 
     }
 
@@ -101,7 +103,6 @@ class Granular extends Source {
         {
             "name" : "Granular",
             "parameters" : [
-
                 {
                     "type" : "slider",
                     "name" : "Density",
@@ -144,14 +145,21 @@ class Granular extends Source {
                     "setting" :"region",
                     "props" : {
                         "value" : this.GetValue("region"),
-                        "min" : this.GetValue("regionmin"),
-                        "max" : this.GetValue("regionmax"),
+                        "min" : 0,
+                        "max" : this.GetDuration(),
                         "quantised" : false,
                         "centered" : false
                     }
                 }
             ]
         };
+    }
+
+    GetDuration() {
+        if (this._Grains){
+            return this._Grains[0].duration;
+        }
+        return 0;
     }
 
     Update() {
@@ -166,12 +174,15 @@ class Granular extends Source {
 
     MouseDown() {
         super.MouseDown();
-        //this.GrainSettings.region = (this.GrainSettings.spread*1.5) + (Math.random()*(this._Grains[0].duration - (this.GrainSettings.spread*3)));
-
         if (this._IsLoaded) {
-            this._CurrentGrain = 0;
-            this.GrainLoop();
+            this._NoteOn = !this._NoteOn;
+
+            if (this._NoteOn) {
+                this.GrainLoop();
+            }
         }
+
+
     }
 
     MouseUp() {
@@ -180,37 +191,57 @@ class Granular extends Source {
 
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
-
         particle.Dispose();
     }
 
     GrainLoop() {
 
         // CYCLES THROUGH GRAINS AND PLAYS THEM //
-        if (this.IsPressed) {
-            var gran = this;
-            var delay = (this.GrainSettings.rate / this.GrainSettings.density);
-            var location = this.GrainSettings.region - (this.GrainSettings.spread * 0.5) + (Math.random() * this.GrainSettings.spread);
-            this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.grainlength - this.GrainSettings.smoothness,"+0.003");
-            this._Grains[this._CurrentGrain].start(0, location, this.GrainSettings.grainlength*1.5);
-            this._Timeout = setTimeout(function() {
-                gran.GrainLoop();
-            },delay*1000);
+        // todo: clicking issue to be addressed (noticeable when connected to filter/gain blocks)
+        if (this._NoteOn) {
+            if (this._Envelopes[this._CurrentGrain]) {
+                var gran = this;
+                var delay = (this.GrainSettings.rate / this.GrainSettings.density);
+                var location = this.GrainSettings.region - (this.GrainSettings.spread * 0.5) + (Math.random() * this.GrainSettings.spread);
+                location = this.LocationRange(location);
 
-            this._CurrentGrain += 1;
-            if (this._CurrentGrain == this.GrainSettings.density) {
-                this._CurrentGrain = 0;
+                // MAKE SURE THESE ARE IN SYNC //
+                this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.grainlength - (this.GrainSettings.smoothness *1.1),"+0");
+                this._Grains[this._CurrentGrain].start("+0", location, this.GrainSettings.grainlength);
+
+
+                this._Timeout = setTimeout(function() {
+                    gran.GrainLoop();
+                },delay*1000);
+
+                this._CurrentGrain += 1;
+                if (this._CurrentGrain >= this.GrainSettings.density) {
+                    this._CurrentGrain = 0;
+                }
+
             }
+
         }
     }
+
+    // CAP POSITIONS OF GRAINS TO STAY WITHIN TRACK LENGTH //
+    LocationRange(location) {
+        if (location<0) {
+            location = 0;
+        }
+        if (location>(this._Grains[0].duration - this.GrainSettings.grainlength)) {
+            location = (this._Grains[0].duration - this.GrainSettings.grainlength);
+        }
+        return location;
+    }
+
+
 
     GetValue(param: string) {
 
         if (this.GrainSettings) {
-
             var val;
             switch (param){
-
 
                 case "density": val = this.GrainSettings.density;
                     break;
@@ -222,23 +253,18 @@ class Granular extends Source {
                     break;
                 case "regionmin": val = (this.GrainSettings.spread*1.5);
                     break;
-                case "regionmax": val = (this._Grains[0].duration - (this.GrainSettings.spread*3));
+                case "regionmax": val = this._Grains[0].duration;
                     break;
             }
-            console.log(val);
             return val;
-
         }
 
     }
 
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
 
         switch (param){
-
             case "density": this.GrainSettings.density = value;
                 break;
             case "grainlength":
@@ -246,7 +272,6 @@ class Granular extends Source {
                 this.GrainSettings.rate = this.GrainSettings.grainlength*2;
                 this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.49;
                 for (var i=0; i< this.MaxDensity; i++) {
-                    console.log(this._Envelopes[i]);
                     this._Envelopes[i].setAttack(this.GrainSettings.smoothness);
                     this._Envelopes[i].setRelease(this.GrainSettings.smoothness);
                 }
@@ -257,21 +282,20 @@ class Granular extends Source {
             case "region": this.GrainSettings.region = value;
                 break;
         }
-
-
-        console.log(jsonVariable);
     }
 
 
 
     Delete(){
         super.Delete();
-        for (var i=0; i<this.GrainSettings.density; i++) {
+        clearTimeout(this._Timeout);
+        this._NoteOn = false;
+        for (var i=0; i<this.MaxDensity; i++) {
             this._Grains[i].stop();
             this._Grains[i].dispose();
             this._Envelopes[i].dispose();
         }
-        clearTimeout(this._Timeout);
+
         this._Grains.length = 0;
         this._Envelopes.length = 0;
     }
