@@ -57,7 +57,7 @@ class Source extends Modifiable {
             this.Source = new Tone.Microphone();
 
         } else if (this.BlockType == BlockType.Soundcloud) {
-            var scId = "?client_id=7bfc58cb50688730352c60eb933aee3a";
+            var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
             var track1 = "24456532";
             var track2 = "25216773";
             var track3 = "5243666";
@@ -80,6 +80,8 @@ class Source extends Modifiable {
         } else if (this.BlockType == BlockType.Recorder) {
             this.Source = new Tone.Signal();
 
+        }  else if (this.BlockType == BlockType.Granular) {
+            this.Source = new Tone.Signal();
         } else {
             console.log('this typeof Source does not have a matching BlockType');
         }
@@ -91,7 +93,7 @@ class Source extends Modifiable {
         this.OutputGain.output.gain.value = this.Settings.output.volume;
 
         //Connect them up
-        if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource ) {
+        if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource) {
             this.Envelope.connect(this.Source.output.gain);
         }
 
@@ -117,22 +119,16 @@ class Source extends Modifiable {
         this.OpenParams();
 
         // Start
-        if (this.BlockType != BlockType.Recorder){
+        if (this.BlockType != BlockType.Recorder && this.BlockType != BlockType.Granular){
             this.Source.start();
         }
-    }
-
-    StreamLoaded(source) {
-        console.log("PLAYER INITIALISED");
-        source.start();
-        console.log(source);
     }
 
     Delete() {
         this.Envelope.dispose();
         this.OutputGain.dispose();
 
-        if (this.BlockType != BlockType.Recorder) {
+        if (this.BlockType != BlockType.Recorder && this.BlockType != BlockType.Granular) {
             this.Source.stop();
         }
         this.Source.dispose();

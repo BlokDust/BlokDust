@@ -82,8 +82,9 @@ class Parametric extends Option{
         var markers = [20,50,100,200,1000,2000,5000,10000,20000];
         var markerNames = ["20","50","100","200","1k","2k","5k","10k","20k"];
         ctx.textAlign = "center";
-        var bodyType = units*5.5;
+        var bodyType = units*5;
         ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
+        ctx.font = "400 " + bodyType + "px PT Sans";
         ctx.fillStyle = App.Palette[8];
         //ctx.fillStyle = "#393d43";
 
@@ -122,6 +123,20 @@ class Parametric extends Option{
              ctx.closePath();
              ctx.fill();*//*
         }*/
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(panel.Margin, y + (height*0.8));
+        ctx.lineTo(panel.Margin, ly - (this.LineGain[0]));
+        for (var j=0; j<this.Smoothness; j++) {
+            ctx.lineTo(panel.Margin + ((panel.Range/this.Smoothness)*(j+1)), ly  - (this.LineGain[j]));
+        }
+        ctx.lineTo(panel.Margin + panel.Range, y + (height*0.8));
+        ctx.closePath();
+        ctx.clip();
+        ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        panel.diagonalFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 9);
+        ctx.restore();
 
 
         // LINE //

@@ -15,6 +15,7 @@ import ToneSource = require("./Blocks/Sources/ToneSource");
 import Noise = require("./Blocks/Sources/Noise");
 import Microphone = require("./Blocks/Sources/Microphone");
 import Soundcloud = require("./Blocks/Sources/Soundcloud");
+import Granular = require("./Blocks/Sources/Granular");
 import Recorder = require("./Blocks/Sources/Recorder");
 
 // EFFECTS BLOCKS //
@@ -76,6 +77,10 @@ class BlockCreator {
                         {
                             "name": "SoundCloud",
                             "id": Soundcloud
+                        },
+                        {
+                            "name": "Granular",
+                            "id": Granular
                         },
                         {
                             "name": "Recorder",
