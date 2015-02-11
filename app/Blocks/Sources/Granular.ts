@@ -22,6 +22,7 @@ class Granular extends Source {
     private _IsLoaded: boolean;
     public Filename: string;
     public GrainSettings;
+    public MaxDensity: number;
 
 
     constructor(grid: Grid, position: Point) {
@@ -36,15 +37,21 @@ class Granular extends Source {
 
         this.GrainSettings = {
             "rate": 0.3,
-            "density": 50,
-            "smoothness": 0.05,
+            "density": 9,
+            "smoothness": 0.06,
             "region": 4,
-            "spread": 1.5,
-            "grainlength": 0.15
+            "spread": 1,
+            "grainlength": 0.05
 
         };
 
+        this.GrainSettings.rate = this.GrainSettings.grainlength*2;
+        this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.49;
+
+
+
         // INIT //
+        this.MaxDensity = 16;
         this._Grains = [];
         this._Envelopes = [];
         this._CurrentGrain = 0;
@@ -68,7 +75,7 @@ class Granular extends Source {
         var gran = this;
 
         // LOAD AUDIO//
-        for (var i=0; i<this.GrainSettings.density; i++) {
+        for (var i=0; i<this.MaxDensity; i++) {
             if (i==0) { // first buffer callback
                 this._Grains[i] = new Tone.Player(audioUrl, function (sc) {
                     console.log(sc);
@@ -87,6 +94,66 @@ class Granular extends Source {
 
     }
 
+    OpenParams() {
+        super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Granular",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Density",
+                    "setting" :"density",
+                    "props" : {
+                        "value" : this.GetValue("density"),
+                        "min" : 2,
+                        "max" : this.MaxDensity,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Duration",
+                    "setting" :"grainlength",
+                    "props" : {
+                        "value" : this.GetValue("grainlength"),
+                        "min" : 0.03,
+                        "max" : 0.5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Spread",
+                    "setting" :"spread",
+                    "props" : {
+                        "value" : this.GetValue("spread"),
+                        "min" : 0,
+                        "max" : 2,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Region",
+                    "setting" :"region",
+                    "props" : {
+                        "value" : this.GetValue("region"),
+                        "min" : this.GetValue("regionmin"),
+                        "max" : this.GetValue("regionmax"),
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
+    }
+
     Update() {
         super.Update();
 
@@ -99,9 +166,10 @@ class Granular extends Source {
 
     MouseDown() {
         super.MouseDown();
-        this.GrainSettings.region = (this.GrainSettings.spread*1.5) + (Math.random()*(this._Grains[0].duration - (this.GrainSettings.spread*3)));
+        //this.GrainSettings.region = (this.GrainSettings.spread*1.5) + (Math.random()*(this._Grains[0].duration - (this.GrainSettings.spread*3)));
 
         if (this._IsLoaded) {
+            this._CurrentGrain = 0;
             this.GrainLoop();
         }
     }
@@ -134,6 +202,64 @@ class Granular extends Source {
                 this._CurrentGrain = 0;
             }
         }
+    }
+
+    GetValue(param: string) {
+
+        if (this.GrainSettings) {
+
+            var val;
+            switch (param){
+
+
+                case "density": val = this.GrainSettings.density;
+                    break;
+                case "grainlength": val = this.GrainSettings.grainlength;
+                    break;
+                case "spread": val = this.GrainSettings.spread;
+                    break;
+                case "region": val = this.GrainSettings.region;
+                    break;
+                case "regionmin": val = (this.GrainSettings.spread*1.5);
+                    break;
+                case "regionmax": val = (this._Grains[0].duration - (this.GrainSettings.spread*3));
+                    break;
+            }
+            console.log(val);
+            return val;
+
+        }
+
+    }
+
+    SetValue(param: string,value: number) {
+        super.SetValue(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
+
+        switch (param){
+
+            case "density": this.GrainSettings.density = value;
+                break;
+            case "grainlength":
+                this.GrainSettings.grainlength = value;
+                this.GrainSettings.rate = this.GrainSettings.grainlength*2;
+                this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.49;
+                for (var i=0; i< this.MaxDensity; i++) {
+                    console.log(this._Envelopes[i]);
+                    this._Envelopes[i].setAttack(this.GrainSettings.smoothness);
+                    this._Envelopes[i].setRelease(this.GrainSettings.smoothness);
+                }
+
+                break;
+            case "spread": this.GrainSettings.spread = value;
+                break;
+            case "region": this.GrainSettings.region = value;
+                break;
+        }
+
+
+        console.log(jsonVariable);
     }
 
 
