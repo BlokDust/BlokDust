@@ -26,7 +26,7 @@ class Block extends DisplayObject implements IBlock {
     public BlockType: BlockType;
 
     constructor(grid: Grid, position: Point) {
-        super(grid.Ctx);
+        super(grid);
 
         this.Grid = grid;
         this.Position = position;

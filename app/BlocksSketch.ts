@@ -121,11 +121,11 @@ class BlocksSketch extends Grid {
         // INSTANCES //
         this.BlockSprites = new BlockSprites(this,this.Ctx);
         this.BlockCreator = new BlockCreator(this);
-        this._ParamsPanel = new ParametersPanel(this.Ctx,this);
-        this._Header = new Header(this.Ctx,this);
-        this._ToolTip = new ToolTip(this.Ctx,this);
-        this._ZoomButtons = new ZoomButtons(this.Ctx,this);
-        this._TrashCan = new TrashCan(this.Ctx,this);
+        this._ParamsPanel = new ParametersPanel(this);
+        this._Header = new Header(this);
+        this._ToolTip = new ToolTip(this);
+        this._ZoomButtons = new ZoomButtons(this);
+        this._TrashCan = new TrashCan(this);
     }
 
 

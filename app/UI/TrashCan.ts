@@ -2,16 +2,18 @@
  * Created by luketwyman on 01/02/2015.
  */
 import BlocksSketch = require("./../BlocksSketch");
+import DisplayObject = require("../DisplayObject");
 
-
-class TrashCan {
+class TrashCan extends DisplayObject {
 
     private _Sketch: BlocksSketch;
     private _RollOver: boolean;
     private _Ctx: CanvasRenderingContext2D;
 
-    constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
-        this._Ctx = ctx;
+    constructor(sketch: BlocksSketch) {
+        super(sketch);
+
+        this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this._RollOver = false;
 

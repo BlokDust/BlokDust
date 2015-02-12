@@ -6,8 +6,9 @@ import App = require("./../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
+import DisplayObject = require("../DisplayObject");
 
-class ZoomButtons {
+class ZoomButtons extends DisplayObject {
 
     private _Ctx: CanvasRenderingContext2D;
     private _Sketch: BlocksSketch;
@@ -16,8 +17,10 @@ class ZoomButtons {
     private _InPos: Point;
     private _OutPos: Point;
 
-    constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
-        this._Ctx = ctx;
+    constructor(sketch: BlocksSketch) {
+        super(sketch);
+
+        this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this.InRoll = this.OutRoll = false;
         var units = this._Sketch.Unit.width;

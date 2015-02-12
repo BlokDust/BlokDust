@@ -6,11 +6,9 @@ import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
 import BlocksSketch = require("./../BlocksSketch");
+import DisplayObject = require("../DisplayObject");
 
-var MAX_FPS: number = 100;
-var MAX_MSPF: number = 1000 / MAX_FPS;
-
-class ToolTip {
+class ToolTip extends DisplayObject {
 
     private _Ctx: CanvasRenderingContext2D;
     private _Sketch: BlocksSketch;
@@ -20,30 +18,15 @@ class ToolTip {
     public Position: Point;
     private _AlphaTween: TWEEN.Tween;
 
-    private _Timer: Fayde.ClockTimer;
-    private _LastVisualTick: number = new Date(0).getTime();
+    constructor(sketch: BlocksSketch) {
+        super(sketch);
 
-
-    constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
-
-        this._Ctx = ctx;
+        this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this.Name = "";
         this.Alpha = 0;
         this.Open = false;
         this.Position = new Point(0,0);
-
-        this._Timer = new Fayde.ClockTimer();
-        this._Timer.RegisterTimer(this);
-
-    }
-
-    OnTicked (lastTime: number, nowTime: number) {
-        var now = new Date().getTime();
-        if (now - this._LastVisualTick < MAX_MSPF) return;
-        this._LastVisualTick = now;
-
-        TWEEN.update(nowTime);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -98,7 +81,7 @@ class ToolTip {
             panel.Alpha = this.x;
         });
         this._AlphaTween.easing(TWEEN.Easing.Quintic.InOut);
-        this._AlphaTween.start(this._LastVisualTick);
+        this._AlphaTween.start(this.LastVisualTick);
     }
 
 

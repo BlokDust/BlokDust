@@ -31,7 +31,7 @@ class Header extends DisplayObject{
     public MenuOver: boolean;
 
     constructor(sketch: BlocksSketch) {
-        super();
+        super(sketch);
 
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
@@ -458,7 +458,7 @@ class Header extends DisplayObject{
         });
         offsetTween.easing(TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this._LastVisualTick);
+        offsetTween.start(this.LastVisualTick);
     }
 
 

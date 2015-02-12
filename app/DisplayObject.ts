@@ -13,14 +13,14 @@ class DisplayObject implements IDisplayObject {
     Width: number;
     Height: number;
     Position: Point;
-    public _Timer: Fayde.ClockTimer;
-    private _LastVisualTick: number = new Date(0).getTime();
+    public Timer: Fayde.ClockTimer;
+    public LastVisualTick: number = new Date(0).getTime();
 
     constructor(sketch: Fayde.Drawing.SketchContext){
         this.Sketch = sketch;
 
-        this._Timer = new Fayde.ClockTimer();
-        this._Timer.RegisterTimer(this);
+        this.Timer = new Fayde.ClockTimer();
+        this.Timer.RegisterTimer(this);
 
         // todo: when drawing, use coordinates relative to origin, width and height, not
         // global context. drawing is done initially to RenderCacheCtx.
@@ -37,8 +37,8 @@ class DisplayObject implements IDisplayObject {
 
     OnTicked (lastTime: number, nowTime: number) {
         var now = new Date().getTime();
-        if (now - this._LastVisualTick < MAX_MSPF) return;
-        this._LastVisualTick = now;
+        if (now - this.LastVisualTick < MAX_MSPF) return;
+        this.LastVisualTick = now;
 
         TWEEN.update(nowTime);
     }

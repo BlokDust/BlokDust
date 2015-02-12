@@ -13,11 +13,9 @@ import ADSR = require("./OptionADSR");
 import Parametric = require("./OptionParametric");
 import OptionHandle = require("./OptionHandle");
 import OptionSubHandle = require("./OptionSubHandle");
+import DisplayObject = require("../DisplayObject");
 
-var MAX_FPS: number = 100;
-var MAX_MSPF: number = 1000 / MAX_FPS;
-
-class ParametersPanel {
+class ParametersPanel extends DisplayObject {
 
     public Position: Point;
     public Size: Size;
@@ -39,9 +37,10 @@ class ParametersPanel {
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
 
-    constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
+    constructor(sketch: BlocksSketch) {
+        super(sketch);
 
-        this._Ctx = ctx;
+        this._Ctx = sketch.Ctx;
         this._Units = 1.7;
         this.Position = new Point(0,0);
         this.Size = new Size(1,1);
@@ -68,14 +67,6 @@ class ParametersPanel {
 
 
         this.Populate(this.InitJson,false);
-    }
-
-    OnTicked (lastTime: number, nowTime: number) {
-        var now = new Date().getTime();
-        if (now - this._LastVisualTick < MAX_MSPF) return;
-        this._LastVisualTick = now;
-
-        TWEEN.update(nowTime);
     }
 
     //-------------------------------------------------------------------------------------------
