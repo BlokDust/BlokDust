@@ -4,15 +4,13 @@
 import App = require("./../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
+import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("./../BlocksSketch");
 import BlockCreator = require("./../BlockCreator");
 import MenuCategory = require("./MenuCategory");
 import MenuItem = require("./MenuItem");
 
-var MAX_FPS: number = 100;
-var MAX_MSPF: number = 1000 / MAX_FPS;
-
-class Header {
+class Header extends DisplayObject{
 
     private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
@@ -32,11 +30,10 @@ class Header {
     private _RightOver: boolean;
     public MenuOver: boolean;
 
-    private _Timer: Fayde.ClockTimer;
-    private _LastVisualTick: number = new Date(0).getTime();
+    constructor(sketch: BlocksSketch) {
+        super();
 
-    constructor(ctx: CanvasRenderingContext2D,sketch: BlocksSketch) {
-        this._Ctx = ctx;
+        this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this._Creator = sketch.BlockCreator;
         this._Units = 1.7;
@@ -52,9 +49,6 @@ class Header {
         this._LeftOver = false;
         this._RightOver = false;
         this.MenuOver = false;
-
-        this._Timer = new Fayde.ClockTimer();
-        this._Timer.RegisterTimer(this);
 
         this.MenuJson = this._Creator.MenuJson;
 
@@ -205,18 +199,9 @@ class Header {
         },2000);
     }
 
-    OnTicked (lastTime: number, nowTime: number) {
-        var now = new Date().getTime();
-        if (now - this._LastVisualTick < MAX_MSPF) return;
-        this._LastVisualTick = now;
-
-        TWEEN.update(nowTime);
-    }
-
     //-------------------------------------------------------------------------------------------
     //  POPULATE
     //-------------------------------------------------------------------------------------------
-
 
     Populate(json) {
 
