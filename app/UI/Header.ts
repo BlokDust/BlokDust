@@ -103,7 +103,7 @@ class Header extends DisplayObject{
                       {
                           "name": "Chopper",
                           "id": "Chopper",
-                          "description": "Gain modulation with adjustable rate & depth. Can connect to any source block."
+                          "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
                       },
                       {
                           "name": "Chorus",
