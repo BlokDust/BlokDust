@@ -1,12 +1,11 @@
 import App = require("../App");
 import IModifier = require("./IModifier");
 import IModifiable = require("./IModifiable");
-import IEffect = require("./IEffect");
 import Block = require("./Block");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-class Modifiable extends Block implements IModifiable{
+class SourceBlock extends Block implements IModifiable{
 
 
     public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
@@ -117,7 +116,7 @@ class Modifiable extends Block implements IModifiable{
 
     /*
     * Validate that the block's modifiers still exist
-    * @param {ObservableCollection<IModifier>} modifiers - Parent's full list of Modifiers.
+    * @param {ObservableCollection<IModifier>} modifiers - Parent's full list of Effects.
     */
     public ValidateModifiers(){
         for (var i = 0; i < this.Modifiers.Count; i++){
@@ -135,17 +134,12 @@ class Modifiable extends Block implements IModifiable{
         if (this.OldModifiers && this.OldModifiers.Count){
             var oldmods: IModifier[] = this.OldModifiers.ToArray();
 
-            for (var k = 0; k < oldmods.length; k++) {
-                var oldmod = oldmods[k];
-
-                var effects = oldmod.Effects.ToArray();
-
-                for (var l = 0; l < effects.length; l++){
-                    var effect: IEffect = effects[l];
-
-                    this._DisconnectEffect(effect);
-                }
-            }
+            //for (var k = 0; k < oldmods.length; k++) {
+            //    var oldmod = oldmods[k];
+            //
+            //    this._DisconnectEffect(oldmod);
+            //
+            //}
         }
 
         // connect modifiers in new collection.
@@ -156,14 +150,8 @@ class Modifiable extends Block implements IModifiable{
         for (var i = 0; i < mods.length; i++) {
             var mod:IModifier = mods[i];
 
-            var effects = mod.Effects.ToArray();
 
-            for (var j = 0; j < effects.length; j++) {
-                var effect:IEffect = effects[j];
-
-                if (effect) this._ConnectEffect(effect);
-
-            }
+            //this._ConnectEffect(mod);
 
             if (mod.Component && mod.Component.Effect) {
                 _effects.push(mod.Component);
@@ -176,13 +164,13 @@ class Modifiable extends Block implements IModifiable{
         this.OldModifiers.AddRange(this.Modifiers.ToArray());
     }
 
-    private _ConnectEffect(effect: IEffect ) {
-        effect.Connect(this);
-    }
+    //private _ConnectEffect(effect: IEffect ) {
+    //    effect.Connect(this);
+    //}
 
-    private _DisconnectEffect(effect: IEffect) {
-        effect.Disconnect(this);
-    }
+    //private _DisconnectEffect(effect: IEffect) {
+    //    effect.Disconnect(this);
+    //}
 
     private _UpdateEffectsChain(effects) {
 
@@ -215,4 +203,4 @@ class Modifiable extends Block implements IModifiable{
 
 }
 
-export = Modifiable;
+export = SourceBlock;

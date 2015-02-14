@@ -1,6 +1,5 @@
 import IBlock = require("./IBlock");
 import IModifier = require("./IModifier");
-import IEffect = require("./IEffect");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface IModifiable extends IBlock{

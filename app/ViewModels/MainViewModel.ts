@@ -10,27 +10,25 @@ import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
 import Microphone = require("../Blocks/Sources/Microphone");
 import Soundcloud = require("../Blocks/Sources/Soundcloud");
-import Keyboard = require("../Blocks/Modifiers/Keyboard");
-import Gain = require("../Blocks/Modifiers/Gain");
-import PitchIncrease = require("../Blocks/Modifiers/PitchIncrease");
-import PitchDecrease = require("../Blocks/Modifiers/PitchDecrease");
-import Envelope = require("../Blocks/Modifiers/Envelope");
-import Filter = require("../Blocks/Modifiers/Filter");
-import LFO = require("../Blocks/Modifiers/LFO");
-import Tremolo = require("../Blocks/Modifiers/Tremolo");
-import Delay = require("../Blocks/Modifiers/Delay");
-import Scuzz = require("../Blocks/Modifiers/Scuzz");
-import Distortion = require("../Blocks/Modifiers/Distortion");
-import Chorus = require("../Blocks/Modifiers/Chorus");
-import Reverb = require("../Blocks/Modifiers/Reverb");
-import Convolver = require("../Blocks/Modifiers/ConvolutionReverb");
-import Phaser = require("../Blocks/Modifiers/Phaser");
-import EQ = require("../Blocks/Modifiers/EQ");
-import BitCrusher = require("../Blocks/Modifiers/BitCrusher");
-import AutoWah = require("../Blocks/Modifiers/AutoWah");
-import Panner = require("../Blocks/Modifiers/Panner");
-import Chomp = require("../Blocks/Modifiers/Chomp");
-import Chopper = require("../Blocks/Modifiers/Chopper");
+import Keyboard = require("../Blocks/Effects/Keyboard");
+import Gain = require("../Blocks/Effects/Gain");
+import PitchIncrease = require("../Blocks/Effects/Pitch");
+import Envelope = require("../Blocks/Effects/Envelope");
+import Filter = require("../Blocks/Effects/Filter");
+import LFO = require("../Blocks/Effects/LFO");
+import Delay = require("../Blocks/Effects/Delay");
+import Scuzz = require("../Blocks/Effects/Scuzz");
+import Distortion = require("../Blocks/Effects/Distortion");
+import Chorus = require("../Blocks/Effects/Chorus");
+import Reverb = require("../Blocks/Effects/Reverb");
+import Convolver = require("../Blocks/Effects/ConvolutionReverb");
+import Phaser = require("../Blocks/Effects/Phaser");
+import EQ = require("../Blocks/Effects/EQ");
+import BitCrusher = require("../Blocks/Effects/BitCrusher");
+import AutoWah = require("../Blocks/Effects/AutoWah");
+import Panner = require("../Blocks/Effects/Panner");
+import Chomp = require("../Blocks/Effects/Chomp");
+import Chopper = require("../Blocks/Effects/Chopper");
 import Recorder = require("../Blocks/Sources/Recorder");
 import Power = require("../Blocks/Sources/Power");
 import ParticleEmitter = require("../Blocks/Sources/ParticleEmitter");
@@ -137,10 +135,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.CreateBlockFromType(PitchIncrease);
     }
 
-    PitchDecreaseBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlockFromType(PitchDecrease);
-    }
-
     EnvelopeBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlockFromType(Envelope);
     }
@@ -151,10 +145,6 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
     LFOBlockBtn_Click(e: any){
         this._BlocksSketch.CreateBlockFromType(LFO);
-    }
-
-    TremoloBlockBtn_Click(e: any){
-        this._BlocksSketch.CreateBlockFromType(Tremolo);
     }
 
     DelayBlockBtn_Click(e: any){

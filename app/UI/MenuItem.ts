@@ -7,7 +7,7 @@ import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
 import Recorder = require("../Blocks/Sources/Recorder");
-import LFO = require("../Blocks/Modifiers/LFO");
+import LFO = require("../Blocks/Effects/LFO");
 import IBlock = require("../Blocks/IBlock");
 
 class MenuItem {

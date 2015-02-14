@@ -34,7 +34,7 @@ class Granular extends Source {
 
         var tracks = ["183588346","48387282","127905486","50894420","12216090"];
 
-        this.Filename = tracks[4];
+        this.Filename = tracks[3];
 
         this.GrainSettings = {
             "rate": 0.3,

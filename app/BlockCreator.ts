@@ -19,30 +19,30 @@ import Granular = require("./Blocks/Sources/Granular");
 import Recorder = require("./Blocks/Sources/Recorder");
 
 // EFFECTS BLOCKS //
-import AutoWah = require("./Blocks/Modifiers/AutoWah");
-import BitCrusher = require("./Blocks/Modifiers/BitCrusher");
-import Chomp = require("./Blocks/Modifiers/Chomp");
-import Chopper = require("./Blocks/Modifiers/Chopper");
-import Chorus = require("./Blocks/Modifiers/Chorus");
-import ConvolutionReverb = require("./Blocks/Modifiers/ConvolutionReverb");
-import Delay = require("./Blocks/Modifiers/Delay");
-import Distortion = require("./Blocks/Modifiers/Distortion");
-import Envelope = require("./Blocks/Modifiers/Envelope");
-import EQ = require("./Blocks/Modifiers/EQ");
-import Filter = require("./Blocks/Modifiers/Filter");
-import Gain = require("./Blocks/Modifiers/Gain");
-import LFO = require("./Blocks/Modifiers/LFO");
-import Panner = require("./Blocks/Modifiers/Panner");
-import Phaser = require("./Blocks/Modifiers/Phaser");
-import PitchIncrease = require("./Blocks/Modifiers/PitchIncrease");
-import Reverb = require("./Blocks/Modifiers/Reverb");
-import Scuzz = require("./Blocks/Modifiers/Scuzz");
+import AutoWah = require("Blocks/Effects/AutoWah");
+import BitCrusher = require("Blocks/Effects/BitCrusher");
+import Chomp = require("Blocks/Effects/Chomp");
+import Chopper = require("Blocks/Effects/Chopper");
+import Chorus = require("Blocks/Effects/Chorus");
+import ConvolutionReverb = require("Blocks/Effects/ConvolutionReverb");
+import Delay = require("Blocks/Effects/Delay");
+import Distortion = require("Blocks/Effects/Distortion");
+import Envelope = require("Blocks/Effects/Envelope");
+import EQ = require("Blocks/Effects/EQ");
+import Filter = require("Blocks/Effects/Filter");
+import Gain = require("Blocks/Effects/Gain");
+import LFO = require("Blocks/Effects/LFO");
+import Panner = require("Blocks/Effects/Panner");
+import Phaser = require("Blocks/Effects/Phaser");
+import PitchIncrease = require("Blocks/Effects/Pitch");
+import Reverb = require("Blocks/Effects/Reverb");
+import Scuzz = require("Blocks/Effects/Scuzz");
 
 // POWER BLOCKS //
 import ParticleEmitter = require("./Blocks/Sources/ParticleEmitter");
 
 // INTERACTION BLOCKS //
-import Keyboard = require("./Blocks/Modifiers/Keyboard");
+import Keyboard = require("Blocks/Effects/Keyboard");
 
 
 
@@ -110,7 +110,7 @@ class BlockCreator {
                         {
                             "name": "Chopper",
                             "id": Chopper,
-                            "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
+                            "description": "Gain modulation with adjustable rate & depth. Can connect to any source block."
                         },
                         {
                             "name": "Chorus",

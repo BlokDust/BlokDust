@@ -8,7 +8,7 @@ class AudioMixer {
         // Master Output
         this.Master = new Tone.Signal();
 
-        // Master Volume Level
+        // Master Gain Level
         this.Master.output.gain.value = this.MasterVolume / 2.5;
 
         //Connections
