@@ -63,7 +63,7 @@ class Scuzz extends Effect {
                     "name" : "Power",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.Component.GetValue("depth"),
+                        "value" : this.GetValue("depth"),
                         "min" : 1000,
                         "max" : 10000,
                         "quantised" : true,
@@ -75,7 +75,7 @@ class Scuzz extends Effect {
                     "name" : "Pulverisation",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.Component.GetValue("rate"),
+                        "value" : this.GetValue("rate"),
                         "min" : 100,
                         "max" : 10000,
                         "quantised" : true,
