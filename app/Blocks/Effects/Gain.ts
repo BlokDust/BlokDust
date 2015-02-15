@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import AudioSettings = require("../../Core/Audio/AudioSettings");
 
-class Gain extends Modifier {
+class Gain extends Effect {
 
     public Effect: Tone.Signal;
     public Settings: ToneSettings = new AudioSettings();

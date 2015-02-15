@@ -1,11 +1,11 @@
 import IBlock = require("./IBlock");
 import Block = require("./Block");
-import IModifier = require("./IModifier");
+import IEffect = require("./IEffect");
 import IModifiable = require("./IModifiable");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-class Modifier extends Block implements IModifier {
+class Effect extends Block implements IEffect {
 
     public CatchmentArea: number = 6; // grid units
     public Component;
@@ -13,7 +13,7 @@ class Modifier extends Block implements IModifier {
     Modifiable: IModifiable;
     Params: ToneSettings;
 
-    public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
+    public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
@@ -40,4 +40,4 @@ class Modifier extends Block implements IModifier {
     //}
 }
 
-export = Modifier;
+export = Effect;

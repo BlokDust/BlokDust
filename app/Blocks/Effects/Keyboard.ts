@@ -1,5 +1,4 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 import Grid = require("../../Grid");
 import App = require("../../App");
@@ -7,7 +6,7 @@ import PooledOscillator = require("../../PooledOscillator");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import PitchComponent = require("./Pitch");
 
-class Keyboard extends Modifier {
+class Keyboard extends Effect {
 
     public Name: string = 'Keyboard';
     private _nodes = [];
@@ -199,7 +198,7 @@ class Keyboard extends Modifier {
         //
         //    this._nodes.push(PooledOscillator);
         //
-        //    //TODO: make all modifiers work in polyphonic mode
+        //    //TODO: make all effects work in polyphonic mode
         //
         //} else {
         // MONOPHONIC
@@ -272,15 +271,15 @@ class Keyboard extends Modifier {
     }
 
     GetFrequencyOfNote(note): number {
-        return this.Modifiable.Source.noteToFrequency(note) * this.GetConnectedPitchModifiers();
+        return this.Modifiable.Source.noteToFrequency(note) * this.GetConnectedPitchPreEffects();
     }
 
-    GetConnectedPitchModifiers() {
+    GetConnectedPitchPreEffects() {
 
         var totalPitchIncrement = 1;
 
-        for (var i = 0; i < this.Modifiable.Modifiers.Count; i++) {
-            var mod = this.Modifiable.Modifiers.GetValueAt(i);
+        for (var i = 0; i < this.Modifiable.Effects.Count; i++) {
+            var mod = this.Modifiable.Effects.GetValueAt(i);
 
             //TODO: Use reflection when available
             if ((<PitchComponent>mod).PitchIncrement) {

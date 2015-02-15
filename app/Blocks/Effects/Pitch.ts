@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 import Grid = require("../../Grid");
 
-class PitchIncrease extends Modifier {
+class PitchIncrease extends Effect {
 
     public PitchIncrement: number;
     public Pitch: number;
@@ -14,7 +13,7 @@ class PitchIncrease extends Modifier {
 
         this.PitchIncrement = 1.5; // Pitch decreases by 4ths
 
-        //TODO: Make pitch modifier take parameter scaled to musical notation: (EXAMPLE 1=A4, 2=Bb4 3=B4, 4=C4...)
+        //TODO: Make pitch effect take parameter scaled to musical notation: (EXAMPLE 1=A4, 2=Bb4 3=B4, 4=C4...)
 
         this.OpenParams();
         // Define Outline for HitTest

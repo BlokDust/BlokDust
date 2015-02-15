@@ -1,11 +1,7 @@
-//todo: remove these when fayde-unify is available
-///<amd-dependency path="fayde.utils"/>.
-
 import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
 import IBlock = require("../Blocks/IBlock");
 import IModifiable = require("../Blocks/IModifiable");
-import IModifier = require("../Blocks/IModifier");
 import ToneSource = require("../Blocks/Sources/ToneSource");
 import Noise = require("../Blocks/Sources/Noise");
 import Microphone = require("../Blocks/Sources/Microphone");

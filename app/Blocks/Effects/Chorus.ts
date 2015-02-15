@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Chorus extends Modifier {
+class Chorus extends Effect {
 
     public Effect: Tone.Chorus;
 

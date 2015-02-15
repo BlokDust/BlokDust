@@ -1,7 +1,4 @@
 /**
- * Created by luketwyman on 08/02/2015.
- *
- *
  * ADDING BLOCKS TO PROJECT
  * ------------------------
  *
@@ -34,7 +31,7 @@ import Gain = require("Blocks/Effects/Gain");
 import LFO = require("Blocks/Effects/LFO");
 import Panner = require("Blocks/Effects/Panner");
 import Phaser = require("Blocks/Effects/Phaser");
-import PitchIncrease = require("Blocks/Effects/Pitch");
+import Pitch = require("Blocks/Effects/Pitch");
 import Reverb = require("Blocks/Effects/Reverb");
 import Scuzz = require("Blocks/Effects/Scuzz");
 
@@ -160,7 +157,7 @@ class BlockCreator {
                         },
                         {
                             "name": "Pitch",
-                            "id": PitchIncrease
+                            "id": Pitch
                         },
                         {
                             "name": "Reverb",

@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Scuzz extends Modifier {
+class Scuzz extends Effect {
 
     LFO: Tone.LFO;
 
@@ -20,12 +19,11 @@ class Scuzz extends Modifier {
 
     Draw() {
         super.Draw();
-
         this.Grid.BlockSprites.Draw(this.Position,true,"scuzz");
     }
 
     Delete(){
-        this.LFO.dispose();;
+        this.LFO.dispose();
     }
 
     SetValue(param: string,value: number) {

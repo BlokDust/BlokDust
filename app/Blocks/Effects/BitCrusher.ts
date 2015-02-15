@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class BitCrusher extends Modifier {
+class BitCrusher extends Effect {
 
     //public Component: IEffect;
     public Effect: Tone.BitCrusher;

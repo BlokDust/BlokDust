@@ -1,7 +1,7 @@
 import App = require("./App");
 import IBlock = require("./Blocks/IBlock");
 import IModifiable = require("./Blocks/IModifiable");
-import IModifier = require("./Blocks/IModifier");
+import IEffect = require("./Blocks/IEffect");
 import AddItemToObservableCollectionOperation = require("./Core/Operations/AddItemToObservableCollectionOperation");
 import RemoveItemFromObservableCollectionOperation = require("./Core/Operations/RemoveItemFromObservableCollectionOperation");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
@@ -425,29 +425,29 @@ class BlocksSketch extends Grid {
 
     // PROXIMITY CHECK //
     private _CheckProximity(){
-        // loop through all Modifiable blocks checking proximity to Modifier blocks.
-        // if within CatchmentArea, add Modifier to Modifiable.Modifiers.
+        // loop through all Modifiable blocks checking proximity to Effect blocks.
+        // if within CatchmentArea, add Effect to Modifiable.Effects.
 
         for (var j = 0; j < App.Modifiables.Count; j++) {
             var modifiable:IModifiable = App.Modifiables.GetValueAt(j);
 
-            for (var i = 0; i < App.Modifiers.Count; i++) {
-                var modifier:IModifier = App.Modifiers.GetValueAt(i);
+            for (var i = 0; i < App.Effects.Count; i++) {
+                var effect:IEffect = App.Effects.GetValueAt(i);
 
-                // if a modifiable is close enough to the modifier, add the modifier
+                // if a modifiable is close enough to the effect, add the effect
                 // to its internal list.
-                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(modifier.CatchmentArea, modifier.CatchmentArea));
-                var distanceFromModifier = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(modifier.Position));
+                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
+                var distanceFromEffect = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(effect.Position));
 
-                if (distanceFromModifier <= catchmentArea.x) {
-                    if (!modifiable.Modifiers.Contains(modifier)){
-                        modifiable.AddModifier(modifier);
+                if (distanceFromEffect <= catchmentArea.x) {
+                    if (!modifiable.Effects.Contains(effect)){
+                        modifiable.AddEffect(effect);
                     }
                 } else {
-                    // if the modifiable already has the modifier on its internal list
+                    // if the modifiable already has the effect on its internal list
                     // remove it as it's now too far away.
-                    if (modifiable.Modifiers.Contains(modifier)){
-                        modifiable.RemoveModifier(modifier);
+                    if (modifiable.Effects.Contains(effect)){
+                        modifiable.RemoveEffect(effect);
                     }
                 }
             }
@@ -598,14 +598,14 @@ class BlocksSketch extends Grid {
     }
 
     _ValidateBlocks() {
-        // for each Modifiable, if the Modifiable contains a Modifier that no longer
+        // for each Modifiable, if the Modifiable contains a Effect that no longer
         // exists, remove it.
 
         // todo: make this a command that all blocks subscribe to?
         for (var i = 0; i < App.Modifiables.Count; i++){
             var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
 
-            modifiable.ValidateModifiers();
+            modifiable.ValidateEffects();
         }
     }
 

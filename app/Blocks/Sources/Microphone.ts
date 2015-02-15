@@ -1,7 +1,6 @@
 import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");
-import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
 import Source = require("./Source");
@@ -56,30 +55,9 @@ class Microphone extends Source {
         }
     }
 
-    // output blocks are blue circles
     Draw() {
         super.Draw();
-
         this.Grid.BlockSprites.Draw(this.Position,true,"microphone");
-
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(1,1);
-        this.DrawLineTo(0,2);
-        this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9];// PINK
-        this.DrawMoveTo(0,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
     }
 }
 

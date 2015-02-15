@@ -1,10 +1,9 @@
 import Gain = require("./Gain");
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Chopper extends Modifier {
+class Chopper extends Effect {
 
     public Rate: number;
     public Depth: number;

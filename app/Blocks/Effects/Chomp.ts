@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Chomp extends Modifier {
+class Chomp extends Effect {
 
     public Effect: Tone.Filter;
     public Rate: number;

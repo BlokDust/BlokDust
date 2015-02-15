@@ -1,18 +1,18 @@
 import IBlock = require("./IBlock");
-import IModifier = require("./IModifier");
+import IEffect = require("./IEffect");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface IModifiable extends IBlock{
-    Modifiers: Fayde.Collections.ObservableCollection<IModifier>;
-    AddModifier(modifier: IModifier): void;
-    RemoveModifier(modifier: IModifier): void;
+    Effects: Fayde.Collections.ObservableCollection<IEffect>;
+    AddEffect(effect: IEffect): void;
+    RemoveEffect(effect: IEffect): void;
     Source?: any; // Use this when available: Tone.Oscillator || Tone.Noise
     Envelope?: Tone.Envelope;
     Delay?: Tone.PingPongDelay;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
     ConnectedKeyboards?: number;
-    ValidateModifiers(): void;
+    ValidateEffects(): void;
 }
 
 export = IModifiable;

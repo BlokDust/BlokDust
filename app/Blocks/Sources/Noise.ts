@@ -1,7 +1,6 @@
 import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");
-import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
 import Source = require("./Source");

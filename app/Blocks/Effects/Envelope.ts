@@ -1,10 +1,9 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import IModifiable = require("../IModifiable");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Envelope extends Modifier {
+class Envelope extends Effect {
 
     public attack: number;
     public decay: number;

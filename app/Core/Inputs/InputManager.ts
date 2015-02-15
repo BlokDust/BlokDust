@@ -1,6 +1,5 @@
 import App = require("../../App");
 import IInputManager = require("../Inputs/IInputManager");
-import IModifier = require("../../Blocks/IModifier");
 
 class InputManager {
 

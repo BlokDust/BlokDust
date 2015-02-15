@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class EQ extends Modifier {
+class EQ extends Effect {
 
     public Effect: Tone.MultibandEQ;
 

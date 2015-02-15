@@ -1,5 +1,5 @@
 import App = require("../App");
-import IModifier = require("./IModifier");
+import IEffect = require("./IEffect");
 import IModifiable = require("./IModifiable");
 import Block = require("./Block");
 import Grid = require("../Grid");
@@ -8,38 +8,38 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class SourceBlock extends Block implements IModifiable{
 
 
-    public Modifiers: ObservableCollection<IModifier> = new ObservableCollection<IModifier>();
-    public OldModifiers: ObservableCollection<IModifier>;
+    public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
+    public OldEffects: ObservableCollection<IEffect>;
     public Source: any;
     public OutputGain: Tone.Signal;
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
-        this.Modifiers.CollectionChanged.on(() => {
-            this._OnModifiersChanged();
+        this.Effects.CollectionChanged.on(() => {
+            this._OnEffectsChanged();
         }, this);
     }
 
-    AddModifier(modifier: IModifier) {
-        this.Modifiers.Add(modifier);
+    AddEffect(effect: IEffect) {
+        this.Effects.Add(effect);
     }
 
-    RemoveModifier(modifier: IModifier) {
-        this.Modifiers.Remove(modifier);
+    RemoveEffect(effect: IEffect) {
+        this.Effects.Remove(effect);
     }
 
     Draw(){
         super.Draw();
 
         if (window.debug){
-            // draw connections to modifiers
-            var modifiers = this.Modifiers.ToArray();
+            // draw connections to effect
+            var effects = this.Effects.ToArray();
 
             var grd = this.Grid.ScaledCellWidth.width; // this.Grid.Width / this.Grid.Divisor;
 
-            for(var i = 0; i < modifiers.length; i++){
-                var target: IModifier = modifiers[i];
+            for(var i = 0; i < effects.length; i++){
+                var target: IEffect = effects[i];
 
                 var myPos = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
                 myPos = this.Grid.ConvertBaseToTransformed(myPos);
@@ -115,24 +115,26 @@ class SourceBlock extends Block implements IModifiable{
     }
 
     /*
-    * Validate that the block's modifiers still exist
-    * @param {ObservableCollection<IModifier>} modifiers - Parent's full list of Effects.
+    * Validate that the block's effects still exist
+    * @param {ObservableCollection<IEffect>} effects - Parent's full list of Effects.
     */
-    public ValidateModifiers(){
-        for (var i = 0; i < this.Modifiers.Count; i++){
-            var modifier:IModifier = this.Modifiers.GetValueAt(i);
 
-            if (!App.Modifiers.Contains(modifier)){
-                this.RemoveModifier(modifier);
+    //TODO: THIS MAY NOT BE NECESSARY
+    public ValidateEffects(){
+        for (var i = 0; i < this.Effects.Count; i++){
+            var effect:IEffect = this.Effects.GetValueAt(i);
+
+            if (!App.Effects.Contains(effect)){
+                this.RemoveEffect(effect);
             }
         }
     }
 
-    private _OnModifiersChanged() {
+    private _OnEffectsChanged() {
 
-        // disconnect modifiers in old collection.
-        if (this.OldModifiers && this.OldModifiers.Count){
-            var oldmods: IModifier[] = this.OldModifiers.ToArray();
+        // disconnect effects in old collection.
+        if (this.OldEffects && this.OldEffects.Count){
+            //var oldmods: IEffect[] = this.OldEffects.ToArray();
 
             //for (var k = 0; k < oldmods.length; k++) {
             //    var oldmod = oldmods[k];
@@ -142,16 +144,17 @@ class SourceBlock extends Block implements IModifiable{
             //}
         }
 
-        // connect modifiers in new collection.
-        var mods: IModifier[] = this.Modifiers.ToArray();
+        // connect effect in new collection.
+        var mods: IEffect[] = this.Effects.ToArray();
 
         var _effects = [];
 
         for (var i = 0; i < mods.length; i++) {
-            var mod:IModifier = mods[i];
+            var mod:IEffect = mods[i];
 
 
             //this._ConnectEffect(mod);
+            //TODO: this may not be necessary
 
             if (mod.Component && mod.Component.Effect) {
                 _effects.push(mod.Component);
@@ -160,8 +163,8 @@ class SourceBlock extends Block implements IModifiable{
 
         this._UpdateEffectsChain(_effects);
 
-        this.OldModifiers = new ObservableCollection<IModifier>();
-        this.OldModifiers.AddRange(this.Modifiers.ToArray());
+        this.OldEffects = new ObservableCollection<IEffect>();
+        this.OldEffects.AddRange(this.Effects.ToArray());
     }
 
     //private _ConnectEffect(effect: IEffect ) {

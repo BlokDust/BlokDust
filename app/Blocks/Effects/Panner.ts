@@ -1,10 +1,8 @@
-
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Panner extends Modifier {
+class Panner extends Effect {
 
     public Effect: Tone.AutoPanner;
 

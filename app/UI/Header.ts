@@ -152,7 +152,7 @@ class Header extends DisplayObject{
                       },
                       {
                           "name": "Pitch",
-                          "id": "PitchIncrease"
+                          "id": "Pitch"
                       },
                       {
                           "name": "Reverb",

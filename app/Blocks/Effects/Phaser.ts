@@ -1,9 +1,8 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class Phaser extends Modifier {
+class Phaser extends Effect {
 
     public Effect: Tone.Phaser;
 

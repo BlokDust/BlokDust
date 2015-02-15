@@ -1,7 +1,6 @@
 import App = require("../../App");
 import IBlock = require("../IBlock");
 import Block = require("../Block");
-import IModifier = require("../IModifier");
 import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
 import Source = require("./Source");
@@ -80,40 +79,7 @@ class ToneSource extends Source {
     // input blocks are red circles
     Draw() {
         super.Draw();
-
-        //if (this.IsRenderCached) return;
-        //console.log("drawing to render cache");
-
         this.Grid.BlockSprites.Draw(this.Position,true,"tone");
-
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[5];// PURPLE
-        this.DrawMoveTo(-2,0);
-        this.DrawLineTo(0,-2);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(1,1);
-        this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
-        this.DrawMoveTo(-2,0);
-        this.DrawLineTo(0,-2);
-        this.DrawLineTo(0,0);
-        this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
-        this.DrawMoveTo(0,-2);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(0,0);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
-
-        //this.IsRenderCached = true;
     }
 
     OpenParams() {

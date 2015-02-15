@@ -1,12 +1,12 @@
 import IBlock = require("./IBlock");
 import IModifiable = require("./IModifiable");
 
-interface IModifier extends IBlock{
+interface IEffect extends IBlock{
     CatchmentArea: number;
 
     Component;
 
-    Modifiable: IModifiable; // Should be list instead Effects: Fayde.Collections.ObservableCollection<IEffect>;
+    Modifiable: IModifiable; // Should be a list of sources: Fayde.Collections.ObservableCollection<IEffect>;
 
     Connect(modifiable: IModifiable): void;
     Disconnect(modifiable: IModifiable): void;
@@ -15,4 +15,4 @@ interface IModifier extends IBlock{
     GetValue(param: string): void;
 }
 
-export = IModifier;
+export = IEffect;

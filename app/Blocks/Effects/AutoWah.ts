@@ -1,11 +1,9 @@
-import IModifier = require("../IModifier");
-import Modifier = require("../Modifier");
+import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
-class AutoWah extends Modifier {
+class AutoWah extends Effect {
 
-    //public Component: IEffect;
     public Effect: Tone.AutoWah;
 
     constructor(grid: Grid, position: Point){
@@ -36,36 +34,8 @@ class AutoWah extends Modifier {
 
     Draw() {
         super.Draw();
-
         this.Grid.BlockSprites.Draw(this.Position,true,"autowah");
-
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[3];// BLUE
-        this.DrawMoveTo(0,-1);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(1,1);
-        this.DrawLineTo(-2,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
-        this.DrawMoveTo(1,-1);
-        this.DrawLineTo(1,1);
-        this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
     }
-
-    //Connect(modifiable:IModifiable): void{
-    //    super.Connect(modifiable);
-    //
-    //}
-    //
-    //Disconnect(modifiable:IModifiable): void {
-    //    super.Disconnect(modifiable);
-    //
-    //}
 
     Delete() {
         this.Effect.dispose();
@@ -83,8 +53,6 @@ class AutoWah extends Modifier {
         } else if (param=="baseFrequency") {
             this.Effect.setBaseFrequency(value);
         }
-
-        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {

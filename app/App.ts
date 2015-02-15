@@ -4,7 +4,7 @@ import CommandManager = require("./Core/Commands/CommandManager");
 import AudioMixer = require("./Core/Audio/AudioMixer");
 import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInput");
-import IModifier = require("./Blocks/IModifier");
+import IEffect = require("./Blocks/IEffect");
 import IModifiable = require("./Blocks/IModifiable");
 import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
@@ -23,7 +23,7 @@ class App{
     static Fonts: Fonts;
     static Blocks: DisplayObjectCollection<any>;
     static Modifiables: ObservableCollection<IModifiable>;
-    static Modifiers: ObservableCollection<IModifier>;
+    static Effects: ObservableCollection<IEffect>;
     static AudioMixer: AudioMixer;
     static InputManager: InputManager;
     static KeyboardInput: KeyboardInput;
@@ -47,7 +47,7 @@ class App{
         //todo: make these members of BlocksContext
         App.Blocks = new DisplayObjectCollection<IBlock>();
         App.Modifiables = new ObservableCollection<IModifiable>();
-        App.Modifiers = new ObservableCollection<IModifier>();
+        App.Effects = new ObservableCollection<IEffect>();
 
         App.Blocks.CollectionChanged.on(() => {
             App.Modifiables.Clear();
@@ -56,19 +56,19 @@ class App{
                 var block = App.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
-                if ((<IModifiable>block.Modifiers)){
+                if ((<IModifiable>block.Effects)){
                     App.Modifiables.Add(block);
                 }
             }
 
-            App.Modifiers.Clear();
+            App.Effects.Clear();
 
             for (var i = 0; i < App.Blocks.Count; i++) {
                 var block = App.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
-                if (!(<IModifiable>block.Modifiers)){
-                    App.Modifiers.Add(block);
+                if (!(<IModifiable>block.Effects)){
+                    App.Effects.Add(block);
                 }
             }
         }, this);
