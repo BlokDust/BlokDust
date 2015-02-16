@@ -18,9 +18,9 @@ class BlockSprites {
     private _XOffset: number;
     private _YOffset: number;
 
-    constructor(grid: Grid, ctx: CanvasRenderingContext2D) {
+    constructor(grid: Grid) {
         this.Grid = grid;
-        this.Ctx = ctx;
+        this.Ctx = grid.Ctx;
         this._Scaled = true;
         this._Position = new Point(0,0);
         this._XOffset = 0;

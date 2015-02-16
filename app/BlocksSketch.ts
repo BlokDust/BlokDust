@@ -119,7 +119,7 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // INSTANCES //
-        this.BlockSprites = new BlockSprites(this,this.Ctx);
+        this.BlockSprites = new BlockSprites(this);
         this.BlockCreator = new BlockCreator();
         this._ParamsPanel = new ParametersPanel(this);
         this._Header = new Header(this);
