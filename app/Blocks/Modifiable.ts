@@ -120,15 +120,15 @@ class SourceBlock extends Block implements IModifiable{
     */
 
     //TODO: THIS MAY NOT BE NECESSARY
-    public ValidateEffects(){
-        for (var i = 0; i < this.Effects.Count; i++){
-            var effect:IEffect = this.Effects.GetValueAt(i);
-
-            if (!App.Effects.Contains(effect)){
-                this.RemoveEffect(effect);
-            }
-        }
-    }
+    //public ValidateEffects(){
+    //    for (var i = 0; i < this.Effects.Count; i++){
+    //        var effect:IEffect = this.Effects.GetValueAt(i);
+    //
+    //        if (!App.Effects.Contains(effect)){
+    //            this.RemoveEffect(effect);
+    //        }
+    //    }
+    //}
 
     private _OnEffectsChanged() {
 

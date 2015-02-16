@@ -602,11 +602,11 @@ class BlocksSketch extends Grid {
         // exists, remove it.
 
         // todo: make this a command that all blocks subscribe to?
-        for (var i = 0; i < App.Modifiables.Count; i++){
-            var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
-
-            modifiable.ValidateEffects();
-        }
+        //for (var i = 0; i < App.Modifiables.Count; i++){
+        //    var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
+        //
+        //    modifiable.ValidateEffects();
+        //}
     }
 
     CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
