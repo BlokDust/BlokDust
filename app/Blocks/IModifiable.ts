@@ -12,7 +12,7 @@ interface IModifiable extends IBlock{
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
     ConnectedKeyboards?: number;
-    ValidateEffects(): void;
+    //ValidateEffects(): void;
 }
 
 export = IModifiable;

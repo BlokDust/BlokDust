@@ -1,3 +1,5 @@
+///<amd-dependency path="fayde.utils"/>.
+
 import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
 import IBlock = require("../Blocks/IBlock");
