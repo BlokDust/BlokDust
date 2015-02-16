@@ -5,7 +5,7 @@ import Block = require("./Block");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-class SourceBlock extends Block implements IModifiable{
+class Modifiable extends Block implements IModifiable{
 
 
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
@@ -206,4 +206,4 @@ class SourceBlock extends Block implements IModifiable{
 
 }
 
-export = SourceBlock;
+export = Modifiable;
