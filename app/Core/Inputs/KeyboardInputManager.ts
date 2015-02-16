@@ -3,7 +3,7 @@ import InputManager = require("./InputManager");
 import KeyDownEventArgs = require("./KeyDownEventArgs");
 import KeyUpEventArgs = require("./KeyUpEventArgs");
 
-class KeyboardInput extends InputManager {
+class KeyboardInputManager extends InputManager {
 
     public MasterKeyboardMap: any;
     public KeysDown: any;
@@ -161,4 +161,4 @@ class KeyboardInput extends InputManager {
     }
 }
 
-export = KeyboardInput;
+export = KeyboardInputManager;
