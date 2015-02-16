@@ -20,7 +20,6 @@ class Block extends DisplayObject implements IBlock {
     public Outline: Point[] = [];
     public ZIndex;
     public ParamJson;
-    public Component;
 
 
     public BlockType: BlockType;

@@ -6,10 +6,12 @@ import Particle = require("../../Particle");
 
 class ToneSource extends Source {
 
+    public Frequency: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.ToneSource;
-        this.Source = new Tone.Oscillator(440, 'sawtooth');
+        this.Frequency = 440;
+        this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
 
         super(grid, position);
 

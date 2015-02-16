@@ -6,8 +6,6 @@ interface ToneSettings {
 
     envelope?: EnvelopeSettings;
 
-    keyboard?: KeyboardSettings;
-
     output?: OutputSettings;
 
     Volume?: VolumeSettings;
@@ -27,11 +25,6 @@ interface EnvelopeSettings {
     decay?: number;
     sustain?: number;
     release?: number;
-}
-
-interface KeyboardSettings {
-    isPolyphonic?: boolean;
-    glide?: number;
 }
 
 interface OutputSettings {

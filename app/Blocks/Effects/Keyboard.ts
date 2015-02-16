@@ -8,19 +8,20 @@ import PitchComponent = require("./Pitch");
 
 class Keyboard extends Effect {
 
-    public Name: string = 'Keyboard';
-    private _nodes = [];
     public BaseFrequency: number;
     public CurrentOctave: number;
-    public KeysDown = {};
-    public KeyMap: Object;
-
-    public Settings = {
-        isPolyphonic: false,
-        glide: 0.05 // glide only works in monophonic mode
-    };
+    public KeysDown: any;
+    public KeyMap: any;
+    public Settings: any;
 
     constructor(grid: Grid, position: Point){
+        this.Settings = {
+            isPolyphonic: false,
+            glide: 0.05 // glide only works in monophonic mode
+        };
+
+        this.KeysDown = {};
+
         super(grid, position);
 
         // Define Outline for HitTest
@@ -36,49 +37,45 @@ class Keyboard extends Effect {
     Attach(source:ISource): void{
         super.Attach(source);
 
-        if (this.Source.Settings.oscillator){
-            this.BaseFrequency = this.Source.Settings.oscillator.frequency;
-            this.CurrentOctave = this.GetStartOctave();
-            this.CurrentOctave--;
-        }
-
         this.KeysDown = {};
 
         App.KeyboardInput.KeyDownChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             this.KeysDown = (<any>e).KeysDown;
 
-            // for all modifiables
-            for (var i = 0; i < this.Source.Source.length; i++) {
-                this.KeyboardDown((<any>e).KeyDown);
+            // FOR ALL SOURCES
+            var sources: ISource[] = this.Sources.ToArray();
+            for (var i = 0; i < sources.length; i++) {
+                this._SetBaseFrequency(sources[i]);
+                this.KeyboardDown((<any>e).KeyDown, sources[i]);
             }
-            console.log(this);
+
         }, this);
 
         App.KeyboardInput.KeyUpChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             this.KeysDown = (<any>e).KeysDown;
 
-            this.KeyboardUp((<any>e).KeyUp);
+            // FOR ALL SOURCES
+            var sources: ISource[] = this.Sources.ToArray();
+            for (var i = 0; i < sources.length; i++) {
+                this.KeyboardUp((<any>e).KeyDown, sources[i]);
+            }
+
         }, this);
-        //this.AddListeners();
     }
 
     Detach(source:ISource): void {
+
+        // FOR ALL SOURCES
+        var sources: ISource[] = this.Sources.ToArray();
+        for (var i = 0; i < sources.length; i++) {
+            var source = sources[i];
+            if (source.Source.frequency){
+                source.Source.frequency.setValue(source.Frequency);
+            }
+        }
+
         super.Detach(source);
 
-        App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-            //this.KeyboardDown((<any>e).KeyDown);
-            //this.KeysDown = (<any>e).KeysDown;
-        }, this);
-
-        App.KeyboardInput.KeyUpChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-            //this.KeyboardUp((<any>e).KeyUp);
-            //this.KeysDown = (<any>e).KeysDown;
-        }, this);
-
-
-        if (this.Source.Source.frequency) {
-            this.Source.Source.frequency.setValue(this.Source.Settings.oscillator.frequency);
-        }
     }
 
     Delete(){
@@ -118,7 +115,7 @@ class Keyboard extends Effect {
                     "name" : "Glide",
                     "setting" :"glide",
                     "props" : {
-                        "value" : this.Component.GetValue("glide"),
+                        "value" : this.GetValue("glide"),
                         "min" : 0.001,
                         "max" : 100,
                         "truemin" : 0,
@@ -131,21 +128,7 @@ class Keyboard extends Effect {
         };
     }
 
-
-    GetStartOctave(): number {
-        var octave,
-            note = this.Source.Source.frequencyToNote(this.BaseFrequency);
-
-        if (note.length === 3) {
-            octave = parseInt(note.charAt(2));
-        } else {
-            octave = parseInt(note.charAt(1));
-        }
-
-        return octave;
-    }
-
-    KeyboardDown(key): void {
+    KeyboardDown(key:string, source:ISource): void {
 
         //console.log(App.KeyboardInput.KeysDown);
 
@@ -170,8 +153,8 @@ class Keyboard extends Effect {
         //}
 
         //var keyPressed = this.GetKeyNoteOctaveString(key.keyCode);
-        var keyPressed = this.GetKeyNoteOctaveString(key);
-        var frequency = this.GetFrequencyOfNote(keyPressed);
+        var keyPressed = this._GetKeyNoteOctaveString(key);
+        var frequency = this._GetFrequencyOfNote(keyPressed, source);
 
         //if (this.Settings.isPolyphonic){
         //    // POLYPHONIC
@@ -203,15 +186,15 @@ class Keyboard extends Effect {
         // MONOPHONIC
         // If no other keys already pressed trigger attack
         if (Object.keys(this.KeysDown).length === 1) {
-            if (this.Source.Source.frequency){
-                this.Source.Source.frequency.exponentialRampToValueNow(frequency, 0);
+            if (source.Source.frequency){
+                source.Source.frequency.exponentialRampToValueNow(frequency, 0);
             }
-            this.Source.Envelope.triggerAttack();
+            source.Envelope.triggerAttack();
 
             // Else ramp to new frequency over time (portamento)
         } else {
-            if (this.Source.Source.frequency) {
-                this.Source.Source.frequency.exponentialRampToValueNow(frequency, this.Settings.glide);
+            if (source.Source.frequency) {
+                source.Source.frequency.exponentialRampToValueNow(frequency, this.Settings.glide);
             }
         }
         //}
@@ -219,15 +202,15 @@ class Keyboard extends Effect {
 
     }
 
-    KeyboardUp(key): void {
+    KeyboardUp(key:string, source:ISource): void {
 
         ////Check if this key released is in out key_map
         //if (typeof this.KeyMap[key.keyCode] !== 'undefined') {
         //    // remove this key from the keysDown object
         //    delete this.KeysDown[key.keyCode];
 
-        var keyPressed = this.GetKeyNoteOctaveString(key);
-        var frequency = this.GetFrequencyOfNote(keyPressed);
+        var keyPressed = this._GetKeyNoteOctaveString(key);
+        var frequency = this._GetFrequencyOfNote(keyPressed, source);
 
         //if (this.Settings.isPolyphonic) {
         //    // POLYPHONIC
@@ -253,13 +236,35 @@ class Keyboard extends Effect {
         //} else {
         // MONOPHONIC
         if (Object.keys(this.KeysDown).length === 0) {
-            this.Source.Envelope.triggerRelease();
+            source.Envelope.triggerRelease();
         }
         //}
         //}
     }
 
-    GetKeyNoteOctaveString(keyCode): string {
+
+    private _SetBaseFrequency(source:ISource){
+        if (source.Frequency){
+            this.BaseFrequency = source.Frequency;
+            this.CurrentOctave = this._GetStartOctave();
+            this.CurrentOctave--;
+        }
+    }
+
+    private _GetStartOctave(): number {
+        var octave,
+            note = this.Source.Source.frequencyToNote(this.BaseFrequency);
+
+        if (note.length === 3) {
+            octave = parseInt(note.charAt(2));
+        } else {
+            octave = parseInt(note.charAt(1));
+        }
+
+        return octave;
+    }
+
+    private _GetKeyNoteOctaveString(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (keyCode
             .replace('a', this.CurrentOctave)
@@ -269,16 +274,16 @@ class Keyboard extends Effect {
             .toString());
     }
 
-    GetFrequencyOfNote(note): number {
-        return this.Source.Source.noteToFrequency(note) * this.GetConnectedPitchPreEffects();
+    private _GetFrequencyOfNote(note, source): number {
+        return source.Source.noteToFrequency(note) * this._GetConnectedPitchPreEffects(source);
     }
 
-    GetConnectedPitchPreEffects() {
+    private _GetConnectedPitchPreEffects(source) {
 
         var totalPitchIncrement = 1;
 
-        for (var i = 0; i < this.Source.Effects.Count; i++) {
-            var mod = this.Source.Effects.GetValueAt(i);
+        for (var i = 0; i < source.Effects.Count; i++) {
+            var mod = source.Effects.GetValueAt(i);
 
             //TODO: Use reflection when available
             if ((<PitchComponent>mod).PitchIncrement) {

@@ -8,10 +8,9 @@ interface ISource extends IBlock{
     RemoveEffect(effect: IEffect): void;
     Source?: any; // Use this when available: Tone.Oscillator || Tone.Noise
     Envelope?: Tone.Envelope;
-    Delay?: Tone.PingPongDelay;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
-    ConnectedKeyboards?: number;
+    Frequency?: number;
     //ValidateEffects(): void;
 }
 

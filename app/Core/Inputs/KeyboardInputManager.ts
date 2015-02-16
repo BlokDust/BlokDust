@@ -134,7 +134,8 @@ class KeyboardInputManager extends InputManager {
         //Check if this key released is in out key_map
         if (typeof k !== 'undefined' && k !== '') {
             //if it's already pressed (holding note)
-            if (e.keyCode in this.KeysDown) {
+            if (k in this.KeysDown) {
+                console.log('hello');
                 return;
             }
             //pressed first time, add to object
