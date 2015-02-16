@@ -2,7 +2,7 @@ import IBlock = require("./IBlock");
 import IEffect = require("./IEffect");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-interface IModifiable extends IBlock{
+interface ISource extends IBlock{
     Effects: Fayde.Collections.ObservableCollection<IEffect>;
     AddEffect(effect: IEffect): void;
     RemoveEffect(effect: IEffect): void;
@@ -15,4 +15,4 @@ interface IModifiable extends IBlock{
     //ValidateEffects(): void;
 }
 
-export = IModifiable;
+export = ISource;

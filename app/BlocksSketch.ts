@@ -425,29 +425,39 @@ class BlocksSketch extends Grid {
 
     // PROXIMITY CHECK //
     private _CheckProximity(){
-        // loop through all Modifiable blocks checking proximity to Effect blocks.
-        // if within CatchmentArea, add Effect to Modifiable.Effects.
+        // loop through all Source blocks checking proximity to Effect blocks.
+        // if within CatchmentArea, add Effect to Source.Effects and add Source to Effect.Sources
 
-        for (var j = 0; j < App.Modifiables.Count; j++) {
-            var source:ISource = App.Modifiables.GetValueAt(j);
+        for (var j = 0; j < App.Sources.Count; j++) {
+            var source:ISource = App.Sources.GetValueAt(j);
 
             for (var i = 0; i < App.Effects.Count; i++) {
                 var effect:IEffect = App.Effects.GetValueAt(i);
 
-                // if a modifiable is close enough to the effect, add the effect
+                // if a source is close enough to the effect, add the effect
                 // to its internal list.
                 var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
                 var distanceFromEffect = source.DistanceFrom(this.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
                     if (!source.Effects.Contains(effect)){
+
+                        // Add effect to source
                         source.AddEffect(effect);
+
+                        //Add sources to effect
+                        effect.AddSource(source);
                     }
                 } else {
-                    // if the modifiable already has the effect on its internal list
+                    // if the source already has the effect on its internal list
                     // remove it as it's now too far away.
                     if (source.Effects.Contains(effect)){
+
+                        // Remove effect from source
                         source.RemoveEffect(effect);
+
+                        // Remove source from effect
+                        effect.RemoveSource(source);
                     }
                 }
             }

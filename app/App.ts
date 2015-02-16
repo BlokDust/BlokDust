@@ -5,7 +5,7 @@ import AudioMixer = require("./Core/Audio/AudioMixer");
 import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import IEffect = require("./Blocks/IEffect");
-import IModifiable = require("./Blocks/ISource");
+import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
@@ -22,7 +22,7 @@ class App{
     static CommandManager: CommandManager;
     static Fonts: Fonts;
     static Blocks: DisplayObjectCollection<any>;
-    static Modifiables: ObservableCollection<IModifiable>;
+    static Sources: ObservableCollection<ISource>;
     static Effects: ObservableCollection<IEffect>;
     static AudioMixer: AudioMixer;
     static InputManager: InputManager;
@@ -46,18 +46,18 @@ class App{
 
         //todo: make these members of BlocksContext
         App.Blocks = new DisplayObjectCollection<IBlock>();
-        App.Modifiables = new ObservableCollection<IModifiable>();
+        App.Sources = new ObservableCollection<ISource>();
         App.Effects = new ObservableCollection<IEffect>();
 
         App.Blocks.CollectionChanged.on(() => {
-            App.Modifiables.Clear();
+            App.Sources.Clear();
 
             for (var i = 0; i < App.Blocks.Count; i++) {
                 var block = App.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
-                if ((<IModifiable>block.Effects)){
-                    App.Modifiables.Add(block);
+                if ((<ISource>block.Effects)){
+                    App.Sources.Add(block);
                 }
             }
 
@@ -67,7 +67,7 @@ class App{
                 var block = App.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
-                if (!(<IModifiable>block.Effects)){
+                if (!(<ISource>block.Effects)){
                     App.Effects.Add(block);
                 }
             }
