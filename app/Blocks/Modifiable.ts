@@ -7,7 +7,6 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Modifiable extends Block implements IModifiable{
 
-
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
     public OldEffects: ObservableCollection<IEffect>;
     public Source: any;
@@ -21,17 +20,26 @@ class Modifiable extends Block implements IModifiable{
         }, this);
     }
 
+    /**
+     * Add effect to this Source's list of effects
+     * @param effect
+     * @constructor
+     */
     AddEffect(effect: IEffect) {
         this.Effects.Add(effect);
     }
 
+    /**
+     * Remove effect from this Source's list of effects
+     * @param effect
+     * @constructor
+     */
     RemoveEffect(effect: IEffect) {
         this.Effects.Remove(effect);
     }
 
     Draw(){
         super.Draw();
-
         if (window.debug){
             // draw connections to effect
             var effects = this.Effects.ToArray();
@@ -132,52 +140,68 @@ class Modifiable extends Block implements IModifiable{
 
     private _OnEffectsChanged() {
 
-        // disconnect effects in old collection.
+        // Detach effects in old collection.
         if (this.OldEffects && this.OldEffects.Count){
-            //var oldmods: IEffect[] = this.OldEffects.ToArray();
+            var oldEffects: IEffect[] = this.OldEffects.ToArray();
 
-            //for (var k = 0; k < oldmods.length; k++) {
-            //    var oldmod = oldmods[k];
-            //
-            //    this._DisconnectEffect(oldmod);
-            //
-            //}
-        }
-
-        // connect effect in new collection.
-        var mods: IEffect[] = this.Effects.ToArray();
-
-        var _effects = [];
-
-        for (var i = 0; i < mods.length; i++) {
-            var mod:IEffect = mods[i];
-
-
-            //this._ConnectEffect(mod);
-            //TODO: this may not be necessary
-
-            if (mod.Component && mod.Component.Effect) {
-                _effects.push(mod.Component);
+            for (var k = 0; k < oldEffects.length; k++) {
+                this._DetachEffect(oldEffects[k]);
             }
         }
 
-        this._UpdateEffectsChain(_effects);
+        // List of connected effect blocks
+        var effects: IEffect[] = this.Effects.ToArray();
 
+        // List of PostEffect blocks
+        var postEffects: IEffect[] = [];
+
+        // For each connected effect
+        for (var i = 0; i < effects.length; i++) {
+
+            // Run Attach method for all effect blocks that need it
+            this._AttachEffect(effects[i]);
+
+            // If this is a post effect add to postEffect list
+            if (effects[i].Effect) {
+                postEffects.push(effects[i]);
+            }
+        }
+
+        // Reorder the post effects chain
+        this.UpdateEffectsChain(postEffects);
+
+        // Update list of Old Effects
         this.OldEffects = new ObservableCollection<IEffect>();
         this.OldEffects.AddRange(this.Effects.ToArray());
     }
 
-    //private _ConnectEffect(effect: IEffect ) {
-    //    effect.Connect(this);
-    //}
+    /**
+     * Runs attach method for all effect blocks that need a bespoke way of connecting (usually pre-effect blocks)
+     * @param effect
+     * @private
+     */
+    private _AttachEffect(effect: IEffect ) {
+        effect.Attach(this);
+    }
 
-    //private _DisconnectEffect(effect: IEffect) {
-    //    effect.Disconnect(this);
-    //}
+    /**
+     * Runs detach method for all effect blocks that need a bespoke way of disconnecting (usually pre-effect blocks)
+     * @param effect
+     * @private
+     */
+    private _DetachEffect(effect: IEffect) {
+        effect.Detach(this);
+    }
 
-    private _UpdateEffectsChain(effects) {
+    /**
+     * Connects all this Source's post-effect blocks in series
+     * @param effects
+     * @public
+     */
+    public UpdateEffectsChain(effects) {
 
         if (effects.length) {
+
             var start = effects[0].Modifiable.Source;
             var mono = new Tone.Mono();
             var end = effects[0].Modifiable.OutputGain;

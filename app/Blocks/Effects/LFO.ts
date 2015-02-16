@@ -24,7 +24,7 @@ class LFO extends Effect {
     }
 
     Connect(modifiable:IModifiable): void{
-        super.Connect(modifiable);
+        super.Attach(modifiable);
 
         if (this.Modifiable.Source.detune) {
             this.LFO.connect(this.Modifiable.Source.detune);
@@ -34,7 +34,7 @@ class LFO extends Effect {
     }
 
     Disconnect(modifiable:IModifiable): void {
-        super.Disconnect(modifiable);
+        super.Detach(modifiable);
 
         if (this.Modifiable.Source.detune) {
             if (this.LFO) {

@@ -8,12 +8,10 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 class Effect extends Block implements IEffect {
 
     public CatchmentArea: number = 6; // grid units
-    public Component;
+    public Effect; // ANY TYPE OF TONE POST EFFECT
 
     Modifiable: IModifiable;
     Params: ToneSettings;
-
-    public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
@@ -23,21 +21,13 @@ class Effect extends Block implements IEffect {
         super.Update();
     }
 
-    Connect(modifiable: IModifiable): void {
+    Attach(modifiable: IModifiable): void {
         this.Modifiable = modifiable;
     }
-    Disconnect(modifiable: IModifiable): void {
+
+    Detach(modifiable: IModifiable): void {
         this.Modifiable = modifiable;
     }
-    //Delete(): void {
-    //
-    //}
-    //SetValue(param: string,value: number) {
-    //
-    //}
-    //GetValue(param: string) {
-    //
-    //}
 }
 
 export = Effect;

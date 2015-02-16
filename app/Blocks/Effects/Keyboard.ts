@@ -35,7 +35,7 @@ class Keyboard extends Effect {
     }
 
     Connect(modifiable:IModifiable): void{
-        super.Connect(modifiable);
+        super.Attach(modifiable);
 
         if (this.Modifiable.Settings.oscillator){
             this.BaseFrequency = this.Modifiable.Settings.oscillator.frequency;
@@ -64,7 +64,7 @@ class Keyboard extends Effect {
     }
 
     Disconnect(modifiable:IModifiable): void {
-        super.Disconnect(modifiable);
+        super.Detach(modifiable);
 
         App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             //this.KeyboardDown((<any>e).KeyDown);

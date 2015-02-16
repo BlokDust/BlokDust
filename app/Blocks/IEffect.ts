@@ -3,13 +3,12 @@ import IModifiable = require("./IModifiable");
 
 interface IEffect extends IBlock{
     CatchmentArea: number;
-
-    Component;
+    Effect: any; // ANY TYPE OF TONE POST EFFECT
 
     Modifiable: IModifiable; // Should be a list of sources: Fayde.Collections.ObservableCollection<IEffect>;
 
-    Connect(modifiable: IModifiable): void;
-    Disconnect(modifiable: IModifiable): void;
+    Attach(modifiable: IModifiable): void;
+    Detach(modifiable: IModifiable): void;
     Delete(): void;
     SetValue(param: string,value: number): void;
     GetValue(param: string): void;

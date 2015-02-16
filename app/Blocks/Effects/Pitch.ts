@@ -30,7 +30,7 @@ class PitchIncrease extends Effect {
     }
 
     Connect(modifiable: IModifiable): void {
-        super.Connect(modifiable);
+        super.Attach(modifiable);
 
         if (this.Modifiable.Source.frequency){
             this.Pitch = this.Modifiable.Source.frequency.getValue();
@@ -42,7 +42,7 @@ class PitchIncrease extends Effect {
     }
 
     Disconnect(modifiable: IModifiable): void{
-        super.Disconnect(modifiable);
+        super.Detach(modifiable);
 
         if (this.Modifiable.Source.frequency) {
             this.Pitch = this.Modifiable.Source.frequency.getValue();

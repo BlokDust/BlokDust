@@ -31,7 +31,7 @@ class Envelope extends Effect {
 
 
     Connect(modifiable: IModifiable): void{
-        super.Connect(modifiable);
+        super.Attach(modifiable);
 
         this.Modifiable.Envelope.setAttack(this.attack);
         this.Modifiable.Envelope.setDecay(this.decay);
@@ -40,7 +40,7 @@ class Envelope extends Effect {
     }
 
     Disconnect(modifiable: IModifiable): void{
-        super.Disconnect(modifiable);
+        super.Detach(modifiable);
 
         this.Modifiable.Envelope.setAttack(this.Modifiable.Settings.envelope.attack);
         this.Modifiable.Envelope.setDecay(this.Modifiable.Settings.envelope.decay);

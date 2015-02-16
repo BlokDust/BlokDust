@@ -101,10 +101,13 @@ class Chopper extends Effect {
         super.SetValue(param,value);
         if (param == "rate") {
             this.Rate = Math.round(151-value);
+        } else if (param == "gain") {
+            //TODO: DO SOME MATH TO MAKE THE NUMBERS BETTER
+            value  = (value + 10) * 0.5;
+            this.Effect.output.gain.value = value;
         } else {
-            this.Depth = value;
+                this.Depth = value
         }
-
     }
 }
 
