@@ -120,7 +120,7 @@ class BlocksSketch extends Grid {
 
         // INSTANCES //
         this.BlockSprites = new BlockSprites(this,this.Ctx);
-        this.BlockCreator = new BlockCreator(this);
+        this.BlockCreator = new BlockCreator();
         this._ParamsPanel = new ParametersPanel(this);
         this._Header = new Header(this);
         this._ToolTip = new ToolTip(this);
