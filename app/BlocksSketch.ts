@@ -466,7 +466,6 @@ class BlocksSketch extends Grid {
 
     // COLLISION CHECK ON BLOCK //
     private _CheckCollision(point: Point, handle: () => void): Boolean {
-        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
 
         // LOOP BLOCKS //
         for (var i = App.Blocks.Count - 1; i >= 0; i--) {
@@ -630,9 +629,11 @@ class BlocksSketch extends Grid {
     private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
         this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
     }
+
     ZoomIn() {
         this._Transformer.Zoom(1);
     }
+
     ZoomOut() {
         this._Transformer.Zoom(-1);
     }

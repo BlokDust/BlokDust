@@ -1,4 +1,3 @@
-
 interface Validator{
     State: boolean;
 }
