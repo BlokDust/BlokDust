@@ -9,7 +9,6 @@ class Chomp extends Effect {
     public Timer;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",
@@ -19,7 +18,7 @@ class Chomp extends Effect {
             "gain" : 25
         });
 
-        this.OpenParams();
+        super(grid, position);
 
 
         this.Rate = 13;

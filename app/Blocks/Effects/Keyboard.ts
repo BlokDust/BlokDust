@@ -1,5 +1,5 @@
 import Effect = require("../Effect");
-import IModifiable = require("../IModifiable");
+import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import PooledOscillator = require("../../PooledOscillator");
@@ -23,7 +23,6 @@ class Keyboard extends Effect {
     constructor(grid: Grid, position: Point){
         super(grid, position);
 
-        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
@@ -34,11 +33,11 @@ class Keyboard extends Effect {
         this.Grid.BlockSprites.Draw(this.Position,true,"keyboard");
     }
 
-    Connect(modifiable:IModifiable): void{
-        super.Attach(modifiable);
+    Attach(source:ISource): void{
+        super.Attach(source);
 
-        if (this.Modifiable.Settings.oscillator){
-            this.BaseFrequency = this.Modifiable.Settings.oscillator.frequency;
+        if (this.Source.Settings.oscillator){
+            this.BaseFrequency = this.Source.Settings.oscillator.frequency;
             this.CurrentOctave = this.GetStartOctave();
             this.CurrentOctave--;
         }
@@ -49,7 +48,7 @@ class Keyboard extends Effect {
             this.KeysDown = (<any>e).KeysDown;
 
             // for all modifiables
-            for (var i = 0; i < this.Modifiable.Source.length; i++) {
+            for (var i = 0; i < this.Source.Source.length; i++) {
                 this.KeyboardDown((<any>e).KeyDown);
             }
             console.log(this);
@@ -63,8 +62,8 @@ class Keyboard extends Effect {
         //this.AddListeners();
     }
 
-    Disconnect(modifiable:IModifiable): void {
-        super.Detach(modifiable);
+    Detach(source:ISource): void {
+        super.Detach(source);
 
         App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             //this.KeyboardDown((<any>e).KeyDown);
@@ -77,8 +76,8 @@ class Keyboard extends Effect {
         }, this);
 
 
-        if (this.Modifiable.Source.frequency) {
-            this.Modifiable.Source.frequency.setValue(this.Modifiable.Settings.oscillator.frequency);
+        if (this.Source.Source.frequency) {
+            this.Source.Source.frequency.setValue(this.Source.Settings.oscillator.frequency);
         }
     }
 
@@ -135,7 +134,7 @@ class Keyboard extends Effect {
 
     GetStartOctave(): number {
         var octave,
-            note = this.Modifiable.Source.frequencyToNote(this.BaseFrequency);
+            note = this.Source.Source.frequencyToNote(this.BaseFrequency);
 
         if (note.length === 3) {
             octave = parseInt(note.charAt(2));
@@ -204,15 +203,15 @@ class Keyboard extends Effect {
         // MONOPHONIC
         // If no other keys already pressed trigger attack
         if (Object.keys(this.KeysDown).length === 1) {
-            if (this.Modifiable.Source.frequency){
-                this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, 0);
+            if (this.Source.Source.frequency){
+                this.Source.Source.frequency.exponentialRampToValueNow(frequency, 0);
             }
-            this.Modifiable.Envelope.triggerAttack();
+            this.Source.Envelope.triggerAttack();
 
             // Else ramp to new frequency over time (portamento)
         } else {
-            if (this.Modifiable.Source.frequency) {
-                this.Modifiable.Source.frequency.exponentialRampToValueNow(frequency, this.Settings.glide);
+            if (this.Source.Source.frequency) {
+                this.Source.Source.frequency.exponentialRampToValueNow(frequency, this.Settings.glide);
             }
         }
         //}
@@ -254,7 +253,7 @@ class Keyboard extends Effect {
         //} else {
         // MONOPHONIC
         if (Object.keys(this.KeysDown).length === 0) {
-            this.Modifiable.Envelope.triggerRelease();
+            this.Source.Envelope.triggerRelease();
         }
         //}
         //}
@@ -271,15 +270,15 @@ class Keyboard extends Effect {
     }
 
     GetFrequencyOfNote(note): number {
-        return this.Modifiable.Source.noteToFrequency(note) * this.GetConnectedPitchPreEffects();
+        return this.Source.Source.noteToFrequency(note) * this.GetConnectedPitchPreEffects();
     }
 
     GetConnectedPitchPreEffects() {
 
         var totalPitchIncrement = 1;
 
-        for (var i = 0; i < this.Modifiable.Effects.Count; i++) {
-            var mod = this.Modifiable.Effects.GetValueAt(i);
+        for (var i = 0; i < this.Source.Effects.Count; i++) {
+            var mod = this.Source.Effects.GetValueAt(i);
 
             //TODO: Use reflection when available
             if ((<PitchComponent>mod).PitchIncrement) {

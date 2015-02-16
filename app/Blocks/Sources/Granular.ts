@@ -1,13 +1,5 @@
-/**
- * Created by luketwyman on 10/02/2015.
- */
-
-import App = require("../../App");
-import IBlock = require("../IBlock");
-import Block = require("../Block");
-import Modifiable = require("../Modifiable");
+import Source = require("../Source");
 import Grid = require("../../Grid");
-import Source = require("./Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
@@ -27,6 +19,8 @@ class Granular extends Source {
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Granular;
+        this.Source = new Tone.Signal();
+
         super(grid, position);
 
         this._IsLoaded = false;

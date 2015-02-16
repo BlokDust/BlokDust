@@ -1,5 +1,5 @@
 import Effect = require("../Effect");
-import IModifiable = require("../IModifiable");
+import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
@@ -11,14 +11,14 @@ class Envelope extends Effect {
     public release: number;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.attack = 1;
         this.decay = 5;
         this.sustain = 0.7;
         this.release = 4;
 
-        this.OpenParams();
+        super(grid, position);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
     }
@@ -30,22 +30,22 @@ class Envelope extends Effect {
     }
 
 
-    Connect(modifiable: IModifiable): void{
-        super.Attach(modifiable);
+    Attach(source: ISource): void{
+        super.Attach(source);
 
-        this.Modifiable.Envelope.setAttack(this.attack);
-        this.Modifiable.Envelope.setDecay(this.decay);
-        this.Modifiable.Envelope.setSustain(this.sustain);
-        this.Modifiable.Envelope.setRelease(this.release);
+        this.Source.Envelope.setAttack(this.attack);
+        this.Source.Envelope.setDecay(this.decay);
+        this.Source.Envelope.setSustain(this.sustain);
+        this.Source.Envelope.setRelease(this.release);
     }
 
-    Disconnect(modifiable: IModifiable): void{
-        super.Detach(modifiable);
+    Detach(source: ISource): void{
+        super.Detach(source);
 
-        this.Modifiable.Envelope.setAttack(this.Modifiable.Settings.envelope.attack);
-        this.Modifiable.Envelope.setDecay(this.Modifiable.Settings.envelope.decay);
-        this.Modifiable.Envelope.setSustain(this.Modifiable.Settings.envelope.sustain);
-        this.Modifiable.Envelope.setRelease(this.Modifiable.Settings.envelope.release);
+        this.Source.Envelope.setAttack(this.Source.Settings.envelope.attack);
+        this.Source.Envelope.setDecay(this.Source.Settings.envelope.decay);
+        this.Source.Envelope.setSustain(this.Source.Settings.envelope.sustain);
+        this.Source.Envelope.setRelease(this.Source.Settings.envelope.release);
     }
 
     SetValue(param: string,value: number) {
@@ -61,11 +61,11 @@ class Envelope extends Effect {
         } else if (param=="release") {
             this.release = value;
         }
-        if (this.Modifiable) {
-            this.Modifiable.Envelope.setAttack(this.attack);
-            this.Modifiable.Envelope.setDecay(this.decay);
-            this.Modifiable.Envelope.setSustain(this.sustain);
-            this.Modifiable.Envelope.setRelease(this.release);
+        if (this.Source) {
+            this.Source.Envelope.setAttack(this.attack);
+            this.Source.Envelope.setDecay(this.decay);
+            this.Source.Envelope.setSustain(this.sustain);
+            this.Source.Envelope.setRelease(this.release);
         }
     }
 

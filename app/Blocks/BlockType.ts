@@ -6,5 +6,6 @@ export enum BlockType {
     Microphone,
     Soundcloud,
     Recorder,
-    Granular
+    Granular,
+    Power
 }

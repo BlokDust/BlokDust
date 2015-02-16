@@ -1,5 +1,5 @@
 import Effect = require("../Effect");
-import IModifiable = require("../IModifiable");
+import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 
@@ -8,12 +8,12 @@ class LFO extends Effect {
     LFO: Tone.LFO;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.LFO = new Tone.LFO(2, -20, 20);
         this.LFO.setType('triangle');
 
-        this.OpenParams();
+        super(grid, position);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
     }
@@ -23,20 +23,20 @@ class LFO extends Effect {
         this.Grid.BlockSprites.Draw(this.Position,true,"lfo");
     }
 
-    Connect(modifiable:IModifiable): void{
-        super.Attach(modifiable);
+    Attach(source:ISource): void{
+        super.Attach(source);
 
-        if (this.Modifiable.Source.detune) {
-            this.LFO.connect(this.Modifiable.Source.detune);
+        if (this.Source.Source.detune) {
+            this.LFO.connect(this.Source.Source.detune);
             this.LFO.start();
         }
 
     }
 
-    Disconnect(modifiable:IModifiable): void {
-        super.Detach(modifiable);
+    Detach(source:ISource): void {
+        super.Detach(source);
 
-        if (this.Modifiable.Source.detune) {
+        if (this.Source.Source.detune) {
             if (this.LFO) {
                 this.LFO.stop();
                 this.LFO.disconnect();

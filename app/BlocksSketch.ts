@@ -1,6 +1,6 @@
 import App = require("./App");
 import IBlock = require("./Blocks/IBlock");
-import IModifiable = require("./Blocks/IModifiable");
+import ISource = require("./Blocks/ISource");
 import IEffect = require("./Blocks/IEffect");
 import AddItemToObservableCollectionOperation = require("./Core/Operations/AddItemToObservableCollectionOperation");
 import RemoveItemFromObservableCollectionOperation = require("./Core/Operations/RemoveItemFromObservableCollectionOperation");
@@ -429,7 +429,7 @@ class BlocksSketch extends Grid {
         // if within CatchmentArea, add Effect to Modifiable.Effects.
 
         for (var j = 0; j < App.Modifiables.Count; j++) {
-            var modifiable:IModifiable = App.Modifiables.GetValueAt(j);
+            var source:ISource = App.Modifiables.GetValueAt(j);
 
             for (var i = 0; i < App.Effects.Count; i++) {
                 var effect:IEffect = App.Effects.GetValueAt(i);
@@ -437,17 +437,17 @@ class BlocksSketch extends Grid {
                 // if a modifiable is close enough to the effect, add the effect
                 // to its internal list.
                 var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
-                var distanceFromEffect = modifiable.DistanceFrom(this.ConvertGridUnitsToAbsolute(effect.Position));
+                var distanceFromEffect = source.DistanceFrom(this.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
-                    if (!modifiable.Effects.Contains(effect)){
-                        modifiable.AddEffect(effect);
+                    if (!source.Effects.Contains(effect)){
+                        source.AddEffect(effect);
                     }
                 } else {
                     // if the modifiable already has the effect on its internal list
                     // remove it as it's now too far away.
-                    if (modifiable.Effects.Contains(effect)){
-                        modifiable.RemoveEffect(effect);
+                    if (source.Effects.Contains(effect)){
+                        source.RemoveEffect(effect);
                     }
                 }
             }

@@ -5,21 +5,19 @@ import AudioSettings = require("../../Core/Audio/AudioSettings");
 class Gain extends Effect {
 
     public Effect: Tone.Signal;
-    public Settings: ToneSettings = new AudioSettings();
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.Signal();
 
-        this.OpenParams();
+        super(grid, position);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(0, 1));
     }
 
     Draw() {
         super.Draw();
-
         this.Grid.BlockSprites.Draw(this.Position,true,"gain");
     }
 

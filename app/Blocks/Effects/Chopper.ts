@@ -13,12 +13,11 @@ class Chopper extends Effect {
     public Effect: Tone.Signal;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.Signal();
         this.Effect.output.gain.value = 5; //TODO: This is shit
 
-        this.OpenParams();
+        super(grid, position);
 
         this.Rate = 50;
         this.Depth = 4;
@@ -106,7 +105,7 @@ class Chopper extends Effect {
             value  = (value + 10) * 0.5;
             this.Effect.output.gain.value = value;
         } else {
-                this.Depth = value
+            this.Depth = value
         }
     }
 }

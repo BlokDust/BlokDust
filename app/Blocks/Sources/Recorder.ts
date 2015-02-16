@@ -1,12 +1,8 @@
 import App = require("../../App");
-import IBlock = require("../IBlock");
-import Block = require("../Block");
-import Modifiable = require("../Modifiable");
 import Grid = require("../../Grid");
-import Source = require("./Source");
+import Source = require("../Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
-import Particle = require("../../Particle");
 
 class RecorderBlock extends Source {
 
@@ -19,6 +15,7 @@ class RecorderBlock extends Source {
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Recorder;
+        this.Source = new Tone.Signal();
 
         super(grid, position);
 
@@ -42,7 +39,6 @@ class RecorderBlock extends Source {
 
     Update() {
         super.Update();
-
     }
 
     Draw() {
@@ -58,12 +54,6 @@ class RecorderBlock extends Source {
     MouseUp() {
         super.MouseUp();
         this.StopRecording();
-    }
-
-    ParticleCollision(particle: Particle) {
-        super.ParticleCollision(particle);
-
-        particle.Dispose();
     }
 
     StartRecording() {

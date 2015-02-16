@@ -7,13 +7,12 @@ class Panner extends Effect {
     public Effect: Tone.AutoPanner;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.AutoPanner({
             "frequency": 1
         });
 
-        this.OpenParams();
+        super(grid, position);
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
     }

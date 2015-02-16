@@ -4,16 +4,13 @@ import App = require("../../App");
 
 class BitCrusher extends Effect {
 
-    //public Component: IEffect;
     public Effect: Tone.BitCrusher;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
-
         this.Effect = new Tone.BitCrusher(7);
 
+        super(grid, position);
 
-        this.OpenParams();
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(1, -2),new Point(1, 0),new Point(0, 1),new Point(-1, 1));
 

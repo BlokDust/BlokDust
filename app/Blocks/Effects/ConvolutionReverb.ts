@@ -7,11 +7,11 @@ class Convolver extends Effect {
     public Effect: Tone.Convolver;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.Convolver("../Assets/ImpulseResponses/teufelsberg01.wav");
 
-        this.OpenParams();
+        super(grid, position);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
     }

@@ -1,7 +1,7 @@
 import IBlock = require("./IBlock");
 import Block = require("./Block");
 import IEffect = require("./IEffect");
-import IModifiable = require("./IModifiable");
+import ISource = require("./ISource");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
@@ -10,23 +10,25 @@ class Effect extends Block implements IEffect {
     public CatchmentArea: number = 6; // grid units
     public Effect; // ANY TYPE OF TONE POST EFFECT
 
-    Modifiable: IModifiable;
+    Source: ISource;
     Params: ToneSettings;
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);
+
+        this.OpenParams();
     }
 
     Update() {
         super.Update();
     }
 
-    Attach(modifiable: IModifiable): void {
-        this.Modifiable = modifiable;
+    Attach(source: ISource): void {
+        this.Source = source;
     }
 
-    Detach(modifiable: IModifiable): void {
-        this.Modifiable = modifiable;
+    Detach(source: ISource): void {
+        this.Source = source;
     }
 }
 

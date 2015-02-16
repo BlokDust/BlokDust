@@ -1,10 +1,10 @@
 import IBlock = require("../IBlock");
 import Block = require("../Block");
-import IModifiable = require("../IModifiable");
-import Modifiable = require("../Modifiable");
+import ISource = require("../ISource");
+import Source = require("../Source");
 import Grid = require("../../Grid");
 
-class Power extends Modifiable{
+class Power extends Source{
 
     constructor(grid: Grid, position: Point) {
         super(grid, position);

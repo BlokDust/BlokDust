@@ -7,12 +7,12 @@ class Distortion extends Effect {
     public Effect: Tone.Distortion;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.Distortion(0.65);
         this.Effect.dryWet.setWet(0.75);
 
-        this.OpenParams();
+        super(grid, position);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
     }

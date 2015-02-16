@@ -7,7 +7,6 @@ class EQ extends Effect {
     public Effect: Tone.MultibandEQ;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.MultibandEQ([
             {
@@ -40,7 +39,8 @@ class EQ extends Effect {
             }
         ]);
 
-        this.OpenParams();
+        super(grid, position);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }

@@ -1,20 +1,19 @@
-import IBlock = require("../IBlock");
-import Block = require("../Block");
-import IModifiable = require("../IModifiable");
-import Modifiable = require("../Modifiable");
+import Source = require("../Source");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import App = require("../../App");
 import Vector = Fayde.Utils.Vector;
+import Type = require("../BlockType");
+import BlockType = Type.BlockType;
 
-class ParticleEmitter extends Modifiable{
+class ParticleEmitter extends Source{
 
     public Params: EmitterSettings;
     private _rateCounter: number;
 
 
     constructor(grid: Grid, position: Point) {
-        super(grid, position);
+        this.BlockType = BlockType.Power;
 
         this.Params = {
             angle: -90,
@@ -22,6 +21,8 @@ class ParticleEmitter extends Modifiable{
             rate: 40,
             range: 600
         };
+
+        super(grid, position);
 
         this._rateCounter = 0;
 
@@ -76,25 +77,6 @@ class ParticleEmitter extends Modifiable{
         super.Draw();
 
         this.Grid.BlockSprites.Draw(this.Position,true,"particle emitter");
-
-        /*this.Ctx.beginPath();
-        //color(col[2]);// PURPLE
-        this.Ctx.fillStyle = "#730081";
-        this.DrawMoveTo(-2,0);
-        this.DrawLineTo(2,0);
-        this.DrawLineTo(0,2);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        //color(col[4]); // RED
-        this.Ctx.fillStyle = "#f22a54";
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
 
         if (window.debug){
             this.Ctx.fillStyle = "#fff";

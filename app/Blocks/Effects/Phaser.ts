@@ -7,7 +7,6 @@ class Phaser extends Effect {
     public Effect: Tone.Phaser;
 
     constructor(grid: Grid, position: Point){
-        super(grid, position);
 
         this.Effect = new Tone.Phaser({
             "rate" : 0.5,
@@ -16,7 +15,7 @@ class Phaser extends Effect {
             "baseFrequency" : 500
         });
 
-        this.OpenParams();
+        super(grid, position);
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));
     }
