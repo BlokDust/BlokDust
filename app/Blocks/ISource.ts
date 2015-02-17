@@ -14,6 +14,8 @@ interface ISource extends IBlock{
     PlaybackRate?: number;
     Grains?: Tone.Player[];
     MaxDensity?: number;
+    RecordedAudio?: any;
+
 }
 
 export = ISource;

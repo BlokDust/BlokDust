@@ -6,11 +6,14 @@ import Particle = require("../../Particle");
 
 class Noise extends Source {
 
+    public PlaybackRate: number;
     public DelayedRelease: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Noise;
+
         this.Source = new Tone.Noise('brown');
+        this.PlaybackRate = 1;
 
         super(grid, position);
 

@@ -12,6 +12,7 @@ class RecorderBlock extends Source {
     public Filename: string;
     public RecordedBlob;
     public StopPlaybackOnRecord: boolean;
+    public PlaybackRate: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Recorder;
@@ -24,6 +25,8 @@ class RecorderBlock extends Source {
         });
 
         this.RecordedAudio = new Tone.Player();
+        this.PlaybackRate = 1;
+
         this.RecordedAudio.connect(this.Source);
         this.BufferSource = this.RecordedAudio.context.createBufferSource();
 

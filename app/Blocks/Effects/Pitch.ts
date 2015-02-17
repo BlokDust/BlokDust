@@ -48,7 +48,12 @@ class Pitch extends Effect {
             for (var i=0; i<source.MaxDensity; i++) {
                 source.Grains[i].setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
             }
+
+            // RECORDER
+        } else if (source.RecordedAudio) {
+            source.RecordedAudio.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
         }
+
     }
 
     SetValue(param: string,value: number) {
