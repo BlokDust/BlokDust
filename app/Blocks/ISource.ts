@@ -11,7 +11,7 @@ interface ISource extends IBlock{
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
     Frequency?: number;
-    //ValidateEffects(): void;
+    PlaybackRate?: number;
 }
 
 export = ISource;

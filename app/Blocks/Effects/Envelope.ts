@@ -33,19 +33,20 @@ class Envelope extends Effect {
     Attach(source: ISource): void{
         super.Attach(source);
 
-        this.Source.Envelope.setAttack(this.attack);
-        this.Source.Envelope.setDecay(this.decay);
-        this.Source.Envelope.setSustain(this.sustain);
-        this.Source.Envelope.setRelease(this.release);
+        source.Envelope.setAttack(this.attack);
+        source.Envelope.setDecay(this.decay);
+        source.Envelope.setSustain(this.sustain);
+        source.Envelope.setRelease(this.release);
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
 
-        this.Source.Envelope.setAttack(this.Source.Settings.envelope.attack);
-        this.Source.Envelope.setDecay(this.Source.Settings.envelope.decay);
-        this.Source.Envelope.setSustain(this.Source.Settings.envelope.sustain);
-        this.Source.Envelope.setRelease(this.Source.Settings.envelope.release);
+        source.Envelope.setAttack(0.02);
+        source.Envelope.setDecay(0.5);
+        source.Envelope.setSustain(0.5);
+        source.Envelope.setRelease(0.02);
+
     }
 
     SetValue(param: string,value: number) {
@@ -61,11 +62,15 @@ class Envelope extends Effect {
         } else if (param=="release") {
             this.release = value;
         }
-        if (this.Source) {
-            this.Source.Envelope.setAttack(this.attack);
-            this.Source.Envelope.setDecay(this.decay);
-            this.Source.Envelope.setSustain(this.sustain);
-            this.Source.Envelope.setRelease(this.release);
+
+        if (this.Sources.Count) {
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                source.Envelope.setAttack(this.attack);
+                source.Envelope.setDecay(this.decay);
+                source.Envelope.setSustain(this.sustain);
+                source.Envelope.setRelease(this.release);
+            }
         }
     }
 

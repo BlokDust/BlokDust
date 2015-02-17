@@ -110,6 +110,8 @@ class ToneSource extends Source {
                 case 4: value = "sawtooth";
                     break;
             }
+        } else if (param == "frequency") {
+            this.Frequency = value;
         }
 
         super.SetValue(param,value);

@@ -15,7 +15,6 @@ class Source extends Block implements ISource {
     public Source: any;
     public Envelope: Tone.Envelope;
     public OutputGain: Tone.Signal;
-    public Frequency: number;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -150,9 +149,9 @@ class Source extends Block implements ISource {
 
         if (effects.length) {
 
-            var start = effects[0].Source.Source;
+            var start = this.Source;
             var mono = new Tone.Mono();
-            var end = effects[0].Source.OutputGain;
+            var end = this.OutputGain;
 
             start.disconnect();
 
@@ -205,7 +204,6 @@ class Source extends Block implements ISource {
             case "playbackRate": val = this.Source.getPlaybackRate();
                 break;
         }
-        console.log(val);
         return val;
 
     }
@@ -216,7 +214,7 @@ class Source extends Block implements ISource {
         jsonVariable[param] = value;
 
         switch (param){
-            case "frequency": this.Source.setFrequency(value);
+            case "frequency": this.Source.frequency.exponentialRampToValueNow(value, 0);
                 break;
             case "detune": this.Source.setDetune(value);
                 break;
@@ -227,9 +225,6 @@ class Source extends Block implements ISource {
             case "playbackRate": this.Source.setPlaybackRate(value, 0);
                 break;
         }
-
-
-        console.log(jsonVariable);
     }
 
     Draw(){

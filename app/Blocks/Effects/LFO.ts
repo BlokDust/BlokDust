@@ -5,7 +5,7 @@ import App = require("../../App");
 
 class LFO extends Effect {
 
-    LFO: Tone.LFO;
+    public LFO: Tone.LFO;
 
     constructor(grid: Grid, position: Point){
 
@@ -26,21 +26,18 @@ class LFO extends Effect {
     Attach(source:ISource): void{
         super.Attach(source);
 
-        if (this.Source.Source.detune) {
-            this.LFO.connect(this.Source.Source.detune);
+        if (source.Source.detune) {
+            this.LFO.connect(source.Source.detune);
             this.LFO.start();
         }
-
     }
 
     Detach(source:ISource): void {
         super.Detach(source);
 
-        if (this.Source.Source.detune) {
-            if (this.LFO) {
-                this.LFO.stop();
-                this.LFO.disconnect();
-            }
+        if (source.Source.detune) {
+            this.LFO.stop();
+            this.LFO.disconnect();
         }
     }
 
@@ -59,7 +56,6 @@ class LFO extends Effect {
             this.LFO.setMin(-value);
             this.LFO.setMax(value);
         }
-        //console.log(jsonVariable);
     }
 
     GetValue(param: string) {

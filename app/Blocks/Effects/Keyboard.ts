@@ -246,14 +246,14 @@ class Keyboard extends Effect {
     private _SetBaseFrequency(source:ISource){
         if (source.Frequency){
             this.BaseFrequency = source.Frequency;
-            this.CurrentOctave = this._GetStartOctave();
+            this.CurrentOctave = this._GetStartOctave(source);
             this.CurrentOctave--;
         }
     }
 
-    private _GetStartOctave(): number {
+    private _GetStartOctave(source): number {
         var octave,
-            note = this.Source.Source.frequencyToNote(this.BaseFrequency);
+            note = source.Source.frequencyToNote(this.BaseFrequency);
 
         if (note.length === 3) {
             octave = parseInt(note.charAt(2));

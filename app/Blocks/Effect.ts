@@ -24,11 +24,11 @@ class Effect extends Block implements IEffect {
     }
 
     Attach(source: ISource): void {
-        this.Source = source;
+        //this.Sources.Add(source);
     }
 
     Detach(source: ISource): void {
-        this.Source = source;
+        //this.Sources.Remove(source);
     }
 
     /**

@@ -2,10 +2,10 @@ import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 
-class PitchIncrease extends Effect {
+class Pitch extends Effect {
 
     public PitchIncrement: number;
-    public Pitch: number;
+    public OldPitch: number;
     //public isConnected: boolean = false;
 
     constructor(grid: Grid, position: Point){
@@ -31,24 +31,22 @@ class PitchIncrease extends Effect {
     Attach(source: ISource): void {
         super.Attach(source);
 
-        if (this.Source.Source.frequency){
-            this.Pitch = this.Source.Source.frequency.getValue();
-            this.Source.Source.frequency.exponentialRampToValueNow(this.Pitch * this.PitchIncrement, 0);
-        } else if (this.Source.Source._playbackRate){
-            this.Pitch = this.Source.Source.getPlaybackRate();
-            this.Source.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
+        if (source.Frequency){
+            source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+
+        } else if (source.PlaybackRate){
+            source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
         }
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
 
-        if (this.Source.Source.frequency) {
-            this.Pitch = this.Source.Source.frequency.getValue();
-            this.Source.Source.frequency.exponentialRampToValueNow(this.Pitch / this.PitchIncrement, 0);
-        } else if (this.Source.Source._playbackRate){
-            this.Pitch = this.Source.Source.getPlaybackRate();
-            this.Source.Source.setPlaybackRate(this.Pitch / this.PitchIncrement, 0);
+        if (source.Frequency) {
+           source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+
+        } else if (source.PlaybackRate){
+            source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
         }
     }
 
@@ -59,10 +57,18 @@ class PitchIncrease extends Effect {
 
         if (param == "pitchMultiplier") {
             this.PitchIncrement = value;
-            if (this.Source && this.Source.Source.frequency) {
-                this.Source.Source.frequency.linearRampToValueAtTime(this.Pitch * this.PitchIncrement, 0 );
-            } else if (this.Source && this.Source.Source._playbackRate) {
-                this.Source.Source.setPlaybackRate(this.Pitch * this.PitchIncrement, 0);
+
+            if (this.Sources.Count) {
+                for (var i = 0; i < this.Sources.Count; i++) {
+                    var source = this.Sources.GetValueAt(i);
+
+                    if (source.Frequency) {
+                        source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+
+                    } else if (source.PlaybackRate) {
+                        source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
+                    }
+                }
             }
         }
     }
@@ -101,6 +107,22 @@ class PitchIncrease extends Effect {
             ]
         };
     }
+
+    private _GetConnectedPitchPreEffects(source) {
+
+        var totalPitchIncrement: number = 1;
+
+        for (var i = 0; i < source.Effects.Count; i++) {
+            var effect = source.Effects.GetValueAt(i);
+
+            if ((<Pitch>effect).PitchIncrement) {
+                var thisPitchIncrement = (<Pitch>effect).PitchIncrement;
+                totalPitchIncrement *= thisPitchIncrement;
+            }
+        }
+
+        return totalPitchIncrement;
+    }
 }
 
-export = PitchIncrease;
+export = Pitch;

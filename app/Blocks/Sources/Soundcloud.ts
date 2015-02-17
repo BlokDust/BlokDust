@@ -5,9 +5,11 @@ import BlockType = Type.BlockType;
 
 class Soundcloud extends Source {
 
+    public PlaybackRate: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Soundcloud;
+        this.PlaybackRate = 1;
 
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224"];
@@ -86,6 +88,10 @@ class Soundcloud extends Source {
 
     SetValue(param: string,value: any) {
         super.SetValue(param,value);
+
+        if (param == "playbackRate") {
+            this.PlaybackRate = value;
+        }
     }
 
     GetValue(param: string){
