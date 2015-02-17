@@ -41,16 +41,11 @@ import ParticleEmitter = require("./Blocks/Sources/ParticleEmitter");
 // INTERACTION BLOCKS //
 import Keyboard = require("Blocks/Effects/Keyboard");
 
-
-
-// other //
-import BlocksSketch = require("./BlocksSketch");
 class BlockCreator {
-    public Sketch: BlocksSketch;
+
     public MenuJson;
 
-    constructor(sketch: BlocksSketch) {
-        this.Sketch = sketch;
+    constructor() {
 
         this.MenuJson =
         {

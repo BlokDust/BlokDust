@@ -119,8 +119,8 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // INSTANCES //
-        this.BlockSprites = new BlockSprites(this,this.Ctx);
-        this.BlockCreator = new BlockCreator(this);
+        this.BlockSprites = new BlockSprites(this);
+        this.BlockCreator = new BlockCreator();
         this._ParamsPanel = new ParametersPanel(this);
         this._Header = new Header(this);
         this._ToolTip = new ToolTip(this);
@@ -466,7 +466,6 @@ class BlocksSketch extends Grid {
 
     // COLLISION CHECK ON BLOCK //
     private _CheckCollision(point: Point, handle: () => void): Boolean {
-        //TODO: Doesn't detect touch. Will there be a (<any>e).args.Source.TouchPosition?
 
         // LOOP BLOCKS //
         for (var i = App.Blocks.Count - 1; i >= 0; i--) {
@@ -601,22 +600,7 @@ class BlocksSketch extends Grid {
     }
 
     private _Invalidate(){
-
-        this._ValidateBlocks();
-
         this._CheckProximity();
-    }
-
-    _ValidateBlocks() {
-        // for each Modifiable, if the Modifiable contains a Effect that no longer
-        // exists, remove it.
-
-        // todo: make this a command that all blocks subscribe to?
-        //for (var i = 0; i < App.Modifiables.Count; i++){
-        //    var modifiable: IModifiable = App.Modifiables.GetValueAt(i);
-        //
-        //    modifiable.ValidateEffects();
-        //}
     }
 
     CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
@@ -645,9 +629,11 @@ class BlocksSketch extends Grid {
     private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
         this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
     }
+
     ZoomIn() {
         this._Transformer.Zoom(1);
     }
+
     ZoomOut() {
         this._Transformer.Zoom(-1);
     }
