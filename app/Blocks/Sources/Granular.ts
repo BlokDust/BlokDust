@@ -6,7 +6,7 @@ import Particle = require("../../Particle");
 
 class Granular extends Source {
 
-    private _Grains: Tone.Player[];
+    public Grains: Tone.Player[];
     private _Envelopes: Tone.Envelope[];
     private _Timeout;
     private _CurrentGrain: number;
@@ -15,6 +15,7 @@ class Granular extends Source {
     public GrainSettings;
     public MaxDensity: number;
     private _NoteOn: boolean;
+    public PlaybackRate: number;
 
 
     constructor(grid: Grid, position: Point) {
@@ -43,10 +44,11 @@ class Granular extends Source {
 
         // INIT //
         this.MaxDensity = 16;
-        this._Grains = [];
+        this.Grains = [];
         this._Envelopes = [];
         this._CurrentGrain = 0;
         this._NoteOn = false;
+        this.PlaybackRate = 1;
         this.SetTrack();
 
 
@@ -62,26 +64,28 @@ class Granular extends Source {
         var audioUrl = "https://api.soundcloud.com/tracks/" + this.Filename + "/stream" + scId;
 
         // RESET //
-        this._Grains.length = 0;
+        this.Grains.length = 0;
         this._Envelopes.length = 0;
         var gran = this;
 
         // LOAD AUDIO//
         for (var i=0; i<this.MaxDensity; i++) {
             if (i==0) { // first buffer callback
-                this._Grains[i] = new Tone.Player(audioUrl, function (sc) {
+                this.Grains[i] = new Tone.Player(audioUrl, function (sc) {
                     console.log(sc);
                     gran._IsLoaded = true;
                     gran.GrainSettings.region = gran.GetDuration()*0.5;
                 });
             } else {  // remaining buffers
-                this._Grains[i] = new Tone.Player(audioUrl);
+                this.Grains[i] = new Tone.Player(audioUrl);
             }
             this._Envelopes[i] = new Tone.Envelope(this.GrainSettings.smoothness,0.01,1,this.GrainSettings.smoothness);
 
             // CONNECT //
-            this._Envelopes[i].connect(this._Grains[i].output.gain);
-            this._Grains[i].connect(this.Source);
+            this._Envelopes[i].connect(this.Grains[i].output.gain);
+            this.Grains[i].connect(this.Source);
+
+            this.Grains[i].setPlaybackRate(this.PlaybackRate);
 
         }
 
@@ -149,8 +153,8 @@ class Granular extends Source {
     }
 
     GetDuration() {
-        if (this._Grains){
-            return this._Grains[0].duration;
+        if (this.Grains){
+            return this.Grains[0].duration;
         }
         return 0;
     }
@@ -200,7 +204,7 @@ class Granular extends Source {
 
                 // MAKE SURE THESE ARE IN SYNC //
                 this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.grainlength - (this.GrainSettings.smoothness *1.1),"+0");
-                this._Grains[this._CurrentGrain].start("+0", location, this.GrainSettings.grainlength);
+                this.Grains[this._CurrentGrain].start("+0", location, this.GrainSettings.grainlength);
 
 
                 this._Timeout = setTimeout(function() {
@@ -222,8 +226,8 @@ class Granular extends Source {
         if (location<0) {
             location = 0;
         }
-        if (location>(this._Grains[0].duration - this.GrainSettings.grainlength)) {
-            location = (this._Grains[0].duration - this.GrainSettings.grainlength);
+        if (location>(this.Grains[0].duration - this.GrainSettings.grainlength)) {
+            location = (this.Grains[0].duration - this.GrainSettings.grainlength);
         }
         return location;
     }
@@ -246,7 +250,7 @@ class Granular extends Source {
                     break;
                 case "regionmin": val = (this.GrainSettings.spread*1.5);
                     break;
-                case "regionmax": val = this._Grains[0].duration;
+                case "regionmax": val = this.Grains[0].duration;
                     break;
             }
             return val;
@@ -284,12 +288,12 @@ class Granular extends Source {
         clearTimeout(this._Timeout);
         this._NoteOn = false;
         for (var i=0; i<this.MaxDensity; i++) {
-            this._Grains[i].stop();
-            this._Grains[i].dispose();
+            this.Grains[i].stop();
+            this.Grains[i].dispose();
             this._Envelopes[i].dispose();
         }
 
-        this._Grains.length = 0;
+        this.Grains.length = 0;
         this._Envelopes.length = 0;
     }
 

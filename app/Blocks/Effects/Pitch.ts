@@ -5,14 +5,10 @@ import Grid = require("../../Grid");
 class Pitch extends Effect {
 
     public PitchIncrement: number;
-    public OldPitch: number;
-    //public isConnected: boolean = false;
 
     constructor(grid: Grid, position: Point){
 
         this.PitchIncrement = 1.5; // Pitch decreases by 4ths
-
-        //TODO: Make pitch effect take parameter scaled to musical notation: (EXAMPLE 1=A4, 2=Bb4 3=B4, 4=C4...)
 
         super(grid, position);
         // Define Outline for HitTest
@@ -25,28 +21,33 @@ class Pitch extends Effect {
     }
 
     Delete(){
-
+        this.PitchIncrement = null;
     }
 
     Attach(source: ISource): void {
         super.Attach(source);
-
-        if (source.Frequency){
-            source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
-
-        } else if (source.PlaybackRate){
-            source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
-        }
+        this.UpdatePitch(source);
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
+        this.UpdatePitch(source);
+    }
 
-        if (source.Frequency) {
-           source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+    UpdatePitch(source: ISource): void{
+        //OSCILLATORS
+        if (source.Frequency){
+            source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
 
-        } else if (source.PlaybackRate){
+            // TONE.PLAYERS
+        } else if (source.Source._playbackRate){
             source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
+
+            // GRANULAR
+        } else if (source.Grains) {
+            for (var i=0; i<source.MaxDensity; i++) {
+                source.Grains[i].setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
+            }
         }
     }
 
@@ -62,12 +63,7 @@ class Pitch extends Effect {
                 for (var i = 0; i < this.Sources.Count; i++) {
                     var source = this.Sources.GetValueAt(i);
 
-                    if (source.Frequency) {
-                        source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
-
-                    } else if (source.PlaybackRate) {
-                        source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
-                    }
+                    this.UpdatePitch(source);
                 }
             }
         }

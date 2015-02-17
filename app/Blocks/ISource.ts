@@ -12,6 +12,8 @@ interface ISource extends IBlock{
     Settings?: ToneSettings;
     Frequency?: number;
     PlaybackRate?: number;
+    Grains?: Tone.Player[];
+    MaxDensity?: number;
 }
 
 export = ISource;
