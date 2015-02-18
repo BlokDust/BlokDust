@@ -140,8 +140,6 @@ class KeyboardInputManager extends InputManager {
             //pressed first time, add to object
             this.KeysDown[k] = true;
 
-            //console.log('KeyCode: ' + e.keyCode + ': ' + k + ', shift = '+e.shiftKey + ', alt = '+e.altKey + ', ctrl = '+e.ctrlKey);
-
             this.KeyDown = k;
             this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
         }

@@ -6,7 +6,7 @@ import Vector = Fayde.Utils.Vector;
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 
-class ParticleEmitter extends Source{
+class ParticleEmitter extends Source {
 
     public Params: EmitterSettings;
     private _rateCounter: number;

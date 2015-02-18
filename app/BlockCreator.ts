@@ -36,10 +36,11 @@ import Reverb = require("Blocks/Effects/Reverb");
 import Scuzz = require("Blocks/Effects/Scuzz");
 
 // POWER BLOCKS //
-import ParticleEmitter = require("./Blocks/Sources/ParticleEmitter");
+import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 
 // INTERACTION BLOCKS //
-import Keyboard = require("Blocks/Effects/Keyboard");
+import KeyboardMono = require("Blocks/Interaction/KeyboardMono");
+import KeyboardPoly = require("Blocks/Interaction/KeyboardPoly");
 
 class BlockCreator {
 
@@ -179,8 +180,12 @@ class BlockCreator {
                     "name": "Interaction",
                     "items": [
                         {
-                            "name": "Keyboard",
-                            "id": Keyboard
+                            "name": "Mono Keyboard",
+                            "id": KeyboardMono
+                        },
+                        {
+                            "name": "Poly Keyboard",
+                            "id": KeyboardPoly
                         }
                     ]
                 }
