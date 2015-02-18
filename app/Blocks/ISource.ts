@@ -15,6 +15,8 @@ interface ISource extends IBlock{
     Grains?: Tone.Player[];
     MaxDensity?: number;
     RecordedAudio?: any;
+    PolySources?: any[];
+    PolyEnvelopes?: any[];
 
 }
 

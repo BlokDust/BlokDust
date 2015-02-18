@@ -38,14 +38,20 @@ class Keyboard extends Effect {
 
         this.KeysDown = {};
 
+        //
+        // THE KEYBOARD BUG!
+        // THIS FUNCTION GETS CALLED AN EXTRA TIME EVERYTIME YOU DISCONNECT AND RECONNECT A SOURCE
+        // .raise() loops for some reason.
+        //
+
         App.KeyboardInput.KeyDownChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             this.KeysDown = (<any>e).KeysDown;
 
             // FOR ALL SOURCES
-            var sources: ISource[] = this.Sources.ToArray();
-            for (var i = 0; i < sources.length; i++) {
-                this.SetBaseFrequency(sources[i]);
-                this.KeyboardDown((<any>e).KeyDown, sources[i]);
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                this.SetBaseFrequency(source);
+                this.KeyboardDown((<any>e).KeyDown, source);
             }
 
         }, this);
@@ -54,9 +60,9 @@ class Keyboard extends Effect {
             this.KeysDown = (<any>e).KeysDown;
 
             // FOR ALL SOURCES
-            var sources: ISource[] = this.Sources.ToArray();
-            for (var i = 0; i < sources.length; i++) {
-                this.KeyboardUp((<any>e).KeyDown, sources[i]);
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                this.KeyboardUp((<any>e).KeyDown, source);
             }
 
         }, this);
@@ -65,9 +71,8 @@ class Keyboard extends Effect {
     Detach(source:ISource): void {
 
         // FOR ALL SOURCES
-        var sources: ISource[] = this.Sources.ToArray();
-        for (var i = 0; i < sources.length; i++) {
-            var source = sources[i];
+        for (var i = 0; i < this.Sources.Count; i++) {
+            var source = this.Sources.GetValueAt(i);
 
             if (this.IsPressed){
                 source.Envelope.triggerRelease();
@@ -99,7 +104,6 @@ class Keyboard extends Effect {
     }
 
     KeyboardDown(key:string, source:ISource): void {
-
     }
 
     KeyboardUp(key:string, source:ISource): void {

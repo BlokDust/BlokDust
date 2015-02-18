@@ -81,7 +81,7 @@ class KeyboardMono extends Keyboard {
     }
 
     KeyboardDown(key:string, source:ISource): void {
-
+        super.KeyboardDown(key, source);
         //if (this.KeyMap[key.keyCode] == 'OctaveUp' && this.CurrentOctave < 9) {
         //    this.CurrentOctave++;
         //    return;
@@ -112,7 +112,7 @@ class KeyboardMono extends Keyboard {
     }
 
     KeyboardUp(key:string, source:ISource): void {
-
+        super.KeyboardUp(key, source);
         var keyPressed = this.GetKeyNoteOctaveString(key);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 

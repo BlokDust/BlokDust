@@ -7,16 +7,13 @@ import BlockType = Type.BlockType;
 
 class KeyboardPoly extends Keyboard {
 
-    private _Sources: any[];
-    private _Envelopes: any[];
+
     public Voices: number;
 
     constructor(grid: Grid, position: Point){
 
         this.KeysDown = {};
         this.Voices = 4;
-        this._Sources = [];
-        this._Envelopes = [];
 
         super(grid, position);
 
@@ -32,51 +29,61 @@ class KeyboardPoly extends Keyboard {
 
     Attach(source:ISource): void{
         super.Attach(source);
+
+
+        for (var i = 0; i < this.Voices; i++) {
+
+            //Create the sources and envelopes
+            source.PolySources[i] = new Tone.Oscillator(source.Frequency);
+            source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
+
+            source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
+            source.PolySources[i].connect(source.OutputGain);
+
+        }
+
     }
 
     Detach(source:ISource): void {
         super.Detach(source);
 
+        if (source.Frequency){
+            for (var i = 0; i < source.PolySources.length; i++) {
+
+                //Delete the sources and envelopes
+                source.PolySources[i].dispose();
+                source.PolyEnvelopes[i].dispose();
+                source.PolySources = [];
+                source.PolyEnvelopes = [];
+
+            }
+        }
     }
 
     Delete(){
         super.Delete();
 
         this.KeysDown = null;
-
-        for (var i = 0; i < this.Voices; i++) {
-            this._Sources[i].dispose();
-            this._Envelopes[i].dispose();
-        }
         this.Voices = null;
     }
 
     KeyboardDown(key:string, source:ISource): void {
+        super.KeyboardDown(key, source);
 
         var keyPressed = this.GetKeyNoteOctaveString(key);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
-        if (source.Frequency){
-            for (var i = 0; i < this.Voices; i++) {
 
-                //Create more sources and envelopes
-                this._Sources[i] = new Tone.Oscillator(source.Frequency);
-                this._Envelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
-
-                this._Envelopes[i].connect(this._Sources[i].output.gain);
-                this._Sources[i].connect(source.OutputGain);
-
-            }
-        }
 
 
         //this.Keyboard.triggerAttack(frequency);
 
-        console.log(this._Sources);
+        console.log(source);
 
     }
 
     KeyboardUp(key:string, source:ISource): void {
+        super.KeyboardUp(key, source);
 
         var keyPressed = this.GetKeyNoteOctaveString(key);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);

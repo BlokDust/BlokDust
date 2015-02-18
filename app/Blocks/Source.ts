@@ -27,6 +27,9 @@ class Source extends Block implements ISource {
         }
     };
 
+    public PolySources: any[];
+    public PolyEnvelopes: any[];
+
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
@@ -48,6 +51,12 @@ class Source extends Block implements ISource {
             this.Source.connect(this.OutputGain);
             this.OutputGain.connect(App.AudioMixer.Master);
         }
+
+
+        // THIS IS NEEDED FOR ANYTHING POLYPHONIC
+        this.PolySources = [];
+        this.PolyEnvelopes = [];
+
 
         this.OpenParams();
     }
@@ -187,6 +196,14 @@ class Source extends Block implements ISource {
             this.Source.stop();
         }
         this.Source.dispose();
+
+        for(var i=0; i<this.PolySources.length; i++){
+            this.PolySources[i].dispose();
+        }
+
+        for(var i=0; i<this.PolyEnvelopes.length; i++){
+            this.PolyEnvelopes[i].dispose();
+        }
     }
 
     GetValue(param: string) {
