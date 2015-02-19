@@ -15,7 +15,7 @@ class Source extends Block implements ISource {
     public Source: any;
     public Envelope: Tone.Envelope;
     public EffectsChainInput: Tone.Signal;
-    public OutputGain: Tone.Signal;
+    public EffectsChainOutput: Tone.Signal;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -41,9 +41,11 @@ class Source extends Block implements ISource {
 
         if (this.BlockType != BlockType.Power) {
             this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
+
             this.EffectsChainInput = new Tone.Signal;
-            this.OutputGain = new Tone.Signal;
-            this.OutputGain.output.gain.value = this.Settings.output.volume;
+            this.EffectsChainOutput = new Tone.Signal;
+
+            this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
             //Connect them up
             if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource) {
@@ -52,8 +54,8 @@ class Source extends Block implements ISource {
 
 
             this.Source.connect(this.EffectsChainInput);
-            this.EffectsChainInput.connect(this.OutputGain);
-            this.OutputGain.connect(App.AudioMixer.Master);
+            this.EffectsChainInput.connect(this.EffectsChainOutput);
+            this.EffectsChainOutput.connect(App.AudioMixer.Master);
         }
 
 
@@ -161,7 +163,7 @@ class Source extends Block implements ISource {
     public UpdateEffectsChain(effects) {
 
         var start = this.EffectsChainInput;
-        var end = this.OutputGain;
+        var end = this.EffectsChainOutput;
 
         if (effects.length) {
             var mono = new Tone.Mono();
@@ -194,7 +196,7 @@ class Source extends Block implements ISource {
      */
     Delete() {
         this.Envelope.dispose();
-        this.OutputGain.dispose();
+        this.EffectsChainOutput.dispose();
 
         if (this.BlockType != BlockType.Recorder && this.BlockType != BlockType.Granular) {
             this.Source.stop();

@@ -37,6 +37,14 @@ class Envelope extends Effect {
         source.Envelope.setDecay(this.decay);
         source.Envelope.setSustain(this.sustain);
         source.Envelope.setRelease(this.release);
+
+        // FOR POLYPHONIC
+        for(var i = 0; i<source.PolySources.length; i++){
+            source.PolyEnvelopes[i].setAttack(this.attack);
+            source.PolyEnvelopes[i].setDecay(this.decay);
+            source.PolyEnvelopes[i].setSustain(this.sustain);
+            source.PolyEnvelopes[i].setRelease(this.release);
+        }
     }
 
     Detach(source: ISource): void{
@@ -70,6 +78,14 @@ class Envelope extends Effect {
                 source.Envelope.setDecay(this.decay);
                 source.Envelope.setSustain(this.sustain);
                 source.Envelope.setRelease(this.release);
+
+                // FOR POLYPHONIC
+                for(var i = 0; i<source.PolySources.length; i++){
+                    source.PolyEnvelopes[i].setAttack(this.attack);
+                    source.PolyEnvelopes[i].setDecay(this.decay);
+                    source.PolyEnvelopes[i].setSustain(this.sustain);
+                    source.PolyEnvelopes[i].setRelease(this.release);
+                }
             }
         }
     }

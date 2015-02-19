@@ -29,6 +29,12 @@ class LFO extends Effect {
         if (source.Source.detune) {
             this.LFO.connect(source.Source.detune);
             this.LFO.start();
+
+            // FOR POLYPHONIC
+            for(var i = 0; i<source.PolySources.length; i++){
+                this.LFO.connect(source.PolySources[i].detune);
+            }
+
         }
     }
 
@@ -38,6 +44,8 @@ class LFO extends Effect {
         if (source.Source.detune) {
             this.LFO.stop();
             this.LFO.disconnect();
+
+
         }
     }
 
