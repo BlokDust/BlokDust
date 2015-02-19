@@ -35,19 +35,20 @@ class KeyboardPoly extends Keyboard {
     Attach(source:ISource): void{
         super.Attach(source);
 
+        // FOR NOW: ONLY FOR OSCILLATORS
+        if (source.Frequency) {
+            for (var i = 0; i < this.Voices; i++) {
 
-        for (var i = 0; i < this.Voices; i++) {
+                //Create the sources and envelopes
+                source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.getType());
+                source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
 
-            //Create the sources and envelopes
-            source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.getType());
-            source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
+                source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
+                source.PolySources[i].connect(source.EffectsChainInput);
 
-            source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
-            source.PolySources[i].connect(source.OutputGain);
-
-            source.PolySources[i].start();
+                source.PolySources[i].start();
+            }
         }
-
     }
 
     Detach(source:ISource): void {
@@ -73,35 +74,42 @@ class KeyboardPoly extends Keyboard {
         this.Voices = null;
     }
 
-    KeyboardDown(key:string, source:ISource): void {
-        super.KeyboardDown(key, source);
+    KeyboardDown(keyDown:string, source:ISource): void {
+        super.KeyboardDown(keyDown, source);
 
-        var keyPressed = this.GetKeyNoteOctaveString(key);
+        var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
 
-        var _voice = Object.keys(this.KeysDown).length - 1;
+        if (source.Frequency) {
+            var keysDownNum: number = Object.keys(this.KeysDown).length;
+            var voices = this.Voices;
+            var r = keysDownNum % voices;
+            if (r == 0) r = voices;
 
-        if (_voice < this.Voices){
-            source.PolySources[_voice].setFrequency(frequency);
-            source.PolyEnvelopes[_voice].triggerAttack();
-        } else {
-            source.PolyEnvelopes[0].triggerRelease();
+            // If more than allocated voices pressed stop oldest one.
+            if (keysDownNum / voices > 1){
+                //We've used up all the available voices so release one
+                source.PolyEnvelopes[r-1].triggerRelease();
+            }
+
+            source.PolySources[r-1].setFrequency(frequency);
+            source.PolyEnvelopes[r-1].triggerAttack();
+
+            this.ActiveVoices[keyDown] = r;
         }
 
     }
 
-    KeyboardUp(key:string, source:ISource): void {
-        super.KeyboardUp(key, source);
+    KeyboardUp(keyup:string, source:ISource): void {
+        super.KeyboardUp(keyup, source);
 
-        var keyPressed = this.GetKeyNoteOctaveString(key);
-        var frequency = this.GetFrequencyOfNote(keyPressed, source);
+            // if this key up is in Keys.Down release it
+            if (keyup in this.ActiveVoices) {
 
-        var _voice = Object.keys(this.KeysDown).length - 1;
-
-        source.PolyEnvelopes[_voice+1].triggerRelease();
-
-        console.log(frequency);
+                var r = this.ActiveVoices[keyup];
+                source.PolyEnvelopes[r-1].triggerRelease();
+            }
     }
 
 

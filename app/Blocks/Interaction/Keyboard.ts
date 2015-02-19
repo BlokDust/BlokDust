@@ -52,13 +52,15 @@ class Keyboard extends Effect {
         }, this);
 
         App.KeyboardInput.KeyUpChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-            this.KeysDown = (<any>e).KeysDown;
+
 
             // FOR ALL SOURCES
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                this.KeyboardUp((<any>e).KeyDown, source);
+                this.KeyboardUp((<any>e).KeyUp, source);
             }
+
+            this.KeysDown = (<any>e).KeysDown;
 
         }, this);
     }

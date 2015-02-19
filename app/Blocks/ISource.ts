@@ -8,6 +8,7 @@ interface ISource extends IBlock{
     RemoveEffect(effect: IEffect): void;
     Source?: any; // Use this when available: Tone.Oscillator || Tone.Noise
     Envelope?: Tone.Envelope;
+    EffectsChainInput?: Tone.Signal;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
     Frequency?: number;
