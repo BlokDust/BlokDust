@@ -9,11 +9,16 @@ class KeyboardPoly extends Keyboard {
 
 
     public Voices: number;
+    public FreeVoices: any[];
+    public ActiveVoices: any;
 
     constructor(grid: Grid, position: Point){
 
         this.KeysDown = {};
         this.Voices = 4;
+        this.FreeVoices = [];
+        //this.FreeVoice/
+        this.ActiveVoices = {};
 
         super(grid, position);
 
@@ -34,12 +39,13 @@ class KeyboardPoly extends Keyboard {
         for (var i = 0; i < this.Voices; i++) {
 
             //Create the sources and envelopes
-            source.PolySources[i] = new Tone.Oscillator(source.Frequency);
+            source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.getType());
             source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
 
             source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
             source.PolySources[i].connect(source.OutputGain);
 
+            source.PolySources[i].start();
         }
 
     }
@@ -74,11 +80,14 @@ class KeyboardPoly extends Keyboard {
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
 
+        var _voice = Object.keys(this.KeysDown).length - 1;
 
-
-        //this.Keyboard.triggerAttack(frequency);
-
-        console.log(source);
+        if (_voice < this.Voices){
+            source.PolySources[_voice].setFrequency(frequency);
+            source.PolyEnvelopes[_voice].triggerAttack();
+        } else {
+            source.PolyEnvelopes[0].triggerRelease();
+        }
 
     }
 
@@ -88,7 +97,9 @@ class KeyboardPoly extends Keyboard {
         var keyPressed = this.GetKeyNoteOctaveString(key);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
-        //this.Keyboard.triggerRelease(frequency);
+        var _voice = Object.keys(this.KeysDown).length - 1;
+
+        source.PolyEnvelopes[_voice+1].triggerRelease();
 
         console.log(frequency);
     }
