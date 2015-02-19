@@ -38,15 +38,10 @@ class Keyboard extends Effect {
 
         this.KeysDown = {};
 
-        //
-        // THE KEYBOARD BUG!
-        // THIS FUNCTION GETS CALLED AN EXTRA TIME EVERYTIME YOU DISCONNECT AND RECONNECT A SOURCE
-        // .raise() loops for some reason.
-        //
-
         App.KeyboardInput.KeyDownChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             this.KeysDown = (<any>e).KeysDown;
 
+            console.log('unplug and replug the keyboard and this will fire multiple times');
             // FOR ALL SOURCES
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
@@ -69,6 +64,15 @@ class Keyboard extends Effect {
     }
 
     Detach(source:ISource): void {
+
+        //TODO: These off functions aren't calling and I'm not sure why
+        App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
+
+        }, this);
+        App.KeyboardInput.KeyUpChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
+
+        }, this);
+
 
         // FOR ALL SOURCES
         for (var i = 0; i < this.Sources.Count; i++) {
