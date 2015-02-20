@@ -23,25 +23,12 @@ class Keyboard extends Effect {
 
         super(grid, position);
 
-        // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
-    }
 
-
-    Draw() {
-        super.Draw();
-        //this.Grid.BlockSprites.Draw(this.Position,true,"keyboard");
-    }
-
-    Attach(source:ISource): void{
-        super.Attach(source);
-
-        this.KeysDown = {};
 
         App.KeyboardInput.KeyDownChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
             this.KeysDown = (<any>e).KeysDown;
 
-            console.log('unplug and replug the keyboard and this will fire multiple times');
+            console.log('need to use off function in this.Delete but how does it work?');
             // FOR ALL SOURCES
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
@@ -53,7 +40,6 @@ class Keyboard extends Effect {
 
         App.KeyboardInput.KeyUpChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
 
-
             // FOR ALL SOURCES
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
@@ -63,18 +49,24 @@ class Keyboard extends Effect {
             this.KeysDown = (<any>e).KeysDown;
 
         }, this);
+
+
+        // Define Outline for HitTest
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
+    }
+
+
+    Draw() {
+        super.Draw();
+    }
+
+    Attach(source:ISource): void{
+        super.Attach(source);
+
+        this.KeysDown = {};
     }
 
     Detach(source:ISource): void {
-
-        //TODO: These off functions aren't calling and I'm not sure why
-        App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-
-        }, this);
-        App.KeyboardInput.KeyUpChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-
-        }, this);
-
 
         // FOR ALL SOURCES
         for (var i = 0; i < this.Sources.Count; i++) {

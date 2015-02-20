@@ -110,6 +110,12 @@ class ToneSource extends Source {
                 case 4: value = "sawtooth";
                     break;
             }
+
+            // Set waveforms on PolySources
+            for(var i = 0; i<this.PolySources.length; i++){
+                this.PolySources[i].setType(value);
+            }
+
         } else if (param == "frequency") {
             this.Frequency = value;
         }
