@@ -14,8 +14,6 @@ class Keyboard extends Effect {
     public BaseFrequency: number;
     public CurrentOctave: number;
     public KeysDown: any;
-    public KeyMap: any;
-    public Settings: any;
 
     constructor(grid: Grid, position: Point){
 
@@ -24,18 +22,19 @@ class Keyboard extends Effect {
         super(grid, position);
 
 
-
         App.KeyboardInput.KeyDownChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-            this.KeysDown = (<any>e).KeysDown;
 
-            console.log('need to use off function in this.Delete but how does it work?');
-            // FOR ALL SOURCES
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                this.SetBaseFrequency(source);
-                this.KeyboardDown((<any>e).KeyDown, source);
+            //if KeyDown is a keyboard note or an octave shifter
+            if ((<any>e).KeyDown.substring(0, 5) === 'note_' || (<any>e).KeyDown === 'octave-up' ||  (<any>e).KeyDown === 'octave-down'){
+                this.KeysDown = (<any>e).KeysDown;
+
+                console.log('need to use off function in this.Delete but how does it work?');
+                // FOR ALL SOURCES
+                for (var i = 0; i < this.Sources.Count; i++) {
+                    var source = this.Sources.GetValueAt(i);
+                    this.KeyboardDown((<any>e).KeyDown, source);
+                }
             }
-
         }, this);
 
         App.KeyboardInput.KeyUpChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
@@ -43,7 +42,11 @@ class Keyboard extends Effect {
             // FOR ALL SOURCES
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                this.KeyboardUp((<any>e).KeyUp, source);
+
+                // If its an octave shift no need to call KeyboardUp
+                if ((<any>e).KeyUp !== 'octave-up' && (<any>e).KeyUp !== 'octave-down') {
+                    this.KeyboardUp((<any>e).KeyUp, source);
+                }
             }
 
             this.KeysDown = (<any>e).KeysDown;
@@ -55,7 +58,6 @@ class Keyboard extends Effect {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
-
     Draw() {
         super.Draw();
     }
@@ -63,6 +65,7 @@ class Keyboard extends Effect {
     Attach(source:ISource): void{
         super.Attach(source);
 
+        this.SetBaseFrequency(source);
         this.KeysDown = {};
     }
 
@@ -87,6 +90,12 @@ class Keyboard extends Effect {
 
     Delete(){
         // TODO: CALL DISCONNECT if not already disconnected
+        //TODO: make this event watcher stop
+        //App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {}, this);
+        //App.KeyboardInput.KeyUpChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {}, this);
+        this.KeysDown = {};
+        this.BaseFrequency = null;
+        this.CurrentOctave = null;
     }
 
     SetValue(param: string,value: number) {
@@ -102,6 +111,15 @@ class Keyboard extends Effect {
     }
 
     KeyboardDown(key:string, source:ISource): void {
+        if (key == 'octave-up' && this.CurrentOctave < 9) {
+            this.CurrentOctave++;
+            //return;
+        }
+
+        if (key === 'octave-down' && this.CurrentOctave != 0) {
+            this.CurrentOctave--;
+            //return;
+        }
     }
 
     KeyboardUp(key:string, source:ISource): void {
@@ -109,6 +127,7 @@ class Keyboard extends Effect {
     }
 
     public SetBaseFrequency(source:ISource){
+
         if (source.Frequency){
             this.BaseFrequency = source.Frequency;
             this.CurrentOctave = this.GetStartOctave(source);
@@ -132,10 +151,11 @@ class Keyboard extends Effect {
     public GetKeyNoteOctaveString(keyCode): string {
         // Replaces keycode with keynote & octave string
         return (keyCode
-            .replace('a', this.CurrentOctave)
-            .replace('b', this.CurrentOctave + 1)
-            .replace('c', this.CurrentOctave + 2)
-            .replace('d', this.CurrentOctave + 3)
+            .replace('note_', '')
+            .replace('_a', this.CurrentOctave)
+            .replace('_b', this.CurrentOctave + 1)
+            .replace('_c', this.CurrentOctave + 2)
+            .replace('_d', this.CurrentOctave + 3)
             .toString());
     }
 

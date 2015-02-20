@@ -26,6 +26,11 @@ class KeyboardInputManager extends InputManager {
             this.KeyboardUp(e);
         });
 
+        /**
+         * Master Keyboard Map
+         * Musical notes follow
+         * note_ + (musical note letter) + _octave (A is lowest)
+         */
         this.MasterKeyboardMap = {
             8: '', //backspace
             9: '', //tab
@@ -42,47 +47,47 @@ class KeyboardInputManager extends InputManager {
             35: '', //end
             36: '', //home
             37: '', //left arrow
-            38: '', //up arrow
+            38: 'octave-up', //up arrow
             39: '', //right arrow
-            40: '', //down arrow
+            40: 'octave-down', //down arrow
             45: '', //insert
             46: '', //delete
-            48: 'G#b', //0
+            48: 'note_G#_b', //0
             49: '', //1
-            50: 'F#a', //2
-            51: 'G#a', //3
-            52: 'A#a', //4
+            50: 'note_F#_a', //2
+            51: 'note_G#_a', //3
+            52: 'note_A#_a', //4
             53: '', //5
-            54: 'C#b', //6
-            55: 'D#b', //7
+            54: 'note_C#_b', //6
+            55: 'note_D#_b', //7
             56: '', //8
-            57: 'F#b', //9
+            57: 'note_F#_b', //9
             65: '', //a
-            66: 'Gc', //b
-            67: 'Ec', //c
-            68: 'D#c', //d
-            69: 'Aa', //e
+            66: 'note_G_c', //b
+            67: 'note_E_c', //c
+            68: 'note_D#_c', //d
+            69: 'note_A_a', //e
             70: '', //f
-            71: 'F#c', //g
-            72: 'G#c', //h
-            73: 'Fb', //i
-            74: 'A#c', //j
+            71: 'note_F#_c', //g
+            72: 'note_G#_c', //h
+            73: 'note_F_b', //i
+            74: 'note_A#_c', //j
             75: '', //k
-            76: 'C#d', //l
-            77: 'Bc', //m
-            78: 'Ac', //n
-            79: 'Gb', //o
-            80: 'Ab', //p
-            81: 'Fa', //q
-            82: 'Ba', //r
-            83: 'C#c', //s
-            84: 'Cb', //t
-            85: 'Eb', //u
-            86: 'Fc', //v
-            87: 'Ga', //w
-            88: 'Dc', //x
-            89: 'Db', //y
-            90: 'Cc', //z
+            76: 'note_C#_d', //l
+            77: 'note_B_c', //m
+            78: 'note_A_c', //n
+            79: 'note_G_b', //o
+            80: 'note_A_b', //p
+            81: 'note_F_a', //q
+            82: 'note_B_a', //r
+            83: 'note_C#_c', //s
+            84: 'note_C_b', //t
+            85: 'note_E_b', //u
+            86: 'note_F_c', //v
+            87: 'note_G_a', //w
+            88: 'note_D_c', //x
+            89: 'note_D_b', //y
+            90: 'note_C_c', //z
             91: '', //left window key
             92: '', //right window key
             93: '', //select key
@@ -97,8 +102,8 @@ class KeyboardInputManager extends InputManager {
             104: '', //numpad 8
             105: '', //numpad 9
             106: '', //multiply
-            107: '', //add
-            109: 'A#b', //subtract //TODO: This is in the wrong place
+            107: 'octave-up', //add
+            109: 'octave-down', //subtract
             110: '', //decimal point
             111: '', //divide
             112: '', //f1
@@ -115,16 +120,16 @@ class KeyboardInputManager extends InputManager {
             123: '', //f12
             144: '', //num lock
             145: '', //scroll lock
-            186: 'D#d', //semi-colon
+            186: 'note_D#_d', //semi-colon
             187: 'OctaveUp', //equal sign
-            188: 'Cd', //comma
-            189: 'OctaveDown', //dash
-            190: 'Dd', //full stop
-            191: 'Ed', //forward slash
+            188: 'note_C_d', //comma
+            189: 'note_A#_b', //dash
+            190: 'note_D_d', //full stop
+            191: 'note_E_d', //forward slash
             192: '', //grave accent
-            219: 'Bb', //open bracket
+            219: 'note_B_b', //open bracket
             220: '', //back slash
-            221: 'Cc', //close bracket
+            221: 'note_C_c', //close bracket
             222: '' //single quote
         }
     }

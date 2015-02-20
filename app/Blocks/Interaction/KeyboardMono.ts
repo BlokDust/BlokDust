@@ -80,19 +80,11 @@ class KeyboardMono extends Keyboard {
         };
     }
 
-    KeyboardDown(key:string, source:ISource): void {
-        super.KeyboardDown(key, source);
-        //if (this.KeyMap[key.keyCode] == 'OctaveUp' && this.CurrentOctave < 9) {
-        //    this.CurrentOctave++;
-        //    return;
-        //}
-        //
-        //if (this.KeyMap[key.keyCode] === 'OctaveDown' && this.CurrentOctave != 0) {
-        //    this.CurrentOctave--;
-        //    return;
-        //}
+    KeyboardDown(keyDown:string, source:ISource): void {
+        super.KeyboardDown(keyDown, source);
 
-        var keyPressed = this.GetKeyNoteOctaveString(key);
+
+        var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
 
@@ -111,10 +103,11 @@ class KeyboardMono extends Keyboard {
         }
     }
 
-    KeyboardUp(key:string, source:ISource): void {
-        super.KeyboardUp(key, source);
-        var keyPressed = this.GetKeyNoteOctaveString(key);
-        var frequency = this.GetFrequencyOfNote(keyPressed, source);
+    KeyboardUp(keyUp:string, source:ISource): void {
+        super.KeyboardUp(keyUp, source);
+        //
+        //var keyPressed = this.GetKeyNoteOctaveString(keyUp);
+        //var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
         if (Object.keys(this.KeysDown).length === 0) {
             source.Envelope.triggerRelease();
