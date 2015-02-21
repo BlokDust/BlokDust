@@ -8,6 +8,7 @@ class Noise extends Source {
 
     public PlaybackRate: number;
     public DelayedRelease: number;
+    public Noise: any;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Noise;
