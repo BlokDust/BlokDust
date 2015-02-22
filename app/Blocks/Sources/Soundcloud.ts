@@ -6,6 +6,8 @@ import BlockType = Type.BlockType;
 class Soundcloud extends Source {
 
     public PlaybackRate: number;
+    public LoopStartPosition: number;
+    public LoopEndPosition: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Soundcloud;
@@ -18,9 +20,15 @@ class Soundcloud extends Source {
 
         this.Source = new Tone.Player(audioUrl, function (sc) {
             sc.loop = true;
-            sc.start();
+            //sc.start();
             console.log('buffer loaded');
         });
+
+        this.LoopStartPosition = 0; // 0 is the beginning
+        this.LoopEndPosition = -1; // -1 goes to the end of the track
+
+        this.Source.loop = true;
+        this.Source.loopEnd = this.LoopEndPosition;
 
 
         /*var audioUrl;
@@ -56,7 +64,7 @@ class Soundcloud extends Source {
 
     MouseDown() {
         super.MouseDown();
-        this.Source.start();
+        this.Source.start(this.Source.toSeconds(this.LoopStartPosition));
         this.Envelope.triggerAttack();
     }
 
