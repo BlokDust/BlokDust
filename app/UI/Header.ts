@@ -556,7 +556,7 @@ class Header extends DisplayObject{
         }
     }
 
-    
+
     ClosePanel() {
         TWEEN.removeAll();
         this.DelayTo(this,0,300,0,"DropDown");
