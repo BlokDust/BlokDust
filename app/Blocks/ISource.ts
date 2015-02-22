@@ -21,6 +21,8 @@ interface ISource extends IBlock{
     PolyEnvelopes?: any[];
     ValidateEffects(): void;
     SetPlaybackRate(rate,time): void;
+    TriggerAttack(): void;
+    TriggerRelease(): void;
 }
 
 export = ISource;

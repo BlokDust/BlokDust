@@ -178,6 +178,19 @@ class Granular extends Source {
 
     MouseDown() {
         super.MouseDown();
+        this.TriggerAttack();
+
+    }
+
+    MouseUp() {
+        super.MouseUp();
+        this.TriggerRelease();
+    }
+
+
+    TriggerAttack() {
+        super.TriggerAttack();
+
         if (this._IsLoaded) {
             clearTimeout(this.EndTimeout);
             this.Envelope.triggerAttack();
@@ -189,11 +202,11 @@ class Granular extends Source {
             }
         }
 
-
     }
 
-    MouseUp() {
-        super.MouseUp();
+    TriggerRelease() {
+        super.TriggerRelease();
+
         this.Envelope.triggerRelease();
         var gran = this;
         console.log(this.Envelope.release);
@@ -202,6 +215,8 @@ class Granular extends Source {
             console.log("END");
         },this.Envelope.release*1000);
     }
+
+
 
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
@@ -249,7 +264,7 @@ class Granular extends Source {
         }
         return location;
     }
-    
+
     SetPlaybackRate(rate,time) {
         super.SetPlaybackRate(rate,time);
         for (var i=0; i<this.MaxDensity; i++) {

@@ -179,9 +179,9 @@ class Source extends Block implements ISource {
 
     TriggerAttack(){
 
-        if (this.BlockType == BlockType.Soundcloud){
+        /*if (this.BlockType == BlockType.Soundcloud){
             this.Source.start(this.Source.toSeconds((<Soundcloud>this).LoopStartPosition));
-        }
+        }*/
 
         this.Envelope.triggerAttack();
     }
@@ -198,11 +198,13 @@ class Source extends Block implements ISource {
         }
         this.Envelope.triggerRelease();
 
-        if (this.BlockType == BlockType.Soundcloud){
+        /*if (this.BlockType == BlockType.Soundcloud){
             this.Source.stop(this.Source.toSeconds(this.Envelope.release));
-        }
+        }*/
 
     }
+
+
 
     /**
      * Disposes the audio nodes
