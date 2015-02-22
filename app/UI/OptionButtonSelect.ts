@@ -18,6 +18,9 @@ class ButtonSelect extends Option{
         this.Value = value;
         this.Name = name;
         this.Setting = setting;
+
+        this.ButtonStyle = 0;
+        this.ButtonNo = 3;
     }
 
     Draw(ctx,units,i,panel) {
@@ -26,11 +29,16 @@ class ButtonSelect extends Option{
         var y = this.Position.y;
         var height = this.Size.Height;
 
-        var dataType = Math.round(units*10);
-        var headerType = Math.round(units*33);
+        var midType = Math.round(units*10);
 
         // DIVIDERS //
         ctx.fillStyle = ctx.strokeStyle = "#393d43";
+
+
+
+
+
+
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -40,9 +48,9 @@ class ButtonSelect extends Option{
 
         // PARAM NAME //
         ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
-        ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
+        ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (midType * 0.4));
 
     }
 
