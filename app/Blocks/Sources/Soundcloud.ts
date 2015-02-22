@@ -13,11 +13,13 @@ class Soundcloud extends Source {
 
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224"];
-        var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[1] + "/stream" + scId;
+        var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[2] + "/stream" + scId;
+        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
 
         this.Source = new Tone.Player(audioUrl, function (sc) {
             sc.loop = true;
             sc.start();
+            console.log('buffer loaded');
         });
 
 

@@ -94,6 +94,7 @@ class KeyboardMono extends Keyboard {
                 source.Source.frequency.exponentialRampToValueNow(frequency, 0);
             } else if (source.PlaybackRate){
                 source.Source.setPlaybackRate(playbackRate, 0);
+                source.Source.start();
             }
             source.Envelope.triggerAttack();
 
@@ -112,6 +113,10 @@ class KeyboardMono extends Keyboard {
 
         if (Object.keys(this.KeysDown).length === 0) {
             source.Envelope.triggerRelease();
+
+            if (source.PlaybackRate) {
+                source.Source.stop(source.Source.toSeconds(source.Envelope.release));
+            }
         }
     }
 }
