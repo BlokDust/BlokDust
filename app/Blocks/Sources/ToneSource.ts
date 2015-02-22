@@ -38,6 +38,15 @@ class ToneSource extends Source {
     MouseUp() {
         super.MouseUp();
 
+        // FOR POWER
+        if (this.Effects.Count) {
+            for (var i = 0; i < this.Effects.Count; i++) {
+                var effect = this.Effects.GetValueAt(i);
+                if (effect.Name == 'Power'){
+                    return;
+                }
+            }
+        }
         this.Envelope.triggerRelease();
     }
 
