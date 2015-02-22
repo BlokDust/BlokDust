@@ -48,7 +48,7 @@ class ToolTip extends DisplayObject {
 
         // BG //
         ctx.globalAlpha = thisAlpha*0.9;
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = App.Palette[2];// Black
 
         ctx.beginPath();
         ctx.moveTo(x,y);

@@ -26,6 +26,7 @@ import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
 import TrashCan = require("./UI/TrashCan");
+import ConnectionLines = require("./UI/ConnectionLines");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
 
@@ -46,6 +47,7 @@ class BlocksSketch extends Grid {
     private _ToolTip: ToolTip;
     private _ZoomButtons: ZoomButtons;
     private _TrashCan: TrashCan;
+    private _ConnectionLines: ConnectionLines;
     private _ToolTipTimeout;
     private _LastSize: Size;
     private _PointerPoint: Point;
@@ -78,7 +80,7 @@ class BlocksSketch extends Grid {
         App.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         App.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
-        var pixelPalette = new PixelPalette("img/palette.gif");
+        var pixelPalette = new PixelPalette("img/palette6.gif");
 
         pixelPalette.Load((palette: string[]) => {
             //console.log(palette);
@@ -99,11 +101,8 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+        this.Metrics();
 
-        this.ScaleToFit = true;
-        this.GridSize = 15;
-        this.Divisor = 850; // 70
-        this._LastSize = new Size(this.Width,this.Height);
         this._PointerPoint = new Point();
 
 
@@ -126,6 +125,7 @@ class BlocksSketch extends Grid {
         this._ToolTip = new ToolTip(this);
         this._ZoomButtons = new ZoomButtons(this);
         this._TrashCan = new TrashCan(this);
+        this._ConnectionLines = new ConnectionLines(this);
     }
 
 
@@ -159,8 +159,7 @@ class BlocksSketch extends Grid {
             // Has resized, call the resize function //
             this.SketchResize();
             // Update size record //
-            this._LastSize.Width = this.Width;
-            this._LastSize.Height = this.Height;
+            this.Metrics();
         }
     }
 
@@ -197,7 +196,6 @@ class BlocksSketch extends Grid {
 
 
     SketchResize() {
-        //console.log("RESIZE");
         if (this._ParamsPanel.Scale==1) {
             this._ParamsPanel.SelectedBlock.OpenParams();
             this._ParamsPanel.Populate(this._ParamsPanel.SelectedBlock.ParamJson,false);
@@ -207,6 +205,30 @@ class BlocksSketch extends Grid {
     }
 
 
+    Metrics() {
+
+        this.ScaleToFit = true;
+        this.GridSize = 15;
+        this.Divisor = 850; // 70
+
+        var unit = this.Unit.width;
+        var headerType = Math.round(unit*28);
+        var sliderType = Math.round(unit*33);
+        var midType = Math.round(unit*10);
+        var bodyType = Math.round(unit*8);
+        var italicType = Math.round(unit*7.5);
+        var dataType = Math.round(unit*5);
+
+        this.TxtHeader = "200 " + headerType + "px Dosis";
+        this.TxtSlider = "200 " + sliderType + "px Dosis";
+        this.TxtMid = "400 " + midType + "px Dosis";
+        this.TxtBody = "200 " + bodyType + "px Dosis";
+        this.TxtItalic = "300 italic " + italicType + "px Merriweather Sans";
+        this.TxtData = "400 " + dataType + "px PT Sans";
+
+        this._LastSize = new Size(this.Width,this.Height);
+
+    }
 
 
     //-------------------------------------------------------------------------------------------
@@ -222,6 +244,9 @@ class BlocksSketch extends Grid {
 
         // DEBUG GRID //
         super.Draw();
+
+        // LINES //
+        this._ConnectionLines.Draw();
 
         // BLOCKS //
         this._DisplayList.Draw();

@@ -11,6 +11,12 @@ class Grid extends Fayde.Drawing.SketchContext {
     private _InitialUnitWidth: number;
     public GridSize: number; // multiplier of Units to specify grid cell width
     public BlockSprites: BlockSprites;
+    public TxtHeader: string;
+    public TxtSlider: string;
+    public TxtMid: string;
+    public TxtBody: string;
+    public TxtItalic: string;
+    public TxtData: string;
 
     private _TransformGroup: TransformGroup;
 

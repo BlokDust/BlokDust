@@ -66,7 +66,7 @@ class Parametric extends Option{
 
         // MARKERS //
         //ctx.globalAlpha = 1;
-        ctx.strokeStyle = "#393d43";
+        ctx.strokeStyle = App.Palette[1];// Grey
         ctx.beginPath();
         ctx.moveTo(panel.Margin - units, y + (height*0.1)); // left
         ctx.lineTo(panel.Margin - units, y + (height*0.8));
@@ -96,7 +96,7 @@ class Parametric extends Option{
 
 
             if (markers[j]==100 || markers[j]==1000) {
-                ctx.strokeStyle = "#393d43";
+                ctx.strokeStyle = App.Palette[1];// Grey
                 ctx.globalAlpha = 0.5;
                 ctx.beginPath();
                 ctx.moveTo(Math.round(panel.Margin + xPos)+0.5, y + (height*0.1)); // vert

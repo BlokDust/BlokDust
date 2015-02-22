@@ -22,17 +22,24 @@ class Soundcloud extends Source {
 
         if (this.BlockType == BlockType.Soundcloud) {
             /*var audioUrl;
+             var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
              SC.initialize({
-             client_id: '7bfc58cb50688730352c60eb933aee3a'
+             client_id: id
              });
+
+             this.Source = new Tone.Player();
+             var sc = this.Source;
+
              var rawUrl = "https://soundcloud.com/whitehawkmusic/deep-mutant";
              SC.get('/resolve', { url: rawUrl }, function(track) {
-             audioUrl = ""+track.stream_url +
-             "?client_id=7bfc58cb50688730352c60eb933aee3a";
+             audioUrl = ""+track.stream_url + "?client_id=" + id;
+             console.log(audioUrl);
+             sc.load(audioUrl, function (sc) {
+             console.log(sc);
+             sc.loop = true;
+             sc.start();
+             });
              });*/
-
-            //var audioUrl = "https://api.soundcloud.com/tracks/145840993/stream?client_id=7bfc58cb50688730352c60eb933aee3a";
-            //this.Source.load(audioUrl, this.StreamLoaded(this.Source));
         }
 
         super(grid, position);
