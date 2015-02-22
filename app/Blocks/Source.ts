@@ -181,7 +181,6 @@ class Source extends Block implements ISource {
      */
     Delete() {
         if (this.BlockType != BlockType.Power){
-            this.Envelope.dispose();
             this.EffectsChainOutput.dispose();
             this.EffectsChainInput.dispose();
         }
