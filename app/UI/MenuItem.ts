@@ -49,7 +49,7 @@ class MenuItem {
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
         var dataType = units*10;
         ctx.textAlign = "center";
-        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.font = this._Sketch.TxtMid;
         ctx.fillText(this.Name,x,y + (40*units));
 
 
@@ -82,12 +82,12 @@ class MenuItem {
             // INFO TEXT //
             ctx.textAlign = "left";
             var bodyType = units*7.5;
-            ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
+            ctx.font = this._Sketch.TxtItalic;
             this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.Width*0.5) + (10*units),y + this.Size.Height - (30*units), bodyType*1.5, (this.Size.Width) - (20*units));
 
 
             // VERTICAL LINES //
-            ctx.strokeStyle = "#393d43";// Grey
+            ctx.strokeStyle = App.Palette[1];// Grey
             ctx.beginPath();
             ctx.moveTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*0.5) + (20*units));
             ctx.lineTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*1.5) - (20*units));

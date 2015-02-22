@@ -19,6 +19,7 @@ interface ISource extends IBlock{
     RecordedAudio?: any;
     PolySources?: any[];
     PolyEnvelopes?: any[];
+    ValidateEffects(): void;
 
 }
 

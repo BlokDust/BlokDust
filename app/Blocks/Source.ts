@@ -59,7 +59,6 @@ class Source extends Block implements ISource {
     /**
      * Add effect to this Source's list of effects
      * @param effect
-     * @constructor
      */
     AddEffect(effect: IEffect) {
         this.Effects.Add(effect);
@@ -68,26 +67,23 @@ class Source extends Block implements ISource {
     /**
      * Remove effect from this Source's list of effects
      * @param effect
-     * @constructor
      */
     RemoveEffect(effect: IEffect) {
         this.Effects.Remove(effect);
     }
 
-    /*
+    /**
     * Validate that the block's effects still exist
-    * @param {ObservableCollection<IEffect>} effects - Parent's full list of Effects.
     */
-    //TODO: THIS MAY NOT BE NECESSARY
-    //public ValidateEffects(){
-    //    for (var i = 0; i < this.Effects.Count; i++){
-    //        var effect:IEffect = this.Effects.GetValueAt(i);
-    //
-    //        if (!App.Effects.Contains(effect)){
-    //            this.RemoveEffect(effect);
-    //        }
-    //    }
-    //}
+    public ValidateEffects(){
+        for (var i = 0; i < this.Effects.Count; i++){
+            var effect:IEffect = this.Effects.GetValueAt(i);
+
+            if (!App.Effects.Contains(effect)){
+                this.RemoveEffect(effect);
+            }
+        }
+    }
 
     private _OnEffectsChanged() {
 
@@ -243,7 +239,7 @@ class Source extends Block implements ISource {
     }
 
     Draw(){
-        super.Draw();
+        super.Draw();/*
         if (window.debug){
             // draw connections to effect
             var effects = this.Effects.ToArray();
@@ -323,7 +319,7 @@ class Source extends Block implements ISource {
                 this.Ctx.lineTo(targetPos.x, targetPos.y);
                 this.Ctx.stroke();
             }
-        }
+        }*/
     }
 
 }

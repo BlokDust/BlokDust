@@ -24,7 +24,7 @@ class CommandManager {
         }
     }
 
-    public ExecuteCommand(command: string, parameters: any): void {
+    public ExecuteCommand(command: string, parameters?: any): void {
         // todo: use metric to determine best CommandHandlerFactory to use.
         var commandHandlerFactories: CommandHandlerFactory<ICommandHandler>[] = this._GetCommandHandlerFactories(command);
 

@@ -289,15 +289,15 @@ class ParametersPanel extends DisplayObject {
 
 
         // PANEL //
-        ctx.fillStyle = "#000";
-        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.font = this.Sketch.TxtMid;
         ctx.textAlign = "right";
 
 
         // DRAW PANEL //
+        ctx.fillStyle = App.Palette[14];// Shadow
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        // SHADOW //
+        ctx.fillStyle = App.Palette[2];// Black
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
@@ -313,20 +313,6 @@ class ParametersPanel extends DisplayObject {
         ctx.lineTo(sx + this.Size.Width - (16 * units), sy - (this.Size.Height * 0.5) + (4 * units));
         ctx.stroke();
         ctx.lineWidth = 1;
-
-        /*var rx = sx + this.Size.Width - (20 * units);
-        var ry = sy - (this.Size.Height * 0.5);
-        var diamond = 12;
-
-        if (this._PanelCloseRoll) {
-            ctx.beginPath();
-            ctx.moveTo(rx - (diamond*units), ry);
-            ctx.lineTo(rx, ry - (diamond*units));
-            ctx.lineTo(rx + (diamond*units), ry);
-            ctx.lineTo(rx, ry + (diamond*units));
-            ctx.closePath();
-            ctx.stroke();
-        }*/
 
 
         // TITLE //

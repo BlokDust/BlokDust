@@ -1,11 +1,8 @@
 
-class Commands {
-    constructor() {
-
-    }
-
-    static CREATE_BLOCK: string = "createBlock";
-    static DELETE_BLOCK: string = "deleteBlock";
+enum Commands {
+    CREATE_BLOCK,
+    DELETE_BLOCK,
+    SAVE
 }
 
 export = Commands;

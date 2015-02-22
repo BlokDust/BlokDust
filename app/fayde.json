@@ -30,7 +30,8 @@
     "pixelpalette": {},
     "RecorderJS": {
       "path": "lib/RecorderJS/recorder.js"
-    }
+    },
+    "jquery": {}
   },
   "themes": {
     "fayde.controls": {},
@@ -41,6 +42,7 @@
     "tween": "none",
     "tone": "none",
     "pixelpalette": "none",
-    "RecorderJS": "none"
+    "RecorderJS": "none",
+    "jquery": "none"
   }
 }

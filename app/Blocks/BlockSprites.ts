@@ -25,7 +25,6 @@ class BlockSprites {
         this._Position = new Point(0,0);
         this._XOffset = 0;
         this._YOffset = 0;
-
     }
 
     Draw(pos: Point,scaled: boolean, block: string) {
@@ -746,7 +745,7 @@ class BlockSprites {
             case "particle emitter":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = "#730081";
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
@@ -754,7 +753,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = "#f22a54";
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);

@@ -61,7 +61,7 @@ class MenuCategory {
 
         // HOVER //
         if (this.Hover && dropDown<1) {
-            ctx.fillStyle = "#000";
+            ctx.fillStyle = App.Palette[2];// Black
             ctx.globalAlpha = 0.9;
 
             ctx.beginPath();
