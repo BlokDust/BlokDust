@@ -1,3 +1,4 @@
+import App = require("../App");
 import IBlock = require("./IBlock");
 import Block = require("./Block");
 import IEffect = require("./IEffect");
@@ -45,6 +46,19 @@ class Effect extends Block implements IEffect {
      */
     RemoveSource(source: ISource) {
         this.Sources.Remove(source);
+    }
+
+    /**
+     * Validate that the block's effects still exist
+     */
+    public ValidateSources(){
+        for (var i = 0; i < this.Sources.Count; i++){
+            var src: ISource = this.Sources.GetValueAt(i);
+
+            if (!App.Sources.Contains(src)){
+                this.RemoveSource(src);
+            }
+        }
     }
 }
 

@@ -17,7 +17,6 @@ class KeyboardInputManager extends InputManager {
         super();
         this.KeysDown = {};
 
-
         document.addEventListener('keydown', (e) => {
             this.KeyboardDown(e);
         });
@@ -137,7 +136,7 @@ class KeyboardInputManager extends InputManager {
     KeyboardDown(e) {
         var k = this.MasterKeyboardMap[e.keyCode];
 
-        //Check if this key released is in out key_map
+        //Check if this key released is in our key_map
         if (typeof k !== 'undefined' && k !== '') {
             //if it's already pressed (holding note)
             if (k in this.KeysDown) {

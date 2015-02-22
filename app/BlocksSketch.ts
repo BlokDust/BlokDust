@@ -11,6 +11,7 @@ import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
 import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
+import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
@@ -64,8 +65,9 @@ class BlocksSketch extends Grid {
         this._DisplayList = new DisplayList(App.Blocks);
 
         // register command handlers
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
 
         App.OperationManager.OperationAdded.on((operation: IOperation) => {
             this._Invalidate();
@@ -603,6 +605,22 @@ class BlocksSketch extends Grid {
         this._CheckProximity();
     }
 
+    _ValidateBlocks() {
+        // for each Modifiable, if the Modifiable contains a Effect that no longer
+        // exists, remove it.
+
+        // todo: make this a command that all blocks subscribe to?
+        for (var i = 0; i < App.Sources.Count; i++){
+            var src: ISource = App.Sources.GetValueAt(i);
+            src.ValidateEffects();
+        }
+
+        for (var i = 0; i < App.Effects.Count; i++){
+            var effect: IEffect = App.Effects.GetValueAt(i);
+            effect.ValidateSources();
+        }
+    }
+
     CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
 
         var block: IBlock = new m(this, this._PointerPoint);
@@ -613,7 +631,7 @@ class BlocksSketch extends Grid {
             this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
         }, this);
 
-        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
+        App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
 
         block.MouseDown();
         this.SelectedBlock = block;
@@ -647,7 +665,7 @@ class BlocksSketch extends Grid {
         if (!this.SelectedBlock) return;
         this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
         this._SelectedBlock.Delete();
-        App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
+        App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
     }
 

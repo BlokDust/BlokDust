@@ -16,6 +16,8 @@ interface IEffect extends IBlock{
     Delete(): void;
     SetValue(param: string,value: number): void;
     GetValue(param: string): void;
+
+    ValidateSources(): void;
 }
 
 export = IEffect;

@@ -25,7 +25,6 @@ class BlockSprites {
         this._Position = new Point(0,0);
         this._XOffset = 0;
         this._YOffset = 0;
-
     }
 
     Draw(pos: Point,scaled: boolean, block: string) {

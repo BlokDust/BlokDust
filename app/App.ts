@@ -4,6 +4,7 @@ import CommandManager = require("./Core/Commands/CommandManager");
 import AudioMixer = require("./Core/Audio/AudioMixer");
 import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
+import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
 import IEffect = require("./Blocks/IEffect");
 import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
@@ -27,6 +28,7 @@ class App{
     static AudioMixer: AudioMixer;
     static InputManager: InputManager;
     static KeyboardInput: KeyboardInput;
+    static CommandsInputManager: CommandsInputManager;
     static ParticlesPool: PooledFactoryResource<Particle>;
     static Particles: Particle[];
     static Palette: string[];
@@ -77,9 +79,26 @@ class App{
 
         App.InputManager = new InputManager();
         App.KeyboardInput = new KeyboardInput();
+        App.CommandsInputManager = new CommandsInputManager(App.CommandManager);
 
         App.Particles = [];
         App.Palette = [];
+
+    }
+
+    static Serialize(): string {
+
+        var json = {
+            Blocks: []
+        };
+
+        for(var block in App.Blocks) {
+            json.Blocks.push({
+                Type: block.constructor.name
+            });
+        }
+
+        return JSON.stringify(json);
 
     }
 }
