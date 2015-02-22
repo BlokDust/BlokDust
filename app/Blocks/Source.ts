@@ -247,7 +247,7 @@ class Source extends Block implements ISource {
     }
 
     Draw(){
-        super.Draw();
+        super.Draw();/*
         if (window.debug){
             // draw connections to effect
             var effects = this.Effects.ToArray();
@@ -327,7 +327,7 @@ class Source extends Block implements ISource {
                 this.Ctx.lineTo(targetPos.x, targetPos.y);
                 this.Ctx.stroke();
             }
-        }
+        }*/
     }
 
 }

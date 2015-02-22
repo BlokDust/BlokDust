@@ -51,13 +51,11 @@ class ADSR extends Option{
         var height = this.Size.Height;
 
         ctx.globalAlpha = 1;
-
-        var curved = false;
         var vert = 0.6;
 
 
         // MARKERS //
-        ctx.fillStyle = ctx.strokeStyle = "#393d43";
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
         ctx.beginPath();
         ctx.moveTo(panel.Margin - units, y + (height*0.1));
         ctx.lineTo(panel.Margin - units, y + (height*0.9));
@@ -76,17 +74,9 @@ class ADSR extends Option{
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height*0.9));
         ctx.lineTo(panel.Margin + a, y + (height*0.1)); // ATTACK
-        if (curved) {
-            ctx.bezierCurveTo(panel.Margin + a, y + (height*0.1) + (((height*0.8) - s) *0),panel.Margin + a + (d*0.5),y + (height*0.9) - s, panel.Margin + a + d, y + (height*0.9) - s ); // DECAY
-        } else {
-            ctx.lineTo(panel.Margin + a + d, y + (height*0.9) - s); // DECAY
-        }
+        ctx.lineTo(panel.Margin + a + d, y + (height*0.9) - s); // DECAY
         ctx.lineTo(panel.Margin + (panel.Range*vert), y + (height*0.9) - s); // SUSTAIN
-        if (curved) {
-            ctx.bezierCurveTo(panel.Margin + (panel.Range * vert), y + (height * 0.9) - s, panel.Margin + (panel.Range * vert) + (r * 0.5), y + (height * 0.9), panel.Margin + (panel.Range * 0.5) + r, y + (height * 0.9)); // RELEASE
-        } else {
-            ctx.lineTo(panel.Margin + (panel.Range*vert) + r, y + (height*0.9)); // RELEASE
-        }
+        ctx.lineTo(panel.Margin + (panel.Range*vert) + r, y + (height*0.9)); // RELEASE
         ctx.lineTo(panel.Range + panel.Margin + units, y + (height*0.9));
         ctx.closePath();
         ctx.clip();
@@ -102,18 +92,9 @@ class ADSR extends Option{
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height*0.9));
         ctx.lineTo(panel.Margin + a, y + (height*0.1)); // ATTACK
-        if (curved) {
-            ctx.bezierCurveTo(panel.Margin + a, y + (height*0.1) + (((height*0.8) - s) *0),panel.Margin + a + (d*0.5),y + (height*0.9) - s, panel.Margin + a + d, y + (height*0.9) - s ); // DECAY
-
-        } else {
-            ctx.lineTo(panel.Margin + a + d, y + (height*0.9) - s); // DECAY
-        }
+        ctx.lineTo(panel.Margin + a + d, y + (height*0.9) - s); // DECAY
         ctx.lineTo(panel.Margin + (panel.Range*vert), y + (height*0.9) - s); // SUSTAIN
-        if (curved) {
-            ctx.bezierCurveTo(panel.Margin + (panel.Range * vert), y + (height * 0.9) - s, panel.Margin + (panel.Range * vert) + (r * 0.5), y + (height * 0.9), panel.Margin + (panel.Range * vert) + r, y + (height * 0.9)); // RELEASE
-        } else {
-            ctx.lineTo(panel.Margin + (panel.Range*vert) + r, y + (height*0.9)); // RELEASE
-        }
+        ctx.lineTo(panel.Margin + (panel.Range*vert) + r, y + (height*0.9)); // RELEASE
         ctx.lineTo(panel.Range + panel.Margin + units, y + (height*0.9));
         ctx.stroke();
         ctx.lineWidth = 1;

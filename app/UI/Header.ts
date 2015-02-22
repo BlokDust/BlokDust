@@ -283,7 +283,7 @@ class Header extends DisplayObject{
 
 
         // BG //
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = App.Palette[2];// Black
         ctx.globalAlpha = 0.16;
         ctx.fillRect(0,0,this._Sketch.Width,thisHeight + (5*units) + dropDown); // shadow
         ctx.globalAlpha = 0.9;
@@ -299,7 +299,7 @@ class Header extends DisplayObject{
 
 
         // DIVIDERS //
-        ctx.strokeStyle = "#393d43";// Grey
+        ctx.strokeStyle = App.Palette[1];// Grey
         ctx.globalAlpha = 1;
 
         // Horizontal //
@@ -477,8 +477,8 @@ class Header extends DisplayObject{
                 TWEEN.removeAll();
                 var cat = this.MenuItems[i];
 
-                cat.CurrentPage = 0; // RESET ITEM PAGES
-                cat.XOffset = 0;
+                //cat.CurrentPage = 0; // RESET ITEM PAGES
+                //cat.XOffset = 0;
                 for (var j=0; j<cat.Items.length; j++) {
                     cat.Items[j].InfoOffset = 0;
                 }
@@ -555,6 +555,7 @@ class Header extends DisplayObject{
             this.ClosePanel();
         }
     }
+
 
     ClosePanel() {
         TWEEN.removeAll();

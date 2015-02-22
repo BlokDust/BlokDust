@@ -26,7 +26,7 @@ class Granular extends Source {
 
         this._IsLoaded = false;
 
-        var tracks = ["183588346","48387282","127905486","50894420","12216090"];
+        var tracks = ["183588346","48387282","127905486","50894420","12216090","76097469","130501492"];
 
         this.Filename = tracks[3];
 

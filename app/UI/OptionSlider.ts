@@ -39,7 +39,7 @@ class Slider extends Option{
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = "#393d43";
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -104,7 +104,7 @@ class Slider extends Option{
 
 
         // PARAM NAME //
-        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
@@ -112,7 +112,7 @@ class Slider extends Option{
         // VALUE TOOLTIP //
         if (this.Selected) {
             ctx.textAlign = "left";
-            ctx.font = "200 " + headerType + "px Dosis";
+            ctx.font = panel.Sketch.TxtSlider;
             var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
             ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
         }
