@@ -17,8 +17,10 @@ class Soundcloud extends Source {
 
         this.Source = new Tone.Player(audioUrl, function (sc) {
             sc.loop = true;
-            sc.start();
+            //sc.start();
         });
+
+
 
         if (this.BlockType == BlockType.Soundcloud) {
             /*var audioUrl;
@@ -36,6 +38,9 @@ class Soundcloud extends Source {
         }
 
         super(grid, position);
+
+        this.Envelope = new Tone.AmplitudeEnvelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
+        this.Source.connect(this.Envelope);
         this.Source.start();
 
         // Define Outline for HitTest
@@ -44,12 +49,12 @@ class Soundcloud extends Source {
 
     MouseDown() {
         super.MouseDown();
-
+        this.Envelope.triggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
-
+        this.Envelope.triggerRelease();
     }
 
     Update() {

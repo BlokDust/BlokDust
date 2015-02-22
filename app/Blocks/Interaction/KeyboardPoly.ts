@@ -8,14 +8,14 @@ import BlockType = Type.BlockType;
 class KeyboardPoly extends Keyboard {
 
 
-    public Voices: number;
-    public ActiveVoices: any;
+    public VoicesAmount: number;
+    public ActiveVoices: any[];
 
     constructor(grid: Grid, position: Point){
 
         this.KeysDown = {};
-        this.Voices = 4;
-        this.ActiveVoices = {};
+        this.VoicesAmount = 4;
+        this.ActiveVoices = [];
 
         super(grid, position);
 
@@ -29,51 +29,73 @@ class KeyboardPoly extends Keyboard {
         this.Grid.BlockSprites.Draw(this.Position,true,"poly keyboard");
     }
 
-    Attach(source:ISource): void{
+    Attach(source:ISource): void {
         super.Attach(source);
 
-
-        for (var i = 0; i < this.Voices; i++) {
-            //Create the poly sources and envelopes
-
-            if (source.BlockType == BlockType.ToneSource){
-                source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.getType());
-            } else if (source.BlockType == BlockType.Noise){
-                source.PolySources[i] = new Tone.Noise(source.Source.getType());
-            }
-
-            source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
-
-            source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
-            source.PolySources[i].connect(source.EffectsChainInput);
-
-            source.PolySources[i].start();
-        }
-
+        this.CreateVoices(source, this.VoicesAmount);
     }
 
     Detach(source:ISource): void {
         super.Detach(source);
 
-        //if (source.Frequency){
-            for (var i = 0; i < source.PolySources.length; i++) {
-
-                //Delete the sources and envelopes
-                source.PolySources[i].dispose();
-                source.PolyEnvelopes[i].dispose();
-                source.PolySources = [];
-                source.PolyEnvelopes = [];
-
-            }
-        //}
+        this.DeleteVoices(source);
     }
 
     Delete(){
         super.Delete();
-
         this.KeysDown = null;
-        this.Voices = null;
-        this.ActiveVoices = {};
+        this.VoicesAmount = null;
+        this.ActiveVoices = [];
+    }
+
+    CreateVoices(source, voicesNum){
+
+        //If we already have voices delete those first
+        if (source.PolySources.length){
+            this.DeleteVoices(source);
+        }
+
+        //ONLY WORKS FOR NOISE AND TONES FOR NOW
+        if (source.BlockType == BlockType.ToneSource || source.BlockType == BlockType.Noise) {
+
+            for (var i = 0; i < voicesNum; i++) {
+                //Create the poly sources and envelopes
+
+                if (source.BlockType == BlockType.ToneSource) {
+                    source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.getType());
+                } else if (source.BlockType == BlockType.Noise) {
+                    source.PolySources[i] = new Tone.Noise(source.Source.getType());
+                }
+
+                //TODO: Make keyboards trigger samples and instead of pitch change playback speeds
+                // Like noteToFrequency, we need a noteToPlaybackSpeed function
+                // If base frequency is 440 (A), base playback is 1
+                // so 440 => 1, 880 => 2, 220 => 0.5
+                // 261 = x
+                // 440/1 = 261/x
+                // 440x = 261
+                // x = 261/440 = 0.59
+
+                // formula is...
+                // playbackRate = frequency / baseFrequency;
+
+                source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
+
+                source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
+                source.PolySources[i].connect(source.EffectsChainInput);
+
+                source.PolySources[i].start();
+            }
+        }
+    }
+
+    DeleteVoices(source){
+        for (var i = 0; i < source.PolySources.length; i++) {
+            source.PolySources[i].dispose();
+            source.PolyEnvelopes[i].dispose();
+            source.PolySources = [];
+            source.PolyEnvelopes = [];
+        }
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
@@ -81,37 +103,62 @@ class KeyboardPoly extends Keyboard {
 
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
+        //TODO: add a playback speed option to GetFrequencyOfNote;
 
         var keysDownNum: number = Object.keys(this.KeysDown).length;
-        var voices = this.Voices;
+        var voices = this.VoicesAmount;
         var r = keysDownNum % voices;
         if (r == 0) r = voices;
 
-        // If more than allocated voices pressed stop oldest one.
-        if (keysDownNum / voices > 1){
-            //We've used up all the available voices so release one
-            source.PolyEnvelopes[r-1].triggerRelease();
+        this.ActiveVoices.push(keyDown);
+
+        // if r is already down use a free one
+        for (var i = 0; i<this.ActiveVoices.length; i++) {
+
+                if (source.Frequency) {
+                    source.PolySources[r - 1].setFrequency(frequency);
+                } else if (source.PlaybackRate){
+                    source.PolySources[r-1].setPlaybackRate(frequency);
+                }
+                source.PolyEnvelopes[r-1].triggerAttack();
+
+
+                //console.log(this.ActiveVoices);
+            //}
         }
 
-            //TODO: fix trigger release bug
-        if (source.Frequency) {
-            source.PolySources[r - 1].setFrequency(frequency);
-        }
-        source.PolyEnvelopes[r-1].triggerAttack();
+        //console.log(source);
 
-        this.ActiveVoices[keyDown] = r;
 
     }
 
-    KeyboardUp(keyup:string, source:ISource): void {
-        super.KeyboardUp(keyup, source);
+    KeyboardUp(keyUp:string, source:ISource): void {
+        super.KeyboardUp(keyUp, source);
 
-            // if this key up is in Keys.Down release it
-            if (keyup in this.ActiveVoices) {
+        var keyPressed = this.GetKeyNoteOctaveString(keyUp);
+        var frequency = this.GetFrequencyOfNote(keyPressed, source);
+        var playbackSpeed; //TODO
 
-                var r = this.ActiveVoices[keyup];
-                source.PolyEnvelopes[r-1].triggerRelease();
+
+        for (var i = 0; i<this.ActiveVoices.length; i++){
+
+            if (this.ActiveVoices[i] == keyUp) {
+
+                // Check whether this envelope is playing and has my frequency before releasing it
+                for (var j=0; j<source.PolyEnvelopes.length; j++){
+
+                    // If frequency is the same as the key up or playback speed is the same as keyup
+                    if (Math.round(source.PolySources[j].getFrequency()) == Math.round(frequency)) {
+                        source.PolyEnvelopes[j].triggerRelease();
+                        console.log(source);
+                    }
+                }
+
+                //Update the array
+                this.ActiveVoices.splice(i, 1);
+                //console.log(this.ActiveVoices);
             }
+        }
     }
 
 
@@ -121,7 +168,15 @@ class KeyboardPoly extends Keyboard {
         jsonVariable[param] = value;
 
         if (param == "voices") {
-            this.Voices = value;
+            this.VoicesAmount = value;
+
+            // FOR ALL SOURCES
+            if (this.Sources.Count) {
+                for (var i = 0; i < this.Sources.Count; i++) {
+                    var source = this.Sources.GetValueAt(i);
+                    this.CreateVoices(source, this.VoicesAmount);
+                }
+            }
         }
     }
 
@@ -130,7 +185,7 @@ class KeyboardPoly extends Keyboard {
         var val;
 
         if (param == "voices") {
-            val = this.Voices;
+            val = this.VoicesAmount;
         }
         return val;
     }
@@ -150,7 +205,7 @@ class KeyboardPoly extends Keyboard {
                     "props" : {
                         "value" : this.GetValue("voices"),
                         "min" : 2,
-                        "max" : 8,
+                        "max" : 6,
                         "quantised" : true,
                         "centered" : false
                     }

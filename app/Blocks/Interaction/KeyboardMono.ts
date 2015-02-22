@@ -86,28 +86,29 @@ class KeyboardMono extends Keyboard {
 
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
-
+        var playbackRate = frequency / 440;
 
         // If no other keys already pressed trigger attack
         if (Object.keys(this.KeysDown).length === 1) {
             if (source.Source.frequency){
                 source.Source.frequency.exponentialRampToValueNow(frequency, 0);
+            } else if (source.PlaybackRate){
+                source.Source.setPlaybackRate(playbackRate, 0);
             }
             source.Envelope.triggerAttack();
 
-            // Else ramp to new frequency over time (glide)
+        // Else ramp to new frequency over time (glide)
         } else {
             if (source.Source.frequency) {
                 source.Source.frequency.exponentialRampToValueNow(frequency, this.Glide);
+            } else if (source.PlaybackRate){
+                source.Source.setPlaybackRate(playbackRate, this.Glide);
             }
         }
     }
 
     KeyboardUp(keyUp:string, source:ISource): void {
         super.KeyboardUp(keyUp, source);
-        //
-        //var keyPressed = this.GetKeyNoteOctaveString(keyUp);
-        //var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
         if (Object.keys(this.KeysDown).length === 0) {
             source.Envelope.triggerRelease();

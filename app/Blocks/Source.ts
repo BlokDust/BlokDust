@@ -13,7 +13,7 @@ class Source extends Block implements ISource {
     public OldEffects: ObservableCollection<IEffect>;
 
     public Source: any;
-    public Envelope: Tone.Envelope;
+    public Envelope: any;
     public EffectsChainInput: Tone.Signal;
     public EffectsChainOutput: Tone.Signal;
     public Settings: ToneSettings = {
@@ -34,35 +34,24 @@ class Source extends Block implements ISource {
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
-        this.Effects.CollectionChanged.on(() => {
-            this._OnEffectsChanged();
-        }, this);
+        this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
 
         if (this.BlockType != BlockType.Power) {
-            this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
 
             this.EffectsChainInput = new Tone.Signal;
             this.EffectsChainOutput = new Tone.Signal;
 
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
-            //Connect them up
-            if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource) {
-                this.Envelope.connect(this.Source.output.gain);
-            }
-
-
             this.Source.connect(this.EffectsChainInput);
             this.EffectsChainInput.connect(this.EffectsChainOutput);
             this.EffectsChainOutput.connect(App.AudioMixer.Master);
+
+            // THIS IS NEEDED FOR ANYTHING POLYPHONIC
+            this.PolySources = [];
+            this.PolyEnvelopes = [];
         }
-
-
-        // THIS IS NEEDED FOR ANYTHING POLYPHONIC
-        this.PolySources = [];
-        this.PolyEnvelopes = [];
-
 
         this.OpenParams();
     }
@@ -195,8 +184,11 @@ class Source extends Block implements ISource {
      * @constructor
      */
     Delete() {
-        this.Envelope.dispose();
-        this.EffectsChainOutput.dispose();
+        if (this.BlockType != BlockType.Power){
+            this.Envelope.dispose();
+            this.EffectsChainOutput.dispose();
+            this.EffectsChainInput.dispose();
+        }
 
         if (this.BlockType != BlockType.Recorder && this.BlockType != BlockType.Granular) {
             this.Source.stop();
