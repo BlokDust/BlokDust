@@ -34,6 +34,9 @@ class Option implements IOption {
     public SubHandleRoll: boolean[];
     public SubHandles: OptionSubHandle[];
 
+    public ButtonStyle: number;
+    public ButtonNo: number;
+
 
     constructor() {
 

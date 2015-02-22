@@ -8,6 +8,7 @@ class Noise extends Source {
 
     public PlaybackRate: number;
     public DelayedRelease: number;
+    public Noise: any;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Noise;
@@ -16,6 +17,10 @@ class Noise extends Source {
         this.PlaybackRate = 1;
 
         super(grid, position);
+
+        this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
+        this.Envelope.connect(this.Source.output.gain);
+        this.Source.connect(this.EffectsChainInput);
 
         this.Source.start();
 
@@ -28,15 +33,13 @@ class Noise extends Source {
     MouseDown() {
         super.MouseDown();
 
-        // play tone
-        this.Envelope.triggerAttack();
+        this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
 
-        // stop tone
-        this.Envelope.triggerRelease();
+        this.TriggerRelease();
     }
 
     ParticleCollision(particle: Particle) {

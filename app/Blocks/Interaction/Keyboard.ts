@@ -2,7 +2,6 @@ import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
-import PooledOscillator = require("../../PooledOscillator");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import PitchComponent = require("./../Effects/Pitch");
 
@@ -22,37 +21,6 @@ class Keyboard extends Effect {
         super(grid, position);
 
 
-        App.KeyboardInput.KeyDownChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-
-            //if KeyDown is a keyboard note or an octave shifter
-            if ((<any>e).KeyDown.substring(0, 5) === 'note_' || (<any>e).KeyDown === 'octave-up' ||  (<any>e).KeyDown === 'octave-down'){
-                this.KeysDown = (<any>e).KeysDown;
-
-                console.log('need to use off function in this.Delete but how does it work?');
-                // FOR ALL SOURCES
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
-                    this.KeyboardDown((<any>e).KeyDown, source);
-                }
-            }
-        }, this);
-
-        App.KeyboardInput.KeyUpChange.on((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {
-
-            // FOR ALL SOURCES
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-
-                // If its an octave shift no need to call KeyboardUp
-                if ((<any>e).KeyUp !== 'octave-up' && (<any>e).KeyUp !== 'octave-down') {
-                    this.KeyboardUp((<any>e).KeyUp, source);
-                }
-            }
-
-            this.KeysDown = (<any>e).KeysDown;
-
-        }, this);
-
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -64,9 +32,11 @@ class Keyboard extends Effect {
 
     Attach(source:ISource): void{
         super.Attach(source);
-
         this.SetBaseFrequency(source);
         this.KeysDown = {};
+
+        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
+        App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
     }
 
     Detach(source:ISource): void {
@@ -84,15 +54,42 @@ class Keyboard extends Effect {
             }
         }
 
-        super.Detach(source);
+        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
+        App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
 
+        super.Detach(source);
+    }
+
+    KeyDownCallback(e){
+
+        //if KeyDown is a keyboard note or an octave shifter
+        if ((<any>e).KeyDown.substring(0, 5) === 'note_' || (<any>e).KeyDown === 'octave-up' ||  (<any>e).KeyDown === 'octave-down'){
+            this.KeysDown = (<any>e).KeysDown;
+
+            // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                this.KeyboardDown((<any>e).KeyDown, source);
+            }
+        }
+    }
+
+    KeyUpCallback(e){
+
+        // FOR ALL SOURCES TRIGGER KEYBOARD UP
+        for (var i = 0; i < this.Sources.Count; i++) {
+            var source = this.Sources.GetValueAt(i);
+
+            // If its an octave shift no need to call KeyboardUp
+            if ((<any>e).KeyUp !== 'octave-up' && (<any>e).KeyUp !== 'octave-down') {
+                this.KeyboardUp((<any>e).KeyUp, source);
+            }
+        }
+
+        this.KeysDown = (<any>e).KeysDown;
     }
 
     Delete(){
-        // TODO: CALL DISCONNECT if not already disconnected
-        //TODO: make this event watcher stop
-        //App.KeyboardInput.KeyDownChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {}, this);
-        //App.KeyboardInput.KeyUpChange.off((e: Fayde.IEventBindingArgs<KeyDownEventArgs>) => {}, this);
         this.KeysDown = {};
         this.BaseFrequency = null;
         this.CurrentOctave = null;
@@ -130,9 +127,11 @@ class Keyboard extends Effect {
 
         if (source.Frequency){
             this.BaseFrequency = source.Frequency;
-            this.CurrentOctave = this.GetStartOctave(source);
-            this.CurrentOctave--;
+        } else {
+            this.BaseFrequency = 440;
         }
+        this.CurrentOctave = this.GetStartOctave(source);
+        this.CurrentOctave--;
     }
 
     public GetStartOctave(source): number {

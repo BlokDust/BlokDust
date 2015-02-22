@@ -6,6 +6,8 @@ import BlockType = Type.BlockType;
 class Soundcloud extends Source {
 
     public PlaybackRate: number;
+    public LoopStartPosition: number;
+    public LoopEndPosition: number;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.Soundcloud;
@@ -13,37 +15,48 @@ class Soundcloud extends Source {
 
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224"];
-        var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[3] + "/stream" + scId;
+        var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[2] + "/stream" + scId;
+        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
 
         this.Source = new Tone.Player(audioUrl, function (sc) {
             sc.loop = true;
-            sc.start();
+            //sc.start();
+            console.log('buffer loaded');
         });
 
-        if (this.BlockType == BlockType.Soundcloud) {
-            /*var audioUrl;
-             var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-             SC.initialize({
-             client_id: id
-             });
+        this.LoopStartPosition = 0; // 0 is the beginning
+        this.LoopEndPosition = -1; // -1 goes to the end of the track
 
-             this.Source = new Tone.Player();
-             var sc = this.Source;
+        this.Source.loop = true;
+        this.Source.loopEnd = this.LoopEndPosition;
 
-             var rawUrl = "https://soundcloud.com/whitehawkmusic/deep-mutant";
-             SC.get('/resolve', { url: rawUrl }, function(track) {
-             audioUrl = ""+track.stream_url + "?client_id=" + id;
-             console.log(audioUrl);
-             sc.load(audioUrl, function (sc) {
-             console.log(sc);
-             sc.loop = true;
-             sc.start();
-             });
-             });*/
-        }
+
+        /*var audioUrl;
+         var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
+         SC.initialize({
+         client_id: id
+         });
+
+         this.Source = new Tone.Player();
+         var sc = this.Source;
+
+         var rawUrl = "https://soundcloud.com/whitehawkmusic/deep-mutant";
+         SC.get('/resolve', { url: rawUrl }, function(track) {
+         audioUrl = ""+track.stream_url + "?client_id=" + id;
+         console.log(audioUrl);
+         sc.load(audioUrl, function (sc) {
+         console.log(sc);
+         sc.loop = true;
+         sc.start();
+         });
+         });*/
 
         super(grid, position);
-        this.Source.start();
+
+        this.Envelope = new Tone.AmplitudeEnvelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
+        this.Source.connect(this.Envelope);
+        this.Envelope.connect(this.EffectsChainInput);
+
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -51,12 +64,24 @@ class Soundcloud extends Source {
 
     MouseDown() {
         super.MouseDown();
-
+        this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
+        this.TriggerRelease();
 
+    }
+
+    TriggerAttack() {
+        super.TriggerAttack();
+        this.Source.start(this.Source.toSeconds((<Soundcloud>this).LoopStartPosition));
+
+    }
+
+    TriggerRelease() {
+        super.TriggerRelease();
+        this.Source.stop(this.Source.toSeconds(this.Envelope.release));
     }
 
     Update() {
@@ -91,6 +116,11 @@ class Soundcloud extends Source {
                 }
             ]
         };
+    }
+
+    SetPlaybackRate(rate,time) {
+        super.SetPlaybackRate(rate,time);
+        this.Source.setPlaybackRate(rate,time);
     }
 
     SetValue(param: string,value: any) {

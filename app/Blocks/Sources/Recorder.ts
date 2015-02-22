@@ -28,6 +28,8 @@ class RecorderBlock extends Source {
         this.PlaybackRate = 1;
 
         this.RecordedAudio.connect(this.Source);
+        this.Source.connect(this.EffectsChainInput);
+
         this.BufferSource = this.RecordedAudio.context.createBufferSource();
 
         this.RecordedAudio.setVolume(10);

@@ -6,6 +6,7 @@ import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Type = require("./BlockType");
 import BlockType = Type.BlockType;
+import Soundcloud = require("./Sources/Soundcloud");
 
 class Source extends Block implements ISource {
 
@@ -13,9 +14,10 @@ class Source extends Block implements ISource {
     public OldEffects: ObservableCollection<IEffect>;
 
     public Source: any;
-    public Envelope: Tone.Envelope;
+    public Envelope: any;
     public EffectsChainInput: Tone.Signal;
     public EffectsChainOutput: Tone.Signal;
+    public PlaybackRate: number;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -34,35 +36,24 @@ class Source extends Block implements ISource {
     constructor(grid: Grid, position: Point) {
         super(grid, position);
 
-        this.Effects.CollectionChanged.on(() => {
-            this._OnEffectsChanged();
-        }, this);
+        this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
 
         if (this.BlockType != BlockType.Power) {
-            this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
 
             this.EffectsChainInput = new Tone.Signal;
             this.EffectsChainOutput = new Tone.Signal;
 
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
-            //Connect them up
-            if (this.BlockType == BlockType.Noise || this.BlockType == BlockType.ToneSource) {
-                this.Envelope.connect(this.Source.output.gain);
-            }
 
-
-            this.Source.connect(this.EffectsChainInput);
             this.EffectsChainInput.connect(this.EffectsChainOutput);
             this.EffectsChainOutput.connect(App.AudioMixer.Master);
+
+            // THIS IS NEEDED FOR ANYTHING POLYPHONIC
+            this.PolySources = [];
+            this.PolyEnvelopes = [];
         }
-
-
-        // THIS IS NEEDED FOR ANYTHING POLYPHONIC
-        this.PolySources = [];
-        this.PolyEnvelopes = [];
-
 
         this.OpenParams();
     }
@@ -186,13 +177,44 @@ class Source extends Block implements ISource {
 
     }
 
+    TriggerAttack(){
+
+        /*if (this.BlockType == BlockType.Soundcloud){
+            this.Source.start(this.Source.toSeconds((<Soundcloud>this).LoopStartPosition));
+        }*/
+
+        this.Envelope.triggerAttack();
+    }
+
+    TriggerRelease(){
+        //FOR POWER
+        if (this.Effects.Count) {
+            for (var i = 0; i < this.Effects.Count; i++) {
+                var effect = this.Effects.GetValueAt(i);
+                if (effect.Name == 'Power'){
+                    return;
+                }
+            }
+        }
+        this.Envelope.triggerRelease();
+
+        /*if (this.BlockType == BlockType.Soundcloud){
+            this.Source.stop(this.Source.toSeconds(this.Envelope.release));
+        }*/
+
+    }
+
+
+
     /**
      * Disposes the audio nodes
      * @constructor
      */
     Delete() {
-        this.Envelope.dispose();
-        this.EffectsChainOutput.dispose();
+        if (this.BlockType != BlockType.Power){
+            this.EffectsChainOutput.dispose();
+            this.EffectsChainInput.dispose();
+        }
 
         if (this.BlockType != BlockType.Recorder && this.BlockType != BlockType.Granular) {
             this.Source.stop();
@@ -206,6 +228,10 @@ class Source extends Block implements ISource {
         for(var i=0; i<this.PolyEnvelopes.length; i++){
             this.PolyEnvelopes[i].dispose();
         }
+    }
+
+    SetPlaybackRate(rate,time) {
+
     }
 
     GetValue(param: string) {
@@ -247,87 +273,7 @@ class Source extends Block implements ISource {
     }
 
     Draw(){
-        super.Draw();/*
-        if (window.debug){
-            // draw connections to effect
-            var effects = this.Effects.ToArray();
-
-            var grd = this.Grid.ScaledCellWidth.width; // this.Grid.Width / this.Grid.Divisor;
-
-            for(var i = 0; i < effects.length; i++){
-                var target: IEffect = effects[i];
-
-                var myPos = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
-                myPos = this.Grid.ConvertBaseToTransformed(myPos);
-                var targetPos = this.Grid.ConvertGridUnitsToAbsolute(target.Position);
-                targetPos = this.Grid.ConvertBaseToTransformed(targetPos);
-
-                var xDif = (targetPos.x - myPos.x) / grd;
-                var yDif = (targetPos.y - myPos.y) / grd;
-
-                this.Ctx.strokeStyle = App.Palette[3];// BLUE
-
-                this.Ctx.beginPath();
-                this.Ctx.moveTo(myPos.x, myPos.y);
-
-                if (xDif > 0) { // RIGHT HALF
-
-                    if (yDif < 0) { // UPPER
-
-                        if (-yDif < xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x + ((xDif - (-yDif))*grd)), Math.round(myPos.y));
-                        }
-
-                        if (-yDif > xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - (((-yDif) - xDif)*grd)));
-                        }
-
-                    }
-
-                    if (yDif > 0) { // LOWER
-
-                        if (yDif < xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x + ((xDif - yDif)*grd)), Math.round(myPos.y));
-                        }
-
-                        if (yDif > xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - xDif)*grd)));
-                        }
-                    }
-                }
-
-                if (xDif < 0) { // LEFT HALF
-
-                    if (yDif < 0) { // UPPER
-
-                        if (yDif > xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x - ((yDif - xDif)*grd)), Math.round(myPos.y));
-                        }
-
-                        if (yDif < xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - ((xDif - yDif)*grd)));
-                        }
-
-                    }
-
-                    if (yDif > 0) { // LOWER
-
-                        if (yDif < -xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x - (((-xDif) - yDif)*grd)), Math.round(myPos.y));
-                        }
-
-                        if (yDif > -xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - (-xDif))*grd)));
-                        }
-
-                    }
-
-                }
-
-                this.Ctx.lineTo(targetPos.x, targetPos.y);
-                this.Ctx.stroke();
-            }
-        }*/
+        super.Draw();
     }
 
 }

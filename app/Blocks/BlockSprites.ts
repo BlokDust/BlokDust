@@ -763,8 +763,38 @@ class BlockSprites {
 
                 break;
 
+            case "power":
 
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = "#40e6ff";
+                this.DrawMoveTo(-1,0);
+                this.DrawLineTo(1,-2);
+                this.DrawLineTo(2,-1);
+                this.DrawLineTo(2,0);
+                this.DrawLineTo(0,2);
+                this.DrawLineTo(-1,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
 
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = "#1add8d";
+                this.DrawMoveTo(0,0);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(2,0);
+                this.DrawLineTo(0,2);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = "#fff";
+                this.DrawMoveTo(-1,0);
+                this.DrawLineTo(1,-2);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(0,0);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                break;
         }
 
 

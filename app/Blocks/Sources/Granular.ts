@@ -8,7 +8,8 @@ class Granular extends Source {
 
     public Grains: Tone.Player[];
     private _Envelopes: Tone.Envelope[];
-    private _Timeout;
+    public Timeout;
+    public EndTimeout;
     private _CurrentGrain: number;
     private _IsLoaded: boolean;
     public Filename: string;
@@ -28,7 +29,7 @@ class Granular extends Source {
 
         var tracks = ["183588346","48387282","127905486","50894420","12216090","76097469","130501492"];
 
-        this.Filename = tracks[3];
+        this.Filename = tracks[4];
 
         this.GrainSettings = {
             "rate": 0.3,
@@ -52,10 +53,15 @@ class Granular extends Source {
         this.SetTrack();
 
 
+        //this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
+        this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
+        this.Envelope.connect(this.Source.output.gain);
+        //this.Source.connect(this.Envelope);
+        //this.Envelope.connect(this.EffectsChainInput);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
     }
-
 
     // LOAD THE AUDIO & CONNECT UP//
     SetTrack() {
@@ -84,6 +90,7 @@ class Granular extends Source {
             // CONNECT //
             this._Envelopes[i].connect(this.Grains[i].output.gain);
             this.Grains[i].connect(this.Source);
+            this.Source.connect(this.EffectsChainInput);
 
             this.Grains[i].setPlaybackRate(this.PlaybackRate);
 
@@ -171,25 +178,51 @@ class Granular extends Source {
 
     MouseDown() {
         super.MouseDown();
-        if (this._IsLoaded) {
-            this._NoteOn = !this._NoteOn;
-
-            if (this._NoteOn) {
-                this.GrainLoop();
-            }
-        }
-
+        this.TriggerAttack();
 
     }
 
     MouseUp() {
         super.MouseUp();
+        this.TriggerRelease();
     }
+
+
+    TriggerAttack() {
+        super.TriggerAttack();
+
+        if (this._IsLoaded) {
+            clearTimeout(this.EndTimeout);
+            this.Envelope.triggerAttack();
+
+
+            if (!this._NoteOn) {
+                this._NoteOn = true;
+                this.GrainLoop();
+            }
+        }
+
+    }
+
+    TriggerRelease() {
+        super.TriggerRelease();
+
+        this.Envelope.triggerRelease();
+        var gran = this;
+        console.log(this.Envelope.release);
+        this.EndTimeout = setTimeout(function() {
+            gran._NoteOn = false;
+            console.log("END");
+        },this.Envelope.release*1000);
+    }
+
+
 
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
         particle.Dispose();
     }
+
 
     GrainLoop() {
 
@@ -207,7 +240,7 @@ class Granular extends Source {
                 this.Grains[this._CurrentGrain].start("+0", location, this.GrainSettings.grainlength);
 
 
-                this._Timeout = setTimeout(function() {
+                this.Timeout = setTimeout(function() {
                     gran.GrainLoop();
                 },delay*1000);
 
@@ -232,6 +265,12 @@ class Granular extends Source {
         return location;
     }
 
+    SetPlaybackRate(rate,time) {
+        super.SetPlaybackRate(rate,time);
+        for (var i=0; i<this.MaxDensity; i++) {
+            this.Grains[i].setPlaybackRate(rate,time);
+        }
+    }
 
 
     GetValue(param: string) {
@@ -285,7 +324,7 @@ class Granular extends Source {
 
     Delete(){
         super.Delete();
-        clearTimeout(this._Timeout);
+        clearTimeout(this.Timeout);
         this._NoteOn = false;
         for (var i=0; i<this.MaxDensity; i++) {
             this.Grains[i].stop();
@@ -295,6 +334,7 @@ class Granular extends Source {
 
         this.Grains.length = 0;
         this._Envelopes.length = 0;
+        this.Envelope.dispose();
     }
 
 }

@@ -1,14 +1,18 @@
+import App = require("../../App");
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import AudioSettings = require("../../Core/Audio/AudioSettings");
 
 class Gain extends Effect {
 
-    public Effect: Tone.Signal;
+    public Effect: GainNode;
+
 
     constructor(grid: Grid, position: Point){
 
-        this.Effect = new Tone.Signal();
+        this.Effect = App.AudioMixer.Master.context.createGain();
+        this.Effect.gain.value = 0.5;
+        this.SetValue("gain", 0.1);
 
         super(grid, position);
 
@@ -22,7 +26,8 @@ class Gain extends Effect {
     }
 
     Delete(){
-        this.Effect.dispose();
+        this.Effect.disconnect();
+        this.Effect = null;
     }
 
     SetValue(param: string,value: number) {
@@ -30,15 +35,19 @@ class Gain extends Effect {
 
         if (param == "gain") {
             //TODO: DO SOME MATH TO MAKE THE NUMBERS BETTER
-            value  = (value + 10) * 0.5;
+            value  = (value + 6) * 0.5;
         }
 
-        this.Effect.output.gain.value = value;
+        this.Effect.gain.value = value;
     }
 
     GetValue(param: string) {
         super.GetValue(param);
-        var val = (this.Effect.output.gain.value * 2) - 10;
+        var val;
+
+        if (param == "gain") {
+            val = (this.Effect.gain.value * 2) - 6;
+        }
         return val;
     }
 

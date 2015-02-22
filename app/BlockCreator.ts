@@ -37,6 +37,7 @@ import Scuzz = require("Blocks/Effects/Scuzz");
 
 // POWER BLOCKS //
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
+import Power = require("./Blocks/Power/Power");
 
 // INTERACTION BLOCKS //
 import KeyboardMono = require("Blocks/Interaction/KeyboardMono");
@@ -172,6 +173,10 @@ class BlockCreator {
                         {
                             "name": "Particle Emitter",
                             "id": ParticleEmitter
+                        },
+                        {
+                            "name": "Power",
+                            "id": Power
                         }
                     ]
                 },
