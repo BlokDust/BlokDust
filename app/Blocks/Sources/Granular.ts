@@ -296,6 +296,7 @@ class Granular extends Source {
 
         this.Grains.length = 0;
         this._Envelopes.length = 0;
+        this.Envelope.dispose();
     }
 
 }

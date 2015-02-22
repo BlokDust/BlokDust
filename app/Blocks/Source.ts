@@ -181,7 +181,6 @@ class Source extends Block implements ISource {
      */
     Delete() {
         if (this.BlockType != BlockType.Power){
-            this.Envelope.dispose();
             this.EffectsChainOutput.dispose();
             this.EffectsChainInput.dispose();
         }
@@ -239,87 +238,7 @@ class Source extends Block implements ISource {
     }
 
     Draw(){
-        super.Draw();/*
-        if (window.debug){
-            // draw connections to effect
-            var effects = this.Effects.ToArray();
-
-            var grd = this.Grid.ScaledCellWidth.width; // this.Grid.Width / this.Grid.Divisor;
-
-            for(var i = 0; i < effects.length; i++){
-                var target: IEffect = effects[i];
-
-                var myPos = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
-                myPos = this.Grid.ConvertBaseToTransformed(myPos);
-                var targetPos = this.Grid.ConvertGridUnitsToAbsolute(target.Position);
-                targetPos = this.Grid.ConvertBaseToTransformed(targetPos);
-
-                var xDif = (targetPos.x - myPos.x) / grd;
-                var yDif = (targetPos.y - myPos.y) / grd;
-
-                this.Ctx.strokeStyle = App.Palette[3];// BLUE
-
-                this.Ctx.beginPath();
-                this.Ctx.moveTo(myPos.x, myPos.y);
-
-                if (xDif > 0) { // RIGHT HALF
-
-                    if (yDif < 0) { // UPPER
-
-                        if (-yDif < xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x + ((xDif - (-yDif))*grd)), Math.round(myPos.y));
-                        }
-
-                        if (-yDif > xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - (((-yDif) - xDif)*grd)));
-                        }
-
-                    }
-
-                    if (yDif > 0) { // LOWER
-
-                        if (yDif < xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x + ((xDif - yDif)*grd)), Math.round(myPos.y));
-                        }
-
-                        if (yDif > xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - xDif)*grd)));
-                        }
-                    }
-                }
-
-                if (xDif < 0) { // LEFT HALF
-
-                    if (yDif < 0) { // UPPER
-
-                        if (yDif > xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x - ((yDif - xDif)*grd)), Math.round(myPos.y));
-                        }
-
-                        if (yDif < xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - ((xDif - yDif)*grd)));
-                        }
-
-                    }
-
-                    if (yDif > 0) { // LOWER
-
-                        if (yDif < -xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x - (((-xDif) - yDif)*grd)), Math.round(myPos.y));
-                        }
-
-                        if (yDif > -xDif) {
-                            this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - (-xDif))*grd)));
-                        }
-
-                    }
-
-                }
-
-                this.Ctx.lineTo(targetPos.x, targetPos.y);
-                this.Ctx.stroke();
-            }
-        }*/
+        super.Draw();
     }
 
 }
