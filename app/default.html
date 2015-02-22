@@ -17,11 +17,13 @@
                 "text": "lib/requirejs-text/text",
                 "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
                 "Tone": "lib/tone/Tone",
-                "Recorderjs": "lib/RecorderJS"
+                "Recorderjs": "lib/RecorderJS",
+                "jquery": "lib/jquery/dist/jquery"
             },
             deps: ["text", "text!fayde.json",
                 "PixelPalette",
                 "Tone/core/Tone",
+                "jquery",
                 "Tone/core/Note",
                 "Tone/core/Master",
                 "Tone/core/Transport",
@@ -44,9 +46,10 @@
                 "Tone/effect/AutoPanner",
                 "Recorderjs/recorder"
             ],
-            callback: function (text, config, PixelPalette, Tone) {
+            callback: function (text, config, PixelPalette, Tone, jquery) {
                 window.PixelPalette = PixelPalette;
                 window.Tone = Tone;
+                window.$ = jquery;
                 Fayde.Bootstrap();
             }
         };
