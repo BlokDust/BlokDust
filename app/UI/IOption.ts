@@ -31,6 +31,11 @@ interface IOption {
     Handles: OptionHandle[];
     SubHandles: OptionSubHandle[];
 
+    ButtonStyle: number;
+    ButtonNo: number;
+
+
+
     Draw(ctx,units,i,panel): void;
 
 }

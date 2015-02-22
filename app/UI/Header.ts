@@ -484,6 +484,7 @@ class Header extends DisplayObject{
                 }
 
 
+
                 this.DelayTo(this,this.DropDownHeight,500,0,"DropDown");
                 this.DelayTo(cat,1,400,0,"Selected");
                 this.DelayTo(cat,0,600,250,"YOffset");
