@@ -627,13 +627,11 @@ class BlocksSketch extends Grid {
     }
 
     private _Invalidate(){
+        this._ValidateBlocks();
         this._CheckProximity();
     }
 
     _ValidateBlocks() {
-        // for each Modifiable, if the Modifiable contains a Effect that no longer
-        // exists, remove it.
-
         // todo: make this a command that all blocks subscribe to?
         for (var i = 0; i < App.Sources.Count; i++){
             var src: ISource = App.Sources.GetValueAt(i);
