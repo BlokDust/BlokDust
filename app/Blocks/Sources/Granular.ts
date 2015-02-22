@@ -249,7 +249,6 @@ class Granular extends Source {
         }
         return location;
     }
-
     
     SetPlaybackRate(rate,time) {
         super.SetPlaybackRate(rate,time);
