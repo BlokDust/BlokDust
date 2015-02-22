@@ -6,6 +6,7 @@ import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Type = require("./BlockType");
 import BlockType = Type.BlockType;
+import Soundcloud = require("./Sources/Soundcloud");
 
 class Source extends Block implements ISource {
 
@@ -16,6 +17,7 @@ class Source extends Block implements ISource {
     public Envelope: any;
     public EffectsChainInput: Tone.Signal;
     public EffectsChainOutput: Tone.Signal;
+    public PlaybackRate: number;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -171,6 +173,33 @@ class Source extends Block implements ISource {
         } else {
             start.disconnect();
             start.connect(end);
+        }
+
+    }
+
+    TriggerAttack(){
+
+        if (this.BlockType == BlockType.Soundcloud){
+            this.Source.start(this.Source.toSeconds((<Soundcloud>this).LoopStartPosition));
+        }
+
+        this.Envelope.triggerAttack();
+    }
+
+    TriggerRelease(){
+        //FOR POWER
+        if (this.Effects.Count) {
+            for (var i = 0; i < this.Effects.Count; i++) {
+                var effect = this.Effects.GetValueAt(i);
+                if (effect.Name == 'Power'){
+                    return;
+                }
+            }
+        }
+        this.Envelope.triggerRelease();
+
+        if (this.BlockType == BlockType.Soundcloud){
+            this.Source.stop(this.Source.toSeconds(this.Envelope.release));
         }
 
     }

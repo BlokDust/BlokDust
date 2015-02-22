@@ -1,6 +1,9 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
+import Type = require("./../BlockType");
+import BlockType = Type.BlockType;
+import Soundcloud = require("./../Sources/Soundcloud");
 
 class Power extends Effect {
 
@@ -19,6 +22,9 @@ class Power extends Effect {
     Attach(source:ISource): void {
         super.Attach(source);
 
+        if (source.BlockType == BlockType.Soundcloud){
+            source.Source.start(source.Source.toSeconds((<Soundcloud>source).LoopStartPosition));
+        }
         if (source.Envelope){
             source.Envelope.triggerAttack();
         }
@@ -29,6 +35,9 @@ class Power extends Effect {
 
         if (source.Envelope){
             source.Envelope.triggerRelease();
+        }
+        if (source.BlockType == BlockType.Soundcloud){
+            source.Source.stop(source.Source.toSeconds(source.Source.release));
         }
     }
 

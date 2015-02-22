@@ -64,24 +64,15 @@ class Soundcloud extends Source {
 
     MouseDown() {
         super.MouseDown();
-        this.Source.start(this.Source.toSeconds(this.LoopStartPosition));
-        this.Envelope.triggerAttack();
+
+        this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
 
-        // FOR POWER
-        if (this.Effects.Count) {
-            for (var i = 0; i < this.Effects.Count; i++) {
-                var effect = this.Effects.GetValueAt(i);
-                if (effect.Name == 'Power'){
-                    return;
-                }
-            }
-        }
-        this.Envelope.triggerRelease();
-        this.Source.stop(this.Source.toSeconds(this.Envelope.release));
+        this.TriggerRelease();
+
     }
 
     Update() {
