@@ -33,15 +33,13 @@ class Noise extends Source {
     MouseDown() {
         super.MouseDown();
 
-        // play tone
-        this.Envelope.triggerAttack();
+        this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
 
-        // stop tone
-        this.Envelope.triggerRelease();
+        this.TriggerRelease();
     }
 
     ParticleCollision(particle: Particle) {

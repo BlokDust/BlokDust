@@ -2,7 +2,6 @@ import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
-import PooledOscillator = require("../../PooledOscillator");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import PitchComponent = require("./../Effects/Pitch");
 

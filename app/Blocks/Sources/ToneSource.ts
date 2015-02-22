@@ -38,7 +38,7 @@ class ToneSource extends Source {
     MouseUp() {
         super.MouseUp();
 
-        this.Envelope.triggerRelease();
+        this.TriggerRelease();
     }
 
     ParticleCollision(particle: Particle) {
