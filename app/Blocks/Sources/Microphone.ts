@@ -12,6 +12,7 @@ class Microphone extends Source {
 
         super(grid, position);
         this.Source.start();
+        this.Source.connect(this.EffectsChainInput);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));

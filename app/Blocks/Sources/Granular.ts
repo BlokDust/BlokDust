@@ -84,6 +84,7 @@ class Granular extends Source {
             // CONNECT //
             this._Envelopes[i].connect(this.Grains[i].output.gain);
             this.Grains[i].connect(this.Source);
+            this.Source.connect(this.EffectsChainInput);
 
             this.Grains[i].setPlaybackRate(this.PlaybackRate);
 

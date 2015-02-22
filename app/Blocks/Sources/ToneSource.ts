@@ -19,6 +19,7 @@ class ToneSource extends Source {
 
         this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Envelope.connect(this.Source.output.gain);
+        this.Source.connect(this.EffectsChainInput);
         this.Source.start();
 
         this.Width = 150;

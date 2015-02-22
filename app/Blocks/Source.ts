@@ -44,7 +44,7 @@ class Source extends Block implements ISource {
 
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
-            this.Source.connect(this.EffectsChainInput);
+
             this.EffectsChainInput.connect(this.EffectsChainOutput);
             this.EffectsChainOutput.connect(App.AudioMixer.Master);
 
