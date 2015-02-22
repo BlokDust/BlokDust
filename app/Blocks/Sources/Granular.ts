@@ -252,6 +252,7 @@ class Granular extends Source {
 
     
     SetPlaybackRate(rate,time) {
+        super.SetPlaybackRate(rate,time);
         for (var i=0; i<this.MaxDensity; i++) {
             this.Grains[i].setPlaybackRate(rate,time);
         }

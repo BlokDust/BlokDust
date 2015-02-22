@@ -20,7 +20,7 @@ interface ISource extends IBlock{
     PolySources?: any[];
     PolyEnvelopes?: any[];
     ValidateEffects(): void;
-
+    SetPlaybackRate(rate,time): void;
 }
 
 export = ISource;

@@ -108,6 +108,11 @@ class Soundcloud extends Source {
         };
     }
 
+    SetPlaybackRate(rate,time) {
+        super.SetPlaybackRate(rate,time);
+        this.Source.setPlaybackRate(rate,time);
+    }
+
     SetValue(param: string,value: any) {
         super.SetValue(param,value);
 

@@ -199,6 +199,10 @@ class Source extends Block implements ISource {
         }
     }
 
+    SetPlaybackRate(rate,time) {
+
+    }
+
     GetValue(param: string) {
 
         var val;

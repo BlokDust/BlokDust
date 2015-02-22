@@ -93,7 +93,7 @@ class KeyboardMono extends Keyboard {
             if (source.Source.frequency){
                 source.Source.frequency.exponentialRampToValueNow(frequency, 0);
             } else if (source.PlaybackRate){
-                source.Source.setPlaybackRate(playbackRate, 0);
+                source.SetPlaybackRate(playbackRate, 0);
                 source.Source.start();
             }
             source.Envelope.triggerAttack();
@@ -103,7 +103,7 @@ class KeyboardMono extends Keyboard {
             if (source.Source.frequency) {
                 source.Source.frequency.exponentialRampToValueNow(frequency, this.Glide);
             } else if (source.PlaybackRate){
-                source.Source.setPlaybackRate(playbackRate, this.Glide);
+                source.SetPlaybackRate(playbackRate, this.Glide);
             }
         }
     }
