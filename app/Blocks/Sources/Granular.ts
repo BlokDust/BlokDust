@@ -85,7 +85,7 @@ class Granular extends Source {
             } else {  // remaining buffers
                 this.Grains[i] = new Tone.Player(audioUrl);
             }
-            this._Envelopes[i] = new Tone.Envelope(this.GrainSettings.smoothness,0.01,1,this.GrainSettings.smoothness);
+            this._Envelopes[i] = new Tone.Envelope(this.GrainSettings.smoothness,0.01,0.9,this.GrainSettings.smoothness);
 
             // CONNECT //
             this._Envelopes[i].connect(this.Grains[i].output.gain);
@@ -192,11 +192,11 @@ class Granular extends Source {
         super.TriggerAttack();
 
         if (this._IsLoaded) {
-            clearTimeout(this.EndTimeout);
             this.Envelope.triggerAttack();
 
-
+            clearTimeout(this.EndTimeout);
             if (!this._NoteOn) {
+
                 this._NoteOn = true;
                 this.GrainLoop();
             }
@@ -209,7 +209,7 @@ class Granular extends Source {
 
         this.Envelope.triggerRelease();
         var gran = this;
-        console.log(this.Envelope.release);
+        //clearTimeout(this.EndTimeout);
         this.EndTimeout = setTimeout(function() {
             gran._NoteOn = false;
             console.log("END");
@@ -236,13 +236,13 @@ class Granular extends Source {
                 location = this.LocationRange(location);
 
                 // MAKE SURE THESE ARE IN SYNC //
-                this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.grainlength - (this.GrainSettings.smoothness *1.1),"+0");
+                this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.smoothness,"+0");
                 this.Grains[this._CurrentGrain].start("+0", location, this.GrainSettings.grainlength);
 
 
                 this.Timeout = setTimeout(function() {
                     gran.GrainLoop();
-                },delay*1000);
+                },Math.round(delay*1000));
 
                 this._CurrentGrain += 1;
                 if (this._CurrentGrain >= this.GrainSettings.density) {
@@ -306,7 +306,7 @@ class Granular extends Source {
             case "grainlength":
                 this.GrainSettings.grainlength = value;
                 this.GrainSettings.rate = this.GrainSettings.grainlength*2;
-                this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.49;
+                this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.5;
                 for (var i=0; i< this.MaxDensity; i++) {
                     this._Envelopes[i].setAttack(this.GrainSettings.smoothness);
                     this._Envelopes[i].setRelease(this.GrainSettings.smoothness);
