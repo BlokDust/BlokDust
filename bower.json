@@ -6,7 +6,7 @@
     "fayde.controls": "~0.17.0",
     "exjs": "~0.2.8",
     "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.4.0",
-    "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.5.1",
+    "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.5.4",
     "fayde.transformer": "git://github.com/edsilv/fayde.transformer#~0.6.0",
     "tone": "git://github.com/lukephills/Tone.js#~0.2.18",
     "pixelpalette": "0.1.8",
