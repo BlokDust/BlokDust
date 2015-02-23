@@ -2,18 +2,18 @@ import App = require("../App");
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IBlock = require("../Blocks/IBlock");
 import IOperation = require("../Core/Operations/IOperation");
-import SaveOperation = require("../Core/Operations/SaveOperation");
+import LoadOperation = require("../Core/Operations/LoadOperation");
 
-class SaveCommandHandler implements ICommandHandler {
+class LoadCommandHandler implements ICommandHandler {
 
     constructor() {
 
     }
 
-    Execute(): void{
-        var op:IOperation = new SaveOperation(App.Serialize());
+    Execute(id: string): void{
+        var op:IOperation = new LoadOperation(id);
         App.OperationManager.Do(op);
     }
 }
 
-export = SaveCommandHandler;
+export = LoadCommandHandler;

@@ -2,7 +2,8 @@
 enum Commands {
     CREATE_BLOCK,
     DELETE_BLOCK,
-    SAVE
+    SAVE,
+    LOAD
 }
 
 export = Commands;

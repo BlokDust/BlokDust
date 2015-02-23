@@ -12,6 +12,7 @@ import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory")
 import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
+import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
@@ -30,6 +31,7 @@ import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
+import Utils = Fayde.Utils;
 
 declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -70,6 +72,7 @@ class BlocksSketch extends Grid {
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
+        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
 
         App.OperationManager.OperationAdded.on((operation: IOperation) => {
             this._Invalidate();
@@ -128,6 +131,12 @@ class BlocksSketch extends Grid {
         this._ZoomButtons = new ZoomButtons(this);
         this._TrashCan = new TrashCan(this);
         this._ConnectionLines = new ConnectionLines(this);
+
+        var id = Utils.Url.GetQuerystringParameter('c');
+
+        if(id) {
+            App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
+        }
     }
 
 

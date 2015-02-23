@@ -1,14 +1,11 @@
 import IOperation = require("./IOperation");
 
-class SaveOperation<String> implements IOperation
+class LoadOperation<String> implements IOperation
 {
-    private _JSON: any;
+    private _Id: any;
 
-    constructor(json: string) {
-
-        this._JSON = {
-            "Data": json
-        };
+    constructor(id: string) {
+        this._Id = id;
     }
 
     Do(): Promise<String> {
@@ -17,12 +14,11 @@ class SaveOperation<String> implements IOperation
         return new Promise((resolve) => {
 
             $.ajax(<JQueryAjaxSettings>{
-                url: "http://blobdust.azurewebsites.net/api/anonymousblobs",
-                type: 'POST',
+                url: "http://blobdust.azurewebsites.net/api/anonymousblobs/" + this._Id,
+                type: 'GET',
                 crossDomain: true,
                 dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify(that._JSON)
+                contentType: 'application/json'
             }).done(function(data){
                 console.log(data);
                 resolve();
@@ -33,4 +29,4 @@ class SaveOperation<String> implements IOperation
 
 }
 
-export = SaveOperation;
+export = LoadOperation;

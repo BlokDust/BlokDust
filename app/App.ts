@@ -13,8 +13,8 @@ import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
 import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
+import Serializer = require("./Serializer");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-
 
 class App{
 
@@ -34,7 +34,6 @@ class App{
     static Palette: string[];
     static OscillatorsPool: PooledFactoryResource<Oscillator>;
     static AudioSettings: ToneSettings;
-
 
     constructor() {
 
@@ -88,17 +87,7 @@ class App{
 
     static Serialize(): string {
 
-        var json = {
-            Blocks: []
-        };
-
-        for(var block in App.Blocks) {
-            json.Blocks.push({
-                Type: block.constructor.name
-            });
-        }
-
-        return JSON.stringify(json);
+        return Serializer.Serialize(App.Blocks.ToArray());
 
     }
 }
