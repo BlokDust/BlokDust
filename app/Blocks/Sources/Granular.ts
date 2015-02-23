@@ -248,9 +248,7 @@ class Granular extends Source {
                 if (this._CurrentGrain >= this.GrainSettings.density) {
                     this._CurrentGrain = 0;
                 }
-
             }
-
         }
     }
 
