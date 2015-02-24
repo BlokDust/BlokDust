@@ -766,7 +766,7 @@ class BlockSprites {
             case "power":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = "#40e6ff";
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(2,-1);
@@ -777,7 +777,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = "#1add8d";
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
@@ -786,7 +786,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = "#fff";
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,-1);

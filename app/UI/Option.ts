@@ -37,6 +37,8 @@ class Option implements IOption {
     public ButtonStyle: number;
     public ButtonNo: number;
 
+    public Spread: number;
+
 
     constructor() {
 
