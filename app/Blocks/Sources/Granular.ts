@@ -42,7 +42,7 @@ class Granular extends Source {
             "density": 10,
             "smoothness": 0.06,
             "region": 0,
-            "spread": 0.9,
+            "spread": 1.5,
             "grainlength": 0.06
 
         };
@@ -93,7 +93,7 @@ class Granular extends Source {
                 this.Grains[i] = new Tone.Player(audioUrl, function (sc) {
                     console.log(sc);
                     gran._IsLoaded = true;
-                    gran.GrainSettings.region = gran.GetDuration()*0.4;
+                    gran.GrainSettings.region = gran.GetDuration()*0.5;
                 });
             } else {  // remaining buffers
                 this.Grains[i] = new Tone.Player(audioUrl);

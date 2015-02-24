@@ -74,36 +74,23 @@ class WaveSlider extends Option{
         ctx.clip();
 
         ctx.globalAlpha = 0.05;
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
-        ctx.fillStyle = App.Palette[1];// WHITE
-        ctx.fillRect(panel.Margin,y,panel.Range,height);
+        ctx.strokeStyle = "#282b31";
+        //ctx.fillStyle = App.Palette[1];// WHITE
+
+        //ctx.fillRect(panel.Margin,y,panel.Range,height);
         ctx.globalAlpha = 1;
         ctx.lineWidth = 1;
         panel.vertFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 5);
         ctx.lineWidth = 1;
 
 
-        /*ctx.beginPath();
-        ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
-        if (this._Waveform.length!==0) {
-            for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.4)));
-            }
-            ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
-            for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.4)));
-            }
-        }
-        ctx.closePath();
-        ctx.stroke();*/
-
-
         ctx.restore();
 
 
-
-        ctx.save();
+        // FILL //
         var spread = (panel.Range / (this.Max-this.Min)) * this.Spread;
+        /*ctx.save();
+
         ctx.fillStyle = App.Palette[1];// WHITE
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - (spread*0.5), y);
@@ -126,9 +113,7 @@ class WaveSlider extends Option{
         }
         ctx.closePath();
         ctx.fill();
-
-
-        ctx.restore();
+        ctx.restore();*/
 
 
 
@@ -146,32 +131,31 @@ class WaveSlider extends Option{
         ctx.fill();*/
 
 
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(panel.Margin, y);
-        ctx.lineTo(panel.Margin + panel.Range, y);
-        ctx.lineTo(panel.Margin + panel.Range, y + height);
-        ctx.lineTo(panel.Margin, y + height);
-        ctx.closePath();
-        ctx.clip();
-
-        ctx.strokeStyle = App.Palette[8];// WHITE
-        ctx.lineWidth = 1;
+        // LINES //
+        ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
+
+        var leftSpread = x + panel.Margin - (spread*0.5);
+        if (leftSpread < panel.Margin) {
+            leftSpread = panel.Margin;
+        }
+        var rightSpread = x + panel.Margin + (spread*0.5);
+        if (rightSpread > (panel.Margin + panel.Range)) {
+            rightSpread = panel.Margin + panel.Range;
+        }
         ctx.beginPath();
-        ctx.moveTo(x + panel.Margin - (spread*0.5),y);
-        ctx.lineTo(x + panel.Margin - (spread*0.5),y + height);
-        ctx.moveTo(x + panel.Margin + (spread*0.5),y);
-        ctx.lineTo(x + panel.Margin + (spread*0.5),y + height);
+        ctx.moveTo(leftSpread,y);
+        ctx.lineTo(leftSpread,y + height);
+        ctx.moveTo(rightSpread,y);
+        ctx.lineTo(rightSpread,y + height);
         ctx.stroke();
         ctx.lineWidth = 1;
-        ctx.restore();
 
 
+
+        // SLIDEBAR //
         var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
-
         var offset = 0;
         if (origin == panel.Margin) {
             offset = -units;
@@ -179,15 +163,11 @@ class WaveSlider extends Option{
 
         ctx.globalAlpha = 1;
         ctx.fillStyle = ctx.strokeStyle = col;
-        //ctx.fillStyle = ctx.strokeStyle = App.Palette[5];// WHITE
-        //ctx.fillStyle = App.Palette[8];// WHITE
         ctx.fillRect(x + panel.Margin - (units), y, 2 * units, height);
 
 
         // GRAB TRIANGLES //
         var dragWidth = (height*0.666) * 0.2;
-
-
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -195,17 +175,6 @@ class WaveSlider extends Option{
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) + dragWidth);
         ctx.closePath();
         ctx.fill();
-
-        /*ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
-        ctx.lineTo(x + panel.Margin + dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + panel.Margin, y + (height * 0.5) + dragWidth);
-        ctx.closePath();
-        ctx.fill();*/
-
-
 
         ctx.fillStyle = App.Palette[8];// WHITE
         ctx.beginPath();
@@ -229,7 +198,7 @@ class WaveSlider extends Option{
             ctx.textAlign = "left";
             ctx.font = panel.Sketch.TxtSlider;
             var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
-            ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
+            ctx.fillText(string, rightSpread + (25 * units), y + (height * 0.5) + (headerType * 0.35));
         }
     }
 
