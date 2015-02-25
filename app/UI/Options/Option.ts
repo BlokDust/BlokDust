@@ -39,6 +39,9 @@ class Option implements IOption {
 
     public Spread: number;
 
+    public Track: string;
+    public User: string;
+
 
     constructor() {
 

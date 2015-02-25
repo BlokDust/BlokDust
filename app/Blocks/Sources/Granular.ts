@@ -74,7 +74,7 @@ class Granular extends Source {
 
         SC.get('/tracks/'+this.Filename, {}, function(track) {
 
-            //console.log(track.waveform_url);
+            console.log(track);
             //gran.WaveUrl = track.waveform_url;
             gran.LoadWaveform();
 
@@ -184,6 +184,15 @@ class Granular extends Source {
                         "centered" : false,
                         "wavearray" : this.Waveform,
                         "spread" : this.GetValue("spread")
+                    }
+                },
+                {
+                    "type" : "sample",
+                    "name" : "Sample",
+                    "setting" :"sample",
+                    "props" : {
+                        "track" : this.GetValue("track"),
+                        "user" : this.GetValue("user")
                     }
                 },
                 {
@@ -359,6 +368,10 @@ class Granular extends Source {
                 case "regionmin": val = (this.GrainSettings.spread*1.5);
                     break;
                 case "regionmax": val = this.Grains[0].duration;
+                    break;
+                case "track": val = "piano";
+                    break;
+                case "user": val = "kingstone";
                     break;
             }
             return val;

@@ -386,7 +386,7 @@ class BlocksSketch extends Grid {
         }
 
         if (collision) {
-            this.IsDraggingABlock = true;
+            this.IsDraggingABlock = true; // for trashcan to know
         }
 
 
@@ -659,8 +659,10 @@ class BlocksSketch extends Grid {
 
     CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
 
+        var ref = m;
         var block: IBlock = new m(this, this._PointerPoint);
         block.Id = this.GetId();
+        block.Reference = ref;
 
         // todo: should this go in command handler?
         block.Click.on((block: IBlock) => {

@@ -11,6 +11,7 @@ import ParametersPanel = require("../UI/ParametersPanel");
 class Block extends DisplayObject implements IBlock {
 
     public Id: number;
+    public Reference;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
