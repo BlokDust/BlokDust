@@ -1,3 +1,4 @@
+import App = require("../App");
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Type = require("./BlockType");
@@ -29,6 +30,7 @@ class Block extends DisplayObject implements IBlock {
         super(grid);
 
         this.Grid = grid;
+
         this.Position = position;
 
         this.Update();
@@ -92,10 +94,20 @@ class Block extends DisplayObject implements IBlock {
 
     MouseMove(point: Point) {
         if (this.IsPressed){
-            point = this.Grid.ConvertTransformedToBase(point);
-            point = this.Grid.SnapToGrid(point);
-            point = this.Grid.ConvertAbsoluteToGridUnits(point);
-            this.Position = point;
+
+            // ALT-DRAG COPY
+            if (this.Grid.AltDown) {
+                this.Grid.CreateBlockFromType(this.Reference);
+                this.Grid.AltDown = false;
+            }
+            // MOVE //
+            else {
+                point = this.Grid.ConvertTransformedToBase(point);
+                point = this.Grid.SnapToGrid(point);
+                point = this.Grid.ConvertAbsoluteToGridUnits(point);
+                this.Position = point;
+            }
+
         }
     }
 

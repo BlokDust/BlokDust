@@ -98,7 +98,7 @@ class OptionSample  extends Option{
         ctx.lineWidth = 1;
     }
 
-    
+
     Capitalise(string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
