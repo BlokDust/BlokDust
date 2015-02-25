@@ -17,6 +17,8 @@ class Keyboard extends Effect {
     constructor(grid: Grid, position: Point){
 
         this.KeysDown = {};
+        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
+        App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
 
         super(grid, position);
 
@@ -34,9 +36,6 @@ class Keyboard extends Effect {
         super.Attach(source);
         this.SetBaseFrequency(source);
         this.KeysDown = {};
-
-        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
     }
 
     Detach(source:ISource): void {
@@ -53,9 +52,6 @@ class Keyboard extends Effect {
                 source.Source.frequency.setValue(source.Frequency);
             }
         }
-
-        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
 
         super.Detach(source);
     }
@@ -93,6 +89,8 @@ class Keyboard extends Effect {
         this.KeysDown = {};
         this.BaseFrequency = null;
         this.CurrentOctave = null;
+        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
+        App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
     }
 
     SetValue(param: string,value: number) {

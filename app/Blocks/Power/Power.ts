@@ -8,6 +8,7 @@ import Soundcloud = require("./../Sources/Soundcloud");
 class Power extends Effect {
 
     Name: string;
+    IsAttached: boolean;
 
     constructor(grid: Grid, position: Point){
 
@@ -22,23 +23,25 @@ class Power extends Effect {
     Attach(source:ISource): void {
         super.Attach(source);
 
-        if (source.BlockType == BlockType.Soundcloud){
-            source.Source.start(source.Source.toSeconds((<Soundcloud>source).LoopStartPosition));
-        }
+        //if (source.BlockType == BlockType.Soundcloud){
+        //    source.Source.start(source.Source.toSeconds((<Soundcloud>source).LoopStartPosition));
+        //}
         if (source.Envelope){
             source.Envelope.triggerAttack();
         }
+
     }
 
     Detach(source:ISource): void {
-        super.Detach(source);
 
         if (source.Envelope){
             source.Envelope.triggerRelease();
         }
-        if (source.BlockType == BlockType.Soundcloud){
-            source.Source.stop(source.Source.toSeconds(source.Source.release));
-        }
+        //if (source.BlockType == BlockType.Soundcloud){
+        //    source.Source.stop(source.Envelope.release);
+        //}
+
+        super.Detach(source);
     }
 
     Draw() {

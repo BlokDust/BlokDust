@@ -42,6 +42,20 @@ class Noise extends Source {
         this.TriggerRelease();
     }
 
+    TriggerAttack(){
+        super.TriggerAttack();
+        if(!this.IsPowered()){
+            this.Envelope.triggerAttack();
+        }
+    }
+
+    TriggerRelease(){
+        super.TriggerRelease();
+        if(!this.IsPowered()){
+            this.Envelope.triggerRelease();
+        }
+    }
+
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
 

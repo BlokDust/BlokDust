@@ -1,6 +1,8 @@
 import Keyboard = require("./Keyboard");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
+import Soundcloud = require("../Sources/Soundcloud");
+
 
 class KeyboardMono extends Keyboard {
 
@@ -94,7 +96,15 @@ class KeyboardMono extends Keyboard {
                 source.Source.frequency.exponentialRampToValueNow(frequency, 0);
             } else if (source.PlaybackRate){
                 source.SetPlaybackRate(playbackRate, 0);
-                //source.Source.start();
+
+                // If has a loop start position start then plus current time else start immediately
+                if(source.LoopStartPosition){
+                    source.Source.start(source.LoopStartPosition+ source.Source.now());
+                } else {
+                    source.Source.start();
+                }
+
+
                 source.TriggerAttack();
             }
             source.Envelope.triggerAttack();
@@ -116,7 +126,7 @@ class KeyboardMono extends Keyboard {
             source.Envelope.triggerRelease();
 
             if (source.PlaybackRate) {
-                //source.Source.stop(source.Source.toSeconds(source.Envelope.release));
+                source.Source.stop(source.Envelope.release+source.Source.now());
                 source.TriggerRelease();
             }
         }

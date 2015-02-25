@@ -176,30 +176,29 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttack(){
-
-        /*if (this.BlockType == BlockType.Soundcloud){
-            this.Source.start(this.Source.toSeconds((<Soundcloud>this).LoopStartPosition));
-        }*/
-
-        this.Envelope.triggerAttack();
+        //if(!this.IsPowered()){
+        //    this.Envelope.triggerAttack();
+        //}
     }
 
     TriggerRelease(){
+        //if(!this.IsPowered()){
+        //    this.Envelope.triggerRelease();
+        //}
+    }
+
+    IsPowered() {
         //FOR POWER
         if (this.Effects.Count) {
             for (var i = 0; i < this.Effects.Count; i++) {
                 var effect = this.Effects.GetValueAt(i);
                 if (effect.Name == 'Power'){
-                    return;
+                    return true;
                 }
             }
         }
-        this.Envelope.triggerRelease();
 
-        /*if (this.BlockType == BlockType.Soundcloud){
-            this.Source.stop(this.Source.toSeconds(this.Envelope.release));
-        }*/
-
+        return false;
     }
 
 

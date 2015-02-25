@@ -32,13 +32,27 @@ class ToneSource extends Source {
     MouseDown() {
         super.MouseDown();
 
-        this.Envelope.triggerAttack();
+        this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
 
         this.TriggerRelease();
+    }
+
+    TriggerAttack(){
+        super.TriggerAttack();
+        if(!this.IsPowered()){
+            this.Envelope.triggerAttack();
+        }
+    }
+
+    TriggerRelease(){
+        super.TriggerRelease();
+        if(!this.IsPowered()){
+            this.Envelope.triggerRelease();
+        }
     }
 
     ParticleCollision(particle: Particle) {
