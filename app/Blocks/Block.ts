@@ -1,3 +1,4 @@
+import App = require("../App");
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Type = require("./BlockType");
@@ -11,6 +12,7 @@ import ParametersPanel = require("../UI/ParametersPanel");
 class Block extends DisplayObject implements IBlock {
 
     public Id: number;
+    public Reference;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
@@ -20,7 +22,7 @@ class Block extends DisplayObject implements IBlock {
     public Outline: Point[] = [];
     public ZIndex;
     public ParamJson;
-
+    private _Duplicable: boolean = false;
 
     public BlockType: BlockType;
 
@@ -28,6 +30,7 @@ class Block extends DisplayObject implements IBlock {
         super(grid);
 
         this.Grid = grid;
+
         this.Position = position;
 
         this.Update();
@@ -87,14 +90,25 @@ class Block extends DisplayObject implements IBlock {
 
     MouseUp() {
         this.IsPressed = false;
+        this._Duplicable = true;
     }
 
     MouseMove(point: Point) {
         if (this.IsPressed){
-            point = this.Grid.ConvertTransformedToBase(point);
-            point = this.Grid.SnapToGrid(point);
-            point = this.Grid.ConvertAbsoluteToGridUnits(point);
-            this.Position = point;
+
+            // ALT-DRAG COPY
+            if (this.Grid.AltDown && this._Duplicable) {
+                this.Grid.CreateBlockFromType(this.Reference);
+                this.MouseUp();
+            }
+            // MOVE //
+            else {
+                point = this.Grid.ConvertTransformedToBase(point);
+                point = this.Grid.SnapToGrid(point);
+                point = this.Grid.ConvertAbsoluteToGridUnits(point);
+                this.Position = point;
+            }
+
         }
     }
 

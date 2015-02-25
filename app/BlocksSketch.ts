@@ -58,6 +58,7 @@ class BlocksSketch extends Grid {
     public BlockCreator: BlockCreator;
 
 
+
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
@@ -106,15 +107,17 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+        // METRICS //
         this.Metrics();
-
         this._PointerPoint = new Point();
+
+        // SOUNDCLOUD //
         var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
         SC.initialize({
             client_id: id
         });
 
-
+        // TRANSFORMER //
         // todo: make these default values
         this._Transformer = new Transformer();
         this._Transformer.ZoomLevel = 0;
@@ -137,10 +140,21 @@ class BlocksSketch extends Grid {
         this._ConnectionLines = new ConnectionLines(this);
 
         var id = Utils.Url.GetQuerystringParameter('c');
-
         if(id) {
             App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
         }
+
+        // TEMP LISTENER //
+        document.addEventListener('keydown', (e) => {
+            if (e.keyCode==18) {
+                this.AltDown = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            this.AltDown = false;
+        });
+
     }
 
 
@@ -386,7 +400,7 @@ class BlocksSketch extends Grid {
         }
 
         if (collision) {
-            this.IsDraggingABlock = true;
+            this.IsDraggingABlock = true; // for trashcan to know
         }
 
 
@@ -658,9 +672,12 @@ class BlocksSketch extends Grid {
     }
 
     CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
+        super.CreateBlockFromType(m);
 
+        var ref = m;
         var block: IBlock = new m(this, this._PointerPoint);
         block.Id = this.GetId();
+        block.Reference = ref;
 
         // todo: should this go in command handler?
         block.Click.on((block: IBlock) => {

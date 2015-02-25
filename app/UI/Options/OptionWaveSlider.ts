@@ -4,8 +4,8 @@
 
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import App = require("./../App");
-import ParametersPanel = require("./ParametersPanel");
+import App = require("./../../App");
+import ParametersPanel = require("./../ParametersPanel");
 
 class WaveSlider extends Option{
 
@@ -63,11 +63,11 @@ class WaveSlider extends Option{
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this._Waveform.length!==0) {
             for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.4)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
             }
             ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
             for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.4)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
             }
         }
         ctx.closePath();
@@ -76,7 +76,6 @@ class WaveSlider extends Option{
         ctx.globalAlpha = 0.05;
         ctx.strokeStyle = "#282b31";
         //ctx.fillStyle = App.Palette[1];// WHITE
-
         //ctx.fillRect(panel.Margin,y,panel.Range,height);
         ctx.globalAlpha = 1;
         ctx.lineWidth = 1;
@@ -104,11 +103,11 @@ class WaveSlider extends Option{
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this._Waveform.length!==0) {
             for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.4)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
             }
             ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
             for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.4)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
             }
         }
         ctx.closePath();
@@ -124,7 +123,7 @@ class WaveSlider extends Option{
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this._Waveform.length!==0) {
             for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.4)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
             }
             ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
         }
@@ -167,7 +166,8 @@ class WaveSlider extends Option{
 
 
         // GRAB TRIANGLES //
-        var dragWidth = (height*0.666) * 0.2;
+        //var dragWidth = (height*0.666) * 0.2;
+        var dragWidth = (height) * 0.2;
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);

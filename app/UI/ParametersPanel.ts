@@ -6,14 +6,15 @@ import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
 import BlocksSketch = require("./../BlocksSketch");
-import Option = require("./Option");
-import Slider = require("./OptionSlider");
-import WaveSlider = require("./OptionWaveSlider");
-import Buttons = require("./OptionButtonSelect");
-import ADSR = require("./OptionADSR");
-import Parametric = require("./OptionParametric");
-import OptionHandle = require("./OptionHandle");
-import OptionSubHandle = require("./OptionSubHandle");
+import Option = require("./Options/Option");
+import Slider = require("./Options/OptionSlider");
+import WaveSlider = require("./Options/OptionWaveSlider");
+import Sample = require("./Options/OptionSample");
+import Buttons = require("./Options/OptionButtonSelect");
+import ADSR = require("./Options/OptionADSR");
+import Parametric = require("./Options/OptionParametric");
+import OptionHandle = require("./Options/OptionHandle");
+import OptionSubHandle = require("./Options/OptionSubHandle");
 import DisplayObject = require("../DisplayObject");
 
 class ParametersPanel extends DisplayObject {
@@ -97,9 +98,12 @@ class ParametersPanel extends DisplayObject {
             if (json.parameters[i].type == "slider") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
+            } else if (json.parameters[i].type == "sample") {
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "waveslider") {
-                getHeight += 72;
-                optionHeight[i] = 72 * units;
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "buttons") {
                 getHeight += 144;
                 optionHeight[i] = 144 * units;
@@ -204,10 +208,12 @@ class ParametersPanel extends DisplayObject {
                     sliderX = this.linPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
                     log = false;
                 }
-
-
                 optionList.push(new WaveSlider(new Point(sliderX,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,option.props.spread));
+            }
 
+            // SAMPLE LOADER //
+            else if (option.type == "sample") {
+                optionList.push(new Sample(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.props.user,option.setting));
             }
 
 

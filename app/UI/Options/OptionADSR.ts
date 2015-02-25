@@ -3,10 +3,10 @@
  */
 
 
-import App = require("./../App");
+import App = require("./../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import ParametersPanel = require("./ParametersPanel");
+import ParametersPanel = require("./../ParametersPanel");
 import OptionHandle = require("./OptionHandle");
 
 class ADSR extends Option{

@@ -36,6 +36,9 @@ interface IOption {
 
     Spread: number;
 
+    Track: string;
+    User: string;
+
 
     Draw(ctx,units,i,panel): void;
 

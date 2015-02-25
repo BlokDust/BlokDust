@@ -2,6 +2,7 @@ import ScaleTransform = Fayde.Media.ScaleTransform;
 import TranslateTransform = Fayde.Media.TranslateTransform;
 import TransformGroup = Fayde.Media.TransformGroup;
 import BlockSprites = require("./Blocks/BlockSprites");
+import IBlock = require("./Blocks/IBlock");
 
 class Grid extends Fayde.Drawing.SketchContext {
 
@@ -17,6 +18,8 @@ class Grid extends Fayde.Drawing.SketchContext {
     public TxtBody: string;
     public TxtItalic: string;
     public TxtData: string;
+    public AltDown: boolean = false;
+
 
     private _TransformGroup: TransformGroup;
 
@@ -172,6 +175,11 @@ class Grid extends Fayde.Drawing.SketchContext {
         // x = 1 / 10 * height
         return (1 / this.Unit.height) * this.Height;
     }*/
+
+    // TEMP // TODO: Blocks should reference BlocksSketch instead of Grid, all Grid & BlocksSketch functions will then be accessible
+    CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }) {
+
+    }
 
     Draw() {
         // draw grid

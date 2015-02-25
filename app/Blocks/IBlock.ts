@@ -4,6 +4,7 @@ import Particle = require("../Particle");
 
 interface IBlock extends IDisplayObject{
     Id: number;
+    Reference;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Outline: Point[];
     IsPressed: boolean;
