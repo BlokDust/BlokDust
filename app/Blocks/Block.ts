@@ -22,7 +22,7 @@ class Block extends DisplayObject implements IBlock {
     public Outline: Point[] = [];
     public ZIndex;
     public ParamJson;
-
+    private _Duplicable: boolean = false;
 
     public BlockType: BlockType;
 
@@ -90,16 +90,16 @@ class Block extends DisplayObject implements IBlock {
 
     MouseUp() {
         this.IsPressed = false;
+        this._Duplicable = true;
     }
 
     MouseMove(point: Point) {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if (this.Grid.AltDown) {
+            if (this.Grid.AltDown && this._Duplicable) {
                 this.Grid.CreateBlockFromType(this.Reference);
                 this.MouseUp();
-                this.Grid.AltDown = false;
             }
             // MOVE //
             else {
