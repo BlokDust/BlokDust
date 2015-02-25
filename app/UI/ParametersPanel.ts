@@ -8,6 +8,7 @@ import IBlock = require("./../Blocks/IBlock");
 import BlocksSketch = require("./../BlocksSketch");
 import Option = require("./Option");
 import Slider = require("./OptionSlider");
+import WaveSlider = require("./OptionWaveSlider");
 import Buttons = require("./OptionButtonSelect");
 import ADSR = require("./OptionADSR");
 import Parametric = require("./OptionParametric");
@@ -33,6 +34,7 @@ class ParametersPanel extends DisplayObject {
     private _PanelCloseRoll: boolean;
     public SelectedBlock: IBlock;
     public InitJson;
+    private _JsonMemory;
 
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
@@ -75,6 +77,7 @@ class ParametersPanel extends DisplayObject {
 
     Populate(json,open) {
 
+        this._JsonMemory = json;
         var units = this.Sketch.Unit.width;
         var ctx = this._Ctx;
         var dataType = units*10;
@@ -94,6 +97,9 @@ class ParametersPanel extends DisplayObject {
             if (json.parameters[i].type == "slider") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
+            } else if (json.parameters[i].type == "waveslider") {
+                getHeight += 72;
+                optionHeight[i] = 72 * units;
             } else if (json.parameters[i].type == "buttons") {
                 getHeight += 144;
                 optionHeight[i] = 144 * units;
@@ -183,6 +189,28 @@ class ParametersPanel extends DisplayObject {
 
             }
 
+            // WAVE SLIDER //
+            else if (option.type == "waveslider") {
+                var sliderO = this.Margin;
+                var waveform = [];
+                if (option.props.wavearray) {
+                    waveform = option.props.wavearray;
+                }
+                var log = option.props.logarithmic;
+                var sliderX;
+                if (log==true) {
+                    sliderX = this.logPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
+                } else {
+                    sliderX = this.linPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
+                    log = false;
+                }
+
+
+                optionList.push(new WaveSlider(new Point(sliderX,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,option.props.spread));
+
+            }
+
+
             // BUTTONS //
             else if (option.type == "buttons") {
                 var value = 0;
@@ -270,6 +298,31 @@ class ParametersPanel extends DisplayObject {
 
 
     }
+
+    UpdateOptions(json) {
+
+        // GET NUMBER OF OPTIONS //
+        var n = json.parameters.length;
+
+        for (var i=0;i<n;i++) {
+
+            var option = json.parameters[i];
+
+
+            // SLIDER //
+            if (option.type == "slider") {
+                this.Options[i].Value = option.props.value;
+            }
+
+            // WAVE SLIDER //
+            else if (option.type == "waveslider") {
+                this.Options[i].Value = option.props.value;
+                this.Options[i].Spread = option.props.spread;
+            }
+
+        }
+    }
+
 
     //-------------------------------------------------------------------------------------------
     //  DRAWING
@@ -378,6 +431,18 @@ class ParametersPanel extends DisplayObject {
         ctx.stroke();
     }
 
+    vertFill(x,y,w,h,s) {
+        var ctx = this._Ctx;
+        var lineNo = Math.round(w / s);
+        x = Math.round(x);
+        ctx.beginPath();
+        for (var j=0;j<lineNo;j++) {
+            ctx.moveTo(x + (s*j), y);
+            ctx.lineTo(x + (s*j), y + h);
+        }
+        ctx.stroke();
+    }
+
 
     NumberWithCommas(x) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -395,7 +460,7 @@ class ParametersPanel extends DisplayObject {
         psTween.onUpdate(function() {
             panel.Scale = this.x;
         });
-        psTween.start(this._LastVisualTick);
+        psTween.start(this.LastVisualTick);
         psTween.easing( TWEEN.Easing.Quintic.InOut );
     }
 
@@ -470,7 +535,7 @@ class ParametersPanel extends DisplayObject {
     MouseMove(mx,my) {
         this.RolloverCheck(mx,my);
         for (var i=0;i<this.Options.length;i++) {
-            if (this.Options[i].Type=="slider") {
+            if (this.Options[i].Type=="slider" || this.Options[i].Type == "waveslider") {
                 if (this.Options[i].Selected) {
                     this.SliderSet(i, mx);
                 }
@@ -507,7 +572,7 @@ class ParametersPanel extends DisplayObject {
         for (var i=0;i<this.Options.length;i++) {
             var units = this.Sketch.Unit.width;
 
-            if (this.Options[i].Type == "slider") {
+            if (this.Options[i].Type == "slider" || this.Options[i].Type == "waveslider") {
                 this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.Height,mx,my);
             }
             else if (this.Options[i].Type == "ADSR") {
@@ -624,6 +689,10 @@ class ParametersPanel extends DisplayObject {
         console.log("" + object[""+setting] +" | "+ object[""+value]);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetValue(object[""+setting],object[""+value]);
+
+        // UPDATE VALUES IN OTHER OPTIONS //
+        this.SelectedBlock.OpenParams();
+        this.UpdateOptions(this.SelectedBlock.ParamJson);
     }
 
 

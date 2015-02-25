@@ -109,6 +109,10 @@ class BlocksSketch extends Grid {
         this.Metrics();
 
         this._PointerPoint = new Point();
+        var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
+        SC.initialize({
+            client_id: id
+        });
 
 
         // todo: make these default values

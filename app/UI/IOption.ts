@@ -34,6 +34,7 @@ interface IOption {
     ButtonStyle: number;
     ButtonNo: number;
 
+    Spread: number;
 
 
     Draw(ctx,units,i,panel): void;
