@@ -11,8 +11,7 @@ class Gain extends Effect {
     constructor(grid: Grid, position: Point){
 
         this.Effect = App.AudioMixer.Master.context.createGain();
-        this.Effect.gain.value = 0.5;
-        this.SetValue("gain", 0.1);
+        this.Effect.gain.value = 1.2;
 
         super(grid, position);
 
@@ -33,28 +32,18 @@ class Gain extends Effect {
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
 
-        if (param == "gain") {
-            //TODO: DO SOME MATH TO MAKE THE NUMBERS BETTER
-            value  = (value + 6) * 0.5;
-        }
-
-        this.Effect.gain.value = value;
+        this.Effect.gain.value = (value/10)+1;
     }
 
     GetValue(param: string) {
         super.GetValue(param);
-        var val;
+        var val = (this.Effect.gain.value-1)*10;
 
-        if (param == "gain") {
-            val = (this.Effect.gain.value * 2) - 6;
-        }
         return val;
     }
 
     OpenParams() {
         super.OpenParams();
-
-
 
         this.ParamJson =
         {

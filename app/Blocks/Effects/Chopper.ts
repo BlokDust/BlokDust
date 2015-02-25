@@ -1,7 +1,7 @@
+import App = require("../../App");
 import Gain = require("./Gain");
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
 
 class Chopper extends Effect {
 
@@ -10,12 +10,11 @@ class Chopper extends Effect {
     public Polarity: number;
     public Transport;
     public Timer;
-    public Effect: Tone.Signal;
+    public Effect: GainNode;
 
     constructor(grid: Grid, position: Point){
 
-        this.Effect = new Tone.Signal();
-        this.Effect.output.gain.value = 5; //TODO: This is shit
+        this.Effect = App.AudioMixer.Master.context.createGain();
 
         super(grid, position);
 
@@ -56,7 +55,8 @@ class Chopper extends Effect {
     Delete(){
         //this.Transport.stop();
         clearTimeout(this.Timer);
-        this.Effect.dispose();
+        this.Effect.disconnect();
+        this.Effect = null;
     }
 
     OpenParams() {
@@ -101,9 +101,7 @@ class Chopper extends Effect {
         if (param == "rate") {
             this.Rate = Math.round(151-value);
         } else if (param == "gain") {
-            //TODO: DO SOME MATH TO MAKE THE NUMBERS BETTER
-            value  = (value + 10) * 0.5;
-            this.Effect.output.gain.value = value;
+            this.Effect.gain.value = value/5;
         } else {
             this.Depth = value
         }

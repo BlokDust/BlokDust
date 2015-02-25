@@ -153,12 +153,10 @@ class Source extends Block implements ISource {
         var end = this.EffectsChainOutput;
 
         if (effects.length) {
-            var mono = new Tone.Mono();
 
             start.disconnect();
 
-            start.connect(mono);
-            mono.connect(effects[0].Effect);
+            start.connect(effects[0].Effect);
             var currentUnit = effects[0].Effect;
 
             for (var i = 1; i < effects.length; i++) {
