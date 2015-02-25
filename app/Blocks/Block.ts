@@ -98,6 +98,7 @@ class Block extends DisplayObject implements IBlock {
             // ALT-DRAG COPY
             if (this.Grid.AltDown) {
                 this.Grid.CreateBlockFromType(this.Reference);
+                this.MouseUp();
                 this.Grid.AltDown = false;
             }
             // MOVE //
