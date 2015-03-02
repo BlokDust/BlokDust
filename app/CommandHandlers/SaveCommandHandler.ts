@@ -11,8 +11,11 @@ class SaveCommandHandler implements ICommandHandler {
     }
 
     Execute(): void{
-        var op:IOperation = new SaveOperation(App.Serialize());
-        App.OperationManager.Do(op);
+        var op:IOperation = new SaveOperation(App.Serialize(), App.CompositionId);
+        App.OperationManager.Do(op).then((result) => {
+            App.CompositionId = result.Id;
+            console.log(result.Id, result.Message);
+        });
     }
 }
 

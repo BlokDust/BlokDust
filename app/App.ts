@@ -21,8 +21,9 @@ class App{
     static OperationManager: OperationManager;
     static ResourceManager: ResourceManager;
     static CommandManager: CommandManager;
+    static CompositionId: string;
     static Fonts: Fonts;
-    static Blocks: DisplayObjectCollection<any>;
+    static Blocks: DisplayObjectCollection<IBlock>;
     static Sources: ObservableCollection<ISource>;
     static Effects: ObservableCollection<IEffect>;
     static AudioMixer: AudioMixer;
@@ -57,8 +58,8 @@ class App{
                 var block = App.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
-                if ((<ISource>block.Effects)){
-                    App.Sources.Add(block);
+                if ((<ISource>block).Effects){
+                    App.Sources.Add((<ISource>block));
                 }
             }
 
@@ -68,8 +69,8 @@ class App{
                 var block = App.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
-                if (!(<ISource>block.Effects)){
-                    App.Effects.Add(block);
+                if (!(<ISource>block).Effects){
+                    App.Effects.Add((<IEffect>block));
                 }
             }
         }, this);
@@ -86,9 +87,11 @@ class App{
     }
 
     static Serialize(): string {
-
         return Serializer.Serialize(App.Blocks.ToArray());
+    }
 
+    static Deserialize(json: string): IBlock[] {
+        return Serializer.Deserialize(json);
     }
 }
 

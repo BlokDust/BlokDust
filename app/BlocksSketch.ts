@@ -140,6 +140,7 @@ class BlocksSketch extends Grid {
         this._ConnectionLines = new ConnectionLines(this);
 
         var id = Utils.Url.GetQuerystringParameter('c');
+
         if(id) {
             App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
         }

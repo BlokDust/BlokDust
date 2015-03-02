@@ -82,8 +82,12 @@ class Serializer {
         return b;
     }
 
-    public static Deserialize(){
+    public static Deserialize(json: string): IBlock[]{
+        var blocks: IBlock[] = [];
 
+
+
+        return blocks;
     }
 
 }

@@ -1,4 +1,6 @@
+import App = require("../../App");
 import IOperation = require("./IOperation");
+import IBlock = require("../../Blocks/IBlock");
 
 class LoadOperation<String> implements IOperation
 {
@@ -20,8 +22,10 @@ class LoadOperation<String> implements IOperation
                 dataType: 'json',
                 contentType: 'application/json'
             }).done(function(data){
-                console.log(data);
-                resolve();
+                var blocks: IBlock[] = App.Deserialize(data.Composition);
+                App.Blocks.Clear();
+                App.Blocks.AddRange(blocks);
+                resolve(data);
             });
 
         });

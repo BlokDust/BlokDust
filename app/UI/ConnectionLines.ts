@@ -4,7 +4,7 @@
 import App = require("../App");
 import BlocksSketch = require("./../BlocksSketch");
 import IEffect = require("../Blocks/IEffect");
-
+import ISource = require("../Blocks/ISource");
 
 class ConnectionLines {
 
@@ -26,12 +26,12 @@ class ConnectionLines {
 
         for (var j=0; j<App.Blocks.Count; j++) {
             var block = App.Blocks.GetValueAt(j);
-            if (block.Effects) {
+            if ((<ISource>block).Effects) {
 
 
 
                 // draw connections to modifiers
-                var modifiers = block.Effects.ToArray();
+                var modifiers = (<ISource>block).Effects.ToArray();
 
                 var grd = this._Sketch.ScaledCellWidth.width; // this.Grid.Width / this.Grid.Divisor;
 
