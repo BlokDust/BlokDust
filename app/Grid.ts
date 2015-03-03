@@ -177,9 +177,9 @@ class Grid extends Fayde.Drawing.SketchContext {
     }*/
 
     // TEMP // TODO: Blocks should reference BlocksSketch instead of Grid, all Grid & BlocksSketch functions will then be accessible
-    CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }) {
-
-    }
+    //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }) {
+    //
+    //}
 
     Draw() {
         // draw grid

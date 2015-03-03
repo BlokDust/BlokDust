@@ -33,11 +33,10 @@ class Source extends Block implements ISource {
     public PolySources: any[];
     public PolyEnvelopes: any[];
 
-    constructor(grid: Grid, position: Point) {
-        super(grid, position);
+    Init(): void {
+        super.Init();
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
-
 
         if (this.BlockType != BlockType.Power) {
 

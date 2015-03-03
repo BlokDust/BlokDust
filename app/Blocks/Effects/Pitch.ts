@@ -6,11 +6,11 @@ class Pitch extends Effect {
 
     public PitchIncrement: number;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.PitchIncrement = 1.5; // Pitch decreases by 4ths
 
-        super(grid, position);
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, -1),new Point(0, 1));
     }

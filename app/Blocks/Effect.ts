@@ -14,8 +14,8 @@ class Effect extends Block implements IEffect {
     Source: ISource;
     public Sources: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
-    constructor(grid: Grid, position: Point) {
-        super(grid, position);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.OpenParams();
     }

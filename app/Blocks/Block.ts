@@ -26,12 +26,10 @@ class Block extends DisplayObject implements IBlock {
 
     public BlockType: BlockType;
 
-    constructor(grid: Grid, position: Point) {
-        super(grid);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
-        this.Grid = grid;
-
-        this.Position = position;
+        if (!this.Position) throw new Exception("Position not specified for Block");
 
         this.Update();
     }
@@ -98,7 +96,7 @@ class Block extends DisplayObject implements IBlock {
 
             // ALT-DRAG COPY
             if (this.Grid.AltDown && this._Duplicable) {
-                this.Grid.CreateBlockFromType(this.Reference);
+                (<BlocksSketch>this.Grid).CreateBlockFromType(this.Reference);
                 this.MouseUp();
             }
             // MOVE //

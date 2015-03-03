@@ -6,12 +6,12 @@ class Scuzz extends Effect {
 
     LFO: Tone.LFO;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.LFO = new Tone.LFO(100, -1000, 1000);
         this.LFO.setType('sawtooth');
 
-        super(grid, position);
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
     }

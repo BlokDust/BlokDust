@@ -6,10 +6,10 @@ class Reverb extends Effect {
 
     public Effect: Tone.Freeverb;
 
-    constructor(grid: Grid, position: Point){
-        this.Effect = new Tone.Freeverb(0.7, 0.5);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
-        super(grid, position);
+        this.Effect = new Tone.Freeverb(0.7, 0.5);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));

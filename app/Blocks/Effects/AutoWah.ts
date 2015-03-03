@@ -6,7 +6,9 @@ class AutoWah extends Effect {
 
     public Effect: Tone.AutoWah;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
+
         this.Effect = new Tone.AutoWah({
             "baseFrequency": 100,
             "octaves": 5,
@@ -23,8 +25,6 @@ class AutoWah extends Effect {
         this.Effect.setOctaves(5);
         this.Effect.setBaseFrequency(100);
         this.Effect.dryWet.setDry(0.6);
-
-        super(grid, position);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(-2, 1));

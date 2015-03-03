@@ -1,6 +1,7 @@
 import Size = Fayde.Utils.Size;
 import IDisplayObject = require("../IDisplayObject");
 import Particle = require("../Particle");
+import Grid = require("../Grid");
 
 interface IBlock extends IDisplayObject{
     Id: number;
@@ -11,7 +12,8 @@ interface IBlock extends IDisplayObject{
     IsSelected: boolean;
     Position: Point;
     LastPosition: Point;
-    ParamJson;
+    ParamJson: any;
+    Grid: Grid;
     Update(): void;
     Draw(): void;
     MouseDown(): void;

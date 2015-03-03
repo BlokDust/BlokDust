@@ -9,13 +9,12 @@ class ToneSource extends Source {
     public Frequency: number;
     public Envelope: any;
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
+
         this.BlockType = BlockType.ToneSource;
         this.Frequency = 440;
         this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
-
-
-        super(grid, position);
 
         this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Envelope.connect(this.Source.output.gain);

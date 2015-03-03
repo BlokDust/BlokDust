@@ -14,10 +14,12 @@ import Fonts = require("./UI/Fonts");
 import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
+import Grid = require("./Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class App{
 
+    static Grid: Grid;
     static OperationManager: OperationManager;
     static ResourceManager: ResourceManager;
     static CommandManager: CommandManager;

@@ -12,12 +12,11 @@ class ConnectionLines {
     private _GridCell: number;
     private _Sketch: BlocksSketch;
 
-    constructor(sketch: BlocksSketch) {
+    Init(sketch: BlocksSketch): void {
 
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this._GridCell = sketch.CellWidth.width;
-
     }
 
     Draw() {

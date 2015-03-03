@@ -12,11 +12,9 @@ class Chopper extends Effect {
     public Timer;
     public Effect: GainNode;
 
-    constructor(grid: Grid, position: Point){
-
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
         this.Effect = App.AudioMixer.Master.context.createGain();
-
-        super(grid, position);
 
         this.Rate = 50;
         this.Depth = 4;

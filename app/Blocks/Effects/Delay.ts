@@ -6,13 +6,12 @@ class Delay extends Effect {
 
     public Effect: Tone.PingPongDelay;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effect = new Tone.PingPongDelay('8n');
         this.Effect.setFeedback(0.4);
         this.Effect.dryWet.setDry(0.5);
-
-        super(grid, position);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 1),new Point(-1, 2));

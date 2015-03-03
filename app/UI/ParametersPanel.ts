@@ -29,7 +29,6 @@ class ParametersPanel extends DisplayObject {
     public Sketch;
     public Options: Option[];
     public SliderColours: string[];
-    private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
     private _SliderRoll: boolean[];
     private _PanelCloseRoll: boolean;
@@ -40,10 +39,13 @@ class ParametersPanel extends DisplayObject {
     private _Timer: Fayde.ClockTimer;
     private _LastVisualTick: number = new Date(0).getTime();
 
-    constructor(sketch: BlocksSketch) {
-        super(sketch);
+    constructor() {
+        super();
+    }
 
-        this._Ctx = sketch.Ctx;
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
+
         this._Units = 1.7;
         this.Position = new Point(0,0);
         this.Size = new Size(1,1);
@@ -53,7 +55,6 @@ class ParametersPanel extends DisplayObject {
         this._Name = "";
         this._NameWidth = 0;
 
-        this.Sketch = sketch;
         this.Options = [];
         this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
         this._SliderRoll = [];
@@ -68,7 +69,6 @@ class ParametersPanel extends DisplayObject {
             ]
         };
 
-
         this.Populate(this.InitJson,false);
     }
 
@@ -80,7 +80,7 @@ class ParametersPanel extends DisplayObject {
 
         this._JsonMemory = json;
         var units = this.Sketch.Unit.width;
-        var ctx = this._Ctx;
+        var ctx = this.Ctx;
         var dataType = units*10;
         this._PanelCloseRoll = false;
 
@@ -153,7 +153,7 @@ class ParametersPanel extends DisplayObject {
 
         // POPULATE PANEL //
         this.Position.x = 250*units;
-        this.Position.y = Math.round(this._Ctx.canvas.height*0.6);
+        this.Position.y = Math.round(this.Ctx.canvas.height*0.6);
         this.Size.Width = panelW;
         this.Size.Height = panelH;
         this.Margin = panelM;
@@ -337,7 +337,7 @@ class ParametersPanel extends DisplayObject {
 
     Draw() {
         var units = this.Sketch.Unit.width;
-        var ctx = this._Ctx;
+        var ctx = this.Ctx;
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
 
@@ -391,7 +391,7 @@ class ParametersPanel extends DisplayObject {
     // PANEL BLACK BG //
     panelDraw(x,y) {
         var units = this.Sketch.Unit.width;
-        var ctx = this._Ctx;
+        var ctx = this.Ctx;
 
         ctx.beginPath();
         ctx.moveTo(x + (44*units), y - (this.Size.Height*0.5)); // tl
@@ -413,7 +413,7 @@ class ParametersPanel extends DisplayObject {
 
 
     diagonalFill(x,y,w,h,s) {
-        var ctx = this._Ctx;
+        var ctx = this.Ctx;
         var lineNo = Math.round((w+h) / s);
         var pos1 = new Point(0,0);
         var pos2 = new Point(0,0);
@@ -438,7 +438,7 @@ class ParametersPanel extends DisplayObject {
     }
 
     vertFill(x,y,w,h,s) {
-        var ctx = this._Ctx;
+        var ctx = this.Ctx;
         var lineNo = Math.round(w / s);
         x = Math.round(x);
         ctx.beginPath();

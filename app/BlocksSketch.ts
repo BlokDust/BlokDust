@@ -39,7 +39,6 @@ declare var ParamTimeout: boolean; //TODO: better way than using global? Needs t
 class BlocksSketch extends Grid {
 
     private _SelectedBlock: IBlock;
-    private _Id: number = 0;
     private _IsPointerDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
@@ -67,6 +66,7 @@ class BlocksSketch extends Grid {
     constructor() {
         super();
 
+        App.Grid = this;
         this._DisplayList = new DisplayList(App.Blocks);
 
         // register command handlers
@@ -100,7 +100,7 @@ class BlocksSketch extends Grid {
 
 
     public GetId(): number {
-        return this._Id++;
+        return App.Blocks.Count++;
     }
 
 
@@ -113,9 +113,12 @@ class BlocksSketch extends Grid {
 
         // SOUNDCLOUD //
         var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-        SC.initialize({
-            client_id: id
-        });
+
+        if (typeof(SC) !== "undefined"){
+            SC.initialize({
+                client_id: id
+            });
+        }
 
         // TRANSFORMER //
         // todo: make these default values
@@ -130,14 +133,29 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // INSTANCES //
-        this.BlockSprites = new BlockSprites(this);
+        this.BlockSprites = new BlockSprites();
+        this.BlockSprites.Init(this);
+
         this.BlockCreator = new BlockCreator();
-        this._ParamsPanel = new ParametersPanel(this);
-        this._Header = new Header(this);
-        this._ToolTip = new ToolTip(this);
-        this._ZoomButtons = new ZoomButtons(this);
-        this._TrashCan = new TrashCan(this);
-        this._ConnectionLines = new ConnectionLines(this);
+
+        this._ParamsPanel = new ParametersPanel();
+        this._ParamsPanel.Init(this);
+
+        this._Header = new Header();
+        this._Header.BlockCreator = this.BlockCreator;
+        this._Header.Init(this);
+
+        this._ToolTip = new ToolTip();
+        this._ToolTip.Init(this);
+
+        this._ZoomButtons = new ZoomButtons();
+        this._ZoomButtons.Init(this);
+
+        this._TrashCan = new TrashCan();
+        this._TrashCan.Init(this);
+
+        this._ConnectionLines = new ConnectionLines();
+        this._ConnectionLines.Init(this);
 
         var id = Utils.Url.GetQuerystringParameter('c');
 
@@ -672,13 +690,13 @@ class BlocksSketch extends Grid {
         }
     }
 
-    CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
-        super.CreateBlockFromType(m);
-
-        var ref = m;
-        var block: IBlock = new m(this, this._PointerPoint);
+    //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
+    CreateBlockFromType<T extends IBlock>(m: {new(): T; }){
+        var block: IBlock = new m();
+        block.Position = this._PointerPoint;
+        block.Init(this);
         block.Id = this.GetId();
-        block.Reference = ref;
+        block.Reference = m; // todo: rename to Type
 
         // todo: should this go in command handler?
         block.Click.on((block: IBlock) => {

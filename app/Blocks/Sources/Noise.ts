@@ -10,13 +10,13 @@ class Noise extends Source {
     public DelayedRelease: number;
     public Noise: any;
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
+
         this.BlockType = BlockType.Noise;
 
         this.Source = new Tone.Noise('brown');
         this.PlaybackRate = 1;
-
-        super(grid, position);
 
         this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Envelope.connect(this.Source.output.gain);

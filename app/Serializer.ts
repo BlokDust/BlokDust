@@ -2,6 +2,9 @@ import App = require("./App");
 import IEffect = require("./Blocks/IEffect");
 import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
+import Grid = require("./Grid");
+import Tone = require("./Blocks/Sources/ToneSource");
+import BitCrusher = require("./Blocks/Effects/BitCrusher");
 
 class Serializer {
 
@@ -22,15 +25,15 @@ class Serializer {
             Composition: []
         };
 
-        this._ParseBlocks(json.Composition, blocks);
+        this._SerializeBlocks(json.Composition, blocks);
 
         return JSON.stringify(json);
     }
 
-    private static _ParseBlocks(list: any[], blocks: any[], parentBlock?: any): void {
+    private static _SerializeBlocks(list: any[], blocks: any[], parentBlock?: any): void {
         for(var i = 0; i < blocks.length; i++) {
 
-            var b = this._ParseBlock(blocks[i], parentBlock);
+            var b = this._SerializeBlock(blocks[i], parentBlock);
 
             if (b) list.push(b);
         }
@@ -40,7 +43,7 @@ class Serializer {
         return (<any>block).constructor.name;
     }
 
-    private static _ParseBlock(block: IBlock, parentBlock?: any): any {
+    private static _SerializeBlock(block: IBlock, parentBlock?: any): any {
 
         var d = this._Dictionary[block.Id];
 
@@ -65,7 +68,7 @@ class Serializer {
                 b.Effects.push(parentBlock.Id);
             }
 
-            this._ParseBlocks(b.Effects, (<ISource>block).Effects.ToArray(), b);
+            this._SerializeBlocks(b.Effects, (<ISource>block).Effects.ToArray(), b);
         }
 
         // if it's an effect block
@@ -76,20 +79,45 @@ class Serializer {
                 b.Sources.push(parentBlock.Id);
             }
 
-            this._ParseBlocks(b.Sources, (<IEffect>block).Sources.ToArray(), b);
+            this._SerializeBlocks(b.Sources, (<IEffect>block).Sources.ToArray(), b);
         }
 
         return b;
     }
 
     public static Deserialize(json: string): IBlock[]{
+        var parsed: any = JSON.parse(json);
+
         var blocks: IBlock[] = [];
 
-
+        this._DeserializeBlocks(parsed.Composition);
 
         return blocks;
     }
 
+    private static _DeserializeBlocks(blocks: any[]): IBlock[] {
+
+        var deserializedBlocks: IBlock[] = [];
+
+        for (var i = 0; i < blocks.length; i++) {
+            var b = blocks[i];
+
+            var block = this._DeserializeBlock(b);
+
+            deserializedBlocks.push(block);
+        }
+
+        return deserializedBlocks;
+    }
+
+    private static _DeserializeBlock(b: any): IBlock {
+        var block: IBlock = eval("new Tone." + b.Type + "()");
+
+        block.Position = b.Position;
+        block.ParamJson = b.Params;
+
+        return block;
+    }
 }
 
 export = Serializer;

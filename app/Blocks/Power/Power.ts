@@ -9,9 +9,8 @@ class Power extends Effect {
 
     Name: string;
 
-    constructor(grid: Grid, position: Point){
-
-        super(grid, position);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Name = 'Power';
 

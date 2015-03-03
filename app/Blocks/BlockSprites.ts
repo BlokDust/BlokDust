@@ -18,9 +18,10 @@ class BlockSprites {
     private _XOffset: number;
     private _YOffset: number;
 
-    constructor(grid: Grid) {
-        this.Grid = grid;
-        this.Ctx = grid.Ctx;
+    Init(sketch: Fayde.Drawing.SketchContext) {
+
+        this.Ctx = sketch.Ctx;
+        this.Grid = <Grid>sketch;
         this._Scaled = true;
         this._Position = new Point(0,0);
         this._XOffset = 0;

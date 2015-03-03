@@ -6,7 +6,8 @@ class Chorus extends Effect {
 
     public Effect: Tone.Chorus;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effect = new Tone.Chorus({
             "rate" : 1,
@@ -15,8 +16,6 @@ class Chorus extends Effect {
             "depth" : 0.4,
             "feedback" : 0.2
         });
-
-        super(grid, position);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(0, 1),new Point(-1, 1));

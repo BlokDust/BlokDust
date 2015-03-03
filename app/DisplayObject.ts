@@ -13,14 +13,11 @@ class DisplayObject implements IDisplayObject {
     Width: number;
     Height: number;
     Position: Point;
+    Initialised: boolean = false;
     public Timer: Fayde.ClockTimer;
     public LastVisualTick: number = new Date(0).getTime();
 
-    constructor(sketch: Fayde.Drawing.SketchContext){
-        this.Sketch = sketch;
-
-        this.Timer = new Fayde.ClockTimer();
-        this.Timer.RegisterTimer(this);
+    //constructor(){
 
         // todo: when drawing, use coordinates relative to origin, width and height, not
         // global context. drawing is done initially to RenderCacheCtx.
@@ -33,6 +30,19 @@ class DisplayObject implements IDisplayObject {
         //this.RenderCacheCanvas.style.position = "absolute";
         //this.RenderCacheCanvas.style.left = "-10000px";
         //this.RenderCacheCtx = this.RenderCacheCanvas.getContext('2d');
+    //}
+
+    Init(sketch?: Fayde.Drawing.SketchContext) {
+        if (sketch) this.Sketch = sketch;
+        if (!this.Sketch) throw new Exception("Sketch not specified for DisplayObject");
+
+        this.StartAnimating();
+        this.Initialised = true;
+    }
+
+    StartAnimating(): void {
+        this.Timer = new Fayde.ClockTimer();
+        this.Timer.RegisterTimer(this);
     }
 
     OnTicked (lastTime: number, nowTime: number) {

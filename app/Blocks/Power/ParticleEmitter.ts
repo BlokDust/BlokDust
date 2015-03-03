@@ -12,7 +12,8 @@ class ParticleEmitter extends Source {
     private _rateCounter: number;
 
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
         this.BlockType = BlockType.Power;
 
         this.Params = {
@@ -21,8 +22,6 @@ class ParticleEmitter extends Source {
             rate: 40,
             range: 600
         };
-
-        super(grid, position);
 
         this._rateCounter = 0;
 

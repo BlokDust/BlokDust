@@ -6,10 +6,10 @@ class BitCrusher extends Effect {
 
     public Effect: Tone.BitCrusher;
 
-    constructor(grid: Grid, position: Point){
-        this.Effect = new Tone.BitCrusher(7);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
-        super(grid, position);
+        this.Effect = new Tone.BitCrusher(7);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(1, -2),new Point(1, 0),new Point(0, 1),new Point(-1, 1));

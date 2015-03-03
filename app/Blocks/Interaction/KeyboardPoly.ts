@@ -11,13 +11,12 @@ class KeyboardPoly extends Keyboard {
     public VoicesAmount: number;
     public ActiveVoices: any[];
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.KeysDown = {};
         this.VoicesAmount = 4;
         this.ActiveVoices = [];
-
-        super(grid, position);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));

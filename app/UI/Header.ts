@@ -12,10 +12,8 @@ import MenuItem = require("./MenuItem");
 
 class Header extends DisplayObject{
 
-    private _Ctx: CanvasRenderingContext2D;
     private _Units: number;
-    private _Sketch: BlocksSketch;
-    private _Creator: BlockCreator;
+    public BlockCreator: BlockCreator;
     public Height: number;
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
@@ -30,17 +28,14 @@ class Header extends DisplayObject{
     private _RightOver: boolean;
     public MenuOver: boolean;
 
-    constructor(sketch: BlocksSketch) {
-        super(sketch);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
-        this._Ctx = sketch.Ctx;
-        this._Sketch = sketch;
-        this._Creator = sketch.BlockCreator;
         this._Units = 1.7;
         this.Height = 60;
         this.MenuItems = [];
         this.ItemsPerPage = 6;
-        this.DropDownHeight = (sketch.Width / (this.ItemsPerPage + 1)) / sketch.Unit.width;
+        this.DropDownHeight = (this.Sketch.Width / (this.ItemsPerPage + 1)) / (<Grid>this.Sketch).Unit.width;
         this.DropDown = 0;
         this._SelectedCategory = 0;
         this._MenuCols = [9,5,7,4,3];
@@ -50,144 +45,7 @@ class Header extends DisplayObject{
         this._RightOver = false;
         this.MenuOver = false;
 
-        this.MenuJson = this._Creator.MenuJson;
-
-        /*this.MenuJson =
-        {
-          "categories": [
-
-              {
-                  "name": "Source",
-                  "items": [
-                      {
-                          "name": "Tone",
-                          "id": "ToneSource"
-                      },
-                      {
-                          "name": "Noise",
-                          "id": "Noise"
-                      },
-                      {
-                          "name": "Microphone",
-                          "id": "Microphone"
-                      },
-                      {
-                          "name": "SoundCloud",
-                          "id": "Soundcloud"
-                      },
-                      {
-                          "name": "Recorder",
-                          "id": "Recorder"
-                      }
-                  ]
-              },
-
-              {
-                  "name": "Effects",
-                  "items": [
-                      {
-                          "name": "Autowah",
-                          "id": "AutoWah",
-                          "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
-                      },
-                      {
-                          "name": "Bit Crusher",
-                          "id": "BitCrusher",
-                          "description": "Creates distortion by reducing the audio resolution when connected to any source block."
-                      },
-                      {
-                          "name": "Chomp",
-                          "id": "Chomp",
-                          "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
-                      },
-                      {
-                          "name": "Chopper",
-                          "id": "Chopper",
-                          "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
-                      },
-                      {
-                          "name": "Chorus",
-                          "id": "Chorus",
-                          "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
-                      },
-                      {
-                          "name": "Convolution",
-                          "id": "ConvolutionReverb",
-                          "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
-                      },
-                      {
-                          "name": "Delay",
-                          "id": "Delay",
-                          "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
-                      },
-                      {
-                          "name": "Distortion",
-                          "id": "Distortion",
-                          "description": "A digital clipping distortion. Can connect to any source block."
-                      },
-                      {
-                          "name": "Envelope",
-                          "id": "Envelope",
-                          "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
-                      },
-                      {
-                          "name": "EQ",
-                          "id": "EQ"
-                      },
-                      {
-                          "name": "Filter",
-                          "id": "Filter"
-                      },
-                      {
-                          "name": "Gain",
-                          "id": "Gain"
-                      },
-                      {
-                          "name": "LFO",
-                          "id": "LFO"
-                      },
-                      {
-                          "name": "Phaser",
-                          "id": "Phaser"
-                      },
-                      {
-                          "name": "Pitch",
-                          "id": "Pitch"
-                      },
-                      {
-                          "name": "Reverb",
-                          "id": "Reverb"
-                      },
-                      {
-                          "name": "Scuzz",
-                          "id": "Scuzz"
-                      }
-                  ]
-              },
-
-              {
-                  "name": "Power",
-                  "items": [
-                      {
-                          "name": "Particle Emitter",
-                          "id": "ParticleEmitter"
-                      }
-                  ]
-              },
-
-              {
-                  "name": "Interaction",
-                  "items": [
-                      {
-                          "name": "Keyboard",
-                          "id": "Keyboard"
-                      }
-                  ]
-              }
-
-          ]
-        };*/
-
+        this.MenuJson = this.BlockCreator.MenuJson;
 
         this.Populate(this.MenuJson);
 
@@ -204,14 +62,13 @@ class Header extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
     Populate(json) {
-
-        var units = this._Sketch.Unit.width;
-        var ctx = this._Ctx;
+        var units = (<Grid>this.Sketch).Unit.width;
+        var ctx = this.Ctx;
         var dataType = units*10;
         var gutter = 60;
         var menuCats = [];
 
-        this.DropDownHeight = (this._Sketch.Width / (this.ItemsPerPage + 1)) / units;
+        this.DropDownHeight = (this.Sketch.Width / (this.ItemsPerPage + 1)) / units;
 
 
         // GET NUMBER OF CATEGORIES //
@@ -232,7 +89,7 @@ class Header extends DisplayObject{
         }
 
         // start x for positioning //
-        var catX = ((this._Sketch.Width*0.5) - (menuWidth*0.5));
+        var catX = ((this.Sketch.Width*0.5) - (menuWidth*0.5));
 
 
         // POPULATE MENU //
@@ -256,7 +113,7 @@ class Header extends DisplayObject{
                 var point = new Point(0,(this.Height + (this.DropDownHeight*0.5))*units);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
-                menuCats[i].Items.push(new MenuItem(point,size,name,id,description,this._Sketch));
+                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <BlocksSketch>this.Sketch));
                 menuCats[i].Pages = Math.floor(itemN/this.ItemsPerPage);
             }
 
@@ -274,8 +131,8 @@ class Header extends DisplayObject{
 
 
     Draw() {
-        var units = this._Sketch.Unit.width;
-        var ctx = this._Ctx;
+        var units = (<Grid>this.Sketch).Unit.width;
+        var ctx = this.Ctx;
         var dataType = units*10;
         var headerType = Math.round(units*28);
         var thisHeight = Math.round(this.Height*units);
@@ -285,9 +142,9 @@ class Header extends DisplayObject{
         // BG //
         ctx.fillStyle = App.Palette[2];// Black
         ctx.globalAlpha = 0.16;
-        ctx.fillRect(0,0,this._Sketch.Width,thisHeight + (5*units) + dropDown); // shadow
+        ctx.fillRect(0,0,this.Sketch.Width,thisHeight + (5*units) + dropDown); // shadow
         ctx.globalAlpha = 0.9;
-        ctx.fillRect(0,0,this._Sketch.Width,thisHeight  + dropDown); // solid
+        ctx.fillRect(0,0,this.Sketch.Width,thisHeight  + dropDown); // solid
 
 
         // TT //
@@ -306,7 +163,7 @@ class Header extends DisplayObject{
         if (dropDown>0) {
             ctx.beginPath();
             ctx.moveTo(20*units,thisHeight);
-            ctx.lineTo(this._Sketch.Width-(20*units),thisHeight);
+            ctx.lineTo(this.Sketch.Width-(20*units),thisHeight);
             ctx.stroke();
         }
 
@@ -355,8 +212,8 @@ class Header extends DisplayObject{
                 ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(Math.floor(margin*units),(this.Height)*units);
-                ctx.lineTo(Math.ceil(this._Sketch.Width - (margin*units)),(this.Height)*units);
-                ctx.lineTo(Math.ceil(this._Sketch.Width - (margin*units)),(this.Height + clipHeight)*units);
+                ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),(this.Height)*units);
+                ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),(this.Height + clipHeight)*units);
                 ctx.lineTo(Math.floor(margin*units),(this.Height + clipHeight)*units);
                 ctx.closePath();
                 ctx.clip();
@@ -367,7 +224,7 @@ class Header extends DisplayObject{
                     var xPos = (margin + (this.DropDownHeight*0.5) + (this.DropDownHeight*j) + cat.XOffset)*units;
                     var yPos = cat.YOffset;
                     cat.Items[j].Position.x = xPos; // TODO: shouldn't really be setting position in Draw, but worth setting up update?
-                    if (xPos>0 && xPos<this._Sketch.Width) {
+                    if (xPos>0 && xPos<this.Sketch.Width) {
                         cat.Items[j].Draw(ctx,units,xPos,yPos);
                     }
                 }
@@ -380,7 +237,7 @@ class Header extends DisplayObject{
 
                     if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
                         ctx.globalAlpha = 0.5;
-                        this._Sketch.BlockSprites.Draw(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
+                        (<BlocksSketch>this.Sketch).BlockSprites.Draw(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
                     }
                 }
 
@@ -402,8 +259,8 @@ class Header extends DisplayObject{
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(0, this.Height * units);
-            ctx.lineTo(this._Sketch.Width, this.Height * units);
-            ctx.lineTo(this._Sketch.Width, (this.Height + this.DropDown) * units);
+            ctx.lineTo(this.Sketch.Width, this.Height * units);
+            ctx.lineTo(this.Sketch.Width, (this.Height + this.DropDown) * units);
             ctx.lineTo(0, (this.Height + this.DropDown) * units);
             ctx.closePath();
             ctx.clip();
@@ -427,9 +284,9 @@ class Header extends DisplayObject{
 
             // RIGHT ARROW //
             ctx.beginPath();
-            ctx.moveTo(this._Sketch.Width - (margin * units) + (20 * units), (this.Height + (this.DropDown * 0.5) - 20) * units);
-            ctx.lineTo(this._Sketch.Width - (margin * units) + (40 * units), (this.Height + (this.DropDown * 0.5)) * units);
-            ctx.lineTo(this._Sketch.Width - (margin * units) + (20 * units), (this.Height + (this.DropDown * 0.5) + 20) * units);
+            ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), (this.Height + (this.DropDown * 0.5) - 20) * units);
+            ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), (this.Height + (this.DropDown * 0.5)) * units);
+            ctx.lineTo(this.Sketch.Width - (margin * units) + (20 * units), (this.Height + (this.DropDown * 0.5) + 20) * units);
             ctx.stroke();
 
 
@@ -469,7 +326,7 @@ class Header extends DisplayObject{
 
     MouseDown(point) {
         //this.HitTests(point);
-        var units = this._Sketch.Unit.width;
+        var units = (<Grid>this.Sketch).Unit.width;
 
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
@@ -574,8 +431,8 @@ class Header extends DisplayObject{
     }
 
     HitTests(point) {
-        var units = this._Sketch.Unit.width;
-        var grd = this._Sketch.CellWidth.width;
+        var units = (<Grid>this.Sketch).Unit.width;
+        var grd = (<Grid>this.Sketch).CellWidth.width;
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
@@ -599,7 +456,7 @@ class Header extends DisplayObject{
 
         // SCROLL HIT TEST //
         this._LeftOver = this.HudCheck(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
-        this._RightOver = this.HudCheck(this._Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._RightOver = this.HudCheck(this.Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
 
         // WHOLE MENU //
         this.MenuOver = (point.y < ((this.Height + this.DropDown)*units));

@@ -22,11 +22,10 @@ class Granular extends Source {
     public Waveform: number[];
 
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
         this.BlockType = BlockType.Granular;
         this.Source = new Tone.Signal();
-
-        super(grid, position);
 
         this._IsLoaded = false;
 

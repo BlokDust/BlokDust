@@ -8,7 +8,8 @@ class Chomp extends Effect {
     public Rate: number;
     public Timer;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",
@@ -18,13 +19,7 @@ class Chomp extends Effect {
             "gain" : 25
         });
 
-        super(grid, position);
-
-
         this.Rate = 13;
-
-
-
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 1),new Point(0, 2),new Point(-1, 2));

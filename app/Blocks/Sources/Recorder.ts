@@ -14,11 +14,10 @@ class RecorderBlock extends Source {
     public StopPlaybackOnRecord: boolean;
     public PlaybackRate: number;
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
         this.BlockType = BlockType.Recorder;
         this.Source = new Tone.Signal();
-
-        super(grid, position);
 
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"

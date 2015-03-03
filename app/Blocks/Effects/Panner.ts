@@ -6,13 +6,13 @@ class Panner extends Effect {
 
     public Effect: Tone.AutoPanner;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effect = new Tone.AutoPanner({
             "frequency": 1
         });
 
-        super(grid, position);
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
     }

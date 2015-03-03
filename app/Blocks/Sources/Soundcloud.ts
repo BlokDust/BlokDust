@@ -9,7 +9,9 @@ class Soundcloud extends Source {
     public LoopStartPosition: number;
     public LoopEndPosition: number;
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
+
         this.BlockType = BlockType.Soundcloud;
         this.PlaybackRate = 1;
 
@@ -50,8 +52,6 @@ class Soundcloud extends Source {
          sc.start();
          });
          });*/
-
-        super(grid, position);
 
         this.Envelope = new Tone.AmplitudeEnvelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Source.connect(this.Envelope);

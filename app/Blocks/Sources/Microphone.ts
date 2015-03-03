@@ -6,11 +6,11 @@ import BlockType = Type.BlockType;
 class Microphone extends Source {
 
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
         this.BlockType = BlockType.Microphone;
         this.Source = new Tone.Microphone();
 
-        super(grid, position);
         this.Source.start();
         this.Source.connect(this.EffectsChainInput);
 
