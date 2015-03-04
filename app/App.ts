@@ -5,6 +5,7 @@ import AudioMixer = require("./Core/Audio/AudioMixer");
 import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
+import PointerInputManager = require("./Core/Inputs/PointerInputManager");
 import IEffect = require("./Blocks/IEffect");
 import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
@@ -19,7 +20,6 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class App{
 
-    static Grid: Grid;
     static OperationManager: OperationManager;
     static ResourceManager: ResourceManager;
     static CommandManager: CommandManager;
@@ -32,6 +32,7 @@ class App{
     static InputManager: InputManager;
     static KeyboardInput: KeyboardInput;
     static CommandsInputManager: CommandsInputManager;
+    static PointerInputManager: PointerInputManager;
     static ParticlesPool: PooledFactoryResource<Particle>;
     static Particles: Particle[];
     static Palette: string[];
@@ -82,6 +83,7 @@ class App{
         App.InputManager = new InputManager();
         App.KeyboardInput = new KeyboardInput();
         App.CommandsInputManager = new CommandsInputManager(App.CommandManager);
+        App.PointerInputManager = new PointerInputManager();
 
         App.Particles = [];
         App.Palette = [];

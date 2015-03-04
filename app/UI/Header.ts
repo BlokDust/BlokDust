@@ -326,7 +326,7 @@ class Header extends DisplayObject{
 
     MouseDown(point) {
         //this.HitTests(point);
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
 
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {

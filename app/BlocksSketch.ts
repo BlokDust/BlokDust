@@ -66,7 +66,18 @@ class BlocksSketch extends Grid {
     constructor() {
         super();
 
-        App.Grid = this;
+        App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
+            this.MouseDown(e);
+        }, this);
+
+        App.PointerInputManager.MouseUp.on((s: any, e: MouseEvent) => {
+            this.MouseUp(e);
+        }, this);
+
+        App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
+            this.MouseMove(e);
+        }, this);
+
         this._DisplayList = new DisplayList(App.Blocks);
 
         // register command handlers
@@ -163,7 +174,7 @@ class BlocksSketch extends Grid {
             App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
         }
 
-        // TEMP LISTENER //
+        // todo: use input manager
         document.addEventListener('keydown', (e) => {
             if (e.keyCode==18) {
                 this.AltDown = true;
@@ -341,27 +352,28 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
     // FIRST TOUCHES //
-    MouseDown(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
+    MouseDown(e: MouseEvent){
+        //var point = (<any>e).args.Source.MousePosition;
+        var position: Point = new Point(e.clientX, e.clientY);
 
-        this._PointerDown(point, () => {
+        this._PointerDown(position, () => {
             (<any>e).args.Handled = true;
         });
     }
 
-    MouseUp(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
+    MouseUp(e: MouseEvent){
+        var position: Point = new Point(e.clientX, e.clientY);
 
-        this._PointerUp(point, () => {
+        this._PointerUp(position, () => {
             (<any>e).args.Handled = true;
         });
-        this._CheckHover(point);
+        this._CheckHover(position);
     }
 
-    MouseMove(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
-        this._PointerMove(point);
-        this._CheckHover(point);
+    MouseMove(e: MouseEvent){
+        var position: Point = new Point(e.clientX, e.clientY);
+        this._PointerMove(position);
+        this._CheckHover(position);
     }
 
     TouchDown(e: any){

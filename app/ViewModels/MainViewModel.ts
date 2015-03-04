@@ -21,29 +21,30 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
         this._BlocksSketch.SketchSession = <Fayde.Drawing.SketchSession>e.args.SketchSession;
     }
 
-    BlocksSketch_MouseDown(e: Fayde.Input.MouseEventArgs){
-        this._BlocksSketch.MouseDown(e);
-    }
-
-    BlocksSketch_MouseUp(e: Fayde.Input.MouseEventArgs){
-        this._BlocksSketch.MouseUp(e);
-    }
-
-    BlocksSketch_MouseMove(e: Fayde.Input.MouseEventArgs){
-        this._BlocksSketch.MouseMove(e);
-    }
-
-    BlocksSketch_TouchDown(e: Fayde.Input.TouchEventArgs){
-        this._BlocksSketch.TouchDown(e);
-    }
-
-    BlocksSketch_TouchUp(e: Fayde.Input.TouchEventArgs){
-        this._BlocksSketch.TouchUp(e);
-    }
-
-    BlocksSketch_TouchMove(e: Fayde.Input.TouchEventArgs){
-        this._BlocksSketch.TouchMove(e);
-    }
+    //BlocksSketch_MouseDown(e: Fayde.Input.MouseEventArgs){
+    //    console.log(new Date().getTime(), (<any>e).args.Source.MousePosition);
+    //    this._BlocksSketch.MouseDown(e);
+    //}
+    //
+    //BlocksSketch_MouseUp(e: Fayde.Input.MouseEventArgs){
+    //    this._BlocksSketch.MouseUp(e);
+    //}
+    //
+    //BlocksSketch_MouseMove(e: Fayde.Input.MouseEventArgs){
+    //    this._BlocksSketch.MouseMove(e);
+    //}
+    //
+    //BlocksSketch_TouchDown(e: Fayde.Input.TouchEventArgs){
+    //    this._BlocksSketch.TouchDown(e);
+    //}
+    //
+    //BlocksSketch_TouchUp(e: Fayde.Input.TouchEventArgs){
+    //    this._BlocksSketch.TouchUp(e);
+    //}
+    //
+    //BlocksSketch_TouchMove(e: Fayde.Input.TouchEventArgs){
+    //    this._BlocksSketch.TouchMove(e);
+    //}
 
 }
 
