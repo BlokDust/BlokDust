@@ -45,7 +45,7 @@ class WaveSlider extends Option{
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = App.GetInstance().Palette[1];// Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -55,7 +55,7 @@ class WaveSlider extends Option{
 
 
         var col = panel.SliderColours[(i) - (Math.floor((i)/panel.SliderColours.length)*(panel.SliderColours.length))];
-        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.fillStyle = App.GetInstance().Palette[1];// WHITE
         ctx.fillStyle = col;
         // WAVEFORM //
         ctx.save();
@@ -75,7 +75,7 @@ class WaveSlider extends Option{
 
         ctx.globalAlpha = 0.05;
         ctx.strokeStyle = "#282b31";
-        //ctx.fillStyle = App.Palette[1];// WHITE
+        //ctx.fillStyle = App.GetInstance().Palette[1];// WHITE
         //ctx.fillRect(panel.Margin,y,panel.Range,height);
         ctx.globalAlpha = 1;
         ctx.lineWidth = 1;
@@ -90,7 +90,7 @@ class WaveSlider extends Option{
         var spread = (panel.Range / (this.Max-this.Min)) * this.Spread;
         /*ctx.save();
 
-        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.fillStyle = App.GetInstance().Palette[1];// WHITE
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - (spread*0.5), y);
         ctx.lineTo(x + panel.Margin + (spread*0.5), y);
@@ -133,7 +133,7 @@ class WaveSlider extends Option{
         // LINES //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = ctx.strokeStyle = App.GetInstance().Palette[8];// WHITE
 
         var leftSpread = x + panel.Margin - (spread*0.5);
         if (leftSpread < panel.Margin) {
@@ -176,7 +176,7 @@ class WaveSlider extends Option{
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -187,7 +187,7 @@ class WaveSlider extends Option{
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
         ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

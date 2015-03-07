@@ -61,7 +61,7 @@ class OptionHandle {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8];
+        ctx.fillStyle = App.GetInstance().Palette[8];
         ctx.beginPath();
         ctx.moveTo(x - size, y);
         ctx.lineTo(x, y - size);

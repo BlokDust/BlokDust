@@ -35,7 +35,7 @@ class OptionSample  extends Option{
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = App.GetInstance().Palette[1];// Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -53,14 +53,14 @@ class OptionSample  extends Option{
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
         ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
 
         // INFO BUTTON //
-        ctx.strokeStyle = App.Palette[8];// WHITE
+        ctx.strokeStyle = App.GetInstance().Palette[8];// WHITE
         ctx.lineWidth = 1;
         ctx.textAlign = "center";
         var ix = panel.Margin + (panel.Range*0.575);

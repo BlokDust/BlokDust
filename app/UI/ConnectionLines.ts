@@ -23,8 +23,8 @@ class ConnectionLines {
 
         this._Ctx.beginPath();
 
-        for (var j=0; j<App.Blocks.Count; j++) {
-            var block = App.Blocks.GetValueAt(j);
+        for (var j=0; j<App.GetInstance().Blocks.Count; j++) {
+            var block = App.GetInstance().Blocks.GetValueAt(j);
             if ((<ISource>block).Effects) {
 
 
@@ -45,7 +45,7 @@ class ConnectionLines {
                     var xDif = (targetPos.x - myPos.x) / grd;
                     var yDif = (targetPos.y - myPos.y) / grd;
 
-                    this._Ctx.strokeStyle = App.Palette[15];// BLUE
+                    this._Ctx.strokeStyle = App.GetInstance().Palette[15];// BLUE
                     this._Ctx.moveTo(myPos.x, myPos.y);
 
                     if (xDif > 0) { // RIGHT HALF

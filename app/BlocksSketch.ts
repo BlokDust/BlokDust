@@ -38,6 +38,7 @@ declare var ParamTimeout: boolean; //TODO: better way than using global? Needs t
 
 class BlocksSketch extends Grid {
 
+    private _App: App;
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
@@ -63,45 +64,47 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
 
-    constructor() {
+    constructor(app: App) {
         super();
 
-        App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
+        this._App = app;
+
+        this._App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
         }, this);
 
-        App.PointerInputManager.MouseUp.on((s: any, e: MouseEvent) => {
+        this._App.PointerInputManager.MouseUp.on((s: any, e: MouseEvent) => {
             this.MouseUp(e);
         }, this);
 
-        App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
+        this._App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
             this.MouseMove(e);
         }, this);
 
-        this._DisplayList = new DisplayList(App.Blocks);
+        this._DisplayList = new DisplayList(this._App.Blocks);
 
         // register command handlers
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
+        this._App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
+        this._App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
+        this._App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
+        this._App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
 
-        App.OperationManager.OperationAdded.on((operation: IOperation) => {
+        this._App.OperationManager.OperationAdded.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
-        App.OperationManager.OperationComplete.on((operation: IOperation) => {
+        this._App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
-        App.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
-        App.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
+        this._App.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
+        this._App.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
         var pixelPalette = new PixelPalette("img/palette6.gif");
 
         pixelPalette.Load((palette: string[]) => {
             //console.log(palette);
-            App.Palette = palette;
+            this._App.Palette = palette;
         });
 
         ParamTimeout = false;
@@ -111,7 +114,7 @@ class BlocksSketch extends Grid {
 
 
     public GetId(): number {
-        return App.Blocks.Count++;
+        return this._App.Blocks.Count++;
     }
 
 
@@ -171,7 +174,7 @@ class BlocksSketch extends Grid {
         var id = Utils.Url.GetQuerystringParameter('c');
 
         if(id) {
-            App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
+            this._App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
         }
 
         // todo: use input manager
@@ -200,12 +203,12 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // update blocks
-        for (var i = 0; i < App.Blocks.Count; i++) {
-            var block: IBlock = App.Blocks.GetValueAt(i);
+        for (var i = 0; i < this._App.Blocks.Count; i++) {
+            var block: IBlock = this._App.Blocks.GetValueAt(i);
             block.Update();
         }
 
-        if (App.Particles.length) {
+        if (this._App.Particles.length) {
             this.UpdateParticles();
         }
 
@@ -226,8 +229,8 @@ class BlocksSketch extends Grid {
     // PARTICLES //
     UpdateParticles() {
         var currentParticles = [];
-        for (var i = 0; i < App.Particles.length; i++) {
-            var particle: Particle = App.Particles[i];
+        for (var i = 0; i < this._App.Particles.length; i++) {
+            var particle: Particle = this._App.Particles[i];
             particle.Life -= 1;
 
             if (particle.Life < 1) {
@@ -240,12 +243,12 @@ class BlocksSketch extends Grid {
             currentParticles.push(particle);
         }
 
-        App.Particles = currentParticles;
+        this._App.Particles = currentParticles;
     }
 
     ParticleCollision(point: Point, particle: Particle) {
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks.GetValueAt(i);
+        for (var i = this._App.Blocks.Count - 1; i >= 0 ; i--){
+            var block: IBlock = this._App.Blocks.GetValueAt(i);
             if (block.HitTest(point)){
                 block.ParticleCollision(particle);
             }
@@ -298,7 +301,7 @@ class BlocksSketch extends Grid {
     Draw(){
 
         // BG //
-        this.Ctx.fillStyle = App.Palette[0];
+        this.Ctx.fillStyle = this._App.Palette[0];
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // DEBUG GRID //
@@ -323,10 +326,10 @@ class BlocksSketch extends Grid {
 
 
     DrawParticles() {
-        for (var i = 0; i < App.Particles.length; i++) {
+        for (var i = 0; i < this._App.Particles.length; i++) {
 
             // todo: pre-render these in a single canvas
-            var particle = App.Particles[i];
+            var particle = this._App.Particles[i];
             var pos = this.ConvertBaseToTransformed(particle.Position);
             var unit = this.ScaledUnit.width;
             //console.log(unit);
@@ -461,7 +464,7 @@ class BlocksSketch extends Grid {
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
                         var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
-                        App.OperationManager.Do(op);
+                        this._App.OperationManager.Do(op);
                     }
                 }
             }
@@ -513,11 +516,11 @@ class BlocksSketch extends Grid {
         // loop through all Source blocks checking proximity to Effect blocks.
         // if within CatchmentArea, add Effect to Source.Effects and add Source to Effect.Sources
 
-        for (var j = 0; j < App.Sources.Count; j++) {
-            var source:ISource = App.Sources.GetValueAt(j);
+        for (var j = 0; j < this._App.Sources.Count; j++) {
+            var source:ISource = this._App.Sources.GetValueAt(j);
 
-            for (var i = 0; i < App.Effects.Count; i++) {
-                var effect:IEffect = App.Effects.GetValueAt(i);
+            for (var i = 0; i < this._App.Effects.Count; i++) {
+                var effect:IEffect = this._App.Effects.GetValueAt(i);
 
                 // if a source is close enough to the effect, add the effect
                 // to its internal list.
@@ -553,8 +556,8 @@ class BlocksSketch extends Grid {
     private _CheckCollision(point: Point, handle: () => void): Boolean {
 
         // LOOP BLOCKS //
-        for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-            var block:IBlock = App.Blocks.GetValueAt(i);
+        for (var i = this._App.Blocks.Count - 1; i >= 0; i--) {
+            var block:IBlock = this._App.Blocks.GetValueAt(i);
             if (block.HitTest(point)) {
                 handle();
                 block.MouseDown();
@@ -586,8 +589,8 @@ class BlocksSketch extends Grid {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
-            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-                var block:IBlock = App.Blocks.GetValueAt(i);
+            for (var i = this._App.Blocks.Count - 1; i >= 0; i--) {
+                var block:IBlock = this._App.Blocks.GetValueAt(i);
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
@@ -691,13 +694,13 @@ class BlocksSketch extends Grid {
 
     _ValidateBlocks() {
         // todo: make this a command that all blocks subscribe to?
-        for (var i = 0; i < App.Sources.Count; i++){
-            var src: ISource = App.Sources.GetValueAt(i);
+        for (var i = 0; i < this._App.Sources.Count; i++){
+            var src: ISource = this._App.Sources.GetValueAt(i);
             src.ValidateEffects();
         }
 
-        for (var i = 0; i < App.Effects.Count; i++){
-            var effect: IEffect = App.Effects.GetValueAt(i);
+        for (var i = 0; i < this._App.Effects.Count; i++){
+            var effect: IEffect = this._App.Effects.GetValueAt(i);
             effect.ValidateSources();
         }
     }
@@ -715,7 +718,7 @@ class BlocksSketch extends Grid {
             this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
         }, this);
 
-        App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
+        this._App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
 
         block.MouseDown();
         this.SelectedBlock = block;
@@ -749,16 +752,16 @@ class BlocksSketch extends Grid {
         if (!this.SelectedBlock) return;
         this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
         this._SelectedBlock.Delete();
-        App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
+        this._App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
     }
 
     Undo(){
-        App.OperationManager.Undo();
+        this._App.OperationManager.Undo();
     }
 
     Redo(){
-        App.OperationManager.Redo();
+        this._App.OperationManager.Redo();
     }
 }
 

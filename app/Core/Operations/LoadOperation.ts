@@ -22,9 +22,9 @@ class LoadOperation<String> implements IOperation
                 dataType: 'json',
                 contentType: 'application/json'
             }).done(function(data){
-                var blocks: IBlock[] = App.Deserialize(data);
-                App.Blocks.Clear();
-                App.Blocks.AddRange(blocks);
+                var blocks: IBlock[] = this._AppDeserialize(data);
+                this._AppBlocks.Clear();
+                this._AppBlocks.AddRange(blocks);
                 resolve(data);
             });
 

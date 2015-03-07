@@ -56,12 +56,12 @@ class MenuCategory {
 
 
         // TEXT //
-        ctx.fillStyle = App.Palette[8];// White
+        ctx.fillStyle = App.GetInstance().Palette[8];// White
         ctx.fillText(this.Name, x ,(thisHeight * 0.5) + (dataType * 0.38));
 
         // HOVER //
         if (this.Hover && dropDown<1) {
-            ctx.fillStyle = App.Palette[2];// Black
+            ctx.fillStyle = App.GetInstance().Palette[2];// Black
             ctx.globalAlpha = 0.9;
 
             ctx.beginPath();

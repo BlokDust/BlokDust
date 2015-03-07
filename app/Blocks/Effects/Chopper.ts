@@ -14,7 +14,7 @@ class Chopper extends Effect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
-        this.Effect = App.AudioMixer.Master.context.createGain();
+        this.Effect = App.GetInstance().AudioMixer.Master.context.createGain();
 
         this.Rate = 50;
         this.Depth = 4;

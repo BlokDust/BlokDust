@@ -37,7 +37,7 @@ class ZoomButtons extends DisplayObject {
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = App.Palette[8];// White
+        ctx.strokeStyle = App.GetInstance().Palette[8];// White
 
         var zin = this._InPos;
         var zout = this._OutPos;

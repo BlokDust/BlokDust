@@ -12,7 +12,7 @@ class LoadCommandHandler implements ICommandHandler {
 
     Execute(id: string): void{
         var op:IOperation = new LoadOperation(id);
-        App.OperationManager.Do(op).then((result) => {
+        App.GetInstance().OperationManager.Do(op).then((result) => {
             console.log(result);
         });
     }

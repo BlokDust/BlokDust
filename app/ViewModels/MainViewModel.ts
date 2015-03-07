@@ -12,9 +12,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
 
         window.debug = true;
 
-        App.Init();
-
-        this._BlocksSketch = new BlocksSketch();
+        //this._BlocksSketch = new BlocksSketch();
     }
 
     BlocksSketch_Draw(e: Fayde.IEventBindingArgs<Fayde.Drawing.SketchDrawEventArgs>){

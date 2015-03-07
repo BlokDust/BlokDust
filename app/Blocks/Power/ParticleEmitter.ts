@@ -37,14 +37,14 @@ class ParticleEmitter extends Source {
         var size = 2 + (Math.random()*1);
         var life = Math.round(this.Params.range/this.Params.speed);
 
-        var p: Particle = App.ParticlesPool.GetObject();
+        var p: Particle = App.GetInstance().ParticlesPool.GetObject();
 
         p.Position = position;
         p.Vector = vector;
         p.Life = life;
         p.Size = size;
 
-        App.Particles.push(p);
+        App.GetInstance().Particles.push(p);
     }
 
 

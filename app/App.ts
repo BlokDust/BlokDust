@@ -16,92 +16,127 @@ import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
+import BlocksSketch = require("./BlocksSketch");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class App{
 
-    static OperationManager: OperationManager;
-    static ResourceManager: ResourceManager;
-    static CommandManager: CommandManager;
-    static CompositionId: string;
-    static Fonts: Fonts;
-    static Blocks: DisplayObjectCollection<IBlock>;
-    static Sources: ObservableCollection<ISource>;
-    static Effects: ObservableCollection<IEffect>;
-    static AudioMixer: AudioMixer;
-    static InputManager: InputManager;
-    static KeyboardInput: KeyboardInput;
-    static CommandsInputManager: CommandsInputManager;
-    static PointerInputManager: PointerInputManager;
-    static ParticlesPool: PooledFactoryResource<Particle>;
-    static Particles: Particle[];
-    static Palette: string[];
-    static OscillatorsPool: PooledFactoryResource<Oscillator>;
-    static AudioSettings: ToneSettings;
+    private static _instance: App = null;
+
+    _Canvas: HTMLCanvasElement;
+    _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
+    OperationManager: OperationManager;
+    ResourceManager: ResourceManager;
+    CommandManager: CommandManager;
+    CompositionId: string;
+    Fonts: Fonts;
+    Blocks: DisplayObjectCollection<IBlock>;
+    Sources: ObservableCollection<ISource>;
+    Effects: ObservableCollection<IEffect>;
+    AudioMixer: AudioMixer;
+    InputManager: InputManager;
+    KeyboardInput: KeyboardInput;
+    CommandsInputManager: CommandsInputManager;
+    PointerInputManager: PointerInputManager;
+    ParticlesPool: PooledFactoryResource<Particle>;
+    Particles: Particle[];
+    Palette: string[];
+    OscillatorsPool: PooledFactoryResource<Oscillator>;
+    AudioSettings: ToneSettings;
+    BlocksSketch: BlocksSketch;
 
     constructor() {
-
+        if(App._instance){
+            throw new Error("Error: Instantiation failed: Use getInstance() instead of new.");
+        }
+        App._instance = this;
     }
 
-    static Bootstrap(): void {
+    public static GetInstance(): App
+    {
+        if(App._instance === null) {
+            App._instance = new App();
+        }
+        return App._instance;
+    }
+
+    Setup(){
         // find canvas
-        document
-        // set up animation loop
-        // create BlocksSketch
-    }
+        this._Canvas = document.getElementsByTagName("canvas")[0];
+        if (!this._Canvas)
+            document.body.appendChild(this._Canvas = document.createElement("canvas"));
 
-    static Init(){
-        App.OperationManager = new OperationManager();
-        App.ResourceManager = new ResourceManager();
-        App.CommandManager = new CommandManager(App.ResourceManager);
-        //App.Fonts = new Fonts();
+        this.OperationManager = new OperationManager();
+        this.ResourceManager = new ResourceManager();
+        this.CommandManager = new CommandManager(this.ResourceManager);
+        //this.Fonts = new Fonts();
 
-        //todo: make these members of BlocksContext
-        App.Blocks = new DisplayObjectCollection<IBlock>();
-        App.Sources = new ObservableCollection<ISource>();
-        App.Effects = new ObservableCollection<IEffect>();
+        this.Blocks = new DisplayObjectCollection<IBlock>();
+        this.Sources = new ObservableCollection<ISource>();
+        this.Effects = new ObservableCollection<IEffect>();
 
-        App.Blocks.CollectionChanged.on(() => {
-            App.Sources.Clear();
+        this.Blocks.CollectionChanged.on(() => {
+            this.Sources.Clear();
 
-            for (var i = 0; i < App.Blocks.Count; i++) {
-                var block = App.Blocks.GetValueAt(i);
+            for (var i = 0; i < this.Blocks.Count; i++) {
+                var block = this.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
                 if ((<ISource>block).Effects){
-                    App.Sources.Add((<ISource>block));
+                    this.Sources.Add((<ISource>block));
                 }
             }
 
-            App.Effects.Clear();
+            this.Effects.Clear();
 
-            for (var i = 0; i < App.Blocks.Count; i++) {
-                var block = App.Blocks.GetValueAt(i);
+            for (var i = 0; i < this.Blocks.Count; i++) {
+                var block = this.Blocks.GetValueAt(i);
 
                 // todo: use reflection when available
                 if (!(<ISource>block).Effects){
-                    App.Effects.Add((<IEffect>block));
+                    this.Effects.Add((<IEffect>block));
                 }
             }
         }, this);
 
-        App.AudioMixer = new AudioMixer();
+        this.AudioMixer = new AudioMixer();
 
-        App.InputManager = new InputManager();
-        App.KeyboardInput = new KeyboardInput();
-        App.CommandsInputManager = new CommandsInputManager(App.CommandManager);
-        App.PointerInputManager = new PointerInputManager();
+        this.InputManager = new InputManager();
+        this.KeyboardInput = new KeyboardInput();
+        this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
+        this.PointerInputManager = new PointerInputManager();
 
-        App.Particles = [];
-        App.Palette = [];
+        this.Particles = [];
+        this.Palette = [];
 
+        window.debug = true;
+
+        // create BlocksSketch
+        this.BlocksSketch = new BlocksSketch(App.GetInstance());
+
+        // set up animation loop
+        this._ClockTimer.RegisterTimer(this);
     }
 
-    static Serialize(): string {
-        return Serializer.Serialize(App.Blocks.ToArray());
+    OnTicked (lastTime: number, nowTime: number) {
+        this.BlocksSketch.SketchSession = new Fayde.Drawing.SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
+        this.Update();
+        this.Draw();
     }
 
-    static Deserialize(json: string): IBlock[] {
+    Update() : void {
+        this.BlocksSketch.Update();
+    }
+
+    Draw(): void {
+        this.BlocksSketch.Draw();
+    }
+
+    Serialize(): string {
+        return Serializer.Serialize(this.Blocks.ToArray());
+    }
+
+    Deserialize(json: string): IBlock[] {
         return Serializer.Deserialize(json);
     }
 }

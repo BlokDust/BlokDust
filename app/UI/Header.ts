@@ -140,7 +140,7 @@ class Header extends DisplayObject{
 
 
         // BG //
-        ctx.fillStyle = App.Palette[2];// Black
+        ctx.fillStyle = App.GetInstance().Palette[2];// Black
         ctx.globalAlpha = 0.16;
         ctx.fillRect(0,0,this.Sketch.Width,thisHeight + (5*units) + dropDown); // shadow
         ctx.globalAlpha = 0.9;
@@ -149,14 +149,14 @@ class Header extends DisplayObject{
 
         // TT //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = App.Palette[8];// Grey
+        ctx.fillStyle = App.GetInstance().Palette[8];// Grey
         ctx.textAlign = "left";
         ctx.font = "200 " + headerType + "px Dosis";
         ctx.fillText("BLOKDUST",20*units,(thisHeight * 0.5) + (headerType * 0.38));
 
 
         // DIVIDERS //
-        ctx.strokeStyle = App.Palette[1];// Grey
+        ctx.strokeStyle = App.GetInstance().Palette[1];// Grey
         ctx.globalAlpha = 1;
 
         // Horizontal //
@@ -189,7 +189,7 @@ class Header extends DisplayObject{
 
             // SELECTION COLOUR //
             var col = this._MenuCols[i - (Math.floor(i/this._MenuCols.length)*(this._MenuCols.length))];
-            ctx.fillStyle = App.Palette[col];
+            ctx.fillStyle = App.GetInstance().Palette[col];
 
             // DRAW CAT HEADER //
             cat.Draw(ctx,units,this);
@@ -265,7 +265,7 @@ class Header extends DisplayObject{
             ctx.closePath();
             ctx.clip();
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.GetInstance().Palette[8]; // White
             if (cat.CurrentPage == 0) {
                 ctx.strokeStyle = "#393d43"; // Grey
             }
@@ -277,7 +277,7 @@ class Header extends DisplayObject{
             ctx.lineTo((margin * units) - (20 * units), (this.Height + (this.DropDown * 0.5) + 20) * units);
             ctx.stroke();
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.GetInstance().Palette[8]; // White
             if (cat.CurrentPage == cat.Pages) {
                 ctx.strokeStyle = "#393d43"; // Grey
             }

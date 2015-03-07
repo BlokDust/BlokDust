@@ -56,7 +56,7 @@ class ParametersPanel extends DisplayObject {
         this._NameWidth = 0;
 
         this.Options = [];
-        this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
+        this.SliderColours = [App.GetInstance().Palette[3],App.GetInstance().Palette[4],App.GetInstance().Palette[9],App.GetInstance().Palette[7],App.GetInstance().Palette[5]];
         this._SliderRoll = [];
 
         this._Timer = new Fayde.ClockTimer();
@@ -353,17 +353,17 @@ class ParametersPanel extends DisplayObject {
 
 
         // DRAW PANEL //
-        ctx.fillStyle = App.Palette[14];// Shadow
+        ctx.fillStyle = App.GetInstance().Palette[14];// Shadow
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        ctx.fillStyle = App.Palette[2];// Black
+        ctx.fillStyle = App.GetInstance().Palette[2];// Black
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
 
 
         // CLOSE X //
-        ctx.strokeStyle = App.Palette[8];// WHITE
+        ctx.strokeStyle = App.GetInstance().Palette[8];// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) + (4 * units));
@@ -375,7 +375,7 @@ class ParametersPanel extends DisplayObject {
 
 
         // TITLE //
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
         ctx.textAlign = "left";
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.Height * 0.5));
 
