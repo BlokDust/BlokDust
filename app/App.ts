@@ -43,8 +43,11 @@ class App{
 
     }
 
-    public Bootstrap(): void {
-        console.log("bootstrap");
+    static Bootstrap(): void {
+        // find canvas
+        document
+        // set up animation loop
+        // create BlocksSketch
     }
 
     static Init(){
