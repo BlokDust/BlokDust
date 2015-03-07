@@ -43,6 +43,10 @@ class App{
 
     }
 
+    public Bootstrap(): void {
+        console.log("bootstrap");
+    }
+
     static Init(){
         App.OperationManager = new OperationManager();
         App.ResourceManager = new ResourceManager();

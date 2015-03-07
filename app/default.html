@@ -4,7 +4,7 @@
     <title></title>
     <script src="lib/nullstone/dist/nullstone.js"></script>
     <script src="lib/minerva/dist/minerva.js"></script>
-    <script src="lib/fayde/dist/fayde.js"></script>
+    <!--<script src="lib/fayde/dist/fayde.js"></script>-->
     <script type="text/javascript" src="http://connect.soundcloud.com/sdk.js"></script>
     <link href='http://fonts.googleapis.com/css?family=Dosis:200,300,400' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Merriweather+Sans:300italic' rel='stylesheet' type='text/css'>
@@ -15,12 +15,15 @@
             baseUrl: "./",
             paths: {
                 "text": "lib/requirejs-text/text",
+                "Application": "App",
                 "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
                 "Tone": "lib/tone/Tone",
                 "Recorderjs": "lib/RecorderJS",
                 "jquery": "lib/jquery/dist/jquery"
             },
-            deps: ["text", "text!fayde.json",
+            deps: ["text",
+                "text!config.json",
+                "App",
                 "PixelPalette",
                 "Tone/core/Tone",
                 "jquery",
@@ -47,11 +50,11 @@
                 "Tone/effect/AutoPanner",
                 "Recorderjs/recorder"
             ],
-            callback: function (text, config, PixelPalette, Tone, jquery) {
+            callback: function (text, config, App, PixelPalette, Tone, jquery) {
                 window.PixelPalette = PixelPalette;
                 window.Tone = Tone;
                 window.$ = jquery;
-                Fayde.Bootstrap();
+                App.Bootstrap();
             }
         };
     </script>
@@ -74,7 +77,9 @@
     <link href='blokstyle.css' rel='stylesheet' type='text/css'>
 
 </head>
-<body fayde-app="default.fap">
+<!--<body fayde-app="default.fap">-->
+<body>
+<canvas></canvas>
 <script src="//localhost:35353/livereload.js"></script>
 <!--<div id="fontTest">68</div>-->
 </body>
