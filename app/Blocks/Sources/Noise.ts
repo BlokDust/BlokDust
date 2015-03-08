@@ -10,8 +10,8 @@ class Noise extends Source {
     public DelayedRelease: number;
     public Noise: any;
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.BlockType = BlockType.Noise;
 

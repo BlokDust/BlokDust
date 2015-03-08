@@ -9,8 +9,8 @@ class Soundcloud extends Source {
     public LoopStartPosition: number;
     public LoopEndPosition: number;
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.BlockType = BlockType.Soundcloud;
         this.PlaybackRate = 1;

@@ -9,8 +9,8 @@ class ToneSource extends Source {
     public Frequency: number;
     public Envelope: any;
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.BlockType = BlockType.ToneSource;
         this.Frequency = 440;

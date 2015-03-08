@@ -33,11 +33,12 @@ class Source extends Block implements ISource {
     public PolySources: any[];
     public PolyEnvelopes: any[];
 
-    Init(): void {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
+        // todo: use Block.Type
         if (this.BlockType != BlockType.Power) {
 
             this.EffectsChainInput = new Tone.Signal;

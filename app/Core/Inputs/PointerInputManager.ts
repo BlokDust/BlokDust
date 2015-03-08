@@ -31,14 +31,14 @@ class MouseInputManager extends InputManager {
     }
 
     OnMouseUp(e: MouseEvent){
-        var position: Point = new Point(e.clientX, e.clientY);
-        console.log(new Date().getTime(), "mouseup", position);
+        //var position: Point = new Point(e.clientX, e.clientY);
+        //console.log(new Date().getTime(), "mouseup", position);
         this.MouseUp.raise(this, e);
     }
 
     OnMouseMove(e: MouseEvent){
-        var position: Point = new Point(e.clientX, e.clientY);
-        console.log(new Date().getTime(), "mousemove", position);
+        //var position: Point = new Point(e.clientX, e.clientY);
+        //console.log(new Date().getTime(), "mousemove", position);
         this.MouseMove.raise(this, e);
     }
 }

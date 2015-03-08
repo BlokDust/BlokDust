@@ -6,8 +6,9 @@ import BlockType = Type.BlockType;
 class Microphone extends Source {
 
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
+
         this.BlockType = BlockType.Microphone;
         this.Source = new Tone.Microphone();
 

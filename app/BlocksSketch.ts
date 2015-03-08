@@ -706,12 +706,12 @@ class BlocksSketch extends Grid {
     }
 
     //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
-    CreateBlockFromType<T extends IBlock>(m: {new(): T; }){
-        var block: IBlock = new m();
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }){
+        var block: IBlock = new t();
         block.Position = this._PointerPoint;
         block.Init(this);
         block.Id = this.GetId();
-        block.Reference = m; // todo: rename to Type
+        block.Type = t;
 
         // todo: should this go in command handler?
         block.Click.on((block: IBlock) => {

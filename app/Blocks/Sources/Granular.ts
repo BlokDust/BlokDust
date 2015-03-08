@@ -22,8 +22,9 @@ class Granular extends Source {
     public Waveform: number[];
 
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
+
         this.BlockType = BlockType.Granular;
         this.Source = new Tone.Signal();
 

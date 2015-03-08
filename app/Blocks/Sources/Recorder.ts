@@ -14,8 +14,9 @@ class RecorderBlock extends Source {
     public StopPlaybackOnRecord: boolean;
     public PlaybackRate: number;
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
+
         this.BlockType = BlockType.Recorder;
         this.Source = new Tone.Signal();
 

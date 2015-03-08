@@ -11,7 +11,7 @@ import ParametersPanel = require("../UI/ParametersPanel");
 class Block extends DisplayObject implements IBlock {
 
     public Id: number;
-    public Reference;
+    public Type: any;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
@@ -95,7 +95,7 @@ class Block extends DisplayObject implements IBlock {
 
             // ALT-DRAG COPY
             if (this.Grid.AltDown && this._Duplicable) {
-                (<BlocksSketch>this.Grid).CreateBlockFromType(this.Reference);
+                (<BlocksSketch>this.Grid).CreateBlockFromType(this.Type);
                 this.MouseUp();
             }
             // MOVE //
