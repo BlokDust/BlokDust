@@ -40,7 +40,7 @@ class Slider extends Option{
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.GetInstance().Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = window.App.Palette[1];// Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -94,7 +94,7 @@ class Slider extends Option{
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
+        ctx.fillStyle = window.App.Palette[8];// WHITE
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);

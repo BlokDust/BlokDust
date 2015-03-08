@@ -19,7 +19,7 @@ class RecorderBlock extends Source {
         this.BlockType = BlockType.Recorder;
         this.Source = new Tone.Signal();
 
-        this.Recorder = new Recorder(App.GetInstance().AudioMixer.Master, {
+        this.Recorder = new Recorder(window.App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
         });
 

@@ -32,8 +32,8 @@ class Keyboard extends Effect {
         this.SetBaseFrequency(source);
         this.KeysDown = {};
 
-        App.GetInstance().KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
-        App.GetInstance().KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
+        window.App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
+        window.App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
     }
 
     Detach(source:ISource): void {
@@ -51,8 +51,8 @@ class Keyboard extends Effect {
             }
         }
 
-        App.GetInstance().KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
-        App.GetInstance().KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
+        window.App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
+        window.App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
 
         super.Detach(source);
     }

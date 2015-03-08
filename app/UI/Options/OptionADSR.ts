@@ -54,7 +54,7 @@ class ADSR extends Option{
 
 
         // MARKERS //
-        ctx.fillStyle = ctx.strokeStyle = App.GetInstance().Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = window.App.Palette[1];// Grey
         ctx.beginPath();
         ctx.moveTo(panel.Margin - units, y + (height*0.1));
         ctx.lineTo(panel.Margin - units, y + (height*0.9));
@@ -87,7 +87,7 @@ class ADSR extends Option{
         // LINE //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = App.GetInstance().Palette[8];
+        ctx.strokeStyle = window.App.Palette[8];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height*0.9));
         ctx.lineTo(panel.Margin + a, y + (height*0.1)); // ATTACK
@@ -101,7 +101,7 @@ class ADSR extends Option{
         // GRAB DIAMONDS //
         var dragWidth = height * 0.06;
 
-        ctx.fillStyle = App.GetInstance().Palette[3];
+        ctx.fillStyle = window.App.Palette[3];
         ctx.beginPath();
         ctx.moveTo(a + panel.Margin - dragWidth, y + (height * 0.1));
         ctx.lineTo(a + panel.Margin, y + (height * 0.1) - dragWidth);
@@ -110,7 +110,7 @@ class ADSR extends Option{
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.GetInstance().Palette[4];
+        ctx.fillStyle = window.App.Palette[4];
         ctx.beginPath();
         ctx.moveTo(a + d + panel.Margin - dragWidth, y + (height * 0.9) - s);
         ctx.lineTo(a + d + panel.Margin, y + (height * 0.9) - dragWidth - s);
@@ -119,7 +119,7 @@ class ADSR extends Option{
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.GetInstance().Palette[5];
+        ctx.fillStyle = window.App.Palette[5];
         ctx.beginPath();
         ctx.moveTo((panel.Range*vert) + r + panel.Margin - dragWidth, y + (height * 0.9));
         ctx.lineTo((panel.Range*vert) + r + panel.Margin, y + (height * 0.9) - dragWidth);
@@ -128,7 +128,7 @@ class ADSR extends Option{
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.GetInstance().Palette[8];
+        ctx.fillStyle = window.App.Palette[8];
         ctx.beginPath();
         ctx.moveTo(a + panel.Margin - dragWidth, y + (height * 0.1));
         ctx.lineTo(a + panel.Margin, y + (height * 0.1) - dragWidth);

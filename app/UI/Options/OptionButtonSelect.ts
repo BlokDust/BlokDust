@@ -48,7 +48,7 @@ class ButtonSelect extends Option{
         }
 
         // PARAM NAME //
-        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
+        ctx.fillStyle = window.App.Palette[8];// WHITE
         ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (midType * 0.4));

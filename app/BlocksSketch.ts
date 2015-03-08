@@ -64,10 +64,10 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
 
-    constructor(app: App) {
+    constructor() {
         super();
 
-        this._App = app;
+        this._App = window.App;
 
         this._App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);

@@ -47,7 +47,7 @@ class Source extends Block implements ISource {
 
 
             this.EffectsChainInput.connect(this.EffectsChainOutput);
-            this.EffectsChainOutput.connect(App.GetInstance().AudioMixer.Master);
+            this.EffectsChainOutput.connect(window.App.AudioMixer.Master);
 
             // THIS IS NEEDED FOR ANYTHING POLYPHONIC
             this.PolySources = [];
@@ -80,7 +80,7 @@ class Source extends Block implements ISource {
         for (var i = 0; i < this.Effects.Count; i++){
             var effect:IEffect = this.Effects.GetValueAt(i);
 
-            if (!App.GetInstance().Effects.Contains(effect)){
+            if (!window.App.Effects.Contains(effect)){
                 this.RemoveEffect(effect);
             }
         }
@@ -166,7 +166,7 @@ class Source extends Block implements ISource {
             }
             effects[effects.length - 1].Effect.disconnect();
             effects[effects.length - 1].Effect.connect(end);
-            end.connect(App.GetInstance().AudioMixer.Master);
+            end.connect(window.App.AudioMixer.Master);
         } else {
             start.disconnect();
             start.connect(end);

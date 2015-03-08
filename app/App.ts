@@ -21,7 +21,7 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class App{
 
-    static Current: App = null;
+    static Current: App;
 
     _Canvas: HTMLCanvasElement;
     _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
@@ -46,25 +46,19 @@ class App{
     BlocksSketch: BlocksSketch;
 
     constructor() {
-        if(App.Current){
-            throw new Error("Error: Instantiation failed: Use GetInstance() instead of new.");
-        }
         App.Current = this;
     }
 
-    public static GetInstance(): App
-    {
-        if(App.Current === null) {
-            App.Current = new App();
-        }
-        return App.Current;
-    }
-
-    Setup(){
+    public Setup(){
         // find canvas
         this._Canvas = document.getElementsByTagName("canvas")[0];
         if (!this._Canvas)
             document.body.appendChild(this._Canvas = document.createElement("canvas"));
+
+        // resize
+        window.onresize = () => {
+            this.Resize();
+        }
 
         this.OperationManager = new OperationManager();
         this.ResourceManager = new ResourceManager();
@@ -112,10 +106,12 @@ class App{
         //window.debug = true;
 
         // create BlocksSketch
-        this.BlocksSketch = new BlocksSketch(App.GetInstance());
+        this.BlocksSketch = new BlocksSketch();
 
         // set up animation loop
         this._ClockTimer.RegisterTimer(this);
+
+        this.Resize();
     }
 
     OnTicked (lastTime: number, nowTime: number) {
@@ -138,6 +134,12 @@ class App{
 
     Deserialize(json: string): IBlock[] {
         return Serializer.Deserialize(json);
+    }
+
+    Resize(): void {
+        var $win = $(window);
+        $(this._Canvas).prop("width", $win.width());
+        $(this._Canvas).prop("height", $win.height());
     }
 }
 

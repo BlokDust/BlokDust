@@ -11,8 +11,8 @@ class DeleteBlockCommandHandler implements ICommandHandler {
     }
 
     Execute(block: IBlock): void{
-        var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(block, App.GetInstance().Blocks);
-        App.GetInstance().OperationManager.Do(op);
+        var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(block, window.App.Blocks);
+        window.App.OperationManager.Do(op);
     }
 }
 

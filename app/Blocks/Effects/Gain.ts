@@ -11,7 +11,7 @@ class Gain extends Effect {
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
-        this.Effect = App.GetInstance().AudioMixer.Master.context.createGain();
+        this.Effect = window.App.AudioMixer.Master.context.createGain();
         this.Effect.gain.value = 1.2;
 
         // Define Outline for HitTest
