@@ -46,19 +46,19 @@ class App{
     BlocksSketch: BlocksSketch;
 
     constructor() {
-        //if(App._instance){
-        //    throw new Error("Error: Instantiation failed: Use getInstance() instead of new.");
-        //}
-        //App._instance = this;
+        if(App._instance){
+            throw new Error("Error: Instantiation failed: Use getInstance() instead of new.");
+        }
+        App._instance = this;
     }
 
-    //public static GetInstance(): App
-    //{
-    //    if(App._instance === null) {
-    //        App._instance = new App();
-    //    }
-    //    return App._instance;
-    //}
+    public static GetInstance(): App
+    {
+        if(App._instance === null) {
+            App._instance = new App();
+        }
+        return App._instance;
+    }
 
     Setup(){
         // find canvas
