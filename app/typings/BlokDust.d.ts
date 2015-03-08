@@ -1,4 +1,6 @@
+//import app = require("../App");
 
+// todo: type App
 declare var App: any;
 
 interface Window{
