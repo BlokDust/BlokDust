@@ -2,7 +2,6 @@
  * Created by luketwyman on 29/01/2015.
  */
 
-import App = require("../App");
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Type = require("./BlockType");
@@ -49,7 +48,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
@@ -58,7 +57,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(-1,1);
@@ -74,7 +73,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,0);
@@ -84,7 +83,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,-1);
@@ -97,7 +96,7 @@ class BlockSprites {
             case "chomp":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -108,7 +107,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,1);
@@ -121,7 +120,7 @@ class BlockSprites {
             case "chopper":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -132,7 +131,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
@@ -149,7 +148,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[10];// ORANGE
+                this.Ctx.fillStyle = App.Palette[10];// ORANGE
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -159,7 +158,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[6];// YELLOW
+                this.Ctx.fillStyle = App.Palette[6];// YELLOW
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(-1,1);
@@ -175,7 +174,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
@@ -185,7 +184,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,2);
@@ -194,7 +193,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[6];// YELLOW
+                this.Ctx.fillStyle = App.Palette[6];// YELLOW
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
@@ -206,7 +205,7 @@ class BlockSprites {
             case "delay":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -217,7 +216,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,1);
@@ -232,7 +231,7 @@ class BlockSprites {
             case "distortion":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,0);
@@ -241,7 +240,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9];// PINK
+                this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawLineTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,0);
@@ -255,7 +254,7 @@ class BlockSprites {
             case "envelope":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[6];// YELLOW
+                this.Ctx.fillStyle = App.Palette[6];// YELLOW
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
@@ -265,7 +264,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
@@ -283,7 +282,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -294,7 +293,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
@@ -302,7 +301,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(2,0);
@@ -314,7 +313,7 @@ class BlockSprites {
             case "filter":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(-1,-2);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
@@ -323,7 +322,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[6];// YELLOW
+                this.Ctx.fillStyle = App.Palette[6];// YELLOW
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
@@ -341,7 +340,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[5];// PURPLE
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,1);
@@ -349,7 +348,7 @@ class BlockSprites {
                 this.Ctx.closePath();
                 this.Ctx.fill();
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,1);
@@ -362,7 +361,7 @@ class BlockSprites {
             case "lfo":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9];// PINK
+                this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -371,7 +370,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[6];// YELLOW
+                this.Ctx.fillStyle = App.Palette[6];// YELLOW
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -384,7 +383,7 @@ class BlockSprites {
             case "panner":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9];// PINK
+                this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -393,7 +392,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
@@ -405,7 +404,7 @@ class BlockSprites {
             case "phaser":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9];// PINK
+                this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(-1,-2);
                 this.DrawLineTo(1,0);
@@ -414,7 +413,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(-1,-1);
                 this.DrawLineTo(1,1);
@@ -432,7 +431,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// WHITE
+                this.Ctx.fillStyle = App.Palette[3];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,-1);
@@ -441,7 +440,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 /*this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,-1);
@@ -450,7 +449,7 @@ class BlockSprites {
                 this.Ctx.fill();*/
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[5];// PURPLE
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,1);
@@ -466,7 +465,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
@@ -476,7 +475,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,2);
@@ -485,7 +484,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[6];// YELLOW
+                this.Ctx.fillStyle = App.Palette[6];// YELLOW
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
@@ -501,7 +500,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[10];// ORANGE
+                this.Ctx.fillStyle = App.Palette[10];// ORANGE
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(2,-1);
                 this.DrawLineTo(0,1);
@@ -510,7 +509,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
@@ -526,7 +525,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[5];// PURPLE
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(0,-2);
                 this.DrawLineTo(2,0);
@@ -536,7 +535,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(0,-2);
                 this.DrawLineTo(0,0);
@@ -545,7 +544,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(0,-2);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
@@ -557,7 +556,7 @@ class BlockSprites {
             case "noise":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -567,7 +566,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -580,7 +579,7 @@ class BlockSprites {
             case "microphone":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -591,7 +590,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9];// PINK
+                this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
@@ -608,7 +607,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -619,7 +618,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[10];// ORANGE
+                this.Ctx.fillStyle = App.Palette[10];// ORANGE
                 this.DrawMoveTo(1,0);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(1,1);
@@ -636,7 +635,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -644,7 +643,7 @@ class BlockSprites {
                 this.Ctx.closePath();
                 this.Ctx.fill();
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[5];// PURPLE
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
@@ -663,7 +662,7 @@ class BlockSprites {
                 }
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9];// PINK
+                this.Ctx.fillStyle = App.Palette[9];// PINK
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
@@ -671,7 +670,7 @@ class BlockSprites {
                 this.Ctx.closePath();
                 this.Ctx.fill();
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(2,1);
@@ -679,7 +678,7 @@ class BlockSprites {
                 this.Ctx.closePath();
                 this.Ctx.fill();
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
@@ -692,7 +691,7 @@ class BlockSprites {
             case "mono keyboard":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,1);
@@ -702,7 +701,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(1,1);
@@ -715,7 +714,7 @@ class BlockSprites {
             case "poly keyboard":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,1);
@@ -725,7 +724,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4]; //GREEN
+                this.Ctx.fillStyle = App.Palette[4]; //GREEN
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(1,1);
@@ -734,7 +733,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[9]; //PINK
+                this.Ctx.fillStyle = App.Palette[9]; //PINK
                 this.DrawLineTo(-1,-1);
                 this.DrawLineTo(-1,1);
                 this.DrawLineTo(0,1);
@@ -747,7 +746,7 @@ class BlockSprites {
             case "particle emitter":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[5];// PURPLE
+                this.Ctx.fillStyle = App.Palette[5];// PURPLE
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
@@ -755,7 +754,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[7];// RED
+                this.Ctx.fillStyle = App.Palette[7];// RED
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
@@ -768,7 +767,7 @@ class BlockSprites {
             case "power":
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[3];// BLUE
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(2,-1);
@@ -779,7 +778,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[4];// GREEN
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
@@ -788,7 +787,7 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 this.Ctx.beginPath();
-                this.Ctx.fillStyle = window.App.Palette[8];// WHITE
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,-1);

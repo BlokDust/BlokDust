@@ -36,9 +36,6 @@ class ParametersPanel extends DisplayObject {
     public InitJson;
     private _JsonMemory;
 
-    //private _Timer: Fayde.ClockTimer;
-    //private _LastVisualTick: number = new Date(0).getTime();
-
     constructor() {
         super();
     }
@@ -56,11 +53,8 @@ class ParametersPanel extends DisplayObject {
         this._NameWidth = 0;
 
         this.Options = [];
-        this.SliderColours = [window.App.Palette[3],window.App.Palette[4],window.App.Palette[9],window.App.Palette[7],window.App.Palette[5]];
+        this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
         this._SliderRoll = [];
-
-        //this._Timer = new Fayde.ClockTimer();
-        //this._Timer.RegisterTimer(this);
 
         this.InitJson =
         {
@@ -352,17 +346,17 @@ class ParametersPanel extends DisplayObject {
 
 
         // DRAW PANEL //
-        ctx.fillStyle = window.App.Palette[14];// Shadow
+        ctx.fillStyle = App.Palette[14];// Shadow
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        ctx.fillStyle = window.App.Palette[2];// Black
+        ctx.fillStyle = App.Palette[2];// Black
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
 
 
         // CLOSE X //
-        ctx.strokeStyle = window.App.Palette[8];// WHITE
+        ctx.strokeStyle = App.Palette[8];// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) + (4 * units));
@@ -374,7 +368,7 @@ class ParametersPanel extends DisplayObject {
 
 
         // TITLE //
-        ctx.fillStyle = window.App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[8];// WHITE
         ctx.textAlign = "left";
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.Height * 0.5));
 
