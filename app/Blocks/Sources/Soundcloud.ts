@@ -10,7 +10,6 @@ class Soundcloud extends Source {
     public LoopEndPosition: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.BlockType = BlockType.Soundcloud;
         this.PlaybackRate = 1;
@@ -22,7 +21,6 @@ class Soundcloud extends Source {
 
         this.Source = new Tone.Player(audioUrl, function (sc) {
             sc.loop = true;
-            //sc.start();
             console.log('buffer loaded');
         });
 
@@ -32,26 +30,7 @@ class Soundcloud extends Source {
         this.Source.loop = true;
         this.Source.loopEnd = this.LoopEndPosition;
 
-
-        /*var audioUrl;
-         var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-         SC.initialize({
-         client_id: id
-         });
-
-         this.Source = new Tone.Player();
-         var sc = this.Source;
-
-         var rawUrl = "https://soundcloud.com/whitehawkmusic/deep-mutant";
-         SC.get('/resolve', { url: rawUrl }, function(track) {
-         audioUrl = ""+track.stream_url + "?client_id=" + id;
-         console.log(audioUrl);
-         sc.load(audioUrl, function (sc) {
-         console.log(sc);
-         sc.loop = true;
-         sc.start();
-         });
-         });*/
+        super.Init(sketch);
 
         this.Envelope = new Tone.AmplitudeEnvelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Source.connect(this.Envelope);
@@ -90,7 +69,7 @@ class Soundcloud extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"soundcloud");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
     }
 
     OpenParams() {

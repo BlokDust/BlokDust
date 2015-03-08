@@ -9,10 +9,11 @@ class Gain extends Effect {
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = window.App.AudioMixer.Master.context.createGain();
         this.Effect.gain.value = 1.2;
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(0, 1));
@@ -20,7 +21,7 @@ class Gain extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"gain");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"gain");
     }
 
     Delete(){

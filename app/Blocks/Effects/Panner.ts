@@ -7,11 +7,12 @@ class Panner extends Effect {
     public Effect: Tone.AutoPanner;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.AutoPanner({
             "frequency": 1
         });
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
@@ -19,7 +20,7 @@ class Panner extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"panner");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"panner");
     }
 
     Delete(){

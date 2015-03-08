@@ -13,7 +13,6 @@ interface IBlock extends IDisplayObject{
     Position: Point;
     LastPosition: Point;
     ParamJson: any;
-    Grid: Grid;
     Update(): void;
     Draw(): void;
     MouseDown(): void;

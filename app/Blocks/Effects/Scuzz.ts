@@ -7,10 +7,11 @@ class Scuzz extends Effect {
     LFO: Tone.LFO;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.LFO = new Tone.LFO(100, -1000, 1000);
         this.LFO.setType('sawtooth');
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
@@ -18,7 +19,7 @@ class Scuzz extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"scuzz");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
     }
 
     Delete(){

@@ -7,7 +7,6 @@ class Phaser extends Effect {
     public Effect: Tone.Phaser;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.Phaser({
             "rate" : 0.5,
@@ -16,13 +15,15 @@ class Phaser extends Effect {
             "baseFrequency" : 500
         });
 
+        super.Init(sketch);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));
     }
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"phaser");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
     }
 
     Delete(){

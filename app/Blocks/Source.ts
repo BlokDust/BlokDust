@@ -130,7 +130,7 @@ class Source extends Block implements ISource {
      * @private
      */
     private _AttachEffect(effect: IEffect ) {
-        effect.Attach(this);
+        effect.Attach(<ISource>this);
     }
 
     /**
@@ -139,7 +139,7 @@ class Source extends Block implements ISource {
      * @private
      */
     private _DetachEffect(effect: IEffect) {
-        effect.Detach(this);
+        effect.Detach(<ISource>this);
     }
 
     /**

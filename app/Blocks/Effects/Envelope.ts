@@ -11,12 +11,13 @@ class Envelope extends Effect {
     public release: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.attack = 1;
         this.decay = 5;
         this.sustain = 0.7;
         this.release = 4;
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -25,7 +26,7 @@ class Envelope extends Effect {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"envelope");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
 

@@ -8,10 +8,11 @@ class LFO extends Effect {
     public LFO: Tone.LFO;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.LFO = new Tone.LFO(2, -20, 20);
         this.LFO.setType('triangle');
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
@@ -19,7 +20,7 @@ class LFO extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"lfo");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
     Attach(source:ISource): void{

@@ -7,10 +7,11 @@ class Distortion extends Effect {
     public Effect: Tone.Distortion;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.Distortion(0.65);
         this.Effect.dryWet.setWet(0.75);
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
@@ -19,7 +20,7 @@ class Distortion extends Effect {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"distortion");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
 
     }
 

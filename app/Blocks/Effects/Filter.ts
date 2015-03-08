@@ -7,7 +7,6 @@ class Filter extends Effect {
     public Effect: Tone.Filter;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",
@@ -17,13 +16,15 @@ class Filter extends Effect {
             "gain" : 0
         });
 
+        super.Init(sketch);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -2),new Point(1, 0),new Point(1, 2),new Point(-1, 0));
     }
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"filter");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
     }
 
     Delete(){

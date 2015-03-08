@@ -15,10 +15,11 @@ class RecorderBlock extends Source {
     public PlaybackRate: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.BlockType = BlockType.Recorder;
         this.Source = new Tone.Signal();
+
+        super.Init(sketch);
 
         this.Recorder = new Recorder(window.App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
@@ -48,7 +49,7 @@ class RecorderBlock extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"recorder");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"recorder");
     }
 
     MouseDown() {

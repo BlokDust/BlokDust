@@ -19,7 +19,7 @@ class KeyboardMono extends Keyboard {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"mono keyboard");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"mono keyboard");
     }
 
     Attach(source:ISource): void{

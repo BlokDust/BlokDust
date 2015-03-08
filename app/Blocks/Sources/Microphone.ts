@@ -7,10 +7,11 @@ class Microphone extends Source {
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.BlockType = BlockType.Microphone;
         this.Source = new Tone.Microphone();
+
+        super.Init(sketch);
 
         this.Source.start();
         this.Source.connect(this.EffectsChainInput);
@@ -33,7 +34,7 @@ class Microphone extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"microphone");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"microphone");
     }
 }
 

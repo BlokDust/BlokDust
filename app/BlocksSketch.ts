@@ -360,7 +360,7 @@ class BlocksSketch extends Grid {
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerDown(position, () => {
-            (<any>e).args.Handled = true;
+            e.cancelBubble = true;
         });
     }
 
@@ -368,7 +368,7 @@ class BlocksSketch extends Grid {
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerUp(position, () => {
-            (<any>e).args.Handled = true;
+            e.cancelBubble = true;
         });
         this._CheckHover(position);
     }
@@ -385,7 +385,7 @@ class BlocksSketch extends Grid {
         var point = new Point(pos.Position.x, pos.Position.y);
 
         this._PointerDown(point, () => {
-            (<any>e).args.Handled = true;
+            e.cancelBubble = true;
         });
     }
 
@@ -394,7 +394,7 @@ class BlocksSketch extends Grid {
         var point = new Point(pos.Position.x, pos.Position.y);
 
         this._PointerUp(point, () => {
-            (<any>e).args.Handled = true;
+            e.cancelBubble = true;
         });
     }
 

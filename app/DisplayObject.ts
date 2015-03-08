@@ -32,7 +32,7 @@ class DisplayObject implements IDisplayObject {
         //this.RenderCacheCtx = this.RenderCacheCanvas.getContext('2d');
     //}
 
-    Init(sketch?: Fayde.Drawing.SketchContext) {
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (sketch) this.Sketch = sketch;
         if (!this.Sketch) throw new Exception("Sketch not specified for DisplayObject");
 

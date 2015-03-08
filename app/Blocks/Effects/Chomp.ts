@@ -9,7 +9,6 @@ class Chomp extends Effect {
     public Timer;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",
@@ -20,6 +19,8 @@ class Chomp extends Effect {
         });
 
         this.Rate = 13;
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 1),new Point(0, 2),new Point(-1, 2));
@@ -42,7 +43,7 @@ class Chomp extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"chomp");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
     }
 
     Delete(){

@@ -31,7 +31,7 @@ class ParticleEmitter extends Source {
 
 
     EmitParticle() {
-        var position = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
+        var position = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(this.Position);
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
         vector.Mult(this.Params.speed);
         var size = 2 + (Math.random()*1);
@@ -75,12 +75,12 @@ class ParticleEmitter extends Source {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"particle emitter");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
 
         //if (window.debug){
         //    this.Ctx.fillStyle = "#fff";
-        //    var pos = this.Grid.ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
-        //    pos = this.Grid.ConvertBaseToTransformed(pos);
+        //    var pos = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
+        //    pos = (<Grid>this.Sketch).ConvertBaseToTransformed(pos);
         //    //this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
         //}
 

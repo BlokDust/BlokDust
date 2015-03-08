@@ -13,12 +13,14 @@ class Chopper extends Effect {
     public Effect: GainNode;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
+
         this.Effect = window.App.AudioMixer.Master.context.createGain();
 
         this.Rate = 50;
         this.Depth = 4;
         this.Polarity = 0;
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -47,7 +49,7 @@ class Chopper extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"chopper");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"chopper");
     }
 
     Delete(){

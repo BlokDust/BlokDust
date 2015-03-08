@@ -11,12 +11,12 @@ class Noise extends Source {
     public Noise: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.BlockType = BlockType.Noise;
-
         this.Source = new Tone.Noise('brown');
         this.PlaybackRate = 1;
+
+        super.Init(sketch);
 
         this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Envelope.connect(this.Source.output.gain);
@@ -68,7 +68,7 @@ class Noise extends Source {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"noise");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
 
         /*this.Ctx.beginPath();
         this.Ctx.fillStyle = this._AppPalette[4];// GREEN

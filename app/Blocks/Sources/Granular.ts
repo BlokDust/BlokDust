@@ -23,10 +23,11 @@ class Granular extends Source {
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.BlockType = BlockType.Granular;
         this.Source = new Tone.Signal();
+
+        super.Init(sketch);
 
         this._IsLoaded = false;
 
@@ -116,7 +117,7 @@ class Granular extends Source {
     LoadWaveform() {
         var loader = new PxLoader(); //// Use PX Loader to handle image load
         var img = loader.addImage(this.WaveUrl);
-        var ctx = this.Grid.Ctx;
+        var ctx = this.Sketch.Ctx;
         var gran = this;
         var waveform = [];
 
@@ -124,8 +125,8 @@ class Granular extends Source {
 
             // metrics //
             var imglength = img.width; //// get number of colours
-            var perc = this.Grid.Size.width/imglength;
-            var length = this.Grid.Size.width;
+            var perc = this.Sketch.Size.width/imglength;
+            var length = this.Sketch.Size.width;
             var height = Math.round(img.height*perc); //// get number of colours
 
             // place image //
@@ -249,7 +250,7 @@ class Granular extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"granular");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
     }
 
     MouseDown() {

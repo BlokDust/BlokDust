@@ -7,9 +7,10 @@ class Convolver extends Effect {
     public Effect: Tone.Convolver;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.Convolver("../Assets/ImpulseResponses/teufelsberg01.wav");
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
@@ -18,7 +19,7 @@ class Convolver extends Effect {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"convolution");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"convolution");
     }
 
     Delete(){

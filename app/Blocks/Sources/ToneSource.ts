@@ -10,11 +10,12 @@ class ToneSource extends Source {
     public Envelope: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.BlockType = BlockType.ToneSource;
         this.Frequency = 440;
         this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
+
+        super.Init(sketch);
 
         this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Envelope.connect(this.Source.output.gain);
@@ -60,7 +61,7 @@ class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"tone");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
     }
 
     OpenParams() {

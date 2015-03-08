@@ -42,7 +42,7 @@ class Power extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"power");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
     }
 
     Delete(){

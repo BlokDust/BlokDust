@@ -7,9 +7,10 @@ class Reverb extends Effect {
     public Effect: Tone.Freeverb;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
 
         this.Effect = new Tone.Freeverb(0.7, 0.5);
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
@@ -17,7 +18,7 @@ class Reverb extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"reverb");
+        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"reverb");
     }
 
     Delete(){
