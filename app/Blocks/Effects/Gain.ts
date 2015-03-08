@@ -1,4 +1,3 @@
-import App = require("../../App");
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import AudioSettings = require("../../Core/Audio/AudioSettings");
@@ -10,7 +9,7 @@ class Gain extends Effect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = window.App.AudioMixer.Master.context.createGain();
+        this.Effect = App.AudioMixer.Master.context.createGain();
         this.Effect.gain.value = 1.2;
 
         super.Init(sketch);

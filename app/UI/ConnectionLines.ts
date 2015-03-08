@@ -1,7 +1,6 @@
 /**
  * Created by luketwyman on 14/02/2015.
  */
-import App = require("../App");
 import BlocksSketch = require("./../BlocksSketch");
 import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
@@ -23,8 +22,8 @@ class ConnectionLines {
 
         this._Ctx.beginPath();
 
-        for (var j=0; j<window.App.Blocks.Count; j++) {
-            var block = window.App.Blocks.GetValueAt(j);
+        for (var j=0; j<App.Blocks.Count; j++) {
+            var block = App.Blocks.GetValueAt(j);
             if ((<ISource>block).Effects) {
 
 
@@ -45,7 +44,7 @@ class ConnectionLines {
                     var xDif = (targetPos.x - myPos.x) / grd;
                     var yDif = (targetPos.y - myPos.y) / grd;
 
-                    this._Ctx.strokeStyle = window.App.Palette[15];// BLUE
+                    this._Ctx.strokeStyle = App.Palette[15];// BLUE
                     this._Ctx.moveTo(myPos.x, myPos.y);
 
                     if (xDif > 0) { // RIGHT HALF

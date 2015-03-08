@@ -2,7 +2,6 @@
  * Created by luketwyman on 24/02/2015.
  */
 
-import App = require("../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../ParametersPanel");
@@ -34,7 +33,7 @@ class OptionSample  extends Option{
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = window.App.Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -52,14 +51,14 @@ class OptionSample  extends Option{
 
 
         // PARAM NAME //
-        ctx.fillStyle = window.App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[8];// WHITE
         ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
 
         // INFO BUTTON //
-        ctx.strokeStyle = window.App.Palette[8];// WHITE
+        ctx.strokeStyle = App.Palette[8];// WHITE
         ctx.lineWidth = 1;
         ctx.textAlign = "center";
         var ix = panel.Margin + (panel.Range*0.575);

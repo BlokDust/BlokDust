@@ -1,7 +1,6 @@
 /**
  * Created by luketwyman on 27/01/2015.
  */
-import App = require("../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
@@ -36,7 +35,7 @@ class ZoomButtons extends DisplayObject {
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = window.App.Palette[8];// White
+        ctx.strokeStyle = App.Palette[8];// White
 
         var zin = this._InPos;
         var zout = this._OutPos;

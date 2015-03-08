@@ -2,7 +2,6 @@
  * Created by luketwyman on 26/01/2015.
  */
 
-import App = require("../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import Header = require("./Header");
@@ -56,12 +55,12 @@ class MenuCategory {
 
 
         // TEXT //
-        ctx.fillStyle = window.App.Palette[8];// White
+        ctx.fillStyle = App.Palette[8];// White
         ctx.fillText(this.Name, x ,(thisHeight * 0.5) + (dataType * 0.38));
 
         // HOVER //
         if (this.Hover && dropDown<1) {
-            ctx.fillStyle = window.App.Palette[2];// Black
+            ctx.fillStyle = App.Palette[2];// Black
             ctx.globalAlpha = 0.9;
 
             ctx.beginPath();

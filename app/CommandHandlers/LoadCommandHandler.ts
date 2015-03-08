@@ -1,4 +1,3 @@
-import App = require("../App");
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IBlock = require("../Blocks/IBlock");
 import IOperation = require("../Core/Operations/IOperation");
@@ -12,7 +11,7 @@ class LoadCommandHandler implements ICommandHandler {
 
     Execute(id: string): void{
         var op:IOperation = new LoadOperation(id);
-        window.App.OperationManager.Do(op).then((result) => {
+        App.OperationManager.Do(op).then((result) => {
             console.log(result);
         });
     }

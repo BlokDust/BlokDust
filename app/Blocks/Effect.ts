@@ -1,4 +1,3 @@
-import App = require("../App");
 import IBlock = require("./IBlock");
 import Block = require("./Block");
 import IEffect = require("./IEffect");
@@ -55,7 +54,7 @@ class Effect extends Block implements IEffect {
         for (var i = 0; i < this.Sources.Count; i++){
             var src: ISource = this.Sources.GetValueAt(i);
 
-            if (!window.App.Sources.Contains(src)){
+            if (!App.Sources.Contains(src)){
                 this.RemoveSource(src);
             }
         }

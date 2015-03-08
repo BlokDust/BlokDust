@@ -2,7 +2,6 @@
  * Created by luketwyman on 06/02/2015.
  */
 
-import App = require("../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../ParametersPanel");
@@ -66,7 +65,7 @@ class Parametric extends Option{
 
         // MARKERS //
         //ctx.globalAlpha = 1;
-        ctx.strokeStyle = window.App.Palette[1];// Grey
+        ctx.strokeStyle = App.Palette[1];// Grey
         ctx.beginPath();
         ctx.moveTo(panel.Margin - units, y + (height*0.1)); // left
         ctx.lineTo(panel.Margin - units, y + (height*0.8));
@@ -85,7 +84,7 @@ class Parametric extends Option{
         var bodyType = units*5;
         ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
         ctx.font = "400 " + bodyType + "px PT Sans";
-        ctx.fillStyle = window.App.Palette[8];
+        ctx.fillStyle = App.Palette[8];
         //ctx.fillStyle = "#393d43";
 
         for (var j=0; j<markers.length; j++) {
@@ -96,7 +95,7 @@ class Parametric extends Option{
 
 
             if (markers[j]==100 || markers[j]==1000) {
-                ctx.strokeStyle = window.App.Palette[1];// Grey
+                ctx.strokeStyle = App.Palette[1];// Grey
                 ctx.globalAlpha = 0.5;
                 ctx.beginPath();
                 ctx.moveTo(Math.round(panel.Margin + xPos)+0.5, y + (height*0.1)); // vert
@@ -109,7 +108,7 @@ class Parametric extends Option{
         /*ctx.globalAlpha = 0.35;
         for (var j=1; j<5; j++) {
             ctx.lineWidth = 2;
-            ctx.strokeStyle = window.App.Palette[2+j];
+            ctx.strokeStyle = App.Palette[2+j];
 
             ctx.beginPath();
             ctx.moveTo(panel.Margin, ly - (this["_Gain"+j][0]));
@@ -142,7 +141,7 @@ class Parametric extends Option{
         // LINE //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = window.App.Palette[8];
+        ctx.strokeStyle = App.Palette[8];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, ly - (this.LineGain[0]));
         for (var j=0; j<this.Smoothness; j++) {
@@ -159,7 +158,7 @@ class Parametric extends Option{
             var size = 2*units;
 
             if (j==0 || j== 3) {
-                ctx.fillStyle = window.App.Palette[3 + j];
+                ctx.fillStyle = App.Palette[3 + j];
                 ctx.beginPath();
                 ctx.moveTo(hx - size, y + (height * 0.9));
                 ctx.lineTo(hx, y + (height * 0.9) - size);
@@ -183,7 +182,7 @@ class Parametric extends Option{
         for (var j=0; j<4; j++) {
             var hx = panel.Margin + p[j].x;
             if (j!==0 && j!== (3)) {
-                this.SubHandles[j].Draw(ctx, hx, y + (height*0.9), height*0.02, window.App.Palette[3+j]);
+                this.SubHandles[j].Draw(ctx, hx, y + (height*0.9), height*0.02, App.Palette[3+j]);
             }
         }
 
@@ -194,7 +193,7 @@ class Parametric extends Option{
         for (var j=0; j<4; j++) {
             var hx = panel.Margin + p[j].x;
             var hy = y + (height*0.8) - p[j].y;
-            this.Handles[j].Draw(ctx,hx,hy,height * 0.05,window.App.Palette[3+j]);
+            this.Handles[j].Draw(ctx,hx,hy,height * 0.05,App.Palette[3+j]);
         }
 
     }

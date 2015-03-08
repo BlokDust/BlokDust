@@ -1,4 +1,3 @@
-import App = require("../../App");
 import Gain = require("./Gain");
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
@@ -14,7 +13,7 @@ class Chopper extends Effect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = window.App.AudioMixer.Master.context.createGain();
+        this.Effect = App.AudioMixer.Master.context.createGain();
 
         this.Rate = 50;
         this.Depth = 4;

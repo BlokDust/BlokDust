@@ -2,7 +2,6 @@
  * Created by luketwyman on 08/02/2015.
  */
 
-import App = require("../../App");
 import OptionHandle = require("./OptionHandle");
 
 class SubHandle {
@@ -59,7 +58,7 @@ class SubHandle {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = window.App.Palette[8];
+        ctx.fillStyle = App.Palette[8];
         ctx.beginPath();
         ctx.moveTo(x - w - size, y);
         ctx.lineTo(x - w, y - size);

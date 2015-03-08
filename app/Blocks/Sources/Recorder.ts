@@ -1,4 +1,3 @@
-import App = require("../../App");
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import Type = require("../BlockType");
@@ -21,7 +20,7 @@ class RecorderBlock extends Source {
 
         super.Init(sketch);
 
-        this.Recorder = new Recorder(window.App.AudioMixer.Master, {
+        this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
         });
 

@@ -2,8 +2,6 @@
  * Created by luketwyman on 19/01/2015.
  */
 
-import App = require("../../App");
-
 class OptionHandle {
 
     public Position: Point;
@@ -62,7 +60,7 @@ class OptionHandle {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = window.App.Palette[8];
+        ctx.fillStyle = App.Palette[8];
         ctx.beginPath();
         ctx.moveTo(x - size, y);
         ctx.lineTo(x, y - size);

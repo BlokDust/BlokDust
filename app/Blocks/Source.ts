@@ -1,4 +1,3 @@
-import App = require("../App");
 import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
@@ -48,7 +47,7 @@ class Source extends Block implements ISource {
 
 
             this.EffectsChainInput.connect(this.EffectsChainOutput);
-            this.EffectsChainOutput.connect(window.App.AudioMixer.Master);
+            this.EffectsChainOutput.connect(App.AudioMixer.Master);
 
             // THIS IS NEEDED FOR ANYTHING POLYPHONIC
             this.PolySources = [];
@@ -81,7 +80,7 @@ class Source extends Block implements ISource {
         for (var i = 0; i < this.Effects.Count; i++){
             var effect:IEffect = this.Effects.GetValueAt(i);
 
-            if (!window.App.Effects.Contains(effect)){
+            if (!App.Effects.Contains(effect)){
                 this.RemoveEffect(effect);
             }
         }
@@ -167,7 +166,7 @@ class Source extends Block implements ISource {
             }
             effects[effects.length - 1].Effect.disconnect();
             effects[effects.length - 1].Effect.connect(end);
-            end.connect(window.App.AudioMixer.Master);
+            end.connect(App.AudioMixer.Master);
         } else {
             start.disconnect();
             start.connect(end);

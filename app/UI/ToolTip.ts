@@ -1,7 +1,6 @@
 /**
  * Created by luketwyman on 26/01/2015.
  */
-import App = require("../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
@@ -44,7 +43,7 @@ class ToolTip extends DisplayObject {
 
         // BG //
         ctx.globalAlpha = thisAlpha*0.9;
-        ctx.fillStyle = window.App.Palette[2];// Black
+        ctx.fillStyle = App.Palette[2];// Black
 
         ctx.beginPath();
         ctx.moveTo(x,y);
@@ -56,7 +55,7 @@ class ToolTip extends DisplayObject {
 
         // NAME //
         ctx.globalAlpha = thisAlpha;
-        ctx.fillStyle = window.App.Palette[8]; // WHITE
+        ctx.fillStyle = App.Palette[8]; // WHITE
         ctx.textAlign = "left";
         ctx.fillText(this.Name.toUpperCase(), x + (30*units), y + (10*units) + (dataType*0.36));
     }

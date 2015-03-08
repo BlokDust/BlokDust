@@ -2,7 +2,6 @@
  * Created by luketwyman on 16/01/2015.
  */
 
-import App = require("../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../ParametersPanel");
@@ -48,7 +47,7 @@ class ButtonSelect extends Option{
         }
 
         // PARAM NAME //
-        ctx.fillStyle = window.App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[8];// WHITE
         ctx.font = panel.Sketch.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (midType * 0.4));

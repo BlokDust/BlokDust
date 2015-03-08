@@ -2,7 +2,6 @@
  * Created by luketwyman on 28/01/2015.
  */
 
-import App = require("../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
@@ -46,7 +45,7 @@ class MenuItem {
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
 
         // NAME //
-        ctx.fillStyle = ctx.strokeStyle = window.App.Palette[8];// White
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
         var dataType = units*10;
         ctx.textAlign = "center";
         ctx.font = this._Sketch.TxtMid;
@@ -87,7 +86,7 @@ class MenuItem {
 
 
             // VERTICAL LINES //
-            ctx.strokeStyle = window.App.Palette[1];// Grey
+            ctx.strokeStyle = App.Palette[1];// Grey
             ctx.beginPath();
             ctx.moveTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*0.5) + (20*units));
             ctx.lineTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*1.5) - (20*units));
