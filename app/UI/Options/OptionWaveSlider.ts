@@ -2,9 +2,9 @@
  * Created by luketwyman on 23/02/2015.
  */
 
+import App = require("../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import App = require("./../../App");
 import ParametersPanel = require("./../ParametersPanel");
 
 class WaveSlider extends Option{

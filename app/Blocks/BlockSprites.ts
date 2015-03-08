@@ -1,13 +1,14 @@
 /**
  * Created by luketwyman on 29/01/2015.
  */
+
+import App = require("../App");
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Type = require("./BlockType");
 import Size = Fayde.Utils.Size;
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
-import App = require("../App");
 
 class BlockSprites {
 

@@ -2,8 +2,7 @@
  * Created by luketwyman on 17/01/2015.
  */
 
-
-import App = require("./../../App");
+import App = require("../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../ParametersPanel");

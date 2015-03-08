@@ -1,7 +1,7 @@
+import App = require("../../App");
 import Source = require("../Source");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
-import App = require("../../App");
 import Vector = Fayde.Utils.Vector;
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -77,12 +77,12 @@ class ParticleEmitter extends Source {
 
         this.Grid.BlockSprites.Draw(this.Position,true,"particle emitter");
 
-        if (window.debug){
-            this.Ctx.fillStyle = "#fff";
-            var pos = this.Grid.ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
-            pos = this.Grid.ConvertBaseToTransformed(pos);
-            //this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
-        }
+        //if (window.debug){
+        //    this.Ctx.fillStyle = "#fff";
+        //    var pos = this.Grid.ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
+        //    pos = this.Grid.ConvertBaseToTransformed(pos);
+        //    //this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
+        //}
 
     }
 

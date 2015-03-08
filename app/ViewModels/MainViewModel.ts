@@ -1,6 +1,5 @@
 ///<amd-dependency path="fayde.utils"/>.
 
-import App = require("../App");
 import BlocksSketch = require("../BlocksSketch");
 
 class MainViewModel extends Fayde.MVVM.ViewModelBase {
@@ -10,7 +9,7 @@ class MainViewModel extends Fayde.MVVM.ViewModelBase {
     constructor() {
         super();
 
-        window.debug = true;
+        //window.debug = true;
 
         //this._BlocksSketch = new BlocksSketch();
     }

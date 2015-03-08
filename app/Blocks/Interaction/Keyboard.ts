@@ -1,7 +1,7 @@
+import App = require("../../App");
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import App = require("../../App");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import PitchComponent = require("./../Effects/Pitch");
 

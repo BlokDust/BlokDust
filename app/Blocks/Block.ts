@@ -1,4 +1,3 @@
-import App = require("../App");
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Type = require("./BlockType");

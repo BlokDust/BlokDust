@@ -1,7 +1,8 @@
 /**
  * Created by luketwyman on 11/01/2015.
  */
-import App = require("./../App");
+
+import App = require("../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");

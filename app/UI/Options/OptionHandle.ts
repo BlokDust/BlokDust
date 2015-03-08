@@ -1,7 +1,8 @@
 /**
  * Created by luketwyman on 19/01/2015.
  */
-import App = require("./../../App");
+
+import App = require("../../App");
 
 class OptionHandle {
 

@@ -2,11 +2,10 @@
  * Created by luketwyman on 24/02/2015.
  */
 
+import App = require("../../App");
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import App = require("./../../App");
 import ParametersPanel = require("./../ParametersPanel");
-
 
 class OptionSample  extends Option{
 
