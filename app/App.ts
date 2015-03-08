@@ -21,8 +21,6 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class App{
 
-    static Current: App;
-
     _Canvas: HTMLCanvasElement;
     _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
     OperationManager: OperationManager;
@@ -46,7 +44,7 @@ class App{
     BlocksSketch: BlocksSketch;
 
     constructor() {
-        App.Current = this;
+
     }
 
     public Setup(){

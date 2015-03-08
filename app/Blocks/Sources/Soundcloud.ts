@@ -30,12 +30,11 @@ class Soundcloud extends Source {
         this.Source.loop = true;
         this.Source.loopEnd = this.LoopEndPosition;
 
-        super.Init(sketch);
-
         this.Envelope = new Tone.AmplitudeEnvelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
         this.Source.connect(this.Envelope);
         this.Envelope.connect(this.EffectsChainInput);
 
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
