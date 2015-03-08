@@ -2,7 +2,7 @@
  * Created by luketwyman on 11/01/2015.
  */
 
-import App = require("../App");
+///<reference path='../typings/BlokDust.d.ts'/>
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
@@ -57,7 +57,7 @@ class ParametersPanel extends DisplayObject {
         this._NameWidth = 0;
 
         this.Options = [];
-        this.SliderColours = [App.GetInstance().Palette[3],App.GetInstance().Palette[4],App.GetInstance().Palette[9],App.GetInstance().Palette[7],App.GetInstance().Palette[5]];
+        this.SliderColours = [window.App.Palette[3],window.App.Palette[4],window.App.Palette[9],window.App.Palette[7],window.App.Palette[5]];
         this._SliderRoll = [];
 
         this._Timer = new Fayde.ClockTimer();
@@ -84,7 +84,6 @@ class ParametersPanel extends DisplayObject {
         var ctx = this.Ctx;
         var dataType = units*10;
         this._PanelCloseRoll = false;
-
 
         // GET NUMBER OF SLIDERS //
         var n = json.parameters.length;
@@ -354,17 +353,17 @@ class ParametersPanel extends DisplayObject {
 
 
         // DRAW PANEL //
-        ctx.fillStyle = App.GetInstance().Palette[14];// Shadow
+        ctx.fillStyle = window.App.Palette[14];// Shadow
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        ctx.fillStyle = App.GetInstance().Palette[2];// Black
+        ctx.fillStyle = window.App.Palette[2];// Black
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
 
 
         // CLOSE X //
-        ctx.strokeStyle = App.GetInstance().Palette[8];// WHITE
+        ctx.strokeStyle = window.App.Palette[8];// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) + (4 * units));
@@ -376,7 +375,7 @@ class ParametersPanel extends DisplayObject {
 
 
         // TITLE //
-        ctx.fillStyle = App.GetInstance().Palette[8];// WHITE
+        ctx.fillStyle = window.App.Palette[8];// WHITE
         ctx.textAlign = "left";
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.Height * 0.5));
 
