@@ -25,8 +25,8 @@ class MouseInputManager extends InputManager {
     }
 
     OnMouseDown(e: MouseEvent){
-        var position: Point = new Point(e.clientX, e.clientY);
-        console.log(new Date().getTime(), "mousedown", position);
+        //var position: Point = new Point(e.clientX, e.clientY);
+        //console.log(new Date().getTime(), "mousedown", position);
         this.MouseDown.raise(this, e);
     }
 
