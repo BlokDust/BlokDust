@@ -2,7 +2,6 @@
  * Created by luketwyman on 11/01/2015.
  */
 
-///<reference path='../typings/BlokDust.d.ts'/>
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
@@ -37,8 +36,8 @@ class ParametersPanel extends DisplayObject {
     public InitJson;
     private _JsonMemory;
 
-    private _Timer: Fayde.ClockTimer;
-    private _LastVisualTick: number = new Date(0).getTime();
+    //private _Timer: Fayde.ClockTimer;
+    //private _LastVisualTick: number = new Date(0).getTime();
 
     constructor() {
         super();
@@ -60,8 +59,8 @@ class ParametersPanel extends DisplayObject {
         this.SliderColours = [window.App.Palette[3],window.App.Palette[4],window.App.Palette[9],window.App.Palette[7],window.App.Palette[5]];
         this._SliderRoll = [];
 
-        this._Timer = new Fayde.ClockTimer();
-        this._Timer.RegisterTimer(this);
+        //this._Timer = new Fayde.ClockTimer();
+        //this._Timer.RegisterTimer(this);
 
         this.InitJson =
         {
