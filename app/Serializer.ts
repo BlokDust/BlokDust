@@ -1,24 +1,27 @@
-import App = require("./App");
 import IEffect = require("./Blocks/IEffect");
 import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import Grid = require("./Grid");
-import Tone = require("./Blocks/Sources/ToneSource");
+import ToneSource = require("./Blocks/Sources/ToneSource");
 import BitCrusher = require("./Blocks/Effects/BitCrusher");
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Serializer {
 
-    private static _Dictionary: any;
+    private static ToneSource: ToneSource = new ToneSource();
+    private static BitCrusher: BitCrusher = new BitCrusher();
+    private static _SerializationDictionary: any;
+    private static _DeserializationDictionary: any;
 
     public static Serialize(blocks: any[]): string{
 
-        this._Dictionary = {};
+        this._SerializationDictionary = {};
 
         // add all blocks to the dictionary.
         for (var i = 0; i < blocks.length; i++){
             var b = blocks[i];
 
-            this._Dictionary[b.Id] = false;
+            this._SerializationDictionary[b.Id] = false;
         }
 
         var json = {
@@ -45,13 +48,13 @@ class Serializer {
 
     private static _SerializeBlock(block: IBlock, parentBlock?: any): any {
 
-        var d = this._Dictionary[block.Id];
+        var d = this._SerializationDictionary[block.Id];
 
         if (d) {
             return;
         }
 
-        this._Dictionary[block.Id] = true;
+        this._SerializationDictionary[block.Id] = true;
 
         var b: any =  {};
 
@@ -86,13 +89,12 @@ class Serializer {
     }
 
     public static Deserialize(json: string): IBlock[]{
+
+        this._DeserializationDictionary = {};
+
         var parsed: any = JSON.parse(json);
 
-        var blocks: IBlock[] = [];
-
-        this._DeserializeBlocks(parsed.Composition);
-
-        return blocks;
+        return this._DeserializeBlocks(parsed.Composition);
     }
 
     private static _DeserializeBlocks(blocks: any[]): IBlock[] {
@@ -111,10 +113,34 @@ class Serializer {
     }
 
     private static _DeserializeBlock(b: any): IBlock {
-        var block: IBlock = eval("new Tone." + b.Type + "()");
 
-        block.Position = b.Position;
+        // if it's an id and has already been deserialized, return it.
+        if (Serializer._DeserializationDictionary[b]){
+            return Serializer._DeserializationDictionary[b];
+        }
+
+        Serializer._DeserializationDictionary[b.Id] = b;
+
+        // if it's a source block
+        if((<ISource>b).Effects){
+            var effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
+            effects.AddRange(<IEffect[]>Serializer._DeserializeBlocks(b.Effects));
+            (<ISource>b).Effects = effects;
+        }
+
+        // if it's an effect b
+        if((<IEffect>b).Sources){
+            var sources: ObservableCollection<ISource> = new ObservableCollection<ISource>();
+            sources.AddRange(<ISource[]>Serializer._DeserializeBlocks(b.Sources));
+            (<IEffect>b).Sources = sources;
+        }
+
+        var block: IBlock = eval("new " + b.Type + "()");
+
+        block.Position = new Point(b.Position.x, b.Position.y);
+        block.LastPosition = new Point(b.Position.x, b.Position.y);
         block.ParamJson = b.Params;
+        block.Init(App.BlocksSketch);
 
         return block;
     }
