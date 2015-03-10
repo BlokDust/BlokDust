@@ -85,9 +85,9 @@ class BlocksSketch extends Grid {
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
         App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
 
-        App.OperationManager.OperationAdded.on((operation: IOperation) => {
-            this._Invalidate();
-        }, this);
+        //App.OperationManager.OperationAdded.on((operation: IOperation) => {
+        //    this._Invalidate();
+        //}, this);
 
         App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();

@@ -8,8 +8,10 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Serializer {
 
+    // todo: is there a way to make these block types available without needing to instantiate them?
     private static ToneSource: ToneSource = new ToneSource();
     private static BitCrusher: BitCrusher = new BitCrusher();
+
     private static _SerializationDictionary: any;
     private static _DeserializationDictionary: any;
 
@@ -94,7 +96,9 @@ class Serializer {
 
         var parsed: any = JSON.parse(json);
 
-        return this._DeserializeBlocks(parsed.Composition);
+        var blocks = this._DeserializeBlocks(parsed.Composition);
+
+        return blocks;
     }
 
     private static _DeserializeBlocks(blocks: any[]): IBlock[] {
@@ -114,33 +118,37 @@ class Serializer {
 
     private static _DeserializeBlock(b: any): IBlock {
 
+        var block: IBlock;
+
         // if it's an id and has already been deserialized, return it.
-        if (Serializer._DeserializationDictionary[b]){
-            return Serializer._DeserializationDictionary[b];
+        if (!(b.Id != null && b.Id.isInt()) && Serializer._DeserializationDictionary[b]){
+            block = Serializer._DeserializationDictionary[b];
+        } else {
+            block = eval("new " + b.Type + "()");
+
+            block.Id = b.Id;
+            block.Position = new Point(b.Position.x, b.Position.y);
+            block.LastPosition = new Point(b.Position.x, b.Position.y);
+            block.ParamJson = b.Params;
+            block.Init(App.BlocksSketch);
+
+            Serializer._DeserializationDictionary[b.Id] = block;
         }
 
-        Serializer._DeserializationDictionary[b.Id] = b;
-
+        // todo: use reflection
         // if it's a source block
         if((<ISource>b).Effects){
-            var effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
-            effects.AddRange(<IEffect[]>Serializer._DeserializeBlocks(b.Effects));
-            (<ISource>b).Effects = effects;
+            var effects = <IEffect[]>Serializer._DeserializeBlocks(b.Effects);
+            (<ISource>block).Effects.AddRange(effects);
         }
 
         // if it's an effect b
         if((<IEffect>b).Sources){
-            var sources: ObservableCollection<ISource> = new ObservableCollection<ISource>();
-            sources.AddRange(<ISource[]>Serializer._DeserializeBlocks(b.Sources));
-            (<IEffect>b).Sources = sources;
+            var sources = <ISource[]>Serializer._DeserializeBlocks(b.Sources);
+            (<IEffect>block).Sources.AddRange(sources);
         }
 
-        var block: IBlock = eval("new " + b.Type + "()");
-
-        block.Position = new Point(b.Position.x, b.Position.y);
-        block.LastPosition = new Point(b.Position.x, b.Position.y);
-        block.ParamJson = b.Params;
-        block.Init(App.BlocksSketch);
+        console.log(block);
 
         return block;
     }

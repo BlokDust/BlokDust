@@ -10,7 +10,7 @@ class OperationManager {
     private _CurrentOperation: Promise<any>;
     private _MaxOperations: number = 100;
 
-    OperationAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    //OperationAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationComplete: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
@@ -68,12 +68,14 @@ class OperationManager {
 
         this._Operations.Add(operation);
 
+        this.OperationBegin.raise(operation, new Fayde.RoutedEventArgs());
+
         var that = this;
 
         return this._CurrentOperation = operation.Do().then((result) => {
             that._CurrentOperation = null;
             that.Head = this._Operations.Count - 1;
-            that.OperationAdded.raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationComplete.raise(operation, new Fayde.RoutedEventArgs());
 
             that._Debug();
 
@@ -87,6 +89,8 @@ class OperationManager {
         if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
 
         var operation = this._Operations.GetValueAt(this.Head);
+
+        this.OperationBegin.raise(operation, new Fayde.RoutedEventArgs());
 
         var that = this;
 

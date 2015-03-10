@@ -70,25 +70,40 @@ class App{
         this.Blocks.CollectionChanged.on(() => {
             this.Sources.Clear();
 
-            for (var i = 0; i < this.Blocks.Count; i++) {
-                var block = this.Blocks.GetValueAt(i);
+            // todo: use reflection when available
+            var sources = this.Blocks.ToArray();
 
-                // todo: use reflection when available
-                if ((<ISource>block).Effects){
-                    this.Sources.Add((<ISource>block));
-                }
-            }
+            var e = (<any>sources).en()
+                .select(b => b.Effects).toArray();
 
-            this.Effects.Clear();
+            this.Sources.AddRange(e);
 
-            for (var i = 0; i < this.Blocks.Count; i++) {
-                var block = this.Blocks.GetValueAt(i);
+            var effects = this.Blocks.ToArray();
 
-                // todo: use reflection when available
-                if (!(<ISource>block).Effects){
-                    this.Effects.Add((<IEffect>block));
-                }
-            }
+            e = (<any>effects).en()
+                .select(b => b.Sources).toArray();
+
+            this.Effects.AddRange(e);
+
+            //for (var i = 0; i < this.Blocks.Count; i++) {
+            //    var block = this.Blocks.GetValueAt(i);
+            //
+            //    // todo: use reflection when available
+            //    if ((<ISource>block).Effects){
+            //        this.Sources.Add((<ISource>block));
+            //    }
+            //}
+            //
+            //this.Effects.Clear();
+            //
+            //for (var i = 0; i < this.Blocks.Count; i++) {
+            //    var block = this.Blocks.GetValueAt(i);
+            //
+            //    // todo: use reflection when available
+            //    if (!(<ISource>block).Effects){
+            //        this.Effects.Add((<IEffect>block));
+            //    }
+            //}
         }, this);
 
         this.AudioMixer = new AudioMixer();
