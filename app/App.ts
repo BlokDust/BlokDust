@@ -78,6 +78,9 @@ class App{
 
             this.Sources.AddRange(e);
 
+
+            this.Effects.Clear();
+
             var effects = this.Blocks.ToArray();
 
             e = (<any>effects).en()
