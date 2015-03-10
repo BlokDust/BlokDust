@@ -1,3 +1,4 @@
+/// <reference path="./lib/exjs/dist/ex.d.ts"/>
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
@@ -29,8 +30,8 @@ class App{
     CompositionId: string;
     Fonts: Fonts;
     Blocks: DisplayObjectCollection<IBlock>;
-    Sources: ObservableCollection<ISource>;
-    Effects: ObservableCollection<IEffect>;
+    Sources: ObservableCollection<IBlock>;
+    Effects: ObservableCollection<IBlock>;
     AudioMixer: AudioMixer;
     InputManager: InputManager;
     KeyboardInput: KeyboardInput;
@@ -68,25 +69,27 @@ class App{
         this.Effects = new ObservableCollection<IEffect>();
 
         this.Blocks.CollectionChanged.on(() => {
+
+            if (!this.Blocks.Count) return;
+
             this.Sources.Clear();
 
             // todo: use reflection when available
             var sources = this.Blocks.ToArray();
 
-            var e = (<any>sources).en()
-                .select(b => b.Effects).toArray();
+            var e = sources.en()
+                .select(b => (<any>b).Effects);
 
-            this.Sources.AddRange(e);
-
+            this.Sources.AddRange(e.toArray());
 
             this.Effects.Clear();
 
             var effects = this.Blocks.ToArray();
 
-            e = (<any>effects).en()
-                .select(b => b.Sources).toArray();
+            e = effects.en()
+                .select(b => (<any>b).Sources);
 
-            this.Effects.AddRange(e);
+            this.Effects.AddRange(e.toArray());
 
             //for (var i = 0; i < this.Blocks.Count; i++) {
             //    var block = this.Blocks.GetValueAt(i);
