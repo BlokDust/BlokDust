@@ -15,8 +15,6 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import Transformer = Fayde.Transformer.Transformer;
-import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./UI/ParametersPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
@@ -26,6 +24,8 @@ import ConnectionLines = require("./UI/ConnectionLines");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
 import Utils = Fayde.Utils;
+import Transformer = Fayde.Transformer.Transformer;
+import Size = Fayde.Utils.Size;
 
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
@@ -54,7 +54,7 @@ class BlocksSketch extends Grid {
     public TxtBody: string;
     public TxtItalic: string;
     public TxtData: string;
-    public AltDown: boolean = false;
+    public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -728,14 +728,6 @@ class BlocksSketch extends Grid {
         this._SelectedBlock.Delete();
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
-    }
-
-    Undo(){
-        App.OperationManager.Undo();
-    }
-
-    Redo(){
-        App.OperationManager.Redo();
     }
 }
 

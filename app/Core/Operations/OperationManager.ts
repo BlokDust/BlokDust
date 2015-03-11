@@ -154,7 +154,7 @@ class OperationManager {
     }
 
     public CanUndo(): boolean {
-        return this.Head > -1;
+        return this.Head > 0;
     }
 
     public CanRedo(): boolean {

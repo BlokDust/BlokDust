@@ -24,6 +24,8 @@ import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommand
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
+import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
+import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 declare var PixelPalette;
@@ -81,11 +83,13 @@ class App{
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.REDO], RedoCommandHandler.prototype));
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
-        var pixelPalette = new PixelPalette("img/palette6.gif");
+        var pixelPalette = new PixelPalette("img/palette6.gif"); // todo: move to config.json
 
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;

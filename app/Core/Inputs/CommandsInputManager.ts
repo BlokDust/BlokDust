@@ -1,4 +1,3 @@
-import App = require("../../App");
 import InputManager = require("./InputManager");
 import KeyDownEventArgs = require("./KeyDownEventArgs");
 import KeyUpEventArgs = require("./KeyUpEventArgs");
@@ -178,6 +177,17 @@ class CommandsInputManager extends InputManager {
 
         if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.s)){
             this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
+            return;
+        }
+
+        if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.Shift) && this.IsKeyNameDown(KeyMap.z)){
+            this._CommandManager.ExecuteCommand(Commands[Commands.REDO]);
+            return;
+        }
+
+        if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.z)){
+            this._CommandManager.ExecuteCommand(Commands[Commands.UNDO]);
+            return;
         }
     }
 }
