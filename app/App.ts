@@ -18,7 +18,15 @@ import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource")
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
 import BlocksSketch = require("./BlocksSketch");
+import Commands = require("./Commands");
+import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
+import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
+import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
+import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
+import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
+
+declare var PixelPalette;
 
 class App{
 
@@ -68,6 +76,21 @@ class App{
         this.Sources = new ObservableCollection<ISource>();
         this.Effects = new ObservableCollection<IEffect>();
 
+        // register command handlers
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
+
+        this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
+        this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
+
+        var pixelPalette = new PixelPalette("img/palette6.gif");
+
+        pixelPalette.Load((palette: string[]) => {
+            this.Palette = palette;
+        });
+
         this.Blocks.CollectionChanged.on(() => {
 
             if (!this.Blocks.Count) return;
@@ -78,7 +101,7 @@ class App{
             var sources = this.Blocks.ToArray();
 
             var e = sources.en()
-                .select(b => (<any>b).Effects);
+                .where(b => (<ISource>b).Effects !== undefined);
 
             this.Sources.AddRange(e.toArray());
 
@@ -87,7 +110,7 @@ class App{
             var effects = this.Blocks.ToArray();
 
             e = effects.en()
-                .select(b => (<any>b).Sources);
+                .where(b => (<IEffect>b).Sources !== undefined);
 
             this.Effects.AddRange(e.toArray());
 
