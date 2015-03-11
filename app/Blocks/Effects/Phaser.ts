@@ -34,7 +34,7 @@ class Phaser extends Effect {
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         } else {
             this.Effect.set(
                 jsonVariable
@@ -46,13 +46,13 @@ class Phaser extends Effect {
         super.GetValue(param);
         var val;
         if (param=="rate") {
-            val = this.Effect.getRate();
+            val = this.Effect.frequency.value;
         } else if (param=="depth") {
-            val = this.Effect.getDepth();
+            val = this.Effect.depth;
         } else if (param=="baseFrequency") {
-            val = this.Effect.getBaseFrequency();
+            val = this.Effect.baseFrequency;
         } else if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         }
         return val;
     }

@@ -6,12 +6,15 @@ import AudioSettings = require("../../Core/Audio/AudioSettings");
 class Gain extends Effect {
 
     public Effect: GainNode;
-
+    //public Effect: Tone.Signal;
 
     constructor(grid: Grid, position: Point){
 
         this.Effect = App.AudioMixer.Master.context.createGain();
         this.Effect.gain.value = 1.2;
+
+        //this.Effect = new Tone.Signal(1, 'db');
+
 
         super(grid, position);
 
@@ -33,11 +36,17 @@ class Gain extends Effect {
         super.SetValue(param,value);
 
         this.Effect.gain.value = (value/10)+1;
+        //this.Effect.value = value;
     }
 
     GetValue(param: string) {
         super.GetValue(param);
-        var val = (this.Effect.gain.value-1)*10;
+
+
+        if (param === "gain") {
+            var val = (this.Effect.gain.value-1)*10;
+            //var val = this.Effect.value;
+        }
 
         return val;
     }
@@ -58,8 +67,10 @@ class Gain extends Effect {
                         "value": this.GetValue("gain"),
                         "min": -10,
                         "max": 10,
+                        //"min": 0.01,
+                        //"max": 20,
                         "quantised": false,
-                        "centered": true
+                        "centered": true,
                     }
                 }
             ]

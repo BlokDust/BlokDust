@@ -1,5 +1,7 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
+import Effect = require("../Effect");
+import Block = require("../Block");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
@@ -7,7 +9,7 @@ import Particle = require("../../Particle");
 class ToneSource extends Source {
 
     public Frequency: number;
-    public Envelope: any;
+    public Envelope: Tone.AmplitudeEnvelope;
 
     constructor(grid: Grid, position: Point) {
         this.BlockType = BlockType.ToneSource;
@@ -17,10 +19,15 @@ class ToneSource extends Source {
 
         super(grid, position);
 
-        this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
-        this.Envelope.connect(this.Source.output.gain);
-        this.Source.connect(this.EffectsChainInput);
-        this.Source.start();
+        this.Envelope = new Tone.AmplitudeEnvelope(
+            this.Settings.envelope.attack,
+            this.Settings.envelope.decay,
+            this.Settings.envelope.sustain,
+            this.Settings.envelope.release
+        );
+
+        this.Envelope.connect(this.EffectsChainInput);
+        this.Source.connect(this.Envelope).start();
 
         this.Width = 150;
         this.Height = 150;
@@ -131,7 +138,7 @@ class ToneSource extends Source {
 
             // Set waveforms on PolySources
             for(var i = 0; i<this.PolySources.length; i++){
-                this.PolySources[i].setType(value);
+                this.PolySources[i].type = value;
             }
 
         } else if (param == "frequency") {

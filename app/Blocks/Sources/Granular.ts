@@ -105,8 +105,7 @@ class Granular extends Source {
             this.Grains[i].connect(this.Source);
             this.Source.connect(this.EffectsChainInput);
 
-            this.Grains[i].setPlaybackRate(this.PlaybackRate);
-
+            this.Grains[i].playbackRate = this.PlaybackRate;
         }
 
 
@@ -289,7 +288,7 @@ class Granular extends Source {
         this.EndTimeout = setTimeout(function() {
             gran._NoteOn = false;
             console.log("END");
-        },this.Envelope.release*1000);
+        },<any>this.Envelope.release*1000);
     }
 
 
@@ -314,8 +313,9 @@ class Granular extends Source {
                 // MAKE SURE THESE ARE IN SYNC //
                 this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.smoothness,"+0");
                 this.Grains[this._CurrentGrain].stop();
-                this.Grains[this._CurrentGrain].setPlaybackRate(this.PlaybackRate);
-                this.Grains[this._CurrentGrain].start("+0", location, (this.GrainSettings.grainlength*this.PlaybackRate)*1.9);
+                this.Grains[this._CurrentGrain].playbackRate = this.PlaybackRate;
+                this.Grains[this._CurrentGrain].start();
+                //this.Grains[this._CurrentGrain].start("+0", location, (this.GrainSettings.grainlength*this.PlaybackRate)*1.9);
 
                 clearTimeout(this.Timeout);
                 this.Timeout = setTimeout(function() {
@@ -390,8 +390,8 @@ class Granular extends Source {
                 this.GrainSettings.rate = this.GrainSettings.grainlength*2;
                 this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.5;
                 for (var i=0; i< this.MaxDensity; i++) {
-                    this._Envelopes[i].setAttack(this.GrainSettings.smoothness);
-                    this._Envelopes[i].setRelease(this.GrainSettings.smoothness);
+                    this._Envelopes[i].attack = this.GrainSettings.smoothness;
+                    this._Envelopes[i].release = this.GrainSettings.smoothness;
                 }
 
                 break;

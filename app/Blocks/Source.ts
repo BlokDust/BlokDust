@@ -14,7 +14,7 @@ class Source extends Block implements ISource {
     public OldEffects: ObservableCollection<IEffect>;
 
     public Source: any;
-    public Envelope: any;
+    public Envelope: Tone.AmplitudeEnvelope;
     public EffectsChainInput: Tone.Signal;
     public EffectsChainOutput: Tone.Signal;
     public PlaybackRate: number;
@@ -41,8 +41,8 @@ class Source extends Block implements ISource {
 
         if (this.BlockType != BlockType.Power) {
 
-            this.EffectsChainInput = new Tone.Signal;
-            this.EffectsChainOutput = new Tone.Signal;
+            this.EffectsChainInput = new Tone.Signal();
+            this.EffectsChainOutput = new Tone.Signal();
 
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
@@ -167,7 +167,7 @@ class Source extends Block implements ISource {
             }
             effects[effects.length - 1].Effect.disconnect();
             effects[effects.length - 1].Effect.connect(end);
-            end.connect(App.AudioMixer.Master);
+            end.toMaster();
         } else {
             start.disconnect();
             start.connect(end);
@@ -235,15 +235,15 @@ class Source extends Block implements ISource {
 
         var val;
         switch (param){
-            case "frequency": val = this.Source.getFrequency();
+            case "frequency": val = this.Source.frequency.value;
                 break;
-            case "detune": val = this.Source.getDetune();
+            case "detune": val = this.Source.detune.value;
                 break;
-            case "waveform": val = this.Source.getType();
+            case "waveform": val = this.Source.type;
                 break;
-            case "volume": val = this.Source.getGain();
+            case "volume": val = this.Source.gain.value;
                 break;
-            case "playbackRate": val = this.Source.getPlaybackRate();
+            case "playbackRate": val = this.Source.playbackRate;
                 break;
         }
         return val;
@@ -258,13 +258,13 @@ class Source extends Block implements ISource {
         switch (param){
             case "frequency": this.Source.frequency.exponentialRampToValueNow(value, 0);
                 break;
-            case "detune": this.Source.setDetune(value);
+            case "detune": this.Source.detune.value = value;
                 break;
-            case "waveform": this.Source.setType(value);
+            case "waveform": this.Source.type = value;
                 break;
-            case "volume": this.Source.setGain(value);
+            case "volume": this.Source.gain.value = value;
                 break;
-            case "playbackRate": this.Source.setPlaybackRate(value, 0);
+            case "playbackRate": this.Source.playbackRate = value;
                 break;
         }
     }

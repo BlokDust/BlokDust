@@ -49,7 +49,7 @@ class Keyboard extends Effect {
             }
 
             if (source.Source.frequency){
-                source.Source.frequency.setValue(source.Frequency);
+                source.Source.frequency.value = source.Frequency;
             }
         }
 

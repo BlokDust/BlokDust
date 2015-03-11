@@ -29,11 +29,11 @@ class Reverb extends Effect {
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         } else if (param=="dampening") {
-            this.Effect.setDampening(value);
+            this.Effect.dampening.value = value;
         } else if (param=="roomSize") {
-            this.Effect.setRoomSize(value);
+            this.Effect.roomSize.value = value;
         }
     }
 
@@ -41,11 +41,11 @@ class Reverb extends Effect {
         super.GetValue(param);
         var val;
         if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         } else if (param=="dampening") {
-            val = this.Effect.getDampening();
+            val = this.Effect.dampening.value;
         } else if (param=="roomSize") {
-            val = this.Effect.getRoomSize();
+            val = this.Effect.roomSize.value;
         }
         return val;
     }

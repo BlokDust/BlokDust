@@ -45,13 +45,13 @@ class Chorus extends Effect {
         super.GetValue(param);
         var val;
         if (param=="rate") {
-            val = this.Effect.getRate();
+            val = this.Effect.frequency.value;
         } else if (param=="delayTime") {
-            val = this.Effect.getDelayTime();
+            val = this.Effect.delayTime;
         } else if (param=="depth") {
-            val = this.Effect.getDepth();
+            val = this.Effect.depth;
         } else if (param=="feedback") {
-            val = this.Effect.getFeedback();
+            val = this.Effect.feedback.value;
         }
 
         return val;

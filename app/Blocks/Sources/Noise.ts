@@ -18,11 +18,17 @@ class Noise extends Source {
 
         super(grid, position);
 
-        this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
-        this.Envelope.connect(this.Source.output.gain);
-        this.Source.connect(this.EffectsChainInput);
+        this.Envelope = new Tone.AmplitudeEnvelope(
+            this.Settings.envelope.attack,
+            this.Settings.envelope.decay,
+            this.Settings.envelope.sustain,
+            this.Settings.envelope.release
+        );
 
-        this.Source.start();
+        this.Envelope.connect(this.EffectsChainInput);
+
+        //this.Envelope.
+        this.Source.connect(this.Envelope).start();
 
         this.DelayedRelease = 0;
 
@@ -78,30 +84,10 @@ class Noise extends Source {
         }
     }
 
-    // output blocks are blue circles
     Draw() {
         super.Draw();
 
         this.Grid.BlockSprites.Draw(this.Position,true,"noise");
-
-        /*this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(1,0);
-        this.DrawLineTo(-1,2);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
-        this.DrawMoveTo(-1,0);
-        this.DrawLineTo(0,-1);
-        this.DrawLineTo(1,-1);
-        this.DrawLineTo(0,0);
-        this.Ctx.closePath();
-        this.Ctx.fill();*/
     }
 
     OpenParams() {

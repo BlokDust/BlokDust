@@ -116,9 +116,9 @@ class KeyboardPoly extends Keyboard {
         for (var i = 0; i<this.ActiveVoices.length; i++) {
 
                 if (source.Frequency) {
-                    source.PolySources[r - 1].setFrequency(frequency);
+                    source.PolySources[r - 1].frequency.value = frequency;
                 } else if (source.PlaybackRate){
-                    source.PolySources[r-1].setPlaybackRate(frequency);
+                    source.PolySources[r-1].playbackRate = frequency;
                 }
                 source.PolyEnvelopes[r-1].triggerAttack();
 
@@ -148,7 +148,7 @@ class KeyboardPoly extends Keyboard {
                 for (var j=0; j<source.PolyEnvelopes.length; j++){
 
                     // If frequency is the same as the key up or playback speed is the same as keyup
-                    if (Math.round(source.PolySources[j].getFrequency()) == Math.round(frequency)) {
+                    if (Math.round(source.PolySources[j].frequency.value) == Math.round(frequency)) {
                         source.PolyEnvelopes[j].triggerRelease();
                         console.log(source);
                     }

@@ -8,7 +8,7 @@
     "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.4.0",
     "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.5.4",
     "fayde.transformer": "git://github.com/edsilv/fayde.transformer#~0.6.0",
-    "tone": "git://github.com/lukephills/Tone.js#~0.2.18",
+    "tone": "git://github.com/lukephills/Tone.js#~0.4.0",
     "pixelpalette": "0.1.8",
     "RecorderJS": "git://github.com/lukephills/Recorderjs#~1.0.3",
     "jquery": "~2.1.3"

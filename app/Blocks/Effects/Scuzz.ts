@@ -1,15 +1,16 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
+import ISource = require("../ISource");
 import App = require("../../App");
 
 class Scuzz extends Effect {
 
-    LFO: Tone.LFO;
+    public LFO: Tone.LFO;
 
     constructor(grid: Grid, position: Point){
 
         this.LFO = new Tone.LFO(100, -1000, 1000);
-        this.LFO.setType('sawtooth');
+        this.LFO.type = 'sawtooth';
 
         super(grid, position);
         // Define Outline for HitTest
@@ -19,6 +20,31 @@ class Scuzz extends Effect {
     Draw() {
         super.Draw();
         this.Grid.BlockSprites.Draw(this.Position,true,"scuzz");
+    }
+
+    Attach(source:ISource): void{
+        super.Attach(source);
+
+        if (source.Source.detune) {
+            this.LFO.connect(source.Source.detune);
+            this.LFO.start();
+
+            // FOR POLYPHONIC
+            for(var i = 0; i<source.PolySources.length; i++){
+                this.LFO.connect(source.PolySources[i].detune);
+            }
+
+        }
+    }
+
+    Detach(source:ISource): void {
+        super.Detach(source);
+
+        if (source.Source.detune) {
+            this.LFO.stop();
+            this.LFO.disconnect();
+
+        }
     }
 
     Delete(){
@@ -31,10 +57,10 @@ class Scuzz extends Effect {
         jsonVariable[param] = value;
 
         if (param=="rate") {
-            this.LFO.setFrequency(value);
+            this.LFO.frequency.value = value;
         } else if (param=="depth") {
-            this.LFO.setMin(-value);
-            this.LFO.setMax(value);
+            this.LFO.min = -value;
+            this.LFO.max = value;
         }
     }
 
@@ -42,9 +68,9 @@ class Scuzz extends Effect {
         super.GetValue(param);
         var val;
         if (param=="rate") {
-            val = this.LFO.getFrequency();
+            val = this.LFO.frequency.value;
         } else if (param=="depth") {
-            val = this.LFO.getMax();
+            val = this.LFO.max;
         }
         return val;
     }

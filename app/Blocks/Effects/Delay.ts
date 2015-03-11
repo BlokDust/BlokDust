@@ -9,8 +9,8 @@ class Delay extends Effect {
     constructor(grid: Grid, position: Point){
 
         this.Effect = new Tone.PingPongDelay('8n');
-        this.Effect.setFeedback(0.4);
-        this.Effect.dryWet.setDry(0.5);
+        this.Effect.feedback.value = 0.4;
+        this.Effect.wet.value = 0.5;
 
         super(grid, position);
 
@@ -32,7 +32,7 @@ class Delay extends Effect {
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         } else {
             this.Effect.set(
                 jsonVariable
@@ -44,11 +44,11 @@ class Delay extends Effect {
         super.GetValue(param);
         var val;
         if (param=="delayTime") {
-            val = this.Effect.getDelayTime();
+            val = this.Effect.delayTime.value;
         } else if (param=="feedback") {
-            val = this.Effect.getFeedback();
+            val = this.Effect.feedback.value;
         } else if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         }
         return val;
     }

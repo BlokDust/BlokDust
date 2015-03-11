@@ -10,7 +10,7 @@ class LFO extends Effect {
     constructor(grid: Grid, position: Point){
 
         this.LFO = new Tone.LFO(2, -20, 20);
-        this.LFO.setType('triangle');
+        this.LFO.type = 'triangle';
 
         super(grid, position);
 
@@ -59,10 +59,10 @@ class LFO extends Effect {
         jsonVariable[param] = value;
 
         if (param=="rate") {
-            this.LFO.setFrequency(value);
+            this.LFO.frequency.value = value;
         } else if (param=="depth") {
-            this.LFO.setMin(-value);
-            this.LFO.setMax(value);
+            this.LFO.min = -value;
+            this.LFO.max = value;
         }
     }
 
@@ -70,9 +70,9 @@ class LFO extends Effect {
         super.GetValue(param);
         var val;
         if (param=="rate") {
-            val = this.LFO.getFrequency();
+            val = this.LFO.frequency.value;
         } else if (param=="depth") {
-            val = this.LFO.getMax();
+            val = this.LFO.max;
         }
         return val;
     }

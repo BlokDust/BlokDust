@@ -32,7 +32,7 @@ class RecorderBlock extends Source {
 
         this.BufferSource = this.RecordedAudio.context.createBufferSource();
 
-        this.RecordedAudio.setVolume(10);
+        this.RecordedAudio.volume.value = 10;
         this.RecordedAudio.loop = true;
         this.StopPlaybackOnRecord = false;
 
@@ -88,7 +88,7 @@ class RecorderBlock extends Source {
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            this.RecordedAudio.setBuffer(this.BufferSource.buffer);
+            this.RecordedAudio.buffer = this.BufferSource.buffer;
 
             this._OnBuffersReady();
         });
