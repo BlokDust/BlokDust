@@ -1,4 +1,5 @@
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -68,7 +69,7 @@ class Noise extends Source {
     Draw() {
         super.Draw();
 
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
 
         /*this.Ctx.beginPath();
         this.Ctx.fillStyle = this._AppPalette[4];// GREEN

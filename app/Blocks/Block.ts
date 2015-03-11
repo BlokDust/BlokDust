@@ -91,7 +91,7 @@ class Block extends DisplayObject implements IBlock {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if ((<Grid>this.Sketch).AltDown && this._Duplicable) {
+            if ((<BlocksSketch>this.Sketch).AltDown && this._Duplicable) {
                 (<BlocksSketch>this.Sketch).CreateBlockFromType(this.Type);
                 this.MouseUp();
             }

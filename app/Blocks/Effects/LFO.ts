@@ -1,7 +1,7 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class LFO extends Effect {
 
@@ -20,7 +20,7 @@ class LFO extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
     Attach(source:ISource): void{

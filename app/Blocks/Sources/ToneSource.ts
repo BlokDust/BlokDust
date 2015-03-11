@@ -1,4 +1,5 @@
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -61,7 +62,7 @@ class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
     }
 
     OpenParams() {

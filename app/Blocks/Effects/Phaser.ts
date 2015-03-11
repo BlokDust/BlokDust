@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Phaser extends Effect {
 
@@ -23,7 +23,7 @@ class Phaser extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
     }
 
     Delete(){

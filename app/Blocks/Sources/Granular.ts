@@ -1,5 +1,5 @@
 import Source = require("../Source");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 import Grid = require("../../Grid");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -250,7 +250,7 @@ class Granular extends Source {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
     }
 
     MouseDown() {

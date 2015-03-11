@@ -3,6 +3,7 @@ import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import Vector = Fayde.Utils.Vector;
 import Type = require("../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 
 class ParticleEmitter extends Source {
@@ -74,7 +75,7 @@ class ParticleEmitter extends Source {
     Draw() {
         super.Draw();
 
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
 
         //if (window.debug){
         //    this.Ctx.fillStyle = "#fff";

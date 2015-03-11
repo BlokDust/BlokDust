@@ -11,15 +11,6 @@ class Grid extends Fayde.Drawing.SketchContext {
     public ScaleToFit: boolean = false;
     private _InitialUnitWidth: number;
     public GridSize: number; // multiplier of Units to specify grid cell width
-    public BlockSprites: BlockSprites;
-    public TxtHeader: string;
-    public TxtSlider: string;
-    public TxtMid: string;
-    public TxtBody: string;
-    public TxtItalic: string;
-    public TxtData: string;
-    public AltDown: boolean = false;
-
 
     private _TransformGroup: TransformGroup;
 
@@ -109,9 +100,9 @@ class Grid extends Fayde.Drawing.SketchContext {
     // BLOCK SNAPPING //
     public SnapToGrid(point: Point): Point {
 
-        var grd = this.CellWidth.width;
-        var x = Math.round((point.x)/grd)*grd;
-        var y = Math.round((point.y)/grd)*grd;
+        var w = this.CellWidth.width;
+        var x = Math.round((point.x)/w)*w;
+        var y = Math.round((point.y)/w)*w;
 
         return new Point(x, y);
     }

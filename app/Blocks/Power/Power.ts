@@ -2,6 +2,7 @@ import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import Type = require("./../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 import Soundcloud = require("./../Sources/Soundcloud");
 
@@ -42,7 +43,7 @@ class Power extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
     }
 
     Delete(){

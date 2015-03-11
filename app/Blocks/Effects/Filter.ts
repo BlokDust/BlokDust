@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Filter extends Effect {
 
@@ -24,7 +24,7 @@ class Filter extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
     }
 
     Delete(){

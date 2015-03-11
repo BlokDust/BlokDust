@@ -3,6 +3,7 @@ import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import Type = require("../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 
 class KeyboardPoly extends Keyboard {
@@ -25,7 +26,7 @@ class KeyboardPoly extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"poly keyboard");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"poly keyboard");
     }
 
     Attach(source:ISource): void {

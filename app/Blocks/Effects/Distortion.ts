@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Distortion extends Effect {
 
@@ -20,7 +20,7 @@ class Distortion extends Effect {
     Draw() {
         super.Draw();
 
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
 
     }
 

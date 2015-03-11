@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class EQ extends Effect {
 
@@ -47,7 +47,7 @@ class EQ extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
     }
 
     Delete(){

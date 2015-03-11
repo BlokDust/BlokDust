@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Delay extends Effect {
 
@@ -20,7 +20,7 @@ class Delay extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
     }
 
     Delete(){

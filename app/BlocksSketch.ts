@@ -48,6 +48,13 @@ class BlocksSketch extends Grid {
     private _PointerPoint: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
+    public TxtHeader: string;
+    public TxtSlider: string;
+    public TxtMid: string;
+    public TxtBody: string;
+    public TxtItalic: string;
+    public TxtData: string;
+    public AltDown: boolean = false;
 
     //-------------------------------------------------------------------------------------------
     //  SETUP

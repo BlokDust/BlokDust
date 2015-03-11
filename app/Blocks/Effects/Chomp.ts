@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Chomp extends Effect {
 
@@ -43,7 +43,7 @@ class Chomp extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
     }
 
     Delete(){

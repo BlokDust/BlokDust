@@ -1,6 +1,7 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import AudioSettings = require("../../Core/Audio/AudioSettings");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Gain extends Effect {
 
@@ -20,7 +21,7 @@ class Gain extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"gain");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"gain");
     }
 
     Delete(){

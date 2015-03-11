@@ -1,6 +1,7 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Pitch extends Effect {
 
@@ -18,7 +19,7 @@ class Pitch extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
     }
 
     Delete(){

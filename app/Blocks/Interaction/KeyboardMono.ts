@@ -1,6 +1,7 @@
 import Keyboard = require("./Keyboard");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 
 class KeyboardMono extends Keyboard {
 
@@ -19,7 +20,7 @@ class KeyboardMono extends Keyboard {
     Draw() {
         super.Draw();
 
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"mono keyboard");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"mono keyboard");
     }
 
     Attach(source:ISource): void{

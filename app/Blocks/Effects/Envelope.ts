@@ -1,7 +1,7 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Envelope extends Effect {
 
@@ -26,7 +26,7 @@ class Envelope extends Effect {
     Draw() {
         super.Draw();
 
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
 

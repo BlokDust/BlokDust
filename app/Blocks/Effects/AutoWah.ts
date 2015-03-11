@@ -1,6 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class AutoWah extends Effect {
 
@@ -33,7 +33,7 @@ class AutoWah extends Effect {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
     }
 
     Delete() {

@@ -1,6 +1,7 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import Type = require("../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 
 class Soundcloud extends Source {
@@ -68,7 +69,7 @@ class Soundcloud extends Source {
 
     Draw() {
         super.Draw();
-        (<Grid>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
     }
 
     OpenParams() {
