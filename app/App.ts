@@ -38,20 +38,20 @@ class App{
     ResourceManager: ResourceManager;
     CommandManager: CommandManager;
     CompositionId: string;
-    Fonts: Fonts;
+    //Fonts: Fonts;
     Blocks: DisplayObjectCollection<IBlock>;
     Sources: ObservableCollection<IBlock>;
     Effects: ObservableCollection<IBlock>;
-    AudioMixer: AudioMixer;
+    AudioMixer: AudioMixer = new AudioMixer();
     InputManager: InputManager;
     KeyboardInput: KeyboardInput;
     CommandsInputManager: CommandsInputManager;
     PointerInputManager: PointerInputManager;
     ParticlesPool: PooledFactoryResource<Particle>;
-    Particles: Particle[];
-    Palette: string[];
+    Particles: Particle[] = [];
+    Palette: string[] = [];
     OscillatorsPool: PooledFactoryResource<Oscillator>;
-    AudioSettings: ToneSettings;
+    //AudioSettings: ToneSettings;
     BlocksSketch: BlocksSketch;
 
     constructor() {
@@ -61,8 +61,10 @@ class App{
     public Setup(){
         // find canvas
         this._Canvas = document.getElementsByTagName("canvas")[0];
-        if (!this._Canvas)
+
+        if (!this._Canvas) {
             document.body.appendChild(this._Canvas = document.createElement("canvas"));
+        }
 
         // resize
         window.onresize = () => {
@@ -74,10 +76,6 @@ class App{
         this.CommandManager = new CommandManager(this.ResourceManager);
         //this.Fonts = new Fonts();
 
-        this.Blocks = new DisplayObjectCollection<IBlock>();
-        this.Sources = new ObservableCollection<ISource>();
-        this.Effects = new ObservableCollection<IEffect>();
-
         // register command handlers
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
@@ -85,6 +83,12 @@ class App{
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.REDO], RedoCommandHandler.prototype));
+
+        // create input managers
+        this.InputManager = new InputManager();
+        this.KeyboardInput = new KeyboardInput();
+        this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
+        this.PointerInputManager = new PointerInputManager();
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
@@ -95,59 +99,13 @@ class App{
             this.Palette = palette;
         });
 
+        this.Blocks = new DisplayObjectCollection<IBlock>();
+        this.Sources = new ObservableCollection<ISource>();
+        this.Effects = new ObservableCollection<IEffect>();
+
         this.Blocks.CollectionChanged.on(() => {
-
-            if (!this.Blocks.Count) return;
-
-            this.Sources.Clear();
-
-            // todo: use reflection when available
-            var sources = this.Blocks.ToArray();
-
-            var e = sources.en()
-                .where(b => (<ISource>b).Effects !== undefined);
-
-            this.Sources.AddRange(e.toArray());
-
-            this.Effects.Clear();
-
-            var effects = this.Blocks.ToArray();
-
-            e = effects.en()
-                .where(b => (<IEffect>b).Sources !== undefined);
-
-            this.Effects.AddRange(e.toArray());
-
-            //for (var i = 0; i < this.Blocks.Count; i++) {
-            //    var block = this.Blocks.GetValueAt(i);
-            //
-            //    // todo: use reflection when available
-            //    if ((<ISource>block).Effects){
-            //        this.Sources.Add((<ISource>block));
-            //    }
-            //}
-            //
-            //this.Effects.Clear();
-            //
-            //for (var i = 0; i < this.Blocks.Count; i++) {
-            //    var block = this.Blocks.GetValueAt(i);
-            //
-            //    // todo: use reflection when available
-            //    if (!(<ISource>block).Effects){
-            //        this.Effects.Add((<IEffect>block));
-            //    }
-            //}
+            this.SortBlocks();
         }, this);
-
-        this.AudioMixer = new AudioMixer();
-
-        this.InputManager = new InputManager();
-        this.KeyboardInput = new KeyboardInput();
-        this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
-        this.PointerInputManager = new PointerInputManager();
-
-        this.Particles = [];
-        this.Palette = [];
 
         //window.debug = true;
 
@@ -172,6 +130,50 @@ class App{
 
     Draw(): void {
         this.BlocksSketch.Draw();
+    }
+
+    // sorts Blocks array into Sources and Effects arrays.
+    SortBlocks(): void {
+        if (!this.Blocks.Count) return;
+
+        this.Sources.Clear();
+
+        // todo: use reflection when available
+        var sources = this.Blocks.ToArray();
+
+        var e = sources.en()
+            .where(b => (<ISource>b).Effects !== undefined);
+
+        this.Sources.AddRange(e.toArray());
+
+        this.Effects.Clear();
+
+        var effects = this.Blocks.ToArray();
+
+        e = effects.en()
+            .where(b => (<IEffect>b).Sources !== undefined);
+
+        this.Effects.AddRange(e.toArray());
+
+        //for (var i = 0; i < this.Blocks.Count; i++) {
+        //    var block = this.Blocks.GetValueAt(i);
+        //
+        //    // todo: use reflection when available
+        //    if ((<ISource>block).Effects){
+        //        this.Sources.Add((<ISource>block));
+        //    }
+        //}
+        //
+        //this.Effects.Clear();
+        //
+        //for (var i = 0; i < this.Blocks.Count; i++) {
+        //    var block = this.Blocks.GetValueAt(i);
+        //
+        //    // todo: use reflection when available
+        //    if (!(<ISource>block).Effects){
+        //        this.Effects.Add((<IEffect>block));
+        //    }
+        //}
     }
 
     Serialize(): string {

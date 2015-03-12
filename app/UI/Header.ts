@@ -13,7 +13,6 @@ import MenuItem = require("./MenuItem");
 class Header extends DisplayObject{
 
     private _Units: number;
-    public BlockCreator: BlockCreator;
     public Height: number;
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
@@ -45,7 +44,7 @@ class Header extends DisplayObject{
         this._RightOver = false;
         this.MenuOver = false;
 
-        this.MenuJson = this.BlockCreator.MenuJson;
+        this.MenuJson = BlockCreator.MenuJson;
 
         this.Populate(this.MenuJson);
 

@@ -54,7 +54,7 @@ class BlocksSketch extends Grid {
     public TxtBody: string;
     public TxtItalic: string;
     public TxtData: string;
-    public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager
+    public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -81,7 +81,7 @@ class BlocksSketch extends Grid {
 
         this._DisplayList = new DisplayList(App.Blocks);
 
-        ParamTimeout = false;
+        ParamTimeout = false; // todo: remove
 
         this._Invalidate();
     }
@@ -130,7 +130,6 @@ class BlocksSketch extends Grid {
         this._ParamsPanel.Init(this);
 
         this._Header = new Header();
-        this._Header.BlockCreator = this.BlockCreator;
         this._Header.Init(this);
 
         this._ToolTip = new ToolTip();
@@ -611,7 +610,6 @@ class BlocksSketch extends Grid {
         var zoom = this._ZoomButtons;
         var header = this._Header;
 
-
         if (zoom.InRoll || zoom.OutRoll || header.MenuOver) {
             console.log("UI INTERACTION");
             return true;
@@ -628,7 +626,7 @@ class BlocksSketch extends Grid {
         return false;
     }
 
-
+    // todo: move this to generic util
     private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
         return (mx>x && mx<(x+w) && my>y && my<(y+h));
     }

@@ -1,5 +1,4 @@
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IBlock = require("../Blocks/IBlock");
 import IOperation = require("../Core/Operations/IOperation");
 import SaveOperation = require("../Core/Operations/SaveOperation");
 

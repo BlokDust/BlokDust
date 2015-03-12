@@ -4,13 +4,10 @@ import IBlock = require("./Blocks/IBlock");
 import Grid = require("./Grid");
 import ToneSource = require("./Blocks/Sources/ToneSource");
 import BitCrusher = require("./Blocks/Effects/BitCrusher");
+import BlockCreator = require("./BlockCreator");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Serializer {
-
-    // todo: is there a way to make these block types available without needing to instantiate them?
-    private static ToneSource: ToneSource = new ToneSource();
-    private static BitCrusher: BitCrusher = new BitCrusher();
 
     private static _SerializationDictionary: any;
     private static _DeserializationDictionary: any;
@@ -44,7 +41,7 @@ class Serializer {
         }
     }
 
-    private static _GetBlockType(block: IBlock): string {
+    private static _GetBlockSerializationType(block: IBlock): string {
         return (<any>block).constructor.name;
     }
 
@@ -61,7 +58,7 @@ class Serializer {
         var b: any =  {};
 
         b.Id = block.Id;
-        b.Type = this._GetBlockType(block);
+        b.Type = this._GetBlockSerializationType(block);
         b.Position = block.Position;
         if (block.ParamJson) b.Params = block.ParamJson;
 
@@ -124,7 +121,7 @@ class Serializer {
         if (!(b.Id != null && b.Id.isInt()) && Serializer._DeserializationDictionary[b]){
             block = Serializer._DeserializationDictionary[b];
         } else {
-            block = eval("new " + b.Type + "()");
+            block = this._GetBlockDeserializationType(b);
 
             block.Id = b.Id;
             block.Position = new Point(b.Position.x, b.Position.y);
@@ -148,9 +145,11 @@ class Serializer {
             (<IEffect>block).Sources.AddRange(sources);
         }
 
-        console.log(block);
-
         return block;
+    }
+
+    private static _GetBlockDeserializationType(b: any): IBlock {
+        return BlockCreator.GetBlock(b.Type);
     }
 }
 

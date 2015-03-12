@@ -7,6 +7,8 @@
  *
  */
 
+import IBlock = require("./Blocks/IBlock");
+
 // SOURCE BLOCKS //
 import ToneSource = require("./Blocks/Sources/ToneSource");
 import Noise = require("./Blocks/Sources/Noise");
@@ -45,159 +47,159 @@ import KeyboardPoly = require("Blocks/Interaction/KeyboardPoly");
 
 class BlockCreator {
 
-    public MenuJson;
+    private static ToneSource: ToneSource = new ToneSource();
+    private static BitCrusher: BitCrusher = new BitCrusher();
 
-    constructor() {
+    public static MenuJson: any = {
+        "categories": [
+            {
+                "name": "Source",
+                "items": [
+                    {
+                        "name": "Tone",
+                        "id": ToneSource
+                    },
+                    {
+                        "name": "Noise",
+                        "id": Noise
+                    },
+                    {
+                        "name": "Microphone",
+                        "id": Microphone
+                    },
+                    {
+                        "name": "SoundCloud",
+                        "id": Soundcloud
+                    },
+                    {
+                        "name": "Granular",
+                        "id": Granular
+                    },
+                    {
+                        "name": "Recorder",
+                        "id": Recorder
+                    }
+                ]
+            },
 
-        this.MenuJson =
-        {
-            "categories": [
+            // todo: put descriptions in config.json? then they can potentially be localised
+            {
+                "name": "Effects",
+                "items": [
+                    {
+                        "name": "Autowah",
+                        "id": AutoWah,
+                        "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
+                    },
+                    {
+                        "name": "Bit Crusher",
+                        "id": BitCrusher,
+                        "description": "Creates distortion by reducing the audio resolution when connected to any source block."
+                    },
+                    {
+                        "name": "Chomp",
+                        "id": Chomp,
+                        "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
+                    },
+                    {
+                        "name": "Chopper",
+                        "id": Chopper,
+                        "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
+                    },
+                    {
+                        "name": "Chorus",
+                        "id": Chorus,
+                        "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
+                    },
+                    {
+                        "name": "Convolution",
+                        "id": ConvolutionReverb,
+                        "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
+                    },
+                    {
+                        "name": "Delay",
+                        "id": Delay,
+                        "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
+                    },
+                    {
+                        "name": "Distortion",
+                        "id": Distortion,
+                        "description": "A digital clipping distortion. Can connect to any source block."
+                    },
+                    {
+                        "name": "Envelope",
+                        "id": Envelope,
+                        "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
+                    },
+                    {
+                        "name": "EQ",
+                        "id": EQ,
+                        "description": "A 'parametric' EQ with 4 filters. Can connect to any source blocks."
+                    },
+                    {
+                        "name": "Filter",
+                        "id": Filter
+                    },
+                    {
+                        "name": "Gain",
+                        "id": Gain
+                    },
+                    {
+                        "name": "LFO",
+                        "id": LFO
+                    },
+                    {
+                        "name": "Phaser",
+                        "id": Phaser
+                    },
+                    {
+                        "name": "Pitch",
+                        "id": Pitch
+                    },
+                    {
+                        "name": "Reverb",
+                        "id": Reverb
+                    },
+                    {
+                        "name": "Scuzz",
+                        "id": Scuzz
+                    }
+                ]
+            },
 
-                {
-                    "name": "Source",
-                    "items": [
-                        {
-                            "name": "Tone",
-                            "id": ToneSource
-                        },
-                        {
-                            "name": "Noise",
-                            "id": Noise
-                        },
-                        {
-                            "name": "Microphone",
-                            "id": Microphone
-                        },
-                        {
-                            "name": "SoundCloud",
-                            "id": Soundcloud
-                        },
-                        {
-                            "name": "Granular",
-                            "id": Granular
-                        },
-                        {
-                            "name": "Recorder",
-                            "id": Recorder
-                        }
-                    ]
-                },
+            {
+                "name": "Power",
+                "items": [
+                    {
+                        "name": "Particle Emitter",
+                        "id": ParticleEmitter
+                    },
+                    {
+                        "name": "Power",
+                        "id": Power
+                    }
+                ]
+            },
 
-                {
-                    "name": "Effects",
-                    "items": [
-                        {
-                            "name": "Autowah",
-                            "id": AutoWah,
-                            "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
-                        },
-                        {
-                            "name": "Bit Crusher",
-                            "id": BitCrusher,
-                            "description": "Creates distortion by reducing the audio resolution when connected to any source block."
-                        },
-                        {
-                            "name": "Chomp",
-                            "id": Chomp,
-                            "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
-                        },
-                        {
-                            "name": "Chopper",
-                            "id": Chopper,
-                            "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
-                        },
-                        {
-                            "name": "Chorus",
-                            "id": Chorus,
-                            "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
-                        },
-                        {
-                            "name": "Convolution",
-                            "id": ConvolutionReverb,
-                            "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
-                        },
-                        {
-                            "name": "Delay",
-                            "id": Delay,
-                            "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
-                        },
-                        {
-                            "name": "Distortion",
-                            "id": Distortion,
-                            "description": "A digital clipping distortion. Can connect to any source block."
-                        },
-                        {
-                            "name": "Envelope",
-                            "id": Envelope,
-                            "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
-                        },
-                        {
-                            "name": "EQ",
-                            "id": EQ,
-                            "description": "A 'parametric' EQ with 4 filters. Can connect to any source blocks."
-                        },
-                        {
-                            "name": "Filter",
-                            "id": Filter
-                        },
-                        {
-                            "name": "Gain",
-                            "id": Gain
-                        },
-                        {
-                            "name": "LFO",
-                            "id": LFO
-                        },
-                        {
-                            "name": "Phaser",
-                            "id": Phaser
-                        },
-                        {
-                            "name": "Pitch",
-                            "id": Pitch
-                        },
-                        {
-                            "name": "Reverb",
-                            "id": Reverb
-                        },
-                        {
-                            "name": "Scuzz",
-                            "id": Scuzz
-                        }
-                    ]
-                },
+            {
+                "name": "Interaction",
+                "items": [
+                    {
+                        "name": "Mono Keyboard",
+                        "id": KeyboardMono
+                    },
+                    {
+                        "name": "Poly Keyboard",
+                        "id": KeyboardPoly
+                    }
+                ]
+            }
 
-                {
-                    "name": "Power",
-                    "items": [
-                        {
-                            "name": "Particle Emitter",
-                            "id": ParticleEmitter
-                        },
-                        {
-                            "name": "Power",
-                            "id": Power
-                        }
-                    ]
-                },
+        ]
+    };
 
-                {
-                    "name": "Interaction",
-                    "items": [
-                        {
-                            "name": "Mono Keyboard",
-                            "id": KeyboardMono
-                        },
-                        {
-                            "name": "Poly Keyboard",
-                            "id": KeyboardPoly
-                        }
-                    ]
-                }
-
-            ]
-        };
-
+    public static GetBlock(type: any): IBlock {
+        return eval("new " + type + "()");
     }
 
 }
