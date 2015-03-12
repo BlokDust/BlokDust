@@ -142,7 +142,7 @@ class App{
         var sources = this.Blocks.ToArray();
 
         var e = sources.en()
-            .where(b => (<ISource>b).Effects !== undefined);
+            .where(b => (<ISource>b).Effects !== undefined);//.selectMany(x => (<ISource>x).Effects);
 
         this.Sources.AddRange(e.toArray());
 
@@ -151,7 +151,7 @@ class App{
         var effects = this.Blocks.ToArray();
 
         e = effects.en()
-            .where(b => (<IEffect>b).Sources !== undefined);
+            .where(b => (<IEffect>b).Sources !== undefined);//.selectMany(x => (<IEffect>x).Sources);
 
         this.Effects.AddRange(e.toArray());
 
