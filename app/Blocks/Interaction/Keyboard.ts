@@ -17,6 +17,7 @@ class Keyboard extends Effect {
     constructor(grid: Grid, position: Point){
 
         this.KeysDown = {};
+        this.CurrentOctave = 3;
         App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
         App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
 
@@ -95,6 +96,10 @@ class Keyboard extends Effect {
 
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
+
+        if (param == "octave"){
+            this.CurrentOctave = value;
+        }
     }
 
     GetValue(param: string) {
@@ -103,6 +108,28 @@ class Keyboard extends Effect {
 
     OpenParams() {
         super.OpenParams();
+
+        this.ParamJson =
+        {
+            "name" : "Mono Keyboard",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Glide",
+                    "setting" :"glide",
+                    "props" : {
+                        "value" : this.GetValue("glide"),
+                        "min" : 0.001,
+                        "max" : 100,
+                        "truemin" : 0,
+                        "truemax" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
     }
 
     KeyboardDown(key:string, source:ISource): void {
@@ -128,8 +155,6 @@ class Keyboard extends Effect {
         } else {
             this.BaseFrequency = 440;
         }
-        this.CurrentOctave = this.GetStartOctave(source);
-        this.CurrentOctave--;
     }
 
     public GetStartOctave(source): number {

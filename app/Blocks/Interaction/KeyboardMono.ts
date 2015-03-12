@@ -52,8 +52,13 @@ class KeyboardMono extends Keyboard {
 
         if (param == "glide") {
             val = this.Glide*100;
+
+        } else if (param == "octave"){
+            val = this.CurrentOctave;
         }
+
         return val;
+
     }
 
     OpenParams() {
@@ -77,7 +82,20 @@ class KeyboardMono extends Keyboard {
                         "quantised" : false,
                         "centered" : false
                     }
-                }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Octave",
+                    "setting" :"octave",
+                    "props" : {
+                        "value" : this.GetValue("octave"),
+                        "min" : 0,
+                        "max" : 9,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
             ]
         };
     }

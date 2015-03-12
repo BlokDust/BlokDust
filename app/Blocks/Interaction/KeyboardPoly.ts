@@ -4,6 +4,8 @@ import Grid = require("../../Grid");
 import App = require("../../App");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
+import ToneSource = require("../Sources/ToneSource");
+import Noise = require("../Sources/Noise");
 
 class KeyboardPoly extends Keyboard {
 
@@ -61,30 +63,22 @@ class KeyboardPoly extends Keyboard {
             for (var i = 0; i < voicesNum; i++) {
                 //Create the poly sources and envelopes
 
-                if (source.BlockType == BlockType.ToneSource) {
-                    source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.getType());
-                } else if (source.BlockType == BlockType.Noise) {
-                    source.PolySources[i] = new Tone.Noise(source.Source.getType());
+                if (source instanceof ToneSource) {
+                    source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.type);
+                } else if (source instanceof Noise) {
+                    source.PolySources[i] = new Tone.Noise(source.Source.type);
                 }
 
-                //TODO: Make keyboards trigger samples and instead of pitch change playback speeds
-                // Like noteToFrequency, we need a noteToPlaybackSpeed function
-                // If base frequency is 440 (A), base playback is 1
-                // so 440 => 1, 880 => 2, 220 => 0.5
-                // 261 = x
-                // 440/1 = 261/x
-                // 440x = 261
-                // x = 261/440 = 0.59
 
-                // formula is...
-                // playbackRate = frequency / baseFrequency;
+                source.PolyEnvelopes[i] = new Tone.AmplitudeEnvelope(
+                    source.Envelope.attack,
+                    source.Envelope.decay,
+                    source.Envelope.sustain,
+                    source.Envelope.release
+                );
 
-                source.PolyEnvelopes[i] = new Tone.Envelope(source.Envelope.attack, source.Envelope.decay, source.Envelope.sustain, source.Envelope.release);
-
-                source.PolyEnvelopes[i].connect(source.PolySources[i].output.gain);
-                source.PolySources[i].connect(source.EffectsChainInput);
-
-                source.PolySources[i].start();
+                source.PolyEnvelopes[i].connect(source.EffectsChainInput);
+                source.PolySources[i].connect(source.PolyEnvelopes[i]).start();
             }
         }
     }
@@ -168,15 +162,21 @@ class KeyboardPoly extends Keyboard {
         jsonVariable[param] = value;
 
         if (param == "voices") {
-            this.VoicesAmount = value;
 
             // FOR ALL SOURCES
             if (this.Sources.Count) {
+
                 for (var i = 0; i < this.Sources.Count; i++) {
                     var source = this.Sources.GetValueAt(i);
+
+                    for (var j=0; j<source.PolyEnvelopes.length; j++){
+                        source.PolyEnvelopes[j].triggerRelease();
+                    }
+
                     this.CreateVoices(source, this.VoicesAmount);
                 }
             }
+            this.VoicesAmount = value;
         }
     }
 
@@ -186,7 +186,10 @@ class KeyboardPoly extends Keyboard {
 
         if (param == "voices") {
             val = this.VoicesAmount;
+        } else if (param == "octave"){
+            val = this.CurrentOctave;
         }
+
         return val;
     }
 
@@ -204,12 +207,24 @@ class KeyboardPoly extends Keyboard {
                     "setting" :"voices",
                     "props" : {
                         "value" : this.GetValue("voices"),
-                        "min" : 2,
+                        "min" : 1,
                         "max" : 6,
                         "quantised" : true,
                         "centered" : false
                     }
-                }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Octave",
+                    "setting" :"octave",
+                    "props" : {
+                        "value" : this.GetValue("octave"),
+                        "min" : 0,
+                        "max" : 9,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
             ]
         };
     }
