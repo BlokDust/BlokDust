@@ -47,8 +47,30 @@ import KeyboardPoly = require("Blocks/Interaction/KeyboardPoly");
 
 class BlockCreator {
 
+    // create instances of blocks for GetBlock() to return.
     private static ToneSource: ToneSource = new ToneSource();
+    private static Noise: Noise = new Noise();
+    private static Microphone: Microphone = new Microphone();
+    private static Soundcloud: Soundcloud = new Soundcloud();
+    private static Granular: Granular = new Granular();
+    private static Recorder: Recorder = new Recorder();
+    private static AutoWah: AutoWah = new AutoWah();
     private static BitCrusher: BitCrusher = new BitCrusher();
+    private static Chomp: Chomp = new Chomp();
+    private static Chopper: Chopper = new Chopper();
+    private static Chorus: Chorus = new Chorus();
+    private static ConvolutionReverb: ConvolutionReverb = new ConvolutionReverb();
+    private static Delay: Delay = new Delay();
+    private static Distortion: Distortion = new Distortion();
+    private static Envelope: Envelope = new Envelope();
+    private static EQ: EQ = new EQ();
+    private static Filter: Filter = new Filter();
+    private static Gain: Gain = new Gain();
+    private static LFO: LFO = new LFO();
+    private static Panner: Panner = new Panner();
+    private static Pitch: Pitch = new Pitch();
+    private static Reverb: Reverb = new Reverb();
+    private static Scuzz: Scuzz = new Scuzz();
 
     public static MenuJson: any = {
         "categories": [
