@@ -1,5 +1,6 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
+import ISource = require("../ISource");
 import BlocksSketch = require("../../BlocksSketch");
 
 class Scuzz extends Effect {
