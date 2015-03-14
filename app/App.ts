@@ -40,8 +40,6 @@ class App{
     CompositionId: string;
     //Fonts: Fonts;
     Blocks: DisplayObjectCollection<IBlock>;
-    Sources: ObservableCollection<IBlock>;
-    Effects: ObservableCollection<IBlock>;
     AudioMixer: AudioMixer = new AudioMixer();
     InputManager: InputManager;
     KeyboardInput: KeyboardInput;
@@ -53,6 +51,24 @@ class App{
     OscillatorsPool: PooledFactoryResource<Oscillator>;
     //AudioSettings: ToneSettings;
     BlocksSketch: BlocksSketch;
+
+    get Sources(): ObservableCollection<IBlock> {
+        var sources = this.Blocks.ToArray().en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects)
+                                .where(b => (<ISource>b).Effects !== undefined);
+
+        var c = new ObservableCollection<IBlock>();
+        c.AddRange(sources.toArray());
+        return c;
+    }
+
+    get Effects(): ObservableCollection<IBlock> {
+        var effects = this.Blocks.ToArray().en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects)
+            .where(b => (<IEffect>b).Sources !== undefined);
+
+        var c = new ObservableCollection<IBlock>();
+        c.AddRange(effects.toArray());
+        return c;
+    }
 
     constructor() {
 
@@ -100,12 +116,12 @@ class App{
         });
 
         this.Blocks = new DisplayObjectCollection<IBlock>();
-        this.Sources = new ObservableCollection<ISource>();
-        this.Effects = new ObservableCollection<IEffect>();
+        //this.Sources = new ObservableCollection<ISource>();
+        //this.Effects = new ObservableCollection<IEffect>();
 
-        this.Blocks.CollectionChanged.on(() => {
-            this.SortBlocks();
-        }, this);
+        //this.Blocks.CollectionChanged.on(() => {
+        //    this.SortBlocks();
+        //}, this);
 
         //window.debug = true;
 
@@ -133,20 +149,24 @@ class App{
     }
 
     // sorts Blocks array into Sources and Effects arrays.
-    SortBlocks(): void {
-        if (!this.Blocks.Count) return;
-
-        this.Sources.Clear();
-
-        // todo: use reflection when available
-
-        // get all blocks by traversing tree, then sort by type.
-
-        //var blocks = this.Blocks.ToArray().en().traverse<any, IBlock>(block => block.Sources || block.Effects);
-
-            //.where(b => (<ISource>b).Effects !== undefined).distinct();
-
-    }
+    //SortBlocks(): void {
+    //    if (!this.Blocks.Count) return;
+    //
+    //    this.Sources.Clear();
+    //
+    //    // todo: use reflection when available
+    //
+    //    // get all blocks by traversing tree, then sort by type.
+    //
+    //
+    //
+    //    this.Effects.AddRange(effects));
+    //
+    //    this.Sources.AddRange(sources.toArray());
+    //
+    //
+    //
+    //}
 
     Serialize(): string {
         return Serializer.Serialize(this.Blocks.ToArray());
