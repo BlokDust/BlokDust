@@ -103,7 +103,6 @@ class KeyboardMono extends Keyboard {
     KeyboardDown(keyDown:string, source:ISource): void {
         super.KeyboardDown(keyDown, source);
 
-
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
         var playbackRate = frequency / 440;

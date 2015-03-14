@@ -150,7 +150,6 @@ class KeyboardPoly extends Keyboard {
 
                 //Update the array
                 this.ActiveVoices.splice(i, 1);
-                //console.log(this.ActiveVoices);
             }
         }
     }
