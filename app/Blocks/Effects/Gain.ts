@@ -1,14 +1,14 @@
-import App = require("../../App");
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
 import AudioSettings = require("../../Core/Audio/AudioSettings");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Gain extends Effect {
 
     //public Effect: GainNode;
     public Effect: Tone.Signal;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         //this.Effect = App.AudioMixer.Master.context.createGain();
         //this.Effect.gain.value = 1.2;
@@ -16,7 +16,7 @@ class Gain extends Effect {
         this.Effect = new Tone.Signal(1, 'db');
 
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(0, 1));
@@ -24,7 +24,7 @@ class Gain extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"gain");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"gain");
     }
 
     Delete(){

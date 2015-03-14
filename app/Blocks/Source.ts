@@ -1,4 +1,3 @@
-import App = require("../App");
 import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
@@ -33,12 +32,12 @@ class Source extends Block implements ISource {
     public PolySources: any[];
     public PolyEnvelopes: any[];
 
-    constructor(grid: Grid, position: Point) {
-        super(grid, position);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
-
+        // todo: use Block.Type
         if (this.BlockType != BlockType.Power) {
 
             this.EffectsChainInput = new Tone.Signal();
@@ -130,7 +129,7 @@ class Source extends Block implements ISource {
      * @private
      */
     private _AttachEffect(effect: IEffect ) {
-        effect.Attach(this);
+        effect.Attach(<ISource>this);
     }
 
     /**
@@ -139,7 +138,7 @@ class Source extends Block implements ISource {
      * @private
      */
     private _DetachEffect(effect: IEffect) {
-        effect.Detach(this);
+        effect.Detach(<ISource>this);
     }
 
     /**

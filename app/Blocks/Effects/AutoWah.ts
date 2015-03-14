@@ -1,12 +1,13 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class AutoWah extends Effect {
 
     public Effect: Tone.AutoWah;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.Effect = new Tone.AutoWah({
             "baseFrequency": 100,
             "octaves": 5,
@@ -24,7 +25,7 @@ class AutoWah extends Effect {
         this.Effect.baseFrequency = 100;
         this.Effect.wet.value = 0.6;
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(-2, 1));
@@ -32,7 +33,7 @@ class AutoWah extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"autowah");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
     }
 
     Delete() {

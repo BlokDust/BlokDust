@@ -1,12 +1,12 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class EQ extends Effect {
 
     public Effect: Tone.MultibandEQ;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.MultibandEQ([
             {
@@ -39,7 +39,7 @@ class EQ extends Effect {
             }
         ]);
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -47,7 +47,7 @@ class EQ extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"eq");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
     }
 
     Delete(){

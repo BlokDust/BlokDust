@@ -1,18 +1,18 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Delay extends Effect {
 
     public Effect: Tone.PingPongDelay;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.PingPongDelay('8n');
         this.Effect.feedback.value = 0.4;
         this.Effect.wet.value = 0.5;
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 1),new Point(-1, 2));
@@ -20,7 +20,7 @@ class Delay extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"delay");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
     }
 
     Delete(){

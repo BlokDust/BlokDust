@@ -1,9 +1,9 @@
 /**
  * Created by luketwyman on 11/01/2015.
  */
+
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import App = require("./../../App");
 import ParametersPanel = require("./../ParametersPanel");
 
 class Slider extends Option{

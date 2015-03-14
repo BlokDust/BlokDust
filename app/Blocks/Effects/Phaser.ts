@@ -1,12 +1,12 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Phaser extends Effect {
 
     public Effect: Tone.Phaser;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.Phaser({
             "rate" : 0.5,
@@ -15,14 +15,15 @@ class Phaser extends Effect {
             "baseFrequency" : 500
         });
 
-        super(grid, position);
+        super.Init(sketch);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));
     }
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"phaser");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
     }
 
     Delete(){

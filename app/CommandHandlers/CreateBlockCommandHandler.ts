@@ -1,4 +1,3 @@
-import App = require("../App");
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");

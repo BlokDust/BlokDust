@@ -1,4 +1,5 @@
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Effect = require("../Effect");
 import Block = require("../Block");
@@ -11,13 +12,13 @@ class ToneSource extends Source {
     public Frequency: number;
     public Envelope: Tone.AmplitudeEnvelope;
 
-    constructor(grid: Grid, position: Point) {
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.BlockType = BlockType.ToneSource;
         this.Frequency = 440;
         this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
 
-
-        super(grid, position);
+        super.Init(sketch);
 
         this.Envelope = new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
@@ -82,7 +83,7 @@ class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"tone");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
     }
 
     OpenParams() {

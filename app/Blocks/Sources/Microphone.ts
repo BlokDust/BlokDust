@@ -1,4 +1,5 @@
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -6,11 +7,13 @@ import BlockType = Type.BlockType;
 class Microphone extends Source {
 
 
-    constructor(grid: Grid, position: Point) {
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.BlockType = BlockType.Microphone;
         this.Source = new Tone.Microphone();
 
-        super(grid, position);
+        super.Init(sketch);
+
         this.Source.start();
         this.Source.connect(this.EffectsChainInput);
 
@@ -32,7 +35,7 @@ class Microphone extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"microphone");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"microphone");
     }
 }
 

@@ -4,9 +4,7 @@
 
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import App = require("./../../App");
 import ParametersPanel = require("./../ParametersPanel");
-
 
 class OptionSample  extends Option{
 

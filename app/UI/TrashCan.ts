@@ -6,26 +6,21 @@ import DisplayObject = require("../DisplayObject");
 
 class TrashCan extends DisplayObject {
 
-    private _Sketch: BlocksSketch;
     private _RollOver: boolean;
-    private _Ctx: CanvasRenderingContext2D;
 
-    constructor(sketch: BlocksSketch) {
-        super(sketch);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
-        this._Ctx = sketch.Ctx;
-        this._Sketch = sketch;
         this._RollOver = false;
-
     }
 
     Draw() {
-        var units = this._Sketch.Unit.width;
-        var ctx = this._Ctx;
-        var tx = this._Sketch.Width - (30*units);
-        var ty = this._Sketch.Height - (30*units);
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var ctx = this.Ctx;
+        var tx = (<BlocksSketch>this.Sketch).Width - (30*units);
+        var ty = (<BlocksSketch>this.Sketch).Height - (30*units);
         var s = 1;
-        if (this._RollOver && this._Sketch.IsDraggingABlock) {
+        if (this._RollOver && (<BlocksSketch>this.Sketch).IsDraggingABlock) {
             s = 1.2;
         }
 
@@ -51,14 +46,13 @@ class TrashCan extends DisplayObject {
     }
 
     MouseMove(point) {
-        var sketch = this._Sketch;
-        var units = sketch.Unit.width;
-        this._RollOver = this.HudCheck(sketch.Width - (60*units),sketch.Height - (60*units),(60*units), (60*units), point.x, point.y);
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        this._RollOver = this.HudCheck((<BlocksSketch>this.Sketch).Width - (60*units),(<BlocksSketch>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 
     MouseUp() {
         if (this._RollOver) {
-            this._Sketch.DeleteSelectedBlock();
+            (<BlocksSketch>this.Sketch).DeleteSelectedBlock();
             return true;
         }
         return false;

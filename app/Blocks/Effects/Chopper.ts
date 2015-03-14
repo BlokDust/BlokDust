@@ -1,7 +1,7 @@
-import App = require("../../App");
 import Gain = require("./Gain");
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Chopper extends Effect {
 
@@ -12,15 +12,15 @@ class Chopper extends Effect {
     public Timer;
     public Effect: GainNode;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = App.AudioMixer.Master.context.createGain();
-
-        super(grid, position);
 
         this.Rate = 50;
         this.Depth = 4;
         this.Polarity = 0;
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -49,7 +49,7 @@ class Chopper extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"chopper");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chopper");
     }
 
     Delete(){

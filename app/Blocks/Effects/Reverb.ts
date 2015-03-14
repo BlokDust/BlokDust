@@ -1,15 +1,16 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Reverb extends Effect {
 
     public Effect: Tone.Freeverb;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.Effect = new Tone.Freeverb(0.7, 0.5);
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
@@ -17,7 +18,7 @@ class Reverb extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"reverb");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"reverb");
     }
 
     Delete(){

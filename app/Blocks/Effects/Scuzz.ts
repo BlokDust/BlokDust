@@ -1,25 +1,25 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import ISource = require("../ISource");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Scuzz extends Effect {
 
     public LFO: Tone.LFO;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.LFO = new Tone.LFO(100, -1000, 1000);
         this.LFO.type = 'sawtooth';
 
-        super(grid, position);
+        super.Init(sketch);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
     }
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"scuzz");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
     }
 
     Attach(source:ISource): void{

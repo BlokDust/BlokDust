@@ -4,9 +4,10 @@ class SaveOperation<String> implements IOperation
 {
     private _JSON: any;
 
-    constructor(json: string) {
+    constructor(json: string, id?: string) {
 
         this._JSON = {
+            "Id": (id) ? id : "",
             "Data": json
         };
     }
@@ -24,8 +25,7 @@ class SaveOperation<String> implements IOperation
                 contentType: 'application/json',
                 data: JSON.stringify(that._JSON)
             }).done(function(data){
-                console.log(data);
-                resolve();
+                resolve(data);
             });
 
         });
