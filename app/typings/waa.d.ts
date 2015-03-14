@@ -41,7 +41,7 @@ interface AudioContext {
      * @param sampleRate the sample-rate of the linear PCM audio data in the buffer in sample-frames per second. An implementation must support sample-rates in at least the range 22050 to 96000.
      */
     createBuffer(numberOfChannels: number, length: number, sampleRate: number): AudioBuffer;
-    
+
     /**
      * Creates an AudioBuffer given the audio file data contained in the ArrayBuffer. The ArrayBuffer can, for example, be loaded from an XMLHttpRequest's response attribute after setting the responseType to "arraybuffer". Audio file data can be in any of the formats supported by the audio element.
      * The following steps must be performed:
@@ -63,7 +63,7 @@ interface AudioContext {
      * 3. The decoding thread will attempt to decode the encoded audioData into linear PCM. If a decoding error is encountered due to the audio format not being recognized or supported, or because of corrupted/unexpected/inconsistent data then the audioData neutered state will be restored to normal and the errorCallback will be scheduled to run on the main thread's event loop and these steps will be terminated.
      * 4. The decoding thread will take the result, representing the decoded linear PCM audio data, and resample it to the sample-rate of the AudioContext if it is different from the sample-rate of audioData. The final result (after possibly sample-rate converting) will be stored in an AudioBuffer.
      * 5. The audioData neutered state will be restored to normal
-     * 6. The successCallback function will be scheduled to run on the main thread's event loop given the AudioBuffer from step (4) as an argument. 
+     * 6. The successCallback function will be scheduled to run on the main thread's event loop given the AudioBuffer from step (4) as an argument.
      *
      * @param ArrayBuffer containing audio file data.
      * @param  callback function which will be invoked when the decoding is finished. The single argument to this callback is an AudioBuffer representing the decoded PCM audio data.
@@ -73,7 +73,7 @@ interface AudioContext {
 
     /**
      * Creates an AudioBufferSourceNode.
-     */    
+     */
     createBufferSource(): AudioBufferSourceNode;
 
     /**
@@ -83,7 +83,7 @@ interface AudioContext {
 
     /**
      * Creates a MediaStreamAudioSourceNode given a MediaStream. As a consequence of calling this method, audio playback from the MediaStream will be re-routed into the processing graph of the AudioContext.
-     */    
+     */
     createMediaStreamSource(mediaStream: any): MediaStreamAudioSourceNode;
 
     /**
@@ -92,19 +92,19 @@ interface AudioContext {
      * @param bufferSize  the buffer size in units of sample-frames. It must be one of the following values: 256, 512, 1024, 2048, 4096, 8192, 16384. This value controls how frequently the onaudioprocess event handler is called and how many sample-frames need to be processed each call. Lower values for bufferSize will result in a lower (better) latency. Higher values will be necessary to avoid audio breakup and glitches. The value chosen must carefully balance between latency and audio quality.
      * @param numberOfInputChannels (defaults to 2) the number of channels for this node's input. Values of up to 32 must be supported.
      * @param numberOfOutputChannels (defaults to 2) the number of channels for this node's output. Values of up to 32 must be supported.
-     */ 
+     */
     createScriptProcessor(bufferSize: number, numberOfInputChannels?: number, numberOfOutputChannels?: number):  ScriptProcessorNode;
 
     /**
      * Creates a AnalyserNode.
      */
     createAnalyser(): AnalyserNode;
-    
+
     /**
      * Creates a GainNode.
      */
-    createGain(): GainNode;     
-    
+    createGain(): GainNode;
+
     /**
      * Creates a DelayNode representing a variable delay line. The initial default delay time will be 0 seconds.
      * @param maxDelayTime the maximum delay time in seconds allowed for the delay line. If specified, this value must be greater than zero and less than three minutes or a NOT_SUPPORTED_ERR exception will be thrown.
@@ -131,7 +131,7 @@ interface AudioContext {
      * Creates a ConvolverNode.
      */
     createConvolver(): ConvolverNode;
-    
+
     /**
      * Creates an ChannelSplitterNode representing a channel splitter. An exception will be thrown for invalid parameter values.
      * @param numberOfOutputs the number of outputs. Values of up to 32 must be supported. If not specified, then 6 will be used.
@@ -143,7 +143,7 @@ interface AudioContext {
      * @param numberOfInputs the number of inputs. Values of up to 32 must be supported. If not specified, then 6 will be used.
      */
     createChannelMerger(numberOfInputs?: number): ChannelMergerNode;
-    
+
     /**
      * Creates a DynamicsCompressorNode.
      */
@@ -176,7 +176,7 @@ interface OfflineRenderSuccessCallback{
 
 /**
  * OfflineAudioContext is a particular type of AudioContext for rendering/mixing-down (potentially) faster than real-time. It does not render to the audio hardware, but instead renders as quickly as possible, calling a render callback function upon completion with the result provided as an AudioBuffer. It is constructed by specifying the numberOfChannels, length, and sampleRate as follows:
- * 
+ *
  *     var offlineContext = new OfflineAudioContext(unsigned long numberOfChannels, unsigned long length, float sampleRate);
  */
 interface OfflineAudioContext extends AudioContext{
@@ -210,14 +210,14 @@ interface AudioNode {
      *  It is possible to connect an AudioNode output to more than one input with multiple calls to connect(). Thus, "fanout" is supported.
      *
      *  It is possible to connect an AudioNode to another AudioNode which creates a cycle. In other words, an AudioNode may connect to another AudioNode, which in turn connects back to the first AudioNode. This is allowed only if there is at least one DelayNode in the cycle or an exception will be thrown.
-     * 
+     *
      * There can only be one connection between a given output of one specific node and a given input of another specific node. Multiple connections with the same termini are ignored. For example:
      *
      *     nodeA.connect(nodeB);
      *     nodeA.connect(nodeB);
      *
      * will have the same effect as
-     * 
+     *
      *     nodeA.connect(nodeB);
      *
      * @param destination the AudioNode to connect to.
@@ -242,13 +242,13 @@ interface AudioNode {
      *
      * will have the same effect as
      *
-     *     nodeA.connect(param);     
-     * 
+     *     nodeA.connect(param);
+     *
      * @param destination the AudioParam to connect to.
      * @param output an index describing which output of the AudioNode from which to connect. An out-of-bound value throws an exception.
      */
     connect(destination: AudioParam, output?: number): void;
-    
+
     /**
      * Disconnects an AudioNode's output.
      * @param output an index describing which output of the AudioNode to disconnect. An out-of-bound value throws an exception.
@@ -274,10 +274,10 @@ interface AudioNode {
 
 /**
  * This is an abstract interface representing an audio source, an AudioNode which has no inputs and a single output:
- * 
+ *
  *    numberOfInputs  : 0
  *    numberOfOutputs : 1
- *     
+ *
  * Subclasses of AudioSourceNode will implement specific types of audio sources.
  */
 interface AudioSourceNode extends AudioNode {
@@ -307,12 +307,12 @@ interface AudioDestinationNode extends AudioNode {
  * AudioParam controls an individual aspect of an AudioNode's functioning, such as volume. The parameter can be set immediately to a particular value using the "value" attribute. Or, value changes can be scheduled to happen at very precise times (in the coordinate system of AudioContext.currentTime), for envelopes, volume fades, LFOs, filter sweeps, grain windows, etc. In this way, arbitrary timeline-based automation curves can be set on any AudioParam. Additionally, audio signals from the outputs of AudioNodes can be connected to an AudioParam, summing with the intrinsic parameter value.
  *
  * Some synthesis and processing AudioNodes have AudioParams as attributes whose values must be taken into account on a per-audio-sample basis. For other AudioParams, sample-accuracy is not important and the value changes can be sampled more coarsely. Each individual AudioParam will specify that it is either an a-rate parameter which means that its values must be taken into account on a per-audio-sample basis, or it is a k-rate parameter.
- * 
+ *
  * Implementations must use block processing, with each AudioNode processing 128 sample-frames in each block.
- * 
+ *
  * For each 128 sample-frame block, the value of a k-rate parameter must be sampled at the time of the very first sample-frame, and that value must be used for the entire block. a-rate parameters must be sampled for each sample-frame of the block.
  */
-interface AudioParam { 
+interface AudioParam {
     /**
      *  The parameter's floating-point value. This attribute is initialized to the defaultValue. If a value is set outside the allowable range described by minValue and maxValue no exception is thrown, because these limits are just nominal and may be exceeded. If a value is set during a time when there are any automation events scheduled then it will be ignored and no exception will be thrown.
      */
@@ -334,14 +334,14 @@ interface AudioParam {
     defaultValue: number;
 
     /**
-     * Schedules a parameter value change at the given time. 
+     * Schedules a parameter value change at the given time.
      *
      * If there are no more events after this SetValue event, then for t >= startTime, v(t) = value. In other words, the value will remain constant.
      *
      * If the next event (having time T1) after this SetValue event is not of type LinearRampToValue or ExponentialRampToValue, then, for t: startTime <= t < T1, v(t) = value. In other words, the value will remain constant during this time interval, allowing the creation of "step" functions.
      *
      * If the next event after this SetValue event is of type LinearRampToValue or ExponentialRampToValue then please see details below.
-     * 
+     *
      * @param value the value the parameter will change to at the given time
      * @param startTime parameter is the time in the same time coordinate system as AudioContext.currentTime.
      */
@@ -353,7 +353,7 @@ interface AudioParam {
      * The value during the time interval T0 <= t < T1 (where T0 is the time of the previous event and T1 is the endTime parameter passed into this method) will be calculated as:
      *
      *      v(t) = V0 + (V1 - V0) * ((t - T0) / (T1 - T0))
-     * 
+     *
      * Where V0 is the value at the time T0 and V1 is the value parameter passed into this method.
      *
      * If there are no more events after this LinearRampToValue event then for t >= T1, v(t) = V1
@@ -362,7 +362,7 @@ interface AudioParam {
      * @param endTime the time in the same time coordinate system as AudioContext.currentTime.
      */
     linearRampToValueAtTime(value: number, time: number): void;
-    
+
     /**
      * Schedules an exponential continuous change in parameter value from the previous scheduled parameter value to the given value. Parameters representing filter frequencies and playback rate are best changed exponentially because of the way humans perceive sound.
      *
@@ -408,13 +408,13 @@ interface AudioParam {
      * @param values a Float32Array representing a parameter value curve. These values will apply starting at the given time and lasting for the given duration.
      * @param startTime the time in the same time coordinate system as AudioContext.currentTime.
      * @param duration the amount of time in seconds (after the time parameter) where values will be calculated according to the values parameter..
-     * 
+     *
      */
     setValueCurveAtTime(values: Float32Array, time: number, duration: number): void;
 
     /**
      * Cancels all scheduled parameter changes with times greater than or equal to startTime.
-     * 
+     *
      * @param startTime the starting time at and after which any previously scheduled parameter changes will be cancelled. It is a time in the same time coordinate system as AudioContext.currentTime.
      */
     cancelScheduledValues(startTime: number): void;
@@ -429,7 +429,7 @@ interface AudioParam {
  * which multiplies the input audio signal by the (possibly time-varying) gain attribute, copying the result to the output. By default, it will take the input and pass it through to the output unchanged, which represents a constant gain change of 1.
  *
  * As with other AudioParams, the gain parameter represents a mapping from time (in the coordinate system of AudioContext.currentTime) to floating-point value. Every PCM audio sample in the input is multiplied by the gain parameter's value for the specific time corresponding to that audio sample. This multiplied value represents the PCM audio sample for the output.
- * 
+ *
  * The number of channels of the output will always equal the number of channels of the input, with each channel of the input being multiplied by the gain values and being copied into the corresponding channel of the output.
  *
  * The implementation must make gain changes to the audio stream smoothly, without introducing noticeable clicks or glitches. This process is called "de-zippering".
@@ -506,7 +506,7 @@ interface AudioBufferSourceNode extends AudioSourceNode {
     /**
      * The playback state, initialized to UNSCHEDULED_STATE.
      */
-    playbackState: number; 
+    playbackState: number;
 
     /**
      * Represents the audio asset to be played.
@@ -516,7 +516,7 @@ interface AudioBufferSourceNode extends AudioSourceNode {
     /**
      * The speed at which to render the audio stream. The default playbackRate.value is 1. This parameter is a-rate
      */
-    playbackRate: AudioParam; 
+    playbackRate: AudioParam;
 
     /**
      * Indicates if the audio data should play in a loop. The default value is false.
@@ -540,7 +540,7 @@ interface AudioBufferSourceNode extends AudioSourceNode {
 
     /**
      * Schedules a sound to playback at an exact time.
-     *  
+     *
      * @param when time (in seconds) the sound should start playing. It is in the same time coordinate system as AudioContext.currentTime. If 0 is passed in for this value or if the value is less than currentTime, then the sound will start playing immediately. start may only be called one time and must be called before stop is called or an exception will be thrown.
      * @param offset the offset time in the buffer (in seconds) where playback will begin. This parameter is optional with a default value of 0 (playing back from the beginning of the buffer).
      * @param duration the duration of the portion (in seconds) to be played. This parameter is optional, with the default value equal to the total duration of the AudioBuffer minus the offset parameter. Thus if neither offset nor duration are specified then the implied duration is the total duration of the AudioBuffer.
@@ -580,7 +580,7 @@ interface ScriptProcessorNode  extends AudioNode {
     /**
      * An event listener which is called periodically for audio processing. An event of type AudioProcessingEvent will be passed to the event handler.
      */
-    onaudioprocess: EventListener;        
+    onaudioprocess: EventListener;
 
     /**
      * The size of the buffer (in sample-frames) which needs to be processed each time onprocessaudio is called. Legal values are (256, 512, 1024, 2048, 4096, 8192, 16384).
@@ -598,7 +598,7 @@ interface AudioProcessingEvent extends Event {
      * The ScriptProcessorNode associated with this processing event.
      */
     node: ScriptProcessorNode;
-    
+
     /**
      * The time when the audio will be played in the same time coordinate system as AudioContext.currentTime. playbackTime allows for very tight synchronization between processing directly in JavaScript with the other events in the context's rendering graph.
      */
@@ -612,7 +612,7 @@ interface AudioProcessingEvent extends Event {
     /**
      * An AudioBuffer where the output audio data should be written. It will have a number of channels equal to the numberOfOutputChannels parameter of the createScriptProcessor() method. Script code within the scope of the onaudioprocess function is expected to modify the Float32Array arrays representing channel data in this AudioBuffer. Any script modifications to this AudioBuffer outside of this scope will not produce any audible effects.
      */
-    outputBuffer: AudioBuffer; 
+    outputBuffer: AudioBuffer;
 }
 
 declare enum PanningModelType {
@@ -681,15 +681,15 @@ interface PannerNode extends AudioNode {
 
     /**
      * Describes which direction the audio source is pointing in the 3D cartesian coordinate space. Depending on how directional the sound is (controlled by the cone attributes), a sound pointing away from the listener can be very quiet or completely silent.
-     * 
-     * The default value is (1,0,0) 
+     *
+     * The default value is (1,0,0)
      *
      * @param x
      * @param y
      * @param z
      */
     setOrientation(x: number, y: number, z: number): void;
-    
+
     /**
      * Sets the velocity vector of the audio source. This vector controls both the direction of travel and the speed in 3D space. This velocity relative to the listener's velocity is used to determine how much doppler shift (pitch change) to apply. The units used for this vector is meters / second and is independent of the units used for position and orientation vectors.
      *
@@ -699,7 +699,7 @@ interface PannerNode extends AudioNode {
      * @param y
      * @param z
      */
-    setVelocity(x: number, y: number, z: number): void;       
+    setVelocity(x: number, y: number, z: number): void;
 
     /**
      * Determines which algorithm will be used to reduce the volume of an audio source as it moves away from the listener. The default is "inverse".
@@ -730,7 +730,7 @@ interface PannerNode extends AudioNode {
      * A parameter for directional audio sources, this is an angle, outside of which the volume will be reduced to a constant value of coneOuterGain. The default value is 360.
      */
     coneOuterAngle: number;
-    
+
     /**
      * A parameter for directional audio sources, this is the amount of volume reduction outside of the coneOuterAngle. The default value is 0.
      */
@@ -744,7 +744,7 @@ interface AudioListener {
     /**
      * A constant used to determine the amount of pitch shift to use when rendering a doppler effect. The default value is 1.
      */
-    dopplerFactor: number;     
+    dopplerFactor: number;
 
     /**
      * The speed of sound used for calculating doppler shift. The default value is 343.3 meters / second.
@@ -753,7 +753,7 @@ interface AudioListener {
 
     /**
      * Sets the position of the listener in a 3D cartesian coordinate space. PannerNode objects use this position relative to individual audio sources for spatialization.
-     * 
+     *
      * The default value is (0,0,0)
      *
      * @param x
@@ -764,7 +764,7 @@ interface AudioListener {
 
     /**
      * Describes which direction the listener is pointing in the 3D cartesian coordinate space. Both a front vector and an up vector are provided. In simple human terms, the front vector represents which direction the person's nose is pointing. The up vector represents the direction the top of a person's head is pointing. These values are expected to be linearly independent (at right angles to each other). For normative requirements of how these values are to be interpreted, see the spatialization section.
-     * 
+     *
      * @param x x coordinate of a front direction vector in 3D space, with the default value being 0
      * @param y y coordinate of a front direction vector in 3D space, with the default value being 0
      * @param z z coordinate of a front direction vector in 3D space, with the default value being -1
@@ -803,7 +803,7 @@ interface ConvolverNode extends AudioNode {
     normalize: boolean;
 }
 
-/** 
+/**
  * This interface represents a node which is able to provide real-time frequency and time-domain analysis information. The audio stream will be passed un-processed from input to output.
  *
  *    numberOfInputs  : 1
@@ -830,7 +830,7 @@ interface AnalyserNode extends AudioNode {
 
     /**
      * The size of the FFT used for frequency-domain analysis. This must be a power of two.
-     */ 
+     */
     fftSize: number;
 
     /**
@@ -1033,7 +1033,7 @@ declare enum BiquadFilterType {
 interface BiquadFilterNode extends AudioNode {
 
     type: BiquadFilterType;
-    frequency: AudioParam; 
+    frequency: AudioParam;
     Q: AudioParam;
     gain: AudioParam;
 
@@ -1062,11 +1062,11 @@ interface WaveShaperNode extends AudioNode {
 }
 
 declare enum OscillatorType {
-  sine,
-  square,
-  sawtooth,
-  triangle,
-  custom
+    sine,
+    square,
+    sawtooth,
+    triangle,
+    custom
 }
 
 /**
@@ -1077,7 +1077,7 @@ declare enum OscillatorType {
  * Mathematically speaking, a continuous-time periodic waveform can have very high (or infinitely high) frequency information when considered in the frequency domain. When this waveform is sampled as a discrete-time digital audio signal at a particular sample-rate, then care must be taken to discard (filter out) the high-frequency information higher than the Nyquist frequency (half the sample-rate) before converting the waveform to a digital form. If this is not done, then aliasing of higher frequencies (than the Nyquist frequency) will fold back as mirror images into frequencies lower than the Nyquist frequency. In many cases this will cause audibly objectionable artifacts. This is a basic and well understood principle of audio DSP.
  *
  * There are several practical approaches that an implementation may take to avoid this aliasing. But regardless of approach, the idealized discrete-time digital audio signal is well defined mathematically. The trade-off for the implementation is a matter of implementation cost (in terms of CPU usage) versus fidelity to achieving this ideal.
- * 
+ *
  * It is expected that an implementation will take some care in achieving this ideal, but it is reasonable to consider lower-quality, less-costly approaches on lower-end hardware.
  *
  * Both .frequency and .detune are a-rate parameters and are used together to determine a computedFrequency value:
@@ -1106,7 +1106,7 @@ interface OscillatorNode extends AudioSourceNode {
      * @readonly
      */
     frequency: AudioParam;
-    
+
     /**
      * A detuning value (in Cents) which will offset the frequency by the given amount. This parameter is a-rate
      */
@@ -1116,7 +1116,7 @@ interface OscillatorNode extends AudioSourceNode {
      * defined as in AudioBufferSourceNode.
      */
     start(when: number): void;
-    
+
     /**
      * defined as in AudioBufferSourceNode.
      */

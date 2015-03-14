@@ -139,41 +139,13 @@ class App{
         this.Sources.Clear();
 
         // todo: use reflection when available
-        var sources = this.Blocks.ToArray();
 
-        var e = sources.en()
-            .where(b => (<ISource>b).Effects !== undefined);//.selectMany(x => (<ISource>x).Effects);
+        // get all blocks by traversing tree, then sort by type.
 
-        this.Sources.AddRange(e.toArray());
+        //var blocks = this.Blocks.ToArray().en().traverse<any, IBlock>(block => block.Sources || block.Effects);
 
-        this.Effects.Clear();
+            //.where(b => (<ISource>b).Effects !== undefined).distinct();
 
-        var effects = this.Blocks.ToArray();
-
-        e = effects.en()
-            .where(b => (<IEffect>b).Sources !== undefined);//.selectMany(x => (<IEffect>x).Sources);
-
-        this.Effects.AddRange(e.toArray());
-
-        //for (var i = 0; i < this.Blocks.Count; i++) {
-        //    var block = this.Blocks.GetValueAt(i);
-        //
-        //    // todo: use reflection when available
-        //    if ((<ISource>block).Effects){
-        //        this.Sources.Add((<ISource>block));
-        //    }
-        //}
-        //
-        //this.Effects.Clear();
-        //
-        //for (var i = 0; i < this.Blocks.Count; i++) {
-        //    var block = this.Blocks.GetValueAt(i);
-        //
-        //    // todo: use reflection when available
-        //    if (!(<ISource>block).Effects){
-        //        this.Effects.Add((<IEffect>block));
-        //    }
-        //}
     }
 
     Serialize(): string {
