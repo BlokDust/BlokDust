@@ -205,7 +205,7 @@ class BlocksSketch extends Grid {
                 particle.ReturnToPool();
                 continue;
             }
-            //this.ParticleCollision(particle.Position, particle);
+            particle.ParticleCollision(particle.Position, particle);
             particle.Move();
             currentParticles.push(particle);
         }
@@ -213,14 +213,15 @@ class BlocksSketch extends Grid {
         App.Particles = currentParticles;
     }
 
-    ParticleCollision(point: Point, particle: Particle) {
+    /*ParticleCollision(point: Point, particle: Particle) {
         for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+            if (block instanceof Source)
             var block: IBlock = App.Blocks.GetValueAt(i);
             if (block.HitTest(point)){
                 block.ParticleCollision(particle);
             }
         }
-    }
+    }*/
 
 
 
@@ -299,7 +300,6 @@ class BlocksSketch extends Grid {
             var particle = App.Particles[i];
             var pos = this.ConvertBaseToTransformed(particle.Position);
             var unit = this.ScaledUnit.width;
-            //console.log(unit);
             var sx = pos.x;
             var sy = pos.y;
             var size = particle.Size * unit;
