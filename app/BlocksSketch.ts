@@ -33,7 +33,7 @@ class BlocksSketch extends Grid {
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
-    public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    //public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
     public BlockSprites: BlockSprites;
@@ -683,10 +683,9 @@ class BlocksSketch extends Grid {
         block.Id = this.GetId();
         block.Type = t;
 
-        // todo: should this go in command handler?
-        block.Click.on((block: IBlock) => {
-            this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
-        }, this);
+        //block.Click.on((block: IBlock) => {
+        //    this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
+        //}, this);
 
         App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
 

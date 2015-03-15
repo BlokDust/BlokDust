@@ -27,6 +27,8 @@ import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
 import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
 import DisplayList = require("./DisplayList");
+import Source = require("./Blocks/Source");
+import Effect = require("./Blocks/Effect");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Utils = Fayde.Utils;
 import SketchSession = Fayde.Drawing.SketchSession;
@@ -54,13 +56,11 @@ class App{
     public BlocksSketch: BlocksSketch;
 
     get Sources(): IBlock[] {
-        // todo: use reflection
-        return this.Blocks.en().where(b => (<ISource>b).Effects !== undefined).toArray();
+        return this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
     get Effects(): IBlock[] {
-        // todo: use reflection
-        return this.Blocks.en().where(b => (<IEffect>b).Sources !== undefined).toArray();
+        return this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
     constructor() {
