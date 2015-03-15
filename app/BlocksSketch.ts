@@ -719,7 +719,7 @@ class BlocksSketch extends Grid {
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
+        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
         this._SelectedBlock.Dispose();
         this.DisplayList.Remove(this._SelectedBlock);
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);

@@ -23,7 +23,7 @@ import BitCrusher = require("Blocks/Effects/BitCrusher");
 import Chomp = require("Blocks/Effects/Chomp");
 import Chopper = require("Blocks/Effects/Chopper");
 import Chorus = require("Blocks/Effects/Chorus");
-import ConvolutionReverb = require("Blocks/Effects/ConvolutionReverb");
+import Convolver = require("Blocks/Effects/ConvolutionReverb");
 import Delay = require("Blocks/Effects/Delay");
 import Distortion = require("Blocks/Effects/Distortion");
 import Envelope = require("Blocks/Effects/Envelope");
@@ -59,7 +59,7 @@ class BlockCreator {
     private static Chomp: Chomp = new Chomp();
     private static Chopper: Chopper = new Chopper();
     private static Chorus: Chorus = new Chorus();
-    private static ConvolutionReverb: ConvolutionReverb = new ConvolutionReverb();
+    private static Convolver: Convolver = new Convolver();
     private static Delay: Delay = new Delay();
     private static Distortion: Distortion = new Distortion();
     private static Envelope: Envelope = new Envelope();
@@ -135,7 +135,7 @@ class BlockCreator {
                     },
                     {
                         "name": "Convolution",
-                        "id": ConvolutionReverb,
+                        "id": Convolver,
                         "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
                     },
                     {
