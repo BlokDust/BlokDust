@@ -206,7 +206,9 @@ class Source extends Block implements ISource {
      * Disposes the audio nodes
      * @constructor
      */
+    // todo: rename to dispose?
     Delete() {
+        // todo: use reflection
         if (this.BlockType != BlockType.Power){
             this.EffectsChainOutput.dispose();
             this.EffectsChainInput.dispose();

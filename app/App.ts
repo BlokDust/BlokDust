@@ -53,18 +53,14 @@ class App{
     public OscillatorsPool: PooledFactoryResource<Oscillator>;
     public BlocksSketch: BlocksSketch;
 
-    // get blocks as a flat list (instead of nested)
-    // todo: is there a way to cache this as it's a fairly expensive operation
-    private GetBlocksAsList(): IBlock[] {
-        return this.Blocks.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
-    }
-
     get Sources(): IBlock[] {
-        return this.GetBlocksAsList().en().where(b => (<ISource>b).Effects !== undefined).toArray();
+        // todo: use reflection
+        return this.Blocks.en().where(b => (<ISource>b).Effects !== undefined).toArray();
     }
 
     get Effects(): IBlock[] {
-        return this.GetBlocksAsList().en().where(b => (<IEffect>b).Sources !== undefined).toArray();
+        // todo: use reflection
+        return this.Blocks.en().where(b => (<IEffect>b).Sources !== undefined).toArray();
     }
 
     constructor() {
@@ -120,7 +116,9 @@ class App{
 
         if(id) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id).then((data) => {
-                this.Blocks = this.Deserialize(data);
+                // get deserialized blocks tree, then "flatten" so that all blocks are in an array
+                var blocks = this.Deserialize(data);
+                this.Blocks = blocks.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
                 this.CreateUI();
             });
         } else {
@@ -132,14 +130,14 @@ class App{
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
 
-        var b = this.GetBlocksAsList();
-
-        b.forEach((b: IBlock) => {
+        // initialise blocks (give them a ctx to draw to)
+        this.Blocks.forEach((b: IBlock) => {
             b.Init(this.BlocksSketch);
         });
 
+        // add blocks to BlocksSketch DisplayList
         var d = new DisplayObjectCollection();
-        d.AddRange(b);
+        d.AddRange(this.Blocks);
         this.BlocksSketch.DisplayList = new DisplayList(d);
 
         // set up animation loop

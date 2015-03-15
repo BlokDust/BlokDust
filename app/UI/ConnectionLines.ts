@@ -23,10 +23,8 @@ class ConnectionLines {
 
         this._Ctx.beginPath();
 
-        var blocks = App.GetBlocksAsList();
-
-        for (var j=0; j<blocks.length; j++) {
-            var block: IBlock = blocks[j];
+        for (var j = 0; j < App.Blocks.length; j++) {
+            var block: IBlock = App.Blocks[j];
             if ((<ISource>block).Effects) {
 
                 // draw connections to modifiers

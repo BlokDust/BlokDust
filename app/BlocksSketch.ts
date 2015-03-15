@@ -66,7 +66,8 @@ class BlocksSketch extends Grid {
 
 
     public GetId(): number {
-        return App.GetBlocksAsList().length++;
+        var count = App.Blocks.length;
+        return count + 1;
     }
 
     get DisplayList(): DisplayList {
@@ -176,9 +177,8 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // update blocks
-        var blocks = App.GetBlocksAsList();
-        for (var i = 0; i < blocks.length; i++) {
-            var block: IBlock = blocks[i];
+        for (var i = 0; i < App.Blocks.length; i++) {
+            var block: IBlock = App.Blocks[i];
             block.Update();
         }
 
@@ -221,16 +221,13 @@ class BlocksSketch extends Grid {
     }
 
     ParticleCollision(point: Point, particle: Particle) {
-        var blocks = App.GetBlocksAsList();
-        for (var i = blocks.length - 1; i >= 0 ; i--){
-            var block: IBlock = blocks[i];
+        for (var i = App.Blocks.length - 1; i >= 0 ; i--){
+            var block: IBlock = App.Blocks[i];
             if (block.HitTest(point)){
                 block.ParticleCollision(particle);
             }
         }
     }
-
-
 
     SketchResize() {
         if (this._ParamsPanel.Scale==1) {
@@ -531,9 +528,8 @@ class BlocksSketch extends Grid {
     private _CheckCollision(point: Point, handle: () => void): Boolean {
 
         // LOOP BLOCKS //
-        var blocks = App.GetBlocksAsList();
-        for (var i = blocks.length - 1; i >= 0; i--) {
-            var block:IBlock = blocks[i];
+        for (var i = App.Blocks.length - 1; i >= 0; i--) {
+            var block:IBlock = App.Blocks[i];
             if (block.HitTest(point)) {
                 handle();
                 block.MouseDown();
@@ -565,9 +561,8 @@ class BlocksSketch extends Grid {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
-            var blocks = App.GetBlocksAsList();
-            for (var i = blocks.length - 1; i >= 0; i--) {
-                var block:IBlock = blocks[i];
+            for (var i = App.Blocks.length - 1; i >= 0; i--) {
+                var block:IBlock = App.Blocks[i];
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
