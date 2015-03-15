@@ -8,11 +8,9 @@ class LoadCommandHandler implements ICommandHandler {
 
     }
 
-    Execute(id: string): void{
+    Execute(id: string): Promise<any>{
         var op:IOperation = new LoadOperation(id);
-        App.OperationManager.Do(op).then((result) => {
-            console.log(result);
-        });
+        return App.OperationManager.Do(op);
     }
 }
 

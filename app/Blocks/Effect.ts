@@ -54,7 +54,7 @@ class Effect extends Block implements IEffect {
         for (var i = 0; i < this.Sources.Count; i++){
             var src: ISource = this.Sources.GetValueAt(i);
 
-            if (!App.Sources.Contains(src)){
+            if (!App.Sources.contains(src)){
                 this.RemoveSource(src);
             }
         }

@@ -26,48 +26,45 @@ import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
 import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
+import DisplayList = require("./DisplayList");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
+import Utils = Fayde.Utils;
+import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var PixelPalette;
 
 class App{
 
-    _Canvas: HTMLCanvasElement;
-    _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
-    OperationManager: OperationManager;
-    ResourceManager: ResourceManager;
-    CommandManager: CommandManager;
-    CompositionId: string;
-    //Fonts: Fonts;
-    Blocks: DisplayObjectCollection<IBlock>;
-    AudioMixer: AudioMixer = new AudioMixer();
-    InputManager: InputManager;
-    KeyboardInput: KeyboardInput;
-    CommandsInputManager: CommandsInputManager;
-    PointerInputManager: PointerInputManager;
-    ParticlesPool: PooledFactoryResource<Particle>;
-    Particles: Particle[] = [];
-    Palette: string[] = [];
-    OscillatorsPool: PooledFactoryResource<Oscillator>;
-    //AudioSettings: ToneSettings;
-    BlocksSketch: BlocksSketch;
+    private _Canvas: HTMLCanvasElement;
+    private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
+    public Blocks: IBlock[] = [];
+    public OperationManager: OperationManager;
+    public ResourceManager: ResourceManager;
+    public CommandManager: CommandManager;
+    public CompositionId: string;
+    public AudioMixer: AudioMixer = new AudioMixer();
+    public InputManager: InputManager;
+    public KeyboardInput: KeyboardInput;
+    public CommandsInputManager: CommandsInputManager;
+    public PointerInputManager: PointerInputManager;
+    public ParticlesPool: PooledFactoryResource<Particle>;
+    public Particles: Particle[] = [];
+    public Palette: string[] = [];
+    public OscillatorsPool: PooledFactoryResource<Oscillator>;
+    public BlocksSketch: BlocksSketch;
 
-    get Sources(): ObservableCollection<IBlock> {
-        var sources = this.Blocks.ToArray().en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects)
-                                .where(b => (<ISource>b).Effects !== undefined);
-
-        var c = new ObservableCollection<IBlock>();
-        c.AddRange(sources.toArray());
-        return c;
+    // get blocks as a flat list (instead of nested)
+    // todo: is there a way to cache this as it's a fairly expensive operation
+    private GetBlocksAsList(): IBlock[] {
+        return this.Blocks.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
     }
 
-    get Effects(): ObservableCollection<IBlock> {
-        var effects = this.Blocks.ToArray().en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects)
-            .where(b => (<IEffect>b).Sources !== undefined);
+    get Sources(): IBlock[] {
+        return this.GetBlocksAsList().en().where(b => (<ISource>b).Effects !== undefined).toArray();
+    }
 
-        var c = new ObservableCollection<IBlock>();
-        c.AddRange(effects.toArray());
-        return c;
+    get Effects(): IBlock[] {
+        return this.GetBlocksAsList().en().where(b => (<IEffect>b).Sources !== undefined).toArray();
     }
 
     constructor() {
@@ -113,20 +110,37 @@ class App{
 
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
+
+            this.LoadComposition();
         });
+    }
 
-        this.Blocks = new DisplayObjectCollection<IBlock>();
-        //this.Sources = new ObservableCollection<ISource>();
-        //this.Effects = new ObservableCollection<IEffect>();
+    LoadComposition() {
+        var id = Utils.Url.GetQuerystringParameter('c');
 
-        //this.Blocks.CollectionChanged.on(() => {
-        //    this.SortBlocks();
-        //}, this);
+        if(id) {
+            this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id).then((data) => {
+                this.Blocks = this.Deserialize(data);
+                this.CreateUI();
+            });
+        } else {
+            this.CreateUI();
+        }
+    }
 
-        //window.debug = true;
-
+    CreateUI() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
+
+        var b = this.GetBlocksAsList();
+
+        b.forEach((b: IBlock) => {
+            b.Init(this.BlocksSketch);
+        });
+
+        var d = new DisplayObjectCollection();
+        d.AddRange(b);
+        this.BlocksSketch.DisplayList = new DisplayList(d);
 
         // set up animation loop
         this._ClockTimer.RegisterTimer(this);
@@ -135,7 +149,7 @@ class App{
     }
 
     OnTicked (lastTime: number, nowTime: number) {
-        this.BlocksSketch.SketchSession = new Fayde.Drawing.SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
+        this.BlocksSketch.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
         this.Update();
         this.Draw();
     }
@@ -148,28 +162,8 @@ class App{
         this.BlocksSketch.Draw();
     }
 
-    // sorts Blocks array into Sources and Effects arrays.
-    //SortBlocks(): void {
-    //    if (!this.Blocks.Count) return;
-    //
-    //    this.Sources.Clear();
-    //
-    //    // todo: use reflection when available
-    //
-    //    // get all blocks by traversing tree, then sort by type.
-    //
-    //
-    //
-    //    this.Effects.AddRange(effects));
-    //
-    //    this.Sources.AddRange(sources.toArray());
-    //
-    //
-    //
-    //}
-
     Serialize(): string {
-        return Serializer.Serialize(this.Blocks.ToArray());
+        return Serializer.Serialize(this.Blocks);
     }
 
     Deserialize(json: string): IBlock[] {

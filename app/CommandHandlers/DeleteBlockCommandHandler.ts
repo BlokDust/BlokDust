@@ -1,7 +1,7 @@
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import RemoveItemFromObservableCollectionOperation = require("../Core/Operations/RemoveItemFromObservableCollectionOperation");
+import RemoveItemFromArrayOperation = require("../Core/Operations/RemoveItemFromArrayOperation");
 
 class DeleteBlockCommandHandler implements ICommandHandler {
 
@@ -9,9 +9,9 @@ class DeleteBlockCommandHandler implements ICommandHandler {
 
     }
 
-    Execute(block: IBlock): void{
-        var op:IUndoableOperation = new RemoveItemFromObservableCollectionOperation(block, App.Blocks);
-        App.OperationManager.Do(op);
+    Execute(block: IBlock): Promise<any>{
+        var op:IUndoableOperation = new RemoveItemFromArrayOperation<IBlock>(block, App.Blocks);
+        return App.OperationManager.Do(op);
     }
 }
 

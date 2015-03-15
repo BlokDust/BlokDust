@@ -62,6 +62,23 @@ class BlocksSketch extends Grid {
 
     constructor() {
         super();
+    }
+
+
+    public GetId(): number {
+        return App.GetBlocksAsList().length++;
+    }
+
+    get DisplayList(): DisplayList {
+        return this._DisplayList;
+    }
+
+    set DisplayList(value: DisplayList) {
+        this._DisplayList = value;
+    }
+
+    Setup(){
+        super.Setup();
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
@@ -79,21 +96,9 @@ class BlocksSketch extends Grid {
             this._Invalidate();
         }, this);
 
-        this._DisplayList = new DisplayList(App.Blocks);
+        //this.DisplayList = new DisplayList(App.Blocks);
 
         ParamTimeout = false; // todo: remove
-
-        this._Invalidate();
-    }
-
-
-    public GetId(): number {
-        return App.Blocks.Count++;
-    }
-
-
-    Setup(){
-        super.Setup();
 
         // METRICS //
         this.Metrics();
@@ -144,12 +149,6 @@ class BlocksSketch extends Grid {
         this._ConnectionLines = new ConnectionLines();
         this._ConnectionLines.Init(this);
 
-        var id = Utils.Url.GetQuerystringParameter('c');
-
-        if(id) {
-            App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
-        }
-
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
             if (e.keyCode==18) {
@@ -161,6 +160,7 @@ class BlocksSketch extends Grid {
             this.AltDown = false;
         });
 
+        this._Invalidate();
     }
 
 
@@ -176,8 +176,9 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // update blocks
-        for (var i = 0; i < App.Blocks.Count; i++) {
-            var block: IBlock = App.Blocks.GetValueAt(i);
+        var blocks = App.GetBlocksAsList();
+        for (var i = 0; i < blocks.length; i++) {
+            var block: IBlock = blocks[i];
             block.Update();
         }
 
@@ -220,8 +221,9 @@ class BlocksSketch extends Grid {
     }
 
     ParticleCollision(point: Point, particle: Particle) {
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks.GetValueAt(i);
+        var blocks = App.GetBlocksAsList();
+        for (var i = blocks.length - 1; i >= 0 ; i--){
+            var block: IBlock = blocks[i];
             if (block.HitTest(point)){
                 block.ParticleCollision(particle);
             }
@@ -284,7 +286,7 @@ class BlocksSketch extends Grid {
         this._ConnectionLines.Draw();
 
         // BLOCKS //
-        this._DisplayList.Draw();
+        this.DisplayList.Draw();
 
         // PARTICLES //
         this.DrawParticles();
@@ -489,11 +491,11 @@ class BlocksSketch extends Grid {
         // loop through all Source blocks checking proximity to Effect blocks.
         // if within CatchmentArea, add Effect to Source.Effects and add Source to Effect.Sources
 
-        for (var j = 0; j < App.Sources.Count; j++) {
-            var source:ISource = App.Sources.GetValueAt(j);
+        for (var j = 0; j < App.Sources.length; j++) {
+            var source:ISource = App.Sources[j];
 
-            for (var i = 0; i < App.Effects.Count; i++) {
-                var effect:IEffect = App.Effects.GetValueAt(i);
+            for (var i = 0; i < App.Effects.length; i++) {
+                var effect:IEffect = App.Effects[i];
 
                 // if a source is close enough to the effect, add the effect
                 // to its internal list.
@@ -529,8 +531,9 @@ class BlocksSketch extends Grid {
     private _CheckCollision(point: Point, handle: () => void): Boolean {
 
         // LOOP BLOCKS //
-        for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-            var block:IBlock = App.Blocks.GetValueAt(i);
+        var blocks = App.GetBlocksAsList();
+        for (var i = blocks.length - 1; i >= 0; i--) {
+            var block:IBlock = blocks[i];
             if (block.HitTest(point)) {
                 handle();
                 block.MouseDown();
@@ -562,8 +565,9 @@ class BlocksSketch extends Grid {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
-            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-                var block:IBlock = App.Blocks.GetValueAt(i);
+            var blocks = App.GetBlocksAsList();
+            for (var i = blocks.length - 1; i >= 0; i--) {
+                var block:IBlock = blocks[i];
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
@@ -655,7 +659,7 @@ class BlocksSketch extends Grid {
             block.IsSelected = true;
             this._SelectedBlock = block;
 
-            this._DisplayList.ToFront(block);
+            this.DisplayList.ToFront(block);
         }
     }
 
@@ -666,13 +670,13 @@ class BlocksSketch extends Grid {
 
     _ValidateBlocks() {
         // todo: make this a command that all blocks subscribe to?
-        for (var i = 0; i < App.Sources.Count; i++){
-            var src: ISource = App.Sources.GetValueAt(i);
+        for (var i = 0; i < App.Sources.length; i++){
+            var src: ISource = App.Sources[i];
             src.ValidateEffects();
         }
 
-        for (var i = 0; i < App.Effects.Count; i++){
-            var effect: IEffect = App.Effects.GetValueAt(i);
+        for (var i = 0; i < App.Effects.length; i++){
+            var effect: IEffect = App.Effects[i];
             effect.ValidateSources();
         }
     }

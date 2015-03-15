@@ -6,9 +6,9 @@ class RedoCommandHandler implements ICommandHandler {
 
     }
 
-    Execute(): void{
+    Execute(): Promise<any>{
         if (App.OperationManager.CanRedo()){
-            App.OperationManager.Redo();
+            return App.OperationManager.Redo();
         }
     }
 }

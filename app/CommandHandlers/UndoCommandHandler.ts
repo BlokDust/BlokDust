@@ -6,9 +6,9 @@ class UndoCommandHandler implements ICommandHandler {
 
     }
 
-    Execute(): void{
+    Execute(): Promise<any>{
         if (App.OperationManager.CanUndo()) {
-            App.OperationManager.Undo();
+            return App.OperationManager.Undo();
         }
     }
 }

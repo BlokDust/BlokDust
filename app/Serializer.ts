@@ -127,7 +127,6 @@ class Serializer {
             block.Position = new Point(b.Position.x, b.Position.y);
             block.LastPosition = new Point(b.Position.x, b.Position.y);
             block.ParamJson = b.Params;
-            block.Init(App.BlocksSketch);
 
             Serializer._DeserializationDictionary[b.Id] = block;
         }

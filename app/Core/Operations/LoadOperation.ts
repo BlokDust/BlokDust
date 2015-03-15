@@ -10,8 +10,6 @@ class LoadOperation<String> implements IOperation
     }
 
     Do(): Promise<String> {
-        var that = this;
-
         return new Promise((resolve) => {
 
             $.ajax(<JQueryAjaxSettings>{
@@ -20,10 +18,7 @@ class LoadOperation<String> implements IOperation
                 crossDomain: true,
                 dataType: 'json',
                 contentType: 'application/json'
-            }).done(function(data){
-                var blocks: IBlock[] = App.Deserialize(data);
-                App.Blocks.Clear();
-                App.Blocks.AddRange(blocks);
+            }).done((data) => {
                 resolve(data);
             });
 

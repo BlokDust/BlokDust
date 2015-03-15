@@ -4,6 +4,7 @@
 import BlocksSketch = require("./../BlocksSketch");
 import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
+import IBlock = require("../Blocks/IBlock");
 
 class ConnectionLines {
 
@@ -22,11 +23,11 @@ class ConnectionLines {
 
         this._Ctx.beginPath();
 
-        for (var j=0; j<App.Blocks.Count; j++) {
-            var block = App.Blocks.GetValueAt(j);
+        var blocks = App.GetBlocksAsList();
+
+        for (var j=0; j<blocks.length; j++) {
+            var block: IBlock = blocks[j];
             if ((<ISource>block).Effects) {
-
-
 
                 // draw connections to modifiers
                 var modifiers = (<ISource>block).Effects.ToArray();

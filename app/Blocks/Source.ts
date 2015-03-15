@@ -80,7 +80,7 @@ class Source extends Block implements ISource {
         for (var i = 0; i < this.Effects.Count; i++){
             var effect:IEffect = this.Effects.GetValueAt(i);
 
-            if (!App.Effects.Contains(effect)){
+            if (!App.Effects.contains(effect)){
                 this.RemoveEffect(effect);
             }
         }
