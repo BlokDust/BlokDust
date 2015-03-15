@@ -2,6 +2,7 @@ import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import Type = require("./../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 import Soundcloud = require("./../Sources/Soundcloud");
 
@@ -10,9 +11,8 @@ class Power extends Effect {
     Name: string;
     IsAttached: boolean;
 
-    constructor(grid: Grid, position: Point){
-
-        super(grid, position);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Name = 'Power';
 
@@ -46,11 +46,11 @@ class Power extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"power");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
     }
 }
 

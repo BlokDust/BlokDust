@@ -1,18 +1,18 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class LFO extends Effect {
 
     public LFO: Tone.LFO;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.LFO = new Tone.LFO(2, -20, 20);
         this.LFO.type = 'triangle';
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
@@ -20,7 +20,7 @@ class LFO extends Effect {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"lfo");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
     Attach(source:ISource): void{
@@ -49,7 +49,7 @@ class LFO extends Effect {
         }
     }
 
-    Delete() {
+    Dispose() {
         this.LFO.dispose();
     }
 

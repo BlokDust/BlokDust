@@ -1,4 +1,3 @@
-import App = require("../App");
 import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
@@ -33,12 +32,12 @@ class Source extends Block implements ISource {
     public PolySources: any[];
     public PolyEnvelopes: any[];
 
-    constructor(grid: Grid, position: Point) {
-        super(grid, position);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
-
+        // todo: use Block.Type
         if (this.BlockType != BlockType.Power) {
 
             this.EffectsChainInput = new Tone.Signal();
@@ -81,7 +80,7 @@ class Source extends Block implements ISource {
         for (var i = 0; i < this.Effects.Count; i++){
             var effect:IEffect = this.Effects.GetValueAt(i);
 
-            if (!App.Effects.Contains(effect)){
+            if (!App.Effects.contains(effect)){
                 this.RemoveEffect(effect);
             }
         }
@@ -130,7 +129,7 @@ class Source extends Block implements ISource {
      * @private
      */
     private _AttachEffect(effect: IEffect ) {
-        effect.Attach(this);
+        effect.Attach(<ISource>this);
     }
 
     /**
@@ -139,7 +138,7 @@ class Source extends Block implements ISource {
      * @private
      */
     private _DetachEffect(effect: IEffect) {
-        effect.Detach(this);
+        effect.Detach(<ISource>this);
     }
 
     /**
@@ -207,7 +206,8 @@ class Source extends Block implements ISource {
      * Disposes the audio nodes
      * @constructor
      */
-    Delete() {
+    Dispose() {
+        // todo: use reflection
         if (this.BlockType != BlockType.Power){
             this.EffectsChainOutput.dispose();
             this.EffectsChainInput.dispose();

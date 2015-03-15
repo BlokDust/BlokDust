@@ -1,28 +1,29 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Panner extends Effect {
 
     public Effect: Tone.AutoPanner;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.AutoPanner({
             "frequency": 1
         });
 
-        super(grid, position);
+        super.Init(sketch);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));
     }
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"panner");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"panner");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

@@ -1,10 +1,9 @@
 import IPooledObject = require("./Core/Resources/IPooledObject");
-import Vector = Fayde.Utils.Vector;
-import App = require("./App");
 import Grid = require("./Grid");
 import IBlock = require("./Blocks/IBlock");
 import Source = require("./Blocks/Source");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
+import Vector = Fayde.Utils.Vector;
 
 class Particle implements IPooledObject {
 
@@ -13,7 +12,6 @@ class Particle implements IPooledObject {
     public Vector: Vector;
     public Position: Point;
     public Size: number;
-    private Grid: Grid;
 
     constructor(position: Point, vector: Vector, size: number, life: number) {
         this.Position = position;

@@ -1,6 +1,3 @@
-// todo: this maintains a DisplayObjectCollection
-// has a Render method, which loops through each item in the DisplayObjectCollection calling their PreRender, then Render (Render skips out if there's a DisplayObject.PreRenderImage)
-
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import IDisplayObject = require("IDisplayObject");
 

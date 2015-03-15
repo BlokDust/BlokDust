@@ -1,10 +1,10 @@
 /**
  * Created by luketwyman on 14/02/2015.
  */
-import App = require("../App");
 import BlocksSketch = require("./../BlocksSketch");
 import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
+import IBlock = require("../Blocks/IBlock");
 
 class ConnectionLines {
 
@@ -12,23 +12,20 @@ class ConnectionLines {
     private _GridCell: number;
     private _Sketch: BlocksSketch;
 
-    constructor(sketch: BlocksSketch) {
+    Init(sketch: BlocksSketch): void {
 
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this._GridCell = sketch.CellWidth.width;
-
     }
 
     Draw() {
 
         this._Ctx.beginPath();
 
-        for (var j=0; j<App.Blocks.Count; j++) {
-            var block = App.Blocks.GetValueAt(j);
+        for (var j = 0; j < App.Blocks.length; j++) {
+            var block: IBlock = App.Blocks[j];
             if ((<ISource>block).Effects) {
-
-
 
                 // draw connections to modifiers
                 var modifiers = (<ISource>block).Effects.ToArray();

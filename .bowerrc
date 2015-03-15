@@ -1,7 +1,6 @@
 {
   "directory": "app/lib",
   "scripts": {
-    "postinstall": "unify update",
-    "preuninstall": "unify update -un %"
+
   }
 }

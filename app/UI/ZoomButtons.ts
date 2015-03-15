@@ -1,8 +1,6 @@
 /**
  * Created by luketwyman on 27/01/2015.
  */
-
-import App = require("./../App");
 import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
@@ -10,34 +8,30 @@ import DisplayObject = require("../DisplayObject");
 
 class ZoomButtons extends DisplayObject {
 
-    private _Ctx: CanvasRenderingContext2D;
-    private _Sketch: BlocksSketch;
     public InRoll: boolean;
     public OutRoll: boolean;
     private _InPos: Point;
     private _OutPos: Point;
 
-    constructor(sketch: BlocksSketch) {
-        super(sketch);
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
-        this._Ctx = sketch.Ctx;
-        this._Sketch = sketch;
         this.InRoll = this.OutRoll = false;
-        var units = this._Sketch.Unit.width;
-        this._InPos = new Point(30*units,this._Sketch.Height - (30*units));
-        this._OutPos = new Point(70*units,this._Sketch.Height - (30*units));
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
+        this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
 
     }
 
     UpdatePositions() {
-        var units = this._Sketch.Unit.width;
-        this._InPos = new Point(30*units,this._Sketch.Height - (30*units));
-        this._OutPos = new Point(70*units,this._Sketch.Height - (30*units));
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
+        this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
     }
 
     Draw() {
-        var units = this._Sketch.Unit.width;
-        var ctx = this._Ctx;
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var ctx = this.Ctx;
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
@@ -100,7 +94,7 @@ class ZoomButtons extends DisplayObject {
     }
 
     MouseMove(point) {
-        var units = this._Sketch.Unit.width;
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
         var zin = this._InPos;
         var zout = this._OutPos;
         var area = (30*units);
@@ -113,10 +107,10 @@ class ZoomButtons extends DisplayObject {
     MouseDown(point) {
 
         if (this.InRoll) {
-            this._Sketch.ZoomIn();
+            (<BlocksSketch>this.Sketch).ZoomIn();
         }
         if (this.OutRoll) {
-            this._Sketch.ZoomOut();
+            (<BlocksSketch>this.Sketch).ZoomOut();
         }
 
 

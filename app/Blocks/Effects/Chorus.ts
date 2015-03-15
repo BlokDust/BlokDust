@@ -1,12 +1,12 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Chorus extends Effect {
 
     public Effect: Tone.Chorus;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.Chorus({
             "rate" : 1,
@@ -16,7 +16,7 @@ class Chorus extends Effect {
             "feedback" : 0.2
         });
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(0, 1),new Point(-1, 1));
@@ -25,10 +25,10 @@ class Chorus extends Effect {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"chorus");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chorus");
     }
 
-    Delete() {
+    Dispose() {
         this.Effect.dispose();
     }
 

@@ -24,7 +24,7 @@ class CommandManager {
         }
     }
 
-    public ExecuteCommand(command: string, parameters?: any): void {
+    public ExecuteCommand(command: string, parameters?: any): Promise<any> {
         // todo: use metric to determine best CommandHandlerFactory to use.
         var commandHandlerFactories: CommandHandlerFactory<ICommandHandler>[] = this._GetCommandHandlerFactories(command);
 
@@ -32,7 +32,7 @@ class CommandManager {
 
         var commandHandler: ICommandHandler = commandHandlerFactories[0].GetInstance();
 
-        commandHandler.Execute(parameters);
+        return commandHandler.Execute(parameters);
     }
 
     private _GetCommandHandlerFactories(command: string): CommandHandlerFactory<ICommandHandler>[]{

@@ -1,4 +1,3 @@
-import App = require("../App");
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Type = require("./BlockType");
@@ -12,13 +11,12 @@ import ParametersPanel = require("../UI/ParametersPanel");
 class Block extends DisplayObject implements IBlock {
 
     public Id: number;
-    public Reference;
+    public Type: any;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
-    public Grid: Grid;
     public Outline: Point[] = [];
     public ZIndex;
     public ParamJson;
@@ -26,12 +24,8 @@ class Block extends DisplayObject implements IBlock {
 
     public BlockType: BlockType;
 
-    constructor(grid: Grid, position: Point) {
-        super(grid);
-
-        this.Grid = grid;
-
-        this.Position = position;
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.Update();
     }
@@ -57,21 +51,21 @@ class Block extends DisplayObject implements IBlock {
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
-        var p = this.Grid.GetRelativePoint(this.Position, new Point(x, y));
+        var p = (<Grid>this.Sketch).GetRelativePoint(this.Position, new Point(x, y));
         p = this.GetTransformedPoint(p);
         this.Ctx.moveTo(p.x, p.y);
     }
 
     DrawLineTo(x, y) {
-        var p = this.Grid.GetRelativePoint(this.Position, new Point(x, y));
+        var p = (<Grid>this.Sketch).GetRelativePoint(this.Position, new Point(x, y));
         p = this.GetTransformedPoint(p);
         this.Ctx.lineTo(p.x, p.y);
     }
 
     // converts a point in grid units to absolute units and transforms it
     GetTransformedPoint(point: Point): Point {
-        var p: Point = this.Grid.ConvertGridUnitsToAbsolute(point);
-        return this.Grid.ConvertBaseToTransformed(p);
+        var p: Point = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(point);
+        return (<Grid>this.Sketch).ConvertBaseToTransformed(p);
     }
 
     ParticleCollision(particle: Particle) {
@@ -97,22 +91,22 @@ class Block extends DisplayObject implements IBlock {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if (this.Grid.AltDown && this._Duplicable) {
-                this.Grid.CreateBlockFromType(this.Reference);
+            if ((<BlocksSketch>this.Sketch).AltDown && this._Duplicable) {
+                (<BlocksSketch>this.Sketch).CreateBlockFromType(this.Type);
                 this.MouseUp();
             }
             // MOVE //
             else {
-                point = this.Grid.ConvertTransformedToBase(point);
-                point = this.Grid.SnapToGrid(point);
-                point = this.Grid.ConvertAbsoluteToGridUnits(point);
+                point = (<Grid>this.Sketch).ConvertTransformedToBase(point);
+                point = (<Grid>this.Sketch).SnapToGrid(point);
+                point = (<Grid>this.Sketch).ConvertAbsoluteToGridUnits(point);
                 this.Position = point;
             }
 
         }
     }
 
-    Delete() {}
+    Dispose() {}
 
     // absolute point
     HitTest(point: Point): boolean {
@@ -131,7 +125,7 @@ class Block extends DisplayObject implements IBlock {
 
     // absolute point
     DistanceFrom(point: Point): number{
-        var p = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
+        var p = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(this.Position);
         return Math.distanceBetween(p.x, p.y, point.x, point.y);
     }
 

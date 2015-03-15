@@ -1,8 +1,7 @@
-import App = require("../App");
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import AddItemToObservableCollectionOperation = require("../Core/Operations/AddItemToObservableCollectionOperation");
+import AddItemToArrayOperation = require("../Core/Operations/AddItemToArrayOperation");
 
 class CreateBlockCommandHandler implements ICommandHandler {
 
@@ -10,9 +9,9 @@ class CreateBlockCommandHandler implements ICommandHandler {
 
     }
 
-    Execute(block: IBlock): void{
-        var op:IUndoableOperation = new AddItemToObservableCollectionOperation(block, App.Blocks);
-        App.OperationManager.Do(op);
+    Execute(block: IBlock): Promise<any>{
+        var op:IUndoableOperation = new AddItemToArrayOperation<IBlock>(block, App.Blocks);
+        return App.OperationManager.Do(op);
     }
 }
 

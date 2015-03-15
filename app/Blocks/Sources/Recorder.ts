@@ -1,5 +1,5 @@
-import App = require("../../App");
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -14,11 +14,12 @@ class RecorderBlock extends Source {
     public StopPlaybackOnRecord: boolean;
     public PlaybackRate: number;
 
-    constructor(grid: Grid, position: Point) {
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.BlockType = BlockType.Recorder;
         this.Source = new Tone.Signal();
 
-        super(grid, position);
+        super.Init(sketch);
 
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
@@ -48,7 +49,7 @@ class RecorderBlock extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"recorder");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"recorder");
     }
 
     MouseDown() {
@@ -119,8 +120,8 @@ class RecorderBlock extends Source {
         this.Recorder.setupDownload(this.GetRecordedBlob(), this.Filename);
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
 
         this.RecordedAudio.stop();
         this.RecordedAudio.dispose();

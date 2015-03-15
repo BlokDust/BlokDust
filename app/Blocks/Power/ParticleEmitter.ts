@@ -1,9 +1,9 @@
 import Source = require("../Source");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
-import App = require("../../App");
 import Vector = Fayde.Utils.Vector;
 import Type = require("../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 
 class ParticleEmitter extends Source {
@@ -12,7 +12,8 @@ class ParticleEmitter extends Source {
     private _rateCounter: number;
 
 
-    constructor(grid: Grid, position: Point) {
+    Init() {
+        super.Init();
         this.BlockType = BlockType.Power;
 
         this.Params = {
@@ -22,8 +23,6 @@ class ParticleEmitter extends Source {
             range: 600
         };
 
-        super(grid, position);
-
         this._rateCounter = 0;
 
         // Define Outline for HitTest
@@ -32,7 +31,7 @@ class ParticleEmitter extends Source {
 
 
     EmitParticle() {
-        var position = this.Grid.ConvertGridUnitsToAbsolute(this.Position);
+        var position = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(this.Position);
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
         vector.Mult(this.Params.speed);
         var size = 2 + (Math.random()*1);
@@ -76,14 +75,14 @@ class ParticleEmitter extends Source {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"particle emitter");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
 
-        if (window.debug){
-            this.Ctx.fillStyle = "#fff";
-            var pos = this.Grid.ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
-            pos = this.Grid.ConvertBaseToTransformed(pos);
-            //this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
-        }
+        //if (window.debug){
+        //    this.Ctx.fillStyle = "#fff";
+        //    var pos = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
+        //    pos = (<Grid>this.Sketch).ConvertBaseToTransformed(pos);
+        //    //this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
+        //}
 
     }
 

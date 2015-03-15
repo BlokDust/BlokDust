@@ -1,6 +1,6 @@
 
 interface ICommandHandler {
-    Execute(parameters?: any): void;
+    Execute(parameters?: any): Promise<any>;
 }
 
 export = ICommandHandler;

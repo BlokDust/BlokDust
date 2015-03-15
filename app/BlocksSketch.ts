@@ -1,4 +1,3 @@
-import App = require("./App");
 import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
 import IEffect = require("./Blocks/IEffect");
@@ -8,11 +7,6 @@ import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperat
 import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
 import Commands = require("./Commands");
-import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
-import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
-import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
-import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
-import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import ICommandHandler = require("./Core/Commands/ICommandHandler");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
@@ -21,8 +15,6 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import Transformer = Fayde.Transformer.Transformer;
-import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./UI/ParametersPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
@@ -32,14 +24,14 @@ import ConnectionLines = require("./UI/ConnectionLines");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
 import Utils = Fayde.Utils;
+import Transformer = Fayde.Transformer.Transformer;
+import Size = Fayde.Utils.Size;
 
-declare var PixelPalette;
 declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
 class BlocksSketch extends Grid {
 
     private _SelectedBlock: IBlock;
-    private _Id: number = 0;
     private _IsPointerDown: boolean = false;
     public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
@@ -56,56 +48,58 @@ class BlocksSketch extends Grid {
     private _PointerPoint: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
-
-
+    public TxtHeader: string;
+    public TxtSlider: string;
+    public TxtMid: string;
+    public TxtBody: string;
+    public TxtItalic: string;
+    public TxtData: string;
+    public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
-
     constructor() {
         super();
+    }
 
-        this._DisplayList = new DisplayList(App.Blocks);
 
-        // register command handlers
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
-        App.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
+    public GetId(): number {
+        var count = App.Blocks.length;
+        return count + 1;
+    }
 
-        App.OperationManager.OperationAdded.on((operation: IOperation) => {
-            this._Invalidate();
+    get DisplayList(): DisplayList {
+        return this._DisplayList;
+    }
+
+    set DisplayList(value: DisplayList) {
+        this._DisplayList = value;
+    }
+
+    Setup(){
+        super.Setup();
+
+        App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
+            this.MouseDown(e);
+        }, this);
+
+        App.PointerInputManager.MouseUp.on((s: any, e: MouseEvent) => {
+            this.MouseUp(e);
+        }, this);
+
+        App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
+            this.MouseMove(e);
         }, this);
 
         App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
 
-        App.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
-        App.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
+        //this.DisplayList = new DisplayList(App.Blocks);
 
-        var pixelPalette = new PixelPalette("img/palette6.gif");
-
-        pixelPalette.Load((palette: string[]) => {
-            //console.log(palette);
-            App.Palette = palette;
-        });
-
-        ParamTimeout = false;
-
-        this._Invalidate();
-    }
-
-
-    public GetId(): number {
-        return this._Id++;
-    }
-
-
-    Setup(){
-        super.Setup();
+        ParamTimeout = false; // todo: remove
 
         // METRICS //
         this.Metrics();
@@ -113,9 +107,12 @@ class BlocksSketch extends Grid {
 
         // SOUNDCLOUD //
         var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-        SC.initialize({
-            client_id: id
-        });
+
+        if (typeof(SC) !== "undefined"){
+            SC.initialize({
+                client_id: id
+            });
+        }
 
         // TRANSFORMER //
         // todo: make these default values
@@ -130,22 +127,30 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // INSTANCES //
-        this.BlockSprites = new BlockSprites(this);
+        this.BlockSprites = new BlockSprites();
+        this.BlockSprites.Init(this);
+
         this.BlockCreator = new BlockCreator();
-        this._ParamsPanel = new ParametersPanel(this);
-        this._Header = new Header(this);
-        this._ToolTip = new ToolTip(this);
-        this._ZoomButtons = new ZoomButtons(this);
-        this._TrashCan = new TrashCan(this);
-        this._ConnectionLines = new ConnectionLines(this);
 
-        var id = Utils.Url.GetQuerystringParameter('c');
+        this._ParamsPanel = new ParametersPanel();
+        this._ParamsPanel.Init(this);
 
-        if(id) {
-            App.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id);
-        }
+        this._Header = new Header();
+        this._Header.Init(this);
 
-        // TEMP LISTENER //
+        this._ToolTip = new ToolTip();
+        this._ToolTip.Init(this);
+
+        this._ZoomButtons = new ZoomButtons();
+        this._ZoomButtons.Init(this);
+
+        this._TrashCan = new TrashCan();
+        this._TrashCan.Init(this);
+
+        this._ConnectionLines = new ConnectionLines();
+        this._ConnectionLines.Init(this);
+
+        // todo: use input manager
         document.addEventListener('keydown', (e) => {
             if (e.keyCode==18) {
                 this.AltDown = true;
@@ -156,6 +161,7 @@ class BlocksSketch extends Grid {
             this.AltDown = false;
         });
 
+        this._Invalidate();
     }
 
 
@@ -171,8 +177,8 @@ class BlocksSketch extends Grid {
         this._Transformer.SizeChanged(this.Size);
 
         // update blocks
-        for (var i = 0; i < App.Blocks.Count; i++) {
-            var block: IBlock = App.Blocks.GetValueAt(i);
+        for (var i = 0; i < App.Blocks.length; i++) {
+            var block: IBlock = App.Blocks[i];
             block.Update();
         }
 
@@ -215,16 +221,13 @@ class BlocksSketch extends Grid {
     }
 
     /*ParticleCollision(point: Point, particle: Particle) {
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
-            if (block instanceof Source)
-            var block: IBlock = App.Blocks.GetValueAt(i);
+        for (var i = App.Blocks.length - 1; i >= 0 ; i--){
+            var block: IBlock = App.Blocks[i];
             if (block.HitTest(point)){
                 block.ParticleCollision(particle);
             }
         }
     }*/
-
-
 
     SketchResize() {
         if (this._ParamsPanel.Scale==1) {
@@ -280,7 +283,7 @@ class BlocksSketch extends Grid {
         this._ConnectionLines.Draw();
 
         // BLOCKS //
-        this._DisplayList.Draw();
+        this.DisplayList.Draw();
 
         // PARTICLES //
         this.DrawParticles();
@@ -323,27 +326,28 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
     // FIRST TOUCHES //
-    MouseDown(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
+    MouseDown(e: MouseEvent){
+        //var point = (<any>e).args.Source.MousePosition;
+        var position: Point = new Point(e.clientX, e.clientY);
 
-        this._PointerDown(point, () => {
-            (<any>e).args.Handled = true;
+        this._PointerDown(position, () => {
+            e.cancelBubble = true;
         });
     }
 
-    MouseUp(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
+    MouseUp(e: MouseEvent){
+        var position: Point = new Point(e.clientX, e.clientY);
 
-        this._PointerUp(point, () => {
-            (<any>e).args.Handled = true;
+        this._PointerUp(position, () => {
+            e.cancelBubble = true;
         });
-        this._CheckHover(point);
+        this._CheckHover(position);
     }
 
-    MouseMove(e: Fayde.Input.MouseEventArgs){
-        var point = (<any>e).args.Source.MousePosition;
-        this._PointerMove(point);
-        this._CheckHover(point);
+    MouseMove(e: MouseEvent){
+        var position: Point = new Point(e.clientX, e.clientY);
+        this._PointerMove(position);
+        this._CheckHover(position);
     }
 
     TouchDown(e: any){
@@ -352,7 +356,7 @@ class BlocksSketch extends Grid {
         var point = new Point(pos.Position.x, pos.Position.y);
 
         this._PointerDown(point, () => {
-            (<any>e).args.Handled = true;
+            e.cancelBubble = true;
         });
     }
 
@@ -361,7 +365,7 @@ class BlocksSketch extends Grid {
         var point = new Point(pos.Position.x, pos.Position.y);
 
         this._PointerUp(point, () => {
-            (<any>e).args.Handled = true;
+            e.cancelBubble = true;
         });
     }
 
@@ -483,11 +487,11 @@ class BlocksSketch extends Grid {
         // loop through all Source blocks checking proximity to Effect blocks.
         // if within CatchmentArea, add Effect to Source.Effects and add Source to Effect.Sources
 
-        for (var j = 0; j < App.Sources.Count; j++) {
-            var source:ISource = App.Sources.GetValueAt(j);
+        for (var j = 0; j < App.Sources.length; j++) {
+            var source:ISource = App.Sources[j];
 
-            for (var i = 0; i < App.Effects.Count; i++) {
-                var effect:IEffect = App.Effects.GetValueAt(i);
+            for (var i = 0; i < App.Effects.length; i++) {
+                var effect:IEffect = App.Effects[i];
 
                 // if a source is close enough to the effect, add the effect
                 // to its internal list.
@@ -523,8 +527,8 @@ class BlocksSketch extends Grid {
     private _CheckCollision(point: Point, handle: () => void): Boolean {
 
         // LOOP BLOCKS //
-        for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-            var block:IBlock = App.Blocks.GetValueAt(i);
+        for (var i = App.Blocks.length - 1; i >= 0; i--) {
+            var block:IBlock = App.Blocks[i];
             if (block.HitTest(point)) {
                 handle();
                 block.MouseDown();
@@ -556,8 +560,8 @@ class BlocksSketch extends Grid {
             panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
-            for (var i = App.Blocks.Count - 1; i >= 0; i--) {
-                var block:IBlock = App.Blocks.GetValueAt(i);
+            for (var i = App.Blocks.length - 1; i >= 0; i--) {
+                var block:IBlock = App.Blocks[i];
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
@@ -604,7 +608,6 @@ class BlocksSketch extends Grid {
         var zoom = this._ZoomButtons;
         var header = this._Header;
 
-
         if (zoom.InRoll || zoom.OutRoll || header.MenuOver) {
             console.log("UI INTERACTION");
             return true;
@@ -621,7 +624,7 @@ class BlocksSketch extends Grid {
         return false;
     }
 
-
+    // todo: move this to generic util
     private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
         return (mx>x && mx<(x+w) && my>y && my<(y+h));
     }
@@ -650,7 +653,7 @@ class BlocksSketch extends Grid {
             block.IsSelected = true;
             this._SelectedBlock = block;
 
-            this._DisplayList.ToFront(block);
+            this.DisplayList.ToFront(block);
         }
     }
 
@@ -661,24 +664,24 @@ class BlocksSketch extends Grid {
 
     _ValidateBlocks() {
         // todo: make this a command that all blocks subscribe to?
-        for (var i = 0; i < App.Sources.Count; i++){
-            var src: ISource = App.Sources.GetValueAt(i);
+        for (var i = 0; i < App.Sources.length; i++){
+            var src: ISource = App.Sources[i];
             src.ValidateEffects();
         }
 
-        for (var i = 0; i < App.Effects.Count; i++){
-            var effect: IEffect = App.Effects.GetValueAt(i);
+        for (var i = 0; i < App.Effects.length; i++){
+            var effect: IEffect = App.Effects[i];
             effect.ValidateSources();
         }
     }
 
-    CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
-        super.CreateBlockFromType(m);
-
-        var ref = m;
-        var block: IBlock = new m(this, this._PointerPoint);
+    //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }){
+        var block: IBlock = new t();
+        block.Position = this._PointerPoint;
+        block.Init(this);
         block.Id = this.GetId();
-        block.Reference = ref;
+        block.Type = t;
 
         // todo: should this go in command handler?
         block.Click.on((block: IBlock) => {
@@ -718,17 +721,10 @@ class BlocksSketch extends Grid {
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
         this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
-        this._SelectedBlock.Delete();
+        this._SelectedBlock.Dispose();
+        this.DisplayList.Remove(this._SelectedBlock);
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
-    }
-
-    Undo(){
-        App.OperationManager.Undo();
-    }
-
-    Redo(){
-        App.OperationManager.Redo();
     }
 }
 

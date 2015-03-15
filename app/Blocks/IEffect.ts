@@ -14,7 +14,6 @@ interface IEffect extends IBlock{
     Attach(source: ISource): void;
     Detach(source: ISource): void;
 
-    Delete(): void;
     SetValue(param: string,value: number): void;
     GetValue(param: string): void;
 

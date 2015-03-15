@@ -1,6 +1,7 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import Type = require("../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 
 class Soundcloud extends Source {
@@ -10,7 +11,8 @@ class Soundcloud extends Source {
     public LoopEndPosition: number;
     public Envelope: Tone.AmplitudeEnvelope;
 
-    constructor(grid: Grid, position: Point) {
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.BlockType = BlockType.Soundcloud;
         this.PlaybackRate = 1;
 
@@ -21,7 +23,6 @@ class Soundcloud extends Source {
 
         this.Source = new Tone.Player(localUrl, function (sc) {
             sc.loop = true;
-            //sc.start();
             console.log('buffer loaded');
         });
 
@@ -30,29 +31,6 @@ class Soundcloud extends Source {
 
         this.Source.loop = true;
         this.Source.loopEnd = this.LoopEndPosition;
-
-
-        /*var audioUrl;
-         var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-         SC.initialize({
-         client_id: id
-         });
-
-         this.Source = new Tone.Player();
-         var sc = this.Source;
-
-         var rawUrl = "https://soundcloud.com/whitehawkmusic/deep-mutant";
-         SC.get('/resolve', { url: rawUrl }, function(track) {
-         audioUrl = ""+track.stream_url + "?client_id=" + id;
-         console.log(audioUrl);
-         sc.load(audioUrl, function (sc) {
-         console.log(sc);
-         sc.loop = true;
-         sc.start();
-         });
-         });*/
-
-        super(grid, position);
 
         this.Envelope = new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
@@ -63,6 +41,8 @@ class Soundcloud extends Source {
 
         this.Envelope.connect(this.EffectsChainInput);
         this.Source.connect(this.Envelope);
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -106,7 +86,7 @@ class Soundcloud extends Source {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"soundcloud");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
     }
 
     OpenParams() {

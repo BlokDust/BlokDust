@@ -1,7 +1,6 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import App = require("../../App");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import PitchComponent = require("./../Effects/Pitch");
 
@@ -14,16 +13,13 @@ class Keyboard extends Effect {
     public CurrentOctave: number;
     public KeysDown: any;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.KeysDown = {};
         this.CurrentOctave = 3;
         App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
         App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
-
-        super(grid, position);
-
-
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -86,7 +82,7 @@ class Keyboard extends Effect {
         this.KeysDown = (<any>e).KeysDown;
     }
 
-    Delete(){
+    Dispose(){
         this.KeysDown = {};
         this.BaseFrequency = null;
         this.CurrentOctave = null;
