@@ -205,7 +205,7 @@ class BlocksSketch extends Grid {
                 particle.ReturnToPool();
                 continue;
             }
-            particle.ParticleCollision(particle.Position, particle);
+            particle.ParticleCollision(this.ConvertBaseToTransformed(particle.Position), particle);
             particle.Move();
             currentParticles.push(particle);
         }
