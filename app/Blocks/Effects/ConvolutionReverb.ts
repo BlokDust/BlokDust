@@ -14,6 +14,7 @@ class Convolver extends Effect {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
+        console.log(this);
     }
 
     Draw() {
@@ -31,7 +32,7 @@ class Convolver extends Effect {
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         }
     }
 
@@ -39,7 +40,7 @@ class Convolver extends Effect {
         super.GetValue(param);
         var val;
         if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         }
         return val;
     }

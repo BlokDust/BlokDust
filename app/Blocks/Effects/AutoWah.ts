@@ -19,10 +19,10 @@ class AutoWah extends Effect {
                 "release": 1
             }
         });
-        this.Effect.setSensitivity(-40);
-        this.Effect.setOctaves(5);
-        this.Effect.setBaseFrequency(100);
-        this.Effect.dryWet.setDry(0.6);
+        this.Effect.sensitivity = -40;
+        this.Effect.octaves = 5;
+        this.Effect.baseFrequency = 100;
+        this.Effect.wet.value = 0.6;
 
         super(grid, position);
 
@@ -45,11 +45,11 @@ class AutoWah extends Effect {
         jsonVariable[param] = value;
 
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         } else if (param=="octaves") {
-            this.Effect.setOctaves(value);
+            this.Effect.octaves = value;
         } else if (param=="baseFrequency") {
-            this.Effect.setBaseFrequency(value);
+            this.Effect.baseFrequency = value;
         }
     }
 
@@ -57,11 +57,11 @@ class AutoWah extends Effect {
         super.GetValue(param);
         var val;
         if (param=="octaves") {
-            val = this.Effect.getOctaves();
+            val = this.Effect.octaves;
         } else if (param=="baseFrequency") {
-            val = this.Effect.getBaseFrequency();
+            val = this.Effect.baseFrequency;
         } else if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         }
 
         return val;

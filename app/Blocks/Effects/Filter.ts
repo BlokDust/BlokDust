@@ -44,9 +44,9 @@ class Filter extends Effect {
         super.GetValue(param);
         var val;
         if (param=="frequency") {
-            val = this.Effect.getFrequency();
+            val = this.Effect.frequency.value;
         } else if (param=="gain") {
-            val = this.Effect.getGain();
+            val = this.Effect.gain.value;
         }
         return val;
     }

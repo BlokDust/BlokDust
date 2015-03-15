@@ -33,27 +33,27 @@ class Envelope extends Effect {
     Attach(source: ISource): void{
         super.Attach(source);
 
-        source.Envelope.setAttack(this.attack);
-        source.Envelope.setDecay(this.decay);
-        source.Envelope.setSustain(this.sustain);
-        source.Envelope.setRelease(this.release);
+        source.Envelope.attack = this.attack;
+        source.Envelope.decay = this.decay;
+        source.Envelope.sustain = this.sustain;
+        source.Envelope.release = this.release;
 
         // FOR POLYPHONIC
         for(var i = 0; i<source.PolySources.length; i++){
-            source.PolyEnvelopes[i].setAttack(this.attack);
-            source.PolyEnvelopes[i].setDecay(this.decay);
-            source.PolyEnvelopes[i].setSustain(this.sustain);
-            source.PolyEnvelopes[i].setRelease(this.release);
+            source.PolyEnvelopes[i].attack = this.attack;
+            source.PolyEnvelopes[i].decay = this.decay;
+            source.PolyEnvelopes[i].sustain = this.sustain;
+            source.PolyEnvelopes[i].release = this.release;
         }
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
 
-        source.Envelope.setAttack(0.02);
-        source.Envelope.setDecay(0.5);
-        source.Envelope.setSustain(0.5);
-        source.Envelope.setRelease(0.02);
+        source.Envelope.attack = 0.02;
+        source.Envelope.decay = 0.5;
+        source.Envelope.sustain = 0.5;
+        source.Envelope.release = 0.02;
 
     }
 
@@ -74,18 +74,18 @@ class Envelope extends Effect {
         if (this.Sources.Count) {
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                source.Envelope.setAttack(this.attack);
-                source.Envelope.setDecay(this.decay);
-                source.Envelope.setSustain(this.sustain);
-                source.Envelope.setRelease(this.release);
+                source.Envelope.attack = this.attack;
+                source.Envelope.decay = this.decay;
+                source.Envelope.sustain = this.sustain;
+                source.Envelope.release = this.release;
 
                 // FOR POLYPHONIC
                 if (source.PolySources.length){
                     for(var i = 0; i<source.PolySources.length; i++){
-                        source.PolyEnvelopes[i].setAttack(this.attack);
-                        source.PolyEnvelopes[i].setDecay(this.decay);
-                        source.PolyEnvelopes[i].setSustain(this.sustain);
-                        source.PolyEnvelopes[i].setRelease(this.release);
+                        source.PolyEnvelopes[i].attack = this.attack;
+                        source.PolyEnvelopes[i].decay = this.decay;
+                        source.PolyEnvelopes[i].sustain = this.sustain;
+                        source.PolyEnvelopes[i].release = this.release;
                     }
                 }
             }

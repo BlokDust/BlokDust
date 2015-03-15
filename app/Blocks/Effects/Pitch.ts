@@ -41,17 +41,17 @@ class Pitch extends Effect {
 
             // TONE.PLAYERS
         } else if (source.Source._playbackRate){
-            source.Source.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
+            source.Source.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
 
             // GRANULAR
         } else if (source.Grains) {
             for (var i=0; i<source.MaxDensity; i++) {
-                source.Grains[i].setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
+                source.Grains[i].playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
             }
 
             // RECORDER
         } else if (source.RecordedAudio) {
-            source.RecordedAudio.setPlaybackRate(source.PlaybackRate * this._GetConnectedPitchPreEffects(source), 0);
+            source.RecordedAudio.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
         }
 
     }

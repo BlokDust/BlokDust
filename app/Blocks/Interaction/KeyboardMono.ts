@@ -1,6 +1,8 @@
 import Keyboard = require("./Keyboard");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
+import Soundcloud = require("../Sources/Soundcloud");
+
 
 class KeyboardMono extends Keyboard {
 
@@ -50,8 +52,13 @@ class KeyboardMono extends Keyboard {
 
         if (param == "glide") {
             val = this.Glide*100;
+
+        } else if (param == "octave"){
+            val = this.CurrentOctave;
         }
+
         return val;
+
     }
 
     OpenParams() {
@@ -75,7 +82,20 @@ class KeyboardMono extends Keyboard {
                         "quantised" : false,
                         "centered" : false
                     }
-                }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Octave",
+                    "setting" :"octave",
+                    "props" : {
+                        "value" : this.GetValue("octave"),
+                        "min" : 0,
+                        "max" : 9,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                },
+
             ]
         };
     }
@@ -94,7 +114,15 @@ class KeyboardMono extends Keyboard {
                 source.Source.frequency.exponentialRampToValueNow(frequency, 0);
             } else if (source.PlaybackRate){
                 source.SetPlaybackRate(playbackRate, 0);
-                //source.Source.start();
+
+                // If has a loop start position start then plus current time else start immediately
+                if(source.LoopStartPosition){
+                    source.Source.start(source.LoopStartPosition+ source.Source.now());
+                } else {
+                    source.Source.start();
+                }
+
+
                 source.TriggerAttack();
             }
             source.Envelope.triggerAttack();
@@ -116,7 +144,7 @@ class KeyboardMono extends Keyboard {
             source.Envelope.triggerRelease();
 
             if (source.PlaybackRate) {
-                //source.Source.stop(source.Source.toSeconds(source.Envelope.release));
+                source.Source.stop(source.Envelope.release+source.Source.now());
                 source.TriggerRelease();
             }
         }

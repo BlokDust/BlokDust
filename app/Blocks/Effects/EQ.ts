@@ -118,7 +118,7 @@ class EQ extends Effect {
                             "y_setting": "gain-1",
                             "y_value": this.GetValue("gain-1"),
                             "y_min": -50,
-                            "y_max": 50,
+                            "y_max": 30,
 
                             "q_setting": "Q-1",
                             "q_value": this.GetValue("Q-1"),
@@ -135,7 +135,7 @@ class EQ extends Effect {
                             "y_setting": "gain-2",
                             "y_value": this.GetValue("gain-2"),
                             "y_min": -50,
-                            "y_max": 50,
+                            "y_max": 30,
 
                             "q_setting": "Q-2",
                             "q_value": this.GetValue("Q-2"),
@@ -152,7 +152,7 @@ class EQ extends Effect {
                             "y_setting": "gain-3",
                             "y_value": this.GetValue("gain-3"),
                             "y_min": -50,
-                            "y_max": 50,
+                            "y_max": 30,
 
                             "q_setting": "Q-3",
                             "q_value": this.GetValue("Q-3"),
@@ -169,7 +169,7 @@ class EQ extends Effect {
                             "y_setting": "gain-4",
                             "y_value": this.GetValue("gain-4"),
                             "y_min": -50,
-                            "y_max": 50,
+                            "y_max": 30,
 
                             "q_setting": "Q-4",
                             "q_value": this.GetValue("Q-4"),

@@ -33,7 +33,7 @@ class BitCrusher extends Effect {
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         } else {
             this.Effect.set(
                 jsonVariable
@@ -46,9 +46,9 @@ class BitCrusher extends Effect {
         super.GetValue(param);
         var val;
         if (param=="bits") {
-            val = this.Effect.getBits();
+            val = this.Effect.bits;
         } else if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         }
         return val;
     }

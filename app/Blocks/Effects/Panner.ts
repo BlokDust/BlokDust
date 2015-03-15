@@ -37,7 +37,7 @@ class Panner extends Effect {
 
     GetValue(param: string) {
         super.GetValue(param);
-        var val = this.Effect.getFrequency();
+        var val = this.Effect.frequency.value;
         return val;
     }
 

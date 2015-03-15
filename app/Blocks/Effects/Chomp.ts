@@ -72,9 +72,9 @@ class Chomp extends Effect {
         super.GetValue(param);
         var val;
         if (param=="Q") {
-            val = this.Effect.getQ();
+            val = this.Effect.Q.value;
         } else if (param=="gain") {
-            val = this.Effect.getGain();
+            val = this.Effect.gain.value;
         }
 
         return val;

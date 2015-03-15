@@ -1,5 +1,10 @@
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import Vector = Fayde.Utils.Vector;
+import App = require("./App");
+import Grid = require("./Grid");
+import IBlock = require("./Blocks/IBlock");
+import Source = require("./Blocks/Source");
+import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 
 class Particle implements IPooledObject {
 
@@ -8,6 +13,7 @@ class Particle implements IPooledObject {
     public Vector: Vector;
     public Position: Point;
     public Size: number;
+    private Grid: Grid;
 
     constructor(position: Point, vector: Vector, size: number, life: number) {
         this.Position = position;
@@ -36,6 +42,19 @@ class Particle implements IPooledObject {
 
     ReturnToPool(): void {
 
+    }
+
+    ParticleCollision(point: Point, particle: Particle) {
+        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+
+            var block: IBlock = App.Blocks.GetValueAt(i);
+            if (block instanceof Source && !(block instanceof ParticleEmitter)) {
+                if (block.HitTest(point)){
+                    block.ParticleCollision(particle);
+                }
+            }
+
+        }
     }
 }
 

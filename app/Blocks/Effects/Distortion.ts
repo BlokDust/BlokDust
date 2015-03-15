@@ -9,7 +9,7 @@ class Distortion extends Effect {
     constructor(grid: Grid, position: Point){
 
         this.Effect = new Tone.Distortion(0.65);
-        this.Effect.dryWet.setWet(0.75);
+        this.Effect.wet.value = 0.75;
 
         super(grid, position);
 
@@ -31,9 +31,9 @@ class Distortion extends Effect {
     SetValue(param: string,value: number) {
         super.SetValue(param,value);
         if (param=="dryWet") {
-            this.Effect.dryWet.setWet(value);
+            this.Effect.wet.value = value;
         } else {
-            this.Effect.setDistortion(value);
+            this.Effect.distortion = value;
         }
     }
 
@@ -41,9 +41,9 @@ class Distortion extends Effect {
         super.GetValue(param);
         var val;
         if (param=="drive") {
-            val = this.Effect.getDistortion();
+            val = this.Effect.distortion;
         } else if (param=="dryWet") {
-            val = this.Effect.getWet();
+            val = this.Effect.wet.value;
         }
         return val;
     }
