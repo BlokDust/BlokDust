@@ -21,7 +21,7 @@ class Reverb extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"reverb");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

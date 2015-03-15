@@ -52,7 +52,7 @@ class Chopper extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chopper");
     }
 
-    Delete(){
+    Dispose(){
         //this.Transport.stop();
         clearTimeout(this.Timer);
         this.Effect.disconnect();

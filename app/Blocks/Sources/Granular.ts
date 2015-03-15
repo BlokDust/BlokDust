@@ -417,8 +417,8 @@ class Granular extends Source {
 
 
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
         clearTimeout(this.Timeout);
         this._NoteOn = false;
         for (var i=0; i<this.MaxDensity; i++) {

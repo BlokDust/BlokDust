@@ -82,7 +82,7 @@ class Keyboard extends Effect {
         this.KeysDown = (<any>e).KeysDown;
     }
 
-    Delete(){
+    Dispose(){
         this.KeysDown = {};
         this.BaseFrequency = null;
         this.CurrentOctave = null;

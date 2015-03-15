@@ -50,7 +50,7 @@ class EQ extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

@@ -23,7 +23,7 @@ class Convolver extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"convolution");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

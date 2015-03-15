@@ -27,7 +27,7 @@ class Filter extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

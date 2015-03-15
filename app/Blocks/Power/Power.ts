@@ -49,8 +49,8 @@ class Power extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
     }
 }
 

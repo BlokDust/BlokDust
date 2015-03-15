@@ -73,8 +73,8 @@ class ToneSource extends Source {
         particle.Dispose();
     }
 
-    Delete() {
-        super.Delete();
+    Dispose() {
+        super.Dispose();
     }
 
     Update() {

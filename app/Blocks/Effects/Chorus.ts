@@ -28,7 +28,7 @@ class Chorus extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chorus");
     }
 
-    Delete() {
+    Dispose() {
         this.Effect.dispose();
     }
 

@@ -22,7 +22,7 @@ class Pitch extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
     }
 
-    Delete(){
+    Dispose(){
         this.PitchIncrement = null;
     }
 

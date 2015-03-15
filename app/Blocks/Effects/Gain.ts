@@ -27,7 +27,7 @@ class Gain extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"gain");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.disconnect();
         this.Effect = null;
     }

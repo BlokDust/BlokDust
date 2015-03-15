@@ -36,7 +36,7 @@ class AutoWah extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
     }
 
-    Delete() {
+    Dispose() {
         this.Effect.dispose();
     }
 

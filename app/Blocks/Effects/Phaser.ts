@@ -26,7 +26,7 @@ class Phaser extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

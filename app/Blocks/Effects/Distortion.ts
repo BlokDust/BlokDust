@@ -24,7 +24,7 @@ class Distortion extends Effect {
 
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

@@ -46,7 +46,7 @@ class Chomp extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
     }
 
-    Delete(){
+    Dispose(){
         clearTimeout(this.Timer);
         this.Effect.dispose();
     }

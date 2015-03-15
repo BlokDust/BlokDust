@@ -48,7 +48,7 @@ class Scuzz extends Effect {
         }
     }
 
-    Delete(){
+    Dispose(){
         this.LFO.dispose();
     }
 

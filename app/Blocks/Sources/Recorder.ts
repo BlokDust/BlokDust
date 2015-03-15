@@ -120,8 +120,8 @@ class RecorderBlock extends Source {
         this.Recorder.setupDownload(this.GetRecordedBlob(), this.Filename);
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
 
         this.RecordedAudio.stop();
         this.RecordedAudio.dispose();

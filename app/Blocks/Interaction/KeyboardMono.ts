@@ -33,8 +33,8 @@ class KeyboardMono extends Keyboard {
         super.Detach(source);
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
     }
 
     SetValue(param: string,value: number) {

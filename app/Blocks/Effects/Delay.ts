@@ -23,7 +23,7 @@ class Delay extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

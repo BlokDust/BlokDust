@@ -25,7 +25,7 @@ class BitCrusher extends Effect {
     }
 
 
-    Delete() {
+    Dispose() {
         this.Effect.dispose();
     }
 

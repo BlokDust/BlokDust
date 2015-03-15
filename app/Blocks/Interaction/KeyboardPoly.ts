@@ -43,8 +43,8 @@ class KeyboardPoly extends Keyboard {
         this.DeleteVoices(source);
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
         this.KeysDown = null;
         this.VoicesAmount = null;
         this.ActiveVoices = [];

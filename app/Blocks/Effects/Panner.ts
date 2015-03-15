@@ -23,7 +23,7 @@ class Panner extends Effect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"panner");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

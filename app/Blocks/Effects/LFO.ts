@@ -49,7 +49,7 @@ class LFO extends Effect {
         }
     }
 
-    Delete() {
+    Dispose() {
         this.LFO.dispose();
     }
 
