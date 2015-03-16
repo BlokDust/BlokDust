@@ -151,10 +151,8 @@ class App{
 
     RefreshBlocks() {
         // refresh all Sources (reconnects Effects).
-        this.Blocks.forEach((b: IBlock) => {
-            if (b instanceof Source){
-                (<ISource>b).Refresh();
-            }
+        this.Sources.forEach((b: ISource) => {
+            b.Refresh();
         });
     }
 
