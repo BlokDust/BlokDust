@@ -120,15 +120,10 @@ class App{
                 var blocks = this.Deserialize(data);
                 this.Blocks = blocks.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
 
-                // delete all Sources and Effects array contents. This forces reconnection when running CheckProximity.
+                // refresh all Sources (reconnects Effects).
                 this.Blocks.forEach((b: IBlock) => {
-
                     if (b instanceof Source){
-                        (<ISource>b).Effects = new ObservableCollection<IEffect>();
-                    }
-
-                    if (b instanceof Effect){
-                        (<IEffect>b).Sources = new ObservableCollection<ISource>();
+                        (<ISource>b).Refresh();
                     }
                 });
 

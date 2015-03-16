@@ -87,7 +87,10 @@ class Source extends Block implements ISource {
     }
 
     private _OnEffectsChanged() {
+        this.Refresh();
+    }
 
+    public Refresh() {
         // Detach effects in old collection.
         if (this.OldEffects && this.OldEffects.Count){
             var oldEffects: IEffect[] = this.OldEffects.ToArray();
