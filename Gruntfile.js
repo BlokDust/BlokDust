@@ -102,6 +102,12 @@ module.exports = function (grunt) {
                     livereload: ports.livereload
                 }
             }
+        },
+        exec: {
+            // concatenate and compress with r.js
+            build: {
+                cmd: 'node lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/app.js name=app <%= global.minify %> out=<%= global.buildDir %>/js/app.js'
+            }
         }
     });
 

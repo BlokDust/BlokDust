@@ -15,7 +15,9 @@
   },
   "resolutions": {
     "fayde": "~0.16.11",
-    "fayde.utils": "~0.5.4",
-    "minerva": "~0.4.7"
+    "fayde.utils": "~0.5.4"
+  },
+  "devDependencies": {
+    "r.js": "~2.1.16"
   }
 }
