@@ -120,17 +120,12 @@ class App{
                 var blocks = this.Deserialize(data);
                 this.Blocks = blocks.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
 
-                // refresh all Sources (reconnects Effects).
-                this.Blocks.forEach((b: IBlock) => {
-                    if (b instanceof Source){
-                        (<ISource>b).Refresh();
-                    }
-                });
-
                 this.CreateUI();
+                this.RefreshBlocks();
             });
         } else {
             this.CreateUI();
+            this.RefreshBlocks();
         }
     }
 
@@ -152,6 +147,15 @@ class App{
         this._ClockTimer.RegisterTimer(this);
 
         this.Resize();
+    }
+
+    RefreshBlocks() {
+        // refresh all Sources (reconnects Effects).
+        this.Blocks.forEach((b: IBlock) => {
+            if (b instanceof Source){
+                (<ISource>b).Refresh();
+            }
+        });
     }
 
     OnTicked (lastTime: number, nowTime: number) {

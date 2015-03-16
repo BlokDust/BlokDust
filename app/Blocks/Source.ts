@@ -37,7 +37,7 @@ class Source extends Block implements ISource {
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
-        // todo: use Block.Type
+        // todo: use reflection
         if (this.BlockType != BlockType.Power) {
 
             this.EffectsChainInput = new Tone.Signal();
