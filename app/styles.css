@@ -13,14 +13,14 @@ html, body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-canvas {
-    display: block;
-}
-
 body {
     background-color: #111;
     color: #fff;
     overflow: hidden;
+}
+
+canvas {
+    display: block;
 }
 
 #fontTest {

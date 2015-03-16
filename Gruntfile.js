@@ -7,6 +7,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-exec');
 
     var ports = {
         server: 8000,
@@ -104,9 +105,8 @@ module.exports = function (grunt) {
             }
         },
         exec: {
-            // concatenate and compress with r.js
-            build: {
-                cmd: 'node lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/app.js name=app <%= global.minify %> out=<%= global.buildDir %>/js/app.js'
+            minify: {
+                cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/config.js name=config optimize=none out=app/min.js'
             }
         }
     });
