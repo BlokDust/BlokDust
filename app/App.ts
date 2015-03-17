@@ -112,11 +112,9 @@ class App implements IApp{
         });
 
         // SOUNDCLOUD //
-        var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-
         if (typeof(SC) !== "undefined"){
             SC.initialize({
-                client_id: id
+                client_id: '7258ff07f16ddd167b55b8f9b9a3ed33'
             });
         }
     }
