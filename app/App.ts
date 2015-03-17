@@ -83,6 +83,8 @@ class App{
         App.Particles = [];
         App.Palette = [];
 
+        window.SC = null; // Soundcloud
+
     }
 
     static Serialize(): string {

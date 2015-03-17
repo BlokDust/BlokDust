@@ -128,6 +128,18 @@ class RecorderBlock extends Source {
         this.Recorder = null;
         this.RecordedBlob = null;
     }
+
+    TriggerAttack(){
+        super.TriggerAttack();
+    }
+
+    TriggerRelease(){
+        super.TriggerRelease();
+    }
+
+    TriggerAttackRelease(){
+
+    }
 }
 
 export = RecorderBlock;

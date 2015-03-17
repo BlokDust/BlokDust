@@ -1,14 +1,10 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import Type = require("./../BlockType");
-import BlockType = Type.BlockType;
-import Soundcloud = require("./../Sources/Soundcloud");
 
 class Power extends Effect {
 
     Name: string;
-    IsAttached: boolean;
 
     constructor(grid: Grid, position: Point){
 
@@ -23,23 +19,15 @@ class Power extends Effect {
     Attach(source:ISource): void {
         super.Attach(source);
 
-        //if (source.BlockType == BlockType.Soundcloud){
-        //    source.Source.start(source.Source.toSeconds((<Soundcloud>source).LoopStartPosition));
-        //}
-        if (source.Envelope){
-            source.Envelope.triggerAttack();
-        }
+        source.TriggerAttack();
 
     }
 
     Detach(source:ISource): void {
 
-        if (source.Envelope){
-            source.Envelope.triggerRelease();
+        if (!source.IsPressed){
+            source.TriggerRelease();
         }
-        //if (source.BlockType == BlockType.Soundcloud){
-        //    source.Source.stop(source.Envelope.release);
-        //}
 
         super.Detach(source);
     }

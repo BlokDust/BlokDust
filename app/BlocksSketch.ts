@@ -112,10 +112,13 @@ class BlocksSketch extends Grid {
         this._PointerPoint = new Point();
 
         // SOUNDCLOUD //
-        var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-        SC.initialize({
-            client_id: id
-        });
+        if (SC){
+            var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
+            SC.initialize({
+                client_id: id
+            });
+        }
+
 
         // TRANSFORMER //
         // todo: make these default values

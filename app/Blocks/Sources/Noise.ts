@@ -38,21 +38,17 @@ class Noise extends Source {
 
     MouseDown() {
         super.MouseDown();
-
         this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
-
         this.TriggerRelease();
     }
 
     TriggerAttack(){
         super.TriggerAttack();
-        if(!this.IsPowered()){
-            this.Envelope.triggerAttack();
-        }
+        this.Envelope.triggerAttack();
     }
 
     TriggerRelease(){
@@ -60,6 +56,10 @@ class Noise extends Source {
         if(!this.IsPowered()){
             this.Envelope.triggerRelease();
         }
+    }
+
+    TriggerAttackRelease(){
+        super.TriggerAttackRelease();
     }
 
     ParticleCollision(particle: Particle) {

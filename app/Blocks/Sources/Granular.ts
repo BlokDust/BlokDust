@@ -303,6 +303,10 @@ class Granular extends Source {
         },<any>this.Envelope.release*1000);
     }
 
+    TriggerAttackRelease(){
+
+    }
+
 
 
     ParticleCollision(particle: Particle) {

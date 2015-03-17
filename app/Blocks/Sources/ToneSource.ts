@@ -50,9 +50,7 @@ class ToneSource extends Source {
 
     TriggerAttack(){
         super.TriggerAttack();
-        if(!this.IsPowered()){
-            this.Envelope.triggerAttack();
-        }
+        this.Envelope.triggerAttack();
     }
 
     TriggerRelease(){
@@ -60,6 +58,10 @@ class ToneSource extends Source {
         if(!this.IsPowered()){
             this.Envelope.triggerRelease();
         }
+    }
+
+    TriggerAttackRelease(){
+        super.TriggerAttackRelease();
     }
 
     ParticleCollision(particle: Particle) {

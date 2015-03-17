@@ -26,6 +26,18 @@ class Microphone extends Source {
         super.MouseUp();
     }
 
+    TriggerAttack(){
+        super.TriggerAttack();
+    }
+
+    TriggerRelease(){
+        super.TriggerRelease();
+    }
+
+    TriggerAttackRelease(){
+
+    }
+
     Update() {
         super.Update();
     }

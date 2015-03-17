@@ -176,15 +176,17 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttack(){
-        //if(!this.IsPowered()){
-        //    this.Envelope.triggerAttack();
-        //}
+
     }
 
     TriggerRelease(){
-        //if(!this.IsPowered()){
-        //    this.Envelope.triggerRelease();
-        //}
+
+    }
+
+    TriggerAttackRelease(){
+        if (this.Envelope){
+            this.Envelope.triggerAttackRelease("4n", "+0");
+        }
     }
 
     IsPowered() {
