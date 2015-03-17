@@ -2,7 +2,7 @@ require.config({
     baseUrl: "./",
     paths: {
         "text": "lib/requirejs-text/text",
-        "Application": "App",
+        "App": "App",
         "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
         "Tone": "lib/tone/Tone",
         "Recorderjs": "lib/RecorderJS",
