@@ -33,7 +33,6 @@ class BlocksSketch extends Grid {
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
-    //public BlockSelected: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
     public BlockSprites: BlockSprites;
@@ -97,22 +96,11 @@ class BlocksSketch extends Grid {
             this._Invalidate();
         }, this);
 
-        //this.DisplayList = new DisplayList(App.Blocks);
-
         ParamTimeout = false; // todo: remove
 
         // METRICS //
         this.Metrics();
         this._PointerPoint = new Point();
-
-        // SOUNDCLOUD //
-        var id = '7258ff07f16ddd167b55b8f9b9a3ed33';
-
-        if (typeof(SC) !== "undefined"){
-            SC.initialize({
-                client_id: id
-            });
-        }
 
         // TRANSFORMER //
         // todo: make these default values
