@@ -48,7 +48,10 @@ class Soundcloud extends Source {
     TriggerAttack() {
         super.TriggerAttack();
 
-        this.Source.triggerAttack();
+        if(!this.IsPowered() || this.Source.player.state === "stopped") {
+            this.Source.triggerAttack();
+        }
+        console.log(this.Source.player.state);
     }
 
     TriggerRelease() {
