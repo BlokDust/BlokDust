@@ -3,6 +3,7 @@ import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import Type = require("../BlockType");
+import BlocksSketch = require("../../BlocksSketch");
 import BlockType = Type.BlockType;
 import ToneSource = require("../Sources/ToneSource");
 import Noise = require("../Sources/Noise");
@@ -13,13 +14,12 @@ class KeyboardPoly extends Keyboard {
     public VoicesAmount: number;
     public ActiveVoices: any[];
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.KeysDown = {};
         this.VoicesAmount = 4;
         this.ActiveVoices = [];
-
-        super(grid, position);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -28,7 +28,7 @@ class KeyboardPoly extends Keyboard {
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"poly keyboard");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"poly keyboard");
     }
 
     Attach(source:ISource): void {
@@ -43,8 +43,8 @@ class KeyboardPoly extends Keyboard {
         this.DeleteVoices(source);
     }
 
-    Delete(){
-        super.Delete();
+    Dispose(){
+        super.Dispose();
         this.KeysDown = null;
         this.VoicesAmount = null;
         this.ActiveVoices = [];

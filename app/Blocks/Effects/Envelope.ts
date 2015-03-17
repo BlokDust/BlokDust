@@ -1,7 +1,7 @@
 import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Envelope extends Effect {
 
@@ -10,14 +10,14 @@ class Envelope extends Effect {
     public sustain: number;
     public release: number;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.attack = 1;
         this.decay = 5;
         this.sustain = 0.7;
         this.release = 4;
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -26,7 +26,7 @@ class Envelope extends Effect {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"envelope");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
 

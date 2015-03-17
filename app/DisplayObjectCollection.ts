@@ -23,7 +23,11 @@ class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collection
     }
 
     ToFront(obj: T){
-        this.SetIndex(obj, this.Count - 1);
+        var index = 0;
+        if (this.Count > 0){
+            index = this.Count - 1;
+        }
+        this.SetIndex(obj, index);
     }
 
     ToBack(obj: T){
@@ -31,7 +35,7 @@ class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collection
     }
 
     SetIndex(obj: T, index: number){
-        if (index > this.Count - 1 || index < 0){
+        if (index > this.Count || index < 0){
             throw new Exception("index out of range");
         }
 

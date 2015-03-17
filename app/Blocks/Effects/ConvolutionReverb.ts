@@ -1,16 +1,16 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Convolver extends Effect {
 
     public Effect: Tone.Convolver;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.Convolver("../Assets/ImpulseResponses/teufelsberg01.wav");
 
-        super(grid, position);
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
@@ -20,10 +20,10 @@ class Convolver extends Effect {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"convolution");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"convolution");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 

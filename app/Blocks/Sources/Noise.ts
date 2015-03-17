@@ -1,4 +1,5 @@
 import Grid = require("../../Grid");
+import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Type = require("../BlockType");
 import BlockType = Type.BlockType;
@@ -10,13 +11,13 @@ class Noise extends Source {
     public DelayedRelease: number;
     public Noise: any;
 
-    constructor(grid: Grid, position: Point) {
-        this.BlockType = BlockType.Noise;
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        this.BlockType = BlockType.Noise;
         this.Source = new Tone.Noise('brown');
         this.PlaybackRate = 1;
 
-        super(grid, position);
+        super.Init(sketch);
 
         this.Envelope = new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
@@ -87,7 +88,7 @@ class Noise extends Source {
     Draw() {
         super.Draw();
 
-        this.Grid.BlockSprites.Draw(this.Position,true,"noise");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
     }
 
     OpenParams() {

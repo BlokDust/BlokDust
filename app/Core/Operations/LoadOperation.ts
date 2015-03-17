@@ -1,4 +1,5 @@
 import IOperation = require("./IOperation");
+import IBlock = require("../../Blocks/IBlock");
 
 class LoadOperation<String> implements IOperation
 {
@@ -9,8 +10,6 @@ class LoadOperation<String> implements IOperation
     }
 
     Do(): Promise<String> {
-        var that = this;
-
         return new Promise((resolve) => {
 
             $.ajax(<JQueryAjaxSettings>{
@@ -19,9 +18,8 @@ class LoadOperation<String> implements IOperation
                 crossDomain: true,
                 dataType: 'json',
                 contentType: 'application/json'
-            }).done(function(data){
-                console.log(data);
-                resolve();
+            }).done((data) => {
+                resolve(data);
             });
 
         });

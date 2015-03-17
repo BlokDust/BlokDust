@@ -25,6 +25,7 @@ interface ISource extends IBlock{
     SetPlaybackRate(rate,time): void;
     TriggerAttack(): void;
     TriggerRelease(): void;
+    Refresh(): void;
 }
 
 export = ISource;

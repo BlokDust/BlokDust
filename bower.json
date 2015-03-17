@@ -4,7 +4,7 @@
   "dependencies": {
     "fayde": "~0.16.15",
     "fayde.controls": "~0.17.0",
-    "exjs": "~0.2.8",
+    "exjs": "~0.2.10",
     "fayde.drawing": "git://github.com/edsilv/fayde.drawing#~0.4.0",
     "fayde.utils": "git://github.com/edsilv/fayde.utils#~0.5.4",
     "fayde.transformer": "git://github.com/edsilv/fayde.transformer#~0.6.0",
@@ -15,7 +15,9 @@
   },
   "resolutions": {
     "fayde": "~0.16.11",
-    "fayde.utils": "~0.5.4",
-    "minerva": "~0.4.7"
+    "fayde.utils": "~0.5.4"
+  },
+  "devDependencies": {
+    "r.js": "~2.1.16"
   }
 }

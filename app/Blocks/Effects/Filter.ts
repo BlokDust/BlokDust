@@ -1,12 +1,12 @@
 import Effect = require("../Effect");
 import Grid = require("../../Grid");
-import App = require("../../App");
+import BlocksSketch = require("../../BlocksSketch");
 
 class Filter extends Effect {
 
     public Effect: Tone.Filter;
 
-    constructor(grid: Grid, position: Point){
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",
@@ -16,18 +16,18 @@ class Filter extends Effect {
             "gain" : 0
         });
 
-        super(grid, position);
-        
+        super.Init(sketch);
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -2),new Point(1, 0),new Point(1, 2),new Point(-1, 0));
     }
 
     Draw() {
         super.Draw();
-        this.Grid.BlockSprites.Draw(this.Position,true,"filter");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
     }
 
-    Delete(){
+    Dispose(){
         this.Effect.dispose();
     }
 
