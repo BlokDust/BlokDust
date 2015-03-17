@@ -29,17 +29,17 @@ import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
 import DisplayList = require("./DisplayList");
 import Source = require("./Blocks/Source");
 import Effect = require("./Blocks/Effect");
+import IApp = require("./IApp");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Utils = Fayde.Utils;
 import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var PixelPalette;
 
-class App{
+class App implements IApp{
 
     private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
-    public Blocks: IBlock[] = [];
     public OperationManager: OperationManager;
     public ResourceManager: ResourceManager;
     public CommandManager: CommandManager;
@@ -50,9 +50,10 @@ class App{
     public CommandsInputManager: CommandsInputManager;
     public PointerInputManager: PointerInputManager;
     public ParticlesPool: PooledFactoryResource<Particle>;
+    public OscillatorsPool: PooledFactoryResource<Oscillator>;
+    public Blocks: IBlock[] = [];
     public Particles: Particle[] = [];
     public Palette: string[] = [];
-    public OscillatorsPool: PooledFactoryResource<Oscillator>;
     public BlocksSketch: BlocksSketch;
 
     get Sources(): IBlock[] {
