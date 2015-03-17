@@ -21,6 +21,7 @@ import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
+import LaserBeams = require("./LaserBeams");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
 import Utils = Fayde.Utils;
@@ -42,6 +43,7 @@ class BlocksSketch extends Grid {
     private _ZoomButtons: ZoomButtons;
     private _TrashCan: TrashCan;
     private _ConnectionLines: ConnectionLines;
+    private _LaserBeams: LaserBeams;
     private _ToolTipTimeout;
     private _LastSize: Size;
     private _PointerPoint: Point;
@@ -138,6 +140,9 @@ class BlocksSketch extends Grid {
         this._ConnectionLines = new ConnectionLines();
         this._ConnectionLines.Init(this);
 
+        this._LaserBeams = new LaserBeams();
+        this._LaserBeams.Init(this);
+
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
             if (e.keyCode==18) {
@@ -174,6 +179,12 @@ class BlocksSketch extends Grid {
             this.UpdateParticles();
         }
 
+        if (this._ParamsPanel.Scale==1) {
+            this._ParamsPanel.Update();
+        }
+
+        this._LaserBeams.Update();
+
         this._CheckResize();
     }
 
@@ -208,14 +219,7 @@ class BlocksSketch extends Grid {
         App.Particles = currentParticles;
     }
 
-    /*ParticleCollision(point: Point, particle: Particle) {
-        for (var i = App.Blocks.length - 1; i >= 0 ; i--){
-            var block: IBlock = App.Blocks[i];
-            if (block.HitTest(point)){
-                block.ParticleCollision(particle);
-            }
-        }
-    }*/
+
 
     SketchResize() {
         if (this._ParamsPanel.Scale==1) {
@@ -275,6 +279,9 @@ class BlocksSketch extends Grid {
 
         // PARTICLES //
         this.DrawParticles();
+
+        // LASER BEAMS //
+        this._LaserBeams.Draw();
 
         // UI //
         this._ToolTip.Draw();

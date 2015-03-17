@@ -8,12 +8,12 @@ import BlockType = Type.BlockType;
 
 class ParticleEmitter extends Source {
 
-    public Params: EmitterSettings;
+    //public Params: EmitterSettings;
     private _rateCounter: number;
 
 
-    Init() {
-        super.Init();
+    Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         this.BlockType = BlockType.Power;
 
         this.Params = {
@@ -24,6 +24,8 @@ class ParticleEmitter extends Source {
         };
 
         this._rateCounter = 0;
+
+        super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2,0), new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(2,0), new Point(0,2));

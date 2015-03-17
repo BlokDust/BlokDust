@@ -796,6 +796,42 @@ class BlockSprites {
                 this.Ctx.fill();
 
                 break;
+
+            case "laser":
+
+                if (!this._Scaled) {
+                    this._YOffset = (grd*0.5);
+                }
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[3];// BLUE
+                this.DrawMoveTo(-1,-1);
+                this.DrawLineTo(0,-1);
+                this.DrawLineTo(0,1);
+                this.DrawLineTo(-1,0);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[4];// GREEN
+                this.DrawMoveTo(0,-1);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(1,0);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[7];// RED
+                this.DrawMoveTo(-1,-1);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(0,0);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                break;
+
+
         }
 
 

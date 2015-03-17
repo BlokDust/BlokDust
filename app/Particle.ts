@@ -1,5 +1,4 @@
 import IPooledObject = require("./Core/Resources/IPooledObject");
-import Grid = require("./Grid");
 import IBlock = require("./Blocks/IBlock");
 import Source = require("./Blocks/Source");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
@@ -43,9 +42,9 @@ class Particle implements IPooledObject {
     }
 
     ParticleCollision(point: Point, particle: Particle) {
-        for (var i = App.Blocks.Count - 1; i >= 0 ; i--){
+        for (var i = App.Blocks.length - 1; i >= 0 ; i--){
 
-            var block: IBlock = App.Blocks.GetValueAt(i);
+            var block: IBlock = App.Blocks[i];
             if (block instanceof Source && !(block instanceof ParticleEmitter)) {
                 if (block.HitTest(point)){
                     block.ParticleCollision(particle);

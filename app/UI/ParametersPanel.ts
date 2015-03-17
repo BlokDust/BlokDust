@@ -298,8 +298,9 @@ class ParametersPanel extends DisplayObject {
 
     }
 
-    UpdateOptions(json) {
-
+    UpdateOptions() {
+        this.SelectedBlock.OpenParams();
+        var json = this.SelectedBlock.ParamJson;
         // GET NUMBER OF OPTIONS //
         var n = json.parameters.length;
 
@@ -311,6 +312,17 @@ class ParametersPanel extends DisplayObject {
             // SLIDER //
             if (option.type == "slider") {
                 this.Options[i].Value = option.props.value;
+
+                var sliderO = this.Margin;
+                if (option.props.centered==true) {
+                    sliderO += ((this.Range/100) * 50);
+                }
+                var log = option.props.logarithmic;
+                if (log==true) {
+                    this.Options[i].Position.x = this.logPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
+                } else {
+                    this.Options[i].Position.x = this.linPosition(0, this.Range, option.props.min, option.props.max, option.props.value);
+                }
             }
 
             // WAVE SLIDER //
@@ -319,6 +331,13 @@ class ParametersPanel extends DisplayObject {
                 this.Options[i].Spread = option.props.spread;
             }
 
+        }
+    }
+
+
+    Update() {
+        if (this._JsonMemory.updateeveryframe) {
+            this.UpdateOptions();
         }
     }
 
@@ -691,7 +710,7 @@ class ParametersPanel extends DisplayObject {
 
         // UPDATE VALUES IN OTHER OPTIONS //
         this.SelectedBlock.OpenParams();
-        this.UpdateOptions(this.SelectedBlock.ParamJson);
+        this.UpdateOptions();
     }
 
 
