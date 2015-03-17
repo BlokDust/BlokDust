@@ -147,6 +147,13 @@ class Noise extends Source {
         }
         return val;
     }
+
+    Dispose() {
+        super.Dispose();
+        this.Source.dispose();
+        this.Envelope.dispose();
+        this.PlaybackRate = null;
+    }
 }
 
 export = Noise;

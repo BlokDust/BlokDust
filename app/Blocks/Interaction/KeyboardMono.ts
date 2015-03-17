@@ -118,14 +118,10 @@ class KeyboardMono extends Keyboard {
                 // If has a loop start position start then plus current time else start immediately
                 if(source.LoopStartPosition){
                     source.Source.start(source.LoopStartPosition+ source.Source.now());
-                } else {
-                    source.Source.start();
                 }
 
-
-                source.TriggerAttack();
             }
-            source.Envelope.triggerAttack();
+            source.TriggerAttack();
 
         // Else ramp to new frequency over time (glide)
         } else {
@@ -141,12 +137,10 @@ class KeyboardMono extends Keyboard {
         super.KeyboardUp(keyUp, source);
 
         if (Object.keys(this.KeysDown).length === 0) {
-            source.Envelope.triggerRelease();
-
             if (source.PlaybackRate) {
-                source.Source.stop(source.Envelope.release+source.Source.now());
-                source.TriggerRelease();
+                //source.Source.stop(source.Envelope.release+source.Source.now());
             }
+            source.TriggerRelease();
         }
     }
 }

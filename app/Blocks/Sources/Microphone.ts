@@ -6,6 +6,7 @@ import BlockType = Type.BlockType;
 
 class Microphone extends Source {
 
+    Source: Tone.Microphone;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -48,6 +49,11 @@ class Microphone extends Source {
     Draw() {
         super.Draw();
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"microphone");
+    }
+
+    Dispose() {
+        super.Dispose();
+        this.Source.dispose();
     }
 }
 

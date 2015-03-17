@@ -74,6 +74,7 @@ require([
     "Tone/component/MultibandEQ",
     "Tone/component/Filter",
     "Tone/component/LFO",
+    "Tone/instrument/Sampler",
     "Tone/effect/PingPongDelay",
     "Tone/effect/Distortion",
     "Tone/effect/Chorus",

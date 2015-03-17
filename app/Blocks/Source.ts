@@ -3,9 +3,8 @@ import ISource = require("./ISource");
 import Block = require("./Block");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-import Type = require("./BlockType");
-import BlockType = Type.BlockType;
 import Soundcloud = require("./Sources/Soundcloud");
+import Power = require("./Power/Power");
 
 class Source extends Block implements ISource {
 
@@ -37,8 +36,7 @@ class Source extends Block implements ISource {
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
-        // todo: use reflection
-        if (this.BlockType != BlockType.Power) {
+        if (!(this instanceof Power)) {
 
             this.EffectsChainInput = new Tone.Signal();
             this.EffectsChainOutput = new Tone.Signal();
@@ -212,24 +210,23 @@ class Source extends Block implements ISource {
      * @constructor
      */
     Dispose() {
-        // todo: use reflection
-        if (this.BlockType != BlockType.Power){
-            this.EffectsChainOutput.dispose();
-            this.EffectsChainInput.dispose();
-        }
+        // Delete Signal nodes
+        if (this.EffectsChainInput) this.EffectsChainInput.dispose();
+        if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
 
-        if (this.BlockType != BlockType.Recorder && this.BlockType != BlockType.Granular) {
-            this.Source.stop();
-        }
-        this.Source.dispose();
+        // Delete PolySources
+        if (this.PolySources.length){
+            for(var i=0; i<this.PolySources.length; i++){
+                this.PolySources[i].dispose();
+            }
+        } else if (this.PolySources) this.PolySources = null;
 
-        for(var i=0; i<this.PolySources.length; i++){
-            this.PolySources[i].dispose();
-        }
-
-        for(var i=0; i<this.PolyEnvelopes.length; i++){
-            this.PolyEnvelopes[i].dispose();
-        }
+        // Delete PolyEnvelopes
+        if (this.PolyEnvelopes.length){
+            for(var i=0; i<this.PolyEnvelopes.length; i++){
+                this.PolyEnvelopes[i].dispose();
+            }
+        }  else if (this.PolyEnvelopes) this.PolyEnvelopes = null;
     }
 
     SetPlaybackRate(rate,time) {

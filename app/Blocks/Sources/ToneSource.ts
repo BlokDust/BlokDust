@@ -9,6 +9,7 @@ import Particle = require("../../Particle");
 
 class ToneSource extends Source {
 
+    public Source: Tone.Oscillator;
     public Frequency: number;
     public Envelope: Tone.AmplitudeEnvelope;
 
@@ -28,7 +29,8 @@ class ToneSource extends Source {
         );
 
         this.Envelope.connect(this.EffectsChainInput);
-        this.Source.connect(this.Envelope).start();
+        this.Source.connect(this.Envelope);
+        this.Source.start();
 
         this.Width = 150;
         this.Height = 150;
@@ -77,6 +79,9 @@ class ToneSource extends Source {
 
     Dispose() {
         super.Dispose();
+        this.Frequency = null;
+        this.Source.dispose();
+        this.Envelope.dispose();
     }
 
     Update() {

@@ -6,9 +6,8 @@ import BlockType = Type.BlockType;
 
 class Soundcloud extends Source {
 
+    public Source : Tone.Sampler;
     public PlaybackRate: number;
-    public LoopStartPosition: number;
-    public LoopEndPosition: number;
     public Envelope: Tone.AmplitudeEnvelope;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -21,28 +20,16 @@ class Soundcloud extends Source {
         var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
 
-        this.Source = new Tone.Player(localUrl, function (sc) {
-            sc.loop = true;
-            console.log('buffer loaded');
-        });
+        this.Source = new Tone.Sampler(audioUrl);
 
-        this.LoopStartPosition = 0; // 0 is the beginning
-        this.LoopEndPosition = -1; // -1 goes to the end of the track
-
-        this.Source.loop = true;
-        this.Source.loopEnd = this.LoopEndPosition;
-
-        this.Envelope = new Tone.AmplitudeEnvelope(
-            this.Settings.envelope.attack,
-            this.Settings.envelope.decay,
-            this.Settings.envelope.sustain,
-            this.Settings.envelope.release
-        );
-
-        this.Envelope.connect(this.EffectsChainInput);
-        this.Source.connect(this.Envelope);
+        this.Source.player.loop = true;
+        this.Source.player.loopStart = 0; // 0 is the beginning
+        this.Source.player.loopEnd = -1; // -1 goes to the end of the track
 
         super.Init(sketch);
+
+        this.Envelope = this.Source.envelope;
+        this.Source.connect(this.EffectsChainInput);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -61,22 +48,14 @@ class Soundcloud extends Source {
     TriggerAttack() {
         super.TriggerAttack();
 
-
-        if (!this.IsPowered()) {
-            this.Source.start((<Soundcloud>this).LoopStartPosition);
-        }
-        this.Envelope.triggerAttack();
-
+        this.Source.triggerAttack();
     }
 
     TriggerRelease() {
         super.TriggerRelease();
 
-        this.Envelope.triggerRelease();
-        if(!this.IsPowered()){
-            //this.Source.stop(this.Source.now() + this.Envelope.release);
-            this.Source.stop(this.Envelope.release+this.Source.now());
-            console.log(this);
+        if(!this.IsPowered()) {
+            this.Source.triggerRelease();
         }
     }
 
@@ -114,23 +93,30 @@ class Soundcloud extends Source {
         };
     }
 
-    SetPlaybackRate(rate,time) {
+    SetPlaybackRate(rate,time?) {
         super.SetPlaybackRate(rate,time);
+        this.Source.player.playbackRate = rate; //TODO: when playback rate becomes a signal ramp using the glide
         this.PlaybackRate = rate;
-        this.Source.playbackRate = this.PlaybackRate; //TODO: when playback rate becomes a signal ramp using the glide
     }
 
     SetValue(param: string,value: any) {
         super.SetValue(param,value);
 
         if (param == "playbackRate") {
-            this.PlaybackRate = value;
+            this.SetPlaybackRate(value);
         }
     }
 
     GetValue(param: string){
         var val = super.GetValue(param);
         return val;
+    }
+
+    Dispose(){
+        super.Dispose();
+        this.Source.dispose();
+        this.PlaybackRate = null;
+        this.Envelope = null;
     }
 }
 
