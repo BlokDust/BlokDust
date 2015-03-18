@@ -7,27 +7,22 @@ require.config({
         "Tone": "lib/tone/Tone",
         "Recorderjs": "lib/RecorderJS",
         "jquery": "lib/jquery/dist/jquery",
-        "intersection": "lib/intersection",
         "fayde.drawing": "lib/fayde.drawing/dist/fayde.drawing",
         "fayde.transformer": "lib/fayde.transformer/dist/fayde.transformer",
-        "fayde.controls": "lib/fayde.controls/dist/fayde.controls",
         "fayde.utils": "lib/fayde.utils/dist/fayde.utils",
         "tween": "lib/tween.ts/build/tween.min",
         "exjs": "lib/exjs/dist/ex"
     },
     shim: {
-        "fayde.controls": {
-            "exports": "Fayde.Controls"
-        },
         "exjs": {
             "exports": "exjs",
             "path": "lib/exjs/dist/ex.min"
         },
-        "fayde.drawing": {
-            "exports": "Fayde.Drawing"
-        },
         "fayde.utils": {
             "exports": "Fayde.Utils"
+        },
+        "fayde.drawing": {
+            "exports": "Fayde.Drawing"
         },
         "fayde.transformer": {
             "exports": "Fayde.Transformer",

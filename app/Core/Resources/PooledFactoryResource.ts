@@ -1,4 +1,3 @@
-///<amd-dependency path="lib/fayde.transformer/dist/fayde.transformer"/>.
 import IPooledFactoryResource = require("./IPooledFactoryResource");
 import IPooledObject = require("./IPooledObject");
 import Queue = Fayde.Utils.Collections.Queue;
@@ -10,7 +9,7 @@ class PooledFactoryResource<T extends IPooledObject> implements IPooledFactoryRe
     private _MinimumPoolSize: number;
     private _MaximumPoolSize: number;
     private _PooledObjects: Queue<T>;
-
+    
     get ObjectsInPoolCount() : number {
         return this._PooledObjects.size();
     }
