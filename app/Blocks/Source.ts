@@ -90,6 +90,8 @@ class Source extends Block implements ISource {
     }
 
     public Refresh() {
+        super.Refresh();
+
         // Detach effects in old collection.
         if (this.OldEffects && this.OldEffects.Count){
             var oldEffects: IEffect[] = this.OldEffects.ToArray();
@@ -270,6 +272,10 @@ class Source extends Block implements ISource {
             case "playbackRate": this.Source.playbackRate = value;
                 break;
         }
+    }
+
+    UpdateParams(params: any) {
+        super.UpdateParams(params);
     }
 
     Draw(){

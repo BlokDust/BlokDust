@@ -15,6 +15,7 @@ interface IBlock extends IDisplayObject{
     ParamJson: any;
     Update(): void;
     Draw(): void;
+    Refresh(): void;
     MouseDown(): void;
     ParticleCollision(particle: Particle): void;
     MouseUp(): void;
@@ -25,6 +26,7 @@ interface IBlock extends IDisplayObject{
     OpenParams(): void;
     SetParam(param: string,value: number): void;
     GetParam(param: string): void;
+    UpdateParams(params: any): void;
 }
 
 export = IBlock;

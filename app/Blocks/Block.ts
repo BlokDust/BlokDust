@@ -134,11 +134,21 @@ class Block extends DisplayObject implements IBlock {
     }
 
     SetParam(param: string,value: number) {
-
+        // implemented in sub class
     }
 
     GetParam(param: string) {
+        // implemented in sub class
+    }
 
+    UpdateParams(params: any) {
+        params.parameters.forEach((param: any) => {
+            //this.SetParam(param.setting, param.props);
+        });
+    }
+
+    Refresh() {
+        this.UpdateParams(this.ParamJson);
     }
 }
 
