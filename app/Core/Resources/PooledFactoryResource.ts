@@ -9,7 +9,7 @@ class PooledFactoryResource<T extends IPooledObject> implements IPooledFactoryRe
     private _MinimumPoolSize: number;
     private _MaximumPoolSize: number;
     private _PooledObjects: Queue<T>;
-    
+
     get ObjectsInPoolCount() : number {
         return this._PooledObjects.size();
     }
