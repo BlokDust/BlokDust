@@ -1,8 +1,6 @@
 import Source = require("../Source");
 import BlocksSketch = require("../../BlocksSketch");
 import Grid = require("../../Grid");
-import Type = require("../BlockType");
-import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
 class Granular extends Source {
@@ -24,7 +22,6 @@ class Granular extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.Granular;
         this.Source = new Tone.Signal();
 
         super.Init(sketch);

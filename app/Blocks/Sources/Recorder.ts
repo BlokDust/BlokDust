@@ -1,8 +1,6 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
-import Type = require("../BlockType");
-import BlockType = Type.BlockType;
 
 class RecorderBlock extends Source {
 
@@ -16,7 +14,6 @@ class RecorderBlock extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.Recorder;
         this.Source = new Tone.Signal();
 
         super.Init(sketch);

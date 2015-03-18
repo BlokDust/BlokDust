@@ -3,19 +3,16 @@ import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Effect = require("../Effect");
 import Block = require("../Block");
-import Type = require("../BlockType");
-import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
 class ToneSource extends Source {
-
+    
     public Source: Tone.Oscillator;
     public Frequency: number;
     public Envelope: Tone.AmplitudeEnvelope;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.ToneSource;
         this.Frequency = 440;
         this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
 

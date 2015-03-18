@@ -1,8 +1,6 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
-import Type = require("../BlockType");
-import BlockType = Type.BlockType;
 
 class Microphone extends Source {
 
@@ -10,7 +8,6 @@ class Microphone extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.Microphone;
         this.Source = new Tone.Microphone();
 
         super.Init(sketch);

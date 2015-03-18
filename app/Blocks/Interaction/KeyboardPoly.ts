@@ -2,9 +2,7 @@ import Keyboard = require("./Keyboard");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
-import Type = require("../BlockType");
 import BlocksSketch = require("../../BlocksSketch");
-import BlockType = Type.BlockType;
 import ToneSource = require("../Sources/ToneSource");
 import Noise = require("../Sources/Noise");
 
@@ -58,7 +56,7 @@ class KeyboardPoly extends Keyboard {
         }
 
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
-        if (source.BlockType == BlockType.ToneSource || source.BlockType == BlockType.Noise) {
+        if (source instanceof ToneSource || source instanceof Noise) {
 
             for (var i = 0; i < voicesNum; i++) {
                 //Create the poly sources and envelopes

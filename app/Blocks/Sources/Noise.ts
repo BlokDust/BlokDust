@@ -1,8 +1,6 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
-import Type = require("../BlockType");
-import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
 class Noise extends Source {
@@ -13,7 +11,6 @@ class Noise extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.Noise;
         this.Source = new Tone.Noise('brown');
         this.PlaybackRate = 1;
 

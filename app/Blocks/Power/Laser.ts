@@ -6,25 +6,19 @@ import Source = require("../Source");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import Vector = Fayde.Utils.Vector;
-import Type = require("../BlockType");
 import BlocksSketch = require("../../BlocksSketch");
-import BlockType = Type.BlockType;
 
 class Laser extends Source {
 
     //public Params;
 
-
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        this.BlockType = BlockType.Power;
 
         this.Params = {
             angle: -90,
             range: 400,
             rotate: 0
         };
-
 
         super.Init(sketch);
 
