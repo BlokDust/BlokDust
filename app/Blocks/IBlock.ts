@@ -5,7 +5,6 @@ import Grid = require("../Grid");
 
 interface IBlock extends IDisplayObject{
     Id: number;
-    Type: any; // todo: use TS 1.5 reflection
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Outline: Point[];
     IsPressed: boolean;

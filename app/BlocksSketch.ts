@@ -676,7 +676,6 @@ class BlocksSketch extends Grid {
         block.Position = this._PointerPoint;
         block.Init(this);
         block.Id = this.GetId();
-        block.Type = t;
 
         //block.Click.on((block: IBlock) => {
         //    this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
