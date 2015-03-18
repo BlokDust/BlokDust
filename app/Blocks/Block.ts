@@ -133,10 +133,11 @@ class Block extends DisplayObject implements IBlock {
 
     }
 
-    SetValue(param: string,value: number) {
+    SetParam(param: string,value: number) {
 
     }
-    GetValue(param: string) {
+
+    GetParam(param: string) {
 
     }
 }

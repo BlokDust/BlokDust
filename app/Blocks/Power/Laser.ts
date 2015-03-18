@@ -111,8 +111,8 @@ class Laser extends Source {
         };
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         if (param=="angle") {
             this.Params[""+param] = (value-90);

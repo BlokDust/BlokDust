@@ -40,8 +40,8 @@ class AutoWah extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -54,8 +54,8 @@ class AutoWah extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="octaves") {
             val = this.Effect.octaves;
@@ -81,7 +81,7 @@ class AutoWah extends Effect {
                     "name" : "Range",
                     "setting" :"octaves",
                     "props" : {
-                        "value" : this.GetValue("octaves"),
+                        "value" : this.GetParam("octaves"),
                         "min" : 1,
                         "max" : 8,
                         "quantised" : false,
@@ -94,7 +94,7 @@ class AutoWah extends Effect {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : this.GetValue("baseFrequency"),
+                        "value" : this.GetParam("baseFrequency"),
                         "min" : 50,
                         "max" : 1200,
                         "quantised" : true,
@@ -107,7 +107,7 @@ class AutoWah extends Effect {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : this.GetValue("dryWet"),
+                        "value" : this.GetParam("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

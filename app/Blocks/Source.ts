@@ -234,7 +234,7 @@ class Source extends Block implements ISource {
 
     }
 
-    GetValue(param: string) {
+    GetParam(param: string) {
 
         var val;
         switch (param){
@@ -253,8 +253,8 @@ class Source extends Block implements ISource {
 
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 

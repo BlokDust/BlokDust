@@ -189,13 +189,13 @@ class Granular extends Source {
                     "name" : "Location",
                     "setting" :"region",
                     "props" : {
-                        "value" : this.GetValue("region"),
+                        "value" : this.GetParam("region"),
                         "min" : 0,
                         "max" : this.GetDuration(),
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this.Waveform,
-                        "spread" : this.GetValue("spread")
+                        "spread" : this.GetParam("spread")
                     }
                 },
                 {
@@ -203,8 +203,8 @@ class Granular extends Source {
                     "name" : "Sample",
                     "setting" :"sample",
                     "props" : {
-                        "track" : this.GetValue("track"),
-                        "user" : this.GetValue("user")
+                        "track" : this.GetParam("track"),
+                        "user" : this.GetParam("user")
                     }
                 },
                 {
@@ -212,7 +212,7 @@ class Granular extends Source {
                     "name" : "Spread",
                     "setting" :"spread",
                     "props" : {
-                        "value" : this.GetValue("spread"),
+                        "value" : this.GetParam("spread"),
                         "min" : 0,
                         "max" : 4,
                         "quantised" : false,
@@ -224,7 +224,7 @@ class Granular extends Source {
                     "name" : "Grain Size",
                     "setting" :"grainlength",
                     "props" : {
-                        "value" : this.GetValue("grainlength"),
+                        "value" : this.GetParam("grainlength"),
                         "min" : 0.03,
                         "max" : 0.5,
                         "quantised" : false,
@@ -236,7 +236,7 @@ class Granular extends Source {
                     "name" : "Density",
                     "setting" :"density",
                     "props" : {
-                        "value" : this.GetValue("density"),
+                        "value" : this.GetParam("density"),
                         "min" : 2,
                         "max" : this.MaxDensity,
                         "quantised" : true,
@@ -368,7 +368,7 @@ class Granular extends Source {
     }
 
 
-    GetValue(param: string) {
+    GetParam(param: string) {
 
         if (this.GrainSettings) {
             var val;
@@ -396,8 +396,8 @@ class Granular extends Source {
 
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         switch (param){
             case "density": this.GrainSettings.density = value;

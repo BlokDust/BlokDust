@@ -53,8 +53,8 @@ class LFO extends Effect {
         this.LFO.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -66,8 +66,8 @@ class LFO extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="rate") {
             val = this.LFO.frequency.value;
@@ -90,7 +90,7 @@ class LFO extends Effect {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetValue("rate"),
+                        "value" : this.GetParam("rate"),
                         "min" : 0,
                         "max" : 20,
                         "quantised" : false,
@@ -103,7 +103,7 @@ class LFO extends Effect {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetValue("depth"),
+                        "value" : this.GetParam("depth"),
                         "min" : 0,
                         "max" : 200,
                         "quantised" : false,

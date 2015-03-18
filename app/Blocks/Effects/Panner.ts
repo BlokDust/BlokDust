@@ -27,8 +27,8 @@ class Panner extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
         this.Effect.set(
@@ -36,8 +36,8 @@ class Panner extends Effect {
         );
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val = this.Effect.frequency.value;
         return val;
     }
@@ -55,7 +55,7 @@ class Panner extends Effect {
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {
-                        "value": this.GetValue("frequency"),
+                        "value": this.GetParam("frequency"),
                         "min": 0,
                         "max": 5,
                         "quantised": false,

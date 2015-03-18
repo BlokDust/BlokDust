@@ -37,8 +37,8 @@ class KeyboardMono extends Keyboard {
         super.Dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -47,8 +47,8 @@ class KeyboardMono extends Keyboard {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
 
         if (param == "glide") {
@@ -75,7 +75,7 @@ class KeyboardMono extends Keyboard {
                     "name" : "Glide",
                     "setting" :"glide",
                     "props" : {
-                        "value" : this.GetValue("glide"),
+                        "value" : this.GetParam("glide"),
                         "min" : 0.001,
                         "max" : 100,
                         "truemin" : 0,
@@ -89,7 +89,7 @@ class KeyboardMono extends Keyboard {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.GetValue("octave"),
+                        "value" : this.GetParam("octave"),
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,

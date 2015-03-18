@@ -28,8 +28,8 @@ class Distortion extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         if (param=="dryWet") {
             this.Effect.wet.value = value;
         } else {
@@ -37,8 +37,8 @@ class Distortion extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="drive") {
             val = this.Effect.distortion;
@@ -61,7 +61,7 @@ class Distortion extends Effect {
                     "name" : "Drive",
                     "setting" :"drive",
                     "props" : {
-                        "value" : this.GetValue("drive"),
+                        "value" : this.GetParam("drive"),
                         "min" : 0.1,
                         "max" : 1,
                         "quantised" : false,
@@ -74,7 +74,7 @@ class Distortion extends Effect {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : this.GetValue("dryWet"),
+                        "value" : this.GetParam("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

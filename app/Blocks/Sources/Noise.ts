@@ -104,7 +104,7 @@ class Noise extends Source {
                     "name" : "Waveform",
                     "setting" :"waveform",
                     "props" : {
-                        "value" : this.GetValue("waveform"),
+                        "value" : this.GetParam("waveform"),
                         "min" : 1,
                         "max" : 3,
                         "quantised" : true,
@@ -115,7 +115,7 @@ class Noise extends Source {
         };
     }
 
-    SetValue(param: string,value: any) {
+    SetParam(param: string,value: any) {
 
         if (param == "waveform") {
             switch(Math.round(value)){
@@ -128,13 +128,13 @@ class Noise extends Source {
             }
         }
 
-        super.SetValue(param,value);
+        super.SetParam(param,value);
     }
 
-    GetValue(param: string){
+    GetParam(param: string){
         var val;
         if (param == "waveform") {
-            switch(super.GetValue(param)){
+            switch(super.GetParam(param)){
                 case "white": val = 1;
                     break;
                 case "pink": val = 2;
@@ -143,7 +143,7 @@ class Noise extends Source {
                     break;
             }
         } else {
-            val = super.GetValue(param)
+            val = super.GetParam(param)
         }
         return val;
     }

@@ -29,8 +29,8 @@ class BitCrusher extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
@@ -43,8 +43,8 @@ class BitCrusher extends Effect {
 
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="bits") {
             val = this.Effect.bits;
@@ -67,7 +67,7 @@ class BitCrusher extends Effect {
                     "name" : "Bits",
                     "setting" : "bits",
                     "props" : {
-                        "value" : this.GetValue("bits"),
+                        "value" : this.GetParam("bits"),
                         "min" : 1,
                         "max" : 8,
                         "quantised" : false,
@@ -80,7 +80,7 @@ class BitCrusher extends Effect {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : this.GetValue("dryWet"),
+                        "value" : this.GetParam("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

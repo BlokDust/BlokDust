@@ -706,7 +706,7 @@ class ParametersPanel extends DisplayObject {
 
         console.log("" + object[""+setting] +" | "+ object[""+value]);
         // SET VALUE IN BLOCK //
-        this.SelectedBlock.SetValue(object[""+setting],object[""+value]);
+        this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
 
         // UPDATE VALUES IN OTHER OPTIONS //
         this.SelectedBlock.OpenParams();

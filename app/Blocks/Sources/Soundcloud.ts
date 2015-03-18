@@ -84,7 +84,7 @@ class Soundcloud extends Source {
                     "name" : "Playback rate",
                     "setting" :"playbackRate",
                     "props" : {
-                        "value" : this.GetValue("playbackRate"),
+                        "value" : this.GetParam("playbackRate"),
                         "min" : 0.125,
                         "max" : 8,
                         "quantised" : false,
@@ -102,16 +102,16 @@ class Soundcloud extends Source {
         this.PlaybackRate = rate;
     }
 
-    SetValue(param: string,value: any) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: any) {
+        super.SetParam(param,value);
 
         if (param == "playbackRate") {
             this.SetPlaybackRate(value);
         }
     }
 
-    GetValue(param: string){
-        var val = super.GetValue(param);
+    GetParam(param: string){
+        var val = super.GetParam(param);
         return val;
     }
 
