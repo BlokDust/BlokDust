@@ -51,7 +51,6 @@ class Soundcloud extends Source {
         if(!this.IsPowered() || this.Source.player.state === "stopped") {
             this.Source.triggerAttack();
         }
-        console.log(this.Source.player.state);
     }
 
     TriggerRelease() {
