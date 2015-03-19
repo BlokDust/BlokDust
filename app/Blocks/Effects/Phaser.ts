@@ -30,8 +30,8 @@ class Phaser extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
         if (param=="dryWet") {
@@ -43,8 +43,8 @@ class Phaser extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="rate") {
             val = this.Effect.frequency.value;
@@ -71,7 +71,7 @@ class Phaser extends Effect {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetValue("rate"),
+                        "value" : this.GetParam("rate"),
                         "min" : 0,
                         "max" : 10,
                         "quantised" : false,
@@ -84,7 +84,7 @@ class Phaser extends Effect {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetValue("depth"),
+                        "value" : this.GetParam("depth"),
                         "min" : 0,
                         "max" : 10,
                         "quantised" : true,
@@ -97,7 +97,7 @@ class Phaser extends Effect {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : this.GetValue("baseFrequency"),
+                        "value" : this.GetParam("baseFrequency"),
                         "min" : 10,
                         "max" : 2000,
                         "quantised" : true,
@@ -110,7 +110,7 @@ class Phaser extends Effect {
                     "name" : "Mix",
                     "setting" :"dryWet",
                     "props" : {
-                        "value" : this.GetValue("dryWet"),
+                        "value" : this.GetParam("dryWet"),
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

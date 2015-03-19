@@ -32,15 +32,15 @@ class Gain extends Effect {
         this.Effect = null;
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         this.Effect.gain.value = (value/10)+1;
         //this.Effect.rampTo(value, 0.1);
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
 
 
         if (param === "gain") {
@@ -64,7 +64,7 @@ class Gain extends Effect {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": this.GetValue("gain"),
+                        "value": this.GetParam("gain"),
                         "min": -10,
                         "max": 10,
                         //"min": 0.01,

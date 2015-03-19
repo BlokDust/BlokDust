@@ -3,19 +3,16 @@ import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
 import Effect = require("../Effect");
 import Block = require("../Block");
-import Type = require("../BlockType");
-import BlockType = Type.BlockType;
 import Particle = require("../../Particle");
 
 class ToneSource extends Source {
-
+    
     public Source: Tone.Oscillator;
     public Frequency: number;
     public Envelope: Tone.AmplitudeEnvelope;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.ToneSource;
         this.Frequency = 440;
         this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
 
@@ -106,7 +103,7 @@ class ToneSource extends Source {
                     "name" : "Frequency",
                     "setting" :"frequency",
                     "props" : {
-                        "value" : this.GetValue("frequency"),
+                        "value" : this.GetParam("frequency"),
                         "min" : 10,
                         "max" : 15000,
                         "quantised" : true,
@@ -119,7 +116,7 @@ class ToneSource extends Source {
                     "name" : "Waveform",
                     "setting" :"waveform",
                     "props" : {
-                        "value" : this.GetValue("waveform"),
+                        "value" : this.GetParam("waveform"),
                         "min" : 1,
                         "max" : 4,
                         "quantised" : true,
@@ -130,7 +127,7 @@ class ToneSource extends Source {
         };
     }
 
-    SetValue(param: string,value: any) {
+    SetParam(param: string,value: any) {
 
         if (param == "waveform") {
             switch(Math.round(value)){
@@ -153,13 +150,13 @@ class ToneSource extends Source {
             this.Frequency = value;
         }
 
-        super.SetValue(param,value);
+        super.SetParam(param,value);
     }
 
-    GetValue(param: string){
+    GetParam(param: string){
         var val;
         if (param == "waveform") {
-            switch(super.GetValue(param)){
+            switch(super.GetParam(param)){
                 case "sine": val = 1;
                     break;
                 case "square": val = 2;
@@ -170,7 +167,7 @@ class ToneSource extends Source {
                     break;
             }
         } else {
-            val = super.GetValue(param)
+            val = super.GetParam(param)
         }
         return val;
     }

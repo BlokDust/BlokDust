@@ -1,12 +1,10 @@
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
-import Type = require("./BlockType");
-import BlockType = Type.BlockType;
-import Size = Fayde.Utils.Size;
 import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
 import ParametersPanel = require("../UI/ParametersPanel");
+import Size = Fayde.Utils.Size;
 
 class Block extends DisplayObject implements IBlock {
 
@@ -21,8 +19,6 @@ class Block extends DisplayObject implements IBlock {
     public ZIndex;
     public ParamJson;
     private _Duplicable: boolean = false;
-
-    public BlockType: BlockType;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -133,11 +129,22 @@ class Block extends DisplayObject implements IBlock {
 
     }
 
-    SetValue(param: string,value: number) {
-
+    SetParam(param: string,value: number) {
+        // implemented in sub class
     }
-    GetValue(param: string) {
 
+    GetParam(param: string) {
+        // implemented in sub class
+    }
+
+    UpdateParams(params: any) {
+        params.parameters.forEach((param: any) => {
+            //this.SetParam(param.setting, param.props);
+        });
+    }
+
+    Refresh() {
+        this.UpdateParams(this.ParamJson);
     }
 }
 

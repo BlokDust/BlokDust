@@ -90,6 +90,8 @@ class Source extends Block implements ISource {
     }
 
     public Refresh() {
+        super.Refresh();
+
         // Detach effects in old collection.
         if (this.OldEffects && this.OldEffects.Count){
             var oldEffects: IEffect[] = this.OldEffects.ToArray();
@@ -234,7 +236,7 @@ class Source extends Block implements ISource {
 
     }
 
-    GetValue(param: string) {
+    GetParam(param: string) {
 
         var val;
         switch (param){
@@ -253,8 +255,8 @@ class Source extends Block implements ISource {
 
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -270,6 +272,10 @@ class Source extends Block implements ISource {
             case "playbackRate": this.Source.playbackRate = value;
                 break;
         }
+    }
+
+    UpdateParams(params: any) {
+        super.UpdateParams(params);
     }
 
     Draw(){

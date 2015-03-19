@@ -1,7 +1,7 @@
 import IBlock = require("./IBlock");
 import ISource = require("./ISource");
 
-interface IEffect extends IBlock{
+interface IEffect extends IBlock {
     CatchmentArea: number;
     Effect: any; // ANY TYPE OF TONE POST EFFECT
     Name?: string;
@@ -13,9 +13,6 @@ interface IEffect extends IBlock{
 
     Attach(source: ISource): void;
     Detach(source: ISource): void;
-
-    SetValue(param: string,value: number): void;
-    GetValue(param: string): void;
 
     ValidateSources(): void;
 }

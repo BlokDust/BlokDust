@@ -35,10 +35,10 @@ class Chopper extends Effect {
         this.Timer = setTimeout(function() {
             if (me.Effect) {
                 if (me.Polarity==0) {
-                    me.SetValue("gain",5-me.Depth);
+                    me.SetParam("gain",5-me.Depth);
                     me.Polarity = 1;
                 } else {
-                    me.SetValue("gain",5);
+                    me.SetParam("gain",5);
                     me.Polarity = 0;
                 }
                 me.SetVolume();
@@ -96,8 +96,8 @@ class Chopper extends Effect {
         };
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         if (param == "rate") {
             this.Rate = Math.round(151-value);
         } else if (param == "gain") {

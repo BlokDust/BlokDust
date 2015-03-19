@@ -1,8 +1,6 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
-import Type = require("../BlockType");
 import BlocksSketch = require("../../BlocksSketch");
-import BlockType = Type.BlockType;
 
 class Soundcloud extends Source {
 
@@ -12,7 +10,6 @@ class Soundcloud extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.BlockType = BlockType.Soundcloud;
         this.PlaybackRate = 1;
 
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
@@ -83,7 +80,7 @@ class Soundcloud extends Source {
                     "name" : "Playback rate",
                     "setting" :"playbackRate",
                     "props" : {
-                        "value" : this.GetValue("playbackRate"),
+                        "value" : this.GetParam("playbackRate"),
                         "min" : 0.125,
                         "max" : 8,
                         "quantised" : false,
@@ -101,16 +98,16 @@ class Soundcloud extends Source {
         this.PlaybackRate = rate;
     }
 
-    SetValue(param: string,value: any) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: any) {
+        super.SetParam(param,value);
 
         if (param == "playbackRate") {
             this.SetPlaybackRate(value);
         }
     }
 
-    GetValue(param: string){
-        var val = super.GetValue(param);
+    GetParam(param: string){
+        var val = super.GetParam(param);
         return val;
     }
 

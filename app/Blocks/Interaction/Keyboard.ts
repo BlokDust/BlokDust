@@ -90,16 +90,16 @@ class Keyboard extends Effect {
         App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         if (param == "octave"){
             this.CurrentOctave = value;
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
     }
 
     OpenParams() {
@@ -115,7 +115,7 @@ class Keyboard extends Effect {
                     "name" : "Glide",
                     "setting" :"glide",
                     "props" : {
-                        "value" : this.GetValue("glide"),
+                        "value" : this.GetParam("glide"),
                         "min" : 0.001,
                         "max" : 100,
                         "truemin" : 0,

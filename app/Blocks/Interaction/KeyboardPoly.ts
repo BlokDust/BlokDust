@@ -2,9 +2,7 @@ import Keyboard = require("./Keyboard");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
-import Type = require("../BlockType");
 import BlocksSketch = require("../../BlocksSketch");
-import BlockType = Type.BlockType;
 import ToneSource = require("../Sources/ToneSource");
 import Noise = require("../Sources/Noise");
 
@@ -58,7 +56,7 @@ class KeyboardPoly extends Keyboard {
         }
 
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
-        if (source.BlockType == BlockType.ToneSource || source.BlockType == BlockType.Noise) {
+        if (source instanceof ToneSource || source instanceof Noise) {
 
             for (var i = 0; i < voicesNum; i++) {
                 //Create the poly sources and envelopes
@@ -155,8 +153,8 @@ class KeyboardPoly extends Keyboard {
     }
 
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -179,8 +177,8 @@ class KeyboardPoly extends Keyboard {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
 
         if (param == "voices") {
@@ -205,7 +203,7 @@ class KeyboardPoly extends Keyboard {
                     "name" : "Voices",
                     "setting" :"voices",
                     "props" : {
-                        "value" : this.GetValue("voices"),
+                        "value" : this.GetParam("voices"),
                         "min" : 1,
                         "max" : 6,
                         "quantised" : true,
@@ -217,7 +215,7 @@ class KeyboardPoly extends Keyboard {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.GetValue("octave"),
+                        "value" : this.GetParam("octave"),
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,

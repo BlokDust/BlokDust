@@ -52,8 +52,8 @@ class Scuzz extends Effect {
         this.LFO.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -65,8 +65,8 @@ class Scuzz extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="rate") {
             val = this.LFO.frequency.value;
@@ -89,7 +89,7 @@ class Scuzz extends Effect {
                     "name" : "Power",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetValue("depth"),
+                        "value" : this.GetParam("depth"),
                         "min" : 1000,
                         "max" : 10000,
                         "quantised" : true,
@@ -101,7 +101,7 @@ class Scuzz extends Effect {
                     "name" : "Pulverisation",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetValue("rate"),
+                        "value" : this.GetParam("rate"),
                         "min" : 100,
                         "max" : 10000,
                         "quantised" : true,

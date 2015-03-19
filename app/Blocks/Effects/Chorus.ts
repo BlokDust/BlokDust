@@ -32,8 +32,8 @@ class Chorus extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
         this.Effect.set(
@@ -41,8 +41,8 @@ class Chorus extends Effect {
         );
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="rate") {
             val = this.Effect.frequency.value;
@@ -70,7 +70,7 @@ class Chorus extends Effect {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetValue("rate"),
+                        "value" : this.GetParam("rate"),
                         "min" : 0,
                         "max" : 5,
                         "quantised" : false,
@@ -83,7 +83,7 @@ class Chorus extends Effect {
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
-                        "value" : this.GetValue("delayTime"),
+                        "value" : this.GetParam("delayTime"),
                         "min" : 0,
                         "max" : 5,
                         "quantised" : false,
@@ -96,7 +96,7 @@ class Chorus extends Effect {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetValue("depth"),
+                        "value" : this.GetParam("depth"),
                         "min" : 0,
                         "max" : 3,
                         "quantised" : false,
@@ -109,7 +109,7 @@ class Chorus extends Effect {
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
-                        "value" : this.GetValue("feedback"),
+                        "value" : this.GetParam("feedback"),
                         "min" : 0,
                         "max" : 0.2,
                         "quantised" : false,

@@ -31,8 +31,8 @@ class Filter extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
         this.Effect.set(
@@ -40,8 +40,8 @@ class Filter extends Effect {
         );
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="frequency") {
             val = this.Effect.frequency.value;
@@ -64,7 +64,7 @@ class Filter extends Effect {
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {
-                        "value": this.GetValue("frequency"),
+                        "value": this.GetParam("frequency"),
                         "min": 20,
                         "max": 20000,
                         "quantised": true,
@@ -78,7 +78,7 @@ class Filter extends Effect {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": this.GetValue("gain"),
+                        "value": this.GetParam("gain"),
                         "min": -50,
                         "max": 50,
                         "quantised": false,

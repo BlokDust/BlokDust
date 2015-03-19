@@ -54,8 +54,8 @@ class EQ extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         var paramWithBand = param.split("-"),
             param = paramWithBand[0],
@@ -76,8 +76,8 @@ class EQ extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
 
         var paramWithBand = param.split("-"),
             param = paramWithBand[0],
@@ -111,68 +111,68 @@ class EQ extends Effect {
                     "nodes": [
                         {
                             "x_setting": "frequency-1",
-                            "x_value": this.GetValue("frequency-1"),
+                            "x_value": this.GetParam("frequency-1"),
                             "x_min": 20,
                             "x_max": 20000,
 
                             "y_setting": "gain-1",
-                            "y_value": this.GetValue("gain-1"),
+                            "y_value": this.GetParam("gain-1"),
                             "y_min": -50,
                             "y_max": 30,
 
                             "q_setting": "Q-1",
-                            "q_value": this.GetValue("Q-1"),
+                            "q_value": this.GetParam("Q-1"),
                             "q_min": 20,
                             "q_max": 1
                         },
 
                         {
                             "x_setting": "frequency-2",
-                            "x_value": this.GetValue("frequency-2"),
+                            "x_value": this.GetParam("frequency-2"),
                             "x_min": 20,
                             "x_max": 20000,
 
                             "y_setting": "gain-2",
-                            "y_value": this.GetValue("gain-2"),
+                            "y_value": this.GetParam("gain-2"),
                             "y_min": -50,
                             "y_max": 30,
 
                             "q_setting": "Q-2",
-                            "q_value": this.GetValue("Q-2"),
+                            "q_value": this.GetParam("Q-2"),
                             "q_min": 14,
                             "q_max": 0.5
                         },
 
                         {
                             "x_setting": "frequency-3",
-                            "x_value": this.GetValue("frequency-3"),
+                            "x_value": this.GetParam("frequency-3"),
                             "x_min": 20,
                             "x_max": 20000,
 
                             "y_setting": "gain-3",
-                            "y_value": this.GetValue("gain-3"),
+                            "y_value": this.GetParam("gain-3"),
                             "y_min": -50,
                             "y_max": 30,
 
                             "q_setting": "Q-3",
-                            "q_value": this.GetValue("Q-3"),
+                            "q_value": this.GetParam("Q-3"),
                             "q_min": 14,
                             "q_max": 0.5
                         },
 
                         {
                             "x_setting": "frequency-4",
-                            "x_value": this.GetValue("frequency-4"),
+                            "x_value": this.GetParam("frequency-4"),
                             "x_min": 20,
                             "x_max": 20000,
 
                             "y_setting": "gain-4",
-                            "y_value": this.GetValue("gain-4"),
+                            "y_value": this.GetParam("gain-4"),
                             "y_min": -50,
                             "y_max": 30,
 
                             "q_setting": "Q-4",
-                            "q_value": this.GetValue("Q-4"),
+                            "q_value": this.GetParam("Q-4"),
                             "q_min": 20,
                             "q_max": 1
                         }

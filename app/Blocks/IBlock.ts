@@ -5,7 +5,6 @@ import Grid = require("../Grid");
 
 interface IBlock extends IDisplayObject{
     Id: number;
-    Type: any; // todo: use TS 1.5 reflection
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Outline: Point[];
     IsPressed: boolean;
@@ -15,6 +14,7 @@ interface IBlock extends IDisplayObject{
     ParamJson: any;
     Update(): void;
     Draw(): void;
+    Refresh(): void;
     MouseDown(): void;
     ParticleCollision(particle: Particle): void;
     MouseUp(): void;
@@ -23,8 +23,9 @@ interface IBlock extends IDisplayObject{
     HitTest(point: Point): boolean;
     DistanceFrom(point: Point): number;
     OpenParams(): void;
-    SetValue(param: string,value: number): void;
-    GetValue(param: string): void;
+    SetParam(param: string,value: number): void;
+    GetParam(param: string): void;
+    UpdateParams(params: any): void;
 }
 
 export = IBlock;

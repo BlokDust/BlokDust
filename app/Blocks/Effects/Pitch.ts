@@ -58,8 +58,8 @@ class Pitch extends Effect {
 
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
 
@@ -76,8 +76,8 @@ class Pitch extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
 
         if (param == "pitchMultiplier") {
@@ -99,7 +99,7 @@ class Pitch extends Effect {
                     "name" : "Pitch",
                     "setting" :"pitchMultiplier",
                     "props" : {
-                        "value" : this.GetValue('pitchMultiplier'),
+                        "value" : this.GetParam('pitchMultiplier'),
                         "min" : 0.5,
                         "max" : 2,
                         "quantised" : false,

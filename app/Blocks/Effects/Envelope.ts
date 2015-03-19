@@ -57,8 +57,8 @@ class Envelope extends Effect {
 
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         if (param=="attack") {
             this.attack = value;
@@ -92,8 +92,8 @@ class Envelope extends Effect {
         }
     }
 
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val = this[""+param];
         return val;
     }
@@ -113,28 +113,28 @@ class Envelope extends Effect {
                     "nodes": [
                         {
                             "setting": "attack",
-                            "value": this.GetValue("attack"),
+                            "value": this.GetParam("attack"),
                             "min": 0.01,
                             "max": 10
                         },
 
                         {
                             "setting": "decay",
-                            "value": this.GetValue("decay"),
+                            "value": this.GetParam("decay"),
                             "min": 0.01,
                             "max": 15
                         },
 
                         {
                             "setting": "sustain",
-                            "value": this.GetValue("sustain"),
+                            "value": this.GetParam("sustain"),
                             "min": 0,
                             "max": 1
                         },
 
                         {
                             "setting": "release",
-                            "value": this.GetValue("release"),
+                            "value": this.GetParam("release"),
                             "min": 0.01,
                             "max": 15
                         }

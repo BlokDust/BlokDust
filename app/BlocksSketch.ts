@@ -673,10 +673,9 @@ class BlocksSketch extends Grid {
     //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
     CreateBlockFromType<T extends IBlock>(t: {new(): T; }){
         var block: IBlock = new t();
+        block.Id = this.GetId();
         block.Position = this._PointerPoint;
         block.Init(this);
-        block.Id = this.GetId();
-        block.Type = t;
 
         //block.Click.on((block: IBlock) => {
         //    this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());

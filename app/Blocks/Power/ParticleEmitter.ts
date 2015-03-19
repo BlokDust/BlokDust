@@ -1,10 +1,8 @@
 import Source = require("../Source");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
-import Vector = Fayde.Utils.Vector;
-import Type = require("../BlockType");
 import BlocksSketch = require("../../BlocksSketch");
-import BlockType = Type.BlockType;
+import Vector = Fayde.Utils.Vector;
 
 class ParticleEmitter extends Source {
 
@@ -13,8 +11,6 @@ class ParticleEmitter extends Source {
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        this.BlockType = BlockType.Power;
 
         this.Params = {
             angle: -90,
@@ -151,8 +147,8 @@ class ParticleEmitter extends Source {
         };
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         if (param=="angle") {
             this.Params[""+param] = (value-90);

@@ -33,7 +33,7 @@ class Chomp extends Effect {
 
         this.Timer = setTimeout(function() {
             if (me.Effect) {
-                me.SetValue("frequency",100 + Math.round(Math.random()*10000));
+                me.SetParam("frequency",100 + Math.round(Math.random()*10000));
                 me.SetFrequency();
             }
 
@@ -51,8 +51,8 @@ class Chomp extends Effect {
         this.Effect.dispose();
     }
 
-    SetValue(param: string,value: number) {
-        super.SetValue(param,value);
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
 
         if (param == "rate") {
             this.Rate = Math.round(101-value);
@@ -64,8 +64,8 @@ class Chomp extends Effect {
             );
         }
     }
-    GetValue(param: string) {
-        super.GetValue(param);
+    GetParam(param: string) {
+        super.GetParam(param);
         var val;
         if (param=="Q") {
             val = this.Effect.Q.value;
@@ -102,7 +102,7 @@ class Chomp extends Effect {
                     "name": "Width",
                     "setting": "Q",
                     "props": {
-                        "value": this.GetValue("Q"),
+                        "value": this.GetParam("Q"),
                         "min": 0.1,
                         "max": 5,
                         "quantised": false,
@@ -115,7 +115,7 @@ class Chomp extends Effect {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": this.GetValue("gain"),
+                        "value": this.GetParam("gain"),
                         "min": 0,
                         "max": 50,
                         "quantised": false,
