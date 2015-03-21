@@ -17,7 +17,7 @@ import OptionHandle = require("./Options/OptionHandle");
 import OptionSubHandle = require("./Options/OptionSubHandle");
 import DisplayObject = require("../DisplayObject");
 
-class ParametersPanel extends DisplayObject {
+class OptionsPanel extends DisplayObject {
 
     public Position: Point;
     public Size: Size;
@@ -263,7 +263,6 @@ class ParametersPanel extends DisplayObject {
                     handleX = this.logPosition(0, this.Range, Xmin, Xmax, Xval);
                     Yrange = Ymax - Ymin;
                     handleY = ( (optionHeight[i]*0.7) / Yrange ) * (Yval-Ymin);
-                    console.log("x: "+handleX+" | y: "+handleY);
                     handles[j] = new OptionHandle(new Point(handleX,handleY),Xval,Xmin,Xmax,this.Range,Yval,Ymin,Ymax,(optionHeight[i]*0.7),option.nodes[j].x_setting,option.nodes[j].y_setting);
                     handles[j].XLog = true;
 
@@ -300,7 +299,7 @@ class ParametersPanel extends DisplayObject {
 
     UpdateOptions() {
         this.SelectedBlock.OpenParams();
-        var json = this.SelectedBlock.ParamJson;
+        var json = this.SelectedBlock.OptionsForm;
         // GET NUMBER OF OPTIONS //
         var n = json.parameters.length;
 
@@ -755,4 +754,4 @@ class ParametersPanel extends DisplayObject {
 
 }
 
-export = ParametersPanel;
+export = OptionsPanel;

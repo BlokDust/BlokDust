@@ -65,7 +65,7 @@ class KeyboardMono extends Keyboard {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Mono Keyboard",
             "parameters" : [

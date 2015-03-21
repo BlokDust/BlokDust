@@ -79,7 +79,7 @@ class Chomp extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name": "Chomp",
             "parameters": [

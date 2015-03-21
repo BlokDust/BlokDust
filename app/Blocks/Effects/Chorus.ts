@@ -60,7 +60,7 @@ class Chorus extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Chorus",
             "parameters" : [

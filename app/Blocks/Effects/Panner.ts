@@ -45,7 +45,7 @@ class Panner extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name": "Auto Panner",
             "parameters": [

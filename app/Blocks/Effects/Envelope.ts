@@ -101,7 +101,7 @@ class Envelope extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name": "Envelope",
             "parameters": [
