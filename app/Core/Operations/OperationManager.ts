@@ -10,7 +10,6 @@ class OperationManager {
     private _CurrentOperation: Promise<any>;
     private _MaxOperations: number = 100;
 
-    //OperationAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationComplete: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
 
@@ -57,7 +56,7 @@ class OperationManager {
         // if a non-undoable operation is added, warn the user
         // and clear _Operations.
         if (!(<IUndoableOperation>operation).Undo){
-            console.warn("this operation is not undoable");
+            //console.warn("this operation is not undoable");
             this._Operations.Clear();
         } else if (this.Head != this._Operations.Count - 1){
             // if Head isn't at end of _Operations, trim those ahead of it.

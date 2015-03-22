@@ -11,12 +11,9 @@ class IncrementNumberCompoundOperation<Number> extends CompoundOperation<Number>
         super();
         this._Number = n;
 
-        // increment a number 5 times
         this.Operations.push(new IncrementNumberOperation(n));
-        this.Operations.push(new IncrementNumberOperation(n));
-        this.Operations.push(new IncrementNumberOperation(n));
-        this.Operations.push(new IncrementNumberOperation(n));
-        this.Operations.push(new IncrementNumberOperation(n));
+        this.Operations.push(new IncrementNumberOperation(n + 1));
+        this.Operations.push(new IncrementNumberOperation(n + 2));
     }
 
     Do(): Promise<Number> {

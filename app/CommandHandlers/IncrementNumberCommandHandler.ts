@@ -12,7 +12,7 @@ class IncrementNumberCommandHandler implements ICommandHandler {
     Execute(n: number): Promise<number>{
         var op = new IncrementNumberCompoundOperation(n);
         return App.OperationManager.Do(op).then((n) => {
-            console.log(n);
+            //console.log(n);
         });
     }
 }

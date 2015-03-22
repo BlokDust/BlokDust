@@ -5,7 +5,6 @@ import IBlock = require("../../Blocks/IBlock");
 
 class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IUndoableOperation, ICompoundOperation
 {
-
     private _Block: IBlock;
 
     constructor(block: IBlock) {
