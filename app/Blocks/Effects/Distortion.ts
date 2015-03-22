@@ -51,7 +51,7 @@ class Distortion extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Distortion",
             "parameters" : [

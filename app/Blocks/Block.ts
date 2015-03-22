@@ -3,7 +3,7 @@ import Grid = require("../Grid");
 import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
-import ParametersPanel = require("../UI/ParametersPanel");
+import ParametersPanel = require("../UI/OptionsPanel");
 import Size = Fayde.Utils.Size;
 
 class Block extends DisplayObject implements IBlock {
@@ -17,7 +17,7 @@ class Block extends DisplayObject implements IBlock {
     public IsSelected: boolean = false;
     public Outline: Point[] = [];
     public ZIndex;
-    public ParamJson;
+    public OptionsForm;
     private _Duplicable: boolean = false;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -144,7 +144,7 @@ class Block extends DisplayObject implements IBlock {
     }
 
     Refresh() {
-        this.UpdateParams(this.ParamJson);
+        this.UpdateParams(this.OptionsForm);
     }
 }
 

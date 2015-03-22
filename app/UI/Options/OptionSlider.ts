@@ -4,7 +4,7 @@
 
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import ParametersPanel = require("./../ParametersPanel");
+import ParametersPanel = require("./../OptionsPanel");
 
 class Slider extends Option{
 

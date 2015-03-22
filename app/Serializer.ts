@@ -60,7 +60,7 @@ class Serializer {
         b.Id = block.Id;
         b.Type = this._GetBlockSerializationType(block);
         b.Position = block.Position;
-        if (block.ParamJson) b.Params = block.ParamJson;
+        if (block.OptionsForm) b.Params = block.OptionsForm;
 
         // if it's a source block
         if ((<ISource>block).Effects && (<ISource>block).Effects.Count){
@@ -126,7 +126,7 @@ class Serializer {
             block.Id = b.Id;
             block.Position = new Point(b.Position.x, b.Position.y);
             block.LastPosition = new Point(b.Position.x, b.Position.y);
-            block.ParamJson = b.Params;
+            block.OptionsForm = b.Params;
 
             Serializer._DeserializationDictionary[b.Id] = block;
         }

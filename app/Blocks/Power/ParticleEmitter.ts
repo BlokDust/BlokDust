@@ -87,7 +87,7 @@ class ParticleEmitter extends Source {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Particle Emitter",
             "parameters" : [

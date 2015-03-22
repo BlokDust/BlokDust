@@ -71,7 +71,7 @@ class AutoWah extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Auto Wah",
             "parameters" : [

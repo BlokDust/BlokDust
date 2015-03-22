@@ -11,7 +11,7 @@ interface IBlock extends IDisplayObject{
     IsSelected: boolean;
     Position: Point;
     LastPosition: Point;
-    ParamJson: any;
+    OptionsForm: any;
     Update(): void;
     Draw(): void;
     Refresh(): void;

@@ -15,7 +15,7 @@ import Particle = require("./Particle");
 import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import ParametersPanel = require("./UI/ParametersPanel");
+import OptionsPanel = require("./UI/OptionsPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
@@ -28,7 +28,7 @@ import Utils = Fayde.Utils;
 import Transformer = Fayde.Transformer.Transformer;
 import Size = Fayde.Utils.Size;
 
-declare var ParamTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
+declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
 class BlocksSketch extends Grid {
 
@@ -37,7 +37,7 @@ class BlocksSketch extends Grid {
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
     public BlockSprites: BlockSprites;
-    private _ParamsPanel: ParametersPanel;
+    private _OptionsPanel: OptionsPanel;
     private _Header: Header;
     private _ToolTip: ToolTip;
     private _ZoomButtons: ZoomButtons;
@@ -98,7 +98,7 @@ class BlocksSketch extends Grid {
             this._Invalidate();
         }, this);
 
-        ParamTimeout = false; // todo: remove
+        OptionTimeout = false; // todo: remove
 
         // METRICS //
         this.Metrics();
@@ -122,8 +122,8 @@ class BlocksSketch extends Grid {
 
         this.BlockCreator = new BlockCreator();
 
-        this._ParamsPanel = new ParametersPanel();
-        this._ParamsPanel.Init(this);
+        this._OptionsPanel = new OptionsPanel();
+        this._OptionsPanel.Init(this);
 
         this._Header = new Header();
         this._Header.Init(this);
@@ -179,8 +179,8 @@ class BlocksSketch extends Grid {
             this.UpdateParticles();
         }
 
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.Update();
+        if (this._OptionsPanel.Scale==1) {
+            this._OptionsPanel.Update();
         }
 
         this._LaserBeams.Update();
@@ -223,9 +223,9 @@ class BlocksSketch extends Grid {
 
 
     SketchResize() {
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.SelectedBlock.OpenParams();
-            this._ParamsPanel.Populate(this._ParamsPanel.SelectedBlock.ParamJson,false);
+        if (this._OptionsPanel.Scale==1) {
+            this._OptionsPanel.SelectedBlock.OpenParams();
+            this._OptionsPanel.Populate(this._OptionsPanel.SelectedBlock.OptionsForm,false);
         }
         this._Header.Populate(this._Header.MenuJson);
         this._ZoomButtons.UpdatePositions();
@@ -286,7 +286,7 @@ class BlocksSketch extends Grid {
 
         // UI //
         this._ToolTip.Draw();
-        this._ParamsPanel.Draw();
+        this._OptionsPanel.Draw();
         this._ZoomButtons.Draw();
         this._TrashCan.Draw();
         this._Header.Draw();
@@ -390,8 +390,8 @@ class BlocksSketch extends Grid {
         }
         this._Header.MouseDown(point);
         this._ZoomButtons.MouseDown(point);
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseDown(point.x,point.y); // to do : unsplit point
+        if (this._OptionsPanel.Scale==1) {
+            this._OptionsPanel.MouseDown(point.x,point.y); // to do : unsplit point
         }
 
 
@@ -437,11 +437,11 @@ class BlocksSketch extends Grid {
             }
 
             // OPEN PANEL //
-            if (ParamTimeout) {
+            if (OptionTimeout) {
                 this.SelectedBlock.OpenParams();
-                if (this.SelectedBlock.ParamJson) {
-                    this._ParamsPanel.SelectedBlock = this.SelectedBlock;
-                    this._ParamsPanel.Populate(this.SelectedBlock.ParamJson,true);
+                if (this.SelectedBlock.OptionsForm) {
+                    this._OptionsPanel.SelectedBlock = this.SelectedBlock;
+                    this._OptionsPanel.Populate(this.SelectedBlock.OptionsForm,true);
                 }
             }
         }
@@ -450,8 +450,8 @@ class BlocksSketch extends Grid {
         // UI //
         this._Header.MouseUp();
 
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseUp();
+        if (this._OptionsPanel.Scale==1) {
+            this._OptionsPanel.MouseUp();
         }
 
         this._Transformer.PointerUp();
@@ -468,8 +468,8 @@ class BlocksSketch extends Grid {
         }
 
         // UI //
-        if (this._ParamsPanel.Scale==1) {
-            this._ParamsPanel.MouseMove(point.x,point.y);
+        if (this._OptionsPanel.Scale==1) {
+            this._OptionsPanel.MouseMove(point.x,point.y);
         }
         this._Header.MouseMove(point);
         this._ZoomButtons.MouseMove(point);
@@ -531,16 +531,16 @@ class BlocksSketch extends Grid {
                 this.SelectedBlock = block;
 
                 // TIMER TO CHECK BETWEEN SINGLE CLICK OR DRAG //
-                ParamTimeout = true;
+                OptionTimeout = true;
                 setTimeout(function() {
-                    ParamTimeout = false;
+                    OptionTimeout = false;
                 },200);
 
                 return true;
             }
         }
         // CLOSE PARAMS IF NO BLOCK CLICKED //
-        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200);
+        this._OptionsPanel.PanelScale(this._OptionsPanel,0,200);
 
         return false;
     }
@@ -552,8 +552,8 @@ class BlocksSketch extends Grid {
         var panel = this._ToolTip;
 
         // CHECK BLOCKS FOR HOVER //
-        if (this._ParamsPanel.Scale==1) {
-            panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        if (this._OptionsPanel.Scale==1) {
+            panelCheck = this._BoxCheck(this._OptionsPanel.Position.x,this._OptionsPanel.Position.y - (this._OptionsPanel.Size.Height*0.5), this._OptionsPanel.Size.Width,this._OptionsPanel.Size.Height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
             for (var i = App.Blocks.length - 1; i >= 0; i--) {
@@ -561,8 +561,8 @@ class BlocksSketch extends Grid {
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
-                    if (block.ParamJson) {
-                        panel.Name = block.ParamJson.name;
+                    if (block.OptionsForm) {
+                        panel.Name = block.OptionsForm.name;
                         var blockPos = this.ConvertScaledGridUnitsToAbsolute(block.Position);
                         panel.Position.x = blockPos.x;
                         panel.Position.y = blockPos.y;
@@ -609,8 +609,8 @@ class BlocksSketch extends Grid {
             return true;
         }
 
-        if (this._ParamsPanel.Scale==1) {
-            var panelCheck = this._BoxCheck(this._ParamsPanel.Position.x,this._ParamsPanel.Position.y - (this._ParamsPanel.Size.Height*0.5), this._ParamsPanel.Size.Width,this._ParamsPanel.Size.Height,point.x,point.y);
+        if (this._OptionsPanel.Scale==1) {
+            var panelCheck = this._BoxCheck(this._OptionsPanel.Position.x,this._OptionsPanel.Position.y - (this._OptionsPanel.Size.Height*0.5), this._OptionsPanel.Size.Width,this._OptionsPanel.Size.Height,point.x,point.y);
             if (panelCheck) {
                 console.log("UI INTERACTION");
                 return true;
@@ -714,7 +714,7 @@ class BlocksSketch extends Grid {
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this._ParamsPanel.PanelScale(this._ParamsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
+        this._OptionsPanel.PanelScale(this._OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
         this._SelectedBlock.Dispose();
         this.DisplayList.Remove(this._SelectedBlock);
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);

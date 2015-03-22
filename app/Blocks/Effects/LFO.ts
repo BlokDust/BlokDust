@@ -80,7 +80,7 @@ class LFO extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "LFO",
             "parameters" : [
