@@ -36,6 +36,8 @@ class Phaser extends Effect {
         jsonVariable[param] = value;
         if (param=="dryWet") {
             this.Effect.wet.value = value;
+        } else if (param=="rate") {
+            this.Effect.frequency.value = value;
         } else {
             this.Effect.set(
                 jsonVariable

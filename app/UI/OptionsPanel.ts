@@ -335,8 +335,8 @@ class OptionsPanel extends DisplayObject {
 
 
     Update() {
-        if (this._JsonMemory.updateeveryframe) {
-            this.UpdateOptions();
+        if (this._JsonMemory.updateeveryframe==true) {
+            //this.UpdateOptions();
         }
     }
 
@@ -709,7 +709,6 @@ class OptionsPanel extends DisplayObject {
 
         // UPDATE VALUES IN OTHER OPTIONS //
         this.SelectedBlock.OpenParams();
-        this.UpdateOptions();
     }
 
 
