@@ -5,7 +5,8 @@ enum Commands {
     SAVE,
     LOAD,
     UNDO,
-    REDO
+    REDO,
+    INCREMENT_NUMBER
 }
 
 export = Commands;

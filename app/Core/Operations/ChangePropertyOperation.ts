@@ -1,5 +1,4 @@
 import IUndoableOperation = require("./IUndoableOperation");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class ChangePropertyOperation<T> implements IUndoableOperation
 {

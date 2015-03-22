@@ -22,6 +22,7 @@ import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
 import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
+import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
@@ -93,6 +94,7 @@ class App implements IApp{
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.REDO], RedoCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.INCREMENT_NUMBER], IncrementNumberCommandHandler.prototype));
 
         // create input managers
         this.InputManager = new InputManager();

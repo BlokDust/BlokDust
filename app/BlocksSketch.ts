@@ -1,8 +1,6 @@
 import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
 import IEffect = require("./Blocks/IEffect");
-import AddItemToObservableCollectionOperation = require("./Core/Operations/AddItemToObservableCollectionOperation");
-import RemoveItemFromObservableCollectionOperation = require("./Core/Operations/RemoveItemFromObservableCollectionOperation");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
 import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
@@ -430,6 +428,7 @@ class BlocksSketch extends Grid {
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
+                        // todo: make this a MoveBlock command - operations should always be wrapped in a command
                         var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
                         App.OperationManager.Do(op);
                     }
@@ -715,10 +714,10 @@ class BlocksSketch extends Grid {
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
         this._OptionsPanel.PanelScale(this._OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
-        this._SelectedBlock.Dispose();
-        this.DisplayList.Remove(this._SelectedBlock);
-        App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
-        this.SelectedBlock = null;
+        //App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
+        //this.SelectedBlock = null;
+
+        App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 }
 

@@ -147,8 +147,8 @@ class OperationManager {
         console.log(str);
     }
 
-    private _Reject(errorMessage: string): Promise<any>{
-        return new Promise<any>(function(undefined, reject) {
+    private _Reject(errorMessage: string): Promise<void>{
+        return new Promise<void>(function(undefined, reject) {
             reject(Error(errorMessage));
         });
     }
