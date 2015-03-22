@@ -79,7 +79,7 @@ class Scuzz extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Scuzz",
             "parameters" : [

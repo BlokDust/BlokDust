@@ -176,7 +176,7 @@ class Granular extends Source {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Granular",
             "parameters" : [

@@ -70,7 +70,7 @@ class Soundcloud extends Source {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Soundcloud",
             "parameters" : [

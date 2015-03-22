@@ -58,7 +58,7 @@ class Laser extends Source {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Laser",
             "updateeveryframe": true,

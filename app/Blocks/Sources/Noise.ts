@@ -91,7 +91,7 @@ class Noise extends Source {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Noise",
             "parameters" : [

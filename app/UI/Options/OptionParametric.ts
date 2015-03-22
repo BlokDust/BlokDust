@@ -4,7 +4,7 @@
 
 import Option = require("./Option");
 import Size = Fayde.Utils.Size;
-import ParametersPanel = require("./../ParametersPanel");
+import OptionsPanel = require("./../OptionsPanel");
 import OptionHandle = require("./OptionHandle");
 import OptionSubHandle = require("./OptionSubHandle");
 

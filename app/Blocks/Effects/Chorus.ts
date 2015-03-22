@@ -36,9 +36,15 @@ class Chorus extends Effect {
         super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        this.Effect.set(
-            jsonVariable
-        );
+        if (param=="rate") {
+            this.Effect.frequency.value = value;
+        } else if (param=="feedback") {
+            this.Effect.feedback.value = value;
+        } else {
+            this.Effect.set(
+                jsonVariable
+            );
+        }
     }
 
     GetParam(param: string) {
@@ -60,7 +66,7 @@ class Chorus extends Effect {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Chorus",
             "parameters" : [

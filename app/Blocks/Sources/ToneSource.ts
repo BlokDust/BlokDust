@@ -93,7 +93,7 @@ class ToneSource extends Source {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Tone",
             "parameters" : [

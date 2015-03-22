@@ -193,7 +193,7 @@ class KeyboardPoly extends Keyboard {
     OpenParams() {
         super.OpenParams();
 
-        this.ParamJson =
+        this.OptionsForm =
         {
             "name" : "Poly Keyboard",
             "parameters" : [
