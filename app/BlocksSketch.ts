@@ -188,6 +188,7 @@ class BlocksSketch extends Grid {
         this._CheckResize();
     }
 
+    // todo: use global resize event
     // DIY RESIZE LISTENER //
     private _CheckResize() {
         if (this.Width!==this._LastSize.Width||this.Height!==this._LastSize.Height) {

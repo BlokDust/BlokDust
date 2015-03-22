@@ -6,7 +6,7 @@ import Block = require("../Block");
 import Particle = require("../../Particle");
 
 class ToneSource extends Source {
-    
+
     public Source: Tone.Oscillator;
     public Frequency: number;
     public Envelope: Tone.AmplitudeEnvelope;
