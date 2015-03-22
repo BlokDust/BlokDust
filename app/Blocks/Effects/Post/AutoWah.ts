@@ -1,29 +1,25 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class AutoWah extends Effect {
+class AutoWah extends PostEffect {
 
     public Effect: Tone.AutoWah;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Effect = new Tone.AutoWah({
-            "baseFrequency": 100,
-            "octaves": 5,
+            "baseFrequency": 440,
+            "octaves": 3,
             "sensitivity": -40,
-            "gain" : 35,
             "rolloff" : -48,
 
             "follower" : {
-                "attack": 0.2,
-                "release": 1
+                "attack": 0.5,
+                "release": 0.01
             }
         });
-        this.Effect.sensitivity = -40;
-        this.Effect.octaves = 5;
-        this.Effect.baseFrequency = 100;
-        this.Effect.wet.value = 0.6;
+        this.Effect.wet.value = 0.8;
 
         super.Init(sketch);
 
@@ -83,7 +79,7 @@ class AutoWah extends Effect {
                     "props" : {
                         "value" : this.GetParam("octaves"),
                         "min" : 1,
-                        "max" : 8,
+                        "max" : 4,
                         "quantised" : false,
                         "centered" : false
                     }

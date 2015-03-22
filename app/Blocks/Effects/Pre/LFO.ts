@@ -1,26 +1,26 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import ISource = require("../ISource");
-import BlocksSketch = require("../../BlocksSketch");
+import PreEffect = require("../PreEffect");
+import ISource = require("../../ISource");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Scuzz extends Effect {
+class LFO extends PreEffect {
 
     public LFO: Tone.LFO;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.LFO = new Tone.LFO(100, -1000, 1000);
-        this.LFO.type = 'sawtooth';
+        this.LFO = new Tone.LFO(2, -20, 20);
+        this.LFO.type = 'triangle';
 
         super.Init(sketch);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
     }
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
     Attach(source:ISource): void{
@@ -45,10 +45,11 @@ class Scuzz extends Effect {
             this.LFO.stop();
             this.LFO.disconnect();
 
+
         }
     }
 
-    Dispose(){
+    Dispose() {
         this.LFO.dispose();
     }
 
@@ -81,30 +82,31 @@ class Scuzz extends Effect {
 
         this.OptionsForm =
         {
-            "name" : "Scuzz",
+            "name" : "LFO",
             "parameters" : [
 
                 {
                     "type" : "slider",
-                    "name" : "Power",
-                    "setting" :"depth",
-                    "props" : {
-                        "value" : this.GetParam("depth"),
-                        "min" : 1000,
-                        "max" : 10000,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Pulverisation",
+                    "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
                         "value" : this.GetParam("rate"),
-                        "min" : 100,
-                        "max" : 10000,
-                        "quantised" : true,
+                        "min" : 0,
+                        "max" : 20,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Depth",
+                    "setting" :"depth",
+                    "props" : {
+                        "value" : this.GetParam("depth"),
+                        "min" : 0,
+                        "max" : 200,
+                        "quantised" : false,
                         "centered" : false
                     }
                 }
@@ -113,4 +115,4 @@ class Scuzz extends Effect {
     }
 }
 
-export = Scuzz;
+export = LFO;

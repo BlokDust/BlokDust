@@ -1,9 +1,9 @@
-import Effect = require("../Effect");
-import ISource = require("../ISource");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PreEffect = require("../PreEffect");
+import ISource = require("../../ISource");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Envelope extends Effect {
+class Envelope extends PreEffect {
 
     public attack: number;
     public decay: number;

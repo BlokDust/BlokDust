@@ -1,8 +1,8 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Panner extends Effect {
+class Panner extends PostEffect {
 
     public Effect: Tone.AutoPanner;
 

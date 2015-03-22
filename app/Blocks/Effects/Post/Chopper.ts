@@ -1,9 +1,8 @@
-import Gain = require("./Gain");
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Chopper extends Effect {
+class Chopper extends PostEffect {
 
     public Rate: number;
     public Depth: number;

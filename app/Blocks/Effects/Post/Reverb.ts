@@ -1,8 +1,8 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Reverb extends Effect {
+class Reverb extends PostEffect {
 
     public Effect: Tone.Freeverb;
 

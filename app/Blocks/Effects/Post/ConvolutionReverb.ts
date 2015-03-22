@@ -1,27 +1,26 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Distortion extends Effect {
+class Convolver extends PostEffect {
 
-    public Effect: Tone.Distortion;
+    public Effect: Tone.Convolver;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.Distortion(0.65);
-        this.Effect.wet.value = 0.75;
+        this.Effect = new Tone.Convolver("../Assets/ImpulseResponses/teufelsberg01.wav");
 
         super.Init(sketch);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
+        this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
+        console.log(this);
     }
 
     Draw() {
         super.Draw();
 
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
-
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"convolution");
     }
 
     Dispose(){
@@ -30,19 +29,17 @@ class Distortion extends Effect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var jsonVariable = {};
+        jsonVariable[param] = value;
         if (param=="dryWet") {
             this.Effect.wet.value = value;
-        } else {
-            this.Effect.distortion = value;
         }
     }
 
     GetParam(param: string) {
         super.GetParam(param);
         var val;
-        if (param=="drive") {
-            val = this.Effect.distortion;
-        } else if (param=="dryWet") {
+        if (param=="dryWet") {
             val = this.Effect.wet.value;
         }
         return val;
@@ -53,21 +50,8 @@ class Distortion extends Effect {
 
         this.OptionsForm =
         {
-            "name" : "Distortion",
+            "name" : "Convolver",
             "parameters" : [
-
-                {
-                    "type" : "slider",
-                    "name" : "Drive",
-                    "setting" :"drive",
-                    "props" : {
-                        "value" : this.GetParam("drive"),
-                        "min" : 0.1,
-                        "max" : 1,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
 
                 {
                     "type" : "slider",
@@ -86,4 +70,4 @@ class Distortion extends Effect {
     }
 }
 
-export = Distortion;
+export = Convolver;
