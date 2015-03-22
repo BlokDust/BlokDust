@@ -59,8 +59,8 @@ class Chopper extends Effect {
         this.Effect = null;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

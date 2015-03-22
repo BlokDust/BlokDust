@@ -86,8 +86,8 @@ class Pitch extends Effect {
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

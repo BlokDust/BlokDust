@@ -102,8 +102,8 @@ class Keyboard extends Effect {
         super.GetParam(param);
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
