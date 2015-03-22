@@ -714,10 +714,10 @@ class BlocksSketch extends Grid {
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
         this._OptionsPanel.PanelScale(this._OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
-        //App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
-        //this.SelectedBlock = null;
+        App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
+        this.SelectedBlock = null;
 
-        App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
+        //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 }
 
