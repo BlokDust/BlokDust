@@ -1,9 +1,9 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import AudioSettings = require("../../Core/Audio/AudioSettings");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import AudioSettings = require("../../../Core/Audio/AudioSettings");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Gain extends Effect {
+class Gain extends PostEffect {
 
     public Effect: GainNode;
     //public Effect: Tone.Signal;
@@ -51,8 +51,8 @@ class Gain extends Effect {
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

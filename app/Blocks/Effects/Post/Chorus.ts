@@ -1,32 +1,34 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Phaser extends Effect {
+class Chorus extends PostEffect {
 
-    public Effect: Tone.Phaser;
+    public Effect: Tone.Chorus;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.Phaser({
-            "rate" : 0.5,
-            "depth" : 9,
-            "Q" : 0.1,
-            "baseFrequency" : 500
+        this.Effect = new Tone.Chorus({
+            "frequency" : 1,
+            "delayTime" : 2.5,
+            "type" : 'triangle',
+            "depth" : 0.4,
+            "feedback" : 0.2
         });
 
         super.Init(sketch);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));
+        this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(0, 1),new Point(-1, 1));
     }
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
+
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chorus");
     }
 
-    Dispose(){
+    Dispose() {
         this.Effect.dispose();
     }
 
@@ -34,10 +36,10 @@ class Phaser extends Effect {
         super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
-        } else if (param=="rate") {
+        if (param=="rate") {
             this.Effect.frequency.value = value;
+        } else if (param=="feedback") {
+            this.Effect.feedback.value = value;
         } else {
             this.Effect.set(
                 jsonVariable
@@ -50,22 +52,23 @@ class Phaser extends Effect {
         var val;
         if (param=="rate") {
             val = this.Effect.frequency.value;
+        } else if (param=="delayTime") {
+            val = this.Effect.delayTime;
         } else if (param=="depth") {
             val = this.Effect.depth;
-        } else if (param=="baseFrequency") {
-            val = this.Effect.baseFrequency;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
+        } else if (param=="feedback") {
+            val = this.Effect.feedback.value;
         }
+
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name" : "Phaser",
+            "name" : "Chorus",
             "parameters" : [
 
                 {
@@ -75,7 +78,20 @@ class Phaser extends Effect {
                     "props" : {
                         "value" : this.GetParam("rate"),
                         "min" : 0,
-                        "max" : 10,
+                        "max" : 5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Delay Time",
+                    "setting" :"delayTime",
+                    "props" : {
+                        "value" : this.GetParam("delayTime"),
+                        "min" : 0,
+                        "max" : 5,
                         "quantised" : false,
                         "centered" : false
                     }
@@ -88,33 +104,20 @@ class Phaser extends Effect {
                     "props" : {
                         "value" : this.GetParam("depth"),
                         "min" : 0,
-                        "max" : 10,
-                        "quantised" : true,
+                        "max" : 3,
+                        "quantised" : false,
                         "centered" : false
                     }
                 },
 
                 {
                     "type" : "slider",
-                    "name" : "Frequency",
-                    "setting" :"baseFrequency",
+                    "name" : "Feedback",
+                    "setting" :"feedback",
                     "props" : {
-                        "value" : this.GetParam("baseFrequency"),
-                        "min" : 10,
-                        "max" : 2000,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
-
-                {
-                    "type" : "slider",
-                    "name" : "Mix",
-                    "setting" :"dryWet",
-                    "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.GetParam("feedback"),
                         "min" : 0,
-                        "max" : 1,
+                        "max" : 0.2,
                         "quantised" : false,
                         "centered" : false
                     }
@@ -124,4 +127,4 @@ class Phaser extends Effect {
     }
 }
 
-export = Phaser;
+export = Chorus;

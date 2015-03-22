@@ -1,8 +1,8 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Chomp extends Effect {
+class Chomp extends PostEffect {
 
     public Effect: Tone.Filter;
     public Rate: number;
@@ -76,8 +76,8 @@ class Chomp extends Effect {
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

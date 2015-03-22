@@ -125,7 +125,7 @@ class Block extends DisplayObject implements IBlock {
         return Math.distanceBetween(p.x, p.y, point.x, point.y);
     }
 
-    OpenParams() {
+    UpdateOptionsForm() {
 
     }
 

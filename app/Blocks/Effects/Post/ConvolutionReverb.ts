@@ -1,8 +1,8 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Convolver extends Effect {
+class Convolver extends PostEffect {
 
     public Effect: Tone.Convolver;
 
@@ -45,8 +45,8 @@ class Convolver extends Effect {
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

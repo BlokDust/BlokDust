@@ -22,7 +22,7 @@ interface IBlock extends IDisplayObject{
     Dispose(): void;
     HitTest(point: Point): boolean;
     DistanceFrom(point: Point): number;
-    OpenParams(): void;
+    UpdateOptionsForm(): void;
     SetParam(param: string,value: number): void;
     GetParam(param: string): void;
     UpdateParams(params: any): void;

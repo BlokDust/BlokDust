@@ -3,7 +3,7 @@ import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import Grid = require("./Grid");
 import ToneSource = require("./Blocks/Sources/ToneSource");
-import BitCrusher = require("./Blocks/Effects/BitCrusher");
+import BitCrusher = require("./Blocks/Effects/Post/BitCrusher");
 import BlockCreator = require("./BlockCreator");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 

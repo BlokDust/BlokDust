@@ -1,9 +1,9 @@
-import Effect = require("../Effect");
-import ISource = require("../ISource");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PreEffect = require("../PreEffect");
+import ISource = require("../../ISource");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Pitch extends Effect {
+class Pitch extends PreEffect {
 
     public PitchIncrement: number;
 
@@ -86,8 +86,8 @@ class Pitch extends Effect {
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

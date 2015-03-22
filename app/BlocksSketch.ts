@@ -222,7 +222,7 @@ class BlocksSketch extends Grid {
 
     SketchResize() {
         if (this._OptionsPanel.Scale==1) {
-            this._OptionsPanel.SelectedBlock.OpenParams();
+            this._OptionsPanel.SelectedBlock.UpdateOptionsForm();
             this._OptionsPanel.Populate(this._OptionsPanel.SelectedBlock.OptionsForm,false);
         }
         this._Header.Populate(this._Header.MenuJson);
@@ -437,7 +437,7 @@ class BlocksSketch extends Grid {
 
             // OPEN PANEL //
             if (OptionTimeout) {
-                this.SelectedBlock.OpenParams();
+                this.SelectedBlock.UpdateOptionsForm();
                 if (this.SelectedBlock.OptionsForm) {
                     this._OptionsPanel.SelectedBlock = this.SelectedBlock;
                     this._OptionsPanel.Populate(this.SelectedBlock.OptionsForm,true);

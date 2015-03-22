@@ -15,7 +15,6 @@ class Source extends Block implements ISource {
     public Envelope: Tone.AmplitudeEnvelope;
     public EffectsChainInput: Tone.Signal;
     public EffectsChainOutput: Tone.Signal;
-    public PlaybackRate: number;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -53,8 +52,9 @@ class Source extends Block implements ISource {
             this.PolyEnvelopes = [];
         }
 
-        this.OpenParams();
+        this.UpdateOptionsForm();
     }
+
 
     /**
      * Add effect to this Source's list of effects
@@ -192,6 +192,11 @@ class Source extends Block implements ISource {
         }
     }
 
+    /**
+     * Checks whether the block is connected to a Power Block
+     * @returns {boolean}
+     * @constructor
+     */
     IsPowered() {
         //FOR POWER
         if (this.Effects.Count) {

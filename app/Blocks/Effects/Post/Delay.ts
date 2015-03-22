@@ -1,24 +1,26 @@
-import Effect = require("../Effect");
-import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import PostEffect = require("../PostEffect");
+import Grid = require("../../../Grid");
+import BlocksSketch = require("../../../BlocksSketch");
 
-class Reverb extends Effect {
+class Delay extends PostEffect {
 
-    public Effect: Tone.Freeverb;
+    public Effect: Tone.PingPongDelay;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.Freeverb(0.7, 0.5);
+        this.Effect = new Tone.PingPongDelay('8n');
+        this.Effect.feedback.value = 0.4;
+        this.Effect.wet.value = 0.5;
 
         super.Init(sketch);
 
         // Define Outline for HitTest
-        this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
+        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 1),new Point(-1, 2));
     }
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"reverb");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
     }
 
     Dispose(){
@@ -31,42 +33,42 @@ class Reverb extends Effect {
         jsonVariable[param] = value;
         if (param=="dryWet") {
             this.Effect.wet.value = value;
-        } else if (param=="dampening") {
-            this.Effect.dampening.value = value;
-        } else if (param=="roomSize") {
-            this.Effect.roomSize.value = value;
+        } else {
+            this.Effect.set(
+                jsonVariable
+            );
         }
     }
 
     GetParam(param: string) {
         super.GetParam(param);
         var val;
-        if (param=="dryWet") {
+        if (param=="delayTime") {
+            val = this.Effect.delayTime.value;
+        } else if (param=="feedback") {
+            val = this.Effect.feedback.value;
+        } else if (param=="dryWet") {
             val = this.Effect.wet.value;
-        } else if (param=="dampening") {
-            val = this.Effect.dampening.value;
-        } else if (param=="roomSize") {
-            val = this.Effect.roomSize.value;
         }
         return val;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name" : "Reverb",
+            "name" : "Delay",
             "parameters" : [
 
                 {
                     "type" : "slider",
-                    "name" : "Dampening",
-                    "setting" :"dampening",
+                    "name" : "Delay Time",
+                    "setting" :"delayTime",
                     "props" : {
-                        "value" : this.GetParam("dampening"),
-                        "min" : 0.1,
-                        "max" : 1,
+                        "value" : this.GetParam("delayTime"),
+                        "min" : 0.05,
+                        "max" : 0.5,
                         "quantised" : false,
                         "centered" : false
                     }
@@ -74,12 +76,12 @@ class Reverb extends Effect {
 
                 {
                     "type" : "slider",
-                    "name" : "Room Size",
-                    "setting" :"roomSize",
+                    "name" : "Feedback",
+                    "setting" :"feedback",
                     "props" : {
-                        "value" : this.GetParam("roomSize"),
-                        "min" : 0.1,
-                        "max" : 0.95,
+                        "value" : this.GetParam("feedback"),
+                        "min" : 0,
+                        "max" : 0.9,
                         "quantised" : false,
                         "centered" : false
                     }
@@ -102,4 +104,4 @@ class Reverb extends Effect {
     }
 }
 
-export = Reverb;
+export = Delay;

@@ -48,7 +48,6 @@ class Soundcloud extends Source {
         if(!this.IsPowered() || this.Source.player.state === "stopped") {
             this.Source.triggerAttack();
         }
-        console.log(this.Source.player.state);
     }
 
     TriggerRelease() {
@@ -68,8 +67,8 @@ class Soundcloud extends Source {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

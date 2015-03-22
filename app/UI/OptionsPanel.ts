@@ -298,7 +298,7 @@ class OptionsPanel extends DisplayObject {
     }
 
     UpdateOptions() {
-        this.SelectedBlock.OpenParams();
+        this.SelectedBlock.UpdateOptionsForm();
         var json = this.SelectedBlock.OptionsForm;
         // GET NUMBER OF OPTIONS //
         var n = json.parameters.length;
@@ -708,7 +708,7 @@ class OptionsPanel extends DisplayObject {
         this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
 
         // UPDATE VALUES IN OTHER OPTIONS //
-        this.SelectedBlock.OpenParams();
+        //this.SelectedBlock.UpdateOptionsForm();
     }
 
 

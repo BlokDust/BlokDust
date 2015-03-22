@@ -2,7 +2,7 @@ import Effect = require("../Effect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
-import PitchComponent = require("./../Effects/Pitch");
+import PitchComponent = require("./../Effects/Pre/Pitch");
 
 /**
  * Base class for mono, poly and midi keyboards
@@ -102,8 +102,8 @@ class Keyboard extends Effect {
         super.GetParam(param);
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

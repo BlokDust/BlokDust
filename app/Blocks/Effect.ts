@@ -16,7 +16,7 @@ class Effect extends Block implements IEffect {
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
-        this.OpenParams();
+        this.UpdateOptionsForm();
     }
 
     Update() {

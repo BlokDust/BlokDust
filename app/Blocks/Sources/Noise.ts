@@ -88,8 +88,8 @@ class Noise extends Source {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
