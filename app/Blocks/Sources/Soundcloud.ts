@@ -67,8 +67,8 @@ class Soundcloud extends Source {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

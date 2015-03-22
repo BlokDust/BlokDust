@@ -52,7 +52,7 @@ class Source extends Block implements ISource {
             this.PolyEnvelopes = [];
         }
 
-        this.OpenParams();
+        this.UpdateOptionsForm();
     }
 
 

@@ -90,8 +90,8 @@ class ToneSource extends Source {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

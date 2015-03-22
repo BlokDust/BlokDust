@@ -58,8 +58,8 @@ class Chopper extends PostEffect {
         this.Effect = null;
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {

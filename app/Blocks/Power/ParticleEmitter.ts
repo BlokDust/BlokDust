@@ -84,8 +84,8 @@ class ParticleEmitter extends Source {
 
     }
 
-    OpenParams() {
-        super.OpenParams();
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
