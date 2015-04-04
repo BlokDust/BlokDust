@@ -59,6 +59,20 @@ class Effect extends Block implements IEffect {
             }
         }
     }
+
+    /**
+     * Call all connected sources' TriggerRelease method
+     * @constructor
+     */
+    public TriggerReleaseAll() {
+        if (this.Sources.Count) {
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                
+                source.TriggerRelease();
+            }
+        }
+    }
 }
 
 export = Effect;

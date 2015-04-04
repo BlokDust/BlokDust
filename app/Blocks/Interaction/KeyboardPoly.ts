@@ -5,6 +5,7 @@ import App = require("../../App");
 import BlocksSketch = require("../../BlocksSketch");
 import ToneSource = require("../Sources/ToneSource");
 import Noise = require("../Sources/Noise");
+import Power = require("../Power/Power");
 
 class KeyboardPoly extends Keyboard {
 
@@ -56,11 +57,13 @@ class KeyboardPoly extends Keyboard {
         }
 
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
-        if (source instanceof ToneSource || source instanceof Noise) {
+        if (!(source instanceof Power)) {
 
             for (var i = 0; i < voicesNum; i++) {
                 //Create the poly sources and envelopes
 
+
+                //TODO: I need to duplicate the existing source here instead
                 if (source instanceof ToneSource) {
                     source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.type);
                 } else if (source instanceof Noise) {
@@ -139,10 +142,15 @@ class KeyboardPoly extends Keyboard {
                 // Check whether this envelope is playing and has my frequency before releasing it
                 for (var j=0; j<source.PolyEnvelopes.length; j++){
 
-                    // If frequency is the same as the key up or playback speed is the same as keyup
-                    if (Math.round(source.PolySources[j].frequency.value) == Math.round(frequency)) {
-                        source.PolyEnvelopes[j].triggerRelease();
-                        console.log(source);
+                    // If frequency or playback speed is the same as this keyUp
+                    if (source.Frequency) {
+                        if (Math.round(source.PolySources[j].frequency.value) == Math.round(frequency)) {
+                            source.PolyEnvelopes[j].triggerRelease();
+                        }
+                    } else if (source.PlaybackRate) {
+                        if (Math.round(source.PolySources[j].playbackRate) == Math.round(frequency)) {
+                            source.PolyEnvelopes[j].triggerRelease();
+                        }
                     }
                 }
 

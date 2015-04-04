@@ -16,7 +16,7 @@ class AutoWah extends PostEffect {
 
             "follower" : {
                 "attack": 0.5,
-                "release": 0.01
+                "release": 0.1
             }
         });
         this.Effect.wet.value = 0.8;

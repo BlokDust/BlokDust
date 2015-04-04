@@ -57,7 +57,14 @@ class ToneSource extends Source {
         super.TriggerRelease();
         if(!this.IsPowered()){
             this.Envelope.triggerRelease();
+
+            if (this.PolyEnvelopes.length) {
+                for (var j = 0; j < this.PolyEnvelopes.length; j++) {
+                    this.PolyEnvelopes[j].triggerRelease();
+                }
+            }
         }
+
     }
 
     TriggerAttackRelease(){

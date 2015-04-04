@@ -1,4 +1,4 @@
-import Effect = require("../Effect");
+import PreEffect = require("../Effects/PreEffect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
@@ -7,7 +7,7 @@ import PitchComponent = require("./../Effects/Pre/Pitch");
 /**
  * Base class for mono, poly and midi keyboards
  */
-class Keyboard extends Effect {
+class Keyboard extends PreEffect {
 
     public BaseFrequency: number;
     public CurrentOctave: number;
@@ -94,6 +94,7 @@ class Keyboard extends Effect {
         super.SetParam(param,value);
 
         if (param == "octave"){
+            this.TriggerReleaseAll();
             this.CurrentOctave = value;
         }
     }
@@ -131,12 +132,10 @@ class Keyboard extends Effect {
     KeyboardDown(key:string, source:ISource): void {
         if (key == 'octave-up' && this.CurrentOctave < 9) {
             this.CurrentOctave++;
-            //return;
         }
 
         if (key === 'octave-down' && this.CurrentOctave != 0) {
             this.CurrentOctave--;
-            //return;
         }
     }
 
@@ -186,14 +185,12 @@ class Keyboard extends Effect {
         var totalPitchIncrement = 1;
 
         for (var i = 0; i < source.Effects.Count; i++) {
-            var mod = source.Effects.GetValueAt(i);
+            var effect = source.Effects.GetValueAt(i);
 
-            //TODO: Use reflection when available
-            if ((<PitchComponent>mod).PitchIncrement) {
-                var thisPitchIncrement = (<PitchComponent>mod).PitchIncrement;
+            if (effect instanceof PitchComponent) {
+                var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
                 totalPitchIncrement *= thisPitchIncrement;
             }
-
         }
 
         return totalPitchIncrement;
