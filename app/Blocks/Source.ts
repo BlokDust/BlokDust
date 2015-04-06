@@ -191,6 +191,7 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttackRelease(){
+        if (this.IsDisposed) return;
         if (this.Envelope){
             this.Envelope.triggerAttackRelease("4n", "+0");
         }
@@ -222,6 +223,10 @@ class Source extends Block implements ISource {
      * @constructor
      */
     Dispose() {
+        super.Dispose();
+
+        if (this.IsDisposed) return;
+
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
         if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();

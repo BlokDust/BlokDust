@@ -50,11 +50,13 @@ class ToneSource extends Source {
 
     TriggerAttack(){
         super.TriggerAttack();
+        if (this.IsDisposed) return;
         this.Envelope.triggerAttack();
     }
 
     TriggerRelease(){
         super.TriggerRelease();
+        if (this.IsDisposed) return;
         if(!this.IsPowered()){
             this.Envelope.triggerRelease();
         }

@@ -11,6 +11,7 @@ class DisplayObject implements IDisplayObject {
     Height: number;
     Position: Point;
     Initialised: boolean = false;
+    IsDisposed: boolean = false;
     public Timer: Fayde.ClockTimer;
     public LastVisualTick: number = new Date(0).getTime();
 
@@ -41,6 +42,10 @@ class DisplayObject implements IDisplayObject {
 
     public Draw() {
 
+    }
+
+    public Dispose(): void {
+        this.IsDisposed = true;
     }
 }
 
