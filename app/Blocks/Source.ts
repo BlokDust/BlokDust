@@ -11,8 +11,8 @@ class Source extends Block implements ISource {
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
     public OldEffects: ObservableCollection<IEffect>;
 
-    public Source: any;
-    public Envelope: Tone.AmplitudeEnvelope;
+    public Sources: any[];
+    public Envelopes: Tone.AmplitudeEnvelope[];
     public EffectsChainInput: Tone.Signal;
     public EffectsChainOutput: Tone.Signal;
     public Settings: ToneSettings = {
@@ -187,8 +187,10 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttackRelease(){
-        if (this.Envelope){
-            this.Envelope.triggerAttackRelease("4n", "+0");
+        if (this.Envelopes.length){
+            this.Envelopes.forEach((e: any, i:number)=> {
+                e.triggerAttackRelease("4n", "+0");
+            });
         }
     }
 
@@ -245,15 +247,30 @@ class Source extends Block implements ISource {
 
         var val;
         switch (param){
-            case "frequency": val = this.Source.frequency.value;
+            case "frequency":
+                this.Sources.forEach((s: any)=> {
+                    val = s.frequency.value;
+                });
                 break;
-            case "detune": val = this.Source.detune.value;
+            case "detune":
+                this.Sources.forEach((s: any)=> {
+                    val = s.detune.value;
+                });
                 break;
-            case "waveform": val = this.Source.type;
+            case "waveform":
+                this.Sources.forEach((s: any)=> {
+                    val = s.type;
+                });
                 break;
-            case "volume": val = this.Source.gain.value;
+            case "volume":
+                this.Sources.forEach((s: any)=> {
+                    val = s.gain.value;
+                });
                 break;
-            case "playbackRate": val = this.Source.playbackRate;
+            case "playbackRate":
+                this.Sources.forEach((s: any)=> {
+                    val = s.playbackRate;
+                });
                 break;
         }
         return val;
@@ -266,15 +283,30 @@ class Source extends Block implements ISource {
         jsonVariable[param] = value;
 
         switch (param){
-            case "frequency": this.Source.frequency.exponentialRampToValueNow(value, 0);
+            case "frequency":
+                this.Sources.forEach((s: any)=> {
+                    s.frequency.exponentialRampToValueNow(value, 0);
+                });
                 break;
-            case "detune": this.Source.detune.value = value;
+            case "detune":
+                this.Sources.forEach((s: any)=> {
+                    s.detune.value = value;
+                });
                 break;
-            case "waveform": this.Source.type = value;
+            case "waveform":
+                this.Sources.forEach((s: any)=> {
+                    s.type = value;
+                });
                 break;
-            case "volume": this.Source.gain.value = value;
+            case "volume":
+                this.Sources.forEach((s: any)=> {
+                    s.gain.value = value;
+                });
                 break;
-            case "playbackRate": this.Source.playbackRate = value;
+            case "playbackRate":
+                this.Sources.forEach((s: any)=> {
+                    s.playbackRate = value;
+                });
                 break;
         }
     }

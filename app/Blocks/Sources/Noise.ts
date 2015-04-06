@@ -11,22 +11,26 @@ class Noise extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Source = new Tone.Noise('brown');
+        this.Sources.push( new Tone.Noise('brown') );
         this.PlaybackRate = 1;
 
         super.Init(sketch);
 
-        this.Envelope = new Tone.AmplitudeEnvelope(
+        this.Envelopes.push( new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
-        );
+        ));
 
-        this.Envelope.connect(this.EffectsChainInput);
+        this.Envelopes.forEach((e: any)=> {
+            e.connect(this.EffectsChainInput);
+        });
 
-        //this.Envelope.
-        this.Source.connect(this.Envelope).start();
+        this.Sources.forEach((s: any, i:number)=> {
+            s.connect(i).start();
+        });
+
 
         this.DelayedRelease = 0;
 
@@ -46,13 +50,17 @@ class Noise extends Source {
 
     TriggerAttack(){
         super.TriggerAttack();
-        this.Envelope.triggerAttack();
+        this.Envelopes.forEach((e: any)=> {
+            e.triggerAttack();
+        });
     }
 
     TriggerRelease(){
         super.TriggerRelease();
         if(!this.IsPowered()){
-            this.Envelope.triggerRelease();
+            this.Envelopes.forEach((e: any)=> {
+                e.triggerRelease();
+            });
         }
     }
 
@@ -65,7 +73,10 @@ class Noise extends Source {
 
         // USE SIGNAL? So we can schedule a sound length properly
         // play tone
-        this.Envelope.triggerAttack();
+        this.Envelopes.forEach((e: any)=> {
+            e.triggerAttack();
+        });
+
         this.DelayedRelease = 5; //TODO, THIS IS SHIT
 
         particle.Dispose();
@@ -77,7 +88,9 @@ class Noise extends Source {
         if (this.DelayedRelease>0) { //TODO, THIS IS SHIT
             this.DelayedRelease -= 1;
             if (this.DelayedRelease==0) {
-                this.Envelope.triggerRelease();
+                this.Envelopes.forEach((e: any)=> {
+                    e.triggerRelease();
+                });
             }
         }
     }
@@ -147,8 +160,15 @@ class Noise extends Source {
 
     Dispose() {
         super.Dispose();
-        this.Source.dispose();
-        this.Envelope.dispose();
+
+        this.Sources.forEach((s: any, i:number)=> {
+            s.dispose();
+        });
+
+        this.Envelopes.forEach((e: any, i:number)=> {
+            e.dispose();
+        });
+
         this.PlaybackRate = null;
     }
 }

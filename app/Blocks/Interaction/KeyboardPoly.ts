@@ -66,6 +66,7 @@ class KeyboardPoly extends Keyboard {
                 //TODO: I need to duplicate the existing source here instead
                 if (source instanceof ToneSource) {
                     source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.type);
+
                 } else if (source instanceof Noise) {
                     source.PolySources[i] = new Tone.Noise(source.Source.type);
                 }

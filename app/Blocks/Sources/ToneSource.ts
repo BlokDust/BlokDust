@@ -7,27 +7,33 @@ import Particle = require("../../Particle");
 
 class ToneSource extends Source {
     
-    public Source: Tone.Oscillator;
+    public Sources: Tone.Oscillator[];
     public Frequency: number;
-    public Envelope: Tone.AmplitudeEnvelope;
+    public Envelopes: Tone.AmplitudeEnvelope[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Frequency = 440;
-        this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
+        this.Sources.push( new Tone.Oscillator(this.Frequency, 'sawtooth'));
 
         super.Init(sketch);
 
-        this.Envelope = new Tone.AmplitudeEnvelope(
+        this.Envelopes.push( new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
-        );
+        ));
 
-        this.Envelope.connect(this.EffectsChainInput);
-        this.Source.connect(this.Envelope);
-        this.Source.start();
+        this.Envelopes.forEach((e: any)=> {
+            e.connect(this.EffectsChainInput);
+        });
+
+        this.Sources.forEach((s: any, i:number)=> {
+            s.connect(this.Envelopes[i]);
+            s.start();
+        });
+
 
         this.Width = 150;
         this.Height = 150;
@@ -50,19 +56,19 @@ class ToneSource extends Source {
 
     TriggerAttack(){
         super.TriggerAttack();
-        this.Envelope.triggerAttack();
+        this.Envelopes.forEach((e: any)=> {
+            e.triggerAttack();
+        });
     }
 
     TriggerRelease(){
         super.TriggerRelease();
         if(!this.IsPowered()){
-            this.Envelope.triggerRelease();
 
-            if (this.PolyEnvelopes.length) {
-                for (var j = 0; j < this.PolyEnvelopes.length; j++) {
-                    this.PolyEnvelopes[j].triggerRelease();
-                }
-            }
+            this.Envelopes.forEach((e: any)=> {
+                e.triggerRelease();
+            });
+
         }
 
     }
@@ -76,7 +82,9 @@ class ToneSource extends Source {
 
         // USE SIGNAL? So we can schedule a sound length properly
         // play tone
-        this.Envelope.triggerAttackRelease(0.1);
+        this.Envelopes.forEach((e: any)=> {
+            e.triggerAttackRelease(0.1);
+        });
 
         particle.Dispose();
     }
@@ -84,8 +92,15 @@ class ToneSource extends Source {
     Dispose() {
         super.Dispose();
         this.Frequency = null;
-        this.Source.dispose();
-        this.Envelope.dispose();
+
+        this.Sources.forEach((s: any) => {
+            s.dispose();
+        });
+
+        this.Envelopes.forEach((e: any) => {
+            e.dispose();
+        });
+
     }
 
     Update() {
