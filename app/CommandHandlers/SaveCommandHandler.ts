@@ -1,6 +1,6 @@
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IOperation = require("../Core/Operations/IOperation");
-import SaveOperation = require("../Core/Operations/SaveOperation");
+import SaveOperation = require("../Operations/SaveOperation");
 
 class SaveCommandHandler implements ICommandHandler {
 

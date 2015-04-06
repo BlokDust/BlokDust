@@ -38,6 +38,12 @@ class CompoundOperation<T> implements ICompoundOperation {
 
         return sequence;
     }
+
+    Dispose(): void {
+        this.Operations.forEach((op: IOperation) => {
+            op.Dispose();
+        });
+    }
 }
 
 export = CompoundOperation;

@@ -1,7 +1,7 @@
-import IUndoableOperation = require("./IUndoableOperation");
-import ICompoundOperation = require("./ICompoundOperation");
-import CompoundOperation = require("./CompoundOperation");
-import IncrementNumberOperation = require("./IncrementNumberOperation");
+import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
+import ICompoundOperation = require("../Core/Operations/ICompoundOperation");
+import CompoundOperation = require("../Core/Operations/CompoundOperation");
+import IncrementNumberOperation = require("../Core/Operations/IncrementNumberOperation");
 
 class IncrementNumberCompoundOperation<Number> extends CompoundOperation<Number> implements IUndoableOperation, ICompoundOperation
 {
@@ -22,6 +22,10 @@ class IncrementNumberCompoundOperation<Number> extends CompoundOperation<Number>
 
     Undo(): Promise<Number> {
         return super.Undo();
+    }
+
+    Dispose(): void {
+
     }
 }
 

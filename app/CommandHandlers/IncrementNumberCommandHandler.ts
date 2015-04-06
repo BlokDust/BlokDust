@@ -1,7 +1,7 @@
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import IncrementNumberCompoundOperation = require("../Core/Operations/IncrementNumberCompoundOperation");
+import IncrementNumberCompoundOperation = require("../Operations/IncrementNumberCompoundOperation");
 
 class IncrementNumberCommandHandler implements ICommandHandler {
 

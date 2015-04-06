@@ -40,6 +40,10 @@ class ChangePropertyOperation<T> implements IUndoableOperation
             resolve(that._Object);
         });
     }
+
+    Dispose(): void {
+        this._Object = null;
+    }
 }
 
 export = ChangePropertyOperation;

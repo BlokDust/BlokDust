@@ -35,6 +35,11 @@ class AddItemToArrayOperation<T> implements IUndoableOperation
             resolve(that._Array);
         });
     }
+
+    Dispose(): void {
+        this._Item = null;
+        this._Array = null;
+    }
 }
 
 export = AddItemToArrayOperation;

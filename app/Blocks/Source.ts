@@ -178,6 +178,10 @@ class Source extends Block implements ISource {
 
     }
 
+    Stop() {
+        this.TriggerRelease();
+    }
+
     TriggerAttack(){
 
     }

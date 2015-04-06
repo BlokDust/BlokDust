@@ -41,10 +41,7 @@ require.config({
         "pixelpalette": {},
         "RecorderJS": {
             "path": "lib/RecorderJS/recorder.js"
-        }/*,
-        "intersection": {
-            "path": "lib/intersection/intersection.js"
-        }*/,
+        },
         "jquery": {}
     }
 });
@@ -83,8 +80,7 @@ require([
     "Tone/effect/BitCrusher",
     "Tone/effect/AutoWah",
     "Tone/effect/AutoPanner",
-    "Recorderjs/recorder"/*,
-    "intersection/intersection"*/
+    "Recorderjs/recorder"
 ], function (text, config, App, PixelPalette, Tone, jquery) {
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;

@@ -33,6 +33,10 @@ class IncrementNumberOperation<Number> implements IUndoableOperation
             resolve(that._Number);
         });
     }
+
+    Dispose(): void {
+
+    }
 }
 
 export = IncrementNumberOperation;

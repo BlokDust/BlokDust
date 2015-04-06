@@ -8,7 +8,7 @@ class OperationManager {
     private _Operations: ObservableCollection<IOperation> = new ObservableCollection<IOperation>();
     private _Head: number = -1;
     private _CurrentOperation: Promise<any>;
-    private _MaxOperations: number = 100;
+    public _MaxOperations: number = 100;
 
     OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     OperationComplete: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
@@ -26,7 +26,7 @@ class OperationManager {
     }
 
     set MaxOperations(value: number){
-        if (value > 0 && value < 100000){
+        if (value > 0 && value < Number.MAX_VALUE){
             this._MaxOperations = value;
         } else {
             throw new Exception("Invalid range");
@@ -47,6 +47,8 @@ class OperationManager {
 
         // if about to exceed max number of operations, start trimming from start of array.
         if (this._Operations.Count == this.MaxOperations){
+            var firstOp = this._Operations.GetValueAt(0);
+            firstOp.Dispose();
             var trimmed = this._Operations.ToArray().splice(1, this._Operations.Count - 1);
             this._Operations.Clear();
             this._Operations.AddRange(trimmed);

@@ -1,6 +1,6 @@
 import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IOperation = require("../Core/Operations/IOperation");
-import LoadOperation = require("../Core/Operations/LoadOperation");
+import LoadOperation = require("../Operations/LoadOperation");
 
 class LoadCommandHandler implements ICommandHandler {
 

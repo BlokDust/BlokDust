@@ -31,6 +31,11 @@ class RemoveItemFromArrayOperation<T> implements IUndoableOperation
             resolve(that._Array);
         });
     }
+
+    Dispose(): void {
+        this._Item = null;
+        this._Array = null;
+    }
 }
 
 export = RemoveItemFromArrayOperation;

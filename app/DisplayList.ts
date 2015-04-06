@@ -17,6 +17,14 @@ class DisplayList {
         this._DisplayObjects.Add(displayObject);
     }
 
+    public IndexOf(displayObject: IDisplayObject) {
+        return this._DisplayObjects.IndexOf(displayObject);
+    }
+
+    public Insert(index: number, displayObject: IDisplayObject) {
+        this._DisplayObjects.Insert(index, displayObject);
+    }
+
     public Remove(displayObject: IDisplayObject){
         this._DisplayObjects.Remove(displayObject);
     }

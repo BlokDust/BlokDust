@@ -146,6 +146,10 @@ class Block extends DisplayObject implements IBlock {
     Refresh() {
         this.UpdateParams(this.OptionsForm);
     }
+
+    Stop() {
+
+    }
 }
 
 export = Block;

@@ -1,4 +1,4 @@
-import IOperation = require("./IOperation");
+import IOperation = require("../Core/Operations/IOperation");
 
 class SaveOperation<String> implements IOperation
 {
@@ -31,6 +31,9 @@ class SaveOperation<String> implements IOperation
         });
     }
 
+    Dispose(): void {
+
+    }
 }
 
 export = SaveOperation;

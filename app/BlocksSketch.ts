@@ -416,9 +416,8 @@ class BlocksSketch extends Grid {
             var blockDelete = this._TrashCan.MouseUp();
         }
 
-
-
         this.IsDraggingABlock = false;
+
         if (!blockDelete) {
             // BLOCK //
             if (this.SelectedBlock){
@@ -428,9 +427,7 @@ class BlocksSketch extends Grid {
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                        // todo: make this a MoveBlock command - operations should always be wrapped in a command
-                        var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
-                        App.OperationManager.Do(op);
+                        App.CommandManager.ExecuteCommand(Commands[Commands.MOVE_BLOCK], this.SelectedBlock);
                     }
                 }
             }
@@ -620,8 +617,8 @@ class BlocksSketch extends Grid {
     }
 
     // todo: move this to generic util
-    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    private _BoxCheck(x, y, w, h, mx, my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
+        return (mx > x && mx < (x + w) && my > y && my < (y + h));
     }
 
 
@@ -676,10 +673,6 @@ class BlocksSketch extends Grid {
         block.Id = this.GetId();
         block.Position = this._PointerPoint;
         block.Init(this);
-
-        //block.Click.on((block: IBlock) => {
-        //    this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
-        //}, this);
 
         App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
 
