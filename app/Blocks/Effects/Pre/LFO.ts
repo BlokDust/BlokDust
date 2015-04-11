@@ -26,27 +26,24 @@ class LFO extends PreEffect {
     Attach(source:ISource): void{
         super.Attach(source);
 
-        if (source.Source.detune) {
-            this.LFO.connect(source.Source.detune);
-            this.LFO.start();
 
-            // FOR POLYPHONIC
-            for(var i = 0; i<source.PolySources.length; i++){
-                this.LFO.connect(source.PolySources[i].detune);
+        source.Sources.forEach((s: any) => {
+            if (s.detune){
+                this.LFO.connect(s.detune);
+                this.LFO.start();
             }
-
-        }
+        });
     }
 
     Detach(source:ISource): void {
         super.Detach(source);
 
-        if (source.Source.detune) {
-            this.LFO.stop();
-            this.LFO.disconnect();
-
-
-        }
+        source.Sources.forEach((s: any) => {
+            if (s.detune){
+                this.LFO.stop();
+                this.LFO.disconnect();
+            }
+        });
     }
 
     Dispose() {

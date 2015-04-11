@@ -27,8 +27,6 @@ class Source extends Block implements ISource {
         }
     };
 
-    public PolySources: any[];
-    public PolyEnvelopes: any[];
     public Params: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -43,13 +41,9 @@ class Source extends Block implements ISource {
 
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
-
             this.EffectsChainInput.connect(this.EffectsChainOutput);
             this.EffectsChainOutput.connect(App.AudioMixer.Master);
 
-            // THIS IS NEEDED FOR ANYTHING POLYPHONIC
-            this.PolySources = [];
-            this.PolyEnvelopes = [];
         }
 
         this.UpdateOptionsForm();
@@ -223,20 +217,6 @@ class Source extends Block implements ISource {
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
         if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
-
-        // Delete PolySources
-        if (this.PolySources.length){
-            for(var i=0; i<this.PolySources.length; i++){
-                this.PolySources[i].dispose();
-            }
-        } else if (this.PolySources) this.PolySources = null;
-
-        // Delete PolyEnvelopes
-        if (this.PolyEnvelopes.length){
-            for(var i=0; i<this.PolyEnvelopes.length; i++){
-                this.PolyEnvelopes[i].dispose();
-            }
-        }  else if (this.PolyEnvelopes) this.PolyEnvelopes = null;
     }
 
     SetPlaybackRate(rate,time) {

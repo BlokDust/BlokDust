@@ -59,39 +59,52 @@ class KeyboardPoly extends Keyboard {
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
         if (!(source instanceof Power)) {
 
-            for (var i = 0; i < voicesNum; i++) {
-                //Create the poly sources and envelopes
+            // Work out how many voices we actually need (we may already have some)
+            var diff = voicesNum - source.Sources.length;
+
+            // If we haven't got enough sources, create however many we need.
+            if (diff > 0){
+
+                for (var i = 1; i <= voicesNum; i++) {
+
+                    //TODO: Should each source have its own create method that we call here?
+
+                    source.Sources.push( source.CreateSource() );
+
+                    if (source instanceof ToneSource) {
+                        source.Sources.push( new Tone.Oscillator(source.Frequency, source.Sources[0].type) );
 
 
-                //TODO: I need to duplicate the existing source here instead
-                if (source instanceof ToneSource) {
-                    source.PolySources[i] = new Tone.Oscillator(source.Frequency, source.Source.type);
+                    } else if (source instanceof Noise) {
+                        source.Sources.push( new Tone.Noise(source.Sources[0].type) );
+                    }
 
-                } else if (source instanceof Noise) {
-                    source.PolySources[i] = new Tone.Noise(source.Source.type);
+
+                    source.Envelopes.push( new Tone.AmplitudeEnvelope(
+                        source.Envelope.attack,
+                        source.Envelope.decay,
+                        source.Envelope.sustain,
+                        source.Envelope.release
+                    ));
+
+                    source.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+                        if (i > 0){
+                            e.connect(source.EffectsChainInput);
+                        }
+                    });
+
+                    source.Sources.forEach((s: any, i: number)=> {
+                        if (i > 0){
+                            s.connect(source.PolyEnvelopes[i]).start();
+                        }
+                    });
                 }
-
-
-                source.PolyEnvelopes[i] = new Tone.AmplitudeEnvelope(
-                    source.Envelope.attack,
-                    source.Envelope.decay,
-                    source.Envelope.sustain,
-                    source.Envelope.release
-                );
-
-                source.PolyEnvelopes[i].connect(source.EffectsChainInput);
-                source.PolySources[i].connect(source.PolyEnvelopes[i]).start();
             }
         }
     }
 
     DeleteVoices(source){
-        for (var i = 0; i < source.PolySources.length; i++) {
-            source.PolySources[i].dispose();
-            source.PolyEnvelopes[i].dispose();
-            source.PolySources = [];
-            source.PolyEnvelopes = [];
-        }
+
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {

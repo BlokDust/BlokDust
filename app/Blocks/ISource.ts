@@ -17,10 +17,9 @@ interface ISource extends IBlock{
     Grains?: Tone.Player[];
     MaxDensity?: number;
     RecordedAudio?: any;
-    PolySources?: any[];
-    PolyEnvelopes?: any[];
     LoopStartPosition?: number;
     LoopEndPosition?: number;
+    CreateSource(): void;
     ValidateEffects(): void;
     SetPlaybackRate(rate,time): void;
     TriggerAttack(): void;

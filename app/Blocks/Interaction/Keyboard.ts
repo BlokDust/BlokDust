@@ -42,12 +42,18 @@ class Keyboard extends PreEffect {
             var source = this.Sources.GetValueAt(i);
 
             if (this.IsPressed){
-                source.Envelope.triggerRelease();
+                source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
+                    e.triggerRelease();
+                });
+
             }
 
-            if (source.Source.frequency){
-                source.Source.frequency.value = source.Frequency;
-            }
+            source.Sources.forEach((s: any) => {
+                if (s.frequency){
+                    s.frequency.value = source.Frequency;
+                }
+            });
+
         }
 
         super.Detach(source);

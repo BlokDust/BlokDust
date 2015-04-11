@@ -33,27 +33,24 @@ class Envelope extends PreEffect {
     Attach(source: ISource): void{
         super.Attach(source);
 
-        source.Envelope.attack = this.attack;
-        source.Envelope.decay = this.decay;
-        source.Envelope.sustain = this.sustain;
-        source.Envelope.release = this.release;
+        source.Envelopes.forEach((e: Tone.Envelope) => {
+            e.attack = this.attack;
+            e.decay = this.decay;
+            e.sustain = this.sustain;
+            e.release = this.release;
+        });
 
-        // FOR POLYPHONIC
-        for(var i = 0; i<source.PolySources.length; i++){
-            source.PolyEnvelopes[i].attack = this.attack;
-            source.PolyEnvelopes[i].decay = this.decay;
-            source.PolyEnvelopes[i].sustain = this.sustain;
-            source.PolyEnvelopes[i].release = this.release;
-        }
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
 
-        source.Envelope.attack = 0.02;
-        source.Envelope.decay = 0.5;
-        source.Envelope.sustain = 0.5;
-        source.Envelope.release = 0.02;
+        source.Envelopes.forEach((e: Tone.Envelope) => {
+            e.attack = 0.02;
+            e.decay = 0.5;
+            e.sustain = 0.5;
+            e.release = 0.02;
+        });
 
     }
 
@@ -74,20 +71,13 @@ class Envelope extends PreEffect {
         if (this.Sources.Count) {
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                source.Envelope.attack = this.attack;
-                source.Envelope.decay = this.decay;
-                source.Envelope.sustain = this.sustain;
-                source.Envelope.release = this.release;
 
-                // FOR POLYPHONIC
-                if (source.PolySources.length){
-                    for(var i = 0; i<source.PolySources.length; i++){
-                        source.PolyEnvelopes[i].attack = this.attack;
-                        source.PolyEnvelopes[i].decay = this.decay;
-                        source.PolyEnvelopes[i].sustain = this.sustain;
-                        source.PolyEnvelopes[i].release = this.release;
-                    }
-                }
+                source.Envelopes.forEach((e: Tone.Envelope) => {
+                    e.attack = this.attack;
+                    e.decay = this.decay;
+                    e.sustain = this.sustain;
+                    e.release = this.release;
+                });
             }
         }
     }

@@ -28,11 +28,11 @@ class Soundcloud extends Source {
 
         super.Init(sketch);
 
-        this.Envelopes.forEach((e: any, i: number)=> {
+        this.Envelopes.forEach((e: Tone.Envelope, i: number)=> {
             e = this.Sources[i].envelope;
         });
 
-        this.Sources.forEach((s: any, i: number)=> {
+        this.Sources.forEach((s: Tone.Sampler, i: number)=> {
             s.connect(this.EffectsChainInput);
         });
 
@@ -130,11 +130,11 @@ class Soundcloud extends Source {
     Dispose(){
         super.Dispose();
 
-        this.Sources.forEach((s: any) => {
+        this.Sources.forEach((s: Tone.Sampler) => {
             s.dispose();
         });
 
-        this.Envelopes.forEach((e: any) => {
+        this.Envelopes.forEach((e: Tone.Envelope) => {
             e.dispose();
         });
 

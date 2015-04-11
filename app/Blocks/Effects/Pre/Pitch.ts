@@ -2,6 +2,10 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import BlocksSketch = require("../../../BlocksSketch");
+import ToneSource = require("../../Sources/ToneSource");
+import Soundcloud = require("../../Sources/Soundcloud");
+import Granular = require("../../Sources/Granular");
+import Recorder = require("../../Sources/Recorder");
 
 class Pitch extends PreEffect {
 
@@ -37,22 +41,35 @@ class Pitch extends PreEffect {
     }
 
     UpdatePitch(source: ISource): void{
+
+        // TODO: GIVE ALL SOURCES A PITCH PROPERTY
+
+
         //OSCILLATORS
-        if (source.Frequency){
-            source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+        if (source instanceof ToneSource){
+            source.Sources.forEach((s: Tone.Oscillator) => {
+                s.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+            });
+
 
             // TONE.PLAYERS
-        } else if (source.Source._playbackRate){
-            source.Source.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+        } else if (source instanceof Soundcloud){
+            source.Sources.forEach((s: Tone.Sampler) => {
+                s.player.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+            });
+
 
             // GRANULAR
-        } else if (source.Grains) {
+        } else if (source instanceof Granular) {
             for (var i=0; i<source.MaxDensity; i++) {
                 source.Grains[i].playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
             }
 
+            source.FIX_THIS;
+
             // RECORDER
-        } else if (source.RecordedAudio) {
+        } else if (source instanceof Recorder) {
+            source.FIX_THIS;
             source.RecordedAudio.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
         }
 

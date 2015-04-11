@@ -9,6 +9,7 @@ class ToneSource extends Source {
     
     public Sources: Tone.Oscillator[];
     public Frequency: number;
+    public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -30,8 +31,7 @@ class ToneSource extends Source {
         });
 
         this.Sources.forEach((s: any, i:number)=> {
-            s.connect(this.Envelopes[i]);
-            s.start();
+            s.connect(this.Envelopes[i]).start();
         });
 
 
@@ -52,6 +52,10 @@ class ToneSource extends Source {
         super.MouseUp();
 
         this.TriggerRelease();
+    }
+
+    CreateSource(){
+        this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
     }
 
     TriggerAttack(){
@@ -161,11 +165,6 @@ class ToneSource extends Source {
                     break;
                 case 4: value = "sawtooth";
                     break;
-            }
-
-            // Set waveforms on PolySources
-            for(var i = 0; i<this.PolySources.length; i++){
-                this.PolySources[i].type = value;
             }
 
         } else if (param == "frequency") {
