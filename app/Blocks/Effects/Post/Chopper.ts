@@ -4,8 +4,6 @@ import BlocksSketch = require("../../../BlocksSketch");
 
 class Chopper extends PostEffect {
 
-    public Rate: number;
-    public Depth: number;
     public Polarity: number;
     public Transport;
     public Timer;
@@ -15,8 +13,13 @@ class Chopper extends PostEffect {
 
         this.Effect = App.AudioMixer.Master.context.createGain();
 
-        this.Rate = 50;
-        this.Depth = 4;
+        if (!this.Params) {
+            this.Params = {
+                rate: 50,
+                depth: 4
+            };
+        }
+
         this.Polarity = 0;
 
         super.Init(sketch);
@@ -34,16 +37,16 @@ class Chopper extends PostEffect {
         this.Timer = setTimeout(function() {
             if (me.Effect) {
                 if (me.Polarity==0) {
-                    me.SetParam("gain",5-me.Depth);
+                    me.Effect.gain.value = ((5-me.Params.depth)/5);
                     me.Polarity = 1;
                 } else {
-                    me.SetParam("gain",5);
+                    me.Effect.gain.value = 1;
                     me.Polarity = 0;
                 }
                 me.SetVolume();
             }
 
-        },this.Rate);
+        },this.Params.rate);
     }
 
     Draw() {
@@ -71,7 +74,7 @@ class Chopper extends PostEffect {
                     "name": "Rate",
                     "setting": "rate",
                     "props": {
-                        "value": Math.round(151-this.Rate),
+                        "value": Math.round(151-this.Params.rate),
                         "min": 1,
                         "max": 125,
                         "quantised": true,
@@ -84,7 +87,7 @@ class Chopper extends PostEffect {
                     "name": "Depth",
                     "setting": "depth",
                     "props": {
-                        "value": this.Depth,
+                        "value": this.Params.depth,
                         "min": 0,
                         "max": 5,
                         "quantised": false,
@@ -97,13 +100,13 @@ class Chopper extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
+
         if (param == "rate") {
-            this.Rate = Math.round(151-value);
-        } else if (param == "gain") {
-            this.Effect.gain.value = value/5;
-        } else {
-            this.Depth = value
+            val = Math.round(151-value);
         }
+
+        this.Params[param] = val;
     }
 }
 

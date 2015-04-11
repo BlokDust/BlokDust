@@ -9,7 +9,14 @@ class LFO extends PreEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.LFO = new Tone.LFO(2, -20, 20);
+        if (!this.Params) {
+            this.Params = {
+                rate: 2,
+                depth: 20
+            };
+        }
+
+        this.LFO = new Tone.LFO(this.Params.rate, -this.Params.depth, this.Params.depth);
         this.LFO.type = 'triangle';
 
         super.Init(sketch);
@@ -55,18 +62,19 @@ class LFO extends PreEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
 
         if (param=="rate") {
-            this.LFO.frequency.value = value;
+            this.LFO.frequency.value = val;
         } else if (param=="depth") {
-            this.LFO.min = -value;
-            this.LFO.max = value;
+            this.LFO.min = -val;
+            this.LFO.max = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="rate") {
@@ -75,7 +83,7 @@ class LFO extends PreEffect {
             val = this.LFO.max;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -90,7 +98,7 @@ class LFO extends PreEffect {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetParam("rate"),
+                        "value" : this.Params.rate,
                         "min" : 0,
                         "max" : 20,
                         "quantised" : false,
@@ -103,7 +111,7 @@ class LFO extends PreEffect {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetParam("depth"),
+                        "value" : this.Params.depth,
                         "min" : 0,
                         "max" : 200,
                         "quantised" : false,

@@ -9,7 +9,13 @@ class Pitch extends PreEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.PitchIncrement = 1.5; // Pitch decreases by 4ths
+        if (!this.Params) {
+            this.Params = {
+                pitchIncrement: 1.5 // Pitch decreases by 4ths
+            };
+        }
+
+        this.PitchIncrement = this.Params.pitchIncrement;
 
         super.Init(sketch);
 
@@ -60,23 +66,22 @@ class Pitch extends PreEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
 
-        if (param == "pitchMultiplier") {
-            this.PitchIncrement = value;
+        this.PitchIncrement = val;
+        this.Params[param] = val;
 
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
+        if (this.Sources.Count) {
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
 
-                    this.UpdatePitch(source);
-                }
+                this.UpdatePitch(source);
             }
         }
+
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
 
@@ -84,7 +89,7 @@ class Pitch extends PreEffect {
             val = this.PitchIncrement;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -97,9 +102,9 @@ class Pitch extends PreEffect {
                 {
                     "type" : "slider",
                     "name" : "Pitch",
-                    "setting" :"pitchMultiplier",
+                    "setting" :"pitchIncrement",
                     "props" : {
-                        "value" : this.GetParam('pitchMultiplier'),
+                        "value" : this.Params.pitchIncrement,
                         "min" : 0.5,
                         "max" : 2,
                         "quantised" : false,

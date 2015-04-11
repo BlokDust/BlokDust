@@ -8,13 +8,21 @@ class Filter extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                frequency: 440,
+                gain: 0
+            };
+        }
+
         this.Effect = new Tone.Filter({
             "type" : "peaking",
-            "frequency" : 440,
+            "frequency" : this.Params.frequency,
             "rolloff" : -12,
             "Q" : 1,
-            "gain" : 0
+            "gain" : this.Params.gain
         });
+
 
         super.Init(sketch);
 
@@ -33,14 +41,14 @@ class Filter extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        this.Effect.set(
-            jsonVariable
-        );
+        var val = value;
+
+        this.Effect[param].value = val;
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="frequency") {
@@ -49,7 +57,7 @@ class Filter extends PostEffect {
             val = this.Effect.gain.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -64,7 +72,7 @@ class Filter extends PostEffect {
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {
-                        "value": this.GetParam("frequency"),
+                        "value": this.Params.frequency,
                         "min": 20,
                         "max": 20000,
                         "quantised": true,
@@ -78,7 +86,7 @@ class Filter extends PostEffect {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": this.GetParam("gain"),
+                        "value": this.Params.gain,
                         "min": -50,
                         "max": 50,
                         "quantised": false,

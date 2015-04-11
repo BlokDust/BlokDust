@@ -29,7 +29,7 @@ class Source extends Block implements ISource {
 
     public PolySources: any[];
     public PolyEnvelopes: any[];
-    public Params: any;
+    //public Params: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);

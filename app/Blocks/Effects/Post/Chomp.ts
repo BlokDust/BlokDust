@@ -10,15 +10,23 @@ class Chomp extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                rate: 13,
+                Q: 0.6,
+                gain: 25
+            };
+        }
+
         this.Effect = new Tone.Filter({
             "type" : "peaking",
             "frequency" : 440,
             "rolloff" : -12,
-            "Q" : 0.6,
-            "gain" : 25
+            "Q" : this.Params.Q,
+            "gain" : this.Params.gain
         });
 
-        this.Rate = 13;
+        this.Rate = this.Params.rate;
 
         super.Init(sketch);
 
@@ -33,11 +41,11 @@ class Chomp extends PostEffect {
 
         this.Timer = setTimeout(function() {
             if (me.Effect) {
-                me.SetParam("frequency",100 + Math.round(Math.random()*10000));
+                me.Effect.frequency.value = 100 + Math.round(Math.random()*10000);
                 me.SetFrequency();
             }
 
-        },this.Rate);
+        },this.Params.rate);
     }
 
 
@@ -53,18 +61,20 @@ class Chomp extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
 
         if (param == "rate") {
-            this.Rate = Math.round(101-value);
-        } else {
-            var jsonVariable = {};
-            jsonVariable[param] = value;
-            this.Effect.set(
-                jsonVariable
-            );
+            val = Math.round(101-val);
+        } else if (param == "Q") {
+            this.Effect.Q.value = val;
+        } else if (param == "gain") {
+            this.Effect.gain.value = val;
         }
+
+        this.Params[param] = val;
     }
-    GetParam(param: string) {
+
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="Q") {
@@ -74,7 +84,7 @@ class Chomp extends PostEffect {
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -89,7 +99,7 @@ class Chomp extends PostEffect {
                     "name": "Rate",
                     "setting": "rate",
                     "props": {
-                        "value": Math.round(101-this.Rate),
+                        "value": Math.round(101-this.Params.rate),
                         "min": 1,
                         "max": 100,
                         "quantised": true,
@@ -102,7 +112,7 @@ class Chomp extends PostEffect {
                     "name": "Width",
                     "setting": "Q",
                     "props": {
-                        "value": this.GetParam("Q"),
+                        "value": this.Params.Q,
                         "min": 0.1,
                         "max": 5,
                         "quantised": false,
@@ -115,7 +125,7 @@ class Chomp extends PostEffect {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": this.GetParam("gain"),
+                        "value": this.Params.gain,
                         "min": 0,
                         "max": 50,
                         "quantised": false,

@@ -18,6 +18,7 @@ class Block extends DisplayObject implements IBlock {
     public Outline: Point[] = [];
     public ZIndex;
     public OptionsForm;
+    public Params: any;
     private _Duplicable: boolean = false;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -140,13 +141,22 @@ class Block extends DisplayObject implements IBlock {
     }
 
     UpdateParams(params: any) {
-        params.parameters.forEach((param: any) => {
-            //this.SetParam(param.setting, param.props);
-        });
+        console.log("refreshing");
+
+        for (var key in params) {
+            if (params.hasOwnProperty(key)) {
+                console.log(key + " -> " + params[key]);
+                this.SetParam(key, params[key]);
+            }
+        }
+        /*params.forEach((param: any) => {
+            this.SetParam(param.setting, param.props);
+        });*/
     }
 
     Refresh() {
-        this.UpdateParams(this.OptionsForm);
+        //console.log(this.Params);
+        //this.UpdateParams(this.Params);
     }
 
     Stop() {

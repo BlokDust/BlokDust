@@ -8,34 +8,51 @@ class EQ extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                frequency_1: 50,
+                Q_1: 1,
+                gain_1: 0,
+                frequency_2: 400,
+                Q_2: 2.5,
+                gain_2: 0,
+                frequency_3: 2000,
+                Q_3: 2.5,
+                gain_3: 0,
+                frequency_4: 10000,
+                Q_4: 1,
+                gain_4: 0
+            };
+        }
+
         this.Effect = new Tone.MultibandEQ([
             {
                 "type" : "lowshelf",
-                "frequency" : 50,
+                "frequency" : this.Params.frequency_1,
                 "rolloff" : -12,
-                "Q" : 1,
-                "gain" : 0
+                "Q" : this.Params.Q_1,
+                "gain" : this.Params.gain_1
             },
             {
                 "type" : "peaking",
-                "frequency" : 400,
+                "frequency" : this.Params.frequency_2,
                 "rolloff" : -12,
-                "Q" : 2.5,
-                "gain" : 0
+                "Q" : this.Params.Q_2,
+                "gain" : this.Params.gain_2
             },
             {
                 "type" : "peaking",
-                "frequency" : 2000,
+                "frequency" : this.Params.frequency_3,
                 "rolloff" : -12,
-                "Q" : 2.5,
-                "gain" : 0
+                "Q" : this.Params.Q_3,
+                "gain" : this.Params.gain_3
             },
             {
                 "type" : "highshelf",
-                "frequency" : 10000,
+                "frequency" : this.Params.frequency_4,
                 "rolloff" : -12,
-                "Q" : 1,
-                "gain" : 0
+                "Q" : this.Params.Q_4,
+                "gain" : this.Params.gain_4
             }
         ]);
 
@@ -56,27 +73,28 @@ class EQ extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
 
-        var paramWithBand = param.split("-"),
-            param = paramWithBand[0],
+        var paramWithBand = param.split("_"),
+            paramtype = paramWithBand[0],
             band = parseInt(paramWithBand[1]);
 
-        console.log("param "+param+"; band: "+band);
+        //console.log("param "+param+"; band: "+band);
 
-        var jsonVariable = {};
-        jsonVariable[param] = value;
 
-        switch (param){
-            case "frequency" : this.Effect.setFrequency(value, band);
+        switch (paramtype){
+            case "frequency" : this.Effect.setFrequency(val, band);
                 break;
-            case "Q" : this.Effect.setQ(value, band);
+            case "Q" : this.Effect.setQ(val, band);
                 break;
-            case "gain" : this.Effect.setGain(value, band);
+            case "gain" : this.Effect.setGain(val, band);
                 break;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
 
         var paramWithBand = param.split("-"),
@@ -94,7 +112,7 @@ class EQ extends PostEffect {
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -110,69 +128,69 @@ class EQ extends PostEffect {
                     "setting": "parametric",
                     "nodes": [
                         {
-                            "x_setting": "frequency-1",
-                            "x_value": this.GetParam("frequency-1"),
+                            "x_setting": "frequency_1",
+                            "x_value": this.Params.frequency_1,
                             "x_min": 20,
                             "x_max": 20000,
 
-                            "y_setting": "gain-1",
-                            "y_value": this.GetParam("gain-1"),
+                            "y_setting": "gain_1",
+                            "y_value": this.Params.gain_1,
                             "y_min": -50,
-                            "y_max": 30,
+                            "y_max": 50,
 
-                            "q_setting": "Q-1",
-                            "q_value": this.GetParam("Q-1"),
+                            "q_setting": "Q_1",
+                            "q_value": this.Params.Q_1,
                             "q_min": 20,
                             "q_max": 1
                         },
 
                         {
-                            "x_setting": "frequency-2",
-                            "x_value": this.GetParam("frequency-2"),
+                            "x_setting": "frequency_2",
+                            "x_value": this.Params.frequency_2,
                             "x_min": 20,
                             "x_max": 20000,
 
-                            "y_setting": "gain-2",
-                            "y_value": this.GetParam("gain-2"),
+                            "y_setting": "gain_2",
+                            "y_value": this.Params.gain_2,
                             "y_min": -50,
-                            "y_max": 30,
+                            "y_max": 50,
 
-                            "q_setting": "Q-2",
-                            "q_value": this.GetParam("Q-2"),
+                            "q_setting": "Q_2",
+                            "q_value": this.Params.Q_2,
                             "q_min": 14,
                             "q_max": 0.5
                         },
 
                         {
-                            "x_setting": "frequency-3",
-                            "x_value": this.GetParam("frequency-3"),
+                            "x_setting": "frequency_3",
+                            "x_value": this.Params.frequency_3,
                             "x_min": 20,
                             "x_max": 20000,
 
-                            "y_setting": "gain-3",
-                            "y_value": this.GetParam("gain-3"),
+                            "y_setting": "gain_3",
+                            "y_value": this.Params.gain_3,
                             "y_min": -50,
-                            "y_max": 30,
+                            "y_max": 50,
 
-                            "q_setting": "Q-3",
-                            "q_value": this.GetParam("Q-3"),
+                            "q_setting": "Q_3",
+                            "q_value": this.Params.Q_3,
                             "q_min": 14,
                             "q_max": 0.5
                         },
 
                         {
-                            "x_setting": "frequency-4",
-                            "x_value": this.GetParam("frequency-4"),
+                            "x_setting": "frequency_4",
+                            "x_value": this.Params.frequency_4,
                             "x_min": 20,
                             "x_max": 20000,
 
-                            "y_setting": "gain-4",
-                            "y_value": this.GetParam("gain-4"),
+                            "y_setting": "gain_4",
+                            "y_value": this.Params.gain_4,
                             "y_min": -50,
-                            "y_max": 30,
+                            "y_max": 50,
 
-                            "q_setting": "Q-4",
-                            "q_value": this.GetParam("Q-4"),
+                            "q_setting": "Q_4",
+                            "q_value": this.Params.Q_4,
                             "q_min": 20,
                             "q_max": 1
                         }

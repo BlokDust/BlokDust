@@ -9,6 +9,13 @@ class Scuzz extends PreEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                depth: 1000,
+                rate: 100
+            };
+        }
+
         this.LFO = new Tone.LFO(100, -1000, 1000);
         this.LFO.type = 'sawtooth';
 
@@ -54,18 +61,19 @@ class Scuzz extends PreEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
 
         if (param=="rate") {
-            this.LFO.frequency.value = value;
+            this.LFO.frequency.value = val;
         } else if (param=="depth") {
-            this.LFO.min = -value;
-            this.LFO.max = value;
+            this.LFO.min = -val;
+            this.LFO.max = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="rate") {
@@ -74,7 +82,7 @@ class Scuzz extends PreEffect {
             val = this.LFO.max;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -89,7 +97,7 @@ class Scuzz extends PreEffect {
                     "name" : "Power",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetParam("depth"),
+                        "value" : this.Params.depth,
                         "min" : 1000,
                         "max" : 10000,
                         "quantised" : true,
@@ -101,7 +109,7 @@ class Scuzz extends PreEffect {
                     "name" : "Pulverisation",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetParam("rate"),
+                        "value" : this.Params.rate,
                         "min" : 100,
                         "max" : 10000,
                         "quantised" : true,

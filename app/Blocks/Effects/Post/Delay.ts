@@ -8,9 +8,17 @@ class Delay extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.PingPongDelay('8n');
-        this.Effect.feedback.value = 0.4;
-        this.Effect.wet.value = 0.5;
+        if (!this.Params) {
+            this.Params = {
+                delayTime: 0.25,
+                feedback: 0.4,
+                mix: 0.5
+            };
+        }
+
+        this.Effect = new Tone.PingPongDelay(this.Params.delayTime);
+        this.Effect.feedback.value = this.Params.feedback;
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
 
@@ -29,18 +37,20 @@ class Delay extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
+        var val = value;
+
+        if (param=="mix") {
+            this.Effect.wet.value = val;
+        } else if (param=="delayTime") {
+            this.Effect.delayTime.rampTo(val,0.1);
         } else {
-            this.Effect.set(
-                jsonVariable
-            );
+            this.Effect[param].value = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+/*    GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="delayTime") {
@@ -51,7 +61,7 @@ class Delay extends PostEffect {
             val = this.Effect.wet.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -66,7 +76,7 @@ class Delay extends PostEffect {
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
-                        "value" : this.GetParam("delayTime"),
+                        "value" : this.Params.delayTime,
                         "min" : 0.05,
                         "max" : 0.5,
                         "quantised" : false,
@@ -79,7 +89,7 @@ class Delay extends PostEffect {
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
-                        "value" : this.GetParam("feedback"),
+                        "value" : this.Params.feedback,
                         "min" : 0,
                         "max" : 0.9,
                         "quantised" : false,
@@ -90,9 +100,9 @@ class Delay extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,
