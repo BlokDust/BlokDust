@@ -15,7 +15,8 @@ class ToneSource extends Source {
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Frequency = 440;
-        this.Sources.push( new Tone.Oscillator(this.Frequency, 'sawtooth'));
+        this.Waveform = 'sawtooth';
+        this.CreateSource();
 
         super.Init(sketch);
 
@@ -166,6 +167,7 @@ class ToneSource extends Source {
                 case 4: value = "sawtooth";
                     break;
             }
+            this.Waveform = value;
 
         } else if (param == "frequency") {
             this.Frequency = value;
