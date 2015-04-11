@@ -22,7 +22,7 @@ class Granular extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Source = new Tone.Signal();
+        this.CreateSource();
 
         super.Init(sketch);
 
@@ -57,8 +57,11 @@ class Granular extends Source {
         this.SetTrack();
 
 
-        this.Envelope = new Tone.Envelope(this.Settings.envelope.attack, this.Settings.envelope.decay, this.Settings.envelope.sustain, this.Settings.envelope.release);
-        this.Envelope.connect(this.Source.output.gain);
+        this.CreateEnvelope();
+
+        this.Envelopes.forEach((e: any, i: number)=> {
+            e.connect(this.Sources[i].output.gain);
+        });
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
@@ -112,8 +115,8 @@ class Granular extends Source {
 
             // CONNECT //
             this._Envelopes[i].connect(this.Grains[i].output.gain);
-            this.Grains[i].connect(this.Source);
-            this.Source.connect(this.EffectsChainInput);
+            this.Grains[i].connect(this.Sources[0]);
+            this.Sources[0].connect(this.EffectsChainInput);
 
             this.Grains[i].playbackRate = this.PlaybackRate;
         }
@@ -272,12 +275,29 @@ class Granular extends Source {
         this.TriggerRelease();
     }
 
+    CreateSource(){
+        super.CreateSource();
+        this.Sources.push( new Tone.Signal() );
+
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
+        this.Envelopes.push( new Tone.Envelope(
+            this.Settings.envelope.attack,
+            this.Settings.envelope.decay,
+            this.Settings.envelope.sustain,
+            this.Settings.envelope.release
+        ) );
+    }
 
     TriggerAttack() {
         super.TriggerAttack();
 
         if (this._IsLoaded) {
-            this.Envelope.triggerAttack();
+            this.Envelopes.forEach((e: any)=> {
+                e.triggerAttack();
+            });
 
             clearTimeout(this.EndTimeout);
             if (!this._NoteOn) {
@@ -292,13 +312,16 @@ class Granular extends Source {
     TriggerRelease() {
         super.TriggerRelease();
 
-        this.Envelope.triggerRelease();
+        this.Envelopes.forEach((e: any)=> {
+            e.triggerRelease();
+        });
+
         var gran = this;
         //clearTimeout(this.EndTimeout);
         this.EndTimeout = setTimeout(function() {
             gran._NoteOn = false;
             console.log("END");
-        },<any>this.Envelope.release*1000);
+        },<any>this.Envelopes[0].release*1000);
     }
 
     TriggerAttackRelease(){
@@ -430,7 +453,14 @@ class Granular extends Source {
 
         this.Grains.length = 0;
         this._Envelopes.length = 0;
-        this.Envelope.dispose();
+
+        this.Envelopes.forEach((e: any)=> {
+            e.dispose();
+        });
+
+        this.Sources.forEach((s: any)=> {
+            s.dispose();
+        });
     }
 
 }

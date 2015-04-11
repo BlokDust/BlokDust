@@ -6,17 +6,20 @@ class Soundcloud extends Source {
 
     public Sources : Tone.Sampler[];
     public PlaybackRate: number;
+    public AudioUrl: string;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.PlaybackRate = 1;
 
+        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224", "87679226"];
-        var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
-        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
+        this.AudioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
 
-        this.Sources.push( new Tone.Sampler(audioUrl) );
+
+        this.CreateSource();
+
         this.Sources.forEach((s: any)=> {
             s.player.loop = true;
             s.player.loopStart = 0; // 0 is the beginning
@@ -28,7 +31,7 @@ class Soundcloud extends Source {
 
         super.Init(sketch);
 
-        this.Envelopes.forEach((e: Tone.Envelope, i: number)=> {
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
             e = this.Sources[i].envelope;
         });
 
@@ -49,6 +52,15 @@ class Soundcloud extends Source {
     MouseUp() {
         super.MouseUp();
         this.TriggerRelease();
+    }
+
+    CreateSource(){
+        super.CreateSource();
+        this.Sources.push( new Tone.Sampler(this.AudioUrl) );
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
     }
 
     TriggerAttack() {

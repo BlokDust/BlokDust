@@ -8,20 +8,18 @@ class Noise extends Source {
     public PlaybackRate: number;
     public DelayedRelease: number;
     public Noise: any;
+    public Waveform: string;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Sources.push( new Tone.Noise('brown') );
+        this.Waveform = 'brown';
         this.PlaybackRate = 1;
+
+        this.CreateSource();
 
         super.Init(sketch);
 
-        this.Envelopes.push( new Tone.AmplitudeEnvelope(
-            this.Settings.envelope.attack,
-            this.Settings.envelope.decay,
-            this.Settings.envelope.sustain,
-            this.Settings.envelope.release
-        ));
+        this.CreateEnvelope();
 
         this.Envelopes.forEach((e: any)=> {
             e.connect(this.EffectsChainInput);
@@ -46,6 +44,21 @@ class Noise extends Source {
     MouseUp() {
         super.MouseUp();
         this.TriggerRelease();
+    }
+
+    CreateSource(){
+        super.CreateSource();
+        this.Sources.push( new Tone.Noise( this.Waveform ) );
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
+        this.Envelopes.push( new Tone.AmplitudeEnvelope(
+            this.Settings.envelope.attack,
+            this.Settings.envelope.decay,
+            this.Settings.envelope.sustain,
+            this.Settings.envelope.release
+        ));
     }
 
     TriggerAttack(){
@@ -136,6 +149,7 @@ class Noise extends Source {
                 case 3: value = "brown";
                     break;
             }
+            this.Waveform = value;
         }
 
         super.SetParam(param,value);

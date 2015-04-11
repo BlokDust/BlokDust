@@ -4,16 +4,17 @@ import Source = require("../Source");
 
 class Microphone extends Source {
 
-    Source: Tone.Microphone;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Source = new Tone.Microphone();
+        this.CreateSource();
 
         super.Init(sketch);
 
-        this.Source.start();
-        this.Source.connect(this.EffectsChainInput);
+        this.Sources.forEach((s: Tone.Microphone)=> {
+            s.connect(this.EffectsChainInput);
+            s.start();
+        });
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -25,6 +26,15 @@ class Microphone extends Source {
 
     MouseUp() {
         super.MouseUp();
+    }
+
+    CreateSource(){
+        super.CreateSource();
+        this.Sources.push( new Tone.Microphone() );
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
     }
 
     TriggerAttack(){
@@ -50,7 +60,10 @@ class Microphone extends Source {
 
     Dispose() {
         super.Dispose();
-        this.Source.dispose();
+
+        this.Sources.forEach((s: Tone.Microphone)=> {
+            s.dispose();
+        });
     }
 }
 

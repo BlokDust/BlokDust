@@ -67,9 +67,9 @@ class KeyboardPoly extends Keyboard {
 
                 for (var i = 1; i <= voicesNum; i++) {
 
-                    //TODO: Should each source have its own create method that we call here?
-
-                    source.Sources.push( source.CreateSource() );
+                    if (!(this instanceof Power)) {
+                        source.CreateSource();
+                    }
 
                     if (source instanceof ToneSource) {
                         source.Sources.push( new Tone.Oscillator(source.Frequency, source.Sources[0].type) );
@@ -125,11 +125,11 @@ class KeyboardPoly extends Keyboard {
         for (var i = 0; i<this.ActiveVoices.length; i++) {
 
                 if (source.Frequency) {
-                    source.PolySources[r - 1].frequency.value = frequency;
+                    source.Sources[r - 1].frequency.value = frequency;
                 } else if (source.PlaybackRate){
-                    source.PolySources[r-1].playbackRate = frequency;
+                    source.Sources[r-1].playbackRate = frequency;
                 }
-                source.PolyEnvelopes[r-1].triggerAttack();
+                source.Envelopes[r-1].triggerAttack();
 
 
                 //console.log(this.ActiveVoices);
@@ -154,16 +154,16 @@ class KeyboardPoly extends Keyboard {
             if (this.ActiveVoices[i] == keyUp) {
 
                 // Check whether this envelope is playing and has my frequency before releasing it
-                for (var j=0; j<source.PolyEnvelopes.length; j++){
+                for (var j=0; j<source.Envelopes.length; j++){
 
                     // If frequency or playback speed is the same as this keyUp
                     if (source.Frequency) {
-                        if (Math.round(source.PolySources[j].frequency.value) == Math.round(frequency)) {
-                            source.PolyEnvelopes[j].triggerRelease();
+                        if (Math.round(source.Sources[j].frequency.value) == Math.round(frequency)) {
+                            source.Envelopes[j].triggerRelease();
                         }
                     } else if (source.PlaybackRate) {
-                        if (Math.round(source.PolySources[j].playbackRate) == Math.round(frequency)) {
-                            source.PolyEnvelopes[j].triggerRelease();
+                        if (Math.round(source.Sources[j].playbackRate) == Math.round(frequency)) {
+                            source.Envelopes[j].triggerRelease();
                         }
                     }
                 }
@@ -188,8 +188,8 @@ class KeyboardPoly extends Keyboard {
                 for (var i = 0; i < this.Sources.Count; i++) {
                     var source = this.Sources.GetValueAt(i);
 
-                    for (var j=0; j<source.PolyEnvelopes.length; j++){
-                        source.PolyEnvelopes[j].triggerRelease();
+                    for (var j=0; j<source.Envelopes.length; j++){
+                        source.Envelopes[j].triggerRelease();
                     }
 
                     this.CreateVoices(source, this.VoicesAmount);

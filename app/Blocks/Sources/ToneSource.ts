@@ -20,12 +20,7 @@ class ToneSource extends Source {
 
         super.Init(sketch);
 
-        this.Envelopes.push( new Tone.AmplitudeEnvelope(
-            this.Settings.envelope.attack,
-            this.Settings.envelope.decay,
-            this.Settings.envelope.sustain,
-            this.Settings.envelope.release
-        ));
+        this.CreateEnvelope();
 
         this.Envelopes.forEach((e: any)=> {
             e.connect(this.EffectsChainInput);
@@ -56,7 +51,18 @@ class ToneSource extends Source {
     }
 
     CreateSource(){
+        super.CreateSource();
         this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
+        this.Envelopes.push( new Tone.AmplitudeEnvelope(
+            this.Settings.envelope.attack,
+            this.Settings.envelope.decay,
+            this.Settings.envelope.sustain,
+            this.Settings.envelope.release
+        ));
     }
 
     TriggerAttack(){

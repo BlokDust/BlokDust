@@ -172,13 +172,13 @@ class Source extends Block implements ISource {
 
     }
 
-    TriggerAttack(){
+    CreateSource(){}
 
-    }
+    CreateEnvelope(){}
 
-    TriggerRelease(){
+    TriggerAttack(){}
 
-    }
+    TriggerRelease(){}
 
     TriggerAttackRelease(){
         if (this.Envelopes.length){
