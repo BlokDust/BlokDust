@@ -32,7 +32,7 @@ class DisplayList {
     public Contains(displayObject: IDisplayObject) {
         return this._DisplayObjects.Contains(displayObject);
     }
-    
+
     public Draw(){
         for (var i = 0; i < this._DisplayObjects.Count; i++){
             var displayObject: IDisplayObject = this._DisplayObjects.GetValueAt(i);
