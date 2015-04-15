@@ -183,7 +183,7 @@ class Keyboard extends PreEffect {
     }
 
     public GetFrequencyOfNote(note, source): number {
-        return source.Source.noteToFrequency(note) * this.GetConnectedPitchPreEffects(source);
+        return source.Sources[0].noteToFrequency(note) * this.GetConnectedPitchPreEffects(source);
     }
 
     public GetConnectedPitchPreEffects(source) {

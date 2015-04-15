@@ -51,11 +51,6 @@ class KeyboardPoly extends Keyboard {
 
     CreateVoices(source, voicesNum){
 
-        //If we already have voices delete those first
-        if (source.PolySources.length){
-            this.DeleteVoices(source);
-        }
-
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
         if (!(source instanceof Power)) {
 
@@ -67,25 +62,10 @@ class KeyboardPoly extends Keyboard {
 
                 for (var i = 1; i <= voicesNum; i++) {
 
-                    if (!(this instanceof Power)) {
-                        source.CreateSource();
-                    }
 
-                    if (source instanceof ToneSource) {
-                        source.Sources.push( new Tone.Oscillator(source.Frequency, source.Sources[0].type) );
+                    source.CreateSource();
 
-
-                    } else if (source instanceof Noise) {
-                        source.Sources.push( new Tone.Noise(source.Sources[0].type) );
-                    }
-
-
-                    source.Envelopes.push( new Tone.AmplitudeEnvelope(
-                        source.Envelope.attack,
-                        source.Envelope.decay,
-                        source.Envelope.sustain,
-                        source.Envelope.release
-                    ));
+                    source.CreateEnvelope();
 
                     source.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
                         if (i > 0){
@@ -95,7 +75,7 @@ class KeyboardPoly extends Keyboard {
 
                     source.Sources.forEach((s: any, i: number)=> {
                         if (i > 0){
-                            s.connect(source.PolyEnvelopes[i]).start();
+                            s.connect(source.Envelopes[i]).start();
                         }
                     });
                 }

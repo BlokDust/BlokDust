@@ -65,12 +65,11 @@ class Pitch extends PreEffect {
                 source.Grains[i].playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
             }
 
-            source.FIX_THIS;
-
             // RECORDER
         } else if (source instanceof Recorder) {
-            source.FIX_THIS;
-            source.RecordedAudio.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+            source.Sources.forEach((s: Tone.Sampler) => {
+                s.player.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+            });
         }
 
     }

@@ -16,7 +16,9 @@ class Soundcloud extends Source {
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224", "87679226"];
         this.AudioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
+        this.AudioUrl = localUrl;
 
+        super.Init(sketch);
 
         this.CreateSource();
 
@@ -25,11 +27,6 @@ class Soundcloud extends Source {
             s.player.loopStart = 0; // 0 is the beginning
             s.player.loopEnd = -1; // -1 goes to the end of the track
         });
-
-
-
-
-        super.Init(sketch);
 
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
             e = this.Sources[i].envelope;

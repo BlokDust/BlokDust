@@ -14,14 +14,14 @@ class RecorderBlock extends Source {
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.PlaybackRate = 1;
-        this.Sources.push( new Tone.Sampler() );
-        this.Recorder = new Recorder(App.AudioMixer.Master, {
-            workerPath: "Assets/Recorder/recorderWorker.js"
-        });
-        this.BufferSource = this.Sources[0].context.createBufferSource();
 
         super.Init(sketch);
 
+        this.Sources.push( new Tone.Sampler(this.BufferSource) );
+        this.BufferSource = this.Sources[0].context.createBufferSource();
+        this.Recorder = new Recorder(App.AudioMixer.Master, {
+            workerPath: "Assets/Recorder/recorderWorker.js"
+        });
 
         this.Sources.forEach((s: Tone.Sampler) => {
             s.connect(this.EffectsChainInput);

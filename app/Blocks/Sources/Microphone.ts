@@ -6,10 +6,9 @@ class Microphone extends Source {
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+        super.Init(sketch);
 
         this.CreateSource();
-
-        super.Init(sketch);
 
         this.Sources.forEach((s: Tone.Microphone)=> {
             s.connect(this.EffectsChainInput);

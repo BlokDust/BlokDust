@@ -16,10 +16,11 @@ class ToneSource extends Source {
 
         this.Frequency = 440;
         this.Waveform = 'sawtooth';
-        this.CreateSource();
+
 
         super.Init(sketch);
 
+        this.CreateSource();
         this.CreateEnvelope();
 
         this.Envelopes.forEach((e: any)=> {
@@ -65,12 +66,22 @@ class ToneSource extends Source {
         ));
     }
 
-    TriggerAttack(){
+    TriggerAttack(env?:number){
         super.TriggerAttack();
-        this.Envelopes.forEach((e: any)=> {
-            e.triggerAttack();
-        });
+
+        // is there specific source to attack?
+        //if (env){
+            this.Envelopes[0].triggerAttack();
+        //} else {
+        //    // Else attack all
+        //    this.Envelopes.forEach((e: any)=> {
+        //        e.triggerAttack();
+        //    });
+        //}
+
     }
+
+
 
     TriggerRelease(){
         super.TriggerRelease();

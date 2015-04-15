@@ -15,10 +15,9 @@ class Noise extends Source {
         this.Waveform = 'brown';
         this.PlaybackRate = 1;
 
-        this.CreateSource();
-
         super.Init(sketch);
 
+        this.CreateSource();
         this.CreateEnvelope();
 
         this.Envelopes.forEach((e: any)=> {
@@ -26,7 +25,7 @@ class Noise extends Source {
         });
 
         this.Sources.forEach((s: any, i:number)=> {
-            s.connect(i).start();
+            s.connect(this.Envelopes[i]).start();
         });
 
 

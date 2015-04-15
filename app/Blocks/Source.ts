@@ -32,6 +32,9 @@ class Source extends Block implements ISource {
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
+        this.Sources = [];
+        this.Envelopes = [];
+
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
         if (!(this instanceof Power)) {

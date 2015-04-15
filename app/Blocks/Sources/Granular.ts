@@ -22,9 +22,9 @@ class Granular extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.CreateSource();
-
         super.Init(sketch);
+
+        this.CreateSource();
 
         this._IsLoaded = false;
 
