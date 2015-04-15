@@ -8,7 +8,7 @@ class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collection
         this.CollectionChanged.on(() => {
             // update ZIndex properties
             for (var i = 0; i < this.Count; i++){
-                var obj = this.GetValueAt(i);
+                var obj: IDisplayObject = this.GetValueAt(i);
                 obj.ZIndex = i;
             }
         }, this)

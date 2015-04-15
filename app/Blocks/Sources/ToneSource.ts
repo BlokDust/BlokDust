@@ -6,7 +6,7 @@ import Block = require("../Block");
 import Particle = require("../../Particle");
 
 class ToneSource extends Source {
-    
+
     public Sources: Tone.Oscillator[];
     public Frequency: number;
     public Waveform: string;
@@ -68,6 +68,7 @@ class ToneSource extends Source {
 
     TriggerAttack(env?:number){
         super.TriggerAttack();
+        if (this.IsDisposed) return;
 
         // is there specific source to attack?
         //if (env){
@@ -78,13 +79,13 @@ class ToneSource extends Source {
         //        e.triggerAttack();
         //    });
         //}
-
     }
 
 
 
     TriggerRelease(){
         super.TriggerRelease();
+        if (this.IsDisposed) return;
         if(!this.IsPowered()){
 
             this.Envelopes.forEach((e: any)=> {

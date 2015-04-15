@@ -8,7 +8,16 @@ class Reverb extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.Freeverb(0.7, 0.5);
+        if (!this.Params) {
+            this.Params = {
+                dampening: 0.7,
+                roomSize: 0.5,
+                mix: 0.5
+            };
+        }
+
+        this.Effect = new Tone.Freeverb(this.Params.dampening, this.Params.roomSize);
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
 
@@ -27,18 +36,20 @@ class Reverb extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
+        var val = value;
+
+        if (param=="mix") {
+            this.Effect.wet.value = val;
         } else if (param=="dampening") {
-            this.Effect.dampening.value = value;
+            this.Effect.dampening.value = val;
         } else if (param=="roomSize") {
-            this.Effect.roomSize.value = value;
+            this.Effect.roomSize.value = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="dryWet") {
@@ -49,7 +60,7 @@ class Reverb extends PostEffect {
             val = this.Effect.roomSize.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -64,7 +75,7 @@ class Reverb extends PostEffect {
                     "name" : "Dampening",
                     "setting" :"dampening",
                     "props" : {
-                        "value" : this.GetParam("dampening"),
+                        "value" : this.Params.dampening,
                         "min" : 0.1,
                         "max" : 1,
                         "quantised" : false,
@@ -77,7 +88,7 @@ class Reverb extends PostEffect {
                     "name" : "Room Size",
                     "setting" :"roomSize",
                     "props" : {
-                        "value" : this.GetParam("roomSize"),
+                        "value" : this.Params.roomSize,
                         "min" : 0.1,
                         "max" : 0.95,
                         "quantised" : false,
@@ -88,9 +99,9 @@ class Reverb extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

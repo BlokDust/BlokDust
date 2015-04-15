@@ -8,8 +8,14 @@ class Panner extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                frequency: 1
+            };
+        }
+
         this.Effect = new Tone.AutoPanner({
-            "frequency": 1
+            "frequency": this.Params.frequency
         });
 
         super.Init(sketch);
@@ -29,18 +35,18 @@ class Panner extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        this.Effect.set(
-            jsonVariable
-        );
+        var val = value;
+
+        this.Effect.frequency.value = (val/10)+1;
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val = this.Effect.frequency.value;
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -55,7 +61,7 @@ class Panner extends PostEffect {
                     "name": "Frequency",
                     "setting": "frequency",
                     "props": {
-                        "value": this.GetParam("frequency"),
+                        "value": this.Params.frequency,
                         "min": 0,
                         "max": 5,
                         "quantised": false,

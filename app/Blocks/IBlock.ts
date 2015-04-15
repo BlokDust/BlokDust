@@ -12,6 +12,7 @@ interface IBlock extends IDisplayObject{
     Position: Point;
     LastPosition: Point;
     OptionsForm: any;
+    Params: any;
     Update(): void;
     Draw(): void;
     Refresh(): void;
@@ -20,10 +21,11 @@ interface IBlock extends IDisplayObject{
     MouseUp(): void;
     MouseMove(point: Point): void;
     Dispose(): void;
+    Stop(): void;
     HitTest(point: Point): boolean;
     DistanceFrom(point: Point): number;
     UpdateOptionsForm(): void;
-    SetParam(param: string,value: number): void;
+    SetParam(param: string, value: number): void;
     GetParam(param: string): void;
     UpdateParams(params: any): void;
 }

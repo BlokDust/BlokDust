@@ -21,6 +21,8 @@ class ConnectionLines {
 
     Draw() {
 
+        this._Ctx.strokeStyle = App.Palette[15];// BLUE
+        this._Ctx.lineWidth = 1;
         this._Ctx.beginPath();
 
         for (var j = 0; j < App.Blocks.length; j++) {
@@ -43,7 +45,7 @@ class ConnectionLines {
                     var xDif = (targetPos.x - myPos.x) / grd;
                     var yDif = (targetPos.y - myPos.y) / grd;
 
-                    this._Ctx.strokeStyle = App.Palette[15];// BLUE
+
                     this._Ctx.moveTo(myPos.x, myPos.y);
 
                     if (xDif > 0) { // RIGHT HALF

@@ -11,6 +11,7 @@ interface IDisplayObject {
     Width: number;
     Height: number;
     Position: Point;
+    IsDisposed: boolean;
 }
 
 export = IDisplayObject;

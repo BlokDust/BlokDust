@@ -10,8 +10,14 @@ class Gain extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                gain: 1.2
+            };
+        }
+
         this.Effect = App.AudioMixer.Master.context.createGain();
-        this.Effect.gain.value = 1.2;
+        this.Effect.gain.value = this.Params.gain;
 
         //this.Effect = new Tone.Signal(1, 'db');
 
@@ -34,12 +40,14 @@ class Gain extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
 
-        this.Effect.gain.value = (value/10)+1;
-        //this.Effect.rampTo(value, 0.1);
+        this.Effect.gain.value = (val/10)+1;
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
 
 
@@ -49,7 +57,7 @@ class Gain extends PostEffect {
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -64,13 +72,13 @@ class Gain extends PostEffect {
                     "name": "Gain",
                     "setting": "gain",
                     "props": {
-                        "value": this.GetParam("gain"),
+                        "value": this.Params.gain,
                         "min": -10,
                         "max": 10,
                         //"min": 0.01,
                         //"max": 80,
                         "quantised": false,
-                        "centered": true,
+                        "centered": true
                     }
                 }
             ]

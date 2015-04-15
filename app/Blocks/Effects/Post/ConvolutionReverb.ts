@@ -8,7 +8,14 @@ class Convolver extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.Convolver("../Assets/ImpulseResponses/teufelsberg01.wav");
+        if (!this.Params) {
+            this.Params = {
+                sample: "../Assets/ImpulseResponses/teufelsberg01.wav",
+                mix: 1
+            };
+        }
+
+        this.Effect = new Tone.Convolver(this.Params.sample);
 
         super.Init(sketch);
 
@@ -29,21 +36,23 @@ class Convolver extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
+        var val = value;
+
+        if (param=="mix") {
+            this.Effect.wet.value = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="dryWet") {
             val = this.Effect.wet.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -56,9 +65,9 @@ class Convolver extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

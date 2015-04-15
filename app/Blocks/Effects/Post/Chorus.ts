@@ -8,12 +8,22 @@ class Chorus extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                rate: 1,
+                delayTime: 2.5,
+                depth: 0.4,
+                feedback: 0.2
+            };
+        }
+
+
         this.Effect = new Tone.Chorus({
-            "frequency" : 1,
-            "delayTime" : 2.5,
+            "frequency" : this.Params.rate,
+            "delayTime" : this.Params.delayTime,
             "type" : 'triangle',
-            "depth" : 0.4,
-            "feedback" : 0.2
+            "depth" : this.Params.depth,
+            "feedback" : this.Params.feedback
         });
 
         super.Init(sketch);
@@ -34,20 +44,20 @@ class Chorus extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
+
         if (param=="rate") {
-            this.Effect.frequency.value = value;
+            this.Effect.frequency.value = val;
         } else if (param=="feedback") {
-            this.Effect.feedback.value = value;
+            this.Effect.feedback.value = val;
         } else {
-            this.Effect.set(
-                jsonVariable
-            );
+            this.Effect[param] = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="rate") {
@@ -61,7 +71,7 @@ class Chorus extends PostEffect {
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -76,7 +86,7 @@ class Chorus extends PostEffect {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetParam("rate"),
+                        "value" : this.Params.rate,
                         "min" : 0,
                         "max" : 5,
                         "quantised" : false,
@@ -89,7 +99,7 @@ class Chorus extends PostEffect {
                     "name" : "Delay Time",
                     "setting" :"delayTime",
                     "props" : {
-                        "value" : this.GetParam("delayTime"),
+                        "value" : this.Params.delayTime,
                         "min" : 0,
                         "max" : 5,
                         "quantised" : false,
@@ -102,7 +112,7 @@ class Chorus extends PostEffect {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetParam("depth"),
+                        "value" : this.Params.depth,
                         "min" : 0,
                         "max" : 3,
                         "quantised" : false,
@@ -115,7 +125,7 @@ class Chorus extends PostEffect {
                     "name" : "Feedback",
                     "setting" :"feedback",
                     "props" : {
-                        "value" : this.GetParam("feedback"),
+                        "value" : this.Params.feedback,
                         "min" : 0,
                         "max" : 0.2,
                         "quantised" : false,

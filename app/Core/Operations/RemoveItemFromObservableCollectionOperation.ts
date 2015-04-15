@@ -3,9 +3,9 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperation
 {
-    private _Item:T;
-    private _Collection:ObservableCollection<T>;
-    private _Index:number;
+    private _Item: T;
+    private _Collection: ObservableCollection<T>;
+    private _Index: number;
 
     constructor(item:T, collection:ObservableCollection<T>) {
         this._Item = item;
@@ -31,6 +31,11 @@ class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperati
 
             resolve(that._Collection);
         });
+    }
+
+    Dispose(): void {
+        this._Item = null;
+        this._Collection = null;
     }
 }
 

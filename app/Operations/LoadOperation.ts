@@ -1,5 +1,5 @@
-import IOperation = require("./IOperation");
-import IBlock = require("../../Blocks/IBlock");
+import IOperation = require("../Core/Operations/IOperation");
+import IBlock = require("../Blocks/IBlock");
 
 class LoadOperation<String> implements IOperation
 {
@@ -25,6 +25,9 @@ class LoadOperation<String> implements IOperation
         });
     }
 
+    Dispose(): void {
+
+    }
 }
 
 export = LoadOperation;

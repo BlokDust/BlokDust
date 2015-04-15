@@ -8,12 +8,22 @@ class Phaser extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                rate: 0.5,
+                depth: 9,
+                baseFrequency: 500,
+                mix: 0.75
+            };
+        }
+
         this.Effect = new Tone.Phaser({
-            "rate" : 0.5,
-            "depth" : 9,
+            "rate" : this.Params.rate,
+            "depth" : this.Params.depth,
             "Q" : 0.1,
-            "baseFrequency" : 500
+            "baseFrequency" : this.Params.baseFrequency
         });
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
 
@@ -32,20 +42,20 @@ class Phaser extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
+        var val = value;
+
+        if (param=="mix") {
+            this.Effect.wet.value = val;
         } else if (param=="rate") {
-            this.Effect.frequency.value = value;
+            this.Effect.frequency.value = val;
         } else {
-            this.Effect.set(
-                jsonVariable
-            );
+            this.Effect[param] = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="rate") {
@@ -58,7 +68,7 @@ class Phaser extends PostEffect {
             val = this.Effect.wet.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -73,7 +83,7 @@ class Phaser extends PostEffect {
                     "name" : "Rate",
                     "setting" :"rate",
                     "props" : {
-                        "value" : this.GetParam("rate"),
+                        "value" : this.Params.rate,
                         "min" : 0,
                         "max" : 10,
                         "quantised" : false,
@@ -86,7 +96,7 @@ class Phaser extends PostEffect {
                     "name" : "Depth",
                     "setting" :"depth",
                     "props" : {
-                        "value" : this.GetParam("depth"),
+                        "value" : this.Params.depth,
                         "min" : 0,
                         "max" : 10,
                         "quantised" : true,
@@ -99,7 +109,7 @@ class Phaser extends PostEffect {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : this.GetParam("baseFrequency"),
+                        "value" : this.Params.baseFrequency,
                         "min" : 10,
                         "max" : 2000,
                         "quantised" : true,
@@ -110,9 +120,9 @@ class Phaser extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

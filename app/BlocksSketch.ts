@@ -1,8 +1,6 @@
 import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
 import IEffect = require("./Blocks/IEffect");
-import AddItemToObservableCollectionOperation = require("./Core/Operations/AddItemToObservableCollectionOperation");
-import RemoveItemFromObservableCollectionOperation = require("./Core/Operations/RemoveItemFromObservableCollectionOperation");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
 import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
@@ -188,6 +186,7 @@ class BlocksSketch extends Grid {
         this._CheckResize();
     }
 
+    // todo: use global resize event
     // DIY RESIZE LISTENER //
     private _CheckResize() {
         if (this.Width!==this._LastSize.Width||this.Height!==this._LastSize.Height) {
@@ -417,9 +416,8 @@ class BlocksSketch extends Grid {
             var blockDelete = this._TrashCan.MouseUp();
         }
 
-
-
         this.IsDraggingABlock = false;
+
         if (!blockDelete) {
             // BLOCK //
             if (this.SelectedBlock){
@@ -429,8 +427,7 @@ class BlocksSketch extends Grid {
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                        var op:IUndoableOperation = new ChangePropertyOperation<IBlock>(this.SelectedBlock, "Position", this.SelectedBlock.LastPosition.Clone(), this.SelectedBlock.Position.Clone());
-                        App.OperationManager.Do(op);
+                        App.CommandManager.ExecuteCommand(Commands[Commands.MOVE_BLOCK], this.SelectedBlock);
                     }
                 }
             }
@@ -620,8 +617,8 @@ class BlocksSketch extends Grid {
     }
 
     // todo: move this to generic util
-    private _BoxCheck(x,y,w,h,mx,my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    private _BoxCheck(x, y, w, h, mx, my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
+        return (mx > x && mx < (x + w) && my > y && my < (y + h));
     }
 
 
@@ -677,10 +674,6 @@ class BlocksSketch extends Grid {
         block.Position = this._PointerPoint;
         block.Init(this);
 
-        //block.Click.on((block: IBlock) => {
-        //    this.BlockSelected.raise(block, new Fayde.RoutedEventArgs());
-        //}, this);
-
         App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
 
         block.MouseDown();
@@ -714,10 +707,10 @@ class BlocksSketch extends Grid {
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
         this._OptionsPanel.PanelScale(this._OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
-        this._SelectedBlock.Dispose();
-        this.DisplayList.Remove(this._SelectedBlock);
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
+
+        //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 }
 

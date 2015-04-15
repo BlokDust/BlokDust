@@ -22,6 +22,8 @@ import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
 import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
+import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
+import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
@@ -82,6 +84,7 @@ class App implements IApp{
         }
 
         this.OperationManager = new OperationManager();
+        this.OperationManager.MaxOperations = 5;
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
         //this.Fonts = new Fonts();
@@ -89,6 +92,7 @@ class App implements IApp{
         // register command handlers
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.MOVE_BLOCK], MoveBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
@@ -159,7 +163,7 @@ class App implements IApp{
 
     RefreshBlocks() {
         // refresh all Sources (reconnects Effects).
-        this.Sources.forEach((b: ISource) => {
+        this.Blocks.forEach((b: ISource) => {
             b.Refresh();
         });
     }

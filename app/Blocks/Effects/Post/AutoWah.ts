@@ -8,18 +8,27 @@ class AutoWah extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        if (!this.Params) {
+            this.Params = {
+                octaves: 5,
+                baseFrequency: 100,
+                mix: 0.6
+            };
+        }
+
         this.Effect = new Tone.AutoWah({
-            "baseFrequency": 440,
-            "octaves": 3,
+            "baseFrequency": this.Params.baseFrequency,
+            "octaves": this.Params.octaves,
             "sensitivity": -40,
             "rolloff" : -48,
 
             "follower" : {
-                "attack": 0.5,
-                "release": 0.1
+
+                "attack": 0.2,
+                "release": 1
             }
         });
-        this.Effect.wet.value = 0.8;
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
 
@@ -38,19 +47,20 @@ class AutoWah extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
 
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
+        if (param=="mix") {
+            this.Effect.wet.value = val;
         } else if (param=="octaves") {
-            this.Effect.octaves = value;
+            this.Effect.octaves = val;
         } else if (param=="baseFrequency") {
-            this.Effect.baseFrequency = value;
+            this.Effect.baseFrequency = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+  /*  GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="octaves") {
@@ -62,7 +72,7 @@ class AutoWah extends PostEffect {
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -77,9 +87,9 @@ class AutoWah extends PostEffect {
                     "name" : "Range",
                     "setting" :"octaves",
                     "props" : {
-                        "value" : this.GetParam("octaves"),
+                        "value" : this.Params.octaves,
                         "min" : 1,
-                        "max" : 4,
+                        "max" : 8,
                         "quantised" : false,
                         "centered" : false
                     }
@@ -90,7 +100,7 @@ class AutoWah extends PostEffect {
                     "name" : "Frequency",
                     "setting" :"baseFrequency",
                     "props" : {
-                        "value" : this.GetParam("baseFrequency"),
+                        "value" : this.Params.baseFrequency,
                         "min" : 50,
                         "max" : 1200,
                         "quantised" : true,
@@ -101,9 +111,9 @@ class AutoWah extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

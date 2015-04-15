@@ -27,7 +27,8 @@ class Source extends Block implements ISource {
         }
     };
 
-    public Params: any;
+    //public Params: any;
+
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -175,15 +176,21 @@ class Source extends Block implements ISource {
 
     }
 
+
     CreateSource(){}
 
     CreateEnvelope(){}
+
+    Stop() {
+        this.TriggerRelease();
+    }
 
     TriggerAttack(){}
 
     TriggerRelease(){}
 
     TriggerAttackRelease(){
+        if (this.IsDisposed) return;
         if (this.Envelopes.length){
             this.Envelopes.forEach((e: any, i:number)=> {
                 e.triggerAttackRelease("4n", "+0");
@@ -217,6 +224,10 @@ class Source extends Block implements ISource {
      * @constructor
      */
     Dispose() {
+        super.Dispose();
+
+        if (this.IsDisposed) return;
+
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
         if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();

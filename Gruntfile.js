@@ -106,7 +106,8 @@ module.exports = function (grunt) {
         },
         exec: {
             minify: {
-                cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/config.js name=config optimize=none out=app/min.js'
+                //cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/require-config.js name=require-config optimize=none out=app/min.js'
+                cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
             }
         }
     });
