@@ -10,7 +10,6 @@ import BlocksSketch = require("../../BlocksSketch");
 
 class Laser extends Source {
 
-    //public Params;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -35,15 +34,12 @@ class Laser extends Source {
         //this.Params.angle = Math.random()*360;
 
         // ROTATE //
-        this.Params.angle += this.Params.rotate;
+        this.Params.angle += (this.Params.rotate/100);
         if (this.Params.angle>90) {
             this.Params.angle -= 360;
         }
         if (this.Params.angle<-270) {
             this.Params.angle += 360;
-        }
-        if ( (this.Params.rotate>0 && this.Params.rotate<0.01) || (this.Params.rotate<0 && this.Params.rotate>-0.01) ) {
-            this.Params.rotate = 0;
         }
 
     }
@@ -82,9 +78,9 @@ class Laser extends Source {
                     "setting" :"rotate",
                     "props" : {
                         "value" : this.Params.rotate,
-                        "min" : -10,
-                        "max" : 10,
-                        "quantised" : false,
+                        "min" : -100,
+                        "max" : 100,
+                        "quantised" : true,
                         "centered" : true
                     }
                 },

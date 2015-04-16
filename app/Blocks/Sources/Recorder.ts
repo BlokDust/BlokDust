@@ -5,7 +5,6 @@ import Source = require("../Source");
 class RecorderBlock extends Source {
 
     public Recorder: any;
-    public RecordedAudio: Tone.Player;
     public BufferSource;
     public Filename: string;
     public RecordedBlob;
@@ -14,24 +13,22 @@ class RecorderBlock extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Source = new Tone.Signal();
+        this.PlaybackRate = 1;
 
         super.Init(sketch);
 
+        this.Sources.push( new Tone.Sampler(this.BufferSource) );
+        this.BufferSource = this.Sources[0].context.createBufferSource();
         this.Recorder = new Recorder(App.AudioMixer.Master, {
             workerPath: "Assets/Recorder/recorderWorker.js"
         });
 
-        this.RecordedAudio = new Tone.Player();
-        this.PlaybackRate = 1;
+        this.Sources.forEach((s: Tone.Sampler) => {
+            s.connect(this.EffectsChainInput);
+            s.player.loop = true;
+            s.volume.value = 10;
+        });
 
-        this.RecordedAudio.connect(this.Source);
-        this.Source.connect(this.EffectsChainInput);
-
-        this.BufferSource = this.RecordedAudio.context.createBufferSource();
-
-        this.RecordedAudio.volume.value = 10;
-        this.RecordedAudio.loop = true;
         this.StopPlaybackOnRecord = false;
 
         this.Filename = "BlokdustRecording.wav";
@@ -67,13 +64,20 @@ class RecorderBlock extends Source {
 
     StopRecording() {
         this.Recorder.stop();
-        this.RecordedAudio.stop();
+
+        this.Sources.forEach((s: any)=> {
+            this.TriggerRelease();
+        });
+
         console.log('STOPPED RECORDING');
         this.SetBuffers();
     }
 
     StartPlayback() {
-        this.RecordedAudio.start();
+        this.Sources.forEach((s: any)=> {
+            this.TriggerAttack();
+        });
+
         console.log("STARTED PLAYBACK");
         console.log(this.GetRecordedBlob());
     }
@@ -82,11 +86,11 @@ class RecorderBlock extends Source {
 
         this.Recorder.getBuffers((buffers) => {
 
-            this.BufferSource.buffer = this.RecordedAudio.context.createBuffer(1, buffers[0].length, 44100);
+            this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            this.RecordedAudio.buffer = this.BufferSource.buffer;
+            this.Sources[0].buffer = this.BufferSource.buffer;
 
             this._OnBuffersReady();
         });
@@ -97,7 +101,9 @@ class RecorderBlock extends Source {
     }
 
     StopPlayback() {
-        this.RecordedAudio.stop();
+        this.Sources.forEach((s: any)=> {
+            this.TriggerRelease();
+        });
         console.log("STOPPED PLAYBACK");
     }
 
@@ -119,20 +125,44 @@ class RecorderBlock extends Source {
 
     Dispose(){
         super.Dispose();
-
-        this.RecordedAudio.stop();
-        this.RecordedAudio.dispose();
         this.BufferSource = null;
         this.Recorder = null;
         this.RecordedBlob = null;
+
+        this.Sources.forEach((s: any)=> {
+            s.dispose();
+        });
+
+    }
+
+    CreateSource(){
+        super.CreateSource();
+
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
+
     }
 
     TriggerAttack(){
         super.TriggerAttack();
+
+        if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttack();
+            });
+        }
     }
 
     TriggerRelease(){
         super.TriggerRelease();
+
+        if(!this.IsPowered()) {
+            this.Sources.forEach((s: any)=> {
+                s.triggerRelease();
+            });
+        }
     }
 
     TriggerAttackRelease(){

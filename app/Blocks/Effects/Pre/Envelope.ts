@@ -5,17 +5,28 @@ import BlocksSketch = require("../../../BlocksSketch");
 
 class Envelope extends PreEffect {
 
-    public attack: number;
+
+
+    /*public attack: number;
     public decay: number;
     public sustain: number;
-    public release: number;
+    public release: number;*/
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.attack = 1;
+        if (!this.Params) {
+            this.Params = {
+                attack: 1,
+                decay: 5,
+                sustain: 0.7,
+                release: 4
+            };
+        }
+
+        /*this.attack = 1;
         this.decay = 5;
         this.sustain = 0.7;
-        this.release = 4;
+        this.release = 4;*/
 
         super.Init(sketch);
 
@@ -33,34 +44,31 @@ class Envelope extends PreEffect {
     Attach(source: ISource): void{
         super.Attach(source);
 
-        source.Envelope.attack = this.attack;
-        source.Envelope.decay = this.decay;
-        source.Envelope.sustain = this.sustain;
-        source.Envelope.release = this.release;
-
-        // FOR POLYPHONIC
-        for(var i = 0; i<source.PolySources.length; i++){
-            source.PolyEnvelopes[i].attack = this.attack;
-            source.PolyEnvelopes[i].decay = this.decay;
-            source.PolyEnvelopes[i].sustain = this.sustain;
-            source.PolyEnvelopes[i].release = this.release;
-        }
+        source.Envelopes.forEach((e: Tone.Envelope) => {
+            e.attack = this.Params.attack;
+            e.decay = this.Params.decay;
+            e.sustain = this.Params.sustain;
+            e.release = this.Params.release;
+        });
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
 
-        source.Envelope.attack = 0.02;
-        source.Envelope.decay = 0.5;
-        source.Envelope.sustain = 0.5;
-        source.Envelope.release = 0.02;
+        source.Envelopes.forEach((e: Tone.Envelope) => {
+            e.attack = 0.02;
+            e.decay = 0.5;
+            e.sustain = 0.5;
+            e.release = 0.02;
+        });
 
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
 
-        if (param=="attack") {
+        /*if (param=="attack") {
             this.attack = value;
 
         } else if (param=="decay") {
@@ -69,34 +77,29 @@ class Envelope extends PreEffect {
             this.sustain = value;
         } else if (param=="release") {
             this.release = value;
-        }
+        }*/
+
+        this.Params[param] = val;
 
         if (this.Sources.Count) {
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                source.Envelope.attack = this.attack;
-                source.Envelope.decay = this.decay;
-                source.Envelope.sustain = this.sustain;
-                source.Envelope.release = this.release;
 
-                // FOR POLYPHONIC
-                if (source.PolySources.length){
-                    for(var i = 0; i<source.PolySources.length; i++){
-                        source.PolyEnvelopes[i].attack = this.attack;
-                        source.PolyEnvelopes[i].decay = this.decay;
-                        source.PolyEnvelopes[i].sustain = this.sustain;
-                        source.PolyEnvelopes[i].release = this.release;
-                    }
-                }
+                source.Envelopes.forEach((e: Tone.Envelope) => {
+                    e.attack = this.Params.attack;
+                    e.decay = this.Params.decay;
+                    e.sustain = this.Params.sustain;
+                    e.release = this.Params.release;
+                });
             }
         }
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val = this[""+param];
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -113,28 +116,28 @@ class Envelope extends PreEffect {
                     "nodes": [
                         {
                             "setting": "attack",
-                            "value": this.GetParam("attack"),
+                            "value": this.Params.attack,
                             "min": 0.01,
                             "max": 10
                         },
 
                         {
                             "setting": "decay",
-                            "value": this.GetParam("decay"),
+                            "value": this.Params.decay,
                             "min": 0.01,
                             "max": 15
                         },
 
                         {
                             "setting": "sustain",
-                            "value": this.GetParam("sustain"),
+                            "value": this.Params.sustain,
                             "min": 0,
                             "max": 1
                         },
 
                         {
                             "setting": "release",
-                            "value": this.GetParam("release"),
+                            "value": this.Params.release,
                             "min": 0.01,
                             "max": 15
                         }

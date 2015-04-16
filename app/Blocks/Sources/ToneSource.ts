@@ -7,27 +7,30 @@ import Particle = require("../../Particle");
 
 class ToneSource extends Source {
 
-    public Source: Tone.Oscillator;
+    public Sources: Tone.Oscillator[];
     public Frequency: number;
-    public Envelope: Tone.AmplitudeEnvelope;
+    public Waveform: string;
+    public Envelopes: Tone.AmplitudeEnvelope[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Frequency = 440;
-        this.Source = new Tone.Oscillator(this.Frequency, 'sawtooth');
+        this.Waveform = 'sawtooth';
+
 
         super.Init(sketch);
 
-        this.Envelope = new Tone.AmplitudeEnvelope(
-            this.Settings.envelope.attack,
-            this.Settings.envelope.decay,
-            this.Settings.envelope.sustain,
-            this.Settings.envelope.release
-        );
+        this.CreateSource();
+        this.CreateEnvelope();
 
-        this.Envelope.connect(this.EffectsChainInput);
-        this.Source.connect(this.Envelope);
-        this.Source.start();
+        this.Envelopes.forEach((e: any)=> {
+            e.connect(this.EffectsChainInput);
+        });
+
+        this.Sources.forEach((s: any, i:number)=> {
+            s.connect(this.Envelopes[i]).start();
+        });
+
 
         this.Width = 150;
         this.Height = 150;
@@ -48,18 +51,49 @@ class ToneSource extends Source {
         this.TriggerRelease();
     }
 
-    TriggerAttack(){
+    CreateSource(){
+        super.CreateSource();
+        this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
+        this.Envelopes.push( new Tone.AmplitudeEnvelope(
+            this.Settings.envelope.attack,
+            this.Settings.envelope.decay,
+            this.Settings.envelope.sustain,
+            this.Settings.envelope.release
+        ));
+    }
+
+    TriggerAttack(env?:number){
         super.TriggerAttack();
         if (this.IsDisposed) return;
-        this.Envelope.triggerAttack();
+
+        // is there specific source to attack?
+        //if (env){
+            this.Envelopes[0].triggerAttack();
+        //} else {
+        //    // Else attack all
+        //    this.Envelopes.forEach((e: any)=> {
+        //        e.triggerAttack();
+        //    });
+        //}
     }
+
+
 
     TriggerRelease(){
         super.TriggerRelease();
         if (this.IsDisposed) return;
         if(!this.IsPowered()){
-            this.Envelope.triggerRelease();
+
+            this.Envelopes.forEach((e: any)=> {
+                e.triggerRelease();
+            });
+
         }
+
     }
 
     TriggerAttackRelease(){
@@ -71,7 +105,9 @@ class ToneSource extends Source {
 
         // USE SIGNAL? So we can schedule a sound length properly
         // play tone
-        this.Envelope.triggerAttackRelease(0.1);
+        this.Envelopes.forEach((e: any)=> {
+            e.triggerAttackRelease(0.1);
+        });
 
         particle.Dispose();
     }
@@ -79,8 +115,15 @@ class ToneSource extends Source {
     Dispose() {
         super.Dispose();
         this.Frequency = null;
-        this.Source.dispose();
-        this.Envelope.dispose();
+
+        this.Sources.forEach((s: any) => {
+            s.dispose();
+        });
+
+        this.Envelopes.forEach((e: any) => {
+            e.dispose();
+        });
+
     }
 
     Update() {
@@ -142,11 +185,7 @@ class ToneSource extends Source {
                 case 4: value = "sawtooth";
                     break;
             }
-
-            // Set waveforms on PolySources
-            for(var i = 0; i<this.PolySources.length; i++){
-                this.PolySources[i].type = value;
-            }
+            this.Waveform = value;
 
         } else if (param == "frequency") {
             this.Frequency = value;

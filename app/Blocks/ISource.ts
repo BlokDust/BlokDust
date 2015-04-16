@@ -6,24 +6,23 @@ interface ISource extends IBlock{
     Effects: Fayde.Collections.ObservableCollection<IEffect>;
     AddEffect(effect: IEffect): void;
     RemoveEffect(effect: IEffect): void;
-    Source?: any; // Use this when available: Tone.Oscillator || Tone.Noise
-    Envelope?: Tone.Envelope;
+    Sources?: any[]; // Use this when available: Tone.Oscillator || Tone.Noise
+    Envelopes?: Tone.AmplitudeEnvelope[];
     EffectsChainInput?: Tone.Signal;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
-    Params: any;
+    //Params: any;
     Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];
     MaxDensity?: number;
     RecordedAudio?: any;
-    PolySources?: any[];
-    PolyEnvelopes?: any[];
     LoopStartPosition?: number;
     LoopEndPosition?: number;
+    CreateSource(): void;
     ValidateEffects(): void;
     SetPlaybackRate(rate,time): void;
-    TriggerAttack(): void;
+    TriggerAttack(envelope?:number): void;
     TriggerRelease(): void;
     Refresh(): void;
 }

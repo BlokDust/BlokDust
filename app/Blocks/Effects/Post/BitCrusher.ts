@@ -8,7 +8,14 @@ class BitCrusher extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.BitCrusher(7);
+        if (!this.Params) {
+            this.Params = {
+                bits: 7,
+                mix: 0.5
+            };
+        }
+
+        this.Effect = new Tone.BitCrusher(this.Params.bits);
 
         super.Init(sketch);
 
@@ -31,19 +38,18 @@ class BitCrusher extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
-        } else {
-            this.Effect.set(
-                jsonVariable
-            );
+        var val = value;
+
+        if (param=="bits") {
+            this.Effect.bits = val;
+        } else if (param=="mix") {
+            this.Effect.wet.value = val;
         }
 
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="bits") {
@@ -52,7 +58,7 @@ class BitCrusher extends PostEffect {
             val = this.Effect.wet.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -67,7 +73,7 @@ class BitCrusher extends PostEffect {
                     "name" : "Bits",
                     "setting" : "bits",
                     "props" : {
-                        "value" : this.GetParam("bits"),
+                        "value" : this.Params.bits,
                         "min" : 1,
                         "max" : 8,
                         "quantised" : false,
@@ -78,9 +84,9 @@ class BitCrusher extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

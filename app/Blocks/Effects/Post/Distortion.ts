@@ -8,8 +8,15 @@ class Distortion extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = new Tone.Distortion(0.65);
-        this.Effect.wet.value = 0.75;
+        if (!this.Params) {
+            this.Params = {
+                drive: 0.65,
+                mix: 0.75
+            };
+        }
+
+        this.Effect = new Tone.Distortion(this.Params.drive);
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
 
@@ -30,14 +37,18 @@ class Distortion extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        if (param=="dryWet") {
-            this.Effect.wet.value = value;
+        var val = value;
+
+        if (param=="mix") {
+            this.Effect.wet.value = val;
         } else {
-            this.Effect.distortion = value;
+            this.Effect.distortion = val;
         }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+/*    GetParam(param: string) {
         super.GetParam(param);
         var val;
         if (param=="drive") {
@@ -46,7 +57,7 @@ class Distortion extends PostEffect {
             val = this.Effect.wet.value;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -61,7 +72,7 @@ class Distortion extends PostEffect {
                     "name" : "Drive",
                     "setting" :"drive",
                     "props" : {
-                        "value" : this.GetParam("drive"),
+                        "value" : this.Params.drive,
                         "min" : 0.1,
                         "max" : 1,
                         "quantised" : false,
@@ -72,9 +83,9 @@ class Distortion extends PostEffect {
                 {
                     "type" : "slider",
                     "name" : "Mix",
-                    "setting" :"dryWet",
+                    "setting" :"mix",
                     "props" : {
-                        "value" : this.GetParam("dryWet"),
+                        "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : false,

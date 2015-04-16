@@ -2,6 +2,10 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import BlocksSketch = require("../../../BlocksSketch");
+import ToneSource = require("../../Sources/ToneSource");
+import Soundcloud = require("../../Sources/Soundcloud");
+import Granular = require("../../Sources/Granular");
+import Recorder = require("../../Sources/Recorder");
 
 class Pitch extends PreEffect {
 
@@ -9,7 +13,13 @@ class Pitch extends PreEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.PitchIncrement = 1.5; // Pitch decreases by 4ths
+        if (!this.Params) {
+            this.Params = {
+                pitchIncrement: 1.5 // Pitch decreases by 4ths
+            };
+        }
+
+        this.PitchIncrement = this.Params.pitchIncrement;
 
         super.Init(sketch);
 
@@ -37,46 +47,57 @@ class Pitch extends PreEffect {
     }
 
     UpdatePitch(source: ISource): void{
+
+        // TODO: GIVE ALL SOURCES A PITCH PROPERTY
+
+
         //OSCILLATORS
-        if (source.Frequency){
-            source.Source.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+        if (source instanceof ToneSource){
+            source.Sources.forEach((s: Tone.Oscillator) => {
+                s.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+            });
+
 
             // TONE.PLAYERS
-        } else if (source.Source._playbackRate){
-            source.Source.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+        } else if (source instanceof Soundcloud){
+            source.Sources.forEach((s: Tone.Sampler) => {
+                s.player.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+            });
+
 
             // GRANULAR
-        } else if (source.Grains) {
+        } else if (source instanceof Granular) {
             for (var i=0; i<source.MaxDensity; i++) {
                 source.Grains[i].playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
             }
 
             // RECORDER
-        } else if (source.RecordedAudio) {
-            source.RecordedAudio.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+        } else if (source instanceof Recorder) {
+            source.Sources.forEach((s: Tone.Sampler) => {
+                s.player.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+            });
         }
 
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
 
-        if (param == "pitchMultiplier") {
-            this.PitchIncrement = value;
+        this.PitchIncrement = val;
+        this.Params[param] = val;
 
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
+        if (this.Sources.Count) {
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
 
-                    this.UpdatePitch(source);
-                }
+                this.UpdatePitch(source);
             }
         }
+
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
 
@@ -84,7 +105,7 @@ class Pitch extends PreEffect {
             val = this.PitchIncrement;
         }
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -97,9 +118,9 @@ class Pitch extends PreEffect {
                 {
                     "type" : "slider",
                     "name" : "Pitch",
-                    "setting" :"pitchMultiplier",
+                    "setting" :"pitchIncrement",
                     "props" : {
-                        "value" : this.GetParam('pitchMultiplier'),
+                        "value" : this.Params.pitchIncrement,
                         "min" : 0.5,
                         "max" : 2,
                         "quantised" : false,

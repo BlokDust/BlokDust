@@ -4,29 +4,38 @@ import BlocksSketch = require("../../BlocksSketch");
 
 class Soundcloud extends Source {
 
-    public Source : Tone.Sampler;
+    public Sources : Tone.Sampler[];
     public PlaybackRate: number;
-    public Envelope: Tone.AmplitudeEnvelope;
+    public AudioUrl: string;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.PlaybackRate = 1;
 
+        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224", "87679226"];
-        var audioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
-        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
-
-        this.Source = new Tone.Sampler(audioUrl);
-
-        this.Source.player.loop = true;
-        this.Source.player.loopStart = 0; // 0 is the beginning
-        this.Source.player.loopEnd = -1; // -1 goes to the end of the track
+        this.AudioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
+        this.AudioUrl = localUrl;
 
         super.Init(sketch);
 
-        this.Envelope = this.Source.envelope;
-        this.Source.connect(this.EffectsChainInput);
+        this.CreateSource();
+
+        this.Sources.forEach((s: any)=> {
+            s.player.loop = true;
+            s.player.loopStart = 0; // 0 is the beginning
+            s.player.loopEnd = -1; // -1 goes to the end of the track
+        });
+
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+            e = this.Sources[i].envelope;
+        });
+
+        this.Sources.forEach((s: Tone.Sampler, i: number)=> {
+            s.connect(this.EffectsChainInput);
+        });
+
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -42,11 +51,22 @@ class Soundcloud extends Source {
         this.TriggerRelease();
     }
 
+    CreateSource(){
+        super.CreateSource();
+        this.Sources.push( new Tone.Sampler(this.AudioUrl) );
+    }
+
+    CreateEnvelope(){
+        super.CreateEnvelope();
+    }
+
     TriggerAttack() {
         super.TriggerAttack();
 
-        if(!this.IsPowered() || this.Source.player.state === "stopped") {
-            this.Source.triggerAttack();
+        if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttack();
+            });
         }
     }
 
@@ -54,7 +74,9 @@ class Soundcloud extends Source {
         super.TriggerRelease();
 
         if(!this.IsPowered()) {
-            this.Source.triggerRelease();
+            this.Sources.forEach((s: any)=> {
+                s.triggerRelease();
+            });
         }
     }
 
@@ -94,7 +116,10 @@ class Soundcloud extends Source {
 
     SetPlaybackRate(rate,time?) {
         super.SetPlaybackRate(rate,time);
-        this.Source.player.playbackRate = rate; //TODO: when playback rate becomes a signal ramp using the glide
+        this.Sources.forEach((s: any)=> {
+            s.player.playbackRate = rate; //TODO: when playback rate becomes a signal ramp using the glide
+        });
+
         this.PlaybackRate = rate;
     }
 
@@ -113,9 +138,16 @@ class Soundcloud extends Source {
 
     Dispose(){
         super.Dispose();
-        this.Source.dispose();
+
+        this.Sources.forEach((s: Tone.Sampler) => {
+            s.dispose();
+        });
+
+        this.Envelopes.forEach((e: Tone.Envelope) => {
+            e.dispose();
+        });
+
         this.PlaybackRate = null;
-        this.Envelope = null;
     }
 }
 
