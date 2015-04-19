@@ -1,4 +1,5 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
+import Config = require("./Config");
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
@@ -43,6 +44,7 @@ class App implements IApp{
 
     private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
+    public Config: Config;
     public OperationManager: OperationManager;
     public ResourceManager: ResourceManager;
     public CommandManager: CommandManager;
@@ -68,8 +70,8 @@ class App implements IApp{
         return this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
-    constructor() {
-
+    constructor(config: string) {
+        this.Config = <Config>JSON.parse(config);
     }
 
     public Setup(){
@@ -86,7 +88,7 @@ class App implements IApp{
         }
 
         this.OperationManager = new OperationManager();
-        this.OperationManager.MaxOperations = 5;
+        this.OperationManager.MaxOperations = this.Config.MaxOperations;
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
         //this.Fonts = new Fonts();
@@ -109,7 +111,7 @@ class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
-        var pixelPalette = new PixelPalette("img/palette6.gif"); // todo: move to config.json
+        var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);
 
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
@@ -121,7 +123,7 @@ class App implements IApp{
         // todo: create server-side session
         if (typeof(SC) !== "undefined"){
             SC.initialize({
-                client_id: '7258ff07f16ddd167b55b8f9b9a3ed33'
+                client_id: this.Config.SoundCloudClientId
             });
         }
     }

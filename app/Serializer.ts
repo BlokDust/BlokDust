@@ -139,14 +139,13 @@ class Serializer {
             Serializer._DeserializationDictionary[b.Id] = block;
         }
 
-        // todo: use reflection
         // if it's a source block
         if((<ISource>b).Effects){
             var effects = <IEffect[]>Serializer._DeserializeBlocks(b.Effects);
             (<ISource>block).Effects.AddRange(effects);
         }
 
-        // if it's an effect b
+        // if it's an effect block
         if((<IEffect>b).Sources){
             var sources = <ISource[]>Serializer._DeserializeBlocks(b.Sources);
             (<IEffect>block).Sources.AddRange(sources);
