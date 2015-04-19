@@ -5,6 +5,7 @@ import Grid = require("./Grid");
 import ToneSource = require("./Blocks/Sources/ToneSource");
 import BitCrusher = require("./Blocks/Effects/Post/BitCrusher");
 import BlockCreator = require("./BlockCreator");
+import SaveFile = require("./SaveFile");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Serializer {
@@ -12,7 +13,9 @@ class Serializer {
     private static _SerializationDictionary: any;
     private static _DeserializationDictionary: any;
 
-    public static Serialize(blocks: any[]): string{
+    public static Serialize(): string{
+
+        var blocks = App.Blocks;
 
         this._SerializationDictionary = {};
 
@@ -24,6 +27,8 @@ class Serializer {
         }
 
         var json = {
+            ZoomLevel: App.BlocksSketch.ZoomLevel,
+            ZoomPosition: App.BlocksSketch.ZoomPosition,
             Composition: []
         };
 
@@ -87,15 +92,18 @@ class Serializer {
         return b;
     }
 
-    public static Deserialize(json: string): IBlock[]{
+    public static Deserialize(json: string): SaveFile{
 
         this._DeserializationDictionary = {};
 
         var parsed: any = JSON.parse(json);
 
-        var blocks = this._DeserializeBlocks(parsed.Composition);
+        var saveFile = new SaveFile();
+        saveFile.ZoomLevel = parsed.ZoomLevel;
+        saveFile.ZoomPosition = new Point(parsed.ZoomPosition.x, parsed.ZoomPosition.y);
+        saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
 
-        return blocks;
+        return saveFile;
     }
 
     private static _DeserializeBlocks(blocks: any[]): IBlock[] {

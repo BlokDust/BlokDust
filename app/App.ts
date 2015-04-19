@@ -32,6 +32,7 @@ import DisplayList = require("./DisplayList");
 import Source = require("./Blocks/Source");
 import Effect = require("./Blocks/Effect");
 import IApp = require("./IApp");
+import SaveFile = require("./SaveFile");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Utils = Fayde.Utils;
 import SketchSession = Fayde.Drawing.SketchSession;
@@ -56,6 +57,7 @@ class App implements IApp{
     public Blocks: IBlock[] = [];
     public Particles: Particle[] = [];
     public Palette: string[] = [];
+    private _SaveFile: SaveFile;
     public BlocksSketch: BlocksSketch;
 
     get Sources(): IBlock[] {
@@ -116,6 +118,7 @@ class App implements IApp{
         });
 
         // SOUNDCLOUD //
+        // todo: create server-side session
         if (typeof(SC) !== "undefined"){
             SC.initialize({
                 client_id: '7258ff07f16ddd167b55b8f9b9a3ed33'
@@ -129,9 +132,7 @@ class App implements IApp{
         if(id) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id).then((data) => {
                 // get deserialized blocks tree, then "flatten" so that all blocks are in an array
-                var blocks = this.Deserialize(data);
-                this.Blocks = blocks.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
-
+                this.Deserialize(data);
                 this.CreateUI();
                 this.RefreshBlocks();
             });
@@ -144,6 +145,12 @@ class App implements IApp{
     CreateUI() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
+
+        // set initial zoom level/position
+        if (this._SaveFile) {
+            this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
+            this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
+        }
 
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {
@@ -183,11 +190,12 @@ class App implements IApp{
     }
 
     Serialize(): string {
-        return Serializer.Serialize(this.Blocks);
+        return Serializer.Serialize();
     }
 
-    Deserialize(json: string): IBlock[] {
-        return Serializer.Deserialize(json);
+    Deserialize(json: string): any {
+        this._SaveFile = Serializer.Deserialize(json);
+        this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
     }
 
     Resize(): void {

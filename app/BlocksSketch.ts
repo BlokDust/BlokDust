@@ -45,6 +45,8 @@ class BlocksSketch extends Grid {
     private _ToolTipTimeout;
     private _LastSize: Size;
     private _PointerPoint: Point;
+    private _ZoomLevel: number;
+    private _ZoomPosition: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
     public TxtHeader: string;
@@ -54,6 +56,24 @@ class BlocksSketch extends Grid {
     public TxtItalic: string;
     public TxtData: string;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
+
+    get ZoomLevel(): number {
+        return this._Transformer.ZoomLevel;
+    }
+
+    set ZoomLevel(value: number) {
+        this._ZoomLevel = value;
+    }
+
+    get ZoomPosition(): Point {
+        return new Point(
+            this._Transformer.TranslateTransform.X,
+            this._Transformer.TranslateTransform.Y);
+    }
+
+    set ZoomPosition(value: Point) {
+        this._ZoomPosition = value;
+    }
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -105,14 +125,21 @@ class BlocksSketch extends Grid {
         // TRANSFORMER //
         // todo: make these default values
         this._Transformer = new Transformer();
-        this._Transformer.ZoomLevel = 0;
+        this._Transformer.ZoomLevel = this._ZoomLevel || 0;
         this._Transformer.ZoomLevels = 5;
         this._Transformer.ZoomFactor = 2;
         this._Transformer.DragAccelerationEnabled = true;
         this._Transformer.ConstrainToViewport = false;
         this._Transformer.AnimationSpeed = 250;
-        this._Transformer.UpdateTransform.on(this.UpdateTransform, this);
+        this._Transformer.UpdateTransform.on(this._UpdateTransform, this);
         this._Transformer.SizeChanged(this.Size);
+
+        if (this._ZoomPosition){
+            var translateTransform = new TranslateTransform();
+            translateTransform.X = this._ZoomPosition.x;
+            translateTransform.Y = this._ZoomPosition.y;
+            this._Transformer.TranslateTransform = translateTransform;
+        }
 
         // INSTANCES //
         this.BlockSprites = new BlockSprites();
@@ -687,15 +714,15 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
 
-    private UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
+    private _UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
         this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
     }
 
-    ZoomIn() {
+    public ZoomIn() {
         this._Transformer.Zoom(1);
     }
 
-    ZoomOut() {
+    public ZoomOut() {
         this._Transformer.Zoom(-1);
     }
 
