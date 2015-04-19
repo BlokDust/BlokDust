@@ -12,13 +12,15 @@ class KeyboardPoly extends Keyboard {
 
     public VoicesAmount: number;
     public ActiveVoices: any[];
+    public FreeVoices: any[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
         this.KeysDown = {};
         this.VoicesAmount = 4;
-        this.ActiveVoices = [];
+        this.ActiveVoices = []; // list of Objects containing a source and envelope
+        this.FreeVoices = [];
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -47,6 +49,7 @@ class KeyboardPoly extends Keyboard {
         this.KeysDown = null;
         this.VoicesAmount = null;
         this.ActiveVoices = [];
+        this.FreeVoices = [];
     }
 
     CreateVoices(source, voicesNum){
@@ -60,24 +63,29 @@ class KeyboardPoly extends Keyboard {
             // If we haven't got enough sources, create however many we need.
             if (diff > 0){
 
+                // Loop through and create the voices
                 for (var i = 1; i <= voicesNum; i++) {
 
+                    // Create a source
+                    var s: any = source.CreateSource();
 
-                    source.CreateSource();
+                    // Create an envelope
+                    var e: Tone.AmplitudeEnvelope = source.CreateEnvelope();
 
-                    source.CreateEnvelope();
+                    // Connect it to the Envelope and start
+                    s.connect(e).start();
 
-                    source.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
-                        if (i > 0){
-                            e.connect(source.EffectsChainInput);
-                        }
-                    });
+                    // Connect Envelope to the Effects Chain
+                    e.connect(source.EffectsChainInput);
 
-                    source.Sources.forEach((s: any, i: number)=> {
-                        if (i > 0){
-                            s.connect(source.Envelopes[i]).start();
-                        }
-                    });
+
+
+                    // Add the source and envelope to our FreeVoices list
+                    this.FreeVoices.push( {
+                        source: s,
+                        envelope: e
+                    } );
+
                 }
             }
         }
@@ -94,27 +102,52 @@ class KeyboardPoly extends Keyboard {
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
         //TODO: add a playback speed option to GetFrequencyOfNote;
 
-        var keysDownNum: number = Object.keys(this.KeysDown).length;
-        var voices = this.VoicesAmount;
-        var r = keysDownNum % voices;
-        if (r == 0) r = voices;
 
-        this.ActiveVoices.push(keyDown);
+        // Are there any free voices?
+        if (this.FreeVoices.length > 0){
 
-        // if r is already down use a free one
-        for (var i = 0; i<this.ActiveVoices.length; i++) {
+            // Yes, get one of them and remove it from FreeVoices list
+            var voice = this.FreeVoices.shift();
 
-                if (source.Frequency) {
-                    source.Sources[r - 1].frequency.value = frequency;
-                } else if (source.PlaybackRate){
-                    source.Sources[r-1].playbackRate = frequency;
-                }
-                source.Envelopes[r-1].triggerAttack();
+            // Add it to the ActiveVoices list
+            this.ActiveVoices.push( voice );
 
 
-                //console.log(this.ActiveVoices);
-            //}
+            // set it to the right frequency
+            if (voice.source.frequency){
+                voice.source.frequency.value = frequency;
+                //Todo: Call sources "SetFrequency" function
+            }
+
+
+            // get it's corresponding envelope;
+
+            // trigger it's envelope
+            voice.envelope.triggerAttack();
+
+
+        } else {
+
+            // No free voices available - steal the oldest one from active voices
+            var voice = this.ActiveVoices.shift();
+
+            // ramp it to the frequency
+            voice.source.frequency.rampTo( frequency, 0 );
+
+            // Add it back to the end of ActiveVoices
+            this.ActiveVoices.push( voice );
+
         }
+
+
+        // Active voices is an array of sources that are in use
+
+        // Key is pressed
+        // Add to ActiveVoices object
+        // Each item should be the source that is in use - set the current note here too
+
+        // Key is released
+        // If the keyup note is equal to the current note saved in the ActiveVoices Object source release it.
 
         //console.log(source);
 
@@ -125,33 +158,70 @@ class KeyboardPoly extends Keyboard {
         super.KeyboardUp(keyUp, source);
 
         var keyPressed = this.GetKeyNoteOctaveString(keyUp);
-        var frequency = this.GetFrequencyOfNote(keyPressed, source);
+        var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
         var playbackSpeed; //TODO
 
 
-        for (var i = 0; i<this.ActiveVoices.length; i++){
+        //for (var i = 0; i<this.ActiveVoices.length; i++){
+        //
+        //    if (this.ActiveVoices[i] == keyUp) {
+        //
+        //        // Check whether this envelope is playing and has my frequency before releasing it
+        //        for (var j=0; j<source.Envelopes.length; j++){
+        //
+        //            // If frequency or playback speed is the same as this keyUp
+        //            if (source.Frequency) {
+        //                if (Math.round(source.Sources[j].frequency.value) == Math.round(frequency)) {
+        //                    source.Envelopes[j].triggerRelease();
+        //                }
+        //            } else if (source.PlaybackRate) {
+        //                if (Math.round(source.Sources[j].playbackRate) == Math.round(frequency)) {
+        //                    source.Envelopes[j].triggerRelease();
+        //                }
+        //            }
+        //        }
+        //
+        //        //Update the array
+        //        this.ActiveVoices.splice(i, 1);
+        //    }
+        //}
 
-            if (this.ActiveVoices[i] == keyUp) {
 
-                // Check whether this envelope is playing and has my frequency before releasing it
-                for (var j=0; j<source.Envelopes.length; j++){
+        var voiceToBeRemoved;
+        var voiceIndex;
 
-                    // If frequency or playback speed is the same as this keyUp
-                    if (source.Frequency) {
-                        if (Math.round(source.Sources[j].frequency.value) == Math.round(frequency)) {
-                            source.Envelopes[j].triggerRelease();
-                        }
-                    } else if (source.PlaybackRate) {
-                        if (Math.round(source.Sources[j].playbackRate) == Math.round(frequency)) {
-                            source.Envelopes[j].triggerRelease();
-                        }
-                    }
-                }
+        // Loop through all the active voices
+        this.ActiveVoices.forEach((voice: any, i: number) => {
 
-                //Update the array
-                this.ActiveVoices.splice(i, 1);
+            // if this active voice has the same frequency as the frequency corresponding to the keyUp
+            if ( Math.round(voice.source.frequency.value) === Math.round(keyUpFrequency) ) {
+
+                // stop it
+                voice.envelope.triggerRelease();
+
+                // Save which voice this is so we can remove it
+                voiceToBeRemoved = voice;
+
+                // What is this voices index
+                voiceIndex = i;
+
+                // break out of the loop
+                return;
             }
+        });
+
+        // Check if voiceToBeRemoved has been set
+        if ( voiceToBeRemoved ) {
+
+            // Remove voice from Active Voices
+            this.ActiveVoices.splice(voiceIndex, 1);
+
+            // Add it to FreeVoices
+            this.FreeVoices.push(voiceToBeRemoved);
         }
+
+
+
     }
 
 

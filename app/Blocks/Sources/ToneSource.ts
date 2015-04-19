@@ -53,7 +53,12 @@ class ToneSource extends Source {
 
     CreateSource(){
         super.CreateSource();
+
+        // add it to the list of sources
         this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
+
+        // return it
+        return this.Sources[this.Sources.length-1];
     }
 
     CreateEnvelope(){
@@ -64,6 +69,8 @@ class ToneSource extends Source {
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
         ));
+        
+        return this.Envelopes[this.Envelopes.length-1];
     }
 
     TriggerAttack(env?:number){
