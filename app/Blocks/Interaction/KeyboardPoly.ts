@@ -21,7 +21,7 @@ class KeyboardPoly extends Keyboard {
         this.KeysDown = {};
         this.VoicesAmount = 4;
         this.ActiveVoices = []; // list of Objects containing a source and envelope
-        this.FreeVoices = [];
+        this.FreeVoices = []; //TODO: Free and active voices should be a property of the source block instead
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -42,7 +42,7 @@ class KeyboardPoly extends Keyboard {
     Detach(source: ISource): void {
         super.Detach(source);
 
-        this.DeleteVoices(source);
+        this.DeleteVoices();
     }
 
     Dispose(){
@@ -98,22 +98,29 @@ class KeyboardPoly extends Keyboard {
 
                     // Add the source and envelope to our FreeVoices list
                     // Todo: Make this better by creating a VoiceCreator Class
-                    //this.FreeVoices.push( {
-                    //    block: source,
-                    //    source: s,
-                    //    envelope: e,
-                    //    id: i
-                    //} );
+                    this.FreeVoices.push( {
+                        Source: source,
+                        Sound: s,
+                        Envelope: e,
+                        ID: i
+                    } );
 
-                    this.FreeVoices.push( new Voice(source, s, e, i) );
+                    //this.FreeVoices.push( new Voice(source, s, e, i) );
+                    //TODO: why does the VoiceCreator class slow everything down?
 
+                }
+            } else {
+                //This Source already has enough voices but we still need to add them the this.FreeVoices
+                for (var i = 1; i <= voicesNum; i++) {
+                    this.FreeVoices.push( new Voice(source, source.Sources[i], source.Envelopes[i], i) );
                 }
             }
         }
     }
 
-    DeleteVoices(source){
-
+    DeleteVoices(){
+        this.ActiveVoices = [];
+        this.FreeVoices = [];
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
@@ -240,33 +247,13 @@ class KeyboardPoly extends Keyboard {
         super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-
-        if (param == "voices") {
-
-            // FOR ALL SOURCES
-            if (this.Sources.Count) {
-
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
-
-                    for (var j=0; j<source.Envelopes.length; j++){
-                        source.Envelopes[j].triggerRelease();
-                    }
-
-                    this.CreateVoices(source, this.VoicesAmount);
-                }
-            }
-            this.VoicesAmount = value;
-        }
     }
 
     GetParam(param: string) {
         super.GetParam(param);
         var val;
 
-        if (param == "voices") {
-            val = this.VoicesAmount;
-        } else if (param == "octave"){
+        if (param == "octave"){
             val = this.CurrentOctave;
         }
 
@@ -281,18 +268,6 @@ class KeyboardPoly extends Keyboard {
             "name" : "Poly Keyboard",
             "parameters" : [
 
-                {
-                    "type" : "slider",
-                    "name" : "Voices",
-                    "setting" :"voices",
-                    "props" : {
-                        "value" : this.GetParam("voices"),
-                        "min" : 1,
-                        "max" : 6,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
                 {
                     "type" : "slider",
                     "name" : "Octave",
