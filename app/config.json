@@ -1,3 +1,5 @@
 {
-
+    "MaxOperations": "50",
+    "PixelPaletteImagePath": "img/palette6.gif",
+    "SoundCloudClientId": "7258ff07f16ddd167b55b8f9b9a3ed33"
 }
