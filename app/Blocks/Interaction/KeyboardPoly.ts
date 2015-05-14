@@ -36,13 +36,11 @@ class KeyboardPoly extends Keyboard {
     Attach(source: ISource): void {
         super.Attach(source);
 
-        this.CreateVoices(source, this.VoicesAmount);
+        this.CreateVoices(source);
     }
 
     Detach(source: ISource): void {
         super.Detach(source);
-
-        this.DeleteVoices();
     }
 
     Dispose(){
@@ -53,19 +51,19 @@ class KeyboardPoly extends Keyboard {
         this.FreeVoices = [];
     }
 
-    CreateVoices(source: ISource, voicesNum: number){
+    CreateVoices(source: ISource){
 
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
         if (!(source instanceof Power)) {
 
             // Work out how many voices we actually need (we may already have some)
-            var diff = voicesNum - source.Sources.length;
+            var diff = this.VoicesAmount - source.Sources.length;
 
             // If we haven't got enough sources, create however many we need.
             if (diff > 0){
 
                 // Loop through and create the voices
-                for (var i = 1; i <= voicesNum; i++) {
+                for (var i = 1; i <= this.VoicesAmount; i++) {
 
 
                     // Create a source
@@ -97,30 +95,11 @@ class KeyboardPoly extends Keyboard {
                     }
 
                     // Add the source and envelope to our FreeVoices list
-                    // Todo: Make this better by creating a VoiceCreator Class
-                    this.FreeVoices.push( {
-                        Source: source,
-                        Sound: s,
-                        Envelope: e,
-                        ID: i
-                    } );
+                    this.FreeVoices.push( new Voice(source, s, e, i) );
 
-                    //this.FreeVoices.push( new Voice(source, s, e, i) );
-                    //TODO: why does the VoiceCreator class slow everything down?
-
-                }
-            } else {
-                //This Source already has enough voices but we still need to add them the this.FreeVoices
-                for (var i = 1; i <= voicesNum; i++) {
-                    this.FreeVoices.push( new Voice(source, source.Sources[i], source.Envelopes[i], i) );
                 }
             }
         }
-    }
-
-    DeleteVoices(){
-        this.ActiveVoices = [];
-        this.FreeVoices = [];
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
