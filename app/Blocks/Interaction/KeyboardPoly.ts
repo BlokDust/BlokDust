@@ -1,4 +1,5 @@
 import Keyboard = require("./Keyboard");
+import Voice = require("./VoiceCreator");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
@@ -11,8 +12,8 @@ class KeyboardPoly extends Keyboard {
 
 
     public VoicesAmount: number;
-    public ActiveVoices: any[];
-    public FreeVoices: any[];
+    public ActiveVoices: Voice[];
+    public FreeVoices: Voice[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -96,10 +97,15 @@ class KeyboardPoly extends Keyboard {
                     }
 
                     // Add the source and envelope to our FreeVoices list
-                    this.FreeVoices.push( {
-                        source: s,
-                        envelope: e
-                    } );
+                    // Todo: Make this better by creating a VoiceCreator Class
+                    //this.FreeVoices.push( {
+                    //    block: source,
+                    //    source: s,
+                    //    envelope: e,
+                    //    id: i
+                    //} );
+
+                    this.FreeVoices.push( new Voice(source, s, e, i) );
 
                 }
             }
@@ -129,9 +135,12 @@ class KeyboardPoly extends Keyboard {
 
 
             // set it to the right frequency
-            if (voice.source.frequency){
-                voice.source.frequency.value = frequency;
+
+            //voice.block.SetNote(frequency, );
+            if (voice.Sound.frequency){
+                voice.Sound.frequency.value = frequency;
                 //Todo: Call sources "SetNote" function
+                //source.setNote(frequency, )
             }
 
 
@@ -139,17 +148,17 @@ class KeyboardPoly extends Keyboard {
             // get it's corresponding envelope;
 
             // trigger it's envelope
-            voice.envelope.triggerAttack();
+            voice.Envelope.triggerAttack();
 
 
         } else {
 
             // No free voices available - steal the oldest one from active voices
-            var voice = this.ActiveVoices.shift();
+            var voice: Voice = this.ActiveVoices.shift();
 
             // ramp it to the frequency
-            if (voice.source.frequency) {
-                voice.source.frequency.rampTo(frequency, 0);
+            if (voice.Sound.frequency) {
+                voice.Sound.frequency.rampTo(frequency, 0);
             }
 
             // Add it back to the end of ActiveVoices
@@ -171,15 +180,15 @@ class KeyboardPoly extends Keyboard {
         var voiceIndex;
 
         // Loop through all the active voices
-        this.ActiveVoices.forEach((voice: any, i: number) => {
+        this.ActiveVoices.forEach((voice: Voice, i: number) => {
 
-            if (voice.source.frequency) {
+            if (voice.Sound.frequency) {
 
                 // if this active voice has the same frequency as the frequency corresponding to the keyUp
-                if (Math.round(voice.source.frequency.value) === Math.round(keyUpFrequency)) {
+                if (Math.round(voice.Sound.frequency.value) === Math.round(keyUpFrequency)) {
 
                     // stop it
-                    voice.envelope.triggerRelease();
+                    voice.Envelope.triggerRelease();
 
                     // Save which voice this is so we can remove it
                     voiceToBeRemoved = voice;
@@ -191,14 +200,14 @@ class KeyboardPoly extends Keyboard {
                     return;
                 }
 
-            } else if (voice.source.pitch) {
+            } else if (voice.Sound.pitch) {
                 // For samplers
 
                 // if this active voice has the same frequency as the frequency corresponding to the keyUp
-                if (Math.round(voice.source.frequency.value) === Math.round(keyUpFrequency)) {
+                if (Math.round(voice.Sound.frequency.value) === Math.round(keyUpFrequency)) {
 
                     // stop it
-                    voice.envelope.triggerRelease();
+                    voice.Envelope.triggerRelease();
 
                     // Save which voice this is so we can remove it
                     voiceToBeRemoved = voice;
