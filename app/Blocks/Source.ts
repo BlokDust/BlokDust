@@ -5,6 +5,7 @@ import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import Power = require("./Power/Power");
+import Voice = require("./Interaction/VoiceObject");
 
 class Source extends Block implements ISource {
 
@@ -27,7 +28,8 @@ class Source extends Block implements ISource {
         }
     };
 
-    //public Params: any;
+    public ActiveVoices: Voice[];
+    public FreeVoices: Voice[];
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -35,6 +37,8 @@ class Source extends Block implements ISource {
 
         this.Sources = [];
         this.Envelopes = [];
+        this.ActiveVoices = [];
+        this.FreeVoices = [];
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
@@ -231,6 +235,9 @@ class Source extends Block implements ISource {
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
         if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
+
+        this.ActiveVoices = [];
+        this.FreeVoices = [];
     }
 
     SetPlaybackRate(rate,time) {

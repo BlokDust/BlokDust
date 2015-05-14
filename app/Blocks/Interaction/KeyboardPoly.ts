@@ -1,5 +1,5 @@
 import Keyboard = require("./Keyboard");
-import Voice = require("./VoiceCreator");
+import Voice = require("./VoiceObject");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
@@ -10,18 +10,13 @@ import Power = require("../Power/Power");
 
 class KeyboardPoly extends Keyboard {
 
-
     public VoicesAmount: number;
-    public ActiveVoices: Voice[];
-    public FreeVoices: Voice[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
         this.KeysDown = {};
         this.VoicesAmount = 4;
-        this.ActiveVoices = []; // list of Objects containing a source and envelope
-        this.FreeVoices = []; //TODO: Free and active voices should be a property of the source block instead
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -47,8 +42,6 @@ class KeyboardPoly extends Keyboard {
         super.Dispose();
         this.KeysDown = null;
         this.VoicesAmount = null;
-        this.ActiveVoices = [];
-        this.FreeVoices = [];
     }
 
     CreateVoices(source: ISource){
@@ -64,7 +57,6 @@ class KeyboardPoly extends Keyboard {
 
                 // Loop through and create the voices
                 for (var i = 1; i <= this.VoicesAmount; i++) {
-
 
                     // Create a source
                     var s: Tone.Source = source.CreateSource();
@@ -95,7 +87,7 @@ class KeyboardPoly extends Keyboard {
                     }
 
                     // Add the source and envelope to our FreeVoices list
-                    this.FreeVoices.push( new Voice(source, s, e, i) );
+                    source.FreeVoices.push( new Voice(source, s, e, i) );
 
                 }
             }
@@ -111,27 +103,22 @@ class KeyboardPoly extends Keyboard {
 
 
         // Are there any free voices?
-        if (this.FreeVoices.length > 0){
+        if (source.FreeVoices.length > 0){
 
             // Yes, get one of them and remove it from FreeVoices list
-            var voice = this.FreeVoices.shift();
+            var voice = source.FreeVoices.shift();
 
             // Add it to the ActiveVoices list
-            this.ActiveVoices.push( voice );
+            source.ActiveVoices.push( voice );
 
 
             // set it to the right frequency
 
-            //voice.block.SetNote(frequency, );
             if (voice.Sound.frequency){
                 voice.Sound.frequency.value = frequency;
                 //Todo: Call sources "SetNote" function
                 //source.setNote(frequency, )
             }
-
-
-
-            // get it's corresponding envelope;
 
             // trigger it's envelope
             voice.Envelope.triggerAttack();
@@ -140,7 +127,7 @@ class KeyboardPoly extends Keyboard {
         } else {
 
             // No free voices available - steal the oldest one from active voices
-            var voice: Voice = this.ActiveVoices.shift();
+            var voice: Voice = source.ActiveVoices.shift();
 
             // ramp it to the frequency
             if (voice.Sound.frequency) {
@@ -148,10 +135,9 @@ class KeyboardPoly extends Keyboard {
             }
 
             // Add it back to the end of ActiveVoices
-            this.ActiveVoices.push( voice );
+            source.ActiveVoices.push( voice );
 
         }
-
 
     }
 
@@ -166,7 +152,7 @@ class KeyboardPoly extends Keyboard {
         var voiceIndex;
 
         // Loop through all the active voices
-        this.ActiveVoices.forEach((voice: Voice, i: number) => {
+        source.ActiveVoices.forEach((voice: Voice, i: number) => {
 
             if (voice.Sound.frequency) {
 
@@ -211,13 +197,11 @@ class KeyboardPoly extends Keyboard {
         if ( voiceToBeRemoved ) {
 
             // Remove voice from Active Voices
-            this.ActiveVoices.splice(voiceIndex, 1);
+            source.ActiveVoices.splice(voiceIndex, 1);
 
             // Add it to FreeVoices
-            this.FreeVoices.push(voiceToBeRemoved);
+            source.FreeVoices.push(voiceToBeRemoved);
         }
-
-
 
     }
 
