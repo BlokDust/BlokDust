@@ -19,7 +19,8 @@ interface ISource extends IBlock{
     RecordedAudio?: any;
     LoopStartPosition?: number;
     LoopEndPosition?: number;
-    CreateSource(): void;
+    CreateSource();
+    CreateEnvelope();
     ValidateEffects(): void;
     SetPlaybackRate(rate,time): void;
     TriggerAttack(envelope?:number): void;

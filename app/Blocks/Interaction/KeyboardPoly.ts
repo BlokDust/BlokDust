@@ -32,13 +32,13 @@ class KeyboardPoly extends Keyboard {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"poly keyboard");
     }
 
-    Attach(source:ISource): void {
+    Attach(source: ISource): void {
         super.Attach(source);
 
         this.CreateVoices(source, this.VoicesAmount);
     }
 
-    Detach(source:ISource): void {
+    Detach(source: ISource): void {
         super.Detach(source);
 
         this.DeleteVoices(source);
@@ -52,7 +52,7 @@ class KeyboardPoly extends Keyboard {
         this.FreeVoices = [];
     }
 
-    CreateVoices(source, voicesNum){
+    CreateVoices(source: ISource, voicesNum: number){
 
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
         if (!(source instanceof Power)) {
@@ -66,19 +66,34 @@ class KeyboardPoly extends Keyboard {
                 // Loop through and create the voices
                 for (var i = 1; i <= voicesNum; i++) {
 
+
                     // Create a source
-                    var s: any = source.CreateSource();
+                    var s: Tone.Source = source.CreateSource();
 
-                    // Create an envelope
-                    var e: Tone.AmplitudeEnvelope = source.CreateEnvelope();
+                    var e: Tone.AmplitudeEnvelope;
 
-                    // Connect it to the Envelope and start
-                    s.connect(e).start();
+                    // If the source has a CreateEnvelope function
+                    if (source.CreateEnvelope()) {
 
-                    // Connect Envelope to the Effects Chain
-                    e.connect(source.EffectsChainInput);
+                        // Create an envelope and save it to `var e`
+                        e = source.CreateEnvelope();
 
+                        // Connect the source to the Envelope and start
+                        s.connect(e);
+                        s.start();
 
+                        // Connect Envelope to the Effects Chain
+                        e.connect(source.EffectsChainInput);
+
+                    } else {
+                        // No CreateEnvelope()
+                        // Check if it's a Sampler Source (they have their own envelopes built in)
+                        if (source.Sources[0] instanceof Tone.Sampler) {
+                            e = source.Sources[i].envelope;
+                            s.connect(source.EffectsChainInput)
+                        }
+
+                    }
 
                     // Add the source and envelope to our FreeVoices list
                     this.FreeVoices.push( {
@@ -116,8 +131,9 @@ class KeyboardPoly extends Keyboard {
             // set it to the right frequency
             if (voice.source.frequency){
                 voice.source.frequency.value = frequency;
-                //Todo: Call sources "SetFrequency" function
+                //Todo: Call sources "SetNote" function
             }
+
 
 
             // get it's corresponding envelope;
@@ -132,24 +148,14 @@ class KeyboardPoly extends Keyboard {
             var voice = this.ActiveVoices.shift();
 
             // ramp it to the frequency
-            voice.source.frequency.rampTo( frequency, 0 );
+            if (voice.source.frequency) {
+                voice.source.frequency.rampTo(frequency, 0);
+            }
 
             // Add it back to the end of ActiveVoices
             this.ActiveVoices.push( voice );
 
         }
-
-
-        // Active voices is an array of sources that are in use
-
-        // Key is pressed
-        // Add to ActiveVoices object
-        // Each item should be the source that is in use - set the current note here too
-
-        // Key is released
-        // If the keyup note is equal to the current note saved in the ActiveVoices Object source release it.
-
-        //console.log(source);
 
 
     }
@@ -161,52 +167,48 @@ class KeyboardPoly extends Keyboard {
         var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
         var playbackSpeed; //TODO
 
-
-        //for (var i = 0; i<this.ActiveVoices.length; i++){
-        //
-        //    if (this.ActiveVoices[i] == keyUp) {
-        //
-        //        // Check whether this envelope is playing and has my frequency before releasing it
-        //        for (var j=0; j<source.Envelopes.length; j++){
-        //
-        //            // If frequency or playback speed is the same as this keyUp
-        //            if (source.Frequency) {
-        //                if (Math.round(source.Sources[j].frequency.value) == Math.round(frequency)) {
-        //                    source.Envelopes[j].triggerRelease();
-        //                }
-        //            } else if (source.PlaybackRate) {
-        //                if (Math.round(source.Sources[j].playbackRate) == Math.round(frequency)) {
-        //                    source.Envelopes[j].triggerRelease();
-        //                }
-        //            }
-        //        }
-        //
-        //        //Update the array
-        //        this.ActiveVoices.splice(i, 1);
-        //    }
-        //}
-
-
         var voiceToBeRemoved;
         var voiceIndex;
 
         // Loop through all the active voices
         this.ActiveVoices.forEach((voice: any, i: number) => {
 
-            // if this active voice has the same frequency as the frequency corresponding to the keyUp
-            if ( Math.round(voice.source.frequency.value) === Math.round(keyUpFrequency) ) {
+            if (voice.source.frequency) {
 
-                // stop it
-                voice.envelope.triggerRelease();
+                // if this active voice has the same frequency as the frequency corresponding to the keyUp
+                if (Math.round(voice.source.frequency.value) === Math.round(keyUpFrequency)) {
 
-                // Save which voice this is so we can remove it
-                voiceToBeRemoved = voice;
+                    // stop it
+                    voice.envelope.triggerRelease();
 
-                // What is this voices index
-                voiceIndex = i;
+                    // Save which voice this is so we can remove it
+                    voiceToBeRemoved = voice;
 
-                // break out of the loop
-                return;
+                    // What is this voices index
+                    voiceIndex = i;
+
+                    // break out of the loop
+                    return;
+                }
+
+            } else if (voice.source.pitch) {
+                // For samplers
+
+                // if this active voice has the same frequency as the frequency corresponding to the keyUp
+                if (Math.round(voice.source.frequency.value) === Math.round(keyUpFrequency)) {
+
+                    // stop it
+                    voice.envelope.triggerRelease();
+
+                    // Save which voice this is so we can remove it
+                    voiceToBeRemoved = voice;
+
+                    // What is this voices index
+                    voiceIndex = i;
+
+                    // break out of the loop
+                    return;
+                }
             }
         });
 

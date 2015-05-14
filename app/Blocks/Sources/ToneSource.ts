@@ -23,12 +23,13 @@ class ToneSource extends Source {
         this.CreateSource();
         this.CreateEnvelope();
 
-        this.Envelopes.forEach((e: any)=> {
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.connect(this.EffectsChainInput);
         });
 
-        this.Sources.forEach((s: any, i:number)=> {
-            s.connect(this.Envelopes[i]).start();
+        this.Sources.forEach((s: Tone.Oscillator, i: number)=> {
+            s.connect(this.Envelopes[i]);
+            s.start();
         });
 
 

@@ -22,10 +22,12 @@ class Soundcloud extends Source {
 
         this.CreateSource();
 
-        this.Sources.forEach((s: any)=> {
+        this.Sources.forEach((s: Tone.Sampler)=> {
             s.player.loop = true;
             s.player.loopStart = 0; // 0 is the beginning
             s.player.loopEnd = -1; // -1 goes to the end of the track
+            s.player.retrigger = true;
+            //s.player.reverse = true; //TODO: add reverse capability
         });
 
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
@@ -54,19 +56,18 @@ class Soundcloud extends Source {
     CreateSource(){
         super.CreateSource();
         this.Sources.push( new Tone.Sampler(this.AudioUrl) );
-    }
 
-    CreateEnvelope(){
-        super.CreateEnvelope();
+        // return it
+        return this.Sources[this.Sources.length-1];
     }
 
     TriggerAttack() {
         super.TriggerAttack();
 
         if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttack();
-            });
+
+            this.Sources[0].triggerAttack();
+
         }
     }
 
@@ -74,7 +75,7 @@ class Soundcloud extends Source {
         super.TriggerRelease();
 
         if(!this.IsPowered()) {
-            this.Sources.forEach((s: any)=> {
+            this.Sources.forEach((s: Tone.Sampler)=> {
                 s.triggerRelease();
             });
         }
