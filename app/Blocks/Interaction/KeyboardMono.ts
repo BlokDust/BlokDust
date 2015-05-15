@@ -111,7 +111,8 @@ class KeyboardMono extends Keyboard {
         // If no other keys already pressed trigger attack
         if (Object.keys(this.KeysDown).length === 1) {
             if (source.Sources[0].frequency){
-                source.Sources[0].frequency.exponentialRampToValueNow(frequency, 0);
+                //source.Sources[0].frequency.exponentialRampToValueNow(frequency, 0);
+                source.SetPitch(frequency);
             } else if (source.PlaybackRate){
                 source.SetPlaybackRate(playbackRate, 0);
 
@@ -126,7 +127,9 @@ class KeyboardMono extends Keyboard {
         // Else ramp to new frequency over time (glide)
         } else {
             if (source.Sources[0].frequency) {
-                source.Sources[0].frequency.exponentialRampToValueNow(frequency, this.Glide);
+                //source.Sources[0].frequency.exponentialRampToValueNow(frequency, this.Glide);
+                source.SetPitch(frequency, 0, this.Glide);
+
             } else if (source.PlaybackRate){
                 source.SetPlaybackRate(playbackRate, this.Glide);
             }

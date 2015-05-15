@@ -244,6 +244,15 @@ class Source extends Block implements ISource {
 
     }
 
+    SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time) {
+        // If no sourceId or rampTime is given default to 0
+        var id = sourceId ? sourceId : 0;
+        var time = rampTime ? rampTime : 0;
+
+        // todo: conditionals here
+        this.Sources[id].frequency.exponentialRampToValueNow(pitch, time);
+    }
+
     GetParam(param: string) {
 
         var val;
