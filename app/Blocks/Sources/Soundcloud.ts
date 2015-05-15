@@ -115,20 +115,11 @@ class Soundcloud extends Source {
         };
     }
 
-    SetPlaybackRate(rate,time?) {
-        super.SetPlaybackRate(rate,time);
-        this.Sources.forEach((s: any)=> {
-            s.player.playbackRate = rate; //TODO: when playback rate becomes a signal ramp using the glide
-        });
-
-        this.PlaybackRate = rate;
-    }
-
     SetParam(param: string,value: any) {
         super.SetParam(param,value);
 
         if (param == "playbackRate") {
-            this.SetPlaybackRate(value);
+            this.SetPitch(value);
         }
     }
 

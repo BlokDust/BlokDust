@@ -99,8 +99,6 @@ class KeyboardPoly extends Keyboard {
 
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
-        //TODO: add a playback speed option to GetFrequencyOfNote;
-
 
         // Are there any free voices?
         if (source.FreeVoices.length > 0){
@@ -113,30 +111,22 @@ class KeyboardPoly extends Keyboard {
 
 
             // set it to the right frequency
-
-            if (voice.Sound.frequency){
-                //voice.Sound.frequency.value = frequency;
-                source.SetPitch(frequency, voice.ID)
-            }
+            source.SetPitch(frequency, voice.ID);
 
             // trigger it's envelope
-            voice.Envelope.triggerAttack();
-
+            //voice.Envelope.triggerAttack();
+            source.TriggerAttack(voice.ID)
 
         } else {
 
             // No free voices available - steal the oldest one from active voices
             var voice: Voice = source.ActiveVoices.shift();
 
-            // ramp it to the frequency
-            if (voice.Sound.frequency) {
-                //voice.Sound.frequency.rampTo(frequency, 0);
-                source.SetPitch(frequency, voice.ID)
-            }
+            // Set the new pitch
+            source.SetPitch(frequency, voice.ID);
 
             // Add it back to the end of ActiveVoices
             source.ActiveVoices.push( voice );
-
         }
 
     }
@@ -146,8 +136,6 @@ class KeyboardPoly extends Keyboard {
 
         var keyPressed = this.GetKeyNoteOctaveString(keyUp);
         var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
-        var playbackSpeed; //TODO
-
         var voiceToBeRemoved;
         var voiceIndex;
 
@@ -167,9 +155,6 @@ class KeyboardPoly extends Keyboard {
 
                     // What is this voices index
                     voiceIndex = i;
-
-                    // break out of the loop
-                    return;
                 }
 
             } else if (voice.Sound.pitch) {

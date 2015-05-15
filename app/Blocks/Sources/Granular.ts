@@ -380,10 +380,11 @@ class Granular extends Source {
         return location;
     }
 
-    SetPlaybackRate(rate,time) {
-        super.SetPlaybackRate(rate,time);
+    SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
+        super.SetPitch(pitch, sourceId, rampTime);
         for (var i=0; i<this.MaxDensity; i++) {
-            this.PlaybackRate = rate;
+            pitch /= 440;
+            this.PlaybackRate = pitch;
         }
     }
 

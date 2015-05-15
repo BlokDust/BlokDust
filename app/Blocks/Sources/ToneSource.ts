@@ -74,34 +74,13 @@ class ToneSource extends Source {
         return this.Envelopes[this.Envelopes.length-1];
     }
 
-    TriggerAttack(env?:number){
-        super.TriggerAttack();
-        if (this.IsDisposed) return;
 
-        // is there specific source to attack?
-        //if (env){
-            this.Envelopes[0].triggerAttack();
-        //} else {
-        //    // Else attack all
-        //    this.Envelopes.forEach((e: any)=> {
-        //        e.triggerAttack();
-        //    });
-        //}
+    TriggerAttack(index?:number|string){
+        super.TriggerAttack();
     }
 
-
-
-    TriggerRelease(){
+    TriggerRelease(index?:number|string){
         super.TriggerRelease();
-        if (this.IsDisposed) return;
-        if(!this.IsPowered()){
-
-            this.Envelopes.forEach((e: any)=> {
-                e.triggerRelease();
-            });
-
-        }
-
     }
 
     TriggerAttackRelease(){
