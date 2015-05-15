@@ -60,21 +60,21 @@ class Noise extends Source {
         ));
     }
 
-    TriggerAttack(){
-        super.TriggerAttack();
-        this.Envelopes.forEach((e: any)=> {
-            e.triggerAttack();
-        });
-    }
+    //TriggerAttack(){
+    //    super.TriggerAttack();
+    //    this.Envelopes.forEach((e: any)=> {
+    //        e.triggerAttack();
+    //    });
+    //}
 
-    TriggerRelease(){
-        super.TriggerRelease();
-        if(!this.IsPowered()){
-            this.Envelopes.forEach((e: any)=> {
-                e.triggerRelease();
-            });
-        }
-    }
+    //TriggerRelease(){
+    //    super.TriggerRelease();
+    //    if(!this.IsPowered()){
+    //        this.Envelopes.forEach((e: any)=> {
+    //            e.triggerRelease();
+    //        });
+    //    }
+    //}
 
     TriggerAttackRelease(){
         super.TriggerAttackRelease();

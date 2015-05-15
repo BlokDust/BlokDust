@@ -74,19 +74,6 @@ class ToneSource extends Source {
         return this.Envelopes[this.Envelopes.length-1];
     }
 
-
-    TriggerAttack(index?:number|string){
-        super.TriggerAttack();
-    }
-
-    TriggerRelease(index?:number|string){
-        super.TriggerRelease();
-    }
-
-    TriggerAttackRelease(){
-        super.TriggerAttackRelease();
-    }
-
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
 

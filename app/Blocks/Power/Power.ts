@@ -26,7 +26,7 @@ class Power extends Effect {
     Detach(source:ISource): void {
 
         if (!source.IsPressed){
-            source.TriggerRelease();
+            source.TriggerRelease('all');
         }
 
         super.Detach(source);

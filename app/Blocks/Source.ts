@@ -223,7 +223,7 @@ class Source extends Block implements ISource {
      * @constructor
      */
     TriggerRelease(index?: number|string){
-        if (this.IsDisposed) return;
+        //if (this.IsDisposed) return;
 
         // Only if the source has envelopes AND if it's not powered
         if (this.Envelopes.length && !this.IsPowered()) {

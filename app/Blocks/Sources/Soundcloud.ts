@@ -61,25 +61,25 @@ class Soundcloud extends Source {
         return this.Sources[this.Sources.length-1];
     }
 
-    TriggerAttack() {
-        super.TriggerAttack();
+    //TriggerAttack(index?: number|string) {
+    //    super.TriggerAttack(index);
+    //
+    //    //if(!this.IsPowered() || this.Sources[index].player.state === "stopped") {
+    //    //
+    //    //    this.Sources[index].triggerAttack();
+    //    //
+    //    //}
+    //}
 
-        if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
-
-            this.Sources[0].triggerAttack();
-
-        }
-    }
-
-    TriggerRelease() {
-        super.TriggerRelease();
-
-        if(!this.IsPowered()) {
-            this.Sources.forEach((s: Tone.Sampler)=> {
-                s.triggerRelease();
-            });
-        }
-    }
+    //TriggerRelease() {
+    //    super.TriggerRelease();
+    //
+    //    //if(!this.IsPowered()) {
+    //    //    this.Sources.forEach((s: Tone.Sampler)=> {
+    //    //        s.triggerRelease();
+    //    //    });
+    //    //}
+    //}
 
     Update() {
         super.Update();
