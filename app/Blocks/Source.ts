@@ -240,17 +240,24 @@ class Source extends Block implements ISource {
         this.FreeVoices = [];
     }
 
-    SetPlaybackRate(rate,time) {
+    SetPlaybackRate(rate,time?) {
 
     }
 
-    SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time) {
+    SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         // If no sourceId or rampTime is given default to 0
-        var id = sourceId ? sourceId : 0;
-        var time = rampTime ? rampTime : 0;
+        var id: number = sourceId ? sourceId : 0;
+        var time: Tone.Time = rampTime ? rampTime : 0;
 
-        // todo: conditionals here
-        this.Sources[id].frequency.exponentialRampToValueNow(pitch, time);
+
+        if (this.Sources[id].frequency) {
+            // Changing a frequency
+            this.Sources[id].frequency.exponentialRampToValueNow(pitch, time);
+        } else if (this.Sources[id].player.playbackRate) {
+            var playbackRate: number = pitch / 440;
+            this.SetPlaybackRate(playbackRate); //TODO: remove SetPlaybackRate and do everything in here
+        }
+
     }
 
     GetParam(param: string) {

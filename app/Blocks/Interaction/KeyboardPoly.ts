@@ -116,7 +116,6 @@ class KeyboardPoly extends Keyboard {
 
             if (voice.Sound.frequency){
                 //voice.Sound.frequency.value = frequency;
-                //Todo: Call sources "SetNote" function
                 source.SetPitch(frequency, voice.ID)
             }
 
@@ -131,7 +130,8 @@ class KeyboardPoly extends Keyboard {
 
             // ramp it to the frequency
             if (voice.Sound.frequency) {
-                voice.Sound.frequency.rampTo(frequency, 0);
+                //voice.Sound.frequency.rampTo(frequency, 0);
+                source.SetPitch(frequency, voice.ID)
             }
 
             // Add it back to the end of ActiveVoices
