@@ -28,12 +28,12 @@ class Microphone extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
         this.Sources.push( new Tone.Microphone() );
+        return super.CreateSource();
     }
 
     CreateEnvelope(){
-        super.CreateEnvelope();
+        return super.CreateEnvelope();
     }
 
     TriggerAttack(){

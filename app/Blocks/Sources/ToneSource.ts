@@ -53,25 +53,22 @@ class ToneSource extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
-
         // add it to the list of sources
         this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
 
         // return it
-        return this.Sources[this.Sources.length-1];
+        return super.CreateSource();
     }
 
     CreateEnvelope(){
-        super.CreateEnvelope();
         this.Envelopes.push( new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
         ));
-        
-        return this.Envelopes[this.Envelopes.length-1];
+
+        return super.CreateEnvelope();
     }
 
     ParticleCollision(particle: Particle) {

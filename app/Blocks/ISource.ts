@@ -22,8 +22,8 @@ interface ISource extends IBlock{
     LoopEndPosition?: number;
     ActiveVoices: Voice[];
     FreeVoices: Voice[];
-    CreateSource();
-    CreateEnvelope();
+    CreateSource(): any;
+    CreateEnvelope(): Tone.AmplitudeEnvelope;
     ValidateEffects(): void;
     SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time): void;
     TriggerAttack(index?: number|string): void;

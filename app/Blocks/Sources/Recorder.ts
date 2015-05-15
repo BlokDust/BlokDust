@@ -136,13 +136,11 @@ class RecorderBlock extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
-
+        return super.CreateSource();
     }
 
     CreateEnvelope(){
-        super.CreateEnvelope();
-
+        return super.CreateEnvelope();
     }
 
     TriggerAttack(){

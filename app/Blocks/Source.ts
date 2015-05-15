@@ -181,9 +181,17 @@ class Source extends Block implements ISource {
     }
 
 
-    CreateSource(){}
+    CreateSource(){
+        if (this.Sources[this.Sources.length-1]){
+            return this.Sources[this.Sources.length-1];
+        }
+    }
 
-    CreateEnvelope(){}
+    CreateEnvelope(){
+        if (this.Envelopes[this.Envelopes.length-1]) {
+            return this.Envelopes[this.Envelopes.length-1];
+        }
+    }
 
     Stop() {
         this.TriggerRelease();
@@ -198,11 +206,11 @@ class Source extends Block implements ISource {
     TriggerAttack(index?: number|string){
         if (this.IsDisposed) return;
 
+        // is the index set?
+        var i: any = index? index: 0;
+
         // Only if the source has envelopes
         if (this.Envelopes.length) {
-
-            // is the index set?
-            var i: any = index? index: 0;
 
             if (i === 'all'){
                 // Trigger all the envelopes
@@ -212,6 +220,18 @@ class Source extends Block implements ISource {
             } else {
                 // Trigger the specific one
                 this.Envelopes[i].triggerAttack();
+            }
+
+        // Or Samplers have built in envelopes
+        } else if (this.Sources[0] && this.Sources[0].envelope) {
+            if (i === 'all'){
+                // Trigger all the envelopes
+                this.Sources.forEach((s: any)=> {
+                    s.triggerAttack();
+                });
+            } else {
+                // Trigger the specific one
+                this.Sources[i].triggerAttack();
             }
         }
     }
@@ -225,20 +245,36 @@ class Source extends Block implements ISource {
     TriggerRelease(index?: number|string){
         //if (this.IsDisposed) return;
 
-        // Only if the source has envelopes AND if it's not powered
-        if (this.Envelopes.length && !this.IsPowered()) {
+        // Only it's not powered
+        if (!this.IsPowered()) {
 
             // is the index set?
             var i: any = index? index: 0;
 
-            if (i === 'all'){
-                // Trigger all the envelopes
-                this.Envelopes.forEach((e: any)=> {
-                    e.triggerRelease();
-                });
-            } else {
-                // Trigger the specific one
-                this.Envelopes[i].triggerRelease();
+            // Only if the source has envelopes
+            if (this.Envelopes.length) {
+
+                if (i === 'all'){
+                    // Trigger all the envelopes
+                    this.Envelopes.forEach((e: any)=> {
+                        e.triggerRelease();
+                    });
+                } else {
+                    // Trigger the specific one
+                    this.Envelopes[i].triggerRelease();
+                }
+
+            // Or Samplers have built in envelopes
+            } else if (this.Sources[0] && this.Sources[0].envelope) {
+                if (i === 'all'){
+                    // Trigger all the envelopes
+                    this.Sources.forEach((s: any)=> {
+                        s.triggerRelease();
+                    });
+                } else {
+                    // Trigger the specific one
+                    this.Sources[i].triggerRelease();
+                }
             }
         }
     }
@@ -286,8 +322,27 @@ class Source extends Block implements ISource {
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
         if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
 
-        this.ActiveVoices = [];
-        this.FreeVoices = [];
+
+        if (this.ActiveVoices.length) {
+            this.ActiveVoices.forEach((s: Voice)=> {
+                s.Envelope.dispose();
+                s.Sound.dispose();
+                s.Source.Dispose();
+                s.ID = null
+            });
+            this.ActiveVoices = [];
+        }
+
+        if (this.FreeVoices.length) {
+            this.FreeVoices.forEach((s: Voice)=> {
+                s.Envelope.dispose();
+                s.Sound.dispose();
+                s.Source.Dispose();
+                s.ID = null;
+            });
+            this.FreeVoices = [];
+        }
+
     }
 
     /**

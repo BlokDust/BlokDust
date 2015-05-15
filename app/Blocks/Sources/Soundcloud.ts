@@ -54,32 +54,9 @@ class Soundcloud extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
         this.Sources.push( new Tone.Sampler(this.AudioUrl) );
-
-        // return it
-        return this.Sources[this.Sources.length-1];
+        return super.CreateSource();
     }
-
-    //TriggerAttack(index?: number|string) {
-    //    super.TriggerAttack(index);
-    //
-    //    //if(!this.IsPowered() || this.Sources[index].player.state === "stopped") {
-    //    //
-    //    //    this.Sources[index].triggerAttack();
-    //    //
-    //    //}
-    //}
-
-    //TriggerRelease() {
-    //    super.TriggerRelease();
-    //
-    //    //if(!this.IsPowered()) {
-    //    //    this.Sources.forEach((s: Tone.Sampler)=> {
-    //    //        s.triggerRelease();
-    //    //    });
-    //    //}
-    //}
 
     Update() {
         super.Update();

@@ -46,35 +46,20 @@ class Noise extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
         this.Sources.push( new Tone.Noise( this.Waveform ) );
+        return super.CreateSource();
     }
 
     CreateEnvelope(){
-        super.CreateEnvelope();
         this.Envelopes.push( new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
         ));
+
+        return super.CreateEnvelope();
     }
-
-    //TriggerAttack(){
-    //    super.TriggerAttack();
-    //    this.Envelopes.forEach((e: any)=> {
-    //        e.triggerAttack();
-    //    });
-    //}
-
-    //TriggerRelease(){
-    //    super.TriggerRelease();
-    //    if(!this.IsPowered()){
-    //        this.Envelopes.forEach((e: any)=> {
-    //            e.triggerRelease();
-    //        });
-    //    }
-    //}
 
     TriggerAttackRelease(){
         super.TriggerAttackRelease();
@@ -174,11 +159,11 @@ class Noise extends Source {
     Dispose() {
         super.Dispose();
 
-        this.Sources.forEach((s: any, i:number)=> {
+        this.Sources.forEach((s: any)=> {
             s.dispose();
         });
 
-        this.Envelopes.forEach((e: any, i:number)=> {
+        this.Envelopes.forEach((e: any)=> {
             e.dispose();
         });
 

@@ -276,19 +276,19 @@ class Granular extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
         this.Sources.push( new Tone.Signal() );
-
+        // return it
+        return super.CreateSource();
     }
 
     CreateEnvelope(){
-        super.CreateEnvelope();
         this.Envelopes.push( new Tone.Envelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
         ) );
+        return super.CreateEnvelope();
     }
 
     TriggerAttack() {
