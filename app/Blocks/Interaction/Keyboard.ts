@@ -101,7 +101,7 @@ class Keyboard extends PreEffect {
     Dispose(){
         this.KeysDown = {};
         this.BaseFrequency = null;
-        this.Params.CurrentOctave = null;
+        this.Params.octave = null;
         App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
         App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
     }

@@ -1,4 +1,5 @@
 import Keyboard = require("./Keyboard");
+import KeyboardPoly = require("./KeyboardPoly");
 import Voice = require("./VoiceObject");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
@@ -13,6 +14,15 @@ class MIDIController extends KeyboardPoly {
     public VoicesAmount: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+
+
+        if (!this.Params) {
+            this.Params = {
+                glide: 0.05,
+                octave: 3
+            };
+
+        }
         super.Init(sketch);
 
         this.KeysDown = {};
@@ -152,11 +162,18 @@ class MIDIController extends KeyboardPoly {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
+
+        if (param == "octaves") {
+            this.TriggerReleaseAll();
+        }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
+
+
+/*    GetParam(param: string) {
         super.GetParam(param);
         var val;
 
@@ -165,7 +182,7 @@ class MIDIController extends KeyboardPoly {
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -180,7 +197,7 @@ class MIDIController extends KeyboardPoly {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.GetParam("octave"),
+                        "value" : this.Params.octave,
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,
