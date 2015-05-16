@@ -13,11 +13,13 @@ class Laser extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Params = {
-            angle: -90,
-            range: 400,
-            rotate: 0
-        };
+        if (!this.Params) {
+            this.Params = {
+                angle: -90,
+                range: 400,
+                rotate: 0
+            };
+        }
 
         super.Init(sketch);
 
@@ -103,14 +105,13 @@ class Laser extends Source {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
 
         if (param=="angle") {
-            this.Params[""+param] = (value-90);
-        } else {
-            this.Params[""+param] = value;
+            val = (value-90);
         }
 
-
+        this.Params[""+param] = val;
     }
 }
 

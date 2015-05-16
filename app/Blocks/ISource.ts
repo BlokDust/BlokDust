@@ -12,8 +12,8 @@ interface ISource extends IBlock{
     EffectsChainInput?: Tone.Signal;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
-    //Params: any;
-    Frequency?: number;
+    WaveIndex: string[];
+    //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];
     MaxDensity?: number;

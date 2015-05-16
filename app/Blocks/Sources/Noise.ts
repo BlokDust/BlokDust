@@ -15,6 +15,15 @@ class Noise extends Source {
         this.Waveform = 'brown';
         this.PlaybackRate = 1;
 
+        this.WaveIndex = ["white","pink","brown"];
+
+        if (!this.Params) {
+            this.Params = {
+                playback: 1,
+                waveform: 2
+            };
+        }
+
         super.Init(sketch);
 
         this.CreateSource();
@@ -46,7 +55,7 @@ class Noise extends Source {
     }
 
     CreateSource(){
-        this.Sources.push( new Tone.Noise( this.Waveform ) );
+        this.Sources.push( new Tone.Noise( this.WaveIndex[this.Params.waveform] ) );
         return super.CreateSource();
     }
 
@@ -111,9 +120,9 @@ class Noise extends Source {
                     "name" : "Waveform",
                     "setting" :"waveform",
                     "props" : {
-                        "value" : this.GetParam("waveform"),
-                        "min" : 1,
-                        "max" : 3,
+                        "value" : this.Params.waveform,
+                        "min" : 0,
+                        "max" : 2,
                         "quantised" : true,
                         "centered" : false
                     }
@@ -124,8 +133,10 @@ class Noise extends Source {
 
     SetParam(param: string,value: any) {
 
+        var val = value;
+
         if (param == "waveform") {
-            switch(Math.round(value)){
+            /*switch(Math.round(value)){
                 case 1: value = "white";
                     break;
                 case 2: value = "pink";
@@ -133,8 +144,10 @@ class Noise extends Source {
                 case 3: value = "brown";
                     break;
             }
-            this.Waveform = value;
+            this.Waveform = value;*/
         }
+        this.Params[""+param] = val;
+
 
         super.SetParam(param,value);
     }

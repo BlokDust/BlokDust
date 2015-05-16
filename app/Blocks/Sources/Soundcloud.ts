@@ -12,6 +12,12 @@ class Soundcloud extends Source {
 
         this.PlaybackRate = 1;
 
+        if (!this.Params) {
+            this.Params = {
+                playbackRate: 1
+            };
+        }
+
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224", "87679226"];
@@ -80,7 +86,7 @@ class Soundcloud extends Source {
                     "name" : "Playback rate",
                     "setting" :"playbackRate",
                     "props" : {
-                        "value" : this.GetParam("playbackRate"),
+                        "value" : this.Params.playbackRate,
                         "min" : 0.125,
                         "max" : 8,
                         "quantised" : false,
@@ -94,16 +100,18 @@ class Soundcloud extends Source {
 
     SetParam(param: string,value: any) {
         super.SetParam(param,value);
+        var val = value;
 
         if (param == "playbackRate") {
             this.SetPitch(value);
         }
+        this.Params[param] = val;
     }
 
-    GetParam(param: string){
+    /*GetParam(param: string){
         var val = super.GetParam(param);
         return val;
-    }
+    }*/
 
     Dispose(){
         super.Dispose();

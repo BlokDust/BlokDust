@@ -7,11 +7,6 @@ class Envelope extends PreEffect {
 
 
 
-    /*public attack: number;
-    public decay: number;
-    public sustain: number;
-    public release: number;*/
-
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
@@ -23,10 +18,6 @@ class Envelope extends PreEffect {
             };
         }
 
-        /*this.attack = 1;
-        this.decay = 5;
-        this.sustain = 0.7;
-        this.release = 4;*/
 
         super.Init(sketch);
 
