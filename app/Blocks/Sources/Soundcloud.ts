@@ -21,8 +21,8 @@ class Soundcloud extends Source {
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
         var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224", "87679226"];
-        this.AudioUrl = "https://api.soundcloud.com/tracks/" + tracks[6] + "/stream" + scId;
-        this.AudioUrl = localUrl;
+        this.AudioUrl = "https://api.soundcloud.com/tracks/" + tracks[0] + "/stream" + scId;
+        //this.AudioUrl = localUrl;
 
         super.Init(sketch);
 

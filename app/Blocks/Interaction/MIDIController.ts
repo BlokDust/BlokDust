@@ -8,19 +8,11 @@ import ToneSource = require("../Sources/ToneSource");
 import Noise = require("../Sources/Noise");
 import Power = require("../Power/Power");
 
-class KeyboardPoly extends Keyboard {
+class MIDIController extends KeyboardPoly {
 
     public VoicesAmount: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        if (!this.Params) {
-            this.Params = {
-                octave: 3,
-                voices: 4
-            };
-        }
-
         super.Init(sketch);
 
         this.KeysDown = {};
@@ -160,29 +152,20 @@ class KeyboardPoly extends Keyboard {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var val = value;
-
-        if (param == "octaves") {
-            this.TriggerReleaseAll();
-        }
-
-        this.Params[param] = val;
-
-
+        var jsonVariable = {};
+        jsonVariable[param] = value;
     }
 
-    /*GetParam(param: string) {
+    GetParam(param: string) {
         super.GetParam(param);
         var val;
 
-        if (param == "voices") {
-            val = this.VoicesAmount;
-        } else if (param == "octave"){
+        if (param == "octave"){
             val = this.CurrentOctave;
         }
 
         return val;
-    }*/
+    }
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -197,7 +180,7 @@ class KeyboardPoly extends Keyboard {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.Params.octave,
+                        "value" : this.GetParam("octave"),
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,
@@ -211,4 +194,4 @@ class KeyboardPoly extends Keyboard {
 
 }
 
-export = KeyboardPoly;
+export = MIDIController;

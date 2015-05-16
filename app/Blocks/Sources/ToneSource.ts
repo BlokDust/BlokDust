@@ -19,7 +19,7 @@ class ToneSource extends Source {
 
         if (!this.Params) {
             this.Params = {
-                frequency: 440,
+                frequency: App.BASE_NOTE,
                 waveform: 3
             };
         }

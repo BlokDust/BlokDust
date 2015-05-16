@@ -287,7 +287,7 @@ class Source extends Block implements ISource {
     TriggerAttackRelease(){
         if (this.IsDisposed) return;
         if (this.Envelopes.length){
-            this.Envelopes.forEach((e: any, i:number)=> {
+            this.Envelopes.forEach((e: any)=> {
                 e.triggerAttackRelease("4n", "+0");
             });
         }
@@ -330,9 +330,6 @@ class Source extends Block implements ISource {
 
         if (this.ActiveVoices.length) {
             this.ActiveVoices.forEach((s: Voice)=> {
-                s.Envelope.dispose();
-                s.Sound.dispose();
-                s.Source.Dispose();
                 s.ID = null
             });
             this.ActiveVoices = [];
@@ -340,9 +337,6 @@ class Source extends Block implements ISource {
 
         if (this.FreeVoices.length) {
             this.FreeVoices.forEach((s: Voice)=> {
-                s.Envelope.dispose();
-                s.Sound.dispose();
-                s.Source.Dispose();
                 s.ID = null;
             });
             this.FreeVoices = [];
@@ -368,13 +362,32 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            pitch /= 440;
-            this.Sources[id].player.playbackRate = pitch;
+            this.Sources[id].player.playbackRate = pitch / App.BASE_NOTE;
 
-        } else if (this.Sources[id].playbackRate) {
+        } else if (typeof this.Sources[id].playbackRate === 'number') {
             // Players
-            pitch /= 440;
-            this.Sources[id].playbackRate = pitch;
+            this.Sources[id].playbackRate = pitch / App.BASE_NOTE;
+        }
+    }
+
+    GetPitch(sourceId?: number) {
+        // If no sourceId is given default to 0
+        var id: number = sourceId ? sourceId : 0;
+
+        if (this.Sources[id].frequency) {
+            // Oscillators
+            return this.Sources[id].frequency.value;
+
+        } else if (this.Sources[id].player) {
+            // Samplers
+            return this.Sources[id].player.playbackRate * App.BASE_NOTE;
+
+        } else if (typeof this.Sources[id].playbackRate === 'number') {
+            // Players
+            return this.Sources[id].playbackRate * App.BASE_NOTE;
+
+        } else {
+            return 0;
         }
     }
 
