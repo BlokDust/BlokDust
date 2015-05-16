@@ -106,30 +106,15 @@ class KeyboardMono extends Keyboard {
 
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
-        var playbackRate = frequency / 440;
 
         // If no other keys already pressed trigger attack
         if (Object.keys(this.KeysDown).length === 1) {
-            if (source.Sources[0].frequency){
-                source.Sources[0].frequency.exponentialRampToValueNow(frequency, 0);
-            } else if (source.PlaybackRate){
-                source.SetPlaybackRate(playbackRate, 0);
-
-                // If has a loop start position start then plus current time else start immediately
-                if(source.LoopStartPosition){
-                    source.Sources[0].start(source.LoopStartPosition+ source.Sources[0].now());
-                }
-
-            }
+            source.SetPitch(frequency);
             source.TriggerAttack();
 
         // Else ramp to new frequency over time (glide)
         } else {
-            if (source.Sources[0].frequency) {
-                source.Sources[0].frequency.exponentialRampToValueNow(frequency, this.Glide);
-            } else if (source.PlaybackRate){
-                source.SetPlaybackRate(playbackRate, this.Glide);
-            }
+            source.SetPitch(frequency, 0, this.Glide);
         }
     }
 
@@ -137,9 +122,6 @@ class KeyboardMono extends Keyboard {
         super.KeyboardUp(keyUp, source);
 
         if (Object.keys(this.KeysDown).length === 0) {
-            if (source.PlaybackRate) {
-                //source.Source.stop(source.Envelope.release+source.Source.now());
-            }
             source.TriggerRelease();
         }
     }

@@ -23,12 +23,13 @@ class ToneSource extends Source {
         this.CreateSource();
         this.CreateEnvelope();
 
-        this.Envelopes.forEach((e: any)=> {
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.connect(this.EffectsChainInput);
         });
 
-        this.Sources.forEach((s: any, i:number)=> {
-            s.connect(this.Envelopes[i]).start();
+        this.Sources.forEach((s: Tone.Oscillator, i: number)=> {
+            s.connect(this.Envelopes[i]);
+            s.start();
         });
 
 
@@ -52,52 +53,22 @@ class ToneSource extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
+        // add it to the list of sources
         this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
+
+        // return it
+        return super.CreateSource();
     }
 
     CreateEnvelope(){
-        super.CreateEnvelope();
         this.Envelopes.push( new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
             this.Settings.envelope.release
         ));
-    }
 
-    TriggerAttack(env?:number){
-        super.TriggerAttack();
-        if (this.IsDisposed) return;
-
-        // is there specific source to attack?
-        //if (env){
-            this.Envelopes[0].triggerAttack();
-        //} else {
-        //    // Else attack all
-        //    this.Envelopes.forEach((e: any)=> {
-        //        e.triggerAttack();
-        //    });
-        //}
-    }
-
-
-
-    TriggerRelease(){
-        super.TriggerRelease();
-        if (this.IsDisposed) return;
-        if(!this.IsPowered()){
-
-            this.Envelopes.forEach((e: any)=> {
-                e.triggerRelease();
-            });
-
-        }
-
-    }
-
-    TriggerAttackRelease(){
-        super.TriggerAttackRelease();
+        return super.CreateEnvelope();
     }
 
     ParticleCollision(particle: Particle) {

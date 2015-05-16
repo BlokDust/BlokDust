@@ -5,6 +5,7 @@ import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import Power = require("./Power/Power");
+import Voice = require("./Interaction/VoiceObject");
 
 class Source extends Block implements ISource {
 
@@ -27,7 +28,8 @@ class Source extends Block implements ISource {
         }
     };
 
-    //public Params: any;
+    public ActiveVoices: Voice[];
+    public FreeVoices: Voice[];
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -35,6 +37,8 @@ class Source extends Block implements ISource {
 
         this.Sources = [];
         this.Envelopes = [];
+        this.ActiveVoices = [];
+        this.FreeVoices = [];
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
@@ -177,17 +181,103 @@ class Source extends Block implements ISource {
     }
 
 
-    CreateSource(){}
+    CreateSource(){
+        if (this.Sources[this.Sources.length-1]){
+            return this.Sources[this.Sources.length-1];
+        }
+    }
 
-    CreateEnvelope(){}
+    CreateEnvelope(){
+        if (this.Envelopes[this.Envelopes.length-1]) {
+            return this.Envelopes[this.Envelopes.length-1];
+        }
+    }
 
     Stop() {
         this.TriggerRelease();
     }
 
-    TriggerAttack(){}
+    /**
+     * Trigger a sources attack
+     * If no index is set trigger the first in the array
+     * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be triggered
+     * @constructor
+     */
+    TriggerAttack(index?: number|string){
+        if (this.IsDisposed) return;
 
-    TriggerRelease(){}
+        // is the index set?
+        var i: any = index? index: 0;
+
+        // Only if the source has envelopes
+        if (this.Envelopes.length) {
+
+            if (i === 'all'){
+                // Trigger all the envelopes
+                this.Envelopes.forEach((e: any)=> {
+                    e.triggerAttack();
+                });
+            } else {
+                // Trigger the specific one
+                this.Envelopes[i].triggerAttack();
+            }
+
+        // Or Samplers have built in envelopes
+        } else if (this.Sources[0] && this.Sources[0].envelope) {
+            if (i === 'all'){
+                // Trigger all the envelopes
+                this.Sources.forEach((s: any)=> {
+                    s.triggerAttack();
+                });
+            } else {
+                // Trigger the specific one
+                this.Sources[i].triggerAttack();
+            }
+        }
+    }
+
+    /**
+     * Trigger a sources release
+     * If no index is set release the first in the array
+     * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be released
+     * @constructor
+     */
+    TriggerRelease(index?: number|string){
+        //if (this.IsDisposed) return;
+
+        // Only it's not powered
+        if (!this.IsPowered()) {
+
+            // is the index set?
+            var i: any = index? index: 0;
+
+            // Only if the source has envelopes
+            if (this.Envelopes.length) {
+
+                if (i === 'all'){
+                    // Trigger all the envelopes
+                    this.Envelopes.forEach((e: any)=> {
+                        e.triggerRelease();
+                    });
+                } else {
+                    // Trigger the specific one
+                    this.Envelopes[i].triggerRelease();
+                }
+
+            // Or Samplers have built in envelopes
+            } else if (this.Sources[0] && this.Sources[0].envelope) {
+                if (i === 'all'){
+                    // Trigger all the envelopes
+                    this.Sources.forEach((s: any)=> {
+                        s.triggerRelease();
+                    });
+                } else {
+                    // Trigger the specific one
+                    this.Sources[i].triggerRelease();
+                }
+            }
+        }
+    }
 
     TriggerAttackRelease(){
         if (this.IsDisposed) return;
@@ -231,10 +321,56 @@ class Source extends Block implements ISource {
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
         if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
+
+
+        if (this.ActiveVoices.length) {
+            this.ActiveVoices.forEach((s: Voice)=> {
+                s.Envelope.dispose();
+                s.Sound.dispose();
+                s.Source.Dispose();
+                s.ID = null
+            });
+            this.ActiveVoices = [];
+        }
+
+        if (this.FreeVoices.length) {
+            this.FreeVoices.forEach((s: Voice)=> {
+                s.Envelope.dispose();
+                s.Sound.dispose();
+                s.Source.Dispose();
+                s.ID = null;
+            });
+            this.FreeVoices = [];
+        }
+
     }
 
-    SetPlaybackRate(rate,time) {
+    /**
+     * Sets a sources pitch regardless of whether it's a oscillator or a audio player
+     * @param pitch: number
+     * @param sourceId: number - The index of the source in Sources[] (default: 0)
+     * @param rampTime: Tone.Time (default: 0)
+     *  TODO: when playback rate becomes a signal, change to something like this: ...playbackRate.rampTo(playbackRate, time);
+     */
+    SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
+        // If no sourceId or rampTime is given default to 0
+        var id: number = sourceId ? sourceId : 0;
+        var time: Tone.Time = rampTime ? rampTime : 0;
 
+        if (this.Sources[id].frequency) {
+            // Oscillators
+            this.Sources[id].frequency.exponentialRampToValueNow(pitch, time);
+
+        } else if (this.Sources[id].player) {
+            // Samplers
+            pitch /= 440;
+            this.Sources[id].player.playbackRate = pitch;
+
+        } else if (this.Sources[id].playbackRate) {
+            // Players
+            pitch /= 440;
+            this.Sources[id].playbackRate = pitch;
+        }
     }
 
     GetParam(param: string) {

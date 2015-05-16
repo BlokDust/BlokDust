@@ -1,5 +1,6 @@
 import IBlock = require("./IBlock");
 import IEffect = require("./IEffect");
+import Voice = require("./Interaction/VoiceObject");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface ISource extends IBlock{
@@ -19,11 +20,14 @@ interface ISource extends IBlock{
     RecordedAudio?: any;
     LoopStartPosition?: number;
     LoopEndPosition?: number;
-    CreateSource(): void;
+    ActiveVoices: Voice[];
+    FreeVoices: Voice[];
+    CreateSource(): any;
+    CreateEnvelope(): Tone.AmplitudeEnvelope;
     ValidateEffects(): void;
-    SetPlaybackRate(rate,time): void;
-    TriggerAttack(envelope?:number): void;
-    TriggerRelease(): void;
+    SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time): void;
+    TriggerAttack(index?: number|string): void;
+    TriggerRelease(index?: number|string): void;
     Refresh(): void;
 }
 

@@ -22,10 +22,12 @@ class Soundcloud extends Source {
 
         this.CreateSource();
 
-        this.Sources.forEach((s: any)=> {
+        this.Sources.forEach((s: Tone.Sampler)=> {
             s.player.loop = true;
             s.player.loopStart = 0; // 0 is the beginning
             s.player.loopEnd = -1; // -1 goes to the end of the track
+            s.player.retrigger = true;
+            //s.player.reverse = true; //TODO: add reverse capability
         });
 
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
@@ -52,32 +54,8 @@ class Soundcloud extends Source {
     }
 
     CreateSource(){
-        super.CreateSource();
         this.Sources.push( new Tone.Sampler(this.AudioUrl) );
-    }
-
-    CreateEnvelope(){
-        super.CreateEnvelope();
-    }
-
-    TriggerAttack() {
-        super.TriggerAttack();
-
-        if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttack();
-            });
-        }
-    }
-
-    TriggerRelease() {
-        super.TriggerRelease();
-
-        if(!this.IsPowered()) {
-            this.Sources.forEach((s: any)=> {
-                s.triggerRelease();
-            });
-        }
+        return super.CreateSource();
     }
 
     Update() {
@@ -114,20 +92,11 @@ class Soundcloud extends Source {
         };
     }
 
-    SetPlaybackRate(rate,time?) {
-        super.SetPlaybackRate(rate,time);
-        this.Sources.forEach((s: any)=> {
-            s.player.playbackRate = rate; //TODO: when playback rate becomes a signal ramp using the glide
-        });
-
-        this.PlaybackRate = rate;
-    }
-
     SetParam(param: string,value: any) {
         super.SetParam(param,value);
 
         if (param == "playbackRate") {
-            this.SetPlaybackRate(value);
+            this.SetPitch(value);
         }
     }
 

@@ -1,4 +1,5 @@
 import Keyboard = require("./Keyboard");
+import Voice = require("./VoiceObject");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
@@ -9,16 +10,13 @@ import Power = require("../Power/Power");
 
 class KeyboardPoly extends Keyboard {
 
-
     public VoicesAmount: number;
-    public ActiveVoices: any[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
         this.KeysDown = {};
-        this.VoicesAmount = 4;
-        this.ActiveVoices = [];
+        this.VoicesAmount = 4; //TODO: Make this a global const
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -30,61 +28,70 @@ class KeyboardPoly extends Keyboard {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"poly keyboard");
     }
 
-    Attach(source:ISource): void {
+    Attach(source: ISource): void {
         super.Attach(source);
 
-        this.CreateVoices(source, this.VoicesAmount);
+        this.CreateVoices(source);
     }
 
-    Detach(source:ISource): void {
+    Detach(source: ISource): void {
         super.Detach(source);
-
-        this.DeleteVoices(source);
     }
 
     Dispose(){
         super.Dispose();
         this.KeysDown = null;
         this.VoicesAmount = null;
-        this.ActiveVoices = [];
     }
 
-    CreateVoices(source, voicesNum){
+    CreateVoices(source: ISource){
 
         //ONLY WORKS FOR NOISE AND TONES FOR NOW
         if (!(source instanceof Power)) {
 
             // Work out how many voices we actually need (we may already have some)
-            var diff = voicesNum - source.Sources.length;
+            var diff = this.VoicesAmount - source.Sources.length;
 
             // If we haven't got enough sources, create however many we need.
             if (diff > 0){
 
-                for (var i = 1; i <= voicesNum; i++) {
+                // Loop through and create the voices
+                for (var i = 1; i <= this.VoicesAmount; i++) {
 
+                    // Create a source
+                    var s: Tone.Source = source.CreateSource();
 
-                    source.CreateSource();
+                    var e: Tone.AmplitudeEnvelope;
 
-                    source.CreateEnvelope();
+                    // If the source has a CreateEnvelope function
+                    if (typeof source.CreateEnvelope == 'function') {
 
-                    source.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
-                        if (i > 0){
-                            e.connect(source.EffectsChainInput);
+                        // Create an envelope and save it to `var e`
+                        e = source.CreateEnvelope();
+
+                        // Connect the source to the Envelope and start
+                        s.connect(e);
+                        s.start();
+
+                        // Connect Envelope to the Effects Chain
+                        e.connect(source.EffectsChainInput);
+
+                    } else {
+                        // No CreateEnvelope()
+                        // Check if it's a Sampler Source (they have their own envelopes built in)
+                        if (source.Sources[0] instanceof Tone.Sampler) {
+                            e = source.Sources[i].envelope;
+                            s.connect(source.EffectsChainInput)
                         }
-                    });
 
-                    source.Sources.forEach((s: any, i: number)=> {
-                        if (i > 0){
-                            s.connect(source.Envelopes[i]).start();
-                        }
-                    });
+                    }
+
+                    // Add the source and envelope to our FreeVoices list
+                    source.FreeVoices.push( new Voice(source, s, e, i) );
+
                 }
             }
         }
-    }
-
-    DeleteVoices(source){
-
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
@@ -92,32 +99,33 @@ class KeyboardPoly extends Keyboard {
 
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
-        //TODO: add a playback speed option to GetFrequencyOfNote;
 
-        var keysDownNum: number = Object.keys(this.KeysDown).length;
-        var voices = this.VoicesAmount;
-        var r = keysDownNum % voices;
-        if (r == 0) r = voices;
+        // Are there any free voices?
+        if (source.FreeVoices.length > 0){
 
-        this.ActiveVoices.push(keyDown);
+            // Yes, get one of them and remove it from FreeVoices list
+            var voice = source.FreeVoices.shift();
 
-        // if r is already down use a free one
-        for (var i = 0; i<this.ActiveVoices.length; i++) {
+            // Add it to the ActiveVoices list
+            source.ActiveVoices.push( voice );
 
-                if (source.Frequency) {
-                    source.Sources[r - 1].frequency.value = frequency;
-                } else if (source.PlaybackRate){
-                    source.Sources[r-1].playbackRate = frequency;
-                }
-                source.Envelopes[r-1].triggerAttack();
+            // set it to the right frequency
+            source.SetPitch(frequency, voice.ID);
 
+            // trigger it's envelope
+            source.TriggerAttack(voice.ID);
 
-                //console.log(this.ActiveVoices);
-            //}
+        } else {
+
+            // No free voices available - steal the oldest one from active voices
+            var voice: Voice = source.ActiveVoices.shift();
+
+            // Set the new pitch
+            source.SetPitch(frequency, voice.ID);
+
+            // Add it back to the end of ActiveVoices
+            source.ActiveVoices.push( voice );
         }
-
-        //console.log(source);
-
 
     }
 
@@ -125,33 +133,27 @@ class KeyboardPoly extends Keyboard {
         super.KeyboardUp(keyUp, source);
 
         var keyPressed = this.GetKeyNoteOctaveString(keyUp);
-        var frequency = this.GetFrequencyOfNote(keyPressed, source);
-        var playbackSpeed; //TODO
+        var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
 
+        // Loop through all the active voices
+        source.ActiveVoices.forEach((voice: Voice, i: number) => {
 
-        for (var i = 0; i<this.ActiveVoices.length; i++){
+            if (voice.Sound.frequency) {
 
-            if (this.ActiveVoices[i] == keyUp) {
+                // if this active voice has the same frequency as the frequency corresponding to the keyUp
+                if (Math.round(voice.Sound.frequency.value) === Math.round(keyUpFrequency)) {
 
-                // Check whether this envelope is playing and has my frequency before releasing it
-                for (var j=0; j<source.Envelopes.length; j++){
+                    // stop it
+                    source.TriggerRelease(voice.ID);
 
-                    // If frequency or playback speed is the same as this keyUp
-                    if (source.Frequency) {
-                        if (Math.round(source.Sources[j].frequency.value) == Math.round(frequency)) {
-                            source.Envelopes[j].triggerRelease();
-                        }
-                    } else if (source.PlaybackRate) {
-                        if (Math.round(source.Sources[j].playbackRate) == Math.round(frequency)) {
-                            source.Envelopes[j].triggerRelease();
-                        }
-                    }
+                    // Remove voice from Active Voices
+                    source.ActiveVoices.splice(i, 1);
+
+                    // Add it to FreeVoices
+                    source.FreeVoices.push(voice);
                 }
-
-                //Update the array
-                this.ActiveVoices.splice(i, 1);
             }
-        }
+        });
     }
 
 
@@ -159,33 +161,13 @@ class KeyboardPoly extends Keyboard {
         super.SetParam(param,value);
         var jsonVariable = {};
         jsonVariable[param] = value;
-
-        if (param == "voices") {
-
-            // FOR ALL SOURCES
-            if (this.Sources.Count) {
-
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
-
-                    for (var j=0; j<source.Envelopes.length; j++){
-                        source.Envelopes[j].triggerRelease();
-                    }
-
-                    this.CreateVoices(source, this.VoicesAmount);
-                }
-            }
-            this.VoicesAmount = value;
-        }
     }
 
     GetParam(param: string) {
         super.GetParam(param);
         var val;
 
-        if (param == "voices") {
-            val = this.VoicesAmount;
-        } else if (param == "octave"){
+        if (param == "octave"){
             val = this.CurrentOctave;
         }
 
@@ -200,18 +182,6 @@ class KeyboardPoly extends Keyboard {
             "name" : "Poly Keyboard",
             "parameters" : [
 
-                {
-                    "type" : "slider",
-                    "name" : "Voices",
-                    "setting" :"voices",
-                    "props" : {
-                        "value" : this.GetParam("voices"),
-                        "min" : 1,
-                        "max" : 6,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
                 {
                     "type" : "slider",
                     "name" : "Octave",
