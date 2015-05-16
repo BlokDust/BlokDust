@@ -14,7 +14,7 @@ class ToneSource extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Frequency = 440;
+        this.Frequency = App.BASE_NOTE;
         this.Waveform = 'sawtooth';
 
 

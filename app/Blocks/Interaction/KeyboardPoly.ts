@@ -126,7 +126,6 @@ class KeyboardPoly extends Keyboard {
             // Add it back to the end of ActiveVoices
             source.ActiveVoices.push( voice );
         }
-
     }
 
     KeyboardUp(keyUp:string, source:ISource): void {
@@ -138,20 +137,18 @@ class KeyboardPoly extends Keyboard {
         // Loop through all the active voices
         source.ActiveVoices.forEach((voice: Voice, i: number) => {
 
-            if (voice.Sound.frequency) {
+            var thisPitch = source.GetPitch(voice.ID)? source.GetPitch(voice.ID) : 0;
 
-                // if this active voice has the same frequency as the frequency corresponding to the keyUp
-                if (Math.round(voice.Sound.frequency.value) === Math.round(keyUpFrequency)) {
+            // if this active voice has the same frequency as the frequency corresponding to the keyUp
+            if (Math.round(thisPitch) === Math.round(keyUpFrequency)) {
+                // stop it
+                source.TriggerRelease(voice.ID);
 
-                    // stop it
-                    source.TriggerRelease(voice.ID);
+                // Remove voice from Active Voices
+                source.ActiveVoices.splice(i, 1);
 
-                    // Remove voice from Active Voices
-                    source.ActiveVoices.splice(i, 1);
-
-                    // Add it to FreeVoices
-                    source.FreeVoices.push(voice);
-                }
+                // Add it to FreeVoices
+                source.FreeVoices.push(voice);
             }
         });
     }

@@ -26,6 +26,7 @@ interface ISource extends IBlock{
     CreateEnvelope(): Tone.AmplitudeEnvelope;
     ValidateEffects(): void;
     SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time): void;
+    GetPitch(sourceId?: number): number;
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string): void;
     Refresh(): void;

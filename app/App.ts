@@ -62,6 +62,8 @@ class App implements IApp{
     private _SaveFile: SaveFile;
     public BlocksSketch: BlocksSketch;
 
+    public BASE_NOTE: number = 440; //TODO: should be const
+
     get Sources(): IBlock[] {
         return this.Blocks.en().where(b => b instanceof Source).toArray();
     }
