@@ -63,19 +63,16 @@ class KeyboardPoly extends Keyboard {
 
                     var e: Tone.AmplitudeEnvelope;
 
-                    // If the source has a CreateEnvelope function
-                    if (typeof source.CreateEnvelope == 'function') {
+                    // Create an envelope and save it to `var e`
+                    e = source.CreateEnvelope();
 
-                        // Create an envelope and save it to `var e`
-                        e = source.CreateEnvelope();
-
+                    if (e) {
                         // Connect the source to the Envelope and start
                         s.connect(e);
                         s.start();
 
                         // Connect Envelope to the Effects Chain
                         e.connect(source.EffectsChainInput);
-
                     } else {
                         // No CreateEnvelope()
                         // Check if it's a Sampler Source (they have their own envelopes built in)
@@ -83,7 +80,6 @@ class KeyboardPoly extends Keyboard {
                             e = source.Sources[i].envelope;
                             s.connect(source.EffectsChainInput)
                         }
-
                     }
 
                     // Add the source and envelope to our FreeVoices list
