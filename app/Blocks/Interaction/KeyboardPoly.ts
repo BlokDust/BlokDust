@@ -83,7 +83,7 @@ class KeyboardPoly extends Keyboard {
                     }
 
                     // Add the source and envelope to our FreeVoices list
-                    source.FreeVoices.push( new Voice(source, s, e, i) );
+                    source.FreeVoices.push( new Voice(i) );
 
                 }
             }

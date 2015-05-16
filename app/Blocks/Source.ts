@@ -325,9 +325,6 @@ class Source extends Block implements ISource {
 
         if (this.ActiveVoices.length) {
             this.ActiveVoices.forEach((s: Voice)=> {
-                s.Envelope.dispose();
-                s.Sound.dispose();
-                s.Source.Dispose();
                 s.ID = null
             });
             this.ActiveVoices = [];
@@ -335,9 +332,6 @@ class Source extends Block implements ISource {
 
         if (this.FreeVoices.length) {
             this.FreeVoices.forEach((s: Voice)=> {
-                s.Envelope.dispose();
-                s.Sound.dispose();
-                s.Source.Dispose();
                 s.ID = null;
             });
             this.FreeVoices = [];
