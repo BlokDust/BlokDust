@@ -48,7 +48,7 @@ require.config({
 
 require([
     "text",
-    "text!config.json",
+    "text!Config.json",
     "App",
     "PixelPalette",
     "Tone/core/Tone",
