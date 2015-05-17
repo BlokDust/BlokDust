@@ -2,6 +2,7 @@ import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
 import Grid = require("../Grid");
+import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import Power = require("./Power/Power");
@@ -289,6 +290,7 @@ class Source extends Block implements ISource {
             if (!duration) duration = "4n";
             if (!time) time = "+0";
             //TODO: add velocity to all trigger methods
+            //TODO: add samplers and players
             this.Envelopes.forEach((e: any)=> {
                 e.triggerAttackRelease(duration, time);
             });

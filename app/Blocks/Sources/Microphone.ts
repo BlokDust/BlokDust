@@ -1,6 +1,7 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
+import Particle = require("../../Particle");
 
 class Microphone extends Source {
 
@@ -66,19 +67,27 @@ class Microphone extends Source {
         return super.CreateSource();
     }
 
-    TriggerAttack(){
+    TriggerAttack(index?: number|string){
         this.Unmute();
     }
 
-    TriggerRelease(){
+    TriggerRelease(index?: number|string){
         this.Mute();
     }
 
-    TriggerAttackRelease(){
+    TriggerAttackRelease(duration: number){
         this.Unmute();
-        setTimeout(function(){
+        setTimeout(() => {
             this.Mute();
-        }, 250); //TODO: this is shit
+        }, duration*1000);
+    }
+
+    ParticleCollision(particle: Particle) {
+        super.ParticleCollision(particle);
+
+        this.TriggerAttackRelease(0.25);
+
+        particle.Dispose();
     }
 
     Update() {

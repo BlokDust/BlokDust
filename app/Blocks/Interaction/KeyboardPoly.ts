@@ -4,8 +4,7 @@ import ISource = require("../ISource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import BlocksSketch = require("../../BlocksSketch");
-import ToneSource = require("../Sources/ToneSource");
-import Noise = require("../Sources/Noise");
+import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 
 class KeyboardPoly extends Keyboard {
@@ -39,7 +38,9 @@ class KeyboardPoly extends Keyboard {
     Attach(source: ISource): void {
         super.Attach(source);
 
-        this.CreateVoices(source);
+        if (!((source instanceof Power) || (source instanceof Microphone))) {
+            this.CreateVoices(source);
+        }
     }
 
     Detach(source: ISource): void {
@@ -55,46 +56,42 @@ class KeyboardPoly extends Keyboard {
 
     CreateVoices(source: ISource){
 
-        //ONLY WORKS FOR NOISE AND TONES FOR NOW
-        if (!(source instanceof Power)) {
+        // Work out how many voices we actually need (we may already have some)
+        var diff = this.VoicesAmount - source.Sources.length;
 
-            // Work out how many voices we actually need (we may already have some)
-            var diff = this.VoicesAmount - source.Sources.length;
+        // If we haven't got enough sources, create however many we need.
+        if (diff > 0){
 
-            // If we haven't got enough sources, create however many we need.
-            if (diff > 0){
+            // Loop through and create the voices
+            for (var i = 1; i <= this.VoicesAmount; i++) {
 
-                // Loop through and create the voices
-                for (var i = 1; i <= this.VoicesAmount; i++) {
+                // Create a source
+                var s: Tone.Source = source.CreateSource();
 
-                    // Create a source
-                    var s: Tone.Source = source.CreateSource();
+                var e: Tone.AmplitudeEnvelope;
 
-                    var e: Tone.AmplitudeEnvelope;
+                // Create an envelope and save it to `var e`
+                e = source.CreateEnvelope();
 
-                    // Create an envelope and save it to `var e`
-                    e = source.CreateEnvelope();
+                if (e) {
+                    // Connect the source to the Envelope and start
+                    s.connect(e);
+                    s.start();
 
-                    if (e) {
-                        // Connect the source to the Envelope and start
-                        s.connect(e);
-                        s.start();
-
-                        // Connect Envelope to the Effects Chain
-                        e.connect(source.EffectsChainInput);
-                    } else {
-                        // No CreateEnvelope()
-                        // Check if it's a Sampler Source (they have their own envelopes built in)
-                        if (source.Sources[0] instanceof Tone.Sampler) {
-                            e = source.Sources[i].envelope;
-                            s.connect(source.EffectsChainInput)
-                        }
+                    // Connect Envelope to the Effects Chain
+                    e.connect(source.EffectsChainInput);
+                } else {
+                    // No CreateEnvelope()
+                    // Check if it's a Sampler Source (they have their own envelopes built in)
+                    if (source.Sources[0] instanceof Tone.Sampler) {
+                        e = source.Sources[i].envelope;
+                        s.connect(source.EffectsChainInput)
                     }
-
-                    // Add the source and envelope to our FreeVoices list
-                    source.FreeVoices.push( new Voice(i) );
-
                 }
+
+                // Add the source and envelope to our FreeVoices list
+                source.FreeVoices.push( new Voice(i) );
+
             }
         }
     }
