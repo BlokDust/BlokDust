@@ -106,6 +106,7 @@ class Soundcloud extends Source {
     }
 
     Dispose(){
+        if (this.IsDisposed) return;
         super.Dispose();
 
         this.Sources.forEach((s: Tone.Sampler) => {

@@ -35,6 +35,7 @@ class KeyboardPoly extends Keyboard {
     }
 
     Detach(source: ISource): void {
+        source.TriggerRelease('all'); //todo:
         super.Detach(source);
     }
 

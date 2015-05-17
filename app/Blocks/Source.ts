@@ -201,7 +201,6 @@ class Source extends Block implements ISource {
      * Trigger a sources attack
      * If no index is set trigger the first in the array
      * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be triggered
-     * @constructor
      */
     TriggerAttack(index?: number|string){
         if (this.IsDisposed) return;
@@ -243,9 +242,9 @@ class Source extends Block implements ISource {
      * @constructor
      */
     TriggerRelease(index?: number|string){
-        //if (this.IsDisposed) return;
+        if (this.IsDisposed) return;
 
-        // Only it's not powered
+        // Only if it's not powered
         if (!this.IsPowered()) {
 
             // is the index set?

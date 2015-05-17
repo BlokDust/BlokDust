@@ -28,7 +28,6 @@ class Noise extends Source {
             s.connect(this.Envelopes[i]).start();
         });
 
-
         this.DelayedRelease = 0;
 
         // Define Outline for HitTest
