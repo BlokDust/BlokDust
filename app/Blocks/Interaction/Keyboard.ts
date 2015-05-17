@@ -9,15 +9,25 @@ import PitchComponent = require("./../Effects/Pre/Pitch");
  */
 class Keyboard extends PreEffect {
 
+
+
     public BaseFrequency: number;
-    public CurrentOctave: number;
+    //public CurrentOctave: number;
     public KeysDown: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
+        /*if (!this.Params) {
+            this.Params = {
+                glide: 0.05,
+                octave: 3,
+                voices: 4
+            };
+        }*/
+
         this.KeysDown = {};
-        this.CurrentOctave = 3;
+        //this.CurrentOctave = 3;
         App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
         App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
 
@@ -50,7 +60,7 @@ class Keyboard extends PreEffect {
 
             source.Sources.forEach((s: any) => {
                 if (s.frequency){
-                    s.frequency.value = source.Frequency;
+                    s.frequency.value = source.Params.frequency;
                 }
             });
 
@@ -91,18 +101,13 @@ class Keyboard extends PreEffect {
     Dispose(){
         this.KeysDown = {};
         this.BaseFrequency = null;
-        this.CurrentOctave = null;
+        this.Params.octave = null;
         App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
         App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-
-        if (param == "octave"){
-            this.TriggerReleaseAll();
-            this.CurrentOctave = value;
-        }
     }
 
     GetParam(param: string) {
@@ -114,34 +119,19 @@ class Keyboard extends PreEffect {
 
         this.OptionsForm =
         {
-            "name" : "Mono Keyboard",
-            "parameters" : [
 
-                {
-                    "type" : "slider",
-                    "name" : "Glide",
-                    "setting" :"glide",
-                    "props" : {
-                        "value" : this.GetParam("glide"),
-                        "min" : 0.001,
-                        "max" : 100,
-                        "truemin" : 0,
-                        "truemax" : 1,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                }
-            ]
         };
     }
 
     KeyboardDown(key:string, source:ISource): void {
-        if (key == 'octave-up' && this.CurrentOctave < 9) {
-            this.CurrentOctave++;
+        if (key == 'octave-up' && this.Params.octave < 9) {
+            //this.Params.octave++;
+            this.SetParam("octave",this.Params.octave+1);
         }
 
-        if (key === 'octave-down' && this.CurrentOctave != 0) {
-            this.CurrentOctave--;
+        if (key === 'octave-down' && this.Params.octave != 0) {
+            //this.CurrentOctave--;
+            this.SetParam("octave",this.Params.octave+1);
         }
     }
 
@@ -151,8 +141,8 @@ class Keyboard extends PreEffect {
 
     public SetBaseFrequency(source:ISource){
 
-        if (source.Frequency){
-            this.BaseFrequency = source.Frequency;
+        if (source.Params.frequency){
+            this.BaseFrequency = source.Params.frequency;
         } else {
             this.BaseFrequency = App.BASE_NOTE;
         }
@@ -175,10 +165,10 @@ class Keyboard extends PreEffect {
         // Replaces keycode with keynote & octave string
         return (keyCode
             .replace('note_', '')
-            .replace('_a', this.CurrentOctave)
-            .replace('_b', this.CurrentOctave + 1)
-            .replace('_c', this.CurrentOctave + 2)
-            .replace('_d', this.CurrentOctave + 3)
+            .replace('_a', this.Params.octave)
+            .replace('_b', this.Params.octave + 1)
+            .replace('_c', this.Params.octave + 2)
+            .replace('_d', this.Params.octave + 3)
             .toString());
     }
 

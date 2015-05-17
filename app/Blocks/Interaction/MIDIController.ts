@@ -5,6 +5,15 @@ import BlocksSketch = require("../../BlocksSketch");
 class MIDIController extends KeyboardPoly {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+
+
+        if (!this.Params) {
+            this.Params = {
+                glide: 0.05,
+                octave: 3
+            };
+
+        }
         super.Init(sketch);
 
         // Define Outline for HitTest
@@ -47,10 +56,13 @@ class MIDIController extends KeyboardPoly {
 
     }
 
+
+
     GetParam(param: string) {
         super.GetParam(param);
 
     }
+
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -65,7 +77,7 @@ class MIDIController extends KeyboardPoly {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.GetParam("octave"),
+                        "value" : this.Params.octave,
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,

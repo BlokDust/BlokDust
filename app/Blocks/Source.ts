@@ -30,6 +30,7 @@ class Source extends Block implements ISource {
 
     public ActiveVoices: Voice[];
     public FreeVoices: Voice[];
+    public WaveIndex: string[];
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -39,6 +40,10 @@ class Source extends Block implements ISource {
         this.Envelopes = [];
         this.ActiveVoices = [];
         this.FreeVoices = [];
+        if (!this.WaveIndex) {
+            this.WaveIndex = ["sine","square","triangle","sawtooth"];
+        }
+
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
@@ -437,7 +442,8 @@ class Source extends Block implements ISource {
                 break;
             case "waveform":
                 this.Sources.forEach((s: any)=> {
-                    s.type = value;
+                    //s.type = value;
+                    s.type = this.WaveIndex[value];
                 });
                 break;
             case "volume":

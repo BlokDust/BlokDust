@@ -700,6 +700,7 @@ class BlocksSketch extends Grid {
         block.Id = this.GetId();
         block.Position = this._PointerPoint;
         block.Init(this);
+        block.Type = t;
 
         App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
 

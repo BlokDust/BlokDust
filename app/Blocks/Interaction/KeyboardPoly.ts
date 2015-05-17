@@ -13,6 +13,14 @@ class KeyboardPoly extends Keyboard {
     public VoicesAmount: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+
+        if (!this.Params) {
+            this.Params = {
+                octave: 3,
+                voices: 4
+            };
+        }
+
         super.Init(sketch);
 
         this.KeysDown = {};
@@ -153,20 +161,29 @@ class KeyboardPoly extends Keyboard {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
+
+        if (param == "octaves") {
+            this.TriggerReleaseAll();
+        }
+
+        this.Params[param] = val;
+
+
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
         super.GetParam(param);
         var val;
 
-        if (param == "octave"){
+        if (param == "voices") {
+            val = this.VoicesAmount;
+        } else if (param == "octave"){
             val = this.CurrentOctave;
         }
 
         return val;
-    }
+    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -181,7 +198,7 @@ class KeyboardPoly extends Keyboard {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.GetParam("octave"),
+                        "value" : this.Params.octave,
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,

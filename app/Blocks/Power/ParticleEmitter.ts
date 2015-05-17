@@ -12,12 +12,14 @@ class ParticleEmitter extends Source {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Params = {
-            angle: -90,
-            speed: 5,
-            rate: 40,
-            range: 600
-        };
+        if (!this.Params) {
+            this.Params = {
+                angle: -90,
+                speed: 5,
+                rate: 40,
+                range: 600
+            };
+        }
 
         this._rateCounter = 0;
 
@@ -149,16 +151,15 @@ class ParticleEmitter extends Source {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
 
         if (param=="angle") {
-            this.Params[""+param] = (value-90);
+            val = (value-90);
         } else if (param=="rate") {
-            this.Params[""+param] = (value+5);
-        } else {
-            this.Params[""+param] = value;
+            val = (value+5);
         }
 
-
+        this.Params[""+param] = val;
     }
 }
 

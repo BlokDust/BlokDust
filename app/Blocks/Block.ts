@@ -89,7 +89,7 @@ class Block extends DisplayObject implements IBlock {
 
             // ALT-DRAG COPY
             if ((<BlocksSketch>this.Sketch).AltDown && this._Duplicable) {
-                (<BlocksSketch>this.Sketch).CreateBlockFromType(this.Type);
+                (<BlocksSketch>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
                 this.MouseUp();
             }
             // MOVE //
