@@ -283,11 +283,14 @@ class Source extends Block implements ISource {
         }
     }
 
-    TriggerAttackRelease(){
+    TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number){
         if (this.IsDisposed) return;
         if (this.Envelopes.length){
+            if (!duration) duration = "4n";
+            if (!time) time = "+0";
+            //TODO: add velocity to all trigger methods
             this.Envelopes.forEach((e: any)=> {
-                e.triggerAttackRelease("4n", "+0");
+                e.triggerAttackRelease(duration, time);
             });
         }
     }

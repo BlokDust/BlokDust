@@ -6,7 +6,6 @@ import Particle = require("../../Particle");
 class Noise extends Source {
 
     public PlaybackRate: number;
-    public DelayedRelease: number;
     public Noise: any;
     public Waveform: string;
 
@@ -36,8 +35,6 @@ class Noise extends Source {
         this.Sources.forEach((s: any, i:number)=> {
             s.connect(this.Envelopes[i]).start();
         });
-
-        this.DelayedRelease = 0;
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
@@ -81,8 +78,6 @@ class Noise extends Source {
         this.Envelopes.forEach((e: any)=> {
             e.triggerAttack();
         });
-
-        this.DelayedRelease = 5; //TODO, THIS IS SHIT
 
         particle.Dispose();
     }
