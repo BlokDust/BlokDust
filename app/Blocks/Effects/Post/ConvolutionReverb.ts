@@ -16,7 +16,7 @@ class Convolver extends PostEffect {
         }
 
         this.Effect = new Tone.Convolver(this.Params.sample);
-        console.log(this.Effect);
+
         super.Init(sketch);
 
         // Define Outline for HitTest
