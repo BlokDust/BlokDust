@@ -53,11 +53,13 @@ class Keyboard extends PreEffect {
 
             if (this.IsPressed){
                 source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
+                    //TODO: use the new TriggerRelease method
                     e.triggerRelease();
                 });
 
             }
 
+            //TODO: Change this to only set the main frequency back.
             source.Sources.forEach((s: any) => {
                 if (s.frequency){
                     s.frequency.value = source.Params.frequency;
@@ -141,7 +143,7 @@ class Keyboard extends PreEffect {
 
     public SetBaseFrequency(source:ISource){
 
-        if (source.Params.frequency){
+        if (source.Params && source.Params.frequency){
             this.BaseFrequency = source.Params.frequency;
         } else {
             this.BaseFrequency = App.BASE_NOTE;

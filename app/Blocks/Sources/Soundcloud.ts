@@ -32,7 +32,7 @@ class Soundcloud extends Source {
             e = this.Sources[i].envelope;
         });
 
-        this.Sources.forEach((s: Tone.Sampler, i: number)=> {
+        this.Sources.forEach((s: Tone.Sampler) => {
             s.connect(this.EffectsChainInput);
         });
 

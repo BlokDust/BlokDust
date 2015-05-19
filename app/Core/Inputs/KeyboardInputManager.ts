@@ -40,7 +40,7 @@ class KeyboardInputManager extends InputManager {
             19: '', //pause/break
             20: '', //caps lock
             27: '', //escape
-            32: '', //space bar
+            32: 'spacebar', //space bar
             33: '', //page up
             34: '', //page down
             35: '', //end

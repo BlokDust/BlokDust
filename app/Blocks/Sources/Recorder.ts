@@ -4,11 +4,12 @@ import Source = require("../Source");
 
 class RecorderBlock extends Source {
 
+    public Sources : Tone.Sampler[];
     public Recorder: any;
     public BufferSource;
     public Filename: string;
+    private _isRecording: boolean = false;
     public RecordedBlob;
-    public StopPlaybackOnRecord: boolean;
     public PlaybackRate: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -17,24 +18,32 @@ class RecorderBlock extends Source {
 
         super.Init(sketch);
 
-        this.Sources.push( new Tone.Sampler(this.BufferSource) );
-        this.BufferSource = this.Sources[0].context.createBufferSource();
+
+        this.CreateSource();
+        this.BufferSource = App.AudioMixer.Master.context.createBufferSource();
+
         this.Recorder = new Recorder(App.AudioMixer.Master, {
-            workerPath: "Assets/Recorder/recorderWorker.js"
+            workerPath: App.Config.RecorderWorkerPath
+        });
+
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+            e = this.Sources[i].envelope;
         });
 
         this.Sources.forEach((s: Tone.Sampler) => {
             s.connect(this.EffectsChainInput);
-            s.player.loop = true;
-            s.volume.value = 10;
+            s.volume.value = 10; //TODO: this is shit
         });
 
-        this.StopPlaybackOnRecord = false;
-
-        this.Filename = "BlokdustRecording.wav";
+        this.Filename = "BlokdustRecording.wav"; //TODO: make an input box for filename download
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
+
+
+
+        //RECORD BUTTON TODO: make this a command in the command manager
+        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
     }
 
     Update() {
@@ -48,26 +57,54 @@ class RecorderBlock extends Source {
 
     MouseDown() {
         super.MouseDown();
-        this.StartRecording();
+        //this.StartRecording();
+        this.TriggerAttack();
     }
 
     MouseUp() {
         super.MouseUp();
-        this.StopRecording();
+        //this.StopRecording();
+        this.TriggerRelease();
+    }
+
+    KeyDownCallback(e){
+
+        if ((<any>e).KeyDown === 'spacebar'){
+
+            // Start recording on spacebar
+            this.Sources.forEach((s: Tone.Sampler)=> {
+                this.ToggleRecording();
+            });
+        }
+    }
+
+    KeyboardDown(key:string, source): void {
+
+    }
+
+    ToggleRecording(){
+        if (this._isRecording) {
+            this.StopRecording();
+        } else {
+            this.StartRecording();
+        }
     }
 
     StartRecording() {
         this.Recorder.clear();
         console.log('STARTED RECORDING...');
+        this._isRecording = true;
         this.Recorder.record();
     }
 
     StopRecording() {
         this.Recorder.stop();
+        this._isRecording = false;
 
-        this.Sources.forEach((s: any)=> {
-            this.TriggerRelease();
-        });
+        ////TODO: this may not be necceseary
+        //this.Sources.forEach((s: any)=> {
+        //    this.TriggerRelease();
+        //});
 
         console.log('STOPPED RECORDING');
         this.SetBuffers();
@@ -90,7 +127,7 @@ class RecorderBlock extends Source {
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            this.Sources[0].buffer = this.BufferSource.buffer;
+            this.Sources[0].player.buffer = this.BufferSource.buffer;
 
             this._OnBuffersReady();
         });
@@ -136,6 +173,16 @@ class RecorderBlock extends Source {
     }
 
     CreateSource(){
+        this.Sources.push( new Tone.Sampler(this.BufferSource) );
+
+        this.Sources.forEach((s: Tone.Sampler)=> {
+            s.player.loop = true;
+            s.player.loopStart = 0; // 0 is the beginning
+            s.player.loopEnd = -1; // -1 goes to the end of the track
+            s.player.retrigger = false; //Don't retrigger attack if already playing
+            //s.player.reverse = true; //TODO: add reverse capability
+        });
+
         return super.CreateSource();
     }
 
@@ -146,21 +193,21 @@ class RecorderBlock extends Source {
     TriggerAttack(){
         super.TriggerAttack();
 
-        if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttack();
-            });
-        }
+        //if(!this.IsPowered() || this.Sources[0].player.state === "stopped") {
+        //    this.Sources.forEach((s: any)=> {
+        //        s.triggerAttack();
+        //    });
+        //}
     }
 
     TriggerRelease(){
         super.TriggerRelease();
 
-        if(!this.IsPowered()) {
-            this.Sources.forEach((s: any)=> {
-                s.triggerRelease();
-            });
-        }
+        //if(!this.IsPowered()) {
+        //    this.Sources.forEach((s: any)=> {
+        //        s.triggerRelease();
+        //    });
+        //}
     }
 
     TriggerAttackRelease(){
