@@ -77,8 +77,6 @@ class Effect extends Block implements IEffect {
 
     Dispose(): void {
         super.Dispose();
-
-        if (this.IsDisposed) return;
     }
 }
 

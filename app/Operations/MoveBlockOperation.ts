@@ -25,12 +25,7 @@ class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IU
     }
 
     Dispose(): void {
-        //TODO: I don't think we shouldn't be disposing of the blocks in the move operation
-        //// if the block isn't in the display list, dispose of it
-        //if (!App.BlocksSketch.DisplayList.Contains(this._Block)){
-        //    (<any>this._Block).Dispose();
-        //    this._Block = null;
-        //}
+
     }
 }
 

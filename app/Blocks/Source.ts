@@ -209,7 +209,6 @@ class Source extends Block implements ISource {
      * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be triggered
      */
     TriggerAttack(index?: number|string){
-        if (this.IsDisposed) return;
 
         // is the index set?
         var i: any = index? index: 0;
@@ -248,7 +247,6 @@ class Source extends Block implements ISource {
      * @constructor
      */
     TriggerRelease(index?: number|string){
-        if (this.IsDisposed) return;
 
         // Only if it's not powered
         if (!this.IsPowered()) {
@@ -285,7 +283,7 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number){
-        if (this.IsDisposed) return;
+
         if (this.Envelopes.length){
             if (!duration) duration = "4n";
             if (!time) time = "+0";
@@ -324,8 +322,6 @@ class Source extends Block implements ISource {
      */
     Dispose() {
         super.Dispose();
-
-        if (this.IsDisposed) return;
 
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
