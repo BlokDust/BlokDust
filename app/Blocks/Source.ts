@@ -314,8 +314,6 @@ class Source extends Block implements ISource {
         return false;
     }
 
-
-
     /**
      * Disposes the audio nodes
      * @constructor

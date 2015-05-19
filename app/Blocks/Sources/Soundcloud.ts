@@ -28,14 +28,6 @@ class Soundcloud extends Source {
 
         this.CreateSource();
 
-        this.Sources.forEach((s: Tone.Sampler)=> {
-            s.player.loop = true;
-            s.player.loopStart = 0; // 0 is the beginning
-            s.player.loopEnd = -1; // -1 goes to the end of the track
-            s.player.retrigger = true;
-            //s.player.reverse = true; //TODO: add reverse capability
-        });
-
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
             e = this.Sources[i].envelope;
         });
@@ -61,6 +53,14 @@ class Soundcloud extends Source {
 
     CreateSource(){
         this.Sources.push( new Tone.Sampler(this.AudioUrl) );
+        this.Sources.forEach((s: Tone.Sampler)=> {
+            s.player.loop = true;
+            s.player.loopStart = 0; // 0 is the beginning
+            s.player.loopEnd = -1; // -1 goes to the end of the track
+            s.player.retrigger = false; //Don't retrigger attack if already playing
+            //s.player.reverse = true; //TODO: add reverse capability
+        });
+
         return super.CreateSource();
     }
 
