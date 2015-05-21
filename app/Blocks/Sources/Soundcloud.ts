@@ -14,7 +14,12 @@ class Soundcloud extends Source {
 
         if (!this.Params) {
             this.Params = {
-                playbackRate: 1
+                playbackRate: 1,
+                reverse: 0, //TODO: Should be boolean,
+                loop: 1,
+                loopStart: 0,
+                loopEnd: 0,
+                retrigger: false //Don't retrigger attack if already playing
             };
         }
 
@@ -54,11 +59,11 @@ class Soundcloud extends Source {
     CreateSource(){
         this.Sources.push( new Tone.Sampler(this.AudioUrl) );
         this.Sources.forEach((s: Tone.Sampler)=> {
-            s.player.loop = true;
-            s.player.loopStart = 0; // 0 is the beginning
-            s.player.loopEnd = -1; // -1 goes to the end of the track
-            s.player.retrigger = false; //Don't retrigger attack if already playing
-            //s.player.reverse = true; //TODO: add reverse capability
+            s.player.loop = this.Params.loop;
+            s.player.loopStart = this.Params.loopStart;
+            s.player.loopEnd = this.Params.loopEnd;
+            s.player.retrigger = this.Params.retrigger;
+            s.player.reverse = this.Params.reverse;
         });
 
         return super.CreateSource();
@@ -93,6 +98,50 @@ class Soundcloud extends Source {
                         "centered" : true,
                         "logarithmic": true
                     }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Reverse",
+                    "setting" :"reverse",
+                    "props" : {
+                        "value" : this.Params.reverse,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : true,
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Loop",
+                    "setting" :"loop",
+                    "props" : {
+                        "value" : this.Params.loop,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : true,
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Loop Start",
+                    "setting" :"loopStart",
+                    "props" : {
+                        "value" : this.Params.loopStart,
+                        "min" : 0,
+                        "max" : 10,//this.GetDuration(),
+                        "quantised" : false,
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Loop End",
+                    "setting" :"loopEnd",
+                    "props" : {
+                        "value" : this.Params.loopEnd,
+                        "min" : 0.0001,
+                        "max" : 10,//this.GetDuration(),
+                        "quantised" : false,
+                    }
                 }
             ]
         };
@@ -102,9 +151,35 @@ class Soundcloud extends Source {
         super.SetParam(param,value);
         var val = value;
 
-        if (param == "playbackRate") {
+        if (param === "playbackRate") {
             this.SetPitch(value);
         }
+        if (param === "reverse") {
+            value = value? true : false;
+            this.Sources.forEach((s: Tone.Sampler)=> {
+                s.player.reverse = value;
+            });
+        }
+
+        if (param === "loop") {
+            value = value? true : false;
+            this.Sources.forEach((s: Tone.Sampler)=> {
+                s.player.loop = value;
+            });
+        }
+
+        if (param === "loopStart") {
+            this.Sources.forEach((s: Tone.Sampler)=> {
+                s.player.loopStart = value;
+            });
+        }
+
+        if (param === "loopEnd") {
+            this.Sources.forEach((s: Tone.Sampler)=> {
+                s.player.loopEnd = value;
+            });
+        }
+
         this.Params[param] = val;
     }
 
@@ -112,6 +187,13 @@ class Soundcloud extends Source {
         var val = super.GetParam(param);
         return val;
     }*/
+
+    GetDuration() {
+        if (this.Sources[0] && this.Sources[0].player && this.Sources[0].player.duration){
+            return this.Sources[0].player.duration;
+        }
+        return 0;
+    }
 
     Dispose(){
         super.Dispose();
