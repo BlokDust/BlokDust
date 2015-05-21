@@ -183,14 +183,9 @@ class Soundcloud extends Source {
         this.Params[param] = val;
     }
 
-    /*GetParam(param: string){
-        var val = super.GetParam(param);
-        return val;
-    }*/
-
     GetDuration() {
-        if (this.Sources[0] && this.Sources[0].player && this.Sources[0].player.duration){
-            return this.Sources[0].player.duration;
+        if (this.Sources[0] && this.Sources[0].player && this.Sources[0].player.buffer && this.Sources[0].player.buffer.duration){
+            return this.Sources[0].player.buffer.duration;
         }
         return 0;
     }

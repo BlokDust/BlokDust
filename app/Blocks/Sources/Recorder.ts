@@ -103,12 +103,6 @@ class RecorderBlock extends Source {
     StopRecording() {
         this.Recorder.stop();
         this._isRecording = false;
-
-        ////TODO: this may not be necceseary
-        //this.Sources.forEach((s: any)=> {
-        //    this.TriggerRelease();
-        //});
-
         console.log('STOPPED RECORDING');
         this.SetBuffers();
     }
@@ -126,7 +120,15 @@ class RecorderBlock extends Source {
 
         this.Recorder.getBuffers((buffers) => {
 
+            // If we already have a BufferSource set, reset it to null
+            // TODO: add a 'merge new buffers with old buffers' option
+            if (this.BufferSource.buffer !== null) {
+                this.BufferSource = null;
+                this.BufferSource = this.Sources[0].context.createBufferSource();
+            }
+
             this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
+
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
@@ -166,24 +168,27 @@ class RecorderBlock extends Source {
     Dispose(){
         super.Dispose();
         this.BufferSource = null;
-        this.Recorder = null;
+        this.Recorder.clear();
         this.RecordedBlob = null;
 
         this.Sources.forEach((s: any)=> {
             s.dispose();
         });
-
     }
 
     CreateSource(){
         this.Sources.push( new Tone.Sampler(this.BufferSource) );
 
-        this.Sources.forEach((s: Tone.Sampler)=> {
+        this.Sources.forEach((s: Tone.Sampler, i: number)=> {
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
             s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
+
+            if (i > 0){
+                s.player.buffer = this.Sources[0].player.buffer;
+            }
         });
 
         return super.CreateSource();
