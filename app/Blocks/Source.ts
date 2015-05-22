@@ -389,6 +389,20 @@ class Source extends Block implements ISource {
         }
     }
 
+    OctaveShift(octaves: number) {
+        if (octaves === 0 ) return;
+        this.Sources.forEach((s: any, i)=> {
+            var oldPitch = this.GetPitch(i);
+            var multiplier = Math.abs(octaves*2);
+
+            if (octaves > 0) {
+                this.SetPitch(oldPitch*multiplier, i);
+            } else {
+                this.SetPitch(oldPitch/multiplier, i);
+            }
+        });
+    }
+
     GetParam(param: string) {
 
         var val;

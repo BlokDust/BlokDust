@@ -71,33 +71,38 @@ class Keyboard extends PreEffect {
         super.Detach(source);
     }
 
-    KeyDownCallback(e){
+    KeyDownCallback(e: any){
 
         //if KeyDown is a keyboard note or an octave shifter
-        if ((<any>e).KeyDown.substring(0, 5) === 'note_' || (<any>e).KeyDown === 'octave-up' ||  (<any>e).KeyDown === 'octave-down'){
-            this.KeysDown = (<any>e).KeysDown;
+        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_'){
+            this.KeysDown = e.KeysDown;
 
             // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                this.KeyboardDown((<any>e).KeyDown, source);
+                this.KeyboardDown(e.KeyDown, source);
+            }
+        } else {
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                this._ExecuteKeyboardCommand(e.KeyDown, source);
             }
         }
     }
 
-    KeyUpCallback(e){
+    KeyUpCallback(e: any){
 
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
         for (var i = 0; i < this.Sources.Count; i++) {
             var source = this.Sources.GetValueAt(i);
 
             // If its an octave shift no need to call KeyboardUp
-            if ((<any>e).KeyUp !== 'octave-up' && (<any>e).KeyUp !== 'octave-down') {
-                this.KeyboardUp((<any>e).KeyUp, source);
+            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
+                this.KeyboardUp(e.KeyUp, source);
             }
         }
 
-        this.KeysDown = (<any>e).KeysDown;
+        this.KeysDown = e.KeysDown;
     }
 
     Dispose(){
@@ -126,19 +131,21 @@ class Keyboard extends PreEffect {
     }
 
     KeyboardDown(key:string, source:ISource): void {
-        if (key == 'octave-up' && this.Params.octave < 9) {
-            //this.Params.octave++;
-            this.SetParam("octave",this.Params.octave+1);
-        }
 
-        if (key === 'octave-down' && this.Params.octave != 0) {
-            //this.CurrentOctave--;
-            this.SetParam("octave",this.Params.octave+1);
-        }
     }
 
     KeyboardUp(key:string, source:ISource): void {
 
+    }
+
+    private _ExecuteKeyboardCommand(key: string, source: ISource) {
+        if (key == 'octave-up' && this.Params.octave < 9) {
+            this.SetParam("octave",this.Params.octave+1);
+            source.OctaveShift(1);
+        } else if (key === 'octave-down' && this.Params.octave != 0) {
+            this.SetParam("octave",this.Params.octave-1);
+            source.OctaveShift(-1);
+        }
     }
 
     public SetBaseFrequency(source:ISource){

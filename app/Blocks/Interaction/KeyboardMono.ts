@@ -58,21 +58,6 @@ class KeyboardMono extends Keyboard {
         this.Params[param] = val;
     }
 
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-
-        if (param == "glide") {
-            val = this.Glide*100;
-
-        } else if (param == "octave"){
-            val = this.CurrentOctave;
-        }
-
-        return val;
-
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
@@ -132,7 +117,11 @@ class KeyboardMono extends Keyboard {
     KeyboardUp(keyUp:string, source:ISource): void {
         super.KeyboardUp(keyUp, source);
 
-        if (Object.keys(this.KeysDown).length === 0) {
+        var keyPressed = this.GetKeyNoteOctaveString(keyUp);
+        var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
+        var thisPitch = source.GetPitch();
+
+        if (Math.round(thisPitch) === Math.round(keyUpFrequency)) {
             source.TriggerRelease();
         }
     }
