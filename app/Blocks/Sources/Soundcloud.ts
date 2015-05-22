@@ -16,10 +16,12 @@ class Soundcloud extends Source {
             this.Params = {
                 playbackRate: 1,
                 reverse: 0, //TODO: Should be boolean,
+                startPosition: 0,
                 loop: 1,
                 loopStart: 0,
                 loopEnd: 0,
-                retrigger: false //Don't retrigger attack if already playing
+                retrigger: false, //Don't retrigger attack if already playing
+                volume: 11
             };
         }
 
@@ -59,6 +61,7 @@ class Soundcloud extends Source {
     CreateSource(){
         this.Sources.push( new Tone.Sampler(this.AudioUrl) );
         this.Sources.forEach((s: Tone.Sampler)=> {
+            s.player.startPosition = this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
@@ -123,6 +126,17 @@ class Soundcloud extends Source {
                 },
                 {
                     "type" : "slider",
+                    "name" : "Start Position",
+                    "setting" :"startPosition",
+                    "props" : {
+                        "value" : this.Params.startPosition,
+                        "min" : 0,
+                        "max" : 10,//this.GetDuration(),
+                        "quantised" : false,
+                    }
+                },
+                {
+                    "type" : "slider",
                     "name" : "Loop Start",
                     "setting" :"loopStart",
                     "props" : {
@@ -142,6 +156,17 @@ class Soundcloud extends Source {
                         "max" : 10,//this.GetDuration(),
                         "quantised" : false,
                     }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Volume",
+                    "setting" :"volume",
+                    "props" : {
+                        "value" : this.Params.volume,
+                        "min" : 0,
+                        "max" : 20,
+                        "quantised" : false,
+                    }
                 }
             ]
         };
@@ -151,33 +176,37 @@ class Soundcloud extends Source {
         super.SetParam(param,value);
         var val = value;
 
-        if (param === "playbackRate") {
-            this.SetPitch(value);
-        }
-        if (param === "reverse") {
-            value = value? true : false;
-            this.Sources.forEach((s: Tone.Sampler)=> {
-                s.player.reverse = value;
-            });
-        }
-
-        if (param === "loop") {
-            value = value? true : false;
-            this.Sources.forEach((s: Tone.Sampler)=> {
-                s.player.loop = value;
-            });
-        }
-
-        if (param === "loopStart") {
-            this.Sources.forEach((s: Tone.Sampler)=> {
-                s.player.loopStart = value;
-            });
-        }
-
-        if (param === "loopEnd") {
-            this.Sources.forEach((s: Tone.Sampler)=> {
-                s.player.loopEnd = value;
-            });
+        switch(param) {
+            case "playbackRate":
+                this.SetPitch(value);
+                break;
+            case "reverse":
+                value = value? true : false;
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.reverse = value;
+                });
+                break;
+            case "startPosition":
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.startPosition = value;
+                });
+                break;
+            case "loop":
+                value = value? true : false;
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.loop = value;
+                });
+                break;
+            case "loopStart":
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.loopStart = value;
+                });
+                break;
+            case "loopEnd":
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.loopEnd = value;
+                });
+                break;
         }
 
         this.Params[param] = val;

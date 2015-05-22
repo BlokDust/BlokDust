@@ -23,7 +23,7 @@ class KeyboardPoly extends Keyboard {
         super.Init(sketch);
 
         this.KeysDown = {};
-        this.VoicesAmount = 4; //TODO: Make this a global const
+        this.VoicesAmount = this.Params.voices;
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
