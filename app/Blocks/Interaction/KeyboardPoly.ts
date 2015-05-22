@@ -155,33 +155,6 @@ class KeyboardPoly extends Keyboard {
         });
     }
 
-
-    SetParam(param: string,value: number) {
-        super.SetParam(param,value);
-        var val = value;
-
-        if (param == "octaves") {
-            this.TriggerReleaseAll();
-        }
-
-        this.Params[param] = val;
-
-
-    }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-
-        if (param == "voices") {
-            val = this.VoicesAmount;
-        } else if (param == "octave"){
-            val = this.CurrentOctave;
-        }
-
-        return val;
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 

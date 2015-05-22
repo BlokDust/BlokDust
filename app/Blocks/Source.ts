@@ -461,7 +461,7 @@ class Source extends Block implements ISource {
                 break;
             case "volume":
                 this.Sources.forEach((s: any)=> {
-                    s.gain.value = value;
+                    s.volume.value = value;
                 });
                 break;
             case "playbackRate":

@@ -49,9 +49,7 @@ class KeyboardMono extends Keyboard {
         super.SetParam(param,value);
         var val = value;
 
-        if (param == "octaves") {
-            this.TriggerReleaseAll();
-        } else if (param == "glide") {
+        if (param == "glide") {
             val = value/100;
         }
 

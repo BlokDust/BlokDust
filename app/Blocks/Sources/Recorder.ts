@@ -23,7 +23,8 @@ class RecorderBlock extends Source {
                 loop: 1, //TODO: Should be boolean,
                 loopStart: 0,
                 loopEnd: 0,
-                retrigger: false //Don't retrigger attack if already playing
+                retrigger: false, //Don't retrigger attack if already playing
+                volume: 11
             };
         }
 
@@ -42,7 +43,7 @@ class RecorderBlock extends Source {
 
         this.Sources.forEach((s: Tone.Sampler) => {
             s.connect(this.EffectsChainInput);
-            s.volume.value = 10; //TODO: this is shit
+            s.volume.value = this.Params.volume;
         });
 
         this.Filename = "BlokdustRecording.wav"; //TODO: make an input box for filename download
@@ -79,9 +80,7 @@ class RecorderBlock extends Source {
         if ((<any>e).KeyDown === 'spacebar'){
 
             // Start recording on spacebar
-            this.Sources.forEach((s: Tone.Sampler)=> {
-                this.ToggleRecording();
-            });
+            this.ToggleRecording();
         }
     }
 
@@ -107,14 +106,14 @@ class RecorderBlock extends Source {
         this.SetBuffers();
     }
 
-    StartPlayback() {
-        this.Sources.forEach((s: any)=> {
-            this.TriggerAttack();
-        });
-
-        console.log("STARTED PLAYBACK");
-        console.log(this.GetRecordedBlob());
-    }
+    //StartPlayback() {
+    //    this.Sources.forEach((s: any)=> {
+    //        this.TriggerAttack();
+    //    });
+    //
+    //    console.log("STARTED PLAYBACK");
+    //    console.log(this.GetRecordedBlob());
+    //}
 
     SetBuffers() {
 
@@ -127,12 +126,15 @@ class RecorderBlock extends Source {
                 this.BufferSource = this.Sources[0].context.createBufferSource();
             }
 
+            // Create a new buffer and set the buffers to the recorded data
             this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
-
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            this.Sources[0].player.buffer = this.BufferSource.buffer;
+            // Set the buffers for each source
+            this.Sources.forEach((s: Tone.Sampler)=> {
+                s.player.buffer = this.BufferSource.buffer;
+            });
 
             this._OnBuffersReady();
         });
@@ -142,16 +144,16 @@ class RecorderBlock extends Source {
         console.log("READY FOR PLAYBACK - CLICK, POWER OR CONNECT TO AN INTERACTION BLOCK")
     }
 
-    StopPlayback() {
-        this.Sources.forEach((s: any)=> {
-            this.TriggerRelease();
-        });
-        console.log("STOPPED PLAYBACK");
-    }
+    //StopPlayback() {
+    //    this.Sources.forEach((s: any)=> {
+    //        this.TriggerRelease();
+    //    });
+    //    console.log("STOPPED PLAYBACK");
+    //}
 
-    GetRecordedBuffers() {
-        return this.BufferSource.buffer;
-    }
+    //GetRecordedBuffers() {
+    //    return this.BufferSource.buffer;
+    //}
 
     GetRecordedBlob() {
         this.Recorder.exportWAV((blob) => {
@@ -258,6 +260,17 @@ class RecorderBlock extends Source {
                         "max" : 10,//this.GetDuration(),
                         "quantised" : false,
                     }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Volume",
+                    "setting" :"volume",
+                    "props" : {
+                        "value" : this.Params.volume,
+                        "min" : 0,
+                        "max" : 20,
+                        "quantised" : true,
+                    }
                 }
             ]
         };
@@ -270,6 +283,7 @@ class RecorderBlock extends Source {
         if (param === "playbackRate") {
             this.SetPitch(value);
         }
+
         if (param === "reverse") {
             value = value? true : false;
             this.Sources.forEach((s: Tone.Sampler)=> {

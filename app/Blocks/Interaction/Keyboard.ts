@@ -115,6 +115,14 @@ class Keyboard extends PreEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+
+        if (param == "octave") {
+            for (var i = 0, source; i < this.Sources.Count; i++) {
+                source = this.Sources.GetValueAt(i);
+                var diff = value - this.Params.octave;
+                source.OctaveShift(diff);
+            }
+        }
     }
 
     GetParam(param: string) {
