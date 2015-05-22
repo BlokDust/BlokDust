@@ -14,6 +14,7 @@ class Keyboard extends PreEffect {
     public BaseFrequency: number;
     //public CurrentOctave: number;
     public KeysDown: any;
+    public KeyboardCommands: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -25,6 +26,11 @@ class Keyboard extends PreEffect {
                 voices: 4
             };
         }*/
+
+        this.KeyboardCommands = {
+            OctaveUp: 'octave-up',
+            OctaveDown: 'octave-down'
+        };
 
         this.KeysDown = {};
         //this.CurrentOctave = 3;
@@ -115,14 +121,6 @@ class Keyboard extends PreEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-
-        if (param == "octave") {
-            for (var i = 0, source; i < this.Sources.Count; i++) {
-                source = this.Sources.GetValueAt(i);
-                var diff = value - this.Params.octave;
-                source.OctaveShift(diff);
-            }
-        }
     }
 
     GetParam(param: string) {

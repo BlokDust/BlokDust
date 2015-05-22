@@ -155,6 +155,22 @@ class KeyboardPoly extends Keyboard {
         });
     }
 
+
+    SetParam(param: string,value: number) {
+        super.SetParam(param,value);
+        var val = value;
+
+        if (param == "octave") {
+            for (var i = 0, source; i < this.Sources.Count; i++) {
+                source = this.Sources.GetValueAt(i);
+                var diff = val - this.Params.octave;
+                source.OctaveShift(diff);
+            }
+        }
+
+        this.Params[param] = val;
+    }
+
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
