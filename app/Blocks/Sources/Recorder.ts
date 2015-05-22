@@ -106,25 +106,21 @@ class RecorderBlock extends Source {
         this.SetBuffers();
     }
 
-    //StartPlayback() {
-    //    this.Sources.forEach((s: any)=> {
-    //        this.TriggerAttack();
-    //    });
-    //
-    //    console.log("STARTED PLAYBACK");
-    //    console.log(this.GetRecordedBlob());
-    //}
-
     SetBuffers() {
 
         this.Recorder.getBuffers((buffers) => {
 
-            // If we already have a BufferSource set, reset it to null
-            // TODO: add a 'merge new buffers with old buffers' option
-            if (this.BufferSource.buffer !== null) {
+            // if BufferSource doesn't exist create it
+            if (!this.BufferSource) {
+                this.BufferSource = this.Sources[0].context.createBufferSource();
+            }
+            // If we already have a BufferSource and the buffer is set, reset it to null and create a new one
+            else if (this.BufferSource && this.BufferSource.buffer !== null){
                 this.BufferSource = null;
                 this.BufferSource = this.Sources[0].context.createBufferSource();
             }
+
+            // TODO: add a 'merge new buffers with old buffers' option
 
             // Create a new buffer and set the buffers to the recorded data
             this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
@@ -144,17 +140,6 @@ class RecorderBlock extends Source {
         console.log("READY FOR PLAYBACK - CLICK, POWER OR CONNECT TO AN INTERACTION BLOCK")
     }
 
-    //StopPlayback() {
-    //    this.Sources.forEach((s: any)=> {
-    //        this.TriggerRelease();
-    //    });
-    //    console.log("STOPPED PLAYBACK");
-    //}
-
-    //GetRecordedBuffers() {
-    //    return this.BufferSource.buffer;
-    //}
-
     GetRecordedBlob() {
         this.Recorder.exportWAV((blob) => {
             this.RecordedBlob = blob;
@@ -169,10 +154,11 @@ class RecorderBlock extends Source {
 
     Dispose(){
         super.Dispose();
+        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
         this.BufferSource = null;
         this.Recorder.clear();
+        this.Recorder = null;
         this.RecordedBlob = null;
-
         this.Sources.forEach((s: any)=> {
             s.dispose();
         });
