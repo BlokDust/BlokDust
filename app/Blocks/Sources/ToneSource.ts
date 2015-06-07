@@ -139,51 +139,10 @@ class ToneSource extends Source {
 
         var val = value;
 
-        if (param == "waveform") {
-            //this.Waveform = this.WaveIndex[val];
-        }
-
         this.Params[""+param] = val;
-         /*
-
-        if (param == "waveform") {
-            switch(Math.round(value)){
-                case 1: value = "sine";
-                    break;
-                case 2: value = "square";
-                    break;
-                case 3: value = "triangle";
-                    break;
-                case 4: value = "sawtooth";
-                    break;
-            }
-            this.Waveform = value;
-
-        } else if (param == "frequency") {
-            this.Frequency = value;
-        }*/
 
         super.SetParam(param,value);
     }
-
-    /*GetParam(param: string){
-        var val;
-        if (param == "waveform") {
-            switch(super.GetParam(param)){
-                case "sine": val = 1;
-                    break;
-                case "square": val = 2;
-                    break;
-                case "triangle": val = 3;
-                    break;
-                case "sawtooth": val = 4;
-                    break;
-            }
-        } else {
-            val = super.GetParam(param)
-        }
-        return val;
-    }*/
 }
 
 export = ToneSource;

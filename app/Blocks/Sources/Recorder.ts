@@ -281,7 +281,9 @@ class RecorderBlock extends Source {
 
         switch(param) {
             case "playbackRate":
-                this.SetPitch(value);
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.playbackRate = value;
+                });
                 break;
             case "reverse":
                 value = value? true : false;
