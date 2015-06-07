@@ -17,7 +17,8 @@ module.exports = function (grunt) {
     var dirs = {
         app: 'app',
         build: 'app/.build',
-        lib: 'app/lib'
+        lib: 'app/lib',
+        typings: 'app/typings'
     };
 
     function mount(connect, dir) {
@@ -32,15 +33,15 @@ module.exports = function (grunt) {
                 src: [
                     '<%= dirs.app %>/**/*.ts',
                     '!<%= dirs.lib %>/**/*.ts',
-                    'app/typings/*.ts',
-                    'app/lib/tone/utils/TypeScript/Tone.d.ts',
-                    'app/lib/fayde/dist/fayde.d.ts',
-                    'app/lib/minerva/dist/minerva.d.ts',
-                    'app/lib/nullstone/dist/nullstone.d.ts',
-                    'app/lib/fayde.drawing/dist/fayde.drawing.d.ts',
-                    'app/lib/fayde.transformer/dist/fayde.transformer.d.ts',
-                    'app/lib/fayde.utils/dist/fayde.utils.d.ts',
-                    'app/lib/tween.ts/src/Tween.d.ts'
+                    '<%= dirs.typings %>/*.ts',
+                    '<%= dirs.lib %>/tone/utils/TypeScript/Tone.d.ts',
+                    '<%= dirs.lib %>/fayde/dist/fayde.d.ts',
+                    '<%= dirs.lib %>/minerva/dist/minerva.d.ts',
+                    '<%= dirs.lib %>/nullstone/dist/nullstone.d.ts',
+                    '<%= dirs.lib %>/fayde.drawing/dist/fayde.drawing.d.ts',
+                    '<%= dirs.lib %>/fayde.transformer/dist/fayde.transformer.d.ts',
+                    '<%= dirs.lib %>/fayde.utils/dist/fayde.utils.d.ts',
+                    '<%= dirs.lib %>/tween.ts/src/Tween.d.ts'
                 ],
                 dest: dirs.build,
                 options: {
