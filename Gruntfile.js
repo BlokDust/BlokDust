@@ -76,10 +76,16 @@ module.exports = function (grunt) {
             minified: {
                 src: ['<%= dirs.dist %>/default.html'],
                 overwrite: true,
-                replacements: [{
-                    from: 'src="lib/requirejs/require.js"',
-                    to: 'src="App.min.js"'
-                }]
+                replacements: [
+                    {
+                        from: 'src="lib/requirejs/require.js"',
+                        to: 'src="App.min.js"'
+                    },
+                    {
+                        from: '<script src="//localhost:35353/livereload.js"></script>',
+                        to: ''
+                    }
+                ]
             }
         },
 
