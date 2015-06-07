@@ -1,20 +1,19 @@
 BlokDust
 ========
 
-<--
 
-git clone https://github.com/BlokDust/BlokDust.git
 
-npm install
+`git clone https://github.com/BlokDust/BlokDust.git`
+
+`npm install`
 
 (if node not installed -
 
-bower install
+`bower install`
 
-npm install -g bower
-npm install -g grunt-cli
-npm install -g typescript
+`npm install -g bower`
+`npm install -g grunt-cli`
+`npm install -g typescript`
 
-grunt serve
+`grunt serve`
 
---->
