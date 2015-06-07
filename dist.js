@@ -27,7 +27,7 @@ module.exports = function (grunt) {
 
         options = this.data.options;
 
-        grunt.file.delete(options.dest);
+        grunt.file.delete(grunt.file.expand(options.dest));
 
         copyFiles(['./app/require-config.js', './app/.build/*'], options.dest);
         copyFiles('./app/lib/*', options.dest + '/lib');

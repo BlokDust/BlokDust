@@ -1,6 +1,6 @@
 ({
-    baseUrl: "app/",
-    mainConfigFile: "app/require-config.js",
+    baseUrl: "dist/",
+    mainConfigFile: "dist/require-config.js",
     name: "require-config",
-    out: "app/.deploy/App.min.js"
+    out: "dist/App.min.js"
 })

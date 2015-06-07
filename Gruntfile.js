@@ -1,11 +1,11 @@
 var path = require('path'),
-    connect_livereload = require('connect-livereload'),
-    dist = require('./dist');
+    connect_livereload = require('connect-livereload');
 
 module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-typescript');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-exec');
@@ -18,7 +18,7 @@ module.exports = function (grunt) {
     var dirs = {
         app: 'app',
         build: 'app/.build',
-        dist: './dist',
+        dist: 'dist',
         lib: 'app/lib',
         typings: 'app/typings'
     };
@@ -57,14 +57,46 @@ module.exports = function (grunt) {
             }
         },
 
+        clean: {
+            dist : ['<%= dirs.dist %>/**']
+        },
+
         copy: {
-            main: {
+            assets: {
                 files: [
                     {
                         expand: true,
                         cwd: '<%= dirs.app %>/Assets/',
                         src: ['**'],
                         dest: '<%= dirs.build %>/Assets/'
+                    }
+                ]
+            },
+            dist: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['require-config.js'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>/lib',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/lib/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.build %>',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['config.json'],
+                        dest: '<%= dirs.dist %>/'
                     }
                 ]
             }
@@ -119,19 +151,10 @@ module.exports = function (grunt) {
                 //cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/require-config.js name=require-config optimize=none out=app/min.js'
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
             }
-        },
-
-        dist: {
-            apply: {
-                options: {
-                    dest: dirs.dist
-                }
-            }
         }
     });
 
-    dist(grunt);
-
-    grunt.registerTask('default', ['typescript:build', 'copy']);
-    grunt.registerTask('serve', ['typescript:build', 'copy', 'connect', 'open', 'watch'])
+    grunt.registerTask('default', ['typescript:build', 'copy:assets']);
+    grunt.registerTask('serve', ['typescript:build', 'copy:assets', 'connect', 'open', 'watch']);
+    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify']);
 };
