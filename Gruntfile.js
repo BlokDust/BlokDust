@@ -1,5 +1,6 @@
 var path = require('path'),
-    connect_livereload = require('connect-livereload');
+    connect_livereload = require('connect-livereload'),
+    dist = require('./dist');
 
 module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-typescript');
@@ -17,6 +18,7 @@ module.exports = function (grunt) {
     var dirs = {
         app: 'app',
         build: 'app/.build',
+        dist: './dist',
         lib: 'app/lib',
         typings: 'app/typings'
     };
@@ -26,8 +28,10 @@ module.exports = function (grunt) {
     }
 
     grunt.initConfig({
+
         ports: ports,
         dirs: dirs,
+
         typescript: {
             build: {
                 src: [
@@ -52,6 +56,7 @@ module.exports = function (grunt) {
                 }
             }
         },
+
         copy: {
             main: {
                 files: [
@@ -64,6 +69,7 @@ module.exports = function (grunt) {
                 ]
             }
         },
+
         connect: {
             server: {
                 options: {
@@ -79,11 +85,13 @@ module.exports = function (grunt) {
                 }
             }
         },
+
         open: {
             serve: {
                 path: 'http://localhost:<%= ports.server %>/default.html'
             }
         },
+
         watch: {
             src: {
                 files: [
@@ -105,13 +113,24 @@ module.exports = function (grunt) {
                 }
             }
         },
+
         exec: {
             minify: {
                 //cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/require-config.js name=require-config optimize=none out=app/min.js'
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
             }
+        },
+
+        dist: {
+            apply: {
+                options: {
+                    dest: dirs.dist
+                }
+            }
         }
     });
+
+    dist(grunt);
 
     grunt.registerTask('default', ['typescript:build', 'copy']);
     grunt.registerTask('serve', ['typescript:build', 'copy', 'connect', 'open', 'watch'])
