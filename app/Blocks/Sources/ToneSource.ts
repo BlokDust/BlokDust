@@ -137,9 +137,16 @@ class ToneSource extends Source {
 
     SetParam(param: string,value: any) {
 
+
         var val = value;
 
-        this.Params[""+param] = val;
+        switch(param) {
+            case "frequency":
+                this.Sources[0].frequency.value = value;
+                break;
+        }
+
+        this.Params[param] = val;
 
         super.SetParam(param,value);
     }

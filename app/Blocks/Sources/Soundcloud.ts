@@ -178,9 +178,7 @@ class Soundcloud extends Source {
 
         switch(param) {
             case "playbackRate":
-                this.Sources.forEach((s: Tone.Sampler)=> {
-                    s.player.playbackRate = value;
-                });
+                this.Sources[0].player.playbackRate = value;
                 break;
             case "reverse":
                 value = value? true : false;

@@ -459,11 +459,6 @@ class Source extends Block implements ISource {
         jsonVariable[param] = value;
 
         switch (param){
-            case "frequency":
-                this.Sources.forEach((s: any)=> {
-                    s.frequency.exponentialRampToValueNow(value, 0);
-                });
-                break;
             case "detune":
                 this.Sources.forEach((s: any)=> {
                     s.detune.value = value;
@@ -478,11 +473,6 @@ class Source extends Block implements ISource {
             case "volume":
                 this.Sources.forEach((s: any)=> {
                     s.volume.value = value;
-                });
-                break;
-            case "playbackRate":
-                this.Sources.forEach((s: any)=> {
-                    s.playbackRate = value;
                 });
                 break;
         }
