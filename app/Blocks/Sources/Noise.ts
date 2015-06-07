@@ -76,14 +76,14 @@ class Noise extends Source {
     Update() {
         super.Update();
 
-        if (this.DelayedRelease>0) { //TODO, THIS IS SHIT
-            this.DelayedRelease -= 1;
-            if (this.DelayedRelease==0) {
-                this.Envelopes.forEach((e: any)=> {
-                    e.triggerRelease();
-                });
-            }
-        }
+        //if (this.DelayedRelease>0) { //TODO, THIS IS SHIT
+        //    this.DelayedRelease -= 1;
+        //    if (this.DelayedRelease==0) {
+        //        this.Envelopes.forEach((e: any)=> {
+        //            e.triggerRelease();
+        //        });
+        //    }
+        //}
     }
 
     Draw() {

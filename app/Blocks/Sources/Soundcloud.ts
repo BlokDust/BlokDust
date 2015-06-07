@@ -15,7 +15,7 @@ class Soundcloud extends Source {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
-                reverse: 0, //TODO: Should be boolean,
+                reverse: 1, //TODO: Should be boolean,
                 startPosition: 0,
                 loop: 1,
                 loopStart: 0,
