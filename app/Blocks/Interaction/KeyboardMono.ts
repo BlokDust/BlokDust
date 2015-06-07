@@ -127,7 +127,7 @@ class KeyboardMono extends Keyboard {
         var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
         var thisPitch = source.GetPitch();
 
-        if (Math.round(thisPitch) === Math.round(keyUpFrequency)) {
+        if (Object.keys(this.KeysDown).length === 0) {
             source.TriggerRelease();
         }
     }

@@ -310,7 +310,7 @@ class Source extends Block implements ISource {
         if (this.Effects.Count) {
             for (var i = 0; i < this.Effects.Count; i++) {
                 var effect = this.Effects.GetValueAt(i);
-                if (effect.Name == 'Power'){
+                if (effect instanceof Power){
                     return true;
                 }
             }

@@ -127,7 +127,7 @@ class Chorus extends PostEffect {
                     "props" : {
                         "value" : this.Params.feedback,
                         "min" : 0,
-                        "max" : 0.2,
+                        "max" : 1,
                         "quantised" : false,
                         "centered" : false
                     }
