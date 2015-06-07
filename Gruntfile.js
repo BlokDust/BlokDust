@@ -5,9 +5,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-typescript');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-exec');
+    grunt.loadNpmTasks('grunt-text-replace');
 
     var ports = {
         server: 8000,
@@ -17,6 +19,7 @@ module.exports = function (grunt) {
     var dirs = {
         app: 'app',
         build: 'app/.build',
+        dist: 'dist',
         lib: 'app/lib',
         typings: 'app/typings'
     };
@@ -26,8 +29,10 @@ module.exports = function (grunt) {
     }
 
     grunt.initConfig({
+
         ports: ports,
         dirs: dirs,
+
         typescript: {
             build: {
                 src: [
@@ -52,8 +57,40 @@ module.exports = function (grunt) {
                 }
             }
         },
+
+        clean: {
+            dist : ['<%= dirs.dist %>/*'],
+            minified : [
+                '<%= dirs.dist %>/*',
+                '!<%= dirs.dist %>/Assets',
+                '!<%= dirs.dist %>/lib',
+                '!<%= dirs.dist %>/img',
+                '!<%= dirs.dist %>/App.min.js',
+                '!<%= dirs.dist %>/config.json',
+                '!<%= dirs.dist %>/default.html',
+                '!<%= dirs.dist %>/intersection.js',
+                '!<%= dirs.dist %>/styles.css']
+        },
+
+        replace: {
+            minified: {
+                src: ['<%= dirs.dist %>/default.html'],
+                overwrite: true,
+                replacements: [
+                    {
+                        from: 'src="lib/requirejs/require.js"',
+                        to: 'src="App.min.js"'
+                    },
+                    {
+                        from: '<script src="//localhost:35353/livereload.js"></script>',
+                        to: ''
+                    }
+                ]
+            }
+        },
+
         copy: {
-            main: {
+            assets: {
                 files: [
                     {
                         expand: true,
@@ -62,10 +99,63 @@ module.exports = function (grunt) {
                         dest: '<%= dirs.build %>/Assets/'
                     }
                 ]
+            },
+            dist: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['require-config.js'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>/img',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/img/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>/lib',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/lib/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.build %>',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['config.json'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['default.html'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['intersection.js'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['styles.css'],
+                        dest: '<%= dirs.dist %>/'
+                    }
+                ]
             }
         },
+
         connect: {
-            server: {
+            dev: {
                 options: {
                     port: ports.server,
                     base: dirs.app,
@@ -77,13 +167,27 @@ module.exports = function (grunt) {
                         ];
                     }
                 }
+            },
+            dist: {
+                options: {
+                    port: ports.server,
+                    base: dirs.dist,
+                    keepalive: true,
+                    middleware: function (connect) {
+                        return [
+                            mount(connect, dirs.dist)
+                        ];
+                    }
+                }
             }
         },
+
         open: {
             serve: {
                 path: 'http://localhost:<%= ports.server %>/default.html'
             }
         },
+
         watch: {
             src: {
                 files: [
@@ -105,14 +209,16 @@ module.exports = function (grunt) {
                 }
             }
         },
+
         exec: {
             minify: {
-                //cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/require-config.js name=require-config optimize=none out=app/min.js'
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
             }
         }
     });
 
-    grunt.registerTask('default', ['typescript:build', 'copy']);
-    grunt.registerTask('serve', ['typescript:build', 'copy', 'connect', 'open', 'watch'])
+    grunt.registerTask('default', ['typescript:build', 'copy:assets']);
+    grunt.registerTask('serve:dev', ['typescript:build', 'copy:assets', 'connect:dev', 'open', 'watch']);
+    grunt.registerTask('serve:dist', ['connect:dist', 'open']);
+    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify', 'clean:minified', 'replace:minified']);
 };

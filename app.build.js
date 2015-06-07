@@ -1,6 +1,10 @@
 ({
-    baseUrl: "app/",
-    mainConfigFile: "app/require-config.js",
+    baseUrl: "dist/",
+    paths: {
+        requireLib: 'lib/requirejs/require'
+    },
+    mainConfigFile: "dist/require-config.js",
     name: "require-config",
-    out: "app/.build/App.min.js"
+    out: "dist/App.min.js",
+    include: ["requireLib"]
 })
