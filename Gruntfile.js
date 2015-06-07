@@ -9,6 +9,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-exec');
+    grunt.loadNpmTasks('grunt-text-replace');
 
     var ports = {
         server: 8000,
@@ -58,13 +59,28 @@ module.exports = function (grunt) {
         },
 
         clean: {
-            dist : ['<%= dirs.dist %>/**'],
+            dist : ['<%= dirs.dist %>/*'],
             minified : [
                 '<%= dirs.dist %>/*',
                 '!<%= dirs.dist %>/Assets',
                 '!<%= dirs.dist %>/lib',
+                '!<%= dirs.dist %>/img',
                 '!<%= dirs.dist %>/App.min.js',
-                '!<%= dirs.dist %>/config.json']
+                '!<%= dirs.dist %>/config.json',
+                '!<%= dirs.dist %>/default.html',
+                '!<%= dirs.dist %>/intersection.js',
+                '!<%= dirs.dist %>/styles.css']
+        },
+
+        replace: {
+            minified: {
+                src: ['<%= dirs.dist %>/default.html'],
+                overwrite: true,
+                replacements: [{
+                    from: 'src="lib/requirejs/require.js"',
+                    to: 'src="App.min.js"'
+                }]
+            }
         },
 
         copy: {
@@ -88,6 +104,12 @@ module.exports = function (grunt) {
                     },
                     {
                         expand: true,
+                        cwd: '<%= dirs.app %>/img',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/img/'
+                    },
+                    {
+                        expand: true,
                         cwd: '<%= dirs.app %>/lib',
                         src: ['**'],
                         dest: '<%= dirs.dist %>/lib/'
@@ -103,13 +125,31 @@ module.exports = function (grunt) {
                         cwd: '<%= dirs.app %>',
                         src: ['config.json'],
                         dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['default.html'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['intersection.js'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['styles.css'],
+                        dest: '<%= dirs.dist %>/'
                     }
                 ]
             }
         },
 
         connect: {
-            server: {
+            dev: {
                 options: {
                     port: ports.server,
                     base: dirs.app,
@@ -118,6 +158,18 @@ module.exports = function (grunt) {
                             connect_livereload({ port: ports.livereload }),
                             mount(connect, dirs.build),
                             mount(connect, dirs.app)
+                        ];
+                    }
+                }
+            },
+            dist: {
+                options: {
+                    port: ports.server,
+                    base: dirs.dist,
+                    keepalive: true,
+                    middleware: function (connect) {
+                        return [
+                            mount(connect, dirs.dist)
                         ];
                     }
                 }
@@ -154,13 +206,13 @@ module.exports = function (grunt) {
 
         exec: {
             minify: {
-                //cmd: 'node app/lib/r.js/dist/r.js -o baseUrl=app/ mainConfigFile=app/require-config.js name=require-config optimize=none out=app/min.js'
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
             }
         }
     });
 
     grunt.registerTask('default', ['typescript:build', 'copy:assets']);
-    grunt.registerTask('serve', ['typescript:build', 'copy:assets', 'connect', 'open', 'watch']);
-    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify', 'clean:minified']);
+    grunt.registerTask('serve:dev', ['typescript:build', 'copy:assets', 'connect:dev', 'open', 'watch']);
+    grunt.registerTask('serve:dist', ['connect:dist', 'open']);
+    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify', 'clean:minified', 'replace:minified']);
 };
