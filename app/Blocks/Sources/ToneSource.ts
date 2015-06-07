@@ -8,14 +8,18 @@ import Particle = require("../../Particle");
 class ToneSource extends Source {
 
     public Sources: Tone.Oscillator[];
-    public Frequency: number;
-    public Waveform: string;
+    //public Frequency: number;
+    //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Frequency = 440;
-        this.Waveform = 'sawtooth';
+        if (!this.Params) {
+            this.Params = {
+                frequency: App.BASE_NOTE,
+                waveform: 2
+            };
+        }
 
 
         super.Init(sketch);
@@ -33,8 +37,8 @@ class ToneSource extends Source {
         });
 
 
-        this.Width = 150;
-        this.Height = 150;
+        //this.Width = 150;
+        //this.Height = 150;
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
@@ -54,7 +58,7 @@ class ToneSource extends Source {
 
     CreateSource(){
         // add it to the list of sources
-        this.Sources.push( new Tone.Oscillator(this.Frequency, this.Waveform));
+        this.Sources.push( new Tone.Oscillator(this.Params.frequency, this.WaveIndex[this.Params.waveform]));
 
         // return it
         return super.CreateSource();
@@ -85,7 +89,7 @@ class ToneSource extends Source {
 
     Dispose() {
         super.Dispose();
-        this.Frequency = null;
+        this.Params.frequency = null;
 
         this.Sources.forEach((s: any) => {
             s.dispose();
@@ -119,7 +123,7 @@ class ToneSource extends Source {
                     "name" : "Frequency",
                     "setting" :"frequency",
                     "props" : {
-                        "value" : this.GetParam("frequency"),
+                        "value" : this.Params.frequency,
                         "min" : 10,
                         "max" : 15000,
                         "quantised" : true,
@@ -132,9 +136,9 @@ class ToneSource extends Source {
                     "name" : "Waveform",
                     "setting" :"waveform",
                     "props" : {
-                        "value" : this.GetParam("waveform"),
-                        "min" : 1,
-                        "max" : 4,
+                        "value" : this.Params.waveform,
+                        "min" : 0,
+                        "max" : 3,
                         "quantised" : true,
                         "centered" : false
                     }
@@ -144,6 +148,15 @@ class ToneSource extends Source {
     }
 
     SetParam(param: string,value: any) {
+
+        var val = value;
+
+        if (param == "waveform") {
+            //this.Waveform = this.WaveIndex[val];
+        }
+
+        this.Params[""+param] = val;
+         /*
 
         if (param == "waveform") {
             switch(Math.round(value)){
@@ -160,12 +173,12 @@ class ToneSource extends Source {
 
         } else if (param == "frequency") {
             this.Frequency = value;
-        }
+        }*/
 
         super.SetParam(param,value);
     }
 
-    GetParam(param: string){
+    /*GetParam(param: string){
         var val;
         if (param == "waveform") {
             switch(super.GetParam(param)){
@@ -182,7 +195,7 @@ class ToneSource extends Source {
             val = super.GetParam(param)
         }
         return val;
-    }
+    }*/
 }
 
 export = ToneSource;

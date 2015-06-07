@@ -7,12 +7,20 @@ import Soundcloud = require("../Sources/Soundcloud");
 
 class KeyboardMono extends Keyboard {
 
-    public Glide: number;
+    //public Glide: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+
+        if (!this.Params) {
+            this.Params = {
+                glide: 0.05,
+                octave: 3
+            };
+
+        }
+
         super.Init(sketch);
 
-        this.Glide = 0.05;
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -39,27 +47,21 @@ class KeyboardMono extends Keyboard {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
+        var val = value;
 
         if (param == "glide") {
-            this.Glide = value/100;
-        }
-    }
-
-    GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-
-        if (param == "glide") {
-            val = this.Glide*100;
-
-        } else if (param == "octave"){
-            val = this.CurrentOctave;
+            val = value/100;
         }
 
-        return val;
+        if (param == "octave") {
+            for (var i = 0, source; i < this.Sources.Count; i++) {
+                source = this.Sources.GetValueAt(i);
+                var diff = val - this.Params.octave;
+                source.OctaveShift(diff);
+            }
+        }
 
+        this.Params[param] = val;
     }
 
     UpdateOptionsForm() {
@@ -75,7 +77,7 @@ class KeyboardMono extends Keyboard {
                     "name" : "Glide",
                     "setting" :"glide",
                     "props" : {
-                        "value" : this.GetParam("glide"),
+                        "value" : this.Params.glide*100,
                         "min" : 0.001,
                         "max" : 100,
                         "truemin" : 0,
@@ -89,7 +91,7 @@ class KeyboardMono extends Keyboard {
                     "name" : "Octave",
                     "setting" :"octave",
                     "props" : {
-                        "value" : this.GetParam("octave"),
+                        "value" : this.Params.octave,
                         "min" : 0,
                         "max" : 9,
                         "quantised" : true,
@@ -114,14 +116,18 @@ class KeyboardMono extends Keyboard {
 
         // Else ramp to new frequency over time (glide)
         } else {
-            source.SetPitch(frequency, 0, this.Glide);
+            source.SetPitch(frequency, 0, this.Params.glide);
         }
     }
 
     KeyboardUp(keyUp:string, source:ISource): void {
         super.KeyboardUp(keyUp, source);
 
-        if (Object.keys(this.KeysDown).length === 0) {
+        var keyPressed = this.GetKeyNoteOctaveString(keyUp);
+        var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
+        var thisPitch = source.GetPitch();
+
+        if (Math.round(thisPitch) === Math.round(keyUpFrequency)) {
             source.TriggerRelease();
         }
     }

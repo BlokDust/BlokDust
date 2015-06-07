@@ -54,7 +54,7 @@ class Pitch extends PreEffect {
         //OSCILLATORS
         if (source instanceof ToneSource){
             source.Sources.forEach((s: Tone.Oscillator) => {
-                s.frequency.exponentialRampToValueNow(source.Frequency * this._GetConnectedPitchPreEffects(source), 0);
+                s.frequency.exponentialRampToValueNow(source.Params.frequency * this._GetConnectedPitchPreEffects(source), 0);
             });
 
 

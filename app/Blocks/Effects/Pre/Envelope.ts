@@ -7,11 +7,6 @@ class Envelope extends PreEffect {
 
 
 
-    /*public attack: number;
-    public decay: number;
-    public sustain: number;
-    public release: number;*/
-
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
@@ -23,10 +18,6 @@ class Envelope extends PreEffect {
             };
         }
 
-        /*this.attack = 1;
-        this.decay = 5;
-        this.sustain = 0.7;
-        this.release = 4;*/
 
         super.Init(sketch);
 
@@ -44,12 +35,24 @@ class Envelope extends PreEffect {
     Attach(source: ISource): void{
         super.Attach(source);
 
-        source.Envelopes.forEach((e: Tone.Envelope) => {
-            e.attack = this.Params.attack;
-            e.decay = this.Params.decay;
-            e.sustain = this.Params.sustain;
-            e.release = this.Params.release;
-        });
+        if (source.Envelopes.length) {
+            source.Envelopes.forEach((e: Tone.Envelope) => {
+                e.attack = this.Params.attack;
+                e.decay = this.Params.decay;
+                e.sustain = this.Params.sustain;
+                e.release = this.Params.release;
+            });
+        } else if (source.Sources[0] instanceof Tone.Sampler) {
+            var e = source.Sources[0].envelope;
+            source.Sources.forEach((s: Tone.Sampler) => {
+                e = s.envelope;
+                e.attack = this.Params.attack;
+                e.decay = this.Params.decay;
+                e.sustain = this.Params.sustain;
+                e.release = this.Params.release;
+            });
+        }
+
     }
 
     Detach(source: ISource): void{
@@ -61,6 +64,24 @@ class Envelope extends PreEffect {
             e.sustain = 0.5;
             e.release = 0.02;
         });
+
+        if (source.Envelopes.length) {
+            source.Envelopes.forEach((e: Tone.Envelope) => {
+                e.attack = 0.02;
+                e.decay = 0.5;
+                e.sustain = 0.5;
+                e.release = 0.02;
+            });
+        } else if (source.Sources[0] instanceof Tone.Sampler) {
+            var e = source.Sources[0].envelope;
+            source.Sources.forEach((s: Tone.Sampler) => {
+                e = s.envelope;
+                e.attack = 0.02;
+                e.decay = 0.5;
+                e.sustain = 0.5;
+                e.release = 0.02;
+            });
+        }
 
     }
 

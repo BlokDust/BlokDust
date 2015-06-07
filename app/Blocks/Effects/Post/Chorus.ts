@@ -19,7 +19,7 @@ class Chorus extends PostEffect {
 
 
         this.Effect = new Tone.Chorus({
-            "frequency" : this.Params.rate,
+            "rate" : this.Params.rate,
             "delayTime" : this.Params.delayTime,
             "type" : 'triangle',
             "depth" : this.Params.depth,

@@ -12,19 +12,22 @@ class AutoWah extends PostEffect {
             this.Params = {
                 octaves: 5,
                 baseFrequency: 100,
-                mix: 0.6
+                mix: 0.3,
+                attack: 0.75,
+                release: 0.3
             };
         }
 
         this.Effect = new Tone.AutoWah({
             "baseFrequency": this.Params.baseFrequency,
             "octaves": this.Params.octaves,
-            "sensitivity": -40,
-            "rolloff" : -48,
+            "sensitivity": -10,
+            "gain" : 30,
+            "rolloff" : -18,
 
             "follower" : {
 
-                "attack": 0.2,
+                "attack": 0.1,
                 "release": 1
             }
         });
@@ -55,6 +58,10 @@ class AutoWah extends PostEffect {
             this.Effect.octaves = val;
         } else if (param=="baseFrequency") {
             this.Effect.baseFrequency = val;
+        } else if (param=="attack") {
+            this.Effect.follower.attack = val;
+        } else if (param=="release") {
+            this.Effect.follower.release = val;
         }
 
         this.Params[param] = val;
@@ -116,6 +123,32 @@ class AutoWah extends PostEffect {
                         "value" : this.Params.mix,
                         "min" : 0,
                         "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Attack",
+                    "setting" :"attack",
+                    "props" : {
+                        "value" : this.Params.attack,
+                        "min" : 0.01,
+                        "max" : 2,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
+                    "name" : "Release",
+                    "setting" :"release",
+                    "props" : {
+                        "value" : this.Params.release,
+                        "min" : 0.01,
+                        "max" : 2,
                         "quantised" : false,
                         "centered" : false
                     }

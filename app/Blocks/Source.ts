@@ -2,6 +2,7 @@ import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
 import Grid = require("../Grid");
+import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import Power = require("./Power/Power");
@@ -30,6 +31,7 @@ class Source extends Block implements ISource {
 
     public ActiveVoices: Voice[];
     public FreeVoices: Voice[];
+    public WaveIndex: string[];
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -39,6 +41,10 @@ class Source extends Block implements ISource {
         this.Envelopes = [];
         this.ActiveVoices = [];
         this.FreeVoices = [];
+        if (!this.WaveIndex) {
+            this.WaveIndex = ["sine","square","triangle","sawtooth"];
+        }
+
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
@@ -201,10 +207,8 @@ class Source extends Block implements ISource {
      * Trigger a sources attack
      * If no index is set trigger the first in the array
      * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be triggered
-     * @constructor
      */
     TriggerAttack(index?: number|string){
-        if (this.IsDisposed) return;
 
         // is the index set?
         var i: any = index? index: 0;
@@ -243,9 +247,8 @@ class Source extends Block implements ISource {
      * @constructor
      */
     TriggerRelease(index?: number|string){
-        //if (this.IsDisposed) return;
 
-        // Only it's not powered
+        // Only if it's not powered
         if (!this.IsPowered()) {
 
             // is the index set?
@@ -279,11 +282,15 @@ class Source extends Block implements ISource {
         }
     }
 
-    TriggerAttackRelease(){
-        if (this.IsDisposed) return;
+    TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number){
+
         if (this.Envelopes.length){
-            this.Envelopes.forEach((e: any, i:number)=> {
-                e.triggerAttackRelease("4n", "+0");
+            if (!duration) duration = "4n";
+            if (!time) time = "+0";
+            //TODO: add velocity to all trigger methods
+            //TODO: add samplers and players
+            this.Envelopes.forEach((e: any)=> {
+                e.triggerAttackRelease(duration, time);
             });
         }
     }
@@ -307,16 +314,12 @@ class Source extends Block implements ISource {
         return false;
     }
 
-
-
     /**
      * Disposes the audio nodes
      * @constructor
      */
     Dispose() {
         super.Dispose();
-
-        if (this.IsDisposed) return;
 
         // Delete Signal nodes
         if (this.EffectsChainInput) this.EffectsChainInput.dispose();
@@ -325,9 +328,6 @@ class Source extends Block implements ISource {
 
         if (this.ActiveVoices.length) {
             this.ActiveVoices.forEach((s: Voice)=> {
-                s.Envelope.dispose();
-                s.Sound.dispose();
-                s.Source.Dispose();
                 s.ID = null
             });
             this.ActiveVoices = [];
@@ -335,9 +335,6 @@ class Source extends Block implements ISource {
 
         if (this.FreeVoices.length) {
             this.FreeVoices.forEach((s: Voice)=> {
-                s.Envelope.dispose();
-                s.Sound.dispose();
-                s.Source.Dispose();
                 s.ID = null;
             });
             this.FreeVoices = [];
@@ -363,14 +360,47 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            pitch /= 440;
-            this.Sources[id].player.playbackRate = pitch;
+            this.Sources[id].player.playbackRate = pitch / App.BASE_NOTE;
 
-        } else if (this.Sources[id].playbackRate) {
+        } else if (typeof this.Sources[id].playbackRate === 'number') {
             // Players
-            pitch /= 440;
-            this.Sources[id].playbackRate = pitch;
+            this.Sources[id].playbackRate = pitch / App.BASE_NOTE;
         }
+    }
+
+    GetPitch(sourceId?: number) {
+        // If no sourceId is given default to 0
+        var id: number = sourceId ? sourceId : 0;
+
+        if (this.Sources[id].frequency) {
+            // Oscillators
+            return this.Sources[id].frequency.value;
+
+        } else if (this.Sources[id].player) {
+            // Samplers
+            return this.Sources[id].player.playbackRate * App.BASE_NOTE;
+
+        } else if (typeof this.Sources[id].playbackRate === 'number') {
+            // Players
+            return this.Sources[id].playbackRate * App.BASE_NOTE;
+
+        } else {
+            return 0;
+        }
+    }
+
+    OctaveShift(octaves: number) {
+        if (octaves === 0 ) return;
+        this.Sources.forEach((s: any, i)=> {
+            var oldPitch = this.GetPitch(i);
+            var multiplier = Math.abs(octaves*2);
+
+            if (octaves > 0) {
+                this.SetPitch(oldPitch*multiplier, i);
+            } else {
+                this.SetPitch(oldPitch/multiplier, i);
+            }
+        });
     }
 
     GetParam(param: string) {
@@ -425,12 +455,13 @@ class Source extends Block implements ISource {
                 break;
             case "waveform":
                 this.Sources.forEach((s: any)=> {
-                    s.type = value;
+                    //s.type = value;
+                    s.type = this.WaveIndex[value];
                 });
                 break;
             case "volume":
                 this.Sources.forEach((s: any)=> {
-                    s.gain.value = value;
+                    s.volume.value = value;
                 });
                 break;
             case "playbackRate":

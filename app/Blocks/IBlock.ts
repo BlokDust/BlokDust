@@ -13,6 +13,7 @@ interface IBlock extends IDisplayObject{
     LastPosition: Point;
     OptionsForm: any;
     Params: any;
+    Type: any;
     Update(): void;
     Draw(): void;
     Refresh(): void;
