@@ -5,7 +5,7 @@ BlokDust
 Clone the repository   
 `git clone https://github.com/BlokDust/BlokDust.git`
 
-Make sure you have node and bower installed first and then run these commands 
+Make sure you have node and bower installed first and then run these commands   
 `npm install`
 
 `npm install -g grunt-cli`
