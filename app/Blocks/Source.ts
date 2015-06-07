@@ -292,6 +292,11 @@ class Source extends Block implements ISource {
             this.Envelopes.forEach((e: any)=> {
                 e.triggerAttackRelease(duration, time);
             });
+        } else if (this.Sources[0] && this.Sources[0].envelope) {
+            // Trigger all the envelopes
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttackRelease(false, duration, time);
+            });
         }
     }
 
@@ -312,6 +317,17 @@ class Source extends Block implements ISource {
         }
 
         return false;
+    }
+
+    /**
+     * When a particle hits a source it triggers the attack and then releases after a time
+     * @param particle
+     * @constructor
+     */
+    ParticleCollision(particle: Particle) {
+        super.ParticleCollision(particle);
+        this.TriggerAttackRelease(0.1); //TODO: This should be a setting
+        particle.Dispose();
     }
 
     /**

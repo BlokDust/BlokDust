@@ -73,20 +73,6 @@ class Noise extends Source {
         super.TriggerAttackRelease();
     }
 
-    ParticleCollision(particle: Particle) {
-        super.ParticleCollision(particle);
-
-        // USE SIGNAL? So we can schedule a sound length properly
-        // play tone
-        this.Envelopes.forEach((e: any)=> {
-            e.triggerAttack();
-        });
-
-        this.DelayedRelease = 5; //TODO, THIS IS SHIT
-
-        particle.Dispose();
-    }
-
     Update() {
         super.Update();
 

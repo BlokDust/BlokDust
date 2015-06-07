@@ -328,14 +328,6 @@ class Granular extends Source {
 
     }
 
-
-
-    ParticleCollision(particle: Particle) {
-        super.ParticleCollision(particle);
-        particle.Dispose();
-    }
-
-
     GrainLoop() {
 
         // CYCLES THROUGH GRAINS AND PLAYS THEM //

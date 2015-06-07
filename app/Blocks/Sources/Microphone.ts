@@ -82,14 +82,6 @@ class Microphone extends Source {
         }, duration*1000);
     }
 
-    ParticleCollision(particle: Particle) {
-        super.ParticleCollision(particle);
-
-        this.TriggerAttackRelease(0.25);
-
-        particle.Dispose();
-    }
-
     Update() {
         super.Update();
     }

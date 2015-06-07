@@ -75,18 +75,6 @@ class ToneSource extends Source {
         return super.CreateEnvelope();
     }
 
-    ParticleCollision(particle: Particle) {
-        super.ParticleCollision(particle);
-
-        // USE SIGNAL? So we can schedule a sound length properly
-        // play tone
-        this.Envelopes.forEach((e: any)=> {
-            e.triggerAttackRelease(0.1);
-        });
-
-        particle.Dispose();
-    }
-
     Dispose() {
         super.Dispose();
         this.Params.frequency = null;
