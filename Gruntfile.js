@@ -58,7 +58,13 @@ module.exports = function (grunt) {
         },
 
         clean: {
-            dist : ['<%= dirs.dist %>/**']
+            dist : ['<%= dirs.dist %>/**'],
+            minified : [
+                '<%= dirs.dist %>/*',
+                '!<%= dirs.dist %>/Assets',
+                '!<%= dirs.dist %>/lib',
+                '!<%= dirs.dist %>/App.min.js',
+                '!<%= dirs.dist %>/config.json']
         },
 
         copy: {
@@ -156,5 +162,5 @@ module.exports = function (grunt) {
 
     grunt.registerTask('default', ['typescript:build', 'copy:assets']);
     grunt.registerTask('serve', ['typescript:build', 'copy:assets', 'connect', 'open', 'watch']);
-    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify']);
+    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify', 'clean:minified']);
 };
