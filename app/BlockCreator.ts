@@ -100,11 +100,13 @@ class BlockCreator {
                     },
                     {
                         "name": "Granular",
-                        "id": Granular
+                        "id": Granular,
+                        "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces and uses that as a sound source."
                     },
                     {
                         "name": "Recorder",
-                        "id": Recorder
+                        "id": Recorder,
+                        "description": "Records the master output and then works like a SoundCloud Block. You can then play back your recordings on a loop and at different pitches."
                     }
                 ]
             },
