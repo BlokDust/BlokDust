@@ -88,7 +88,8 @@ module.exports = function (grunt) {
             src: {
                 files: [
                     '<%= dirs.app %>/**/*.ts',
-                    '!<%= dirs.lib %>/**/*.ts'
+                    '!<%= dirs.lib %>/**/*.ts',
+                    'config.json'
                 ],
                 tasks: ['typescript:build'],
                 options: {

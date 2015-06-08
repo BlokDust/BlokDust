@@ -80,19 +80,23 @@ class BlockCreator {
                 "items": [
                     {
                         "name": "Tone",
-                        "id": ToneSource
+                        "id": ToneSource,
+                        "description": "A single oscillator with frequency and waveform controls."
                     },
                     {
                         "name": "Noise",
-                        "id": Noise
+                        "id": Noise,
+                        "description": "A noise generator with 'White', 'Brown' and 'Pink' waveform types."
                     },
                     {
                         "name": "Microphone",
-                        "id": Microphone
+                        "id": Microphone,
+                        "description": "Captures sound from the devices microphone input. Connect it to a Power block to arm it and avoid audio feedback by using headphones."
                     },
                     {
                         "name": "SoundCloud",
-                        "id": Soundcloud
+                        "id": Soundcloud,
+                        "description": "A sampler loaded with a SoundCloud track of your choice. Select a section of the audio and loop it, reverse it or change the playback rate"
                     },
                     {
                         "name": "Granular",
@@ -161,31 +165,38 @@ class BlockCreator {
                     },
                     {
                         "name": "Filter",
-                        "id": Filter
+                        "id": Filter,
+                        "description": "A 'peaking' filter used for boosting or suppressing frequencies."
                     },
                     {
                         "name": "Gain",
-                        "id": Gain
+                        "id": Gain,
+                        "description": "Increase or decrease the volume."
                     },
                     {
                         "name": "LFO",
-                        "id": LFO
+                        "id": LFO,
+                        "description": "Modulates the pitch of a Tone block."
                     },
                     {
                         "name": "Phaser",
-                        "id": Phaser
+                        "id": Phaser,
+                        "description": "Creates a sweeping effect by mixing the original audio with a slightly shifted out-of-time copy."
                     },
                     {
                         "name": "Pitch",
-                        "id": Pitch
+                        "id": Pitch,
+                        "description": "Multiplies the pitch of a source. A pitch setting of 2 would mean twice the pitch or an octave higher."
                     },
                     {
                         "name": "Reverb",
-                        "id": Reverb
+                        "id": Reverb,
+                        "description": "A digital reverb based on the Freeverb which uses 8 comb filters on both left and right channels."
                     },
                     {
                         "name": "Scuzz",
-                        "id": Scuzz
+                        "id": Scuzz,
+                        "description": "No idea. Can connect to Tone Blocks"
                     }
                 ]
             },
@@ -195,15 +206,18 @@ class BlockCreator {
                 "items": [
                     {
                         "name": "Particle Emitter",
-                        "id": ParticleEmitter
+                        "id": ParticleEmitter,
+                        "description": "Fires particles across the screen. When a particle hits a source block, that source is momentarily triggered."
                     },
                     {
                         "name": "Power",
-                        "id": Power
+                        "id": Power,
+                        "description": "Creates energy for source blocks. This allows them to be constantly on."
                     },
                     {
                         "name": "Laser",
-                        "id": Laser
+                        "id": Laser,
+                        "description": "Fires a super cool laser beam that gives energy to anything it touches."
                     }
                 ]
             },
@@ -213,11 +227,13 @@ class BlockCreator {
                 "items": [
                     {
                         "name": "Mono Keyboard",
-                        "id": KeyboardMono
+                        "id": KeyboardMono,
+                        "description": "Turns your computer keyboard into 2 1/2 octave monophonic keyboard with glide control. Can connect to any source block."
                     },
                     {
                         "name": "Poly Keyboard",
-                        "id": KeyboardPoly
+                        "id": KeyboardPoly,
+                        "description": "Turns your computer keyboard into 2 1/2 octave polyphonic keyboard, allowing you to play chords. Can connect to any source block."
                     }
                 ]
             }
