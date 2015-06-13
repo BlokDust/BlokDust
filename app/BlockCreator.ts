@@ -45,8 +45,11 @@ import Laser = require("./Blocks/Power/Laser");
 // INTERACTION BLOCKS //
 import KeyboardMono = require("Blocks/Interaction/KeyboardMono");
 import KeyboardPoly = require("Blocks/Interaction/KeyboardPoly");
+import MIDIController = require("Blocks/Interaction/MIDIController");
 
 class BlockCreator {
+
+    //TODO: Do all the blocks need to be here??? What does this do?
 
     // create instances of blocks for GetBlock() to return.
     private static ToneSource: ToneSource = new ToneSource();
@@ -235,6 +238,11 @@ class BlockCreator {
                     {
                         "name": "Poly Keyboard",
                         "id": KeyboardPoly,
+                        "description": "Turns your computer keyboard into 2 1/2 octave polyphonic keyboard, allowing you to play chords. Can connect to any source block."
+                    },
+                    {
+                        "name": "MIDI",
+                        "id": MIDIController,
                         "description": "Turns your computer keyboard into 2 1/2 octave polyphonic keyboard, allowing you to play chords. Can connect to any source block."
                     }
                 ]

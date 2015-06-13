@@ -742,6 +742,37 @@ class BlockSprites {
 
                 break;
 
+            case "midi":
+
+                //TODO: change this terrible drawing
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[7];
+                this.DrawMoveTo(-1,-1);
+                this.DrawLineTo(0,1);
+                this.DrawLineTo(1,2);
+                this.DrawLineTo(-1,-1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[5];
+                this.DrawLineTo(0,-1);
+                this.DrawLineTo(0,1);
+                this.DrawLineTo(1,0);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[8];
+                this.DrawLineTo(2,0);
+                this.DrawLineTo(2,-1);
+                this.DrawLineTo(-1,-1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                break;
+
             case "particle emitter":
 
                 this.Ctx.beginPath();

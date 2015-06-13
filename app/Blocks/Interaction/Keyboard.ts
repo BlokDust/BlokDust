@@ -9,8 +9,6 @@ import PitchComponent = require("./../Effects/Pre/Pitch");
  */
 class Keyboard extends PreEffect {
 
-
-
     public BaseFrequency: number;
     //public CurrentOctave: number;
     public KeysDown: any;
