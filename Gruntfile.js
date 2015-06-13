@@ -68,7 +68,6 @@ module.exports = function (grunt) {
                 '!<%= dirs.dist %>/App.min.js',
                 '!<%= dirs.dist %>/config.json',
                 '!<%= dirs.dist %>/default.html',
-                '!<%= dirs.dist %>/intersection.js',
                 '!<%= dirs.dist %>/styles.css']
         },
 
@@ -136,12 +135,6 @@ module.exports = function (grunt) {
                         expand: true,
                         cwd: '<%= dirs.app %>',
                         src: ['default.html'],
-                        dest: '<%= dirs.dist %>/'
-                    },
-                    {
-                        expand: true,
-                        cwd: '<%= dirs.app %>',
-                        src: ['intersection.js'],
                         dest: '<%= dirs.dist %>/'
                     },
                     {
