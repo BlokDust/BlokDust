@@ -1,6 +1,6 @@
 {
   "name": "BlokDust",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "dependencies": {
     "fayde": "~0.16.15",
     "fayde.controls": "~0.17.0",

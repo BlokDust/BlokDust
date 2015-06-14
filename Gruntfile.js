@@ -1,15 +1,19 @@
 var path = require('path'),
     connect_livereload = require('connect-livereload');
+    version = require('./version');
 
 module.exports = function (grunt) {
-    grunt.loadNpmTasks('grunt-typescript');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-open');
+    grunt.loadNpmTasks('grunt-contrib-compress');
+    grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-exec');
+    grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-text-replace');
+    grunt.loadNpmTasks('grunt-typescript');
+
+    version(grunt);
 
     var ports = {
         server: 8000,
@@ -21,12 +25,22 @@ module.exports = function (grunt) {
         build: 'app/.build',
         dist: 'dist',
         lib: 'app/lib',
+        releases: 'releases',
         typings: 'app/typings'
     };
+
+    var packageJson;
+
+    function refresh() {
+        packageJson = grunt.file.readJSON("package.json");
+        grunt.config.set('dirs.zip', path.join(dirs.releases, packageJson.version));
+    }
 
     function mount(connect, dir) {
         return connect.static(path.resolve(dir));
     }
+
+    refresh();
 
     grunt.initConfig({
 
@@ -208,11 +222,63 @@ module.exports = function (grunt) {
             minify: {
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
             }
+        },
+
+        compress: {
+            zip: {
+                options: {
+                    mode: "zip",
+                    archive: "<%= dirs.zip %>.zip",
+                    level: 9
+                },
+                files: [
+                    {
+                        expand: true,
+                        src: ["<%= dirs.dist %>/**"]
+                    }
+                ]
+            }
+        },
+
+        version: {
+            bump: {
+            },
+            apply: {
+                src: './VersionTemplate.ts',
+                dest: './app/_Version.ts'
+            }
         }
     });
 
+    grunt.registerTask('bump:patch', ['version:bump', 'version:apply']);
+    grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
+    grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);
     grunt.registerTask('default', ['typescript:build', 'copy:assets']);
     grunt.registerTask('serve:dev', ['typescript:build', 'copy:assets', 'connect:dev', 'open', 'watch']);
     grunt.registerTask('serve:dist', ['connect:dist', 'open']);
-    grunt.registerTask('dist', ['clean:dist', 'copy:dist', 'exec:minify', 'clean:minified', 'replace:minified']);
+
+    grunt.registerTask('dist', '', function() {
+
+        grunt.task.run('bump:patch');
+
+        refresh();
+
+        grunt.task.run(
+            'clean:dist',
+            'copy:dist',
+            'exec:minify',
+            'clean:minified',
+            'replace:minified'
+        );
+    });
+
+    grunt.registerTask('release', '', function() {
+
+        refresh();
+
+        grunt.task.run(
+            'compress:zip'
+        );
+    });
+
 };

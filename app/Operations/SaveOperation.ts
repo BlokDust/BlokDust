@@ -18,7 +18,7 @@ class SaveOperation<String> implements IOperation
         return new Promise((resolve) => {
 
             $.ajax(<JQueryAjaxSettings>{
-                url: "http://blobdust.azurewebsites.net/api/anonymousblobs",
+                url: "http://blokdust.azurewebsites.net/api/anonymousblobs",
                 type: 'POST',
                 crossDomain: true,
                 dataType: 'json',
