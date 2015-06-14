@@ -82,59 +82,70 @@ class MIDIController extends Keyboard {
      * MIDI Message received callback
      * @param message
      */
-    private OnMIDIMessage(message) {
-        this.Data = message.data; // this gives us our [command/channel, note, velocity] data.
-        this._Cmd = this.Data[0] >> 4;
-        this._Channel = this.Data[0] & 0xf;
-        this._Type = this.Data[0] & 0xf0; // channel agnostic message type. Thanks, Phil Burk.
-        this._Note = App.AudioMixer.Master.midiToNote(this.Data[1]);
-        this._Velocity = this.MidiVelocityToGain(this.Data[2]);
-        // with pressure and tilt off
-        // note off: 128, cmd: 8
-        // note on: 144, cmd: 9
-        // pressure / tilt on
-        // pressure: 176, cmd 11:
-        // bend: 224, cmd: 14
+    private OnMIDIMessage(e) {
+        var cmd = e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
+            channel = e.data[0] & 0xf,
+            type = e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
+            note = App.AudioMixer.Master.midiToNote(e.data[1]),
+            velocity = e.data[2];
 
         console.log(
-            'cmd:',this._Cmd,
-            'channel:', this._Channel,
-            'type:', this._Type,
-            'note:', this._Note,
-            'velocity', this._Velocity
-    );
+            'cmd:', cmd,
+            'channel:', channel,
+            'type:', type,
+            'note:', note,
+            'velocity', velocity
+        );
 
-        if (this._Type === 144) {
-            // Key down type
+        if (channel == 9) return;
 
-            this.KeysDown[this._Note] = true;
-
-            // ALL SOURCES TRIGGER KEYBOARD DOWN
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
-                    this.KeyboardDown(this._Note, source);
-                }
-            }
-
-
-        } else if (this._Type === 128) {
+        if (cmd == 8 || ((cmd == 9) && (velocity == 0))) {
+            // with MIDI, note on with velocity zero is the same as note off
             // Key up type
 
             //Check if this key released is in out key_map
-            if (typeof this._Note !== 'undefined' && this._Note !== '') {
+            if (typeof note !== 'undefined' && note !== '') {
                 // remove this key from the keysDown object
-                delete this.KeysDown[this._Note];
+                delete this.KeysDown[note];
             }
 
             // ALL SOURCES TRIGGER KEYBOARD UP
             if (this.Sources.Count) {
                 for (var i = 0; i < this.Sources.Count; i++) {
                     var source = this.Sources.GetValueAt(i);
-                    this.KeyboardUp(this._Note, source);
+                    this.KeyboardUp(note, source);
                 }
             }
         }
+
+        else if (cmd === 9) {
+            // Key down command
+
+            this.KeysDown[note] = true;
+
+            // ALL SOURCES TRIGGER KEYBOARD DOWN
+            if (this.Sources.Count) {
+                for (var i = 0; i < this.Sources.Count; i++) {
+                    var source = this.Sources.GetValueAt(i);
+                    this.KeyboardDown(note, source);
+                }
+            }
+
+
+        }
+        // TODO: add controller, pitchwheel and polyaftertouch cases.
+        // https://github.com/cwilso/midi-synth/blob/master/js/midi.js line 7
+        //
+        //else if (cmd == 11) {
+        //    controller(note, velocity / 127.0);
+        //}
+        //else if (cmd == 14) {
+        //    // pitch wheel
+        //    pitchWheel(((velocity * 128.0 + note) - 8192) / 8192.0);
+        //}
+        //else if (cmd == 10) {  // poly aftertouch
+        //    polyPressure(note, velocity / 127)
+        //}
     }
 
     /**
