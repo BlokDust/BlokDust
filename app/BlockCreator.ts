@@ -43,18 +43,24 @@ import Power = require("./Blocks/Power/Power");
 import Laser = require("./Blocks/Power/Laser");
 
 // INTERACTION BLOCKS //
-import KeyboardMono = require("Blocks/Interaction/KeyboardMono");
-import KeyboardPoly = require("Blocks/Interaction/KeyboardPoly");
+import ComputerKeyboard = require("Blocks/Interaction/ComputerKeyboard");
+import MIDIController = require("Blocks/Interaction/MIDIController");
 
 class BlockCreator {
 
+    //TODO: Do all the blocks need to be here??? What does this do?
+
     // create instances of blocks for GetBlock() to return.
+
+    // SOURCE BLOCKS //
     private static ToneSource: ToneSource = new ToneSource();
     private static Noise: Noise = new Noise();
     private static Microphone: Microphone = new Microphone();
     private static Soundcloud: Soundcloud = new Soundcloud();
     private static Granular: Granular = new Granular();
     private static Recorder: Recorder = new Recorder();
+
+    // EFFECT BLOCKS //
     private static AutoWah: AutoWah = new AutoWah();
     private static BitCrusher: BitCrusher = new BitCrusher();
     private static Chomp: Chomp = new Chomp();
@@ -72,6 +78,15 @@ class BlockCreator {
     private static Pitch: Pitch = new Pitch();
     private static Reverb: Reverb = new Reverb();
     private static Scuzz: Scuzz = new Scuzz();
+
+    // POWER BLOCKS //
+    private static ParticleEmitter: ParticleEmitter = new ParticleEmitter();
+    private static Power: Power = new Power();
+    private static Laser: Laser = new Laser();
+
+    // INTERACTION BLOCKS //
+    private static ComputerKeyboard: ComputerKeyboard = new ComputerKeyboard();
+    private static MIDIController: MIDIController = new MIDIController();
 
     public static MenuJson: any = {
         "categories": [
@@ -228,14 +243,14 @@ class BlockCreator {
                 "name": "Interaction",
                 "items": [
                     {
-                        "name": "Mono Keyboard",
-                        "id": KeyboardMono,
-                        "description": "Turns your computer keyboard into 2 1/2 octave monophonic keyboard with glide control. Can connect to any source block."
+                        "name": "Computer Keyboard",
+                        "id": ComputerKeyboard,
+                        "description": "Control a source using your computer keys. In monophonic mode, one note is produced at a time. Glide can be added to sweep from one note to another. In polyphonic mode, multiple notes can be played together."
                     },
                     {
-                        "name": "Poly Keyboard",
-                        "id": KeyboardPoly,
-                        "description": "Turns your computer keyboard into 2 1/2 octave polyphonic keyboard, allowing you to play chords. Can connect to any source block."
+                        "name": "MIDI Controller",
+                        "id": MIDIController,
+                        "description": "Allows you to control source blocks with a USB MIDI device. Connect the device and make sure it is selected in the settings panel. Same settings as Computer Keyboard."
                     }
                 ]
             }

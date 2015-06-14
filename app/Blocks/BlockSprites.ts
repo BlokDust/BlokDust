@@ -37,7 +37,7 @@ class BlockSprites {
 
         switch (block) {
 
-
+            // All block cases must be lower case
 
             case "autowah":
 
@@ -687,7 +687,7 @@ class BlockSprites {
 
                 break;
 
-            case "mono keyboard":
+            case "computer keyboard":
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[8];// WHITE
@@ -710,7 +710,7 @@ class BlockSprites {
 
                 break;
 
-            case "poly keyboard":
+            case "midi controller":
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[8];// WHITE
