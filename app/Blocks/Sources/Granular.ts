@@ -77,7 +77,7 @@ class Granular extends Source {
 
             console.log(track);
             gran.WaveUrl = track.waveform_url;
-            $.getJSON("http://blobdust.azurewebsites.net/api/Wave64/", {url: gran.WaveUrl}, function(data) {
+            $.getJSON("http://blokdust.azurewebsites.net/api/Wave64/", {url: gran.WaveUrl}, function(data) {
                 var waveform;
                 waveform = new Image();
                 waveform.src = data.data;
