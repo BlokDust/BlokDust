@@ -1,8 +1,10 @@
 import PreEffect = require("../Effects/PreEffect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import PitchComponent = require("./../Effects/Pre/Pitch");
+import Microphone = require("../Sources/Microphone");
+import Power = require("../Power/Power");
+import Voice = require("./VoiceObject");
 
 /**
  * Base class for mono, poly and midi keyboards
@@ -10,33 +12,10 @@ import PitchComponent = require("./../Effects/Pre/Pitch");
 class Keyboard extends PreEffect {
 
     public BaseFrequency: number;
-    //public CurrentOctave: number;
-    public KeysDown: any;
-    public KeyboardCommands: any;
+    public KeysDown: any = {};
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
-
-        /*if (!this.Params) {
-            this.Params = {
-                glide: 0.05,
-                octave: 3,
-                voices: 4
-            };
-        }*/
-
-        this.KeyboardCommands = {
-            OctaveUp: 'octave-up',
-            OctaveDown: 'octave-down'
-        };
-
-        this.KeysDown = {};
-        //this.CurrentOctave = 3;
-        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
-
-        // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
     Draw() {
@@ -75,82 +54,89 @@ class Keyboard extends PreEffect {
         super.Detach(source);
     }
 
-    KeyDownCallback(e: any){
-
-        //if KeyDown is a keyboard note or an octave shifter
-        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_'){
-            this.KeysDown = e.KeysDown;
-
-            // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                this.KeyboardDown(e.KeyDown, source);
-            }
-        } else {
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                this._ExecuteKeyboardCommand(e.KeyDown, source);
-            }
-        }
-    }
-
-    KeyUpCallback(e: any){
-
-        // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        for (var i = 0; i < this.Sources.Count; i++) {
-            var source = this.Sources.GetValueAt(i);
-
-            // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
-                this.KeyboardUp(e.KeyUp, source);
-            }
-        }
-
-        this.KeysDown = e.KeysDown;
-    }
-
     Dispose(){
-        this.KeysDown = {};
+        this.KeysDown = null;
         this.BaseFrequency = null;
-        this.Params.octave = null;
-        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
+        var val = value;
+
+        if (param == "glide") {
+            val = value/100;
+        }
+        else if (param == "octave") {
+            for (var i = 0, source; i < this.Sources.Count; i++) {
+                source = this.Sources.GetValueAt(i);
+                var diff = val - this.Params.octave;
+                source.OctaveShift(diff);
+            }
+        }
+        else if (param === 'polyphonic') {
+
+
+            this.Params.isPolyphonic = val;
+            // ALL SOURCES
+            for (var i = 0; i < this.Sources.Count; i++) {
+                var source: any = this.Sources.GetValueAt(i);
+
+                source.TriggerRelease('all');
+
+                // If it's not a Power or a Microphone
+                if (!((source instanceof Power) || (source instanceof Microphone))) {
+                    // Create extra polyphonic voices
+                    this.CreateVoices(source);
+                }
+            }
+
+        }
+
+        this.Params[param] = val;
     }
 
-    GetParam(param: string) {
-        super.GetParam(param);
-    }
+    CreateVoices(source: ISource){
 
-    UpdateOptionsForm() {
-        super.UpdateOptionsForm();
+        // Work out how many voices we actually need (we may already have some)
+        var diff = App.Config.PolyphonicVoices - source.Sources.length;
 
-        this.OptionsForm =
-        {
+        // If we haven't got enough sources, create however many we need.
+        if (diff > 0){
 
-        };
-    }
+            // Loop through and create the voices
+            for (var i = 1; i <= App.Config.PolyphonicVoices; i++) {
 
-    KeyboardDown(key:string, source:ISource): void {
+                // Create a source
+                var s: Tone.Source = source.CreateSource();
 
-    }
+                var e: Tone.AmplitudeEnvelope;
 
-    KeyboardUp(key:string, source:ISource): void {
+                // Create an envelope and save it to `var e`
+                e = source.CreateEnvelope();
 
-    }
+                if (e) {
+                    // Connect the source to the Envelope and start
+                    s.connect(e);
+                    s.start();
 
-    private _ExecuteKeyboardCommand(key: string, source: ISource) {
-        if (key == 'octave-up' && this.Params.octave < 9) {
-            this.SetParam("octave",this.Params.octave+1);
-            source.OctaveShift(1);
-        } else if (key === 'octave-down' && this.Params.octave != 0) {
-            this.SetParam("octave",this.Params.octave-1);
-            source.OctaveShift(-1);
+                    // Connect Envelope to the Effects Chain
+                    e.connect(source.EffectsChainInput);
+                } else {
+                    // No CreateEnvelope()
+                    // Check if it's a Sampler Source (they have their own envelopes built in)
+                    if (source.Sources[0] instanceof Tone.Sampler) {
+                        e = source.Sources[i].envelope;
+                        s.connect(source.EffectsChainInput)
+                    }
+                }
+
+                // Add the source and envelope to our FreeVoices list
+                source.FreeVoices.push( new Voice(i) );
+
+            }
         }
     }
+
 
     public SetBaseFrequency(source:ISource){
 
@@ -174,8 +160,13 @@ class Keyboard extends PreEffect {
         return octave;
     }
 
+    /**
+     * Gets the note string from the computer keyboard event keynote & octave string
+     * @param keyCode
+     * @returns {string}
+     * @constructor
+     */
     public GetKeyNoteOctaveString(keyCode): string {
-        // Replaces keycode with keynote & octave string
         return (keyCode
             .replace('note_', '')
             .replace('_a', this.Params.octave)
@@ -185,10 +176,23 @@ class Keyboard extends PreEffect {
             .toString());
     }
 
+    /**
+     * Gets the frequency from a note string and multiplies by any pitch increments
+     * @param note
+     * @param source
+     * @returns {number}
+     * @constructor
+     */
     public GetFrequencyOfNote(note, source): number {
         return source.Sources[0].noteToFrequency(note) * this.GetConnectedPitchPreEffects(source);
     }
 
+    /**
+     * Checks a Sources connected pitch effects and gets the total pitch increment
+     * @param source
+     * @returns {number}
+     * @constructor
+     */
     public GetConnectedPitchPreEffects(source) {
 
         var totalPitchIncrement = 1;
@@ -203,6 +207,16 @@ class Keyboard extends PreEffect {
         }
 
         return totalPitchIncrement;
+    }
+
+    /**
+     * Turns midi velocity information into a number 0 - 1 for gain
+     * @param velocity
+     * @returns {number}
+     * @constructor
+     */
+    MidiVelocityToGain(velocity){
+        return velocity/127;
     }
 
 }

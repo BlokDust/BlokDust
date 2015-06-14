@@ -37,7 +37,7 @@ class BlockSprites {
 
         switch (block) {
 
-
+            // All block cases must be lower case
 
             case "autowah":
 
@@ -687,7 +687,7 @@ class BlockSprites {
 
                 break;
 
-            case "mono keyboard":
+            case "computer keyboard":
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[8];// WHITE
@@ -710,7 +710,7 @@ class BlockSprites {
 
                 break;
 
-            case "poly keyboard":
+            case "midi controller":
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[8];// WHITE
@@ -737,37 +737,6 @@ class BlockSprites {
                 this.DrawLineTo(-1,1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(0,-1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-
-                break;
-
-            case "midi":
-
-                //TODO: change this terrible drawing
-
-                this.Ctx.beginPath();
-                this.Ctx.fillStyle = App.Palette[7];
-                this.DrawMoveTo(-1,-1);
-                this.DrawLineTo(0,1);
-                this.DrawLineTo(1,2);
-                this.DrawLineTo(-1,-1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-
-                this.Ctx.beginPath();
-                this.Ctx.fillStyle = App.Palette[5];
-                this.DrawLineTo(0,-1);
-                this.DrawLineTo(0,1);
-                this.DrawLineTo(1,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-
-                this.Ctx.beginPath();
-                this.Ctx.fillStyle = App.Palette[8];
-                this.DrawLineTo(2,0);
-                this.DrawLineTo(2,-1);
-                this.DrawLineTo(-1,-1);
                 this.Ctx.closePath();
                 this.Ctx.fill();
 
