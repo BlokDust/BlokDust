@@ -28,12 +28,14 @@ module.exports = function (grunt) {
         releases: 'releases',
         typings: 'app/typings'
     };
+    var files = {
+    }
 
     var packageJson;
 
     function refresh() {
         packageJson = grunt.file.readJSON("package.json");
-        grunt.config.set('dirs.zip', path.join(dirs.releases, packageJson.version));
+        grunt.config.set('files.zip', path.join(dirs.releases, packageJson.version + ".zip"));
     }
 
     function mount(connect, dir) {
@@ -228,7 +230,7 @@ module.exports = function (grunt) {
             zip: {
                 options: {
                     mode: "zip",
-                    archive: "<%= dirs.zip %>.zip",
+                    archive: "<%= files.zip %>",
                     level: 9
                 },
                 files: [
