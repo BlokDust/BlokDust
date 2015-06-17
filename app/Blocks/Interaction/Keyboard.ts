@@ -74,8 +74,6 @@ class Keyboard extends PreEffect {
             }
         }
         else if (param === 'polyphonic') {
-
-
             this.Params.isPolyphonic = val;
             // ALL SOURCES
             for (var i = 0; i < this.Sources.Count; i++) {
