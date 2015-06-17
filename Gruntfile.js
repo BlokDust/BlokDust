@@ -1,6 +1,6 @@
 var path = require('path'),
     connect_livereload = require('connect-livereload');
-    version = require('./version');
+    version = require('./utils/version');
 
 module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
@@ -28,6 +28,7 @@ module.exports = function (grunt) {
         releases: 'releases',
         typings: 'app/typings'
     };
+
     var files = {
     }
 
