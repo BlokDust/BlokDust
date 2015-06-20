@@ -131,7 +131,6 @@ class CommandsInputManager extends InputManager {
     }
 
     KeyboardDown(e) {
-        e.preventDefault();
         var k: number = this.GetKeyByCode(e.keyCode);
 
         // if it's undefined
@@ -140,11 +139,10 @@ class CommandsInputManager extends InputManager {
         // add to dictionary
         this.KeysDown[k] = true;
 
-        this.CreateCommand();
+        this.CreateCommand(e);
     }
 
     KeyboardUp(e) {
-        e.preventDefault();
         var k: number = this.GetKeyByCode(e.keyCode);
 
         // if it's undefined
@@ -153,7 +151,7 @@ class CommandsInputManager extends InputManager {
         // remove from dictionary
         delete this.KeysDown[k];
 
-        this.CreateCommand();
+        this.CreateCommand(e);
     }
 
     GetKeyByCode(code: number): number {
@@ -170,22 +168,25 @@ class CommandsInputManager extends InputManager {
         return !!this.KeysDown[name];
     }
 
-    CreateCommand() {
+    CreateCommand(e: KeyboardEvent) {
         // check key combinations and create associated commands
 
         //console.log(this.KeysDown);
 
         if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.s)){
+            e.preventDefault();
             this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
             return;
         }
 
         if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.Shift) && this.IsKeyNameDown(KeyMap.z)){
+            e.preventDefault();
             this._CommandManager.ExecuteCommand(Commands[Commands.REDO]);
             return;
         }
 
         if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.z)){
+            e.preventDefault();
             this._CommandManager.ExecuteCommand(Commands[Commands.UNDO]);
             return;
         }
