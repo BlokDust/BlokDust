@@ -186,7 +186,7 @@ class MIDIController extends Keyboard {
     }
 
     Detach(source: ISource): void {
-        source.TriggerRelease('all'); //todo:
+        source.TriggerRelease('all');
         super.Detach(source);
     }
 
