@@ -6,6 +6,9 @@ class SaveOperation<String> implements IOperation
 
     constructor(json: string, id?: string) {
 
+        // compress the json
+        //var lzma = new LZMA(json);
+
         this._JSON = {
             "Id": (id) ? id : "",
             "Data": json

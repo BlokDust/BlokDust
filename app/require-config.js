@@ -1,17 +1,18 @@
 require.config({
     baseUrl: "./",
     paths: {
-        "text": "lib/requirejs-text/text",
         "App": "App",
-        "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
-        "Tone": "lib/tone/Tone",
-        "Recorderjs": "lib/RecorderJS",
-        "jquery": "lib/jquery/dist/jquery",
+        "exjs": "lib/exjs/dist/ex",
         "fayde.drawing": "lib/fayde.drawing/dist/fayde.drawing",
         "fayde.transformer": "lib/fayde.transformer/dist/fayde.transformer",
         "fayde.utils": "lib/fayde.utils/dist/fayde.utils",
-        "tween": "lib/tween.ts/build/tween.min",
-        "exjs": "lib/exjs/dist/ex"
+        "jquery": "lib/jquery/dist/jquery",
+        "lzma": "lib/lzma/bin/lzma",
+        "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
+        "Recorderjs": "lib/RecorderJS",
+        "text": "lib/requirejs-text/text",
+        "Tone": "lib/tone/Tone",
+        "tween": "lib/tween.ts/build/tween.min"
     },
     shim: {
         "exjs": {
@@ -80,7 +81,8 @@ require([
     "Tone/effect/BitCrusher",
     "Tone/effect/AutoWah",
     "Tone/effect/AutoPanner",
-    "Recorderjs/recorder"
+    "Recorderjs/recorder",
+    "lzma"
 ], function (text, config, App, PixelPalette, Tone, jquery) {
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;
