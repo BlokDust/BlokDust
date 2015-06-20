@@ -18,7 +18,7 @@ class ParticleEmitter extends Source {
                 speed: 5,
                 rate: 40,
                 range: 600,
-                selfPoweredMode: true
+                selfPoweredMode: false
             };
         }
 
@@ -74,6 +74,8 @@ class ParticleEmitter extends Source {
                 }
 
             }
+        } else {
+            this._rateCounter = this.Params.rate;
         }
     }
 

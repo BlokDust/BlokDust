@@ -1,7 +1,6 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
-import Particle = require("../../Particle");
 
 class Noise extends Source {
 
