@@ -13,6 +13,10 @@ html, body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
+
 body {
     background-color: #111;
     color: #fff;
@@ -23,14 +27,18 @@ canvas {
     display: block;
 }
 
-#fontTest {
+#shareUrl {
     font-family: "Dosis", Arial, Helvetica, sans;
     font-weight: 200;
     font-size: 56px;
+    overflow: scroll;
+    white-space: nowrap;
+    mix-blend-mode: normal;
+    background-blend-mode: normal;
 
     position: absolute;
-    left: 74%;
-    top: 36%;
+    left: 200%;
+    top: -100%;
 
     width: 200px;
     height: 100px;
