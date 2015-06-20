@@ -14,6 +14,8 @@ import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import OptionsPanel = require("./UI/OptionsPanel");
+import SharePanel = require("./UI/SharePanel");
+import SettingsPanel = require("./UI/SettingsPanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
@@ -36,6 +38,8 @@ class BlocksSketch extends Grid {
     private _Transformer: Transformer;
     public BlockSprites: BlockSprites;
     private _OptionsPanel: OptionsPanel;
+    public SharePanel: SharePanel;
+    public SettingsPanel: SettingsPanel;
     private _Header: Header;
     private _ToolTip: ToolTip;
     private _ZoomButtons: ZoomButtons;
@@ -51,9 +55,12 @@ class BlocksSketch extends Grid {
     public BlockCreator: BlockCreator;
     public TxtHeader: string;
     public TxtSlider: string;
+    public TxtUrl: string;
+    public TxtLarge: string;
     public TxtMid: string;
     public TxtBody: string;
     public TxtItalic: string;
+    public TxtItalic2: string;
     public TxtData: string;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
 
@@ -150,6 +157,12 @@ class BlocksSketch extends Grid {
         this._OptionsPanel = new OptionsPanel();
         this._OptionsPanel.Init(this);
 
+        this.SharePanel = new SharePanel();
+        this.SharePanel.Init(this);
+
+        this.SettingsPanel = new SettingsPanel();
+        this.SettingsPanel.Init(this);
+
         this._Header = new Header();
         this._Header.Init(this);
 
@@ -219,8 +232,7 @@ class BlocksSketch extends Grid {
         if (this.Width!==this._LastSize.Width||this.Height!==this._LastSize.Height) {
             // Has resized, call the resize function //
             this.SketchResize();
-            // Update size record //
-            this.Metrics();
+
         }
     }
 
@@ -246,14 +258,18 @@ class BlocksSketch extends Grid {
     }
 
 
-
     SketchResize() {
+        // Update size record //
+        this.Metrics();
+
         if (this._OptionsPanel.Scale==1) {
             this._OptionsPanel.SelectedBlock.UpdateOptionsForm();
             this._OptionsPanel.Populate(this._OptionsPanel.SelectedBlock.OptionsForm,false);
         }
         this._Header.Populate(this._Header.MenuJson);
         this._ZoomButtons.UpdatePositions();
+        this.SharePanel.Resize();
+        this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 
 
@@ -266,20 +282,28 @@ class BlocksSketch extends Grid {
         var unit = this.Unit.width;
         var headerType = Math.round(unit*28);
         var sliderType = Math.round(unit*33);
+        var urlType = Math.round(unit*24);
+        var largeType = Math.round(unit*12);
         var midType = Math.round(unit*10);
         var bodyType = Math.round(unit*8);
         var italicType = Math.round(unit*7.5);
+        var italicType2 = Math.round(unit*9);
         var dataType = Math.round(unit*5);
 
         this.TxtHeader = "200 " + headerType + "px Dosis";
         this.TxtSlider = "200 " + sliderType + "px Dosis";
+        this.TxtUrl = "200 " + urlType + "px Dosis";
         this.TxtMid = "400 " + midType + "px Dosis";
+        this.TxtLarge = "400 " + largeType + "px Dosis";
         this.TxtBody = "200 " + bodyType + "px Dosis";
         this.TxtItalic = "300 italic " + italicType + "px Merriweather Sans";
+        this.TxtItalic2 = "300 italic " + italicType2 + "px Merriweather Sans";
         this.TxtData = "400 " + dataType + "px PT Sans";
 
         this._LastSize = new Size(this.Width,this.Height);
 
+        var styleElem = document.getElementById("selectStyle");
+        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1] + '; background-blend-mode: normal; mix-blend-mode: normal;}';
     }
 
 
@@ -315,6 +339,8 @@ class BlocksSketch extends Grid {
         this._ZoomButtons.Draw();
         this._TrashCan.Draw();
         this._Header.Draw();
+        this.SharePanel.Draw();
+        this.SettingsPanel.Draw();
     }
 
 
@@ -352,7 +378,7 @@ class BlocksSketch extends Grid {
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerDown(position, () => {
-            e.cancelBubble = true;
+            e.cancelBubble = false;
         });
     }
 
@@ -360,7 +386,7 @@ class BlocksSketch extends Grid {
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerUp(position, () => {
-            e.cancelBubble = true;
+            //e.cancelBubble = false;
         });
         this._CheckHover(position);
     }
@@ -377,7 +403,7 @@ class BlocksSketch extends Grid {
         var point = new Point(pos.Position.x, pos.Position.y);
 
         this._PointerDown(point, () => {
-            e.cancelBubble = true;
+            //e.cancelBubble = false;
         });
     }
 
@@ -386,7 +412,7 @@ class BlocksSketch extends Grid {
         var point = new Point(pos.Position.x, pos.Position.y);
 
         this._PointerUp(point, () => {
-            e.cancelBubble = true;
+            //e.cancelBubble = false;
         });
     }
 
@@ -398,6 +424,8 @@ class BlocksSketch extends Grid {
     }
 
 
+
+
     // AGNOSTIC EVENTS //
 
     private _PointerDown(point: Point, handle: () => void) {
@@ -407,17 +435,28 @@ class BlocksSketch extends Grid {
         var UI: Boolean;
         var collision: Boolean;
 
-
         // UI //
         UI = this._UIInteraction(point);
+
         if (this._ToolTip.Open) {
             this._ToolTipClose(this._ToolTip);
         }
-        this._Header.MouseDown(point);
-        this._ZoomButtons.MouseDown(point);
-        if (this._OptionsPanel.Scale==1) {
-            this._OptionsPanel.MouseDown(point.x,point.y); // to do : unsplit point
+        if (this.SharePanel.Open) {
+            this.SharePanel.MouseDown(point);
         }
+        if (this.SettingsPanel.Open) {
+            this.SettingsPanel.MouseDown(point);
+        }
+        else if (!this.SharePanel.Open && !this.SettingsPanel.Open) {
+            this._Header.MouseDown(point);
+            this._ZoomButtons.MouseDown(point);
+            if (this._OptionsPanel.Scale==1) {
+                this._OptionsPanel.MouseDown(point.x,point.y); // to do : unsplit point
+            }
+        }
+
+
+
 
 
         // BLOCK CLICK //
@@ -471,13 +510,21 @@ class BlocksSketch extends Grid {
 
 
         // UI //
-        this._Header.MouseUp();
+        if (this.SharePanel.Open) {
+            this.SharePanel.MouseUp(point);
+        }
+         else if (this.SettingsPanel.Open) {
+            this.SettingsPanel.MouseUp(point);
+        } else {
+            this._Header.MouseUp();
 
-        if (this._OptionsPanel.Scale==1) {
-            this._OptionsPanel.MouseUp();
+            if (this._OptionsPanel.Scale==1) {
+                this._OptionsPanel.MouseUp();
+            }
+
+            this._Transformer.PointerUp();
         }
 
-        this._Transformer.PointerUp();
     }
 
 
@@ -493,6 +540,12 @@ class BlocksSketch extends Grid {
         // UI //
         if (this._OptionsPanel.Scale==1) {
             this._OptionsPanel.MouseMove(point.x,point.y);
+        }
+        if (this.SharePanel.Open) {
+            this.SharePanel.MouseMove(point);
+        }
+        if (this.SettingsPanel.Open) {
+            this.SettingsPanel.MouseMove(point);
         }
         this._Header.MouseMove(point);
         this._ZoomButtons.MouseMove(point);
@@ -603,7 +656,7 @@ class BlocksSketch extends Grid {
                 if (panel.Alpha==0) {
                     panel.AlphaTo(panel,100,800);
                 }
-            },800);
+            },500);
         }
         // CLOSE IF NO LONGER HOVERING //
         if (!blockHover && panel.Open) {
@@ -626,8 +679,10 @@ class BlocksSketch extends Grid {
 
         var zoom = this._ZoomButtons;
         var header = this._Header;
+        var share = this.SharePanel;
+        var settings = this.SettingsPanel;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open) {
             console.log("UI INTERACTION");
             return true;
         }

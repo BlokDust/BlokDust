@@ -145,7 +145,7 @@ class OperationManager {
             }
         }
 
-        console.log(str);
+        //console.log(str);
     }
 
     private _Reject(errorMessage: string): Promise<void>{
