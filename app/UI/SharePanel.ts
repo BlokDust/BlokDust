@@ -321,6 +321,7 @@ class SharePanel extends DisplayObject{
                     panel.Open = false;
                     var shareUrl = document.getElementById("shareUrl");
                     shareUrl.style.display = "none";
+                    shareUrl.style.visibility = "false";
                 }
                 panel.OffsetX = 0;
                 var shareUrl = document.getElementById("shareUrl");
@@ -410,7 +411,8 @@ class SharePanel extends DisplayObject{
         this.Open = true;
         this.OffsetY = -this.Sketch.Height;
         var shareUrl = document.getElementById("shareUrl");
-        shareUrl.style.display = "inline";
+        shareUrl.style.display = "block";
+        shareUrl.style.visibility = "true";
         this.DelayTo(this,0,500,0,"OffsetY");
 
     }
@@ -604,10 +606,12 @@ class SharePanel extends DisplayObject{
         shareUrl.style.height = "" + (units*40) + "px";
         shareUrl.style.lineHeight = "" + (units*40) + "px";
         shareUrl.style.color = App.Palette[8];
+        shareUrl.style.display = "block";
 
         if (!this.Open) {
             this.OffsetY = -this.Sketch.Height;
             shareUrl.style.display = "none";
+            shareUrl.style.visibility = "false";
         }
         if (this.OffsetX!==0) {
             this.OffsetX = -this.Sketch.Width;
