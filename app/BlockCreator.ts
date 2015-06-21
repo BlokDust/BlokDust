@@ -85,7 +85,7 @@ class BlockCreator {
     private static ParticleEmitter: ParticleEmitter = new ParticleEmitter();
     private static Power: Power = new Power();
     private static Toggle: Toggle = new Toggle();
-    //private static Momentary: Momentary = new Momentary();
+    private static Momentary: Momentary = new Momentary();
     private static Laser: Laser = new Laser();
 
     // INTERACTION BLOCKS //
@@ -240,11 +240,11 @@ class BlockCreator {
                         "id": Toggle,
                         "description": "Toggles energy for source blocks, particle emitters & lasers."
                     },
-                    //{
-                    //    "name": "Momentary Switch",
-                    //    "id": Momentary,
-                    //    "description": "Momentary energy for source blocks, particle emitters & lasers."
-                    //},
+                    {
+                        "name": "Momentary Switch",
+                        "id": Momentary,
+                        "description": "Momentary energy for source blocks, particle emitters & lasers."
+                    },
                     {
                         "name": "Laser",
                         "id": Laser,

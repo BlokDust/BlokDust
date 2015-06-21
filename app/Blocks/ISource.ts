@@ -30,6 +30,7 @@ interface ISource extends IBlock{
     OctaveShift(octavesAmount: number): void;
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string): void;
+    TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void
     Refresh(): void;
 }
 

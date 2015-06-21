@@ -284,10 +284,9 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number){
-
+        if (!duration) duration = "16n";
+        if (!time) time = "+0";
         if (this.Envelopes.length){
-            if (!duration) duration = "4n";
-            if (!time) time = "+0";
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
             this.Envelopes.forEach((e: any)=> {
@@ -307,8 +306,10 @@ class Source extends Block implements ISource {
      * @constructor
      */
     IsPowered() {
-        //FOR POWER
-        if (this.Effects.Count) {
+        if (this.IsPressed) {
+            return true;
+        }
+        else if (this.Effects.Count) {
             for (var i = 0; i < this.Effects.Count; i++) {
                 var effect = this.Effects.GetValueAt(i);
                 if (effect instanceof Power || effect instanceof Logic && effect.Params.logic){
@@ -316,8 +317,9 @@ class Source extends Block implements ISource {
                 }
             }
         }
-
-        return false;
+        else {
+            return false;
+        }
     }
 
     /**

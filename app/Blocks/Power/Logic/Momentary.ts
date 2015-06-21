@@ -33,7 +33,7 @@ class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary switch");
     }
 
     Dispose(){
@@ -54,7 +54,7 @@ class Momentary extends Logic {
                     "props" : {
                         "value" : this.Params.logic,
                         "min" : 0,
-                        "max" : 1,
+                        "max" : 0,
                         "quantised" : true
                     }
                 }
@@ -66,37 +66,21 @@ class Momentary extends Logic {
         super.SetParam(param,value);
 
         if (param=="logic") {
-            this.Toggle();
+            this.PerformLogic();
         }
 
         this.Params[""+param] = value;
     }
 
-    /**
-     * Toggle when particle hits
-     * @param particle
-     * @constructor
-     */
-    ParticleCollision(particle: Particle) {
-        this.Toggle();
-        particle.Dispose();
-    }
 
-    Toggle() {
-        if (this.Params.logic) {
-            this.Params.logic = 0;
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                source.TriggerRelease('all');
-            }
-
-        } else {
-            this.Params.logic = 1;
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                source.TriggerAttack();
-            }
+    PerformLogic() {
+        // Momentarily Trigger Attack and then release
+        this.Params.logic = 1;
+        for (var i = 0; i < this.Sources.Count; i++) {
+            var source = this.Sources.GetValueAt(i);
+            source.TriggerAttackRelease();
         }
+        this.Params.logic = 0;
     }
 }
 
