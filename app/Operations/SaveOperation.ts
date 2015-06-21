@@ -29,13 +29,17 @@ class SaveOperation<String> implements IOperation
 
         return new Promise((resolve) => {
 
+            var data = JSON.stringify(that._JSON);
+
+            console.log(data);
+
             $.ajax(<JQueryAjaxSettings>{
                 url: "http://blokdust.azurewebsites.net/api/anonymousblobs",
                 type: 'POST',
                 crossDomain: true,
                 dataType: 'json',
                 contentType: 'application/json',
-                data: JSON.stringify(that._JSON)
+                data: data
             }).done(function(data){
                 resolve(data);
             });
