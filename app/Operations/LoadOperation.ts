@@ -4,12 +4,33 @@ import IBlock = require("../Blocks/IBlock");
 class LoadOperation<String> implements IOperation
 {
     private _Id: any;
+    private _LZMA: any;
 
     constructor(id: string) {
         this._Id = id;
+        this._LZMA = new LZMA("/lib/lzma/src/lzma_worker.js");
+    }
+
+    Decompress(data: string): Promise<string>{
+
+        return new Promise((resolve) => {
+
+            data = JSON.parse("[" + data + "]");
+
+            this._LZMA.decompress(data,
+                function(result) {
+                    resolve(result.toString());
+                },
+                function(percent) {
+                    //console.log(percent);
+                }
+            );
+        });
     }
 
     Do(): Promise<String> {
+        var that = this;
+
         return new Promise((resolve) => {
 
             $.ajax(<JQueryAjaxSettings>{
@@ -19,9 +40,10 @@ class LoadOperation<String> implements IOperation
                 dataType: 'json',
                 contentType: 'application/json'
             }).done((data) => {
-                resolve(data);
+                that.Decompress(data).then((decompressed) => {
+                    resolve(decompressed);
+                });
             });
-
         });
     }
 

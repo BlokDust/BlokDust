@@ -273,7 +273,9 @@ class BlockCreator {
     };
 
     public static GetBlock(type: any): IBlock {
-        return eval("new " + type + "()");
+        var b = eval("new " + type + "()");
+        b.Type = eval(type);
+        return b;
     }
 
 }
