@@ -5,15 +5,24 @@ class SaveOperation<String> implements IOperation
     private _JSON: any;
 
     constructor(json: string, id?: string) {
-
-        // compress the json
-        //var lzma = new LZMA(json);
-
         this._JSON = {
             "Id": (id) ? id : "",
             "Data": json
         };
     }
+
+    //Compress(json: string){
+    //    // compress the json
+    //    var lzma = new LZMA();
+    //
+    //    lzma.compress(json, 5,
+    //        function(result) {
+    //            return result;
+    //        },
+    //        function(percent) {
+    //            console.log(percent);
+    //        });
+    //}
 
     Do(): Promise<String> {
         var that = this;

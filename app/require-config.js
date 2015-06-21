@@ -89,6 +89,9 @@ require([
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;
     window.$ = jquery;
-    window.App = new App(config);
-    window.App.Setup();
+
+    $(document).ready(function() {
+        window.App = new App(config);
+        window.App.Setup();
+    });
 });
