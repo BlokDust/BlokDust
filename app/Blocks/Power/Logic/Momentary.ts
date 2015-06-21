@@ -1,17 +1,12 @@
-import Effect = require("../Effect");
-import ISource = require("../ISource");
-import BlocksSketch = require("../../BlocksSketch");
-import Particle = require("../../Particle");
+import Effect = require("../../Effect");
+import ISource = require("../../ISource");
+import BlocksSketch = require("../../../BlocksSketch");
+import Particle = require("../../../Particle");
+import Logic = require("./Logic");
 
-class Switch extends Effect {
+class Momentary extends Logic {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        if (!this.Params) {
-            this.Params = {
-                enabled: 0 //TODO: this line should be boolean when using boolean switch UI
-            };
-        }
 
         super.Init(sketch);
 
@@ -21,7 +16,7 @@ class Switch extends Effect {
     Attach(source:ISource): void {
         super.Attach(source);
 
-        if (this.Params.enabled) {
+        if (this.Params.logic) {
             source.TriggerAttack();
         }
 
@@ -38,7 +33,7 @@ class Switch extends Effect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"switch");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary");
     }
 
     Dispose(){
@@ -50,14 +45,14 @@ class Switch extends Effect {
 
         this.OptionsForm =
         {
-            "name" : "Switch",
+            "name" : "Momentary Switch",
             "parameters" : [
                 {
                     "type" : "slider", //TODO Change to switch UI when available
                     "name" : "Off/On",
-                    "setting" :"enabled",
+                    "setting" :"logic",
                     "props" : {
-                        "value" : this.Params.enabled,
+                        "value" : this.Params.logic,
                         "min" : 0,
                         "max" : 1,
                         "quantised" : true
@@ -70,8 +65,7 @@ class Switch extends Effect {
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
 
-        if (param=="enabled") {
-            //this.Params.enabled = value; //TODO: delete this when we have switch UI
+        if (param=="logic") {
             this.Toggle();
         }
 
@@ -79,7 +73,7 @@ class Switch extends Effect {
     }
 
     /**
-     * When a particle hits a source it triggers the attack and then releases after a time
+     * Toggle when particle hits
      * @param particle
      * @constructor
      */
@@ -89,15 +83,15 @@ class Switch extends Effect {
     }
 
     Toggle() {
-        if (this.Params.enabled) {
-            this.Params.enabled = 0;
+        if (this.Params.logic) {
+            this.Params.logic = 0;
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
                 source.TriggerRelease('all');
             }
 
         } else {
-            this.Params.enabled = 1;
+            this.Params.logic = 1;
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
                 source.TriggerAttack();
@@ -106,4 +100,4 @@ class Switch extends Effect {
     }
 }
 
-export = Switch;
+export = Momentary;

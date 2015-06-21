@@ -1,7 +1,7 @@
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import IBlock = require("./Blocks/IBlock");
 import Source = require("./Blocks/Source");
-import Switch = require("./Blocks/Power/Switch");
+import Logic = require("./Blocks/Power/Logic/Logic");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 import Vector = Fayde.Utils.Vector;
 
@@ -48,7 +48,7 @@ class Particle implements IPooledObject {
             var block: IBlock = App.Blocks[i];
 
             // Particle can only collide with Switches and Sources but not Particle Emitters
-            if (block instanceof Switch || block instanceof Source && !(block instanceof ParticleEmitter)) {
+            if (block instanceof Logic || block instanceof Source && !(block instanceof ParticleEmitter)) {
                 if (block.HitTest(point)){
                     block.ParticleCollision(particle);
                 }

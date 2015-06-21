@@ -40,7 +40,8 @@ import Scuzz = require("Blocks/Effects/Pre/Scuzz");
 // POWER BLOCKS //
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 import Power = require("./Blocks/Power/Power");
-import Switch = require("./Blocks/Power/Switch");
+import Toggle = require("./Blocks/Power/Logic/Toggle");
+import Momentary = require("./Blocks/Power/Logic/Momentary");
 import Laser = require("./Blocks/Power/Laser");
 
 // INTERACTION BLOCKS //
@@ -83,7 +84,8 @@ class BlockCreator {
     // POWER BLOCKS //
     private static ParticleEmitter: ParticleEmitter = new ParticleEmitter();
     private static Power: Power = new Power();
-    private static Switch: Switch = new Switch();
+    private static Toggle: Toggle = new Toggle();
+    //private static Momentary: Momentary = new Momentary();
     private static Laser: Laser = new Laser();
 
     // INTERACTION BLOCKS //
@@ -234,10 +236,15 @@ class BlockCreator {
                         "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
                     },
                     {
-                        "name": "Switch",
-                        "id": Switch,
+                        "name": "Toggle Switch",
+                        "id": Toggle,
                         "description": "Toggles energy for source blocks, particle emitters & lasers."
                     },
+                    //{
+                    //    "name": "Momentary Switch",
+                    //    "id": Momentary,
+                    //    "description": "Momentary energy for source blocks, particle emitters & lasers."
+                    //},
                     {
                         "name": "Laser",
                         "id": Laser,

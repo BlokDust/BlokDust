@@ -6,7 +6,7 @@ import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import Power = require("./Power/Power");
-import Switch = require("./Power/Switch");
+import Logic = require("./Power/Logic/Logic");
 import Voice = require("./Interaction/VoiceObject");
 
 class Source extends Block implements ISource {
@@ -311,7 +311,7 @@ class Source extends Block implements ISource {
         if (this.Effects.Count) {
             for (var i = 0; i < this.Effects.Count; i++) {
                 var effect = this.Effects.GetValueAt(i);
-                if (effect instanceof Power || effect instanceof Switch && effect.Params.enabled){
+                if (effect instanceof Power || effect instanceof Logic && effect.Params.logic){
                     return true;
                 }
             }
