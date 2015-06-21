@@ -77,15 +77,40 @@ module.exports = function (grunt) {
 
         clean: {
             dist : ['<%= dirs.dist %>/*'],
-            minified : [
-                '<%= dirs.dist %>/*',
-                '!<%= dirs.dist %>/Assets',
-                '!<%= dirs.dist %>/lib',
-                '!<%= dirs.dist %>/img',
-                '!<%= dirs.dist %>/App.min.js',
-                '!<%= dirs.dist %>/config.json',
-                '!<%= dirs.dist %>/default.html',
-                '!<%= dirs.dist %>/styles.css']
+            // remove every file that isn't needed in production
+            minified: {
+                files: [
+                    {
+                        src: [
+                            '<%= dirs.dist %>/*',
+                            '!<%= dirs.dist %>/lib',
+                            '!<%= dirs.dist %>/Assets',
+                            '!<%= dirs.dist %>/img',
+                            '!<%= dirs.dist %>/App.min.js',
+                            '!<%= dirs.dist %>/config.json',
+                            '!<%= dirs.dist %>/default.html',
+                            '!<%= dirs.dist %>/styles.css'
+                        ]
+                    },
+                    {
+                        src: [
+                            '<%= dirs.dist %>/lib/**',
+                            '!<%= dirs.dist %>/lib/fayde/dist/fayde.js',
+                            '!<%= dirs.dist %>/lib/minerva/dist/minerva.js',
+                            '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.js'
+                        ],
+                        filter: 'isFile'
+                    },
+                    {
+                        src: [
+                            '<%= dirs.dist %>/lib/*',
+                            '!<%= dirs.dist %>/lib/fayde/**',
+                            '!<%= dirs.dist %>/lib/minerva/**',
+                            '!<%= dirs.dist %>/lib/nullstone/**'
+                        ]
+                    }
+                ]
+            }
         },
 
         replace: {

@@ -25,6 +25,8 @@ class Header extends DisplayObject{
     public Margin: number;
     private _LeftOver: boolean;
     private _RightOver: boolean;
+    private _ShareOver: boolean;
+    private _SettingsOver: boolean;
     public MenuOver: boolean;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -146,6 +148,7 @@ class Header extends DisplayObject{
         ctx.fillRect(0,0,this.Sketch.Width,thisHeight  + dropDown); // solid
 
 
+
         // TT //
         ctx.globalAlpha = 1;
         ctx.fillStyle = App.Palette[8];// Grey
@@ -167,16 +170,20 @@ class Header extends DisplayObject{
         }
 
         // Vertical //
+        var margin = this.DropDownHeight*0.5;
+        ctx.beginPath();
         for (var i=0;i<this.MenuItems.length;i++) {
             var cat = this.MenuItems[i];
             var menuX = cat.Position.x;
             if (i > 0) {
-                ctx.beginPath();
                 ctx.moveTo(Math.round(menuX - (cat.Size.Width*0.5)), (thisHeight * 0.5) - (16 * units));
                 ctx.lineTo(Math.round(menuX - (cat.Size.Width*0.5)), (thisHeight * 0.5) + (16 * units));
-                ctx.stroke();
             }
         }
+        //between share & settings //
+        ctx.moveTo(Math.round(this.Sketch.Width - (margin * units)), (thisHeight * 0.5) - (16 * units));
+        ctx.lineTo(Math.round(this.Sketch.Width - (margin * units)), (thisHeight * 0.5) + (16 * units));
+        ctx.stroke();
 
         // CATEGORIES //
         ctx.textAlign = "center";
@@ -191,13 +198,13 @@ class Header extends DisplayObject{
             ctx.fillStyle = App.Palette[col];
 
             // DRAW CAT HEADER //
-            cat.Draw(ctx,units,this);
+            cat.Draw(ctx,units,this,0);
 
 
             // ITEMS //
             if (this.DropDown > 0 && cat.YOffset<this.DropDownHeight) {
                 var itemN = cat.Items.length;
-                var margin = 20 + (this.Margin*0.666);
+                margin = 20 + (this.Margin*0.666);
                 ctx.lineWidth = 1;
 
 
@@ -247,7 +254,7 @@ class Header extends DisplayObject{
 
         if (this.DropDown > 0) {
             var cat = this.MenuItems[this._SelectedCategory];
-            var margin = this.Margin;
+            margin = this.Margin;
 
 
             // PAGINATION //
@@ -292,7 +299,35 @@ class Header extends DisplayObject{
             ctx.restore();
         }
 
+        // SETTINGS BTN //
+        ctx.globalAlpha = 1;
+        margin = this.DropDownHeight*0.5;
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) - 7) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) - 1) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), ((this.Height*0.5) - 7) * units);
 
+        ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height*0.5) + 7) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) + 1) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) + 7) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), ((this.Height*0.5) + 1) * units);
+
+
+
+        // SHARE BTN //
+        var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
+        ctx.moveTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5) - (5 * units), ((this.Height*0.75) - 6) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5), ((this.Height*0.75) - 1) * units);
+        ctx.lineTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5) + (5 * units), ((this.Height*0.75) - 6) * units);
+
+        ctx.stroke();
+
+        ctx.textAlign = "right";
+        ctx.fillText("SHARE", this.Sketch.Width - (margin * units) - (20 * units) ,((this.Height * 0.5)*units) + (dataType * 0.38));
+        ctx.textAlign = "center";
     }
 
     IsPaginated(cat,units) {
@@ -406,6 +441,15 @@ class Header extends DisplayObject{
             }
         }
 
+        // SHARE //
+        if (this._ShareOver) {
+            (<BlocksSketch>this.Sketch).SharePanel.OpenPanel();
+        }
+        // SETTINGS //
+        if (this._SettingsOver) {
+            (<BlocksSketch>this.Sketch).SettingsPanel.OpenPanel();
+        }
+
 
         // CLOSE DROPDOWN //
         if (point.y > ((this.Height + this.DropDown)*units) && this.DropDown > 0) {
@@ -456,6 +500,13 @@ class Header extends DisplayObject{
         // SCROLL HIT TEST //
         this._LeftOver = this.HudCheck(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
         this._RightOver = this.HudCheck(this.Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+
+        // SHARE & SETTINGS HIT TESTS //
+        this.Ctx.font = "400 " + (units*10) + "px Dosis";
+        var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
+        this._ShareOver = this.HudCheck(this.Sketch.Width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
+        this._SettingsOver = this.HudCheck(this.Sketch.Width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
+
 
         // WHOLE MENU //
         this.MenuOver = (point.y < ((this.Height + this.DropDown)*units));
