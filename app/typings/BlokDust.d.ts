@@ -7,6 +7,11 @@ interface Window{
     App: any;
     debug: boolean;
     SC: any;
+    LZMA: any;
+}
+
+interface Document{
+    selection: any;
 }
 
 interface CanvasRenderingContext2D {
