@@ -327,7 +327,9 @@ class Source extends Block implements ISource {
      */
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
-        this.TriggerAttackRelease(0.1); //TODO: This should be a setting
+        if (!this.IsPowered()) {
+            this.TriggerAttackRelease(0.1); //TODO: This should be a setting
+        }
         particle.Dispose();
     }
 
