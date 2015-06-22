@@ -2,6 +2,7 @@ import Effect = require("../../Effect");
 import ISource = require("../../ISource");
 import BlocksSketch = require("../../../BlocksSketch");
 import Particle = require("../../../Particle");
+import ParticleEmitter = require("./../ParticleEmitter");
 import Logic = require("./Logic");
 
 class Momentary extends Logic {
@@ -52,7 +53,7 @@ class Momentary extends Logic {
                     "name" : "Off/On",
                     "setting" :"logic",
                     "props" : {
-                        "value" : this.Params.logic,
+                        "value" : 0,
                         "min" : 0,
                         "max" : 0,
                         "quantised" : true
@@ -69,7 +70,7 @@ class Momentary extends Logic {
             this.PerformLogic();
         }
 
-        this.Params[""+param] = value;
+        //this.Params[""+param] = value;
     }
 
 
@@ -79,6 +80,9 @@ class Momentary extends Logic {
         for (var i = 0; i < this.Sources.Count; i++) {
             var source = this.Sources.GetValueAt(i);
             source.TriggerAttackRelease();
+            if (source instanceof ParticleEmitter){
+                (<ParticleEmitter>source).EmitParticle();
+            }
         }
         this.Params.logic = 0;
     }
