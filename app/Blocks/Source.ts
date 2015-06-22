@@ -284,7 +284,7 @@ class Source extends Block implements ISource {
     }
 
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number){
-        if (!duration) duration = "16n";
+        if (!duration) duration = App.Config.PulseLength;
         if (!time) time = "+0";
         if (this.Envelopes.length){
             //TODO: add velocity to all trigger methods

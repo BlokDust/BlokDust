@@ -3,5 +3,6 @@
     "PixelPaletteImagePath": "img/palette6.gif",
     "SoundCloudClientId": "7258ff07f16ddd167b55b8f9b9a3ed33",
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
-    "PolyphonicVoices": 4
+    "PolyphonicVoices": 4,
+    "PulseLength": "16n"
 }
