@@ -3,6 +3,7 @@ require.config({
     paths: {
         "App": "App",
         "exjs": "lib/exjs/dist/ex",
+        "extensions": "lib/extensions/dist/extensions",
         "fayde.drawing": "lib/fayde.drawing/dist/fayde.drawing",
         "fayde.transformer": "lib/fayde.transformer/dist/fayde.transformer",
         "fayde.utils": "lib/fayde.utils/dist/fayde.utils",
@@ -56,6 +57,7 @@ require([
     "Tone/core/Tone",
     "jquery",
     "exjs",
+    "extensions",
     "fayde.drawing",
     "fayde.transformer",
     "fayde.utils",
