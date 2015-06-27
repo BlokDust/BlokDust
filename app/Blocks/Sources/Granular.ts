@@ -2,248 +2,110 @@ import Source = require("../Source");
 import BlocksSketch = require("../../BlocksSketch");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
+import SoundCloudAudio = require('../SoundCloudAudio');
 
 class Granular extends Source {
 
-    public Grains: Tone.Player[];
-    private _Envelopes: Tone.Envelope[];
+    public Sources: Tone.Signal[];
+    public Grains: Tone.Player[] = [];
+    private _Envelopes: Tone.AmplitudeEnvelope[] = [];
     public Timeout;
     public EndTimeout;
-    private _CurrentGrain: number;
+    private _CurrentGrain: number = 0;
     private _IsLoaded: boolean;
-    public Filename: string;
-    public GrainSettings;
-    public MaxDensity: number;
-    private _NoteOn: boolean;
-    public PlaybackRate: number;
-    public WaveUrl: string;
-    public Waveform: number[];
-
+    public GrainsAmount: number = 16;
+    private _NoteOn: boolean = false;
+    public PlaybackRate: number = 1;
+    public SC: SoundCloudAudio;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
+        if (!this.Params) {
+            this.Params = {
+                playbackRate: 1,
+                rate: 0.3,
+                density: 10,
+                smoothness: 0.06,
+                region: 0,
+                spread: 1.5,
+                grainlength: 0.06,
+                track: '',
+                user: ''
+            };
+        }
         super.Init(sketch);
 
+        this.SC = new SoundCloudAudio(this);
+        this.Params.track = this.SC.TrackURL;
+
+        //TODO: NOT SURE SHOULD WE BE DOING THIS HERE ??
+        this.Params.rate = this.Params.grainlength*2;
+        this.Params.smoothness = this.Params.grainlength*0.49;
+        //----------
+
         this.CreateSource();
-
-        this._IsLoaded = false;
-
-        var tracks = ["183588346","48387282","127905486","50894420","12216090","76097469","130501492"];
-
-        this.Filename = tracks[1];
-        this.WaveUrl = "http://w1.sndcdn.com/fxguEjG4ax6B_m.png";
-        this.WaveUrl = "../Assets/Waveforms/02.png";
-        this.Waveform = [];
-
-        this.GrainSettings = {
-            "rate": 0.3,
-            "density": 10,
-            "smoothness": 0.06,
-            "region": 0,
-            "spread": 1.5,
-            "grainlength": 0.06
-
-        };
-        this.GrainSettings.rate = this.GrainSettings.grainlength*2;
-        this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.49;
-
-        // INIT //
-        this.MaxDensity = 16;
-        this.Grains = [];
-        this._Envelopes = [];
-        this._CurrentGrain = 0;
-        this._NoteOn = false;
-        this.PlaybackRate = 1;
-        this.SetTrack();
-
-
         this.CreateEnvelope();
 
-        this.Envelopes.forEach((e: any, i: number)=> {
-            e.connect(this.Sources[i].output.gain);
+        this.Sources.forEach((s: Tone.Signal, i: number) => {
+            s.connect(this.Envelopes[i]);
         });
+
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+            e.connect(this.EffectsChainInput);
+        });
+
+        this.SetupGrains();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
     }
 
-    // LOAD THE AUDIO & CONNECT UP//
-    SetTrack() {
-        this._IsLoaded = false;
-        var id = "7258ff07f16ddd167b55b8f9b9a3ed33";
-        var gran = this;
-
-        // GET WAVEFORM DATA //
-        SC.get('/tracks/'+this.Filename, {}, function(track) {
-            console.log(track);
-            gran.WaveUrl = track.waveform_url;
-            $.getJSON("http://blokdust.azurewebsites.net/api/Wave64/", {url: gran.WaveUrl}, function(data) {
-                var waveform;
-                waveform = new Image();
-                waveform.src = data.data;
-                waveform.onload = function() {
-                    //return waveform;
-                    gran.LoadWaveform(waveform);
-                };
-            });
-        });
-
-        var audioUrl = "https://api.soundcloud.com/tracks/" + this.Filename + "/stream" + "?client_id=" + id;
-
-        // RESET //
+    Reset(){
         this.Grains.length = 0;
         this._Envelopes.length = 0;
+    }
+
+
+
+    // LOAD THE AUDIO & CONNECT UP//
+    SetupGrains() {
+        this._IsLoaded = false;
+
+        //this.Reset();
 
 
         // LOAD AUDIO//
         // INITIALISE PLAYERS & ENVELOPES //
         // TODO either envelopes need to become signal envelopes, or we introduce a sampler.
         // Either one master sampler if it can have multiple samples, or a sampler per grain.
-        for (var i=0; i<this.MaxDensity; i++) {
+
+        // Loop through GrainsAmount
+        for (var i=0; i<this.GrainsAmount; i++) {
+
             if (i==0) { // first buffer callback
-                this.Grains[i] = new Tone.Player(audioUrl, function (sc) {
-                    console.log(sc);
-                    gran._IsLoaded = true;
-                    gran.GrainSettings.region = gran.GetDuration()*0.5;
+                this.Grains[i] = new Tone.Player(this.SC.TrackURL, (e) => {
+                    this._IsLoaded = true;
+                    this.Params.region = this.GetDuration()*0.5;
                 });
+
             } else {  // remaining buffers
-                this.Grains[i] = new Tone.Player(audioUrl);
+                this.Grains[i] = new Tone.Player(this.SC.TrackURL);
             }
-            this._Envelopes[i] = new Tone.Envelope(this.GrainSettings.smoothness,0.01,0.9,this.GrainSettings.smoothness);
+
+            this._Envelopes[i] = new Tone.AmplitudeEnvelope(this.Params.smoothness,0.01,0.9,this.Params.smoothness);
 
             // CONNECT //
-            this._Envelopes[i].connect(this.Grains[i].output.gain);
-            this.Grains[i].connect(this.Sources[0]);
+            this.Grains[i].connect(this._Envelopes[i]);
+            this._Envelopes[i].connect(this.Sources[0]);
             this.Sources[0].connect(this.EffectsChainInput);
             this.Grains[i].playbackRate = this.PlaybackRate;
         }
 
     }
 
-    LoadWaveform(img) {
-        var loader = new PxLoader(); //// Use PX Loader to handle image load
-        //var img = loader.addImage(this.WaveUrl);
-        var ctx = this.Sketch.Ctx;
-        var gran = this;
-        var waveform = [];
 
-        //loader.addCompletionListener(() => { //// callback that will be run once image is ready
-
-            // metrics //
-            var imglength = img.width; //// get number of colours
-            var perc = this.Sketch.Size.width/imglength;
-            var length = this.Sketch.Size.width;
-            var height = Math.round(img.height*perc); //// get number of colours
-
-            // place image //
-            ctx.fillStyle = "#000";// black
-            ctx.fillRect(0,0,length,height/2);
-            ctx.drawImage(img, 0, -(height/2), length, height); //// temporarily place image half visible
-
-            // get data //
-            var imgdata = ctx.getImageData(0, 0, length, Math.floor(height/2)); //// get half the image data
-            var pal = imgdata.data; // data for lower half
-            //console.log(pal);
-
-            var bits = 4;
-            var sample = 6;
-
-            var cols = Math.floor(length/sample);
-            var rows = Math.floor(height/(sample));
-
-            for (var i = 0; i < cols; i ++) {
-                waveform[i] = 0;
-                for (var j=0; j<rows; j++) {
-                    var dataPoint = ((i*sample)*bits) + (((j*(sample*0.5))*length)*bits);
-                    if (pal[dataPoint]!==0) { // if not black (wave color)
-                        break;
-                    }
-                    waveform[i] = (1/rows)*j;
-                }
-            }
-
-            gran.Waveform = waveform;
-            console.log(gran.Waveform.length);
-        //});
-
-        //loader.start(); //// begin downloading image
-    }
-
-
-
-    UpdateOptionsForm() {
-        super.UpdateOptionsForm();
-
-        this.OptionsForm =
-        {
-            "name" : "Granular",
-            "parameters" : [
-
-                {
-                    "type" : "waveslider",
-                    "name" : "Location",
-                    "setting" :"region",
-                    "props" : {
-                        "value" : this.GetParam("region"),
-                        "min" : 0,
-                        "max" : this.GetDuration(),
-                        "quantised" : false,
-                        "centered" : false,
-                        "wavearray" : this.Waveform,
-                        "spread" : this.GetParam("spread")
-                    }
-                },
-                {
-                    "type" : "sample",
-                    "name" : "Sample",
-                    "setting" :"sample",
-                    "props" : {
-                        "track" : this.GetParam("track"),
-                        "user" : this.GetParam("user")
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Spread",
-                    "setting" :"spread",
-                    "props" : {
-                        "value" : this.GetParam("spread"),
-                        "min" : 0,
-                        "max" : 4,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Grain Size",
-                    "setting" :"grainlength",
-                    "props" : {
-                        "value" : this.GetParam("grainlength"),
-                        "min" : 0.03,
-                        "max" : 0.5,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Density",
-                    "setting" :"density",
-                    "props" : {
-                        "value" : this.GetParam("density"),
-                        "min" : 2,
-                        "max" : this.MaxDensity,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                }
-            ]
-        };
-    }
 
     GetDuration() {
-        if (this.Grains){
+        if (this.Grains.length){
             return this.Grains[0].duration;
         }
         return 0;
@@ -277,7 +139,7 @@ class Granular extends Source {
     }
 
     CreateEnvelope(){
-        this.Envelopes.push( new Tone.Envelope(
+        this.Envelopes.push( new Tone.AmplitudeEnvelope(
             this.Settings.envelope.attack,
             this.Settings.envelope.decay,
             this.Settings.envelope.sustain,
@@ -330,12 +192,12 @@ class Granular extends Source {
         if (this._NoteOn) {
             if (this._Envelopes[this._CurrentGrain]) {
                 var gran = this;
-                var delay = (this.GrainSettings.rate / this.GrainSettings.density);
-                var location = this.GrainSettings.region - (this.GrainSettings.spread * 0.5) + (Math.random() * this.GrainSettings.spread);
+                var delay = (this.Params.rate / this.Params.density);
+                var location = this.Params.region - (this.Params.spread * 0.5) + (Math.random() * this.Params.spread);
                 location = this.LocationRange(location);
 
                 // MAKE SURE THESE ARE IN SYNC //
-                this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.smoothness,"+0");
+                this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.smoothness,"+0");
                 this.Grains[this._CurrentGrain].stop();
                 this.Grains[this._CurrentGrain].playbackRate = this.PlaybackRate;
                 this.Grains[this._CurrentGrain].start();
@@ -349,7 +211,7 @@ class Granular extends Source {
                 //console.log("" + this._CurrentGrain + " | " + playRate);
 
                 this._CurrentGrain += 1;
-                if (this._CurrentGrain >= this.GrainSettings.density) {
+                if (this._CurrentGrain >= this.Params.density) {
                     this._CurrentGrain = 0;
                 }
             }
@@ -361,68 +223,39 @@ class Granular extends Source {
         if (location<0) {
             location = 0;
         }
-        if (location>(this.Grains[0].duration - this.GrainSettings.grainlength)) {
-            location = (this.Grains[0].duration - this.GrainSettings.grainlength);
+        if (location>(this.Grains[0].duration - this.Params.grainlength)) {
+            location = (this.Grains[0].duration - this.Params.grainlength);
         }
         return location;
     }
 
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         super.SetPitch(pitch, sourceId, rampTime);
-        for (var i=0; i<this.MaxDensity; i++) {
+        for (var i=0; i<this.GrainsAmount; i++) {
             pitch /= App.BASE_NOTE;
             this.PlaybackRate = pitch;
         }
-    }
-
-
-    GetParam(param: string) {
-
-        if (this.GrainSettings) {
-            var val;
-            switch (param){
-
-                case "density": val = this.GrainSettings.density;
-                    break;
-                case "grainlength": val = this.GrainSettings.grainlength;
-                    break;
-                case "spread": val = this.GrainSettings.spread;
-                    break;
-                case "region": val = this.GrainSettings.region;
-                    break;
-                case "regionmin": val = (this.GrainSettings.spread*1.5);
-                    break;
-                case "regionmax": val = this.Grains[0].duration;
-                    break;
-                case "track": val = "piano";
-                    break;
-                case "user": val = "kingstone";
-                    break;
-            }
-            return val;
-        }
-
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
 
         switch (param){
-            case "density": this.GrainSettings.density = value;
+            case "density": this.Params.density = value;
                 break;
             case "grainlength":
-                this.GrainSettings.grainlength = value;
-                this.GrainSettings.rate = this.GrainSettings.grainlength*2;
-                this.GrainSettings.smoothness = this.GrainSettings.grainlength*0.5;
-                for (var i=0; i< this.MaxDensity; i++) {
-                    this._Envelopes[i].attack = this.GrainSettings.smoothness;
-                    this._Envelopes[i].release = this.GrainSettings.smoothness;
+                this.Params.grainlength = value;
+                this.Params.rate = this.Params.grainlength*2;
+                this.Params.smoothness = this.Params.grainlength*0.5;
+                for (var i=0; i< this.GrainsAmount; i++) {
+                    this._Envelopes[i].attack = this.Params.smoothness;
+                    this._Envelopes[i].release = this.Params.smoothness;
                 }
 
                 break;
-            case "spread": this.GrainSettings.spread = value;
+            case "spread": this.Params.spread = value;
                 break;
-            case "region": this.GrainSettings.region = value;
+            case "region": this.Params.region = value;
                 break;
         }
     }
@@ -433,7 +266,7 @@ class Granular extends Source {
         super.Dispose();
         clearTimeout(this.Timeout);
         this._NoteOn = false;
-        for (var i=0; i<this.MaxDensity; i++) {
+        for (var i=0; i<this.GrainsAmount; i++) {
             this.Grains[i].stop();
             this.Grains[i].dispose();
             this._Envelopes[i].dispose();
@@ -449,6 +282,78 @@ class Granular extends Source {
         this.Sources.forEach((s: any)=> {
             s.dispose();
         });
+    }
+
+
+
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
+
+        this.OptionsForm =
+        {
+            "name" : "Granular",
+            "parameters" : [
+
+                {
+                    "type" : "waveslider",
+                    "name" : "Location",
+                    "setting" :"region",
+                    "props" : {
+                        "value" : this.GetParam("region"),
+                        "min" : 0,
+                        "max" : this.GetDuration(),
+                        "quantised" : false,
+                        "centered" : false,
+                        "spread" : this.Params.spread
+                    }
+                },
+                {
+                    "type" : "sample",
+                    "name" : "Sample",
+                    "setting" :"sample",
+                    "props" : {
+                        "track" : this.Params.track,
+                        "user" : this.Params.user
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Spread",
+                    "setting" :"spread",
+                    "props" : {
+                        "value" : this.Params.spread,
+                        "min" : 0,
+                        "max" : 4,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Grain Size",
+                    "setting" :"grainlength",
+                    "props" : {
+                        "value" : this.Params.grainlength,
+                        "min" : 0.03,
+                        "max" : 0.5,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Density",
+                    "setting" :"density",
+                    "props" : {
+                        "value" : this.Params.density,
+                        "min" : 2,
+                        "max" : this.GrainsAmount,
+                        "quantised" : true,
+                        "centered" : false
+                    }
+                }
+            ]
+        };
     }
 
 }

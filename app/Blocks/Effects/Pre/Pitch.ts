@@ -67,9 +67,10 @@ class Pitch extends PreEffect {
 
             // GRANULAR
         } else if (source instanceof Granular) {
-            for (var i=0; i<source.MaxDensity; i++) {
-                source.Grains[i].playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
-            }
+            //for (var i=0; i<source.GrainsAmount; i++) {
+            //    source.Grains[i].playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
+            //}
+            //TODO: fix for Granular
 
             // RECORDER
         } else if (source instanceof Recorder) {

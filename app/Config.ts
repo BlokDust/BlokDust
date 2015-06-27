@@ -4,6 +4,9 @@ class Config {
     public SoundCloudClientId: string;
     public PolyphonicVoices: number;
     public PulseLength: Tone.Time;
+    public SoundCloudDefaultTracks: string[];
+    public GranularDefaultTracks: string[];
+    public ConvolverDefaultTracks: string[]
 }
 
 export = Config;
