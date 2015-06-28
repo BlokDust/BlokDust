@@ -1,35 +1,27 @@
-import IBlock = require('./IBlock');
-import Soundcloud = require('./Sources/Soundcloud');
-import Granular = require('./Sources/Granular');
-import Effect = require('./Effect');
-
+import SoundCloudAudioType = require('./SoundCloudAudioType');
 
 class SoundCloudAudio {
 
-    public TrackID: string;
-    //public Type: IBlock;
 
-    constructor(blockType){
-        //this.Type = blockType;
-        this.PickRandomTrack(blockType)
-    }
+    static PickRandomTrack(t:SoundCloudAudioType) {
 
-    get TrackURL(): string {
-        return 'https://api.soundcloud.com/tracks/'+ this.TrackID +'/stream?client_id='+ App.Config.SoundCloudClientId;
-    }
+        switch (t) {
+            case SoundCloudAudioType.Soundcloud:
+                var defaults = App.Config.SoundCloudDefaultTracks;
+                break;
+            case SoundCloudAudioType.Granular:
+                var defaults = App.Config.GranularDefaultTracks;
+                break
+            case SoundCloudAudioType.Convolution:
+                var defaults = App.Config.ConvolverDefaultTracks;
+                break;
+            default:
+                var defaults = App.Config.SoundCloudDefaultTracks;
+        }
 
-    PickRandomTrack(B:IBlock) {
+        var track = defaults[Math.floor((Math.random() * defaults.length))];
 
-        //if (B instanceof Soundcloud) { //TODO: MAKE THIS WORK
-        //    var defaults = App.Config.SoundCloudDefaultTracks;
-        //} else if (B instanceof Granular){
-            var defaults = App.Config.GranularDefaultTracks;
-        //} else if (B instanceof Effect) {
-        //    var defaults = App.Config.ConvolverDefaultTracks;
-        //}
-
-        this.TrackID = defaults[Math.floor((Math.random() * defaults.length))];
-
+        return 'https://api.soundcloud.com/tracks/'+ track +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }
 }
 

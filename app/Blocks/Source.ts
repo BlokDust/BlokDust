@@ -424,6 +424,17 @@ class Source extends Block implements ISource {
         });
     }
 
+    MouseDown() {
+        super.MouseDown();
+        this.TriggerAttack();
+
+    }
+
+    MouseUp() {
+        super.MouseUp();
+        this.TriggerRelease();
+    }
+
     GetParam(param: string) {
 
         var val;

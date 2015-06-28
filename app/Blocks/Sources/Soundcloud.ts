@@ -2,12 +2,12 @@ import Grid = require("../../Grid");
 import Source = require("../Source");
 import BlocksSketch = require("../../BlocksSketch");
 import SoundCloudAudio = require('../SoundCloudAudio');
+import SoundCloudAudioType = require('../SoundCloudAudioType');
 
 class Soundcloud extends Source {
 
     public Sources : Tone.Sampler[];
     //public PlaybackRate: number = 1; //TODO: Use Params.playbackRate instead
-    public SC: SoundCloudAudio;
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -20,12 +20,13 @@ class Soundcloud extends Source {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 11
+                volume: 11,
+                track: ''
             };
         }
 
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
-        this.SC = new SoundCloudAudio(this);
+        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
 
         super.Init(sketch);
 
@@ -43,18 +44,8 @@ class Soundcloud extends Source {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }
 
-    MouseDown() {
-        super.MouseDown();
-        this.TriggerAttack();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.TriggerRelease();
-    }
-
     CreateSource(){
-        this.Sources.push( new Tone.Sampler(this.SC.TrackURL) );
+        this.Sources.push( new Tone.Sampler(this.Params.track) );
         this.Sources.forEach((s: Tone.Sampler)=> {
             s.player.startPosition = this.Params.startPosition;
             s.player.loop = this.Params.loop;

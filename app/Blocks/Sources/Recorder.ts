@@ -66,16 +66,6 @@ class RecorderBlock extends Source {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"recorder");
     }
 
-    MouseDown() {
-        super.MouseDown();
-        this.TriggerAttack();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.TriggerRelease();
-    }
-
     KeyDownCallback(e){
 
         if ((<any>e).KeyDown === 'spacebar'){

@@ -3,6 +3,7 @@ import BlocksSketch = require("../../BlocksSketch");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import SoundCloudAudio = require('../SoundCloudAudio');
+import SoundCloudAudioType = require('../SoundCloudAudioType');
 
 class Granular extends Source {
 
@@ -15,7 +16,6 @@ class Granular extends Source {
     private _IsLoaded: boolean;
     public GrainsAmount: number = 16;
     private _NoteOn: boolean = false;
-    public PlaybackRate: number = 1;
     public SC: SoundCloudAudio;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -34,8 +34,7 @@ class Granular extends Source {
         }
         super.Init(sketch);
 
-        this.SC = new SoundCloudAudio(this);
-        this.Params.track = this.SC.TrackURL;
+        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
 
         //TODO: NOT SURE SHOULD WE BE DOING THIS HERE ??
         this.Params.rate = this.Params.grainlength*2;
@@ -82,13 +81,13 @@ class Granular extends Source {
         for (var i=0; i<this.GrainsAmount; i++) {
 
             if (i==0) { // first buffer callback
-                this.Grains[i] = new Tone.Player(this.SC.TrackURL, (e) => {
+                this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
                     this._IsLoaded = true;
                     this.Params.region = this.GetDuration()*0.5;
                 });
 
             } else {  // remaining buffers
-                this.Grains[i] = new Tone.Player(this.SC.TrackURL);
+                this.Grains[i] = new Tone.Player(this.Params.track);
             }
 
             this._Envelopes[i] = new Tone.AmplitudeEnvelope(this.Params.smoothness,0.01,0.9,this.Params.smoothness);
@@ -97,7 +96,7 @@ class Granular extends Source {
             this.Grains[i].connect(this._Envelopes[i]);
             this._Envelopes[i].connect(this.Sources[0]);
             this.Sources[0].connect(this.EffectsChainInput);
-            this.Grains[i].playbackRate = this.PlaybackRate;
+            this.Grains[i].playbackRate = this.Params.playbackRate;
         }
 
     }
@@ -121,16 +120,7 @@ class Granular extends Source {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
     }
 
-    MouseDown() {
-        super.MouseDown();
-        this.TriggerAttack();
 
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.TriggerRelease();
-    }
 
     CreateSource(){
         this.Sources.push( new Tone.Signal() );
@@ -152,7 +142,8 @@ class Granular extends Source {
         super.TriggerAttack();
 
         if (this._IsLoaded) {
-            this.Envelopes.forEach((e: any)=> {
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
                 e.triggerAttack();
             });
 
@@ -169,16 +160,14 @@ class Granular extends Source {
     TriggerRelease() {
         super.TriggerRelease();
 
-        this.Envelopes.forEach((e: any)=> {
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.triggerRelease();
         });
 
-        var gran = this;
         //clearTimeout(this.EndTimeout);
-        this.EndTimeout = setTimeout(function() {
-            gran._NoteOn = false;
-            console.log("END");
-        },<any>this.Envelopes[0].release*1000);
+        this.EndTimeout = setTimeout(() => {
+            this._NoteOn = false;
+        }, <number>this.Envelopes[0].release*1000);
     }
 
     TriggerAttackRelease(){
@@ -188,27 +177,24 @@ class Granular extends Source {
     GrainLoop() {
 
         // CYCLES THROUGH GRAINS AND PLAYS THEM //
-        // todo: clicking issue to be addressed (noticeable when connected to filter/gain blocks)
-        if (this._NoteOn) {
+        if (this.IsPowered() || this._NoteOn) {
             if (this._Envelopes[this._CurrentGrain]) {
-                var gran = this;
-                var delay = (this.Params.rate / this.Params.density);
-                var location = this.Params.region - (this.Params.spread * 0.5) + (Math.random() * this.Params.spread);
-                location = this.LocationRange(location);
+
+               var location = this.LocationRange(
+                   this.Params.region - (this.Params.spread * 0.5) + (Math.random() * this.Params.spread)
+               );
 
                 // MAKE SURE THESE ARE IN SYNC //
                 this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.smoothness,"+0");
                 this.Grains[this._CurrentGrain].stop();
-                this.Grains[this._CurrentGrain].playbackRate = this.PlaybackRate;
+                this.Grains[this._CurrentGrain].playbackRate = this.Params.playbackRate;
                 this.Grains[this._CurrentGrain].start();
                 //this.Grains[this._CurrentGrain].start("+0", location, (this.GrainSettings.grainlength*this.PlaybackRate)*1.9);
 
                 clearTimeout(this.Timeout);
-                this.Timeout = setTimeout(function() {
-                    gran.GrainLoop();
-                },Math.round(delay*1500));
-
-                //console.log("" + this._CurrentGrain + " | " + playRate);
+                this.Timeout = setTimeout(() => {
+                    this.GrainLoop();
+                }, Math.round((this.Params.rate / this.Params.density)*1500));
 
                 this._CurrentGrain += 1;
                 if (this._CurrentGrain >= this.Params.density) {
@@ -219,22 +205,21 @@ class Granular extends Source {
     }
 
     // CAP POSITIONS OF GRAINS TO STAY WITHIN TRACK LENGTH //
-    LocationRange(location) {
-        if (location<0) {
+    LocationRange(location: number) {
+        var locationCap = this.Grains[0].duration - this.Params.grainlength
+        if (location < 0) {
             location = 0;
-        }
-        if (location>(this.Grains[0].duration - this.Params.grainlength)) {
-            location = (this.Grains[0].duration - this.Params.grainlength);
+        } else if (location > locationCap) {
+            location = locationCap;
         }
         return location;
     }
 
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
-        super.SetPitch(pitch, sourceId, rampTime);
         for (var i=0; i<this.GrainsAmount; i++) {
-            pitch /= App.BASE_NOTE;
-            this.PlaybackRate = pitch;
+            this.Grains[i].playbackRate = pitch / App.BASE_NOTE;
         }
+        this.Params.playbackRate = this.Grains[0].playbackRate;
     }
 
     SetParam(param: string,value: number) {
@@ -262,27 +247,7 @@ class Granular extends Source {
 
 
 
-    Dispose(){
-        super.Dispose();
-        clearTimeout(this.Timeout);
-        this._NoteOn = false;
-        for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].stop();
-            this.Grains[i].dispose();
-            this._Envelopes[i].dispose();
-        }
 
-        this.Grains.length = 0;
-        this._Envelopes.length = 0;
-
-        this.Envelopes.forEach((e: any)=> {
-            e.dispose();
-        });
-
-        this.Sources.forEach((s: any)=> {
-            s.dispose();
-        });
-    }
 
 
 
@@ -354,6 +319,31 @@ class Granular extends Source {
                 }
             ]
         };
+    }
+
+    Dispose(){
+        super.Dispose();
+        clearTimeout(this.Timeout);
+        this._NoteOn = false;
+
+        this.Grains.forEach((g: Tone.Player)=> {
+            g.dispose();
+        });
+
+        this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+            e.dispose();
+        });
+
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+            e.dispose();
+        });
+
+        this.Sources.forEach((s: Tone.Signal)=> {
+            s.dispose();
+        });
+
+        this.Grains.length = 0;
+        this._Envelopes.length = 0;
     }
 
 }
