@@ -47,7 +47,7 @@ class SharePanel extends DisplayObject{
             shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",
             copyLine: "Share your creation with this unique URL:",
             titleLine: "Title",
-            domain: "http://localhost:8000/default.html?c=",
+            domain: this.GetUrl() + "?c=",
             facebook: "post to facebook",
             twitter: "post to twitter",
             google: "post to google +",
@@ -60,6 +60,10 @@ class SharePanel extends DisplayObject{
         this.SessionTitle = this.GenerateLabel();
         this.Resize();
 
+    }
+
+    GetUrl() {
+        return [location.protocol, '//', location.host, location.pathname].join('');
     }
 
     //-------------------------------------------------------------------------------------------
@@ -422,7 +426,7 @@ class SharePanel extends DisplayObject{
     }
 
     GenerateLink() {
-        this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
+        this._CommandManager.ExecuteCommand(Commands[Commands.SAVEAS]);
 
     }
 

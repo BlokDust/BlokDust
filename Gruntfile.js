@@ -108,7 +108,8 @@ module.exports = function (grunt) {
                             '<%= dirs.dist %>/lib/*',
                             '!<%= dirs.dist %>/lib/fayde/**',
                             '!<%= dirs.dist %>/lib/minerva/**',
-                            '!<%= dirs.dist %>/lib/nullstone/**'
+                            '!<%= dirs.dist %>/lib/nullstone/**',
+                            '!<%= dirs.dist %>/lib/lzma/**'
                         ]
                     }
                 ]
