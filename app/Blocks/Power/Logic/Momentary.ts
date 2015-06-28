@@ -2,6 +2,7 @@ import Effect = require("../../Effect");
 import ISource = require("../../ISource");
 import BlocksSketch = require("../../../BlocksSketch");
 import Particle = require("../../../Particle");
+import ParticleEmitter = require("./../ParticleEmitter");
 import Logic = require("./Logic");
 
 class Momentary extends Logic {
@@ -33,7 +34,7 @@ class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary switch");
     }
 
     Dispose(){
@@ -52,9 +53,9 @@ class Momentary extends Logic {
                     "name" : "Off/On",
                     "setting" :"logic",
                     "props" : {
-                        "value" : this.Params.logic,
+                        "value" : 0,
                         "min" : 0,
-                        "max" : 1,
+                        "max" : 0,
                         "quantised" : true
                     }
                 }
@@ -66,37 +67,24 @@ class Momentary extends Logic {
         super.SetParam(param,value);
 
         if (param=="logic") {
-            this.Toggle();
+            this.PerformLogic();
         }
 
-        this.Params[""+param] = value;
+        //this.Params[""+param] = value;
     }
 
-    /**
-     * Toggle when particle hits
-     * @param particle
-     * @constructor
-     */
-    ParticleCollision(particle: Particle) {
-        this.Toggle();
-        particle.Dispose();
-    }
 
-    Toggle() {
-        if (this.Params.logic) {
-            this.Params.logic = 0;
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                source.TriggerRelease('all');
-            }
-
-        } else {
-            this.Params.logic = 1;
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                source.TriggerAttack();
+    PerformLogic() {
+        // Momentarily Trigger Attack and then release
+        this.Params.logic = 1;
+        for (var i = 0; i < this.Sources.Count; i++) {
+            var source = this.Sources.GetValueAt(i);
+            source.TriggerAttackRelease();
+            if (source instanceof ParticleEmitter){
+                (<ParticleEmitter>source).EmitParticle();
             }
         }
+        this.Params.logic = 0;
     }
 }
 

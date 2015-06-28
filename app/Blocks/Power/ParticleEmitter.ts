@@ -52,8 +52,8 @@ class ParticleEmitter extends Source {
     Update() {
         super.Update();
 
-        // If we're in self powered mode, or if this is powered or it's pressed
-        if (this.Params.selfPoweredMode || this.IsPowered() || this.IsPressed) {
+        // If we're in self powered mode, or if this is powered
+        if (this.Params.selfPoweredMode || this.IsPowered()) {
 
             if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
 

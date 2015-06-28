@@ -33,7 +33,7 @@ class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle switch");
     }
 
     UpdateOptionsForm() {

@@ -6,16 +6,18 @@ import Particle = require("../../Particle");
 class Microphone extends Source {
 
     public Volume: any;
+    public Muted: boolean = false;
     private _unmutedVolume: number = 1;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-        super.Init(sketch);
-
         if (!this.Params) {
             this.Params = {
-                gain: 1
+                gain: 1,
+                monitor: 1 //TODO: change to boolean when available
             };
         }
+
+        super.Init(sketch);
 
         this.Volume = App.AudioMixer.Master.context.createGain();
         this.Volume.gain.value = this.Params.gain;
@@ -40,8 +42,11 @@ class Microphone extends Source {
      *  Mute the output
      */
     Mute() {
-        this._unmutedVolume = this.Volume.gain.value;
-        this.Volume.gain.value = 0;
+        if (!this.Muted) {
+            this._unmutedVolume = this.Volume.gain.value;
+            this.Volume.gain.value = 0;
+            this.Muted = true;
+        }
     }
 
     /**
@@ -49,7 +54,10 @@ class Microphone extends Source {
      *  the output was muted.
      */
     Unmute() {
-        this.Volume.gain.value = this._unmutedVolume;
+        if (this.Muted) {
+            this.Volume.gain.value = this._unmutedVolume;
+            this.Muted = false;
+        }
     }
 
     MouseDown() {
@@ -77,9 +85,45 @@ class Microphone extends Source {
 
     TriggerAttackRelease(duration: number){
         this.Unmute();
+        if (!duration) duration = App.Config.PulseLength;
         setTimeout(() => {
             this.Mute();
-        }, duration*1000);
+        }, this.Sources[0].toSeconds(duration)*1000);
+    }
+
+    UpdateOptionsForm() {
+        super.UpdateOptionsForm();
+
+        this.OptionsForm =
+        {
+            "name" : "Microphone",
+            "parameters" : [
+
+                {
+                    "type" : "slider",
+                    "name" : "Monitor",
+                    "setting" :"monitor",
+                    "props" : {
+                        "value" : this.Params.monitor,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : true
+                    }
+                }
+            ]
+        };
+    }
+
+    SetParam(param: string,value: any) {
+
+        var val = value;
+
+        if (param == "monitor") {
+            //TODO: setup monitoring toggle or mix slider
+        }
+        this.Params[""+param] = val;
+
+        super.SetParam(param,value);
     }
 
     Update() {
