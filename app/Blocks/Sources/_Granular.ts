@@ -338,7 +338,7 @@ class Granular extends Source {
                 this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.GrainSettings.smoothness,"+0");
                 this.Grains[this._CurrentGrain].stop();
                 this.Grains[this._CurrentGrain].playbackRate = this.PlaybackRate;
-                this.Grains[this._CurrentGrain].start();
+                //this.Grains[this._CurrentGrain].start();
                 //this.Grains[this._CurrentGrain].start("+0", location, (this.GrainSettings.grainlength*this.PlaybackRate)*1.9);
 
                 clearTimeout(this.Timeout);
