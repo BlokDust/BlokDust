@@ -26,6 +26,12 @@ class Keyboard extends PreEffect {
         super.Attach(source);
         this.SetBaseFrequency(source);
         this.KeysDown = {};
+
+        // Check to see if we have enough sources on this block
+        if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
+            // Create extra polyphonic voices
+            this.CreateVoices(source);
+        }
     }
 
     Detach(source:ISource): void {
@@ -81,11 +87,8 @@ class Keyboard extends PreEffect {
 
                 source.TriggerRelease('all');
 
-                // If it's not a Power or a Microphone
-                if (!((source instanceof Power) || (source instanceof Microphone))) {
-                    // Create extra polyphonic voices
-                    this.CreateVoices(source);
-                }
+                // Create extra polyphonic voices
+                this.CreateVoices(source);
             }
 
         }
@@ -94,6 +97,8 @@ class Keyboard extends PreEffect {
     }
 
     CreateVoices(source: ISource){
+        // Don't create if it's a Power or a Microphone
+        if ((source instanceof Power) || (source instanceof Microphone)) return;
 
         // Work out how many voices we actually need (we may already have some)
         var diff = App.Config.PolyphonicVoices - source.Sources.length;
@@ -130,7 +135,6 @@ class Keyboard extends PreEffect {
 
                 // Add the source and envelope to our FreeVoices list
                 source.FreeVoices.push( new Voice(i) );
-
             }
         }
     }
