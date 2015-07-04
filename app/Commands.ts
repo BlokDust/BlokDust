@@ -2,12 +2,12 @@
 enum Commands {
     CREATE_BLOCK,
     DELETE_BLOCK,
-    MOVE_BLOCK,
-    SAVE,
     LOAD,
-    UNDO,
+    MOVE_BLOCK,
     REDO,
-    INCREMENT_NUMBER
+    SAVE,
+    SAVEAS,
+    UNDO
 }
 
 export = Commands;

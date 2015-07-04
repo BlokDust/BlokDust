@@ -5,11 +5,13 @@ class SaveOperation<String> implements IOperation
     private _JSON: any;
     private _LZMA: any;
 
-    constructor(json: string, id?: string) {
-        this._JSON = {
-            "Id": (id) ? id : "",
-            "Data": json
-        };
+    constructor(json: string, compositionId?: string, sessionId?: string) {
+
+        this._JSON = new PostData(
+            (compositionId) ? compositionId : "",
+            json,
+            sessionId
+        );
 
         this._LZMA = new LZMA("/lib/lzma/src/lzma_worker.js");
     }
@@ -57,6 +59,12 @@ class SaveOperation<String> implements IOperation
     }
 
     Dispose(): void {
+
+    }
+}
+
+class PostData {
+    constructor(public Id: string, public Data: string, public SessionId) {
 
     }
 }

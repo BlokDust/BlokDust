@@ -26,6 +26,7 @@ import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommand
 import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
 import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
+import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
 import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
 import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
@@ -44,23 +45,24 @@ class App implements IApp{
 
     private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
-    public Config: Config;
-    public OperationManager: OperationManager;
-    public ResourceManager: ResourceManager;
-    public CommandManager: CommandManager;
-    public CompositionId: string;
+    private _SaveFile: SaveFile;
     public AudioMixer: AudioMixer = new AudioMixer();
+    public Blocks: IBlock[] = [];
+    public BlocksSketch: BlocksSketch;
+    public CommandManager: CommandManager;
+    public CommandsInputManager: CommandsInputManager;
+    public CompositionId: string;
+    public Config: Config;
     public InputManager: InputManager;
     public KeyboardInput: KeyboardInput;
-    public CommandsInputManager: CommandsInputManager;
-    public PointerInputManager: PointerInputManager;
-    public ParticlesPool: PooledFactoryResource<Particle>;
+    public OperationManager: OperationManager;
     public OscillatorsPool: PooledFactoryResource<Oscillator>;
-    public Blocks: IBlock[] = [];
-    public Particles: Particle[] = [];
     public Palette: string[] = [];
-    private _SaveFile: SaveFile;
-    public BlocksSketch: BlocksSketch;
+    public Particles: Particle[] = [];
+    public ParticlesPool: PooledFactoryResource<Particle>;
+    public PointerInputManager: PointerInputManager;
+    public ResourceManager: ResourceManager;
+    public SessionId: string;
 
     public BASE_NOTE: number = 440; //TODO: should be const
 
@@ -100,6 +102,7 @@ class App implements IApp{
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.MOVE_BLOCK], MoveBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVEAS], SaveAsCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.REDO], RedoCommandHandler.prototype));
@@ -131,10 +134,10 @@ class App implements IApp{
     }
 
     LoadComposition() {
-        var id = Utils.Url.GetQuerystringParameter('c');
+        this.CompositionId = Utils.Url.GetQuerystringParameter('c');
 
-        if(id) {
-            this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], id).then((data) => {
+        if(this.CompositionId) {
+            this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
                 // get deserialized blocks tree, then "flatten" so that all blocks are in an array
                 this.Deserialize(data);
                 this.CreateUI();

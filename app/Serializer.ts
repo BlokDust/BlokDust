@@ -6,6 +6,7 @@ import ToneSource = require("./Blocks/Sources/ToneSource");
 import BitCrusher = require("./Blocks/Effects/Post/BitCrusher");
 import BlockCreator = require("./BlockCreator");
 import SaveFile = require("./SaveFile");
+import Version = require("./_Version");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Serializer {
@@ -29,7 +30,8 @@ class Serializer {
         var json = {
             ZoomLevel: App.BlocksSketch.ZoomLevel,
             ZoomPosition: App.BlocksSketch.ZoomPosition,
-            Composition: []
+            Composition: [],
+            Version: Version.Version
         };
 
         this._SerializeBlocks(json.Composition, blocks);
