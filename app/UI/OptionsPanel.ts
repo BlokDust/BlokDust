@@ -707,8 +707,13 @@ class OptionsPanel extends DisplayObject {
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
 
+
+        console.log(this._Name);
         // UPDATE VALUES IN OTHER OPTIONS //
-        //this.SelectedBlock.UpdateOptionsForm();
+        if (this._Name.toUpperCase()=="GRANULAR" && ("" + object[""+setting])=="spread") {
+            this.UpdateOptions();
+        }
+
     }
 
 

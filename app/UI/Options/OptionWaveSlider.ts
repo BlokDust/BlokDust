@@ -53,27 +53,32 @@ class WaveSlider extends Option{
         }
 
 
+
         var col = panel.SliderColours[(i) - (Math.floor((i)/panel.SliderColours.length)*(panel.SliderColours.length))];
         ctx.fillStyle = App.Palette[1];// WHITE
         ctx.fillStyle = col;
+
         // WAVEFORM //
-        ctx.save();
+
+        /*ctx.save();
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this._Waveform.length!==0) {
             for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.5)));
+                //ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + ((height * 0.49) * this._Waveform[j]) );
             }
             ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
             for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.5)));
+                //ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + ((height * 0.49) * this._Waveform[j]) );
             }
         }
         ctx.closePath();
         ctx.clip();
 
         ctx.globalAlpha = 0.05;
-        ctx.strokeStyle = "#282b31";
+        ctx.fillStyle = ctx.strokeStyle = "#282b31";
         //ctx.fillStyle = App.Palette[1];// WHITE
         //ctx.fillRect(panel.Margin,y,panel.Range,height);
         ctx.globalAlpha = 1;
@@ -81,12 +86,15 @@ class WaveSlider extends Option{
         panel.vertFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 5);
         ctx.lineWidth = 1;
 
+        ctx.fillRect(panel.Margin - units,y + units, panel.Range + (2 * units), height - (2 * units));
 
-        ctx.restore();
+
+        ctx.restore();*/
 
 
         // FILL //
         var spread = (panel.Range / (this.Max-this.Min)) * this.Spread;
+
         /*ctx.save();
 
         ctx.fillStyle = App.Palette[1];// WHITE
@@ -113,20 +121,20 @@ class WaveSlider extends Option{
         ctx.fill();
         ctx.restore();*/
 
-
-
-
-
-
-        /*ctx.beginPath();
+        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this._Waveform.length!==0) {
             for (var j=0; j<this._Waveform.length; j++) {
                 ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
             }
             ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
+            for (var j=this._Waveform.length-1; j>-1; j--) {
+                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
+            }
         }
-        ctx.fill();*/
+        ctx.closePath();
+        ctx.fill();
 
 
         // LINES //

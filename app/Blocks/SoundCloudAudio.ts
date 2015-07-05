@@ -11,7 +11,7 @@ class SoundCloudAudio {
                 break;
             case SoundCloudAudioType.Granular:
                 var defaults = App.Config.GranularDefaultTracks;
-                break
+                break;
             case SoundCloudAudioType.Convolution:
                 var defaults = App.Config.ConvolverDefaultTracks;
                 break;
@@ -20,6 +20,27 @@ class SoundCloudAudio {
         }
 
         var track = defaults[Math.floor((Math.random() * defaults.length))];
+
+        return 'https://api.soundcloud.com/tracks/'+ track +'/stream?client_id='+ App.Config.SoundCloudClientId;
+    }
+
+    static PickTrack(t:SoundCloudAudioType,n:number) {
+
+        switch (t) {
+            case SoundCloudAudioType.Soundcloud:
+                var defaults = App.Config.SoundCloudDefaultTracks;
+                break;
+            case SoundCloudAudioType.Granular:
+                var defaults = App.Config.GranularDefaultTracks;
+                break;
+            case SoundCloudAudioType.Convolution:
+                var defaults = App.Config.ConvolverDefaultTracks;
+                break;
+            default:
+                var defaults = App.Config.SoundCloudDefaultTracks;
+        }
+
+        var track = defaults[n];
 
         return 'https://api.soundcloud.com/tracks/'+ track +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }

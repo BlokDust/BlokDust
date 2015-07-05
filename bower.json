@@ -9,7 +9,7 @@
     "fayde.drawing": "edsilv/fayde.drawing#~0.4.0",
     "fayde.utils": "edsilv/fayde.utils#~0.5.4",
     "fayde.transformer": "edsilv/fayde.transformer#~0.6.0",
-    "tone": "lukephills/Tone.js#~0.4.7",
+    "tone": "lukephills/Tone.js#~0.4.8",
     "pixelpalette": "edsilv/pixelpalette#~0.1.9",
     "RecorderJS": "lukephills/Recorderjs#~1.0.3",
     "jquery": "~2.1.3",

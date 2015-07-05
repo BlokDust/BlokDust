@@ -10,7 +10,15 @@
         "172375224",
         "43883752"
     ],
-    "GranularDefaultTracks": ["183588346","48387282","127905486","50894420","12216090","76097469","130501492"],
+    "GranularDefaultTracks": [
+        "24456532",
+        "183588346",
+        "48387282",
+        "127905486",
+        "50894420",
+        "76097469",
+        "130501492"
+    ],
     "ConvolverDefaultTracks": [],
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
     "PolyphonicVoices": 4,

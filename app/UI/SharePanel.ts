@@ -23,12 +23,14 @@ class SharePanel extends DisplayObject{
     private _RollOvers: boolean[];
     private _CommandManager;
     private _SessionId: string;
+    private _Saving: boolean;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
         this.Open = false;
         this._FirstSession = true;
+        this._Saving = false;
         this._NameUrl = "";
         this.SessionURL = "";
         this._SessionId = "";
@@ -54,6 +56,7 @@ class SharePanel extends DisplayObject{
             bookmark: "bookmark creation",
             save: "overwrite",
             saveAs: "create new",
+            saving: "saving...",
             tweetText: "I made this @blokdust creation: "
         };
 
@@ -100,9 +103,14 @@ class SharePanel extends DisplayObject{
             if (this._FirstSession) {
 
                 // GENERATE URL //
-                ctx.fillStyle = App.Palette[4];
+
+                if (this._Saving) {
+                    ctx.fillStyle = App.Palette[1];
+                } else {
+                    ctx.fillStyle = App.Palette[4];
+                }
                 ctx.fillRect(this.OffsetX + (this.Sketch.Width * 0.5) - (210 * units), centerY - (20 * units), 420 * units, 40 * units);
-                if (this._RollOvers[3]) {
+                if (this._RollOvers[3] && !this._Saving) {
                     ctx.beginPath();
                     ctx.moveTo(this.OffsetX + (this.Sketch.Width*0.5), centerY + (29*units));
                     ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) - (10*units), centerY + (19*units));
@@ -120,9 +128,13 @@ class SharePanel extends DisplayObject{
             } else {
 
                 // SAVE & SAVE AS //
-                ctx.fillStyle = App.Palette[4];
+                if (this._Saving) {
+                    ctx.fillStyle = App.Palette[1];
+                } else {
+                    ctx.fillStyle = App.Palette[4];
+                }
                 ctx.fillRect(this.OffsetX + (this.Sketch.Width * 0.5) - (210 * units), centerY - (20 * units), 202.5 * units, 40 * units);
-                if (this._RollOvers[4]) {
+                if (this._RollOvers[4] && !this._Saving) {
                     ctx.beginPath();
                     ctx.moveTo(this.OffsetX + (this.Sketch.Width*0.5) - (108.75*units), centerY + (29*units));
                     ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) - (118.75*units), centerY + (19*units));
@@ -130,9 +142,13 @@ class SharePanel extends DisplayObject{
                     ctx.closePath();
                     ctx.fill();
                 }
-                ctx.fillStyle = App.Palette[5];
+                if (this._Saving) {
+                    ctx.fillStyle = App.Palette[1];
+                } else {
+                    ctx.fillStyle = App.Palette[5];
+                }
                 ctx.fillRect(this.OffsetX + (this.Sketch.Width * 0.5) + (7.5 * units), centerY - (20 * units), 202.5 * units, 40 * units);
-                if (this._RollOvers[5]) {
+                if (this._RollOvers[5] && !this._Saving) {
                     ctx.beginPath();
                     ctx.moveTo(this.OffsetX + (this.Sketch.Width*0.5) + (108.75*units), centerY + (29*units));
                     ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) + (118.75*units), centerY + (19*units));
@@ -161,6 +177,12 @@ class SharePanel extends DisplayObject{
                 ctx.fillText("SKIP", this.OffsetX + (this.Sketch.Width * 0.5) + (275 * units), centerY + (35 * units));
             }
 
+            // SAVE MESSAGE //
+            if (this._Saving) {
+                ctx.font = midType;
+                ctx.textAlign = "center";
+                ctx.fillText(this._CopyJson.saving.toUpperCase(), this.OffsetX + (this.Sketch.Width * 0.5), centerY + (50 * units));
+            }
 
             // BACK ARROW //
             ctx.lineWidth = 2;
@@ -350,10 +372,8 @@ class SharePanel extends DisplayObject{
     GenerateLabel() {
 
         var label = "";
-        var diceRoll; // diceRoll is used to weight random probability
-        /*var prefix = ["al","an","ä","ba","bø","bö","bü","be","blok","bjur","björ","brä","da","dø","du","do","fja","fle","fe","fi","fo","go","fjo","ha","he","hel","ju","ji","jä","jen","jok","ka","ki","kat","la","lü","lin","ma","mo","mal","nu","no","ø","o","ro","rø","sø","so","to","tø","tol","ul","vu","vø","vo","vol"];
-        var suffix = ["berg","nist","de","dü","dø","dust","dt","ten","jist","gen","jö","kö","slik","slø","kin","kien","kjen","mo","mark","tø","mea","mik","svik","vik","sen","verb","vist","vo","vø"];
-*/
+        var diceRoll;
+
         // DIALECT 1 (Norwegian alphabet)
         var prefixA = ["al","aal","blok","bjør","brø","drø","du","ef","en","jen","ja","lek","lu","mal","svi","svar","sku","spru","kø","kin","kvi","kna","kvar","hof","tje","fja","ub","rø","vø","vol","va","ey","ly","sky","ske","skø","sji","yø","ø"];
         var syllableA = ["jen","ke","kil","kol","kof","nø","ken","ren","re","rol","sen","se","sa","then","tol","te","ty","ple","pa","ka","y"];
@@ -426,15 +446,18 @@ class SharePanel extends DisplayObject{
     }
 
     GenerateLink() {
+        this._Saving = true;
         this._CommandManager.ExecuteCommand(Commands[Commands.SAVEAS]);
 
     }
 
     UpdateLink() {
+        this._Saving = true;
         this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
     }
 
     ReturnLink(id) {
+        this._Saving = false;
         console.log(id);
         this._SessionId = id;
         this.UpdateUrlText();

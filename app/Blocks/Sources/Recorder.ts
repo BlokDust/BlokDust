@@ -235,7 +235,7 @@ class RecorderBlock extends Source {
                     "props" : {
                         "value" : this.Params.loopStart,
                         "min" : 0,
-                        "max" : 10,//this.GetDuration(),
+                        "max" : 20,//this.GetDuration(),
                         "quantised" : false,
                     }
                 },
@@ -246,7 +246,7 @@ class RecorderBlock extends Source {
                     "props" : {
                         "value" : this.Params.loopEnd,
                         "min" : 0.0001,
-                        "max" : 10,//this.GetDuration(),
+                        "max" : 20,//this.GetDuration(),
                         "quantised" : false,
                     }
                 },

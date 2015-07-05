@@ -356,6 +356,7 @@ class Granular extends Source {
         }
     }
 
+
     // CAP POSITIONS OF GRAINS TO STAY WITHIN TRACK LENGTH //
     LocationRange(location) {
         if (location<0) {

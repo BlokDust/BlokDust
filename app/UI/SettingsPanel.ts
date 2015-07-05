@@ -48,7 +48,7 @@ class SettingsPanel extends DisplayObject{
             },
 
             phillips: {
-                blurb: "Luke Phillips - audio development & interaction.",
+                blurb: "Luke Phillips - audio development & musical interaction.",
                 url: "femurdesign.com",
                 twitter: "@lukephills"
             },
