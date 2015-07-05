@@ -3,17 +3,17 @@
  */
 
 import Option = require("./Option");
+import WaveForm = require("./OptionWave");
 import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../OptionsPanel");
 
-class WaveSlider extends Option{
+class WaveSlider extends WaveForm{
 
-    private _Waveform: number[];
     public Spread: number;
 
 
     constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], spread: number) {
-        super();
+        super(waveform);
 
         this.Type = "waveslider";
         this.Position = position;
@@ -27,7 +27,7 @@ class WaveSlider extends Option{
         this.Setting = setting;
         this.Log = log;
         this.Selected = false;
-        this._Waveform = waveform;
+        //this._Waveform = waveform;
         this.Spread = spread;
     }
 
@@ -42,105 +42,14 @@ class WaveSlider extends Option{
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
 
-        // DIVIDERS //
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
-        if (i !== (panel.Options.length - 1)) {
-            ctx.beginPath();
-            ctx.moveTo(panel.Margin - units, y + height);
-            ctx.lineTo(panel.Range + panel.Margin + units, y + height);
-            ctx.stroke();
-        }
-
-
-
-        var col = panel.SliderColours[(i) - (Math.floor((i)/panel.SliderColours.length)*(panel.SliderColours.length))];
-        ctx.fillStyle = App.Palette[1];// WHITE
-        ctx.fillStyle = col;
-
-        // WAVEFORM //
-
-        /*ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
-        if (this._Waveform.length!==0) {
-            for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.5)));
-                //ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + ((height * 0.49) * this._Waveform[j]) );
-            }
-            ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
-            for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.5)));
-                //ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + ((height * 0.49) * this._Waveform[j]) );
-            }
-        }
-        ctx.closePath();
-        ctx.clip();
-
-        ctx.globalAlpha = 0.05;
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
-        //ctx.fillStyle = App.Palette[1];// WHITE
-        //ctx.fillRect(panel.Margin,y,panel.Range,height);
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 1;
-        panel.vertFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 5);
-        ctx.lineWidth = 1;
-
-        ctx.fillRect(panel.Margin - units,y + units, panel.Range + (2 * units), height - (2 * units));
-
-
-        ctx.restore();*/
-
-
-        // FILL //
-        var spread = (panel.Range / (this.Max-this.Min)) * this.Spread;
-
-        /*ctx.save();
-
-        ctx.fillStyle = App.Palette[1];// WHITE
-        ctx.beginPath();
-        ctx.moveTo(x + panel.Margin - (spread*0.5), y);
-        ctx.lineTo(x + panel.Margin + (spread*0.5), y);
-        ctx.lineTo(x + panel.Margin + (spread*0.5), y + height);
-        ctx.lineTo(x + panel.Margin - (spread*0.5), y + height);
-        ctx.closePath();
-        ctx.clip();
-
-        ctx.beginPath();
-        ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
-        if (this._Waveform.length!==0) {
-            for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
-            }
-            ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
-            for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
-            }
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();*/
-
-        ctx.fillStyle = App.Palette[1];// WHITE
-        ctx.beginPath();
-        ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
-        if (this._Waveform.length!==0) {
-            for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
-            }
-            ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
-            for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
-            }
-        }
-        ctx.closePath();
-        ctx.fill();
 
 
         // LINES //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
+
+        var spread = (panel.Range / (this.Max-this.Min)) * this.Spread;
 
         var leftSpread = x + panel.Margin - (spread*0.5);
         if (leftSpread < panel.Margin) {
@@ -173,7 +82,6 @@ class WaveSlider extends Option{
 
 
         // GRAB TRIANGLES //
-        //var dragWidth = (height*0.666) * 0.2;
         var dragWidth = (height) * 0.2;
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
@@ -191,13 +99,6 @@ class WaveSlider extends Option{
         ctx.lineTo(x + panel.Margin - (dragWidth * 0.5), y + (height * 0.5) + (dragWidth * 0.5));
         ctx.closePath();
         ctx.fill();
-
-
-        // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.font = panel.Sketch.TxtMid;
-        ctx.textAlign = "right";
-        ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
 
         // VALUE TOOLTIP //
