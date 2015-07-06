@@ -117,12 +117,14 @@ class RecorderBlock extends Source {
 
             // TODO: add a 'merge new buffers with old buffers' option
 
+
+
             // Create a new buffer and set the buffers to the recorded data
             this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            // Update waveform
+// Update waveform
             this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
             var duration = this.GetDuration();
             this.Params.endPosition = duration;
@@ -137,6 +139,9 @@ class RecorderBlock extends Source {
             // Set the buffers for each source
             this.Sources.forEach((s: Tone.Sampler)=> {
                 s.player.buffer = this.BufferSource.buffer;
+                s.player.startPosition = this.Params.startPosition;
+                s.player.loopStart = this.Params.loopStart;
+                s.player.loopEnd = this.Params.loopEnd;
             });
 
             this._OnBuffersReady();
