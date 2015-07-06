@@ -140,6 +140,7 @@ class RecorderBlock extends Source {
             this.Sources.forEach((s: Tone.Sampler)=> {
                 s.player.buffer = this.BufferSource.buffer;
                 s.player.startPosition = this.Params.startPosition;
+                s.player.duration = this.Params.endPosition - this.Params.startPosition;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
             });
@@ -192,6 +193,7 @@ class RecorderBlock extends Source {
 
         this.Sources.forEach((s: Tone.Sampler, i: number)=> {
             s.player.startPosition = this.Params.startPosition;
+            s.player.duration = this.Params.endPosition - this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
@@ -354,6 +356,11 @@ class RecorderBlock extends Source {
             case "startPosition":
                 this.Sources.forEach((s: Tone.Sampler)=> {
                     s.player.startPosition = value;
+                });
+                break;
+            case "endPosition":
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.duration = value - this.Params.startPosition;
                 });
                 break;
             case "loop":
