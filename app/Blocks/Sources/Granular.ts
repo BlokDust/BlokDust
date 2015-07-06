@@ -68,6 +68,9 @@ class Granular extends Source {
     // INITIALISE PLAYERS & ENVELOPES //
     SetupGrains() {
         this._IsLoaded = false;
+        var duration = this.GetDuration();
+        this.Params.region = duration/2;
+
 
         // Loop through GrainsAmount
         for (var i=0; i<this.GrainsAmount; i++) {
@@ -75,9 +78,16 @@ class Granular extends Source {
             if (i==0) { // first buffer callback
                 this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
                     console.log(e);
-                    this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2);
+                    this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
                     this._IsLoaded = true;
-                    this.Params.region = this.GetDuration()/2;
+                    var duration = this.GetDuration();
+                    this.Params.region = duration/2;
+                    console.log(duration);
+
+                    if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                        this.UpdateOptionsForm();
+                        (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                    }
 
                     // start if powered //
                     this.GrainLoop();
@@ -107,12 +117,14 @@ class Granular extends Source {
     }
 
     GetDuration() {
+        var duration = 0;
         if (this.Grains.length){
-            console.log(this.Grains[0].buffer.duration);
-            return this.Grains[0].buffer.duration;
-
+            duration = this.Grains[0].buffer.duration;
         }
-        return 0;
+        if (duration==0) {
+            duration = 10;
+        }
+        return duration;
     }
 
     Draw() {
@@ -171,12 +183,9 @@ class Granular extends Source {
     }
 
     TriggerAttackRelease(){
-
     }
 
     GrainLoop() {
-
-        console.log("grainloop");
 
         // CYCLES THROUGH GRAINS AND PLAYS THEM //
         if (this._Envelopes[this._CurrentGrain] && (this.IsPowered() || this._NoteOn)) {
@@ -199,7 +208,6 @@ class Granular extends Source {
             if (this._CurrentGrain >= this.Params.density) {
                 this._CurrentGrain = 0;
             }
-
         }
     }
 

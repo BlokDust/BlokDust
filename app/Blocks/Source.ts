@@ -2,6 +2,7 @@ import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
 import Grid = require("../Grid");
+import BlocksSketch = require("../BlocksSketch");
 import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
@@ -424,7 +425,7 @@ class Source extends Block implements ISource {
         });
     }
 
-    GetWaveformFromBuffer(buffer,detail,precision) {
+    GetWaveformFromBuffer(buffer,detail,precision,normal) {
 
 
         var waveform = [];
@@ -433,10 +434,15 @@ class Source extends Block implements ISource {
 
         // MERGE LEFT & RIGHT CHANNELS //
         var left = buffer.getChannelData(0);
-        var right = buffer.getChannelData(1);
-        for (var i=0; i<left.length; i++) {
-            waveform[i] = (left[i] + right[i])*0.5;
+        if (buffer.numberOfChannels>1) {
+            var right = buffer.getChannelData(1);
+            for (var i=0; i<left.length; i++) {
+                waveform[i] = (left[i] + right[i])*0.5;
+            }
+        } else {
+            waveform = left;
         }
+
         var step = Math.ceil( waveform.length / detail );
 
 
@@ -455,7 +461,7 @@ class Source extends Block implements ISource {
         }
 
         // SOFT NORMALISE //
-        var percent = 0.75; // normalisation strength
+        var percent = normal/100; // normalisation strength
         var mult = (((1/peak) - 1)*percent) + 1;
         for (var i=0; i<newWaveform.length; i++) {
             newWaveform[i] = newWaveform[i] * mult;

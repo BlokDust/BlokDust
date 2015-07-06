@@ -39,6 +39,12 @@ interface IOption {
     Track: string;
     User: string;
 
+    SampleStart: Point;
+    SampleEnd: Point;
+    LoopStart: Point;
+    LoopEnd: Point;
+    Waveform: number[];
+
 
     Draw(ctx,units,i,panel): void;
 

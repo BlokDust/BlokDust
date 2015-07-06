@@ -8,11 +8,10 @@ import ParametersPanel = require("./../OptionsPanel");
 
 class WaveForm extends Option{
 
-    private _Waveform: number[];
 
     constructor (waveform) {
         super();
-        this._Waveform = waveform;
+        this.Waveform = waveform;
 
     }
 
@@ -24,9 +23,7 @@ class WaveForm extends Option{
         var x = this.Position.x;
         var y = this.Position.y;
         var height = this.Size.Height;
-        var origin = this.Origin;
         var dataType = Math.round(units*10);
-        var headerType = Math.round(units*33);
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
@@ -78,13 +75,13 @@ class WaveForm extends Option{
         ctx.fillStyle = App.Palette[1];// WHITE
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
-        if (this._Waveform.length!==0) {
-            for (var j=0; j<this._Waveform.length; j++) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this._Waveform[j] * (height * 0.45)));
+        if (this.Waveform.length!==0) {
+            for (var j=0; j<this.Waveform.length; j++) {
+                ctx.lineTo( ((panel.Range/this.Waveform.length)*j) + panel.Margin, y + (height * 0.5) - (this.Waveform[j] * (height * 0.45)));
             }
             ctx.lineTo(panel.Range + panel.Margin, y + (height * 0.5)); // right mid
-            for (var j=this._Waveform.length-1; j>-1; j--) {
-                ctx.lineTo( ((panel.Range/this._Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this._Waveform[j] * (height * 0.45)));
+            for (var j=this.Waveform.length-1; j>-1; j--) {
+                ctx.lineTo( ((panel.Range/this.Waveform.length)*j) + panel.Margin, y + (height * 0.5) + (this.Waveform[j] * (height * 0.45)));
             }
         }
         ctx.closePath();

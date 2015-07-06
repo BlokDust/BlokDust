@@ -28,7 +28,7 @@ interface ISource extends IBlock{
     SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time): void;
     GetPitch(sourceId?: number): number;
     OctaveShift(octavesAmount: number): void;
-    GetWaveformFromBuffer(buffer: any, detail: number, precision: number): number[];
+    GetWaveformFromBuffer(buffer: any, detail: number, precision: number,  normal: number): number[];
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string): void;
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void
