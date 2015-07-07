@@ -17,6 +17,7 @@ class Granular extends Source {
     public GrainsAmount: number = 16;
     private _NoteOn: boolean = false;
     public SC: SoundCloudAudio;
+    private _WaveForm: number[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {
@@ -27,12 +28,17 @@ class Granular extends Source {
                 spread: 1.5,
                 grainlength: 0.25,
                 track: '',
-                user: ''
+                trackName: 'Voices',
+                user: 'SparkleFinger'
             };
         }
+
+        this._WaveForm = [];
+
         super.Init(sketch);
 
-        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
+        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
+        //this.Params.track = SoundCloudAudio.PickTrack(SoundCloudAudioType.Granular,0);
 
         this.CreateSource();
         this.CreateEnvelope();
@@ -62,18 +68,36 @@ class Granular extends Source {
     // INITIALISE PLAYERS & ENVELOPES //
     SetupGrains() {
         this._IsLoaded = false;
+        var duration = this.GetDuration();
+        this.Params.region = duration/2;
+
 
         // Loop through GrainsAmount
         for (var i=0; i<this.GrainsAmount; i++) {
 
             if (i==0) { // first buffer callback
                 this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
+                    console.log(e);
+                    this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
                     this._IsLoaded = true;
-                    this.Params.region = this.GetDuration()/2;
+                    var duration = this.GetDuration();
+                    this.Params.region = duration/2;
+                    console.log(duration);
+
+                    if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                        this.UpdateOptionsForm();
+                        (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                    }
+
+                    // start if powered //
+                    this.GrainLoop();
                 });
 
             } else {  // remaining buffers
-                this.Grains[i] = new Tone.Player(this.Params.track);
+                this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
+                    console.log(e);
+                });
+
             }
 
             this._Envelopes[i] = new Tone.AmplitudeEnvelope(
@@ -93,15 +117,21 @@ class Granular extends Source {
     }
 
     GetDuration() {
+        var duration = 0;
         if (this.Grains.length){
-            return this.Grains[0].duration;
+            duration = this.Grains[0].buffer.duration;
         }
-        return 0;
+        if (duration==0) {
+            duration = 10;
+        }
+        return duration;
     }
 
     Draw() {
         super.Draw();
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
+        if (this._WaveForm.length>0) {
+        }
     }
 
     CreateSource(){
@@ -125,9 +155,9 @@ class Granular extends Source {
 
         if (this._IsLoaded) {
 
-            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+            /*this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
                 e.triggerAttack();
-            });
+            });*/
 
             clearTimeout(this.EndTimeout);
             if (!this._NoteOn) {
@@ -142,18 +172,17 @@ class Granular extends Source {
     TriggerRelease() {
         super.TriggerRelease();
 
-        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+        /*this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.triggerRelease();
-        });
+        });*/
 
         //clearTimeout(this.EndTimeout);
         this.EndTimeout = setTimeout(() => {
             this._NoteOn = false;
-        }, <number>this.Envelopes[0].release*1000);
+        }, <number>this._Envelopes[0].release*1000);
     }
 
     TriggerAttackRelease(){
-
     }
 
     GrainLoop() {
@@ -170,7 +199,6 @@ class Granular extends Source {
             this.Grains[this._CurrentGrain].stop();
             this.Grains[this._CurrentGrain].playbackRate = this.Params.playbackRate;
             this.Grains[this._CurrentGrain].start("+0", location, (this.Params.grainlength*this.Params.playbackRate)*1.9);
-
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
                 this.GrainLoop();
@@ -180,9 +208,9 @@ class Granular extends Source {
             if (this._CurrentGrain >= this.Params.density) {
                 this._CurrentGrain = 0;
             }
-
         }
     }
+
 
     // CAP POSITIONS OF GRAINS TO STAY WITHIN TRACK LENGTH //
     LocationRange(location: number) {
@@ -247,7 +275,7 @@ class Granular extends Source {
                         "max" : this.GetDuration(),
                         "quantised" : false,
                         "centered" : false,
-                        //"wavearray" : this.Waveform,
+                        "wavearray" : this._WaveForm,
                         "spread" : this.Params.spread
                     }
                 },
@@ -256,7 +284,7 @@ class Granular extends Source {
                     "name" : "Sample",
                     "setting" :"sample",
                     "props" : {
-                        "track" : this.Params.track,
+                        "track" : this.Params.trackName,
                         "user" : this.Params.user
                     }
                 },
@@ -304,6 +332,8 @@ class Granular extends Source {
         super.Dispose();
         clearTimeout(this.Timeout);
         this._NoteOn = false;
+
+
 
         this.Grains.forEach((g: Tone.Player)=> {
             g.dispose();

@@ -11,6 +11,7 @@ class RecorderBlock extends Source {
     private _isRecording: boolean = false;
     public RecordedBlob;
     public PlaybackRate: number;
+    private _WaveForm: number[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -21,6 +22,7 @@ class RecorderBlock extends Source {
                 playbackRate: 1,
                 reverse: 0, //TODO: Should be boolean,
                 startPosition: 0,
+                endPosition: 0,
                 loop: 1, //TODO: Should be boolean,
                 loopStart: 0,
                 loopEnd: 0,
@@ -28,6 +30,8 @@ class RecorderBlock extends Source {
                 volume: 11
             };
         }
+
+        this._WaveForm = [];
 
         super.Init(sketch);
 
@@ -113,14 +117,32 @@ class RecorderBlock extends Source {
 
             // TODO: add a 'merge new buffers with old buffers' option
 
+
+
             // Create a new buffer and set the buffers to the recorded data
             this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
+// Update waveform
+            this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+            var duration = this.GetDuration();
+            this.Params.endPosition = duration;
+            this.Params.loopStart = duration * 0.5;
+            this.Params.loopEnd = duration * 0.75;
+
+            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                this.UpdateOptionsForm();
+                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+            }
+
             // Set the buffers for each source
             this.Sources.forEach((s: Tone.Sampler)=> {
                 s.player.buffer = this.BufferSource.buffer;
+                s.player.startPosition = this.Params.startPosition;
+                s.player.duration = this.Params.endPosition - this.Params.startPosition;
+                s.player.loopStart = this.Params.loopStart;
+                s.player.loopEnd = this.Params.loopEnd;
             });
 
             this._OnBuffersReady();
@@ -129,6 +151,17 @@ class RecorderBlock extends Source {
 
     private _OnBuffersReady() {
         console.log("READY FOR PLAYBACK - CLICK, POWER OR CONNECT TO AN INTERACTION BLOCK")
+    }
+
+    GetDuration() {
+        var duration = 0;
+        if (this.BufferSource && this.BufferSource.buffer !== null){
+            duration = this.BufferSource.buffer.duration;
+        }
+        if (duration==0) {
+            duration = 10;
+        }
+        return duration;
     }
 
     GetRecordedBlob() {
@@ -160,6 +193,7 @@ class RecorderBlock extends Source {
 
         this.Sources.forEach((s: Tone.Sampler, i: number)=> {
             s.player.startPosition = this.Params.startPosition;
+            s.player.duration = this.Params.endPosition - this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
@@ -183,17 +217,37 @@ class RecorderBlock extends Source {
             "parameters" : [
 
                 {
-                    "type" : "slider",
-                    "name" : "Playback rate",
-                    "setting" :"playbackRate",
+                    "type" : "waveregion",
+                    "name" : "Recording",
+                    "setting" :"region",
                     "props" : {
-                        "value" : this.Params.playbackRate,
-                        "min" : 0.125,
-                        "max" : 8,
+                        "value" : 5,
+                        "min" : 0,
+                        "max" : this.GetDuration(),
                         "quantised" : false,
-                        "centered" : true,
-                        "logarithmic": true
+                        "centered" : false,
+                        "wavearray" : this._WaveForm
+                    },"nodes": [
+                    {
+                        "setting": "startPosition",
+                        "value": this.Params.startPosition
+                    },
+
+                    {
+                        "setting": "endPosition",
+                        "value": this.Params.endPosition
+                    },
+
+                    {
+                        "setting": "loopStart",
+                        "value": this.Params.loopStart
+                    },
+
+                    {
+                        "setting": "loopEnd",
+                        "value": this.Params.loopEnd
                     }
+                ]
                 },
                 {
                     "type" : "slider",
@@ -219,6 +273,19 @@ class RecorderBlock extends Source {
                 },
                 {
                     "type" : "slider",
+                    "name" : "playback",
+                    "setting" :"playbackRate",
+                    "props" : {
+                        "value" : this.Params.playbackRate,
+                        "min" : 0.125,
+                        "max" : 8,
+                        "quantised" : false,
+                        "centered" : true,
+                        "logarithmic": true
+                    }
+                }/*,
+                {
+                    "type" : "slider",
                     "name" : "Start Position",
                     "setting" :"startPosition",
                     "props" : {
@@ -235,7 +302,7 @@ class RecorderBlock extends Source {
                     "props" : {
                         "value" : this.Params.loopStart,
                         "min" : 0,
-                        "max" : 10,//this.GetDuration(),
+                        "max" : 20,//this.GetDuration(),
                         "quantised" : false,
                     }
                 },
@@ -246,7 +313,7 @@ class RecorderBlock extends Source {
                     "props" : {
                         "value" : this.Params.loopEnd,
                         "min" : 0.0001,
-                        "max" : 10,//this.GetDuration(),
+                        "max" : 20,//this.GetDuration(),
                         "quantised" : false,
                     }
                 },
@@ -260,7 +327,7 @@ class RecorderBlock extends Source {
                         "max" : 20,
                         "quantised" : false,
                     }
-                }
+                }*/
             ]
         };
     }
@@ -278,10 +345,22 @@ class RecorderBlock extends Source {
                 this.Sources.forEach((s: Tone.Sampler)=> {
                     s.player.reverse = value;
                 });
+                // Update waveform
+                this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                    this.Params[param] = val;
+                    this.UpdateOptionsForm();
+                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                }
                 break;
             case "startPosition":
                 this.Sources.forEach((s: Tone.Sampler)=> {
                     s.player.startPosition = value;
+                });
+                break;
+            case "endPosition":
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.duration = value - this.Params.startPosition;
                 });
                 break;
             case "loop":

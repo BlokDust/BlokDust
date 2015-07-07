@@ -105,6 +105,7 @@ class Block extends DisplayObject implements IBlock {
 
     Dispose() {
         super.Dispose();
+
     }
 
     // absolute point

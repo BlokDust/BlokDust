@@ -2,6 +2,7 @@ import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
 import Grid = require("../Grid");
+import BlocksSketch = require("../BlocksSketch");
 import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
@@ -422,6 +423,51 @@ class Source extends Block implements ISource {
                 this.SetPitch(oldPitch/multiplier, i);
             }
         });
+    }
+
+    GetWaveformFromBuffer(buffer,detail,precision,normal) {
+
+
+        var waveform = [];
+        var newWaveform = [];
+        var peak = 0.0;
+
+        // MERGE LEFT & RIGHT CHANNELS //
+        var left = buffer.getChannelData(0);
+        if (buffer.numberOfChannels>1) {
+            var right = buffer.getChannelData(1);
+            for (var i=0; i<left.length; i++) {
+                waveform[i] = (left[i] + right[i])*0.5;
+            }
+        } else {
+            waveform = left;
+        }
+
+        var step = Math.ceil( waveform.length / detail );
+
+
+        // FOR EACH DETAIL POINT //
+        for(var i=0; i<detail; i++) {
+
+            // AVERAGE PEAK BETWEEN POINTS //
+            var max = 0.0;
+            for (var j = 0; j < step; j += precision) {
+                var datum = waveform[(i * step) + j];
+                if (datum < 0) { datum = -datum;}
+                if (datum > max) {max = datum;}
+            }
+            if (max > peak) {peak = max;}
+            newWaveform.push(max);
+        }
+
+        // SOFT NORMALISE //
+        var percent = normal/100; // normalisation strength
+        var mult = (((1/peak) - 1)*percent) + 1;
+        for (var i=0; i<newWaveform.length; i++) {
+            newWaveform[i] = newWaveform[i] * mult;
+        }
+
+        return newWaveform;
     }
 
     MouseDown() {

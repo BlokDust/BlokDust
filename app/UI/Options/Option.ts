@@ -42,6 +42,12 @@ class Option implements IOption {
     public Track: string;
     public User: string;
 
+    public SampleStart: Point;
+    public SampleEnd: Point;
+    public LoopStart: Point;
+    public LoopEnd: Point;
+    public Waveform: number[];
+
 
     constructor() {
 
