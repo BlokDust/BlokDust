@@ -85,9 +85,9 @@ class Source extends Block implements ISource {
     /**
     * Validate that the block's effects still exist
     */
-    public ValidateEffects(){
-        for (var i = 0; i < this.Effects.Count; i++){
-            var effect:IEffect = this.Effects.GetValueAt(i);
+    public ValidateEffects() {
+        for (let i = 0; i < this.Effects.Count; i++){
+            let effect:IEffect = this.Effects.GetValueAt(i);
 
             if (!App.Effects.contains(effect)){
                 this.RemoveEffect(effect);
@@ -104,21 +104,21 @@ class Source extends Block implements ISource {
 
         // Detach effects in old collection.
         if (this.OldEffects && this.OldEffects.Count){
-            var oldEffects: IEffect[] = this.OldEffects.ToArray();
+            const oldEffects: IEffect[] = this.OldEffects.ToArray();
 
-            for (var k = 0; k < oldEffects.length; k++) {
+            for (let k = 0; k < oldEffects.length; k++) {
                 this._DetachEffect(oldEffects[k]);
             }
         }
 
         // List of connected effect blocks
-        var effects: IEffect[] = this.Effects.ToArray();
+        const effects: IEffect[] = this.Effects.ToArray();
 
         // List of PostEffect blocks
-        var postEffects: IEffect[] = [];
+        const postEffects: IEffect[] = [];
 
         // For each connected effect
-        for (var i = 0; i < effects.length; i++) {
+        for (let i = 0; i < effects.length; i++) {
 
             // Run Attach method for all effect blocks that need it
             this._AttachEffect(effects[i]);
@@ -162,18 +162,18 @@ class Source extends Block implements ISource {
      */
     public UpdateEffectsChain(effects) {
 
-        var start = this.EffectsChainInput;
-        var end = this.EffectsChainOutput;
+        const start = this.EffectsChainInput;
+        const end = this.EffectsChainOutput;
 
         if (effects.length) {
 
             start.disconnect();
 
             start.connect(effects[0].Effect);
-            var currentUnit = effects[0].Effect;
+            let currentUnit = effects[0].Effect;
 
-            for (var i = 1; i < effects.length; i++) {
-                var toUnit = effects[i].Effect;
+            for (let i = 1; i < effects.length; i++) {
+                const toUnit = effects[i].Effect;
                 currentUnit.disconnect();
                 currentUnit.connect(toUnit);
                 currentUnit = toUnit;
@@ -208,36 +208,35 @@ class Source extends Block implements ISource {
     /**
      * Trigger a sources attack
      * If no index is set trigger the first in the array
-     * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be triggered
+     * @param {number | string} index
+     * Index is the position of the Envelope in Envelopes[].
+     * If index is set to 'all', all envelopes will be triggered
      */
-    TriggerAttack(index?: number|string){
-
-        // is the index set?
-        var i: any = index? index: 0;
+    TriggerAttack(index: number|string = 0) {
 
         // Only if the source has envelopes
         if (this.Envelopes.length) {
 
-            if (i === 'all'){
+            if (index === 'all'){
                 // Trigger all the envelopes
                 this.Envelopes.forEach((e: any)=> {
                     e.triggerAttack();
                 });
             } else {
                 // Trigger the specific one
-                this.Envelopes[i].triggerAttack();
+                this.Envelopes[index].triggerAttack();
             }
 
         // Or Samplers have built in envelopes
         } else if (this.Sources[0] && this.Sources[0].envelope) {
-            if (i === 'all'){
+            if (index === 'all'){
                 // Trigger all the envelopes
                 this.Sources.forEach((s: any)=> {
                     s.triggerAttack();
                 });
             } else {
                 // Trigger the specific one
-                this.Sources[i].triggerAttack();
+                this.Sources[index].triggerAttack();
             }
         }
     }
@@ -245,48 +244,45 @@ class Source extends Block implements ISource {
     /**
      * Trigger a sources release
      * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[]. If index is set to 'all', all envelopes will be released
-     * @constructor
+     * @param index number|string position of the Envelope in Envelopes[].
+     * If index is set to 'all', all envelopes will be released
      */
-    TriggerRelease(index?: number|string){
+    TriggerRelease(index: number|string = 0) {
 
         // Only if it's not powered
         if (!this.IsPowered()) {
 
-            // is the index set?
-            var i: any = index? index: 0;
-
             // Only if the source has envelopes
             if (this.Envelopes.length) {
 
-                if (i === 'all'){
+                if (index === 'all'){
                     // Trigger all the envelopes
                     this.Envelopes.forEach((e: any)=> {
                         e.triggerRelease();
                     });
                 } else {
                     // Trigger the specific one
-                    this.Envelopes[i].triggerRelease();
+                    this.Envelopes[index].triggerRelease();
                 }
 
             // Or Samplers have built in envelopes
             } else if (this.Sources[0] && this.Sources[0].envelope) {
-                if (i === 'all'){
+                if (index === 'all'){
                     // Trigger all the envelopes
                     this.Sources.forEach((s: any)=> {
                         s.triggerRelease();
                     });
                 } else {
                     // Trigger the specific one
-                    this.Sources[i].triggerRelease();
+                    this.Sources[index].triggerRelease();
                 }
             }
         }
     }
 
-    TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number){
-        if (!duration) duration = App.Config.PulseLength;
-        if (!time) time = "+0";
+
+    TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0', velocity?: number) {
+
         if (this.Envelopes.length){
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
@@ -296,23 +292,24 @@ class Source extends Block implements ISource {
         } else if (this.Sources[0] && this.Sources[0].envelope) {
             // Trigger all the envelopes
             this.Sources.forEach((s: any)=> {
-                s.triggerAttackRelease(false, duration, time);
+                s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
             });
         }
     }
 
     /**
-     * Checks whether the block is connected to a Power Block
+     * Checks whether the block is connected to a Power
      * @returns {boolean}
-     * @constructor
      */
     IsPowered() {
         if (this.IsPressed) {
             return true;
-        }
-        else if (this.Effects.Count) {
-            for (var i = 0; i < this.Effects.Count; i++) {
-                var effect = this.Effects.GetValueAt(i);
+
+        } else if (this.Effects.Count) {
+            for (let i = 0; i < this.Effects.Count; i++) {
+                const effect: IEffect = this.Effects.GetValueAt(i);
+
+                //If connected to power block OR connected to a logic block that is 'on'
                 if (effect instanceof Power || effect instanceof Logic && effect.Params.logic){
                     return true;
                 }
@@ -324,7 +321,8 @@ class Source extends Block implements ISource {
     }
 
     /**
-     * When a particle hits a source it triggers the attack and then releases after a time
+     * When a particle hits a source it triggers the attack and release
+     * TODO: give this method a time parameter for duration of note
      * @param particle
      * @constructor
      */
@@ -369,12 +367,13 @@ class Source extends Block implements ISource {
      * @param pitch: number
      * @param sourceId: number - The index of the source in Sources[] (default: 0)
      * @param rampTime: Tone.Time (default: 0)
-     *  TODO: when playback rate becomes a signal, change to something like this: ...playbackRate.rampTo(playbackRate, time);
+     *  TODO: when playback rate becomes a signal, change to something like this:
+     *  this.Sources[id].player.playbackRate.rampTo(playbackRate, time);
      */
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         // If no sourceId or rampTime is given default to 0
-        var id: number = sourceId ? sourceId : 0;
-        var time: Tone.Time = rampTime ? rampTime : 0;
+        const id: number = sourceId ? sourceId : 0;
+        const time: Tone.Time = rampTime ? rampTime : 0;
 
         if (this.Sources[id].frequency) {
             // Oscillators
@@ -390,10 +389,12 @@ class Source extends Block implements ISource {
         }
     }
 
-    GetPitch(sourceId?: number) {
-        // If no sourceId is given default to 0
-        var id: number = sourceId ? sourceId : 0;
-
+    /**
+     * Get the current pitch from a specific source in Sources[]
+     * @param {number} id
+     * @returns {number} pitch
+     */
+    GetPitch(id: number = 0) {
         if (this.Sources[id].frequency) {
             // Oscillators
             return this.Sources[id].frequency.value;
@@ -411,18 +412,26 @@ class Source extends Block implements ISource {
         }
     }
 
+    /**
+     * Shifts a notes pitch up or down a number of octaves
+     * @example -2 would shift the note down by 2 octaves.
+     * @param {number} octaves
+     * @return this
+     */
     OctaveShift(octaves: number) {
-        if (octaves === 0 ) return;
-        this.Sources.forEach((s: any, i)=> {
-            var oldPitch = this.GetPitch(i);
-            var multiplier = Math.abs(octaves*2);
+        if (octaves) {
+            this.Sources.forEach((s: Tone.Source, i)=> {
+                const oldPitch = this.GetPitch(i);
+                const multiplier = Math.pow(2, Math.abs(octaves));
 
-            if (octaves > 0) {
-                this.SetPitch(oldPitch*multiplier, i);
-            } else {
-                this.SetPitch(oldPitch/multiplier, i);
-            }
-        });
+                if (octaves > 0) {
+                    this.SetPitch(oldPitch * multiplier, i);
+                } else {
+                    this.SetPitch(oldPitch / multiplier, i);
+                }
+            });
+        }
+        return this;
     }
 
     GetWaveformFromBuffer(buffer,detail,precision,normal) {
@@ -528,7 +537,6 @@ class Source extends Block implements ISource {
                 break;
             case "waveform":
                 this.Sources.forEach((s: any)=> {
-                    //s.type = value;
                     s.type = this.WaveIndex[value];
                 });
                 break;

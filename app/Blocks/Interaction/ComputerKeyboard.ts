@@ -94,11 +94,13 @@ class ComputerKeyboard extends Keyboard {
 
     private _ExecuteKeyboardCommand(key: string, source: ISource) {
         if (key == 'octave-up' && this.Params.octave < 9) {
-            this.SetParam("octave",this.Params.octave+1);
+            //this.SetParam("octave",this.Params.octave+1);
             source.OctaveShift(1);
+            this.Params.octave++;
         } else if (key === 'octave-down' && this.Params.octave != 0) {
-            this.SetParam("octave",this.Params.octave-1);
+            //this.SetParam("octave",this.Params.octave-1);
             source.OctaveShift(-1);
+            this.Params.octave--;
         }
     }
 
