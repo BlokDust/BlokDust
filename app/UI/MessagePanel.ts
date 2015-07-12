@@ -16,6 +16,7 @@ class MessagePanel extends DisplayObject {
     public Open: boolean;
     private _Timeout: any;
     private _CloseX: number;
+    private _ButtonWidth: number;
 
 
     Init(sketch?:Fayde.Drawing.SketchContext):void {
@@ -26,19 +27,21 @@ class MessagePanel extends DisplayObject {
         this.Open = false;
         this._CloseX = 0;
 
+        // DEFAULT MESSAGING ARGUMENTS //
         this._Defaults = {
             string: "Message Text Missing...",
             seconds: 3,
             confirmation: false,
-            buttonText: "Retry",
-            buttonEvent: ""
-        };
-        this._Value = {
-            string: "",
-            seconds: 3,
-            confirmation: false,
             buttonText: "",
-            buttonEvent: ""
+            buttonEvent: this.DefaultFunction
+        };
+
+        this._Value = {
+            string: this._Defaults.string,
+            seconds: this._Defaults.seconds,
+            confirmation: this._Defaults.confirmation,
+            buttonText: this._Defaults.buttonText,
+            buttonEvent: this._Defaults.buttonEvent
         };
 
 
@@ -103,6 +106,22 @@ class MessagePanel extends DisplayObject {
 
             }
 
+            // BUTTON //
+            if (this._Value.buttonText!=="") {
+                ctx.fillStyle = App.Palette[4]; // Colour
+                ctx.fillRect(clx,y - (15*units),this._ButtonWidth,30*units);
+                if (this._Roll[1]) {
+                    ctx.beginPath();
+                    ctx.moveTo(clx + (this._ButtonWidth*0.5) - (10 * units), y + (15 * units) - 1);
+                    ctx.lineTo(clx + (this._ButtonWidth*0.5) + (10 * units), y + (15 * units) - 1);
+                    ctx.lineTo(clx + (this._ButtonWidth*0.5), y + (25 * units) - 1);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.textAlign = "left";
+                ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+                ctx.fillText(this._Value.buttonText.toUpperCase(), clx + (10*units), y + (5 * units));
+            }
         }
     }
 
@@ -119,6 +138,11 @@ class MessagePanel extends DisplayObject {
         this._Value.buttonText = buttonText || this._Defaults.buttonText;
         this._Value.buttonEvent = buttonEvent || this._Defaults.buttonEvent;
 
+        // IF BUTTON, FORCE CONFIRMATION //
+        if (this._Value.buttonText!=="") {
+            this._Value.confirmation = true;
+        }
+
         // CLOSE POSITION //
         if (this._Value.confirmation) {
             var units = (<BlocksSketch>this.Sketch).Unit.width;
@@ -127,6 +151,7 @@ class MessagePanel extends DisplayObject {
             var cx = (<BlocksSketch>this.Sketch).Width*0.5;
             ctx.font = midType;
             this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
+            this._ButtonWidth = (20*units) + ctx.measureText(this._Value.buttonText.toUpperCase()).width;
         }
 
         // START OPEN TWEEN //
@@ -153,6 +178,9 @@ class MessagePanel extends DisplayObject {
         this.Open = false;
     }
 
+    DefaultFunction() {
+        console.log("default function");
+    }
 
 
     //-------------------------------------------------------------------------------------------
@@ -182,6 +210,10 @@ class MessagePanel extends DisplayObject {
         if (this.Open && this._Roll[0]) {
             this.Close();
         }
+        if (this.Open && this._Roll[1]) {
+            this._Value.buttonEvent();
+            this.Close();
+        }
     }
 
     MouseMove(point) {
@@ -193,9 +225,18 @@ class MessagePanel extends DisplayObject {
         this.Hover = false;
         var units = (<BlocksSketch>this.Sketch).Unit.width;
 
-        this._Roll[0] = this.HudCheck(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+        if (this._Value.confirmation) {
+            this._Roll[0] = this.HudCheck(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+        } else {
+            this._Roll[0] = false;
+        }
+        if (this._Value.buttonText!=="") {
+            this._Roll[1] = this.HudCheck(this._CloseX, ((<BlocksSketch>this.Sketch).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
+        } else {
+            this._Roll[1] = false;
+        }
 
-        if (this._Roll[0]) {
+        if (this._Roll[0] || this._Roll[1]) {
             this.Hover = true;
         }
     }

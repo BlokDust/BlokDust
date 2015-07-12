@@ -33,13 +33,16 @@ class MIDIController extends Keyboard {
             navigator.requestMIDIAccess({sysex: false}).then(this.OnMIDISuccess.bind(this), this.OnMIDIFailure.bind(this));
         } else {
             console.log('No MIDI support in your browser. Check here: http://caniuse.com/midi'); //Todo: display this in a modal box
+            App.Message("No MIDI support in your browser",2,true,"http://caniuse.com/midi",this.CanIUse);
         }
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
-
+    CanIUse() {
+        window.open("http://caniuse.com/midi","_blank");
+    }
 
     /**
      * MIDI Success event
@@ -173,9 +176,11 @@ class MIDIController extends Keyboard {
         if (event.port.type == "input"){
             console.log("MIDI Controller", event.port.name, "port", event.port, "state", event.port.state);
             App.Message("MIDI Controller " + event.port.name + " " + event.port.state);
+            console.log(this);
         }
         return event;
     }
+
 
     Draw() {
         super.Draw();
