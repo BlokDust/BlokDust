@@ -676,7 +676,7 @@ class OptionsPanel extends DisplayObject {
     RolloverCheck(mx,my) {
         var units = this.Sketch.Unit.width;
 
-        this.Hover = this.HudCheck(this.Position.x,this.Position.y - (this.Size.Height*0.5), this.Size.Width, this.Size.Height,mx,my);
+        this.Hover = this.HudCheck(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
 
 
         for (var i=0;i<this.Options.length;i++) {
