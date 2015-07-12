@@ -1,0 +1,215 @@
+/**
+ * Created by luketwyman on 12/07/2015.
+ */
+
+import BlocksSketch = require("./../BlocksSketch");
+import DisplayObject = require("../DisplayObject");
+import Size = minerva.Size;
+
+class MessagePanel extends DisplayObject {
+
+    private _Roll:boolean[];
+    public Hover:boolean;
+    private _Defaults:any;
+    private _Value: any;
+    private _Alpha: number;
+    public Open: boolean;
+    private _Timeout: any;
+    private _CloseX: number;
+
+
+    Init(sketch?:Fayde.Drawing.SketchContext):void {
+        super.Init(sketch);
+
+        this._Roll = [];
+        this.Hover = false;
+        this.Open = false;
+        this._CloseX = 0;
+
+        this._Defaults = {
+            string: "Message Text Missing...",
+            seconds: 3,
+            confirmation: false,
+            buttonText: "Retry",
+            buttonEvent: ""
+        };
+        this._Value = {
+            string: "",
+            seconds: 3,
+            confirmation: false,
+            buttonText: "",
+            buttonEvent: ""
+        };
+
+
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  DRAWING
+    //-------------------------------------------------------------------------------------------
+
+
+    Draw() {
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var ctx = this.Ctx;
+        var midType = (<BlocksSketch>this.Sketch).TxtMid;
+        var y = (<BlocksSketch>this.Sketch).Height*0.75;
+        var cx = (<BlocksSketch>this.Sketch).Width*0.5;
+        var w = (<BlocksSketch>this.Sketch).Width;
+
+        if (this._Alpha>0) {
+            ctx.textAlign = "center";
+            ctx.font = midType;
+            var clx = this._CloseX;
+
+            // DRAW PANEL //
+            ctx.fillStyle = App.Palette[14];// Shadow
+            ctx.globalAlpha = this._Alpha * 0.16;
+            ctx.fillRect(0,y - (25*units),w,60*units);
+
+            ctx.fillStyle = App.Palette[2]; // Black
+            ctx.globalAlpha = this._Alpha * 0.9;
+            ctx.fillRect(0,y - (30*units),w,60*units);
+
+            // MESSAGE TEXT //
+            ctx.globalAlpha = this._Alpha;
+
+            ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+            ctx.fillText(this._Value.string.toUpperCase(), cx, y + (5 * units));
+
+            // CLOSE //
+            if (this._Value.confirmation) {
+
+                ctx.fillStyle = App.Palette[2]; // Black
+                ctx.globalAlpha = this._Alpha * 0.9;
+                ctx.beginPath();
+                ctx.moveTo(clx - (20 * units), y - (30 * units));
+                ctx.lineTo(clx + (20 * units), y - (30 * units));
+                ctx.lineTo(clx, y - (50 * units));
+                ctx.closePath();
+                ctx.fill();
+
+                // CLOSE X //
+                ctx.globalAlpha = this._Alpha;
+                ctx.strokeStyle = App.Palette[8];// WHITE
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(clx - (4 * units), y - (34 * units));
+                ctx.lineTo(clx + (4 * units), y - (26 * units));
+                ctx.moveTo(clx - (4 * units), y - (26 * units));
+                ctx.lineTo(clx + (4 * units), y - (34 * units));
+                ctx.stroke();
+                ctx.lineWidth = 1;
+
+            }
+
+        }
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  MESSAGING
+    //-------------------------------------------------------------------------------------------
+
+
+    NewMessage(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+        this._Value.string = string || this._Defaults.string;
+        this._Value.seconds = seconds || this._Defaults.seconds;
+        this._Value.confirmation = confirmation || this._Defaults.confirmation;
+        this._Value.buttonText = buttonText || this._Defaults.buttonText;
+        this._Value.buttonEvent = buttonEvent || this._Defaults.buttonEvent;
+
+        // CLOSE POSITION //
+        if (this._Value.confirmation) {
+            var units = (<BlocksSketch>this.Sketch).Unit.width;
+            var ctx = this.Ctx;
+            var midType = (<BlocksSketch>this.Sketch).TxtMid;
+            var cx = (<BlocksSketch>this.Sketch).Width*0.5;
+            ctx.font = midType;
+            this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
+        }
+
+        // START OPEN TWEEN //
+        if (!this.Open) {
+            this.Tween(this,"_Alpha",1,0,400);
+            this.Open = true;
+        }
+
+        // CLOSE TIMER//
+        clearTimeout(this._Timeout);
+        var message = this;
+        this._Timeout = setTimeout(function(){
+            if (!message._Value.confirmation) {
+                message.Close();
+            }
+        },this._Value.seconds*1000);
+
+
+    }
+
+    Close() {
+        this.Tween(this,"_Alpha",0,0,1000);
+        this.Hover = false;
+        this.Open = false;
+    }
+
+
+
+    //-------------------------------------------------------------------------------------------
+    //  TWEEN
+    //-------------------------------------------------------------------------------------------
+
+
+    Tween(panel,value,destination,delay,time) {
+
+        var pTween = new TWEEN.Tween({x:panel[""+value]});
+        pTween.to({ x: destination }, time);
+        pTween.onUpdate(function() {
+            panel[""+value] = this.x;
+        });
+        pTween.delay(delay);
+        pTween.start(this.LastVisualTick);
+        pTween.easing( TWEEN.Easing.Quintic.InOut );
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
+
+    MouseDown(point) {
+        this.RolloverCheck(point);
+
+        if (this.Open && this._Roll[0]) {
+            this.Close();
+        }
+    }
+
+    MouseMove(point) {
+        this.RolloverCheck(point);
+    }
+
+
+    RolloverCheck(point) {
+        this.Hover = false;
+        var units = (<BlocksSketch>this.Sketch).Unit.width;
+
+        this._Roll[0] = this.HudCheck(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+
+        if (this._Roll[0]) {
+            this.Hover = true;
+        }
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  MATHS
+    //-------------------------------------------------------------------------------------------
+
+
+    // IS CLICK WITHIN THIS BOX //
+    HudCheck(x,y,w,h,mx,my) {
+        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    }
+
+}
+
+export = MessagePanel;

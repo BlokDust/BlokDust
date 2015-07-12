@@ -16,6 +16,7 @@ import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource")
 import OptionsPanel = require("./UI/OptionsPanel");
 import SharePanel = require("./UI/SharePanel");
 import SettingsPanel = require("./UI/SettingsPanel");
+import MessagePanel = require("./UI/MessagePanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
@@ -39,6 +40,7 @@ class BlocksSketch extends Grid {
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
     public SettingsPanel: SettingsPanel;
+    public MessagePanel: MessagePanel;
     private _Header: Header;
     private _ToolTip: ToolTip;
     private _ZoomButtons: ZoomButtons;
@@ -162,6 +164,9 @@ class BlocksSketch extends Grid {
 
         this.SettingsPanel = new SettingsPanel();
         this.SettingsPanel.Init(this);
+
+        this.MessagePanel = new MessagePanel();
+        this.MessagePanel.Init(this);
 
         this._Header = new Header();
         this._Header.Init(this);
@@ -346,6 +351,7 @@ class BlocksSketch extends Grid {
         this._Header.Draw();
         this.SharePanel.Draw();
         this.SettingsPanel.Draw();
+        this.MessagePanel.Draw();
     }
 
 
@@ -447,12 +453,18 @@ class BlocksSketch extends Grid {
         var settings = this.SettingsPanel;
         var recorder = this._RecorderPanel;
         var options = this.OptionsPanel;
+        var message = this.MessagePanel;
 
         // UI //
         UI = this._UIInteraction(point);
 
         if (tooltip.Open) {
             this._ToolTipClose(tooltip);
+        }
+
+        if (message.Hover) {
+            message.MouseDown(point);
+            return;
         }
         if (share.Open) {
             share.MouseDown(point);
@@ -576,6 +588,9 @@ class BlocksSketch extends Grid {
         }
         if (this.SettingsPanel.Open) {
             this.SettingsPanel.MouseMove(point);
+        }
+        if (this.MessagePanel.Open) {
+            this.MessagePanel.MouseMove(point);
         }
         this._Header.MouseMove(point);
         this._RecorderPanel.MouseMove(point);
@@ -714,8 +729,9 @@ class BlocksSketch extends Grid {
         var settings = this.SettingsPanel;
         var recorder = this._RecorderPanel;
         var options = this.OptionsPanel;
+        var message = this.MessagePanel;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || recorder.Hover || (options.Scale==1 && options.Hover)) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || recorder.Hover || message.Hover || (options.Scale==1 && options.Hover)) {
             console.log("UI INTERACTION");
             return true;
         }

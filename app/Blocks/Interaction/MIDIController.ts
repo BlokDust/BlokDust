@@ -50,6 +50,7 @@ class MIDIController extends Keyboard {
         // when we get a successful response, run this code
         console.log('MIDI success', midiAccess);
         console.log(this);
+        App.Message("MIDI ready");
 
         this.Midi = midiAccess; // this is our raw MIDI data, inputs, outputs, and sysex status
 
@@ -76,6 +77,7 @@ class MIDIController extends Keyboard {
     private OnMIDIFailure(error) {
         // when we get a failed response, run this code
         console.log("No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim " + error);
+        App.Message("No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim " + error);
     }
 
     /**
@@ -158,6 +160,7 @@ class MIDIController extends Keyboard {
         console.log("Input port : [ type:'" + i.type + "' id: '" + i.id +
             "' manufacturer: '" + i.manufacturer + "' name: '" + i.name +
             "' version: '" + i.version + "']");
+        App.Message("MIDI Controller: " + i.name + " manufacturer: " + i.manufacturer);
         return i;
     }
 
@@ -169,7 +172,7 @@ class MIDIController extends Keyboard {
     private OnStateChange(event) {
         if (event.port.type == "input"){
             console.log("MIDI Controller", event.port.name, "port", event.port, "state", event.port.state);
-            //TODO: Change this to blokdust tooltip message
+            App.Message("MIDI Controller " + event.port.name + " " + event.port.state);
         }
         return event;
     }

@@ -212,6 +212,10 @@ class App implements IApp{
         this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
     }
 
+    Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+         this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    }
+
     Resize(): void {
         var $win = $(window);
         $(this._Canvas).prop("width", $win.width());
