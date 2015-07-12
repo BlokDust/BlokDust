@@ -9,15 +9,11 @@ class SaveCommandHandler implements ICommandHandler {
     }
 
     Execute(): Promise<any>{
-        var compositionId = App.CompositionId;
-        var sessionId = App.SessionId || localStorage.getItem(compositionId);
-
-        var op:IOperation = new SaveOperation(App.Serialize(), compositionId, sessionId);
+        var op:IOperation = new SaveOperation(App.Serialize(), App.CompositionId, App.SessionId);
         return App.OperationManager.Do(op).then((result) => {
             App.CompositionId = result.Id;
             App.BlocksSketch.SharePanel.ReturnLink(result.Id);
             App.SessionId = result.SessionId;
-            localStorage.setItem(App.CompositionId, App.SessionId);
             //console.log(result.Id, result.Message);
         });
     }

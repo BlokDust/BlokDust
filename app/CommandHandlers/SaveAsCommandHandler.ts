@@ -14,7 +14,6 @@ class SaveAsCommandHandler implements ICommandHandler {
             App.CompositionId = result.Id;
             App.BlocksSketch.SharePanel.ReturnLink(result.Id);
             App.SessionId = result.SessionId;
-            localStorage.setItem(App.CompositionId, App.SessionId);
             //console.log(result.Id, result.Message);
         });
     }

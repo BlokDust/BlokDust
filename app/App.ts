@@ -62,7 +62,7 @@ class App implements IApp{
     public ParticlesPool: PooledFactoryResource<Particle>;
     public PointerInputManager: PointerInputManager;
     public ResourceManager: ResourceManager;
-    public SessionId: string;
+    private _SessionId: string;
 
     public BASE_NOTE: number = 440; //TODO: should be const
 
@@ -72,6 +72,15 @@ class App implements IApp{
 
     get Effects(): IBlock[] {
         return this.Blocks.en().where(b => b instanceof Effect).toArray();
+    }
+
+    get SessionId(): string {
+        return this._SessionId || localStorage.getItem(this.CompositionId);
+    }
+
+    set SessionId(value: string) {
+        this._SessionId = value;
+        localStorage.setItem(this.CompositionId, this._SessionId);
     }
 
     constructor(config: string) {
@@ -120,7 +129,6 @@ class App implements IApp{
 
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
-
             this.LoadComposition();
         });
 

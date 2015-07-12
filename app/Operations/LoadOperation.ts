@@ -13,7 +13,7 @@ class LoadOperation<String> implements IOperation
 
     Decompress(data: string): Promise<string>{
 
-        return new Promise((resolve) => {
+        return new Promise<string>((resolve) => {
 
             data = JSON.parse("[" + data + "]");
 
@@ -28,10 +28,10 @@ class LoadOperation<String> implements IOperation
         });
     }
 
-    Do(): Promise<String> {
+    Do(): Promise<string> {
         var that = this;
 
-        return new Promise((resolve) => {
+        return new Promise<string>((resolve) => {
 
             $.ajax(<JQueryAjaxSettings>{
                 url: "http://blokdust.azurewebsites.net/api/anonymousblobs/" + this._Id,
