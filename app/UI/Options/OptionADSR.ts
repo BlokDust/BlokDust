@@ -3,9 +3,9 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
-import ParametersPanel = require("./../OptionsPanel");
 import OptionHandle = require("./OptionHandle");
+import ParametersPanel = require("./../OptionsPanel");
+import Size = minerva.Size;
 
 class ADSR extends Option{
 
@@ -46,7 +46,7 @@ class ADSR extends Option{
         var s = this.Handles[1].Position.y;
         var r = this.Handles[2].Position.x;
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
 
         ctx.globalAlpha = 1;
         var vert = 0.6;

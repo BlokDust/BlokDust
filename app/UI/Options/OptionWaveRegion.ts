@@ -4,7 +4,7 @@
 
 import Option = require("./Option");
 import WaveForm = require("./OptionWave");
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import ParametersPanel = require("./../OptionsPanel");
 import OptionHandle = require("./OptionHandle");
 
@@ -37,7 +37,7 @@ class WaveRegion extends WaveForm{
 
 
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
         var origin = this.Origin;
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);

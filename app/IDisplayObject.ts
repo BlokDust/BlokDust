@@ -1,4 +1,3 @@
-import Size = Fayde.Utils.Size;
 
 interface IDisplayObject {
     ZIndex: number;

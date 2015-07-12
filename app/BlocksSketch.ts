@@ -24,9 +24,7 @@ import ConnectionLines = require("./UI/ConnectionLines");
 import LaserBeams = require("./LaserBeams");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
-import Utils = Fayde.Utils;
 import Transformer = Fayde.Transformer.Transformer;
-import Size = Fayde.Utils.Size;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
@@ -47,7 +45,7 @@ class BlocksSketch extends Grid {
     private _ConnectionLines: ConnectionLines;
     private _LaserBeams: LaserBeams;
     private _ToolTipTimeout;
-    private _LastSize: Size;
+    private _LastSize: minerva.Size;
     private _PointerPoint: Point;
     private _ZoomLevel: number;
     private _ZoomPosition: Point;
@@ -229,7 +227,7 @@ class BlocksSketch extends Grid {
     // todo: use global resize event
     // DIY RESIZE LISTENER //
     private _CheckResize() {
-        if (this.Width!==this._LastSize.Width||this.Height!==this._LastSize.Height) {
+        if (this.Width!==this._LastSize.width||this.Height!==this._LastSize.height) {
             // Has resized, call the resize function //
             this.SketchResize();
 
@@ -629,7 +627,7 @@ class BlocksSketch extends Grid {
 
         // CHECK BLOCKS FOR HOVER //
         if (this.OptionsPanel.Scale==1) {
-            panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.Height*0.5), this.OptionsPanel.Size.Width,this.OptionsPanel.Size.Height,point.x,point.y);
+            panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
             for (var i = App.Blocks.length - 1; i >= 0; i--) {
@@ -688,7 +686,7 @@ class BlocksSketch extends Grid {
         }
 
         if (this.OptionsPanel.Scale==1) {
-            var panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.Height*0.5), this.OptionsPanel.Size.Width,this.OptionsPanel.Size.Height,point.x,point.y);
+            var panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
             if (panelCheck) {
                 console.log("UI INTERACTION");
                 return true;

@@ -3,7 +3,7 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import ParametersPanel = require("./../OptionsPanel");
 
 class WaveForm extends Option{
@@ -22,7 +22,7 @@ class WaveForm extends Option{
 
         var x = this.Position.x;
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
         var dataType = Math.round(units*10);
 
         // DIVIDERS //

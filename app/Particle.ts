@@ -3,7 +3,7 @@ import IBlock = require("./Blocks/IBlock");
 import Source = require("./Blocks/Source");
 import Logic = require("./Blocks/Power/Logic/Logic");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
-import Vector = Fayde.Utils.Vector;
+import Vector = Utils.Maths.Vector;
 
 class Particle implements IPooledObject {
 

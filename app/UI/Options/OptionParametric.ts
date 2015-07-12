@@ -3,10 +3,10 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
-import OptionsPanel = require("./../OptionsPanel");
 import OptionHandle = require("./OptionHandle");
+import OptionsPanel = require("./../OptionsPanel");
 import OptionSubHandle = require("./OptionSubHandle");
+import Size = minerva.Size;
 
 class Parametric extends Option{
 
@@ -57,7 +57,7 @@ class Parametric extends Option{
         var p = [this.Handles[0].Position,this.Handles[1].Position,this.Handles[2].Position,this.Handles[3].Position];
 
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
         ctx.globalAlpha = 1;
         var ly = Math.round(y + (height*0.45));
 
@@ -203,8 +203,8 @@ class Parametric extends Option{
 
         var p = [];
         for (var j=0; j<4; j++) {
-            var x = Math.round((this.Smoothness/this.Size.Width) * this.Handles[j].Position.x)-1;
-            var y = this.Handles[j].Position.y - (this.Size.Height*0.35);
+            var x = Math.round((this.Smoothness/this.Size.width) * this.Handles[j].Position.x)-1;
+            var y = this.Handles[j].Position.y - (this.Size.height*0.35);
             p[j] = new Point(x,y);
         }
 
@@ -224,11 +224,11 @@ class Parametric extends Option{
             this.LineGain[j] = this._Gain1[j] + this._Gain2[j] + this._Gain3[j] + this._Gain4[j];
 
             // CAP RANGE //
-            if (this.LineGain[j]>(this.Size.Height*0.35)) {
-                this.LineGain[j] = (this.Size.Height*0.35);
+            if (this.LineGain[j]>(this.Size.height*0.35)) {
+                this.LineGain[j] = (this.Size.height*0.35);
             }
-            if (this.LineGain[j]< -(this.Size.Height*0.35)) {
-                this.LineGain[j] = -(this.Size.Height*0.35);
+            if (this.LineGain[j]< -(this.Size.height*0.35)) {
+                this.LineGain[j] = -(this.Size.height*0.35);
             }
 
         }

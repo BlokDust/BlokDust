@@ -4,7 +4,7 @@ import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
 import ParametersPanel = require("../UI/OptionsPanel");
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 
 class Block extends DisplayObject implements IBlock {
 

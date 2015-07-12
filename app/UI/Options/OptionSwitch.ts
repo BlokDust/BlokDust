@@ -3,7 +3,7 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import ParametersPanel = require("./../OptionsPanel");
 
 class OptionSwitch {
@@ -31,7 +31,7 @@ class OptionSwitch {
         var size = 0;
         x += this.Position.x;
         var y = this.Position.y;
-        var w = this.Size.Width;
+        var w = this.Size.width;
         //h = this.Size.Height;
 
         ctx.fillStyle = App.Palette[1];// WHITE

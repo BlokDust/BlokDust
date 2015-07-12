@@ -3,8 +3,8 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../OptionsPanel");
+import Size = minerva.Size;
 
 class ButtonSelect extends Option{
 
@@ -27,7 +27,7 @@ class ButtonSelect extends Option{
 
         var x = this.Position.x;
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
 
         var midType = Math.round(units*10);
 

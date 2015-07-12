@@ -2,7 +2,7 @@ import Source = require("../Source");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import BlocksSketch = require("../../BlocksSketch");
-import Vector = Fayde.Utils.Vector;
+import Vector = Utils.Maths.Vector;
 
 class ParticleEmitter extends Source {
 

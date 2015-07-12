@@ -1,5 +1,4 @@
 import IDisplayObject = require("./IDisplayObject");
-import Size = Fayde.Utils.Size;
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;

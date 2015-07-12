@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 16/01/2015.
  */
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import OptionHandle = require("./OptionHandle");
 import OptionSwitch = require("./OptionSwitch");
 import OptionSubHandle = require("./OptionSubHandle");
