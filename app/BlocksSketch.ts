@@ -37,7 +37,7 @@ class BlocksSketch extends Grid {
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
     public BlockSprites: BlockSprites;
-    private _OptionsPanel: OptionsPanel;
+    public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
     public SettingsPanel: SettingsPanel;
     private _Header: Header;
@@ -154,8 +154,8 @@ class BlocksSketch extends Grid {
 
         this.BlockCreator = new BlockCreator();
 
-        this._OptionsPanel = new OptionsPanel();
-        this._OptionsPanel.Init(this);
+        this.OptionsPanel = new OptionsPanel();
+        this.OptionsPanel.Init(this);
 
         this.SharePanel = new SharePanel();
         this.SharePanel.Init(this);
@@ -217,8 +217,8 @@ class BlocksSketch extends Grid {
             this.UpdateParticles();
         }
 
-        if (this._OptionsPanel.Scale==1) {
-            this._OptionsPanel.Update();
+        if (this.OptionsPanel.Scale==1) {
+            this.OptionsPanel.Update();
         }
 
         this._LaserBeams.Update();
@@ -262,9 +262,9 @@ class BlocksSketch extends Grid {
         // Update size record //
         this.Metrics();
 
-        if (this._OptionsPanel.Scale==1) {
-            this._OptionsPanel.SelectedBlock.UpdateOptionsForm();
-            this._OptionsPanel.Populate(this._OptionsPanel.SelectedBlock.OptionsForm,false);
+        if (this.OptionsPanel.Scale==1) {
+            this.OptionsPanel.SelectedBlock.UpdateOptionsForm();
+            this.OptionsPanel.Populate(this.OptionsPanel.SelectedBlock.OptionsForm,false);
         }
         this._Header.Populate(this._Header.MenuJson);
         this._ZoomButtons.UpdatePositions();
@@ -335,7 +335,7 @@ class BlocksSketch extends Grid {
 
         // UI //
         this._ToolTip.Draw();
-        this._OptionsPanel.Draw();
+        this.OptionsPanel.Draw();
         this._ZoomButtons.Draw();
         this._TrashCan.Draw();
         this._Header.Draw();
@@ -450,8 +450,8 @@ class BlocksSketch extends Grid {
         else if (!this.SharePanel.Open && !this.SettingsPanel.Open) {
             this._Header.MouseDown(point);
             this._ZoomButtons.MouseDown(point);
-            if (this._OptionsPanel.Scale==1) {
-                this._OptionsPanel.MouseDown(point.x,point.y); // to do : unsplit point
+            if (this.OptionsPanel.Scale==1) {
+                this.OptionsPanel.MouseDown(point.x,point.y); // to do : unsplit point
             }
         }
 
@@ -502,8 +502,8 @@ class BlocksSketch extends Grid {
             if (OptionTimeout) {
                 this.SelectedBlock.UpdateOptionsForm();
                 if (this.SelectedBlock.OptionsForm) {
-                    this._OptionsPanel.SelectedBlock = this.SelectedBlock;
-                    this._OptionsPanel.Populate(this.SelectedBlock.OptionsForm,true);
+                    this.OptionsPanel.SelectedBlock = this.SelectedBlock;
+                    this.OptionsPanel.Populate(this.SelectedBlock.OptionsForm,true);
                 }
             }
         }
@@ -518,8 +518,8 @@ class BlocksSketch extends Grid {
         } else {
             this._Header.MouseUp();
 
-            if (this._OptionsPanel.Scale==1) {
-                this._OptionsPanel.MouseUp();
+            if (this.OptionsPanel.Scale==1) {
+                this.OptionsPanel.MouseUp();
             }
 
             this._Transformer.PointerUp();
@@ -538,8 +538,8 @@ class BlocksSketch extends Grid {
         }
 
         // UI //
-        if (this._OptionsPanel.Scale==1) {
-            this._OptionsPanel.MouseMove(point.x,point.y);
+        if (this.OptionsPanel.Scale==1) {
+            this.OptionsPanel.MouseMove(point.x,point.y);
         }
         if (this.SharePanel.Open) {
             this.SharePanel.MouseMove(point);
@@ -616,7 +616,7 @@ class BlocksSketch extends Grid {
             }
         }
         // CLOSE PARAMS IF NO BLOCK CLICKED //
-        this._OptionsPanel.PanelScale(this._OptionsPanel,0,200);
+        this.OptionsPanel.PanelScale(this.OptionsPanel,0,200);
 
         return false;
     }
@@ -628,8 +628,8 @@ class BlocksSketch extends Grid {
         var panel = this._ToolTip;
 
         // CHECK BLOCKS FOR HOVER //
-        if (this._OptionsPanel.Scale==1) {
-            panelCheck = this._BoxCheck(this._OptionsPanel.Position.x,this._OptionsPanel.Position.y - (this._OptionsPanel.Size.Height*0.5), this._OptionsPanel.Size.Width,this._OptionsPanel.Size.Height,point.x,point.y);
+        if (this.OptionsPanel.Scale==1) {
+            panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.Height*0.5), this.OptionsPanel.Size.Width,this.OptionsPanel.Size.Height,point.x,point.y);
         }
         if (!panelCheck && !this._IsPointerDown) {
             for (var i = App.Blocks.length - 1; i >= 0; i--) {
@@ -687,8 +687,8 @@ class BlocksSketch extends Grid {
             return true;
         }
 
-        if (this._OptionsPanel.Scale==1) {
-            var panelCheck = this._BoxCheck(this._OptionsPanel.Position.x,this._OptionsPanel.Position.y - (this._OptionsPanel.Size.Height*0.5), this._OptionsPanel.Size.Width,this._OptionsPanel.Size.Height,point.x,point.y);
+        if (this.OptionsPanel.Scale==1) {
+            var panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.Height*0.5), this.OptionsPanel.Size.Width,this.OptionsPanel.Size.Height,point.x,point.y);
             if (panelCheck) {
                 console.log("UI INTERACTION");
                 return true;
@@ -789,7 +789,8 @@ class BlocksSketch extends Grid {
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this._OptionsPanel.PanelScale(this._OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
+        this.SelectedBlock.MouseUp();
+        this.OptionsPanel.PanelScale(this.OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
 

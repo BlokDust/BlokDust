@@ -94,11 +94,13 @@ class ComputerKeyboard extends Keyboard {
 
     private _ExecuteKeyboardCommand(key: string, source: ISource) {
         if (key == 'octave-up' && this.Params.octave < 9) {
-            this.SetParam("octave",this.Params.octave+1);
+            //this.SetParam("octave",this.Params.octave+1);
             source.OctaveShift(1);
+            this.Params.octave++;
         } else if (key === 'octave-down' && this.Params.octave != 0) {
-            this.SetParam("octave",this.Params.octave-1);
+            //this.SetParam("octave",this.Params.octave-1);
             source.OctaveShift(-1);
+            this.Params.octave--;
         }
     }
 
@@ -198,15 +200,22 @@ class ComputerKeyboard extends Keyboard {
             "parameters" : [
 
                 {
-                    "type" : "slider",
-                    "name" : "Mono/Polyphonic",
-                    "setting" :"polyphonic",
+                    "type" : "switches",
+                    "name" : "",
+                    "setting" :"",
                     "props" : {
-                        "value" : this.Params.polyphonic,
+                        "value" : 0,
                         "min" : 0,
                         "max" : 1,
-                        "quantised" : true
-                    }
+                        "quantised" : true,
+                    },
+                    "switches": [
+                        {
+                            "name" : "Mono/Poly",
+                            "setting" :"polyphonic",
+                            "value": this.Params.polyphonic
+                        }
+                    ]
                 },
                 {
                     "type" : "slider",

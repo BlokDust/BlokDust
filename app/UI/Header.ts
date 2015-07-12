@@ -52,10 +52,10 @@ class Header extends DisplayObject{
 
 
         //TODO: this is compensating for font loading, look into font loading
-        var header = this;
+        /*var header = this;
         setTimeout(function() {
             header.Populate(header.MenuJson);
-        },2000);
+        },2000);*/
     }
 
     //-------------------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ class Header extends DisplayObject{
         ctx.fillStyle = App.Palette[2];// Black
         ctx.globalAlpha = 0.16;
         ctx.fillRect(0,0,this.Sketch.Width,thisHeight + (5*units) + dropDown); // shadow
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.9; //0.9
         ctx.fillRect(0,0,this.Sketch.Width,thisHeight  + dropDown); // solid
 
 

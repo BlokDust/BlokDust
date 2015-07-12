@@ -60,16 +60,6 @@ class Microphone extends Source {
         }
     }
 
-    MouseDown() {
-        super.MouseDown();
-        this.Unmute();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.Mute();
-    }
-
     CreateSource(){
         this.Sources.push( new Tone.Microphone() );
         return super.CreateSource();

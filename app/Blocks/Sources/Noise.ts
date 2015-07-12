@@ -42,16 +42,6 @@ class Noise extends Source {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
     }
 
-    MouseDown() {
-        super.MouseDown();
-        this.TriggerAttack();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.TriggerRelease();
-    }
-
     CreateSource(){
         this.Sources.push( new Tone.Noise( this.WaveIndex[this.Params.waveform] ) );
         return super.CreateSource();

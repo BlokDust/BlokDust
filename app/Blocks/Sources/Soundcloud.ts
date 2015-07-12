@@ -1,17 +1,16 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import BlocksSketch = require("../../BlocksSketch");
+import SoundCloudAudio = require('../SoundCloudAudio');
+import SoundCloudAudioType = require('../SoundCloudAudioType');
 
 class Soundcloud extends Source {
 
     public Sources : Tone.Sampler[];
-    public PlaybackRate: number;
-    public AudioUrl: string;
+    //public PlaybackRate: number = 1; //TODO: Use Params.playbackRate instead
+
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        this.PlaybackRate = 1;
-
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
@@ -21,15 +20,13 @@ class Soundcloud extends Source {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 11
+                volume: 11,
+                track: ''
             };
         }
 
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
-        var scId = "?client_id=7258ff07f16ddd167b55b8f9b9a3ed33";
-        var tracks = ["24456532","25216773","5243666","84216161","51167662","172375224", "87679226","43883752"];
-        this.AudioUrl = "https://api.soundcloud.com/tracks/" + tracks[7] + "/stream" + scId;
-        //this.AudioUrl = localUrl;
+        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
 
         super.Init(sketch);
 
@@ -47,18 +44,8 @@ class Soundcloud extends Source {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }
 
-    MouseDown() {
-        super.MouseDown();
-        this.TriggerAttack();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.TriggerRelease();
-    }
-
     CreateSource(){
-        this.Sources.push( new Tone.Sampler(this.AudioUrl) );
+        this.Sources.push( new Tone.Sampler(this.Params.track) );
         this.Sources.forEach((s: Tone.Sampler)=> {
             s.player.startPosition = this.Params.startPosition;
             s.player.loop = this.Params.loop;
@@ -228,8 +215,6 @@ class Soundcloud extends Source {
         this.Envelopes.forEach((e: Tone.Envelope) => {
             e.dispose();
         });
-
-        this.PlaybackRate = null;
     }
 }
 

@@ -44,18 +44,6 @@ class ToneSource extends Source {
         this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
     }
 
-    MouseDown() {
-        super.MouseDown();
-
-        this.TriggerAttack();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-
-        this.TriggerRelease();
-    }
-
     CreateSource(){
         // add it to the list of sources
         this.Sources.push( new Tone.Oscillator(this.Params.frequency, this.WaveIndex[this.Params.waveform]));

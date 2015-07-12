@@ -26,23 +26,29 @@ class Keyboard extends PreEffect {
         super.Attach(source);
         this.SetBaseFrequency(source);
         this.KeysDown = {};
+
+        // Check to see if we have enough sources on this block
+        if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
+            // Create extra polyphonic voices
+            this.CreateVoices(source);
+        }
     }
 
     Detach(source:ISource): void {
 
         // FOR ALL SOURCES
-        for (var i = 0; i < this.Sources.Count; i++) {
-            var source = this.Sources.GetValueAt(i);
+        for (let i = 0; i < this.Sources.Count; i++) {
+            var source: ISource = this.Sources.GetValueAt(i);
 
             if (this.IsPressed){
                 source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
-                    //TODO: use the new TriggerRelease method
+                    //FIXME: use the new TriggerRelease method
                     e.triggerRelease();
                 });
 
             }
 
-            //TODO: Change this to only set the main frequency back.
+            //FIXME: Change this to only set the main frequency back.
             source.Sources.forEach((s: any) => {
                 if (s.frequency){
                     s.frequency.value = source.Params.frequency;
@@ -61,53 +67,51 @@ class Keyboard extends PreEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var val = value;
 
         if (param == "glide") {
-            val = value/100;
+            value = value/100;
         }
         else if (param == "octave") {
-            for (var i = 0, source; i < this.Sources.Count; i++) {
+            for (let i = 0, source: ISource; i < this.Sources.Count; i++) {
                 source = this.Sources.GetValueAt(i);
-                var diff = val - this.Params.octave;
+                let diff: number = value - this.Params.octave;
                 source.OctaveShift(diff);
             }
         }
         else if (param === 'polyphonic') {
-            this.Params.isPolyphonic = val;
+            this.Params.isPolyphonic = value;
             // ALL SOURCES
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source: any = this.Sources.GetValueAt(i);
+            for (let i = 0; i < this.Sources.Count; i++) {
+                let source: ISource = this.Sources.GetValueAt(i);
 
                 source.TriggerRelease('all');
 
-                // If it's not a Power or a Microphone
-                if (!((source instanceof Power) || (source instanceof Microphone))) {
-                    // Create extra polyphonic voices
-                    this.CreateVoices(source);
-                }
+                // Create extra polyphonic voices
+                this.CreateVoices(source);
             }
 
         }
 
-        this.Params[param] = val;
+        this.Params[param] = value;
     }
 
     CreateVoices(source: ISource){
+        // Don't create if it's a Power or a Microphone
+        if ((source instanceof Power) || (source instanceof Microphone)) return;
 
         // Work out how many voices we actually need (we may already have some)
-        var diff = App.Config.PolyphonicVoices - source.Sources.length;
+        let diff: number = App.Config.PolyphonicVoices - source.Sources.length;
 
         // If we haven't got enough sources, create however many we need.
         if (diff > 0){
 
             // Loop through and create the voices
-            for (var i = 1; i <= App.Config.PolyphonicVoices; i++) {
+            for (let i = 1; i <= App.Config.PolyphonicVoices; i++) {
 
                 // Create a source
-                var s: Tone.Source = source.CreateSource();
+                let s: Tone.Source = source.CreateSource();
 
-                var e: Tone.AmplitudeEnvelope;
+                let e: Tone.AmplitudeEnvelope;
 
                 // Create an envelope and save it to `var e`
                 e = source.CreateEnvelope();
@@ -130,14 +134,12 @@ class Keyboard extends PreEffect {
 
                 // Add the source and envelope to our FreeVoices list
                 source.FreeVoices.push( new Voice(i) );
-
             }
         }
     }
 
 
     public SetBaseFrequency(source:ISource){
-
         if (source.Params && source.Params.frequency){
             this.BaseFrequency = source.Params.frequency;
         } else {
@@ -146,8 +148,8 @@ class Keyboard extends PreEffect {
     }
 
     public GetStartOctave(source): number {
-        var octave,
-            note = source.Source.frequencyToNote(this.BaseFrequency);
+        let octave: number;
+        let note: string = source.Source.frequencyToNote(this.BaseFrequency);
 
         if (note.length === 3) {
             octave = parseInt(note.charAt(2));
@@ -193,13 +195,13 @@ class Keyboard extends PreEffect {
      */
     public GetConnectedPitchPreEffects(source) {
 
-        var totalPitchIncrement = 1;
+        let totalPitchIncrement: number = 1;
 
         for (var i = 0; i < source.Effects.Count; i++) {
-            var effect = source.Effects.GetValueAt(i);
+            let effect = source.Effects.GetValueAt(i);
 
             if (effect instanceof PitchComponent) {
-                var thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
+                let thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
                 totalPitchIncrement *= thisPitchIncrement;
             }
         }
