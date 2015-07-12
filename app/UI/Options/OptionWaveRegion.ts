@@ -57,7 +57,7 @@ class WaveRegion extends WaveForm{
             ctx.globalAlpha = 1;
 
             ctx.fillStyle = ctx.strokeStyle = "#282b31";
-            panel.diagonalFill(xs[2] + panel.Margin,y,xs[3] - xs[2],height,9);
+            //panel.diagonalFill(xs[2] + panel.Margin,y,xs[3] - xs[2],height,9);
 
             /*ctx.fillStyle = ctx.strokeStyle = App.Palette[2];
             panel.diagonalFill(panel.Margin,y,xs[0],height,5);

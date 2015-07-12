@@ -12,6 +12,8 @@ import WaveSlider = require("./Options/OptionWaveSlider");
 import WaveRegion = require("./Options/OptionWaveRegion");
 import Sample = require("./Options/OptionSample");
 import Buttons = require("./Options/OptionButtonSelect");
+import SwitchArray = require("./Options/OptionSwitchArray");
+import Switch = require("./Options/OptionSwitch");
 import ADSR = require("./Options/OptionADSR");
 import Parametric = require("./Options/OptionParametric");
 import OptionHandle = require("./Options/OptionHandle");
@@ -110,6 +112,9 @@ class OptionsPanel extends DisplayObject {
             } else if (json.parameters[i].type == "parametric") {
                 getHeight += 140;
                 optionHeight[i] = 140 * units;
+            } else if (json.parameters[i].type == "switches") {
+                getHeight += 60;
+                optionHeight[i] = 60 * units;
             } else {
                 console.log("Option type not recognised");
             }
@@ -239,6 +244,22 @@ class OptionsPanel extends DisplayObject {
                 optionList.push(new Sample(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.props.user,option.setting));
             }
 
+
+            // SWITCH ARRAY //
+            else if (option.type == "switches") {
+
+                var switches = [];
+                var switchWidth = 60*units;
+                var switchX = [0,(this.Range*0.5) - (switchWidth*0.5),this.Range - switchWidth];
+
+                for (var j=0; j<option.switches.length; j++) {
+                    switches[j] = new Switch(new Point(switchX[j],optionY), option.switches[j].name, option.switches[j].setting, option.switches[j].value,new Size(switchWidth,optionHeight[i]*0.43));
+                }
+
+
+                optionList.push(new SwitchArray(new Point(sliderX,optionY),new Size(1,optionHeight[i]),switches));
+
+            }
 
             // BUTTONS //
             else if (option.type == "buttons") {
@@ -543,6 +564,16 @@ class OptionsPanel extends DisplayObject {
                     }
                 }
             }
+            if (this.Options[i].Type=="switches") {
+                for (var j=0;j<this.Options[i].Switches.length;j++) {
+                    if (this.Options[i].HandleRoll[j]) {
+                        //this.Options[i].Switches[j].Selected = !this.Options[i].Switches[j].Selected;
+                        this.SwitchValue(this.Options[i].Switches[j],"Selected","Setting");
+
+                        return;
+                    }
+                }
+            }
             if (this.Options[i].Type=="parametric") {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
@@ -656,9 +687,12 @@ class OptionsPanel extends DisplayObject {
                 for (var j=0; j<4; j++) {
                     this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.Height, mx, my);
                 }
-
             }
-
+            else if (this.Options[i].Type == "switches") {
+                for (var j=0; j<this.Options[i].Switches.length; j++) {
+                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height*0.16), this.Options[i].Switches[j].Size.Width, this.Options[i].Switches[j].Size.Height, mx, my);
+                }
+            }
             else if (this.Options[i].Type == "parametric") {
                 for (var j=0; j<this.Options[i].Handles.length; j++) {
                     this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.8) - this.Options[i].Handles[j].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
@@ -770,11 +804,26 @@ class OptionsPanel extends DisplayObject {
         this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
 
 
-        console.log(this._Name);
         // UPDATE VALUES IN OTHER OPTIONS //
         if (this._Name.toUpperCase()=="GRANULAR" && ("" + object[""+setting])=="spread") {
             this.UpdateOptions();
         }
+
+    }
+
+    SwitchValue(object,value,setting) {
+
+        console.log("from " + object[""+setting] +" | "+ object[""+value]);
+        object[""+value] = ! object[""+value];
+
+        var val = 0;
+        if (object[""+value]) {
+            val = 1;
+        }
+
+        console.log("to " + object[""+setting] +" | "+ val);
+        // SET VALUE IN BLOCK //
+        this.SelectedBlock.SetParam(object[""+setting], val);
 
     }
 

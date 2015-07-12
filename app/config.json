@@ -21,6 +21,6 @@
     ],
     "ConvolverDefaultTracks": [],
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
-    "PolyphonicVoices": 4,
+    "PolyphonicVoices": 5,
     "PulseLength": "16n"
 }

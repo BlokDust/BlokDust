@@ -200,15 +200,22 @@ class ComputerKeyboard extends Keyboard {
             "parameters" : [
 
                 {
-                    "type" : "slider",
-                    "name" : "Mono/Polyphonic",
-                    "setting" :"polyphonic",
+                    "type" : "switches",
+                    "name" : "",
+                    "setting" :"",
                     "props" : {
-                        "value" : this.Params.polyphonic,
+                        "value" : 0,
                         "min" : 0,
                         "max" : 1,
-                        "quantised" : true
-                    }
+                        "quantised" : true,
+                    },
+                    "switches": [
+                        {
+                            "name" : "Mono/Poly",
+                            "setting" :"polyphonic",
+                            "value": this.Params.polyphonic
+                        }
+                    ]
                 },
                 {
                     "type" : "slider",

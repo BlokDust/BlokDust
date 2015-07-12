@@ -5,6 +5,7 @@
 import IOption = require("./IOption");
 import Size = Fayde.Utils.Size;
 import OptionHandle = require("./OptionHandle");
+import OptionSwitch = require("./OptionSwitch");
 import OptionSubHandle = require("./OptionSubHandle");
 
 class Option implements IOption {
@@ -42,11 +43,9 @@ class Option implements IOption {
     public Track: string;
     public User: string;
 
-    public SampleStart: Point;
-    public SampleEnd: Point;
-    public LoopStart: Point;
-    public LoopEnd: Point;
     public Waveform: number[];
+
+    public Switches: OptionSwitch[];
 
 
     constructor() {

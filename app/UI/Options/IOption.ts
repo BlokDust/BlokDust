@@ -3,6 +3,7 @@
  */
 import Size = Fayde.Utils.Size;
 import OptionHandle = require("./OptionHandle");
+import OptionSwitch = require("./OptionSwitch");
 import OptionSubHandle = require("./OptionSubHandle");
 
 interface IOption {
@@ -39,12 +40,9 @@ interface IOption {
     Track: string;
     User: string;
 
-    SampleStart: Point;
-    SampleEnd: Point;
-    LoopStart: Point;
-    LoopEnd: Point;
     Waveform: number[];
 
+    Switches: OptionSwitch[];
 
     Draw(ctx,units,i,panel): void;
 

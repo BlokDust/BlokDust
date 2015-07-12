@@ -27,7 +27,7 @@ class RecorderBlock extends Source {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 11
+                volume: 0
             };
         }
 
@@ -127,6 +127,7 @@ class RecorderBlock extends Source {
 // Update waveform
             this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
             var duration = this.GetDuration();
+            this.Params.startPosition = 0;
             this.Params.endPosition = duration;
             this.Params.loopStart = duration * 0.5;
             this.Params.loopEnd = duration * 0.75;
@@ -250,6 +251,29 @@ class RecorderBlock extends Source {
                 ]
                 },
                 {
+                    "type" : "switches",
+                    "name" : "Loop",
+                    "setting" :"loop",
+                    "props" : {
+                        "value" : this.Params.loop,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : true,
+                    },
+                    "switches": [
+                        {
+                            "name": "Reverse",
+                            "setting": "reverse",
+                            "value": this.Params.reverse
+                        },
+                        {
+                            "name": "Looping",
+                            "setting": "loop",
+                            "value": this.Params.loop
+                        }
+                    ]
+                }/*,
+                {
                     "type" : "slider",
                     "name" : "Reverse",
                     "setting" :"reverse",
@@ -270,7 +294,7 @@ class RecorderBlock extends Source {
                         "max" : 1,
                         "quantised" : true,
                     }
-                },
+                }*/,
                 {
                     "type" : "slider",
                     "name" : "playback",
@@ -342,8 +366,10 @@ class RecorderBlock extends Source {
                 break;
             case "reverse":
                 value = value? true : false;
+                console.log("out: "+ value);
                 this.Sources.forEach((s: Tone.Sampler)=> {
                     s.player.reverse = value;
+                    console.log(s.player.reverse);
                 });
                 // Update waveform
                 this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
