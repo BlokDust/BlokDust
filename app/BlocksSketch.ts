@@ -21,6 +21,7 @@ import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
+import RecorderPanel = require("./UI/RecorderPanel");
 import LaserBeams = require("./LaserBeams");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
@@ -43,6 +44,7 @@ class BlocksSketch extends Grid {
     private _ZoomButtons: ZoomButtons;
     private _TrashCan: TrashCan;
     private _ConnectionLines: ConnectionLines;
+    private _RecorderPanel: RecorderPanel;
     private _LaserBeams: LaserBeams;
     private _ToolTipTimeout;
     private _LastSize: minerva.Size;
@@ -176,6 +178,9 @@ class BlocksSketch extends Grid {
         this._ConnectionLines = new ConnectionLines();
         this._ConnectionLines.Init(this);
 
+        this._RecorderPanel = new RecorderPanel();
+        this._RecorderPanel.Init(this);
+
         this._LaserBeams = new LaserBeams();
         this._LaserBeams.Init(this);
 
@@ -220,6 +225,7 @@ class BlocksSketch extends Grid {
         }
 
         this._LaserBeams.Update();
+        this._RecorderPanel.Update();
 
         this._CheckResize();
     }
@@ -333,6 +339,7 @@ class BlocksSketch extends Grid {
 
         // UI //
         this._ToolTip.Draw();
+        this._RecorderPanel.Draw();
         this.OptionsPanel.Draw();
         this._ZoomButtons.Draw();
         this._TrashCan.Draw();
@@ -433,24 +440,49 @@ class BlocksSketch extends Grid {
         var UI: Boolean;
         var collision: Boolean;
 
+        var tooltip = this._ToolTip;
+        var zoom = this._ZoomButtons;
+        var header = this._Header;
+        var share = this.SharePanel;
+        var settings = this.SettingsPanel;
+        var recorder = this._RecorderPanel;
+        var options = this.OptionsPanel;
+
         // UI //
         UI = this._UIInteraction(point);
 
-        if (this._ToolTip.Open) {
-            this._ToolTipClose(this._ToolTip);
+        if (tooltip.Open) {
+            this._ToolTipClose(tooltip);
         }
-        if (this.SharePanel.Open) {
-            this.SharePanel.MouseDown(point);
+        if (share.Open) {
+            share.MouseDown(point);
+            return;
         }
-        if (this.SettingsPanel.Open) {
-            this.SettingsPanel.MouseDown(point);
+        if (settings.Open) {
+            settings.MouseDown(point);
+            return;
         }
-        else if (!this.SharePanel.Open && !this.SettingsPanel.Open) {
-            this._Header.MouseDown(point);
-            this._ZoomButtons.MouseDown(point);
-            if (this.OptionsPanel.Scale==1) {
-                this.OptionsPanel.MouseDown(point.x,point.y); // to do : unsplit point
+        else if (!share.Open && !settings.Open) {
+            header.MouseDown(point);
+            if (header.MenuOver) {
+                return;
             }
+            zoom.MouseDown(point);
+            if (zoom.InRoll || zoom.OutRoll) {
+                return;
+            }
+
+            if (options.Scale==1) {
+                options.MouseDown(point.x,point.y); // to do : unsplit point
+                if (options.Hover) {
+                    return;
+                }
+            }
+            recorder.MouseDown(point);
+            if (recorder.Hover) {
+                return;
+            }
+
         }
 
 
@@ -546,6 +578,7 @@ class BlocksSketch extends Grid {
             this.SettingsPanel.MouseMove(point);
         }
         this._Header.MouseMove(point);
+        this._RecorderPanel.MouseMove(point);
         this._ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
         this._Transformer.PointerMove(point);
@@ -679,19 +712,23 @@ class BlocksSketch extends Grid {
         var header = this._Header;
         var share = this.SharePanel;
         var settings = this.SettingsPanel;
+        var recorder = this._RecorderPanel;
+        var options = this.OptionsPanel;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || recorder.Hover || (options.Scale==1 && options.Hover)) {
             console.log("UI INTERACTION");
             return true;
         }
 
-        if (this.OptionsPanel.Scale==1) {
-            var panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
-            if (panelCheck) {
+        /*if (this.OptionsPanel.Scale==1) {
+            //var panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.Height*0.5), this.OptionsPanel.Size.Width,this.OptionsPanel.Size.Height,point.x,point.y);
+            if (this.OptionsPanel.Hover) {
                 console.log("UI INTERACTION");
                 return true;
             }
-        }
+        }*/
+
+
 
         return false;
     }

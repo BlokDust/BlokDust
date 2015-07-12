@@ -8,7 +8,7 @@ class RecorderBlock extends Source {
     public Recorder: any;
     public BufferSource;
     public Filename: string;
-    private _isRecording: boolean = false;
+    public IsRecording: boolean = false;
     public RecordedBlob;
     public PlaybackRate: number;
     private _WaveForm: number[];
@@ -73,14 +73,13 @@ class RecorderBlock extends Source {
     KeyDownCallback(e){
 
         if ((<any>e).KeyDown === 'spacebar'){
-
             // Start recording on spacebar
             this.ToggleRecording();
         }
     }
 
     ToggleRecording(){
-        if (this._isRecording) {
+        if (this.IsRecording) {
             this.StopRecording();
         } else {
             this.StartRecording();
@@ -90,13 +89,13 @@ class RecorderBlock extends Source {
     StartRecording() {
         this.Recorder.clear();
         console.log('STARTED RECORDING...');
-        this._isRecording = true;
+        this.IsRecording = true;
         this.Recorder.record();
     }
 
     StopRecording() {
         this.Recorder.stop();
-        this._isRecording = false;
+        this.IsRecording = false;
         console.log('STOPPED RECORDING');
         this.SetBuffers();
     }

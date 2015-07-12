@@ -60,6 +60,10 @@ class SharePanel extends DisplayObject{
             tweetText: "I made this @blokdust creation: "
         };
 
+        if (App.SessionId!==null) {
+            this._FirstSession = false;
+        }
+
         this.SessionTitle = this.GenerateLabel();
         this.Resize();
 

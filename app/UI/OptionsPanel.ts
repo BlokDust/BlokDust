@@ -38,6 +38,7 @@ class OptionsPanel extends DisplayObject {
     public SelectedBlock: IBlock;
     public InitJson;
     private _JsonMemory;
+    public Hover: boolean;
 
     constructor() {
         super();
@@ -54,6 +55,7 @@ class OptionsPanel extends DisplayObject {
         this.Range = 100;
         this._Name = "";
         this._NameWidth = 0;
+        this.Hover = false;
 
         this.Options = [];
         this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
@@ -672,8 +674,12 @@ class OptionsPanel extends DisplayObject {
 
 
     RolloverCheck(mx,my) {
+        var units = this.Sketch.Unit.width;
+
+        this.Hover = this.HudCheck(this.Position.x,this.Position.y - (this.Size.Height*0.5), this.Size.Width, this.Size.Height,mx,my);
+
+
         for (var i=0;i<this.Options.length;i++) {
-            var units = this.Sketch.Unit.width;
 
             if (this.Options[i].Type == "slider" || this.Options[i].Type == "waveslider") {
                 this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.height,mx,my);
@@ -699,11 +705,9 @@ class OptionsPanel extends DisplayObject {
 
                     if (j!==0 && j!==this.Options[i].Handles.length-1) {
                         this.Options[i].SubHandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
-
                     }
                 }
             }
-
         }
 
         if (this.Scale==1) {
