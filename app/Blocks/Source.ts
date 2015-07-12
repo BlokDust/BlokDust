@@ -297,6 +297,7 @@ class Source extends Block implements ISource {
         }
     }
 
+
     /**
      * Checks whether the block is connected to a Power
      * @returns {boolean}
