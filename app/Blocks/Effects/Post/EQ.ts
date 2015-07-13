@@ -4,7 +4,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 
 class EQ extends PostEffect {
 
-    public Effect: Tone.MultibandEQ;
+    public Effect: Tone.EQMultiband;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -25,7 +25,7 @@ class EQ extends PostEffect {
             };
         }
 
-        this.Effect = new Tone.MultibandEQ([
+        this.Effect = new Tone.EQMultiband([
             {
                 "type" : "lowshelf",
                 "frequency" : this.Params.frequency_1,
@@ -93,26 +93,6 @@ class EQ extends PostEffect {
 
         this.Params[param] = val;
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-
-        var paramWithBand = param.split("-"),
-            param = paramWithBand[0],
-            band = parseInt(paramWithBand[1]),
-            val;
-
-        switch (param){
-            case "frequency": val = this.Effect.getFrequency(band);
-                break;
-            case "Q": val = this.Effect.getQ(band);
-                break;
-            case "gain": val = this.Effect.getGain(band);
-                break;
-        }
-
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();

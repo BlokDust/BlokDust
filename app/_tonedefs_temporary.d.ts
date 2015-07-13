@@ -35,7 +35,7 @@ interface Tone {
     noteToFrequency(note: string): number;
     noteToMidi(note: string): number;
     now(): number;
-    optionsObject(values: Array<any>, keys: Array<string>, defaults?:Object): Object;
+    optionsObject(values: Array<any>, keys: Array<string>, defaults?:any): any;
     receive(channelName: string, input?: AudioNode): Tone;
     samplesToSeconds(samples: number): number;
     secondsToFrequency(seconds: number): number;
@@ -107,7 +107,7 @@ declare module Tone {
     }
 
     var AutoPanner: {
-        new(frequency?: any): Tone.AutoPanner; //TODO: Number || Object
+        new(frequency?: any): Tone.AutoPanner;
     };
 
     interface AutoPanner extends Effect {
@@ -122,7 +122,7 @@ declare module Tone {
     }
 
     var AutoWah: {
-        new(baseFrequency?: any, octaves?: number, sensitivity?:number): Tone.AutoWah; //Todo number | Object
+        new(baseFrequency?: any, octaves?: number, sensitivity?:number): Tone.AutoWah;
     };
 
     interface AutoWah extends Tone.Effect {
@@ -136,7 +136,7 @@ declare module Tone {
     }
 
     var BitCrusher: {
-        new(bits: any): Tone.BitCrusher; //TODO: Number || Object
+        new(bits: any): Tone.BitCrusher;
     };
 
     interface BitCrusher extends Tone.Effect {
@@ -145,25 +145,25 @@ declare module Tone {
     }
 
     var Buffer: {
-        new(url: any): Tone.Buffer; //TODO: Change 'any' to 'AudioBuffer | string' when available
+        new(url: AudioBuffer | string): Tone.Buffer;
     };
 
     interface Buffer extends Tone {
         MAX_SIMULTANEOUS_DOWNLOADS: number;
-        duration: number; // Readonly
-        loaded: boolean; // Readonly
-        onload: (e: any)=>any;
-        url: string; // Readonly
-        load(url:string, callback?: (e: any)=>any): Tone.Buffer;
+        duration: number;
+        loaded: boolean;
+        onload: (e: any) => any;
+        url: string;
+        load(url: string, callback?: (e: any) => any ): Tone.Buffer;
         onerror();
         onprogress();
         dispose(): Tone.Buffer;
         get(): AudioBuffer;
-        set(buffer: any): Tone.Buffer; //TODO: change any to AudioBuffer | Tone.Buffer
+        set(buffer: AudioBuffer | string ): Tone.Buffer;
     }
 
     var Chebyshev: {
-        new(order: any): Tone.Chebyshev; //TODO: Number || Object
+        new(order: any): Tone.Chebyshev;
     };
 
     interface Chebyshev extends Tone.Effect {
@@ -195,7 +195,7 @@ declare module Tone {
     }
 
     var Compressor: {
-        new(threshold?: any, ratio?: number): Tone.Compressor; //TODO: Number || Object
+        new(threshold?: any, ratio?: number): Tone.Compressor;
     };
 
     interface Compressor extends Tone {
@@ -208,7 +208,7 @@ declare module Tone {
     }
 
     var Convolver: {
-        new(url: any): Tone.Convolver; //TODO: Change any to 'string | AudioBuffer' when available
+        new(url: string | AudioBuffer): Tone.Convolver;
     };
 
     interface Convolver extends Tone.Effect {
@@ -229,7 +229,7 @@ declare module Tone {
     }
 
     var Distortion: {
-        new(distortion: any): Tone.Distortion; //TODO: Number || Object
+        new(distortion: any): Tone.Distortion;
     };
 
     interface Distortion extends Tone.Effect {
@@ -264,7 +264,7 @@ declare module Tone {
     }
 
     var Envelope: {
-        new(attack: any, decay?: Tone.Time, sustain?: number, release?: Tone.Time): Tone.Envelope;  //TODO: Change 'any' to 'Tone.Time | Object'
+        new(attack: any, decay?: Tone.Time, sustain?: number, release?: Tone.Time): Tone.Envelope;
     };
 
     interface Envelope extends Tone {
@@ -279,7 +279,7 @@ declare module Tone {
     }
 
     var EQ3: {
-        new(lowLevel?: any, midLevel?: number, highLevel?: number): Tone.EQ3; //TODO: Change 'any' to 'number | Object'
+        new(lowLevel?: any, midLevel?: number, highLevel?: number): Tone.EQ3;
     };
 
     interface EQ3 extends Tone {
@@ -321,8 +321,8 @@ declare module Tone {
     };
 
     interface Expr extends Tone.SignalBase {
-        input: any; //todo: any[]
-        output: any; // todo: Tone
+        input: any;
+        output: any;
         dispose(): Tone.Expr;
     }
 
@@ -355,7 +355,7 @@ declare module Tone {
     }
 
     var Filter: {
-        new(freq?: any, type?: string, rolloff?: number): Tone.Filter; //TODO: Number || Object
+        new(freq?: any, type?: string, rolloff?: number): Tone.Filter;
     };
 
     interface Filter extends Tone {
@@ -446,14 +446,14 @@ declare module Tone {
 
     interface Instrument extends Tone {
         volume: Tone.Signal;
-        triggerAttack(note: any, time?: Tone.Time, velocity?: number): Tone.Instrument; //Todo: string | number
-        triggerAttackRelease(note: any, duration: Tone.Time, time?: Tone.Time, velocity?: number): Tone.Instrument; //Todo: string | number
+        triggerAttack(note: string | number, time?: Tone.Time, velocity?: number): Tone.Instrument;
+        triggerAttackRelease(note: string | number, duration: Tone.Time, time?: Tone.Time, velocity?: number): Tone.Instrument;
         triggerRelease(time?: Tone.Time): Tone.Instrument;
         dispose(): Tone.Instrument;
     }
 
     var JCReverb: {
-        new(roomSize: number): Tone.JCReverb; //TODO: Number || Object
+        new(roomSize: number): Tone.JCReverb;
     };
 
     interface JCReverb extends Tone.Effect {
@@ -470,7 +470,7 @@ declare module Tone {
     }
 
     var LFO: {
-        new(frequency?: Tone.Time, outputMin?: number, outputMax?: number): Tone.LFO; //TODO: Number || Object
+        new(frequency?: any, outputMin?: number, outputMax?: number): Tone.LFO;
     };
 
     interface LFO extends Tone.Oscillator {
@@ -511,11 +511,9 @@ declare module Tone {
     var Master: Tone.Master;
 
     interface Master extends Tone {
+        mute: Boolean;
         volume: Tone.Signal;
-        mute(): Tone.Master;
-        unmute(): Tone.Master;
-        receive(node:any): Tone.Master; //todo: AudioNode | Tone
-        send(node:any): Tone.Master; //todo: AudioNode | Tone
+        chain(): Tone.Master;
     }
 
     var Max: {
@@ -599,7 +597,7 @@ declare module Tone {
 
     interface Monophonic extends Tone.Instrument {
         portamento: Tone.Time;
-        setNote(note: any):Tone.Monophonic; //Todo: number | string
+        setNote(note: number | string):Tone.Monophonic;
     }
 
     var MonoSynth: {
@@ -619,7 +617,7 @@ declare module Tone {
     }
 
     var MultibandCompressor: {
-        new(options: Object): Tone.MultibandCompressor;
+        new(options?: Object): Tone.MultibandCompressor;
     };
 
     interface MultibandCompressor extends Tone {
@@ -631,12 +629,11 @@ declare module Tone {
         dispose(): Tone.MultibandCompressor;
     }
 
-    var MultibandEQ: {
-        new(options?: any): Tone.MultibandEQ;
+    var EQMultiband: {
+        new(options?: any): Tone.EQMultiband;
     };
 
-    interface MultibandEQ extends Tone {
-        //set(params: Object): void;
+    interface EQMultiband extends Tone {
         setType(type: string, band: number): void;
         getType(band: number): string;
         setFrequency(freq: number, band: number): void;
@@ -711,19 +708,19 @@ declare module Tone {
     }
 
     var Note: {
-        new(channel: any, time:Tone.Time, value: any): Tone.Note; //todo: channel: number|string, value: string|number|Object|Array
+        new(channel: number | string, time: Tone.Time, value: any): Tone.Note;
     };
 
     interface Note {
-        value: any; //todo: string | number | Object
+        value: any;
         parseScore(score: Object): Tone.Note[];
-        route(channel:any, callback?: (e: any)=>any): void; //todo: string | number
-        unroute(channel: any, callback?: (e: any)=>any): void; //todo: string | number;
+        route(channel: string | number, callback?: (e: any)=>any): void;
+        unroute(channel: string | number, callback?: (e: any)=>any): void;
         dispose(): Tone.Note;
     }
 
     var OmniOscillator: {
-        new(frequency?: Tone.Frequency, type?: string): Tone.OmniOscillator; //TODO: Number || Object
+        new(frequency?: Tone.Frequency, type?: string): Tone.OmniOscillator;
     };
 
     interface OmniOscillator extends Tone.Source {
@@ -745,7 +742,7 @@ declare module Tone {
     }
 
     var Oscillator: {
-        new(frequency?: any, type?: string): Tone.Oscillator; //todo: number | string
+        new(frequency?: any, type?: string): Tone.Oscillator;
     };
 
     interface Oscillator extends Tone.Source {
@@ -768,7 +765,7 @@ declare module Tone {
     }
 
     var PanVol: {
-        new(pan: number, volume: number): Tone.PanVol;
+        new(pan?: number, volume?: number): Tone.PanVol;
     };
 
     interface PanVol extends Tone {
@@ -778,7 +775,7 @@ declare module Tone {
     }
 
     var Phaser: {
-        new(rate?: any, depth?: number, baseFrequency?: number): Tone.Phaser; //TODO: change 'any' to 'number | Object'
+        new(rate?: any, depth?: number, baseFrequency?: number): Tone.Phaser;
     };
 
     interface Phaser extends Tone.StereoEffect {
@@ -789,7 +786,7 @@ declare module Tone {
     }
 
     var PingPongDelay: {
-        new(delayTime?: any, feedback?: number): Tone.PingPongDelay; //TODO: Tone.Time || Object
+        new(delayTime?: any, feedback?: number): Tone.PingPongDelay;
     };
 
     interface PingPongDelay extends Tone.StereoXFeedbackEffect {
@@ -798,7 +795,7 @@ declare module Tone {
     }
 
     var Player: {
-        new(url?: string, onload?: (e: any)=>any): Tone.Player; //todo: string | AudioBuffer
+        new(url?: string | AudioBuffer, onload?: (e: any)=>any): Tone.Player;
     };
 
     interface Player extends Tone.Source {
@@ -813,7 +810,7 @@ declare module Tone {
         reverse: boolean;
         startPosition: Tone.Time;
         dispose(): Tone.Player;
-        load(url:string, callback?:(e: any)=>any):  Tone.Player;
+        load(url:string | AudioBuffer, callback?:(e: any)=>any):  Tone.Player;
         setLoopPoints(loopStart:Tone.Time, loopEnd:Tone.Time): Tone.Player;
         start(startTime?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time): Tone.Player;
     }
@@ -827,11 +824,11 @@ declare module Tone {
         dampening: Tone.Signal;
         resonance: Tone.Signal;
         dispose(): Tone.PluckSynth;
-        triggerAttack(note: any, time?: Tone.Time): Tone.PluckSynth; //todo: string | number
+        triggerAttack(note: string | number, time?: Tone.Time): Tone.PluckSynth;
     }
 
     var PolySynth : {
-        new(voicesAmount?: any, voice?: ()=>any): Tone.PolySynth; // number | Object
+        new(voicesAmount?: any, voice?: ()=>any): Tone.PolySynth;
     };
 
     interface PolySynth extends Tone.Instrument {
@@ -840,9 +837,9 @@ declare module Tone {
         get(params?: any[]);
         set(params: Object);
         setPreset(presetName: string): Tone.PolySynth;
-        triggerAttack(value: any, time?: Tone.Time, velocity?: number): Tone.PolySynth; //todo: string | number | Object| string[] | number[]
-        triggerAttackRelease(value: any, duration: Tone.Time, time?: Tone.Time, velocity?: number): Tone.PolySynth; //todo: string | number | Object | string[] | number[]
-        triggerRelease(value: any, time?: Tone.Time): Tone.PolySynth; //todo: string | number | Object | string[] | number[]
+        triggerAttack(value: any, time?: Tone.Time, velocity?: number): Tone.PolySynth;
+        triggerAttackRelease(value: any, duration: Tone.Time, time?: Tone.Time, velocity?: number): Tone.PolySynth;
+        triggerRelease(value: any, time?: Tone.Time): Tone.PolySynth;
     }
 
     var Pow: {
@@ -890,7 +887,7 @@ declare module Tone {
     }
 
     var Sampler: {
-        new(urls: any, options?: Object): Tone.Sampler; //todo: Object | string
+        new(urls: any, options?: Object): Tone.Sampler;
     };
 
     interface Sampler extends Tone.Instrument {
@@ -899,7 +896,7 @@ declare module Tone {
         filterEnvelope: Tone.Envelope;
         pitch: number;
         player: Tone.Player;
-        sample: any; //todo: number | string
+        sample: any;
         dispose(): Tone.Sampler;
         triggerAttack(sample?: string, time?: Tone.Time, velocity?: number): Tone.Sampler;
         triggerRelease(time?: Tone.Time): Tone.Sampler;
@@ -916,7 +913,7 @@ declare module Tone {
     }
 
     var ScaledEnvelope: {
-        new(attack?: any, decay?: Tone.Time, sustain?: number, release?:Tone.Time): Tone.ScaledEnvelope; //TODO: Change 'any' to 'Tone.Time | Object'
+        new(attack?: any, decay?: Tone.Time, sustain?: number, release?: Tone.Time): Tone.ScaledEnvelope;
     };
 
     interface ScaledEnvelope extends Tone.Envelope {
@@ -953,12 +950,12 @@ declare module Tone {
     }
 
     var Signal: {
-        new(value?: any, units?: Tone.Signal.Unit): Tone.Signal; //todo: number | AudioParam
+        new(value?: number | AudioParam, units?: Tone.Signal.Unit): Tone.Signal;
     };
 
     interface Signal extends Tone.SignalBase {
         units: Tone.Signal.Type;
-        value: any; //TODO: Tone.Time | Tone.Frequency | number
+        value: Tone.Time | Tone.Frequency | number;
         cancelScheduledValues(startTime: Tone.Time): Tone.Signal;
         dispose(): Tone.Signal;
         exponentialRampToValueAtTime(value: number, endTime: Tone.Time): Tone.Signal;
@@ -977,7 +974,7 @@ declare module Tone {
     };
 
     interface SignalBase extends Tone {
-        connect(node: any, outputNumber?: number, inputNumber?: number): Tone.SignalBase; //TODO: Change 'any' to 'AudioParam | AudioNode | Tone.Signal | Tone' when available
+        connect(node: AudioParam | AudioNode | Tone.Signal | Tone, outputNumber?: number, inputNumber?: number): Tone.SignalBase;
     }
 
     var Source: {
@@ -1030,7 +1027,7 @@ declare module Tone {
     }
 
     var StereoWidener: {
-        new(width?: any): Tone.StereoWidener; //TODO change 'any' to 'number | Object'
+        new(width?: any): Tone.StereoWidener;
     };
 
     interface StereoWidener extends Tone.MidSideEffect {
@@ -1098,7 +1095,7 @@ declare module Tone {
     interface TransportState {}
 
     var WaveShaper: {
-        new(mapping: any, bufferLen?: number): Tone.WaveShaper; //TODO: change 'any' to 'Function | Array | number'
+        new(mapping?: any, bufferLen?: number): Tone.WaveShaper;
     };
 
     interface WaveShaper extends Tone.SignalBase {
