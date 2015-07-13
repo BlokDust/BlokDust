@@ -143,7 +143,7 @@ class Keyboard extends PreEffect {
         if (source.Params && source.Params.frequency){
             this.BaseFrequency = source.Params.frequency;
         } else {
-            this.BaseFrequency = App.BASE_NOTE;
+            this.BaseFrequency = App.Config.BaseNote;
         }
     }
 

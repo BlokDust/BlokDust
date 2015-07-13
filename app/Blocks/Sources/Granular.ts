@@ -225,7 +225,7 @@ class Granular extends Source {
 
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate = pitch / App.BASE_NOTE;
+            this.Grains[i].playbackRate = pitch / App.Config.BaseNote;
         }
         this.Params.playbackRate = this.Grains[0].playbackRate;
     }

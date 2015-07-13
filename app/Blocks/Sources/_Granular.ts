@@ -371,7 +371,7 @@ class Granular extends Source {
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         super.SetPitch(pitch, sourceId, rampTime);
         for (var i=0; i<this.MaxDensity; i++) {
-            pitch /= App.BASE_NOTE;
+            pitch /= App.Config.BaseNote;
             this.PlaybackRate = pitch;
         }
     }

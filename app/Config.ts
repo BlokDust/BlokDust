@@ -6,7 +6,8 @@ class Config {
     public PulseLength: Tone.Time;
     public SoundCloudDefaultTracks: string[];
     public GranularDefaultTracks: string[];
-    public ConvolverDefaultTracks: string[]
+    public ConvolverDefaultTracks: string[];
+    public BaseNote: number;
 }
 
 export = Config;
