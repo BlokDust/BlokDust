@@ -1,4 +1,3 @@
-import Size = Fayde.Utils.Size;
 import IDisplayObject = require("../IDisplayObject");
 import Particle = require("../Particle");
 import Grid = require("../Grid");

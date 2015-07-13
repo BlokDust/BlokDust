@@ -2,7 +2,7 @@
  * Created by luketwyman on 13/06/2015.
  */
 
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("./../BlocksSketch");
@@ -314,8 +314,8 @@ class SettingsPanel extends DisplayObject{
                 var cat = this.MenuItems[i];
                 var menuX = cat.Position.x;
                 if (i > 0) {
-                    ctx.moveTo(Math.round(menuX - (cat.Size.Width*0.5)), tabY + (16*units));
-                    ctx.lineTo(Math.round(menuX - (cat.Size.Width*0.5)), tabY + (44*units));
+                    ctx.moveTo(Math.round(menuX - (cat.Size.width*0.5)), tabY + (16*units));
+                    ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), tabY + (44*units));
                 }
             }
 
@@ -465,7 +465,7 @@ class SettingsPanel extends DisplayObject{
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.Width*0.5) + (2*units), tabY + (5*units), cat.Size.Width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
         }
     }
 

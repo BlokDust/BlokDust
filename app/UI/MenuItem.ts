@@ -2,12 +2,12 @@
  * Created by luketwyman on 28/01/2015.
  */
 
-import Size = Fayde.Utils.Size;
-import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
-import Recorder = require("../Blocks/Sources/Recorder");
-import LFO = require("../Blocks/Effects/Pre/LFO");
+import Grid = require("./../Grid");
 import IBlock = require("../Blocks/IBlock");
+import LFO = require("../Blocks/Effects/Pre/LFO");
+import Recorder = require("../Blocks/Sources/Recorder");
+import Size = minerva.Size;
 
 class MenuItem {
 
@@ -70,7 +70,7 @@ class MenuItem {
         if (this.InfoOffset!==0) {
             // INFO ARROW //
             ctx.lineWidth = 2;
-            var ay = y + (this.Size.Height*1.5) - (30*units);
+            var ay = y + (this.Size.height*1.5) - (30*units);
             ctx.beginPath();
             ctx.moveTo(x - (diamond*units), ay);
             ctx.lineTo(x, ay + (diamond*units));
@@ -82,16 +82,16 @@ class MenuItem {
             ctx.textAlign = "left";
             var bodyType = units*7.5;
             ctx.font = this._Sketch.TxtItalic;
-            this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.Width*0.5) + (10*units),y + this.Size.Height - (30*units), bodyType*1.5, (this.Size.Width) - (20*units));
+            this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.width*0.5) + (10*units),y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
 
 
             // VERTICAL LINES //
             ctx.strokeStyle = App.Palette[1];// Grey
             ctx.beginPath();
-            ctx.moveTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*0.5) + (20*units));
-            ctx.lineTo(Math.round(x - (this.Size.Width*0.5))+1,y + (this.Size.Height*1.5) - (20*units));
-            ctx.moveTo(Math.round(x + (this.Size.Width*0.5))-1,y + (this.Size.Height*0.5) + (20*units));
-            ctx.lineTo(Math.round(x + (this.Size.Width*0.5))-1,y + (this.Size.Height*1.5) - (20*units));
+            ctx.moveTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*0.5) + (20*units));
+            ctx.lineTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*1.5) - (20*units));
+            ctx.moveTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*0.5) + (20*units));
+            ctx.lineTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*1.5) - (20*units));
             ctx.stroke();
         }
 

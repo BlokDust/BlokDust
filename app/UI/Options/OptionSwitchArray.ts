@@ -3,7 +3,7 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import ParametersPanel = require("./../OptionsPanel");
 
 class SwitchArray extends Option{
@@ -24,7 +24,7 @@ class SwitchArray extends Option{
 
         var x = this.Position.x;
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
 
         var midType = Math.round(units*10);
 
@@ -38,7 +38,7 @@ class SwitchArray extends Option{
         }
 
         for (var j=0; j<this.Switches.length; j++) {
-            this.Switches[j].Draw(ctx,panel,units,panel.Margin,this.Size.Height,i);
+            this.Switches[j].Draw(ctx,panel,units,panel.Margin,this.Size.height,i);
         }
 
 

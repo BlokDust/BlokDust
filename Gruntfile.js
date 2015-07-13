@@ -62,7 +62,7 @@ module.exports = function (grunt) {
                     '<%= dirs.lib %>/nullstone/dist/nullstone.d.ts',
                     '<%= dirs.lib %>/fayde.drawing/dist/fayde.drawing.d.ts',
                     '<%= dirs.lib %>/fayde.transformer/dist/fayde.transformer.d.ts',
-                    '<%= dirs.lib %>/fayde.utils/dist/fayde.utils.d.ts',
+                    '<%= dirs.lib %>/utils/dist/utils.d.ts',
                     '<%= dirs.lib %>/tween.ts/src/Tween.d.ts',
                     '<%= dirs.lib %>/extensions/typings/extensions.d.ts'
                 ],

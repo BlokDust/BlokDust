@@ -36,7 +36,6 @@ import Effect = require("./Blocks/Effect");
 import IApp = require("./IApp");
 import SaveFile = require("./SaveFile");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-import Utils = Fayde.Utils;
 import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var PixelPalette;
@@ -142,7 +141,7 @@ class App implements IApp{
     }
 
     LoadComposition() {
-        this.CompositionId = Utils.Url.GetQuerystringParameter('c');
+        this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
 
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
@@ -211,6 +210,10 @@ class App implements IApp{
     Deserialize(json: string): any {
         this._SaveFile = Serializer.Deserialize(json);
         this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
+    }
+
+    Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+         this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
     }
 
     Resize(): void {

@@ -5,7 +5,6 @@
 import Source = require("../Source");
 import Grid = require("../../Grid");
 import App = require("../../App");
-import Vector = Fayde.Utils.Vector;
 import BlocksSketch = require("../../BlocksSketch");
 
 class Laser extends Source {

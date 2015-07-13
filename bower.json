@@ -7,8 +7,7 @@
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
     "fayde.drawing": "edsilv/fayde.drawing#~0.4.0",
-    "fayde.utils": "edsilv/fayde.utils#~0.5.4",
-    "fayde.transformer": "edsilv/fayde.transformer#~0.6.0",
+    "fayde.transformer": "edsilv/fayde.transformer#~0.7.2",
     "tone": "lukephills/Tone.js#dev",
     "pixelpalette": "edsilv/pixelpalette#~0.1.9",
     "RecorderJS": "lukephills/Recorderjs#~1.0.3",
@@ -17,8 +16,7 @@
     "lzma": "nmrugg/LZMA-JS"
   },
   "resolutions": {
-    "fayde": "~0.16.11",
-    "fayde.utils": "~0.5.4"
+    "fayde": "~0.16.11"
   },
   "devDependencies": {
     "r.js": "~2.1.16"

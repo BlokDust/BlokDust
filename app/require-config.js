@@ -6,7 +6,6 @@ require.config({
         "extensions": "lib/extensions/dist/extensions",
         "fayde.drawing": "lib/fayde.drawing/dist/fayde.drawing",
         "fayde.transformer": "lib/fayde.transformer/dist/fayde.transformer",
-        "fayde.utils": "lib/fayde.utils/dist/fayde.utils",
         "intersection": "lib/intersection/intersection",
         "jquery": "lib/jquery/dist/jquery",
         "lzma": "lib/lzma/src/lzma",
@@ -14,15 +13,13 @@ require.config({
         "Recorderjs": "lib/RecorderJS",
         "text": "lib/requirejs-text/text",
         "Tone": "lib/tone/Tone",
-        "tween": "lib/tween.ts/build/tween.min"
+        "tween": "lib/tween.ts/build/tween.min",
+        "utils": "lib/utils/dist/utils"
     },
     shim: {
         "exjs": {
             "exports": "exjs",
             "path": "lib/exjs/dist/ex.min"
-        },
-        "fayde.utils": {
-            "exports": "Fayde.Utils"
         },
         "fayde.drawing": {
             "exports": "Fayde.Drawing"
@@ -30,7 +27,7 @@ require.config({
         "fayde.transformer": {
             "exports": "Fayde.Transformer",
             "deps": [
-                "fayde.utils",
+                "utils",
                 "tween"
             ]
         },
@@ -40,6 +37,9 @@ require.config({
         },
         "tone": {
             "path": "lib/tone/build/Tone.js"
+        },
+        "utils": {
+            "exports": "Utils"
         },
         "pixelpalette": {},
         "RecorderJS": {
@@ -60,7 +60,6 @@ require([
     "extensions",
     "fayde.drawing",
     "fayde.transformer",
-    "fayde.utils",
     "intersection",
     "lzma",
     "Recorderjs/recorder",
@@ -86,7 +85,8 @@ require([
     "Tone/source/Noise",
     "Tone/source/Oscillator",
     "Tone/source/Player",
-    "tween"
+    "tween",
+    "utils"
 ], function (text, config, App, PixelPalette, Tone, jquery) {
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;

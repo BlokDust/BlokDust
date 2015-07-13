@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 27/01/2015.
  */
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import Grid = require("./../Grid");
 import BlocksSketch = require("./../BlocksSketch");
 import DisplayObject = require("../DisplayObject");

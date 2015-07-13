@@ -2,7 +2,6 @@
  * Created by luketwyman on 26/01/2015.
  */
 
-import Size = Fayde.Utils.Size;
 import Grid = require("./../Grid");
 import Header = require("./Header");
 import MenuItem = require("./MenuItem");
@@ -10,7 +9,7 @@ import MenuItem = require("./MenuItem");
 class MenuCategory {
 
     public Position: Point;
-    public Size: Size;
+    public Size: minerva.Size;
     public Name: string;
     public Items: MenuItem[] = [];
     public Selected: number;
@@ -20,7 +19,7 @@ class MenuCategory {
     public Pages: number;
     public CurrentPage: number;
 
-    constructor (position: Point, size: Size, name: string, offset: number) {
+    constructor (position: Point, size: minerva.Size, name: string, offset: number) {
         this.Position = position;
         this.Size = size;
         this.Name = name;
@@ -37,7 +36,7 @@ class MenuCategory {
         var thisHeight = Math.round(header.Height*units);
         var dropDown = Math.round(header.DropDown*units);
         var x = this.Position.x;
-        var width = (this.Size.Width*0.5);
+        var width = (this.Size.width*0.5);
 
 
 

@@ -3,10 +3,10 @@
  */
 
 import IOption = require("./IOption");
-import Size = Fayde.Utils.Size;
 import OptionHandle = require("./OptionHandle");
-import OptionSwitch = require("./OptionSwitch");
 import OptionSubHandle = require("./OptionSubHandle");
+import OptionSwitch = require("./OptionSwitch");
+import Size = minerva.Size;
 
 class Option implements IOption {
 

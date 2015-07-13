@@ -3,11 +3,10 @@
  */
 
 import Option = require("./Option");
-import Size = Fayde.Utils.Size;
 import ParametersPanel = require("./../OptionsPanel");
+import Size = minerva.Size;
 
 class Slider extends Option{
-
 
     constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean) {
         super();
@@ -32,7 +31,7 @@ class Slider extends Option{
 
         var x = this.Position.x;
         var y = this.Position.y;
-        var height = this.Size.Height;
+        var height = this.Size.height;
         var origin = this.Origin;
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);

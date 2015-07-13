@@ -2,13 +2,13 @@
  * Created by luketwyman on 25/01/2015.
  */
 
-import Size = Fayde.Utils.Size;
-import Grid = require("./../Grid");
-import DisplayObject = require("../DisplayObject");
-import BlocksSketch = require("./../BlocksSketch");
 import BlockCreator = require("./../BlockCreator");
+import BlocksSketch = require("./../BlocksSketch");
+import DisplayObject = require("../DisplayObject");
+import Grid = require("./../Grid");
 import MenuCategory = require("./MenuCategory");
 import MenuItem = require("./MenuItem");
+import Size = minerva.Size;
 
 class Header extends DisplayObject{
 
@@ -176,8 +176,8 @@ class Header extends DisplayObject{
             var cat = this.MenuItems[i];
             var menuX = cat.Position.x;
             if (i > 0) {
-                ctx.moveTo(Math.round(menuX - (cat.Size.Width*0.5)), (thisHeight * 0.5) - (16 * units));
-                ctx.lineTo(Math.round(menuX - (cat.Size.Width*0.5)), (thisHeight * 0.5) + (16 * units));
+                ctx.moveTo(Math.round(menuX - (cat.Size.width*0.5)), (thisHeight * 0.5) - (16 * units));
+                ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), (thisHeight * 0.5) + (16 * units));
             }
         }
         //between share & settings //
@@ -480,7 +480,7 @@ class Header extends DisplayObject{
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.Width*0.5) + (2*units), (5*units), cat.Size.Width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.width*0.5) + (2*units), (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
 
             //ITEMS HIT TEST //
             if (this._SelectedCategory==i) {

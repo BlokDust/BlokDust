@@ -4,7 +4,6 @@
 
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
-import Size = Fayde.Utils.Size;
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
 

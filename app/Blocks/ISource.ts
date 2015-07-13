@@ -31,7 +31,7 @@ interface ISource extends IBlock{
     GetWaveformFromBuffer(buffer: any, detail: number, precision: number,  normal: number): number[];
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string): void;
-    TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void
+    TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;
     Refresh(): void;
 }
 

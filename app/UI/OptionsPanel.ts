@@ -2,7 +2,7 @@
  * Created by luketwyman on 11/01/2015.
  */
 
-import Size = Fayde.Utils.Size;
+import Size = minerva.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
 import BlocksSketch = require("./../BlocksSketch");
@@ -38,6 +38,7 @@ class OptionsPanel extends DisplayObject {
     public SelectedBlock: IBlock;
     public InitJson;
     private _JsonMemory;
+    public Hover: boolean;
 
     constructor() {
         super();
@@ -54,6 +55,7 @@ class OptionsPanel extends DisplayObject {
         this.Range = 100;
         this._Name = "";
         this._NameWidth = 0;
+        this.Hover = false;
 
         this.Options = [];
         this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
@@ -156,8 +158,8 @@ class OptionsPanel extends DisplayObject {
         // POPULATE PANEL //
         this.Position.x = 250*units;
         this.Position.y = Math.round(this.Ctx.canvas.height*0.6);
-        this.Size.Width = panelW;
-        this.Size.Height = panelH;
+        this.Size.width = panelW;
+        this.Size.height = panelH;
         this.Margin = panelM;
         this.Range = panelR;
         this._Name = json.name;
@@ -172,7 +174,7 @@ class OptionsPanel extends DisplayObject {
 
             // SET HEIGHT //
             optionHeight[i] = Math.round(optionHeight[i] * heightScale); // scale heights
-            var optionY = Math.round((- (this.Size.Height*0.5)) + (20*units) + optionTotalY);
+            var optionY = Math.round((- (this.Size.height*0.5)) + (20*units) + optionTotalY);
 
 
             // SLIDER //
@@ -428,10 +430,10 @@ class OptionsPanel extends DisplayObject {
         ctx.strokeStyle = App.Palette[8];// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) + (4 * units));
-        ctx.lineTo(sx + this.Size.Width - (16 * units), sy - (this.Size.Height * 0.5) - (4 * units));
-        ctx.moveTo(sx + this.Size.Width - (24 * units), sy - (this.Size.Height * 0.5) - (4 * units));
-        ctx.lineTo(sx + this.Size.Width - (16 * units), sy - (this.Size.Height * 0.5) + (4 * units));
+        ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
+        ctx.lineTo(sx + this.Size.width - (16 * units), sy - (this.Size.height * 0.5) - (4 * units));
+        ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) - (4 * units));
+        ctx.lineTo(sx + this.Size.width - (16 * units), sy - (this.Size.height * 0.5) + (4 * units));
         ctx.stroke();
         ctx.lineWidth = 1;
 
@@ -439,7 +441,7 @@ class OptionsPanel extends DisplayObject {
         // TITLE //
         ctx.fillStyle = App.Palette[8];// WHITE
         ctx.textAlign = "left";
-        ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.Height * 0.5));
+        ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
 
 
         // DRAW OPTIONS //
@@ -456,16 +458,16 @@ class OptionsPanel extends DisplayObject {
         var ctx = this.Ctx;
 
         ctx.beginPath();
-        ctx.moveTo(x + (44*units), y - (this.Size.Height*0.5)); // tl
-        ctx.lineTo(x + this.Margin - (25*units), y - (this.Size.Height*0.5)); // name tab start
-        ctx.lineTo(x + this.Margin - (5*units), y - (this.Size.Height*0.5) - (20*units));
-        ctx.lineTo(x + this.Margin + (5*units) + this._NameWidth, y - (this.Size.Height*0.5) - (20*units));
-        ctx.lineTo(x + this.Margin + (25*units) + this._NameWidth, y - (this.Size.Height*0.5)); // name tab end
-        ctx.lineTo(x + this.Size.Width - (40*units), y - (this.Size.Height*0.5)); // close start
-        ctx.lineTo(x + this.Size.Width - (20*units), y - (this.Size.Height*0.5) - (20*units));
-        ctx.lineTo(x + this.Size.Width, y - (this.Size.Height*0.5)); // tr
-        ctx.lineTo(x + this.Size.Width, y + (this.Size.Height*0.5)); // br
-        ctx.lineTo(x + (44*units), y + (this.Size.Height*0.5)); // bl
+        ctx.moveTo(x + (44*units), y - (this.Size.height*0.5)); // tl
+        ctx.lineTo(x + this.Margin - (25*units), y - (this.Size.height*0.5)); // name tab start
+        ctx.lineTo(x + this.Margin - (5*units), y - (this.Size.height*0.5) - (20*units));
+        ctx.lineTo(x + this.Margin + (5*units) + this._NameWidth, y - (this.Size.height*0.5) - (20*units));
+        ctx.lineTo(x + this.Margin + (25*units) + this._NameWidth, y - (this.Size.height*0.5)); // name tab end
+        ctx.lineTo(x + this.Size.width - (40*units), y - (this.Size.height*0.5)); // close start
+        ctx.lineTo(x + this.Size.width - (20*units), y - (this.Size.height*0.5) - (20*units));
+        ctx.lineTo(x + this.Size.width, y - (this.Size.height*0.5)); // tr
+        ctx.lineTo(x + this.Size.width, y + (this.Size.height*0.5)); // br
+        ctx.lineTo(x + (44*units), y + (this.Size.height*0.5)); // bl
         ctx.lineTo(x + (44*units), y + (44*units));
         ctx.lineTo(x, y); // block
         ctx.lineTo(x + (44*units), y);
@@ -551,7 +553,7 @@ class OptionsPanel extends DisplayObject {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
                         this.Options[i].Handles[j].Selected = true;
-                        this.HandleSet(i, j, xStart[j],this.Options[i].Size.Height*0.9,mx, my);
+                        this.HandleSet(i, j, xStart[j],this.Options[i].Size.height*0.9,mx, my);
                     }
                 }
             }
@@ -559,7 +561,7 @@ class OptionsPanel extends DisplayObject {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
                         this.Options[i].Handles[j].Selected = true;
-                        this.HandleSet(i, j, 0,this.Options[i].Size.Height,mx, my);
+                        this.HandleSet(i, j, 0,this.Options[i].Size.height,mx, my);
                         return;
                     }
                 }
@@ -578,7 +580,7 @@ class OptionsPanel extends DisplayObject {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
                         this.Options[i].Handles[j].Selected = true;
-                        this.HandleSet(i, j, 0,this.Options[i].Size.Height*0.8,mx, my);
+                        this.HandleSet(i, j, 0,this.Options[i].Size.height*0.8,mx, my);
                         this.Options[i].PlotGraph();
                         break;
                     }
@@ -631,7 +633,7 @@ class OptionsPanel extends DisplayObject {
                 var xStart = [0, this.Options[i].Handles[0].Position.x,this.Range*0.6];
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].Handles[j].Selected) {
-                        this.HandleSet(i, j, xStart[j], this.Options[i].Size.Height*0.9, mx, my);
+                        this.HandleSet(i, j, xStart[j], this.Options[i].Size.height*0.9, mx, my);
                     }
                 }
             }
@@ -639,22 +641,22 @@ class OptionsPanel extends DisplayObject {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     var handles = this.Options[i].Handles;
                     if (handles[j].Selected) {
-                        this.HandleSet(i, j, 0, this.Options[i].Size.Height, mx, my);
+                        this.HandleSet(i, j, 0, this.Options[i].Size.height, mx, my);
                     }
                 }
 
                 if (handles[3].Position.x < (handles[2].Position.x+1)) {
-                    this.HandleSet(i, 3, 0, this.Options[i].Size.Height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
+                    this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
                 }
                 if (handles[1].Position.x < (handles[0].Position.x+1)) {
-                    this.HandleSet(i, 1, 0, this.Options[i].Size.Height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);
+                    this.HandleSet(i, 1, 0, this.Options[i].Size.height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);
                 }
 
             }
             if (this.Options[i].Type=="parametric") {
                 for (var j=0;j<this.Options[i].Handles.length;j++) {
                     if (this.Options[i].Handles[j].Selected) {
-                        this.HandleSet(i, j, 0, this.Options[i].Size.Height*0.8, mx, my);
+                        this.HandleSet(i, j, 0, this.Options[i].Size.height*0.8, mx, my);
                         this.Options[i].PlotGraph();
                     }
                 }
@@ -672,42 +674,44 @@ class OptionsPanel extends DisplayObject {
 
 
     RolloverCheck(mx,my) {
+        var units = this.Sketch.Unit.width;
+
+        this.Hover = this.HudCheck(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
+
+
         for (var i=0;i<this.Options.length;i++) {
-            var units = this.Sketch.Unit.width;
 
             if (this.Options[i].Type == "slider" || this.Options[i].Type == "waveslider") {
-                this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.Height,mx,my);
+                this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.height,mx,my);
             }
             else if (this.Options[i].Type == "ADSR") {
-                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.1) - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.1) - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
             }
             else if (this.Options[i].Type == "waveregion") {
                 for (var j=0; j<4; j++) {
-                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.Height, mx, my);
+                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.height, mx, my);
                 }
             }
             else if (this.Options[i].Type == "switches") {
                 for (var j=0; j<this.Options[i].Switches.length; j++) {
-                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height*0.16), this.Options[i].Switches[j].Size.Width, this.Options[i].Switches[j].Size.Height, mx, my);
+                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Switches[j].Size.width, this.Options[i].Switches[j].Size.height, mx, my);
                 }
             }
             else if (this.Options[i].Type == "parametric") {
                 for (var j=0; j<this.Options[i].Handles.length; j++) {
-                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.8) - this.Options[i].Handles[j].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.8) - this.Options[i].Handles[j].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
 
                     if (j!==0 && j!==this.Options[i].Handles.length-1) {
-                        this.Options[i].SubHandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.Height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
-
+                        this.Options[i].SubHandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
                     }
                 }
             }
-
         }
 
         if (this.Scale==1) {
-            this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.Width - (30*units),this.Position.y - (this.Size.Height*0.5) - (10*units),20*units,20*units,mx,my);
+            this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.width - (30*units),this.Position.y - (this.Size.height*0.5) - (10*units),20*units,20*units,mx,my);
         }
     }
 
