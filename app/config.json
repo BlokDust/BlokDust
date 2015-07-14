@@ -23,5 +23,5 @@
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
     "PolyphonicVoices": 5,
     "PulseLength": "16n",
-    "BaseNote": 440,
+    "BaseNote": 440
 }
