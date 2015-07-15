@@ -210,49 +210,33 @@ class App implements IApp{
         this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
     }
 
-    Resize(): void {
-        var $win = $(window);
-        //$(this._Canvas).prop("width", $win.width());
-        //$(this._Canvas).prop("height", $win.height());
+    get PixelRatio(): number {
+        const ctx:any = document.createElement("canvas").getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
+        const bsr = ctx.webkitBackingStorePixelRatio ||
+                ctx.mozBackingStorePixelRatio ||
+                ctx.msBackingStorePixelRatio ||
+                ctx.oBackingStorePixelRatio ||
+                ctx.backingStorePixelRatio || 1;
+
+        return dpr / bsr;
     }
 
     CreateCanvas() {
-        var PIXEL_RATIO = (function () {
-            var ctx:any = document.createElement("canvas").getContext("2d"),
-                dpr = window.devicePixelRatio || 1,
-                bsr = ctx.webkitBackingStorePixelRatio ||
-                    ctx.mozBackingStorePixelRatio ||
-                    ctx.msBackingStorePixelRatio ||
-                    ctx.oBackingStorePixelRatio ||
-                    ctx.backingStorePixelRatio || 1;
-
-            return dpr / bsr;
-        })();
-
-
-        var createHiDPICanvas = function(w, h) {
-            let ratio = PIXEL_RATIO;
-            const can: any = document.createElement("canvas");
-            can.width = w * ratio;
-            can.height = h * ratio;
-            can.style.width = w + "px";
-            can.style.height = h + "px";
-            can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
-            return can;
-        }
-
-
-//Create canvas with a custom resolution.
-        this._Canvas = createHiDPICanvas(window.innerWidth, window.innerHeight);
+        this._Canvas = document.createElement("canvas");
         document.body.appendChild(this._Canvas);
+    }
 
-        // find canvas
-        //this._Canvas = document.getElementsByTagName("canvas")[0];
-
-        //if (!this._Canvas) {
-        //    document.body.appendChild(this._Canvas = document.createElement("canvas"));
-        //}
-
+    Resize(): void {
+        const canvas = this._Canvas;
+        const ratio = this.PixelRatio;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
     }
 }
 
