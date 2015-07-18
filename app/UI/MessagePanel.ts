@@ -131,8 +131,8 @@ class MessagePanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    //NewMessage(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-        NewMessage(string?: string, options?: any) {
+    NewMessage(string?: string, options?: any) {
+        options = options || {};
         this._Value.string = string || this._Defaults.string;
         this._Value.seconds = options.seconds || this._Defaults.seconds;
         this._Value.confirmation = options.confirmation || this._Defaults.confirmation;

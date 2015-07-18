@@ -6,7 +6,7 @@ import SoundCloudAudioType = require('../SoundCloudAudioType');
 
 class Soundcloud extends Source {
 
-    public Sources : Tone.Sampler[];
+    public Sources : Tone.Simpler[];
     //public PlaybackRate: number = 1; //TODO: Use Params.playbackRate instead
 
 
@@ -27,6 +27,7 @@ class Soundcloud extends Source {
 
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
+        this.Params.track = localUrl;
 
         super.Init(sketch);
 
@@ -36,7 +37,7 @@ class Soundcloud extends Source {
             e = this.Sources[i].envelope;
         });
 
-        this.Sources.forEach((s: Tone.Sampler) => {
+        this.Sources.forEach((s: Tone.Simpler) => {
             s.connect(this.EffectsChainInput);
         });
 
@@ -45,8 +46,8 @@ class Soundcloud extends Source {
     }
 
     CreateSource(){
-        this.Sources.push( new Tone.Sampler(this.Params.track) );
-        this.Sources.forEach((s: Tone.Sampler)=> {
+        this.Sources.push( new Tone.Simpler(this.Params.track) );
+        this.Sources.forEach((s: Tone.Simpler)=> {
             s.player.startPosition = this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
@@ -168,28 +169,28 @@ class Soundcloud extends Source {
                 break;
             case "reverse":
                 value = value? true : false;
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.reverse = value;
                 });
                 break;
             case "startPosition":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.startPosition = value;
                 });
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
                 break;
             case "loopStart":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopStart = value;
                 });
                 break;
             case "loopEnd":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
                 break;
@@ -208,7 +209,7 @@ class Soundcloud extends Source {
     Dispose(){
         super.Dispose();
 
-        this.Sources.forEach((s: Tone.Sampler) => {
+        this.Sources.forEach((s: Tone.Simpler) => {
             s.dispose();
         });
 

@@ -126,7 +126,7 @@ class Keyboard extends PreEffect {
                 } else {
                     // No CreateEnvelope()
                     // Check if it's a Sampler Source (they have their own envelopes built in)
-                    if (source.Sources[0] instanceof Tone.Sampler) {
+                    if (source.Sources[0] instanceof Tone.Simpler) {
                         e = source.Sources[i].envelope;
                         s.connect(source.EffectsChainInput)
                     }

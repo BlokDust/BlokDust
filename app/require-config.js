@@ -80,7 +80,7 @@ require([
     "Tone/effect/Freeverb",
     "Tone/effect/Phaser",
     "Tone/effect/PingPongDelay",
-    "Tone/instrument/Sampler",
+    "Tone/instrument/Simpler",
     "Tone/source/Microphone",
     "Tone/source/Noise",
     "Tone/source/Oscillator",
