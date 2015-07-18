@@ -170,7 +170,7 @@ class OptionsPanel extends DisplayObject {
         // DEFINE OUTLINE FOR HITTEST
         var topY =  - (panelH*0.5);
         var margin = this.Margin;
-
+        this.Outline = [];
         this.Outline.push(
             new Point(0, 0), // block
             new Point(44*units, 0),
