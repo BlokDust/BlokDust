@@ -576,25 +576,25 @@ class SharePanel extends DisplayObject{
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var buttonY = centerY + (35*units);
 
-        this._RollOvers[0] = this.HudCheck(shareX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = this.HudCheck((this.Sketch.Width*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = this.HudCheck((this.Sketch.Width*0.5) - (305*units), centerY - (130*units),40*units,40*units, point.x, point.y); // gen title
+        this._RollOvers[0] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
+        this._RollOvers[1] = this.HitRect((this.Sketch.Width*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[2] = this.HitRect((this.Sketch.Width*0.5) - (305*units), centerY - (130*units),40*units,40*units, point.x, point.y); // gen title
         if (this._FirstSession) {
-            this._RollOvers[3] = this.HudCheck(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
+            this._RollOvers[3] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
             this._RollOvers[4] = false;
             this._RollOvers[5] = false;
             this._RollOvers[10] = false;
         } else {
             this._RollOvers[3] = false;
-            this._RollOvers[4] = this.HudCheck(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
-            this._RollOvers[5] = this.HudCheck(this.OffsetX + (this.Sketch.Width*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
-            this._RollOvers[10] = this.HudCheck(this.OffsetX + (this.Sketch.Width*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
+            this._RollOvers[4] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
+            this._RollOvers[5] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
+            this._RollOvers[10] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
         }
-        this._RollOvers[6] = this.HudCheck(shareX + (this.Sketch.Width*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
-        this._RollOvers[7] = this.HudCheck(shareX + (this.Sketch.Width*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
-        this._RollOvers[8] = this.HudCheck(shareX + (this.Sketch.Width*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
+        this._RollOvers[6] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
+        this._RollOvers[7] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
+        this._RollOvers[8] = this.HitRect(shareX + (this.Sketch.Width*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
 
-        this._RollOvers[9] = this.HudCheck(shareX + (this.Sketch.Width*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[9] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
     }
 
 
@@ -621,11 +621,6 @@ class SharePanel extends DisplayObject{
             window.getSelection().removeAllRanges();
         else if (document.selection)
             document.selection.empty();
-    }
-
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
     }
 
     Resize() {

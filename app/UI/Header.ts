@@ -480,16 +480,16 @@ class Header extends DisplayObject{
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.width*0.5) + (2*units), (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
 
             //ITEMS HIT TEST //
             if (this._SelectedCategory==i) {
                 for (var j=0; j<cat.Items.length; j++) {
                     var item = cat.Items[j];
 
-                    item.Hover = this.HudCheck(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
-                    item.InfoHover = this.HudCheck(item.Position.x - (52*units), item.Position.y - (42*units), 24*units, 24*units, point.x, point.y);
-                    item.BackHover = this.HudCheck(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);
+                    item.Hover = this.HitRect(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
+                    item.InfoHover = this.HitRect(item.Position.x - (52*units), item.Position.y - (42*units), 24*units, 24*units, point.x, point.y);
+                    item.BackHover = this.HitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);
                     item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
 
                 }
@@ -498,14 +498,14 @@ class Header extends DisplayObject{
         }
 
         // SCROLL HIT TEST //
-        this._LeftOver = this.HudCheck(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
-        this._RightOver = this.HudCheck(this.Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._LeftOver = this.HitRect(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._RightOver = this.HitRect(this.Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
 
         // SHARE & SETTINGS HIT TESTS //
         this.Ctx.font = "400 " + (units*10) + "px Dosis";
         var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
-        this._ShareOver = this.HudCheck(this.Sketch.Width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
-        this._SettingsOver = this.HudCheck(this.Sketch.Width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
+        this._ShareOver = this.HitRect(this.Sketch.Width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
+        this._SettingsOver = this.HitRect(this.Sketch.Width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
 
 
         // WHOLE MENU //
@@ -523,10 +523,7 @@ class Header extends DisplayObject{
 
 
 
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
+
 
 
 }

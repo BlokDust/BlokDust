@@ -382,11 +382,11 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            this.Sources[id].player.playbackRate = pitch / App.BASE_NOTE;
+            this.Sources[id].player.playbackRate = pitch / App.Config.BaseNote;
 
         } else if (typeof this.Sources[id].playbackRate === 'number') {
             // Players
-            this.Sources[id].playbackRate = pitch / App.BASE_NOTE;
+            this.Sources[id].playbackRate = pitch / App.Config.BaseNote;
         }
     }
 
@@ -402,11 +402,11 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            return this.Sources[id].player.playbackRate * App.BASE_NOTE;
+            return this.Sources[id].player.playbackRate * App.Config.BaseNote;
 
         } else if (typeof this.Sources[id].playbackRate === 'number') {
             // Players
-            return this.Sources[id].playbackRate * App.BASE_NOTE;
+            return this.Sources[id].playbackRate * App.Config.BaseNote;
 
         } else {
             return 0;

@@ -67,7 +67,7 @@ require([
     "Tone/component/Envelope",
     "Tone/component/Filter",
     "Tone/component/LFO",
-    "Tone/component/MultibandEQ",
+    "Tone/component/EQMultiband",
     "Tone/core/Master",
     "Tone/core/Note",
     "Tone/core/Transport",

@@ -676,53 +676,48 @@ class OptionsPanel extends DisplayObject {
     RolloverCheck(mx,my) {
         var units = this.Sketch.Unit.width;
 
-        this.Hover = this.HudCheck(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
+        this.Hover = this.HitRect(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
 
 
         for (var i=0;i<this.Options.length;i++) {
 
             if (this.Options[i].Type == "slider" || this.Options[i].Type == "waveslider") {
-                this._SliderRoll[i] = this.HudCheck(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.height,mx,my);
+                this._SliderRoll[i] = this.HitRect(this.Position.x + this.Margin - (10*units),this.Position.y + this.Options[i].Position.y,this.Range + (20*units),this.Options[i].Size.height,mx,my);
             }
             else if (this.Options[i].Type == "ADSR") {
-                this.Options[i].HandleRoll[0] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.1) - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[1] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
-                this.Options[i].HandleRoll[2] = this.HudCheck(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[0] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.1) - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[1] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[0].Position.x + this.Options[i].Handles[1].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - this.Options[i].Handles[1].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                this.Options[i].HandleRoll[2] = this.HitRect(this.Position.x + this.Margin + (this.Range * 0.6) + this.Options[i].Handles[2].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (20 * units), (20 * units), mx, my);
             }
             else if (this.Options[i].Type == "waveregion") {
                 for (var j=0; j<4; j++) {
-                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.height, mx, my);
+                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.height, mx, my);
                 }
             }
             else if (this.Options[i].Type == "switches") {
                 for (var j=0; j<this.Options[i].Switches.length; j++) {
-                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Switches[j].Size.width, this.Options[i].Switches[j].Size.height, mx, my);
+                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Switches[j].Size.width, this.Options[i].Switches[j].Size.height, mx, my);
                 }
             }
             else if (this.Options[i].Type == "parametric") {
                 for (var j=0; j<this.Options[i].Handles.length; j++) {
-                    this.Options[i].HandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.8) - this.Options[i].Handles[j].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
+                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.8) - this.Options[i].Handles[j].Position.y - (10 * units), (20 * units), (20 * units), mx, my);
 
                     if (j!==0 && j!==this.Options[i].Handles.length-1) {
-                        this.Options[i].SubHandleRoll[j] = this.HudCheck(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
+                        this.Options[i].SubHandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
                     }
                 }
             }
         }
 
         if (this.Scale==1) {
-            this._PanelCloseRoll = this.HudCheck(this.Position.x + this.Size.width - (30*units),this.Position.y - (this.Size.height*0.5) - (10*units),20*units,20*units,mx,my);
+            this._PanelCloseRoll = this.HitRect(this.Position.x + this.Size.width - (30*units),this.Position.y - (this.Size.height*0.5) - (10*units),20*units,20*units,mx,my);
         }
     }
 
     //-------------------------------------------------------------------------------------------
     //  MATHS
     //-------------------------------------------------------------------------------------------
-
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
 
     // DRAGGING A HANDLE //
     HandleSet(n,h,xStart,yRange,mx,my) {

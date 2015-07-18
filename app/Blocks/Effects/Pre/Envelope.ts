@@ -5,8 +5,6 @@ import BlocksSketch = require("../../../BlocksSketch");
 
 class Envelope extends PreEffect {
 
-
-
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
@@ -17,7 +15,6 @@ class Envelope extends PreEffect {
                 release: 4
             };
         }
-
 
         super.Init(sketch);
 
@@ -31,7 +28,6 @@ class Envelope extends PreEffect {
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
-
     Attach(source: ISource): void{
         super.Attach(source);
 
@@ -43,27 +39,18 @@ class Envelope extends PreEffect {
                 e.release = this.Params.release;
             });
         } else if (source.Sources[0] instanceof Tone.Sampler) {
-            var e = source.Sources[0].envelope;
             source.Sources.forEach((s: Tone.Sampler) => {
-                e = s.envelope;
+                let e = s.envelope;
                 e.attack = this.Params.attack;
                 e.decay = this.Params.decay;
                 e.sustain = this.Params.sustain;
                 e.release = this.Params.release;
             });
         }
-
     }
 
     Detach(source: ISource): void{
         super.Detach(source);
-
-        source.Envelopes.forEach((e: Tone.Envelope) => {
-            e.attack = 0.02;
-            e.decay = 0.5;
-            e.sustain = 0.5;
-            e.release = 0.02;
-        });
 
         if (source.Envelopes.length) {
             source.Envelopes.forEach((e: Tone.Envelope) => {
@@ -73,9 +60,8 @@ class Envelope extends PreEffect {
                 e.release = 0.02;
             });
         } else if (source.Sources[0] instanceof Tone.Sampler) {
-            var e = source.Sources[0].envelope;
             source.Sources.forEach((s: Tone.Sampler) => {
-                e = s.envelope;
+                let e = s.envelope;
                 e.attack = 0.02;
                 e.decay = 0.5;
                 e.sustain = 0.5;
@@ -85,26 +71,14 @@ class Envelope extends PreEffect {
 
     }
 
-    SetParam(param: string,value: number) {
-        super.SetParam(param,value);
-        var val = value;
+    SetParam(param: string, value: number) {
+        super.SetParam(param, value);
 
-        /*if (param=="attack") {
-            this.attack = value;
-
-        } else if (param=="decay") {
-            this.decay = value;
-        } else if (param=="sustain") {
-            this.sustain = value;
-        } else if (param=="release") {
-            this.release = value;
-        }*/
-
-        this.Params[param] = val;
+        this.Params[param] = value;
 
         if (this.Sources.Count) {
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
+            for (let i = 0; i < this.Sources.Count; i++) {
+                const source = this.Sources.GetValueAt(i);
 
                 source.Envelopes.forEach((e: Tone.Envelope) => {
                     e.attack = this.Params.attack;
@@ -115,12 +89,6 @@ class Envelope extends PreEffect {
             }
         }
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val = this[""+param];
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();

@@ -63,8 +63,6 @@ class App implements IApp{
     public ResourceManager: ResourceManager;
     private _SessionId: string;
 
-    public BASE_NOTE: number = 440; //TODO: should be const
-
     get Sources(): IBlock[] {
         return this.Blocks.en().where(b => b instanceof Source).toArray();
     }
@@ -87,12 +85,8 @@ class App implements IApp{
     }
 
     public Setup(){
-        // find canvas
-        this._Canvas = document.getElementsByTagName("canvas")[0];
 
-        if (!this._Canvas) {
-            document.body.appendChild(this._Canvas = document.createElement("canvas"));
-        }
+        this.CreateCanvas();
 
         // resize
         window.onresize = () => {
@@ -216,10 +210,46 @@ class App implements IApp{
         this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
     }
 
+    //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+    //    this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    //}
+
+    Message(string?: string, options?: any) {
+        this.BlocksSketch.MessagePanel.NewMessage(string, options);
+    }
+
+    get PixelRatio(): number {
+        const ctx:any = document.createElement("canvas").getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
+        const bsr = ctx.webkitBackingStorePixelRatio ||
+                ctx.mozBackingStorePixelRatio ||
+                ctx.msBackingStorePixelRatio ||
+                ctx.oBackingStorePixelRatio ||
+                ctx.backingStorePixelRatio || 1;
+
+        return dpr / bsr;
+    }
+
+    CreateCanvas() {
+        this._Canvas = document.createElement("canvas");
+        document.body.appendChild(this._Canvas);
+    }
+
     Resize(): void {
-        var $win = $(window);
-        $(this._Canvas).prop("width", $win.width());
-        $(this._Canvas).prop("height", $win.height());
+        const canvas = this._Canvas;
+        const ratio = this.PixelRatio;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    TranslateMousePointToPixelRatioPoint(point: Point){
+        point.x *= this.PixelRatio;
+        point.y *= this.PixelRatio;
     }
 }
 

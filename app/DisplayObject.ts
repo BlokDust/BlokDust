@@ -45,6 +45,11 @@ class DisplayObject implements IDisplayObject {
     public Dispose(): void {
 
     }
+
+    // IS CLICK WITHIN THIS BOX //
+    HitRect(x,y,w,h,mx,my) {
+        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+    }
 }
 
 export = DisplayObject;

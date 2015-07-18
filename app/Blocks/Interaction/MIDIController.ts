@@ -33,13 +33,21 @@ class MIDIController extends Keyboard {
             navigator.requestMIDIAccess({sysex: false}).then(this.OnMIDISuccess.bind(this), this.OnMIDIFailure.bind(this));
         } else {
             console.log('No MIDI support in your browser. Check here: http://caniuse.com/midi'); //Todo: display this in a modal box
+            App.Message('No MIDI support in your browser', {
+                'seconds': 2,
+                'confirmation': true,
+                'buttonText': 'http://caniuse.com/midi',
+                'buttonEvent': this.CanIUse,
+            });
         }
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
-
+    CanIUse() {
+        window.open("http://caniuse.com/midi","_blank");
+    }
 
     /**
      * MIDI Success event
@@ -49,7 +57,7 @@ class MIDIController extends Keyboard {
     private OnMIDISuccess(midiAccess){
         // when we get a successful response, run this code
         console.log('MIDI success', midiAccess);
-        console.log(this);
+        App.Message('MIDI ready');
 
         this.Midi = midiAccess; // this is our raw MIDI data, inputs, outputs, and sysex status
 
@@ -76,6 +84,7 @@ class MIDIController extends Keyboard {
     private OnMIDIFailure(error) {
         // when we get a failed response, run this code
         console.log("No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim " + error);
+        App.Message(`No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim ${error}`);
     }
 
     /**
@@ -155,9 +164,14 @@ class MIDIController extends Keyboard {
      */
     private DisplayInput(input){
         var i = input.value;
-        console.log("Input port : [ type:'" + i.type + "' id: '" + i.id +
-            "' manufacturer: '" + i.manufacturer + "' name: '" + i.name +
-            "' version: '" + i.version + "']");
+        console.log(`Input port: [
+            type: + ${i.type}
+            id: ${i.id}
+            manufacturer: ${i.manufacturer}
+            name: ${i.name}
+            version: ${i.version}
+        ]`);
+        App.Message(`MIDI Controller:  ${i.name} manufacturer: ${i.manufacturer}`);
         return i;
     }
 
@@ -167,12 +181,12 @@ class MIDIController extends Keyboard {
      * @returns the event
      */
     private OnStateChange(event) {
-        if (event.port.type == "input"){
-            console.log("MIDI Controller", event.port.name, "port", event.port, "state", event.port.state);
-            //TODO: Change this to blokdust tooltip message
+        if (event.port.type == 'input'){
+            App.Message(`MIDI Controller ${event.port.name} ${event.port.state}`);
         }
         return event;
     }
+
 
     Draw() {
         super.Draw();

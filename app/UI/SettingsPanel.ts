@@ -460,23 +460,18 @@ class SettingsPanel extends DisplayObject{
         var closeY = tabY + (30*units);
         var halfWidth = ((this.Sketch.Width/7)*4)*0.5;
 
-        this._RollOvers[0] = this.HudCheck((this.Sketch.Width*0.5) + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[0] = this.HitRect((this.Sketch.Width*0.5) + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HudCheck(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
         }
     }
 
     MouseUp(point) {
     }
 
-
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
 }
 
 export = SettingsPanel;

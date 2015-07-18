@@ -89,6 +89,7 @@ class RecorderBlock extends Source {
     StartRecording() {
         this.Recorder.clear();
         console.log('STARTED RECORDING...');
+        App.Message("Started Recording",1);
         this.IsRecording = true;
         this.Recorder.record();
     }
@@ -97,6 +98,7 @@ class RecorderBlock extends Source {
         this.Recorder.stop();
         this.IsRecording = false;
         console.log('STOPPED RECORDING');
+        App.Message("Stopped Recording",1);
         this.SetBuffers();
     }
 
