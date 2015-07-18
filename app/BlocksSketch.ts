@@ -55,7 +55,7 @@ class BlocksSketch extends Grid {
     private _ZoomPosition: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
-    public TxtHeader: string;
+    public TxtHeader: string;op
     public TxtSlider: string;
     public TxtUrl: string;
     public TxtLarge: string;
@@ -91,7 +91,6 @@ class BlocksSketch extends Grid {
     constructor() {
         super();
     }
-
 
     public GetId(): number {
         var count = App.Blocks.length;

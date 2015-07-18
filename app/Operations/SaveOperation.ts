@@ -34,7 +34,7 @@ class SaveOperation<String> implements IOperation
     Do(): Promise<String> {
         var that = this;
 
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
 
             //console.log(data);
 
@@ -53,8 +53,10 @@ class SaveOperation<String> implements IOperation
                     data: data
                 }).done(function(saved){
                     resolve(saved);
+                }).fail((jqXHR, textStatus: string) => {
+                    reject(textStatus);
                 });
-            })
+            });
         });
     }
 
