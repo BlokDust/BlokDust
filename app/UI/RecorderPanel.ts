@@ -53,14 +53,15 @@ class RecorderPanel extends DisplayObject {
             var block = this._Blocks[i];
             var myPos = (<BlocksSketch>this.Sketch).ConvertGridUnitsToAbsolute(block.Position);
             myPos = (<BlocksSketch>this.Sketch).ConvertBaseToTransformed(myPos);
-            this.DrawPanel(myPos.x,myPos.y,block.IsRecording);
+            this.DrawPanel(myPos.x,myPos.y,block.IsRecording,this._Roll[i]);
         }
     }
 
-    DrawPanel(x,y,rec) {
+    DrawPanel(x,y,rec,hover) {
         var units = (<BlocksSketch>this.Sketch).Unit.width;
         var grd = (<BlocksSketch>this.Sketch).CellWidth.width;
         var ctx = this.Ctx;
+        var midType = (<BlocksSketch>this.Sketch).TxtMid;
 
         var w = grd*3;
         var h = grd*3;
@@ -100,6 +101,15 @@ class RecorderPanel extends DisplayObject {
         ctx.lineTo(x, y - (w*0.5) - (h*0.5) + grd);
         ctx.closePath();
         ctx.fill();
+
+        if (hover) {
+            ctx.textAlign = "left";
+            ctx.font = midType;
+            ctx.fillStyle = App.Palette[8]; // WHITE
+            //ctx.fillText("R", x - (w*0.5) + (4*units), y - (w*0.5) - h + (12 * units));
+            ctx.fillRect(x - grd,y - (w*0.5) - (h*0.5) - grd,4*units,4*units);
+        }
+
     }
 
     // PANEL BACKGROUND //

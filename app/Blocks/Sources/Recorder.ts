@@ -125,7 +125,7 @@ class RecorderBlock extends Source {
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-// Update waveform
+            // Update waveform
             this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
             var duration = this.GetDuration();
             this.Params.startPosition = 0;
