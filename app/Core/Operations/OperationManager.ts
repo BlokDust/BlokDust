@@ -46,7 +46,7 @@ class OperationManager {
         if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
 
         // if about to exceed max number of operations, start trimming from start of array.
-        if (this._Operations.Count == this.MaxOperations){
+        if (this._Operations.Count === this.MaxOperations){
             var firstOp = this._Operations.GetValueAt(0);
             firstOp.Dispose();
             var trimmed = this._Operations.ToArray().splice(1, this._Operations.Count - 1);
@@ -81,6 +81,9 @@ class OperationManager {
             that._Debug();
 
             return result;
+        }).catch((error: string) => {
+            // if the operation failed, allow subsequent operations.
+            that._CurrentOperation = null;
         });
     }
 
@@ -103,6 +106,9 @@ class OperationManager {
             that._Debug();
 
             return result;
+        }).catch((error: string) => {
+            // if the operation failed, allow subsequent operations.
+            that._CurrentOperation = null;
         });
     }
 
@@ -123,6 +129,9 @@ class OperationManager {
             that._Debug();
 
             return result;
+        }).catch((error: string) => {
+            // if the operation failed, allow subsequent operations.
+            that._CurrentOperation = null;
         });
     }
 
@@ -138,10 +147,10 @@ class OperationManager {
         var str:string = "";
 
         for (var i = 0; i < this._Operations.Count; i++) {
-            if (this.Head == i){
+            if (this.Head === i){
                 str += "[]";
             } else {
-                str += "#"
+                str += "#";
             }
         }
 
