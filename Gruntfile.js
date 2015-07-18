@@ -97,8 +97,8 @@ module.exports = function (grunt) {
                         src: [
                             '<%= dirs.dist %>/lib/**',
                             '!<%= dirs.dist %>/lib/fayde/dist/fayde.js',
-                            '!<%= dirs.dist %>/lib/minerva/dist/minerva.js',
-                            '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.js',
+                            '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js',
+                            '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
                             '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js'
                         ],
                         filter: 'isFile'

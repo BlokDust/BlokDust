@@ -31,10 +31,10 @@ class LoadOperation<String> implements IOperation
     Do(): Promise<string> {
         var that = this;
 
-        return new Promise<string>((resolve) => {
+        return new Promise<string>((resolve, reject) => {
 
             $.ajax(<JQueryAjaxSettings>{
-                url: "http://blokdust.azurewebsites.net/api/anonymousblobs/" + this._Id,
+                url: 'http://blokdust.azurewebsites.net/api/anonymousblobs/' + this._Id,
                 type: 'GET',
                 crossDomain: true,
                 dataType: 'json',
@@ -43,6 +43,8 @@ class LoadOperation<String> implements IOperation
                 that.Decompress(data).then((decompressed) => {
                     resolve(decompressed);
                 });
+            }).fail((jqXHR, textStatus: string) => {
+                reject(textStatus);
             });
         });
     }
