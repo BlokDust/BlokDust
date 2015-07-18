@@ -188,19 +188,46 @@ class SettingsPanel extends DisplayObject{
             //this.WordWrap(ctx, this._CopyJson.thanks, dx - halfWidth, centerY + (164 * units), units*16, menuWidth);
 
 
+
+            var xs = [x1,x2,x3];
+            for (var i=1; i<4; i++) {
+                if (this._RollOvers[i]) {
+
+                    //ctx.fillRect(xs[i-1] - (10*units),thirdY + (38*units),2*units,2*units);
+                    ctx.fillStyle = App.Palette[3];// Blue
+                    ctx.beginPath();
+                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (43*units) - (grid*0.5));
+                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (43*units) - (grid*0.5));
+                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (43*units));
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                if (this._RollOvers[i+3]) {
+                    //ctx.fillRect(xs[i-1] - (10*units),thirdY + (52*units),2*units,2*units);
+                    ctx.fillStyle = App.Palette[3];// Blue
+                    ctx.beginPath();
+                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (57*units) - (grid*0.5));
+                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (57*units) - (grid*0.5));
+                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (57*units));
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[8]; // White
             ctx.font = italicType2;
+
+            // BLURBS //
             this.WordWrap(ctx, this._CopyJson.twyman.blurb, x1, thirdY, units*14, Math.ceil(thirdWidth));
             this.WordWrap(ctx, this._CopyJson.phillips.blurb, x2, thirdY, units*14, Math.ceil(thirdWidth));
             this.WordWrap(ctx, this._CopyJson.silverton.blurb, x3, thirdY, units*14, Math.ceil(thirdWidth));
 
-
-
-
-            //ctx.fillStyle = ctx.strokeStyle = App.Palette[this._MenuCols[this._OpenTab]]; // Tab color
+            // URLS //
             ctx.fillText(this._CopyJson.twyman.url, x1, thirdY + (42 * units));
             ctx.fillText(this._CopyJson.phillips.url, x2, thirdY + (42 * units));
             ctx.fillText(this._CopyJson.silverton.url, x3, thirdY + (42 * units));
 
+            // TWITTERS //
             ctx.fillText(this._CopyJson.twyman.twitter, x1, thirdY + (56 * units));
             ctx.fillText(this._CopyJson.phillips.twitter, x2, thirdY + (56 * units));
             ctx.fillText(this._CopyJson.silverton.twitter, x3, thirdY + (56 * units));
@@ -447,6 +474,20 @@ class SettingsPanel extends DisplayObject{
             }
         }
 
+
+        // EXTERNAL URLS //
+        var urls = [this._CopyJson.twyman.url,this._CopyJson.phillips.url,this._CopyJson.silverton.url,this._CopyJson.twyman.twitter,this._CopyJson.phillips.twitter,this._CopyJson.silverton.twitter];
+        for (var i=1; i<7; i++) {
+           if (this._RollOvers[i]) {
+               if (i>3) {
+                   window.open("http://twitter.com/"+urls[i-1],"_blank");
+               } else {
+                   window.open("http://"+urls[i-1],"_blank");
+               }
+
+           }
+        }
+
     }
 
     MouseMove(point) {
@@ -458,10 +499,26 @@ class SettingsPanel extends DisplayObject{
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var tabY = centerY - (180*units);
         tabY = this.OffsetY;
+        var pageY = tabY + (120*units);
         var closeY = tabY + (30*units);
-        var halfWidth = ((this.Sketch.Width/7)*4)*0.5;
+        var dx = (this.Sketch.Width*0.5);
+        var menuWidth = (this.Sketch.Width/7)*4;
+        var halfWidth = menuWidth*0.5;
+        var gutter = (40*units);
+        var thirdWidth = (menuWidth - (gutter*2))/3;
+        var thirdY = pageY + (170 * units);
+        var x1 = dx - halfWidth;
+        var x2 = dx - halfWidth + thirdWidth + gutter;
+        var x3 = dx - halfWidth + (thirdWidth*2) + (gutter*2);
+        var xs = [x1,x2,x3];
 
-        this._RollOvers[0] = this.HitRect((this.Sketch.Width*0.5) + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[0] = this.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
+
+        for (var i=1; i<4; i++) {
+            this._RollOvers[i] = this.HitRect(xs[i-1], thirdY + (30*units),thirdWidth,20*units, point.x, point.y); // url
+            this._RollOvers[i+3] = this.HitRect(xs[i-1], thirdY + (50*units),thirdWidth,20*units, point.x, point.y); // twitter
+        }
+
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {

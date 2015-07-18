@@ -13,14 +13,16 @@ class OptionSwitch {
     public Setting:string;
     public Selected: boolean;
     public Size: Size;
+    private _Lit: boolean;
 
-    constructor(position: Point, name, setting, value, size) {
+    constructor(position: Point, name, setting, value, size, lit) {
 
         this.Position = position;
         this.Name = name;
         this.Setting = setting;
         this.Selected = value;
         this.Size = size;
+        this._Lit = lit;
 
         console.log(this.Selected);
     }
@@ -39,6 +41,9 @@ class OptionSwitch {
 
         ctx.fillStyle = col;
         if (this.Selected) {
+            if (this._Lit) {
+                ctx.fillStyle = App.Palette[8];// WHITE
+            }
             ctx.fillRect(x + (w*0.5),y + (h*0.16),w*0.5,h*0.42);
         } else {
             ctx.fillRect(x, y + (h*0.16),w*0.5,h*0.42);

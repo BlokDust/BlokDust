@@ -11,7 +11,7 @@ import OptionHandle = require("./OptionHandle");
 class WaveRegion extends WaveForm{
 
 
-    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], handles: any) {
+    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], handles: any, mode: boolean) {
         super(waveform);
 
         this.Type = "waveregion";
@@ -27,6 +27,7 @@ class WaveRegion extends WaveForm{
         this.Log = log;
         this.Selected = false;
         this.Handles = handles;
+        this.Mode = mode;
 
         this.HandleRoll = [];
     }
@@ -83,17 +84,22 @@ class WaveRegion extends WaveForm{
 
             ctx.stroke();*/
 
-
+            var sliderNo = 2;
             // LOOP LINES //
-            ctx.lineWidth = 2;
-            ctx.beginPath();
 
-            ctx.moveTo(xs[2] + panel.Margin,y);
-            ctx.lineTo(xs[2] + panel.Margin,y + height);
-            ctx.moveTo(xs[3] + panel.Margin,y);
-            ctx.lineTo(xs[3] + panel.Margin,y + height);
-            ctx.stroke();
-            ctx.lineWidth = 1;
+            if (this.Mode) {
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(xs[2] + panel.Margin,y);
+                ctx.lineTo(xs[2] + panel.Margin,y + height);
+                ctx.moveTo(xs[3] + panel.Margin,y);
+                ctx.lineTo(xs[3] + panel.Margin,y + height);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+
+                sliderNo = 1;
+            }
+
 
 
 
@@ -106,7 +112,7 @@ class WaveRegion extends WaveForm{
 
             ctx.globalAlpha = 1;
 
-            for (var j=0; j<2; j++) {
+            for (var j=0; j<sliderNo; j++) {
                 ctx.fillStyle = ctx.strokeStyle = col;
 
 
@@ -132,21 +138,25 @@ class WaveRegion extends WaveForm{
                 ctx.closePath();
                 ctx.fill();
             }
-            for (var j=2; j<4; j++) {
-                ctx.fillStyle = App.Palette[8];// WHITE
 
-                x = xs[j];
+            if (this.Mode) {
+                for (var j=2; j<4; j++) {
+                    ctx.fillStyle = App.Palette[8];// WHITE
 
-                // GRAB TRIANGLES //
-                var dragWidth = ((height) * 0.16);
-                ctx.beginPath();
-                ctx.moveTo(x + panel.Margin - (dragWidth*0.5), y + (height * 0.5));
-                ctx.lineTo(x + panel.Margin, y + (height * 0.5) - (dragWidth*0.5));
-                ctx.lineTo(x + panel.Margin + (dragWidth*0.5), y + (height * 0.5));
-                ctx.lineTo(x + panel.Margin, y + (height * 0.5) + (dragWidth*0.5));
-                ctx.closePath();
-                ctx.fill();
+                    x = xs[j];
+
+                    // GRAB TRIANGLES //
+                    var dragWidth = ((height) * 0.16);
+                    ctx.beginPath();
+                    ctx.moveTo(x + panel.Margin - (dragWidth*0.5), y + (height * 0.5));
+                    ctx.lineTo(x + panel.Margin, y + (height * 0.5) - (dragWidth*0.5));
+                    ctx.lineTo(x + panel.Margin + (dragWidth*0.5), y + (height * 0.5));
+                    ctx.lineTo(x + panel.Margin, y + (height * 0.5) + (dragWidth*0.5));
+                    ctx.closePath();
+                    ctx.fill();
+                }
             }
+
 
 
 
@@ -158,7 +168,10 @@ class WaveRegion extends WaveForm{
             ctx.fillText("Loop", xs[2] + panel.Margin + (dragWidth*0.5) + (5*units), y + (height * 0.5) + (dataType*0.35));*/
 
             ctx.fillText("Start", xs[0] + panel.Margin + (5*units), y + (dataType*0.8));
-            ctx.fillText("Loop", xs[2] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
+            if (this.Mode) {
+                ctx.fillText("Loop", xs[2] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
+            }
+
         }
 
 

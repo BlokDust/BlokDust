@@ -225,7 +225,8 @@ class RecorderBlock extends Source {
                         "max" : this.GetDuration(),
                         "quantised" : false,
                         "centered" : false,
-                        "wavearray" : this._WaveForm
+                        "wavearray" : this._WaveForm,
+                        "mode" : this.Params.loop
                     },
                     "nodes": [
                         {
@@ -257,12 +258,14 @@ class RecorderBlock extends Source {
                         {
                             "name": "Reverse",
                             "setting": "reverse",
-                            "value": this.Params.reverse
+                            "value": this.Params.reverse,
+                            "lit" : true
                         },
                         {
                             "name": "Looping",
                             "setting": "loop",
-                            "value": this.Params.loop
+                            "value": this.Params.loop,
+                            "lit" : true
                         }
                     ]
                 },
@@ -310,6 +313,12 @@ class RecorderBlock extends Source {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
+                // update showing loop sliders
+                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                    this.Params[param] = val;
+                    this.UpdateOptionsForm();
+                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                }
                 break;
             case "loopStart":
                 this.Sources.forEach((s: Tone.Simpler)=> {
