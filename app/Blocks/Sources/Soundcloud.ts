@@ -6,6 +6,7 @@ import SoundCloudAudioType = require('../SoundCloudAudioType');
 
 class Soundcloud extends Source {
 
+    private _WaveForm: number[];
     public Sources : Tone.Simpler[];
     //public PlaybackRate: number = 1; //TODO: Use Params.playbackRate instead
 
@@ -16,6 +17,7 @@ class Soundcloud extends Source {
                 playbackRate: 1,
                 reverse: 1, //TODO: Should be boolean,
                 startPosition: 0,
+                endPosition: 0,
                 loop: 1,
                 loopStart: 0,
                 loopEnd: 0,
@@ -24,6 +26,8 @@ class Soundcloud extends Source {
                 track: ''
             };
         }
+
+        this._WaveForm = [];
 
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
@@ -49,12 +53,46 @@ class Soundcloud extends Source {
         this.Sources.push( new Tone.Simpler(this.Params.track) );
         this.Sources.forEach((s: Tone.Simpler)=> {
             s.player.startPosition = this.Params.startPosition;
+            s.player.duration = this.Params.endPosition - this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
             s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
         });
+
+        // Update waveform
+
+        var buffer = new Tone.Buffer(this.Params.track, (e) => {
+            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,2,95);
+            var duration = this.GetDuration();
+            this.Params.startPosition = 0;
+            this.Params.endPosition = duration;
+            this.Params.loopStart = duration * 0.5;
+            this.Params.loopEnd = duration * 0.75;
+
+            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                this.UpdateOptionsForm();
+                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+            }
+        });
+
+        /*this.Sources[0].player.buffer.onload = (e) => {
+            console.log(e);
+            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,2,95);
+            var duration = this.GetDuration();
+            this.Params.startPosition = 0;
+            this.Params.endPosition = duration;
+            this.Params.loopStart = duration * 0.5;
+            this.Params.loopEnd = duration * 0.75;
+
+            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                this.UpdateOptionsForm();
+                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+            }
+        };*/
+
+
 
         return super.CreateSource();
     }
@@ -77,6 +115,62 @@ class Soundcloud extends Source {
             "parameters" : [
 
                 {
+                    "type" : "waveregion",
+                    "name" : "Recording",
+                    "setting" :"region",
+                    "props" : {
+                        "value" : 5,
+                        "min" : 0,
+                        "max" : this.GetDuration(),
+                        "quantised" : false,
+                        "centered" : false,
+                        "wavearray" : this._WaveForm
+                    },"nodes": [
+                        {
+                            "setting": "startPosition",
+                            "value": this.Params.startPosition
+                        },
+
+                        {
+                            "setting": "endPosition",
+                            "value": this.Params.endPosition
+                        },
+
+                        {
+                            "setting": "loopStart",
+                            "value": this.Params.loopStart
+                        },
+
+                        {
+                            "setting": "loopEnd",
+                            "value": this.Params.loopEnd
+                        }
+                    ]
+                },
+                {
+                    "type" : "switches",
+                    "name" : "Loop",
+                    "setting" :"loop",
+                    "props" : {
+                        "value" : this.Params.loop,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : true,
+                    },
+                    "switches": [
+                        {
+                            "name": "Reverse",
+                            "setting": "reverse",
+                            "value": this.Params.reverse
+                        },
+                        {
+                            "name": "Looping",
+                            "setting": "loop",
+                            "value": this.Params.loop
+                        }
+                    ]
+                },
+                {
                     "type" : "slider",
                     "name" : "Playback rate",
                     "setting" :"playbackRate",
@@ -88,7 +182,7 @@ class Soundcloud extends Source {
                         "centered" : true,
                         "logarithmic": true
                     }
-                },
+                }/*,
                 {
                     "type" : "slider",
                     "name" : "Reverse",
@@ -154,7 +248,7 @@ class Soundcloud extends Source {
                         "max" : 20,
                         "quantised" : false,
                     }
-                }
+                }*/
             ]
         };
     }
@@ -172,6 +266,13 @@ class Soundcloud extends Source {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.reverse = value;
                 });
+                // Update waveform
+                /*this._WaveForm = this.GetWaveformFromBuffer(this.Sources[0].player.buffer,200,2,95);
+                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                    this.Params[param] = val;
+                    this.UpdateOptionsForm();
+                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                }*/
                 break;
             case "startPosition":
                 this.Sources.forEach((s: Tone.Simpler)=> {

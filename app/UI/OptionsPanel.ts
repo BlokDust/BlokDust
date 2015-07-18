@@ -39,6 +39,7 @@ class OptionsPanel extends DisplayObject {
     public InitJson;
     private _JsonMemory;
     public Hover: boolean;
+    public Outline: Point[] = [];
 
     constructor() {
         super();
@@ -164,6 +165,27 @@ class OptionsPanel extends DisplayObject {
         this.Range = panelR;
         this._Name = json.name;
         this._NameWidth = nameW;
+
+
+        // DEFINE OUTLINE FOR HITTEST
+        var topY =  - (panelH*0.5);
+        var margin = this.Margin;
+
+        this.Outline.push(
+            new Point(0, 0), // block
+            new Point(44*units, 0),
+            new Point(44*units,topY), // top left
+            new Point(margin - (25*units), topY), // name tab start
+            new Point(margin - (5*units), topY - (20*units)),
+            new Point(margin + (5*units) + this._NameWidth, topY - (20*units)),
+            new Point(margin + (25*units) + this._NameWidth, topY), // name tab end
+            new Point(panelW - (40*units), topY), // close start
+            new Point(panelW - (20*units), topY - (20*units)),
+            new Point(panelW, topY), // top right
+            new Point(panelW, panelH*0.5), // bottom right
+            new Point(44*units, panelH*0.5), // bottom left
+            new Point(44*units, 44*units)
+        );
 
 
         // POPULATE OPTIONS //
@@ -558,7 +580,7 @@ class OptionsPanel extends DisplayObject {
                 }
             }
             if (this.Options[i].Type=="waveregion") {
-                for (var j=0;j<this.Options[i].Handles.length;j++) {
+                for (var j=this.Options[i].Handles.length-1;j>-1;j--) {
                     if (this.Options[i].HandleRoll[j]) {
                         this.Options[i].Handles[j].Selected = true;
                         this.HandleSet(i, j, 0,this.Options[i].Size.height,mx, my);
@@ -648,6 +670,9 @@ class OptionsPanel extends DisplayObject {
                 if (handles[3].Position.x < (handles[2].Position.x+1)) {
                     this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
                 }
+                if (handles[3].Position.x > (handles[1].Position.x+1)) {
+                    this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[1].Position.x+1) + this.Position.x + this.Margin, my);
+                }
                 if (handles[1].Position.x < (handles[0].Position.x+1)) {
                     this.HandleSet(i, 1, 0, this.Options[i].Size.height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);
                 }
@@ -676,8 +701,8 @@ class OptionsPanel extends DisplayObject {
     RolloverCheck(mx,my) {
         var units = this.Sketch.Unit.width;
 
-        this.Hover = this.HitRect(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
-
+        //this.Hover = this.HitRect(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
+        this.Hover = this.OutlineTest(new Point(mx,my));
 
         for (var i=0;i<this.Options.length;i++) {
 
@@ -718,6 +743,21 @@ class OptionsPanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
     //  MATHS
     //-------------------------------------------------------------------------------------------
+
+    OutlineTest(point: Point): boolean {
+
+        this.Ctx.beginPath();
+        this.Ctx.moveTo(this.Position.x + this.Outline[0].x, this.Position.y + this.Outline[0].y);
+
+        for (var i = 1; i < this.Outline.length; i++) {
+            this.Ctx.lineTo(this.Position.x + this.Outline[i].x, this.Position.y + this.Outline[i].y);
+        }
+
+        this.Ctx.closePath();
+
+        return this.Ctx.isPointInPath(point.x, point.y);
+    }
+
 
     // DRAGGING A HANDLE //
     HandleSet(n,h,xStart,yRange,mx,my) {

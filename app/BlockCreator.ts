@@ -101,7 +101,7 @@ class BlockCreator {
                     {
                         "name": "Tone",
                         "id": ToneSource,
-                        "description": "A single oscillator with frequency and waveform controls."
+                        "description": "A single oscillator. Creates a waveform used as the basis of most synths."
                     },
                     {
                         "name": "Noise",
@@ -111,12 +111,12 @@ class BlockCreator {
                     {
                         "name": "Microphone",
                         "id": Microphone,
-                        "description": "Captures sound from the devices microphone input. Connect it to a Power block to arm it and avoid audio feedback by using headphones."
+                        "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones."
                     },
                     {
                         "name": "SoundCloud",
                         "id": Soundcloud,
-                        "description": "A sampler loaded with a SoundCloud track of your choice. Select a section of the audio and loop it, reverse it or change the playback rate"
+                        "description": "A sampler player loaded with a SoundCloud track of your choice."
                     },
                     {
                         "name": "Granular",
@@ -126,7 +126,7 @@ class BlockCreator {
                     {
                         "name": "Recorder",
                         "id": Recorder,
-                        "description": "Records the master output and then works like a SoundCloud Block. You can then play back your recordings on a loop and at different pitches."
+                        "description": "Records the master output and then works as a sample player like the SoundCloud Block."
                     }
                 ]
             },
@@ -188,37 +188,37 @@ class BlockCreator {
                     {
                         "name": "Filter",
                         "id": Filter,
-                        "description": "A 'peaking' filter used for boosting or suppressing frequencies."
+                        "description": "A 'peaking' filter used for boosting or suppressing frequencies. Can connect to any source block."
                     },
                     {
                         "name": "Gain",
                         "id": Gain,
-                        "description": "Increase or decrease the volume."
+                        "description": "Increase or decrease the volume. Can connect to any source block."
                     },
                     {
                         "name": "LFO",
                         "id": LFO,
-                        "description": "Modulates the pitch of a Tone block."
+                        "description": "Modulates pitch, Can connect to Tone blocks."
                     },
                     {
                         "name": "Phaser",
                         "id": Phaser,
-                        "description": "Creates a sweeping effect by mixing the original audio with a slightly shifted out-of-time copy."
+                        "description": "Creates a sweeping phase effect. Can connect to any source block."
                     },
                     {
                         "name": "Pitch",
                         "id": Pitch,
-                        "description": "Multiplies the pitch of a source. A pitch setting of 2 would mean twice the pitch or an octave higher."
+                        "description": "Multiplies pitch. Can connect to any source block."
                     },
                     {
                         "name": "Reverb",
                         "id": Reverb,
-                        "description": "A digital reverb based on the Freeverb which uses 8 comb filters on both left and right channels."
+                        "description": "A digital reverb based on the 'Freeverb'. Can connect to any source block."
                     },
                     {
                         "name": "Scuzz",
                         "id": Scuzz,
-                        "description": "No idea. Can connect to Tone Blocks"
+                        "description": "No idea. Can connect to Tone Blocks."
                     }
                 ]
             },
@@ -229,7 +229,7 @@ class BlockCreator {
                     {
                         "name": "Particle Emitter",
                         "id": ParticleEmitter,
-                        "description": "Fires particles across the screen. When a particle hits a source block, that source is momentarily triggered."
+                        "description": "Fires energy particles across the screen. When a particle hits a source block, that source is momentarily triggered."
                     },
                     {
                         "name": "Power",
@@ -260,12 +260,12 @@ class BlockCreator {
                     {
                         "name": "Computer Keyboard",
                         "id": ComputerKeyboard,
-                        "description": "Control a source using your computer keys. In monophonic mode, one note is produced at a time. Glide can be added to sweep from one note to another. In polyphonic mode, multiple notes can be played together."
+                        "description": "Control a source using your computer keys."
                     },
                     {
                         "name": "MIDI Controller",
                         "id": MIDIController,
-                        "description": "Allows you to control source blocks with a USB MIDI device. Connect the device and make sure it is selected in the settings panel. Same settings as Computer Keyboard."
+                        "description": "Control source blocks using a connected USB MIDI device."
                     }
                 ]
             }

@@ -157,8 +157,8 @@ class WaveRegion extends WaveForm{
             /*ctx.fillText("Play", xs[0] + panel.Margin + (dragWidth) + (5*units), y + (height * 0.5) + (dataType*0.35));
             ctx.fillText("Loop", xs[2] + panel.Margin + (dragWidth*0.5) + (5*units), y + (height * 0.5) + (dataType*0.35));*/
 
-            ctx.fillText("Start", xs[0] + panel.Margin + (5*units), y + (dataType*0.6));
-            ctx.fillText("Loop", xs[2] + panel.Margin + (5*units), y + (dataType*0.6));
+            ctx.fillText("Start", xs[0] + panel.Margin + (5*units), y + (dataType*0.8));
+            ctx.fillText("Loop", xs[2] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
         }
 
 

@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 13/06/2015.
  */
-
+import Version = require("./../_Version");
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
@@ -19,6 +19,7 @@ class SettingsPanel extends DisplayObject{
     public MenuJson: any;
     public Height: number;
     private _OpenTab: number;
+    private _VersionNumber: string;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -30,7 +31,7 @@ class SettingsPanel extends DisplayObject{
         this.MenuItems = [];
         this._MenuCols = [9,5,7,4,3];
         this._OpenTab = 2;
-
+        this._VersionNumber = Version.Version;
 
         /*this._CopyJson = {
             credits: "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton.",
@@ -60,7 +61,7 @@ class SettingsPanel extends DisplayObject{
             },
 
             thanks: "Thanks also to Yotam Mann and Brad Sickles.",
-            build: "Current Build: 0.1.5.6789"
+            build: "Current Build: " + this._VersionNumber
         };
 
         this.MenuJson = {

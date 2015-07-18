@@ -437,6 +437,7 @@ class Source extends Block implements ISource {
 
     GetWaveformFromBuffer(buffer,detail,precision,normal) {
 
+        console.log(buffer);
 
         var waveform = [];
         var newWaveform = [];

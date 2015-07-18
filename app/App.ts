@@ -143,6 +143,10 @@ class App implements IApp{
                 this.Deserialize(data);
                 this.CreateUI();
                 this.RefreshBlocks();
+            }).catch((error: string) => {
+                // fail silently
+                this.CreateUI();
+                this.RefreshBlocks();
             });
         } else {
             this.CreateUI();
