@@ -337,11 +337,11 @@ class RecorderBlock extends Source {
         if (index === 'all'){
             // Trigger all the envelopes
             this.Sources.forEach((s: any)=> {
-                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition);
+                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
             });
         } else {
             // Trigger the specific one
-            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition);
+            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
         }
     }
 
