@@ -60,7 +60,7 @@ class Pitch extends PreEffect {
 
             // TONE.PLAYERS
         } else if (source instanceof Soundcloud){
-            source.Sources.forEach((s: Tone.Sampler) => {
+            source.Sources.forEach((s: Tone.Simpler) => {
                 s.player.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
             });
 
@@ -74,7 +74,7 @@ class Pitch extends PreEffect {
 
             // RECORDER
         } else if (source instanceof Recorder) {
-            source.Sources.forEach((s: Tone.Sampler) => {
+            source.Sources.forEach((s: Tone.Simpler) => {
                 s.player.playbackRate = source.PlaybackRate * this._GetConnectedPitchPreEffects(source);
             });
         }

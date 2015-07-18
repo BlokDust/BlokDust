@@ -10,10 +10,10 @@ class Chorus extends PostEffect {
 
         if (!this.Params) {
             this.Params = {
-                rate: 1,
-                delayTime: 2.5,
-                depth: 0.4,
-                feedback: 0.2
+                rate: 2,
+                delayTime: 2.22,
+                depth: 0.9,
+                feedback: 0.9
             };
         }
 
@@ -21,7 +21,7 @@ class Chorus extends PostEffect {
         this.Effect = new Tone.Chorus({
             "rate" : this.Params.rate,
             "delayTime" : this.Params.delayTime,
-            "type" : 'triangle',
+            "type" : 'sine',
             "depth" : this.Params.depth,
             "feedback" : this.Params.feedback
         });
@@ -114,7 +114,7 @@ class Chorus extends PostEffect {
                     "props" : {
                         "value" : this.Params.depth,
                         "min" : 0,
-                        "max" : 3,
+                        "max" : 1,
                         "quantised" : false,
                         "centered" : false
                     }

@@ -38,8 +38,8 @@ class Envelope extends PreEffect {
                 e.sustain = this.Params.sustain;
                 e.release = this.Params.release;
             });
-        } else if (source.Sources[0] instanceof Tone.Sampler) {
-            source.Sources.forEach((s: Tone.Sampler) => {
+        } else if (source.Sources[0] instanceof Tone.Simpler) {
+            source.Sources.forEach((s: Tone.Simpler) => {
                 let e = s.envelope;
                 e.attack = this.Params.attack;
                 e.decay = this.Params.decay;
@@ -59,8 +59,8 @@ class Envelope extends PreEffect {
                 e.sustain = 0.5;
                 e.release = 0.02;
             });
-        } else if (source.Sources[0] instanceof Tone.Sampler) {
-            source.Sources.forEach((s: Tone.Sampler) => {
+        } else if (source.Sources[0] instanceof Tone.Simpler) {
+            source.Sources.forEach((s: Tone.Simpler) => {
                 let e = s.envelope;
                 e.attack = 0.02;
                 e.decay = 0.5;

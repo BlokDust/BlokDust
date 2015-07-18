@@ -4,7 +4,7 @@ import Source = require("../Source");
 
 class RecorderBlock extends Source {
 
-    public Sources : Tone.Sampler[];
+    public Sources : Tone.Simpler[];
     public Recorder: any;
     public BufferSource;
     public Filename: string;
@@ -46,7 +46,7 @@ class RecorderBlock extends Source {
             e = this.Sources[i].envelope;
         });
 
-        this.Sources.forEach((s: Tone.Sampler) => {
+        this.Sources.forEach((s: Tone.Simpler) => {
             s.connect(this.EffectsChainInput);
             s.volume.value = this.Params.volume;
         });
@@ -89,7 +89,9 @@ class RecorderBlock extends Source {
     StartRecording() {
         this.Recorder.clear();
         console.log('STARTED RECORDING...');
-        App.Message("Started Recording",1);
+        App.Message('Started Recording', {
+            'seconds': 1,
+        });
         this.IsRecording = true;
         this.Recorder.record();
     }
@@ -98,7 +100,9 @@ class RecorderBlock extends Source {
         this.Recorder.stop();
         this.IsRecording = false;
         console.log('STOPPED RECORDING');
-        App.Message("Stopped Recording",1);
+        App.Message('Stopped Recording', {
+            'seconds': 1,
+        });
         this.SetBuffers();
     }
 
@@ -139,7 +143,7 @@ class RecorderBlock extends Source {
             }
 
             // Set the buffers for each source
-            this.Sources.forEach((s: Tone.Sampler)=> {
+            this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = this.BufferSource.buffer;
                 s.player.startPosition = this.Params.startPosition;
                 s.player.duration = this.Params.endPosition - this.Params.startPosition;
@@ -191,9 +195,9 @@ class RecorderBlock extends Source {
     }
 
     CreateSource(){
-        this.Sources.push( new Tone.Sampler(this.BufferSource) );
+        this.Sources.push( new Tone.Simpler(this.BufferSource) );
 
-        this.Sources.forEach((s: Tone.Sampler, i: number)=> {
+        this.Sources.forEach((s: Tone.Simpler, i: number)=> {
             s.player.startPosition = this.Params.startPosition;
             s.player.duration = this.Params.endPosition - this.Params.startPosition;
             s.player.loop = this.Params.loop;
@@ -368,7 +372,7 @@ class RecorderBlock extends Source {
             case "reverse":
                 value = value? true : false;
                 console.log("out: "+ value);
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.reverse = value;
                     console.log(s.player.reverse);
                 });
@@ -381,28 +385,28 @@ class RecorderBlock extends Source {
                 }
                 break;
             case "startPosition":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.startPosition = value;
                 });
                 break;
             case "endPosition":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.duration = value - this.Params.startPosition;
                 });
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
                 break;
             case "loopStart":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopStart = value;
                 });
                 break;
             case "loopEnd":
-                this.Sources.forEach((s: Tone.Sampler)=> {
+                this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
                 break;
