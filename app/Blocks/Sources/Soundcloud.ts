@@ -8,17 +8,15 @@ class Soundcloud extends Source {
 
     private _WaveForm: number[];
     public Sources : Tone.Simpler[];
-    //public PlaybackRate: number = 1; //TODO: Use Params.playbackRate instead
-
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
-                reverse: 1, //TODO: Should be boolean,
+                reverse: false,
                 startPosition: 0,
-                endPosition: 0,
-                loop: 1,
+                endPosition: null,
+                loop: true,
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
@@ -52,8 +50,6 @@ class Soundcloud extends Source {
     CreateSource(){
         this.Sources.push( new Tone.Simpler(this.Params.track) );
         this.Sources.forEach((s: Tone.Simpler)=> {
-            s.player.startPosition = this.Params.startPosition;
-            s.player.duration = this.Params.endPosition - this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
@@ -66,7 +62,6 @@ class Soundcloud extends Source {
         var buffer = new Tone.Buffer(this.Params.track, (e) => {
             this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,2,95);
             var duration = this.GetDuration();
-            this.Params.startPosition = 0;
             this.Params.endPosition = duration;
             this.Params.loopStart = duration * 0.5;
             this.Params.loopEnd = duration * 0.75;
@@ -151,12 +146,6 @@ class Soundcloud extends Source {
                     "type" : "switches",
                     "name" : "Loop",
                     "setting" :"loop",
-                    "props" : {
-                        "value" : this.Params.loop,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true,
-                    },
                     "switches": [
                         {
                             "name": "Reverse",
@@ -182,73 +171,7 @@ class Soundcloud extends Source {
                         "centered" : true,
                         "logarithmic": true
                     }
-                }/*,
-                {
-                    "type" : "slider",
-                    "name" : "Reverse",
-                    "setting" :"reverse",
-                    "props" : {
-                        "value" : this.Params.reverse,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Loop",
-                    "setting" :"loop",
-                    "props" : {
-                        "value" : this.Params.loop,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Start Position",
-                    "setting" :"startPosition",
-                    "props" : {
-                        "value" : this.Params.startPosition,
-                        "min" : 0,
-                        "max" : 10,//this.GetDuration(),
-                        "quantised" : false,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Loop Start",
-                    "setting" :"loopStart",
-                    "props" : {
-                        "value" : this.Params.loopStart,
-                        "min" : 0,
-                        "max" : 10,//this.GetDuration(),
-                        "quantised" : false,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Loop End",
-                    "setting" :"loopEnd",
-                    "props" : {
-                        "value" : this.Params.loopEnd,
-                        "min" : 0.0001,
-                        "max" : 10,//this.GetDuration(),
-                        "quantised" : false,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Volume",
-                    "setting" :"volume",
-                    "props" : {
-                        "value" : this.Params.volume,
-                        "min" : 0,
-                        "max" : 20,
-                        "quantised" : false,
-                    }
-                }*/
+                }
             ]
         };
     }
@@ -273,11 +196,6 @@ class Soundcloud extends Source {
                     this.UpdateOptionsForm();
                     (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
                 }*/
-                break;
-            case "startPosition":
-                this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.startPosition = value;
-                });
                 break;
             case "loop":
                 value = value? true : false;
@@ -305,6 +223,46 @@ class Soundcloud extends Source {
             return this.Sources[0].player.buffer.duration;
         }
         return 0;
+    }
+
+    /**
+     * Trigger a Simpler's attack
+     * If no index is set trigger the first in the array
+     * @param {number | string} index
+     * Index is the position of the Envelope in Envelopes[].
+     * If index is set to 'all', all envelopes will be triggered
+     */
+    TriggerAttack(index: number|string = 0) {
+        if (index === 'all'){
+            // Trigger all the envelopes
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition);
+            });
+        } else {
+            // Trigger the specific one
+            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition);
+        }
+    }
+
+    /**
+     * Trigger a Simpler's release
+     * If no index is set release the first in the array
+     * @param index number|string position of the Envelope in Envelopes[].
+     * If index is set to 'all', all envelopes will be released
+     */
+    TriggerRelease(index: number|string = 0) {
+        // Only if it's not powered
+        if (!this.IsPowered()) {
+            if (index === 'all'){
+                // Trigger all the envelopes
+                this.Sources.forEach((s: any)=> {
+                    s.triggerRelease();
+                });
+            } else {
+                // Trigger the specific one
+                this.Sources[index].triggerRelease();
+            }
+        }
     }
 
     Dispose(){

@@ -20,10 +20,10 @@ class RecorderBlock extends Source {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
-                reverse: 0, //TODO: Should be boolean,
+                reverse: false,
                 startPosition: 0,
                 endPosition: 0,
-                loop: 1, //TODO: Should be boolean,
+                loop: true,
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
@@ -88,7 +88,6 @@ class RecorderBlock extends Source {
 
     StartRecording() {
         this.Recorder.clear();
-        console.log('STARTED RECORDING...');
         App.Message('Started Recording', {
             'seconds': 1,
         });
@@ -99,7 +98,6 @@ class RecorderBlock extends Source {
     StopRecording() {
         this.Recorder.stop();
         this.IsRecording = false;
-        console.log('STOPPED RECORDING');
         App.Message('Stopped Recording', {
             'seconds': 1,
         });
@@ -132,7 +130,6 @@ class RecorderBlock extends Source {
             // Update waveform
             this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
             var duration = this.GetDuration();
-            this.Params.startPosition = 0;
             this.Params.endPosition = duration;
             this.Params.loopStart = duration * 0.5;
             this.Params.loopEnd = duration * 0.75;
@@ -145,8 +142,6 @@ class RecorderBlock extends Source {
             // Set the buffers for each source
             this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = this.BufferSource.buffer;
-                s.player.startPosition = this.Params.startPosition;
-                s.player.duration = this.Params.endPosition - this.Params.startPosition;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
             });
@@ -156,7 +151,7 @@ class RecorderBlock extends Source {
     }
 
     private _OnBuffersReady() {
-        console.log("READY FOR PLAYBACK - CLICK, POWER OR CONNECT TO AN INTERACTION BLOCK")
+        //Buffers Loaded
     }
 
     GetDuration() {
@@ -198,8 +193,6 @@ class RecorderBlock extends Source {
         this.Sources.push( new Tone.Simpler(this.BufferSource) );
 
         this.Sources.forEach((s: Tone.Simpler, i: number)=> {
-            s.player.startPosition = this.Params.startPosition;
-            s.player.duration = this.Params.endPosition - this.Params.startPosition;
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
@@ -233,38 +226,33 @@ class RecorderBlock extends Source {
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this._WaveForm
-                    },"nodes": [
-                    {
-                        "setting": "startPosition",
-                        "value": this.Params.startPosition
                     },
+                    "nodes": [
+                        {
+                            "setting": "startPosition",
+                            "value": this.Params.startPosition
+                        },
 
-                    {
-                        "setting": "endPosition",
-                        "value": this.Params.endPosition
-                    },
+                        {
+                            "setting": "endPosition",
+                            "value": this.Params.endPosition
+                        },
 
-                    {
-                        "setting": "loopStart",
-                        "value": this.Params.loopStart
-                    },
+                        {
+                            "setting": "loopStart",
+                            "value": this.Params.loopStart
+                        },
 
-                    {
-                        "setting": "loopEnd",
-                        "value": this.Params.loopEnd
-                    }
-                ]
+                        {
+                            "setting": "loopEnd",
+                            "value": this.Params.loopEnd
+                        }
+                    ]
                 },
                 {
                     "type" : "switches",
                     "name" : "Loop",
                     "setting" :"loop",
-                    "props" : {
-                        "value" : this.Params.loop,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true,
-                    },
                     "switches": [
                         {
                             "name": "Reverse",
@@ -277,29 +265,7 @@ class RecorderBlock extends Source {
                             "value": this.Params.loop
                         }
                     ]
-                }/*,
-                {
-                    "type" : "slider",
-                    "name" : "Reverse",
-                    "setting" :"reverse",
-                    "props" : {
-                        "value" : this.Params.reverse,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true,
-                    }
                 },
-                {
-                    "type" : "slider",
-                    "name" : "Loop",
-                    "setting" :"loop",
-                    "props" : {
-                        "value" : this.Params.loop,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true,
-                    }
-                }*/,
                 {
                     "type" : "slider",
                     "name" : "playback",
@@ -312,51 +278,7 @@ class RecorderBlock extends Source {
                         "centered" : true,
                         "logarithmic": true
                     }
-                }/*,
-                {
-                    "type" : "slider",
-                    "name" : "Start Position",
-                    "setting" :"startPosition",
-                    "props" : {
-                        "value" : this.Params.startPosition,
-                        "min" : 0,
-                        "max" : 10,//this.GetDuration(),
-                        "quantised" : false,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Loop Start",
-                    "setting" :"loopStart",
-                    "props" : {
-                        "value" : this.Params.loopStart,
-                        "min" : 0,
-                        "max" : 20,//this.GetDuration(),
-                        "quantised" : false,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Loop End",
-                    "setting" :"loopEnd",
-                    "props" : {
-                        "value" : this.Params.loopEnd,
-                        "min" : 0.0001,
-                        "max" : 20,//this.GetDuration(),
-                        "quantised" : false,
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Volume",
-                    "setting" :"volume",
-                    "props" : {
-                        "value" : this.Params.volume,
-                        "min" : 0,
-                        "max" : 20,
-                        "quantised" : false,
-                    }
-                }*/
+                }
             ]
         };
     }
@@ -374,7 +296,6 @@ class RecorderBlock extends Source {
                 console.log("out: "+ value);
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.reverse = value;
-                    console.log(s.player.reverse);
                 });
                 // Update waveform
                 this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
@@ -383,16 +304,6 @@ class RecorderBlock extends Source {
                     this.UpdateOptionsForm();
                     (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
                 }
-                break;
-            case "startPosition":
-                this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.startPosition = value;
-                });
-                break;
-            case "endPosition":
-                this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.duration = value - this.Params.startPosition;
-                });
                 break;
             case "loop":
                 value = value? true : false;
@@ -414,6 +325,47 @@ class RecorderBlock extends Source {
 
         this.Params[param] = val;
     }
+
+    /**
+     * Trigger a Simpler's attack
+     * If no index is set trigger the first in the array
+     * @param {number | string} index
+     * Index is the position of the Envelope in Envelopes[].
+     * If index is set to 'all', all envelopes will be triggered
+     */
+    TriggerAttack(index: number|string = 0) {
+        if (index === 'all'){
+            // Trigger all the envelopes
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition);
+            });
+        } else {
+            // Trigger the specific one
+            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition);
+        }
+    }
+
+    /**
+     * Trigger a Simpler's release
+     * If no index is set release the first in the array
+     * @param index number|string position of the Envelope in Envelopes[].
+     * If index is set to 'all', all envelopes will be released
+     */
+    TriggerRelease(index: number|string = 0) {
+        // Only if it's not powered
+        if (!this.IsPowered()) {
+            if (index === 'all'){
+                // Trigger all the envelopes
+                this.Sources.forEach((s: any)=> {
+                    s.triggerRelease();
+                });
+            } else {
+                // Trigger the specific one
+                this.Sources[index].triggerRelease();
+            }
+        }
+    }
+
 }
 
 export = RecorderBlock;
