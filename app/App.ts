@@ -206,8 +206,12 @@ class App implements IApp{
         this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
     }
 
-    Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-        this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+    //    this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    //}
+
+    Message(string?: string, options?: any) {
+        this.BlocksSketch.MessagePanel.NewMessage(string, options);
     }
 
     get PixelRatio(): number {
@@ -237,6 +241,11 @@ class App implements IApp{
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
         (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    TranslateMousePointToPixelRatioPoint(point: Point){
+        point.x *= this.PixelRatio;
+        point.y *= this.PixelRatio;
     }
 }
 

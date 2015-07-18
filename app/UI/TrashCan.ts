@@ -47,7 +47,7 @@ class TrashCan extends DisplayObject {
 
     MouseMove(point) {
         var units = (<BlocksSketch>this.Sketch).Unit.width;
-        this._RollOver = this.HudCheck((<BlocksSketch>this.Sketch).Width - (60*units),(<BlocksSketch>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
+        this._RollOver = this.HitRect((<BlocksSketch>this.Sketch).Width - (60*units),(<BlocksSketch>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 
     MouseUp() {
@@ -56,11 +56,6 @@ class TrashCan extends DisplayObject {
             return true;
         }
         return false;
-    }
-
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
     }
 
 }

@@ -6,13 +6,15 @@ import SoundCloudAudioType = require('../SoundCloudAudioType');
 
 class Soundcloud extends Source {
 
-    public Sources : Tone.Player[];
+    public Sources : Tone.Sampler[];
+    //public PlaybackRate: number = 1; //TODO: Use Params.playbackRate instead
+
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
-                reverse: 0, //TODO: Should be boolean,
+                reverse: 1, //TODO: Should be boolean,
                 startPosition: 0,
                 loop: 1,
                 loopStart: 0,
@@ -23,21 +25,19 @@ class Soundcloud extends Source {
             };
         }
 
-        const localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
+        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
-        this.Params.track = localUrl;
 
         super.Init(sketch);
 
         this.CreateSource();
-        this.CreateEnvelope();
 
-        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-            e.connect(this.EffectsChainInput);
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+            e = this.Sources[i].envelope;
         });
 
-        this.Sources.forEach((s: Tone.Player, i: number) => {
-            s.connect(this.Envelopes[i]);
+        this.Sources.forEach((s: Tone.Sampler) => {
+            s.connect(this.EffectsChainInput);
         });
 
         // Define Outline for HitTest
@@ -45,47 +45,17 @@ class Soundcloud extends Source {
     }
 
     CreateSource(){
-        this.Sources.push( new Tone.Player(this.Params.track) );
-        this.Sources.forEach((s: Tone.Player)=> {
-            //s.startPosition = this.Params.startPosition;
-            s.loop = this.Params.loop;
-            s.loopStart = this.Params.loopStart;
-            s.loopEnd = this.Params.loopEnd;
-            s.retrigger = this.Params.retrigger;
-            s.reverse = this.Params.reverse;
+        this.Sources.push( new Tone.Sampler(this.Params.track) );
+        this.Sources.forEach((s: Tone.Sampler)=> {
+            s.player.startPosition = this.Params.startPosition;
+            s.player.loop = this.Params.loop;
+            s.player.loopStart = this.Params.loopStart;
+            s.player.loopEnd = this.Params.loopEnd;
+            s.player.retrigger = this.Params.retrigger;
+            s.player.reverse = this.Params.reverse;
         });
 
         return super.CreateSource();
-    }
-
-    CreateEnvelope(){
-        this.Envelopes.push( new Tone.AmplitudeEnvelope(
-            this.Settings.envelope.attack,
-            this.Settings.envelope.decay,
-            this.Settings.envelope.sustain,
-            this.Settings.envelope.release
-        ));
-
-        return super.CreateEnvelope();
-    }
-
-    TriggerAttack(index: number|string = 0) {
-        if (this.Sources[index].buffer.loaded){
-            super.TriggerAttack(index);
-            this.Sources[index].start(this.Sources[0].now(), this.Params.startPosition);
-        }
-    }
-
-    TriggerRelease(index: number|string = 0) {  //TODO: add time parameter
-        if (this.Sources[index].buffer.loaded && !this.IsPowered()) {
-            super.TriggerRelease(index);
-            //this.Sources[index].stop(this.Sources[0].now()); //FIXME: at the moment player dies if parameter is more than zero
-            let time;
-            let timeToSecs = this.Sources[0].toSeconds(time);
-            let release = this.Sources[0].toSeconds(this.Envelopes[0].release)
-            let added = timeToSecs + release;
-            this.Sources[index].stop(added);
-        }
     }
 
     Update() {
@@ -194,33 +164,33 @@ class Soundcloud extends Source {
 
         switch(param) {
             case "playbackRate":
-                this.Sources[0].playbackRate = value;
+                this.Sources[0].player.playbackRate = value;
                 break;
             case "reverse":
                 value = value? true : false;
-                this.Sources.forEach((s: Tone.Player)=> {
-                    s.reverse = value;
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.reverse = value;
                 });
                 break;
-            //case "startPosition":
-            //    this.Sources.forEach((s: Tone.Player)=> {
-            //        s.startPosition = value;dfdsf
-            //    });
-            //    break;
+            case "startPosition":
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.startPosition = value;
+                });
+                break;
             case "loop":
                 value = value? true : false;
-                this.Sources.forEach((s: Tone.Player)=> {
-                    s.loop = value;
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.loop = value;
                 });
                 break;
             case "loopStart":
-                this.Sources.forEach((s: Tone.Player)=> {
-                    s.loopStart = value;
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.loopStart = value;
                 });
                 break;
             case "loopEnd":
-                this.Sources.forEach((s: Tone.Player)=> {
-                    s.loopEnd = value;
+                this.Sources.forEach((s: Tone.Sampler)=> {
+                    s.player.loopEnd = value;
                 });
                 break;
         }
@@ -229,8 +199,8 @@ class Soundcloud extends Source {
     }
 
     GetDuration() {
-        if (this.Sources[0] && this.Sources[0].buffer && this.Sources[0].buffer.duration){
-            return this.Sources[0].buffer.duration;
+        if (this.Sources[0] && this.Sources[0].player && this.Sources[0].player.buffer && this.Sources[0].player.buffer.duration){
+            return this.Sources[0].player.buffer.duration;
         }
         return 0;
     }
@@ -238,7 +208,7 @@ class Soundcloud extends Source {
     Dispose(){
         super.Dispose();
 
-        this.Sources.forEach((s: Tone.Player) => {
+        this.Sources.forEach((s: Tone.Sampler) => {
             s.dispose();
         });
 

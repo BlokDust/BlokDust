@@ -99,8 +99,8 @@ class ZoomButtons extends DisplayObject {
         var zout = this._OutPos;
         var area = (30*units);
 
-        this.InRoll = this.HudCheck(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
-        this.OutRoll = this.HudCheck(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
+        this.InRoll = this.HitRect(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
+        this.OutRoll = this.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
 
     }
 
@@ -114,11 +114,6 @@ class ZoomButtons extends DisplayObject {
         }
 
 
-    }
-
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
     }
 
 }

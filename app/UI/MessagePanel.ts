@@ -131,12 +131,13 @@ class MessagePanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    NewMessage(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+    //NewMessage(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
+        NewMessage(string?: string, options?: any) {
         this._Value.string = string || this._Defaults.string;
-        this._Value.seconds = seconds || this._Defaults.seconds;
-        this._Value.confirmation = confirmation || this._Defaults.confirmation;
-        this._Value.buttonText = buttonText || this._Defaults.buttonText;
-        this._Value.buttonEvent = buttonEvent || this._Defaults.buttonEvent;
+        this._Value.seconds = options.seconds || this._Defaults.seconds;
+        this._Value.confirmation = options.confirmation || this._Defaults.confirmation;
+        this._Value.buttonText = options.buttonText || this._Defaults.buttonText;
+        this._Value.buttonEvent = options.buttonEvent || this._Defaults.buttonEvent;
 
         // IF BUTTON, FORCE CONFIRMATION //
         if (this._Value.buttonText!=="") {
@@ -226,12 +227,12 @@ class MessagePanel extends DisplayObject {
         var units = (<BlocksSketch>this.Sketch).Unit.width;
 
         if (this._Value.confirmation) {
-            this._Roll[0] = this.HudCheck(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+            this._Roll[0] = this.HitRect(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
         } else {
             this._Roll[0] = false;
         }
         if (this._Value.buttonText!=="") {
-            this._Roll[1] = this.HudCheck(this._CloseX, ((<BlocksSketch>this.Sketch).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
+            this._Roll[1] = this.HitRect(this._CloseX, ((<BlocksSketch>this.Sketch).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
         } else {
             this._Roll[1] = false;
         }
@@ -240,17 +241,6 @@ class MessagePanel extends DisplayObject {
             this.Hover = true;
         }
     }
-
-    //-------------------------------------------------------------------------------------------
-    //  MATHS
-    //-------------------------------------------------------------------------------------------
-
-
-    // IS CLICK WITHIN THIS BOX //
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
-
 }
 
 export = MessagePanel;

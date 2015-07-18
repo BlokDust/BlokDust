@@ -440,6 +440,8 @@ class BlocksSketch extends Grid {
     // AGNOSTIC EVENTS //
 
     private _PointerDown(point: Point, handle: () => void) {
+        App.TranslateMousePointToPixelRatioPoint(point);
+
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
@@ -518,6 +520,7 @@ class BlocksSketch extends Grid {
     }
 
     private _PointerUp(point: Point, handle: () => void) {
+        App.TranslateMousePointToPixelRatioPoint(point);
         this._IsPointerDown = false;
 
         if (this.IsDraggingABlock) {
@@ -572,6 +575,7 @@ class BlocksSketch extends Grid {
 
 
     private _PointerMove(point: Point){
+        App.TranslateMousePointToPixelRatioPoint(point);
 
         // BLOCK //
         if (this.SelectedBlock){
@@ -643,7 +647,6 @@ class BlocksSketch extends Grid {
 
     // COLLISION CHECK ON BLOCK //
     private _CheckCollision(point: Point, handle: () => void): Boolean {
-
         // LOOP BLOCKS //
         for (var i = App.Blocks.length - 1; i >= 0; i--) {
             var block:IBlock = App.Blocks[i];

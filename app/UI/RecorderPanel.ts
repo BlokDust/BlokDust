@@ -148,7 +148,7 @@ class RecorderPanel extends DisplayObject {
             var block = this._Blocks[i];
             var myPos = (<BlocksSketch>this.Sketch).ConvertGridUnitsToAbsolute(block.Position);
             myPos = (<BlocksSketch>this.Sketch).ConvertBaseToTransformed(myPos);
-            this._Roll[i] = this.HudCheck(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
+            this._Roll[i] = this.HitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
             if (this._Roll[i]==true) {
                 console.log("ROLL " + i);
                 this.Hover = true;
@@ -157,16 +157,6 @@ class RecorderPanel extends DisplayObject {
 
     }
 
-    //-------------------------------------------------------------------------------------------
-    //  MATHS
-    //-------------------------------------------------------------------------------------------
-
-
-    // IS CLICK WITHIN THIS BOX //
-    // TODO: Make function of DisplayObject? It's used throughout UI
-    HudCheck(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
-    }
 
 }
 
