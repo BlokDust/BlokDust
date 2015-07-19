@@ -10,7 +10,7 @@ class Toggle extends Logic {
 
         super.Init(sketch);
 
-        this.Outline.push(new Point(-1,0), new Point(1,-2), new Point(2,-1), new Point(2,0), new Point(0,2), new Point(-1,1));
+        this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
 
     Attach(source:ISource): void {
@@ -19,7 +19,6 @@ class Toggle extends Logic {
         if (this.Params.logic) {
             source.TriggerAttack();
         }
-
     }
 
     Detach(source:ISource): void {

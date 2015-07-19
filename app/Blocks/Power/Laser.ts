@@ -16,9 +16,13 @@ class Laser extends Source {
             this.Params = {
                 angle: -90,
                 range: 400,
-                rotate: 0
+                rotate: 0,
+                selfPoweredMode: false
             };
         }
+
+        this.UpdateCollision = true;
+        this.Collisions = [];
 
         super.Init(sketch);
 
@@ -35,13 +39,17 @@ class Laser extends Source {
         //this.Params.angle = Math.random()*360;
 
         // ROTATE //
-        this.Params.angle += (this.Params.rotate/100);
-        if (this.Params.angle>90) {
-            this.Params.angle -= 360;
+        if (this.IsPowered() && Math.round(this.Params.rotate)!==0) {
+            this.UpdateCollision = true;
+            this.Params.angle += (this.Params.rotate/100);
+            if (this.Params.angle>90) {
+                this.Params.angle -= 360;
+            }
+            if (this.Params.angle<-270) {
+                this.Params.angle += 360;
+            }
         }
-        if (this.Params.angle<-270) {
-            this.Params.angle += 360;
-        }
+
 
     }
 
@@ -107,11 +115,27 @@ class Laser extends Source {
         var val = value;
 
         if (param=="angle") {
+
             val = (value-90);
         }
+        if (param=="angle"||param=="range") {
+            this.UpdateCollision = true;
+        }
+
 
         this.Params[""+param] = val;
     }
+
+    /*TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0', velocity?: number) {
+        super.TriggerAttackRelease(duration, time, velocity);
+
+        this.ParticlePowered = true;
+        var laser = this;
+        setTimeout( function(laser) {
+            laser.ParticlePowered = false;
+        },duration);
+
+    }*/
 }
 
 export = Laser;

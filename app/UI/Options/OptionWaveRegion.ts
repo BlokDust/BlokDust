@@ -170,6 +170,8 @@ class WaveRegion extends WaveForm{
             ctx.fillText("Start", xs[0] + panel.Margin + (5*units), y + (dataType*0.8));
             if (this.Mode) {
                 ctx.fillText("Loop", xs[2] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
+            } else {
+                ctx.fillText("End", xs[1] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
             }
 
         }
