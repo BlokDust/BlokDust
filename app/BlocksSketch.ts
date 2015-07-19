@@ -723,11 +723,12 @@ class BlocksSketch extends Grid {
     }
 
     private _ABlockHasBeenMoved(block) {
-        if (block instanceof Laser) {
+        /*if (block instanceof Laser) {
             block.UpdateCollision = true;
         } else if (block instanceof Source) {
             this._LaserBeams.UpdateAllLasers = true;
-        }
+        }*/
+        this._LaserBeams.UpdateAllLasers = true;
     }
 
     private _ToolTipClose(panel) {
