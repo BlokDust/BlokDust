@@ -41,6 +41,7 @@ interface IOption {
     User: string;
 
     Waveform: number[];
+    Mode: boolean;
 
     Switches: OptionSwitch[];
 

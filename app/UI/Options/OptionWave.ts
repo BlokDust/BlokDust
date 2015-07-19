@@ -36,7 +36,7 @@ class WaveForm extends Option{
         }
 
 
-        if (this.Handles && this.Waveform.length) {
+        if (this.Handles && this.Waveform.length && this.Mode) {
             ctx.strokeStyle = ctx.fillStyle = App.Palette[15]; // highlight
             ctx.fillStyle = ctx.strokeStyle = "#282b31";
             //ctx.fillRect(panel.Margin + this.Handles[2].Position.x,y,this.Handles[3].Position.x - this.Handles[2].Position.x,height);

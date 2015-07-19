@@ -49,6 +49,7 @@ class SharePanel extends DisplayObject{
             shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",
             copyLine: "Share your creation with this unique URL:",
             titleLine: "Title",
+            generateLine: "Generate Title",
             domain: this.GetUrl() + "?c=",
             facebook: "post to facebook",
             twitter: "post to twitter",
@@ -258,7 +259,7 @@ class SharePanel extends DisplayObject{
             ctx.fillText("SHARE",20*units,this.OffsetY + (30*units) + (11*units));
 
             // GEN TITLE BUTTON //
-            ctx.beginPath();
+            /*ctx.beginPath();
             ctx.moveTo((this.Sketch.Width*0.5) - (295*units), centerY - (115*units));
             ctx.lineTo((this.Sketch.Width*0.5) - (275*units), centerY - (115*units));
             ctx.moveTo((this.Sketch.Width*0.5) - (295*units), centerY - (105*units));
@@ -275,7 +276,20 @@ class SharePanel extends DisplayObject{
             ctx.lineTo((this.Sketch.Width*0.5) - (290*units), centerY - (107*units));
             ctx.lineTo((this.Sketch.Width*0.5) - (290*units), centerY - (103*units));
             ctx.closePath();
-            ctx.fill();
+            ctx.fill();*/
+
+            ctx.font = midType;
+            var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
+            ctx.fillText(this._CopyJson.generateLine.toUpperCase(), (this.Sketch.Width*0.5) + (205*units) - genW, centerY - (106*units) );
+
+
+            ctx.beginPath();
+            ctx.moveTo((this.Sketch.Width*0.5) + (210*units), centerY - (120*units));
+            ctx.lineTo((this.Sketch.Width*0.5) + (200*units) - genW, centerY - (120*units));
+            ctx.lineTo((this.Sketch.Width*0.5) + (200*units) - genW, centerY - (100*units));
+            ctx.lineTo((this.Sketch.Width*0.5) + (210*units), centerY - (100*units));
+            ctx.closePath();
+            ctx.stroke();
 
 
             // CLOSE BUTTON //
@@ -575,10 +589,15 @@ class SharePanel extends DisplayObject{
         var shareX = this.OffsetX + this.Sketch.Width;
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var buttonY = centerY + (35*units);
+        var ctx = this.Ctx;
+        var midType = (<BlocksSketch>this.Sketch).TxtMid;
+
+        ctx.font = midType;
+        var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
 
         this._RollOvers[0] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
         this._RollOvers[1] = this.HitRect((this.Sketch.Width*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = this.HitRect((this.Sketch.Width*0.5) - (305*units), centerY - (130*units),40*units,40*units, point.x, point.y); // gen title
+        this._RollOvers[2] = this.HitRect((this.Sketch.Width*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
         if (this._FirstSession) {
             this._RollOvers[3] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
             this._RollOvers[4] = false;

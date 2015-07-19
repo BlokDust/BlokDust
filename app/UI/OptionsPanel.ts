@@ -170,7 +170,7 @@ class OptionsPanel extends DisplayObject {
         // DEFINE OUTLINE FOR HITTEST
         var topY =  - (panelH*0.5);
         var margin = this.Margin;
-
+        this.Outline = [];
         this.Outline.push(
             new Point(0, 0), // block
             new Point(44*units, 0),
@@ -259,7 +259,7 @@ class OptionsPanel extends DisplayObject {
                     handles[j] = new OptionHandle(new Point(xs[j],optionY),option.nodes[j].value,option.props.min, option.props.max,this.Range,0,0,0,0,option.nodes[j].setting,"");
                 }
 
-                optionList.push(new WaveRegion(new Point(0,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,handles));
+                optionList.push(new WaveRegion(new Point(0,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,handles,option.props.mode));
 
             }
 
@@ -277,7 +277,7 @@ class OptionsPanel extends DisplayObject {
                 var switchX = [0,(this.Range*0.5) - (switchWidth*0.5),this.Range - switchWidth];
 
                 for (var j=0; j<option.switches.length; j++) {
-                    switches[j] = new Switch(new Point(switchX[j],optionY), option.switches[j].name, option.switches[j].setting, option.switches[j].value,new Size(switchWidth,optionHeight[i]*0.43));
+                    switches[j] = new Switch(new Point(switchX[j],optionY), option.switches[j].name, option.switches[j].setting, option.switches[j].value,new Size(switchWidth,optionHeight[i]*0.43),option.switches[j].lit);
                 }
 
 
@@ -403,6 +403,7 @@ class OptionsPanel extends DisplayObject {
             else if (option.type == "waveslider") {
                 this.Options[i].Value = option.props.value;
                 this.Options[i].Spread = option.props.spread;
+                this.Options[i].Mode = option.props.mode;
             }
 
         }
@@ -667,13 +668,10 @@ class OptionsPanel extends DisplayObject {
                     }
                 }
 
-                if (handles[3].Position.x < (handles[2].Position.x+1)) {
+                if (handles[3].Position.x < (handles[2].Position.x+1)) { // loopend before loopstart
                     this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
                 }
-                if (handles[3].Position.x > (handles[1].Position.x+1)) {
-                    this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[1].Position.x+1) + this.Position.x + this.Margin, my);
-                }
-                if (handles[1].Position.x < (handles[0].Position.x+1)) {
+                if (handles[1].Position.x < (handles[0].Position.x+1)) { // end before start
                     this.HandleSet(i, 1, 0, this.Options[i].Size.height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);
                 }
 
@@ -716,7 +714,11 @@ class OptionsPanel extends DisplayObject {
             }
             else if (this.Options[i].Type == "waveregion") {
                 for (var j=0; j<4; j++) {
-                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.height, mx, my);
+                    if ( (!this.Options[i].Mode && j>1) || (this.Options[i].Mode && j==1)) {
+                        this.Options[i].HandleRoll[j] = false;
+                    } else {
+                        this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y, (20 * units), this.Options[i].Size.height, mx, my);
+                    }
                 }
             }
             else if (this.Options[i].Type == "switches") {
