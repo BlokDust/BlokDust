@@ -128,7 +128,7 @@ class Serializer {
         var block: IBlock;
 
         // if it's an id and has already been deserialized, return it.
-        if (!(b.Id != null && b.Id.isInt()) && Serializer._DeserializationDictionary[b]){
+        if (!(b.Id != null && b.Id.isInteger()) && Serializer._DeserializationDictionary[b]){
             block = Serializer._DeserializationDictionary[b];
         } else {
             block = this._GetBlockDeserializationType(b);
