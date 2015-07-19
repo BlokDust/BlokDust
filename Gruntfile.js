@@ -1,6 +1,6 @@
 var path = require('path'),
     connect_livereload = require('connect-livereload');
-    version = require('./utils/version');
+    version = require('./tasks/version');
 
 module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
@@ -99,7 +99,8 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/lib/fayde/dist/fayde.js',
                             '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
-                            '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js'
+                            '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
+                            '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js'
                         ],
                         filter: 'isFile'
                     },
@@ -109,7 +110,8 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/lib/fayde/**',
                             '!<%= dirs.dist %>/lib/minerva/**',
                             '!<%= dirs.dist %>/lib/nullstone/**',
-                            '!<%= dirs.dist %>/lib/lzma/**'
+                            '!<%= dirs.dist %>/lib/lzma/**',
+                            '!<%= dirs.dist %>/lib/bower-webfontloader/**'
                         ]
                     }
                 ]
@@ -237,15 +239,6 @@ module.exports = function (grunt) {
                 options: {
                     livereload: ports.livereload
                 }
-            },
-            views: {
-                files: [
-                    '<%= dirs.app %>/**/*.fap',
-                    '<%= dirs.app %>/**/*.fayde'
-                ],
-                options: {
-                    livereload: ports.livereload
-                }
             }
         },
 
@@ -281,10 +274,10 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.registerTask('default', ['typescript:build', 'copy:assets']);
     grunt.registerTask('bump:patch', ['version:bump', 'version:apply']);
     grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
     grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);
-    grunt.registerTask('default', ['typescript:build', 'copy:assets']);
     grunt.registerTask('serve:dev', ['typescript:build', 'copy:assets', 'connect:dev', 'open', 'watch']);
     grunt.registerTask('serve:dist', ['connect:dist', 'open']);
 

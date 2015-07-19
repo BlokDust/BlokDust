@@ -840,8 +840,9 @@ class OptionsPanel extends DisplayObject {
 
         console.log("" + object[""+setting] +" | "+ object[""+value]);
         // SET VALUE IN BLOCK //
-        this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
-
+        //Utils.Events.Debounce(() => {
+            this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
+        //}, 100);
 
         // UPDATE VALUES IN OTHER OPTIONS //
         if (this._Name.toUpperCase()=="GRANULAR" && ("" + object[""+setting])=="spread") {

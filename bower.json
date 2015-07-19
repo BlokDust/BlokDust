@@ -2,18 +2,20 @@
   "name": "BlokDust",
   "version": "0.1.40",
   "dependencies": {
-    "fayde": "~0.16.15",
-    "fayde.controls": "~0.17.0",
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
+    "fayde": "~0.16.15",
+    "fayde.controls": "~0.17.0",
     "fayde.drawing": "edsilv/fayde.drawing#~0.4.0",
     "fayde.transformer": "edsilv/fayde.transformer#~0.7.2",
-    "tone": "lukephills/Tone.js#dev",
+    "intersection": "BlokDust/intersection",
+    "jquery": "~2.1.3",
+    "lzma": "nmrugg/LZMA-JS",
     "pixelpalette": "edsilv/pixelpalette#~0.1.9",
     "RecorderJS": "lukephills/Recorderjs#~1.0.3",
-    "jquery": "~2.1.3",
-    "intersection": "BlokDust/intersection",
-    "lzma": "nmrugg/LZMA-JS"
+    "tone": "lukephills/Tone.js#dev",
+    "utils": "edsilv/utils#~0.0.21",
+    "bower-webfontloader": "~1.5.16"
   },
   "resolutions": {
     "fayde": "~0.16.11"
