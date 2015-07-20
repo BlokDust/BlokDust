@@ -31,6 +31,14 @@ class Soundcloud extends Source {
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
         this.Params.track = localUrl;
 
+
+        SoundCloudAudio.Search('dream pop', (tracks) => {
+            tracks.forEach((track) => {
+                console.log(track);
+                console.log(track.user.username, track.title, track.id, track.tag_list);
+            });
+        });
+
         super.Init(sketch);
 
         this.CreateSource();

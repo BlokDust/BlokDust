@@ -2,6 +2,14 @@ import SoundCloudAudioType = require('./SoundCloudAudioType');
 
 class SoundCloudAudio {
 
+    public SC: any;
+
+    constructor(){
+        SC.initialize({
+            client_id: App.Config.SoundCloudClientId
+        });
+    }
+
 
     static PickRandomTrack(t:SoundCloudAudioType) {
 
@@ -43,6 +51,23 @@ class SoundCloudAudio {
         var track = defaults[n];
 
         return 'https://api.soundcloud.com/tracks/'+ track +'/stream?client_id='+ App.Config.SoundCloudClientId;
+    }
+
+    /**
+     * Search the Soundcloud API for any tracks containing a string.
+     * @param query String to search for
+     * @param callback This passes as its only parameter an array of track objects
+     *
+     * //TODO: take into account blokdust tags and creative commons.
+     *  How to query either creative commons OR tags. It doesn't see to be possible.
+     *  Perhaps multiple we need to make multiple API requests. Alternatively we could do this all on server side.
+     */
+    static Search(query: string, callback: (tracks: any[]) => any){
+        SC.get('/tracks', {
+            //tags: 'blokdust',
+            //license: 'cc-by',
+            q: query,
+        }, callback);
     }
 }
 
