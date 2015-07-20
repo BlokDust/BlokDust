@@ -14,7 +14,7 @@
     "pixelpalette": "edsilv/pixelpalette#~0.1.9",
     "RecorderJS": "lukephills/Recorderjs#~1.0.3",
     "tone": "lukephills/Tone.js#dev",
-    "utils": "edsilv/utils#~0.0.21",
+    "utils": "edsilv/utils#~0.0.22",
     "bower-webfontloader": "~1.5.16"
   },
   "resolutions": {
