@@ -2,7 +2,6 @@
  * Created by luketwyman on 17/03/2015.
  */
 
-//import App = require("./App");
 import BlocksSketch = require("./BlocksSketch");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 import Laser = require("./Blocks/Power/Laser");

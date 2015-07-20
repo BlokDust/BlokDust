@@ -180,7 +180,6 @@ class Soundcloud extends Source {
 
     SetParam(param: string,value: any) {
         super.SetParam(param,value);
-        var val = value;
 
         switch(param) {
             case "playbackRate":
@@ -206,7 +205,7 @@ class Soundcloud extends Source {
                 });
                 // update display of loop sliders
                 if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = val;
+                    this.Params[param] = value;
                     this.UpdateOptionsForm();
                     (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
                 }
@@ -223,7 +222,7 @@ class Soundcloud extends Source {
                 break;
         }
 
-        this.Params[param] = val;
+        this.Params[param] = value;
     }
 
     GetDuration() {

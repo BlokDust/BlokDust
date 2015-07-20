@@ -6,9 +6,7 @@ class AudioMixer {
     constructor() {
 
         // Master Output
-        //this.Master = new Tone.Signal();
         this.Master = Tone.Master;
-        //todo: make this a tone master
 
         // Master Gain Level
         this.Master.volume.value = this.MasterVolume;

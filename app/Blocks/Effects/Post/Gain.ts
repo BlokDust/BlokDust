@@ -40,24 +40,9 @@ class Gain extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var val = value;
-
-        this.Effect.gain.value = (val/10)+1;
-
-        this.Params[param] = val;
+        this.Effect.gain.value = (value/10)+1;
+        this.Params[param] = value;
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-
-
-        if (param === "gain") {
-            var val = (this.Effect.gain.value-1)*10;
-            //var val = this.Effect.value;
-        }
-
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -66,7 +51,6 @@ class Gain extends PostEffect {
         {
             "name": "Gain",
             "parameters": [
-
                 {
                     "type" : "slider",
                     "name": "Gain",

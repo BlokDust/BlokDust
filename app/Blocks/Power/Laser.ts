@@ -1,14 +1,9 @@
-/**
- * Created by luketwyman on 15/03/2015.
- */
-
 import Source = require("../Source");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import BlocksSketch = require("../../BlocksSketch");
 
 class Laser extends Source {
-
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -125,17 +120,6 @@ class Laser extends Source {
 
         this.Params[""+param] = val;
     }
-
-    /*TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0', velocity?: number) {
-        super.TriggerAttackRelease(duration, time, velocity);
-
-        this.ParticlePowered = true;
-        var laser = this;
-        setTimeout( function(laser) {
-            laser.ParticlePowered = false;
-        },duration);
-
-    }*/
 }
 
 export = Laser;

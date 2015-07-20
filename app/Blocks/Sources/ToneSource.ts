@@ -36,10 +36,6 @@ class ToneSource extends Source {
             s.start();
         });
 
-
-        //this.Width = 150;
-        //this.Height = 150;
-
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
     }

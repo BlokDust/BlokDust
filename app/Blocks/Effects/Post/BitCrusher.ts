@@ -38,27 +38,15 @@ class BitCrusher extends PostEffect {
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var val = value;
 
-        if (param=="bits") {
-            this.Effect.bits = val;
-        } else if (param=="mix") {
-            this.Effect.wet.value = val;
+        if (param === 'bits') {
+            this.Effect.bits = value;
+        } else if (param === 'mix') {
+            this.Effect.wet.value = value;
         }
 
-        this.Params[param] = val;
+        this.Params[param] = value;
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="bits") {
-            val = this.Effect.bits;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        }
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -96,7 +84,6 @@ class BitCrusher extends PostEffect {
             ]
         };
     }
-
 }
 
 export = BitCrusher;
