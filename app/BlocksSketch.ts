@@ -95,11 +95,6 @@ class BlocksSketch extends Grid {
         super();
     }
 
-    public GetId(): number {
-        var count = App.Blocks.length;
-        return count + 1;
-    }
-
     get DisplayList(): DisplayList {
         return this._DisplayList;
     }
@@ -723,11 +718,12 @@ class BlocksSketch extends Grid {
     }
 
     private _ABlockHasBeenMoved(block) {
-        if (block instanceof Laser) {
+        /*if (block instanceof Laser) {
             block.UpdateCollision = true;
         } else if (block instanceof Source) {
             this._LaserBeams.UpdateAllLasers = true;
-        }
+        }*/
+        this._LaserBeams.UpdateAllLasers = true;
     }
 
     private _ToolTipClose(panel) {
@@ -822,7 +818,7 @@ class BlocksSketch extends Grid {
     //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
     CreateBlockFromType<T extends IBlock>(t: {new(): T; }){
         var block: IBlock = new t();
-        block.Id = this.GetId();
+        block.Id = App.GetBlockId();
         block.Position = this._PointerPoint;
         block.Init(this);
         block.Type = t;

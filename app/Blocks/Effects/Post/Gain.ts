@@ -17,7 +17,7 @@ class Gain extends PostEffect {
         }
 
         this.Effect = App.AudioMixer.Master.context.createGain();
-        this.Effect.gain.value = this.Params.gain;
+        this.Effect.gain.value = (this.Params.gain/10)+1;
 
         //this.Effect = new Tone.Signal(1, 'db');
 

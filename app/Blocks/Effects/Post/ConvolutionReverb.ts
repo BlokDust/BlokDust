@@ -16,6 +16,7 @@ class Convolver extends PostEffect {
         }
 
         this.Effect = new Tone.Convolver(this.Params.sample);
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
 

@@ -168,7 +168,6 @@ class LaserBeams {
                                 block.TriggerRelease();
                             }
                         }
-
                     }
                     //console.log(collisions);
                     // UPDATE COLLISIONS ARRAY

@@ -11,20 +11,31 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Serializer {
 
+    private static _Debug = false;
     private static _SerializationDictionary: any;
     private static _DeserializationDictionary: any;
 
     public static Serialize(): string{
 
+        if (this._Debug) console.log("START SERIALIZATION");
+
         var blocks = App.Blocks;
+
+        if (this._Debug) {
+            console.log("BLOCKS", blocks);
+        }
 
         this._SerializationDictionary = {};
 
-        // add all blocks to the dictionary.
+        // add all block ids to the dictionary.
         for (var i = 0; i < blocks.length; i++){
             var b = blocks[i];
 
             this._SerializationDictionary[b.Id] = false;
+        }
+
+        if (this._Debug) {
+            console.log("DICTIONARY", this._SerializationDictionary);
         }
 
         var json = {
@@ -36,7 +47,13 @@ class Serializer {
 
         this._SerializeBlocks(json.Composition, blocks);
 
-        return JSON.stringify(json);
+        var result = JSON.stringify(json);
+
+        if (this._Debug) {
+            console.log("END SERIALIZATION", result);
+        }
+
+        return result;
     }
 
     private static _SerializeBlocks(list: any[], blocks: any[], parentBlock?: any): void {
@@ -45,6 +62,11 @@ class Serializer {
             var b = this._SerializeBlock(blocks[i], parentBlock);
 
             if (b) list.push(b);
+
+            if (this._Debug) {
+                console.log("DICTIONARY", this._SerializationDictionary);
+                console.log("SERIALIZED LIST", list);
+            }
         }
     }
 
@@ -54,15 +76,22 @@ class Serializer {
 
     private static _SerializeBlock(block: IBlock, parentBlock?: any): any {
 
+        if (this._Debug) {
+            console.log("SERIALIZING", block);
+        }
+
         var d = this._SerializationDictionary[block.Id];
 
         if (d) {
+            if (this._Debug) {
+                console.log("ALREADY SERIALIZED");
+            }
             return;
         }
 
         this._SerializationDictionary[block.Id] = true;
 
-        var b: any =  {};
+        var b: any = {};
 
         b.Id = block.Id;
         b.Type = this._GetBlockSerializationType(block);

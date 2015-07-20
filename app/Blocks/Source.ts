@@ -258,8 +258,16 @@ class Source extends Block implements ISource {
      */
     TriggerRelease(index: number|string = 0) {
 
+        console.log("ID: "+this.Id);
+        console.log("Powered: " +this.IsPowered());
+        console.log("Power Connections: " +this.PowerConnections);
+        console.log(this.Envelopes);
+
+
         // Only if it's not powered
         if (!this.IsPowered()) {
+
+            console.log("not powered");
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -268,10 +276,12 @@ class Source extends Block implements ISource {
                     // Trigger all the envelopes
                     this.Envelopes.forEach((e: any)=> {
                         e.triggerRelease();
+                        console.log("01");
                     });
                 } else {
                     // Trigger the specific one
                     this.Envelopes[index].triggerRelease();
+                    console.log("02");
                 }
 
             // Or Samplers have built in envelopes
@@ -280,13 +290,16 @@ class Source extends Block implements ISource {
                     // Trigger all the envelopes
                     this.Sources.forEach((s: any)=> {
                         s.triggerRelease();
+                        console.log("03");
                     });
                 } else {
                     // Trigger the specific one
                     this.Sources[index].triggerRelease();
+                    console.log("04");
                 }
             } else if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
+                console.log("updateCollision");
             }
         }
     }
@@ -302,7 +315,7 @@ class Source extends Block implements ISource {
                 e.triggerAttackRelease(duration, time);
             });
 
-        } else if (this.ParticlePowered!==undefined) {
+        } else if (this.PowerConnections!==undefined) {
 
             //this.ParticlePowered = true;
             this.PowerConnections += 1;
@@ -334,7 +347,7 @@ class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered() {
-        if (this.IsPressed || this.ParticlePowered || this.LaserPowered || this.PowerConnections>0) {
+        if (this.IsPressed || this.PowerConnections>0) {
             return true;
 
         } else if (this.Effects.Count) {
@@ -347,9 +360,8 @@ class Source extends Block implements ISource {
                 }
             }
         }
-        else {
-            return false;
-        }
+        return false;
+
     }
 
     /**

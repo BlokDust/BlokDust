@@ -842,7 +842,8 @@ class OptionsPanel extends DisplayObject {
 
         console.log("" + object[""+setting] +" | "+ object[""+value]);
         // SET VALUE IN BLOCK //
-        //Utils.Events.Debounce(() => {
+        //Utils.Events.Debounce(function() {
+            //console.log("debounce");
             this.SelectedBlock.SetParam(object[""+setting], object[""+value]);
         //}, 100);
 
