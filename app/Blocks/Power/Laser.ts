@@ -1,9 +1,9 @@
-import Source = require("../Source");
+import PowerSource = require("./PowerSource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import BlocksSketch = require("../../BlocksSketch");
 
-class Laser extends Source {
+class Laser extends PowerSource {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 

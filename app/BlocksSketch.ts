@@ -26,6 +26,8 @@ import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
 import LaserBeams = require("./LaserBeams");
 import Laser = require("./Blocks/Power/Laser");
+import PowerSource = require("./Blocks/Power/PowerSource");
+import PowerEffect = require("./Blocks/Power/PowerEffect");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
 import Transformer = Fayde.Transformer.Transformer;
@@ -494,12 +496,7 @@ class BlocksSketch extends Grid {
             if (recorder.Hover) {
                 return;
             }
-
         }
-
-
-
-
 
         // BLOCK CLICK //
         if (!UI) {
@@ -626,11 +623,17 @@ class BlocksSketch extends Grid {
                 if (distanceFromEffect <= catchmentArea.x) {
                     if (!source.Effects.Contains(effect)){
 
-                        // Add effect to source
-                        source.AddEffect(effect);
+                        if (source instanceof PowerSource && effect instanceof PowerEffect || !(source instanceof PowerSource)) {
 
-                        //Add sources to effect
-                        effect.AddSource(source);
+                            // Add effect to source
+                            source.AddEffect(effect);
+
+                            //Add sources to effect
+                            effect.AddSource(source);
+
+                        }
+
+
                     }
                 } else {
                     // if the source already has the effect on its internal list
@@ -718,11 +721,6 @@ class BlocksSketch extends Grid {
     }
 
     private _ABlockHasBeenMoved(block) {
-        /*if (block instanceof Laser) {
-            block.UpdateCollision = true;
-        } else if (block instanceof Source) {
-            this._LaserBeams.UpdateAllLasers = true;
-        }*/
         this._LaserBeams.UpdateAllLasers = true;
     }
 
@@ -750,16 +748,6 @@ class BlocksSketch extends Grid {
             console.log("UI INTERACTION");
             return true;
         }
-
-        /*if (this.OptionsPanel.Scale==1) {
-            //var panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.Height*0.5), this.OptionsPanel.Size.Width,this.OptionsPanel.Size.Height,point.x,point.y);
-            if (this.OptionsPanel.Hover) {
-                console.log("UI INTERACTION");
-                return true;
-            }
-        }*/
-
-
 
         return false;
     }

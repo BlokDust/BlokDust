@@ -1,10 +1,10 @@
-import Source = require("../Source");
+import PowerSource = require("./PowerSource");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import BlocksSketch = require("../../BlocksSketch");
 import Vector = Utils.Maths.Vector;
 
-class ParticleEmitter extends Source {
+class ParticleEmitter extends PowerSource {
 
     //public Params: EmitterSettings;
     private _rateCounter: number;

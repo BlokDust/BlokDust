@@ -1,8 +1,9 @@
 import Effect = require("../../Effect");
+import PowerEffect = require("./../PowerEffect");
 import ISource = require("../../ISource");
 import Particle = require("../../../Particle");
 
-class Logic extends Effect {
+class Logic extends PowerEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 

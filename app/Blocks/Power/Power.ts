@@ -1,9 +1,10 @@
 import Effect = require("../Effect");
+import PowerEffect = require("./PowerEffect");
 import ISource = require("../ISource");
 import BlocksSketch = require("../../BlocksSketch");
 
 
-class Power extends Effect {
+class Power extends PowerEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);

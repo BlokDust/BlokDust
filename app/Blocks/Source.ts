@@ -245,6 +245,8 @@ class Source extends Block implements ISource {
                 // Trigger the specific one
                 this.Sources[index].triggerAttack();
             }
+
+        // Or this is a laser which needs to update it's collision check after being powered
         } else if (this.UpdateCollision!==undefined) {
             this.UpdateCollision = true;
         }
@@ -259,15 +261,10 @@ class Source extends Block implements ISource {
     TriggerRelease(index: number|string = 0) {
 
         console.log("ID: "+this.Id);
-        console.log("Powered: " +this.IsPowered());
-        console.log("Power Connections: " +this.PowerConnections);
-        console.log(this.Envelopes);
 
 
         // Only if it's not powered
         if (!this.IsPowered()) {
-
-            console.log("not powered");
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -276,12 +273,10 @@ class Source extends Block implements ISource {
                     // Trigger all the envelopes
                     this.Envelopes.forEach((e: any)=> {
                         e.triggerRelease();
-                        console.log("01");
                     });
                 } else {
                     // Trigger the specific one
                     this.Envelopes[index].triggerRelease();
-                    console.log("02");
                 }
 
             // Or Samplers have built in envelopes
@@ -290,16 +285,15 @@ class Source extends Block implements ISource {
                     // Trigger all the envelopes
                     this.Sources.forEach((s: any)=> {
                         s.triggerRelease();
-                        console.log("03");
                     });
                 } else {
                     // Trigger the specific one
                     this.Sources[index].triggerRelease();
-                    console.log("04");
                 }
+
+            // Or this is a laser which needs to update it's collision check after being unpowered
             } else if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
-                console.log("updateCollision");
             }
         }
     }
@@ -317,7 +311,6 @@ class Source extends Block implements ISource {
 
         } else if (this.PowerConnections!==undefined) {
 
-            //this.ParticlePowered = true;
             this.PowerConnections += 1;
             if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
@@ -325,7 +318,6 @@ class Source extends Block implements ISource {
             var block = this;
             var seconds = App.AudioMixer.Master.toSeconds(duration) * 1000;
             setTimeout( function() {
-                //block.ParticlePowered = false;
                 block.PowerConnections -= 1;
                 if (block.UpdateCollision!==undefined) {
                     block.UpdateCollision = true;
@@ -360,8 +352,9 @@ class Source extends Block implements ISource {
                 }
             }
         }
-        return false;
-
+        else {
+            return false;
+        }
     }
 
     /**
