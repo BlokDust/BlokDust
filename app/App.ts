@@ -63,10 +63,12 @@ class App implements IApp{
     public ResourceManager: ResourceManager;
     private _SessionId: string;
 
+    // todo: move to BlockStore
     get Sources(): IBlock[] {
         return this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
+    // todo: move to BlockStore
     get Effects(): IBlock[] {
         return this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
@@ -78,6 +80,21 @@ class App implements IApp{
     set SessionId(value: string) {
         this._SessionId = value;
         localStorage.setItem(this.CompositionId, this._SessionId);
+    }
+
+    // todo: move to BlockStore
+    public GetBlockId(): number {
+        // loop through blocks to get max id
+        var max = 0;
+
+        for (var i = 0; i < this.Blocks.length; i++){
+            var b = this.Blocks[i];
+            if (b.Id > max){
+                max = b.Id;
+            }
+        }
+
+        return max + 1;
     }
 
     constructor(config: string) {
@@ -180,6 +197,7 @@ class App implements IApp{
         this.Resize();
     }
 
+    // todo: move to BlockStore
     RefreshBlocks() {
         // refresh all Sources (reconnects Effects).
         this.Blocks.forEach((b: ISource) => {
