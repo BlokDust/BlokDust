@@ -1,4 +1,5 @@
 import IBlock = require("./IBlock");
+import Source = require("./Source");
 import IEffect = require("./IEffect");
 import Voice = require("./Interaction/VoiceObject");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -13,6 +14,11 @@ interface ISource extends IBlock{
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
     WaveIndex: string[];
+    PowerConnections: number;
+    ParticlePowered: boolean;
+    LaserPowered: boolean;
+    UpdateCollision: boolean;
+    Collisions: any[];
     //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];
@@ -32,6 +38,7 @@ interface ISource extends IBlock{
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string): void;
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;
+    IsPowered(): boolean;
     Refresh(): void;
 }
 

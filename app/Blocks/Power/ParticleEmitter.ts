@@ -35,7 +35,7 @@ class ParticleEmitter extends Source {
         var position = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(this.Position);
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
         vector.Mult(this.Params.speed);
-        var size = 2 + (Math.random()*1);
+        var size = 2 + (Math.random());
         var life = Math.round(this.Params.range/this.Params.speed);
 
         var p: Particle = App.ParticlesPool.GetObject();
@@ -63,12 +63,7 @@ class ParticleEmitter extends Source {
                     this._rateCounter = 0;
                 }
 
-                // TEMP //
-                // RANDOM //
-                //this.Params.angle = Math.random()*360;
-
                 // ROTATE //
-                //this.Params.angle += 1;
                 if (this.Params.angle>360) {
                     this.Params.angle = 1;
                 }

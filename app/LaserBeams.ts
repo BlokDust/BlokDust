@@ -6,6 +6,7 @@
 import BlocksSketch = require("./BlocksSketch");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 import Laser = require("./Blocks/Power/Laser");
+import Logic = require("./Blocks/Power/Logic/Logic");
 import Source = require("./Blocks/Source");
 import IEffect = require("./Blocks/IEffect");
 import ISource = require("./Blocks/ISource");
@@ -15,19 +16,21 @@ class LaserBeams {
 
     private _Ctx: CanvasRenderingContext2D;
     private _Sketch: BlocksSketch;
+    public UpdateAllLasers: boolean;
     //private _TestPoints: Point[];
 
     Init(sketch: BlocksSketch): void {
 
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
+        this.UpdateAllLasers = false;
         //this._TestPoints = [];
 
     }
 
     Update() {
         //console.log("BEAMS");
-        this.UpdateTidy();
+        this.UpdateCollisions();
     }
 
     QuadPartition(p1,p2,angle) {
@@ -74,7 +77,7 @@ class LaserBeams {
         return Math.sqrt((x -= x0) * x + (y -= y0) * y);
     }
 
-    UpdateTidy() {
+    UpdateCollisions() {
         var p1,p2,vector,line,outline;
         var rectSize = 1.7; // size of rectangle for rough check (in grid cells)
         var grd = this._Sketch.ScaledCellWidth.width * rectSize;
@@ -83,141 +86,105 @@ class LaserBeams {
         for (var i = 0; i < App.Blocks.length; i++){
             var laser: ISource = App.Blocks[i];
             if (laser instanceof Laser) {
-                vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)),this._Sketch.ScaledUnit.width);
-                line = Vector.MultN(vector,laser.Params.range);
 
-                // FOR EACH LASER LOOK FOR SOURCE COLLISIONS //
-                for (var j = 0; j < App.Blocks.length; j++) {
-                    var block: ISource  = App.Blocks[j];
-                    if (block!==laser && block instanceof Source && !(block instanceof ParticleEmitter)) {
+                // gets set to true when blocks are moved
+                if (this.UpdateAllLasers) {
+                    laser.UpdateCollision = true;
+                }
 
-                        outline = [];
-                        p1 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(laser.Position));
-                        p2 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(block.Position));
+                // if this blocks collisions should be updated
+                if (laser.UpdateCollision) {
+                    laser.UpdateCollision = false;
+                    var collisions = [];
 
-                        // IF IN RANGE //
-                        if (this.PointFromPoint(p1.x,p1.y,p2.x,p2.y) < ((laser.Params.range*this._Sketch.ScaledUnit.width)+grd)) {
+                    // If we're in self powered mode, or if this is powered
+                    if (laser.Params.selfPoweredMode || laser.IsPowered()) {
 
-                            // IF IN QUADRANT //
-                            if (this.QuadPartition(p1,p2,laser.Params.angle)) {
 
-                                //IF CLOSE TO LINE //
-                                if (this.PointFromLine(p2.x,p2.y,p1.x,p1.y,p1.x + line.X,p1.y + line.Y,false)<grd) {
+                        vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)), this._Sketch.ScaledUnit.width);
+                        line = Vector.MultN(vector, laser.Params.range);
 
-                                    // INTERSECT CHECK //
-                                    for (var k=0; k<block.Outline.length; k++) {
-                                        outline.push( this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(this._Sketch.GetRelativePoint(block.Outline[k],block.Position))) );
-                                    }
-                                    p2 = new Point(p1.x + line.X,p1.y + line.Y);
-                                    if (Intersection.intersectLinePolygon(p1,p2,outline).status=="Intersection") {
-                                        console.log("HIT");
-                                    }
+                        // FOR EACH LASER LOOK FOR SOURCE COLLISIONS //
+                        for (var j = 0; j < App.Blocks.length; j++) {
+                            var block:any = App.Blocks[j];
+                            if (block !== laser && (block instanceof Source || block instanceof Logic)) {
 
-                                } // end line
+                                outline = [];
+                                p1 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(laser.Position));
+                                p2 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(block.Position));
 
-                            } // end quad
+                                // IF IN RANGE //
+                                if (this.PointFromPoint(p1.x, p1.y, p2.x, p2.y) < ((laser.Params.range * this._Sketch.ScaledUnit.width) + grd)) {
 
-                        } // end range
+                                    // IF IN QUADRANT //
+                                    if (this.QuadPartition(p1, p2, laser.Params.angle)) {
 
-                    } // end if right block
+                                        //IF CLOSE TO LINE //
+                                        if (this.PointFromLine(p2.x, p2.y, p1.x, p1.y, p1.x + line.X, p1.y + line.Y, false) < grd) {
 
-                }// end block loop
+                                            // INTERSECT CHECK //
+                                            for (var k = 0; k < block.Outline.length; k++) {
+                                                outline.push(this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(this._Sketch.GetRelativePoint(block.Outline[k], block.Position))));
+                                            }
+                                            p2 = new Point(p1.x + line.X, p1.y + line.Y);
+                                            if (Intersection.intersectLinePolygon(p1, p2, outline).status == "Intersection") {
+
+                                                collisions.push(block);
+                                                if (laser.Collisions.length==0 || $.inArray(block, laser.Collisions)==-1) {
+                                                    console.log("HIT "+ block.Id);
+                                                    if (block instanceof Logic) {
+                                                        block.PerformLogic();
+                                                    } else {
+                                                        //block.LaserPowered = true;
+                                                        if (!block.IsPowered()) {
+                                                            block.TriggerAttack();
+                                                        }
+                                                        block.PowerConnections += 1;
+
+                                                    }
+
+                                                }
+                                            }
+
+                                        } // end line
+
+                                    } // end quad
+
+                                } // end range
+
+                            } // end if right block
+
+                        }// end block loop
+
+                    } // end if powered
+
+                    // FOR EACH COLLISION CHECK RELEASE //
+                    for (var j = 0; j < laser.Collisions.length; j++) {
+                        var block = laser.Collisions[j];
+                        if (collisions.length==0 || $.inArray(block, collisions)==-1) {
+                            console.log("RELEASE "+ block.Id);
+                            //laser.Collisions[j].LaserPowered = false;
+                            if (!(block instanceof Logic)) {
+                                block.PowerConnections -= 1;
+                                block.TriggerRelease();
+                            }
+                        }
+                    }
+                    //console.log(collisions);
+                    // UPDATE COLLISIONS ARRAY
+                    laser.Collisions = collisions;
+
+                } // end if collisions don't need updating for this block
 
             } // end if laser
 
         }// end laser loop
+
+        this.UpdateAllLasers = false;
     }
 
 
-/*    UpdateTesting() {
-        var p1,p2,vector,line;
-        this._TestPoints = [];
 
-
-        var rectSize = 2; // size of rectangle for rough check (in grid cells)
-        var checkSize = 7; // number of units to do a precise hit check (ie 1 = every unit, 4 = every 4 units)
-        var grd = this._Sketch.ScaledCellWidth.width * rectSize;
-        var grdStraight = this._Sketch.GridSize * rectSize;
-
-        for (var i = 0; i < App.Blocks.Count; i++){
-            var laser = App.Blocks.GetValueAt(i);
-
-            if (laser instanceof Laser) {
-
-                vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)),this._Sketch.ScaledUnit.width);
-                //vector.Mult(this._Sketch.ScaledUnit.width);
-                line = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)),laser.Params.range*this._Sketch.ScaledUnit.width);
-
-
-                for (var j = 0; j < App.Blocks.Count; j++) {
-                    var block = App.Blocks.GetValueAt(j);
-
-                    if (block!==laser && block instanceof Source && !(block instanceof ParticleEmitter)) {
-
-                        var outline = [];
-
-                        p1 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(laser.Position));
-                        p2 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(block.Position));
-
-                        // IF IN QUADRANT //
-                        if (this.QuadPartition(p1,p2,laser.Params.angle)) {
-
-                            //IF CLOSE TO LINE //
-                            if (this.PointFromLine(p2.x,p2.y,p1.x,p1.y,p1.x + line.X,p1.y + line.Y,false)<grd) {
-
-                                *//*for (var h=0;h<(laser.Params.range*this._Sketch.ScaledUnit.width)/grd;h++) {
-
-                                 // IF IN A CHECK RECTANGLE //
-                                 var bp = p2;
-
-                                 if (bp.x > (p1.x - grd) && bp.x < (p1.x + grd) && bp.y > (p1.y - grd) && bp.y < (p1.y + grd)) {
-                                 *//*
-                                // THEN DO A PRECISE CHECK //
-
-                                // METHOD 1 //
-                                *//*var coveredRange = h * grdStraight;
-                                 for (var k=0; k<(this._Sketch.GridSize*rectSize); k+=checkSize) {
-                                 if ((k + coveredRange)>(laser.Params.range)) { // END OF LINE
-                                 break;
-                                 }
-                                 if (block.HitTest(p1)){
-                                 console.log("HIT");
-                                 //this._TestPoints.push(p1);
-                                 break;
-                                 }
-                                 p1 = new Point(p1.x + (vector.X*checkSize),p1.y + (vector.Y*checkSize));
-                                 }
-                                 break;*//*
-
-
-                                // METHOD 2 //
-                                for (var k=0; k<block.Outline.length; k++) {
-                                    outline.push( this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(this._Sketch.GetRelativePoint(block.Outline[k],block.Position))) );
-                                }
-                                //p2 = new Point(p1.x + (vector.X*grdStraight),p1.y + (vector.Y*grdStraight));
-                                p2 = new Point(p1.x + line.X,p1.y + line.Y);
-                                if (Intersection.intersectLinePolygon(p1,p2,outline).status=="Intersection") {
-                                    console.log("HIT");
-                                    break;
-                                }
-                                *//*}
-                                 p1 = new Point(p1.x + (vector.X*grdStraight),p1.y + (vector.Y*grdStraight));
-                                 }*//*
-
-
-                            }
-
-
-
-                        }
-                        // end quad == true
-                    }
-                }
-                // end block loop
-            }
-        }
-        // end laser loop
-    }*/
 
 
     Draw() {
@@ -230,17 +197,21 @@ class LaserBeams {
         this._Ctx.beginPath();
 
         for (var j=0; j<App.Blocks.length; j++) {
-            var block: ISource  = App.Blocks[j];
-            if (block instanceof Laser) {
+            var laser: ISource  = App.Blocks[j];
+            if (laser instanceof Laser) {
 
-                myPos = this._Sketch.ConvertGridUnitsToAbsolute(block.Position);
-                myPos = this._Sketch.ConvertBaseToTransformed(myPos);
+                // If we're in self powered mode, or if this is powered
+                if (laser.Params.selfPoweredMode || laser.IsPowered()) {
 
-                vector = Vector.FromAngle(Math.degreesToRadians(block.Params.angle));
-                vector.Mult(block.Params.range*unit);
+                    myPos = this._Sketch.ConvertGridUnitsToAbsolute(laser.Position);
+                    myPos = this._Sketch.ConvertBaseToTransformed(myPos);
 
-                this._Ctx.moveTo(myPos.x,myPos.y);
-                this._Ctx.lineTo(myPos.x + vector.X,myPos.y + vector.Y);
+                    vector = Vector.FromAngle(Math.degreesToRadians(laser.Params.angle));
+                    vector.Mult(laser.Params.range * unit);
+
+                    this._Ctx.moveTo(myPos.x, myPos.y);
+                    this._Ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
+                }
             }
         }
         this._Ctx.stroke();

@@ -1,5 +1,6 @@
 import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
+import Source = require("./Blocks/Source");
 import IEffect = require("./Blocks/IEffect");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
 import IOperation = require("./Core/Operations/IOperation");
@@ -24,6 +25,7 @@ import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
 import LaserBeams = require("./LaserBeams");
+import Laser = require("./Blocks/Power/Laser");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
 import Transformer = Fayde.Transformer.Transformer;
@@ -51,11 +53,12 @@ class BlocksSketch extends Grid {
     private _ToolTipTimeout;
     private _LastSize: minerva.Size;
     private _PointerPoint: Point;
+    private _SelectedBlockPosition: Point;
     private _ZoomLevel: number;
     private _ZoomPosition: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
-    public TxtHeader: string;op
+    public TxtHeader: string;
     public TxtSlider: string;
     public TxtUrl: string;
     public TxtLarge: string;
@@ -129,6 +132,7 @@ class BlocksSketch extends Grid {
         // METRICS //
         this.Metrics();
         this._PointerPoint = new Point();
+        this._SelectedBlockPosition = new Point();
 
         // TRANSFORMER //
         // todo: make these default values
@@ -509,6 +513,7 @@ class BlocksSketch extends Grid {
 
         if (collision) {
             this.IsDraggingABlock = true; // for trashcan to know
+            this._SelectedBlockPosition = this.SelectedBlock.Position; // memory of start position
         }
 
 
@@ -580,6 +585,10 @@ class BlocksSketch extends Grid {
         if (this.SelectedBlock){
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
+            if (this.IsDraggingABlock && (Math.round(this.SelectedBlock.Position.x)!==Math.round(this._SelectedBlockPosition.x) || Math.round(this.SelectedBlock.Position.y)!==Math.round(this._SelectedBlockPosition.y) ) ) {
+                this._SelectedBlockPosition = this.SelectedBlock.Position; // new grid position
+                this._ABlockHasBeenMoved(this.SelectedBlock);
+            }
         }
 
         // UI //
@@ -711,6 +720,15 @@ class BlocksSketch extends Grid {
             this._ToolTipClose(panel);
         }
 
+    }
+
+    private _ABlockHasBeenMoved(block) {
+        /*if (block instanceof Laser) {
+            block.UpdateCollision = true;
+        } else if (block instanceof Source) {
+            this._LaserBeams.UpdateAllLasers = true;
+        }*/
+        this._LaserBeams.UpdateAllLasers = true;
     }
 
     private _ToolTipClose(panel) {

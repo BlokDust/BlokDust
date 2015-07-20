@@ -34,6 +34,11 @@ class Source extends Block implements ISource {
     public ActiveVoices: Voice[];
     public FreeVoices: Voice[];
     public WaveIndex: string[];
+    public PowerConnections: number;
+    public ParticlePowered: boolean;
+    public LaserPowered: boolean;
+    public UpdateCollision: boolean;
+    public Collisions: any[];
 
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -46,7 +51,9 @@ class Source extends Block implements ISource {
         if (!this.WaveIndex) {
             this.WaveIndex = ["sine","square","triangle","sawtooth"];
         }
-
+        this.PowerConnections = 0;
+        this.ParticlePowered = false;
+        this.LaserPowered = false;
 
         this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
 
@@ -238,6 +245,8 @@ class Source extends Block implements ISource {
                 // Trigger the specific one
                 this.Sources[index].triggerAttack();
             }
+        } else if (this.UpdateCollision!==undefined) {
+            this.UpdateCollision = true;
         }
     }
 
@@ -249,8 +258,16 @@ class Source extends Block implements ISource {
      */
     TriggerRelease(index: number|string = 0) {
 
+        console.log("ID: "+this.Id);
+        console.log("Powered: " +this.IsPowered());
+        console.log("Power Connections: " +this.PowerConnections);
+        console.log(this.Envelopes);
+
+
         // Only if it's not powered
         if (!this.IsPowered()) {
+
+            console.log("not powered");
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -259,10 +276,12 @@ class Source extends Block implements ISource {
                     // Trigger all the envelopes
                     this.Envelopes.forEach((e: any)=> {
                         e.triggerRelease();
+                        console.log("01");
                     });
                 } else {
                     // Trigger the specific one
                     this.Envelopes[index].triggerRelease();
+                    console.log("02");
                 }
 
             // Or Samplers have built in envelopes
@@ -271,11 +290,16 @@ class Source extends Block implements ISource {
                     // Trigger all the envelopes
                     this.Sources.forEach((s: any)=> {
                         s.triggerRelease();
+                        console.log("03");
                     });
                 } else {
                     // Trigger the specific one
                     this.Sources[index].triggerRelease();
+                    console.log("04");
                 }
+            } else if (this.UpdateCollision!==undefined) {
+                this.UpdateCollision = true;
+                console.log("updateCollision");
             }
         }
     }
@@ -284,12 +308,32 @@ class Source extends Block implements ISource {
     TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0', velocity?: number) {
 
         if (this.Envelopes.length){
+
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
             this.Envelopes.forEach((e: any)=> {
                 e.triggerAttackRelease(duration, time);
             });
+
+        } else if (this.PowerConnections!==undefined) {
+
+            //this.ParticlePowered = true;
+            this.PowerConnections += 1;
+            if (this.UpdateCollision!==undefined) {
+                this.UpdateCollision = true;
+            }
+            var block = this;
+            var seconds = App.AudioMixer.Master.toSeconds(duration) * 1000;
+            setTimeout( function() {
+                //block.ParticlePowered = false;
+                block.PowerConnections -= 1;
+                if (block.UpdateCollision!==undefined) {
+                    block.UpdateCollision = true;
+                }
+            },seconds);
+
         } else if (this.Sources[0] && this.Sources[0].envelope) {
+
             // Trigger all the envelopes
             this.Sources.forEach((s: any)=> {
                 s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
@@ -303,7 +347,7 @@ class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered() {
-        if (this.IsPressed) {
+        if (this.IsPressed || this.PowerConnections>0) {
             return true;
 
         } else if (this.Effects.Count) {
@@ -316,9 +360,8 @@ class Source extends Block implements ISource {
                 }
             }
         }
-        else {
-            return false;
-        }
+        return false;
+
     }
 
     /**
