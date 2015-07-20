@@ -62,6 +62,7 @@ class App implements IApp{
     public PointerInputManager: PointerInputManager;
     public ResourceManager: ResourceManager;
     private _SessionId: string;
+    private _FontsLoaded: string[];
 
     // todo: move to BlockStore
     get Sources(): IBlock[] {
@@ -105,10 +106,25 @@ class App implements IApp{
 
         this.CreateCanvas();
 
-        // resize
+        // WONDOW RESIZE //
         window.onresize = () => {
             this.Resize();
         }
+
+
+        // LOAD FONTS AND SETUP CALLBACK //
+        this._FontsLoaded = [];
+        var me = this;
+        console.log("FONTS LOADING...");
+        WebFont.load({
+            custom: { families: ['Merriweather Sans:i3','Dosis:n2,n4']},
+            fontactive: function (font,fvd) { me.FontsLoaded(font,fvd); },
+            timeout: 3000 // 3 seconds
+        });
+        setTimeout(function () {
+            me.FontsNotLoaded();
+        },3020);
+
 
         this.OperationManager = new OperationManager();
         this.OperationManager.MaxOperations = this.Config.MaxOperations;
@@ -139,7 +155,7 @@ class App implements IApp{
 
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
-            this.LoadComposition();
+            //this.LoadComposition();
         });
 
         // SOUNDCLOUD //
@@ -151,6 +167,26 @@ class App implements IApp{
         }
     }
 
+    // FONT LOAD CALLBACK //
+    FontsLoaded(font,fvd) {
+        console.log("FONT LOADED: "+font+" "+fvd);
+        this._FontsLoaded.push(""+font+" "+fvd);
+        // All fonts are present - load scene
+        if (this._FontsLoaded.length==3) {
+            this.LoadComposition();
+        }
+    }
+
+    // FONT FAILURE TIMEOUT //
+    FontsNotLoaded() {
+        if (this._FontsLoaded.length!==3) {
+            console.log("FONTS ARE MISSING");
+            // proceed anyway for now
+            this.LoadComposition();
+        }
+    }
+
+    // BUILD EVERYTHING //
     LoadComposition() {
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
 
@@ -263,6 +299,9 @@ class App implements IApp{
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
         (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+
+        // Update Metrics & positioning in BlocksSketch
+        //this.BlocksSketch.SketchResize();
     }
 
     TranslateMousePointToPixelRatioPoint(point: Point){

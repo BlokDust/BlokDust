@@ -260,7 +260,7 @@ class Source extends Block implements ISource {
      */
     TriggerRelease(index: number|string = 0) {
 
-        console.log("ID: "+this.Id);
+        //console.log("ID: "+this.Id);
 
 
         // Only if it's not powered

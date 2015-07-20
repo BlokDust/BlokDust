@@ -134,7 +134,6 @@ class LaserBeams {
                                                     if (block instanceof Logic) {
                                                         block.PerformLogic();
                                                     } else {
-                                                        //block.LaserPowered = true;
                                                         if (!block.IsPowered()) {
                                                             block.TriggerAttack();
                                                         }
@@ -162,7 +161,6 @@ class LaserBeams {
                         var block = laser.Collisions[j];
                         if (collisions.length==0 || $.inArray(block, collisions)==-1) {
                             console.log("RELEASE "+ block.Id);
-                            //laser.Collisions[j].LaserPowered = false;
                             if (!(block instanceof Logic)) {
                                 block.PowerConnections -= 1;
                                 block.TriggerRelease();
