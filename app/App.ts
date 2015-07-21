@@ -48,6 +48,8 @@ class App implements IApp{
     private _SaveFile: SaveFile;
     public Unit: number;
     public GridSize: number;
+    public Width: number;
+    public Height: number;
     public Metrics: Metrics;
     public AudioMixer: AudioMixer = new AudioMixer();
     public Blocks: IBlock[] = [];
@@ -291,11 +293,11 @@ class App implements IApp{
 
     Resize(): void {
 
+        this.Metrics.Metrics();
         if (this.BlocksSketch.OptionsPanel) {
             this.BlocksSketch.SketchResize();
         }
 
-        this.Metrics.Metrics();
     }
 
     TranslateMousePointToPixelRatioPoint(point: Point){

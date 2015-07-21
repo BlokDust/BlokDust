@@ -87,9 +87,11 @@ class SharePanel extends DisplayObject{
         var urlType = App.Metrics.TxtUrl;
         var italicType = App.Metrics.TxtItalic2;
         var units = App.Unit;
-        var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
-        var shareX = this.OffsetX + this.Sketch.Width;
+        var centerY = this.OffsetY + (App.Height * 0.5);
+        var shareX = this.OffsetX + App.Width;
         var buttonY = centerY + (35*units);
+        var appWidth = App.Width;
+        var appHeight = App.Height;
 
         if (this.Open) {
 
@@ -97,13 +99,13 @@ class SharePanel extends DisplayObject{
             // BG //
             ctx.fillStyle = App.Palette[2];// Black
             ctx.globalAlpha = 0.95;
-            ctx.fillRect(0,this.OffsetY,this.Sketch.Width,this.Sketch.Height);
+            ctx.fillRect(0,this.OffsetY,appWidth,appHeight);
 
 
             // URL BOX //
             ctx.globalAlpha = 1;
             ctx.fillStyle = App.Palette[1];// Black
-            ctx.fillRect(shareX + (this.Sketch.Width*0.5) - (210*units),centerY - (20*units),420*units,40*units); // solid
+            ctx.fillRect(shareX + (appWidth*0.5) - (210*units),centerY - (20*units),420*units,40*units); // solid
 
             if (this._FirstSession) {
 
@@ -114,22 +116,22 @@ class SharePanel extends DisplayObject{
                 } else {
                     ctx.fillStyle = App.Palette[4];
                 }
-                ctx.fillRect(this.OffsetX + (this.Sketch.Width * 0.5) - (210 * units), centerY - (20 * units), 420 * units, 40 * units);
+                ctx.fillRect(this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (20 * units), 420 * units, 40 * units);
                 if (this._RollOvers[3] && !this._Saving) {
                     ctx.beginPath();
-                    ctx.moveTo(this.OffsetX + (this.Sketch.Width*0.5), centerY + (29*units));
-                    ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) - (10*units), centerY + (19*units));
-                    ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) + (10*units), centerY + (19*units));
+                    ctx.moveTo(this.OffsetX + (appWidth*0.5), centerY + (29*units));
+                    ctx.lineTo(this.OffsetX + (appWidth*0.5) - (10*units), centerY + (19*units));
+                    ctx.lineTo(this.OffsetX + (appWidth*0.5) + (10*units), centerY + (19*units));
                     ctx.closePath();
                     ctx.fill();
                 }
                 ctx.font = urlType;
                 ctx.textAlign = "center";
                 ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
-                ctx.fillText(this._CopyJson.genUrl.toUpperCase(), this.OffsetX + (this.Sketch.Width * 0.5), centerY + (9 * units));
+                ctx.fillText(this._CopyJson.genUrl.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (9 * units));
                 ctx.font = italicType;
                 ctx.textAlign = "left";
-                this.WordWrap(ctx, this._CopyJson.shareLine, this.OffsetX + (this.Sketch.Width * 0.5) - (210 * units), centerY - (59 * units), 14 * units, 210 * units);
+                this.WordWrap(ctx, this._CopyJson.shareLine, this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (59 * units), 14 * units, 210 * units);
             } else {
 
                 // SAVE & SAVE AS //
@@ -138,12 +140,12 @@ class SharePanel extends DisplayObject{
                 } else {
                     ctx.fillStyle = App.Palette[4];
                 }
-                ctx.fillRect(this.OffsetX + (this.Sketch.Width * 0.5) - (210 * units), centerY - (20 * units), 202.5 * units, 40 * units);
+                ctx.fillRect(this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (20 * units), 202.5 * units, 40 * units);
                 if (this._RollOvers[4] && !this._Saving) {
                     ctx.beginPath();
-                    ctx.moveTo(this.OffsetX + (this.Sketch.Width*0.5) - (108.75*units), centerY + (29*units));
-                    ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) - (118.75*units), centerY + (19*units));
-                    ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) - (98.75*units), centerY + (19*units));
+                    ctx.moveTo(this.OffsetX + (appWidth*0.5) - (108.75*units), centerY + (29*units));
+                    ctx.lineTo(this.OffsetX + (appWidth*0.5) - (118.75*units), centerY + (19*units));
+                    ctx.lineTo(this.OffsetX + (appWidth*0.5) - (98.75*units), centerY + (19*units));
                     ctx.closePath();
                     ctx.fill();
                 }
@@ -152,81 +154,81 @@ class SharePanel extends DisplayObject{
                 } else {
                     ctx.fillStyle = App.Palette[5];
                 }
-                ctx.fillRect(this.OffsetX + (this.Sketch.Width * 0.5) + (7.5 * units), centerY - (20 * units), 202.5 * units, 40 * units);
+                ctx.fillRect(this.OffsetX + (appWidth * 0.5) + (7.5 * units), centerY - (20 * units), 202.5 * units, 40 * units);
                 if (this._RollOvers[5] && !this._Saving) {
                     ctx.beginPath();
-                    ctx.moveTo(this.OffsetX + (this.Sketch.Width*0.5) + (108.75*units), centerY + (29*units));
-                    ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) + (118.75*units), centerY + (19*units));
-                    ctx.lineTo(this.OffsetX + (this.Sketch.Width*0.5) + (98.75*units), centerY + (19*units));
+                    ctx.moveTo(this.OffsetX + (appWidth*0.5) + (108.75*units), centerY + (29*units));
+                    ctx.lineTo(this.OffsetX + (appWidth*0.5) + (118.75*units), centerY + (19*units));
+                    ctx.lineTo(this.OffsetX + (appWidth*0.5) + (98.75*units), centerY + (19*units));
                     ctx.closePath();
                     ctx.fill();
                 }
                 ctx.font = urlType;
                 ctx.textAlign = "center";
                 ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
-                ctx.fillText(this._CopyJson.save.toUpperCase(), this.OffsetX + (this.Sketch.Width * 0.5) - (108.75 * units), centerY + (9 * units));
-                ctx.fillText(this._CopyJson.saveAs.toUpperCase(), this.OffsetX + (this.Sketch.Width * 0.5) + (108.75 * units), centerY + (9 * units));
+                ctx.fillText(this._CopyJson.save.toUpperCase(), this.OffsetX + (appWidth * 0.5) - (108.75 * units), centerY + (9 * units));
+                ctx.fillText(this._CopyJson.saveAs.toUpperCase(), this.OffsetX + (appWidth * 0.5) + (108.75 * units), centerY + (9 * units));
                 ctx.font = italicType;
                 ctx.textAlign = "left";
-                this.WordWrap(ctx, this._CopyJson.shareLine, this.OffsetX + (this.Sketch.Width * 0.5) - (210 * units), centerY - (59 * units), 14 * units, 210 * units);
+                this.WordWrap(ctx, this._CopyJson.shareLine, this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (59 * units), 14 * units, 210 * units);
 
                 // SKIP //
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = App.Palette[8]; // White
                 ctx.beginPath();
-                ctx.moveTo( this.OffsetX + (this.Sketch.Width*0.5) + (275 * units), centerY - (20*units));
-                ctx.lineTo( this.OffsetX + (this.Sketch.Width*0.5) + (295 * units), centerY);
-                ctx.lineTo( this.OffsetX + (this.Sketch.Width*0.5) + (275 * units), centerY + (20*units));
+                ctx.moveTo( this.OffsetX + (appWidth*0.5) + (275 * units), centerY - (20*units));
+                ctx.lineTo( this.OffsetX + (appWidth*0.5) + (295 * units), centerY);
+                ctx.lineTo( this.OffsetX + (appWidth*0.5) + (275 * units), centerY + (20*units));
                 ctx.stroke();
                 ctx.font = midType;
-                ctx.fillText("SKIP", this.OffsetX + (this.Sketch.Width * 0.5) + (275 * units), centerY + (35 * units));
+                ctx.fillText("SKIP", this.OffsetX + (appWidth * 0.5) + (275 * units), centerY + (35 * units));
             }
 
             // SAVE MESSAGE //
             if (this._Saving) {
                 ctx.font = midType;
                 ctx.textAlign = "center";
-                ctx.fillText(this._CopyJson.saving.toUpperCase(), this.OffsetX + (this.Sketch.Width * 0.5), centerY + (50 * units));
+                ctx.fillText(this._CopyJson.saving.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (50 * units));
             }
 
             // BACK ARROW //
             ctx.lineWidth = 2;
             ctx.strokeStyle = App.Palette[8]; // White
             ctx.beginPath();
-            ctx.moveTo(shareX + (this.Sketch.Width*0.5) - (275 * units), centerY - (20*units));
-            ctx.lineTo(shareX + (this.Sketch.Width*0.5) - (295 * units), centerY);
-            ctx.lineTo(shareX + (this.Sketch.Width*0.5) - (275 * units), centerY + (20*units));
+            ctx.moveTo(shareX + (appWidth*0.5) - (275 * units), centerY - (20*units));
+            ctx.lineTo(shareX + (appWidth*0.5) - (295 * units), centerY);
+            ctx.lineTo(shareX + (appWidth*0.5) - (275 * units), centerY + (20*units));
             ctx.stroke();
 
 
             // SHARE BUTTONS //
             ctx.fillStyle = "#fc4742";// gp
-            ctx.fillRect(shareX + (this.Sketch.Width*0.5) + (80*units),buttonY,130*units,30*units);
+            ctx.fillRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units);
             if (this._RollOvers[8]) {
                 ctx.beginPath();
-                ctx.moveTo(shareX + (this.Sketch.Width*0.5) + (145*units), buttonY + (39*units));
-                ctx.lineTo(shareX + (this.Sketch.Width*0.5) + (135*units), buttonY + (29*units));
-                ctx.lineTo(shareX + (this.Sketch.Width*0.5) + (155*units), buttonY + (29*units));
+                ctx.moveTo(shareX + (appWidth*0.5) + (145*units), buttonY + (39*units));
+                ctx.lineTo(shareX + (appWidth*0.5) + (135*units), buttonY + (29*units));
+                ctx.lineTo(shareX + (appWidth*0.5) + (155*units), buttonY + (29*units));
                 ctx.closePath();
                 ctx.fill();
             }
             ctx.fillStyle = "#2db0e7"; // tw
-            ctx.fillRect(shareX + (this.Sketch.Width*0.5) - (65*units),buttonY,130*units,30*units);
+            ctx.fillRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units);
             if (this._RollOvers[7]) {
                 ctx.beginPath();
-                ctx.moveTo(shareX + (this.Sketch.Width*0.5), buttonY + (39*units));
-                ctx.lineTo(shareX + (this.Sketch.Width*0.5) - (10*units), buttonY + (29*units));
-                ctx.lineTo(shareX + (this.Sketch.Width*0.5) + (10*units), buttonY + (29*units));
+                ctx.moveTo(shareX + (appWidth*0.5), buttonY + (39*units));
+                ctx.lineTo(shareX + (appWidth*0.5) - (10*units), buttonY + (29*units));
+                ctx.lineTo(shareX + (appWidth*0.5) + (10*units), buttonY + (29*units));
                 ctx.closePath();
                 ctx.fill();
             }
             ctx.fillStyle = "#2152ad"; // fb
-            ctx.fillRect(shareX + (this.Sketch.Width*0.5) - (210*units),buttonY,130*units,30*units);
+            ctx.fillRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units);
             if (this._RollOvers[6]) {
                 ctx.beginPath();
-                ctx.moveTo(shareX + (this.Sketch.Width*0.5) - (145*units), buttonY + (39*units));
-                ctx.lineTo(shareX + (this.Sketch.Width*0.5) - (135*units), buttonY + (29*units));
-                ctx.lineTo(shareX + (this.Sketch.Width*0.5) - (155*units), buttonY + (29*units));
+                ctx.moveTo(shareX + (appWidth*0.5) - (145*units), buttonY + (39*units));
+                ctx.lineTo(shareX + (appWidth*0.5) - (135*units), buttonY + (29*units));
+                ctx.lineTo(shareX + (appWidth*0.5) - (155*units), buttonY + (29*units));
                 ctx.closePath();
                 ctx.fill();
             }
@@ -236,24 +238,24 @@ class SharePanel extends DisplayObject{
             ctx.textAlign = "left";
             ctx.font = midType;
             ctx.font = italicType;
-            ctx.fillText(this._CopyJson.copyLine, shareX + (this.Sketch.Width*0.5) - (210*units), centerY - (33*units) );
+            ctx.fillText(this._CopyJson.copyLine, shareX + (appWidth*0.5) - (210*units), centerY - (33*units) );
             ctx.textAlign = "center";
             ctx.font = midType;
-            ctx.fillText(this._CopyJson.facebook.toUpperCase(), shareX + (this.Sketch.Width*0.5) - (145*units), buttonY + (18.5*units) );
-            ctx.fillText(this._CopyJson.twitter.toUpperCase(), shareX + (this.Sketch.Width*0.5), buttonY + (18.5*units) );
-            ctx.fillText(this._CopyJson.google.toUpperCase(), shareX + (this.Sketch.Width*0.5)  + (145*units), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.facebook.toUpperCase(), shareX + (appWidth*0.5) - (145*units), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.twitter.toUpperCase(), shareX + (appWidth*0.5), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.google.toUpperCase(), shareX + (appWidth*0.5)  + (145*units), buttonY + (18.5*units) );
 
 
             // TITLE //
             ctx.textAlign = "right";
-            ctx.fillText(this._CopyJson.titleLine.toUpperCase(), (this.Sketch.Width*0.5) - (225*units), centerY - (106*units) );
+            ctx.fillText(this._CopyJson.titleLine.toUpperCase(), (appWidth*0.5) - (225*units), centerY - (106*units) );
             ctx.beginPath();
-            ctx.moveTo((this.Sketch.Width*0.5) - (210*units), centerY - (90*units));
-            ctx.lineTo((this.Sketch.Width*0.5) + (210*units), centerY - (90*units));
+            ctx.moveTo((appWidth*0.5) - (210*units), centerY - (90*units));
+            ctx.lineTo((appWidth*0.5) + (210*units), centerY - (90*units));
             ctx.stroke();
             ctx.textAlign = "left";
             ctx.font = headType;
-            ctx.fillText(this.SessionTitle, (this.Sketch.Width*0.5) - (210*units), centerY - (100*units) );
+            ctx.fillText(this.SessionTitle, (appWidth*0.5) - (210*units), centerY - (100*units) );
 
             ctx.font = headType;
             ctx.fillText("SHARE",20*units,this.OffsetY + (30*units) + (11*units));
@@ -262,24 +264,24 @@ class SharePanel extends DisplayObject{
             // GEN TITLE //
             ctx.font = midType;
             var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
-            ctx.fillText(this._CopyJson.generateLine.toUpperCase(), (this.Sketch.Width*0.5) + (205*units) - genW, centerY - (106*units) );
+            ctx.fillText(this._CopyJson.generateLine.toUpperCase(), (appWidth*0.5) + (205*units) - genW, centerY - (106*units) );
 
 
             ctx.beginPath();
-            ctx.moveTo((this.Sketch.Width*0.5) + (210*units), centerY - (120*units));
-            ctx.lineTo((this.Sketch.Width*0.5) + (200*units) - genW, centerY - (120*units));
-            ctx.lineTo((this.Sketch.Width*0.5) + (200*units) - genW, centerY - (100*units));
-            ctx.lineTo((this.Sketch.Width*0.5) + (210*units), centerY - (100*units));
+            ctx.moveTo((appWidth*0.5) + (210*units), centerY - (120*units));
+            ctx.lineTo((appWidth*0.5) + (200*units) - genW, centerY - (120*units));
+            ctx.lineTo((appWidth*0.5) + (200*units) - genW, centerY - (100*units));
+            ctx.lineTo((appWidth*0.5) + (210*units), centerY - (100*units));
             ctx.closePath();
             ctx.stroke();
 
 
             // CLOSE BUTTON //
             ctx.beginPath();
-            ctx.moveTo((this.Sketch.Width*0.5) + (222.5*units), centerY - (122.5*units));
-            ctx.lineTo((this.Sketch.Width*0.5) + (237.5*units), centerY - (137.5*units));
-            ctx.moveTo((this.Sketch.Width*0.5) + (237.5*units), centerY - (122.5*units));
-            ctx.lineTo((this.Sketch.Width*0.5) + (222.5*units), centerY - (137.5*units));
+            ctx.moveTo((appWidth*0.5) + (222.5*units), centerY - (122.5*units));
+            ctx.lineTo((appWidth*0.5) + (237.5*units), centerY - (137.5*units));
+            ctx.moveTo((appWidth*0.5) + (237.5*units), centerY - (122.5*units));
+            ctx.lineTo((appWidth*0.5) + (222.5*units), centerY - (137.5*units));
             ctx.stroke();
         }
     }
@@ -334,10 +336,10 @@ class SharePanel extends DisplayObject{
             var shareUrl = document.getElementById("shareUrl");
 
             if (v=="OffsetX") {
-                shareUrl.style.left = "" + (this.x + (sketch.Width*1.5) - (units*200)) + "px";
+                shareUrl.style.left = "" + (this.x + (App.Width*1.5) - (units*200)) + "px";
             }
             if (v=="OffsetY") {
-                shareUrl.style.top = "" + (this.x + (sketch.Height*0.5) - (units*20)) + "px";
+                shareUrl.style.top = "" + (this.x + (App.Height*0.5) - (units*20)) + "px";
             }
         });
 
@@ -433,7 +435,7 @@ class SharePanel extends DisplayObject{
 
     OpenPanel() {
         this.Open = true;
-        this.OffsetY = -this.Sketch.Height;
+        this.OffsetY = -App.Height;
         var shareUrl = document.getElementById("shareUrl");
         shareUrl.style.display = "block";
         shareUrl.style.visibility = "true";
@@ -442,7 +444,7 @@ class SharePanel extends DisplayObject{
     }
 
     ClosePanel() {
-        this.DelayTo(this,-this.Sketch.Height,500,0,"OffsetY");
+        this.DelayTo(this,-App.Height,500,0,"OffsetY");
     }
 
     GenerateLink() {
@@ -461,7 +463,7 @@ class SharePanel extends DisplayObject{
         console.log(id);
         this._SessionId = id;
         this.UpdateUrlText();
-        this.DelayTo(this,-this.Sketch.Width,500,0,"OffsetX");
+        this.DelayTo(this,-App.Width,500,0,"OffsetX");
     }
 
     UpdateUrlText() {
@@ -542,7 +544,7 @@ class SharePanel extends DisplayObject{
                 return;
             }
             if (this._RollOvers[10]) { // skip
-                this.DelayTo(this,-this.Sketch.Width,500,0,"OffsetX");
+                this.DelayTo(this,-App.Width,500,0,"OffsetX");
                 return;
             }
 
@@ -568,34 +570,36 @@ class SharePanel extends DisplayObject{
 
     HitTests(point) {
         var units = App.Unit;
-        var shareX = this.OffsetX + this.Sketch.Width;
-        var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
+        var shareX = this.OffsetX + App.Width;
+        var centerY = this.OffsetY + (App.Height * 0.5);
         var buttonY = centerY + (35*units);
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
+        var appWidth = App.Width;
+
 
         ctx.font = midType;
         var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
 
-        this._RollOvers[0] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = this.HitRect((this.Sketch.Width*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = this.HitRect((this.Sketch.Width*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
+        this._RollOvers[0] = this.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
+        this._RollOvers[1] = this.HitRect((appWidth*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[2] = this.HitRect((appWidth*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
         if (this._FirstSession) {
-            this._RollOvers[3] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
+            this._RollOvers[3] = this.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
             this._RollOvers[4] = false;
             this._RollOvers[5] = false;
             this._RollOvers[10] = false;
         } else {
             this._RollOvers[3] = false;
-            this._RollOvers[4] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
-            this._RollOvers[5] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
-            this._RollOvers[10] = this.HitRect(this.OffsetX + (this.Sketch.Width*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
+            this._RollOvers[4] = this.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
+            this._RollOvers[5] = this.HitRect(this.OffsetX + (appWidth*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
+            this._RollOvers[10] = this.HitRect(this.OffsetX + (appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
         }
-        this._RollOvers[6] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
-        this._RollOvers[7] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
-        this._RollOvers[8] = this.HitRect(shareX + (this.Sketch.Width*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
+        this._RollOvers[6] = this.HitRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
+        this._RollOvers[7] = this.HitRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
+        this._RollOvers[8] = this.HitRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
 
-        this._RollOvers[9] = this.HitRect(shareX + (this.Sketch.Width*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[9] = this.HitRect(shareX + (appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
     }
 
 
@@ -625,7 +629,7 @@ class SharePanel extends DisplayObject{
     }
 
     Resize() {
-        var units = App.Unit;
+        var units = (App.Unit);
 
         //TODO: Move to AppMetrics
 
@@ -638,18 +642,16 @@ class SharePanel extends DisplayObject{
         shareUrl.style.display = "block";
 
         if (!this.Open) {
-            this.OffsetY = -this.Sketch.Height;
+            this.OffsetY = -App.Height;
             shareUrl.style.display = "none";
             shareUrl.style.visibility = "false";
         }
         if (this.OffsetX!==0) {
-            this.OffsetX = -this.Sketch.Width;
+            this.OffsetX = -App.Width;
         }
 
-        shareUrl.style.left = "" + (this.OffsetX + (this.Sketch.Width*1.5) - (units*200)) + "px";
-        shareUrl.style.top = "" + (this.OffsetY + (this.Sketch.Height*0.5) - (units*20)) + "px";
-
-
+        shareUrl.style.left = "" + (this.OffsetX + (App.Width*1.5) - (units*200)) + "px";
+        shareUrl.style.top = "" + (this.OffsetY + (App.Height*0.5) - (units*20)) + "px";
 
     }
 }
