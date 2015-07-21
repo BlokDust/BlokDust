@@ -72,10 +72,18 @@ class RecorderBlock extends Source {
 
     KeyDownCallback(e){
 
-        if ((<any>e).KeyDown === 'spacebar'){
-            // Start recording on spacebar
-            this.ToggleRecording();
-        }
+        /**
+         *  SPACEBAR RECORDING
+         *  NOTE: disabled this as it causes problems when you have multiple recorders on the stage.
+         *
+         *  TODO: create a global 'activate' button which triggers the
+         *  functionality of the last block that was pressed
+         */
+
+        //if ((<any>e).KeyDown === 'spacebar'){
+        //    //Start recording on spacebar
+        //    this.ToggleRecording();
+        //}
     }
 
     ToggleRecording(){
