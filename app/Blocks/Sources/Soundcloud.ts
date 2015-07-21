@@ -236,7 +236,7 @@ class Soundcloud extends Source {
         if (this.Sources[0] && this.Sources[0].player && this.Sources[0].player.buffer && this.Sources[0].player.buffer.duration){
             return this.Sources[0].player.buffer.duration;
         }
-        return 0;
+        return 10;
     }
 
     /**

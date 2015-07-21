@@ -116,15 +116,12 @@ class Granular extends Source {
 
     }
 
-    GetDuration() {
-        var duration = 0;
+    GetDuration(): number {
         if (this.Grains.length){
-            duration = this.Grains[0].buffer.duration;
+            return this.Grains[0].buffer.duration;
+        } else {
+            return 10;
         }
-        if (duration==0) {
-            duration = 10;
-        }
-        return duration;
     }
 
     Draw() {

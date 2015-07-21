@@ -152,15 +152,12 @@ class RecorderBlock extends Source {
         }
     }
 
-    GetDuration() {
-        var duration = 0;
+    GetDuration(): number {
         if (this.BufferSource && this.BufferSource.buffer !== null){
-            duration = this.BufferSource.buffer.duration;
+            return this.BufferSource.buffer.duration;
+        }  else {
+            return 10;
         }
-        if (duration==0) {
-            duration = 10;
-        }
-        return duration;
     }
 
     GetRecordedBlob() {
