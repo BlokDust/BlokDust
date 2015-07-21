@@ -227,11 +227,11 @@ class Source extends Block implements ISource {
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Envelopes.forEach((e: any)=> {
-                    e.triggerAttack();
+                    e.triggerAttack("+0.01");
                 });
             } else {
                 // Trigger the specific one
-                this.Envelopes[index].triggerAttack();
+                this.Envelopes[index].triggerAttack("+0.01");
             }
 
         // Or Samplers have built in envelopes
@@ -239,11 +239,11 @@ class Source extends Block implements ISource {
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Sources.forEach((s: any)=> {
-                    s.triggerAttack();
+                    s.triggerAttack("+0.01");
                 });
             } else {
                 // Trigger the specific one
-                this.Sources[index].triggerAttack();
+                this.Sources[index].triggerAttack("+0.01");
             }
 
         // Or this is a laser which needs to update it's collision check after being powered
@@ -299,8 +299,9 @@ class Source extends Block implements ISource {
     }
 
 
-    TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0', velocity?: number) {
+    TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0.01', velocity?: number) {
 
+        // Oscillators & Noises & Players
         if (this.Envelopes.length){
 
             //TODO: add velocity to all trigger methods
@@ -309,6 +310,20 @@ class Source extends Block implements ISource {
                 e.triggerAttackRelease(duration, time);
             });
 
+        //    Samplers
+        } else if (this.Sources[0] && this.Sources[0].envelope) {
+
+            // Trigger all the envelopes
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
+            });
+
+            // FIXME: This is wrong had to move it to last because
+            // 'this.PowerConnections!==undefined' always returns true
+            //
+            // Should probably just one of these instead?
+            // `else if (this.PowerConnections)` OR
+            // `else if(typeof this.PowerConnections != 'undefined')`
         } else if (this.PowerConnections!==undefined) {
 
             this.PowerConnections += 1;
@@ -324,12 +339,6 @@ class Source extends Block implements ISource {
                 }
             },seconds);
 
-        } else if (this.Sources[0] && this.Sources[0].envelope) {
-
-            // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
-            });
         }
     }
 
