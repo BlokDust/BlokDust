@@ -41,13 +41,15 @@ class Metrics {
         var unit = App.Unit;
         App.GridSize = gridSize * unit;
 
+
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
         canvas.width = width * ratio;
         canvas.height = height * ratio;
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
         (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
-
+        App.Width = width * ratio;
+        App.Height = height * ratio;
 
         // SET GLOBAL TYPE STYLES //
         var headerType = Math.round(unit*28);
