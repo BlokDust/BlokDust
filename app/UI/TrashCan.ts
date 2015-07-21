@@ -15,7 +15,7 @@ class TrashCan extends DisplayObject {
     }
 
     Draw() {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var tx = (<BlocksSketch>this.Sketch).Width - (30*units);
         var ty = (<BlocksSketch>this.Sketch).Height - (30*units);
@@ -46,7 +46,7 @@ class TrashCan extends DisplayObject {
     }
 
     MouseMove(point) {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         this._RollOver = this.HitRect((<BlocksSketch>this.Sketch).Width - (60*units),(<BlocksSketch>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 

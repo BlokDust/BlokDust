@@ -82,11 +82,11 @@ class SharePanel extends DisplayObject{
     Draw() {
 
         var ctx = this.Ctx;
-        var midType = (<BlocksSketch>this.Sketch).TxtMid;
-        var headType = (<BlocksSketch>this.Sketch).TxtHeader;
-        var urlType = (<BlocksSketch>this.Sketch).TxtUrl;
-        var italicType = (<BlocksSketch>this.Sketch).TxtItalic2;
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var midType = App.Metrics.TxtMid;
+        var headType = App.Metrics.TxtHeader;
+        var urlType = App.Metrics.TxtUrl;
+        var italicType = App.Metrics.TxtItalic2;
+        var units = App.Unit;
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var shareX = this.OffsetX + this.Sketch.Width;
         var buttonY = centerY + (35*units);
@@ -258,26 +258,8 @@ class SharePanel extends DisplayObject{
             ctx.font = headType;
             ctx.fillText("SHARE",20*units,this.OffsetY + (30*units) + (11*units));
 
-            // GEN TITLE BUTTON //
-            /*ctx.beginPath();
-            ctx.moveTo((this.Sketch.Width*0.5) - (295*units), centerY - (115*units));
-            ctx.lineTo((this.Sketch.Width*0.5) - (275*units), centerY - (115*units));
-            ctx.moveTo((this.Sketch.Width*0.5) - (295*units), centerY - (105*units));
-            ctx.lineTo((this.Sketch.Width*0.5) - (275*units), centerY - (105*units));
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo((this.Sketch.Width*0.5) - (275*units), centerY - (115*units));
-            ctx.lineTo((this.Sketch.Width*0.5) - (280*units), centerY - (117*units));
-            ctx.lineTo((this.Sketch.Width*0.5) - (280*units), centerY - (113*units));
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo((this.Sketch.Width*0.5) - (295*units), centerY - (105*units));
-            ctx.lineTo((this.Sketch.Width*0.5) - (290*units), centerY - (107*units));
-            ctx.lineTo((this.Sketch.Width*0.5) - (290*units), centerY - (103*units));
-            ctx.closePath();
-            ctx.fill();*/
 
+            // GEN TITLE //
             ctx.font = midType;
             var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
             ctx.fillText(this._CopyJson.generateLine.toUpperCase(), (this.Sketch.Width*0.5) + (205*units) - genW, centerY - (106*units) );
@@ -348,7 +330,7 @@ class SharePanel extends DisplayObject{
             panel[""+v] = this.x;
 
             var sketch = (<BlocksSketch>panel.Sketch);
-            var units = sketch.Unit.width;
+            var units = App.Unit;
             var shareUrl = document.getElementById("shareUrl");
 
             if (v=="OffsetX") {
@@ -585,12 +567,12 @@ class SharePanel extends DisplayObject{
     }
 
     HitTests(point) {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
         var shareX = this.OffsetX + this.Sketch.Width;
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var buttonY = centerY + (35*units);
         var ctx = this.Ctx;
-        var midType = (<BlocksSketch>this.Sketch).TxtMid;
+        var midType = App.Metrics.TxtMid;
 
         ctx.font = midType;
         var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
@@ -643,10 +625,12 @@ class SharePanel extends DisplayObject{
     }
 
     Resize() {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
+
+        //TODO: Move to AppMetrics
 
         var shareUrl = document.getElementById("shareUrl");
-        shareUrl.style.font = (<BlocksSketch>this.Sketch).TxtUrl;
+        shareUrl.style.font = App.Metrics.TxtUrl;
         shareUrl.style.width = "" + (units*400) + "px";
         shareUrl.style.height = "" + (units*40) + "px";
         shareUrl.style.lineHeight = "" + (units*40) + "px";

@@ -53,9 +53,9 @@ class MessagePanel extends DisplayObject {
 
 
     Draw() {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
-        var midType = (<BlocksSketch>this.Sketch).TxtMid;
+        var midType = App.Metrics.TxtMid;
         var y = (<BlocksSketch>this.Sketch).Height*0.75;
         var cx = (<BlocksSketch>this.Sketch).Width*0.5;
         var w = (<BlocksSketch>this.Sketch).Width;
@@ -144,9 +144,9 @@ class MessagePanel extends DisplayObject {
 
         // CLOSE POSITION //
         if (this._Value.confirmation) {
-            var units = (<BlocksSketch>this.Sketch).Unit.width;
+            var units = App.Unit;
             var ctx = this.Ctx;
-            var midType = (<BlocksSketch>this.Sketch).TxtMid;
+            var midType = App.Metrics.TxtMid;
             var cx = (<BlocksSketch>this.Sketch).Width*0.5;
             ctx.font = midType;
             this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
@@ -222,7 +222,7 @@ class MessagePanel extends DisplayObject {
 
     RolloverCheck(point) {
         this.Hover = false;
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
 
         if (this._Value.confirmation) {
             this._Roll[0] = this.HitRect(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);

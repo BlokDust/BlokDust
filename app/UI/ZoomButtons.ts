@@ -17,20 +17,20 @@ class ZoomButtons extends DisplayObject {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
         this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
 
     }
 
     UpdatePositions() {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
         this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
     }
 
     Draw() {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
 
         ctx.globalAlpha = 1;
@@ -94,7 +94,7 @@ class ZoomButtons extends DisplayObject {
     }
 
     MouseMove(point) {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         var zin = this._InPos;
         var zout = this._OutPos;
         var area = (30*units);

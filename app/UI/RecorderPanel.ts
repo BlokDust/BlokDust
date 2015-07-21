@@ -58,10 +58,10 @@ class RecorderPanel extends DisplayObject {
     }
 
     DrawPanel(x,y,rec,hover) {
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
-        var grd = (<BlocksSketch>this.Sketch).CellWidth.width;
+        var units = App.Unit;
+        var grd = App.GridSize;
         var ctx = this.Ctx;
-        var midType = (<BlocksSketch>this.Sketch).TxtMid;
+        var midType = App.Metrics.TxtMid;
 
         var w = grd*3;
         var h = grd*3;
@@ -148,8 +148,8 @@ class RecorderPanel extends DisplayObject {
 
     RolloverCheck(point) {
         this.Hover = false;
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
-        var grd = (<BlocksSketch>this.Sketch).CellWidth.width;
+        var units = App.Unit;
+        var grd = App.GridSize;
 
         var w = grd*3;
         var h = grd*3;

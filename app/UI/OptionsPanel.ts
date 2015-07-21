@@ -59,7 +59,7 @@ class OptionsPanel extends DisplayObject {
         this.Hover = false;
 
         this.Options = [];
-        this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
+        this.SliderColours = [];
         this._SliderRoll = [];
 
         this.InitJson =
@@ -79,7 +79,7 @@ class OptionsPanel extends DisplayObject {
     Populate(json,open) {
 
         this._JsonMemory = json;
-        var units = this.Sketch.Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var dataType = units*10;
         this._PanelCloseRoll = false;
@@ -165,6 +165,7 @@ class OptionsPanel extends DisplayObject {
         this.Range = panelR;
         this._Name = json.name;
         this._NameWidth = nameW;
+        this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
 
 
         // DEFINE OUTLINE FOR HITTEST
@@ -423,7 +424,7 @@ class OptionsPanel extends DisplayObject {
 
 
     Draw() {
-        var units = this.Sketch.Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
@@ -435,7 +436,7 @@ class OptionsPanel extends DisplayObject {
 
 
         // PANEL //
-        ctx.font = this.Sketch.TxtMid;
+        ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
 
 
@@ -477,7 +478,7 @@ class OptionsPanel extends DisplayObject {
 
     // PANEL BLACK BG //
     panelDraw(x,y) {
-        var units = this.Sketch.Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
 
         ctx.beginPath();
@@ -697,7 +698,7 @@ class OptionsPanel extends DisplayObject {
 
 
     RolloverCheck(mx,my) {
-        var units = this.Sketch.Unit.width;
+        var units = App.Unit;
 
         //this.Hover = this.HitRect(this.Position.x,this.Position.y - (this.Size.height*0.5), this.Size.width, this.Size.height,mx,my);
         this.Hover = this.OutlineTest(new Point(mx,my));

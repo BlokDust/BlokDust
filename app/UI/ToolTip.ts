@@ -31,12 +31,12 @@ class ToolTip extends DisplayObject {
 
     Draw() {
 
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var dataType = Math.round(units*10);
         var thisAlpha = this.Alpha/100;
 
-        ctx.font = "400 " + dataType + "px Dosis";
+        ctx.font = App.Metrics.TxtMid;
         var thisWidth = ctx.measureText(this.Name.toUpperCase()).width + (40*units);
         var x = this.Position.x + ((<BlocksSketch>this.Sketch).ScaledCellWidth.width*0);
         var y = this.Position.y;

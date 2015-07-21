@@ -48,7 +48,7 @@ class WaveRegion extends WaveForm{
         if (!this.Waveform.length) {
             ctx.textAlign = "center";
             ctx.fillStyle = App.Palette[8];// WHITE
-            ctx.font = panel.Sketch.TxtMid;
+            ctx.font = App.Metrics.TxtMid;
             ctx.fillText("NO SAMPLE", (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType*0.45));
         }
 
@@ -161,7 +161,7 @@ class WaveRegion extends WaveForm{
 
 
             ctx.fillStyle = App.Palette[8];// WHITE
-            ctx.font = panel.Sketch.TxtItalic;
+            ctx.font = App.Metrics.TxtItalic;
 
             ctx.textAlign = "left";
             /*ctx.fillText("Play", xs[0] + panel.Margin + (dragWidth) + (5*units), y + (height * 0.5) + (dataType*0.35));

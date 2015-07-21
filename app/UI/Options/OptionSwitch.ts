@@ -52,7 +52,7 @@ class OptionSwitch {
 
         // PARAM NAME //
         ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.font = panel.Sketch.TxtMid;
+        ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "center";
         ctx.fillText(this.Name.toUpperCase(), x + (w*0.5), y + (h*0.84));
 

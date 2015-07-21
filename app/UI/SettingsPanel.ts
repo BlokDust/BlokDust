@@ -87,7 +87,7 @@ class SettingsPanel extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
     Populate(json) {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var dataType = units*10;
         var gutter = 60;
@@ -135,18 +135,18 @@ class SettingsPanel extends DisplayObject{
     Draw() {
 
         var ctx = this.Ctx;
-        var midType = (<BlocksSketch>this.Sketch).TxtMid;
-        var headType = (<BlocksSketch>this.Sketch).TxtHeader;
-        var largeType = (<BlocksSketch>this.Sketch).TxtLarge;
-        var italicType2 = (<BlocksSketch>this.Sketch).TxtItalic2;
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var midType = App.Metrics.TxtMid;
+        var headType = App.Metrics.TxtHeader;
+        var largeType = App.Metrics.TxtLarge;
+        var italicType2 = App.Metrics.TxtItalic2;
+        var units = App.Unit;
+        var grid = App.GridSize;
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var tabY = centerY - (180*units);
         tabY = this.OffsetY;
         var menuWidth = (this.Sketch.Width/7)*4;
         var halfWidth = menuWidth * 0.5;
         var dx = (this.Sketch.Width*0.5);
-        var grid = (<BlocksSketch>this.Sketch).GridSize*units;
         var pageY = tabY + (120*units);
 
 
@@ -495,7 +495,7 @@ class SettingsPanel extends DisplayObject{
     }
 
     HitTests(point) {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
         var tabY = centerY - (180*units);
         tabY = this.OffsetY;

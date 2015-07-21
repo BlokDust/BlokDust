@@ -63,7 +63,7 @@ class Header extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
     Populate(json) {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var dataType = units*10;
         var gutter = 60;
@@ -132,7 +132,7 @@ class Header extends DisplayObject{
 
 
     Draw() {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
         var ctx = this.Ctx;
         var dataType = units*10;
         var headerType = Math.round(units*28);
@@ -360,7 +360,7 @@ class Header extends DisplayObject{
 
     MouseDown(point) {
         //this.HitTests(point);
-        var units = (<BlocksSketch>this.Sketch).Unit.width;
+        var units = App.Unit;
 
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
@@ -474,7 +474,7 @@ class Header extends DisplayObject{
     }
 
     HitTests(point) {
-        var units = (<Grid>this.Sketch).Unit.width;
+        var units = App.Unit;
         var grd = (<Grid>this.Sketch).CellWidth.width;
 
         // CATEGORY HIT TEST //

@@ -1,5 +1,6 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
 import Config = require("./Config");
+import Metrics = require("./AppMetrics");
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
@@ -45,6 +46,9 @@ class App implements IApp{
     private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
     private _SaveFile: SaveFile;
+    public Unit: number;
+    public GridSize: number;
+    public Metrics: Metrics;
     public AudioMixer: AudioMixer = new AudioMixer();
     public Blocks: IBlock[] = [];
     public BlocksSketch: BlocksSketch;
@@ -106,7 +110,8 @@ class App implements IApp{
 
         this.CreateCanvas();
 
-        // WONDOW RESIZE //
+        // METRICS //
+        this.Metrics = new Metrics();
         window.onresize = () => {
             this.Resize();
         }
@@ -126,13 +131,14 @@ class App implements IApp{
         },3020);
 
 
+        // CREATE OPERATIONS MANAGERS //
         this.OperationManager = new OperationManager();
         this.OperationManager.MaxOperations = this.Config.MaxOperations;
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
-        //this.Fonts = new Fonts();
 
-        // register command handlers
+
+        // REGISTER COMMAND HANDLERS //
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.MOVE_BLOCK], MoveBlockCommandHandler.prototype));
@@ -142,7 +148,8 @@ class App implements IApp{
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.REDO], RedoCommandHandler.prototype));
 
-        // create input managers
+
+        // CREATE INPUT MANAGERS //
         this.InputManager = new InputManager();
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
@@ -151,14 +158,15 @@ class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
-        var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);
 
+        // LOAD PALETTE //
+        var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
             //this.LoadComposition();
         });
 
-        // SOUNDCLOUD //
+        // SOUNDCLOUD INIT //
         // todo: create server-side session
         if (typeof(SC) !== "undefined"){
             SC.initialize({
@@ -272,42 +280,29 @@ class App implements IApp{
         this.BlocksSketch.MessagePanel.NewMessage(string, options);
     }
 
-    get PixelRatio(): number {
-        const ctx:any = document.createElement("canvas").getContext("2d");
-        const dpr = window.devicePixelRatio || 1;
-        const bsr = ctx.webkitBackingStorePixelRatio ||
-                ctx.mozBackingStorePixelRatio ||
-                ctx.msBackingStorePixelRatio ||
-                ctx.oBackingStorePixelRatio ||
-                ctx.backingStorePixelRatio || 1;
-
-        return dpr / bsr;
-    }
-
     CreateCanvas() {
         this._Canvas = document.createElement("canvas");
         document.body.appendChild(this._Canvas);
     }
 
-    Resize(): void {
-        const canvas = this._Canvas;
-        const ratio = this.PixelRatio;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        canvas.width = width * ratio;
-        canvas.height = height * ratio;
-        canvas.style.width = width + "px";
-        canvas.style.height = height + "px";
-        (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+    get Canvas() {
+        return this._Canvas;
+    }
 
-        // Update Metrics & positioning in BlocksSketch
-        //this.BlocksSketch.SketchResize();
+    Resize(): void {
+
+        if (this.BlocksSketch.OptionsPanel) {
+            this.BlocksSketch.SketchResize();
+        }
+
+        this.Metrics.Metrics();
     }
 
     TranslateMousePointToPixelRatioPoint(point: Point){
-        point.x *= this.PixelRatio;
-        point.y *= this.PixelRatio;
+        point.x *= this.Metrics.PixelRatio;
+        point.y *= this.Metrics.PixelRatio;
     }
+
 }
 
 export = App;

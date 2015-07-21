@@ -83,7 +83,7 @@ class Parametric extends Option{
         ctx.textAlign = "center";
         var bodyType = units*5;
         ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
-        ctx.font = "400 " + bodyType + "px PT Sans";
+        ctx.font = "400 " + bodyType + "px PT Sans"; //TODO: convert to newer font system
         ctx.fillStyle = App.Palette[8];
         //ctx.fillStyle = "#393d43";
 

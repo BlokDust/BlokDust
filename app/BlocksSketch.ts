@@ -53,22 +53,12 @@ class BlocksSketch extends Grid {
     private _RecorderPanel: RecorderPanel;
     private _LaserBeams: LaserBeams;
     private _ToolTipTimeout;
-    private _LastSize: minerva.Size;
     private _PointerPoint: Point;
     private _SelectedBlockPosition: Point;
     private _ZoomLevel: number;
     private _ZoomPosition: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
-    public TxtHeader: string;
-    public TxtSlider: string;
-    public TxtUrl: string;
-    public TxtLarge: string;
-    public TxtMid: string;
-    public TxtBody: string;
-    public TxtItalic: string;
-    public TxtItalic2: string;
-    public TxtData: string;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
 
     get ZoomLevel(): number {
@@ -108,6 +98,12 @@ class BlocksSketch extends Grid {
     Setup(){
         super.Setup();
 
+        //TODO can go once Grid is updated to new metrics system
+        this.ScaleToFit = true;
+        this.GridSize = 15;
+        this.Divisor = 850; // 70
+
+
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
         }, this);
@@ -127,7 +123,6 @@ class BlocksSketch extends Grid {
         OptionTimeout = false; // todo: remove
 
         // METRICS //
-        this.Metrics();
         this._PointerPoint = new Point();
         this._SelectedBlockPosition = new Point();
 
@@ -232,18 +227,10 @@ class BlocksSketch extends Grid {
         this._LaserBeams.Update();
         this._RecorderPanel.Update();
 
-        this._CheckResize();
+        //this._CheckResize();
     }
 
-    // todo: use global resize event
-    // DIY RESIZE LISTENER //
-    private _CheckResize() {
-        if (this.Width!==this._LastSize.width||this.Height!==this._LastSize.height) {
-            // Has resized, call the resize function //
-            this.SketchResize();
 
-        }
-    }
 
 
     // PARTICLES //
@@ -269,7 +256,7 @@ class BlocksSketch extends Grid {
 
     SketchResize() {
         // Update size record //
-        this.Metrics();
+        //this.Metrics();
 
         if (this.OptionsPanel.Scale==1) {
             this.OptionsPanel.SelectedBlock.UpdateOptionsForm();
@@ -282,38 +269,7 @@ class BlocksSketch extends Grid {
     }
 
 
-    Metrics() {
 
-        this.ScaleToFit = true;
-        this.GridSize = 15;
-        this.Divisor = 850; // 70
-
-        var unit = this.Unit.width;
-        var headerType = Math.round(unit*28);
-        var sliderType = Math.round(unit*33);
-        var urlType = Math.round(unit*24);
-        var largeType = Math.round(unit*12);
-        var midType = Math.round(unit*10);
-        var bodyType = Math.round(unit*8);
-        var italicType = Math.round(unit*7.5);
-        var italicType2 = Math.round(unit*9);
-        var dataType = Math.round(unit*5);
-
-        this.TxtHeader = "200 " + headerType + "px Dosis";
-        this.TxtSlider = "200 " + sliderType + "px Dosis";
-        this.TxtUrl = "200 " + urlType + "px Dosis";
-        this.TxtMid = "400 " + midType + "px Dosis";
-        this.TxtLarge = "400 " + largeType + "px Dosis";
-        this.TxtBody = "200 " + bodyType + "px Dosis";
-        this.TxtItalic = "300 italic " + italicType + "px Merriweather Sans";
-        this.TxtItalic2 = "300 italic " + italicType2 + "px Merriweather Sans";
-        this.TxtData = "400 " + dataType + "px PT Sans";
-
-        this._LastSize = new Size(this.Width,this.Height);
-
-        var styleElem = document.getElementById("selectStyle");
-        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1] + '; background-blend-mode: normal; mix-blend-mode: normal;}';
-    }
 
 
     //-------------------------------------------------------------------------------------------

@@ -26,7 +26,6 @@ class SwitchArray extends Option{
         var y = this.Position.y;
         var height = this.Size.height;
 
-        var midType = Math.round(units*10);
 
         // DIVIDERS //
         ctx.fillStyle = ctx.strokeStyle = "#393d43";

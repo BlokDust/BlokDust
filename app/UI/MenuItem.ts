@@ -48,7 +48,7 @@ class MenuItem {
         ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
         var dataType = units*10;
         ctx.textAlign = "center";
-        ctx.font = this._Sketch.TxtMid;
+        ctx.font = App.Metrics.TxtMid;
         ctx.fillText(this.Name,x,y + (40*units));
 
 
@@ -81,7 +81,7 @@ class MenuItem {
             // INFO TEXT //
             ctx.textAlign = "left";
             var bodyType = units*7.5;
-            ctx.font = this._Sketch.TxtItalic;
+            ctx.font = App.Metrics.TxtItalic;
             this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.width*0.5) + (10*units),y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
 
 

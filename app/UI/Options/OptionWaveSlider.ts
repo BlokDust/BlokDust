@@ -104,7 +104,7 @@ class WaveSlider extends WaveForm{
         // VALUE TOOLTIP //
         if (this.Selected) {
             ctx.textAlign = "left";
-            ctx.font = panel.Sketch.TxtSlider;
+            ctx.font = App.Metrics.TxtSlider;
             var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
             ctx.fillText(string, rightSpread + (25 * units), y + (height * 0.5) + (headerType * 0.35));
         }

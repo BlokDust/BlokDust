@@ -103,7 +103,7 @@ class Slider extends Option{
 
 
         // PARAM NAME //
-        ctx.font = panel.Sketch.TxtMid;
+        ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
@@ -111,7 +111,7 @@ class Slider extends Option{
         // VALUE TOOLTIP //
         if (this.Selected) {
             ctx.textAlign = "left";
-            ctx.font = panel.Sketch.TxtSlider;
+            ctx.font = App.Metrics.TxtSlider;
             var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
             ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
         }

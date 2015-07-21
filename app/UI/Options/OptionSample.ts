@@ -52,7 +52,7 @@ class OptionSample  extends Option{
 
         // PARAM NAME //
         ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.font = panel.Sketch.TxtMid;
+        ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
@@ -75,15 +75,14 @@ class OptionSample  extends Option{
 
 
         // TRACK //
+        ctx.font = App.Metrics.TxtItalic;
         ctx.textAlign = "left";
         ctx.fillText(this.Track.toUpperCase(), panel.Margin, y + (height * 0.5)-units);
-        ctx.font = panel.Sketch.TxtItalic;
         ctx.fillText("By "+this.Capitalise(this.User), panel.Margin, y + (height * 0.5) + (dataType) - (units*2));
 
 
         // LOAD NEW //
         ctx.textAlign = "center";
-        ctx.font = panel.Sketch.TxtItalic;
         ctx.fillText("load new sample ", panel.Margin + (panel.Range*0.82), y + (height * 0.5) + (dataType*0.35));
         ctx.lineWidth = 2;
         ix = panel.Margin + panel.Range - (diamond*units);

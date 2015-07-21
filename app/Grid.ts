@@ -10,7 +10,7 @@ class Grid extends Fayde.Drawing.SketchContext {
     public _Divisor: number;
     public ScaleToFit: boolean = false;
     private _InitialUnitWidth: number;
-    public GridSize: number; // multiplier of Units to specify grid cell width
+    public GridSize: number; // number of Units to specify grid cell width
 
     private _TransformGroup: TransformGroup;
 
@@ -64,6 +64,7 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     }
 
+    //TODO decommission Divisor & ScaleToFit, move all metrics functions to App.Metrics, convert 2d units to 1d, leave Transform functions here
 
 
     // GRID CELL SIZE //

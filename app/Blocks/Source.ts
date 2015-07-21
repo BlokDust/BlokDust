@@ -7,6 +7,7 @@ import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import Power = require("./Power/Power");
+import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
 import Voice = require("./Interaction/VoiceObject");
 
@@ -51,7 +52,7 @@ class Source extends Block implements ISource {
         if (!this.WaveIndex) {
             this.WaveIndex = ["sine","square","triangle","sawtooth"];
         }
-        this.PowerConnections = 0;
+
         this.ParticlePowered = false;
         this.LaserPowered = false;
 
@@ -318,12 +319,7 @@ class Source extends Block implements ISource {
                 s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
             });
 
-            // FIXME: This is wrong had to move it to last because
-            // 'this.PowerConnections!==undefined' always returns true
-            //
-            // Should probably just one of these instead?
-            // `else if (this.PowerConnections)` OR
-            // `else if(typeof this.PowerConnections != 'undefined')`
+        //    Power Source Blocks
         } else if (this.PowerConnections!==undefined) {
 
             this.PowerConnections += 1;
