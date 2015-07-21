@@ -42,16 +42,19 @@ class Toggle extends Logic {
         {
             "name" : "Toggle Switch",
             "parameters" : [
+
                 {
-                    "type" : "slider", //TODO Change to switch UI when available
-                    "name" : "Off/On",
-                    "setting" :"logic",
-                    "props" : {
-                        "value" : this.Params.logic,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true
-                    }
+                    "type" : "switches",
+                    "name" : "Power",
+                    "setting" :"",
+                    "switches": [
+                        {
+                            "name": "Off/On",
+                            "setting": "logic",
+                            "value": this.Params.logic,
+                            "lit" : true
+                        }
+                    ]
                 }
             ]
         };
