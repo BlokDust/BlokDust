@@ -65,6 +65,7 @@ class Soundcloud extends Source {
             s.player.reverse = this.Params.reverse;
         });
 
+        //TODO: We don't need to do this for every source in Sources array. Once is enough
         // Update waveform
         var buffer = new Tone.Buffer(this.Params.track, (e) => {
             this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,2,95);
@@ -208,9 +209,7 @@ class Soundcloud extends Source {
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.loop = value;
-                });
+                this.Sources[0].player.loop = value;
                 // update display of loop sliders
                 if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
                     this.Params[param] = value;

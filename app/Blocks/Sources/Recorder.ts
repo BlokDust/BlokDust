@@ -118,26 +118,14 @@ class RecorderBlock extends Source {
                 this.BufferSource = this.Sources[0].context.createBufferSource();
             }
 
-            // TODO: add a 'merge new buffers with old buffers' option
-
-
+            // TODO: add an overlay function which would merge new buffers with old buffers
 
             // Create a new buffer and set the buffers to the recorded data
             this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
-            // Update waveform
-            this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
-            var duration = this.GetDuration();
-            this.Params.endPosition = duration;
-            this.Params.loopStart = duration * 0.5;
-            this.Params.loopEnd = duration * 0.75;
-
-            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                this.UpdateOptionsForm();
-                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-            }
+            this.UpdateWaveform();
 
             // Set the buffers for each source
             this.Sources.forEach((s: Tone.Simpler)=> {
@@ -146,12 +134,22 @@ class RecorderBlock extends Source {
                 s.player.loopEnd = this.Params.loopEnd;
             });
 
-            this._OnBuffersReady();
+
         });
     }
 
-    private _OnBuffersReady() {
-        //Buffers Loaded
+    UpdateWaveform(){
+        // Update waveform
+        this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+        var duration = this.GetDuration();
+        this.Params.endPosition = duration;
+        this.Params.loopStart = duration * 0.5;
+        this.Params.loopEnd = duration * 0.75;
+
+        if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+        }
     }
 
     GetDuration() {
@@ -297,9 +295,7 @@ class RecorderBlock extends Source {
             case "reverse":
                 value = value? true : false;
                 console.log("out: "+ value);
-                this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.reverse = value;
-                });
+                this.Sources[0].player.reverse = value;
                 // Update waveform
                 this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
                 if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {

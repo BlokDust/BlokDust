@@ -1,7 +1,3 @@
-/**
- * Created by luketwyman on 20/07/2015.
- */
-
 import Effect = require("../Effect");
 
 class PowerEffect extends Effect {

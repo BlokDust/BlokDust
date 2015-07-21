@@ -6,7 +6,6 @@ import Vector = Utils.Maths.Vector;
 
 class ParticleEmitter extends PowerSource {
 
-    //public Params: EmitterSettings;
     private _rateCounter: number;
 
 
