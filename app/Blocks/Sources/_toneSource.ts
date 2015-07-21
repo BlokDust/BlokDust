@@ -71,6 +71,11 @@ class ToneSource extends Source {
         this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
     }
 
+    //TODO: move this
+    interval2freq(interval: number): number {
+        return Math.pow(2,(interval/12));
+    }
+
     CreateSource(){
         // add it to the list of sources
         this.Sources.push( new Tone.Oscillator(this.Params.frequency, this.WaveIndex[this.Params.waveform]));
@@ -143,8 +148,7 @@ class ToneSource extends Source {
                         "min" : -12,
                         "max" : 12,
                         "quantised" : true,
-                        "centered" : true,
-                        "logarithmic": true
+                        "centered" : true
                     }
                 },
                 {
@@ -171,6 +175,9 @@ class ToneSource extends Source {
         switch(param) {
             case "frequency":
                 this.Sources[0].frequency.value = value;
+                break;
+            case 'transpose':
+                this.Sources[0].frequency.value = this.Sources[0].frequency.value * this.interval2freq(value);
                 break;
         }
 

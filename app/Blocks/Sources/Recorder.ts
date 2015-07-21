@@ -10,12 +10,12 @@ class RecorderBlock extends Source {
     public Filename: string;
     public IsRecording: boolean = false;
     public RecordedBlob;
-    public PlaybackRate: number;
+    //public PlaybackRate: number;
     private _WaveForm: number[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.PlaybackRate = 1;
+        //this.PlaybackRate = 1;
 
         if (!this.Params) {
             this.Params = {
