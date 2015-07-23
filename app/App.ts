@@ -196,41 +196,25 @@ class App implements IApp{
         }
     }
 
-    // BUILD EVERYTHING //
+    // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
-
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
-                // get deserialized blocks tree, then "flatten" so that all blocks are in an array
-                this.Deserialize(data);
-                this.CreateUI();
-                this.RefreshBlocks();
+                this.PopulateSketch(data);
             }).catch((error: string) => {
                 // fail silently
-                this.CreateUI();
-                this.RefreshBlocks();
             });
-        } else {
-            this.CreateUI();
-            this.RefreshBlocks();
         }
+        this.CreateBlockSketch();
     }
 
-    CreateUI() {
+
+    // CREATE BLOCKSSKETCH & BEGIN DRAWING/ANIMATING //
+    CreateBlockSketch() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
-
-        // set initial zoom level/position
-        if (this._SaveFile) {
-            this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
-            this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
-        }
-
-        // initialise blocks (give them a ctx to draw to)
-        this.Blocks.forEach((b: IBlock) => {
-            b.Init(this.BlocksSketch);
-        });
+        this.Blocks = [];
 
         // add blocks to BlocksSketch DisplayList
         var d = new DisplayObjectCollection();
@@ -241,6 +225,33 @@ class App implements IApp{
         this._ClockTimer.RegisterTimer(this);
 
         this.Resize();
+    }
+
+    // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
+    PopulateSketch(data) {
+        // get deserialized blocks tree, then "flatten" so that all blocks are in an array
+        this.Deserialize(data);
+
+        // set initial zoom level/position
+        this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
+        this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
+
+
+        // initialise blocks (give them a ctx to draw to)
+        this.Blocks.forEach((b: IBlock) => {
+            b.Init(this.BlocksSketch);
+        });
+
+
+        // add blocks to BlocksSketch DisplayList
+        var d = new DisplayObjectCollection();
+        d.AddRange(this.Blocks);
+        this.BlocksSketch.DisplayList = new DisplayList(d);
+
+        // bring down volume and validate blocks //
+        this.AudioMixer.Master.volume.value = -100;
+        this.RefreshBlocks();
+        this.BlocksSketch.CompositionLoaded();
     }
 
     // todo: move to BlockStore
