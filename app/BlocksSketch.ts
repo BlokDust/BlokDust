@@ -788,13 +788,16 @@ class BlocksSketch extends Grid {
     // GETS CALLED WHEN LOADING FROM SHARE URL //
     CompositionLoaded() {
         // validate blocks and give us a little time to stabilise / bring in volume etc
-        this.Paused = true;
         this._Invalidate();
         var sketch = this;
         setTimeout(function() {
             sketch.Paused = false;
             App.AudioMixer.Master.volume.rampTo(App.AudioMixer.MasterVolume,1);
-        },500);
+        },200);
+
+        if (!App.LoadCued) {
+            App.Splash.EndLoad();
+        }
     }
 
 
