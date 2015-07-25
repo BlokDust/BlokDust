@@ -230,6 +230,7 @@ class App implements IApp{
                 this.PopulateSketch(data);
             }).catch((error: string) => {
                 // fail silently
+                this.CompositionId = null;
             });
         }
         this.CreateBlockSketch();

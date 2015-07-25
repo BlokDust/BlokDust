@@ -65,7 +65,7 @@ class Splash {
         this._Scale = 100 * App.Unit;
 
         // LOADING //
-        if (App.Scene==2 && !App.LoadCued) {
+        if (App.Scene==2 && !App.LoadCued && App.CompositionId) {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
             this.Ctx.fillStyle = App.Palette[0];
