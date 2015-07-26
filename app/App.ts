@@ -231,7 +231,10 @@ class App implements IApp{
             }).catch((error: string) => {
                 // fail silently
                 this.CompositionId = null;
+                this.Splash.LoadOffset = 1;
             });
+        } else {
+            this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
         this.CreateBlockSketch();
     }
