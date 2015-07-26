@@ -40,6 +40,7 @@ class BlocksSketch extends Grid {
     private _IsPointerDown: boolean = false;
     private _DisplayList: DisplayList;
     private _Transformer: Transformer;
+    public Paused: boolean;
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
@@ -205,29 +206,32 @@ class BlocksSketch extends Grid {
 
 
     Update() {
-        super.Update();
 
-        // update transformer
-        this._Transformer.SizeChanged(this.Size);
+        if (!this.Paused) {
+            super.Update();
 
-        // update blocks
-        for (var i = 0; i < App.Blocks.length; i++) {
-            var block: IBlock = App.Blocks[i];
-            block.Update();
+            // update transformer
+            this._Transformer.SizeChanged(this.Size);
+
+            // update blocks
+            for (var i = 0; i < App.Blocks.length; i++) {
+                var block: IBlock = App.Blocks[i];
+                block.Update();
+            }
+
+            if (App.Particles.length) {
+                this.UpdateParticles();
+            }
+
+            if (this.OptionsPanel.Scale==1) {
+                this.OptionsPanel.Update();
+            }
+
+            this._LaserBeams.Update();
+            this._RecorderPanel.Update();
         }
 
-        if (App.Particles.length) {
-            this.UpdateParticles();
-        }
 
-        if (this.OptionsPanel.Scale==1) {
-            this.OptionsPanel.Update();
-        }
-
-        this._LaserBeams.Update();
-        this._RecorderPanel.Update();
-
-        //this._CheckResize();
     }
 
 
@@ -663,30 +667,37 @@ class BlocksSketch extends Grid {
         // OPEN TOOLTIP IF NOT ALREADY OPEN //
         if (blockHover && !panel.Open) {
             panel.Open = true;
-            this._ToolTipTimeout = setTimeout(function() {
-                if (panel.Alpha==0) {
-                    panel.AlphaTo(panel,100,800);
-                }
-            },500);
+            if (panel.Alpha>0) {
+                panel.AlphaTo(panel,100,600);
+            } else {
+                this._ToolTipTimeout = setTimeout(function() {
+                    if (panel.Alpha==0) {
+                        panel.AlphaTo(panel,100,600);
+                    }
+                },550);
+            }
+
+
         }
         // CLOSE IF NO LONGER HOVERING //
         if (!blockHover && panel.Open) {
-            this._ToolTipClose(panel);
+             this._ToolTipClose(panel);
         }
 
     }
 
-    private _ABlockHasBeenMoved(block) {
-        this._LaserBeams.UpdateAllLasers = true;
-    }
 
     private _ToolTipClose(panel) {
         if (this._ToolTipTimeout) {
             clearTimeout(this._ToolTipTimeout);
         }
-        panel.AlphaTo(panel,0,100);
+        panel.AlphaTo(panel,0,200);
         panel.Open = false;
 
+    }
+
+    private _ABlockHasBeenMoved(block) {
+        this._LaserBeams.UpdateAllLasers = true;
     }
 
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
@@ -772,6 +783,21 @@ class BlocksSketch extends Grid {
         block.MouseDown();
         this.SelectedBlock = block;
         this.IsDraggingABlock = true;
+    }
+
+    // GETS CALLED WHEN LOADING FROM SHARE URL //
+    CompositionLoaded() {
+        // validate blocks and give us a little time to stabilise / bring in volume etc
+        this._Invalidate();
+        var sketch = this;
+        setTimeout(function() {
+            sketch.Paused = false;
+            App.AudioMixer.Master.volume.rampTo(App.AudioMixer.MasterVolume,1);
+        },200);
+
+        if (!App.LoadCued) {
+            App.Splash.EndLoad();
+        }
     }
 
 

@@ -20,6 +20,7 @@ import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource")
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
 import BlocksSketch = require("./BlocksSketch");
+import Splash = require("./Splash");
 import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
 import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
@@ -54,6 +55,7 @@ class App implements IApp{
     public AudioMixer: AudioMixer = new AudioMixer();
     public Blocks: IBlock[] = [];
     public BlocksSketch: BlocksSketch;
+    public Scene: number;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
     public CompositionId: string;
@@ -68,7 +70,10 @@ class App implements IApp{
     public PointerInputManager: PointerInputManager;
     public ResourceManager: ResourceManager;
     private _SessionId: string;
-    private _FontsLoaded: string[];
+    private _FontsLoaded: number;
+    private _PaletteLoaded: boolean;
+    public Splash: Splash;
+    public LoadCued: boolean;
 
     // todo: move to BlockStore
     get Sources(): IBlock[] {
@@ -111,6 +116,7 @@ class App implements IApp{
     public Setup(){
 
         this.CreateCanvas();
+        this.Scene = 0;
 
         // METRICS //
         this.Metrics = new Metrics();
@@ -120,7 +126,8 @@ class App implements IApp{
 
 
         // LOAD FONTS AND SETUP CALLBACK //
-        this._FontsLoaded = [];
+        this.LoadCued = false;
+        this._FontsLoaded = 0;
         var me = this;
         console.log("FONTS LOADING...");
         WebFont.load({
@@ -165,7 +172,8 @@ class App implements IApp{
         var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
-            //this.LoadComposition();
+            this._PaletteLoaded = true;
+            this.LoadReady();
         });
 
         // SOUNDCLOUD INIT //
@@ -175,62 +183,68 @@ class App implements IApp{
                 client_id: this.Config.SoundCloudClientId
             });
         }
+
+        // CREATE SPLASH SCREEN //
+        this.Splash = new Splash;
     }
 
     // FONT LOAD CALLBACK //
     FontsLoaded(font,fvd) {
         console.log("FONT LOADED: "+font+" "+fvd);
-        this._FontsLoaded.push(""+font+" "+fvd);
+        this._FontsLoaded += 1;
         // All fonts are present - load scene
-        if (this._FontsLoaded.length==3) {
-            this.LoadComposition();
+        if (this._FontsLoaded==3) {
+            this.LoadReady();
         }
     }
 
     // FONT FAILURE TIMEOUT //
     FontsNotLoaded() {
-        if (this._FontsLoaded.length!==3) {
+        if (this._FontsLoaded!==3) {
             console.log("FONTS ARE MISSING");
             // proceed anyway for now
-            this.LoadComposition();
+            this.LoadReady();
         }
     }
 
-    // BUILD EVERYTHING //
+    // PROCEED WHEN ALL SOCKETS LOADED //
+    LoadReady() {
+        if (this._FontsLoaded==3 && this._PaletteLoaded) {
+            this.LoadComposition();
+            this.Scene = 1;
+            this.Splash.StartTween();
+            var me = this;
+        }
+    }
+
+    // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
-
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
-                // get deserialized blocks tree, then "flatten" so that all blocks are in an array
-                this.Deserialize(data);
-                this.CreateUI();
-                this.RefreshBlocks();
+                /*var me = this;
+                var data = data;
+                setTimeout(function() {
+                    me.PopulateSketch(data);
+                },6000);*/
+                this.PopulateSketch(data);
             }).catch((error: string) => {
                 // fail silently
-                this.CreateUI();
-                this.RefreshBlocks();
+                this.CompositionId = null;
+                this.Splash.LoadOffset = 1;
             });
         } else {
-            this.CreateUI();
-            this.RefreshBlocks();
+            this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
+        this.CreateBlockSketch();
     }
 
-    CreateUI() {
+
+    // CREATE BLOCKSSKETCH & BEGIN DRAWING/ANIMATING //
+    CreateBlockSketch() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
-
-        // set initial zoom level/position
-        if (this._SaveFile) {
-            this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
-            this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
-        }
-
-        // initialise blocks (give them a ctx to draw to)
-        this.Blocks.forEach((b: IBlock) => {
-            b.Init(this.BlocksSketch);
-        });
+        this.Blocks = [];
 
         // add blocks to BlocksSketch DisplayList
         var d = new DisplayObjectCollection();
@@ -241,6 +255,39 @@ class App implements IApp{
         this._ClockTimer.RegisterTimer(this);
 
         this.Resize();
+    }
+
+    // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
+    PopulateSketch(data) {
+        // get deserialized blocks tree, then "flatten" so that all blocks are in an array
+        this.Deserialize(data);
+
+        // set initial zoom level/position
+        this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
+        this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
+
+
+        // initialise blocks (give them a ctx to draw to)
+        this.Blocks.forEach((b: IBlock) => {
+            b.Init(this.BlocksSketch);
+        });
+
+
+        // add blocks to BlocksSketch DisplayList
+        var d = new DisplayObjectCollection();
+        d.AddRange(this.Blocks);
+        this.BlocksSketch.DisplayList = new DisplayList(d);
+
+        // bring down volume and validate blocks //
+        this.AudioMixer.Master.volume.value = -100;
+        this.RefreshBlocks();
+        this.BlocksSketch.Paused = true;
+        if (this.Scene<2) {
+            this.LoadCued = true;
+        } else {
+            this.BlocksSketch.CompositionLoaded();
+        }
+
     }
 
     // todo: move to BlockStore
@@ -258,11 +305,19 @@ class App implements IApp{
     }
 
     Update() : void {
-        this.BlocksSketch.Update();
+        if (this.Scene==2) {
+            this.BlocksSketch.Update();
+        }
+
     }
 
     Draw(): void {
-        this.BlocksSketch.Draw();
+        if (this.Scene==2) {
+            this.BlocksSketch.Draw();
+        }
+        if (this.Scene>0) {
+            this.Splash.Draw();
+        }
     }
 
     Serialize(): string {

@@ -70,6 +70,7 @@ class ToolTip extends DisplayObject {
         if (this._AlphaTween) {
             this._AlphaTween.stop();
         }
+        TWEEN.remove(this._AlphaTween);
         this._AlphaTween = new TWEEN.Tween({x: this.Alpha});
         this._AlphaTween.to({x: destination}, t);
         this._AlphaTween.onUpdate(function () {
