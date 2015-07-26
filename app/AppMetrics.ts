@@ -37,7 +37,7 @@ class Metrics {
 
 
         // DEFINE UNIT & GRID SIZE //
-        App.Unit = width/screenDivision;
+        App.Unit = (width/screenDivision)*ratio;
         var unit = App.Unit;
         App.GridSize = gridSize * unit;
 
