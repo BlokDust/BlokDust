@@ -28,7 +28,7 @@ class Splash {
         this.YOffset = -1;
         this.LoadOffset = 0;
 
-        this.StartAnimating();
+        //this.StartAnimating();
         this.Initialised = true;
     }
 
