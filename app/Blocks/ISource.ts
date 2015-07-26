@@ -19,6 +19,7 @@ interface ISource extends IBlock{
     LaserPowered: boolean;
     UpdateCollision: boolean;
     Collisions: any[];
+    SearchResults: any[];
     //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];

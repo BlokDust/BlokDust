@@ -18,6 +18,7 @@ class OptionSample  extends Option{
         this.Track = track;
         this.User = user;
         this.Setting = setting;
+        this.HandleRoll = [];
     }
 
 

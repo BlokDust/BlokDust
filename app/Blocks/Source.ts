@@ -40,7 +40,7 @@ class Source extends Block implements ISource {
     public LaserPowered: boolean;
     public UpdateCollision: boolean;
     public Collisions: any[];
-
+    public SearchResults: any[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);

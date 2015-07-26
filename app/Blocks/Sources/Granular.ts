@@ -35,16 +35,18 @@ class Granular extends Source {
         }
 
         this._WaveForm = [];
+        this.SearchResults = [];
 
         super.Init(sketch);
 
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
         //this.Params.track = SoundCloudAudio.PickTrack(SoundCloudAudioType.Granular,0);
 
-        // moved to first mouse release //
+
         this.CreateSource();
         this.CreateEnvelope();
-
+        this.CreateGrains();
+        // moved to first mouse release //
         /*this.Sources.forEach((s: Tone.Signal, i: number) => {
             s.connect(this.Envelopes[i]);
         });
@@ -64,60 +66,76 @@ class Granular extends Source {
         this._Envelopes.length = 0;
     }
 
+    Search(query: string) {
+        SoundCloudAudio.Search(query, (tracks) => {
+            tracks.forEach((track) => {
+                this.SearchResults.push(track);
+            });
+        });
+    }
 
 
-    // LOAD THE AUDIO & CONNECT UP//
-    // INITIALISE PLAYERS & ENVELOPES //
+    CreateGrains() {
+        if (!this.Grains[0]) {
+            for (var i=0; i<this.GrainsAmount; i++) {
+
+                // CREATE PLAYER //
+                this.Grains[i] = new Tone.Player();
+
+                // CREATE ENVELOPE //
+                this._Envelopes[i] = new Tone.AmplitudeEnvelope(
+                    this.Params.grainlength/2,  // Attack
+                    0.01,                       // Decay
+                    0.9,                        // Sustain
+                    this.Params.grainlength/2   // Release
+                );
+
+                // CONNECT //
+                this.Grains[i].connect(this._Envelopes[i]);
+                this._Envelopes[i].connect(this.Sources[0]);
+                this.Grains[i].playbackRate = this.Params.playbackRate;
+            }
+            this.Sources[0].connect(this.EffectsChainInput);
+        }
+    }
+
+
     SetupGrains() {
+        // RESET //
         this._IsLoaded = false;
         var duration = this.GetDuration();
         this.Params.region = duration/2;
 
 
-        // Loop through GrainsAmount
-        for (var i=0; i<this.GrainsAmount; i++) {
+        // LOAD FIRST BUFFER //
+        var buffer = new Tone.Player(this.Params.track, (e) => {
+            console.log(e);
+            this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
+            this._IsLoaded = true;
 
-            if (i==0) { // first buffer callback
-                this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
-                    console.log(e);
-                    this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
-                    this._IsLoaded = true;
+            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                this.UpdateOptionsForm();
+                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+            }
+
+            // COPY BUFFER TO GRAINS //
+            for (var i=0; i<this.GrainsAmount; i++) {
+                // fill buffer //
+                this.Grains[i].buffer = e.buffer;
+
+                if (i==0) {
                     var duration = this.GetDuration();
                     this.Params.region = duration/2;
                     console.log(duration);
-
-                    if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                        this.UpdateOptionsForm();
-                        (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                    }
-
-                    // start if powered //
-                    this.GrainLoop();
-                });
-
-            } else {  // remaining buffers
-                this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
-                    console.log(e);
-                });
-
+                }
             }
 
-            this._Envelopes[i] = new Tone.AmplitudeEnvelope(
-                this.Params.grainlength/2,  // Attack
-                0.01,                       // Decay
-                0.9,                        // Sustain
-                this.Params.grainlength/2   // Release
-            );
-
-            // CONNECT //
-            this.Grains[i].connect(this._Envelopes[i]);
-            this._Envelopes[i].connect(this.Sources[0]);
-            this.Sources[0].connect(this.EffectsChainInput);
-            this.Grains[i].playbackRate = this.Params.playbackRate;
-        }
-
+            // start if powered //
+            this.GrainLoop();
+        });
     }
 
+    
     GetDuration(): number {
         if (this.Grains.length){
             return this.Grains[0].buffer.duration;
@@ -196,6 +214,7 @@ class Granular extends Source {
                 e.connect(this.EffectsChainInput);
             });
 
+            this.Search("train station");
             this.SetupGrains();
 
             this._FirstRelease = false;

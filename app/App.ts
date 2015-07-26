@@ -129,7 +129,6 @@ class App implements IApp{
         this.LoadCued = false;
         this._FontsLoaded = 0;
         var me = this;
-        console.log("FONTS LOADING...");
         WebFont.load({
             custom: { families: ['Merriweather Sans:i3','Dosis:n2,n4']},
             fontactive: function (font,fvd) { me.FontsLoaded(font,fvd); },
@@ -190,7 +189,6 @@ class App implements IApp{
 
     // FONT LOAD CALLBACK //
     FontsLoaded(font,fvd) {
-        console.log("FONT LOADED: "+font+" "+fvd);
         this._FontsLoaded += 1;
         // All fonts are present - load scene
         if (this._FontsLoaded==3) {

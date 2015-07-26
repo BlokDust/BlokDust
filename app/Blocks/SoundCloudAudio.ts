@@ -67,6 +67,7 @@ class SoundCloudAudio {
             //tags: 'blokdust',
             //license: 'cc-by',
             q: query,
+            limit: 200
         }, callback);
     }
 }
