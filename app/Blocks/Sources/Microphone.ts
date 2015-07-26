@@ -72,7 +72,9 @@ class Microphone extends Source {
     }
 
     TriggerRelease(index?: number|string){
-        this.Mute();
+        if (!this.IsPowered()) {
+            this.Mute();
+        }
     }
 
     TriggerAttackRelease(duration: number){
