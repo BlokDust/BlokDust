@@ -7,6 +7,7 @@ import SoundCloudAudioType = require('../SoundCloudAudioType');
 class Soundcloud extends Source {
 
     private _WaveForm: number[];
+    private _FirstRelease: boolean = true;
     public Sources : Tone.Simpler[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -43,13 +44,13 @@ class Soundcloud extends Source {
 
         this.CreateSource();
 
-        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+        /*this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
             e = this.Sources[i].envelope;
         });
 
         this.Sources.forEach((s: Tone.Simpler) => {
             s.connect(this.EffectsChainInput);
-        });
+        });*/
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -64,7 +65,10 @@ class Soundcloud extends Source {
             s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
         });
+        return super.CreateSource();
+    }
 
+    SetBuffers() {
         //TODO: We don't need to do this for every source in Sources array. Once is enough
         // Update waveform
         var buffer = new Tone.Buffer(this.Params.track, (e) => {
@@ -81,23 +85,19 @@ class Soundcloud extends Source {
         });
 
         /*this.Sources[0].player.buffer.onload = (e) => {
-            console.log(e);
-            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,2,95);
-            var duration = this.GetDuration();
-            this.Params.startPosition = 0;
-            this.Params.endPosition = duration;
-            this.Params.loopStart = duration * 0.5;
-            this.Params.loopEnd = duration * 0.75;
+         console.log(e);
+         this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,2,95);
+         var duration = this.GetDuration();
+         this.Params.startPosition = 0;
+         this.Params.endPosition = duration;
+         this.Params.loopStart = duration * 0.5;
+         this.Params.loopEnd = duration * 0.75;
 
-            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                this.UpdateOptionsForm();
-                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-            }
-        };*/
-
-
-
-        return super.CreateSource();
+         if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+         this.UpdateOptionsForm();
+         (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+         }
+         };*/
     }
 
     Update() {
@@ -277,6 +277,25 @@ class Soundcloud extends Source {
                 this.Sources[index].triggerRelease();
             }
         }
+    }
+
+    MouseUp() {
+        if (this._FirstRelease) {
+
+            this.SetBuffers();
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+                e = this.Sources[i].envelope;
+            });
+
+            this.Sources.forEach((s: Tone.Simpler) => {
+                s.connect(this.EffectsChainInput);
+            });
+
+            this._FirstRelease = false;
+        }
+
+        super.MouseUp();
     }
 
     Dispose(){

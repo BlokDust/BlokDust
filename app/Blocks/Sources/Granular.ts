@@ -12,6 +12,7 @@ class Granular extends Source {
     private _Envelopes: Tone.AmplitudeEnvelope[] = [];
     public Timeout;
     public EndTimeout;
+    private _FirstRelease: boolean = true;
     private _CurrentGrain: number = 0;
     private _IsLoaded: boolean;
     public GrainsAmount: number = 16;
@@ -40,10 +41,11 @@ class Granular extends Source {
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
         //this.Params.track = SoundCloudAudio.PickTrack(SoundCloudAudioType.Granular,0);
 
+        // moved to first mouse release //
         this.CreateSource();
         this.CreateEnvelope();
 
-        this.Sources.forEach((s: Tone.Signal, i: number) => {
+        /*this.Sources.forEach((s: Tone.Signal, i: number) => {
             s.connect(this.Envelopes[i]);
         });
 
@@ -51,7 +53,7 @@ class Granular extends Source {
             e.connect(this.EffectsChainInput);
         });
 
-        this.SetupGrains();
+        this.SetupGrains();*/
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
@@ -180,6 +182,26 @@ class Granular extends Source {
     }
 
     TriggerAttackRelease(){
+    }
+
+
+    MouseUp() {
+        if (this._FirstRelease) {
+
+            this.Sources.forEach((s: Tone.Signal, i: number) => {
+                s.connect(this.Envelopes[i]);
+            });
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+                e.connect(this.EffectsChainInput);
+            });
+
+            this.SetupGrains();
+
+            this._FirstRelease = false;
+        }
+
+        super.MouseUp();
     }
 
     GrainLoop() {
