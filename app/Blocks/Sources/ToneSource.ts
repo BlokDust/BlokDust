@@ -8,6 +8,8 @@ import Particle = require("../../Particle");
 class ToneSource extends Source {
 
     public Sources: Tone.Oscillator[];
+    //public Frequency: number;
+    //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -15,41 +17,10 @@ class ToneSource extends Source {
         if (!this.Params) {
             this.Params = {
                 frequency: App.Config.BaseNote,
-                transpose: 0,
                 waveform: 2,
+                transpose: 0,
             };
         }
-
-        /** Task: Create transpose feature
-         *
-         * All sources should have it
-         * default is 0 (no transposition)
-         * sliding scale between -12 and 12 (for first testing)
-         * 1 being a semitone and 12 being a full octave
-         *
-         * a default tone is set to 440 (A)
-         * if transpose is 3, tone should be 523.25 (C) (3+ semitones)
-         *
-         * If a keyboard is attached an A note would also then be transposed to C
-         * When a keyboard calls SetPitch it needs to get the transpose number and take Math into account
-         *
-         * ie. keyboard pressed a 440 note, set Pitch should set to 523.25
-         *
-         * 440      0       440
-         * 440      1       466.16
-         * 440      2       493.88
-         *
-         * 440      12      880
-         *
-         *
-         * intervalToFrequencyRatio(interval){
-         *  Math.pow(2,(interval/12))
-         * }
-         *
-         * The formula is:
-         *
-         * App.Config.BaseNote * intervalToFrequencyRatio(interval);
-         */
 
 
         super.Init(sketch);
@@ -63,7 +34,6 @@ class ToneSource extends Source {
 
         this.Sources.forEach((s: Tone.Oscillator, i: number)=> {
             s.connect(this.Envelopes[i]);
-            s.volume.value = -100;
             s.start();
         });
 
@@ -143,8 +113,7 @@ class ToneSource extends Source {
                         "min" : -12,
                         "max" : 12,
                         "quantised" : true,
-                        "centered" : true,
-                        "logarithmic": true
+                        "centered" : true
                     }
                 },
                 {
@@ -163,6 +132,11 @@ class ToneSource extends Source {
         };
     }
 
+    //TODO: move this
+    interval2freq(interval: number): number {
+        return Math.pow(2,(interval/12));
+    }
+
     SetParam(param: string,value: any) {
 
 
@@ -171,6 +145,9 @@ class ToneSource extends Source {
         switch(param) {
             case "frequency":
                 this.Sources[0].frequency.value = value;
+                break;
+            case 'transpose':
+                this.Sources[0].frequency.value = this.Sources[0].frequency.value * this.interval2freq(value);
                 break;
         }
 
