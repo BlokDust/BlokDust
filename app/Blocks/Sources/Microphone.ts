@@ -7,6 +7,7 @@ class Microphone extends Source {
 
     public Volume: any;
     public Muted: boolean = false;
+    private _FirstRelease: boolean = true;
     private _unmutedVolume: number = 1;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -22,17 +23,18 @@ class Microphone extends Source {
         this.Volume = App.AudioMixer.Master.context.createGain();
         this.Volume.gain.value = this.Params.gain;
 
-        this.CreateSource();
+        //this.CreateSource();
 
         this.Volume.connect(this.EffectsChainInput);
 
-        // Microphone should be muted and only unmuted when powered
+        // moved to first mouse release //
+        /*// Microphone should be muted and only unmuted when powered
         this.Mute();
 
         this.Sources.forEach((s: Tone.Microphone)=> {
             s.connect(this.Volume);
             s.start();
-        });
+        });*/
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -79,6 +81,22 @@ class Microphone extends Source {
         setTimeout(() => {
             this.Mute();
         }, this.Sources[0].toSeconds(duration)*1000);
+    }
+
+    MouseUp() {
+        if (this._FirstRelease) {
+            this.CreateSource();
+            // Microphone should be muted and only unmuted when powered
+            //this.Mute();
+
+            this.Sources.forEach((s: Tone.Microphone)=> {
+                s.connect(this.Volume);
+                s.start();
+            });
+            this._FirstRelease = false;
+        }
+
+        super.MouseUp();
     }
 
     UpdateOptionsForm() {
