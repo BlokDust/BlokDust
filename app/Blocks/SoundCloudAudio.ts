@@ -53,6 +53,11 @@ class SoundCloudAudio {
         return 'https://api.soundcloud.com/tracks/'+ track +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }
 
+    static LoadTrack(track: any) {
+        var trackUrl = track.uri;
+        return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
+    }
+
     /**
      * Search the Soundcloud API for any tracks containing a string.
      * @param query String to search for

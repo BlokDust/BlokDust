@@ -42,71 +42,78 @@ class WaveSlider extends WaveForm{
         var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
 
-
-
-        // LINES //
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
-
-        var spread = (panel.Range / (this.Max-this.Min)) * this.Spread;
-
-        var leftSpread = x + panel.Margin - (spread*0.5);
-        if (leftSpread < panel.Margin) {
-            leftSpread = panel.Margin;
-        }
-        var rightSpread = x + panel.Margin + (spread*0.5);
-        if (rightSpread > (panel.Margin + panel.Range)) {
-            rightSpread = panel.Margin + panel.Range;
-        }
-        ctx.beginPath();
-        ctx.moveTo(leftSpread,y);
-        ctx.lineTo(leftSpread,y + height);
-        ctx.moveTo(rightSpread,y);
-        ctx.lineTo(rightSpread,y + height);
-        ctx.stroke();
-        ctx.lineWidth = 1;
-
-
-
-        // SLIDEBAR //
-        var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
-        var offset = 0;
-        if (origin == panel.Margin) {
-            offset = -units;
+        if (!this.Waveform.length) {
+            ctx.textAlign = "center";
+            ctx.fillStyle = App.Palette[8];// WHITE
+            ctx.font = App.Metrics.TxtMid;
+            ctx.fillText("NO SAMPLE", (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType*0.45));
         }
 
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = col;
-        ctx.fillRect(x + panel.Margin - (units), y, 2 * units, height);
+         else {
+
+            // LINES //
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
+
+            var spread = (panel.Range / (this.Max - this.Min)) * this.Spread;
+
+            var leftSpread = x + panel.Margin - (spread * 0.5);
+            if (leftSpread < panel.Margin) {
+                leftSpread = panel.Margin;
+            }
+            var rightSpread = x + panel.Margin + (spread * 0.5);
+            if (rightSpread > (panel.Margin + panel.Range)) {
+                rightSpread = panel.Margin + panel.Range;
+            }
+            ctx.beginPath();
+            ctx.moveTo(leftSpread, y);
+            ctx.lineTo(leftSpread, y + height);
+            ctx.moveTo(rightSpread, y);
+            ctx.lineTo(rightSpread, y + height);
+            ctx.stroke();
+            ctx.lineWidth = 1;
 
 
-        // GRAB TRIANGLES //
-        var dragWidth = (height) * 0.2;
-        ctx.beginPath();
-        ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
-        ctx.lineTo(x + panel.Margin + dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + panel.Margin, y + (height * 0.5) + dragWidth);
-        ctx.closePath();
-        ctx.fill();
+            // SLIDEBAR //
+            var col = panel.SliderColours[i - (Math.floor(i / panel.SliderColours.length) * (panel.SliderColours.length))];
+            var offset = 0;
+            if (origin == panel.Margin) {
+                offset = -units;
+            }
 
-        ctx.fillStyle = App.Palette[8];// WHITE
-        ctx.beginPath();
-        ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
-        ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
-        ctx.lineTo(x + panel.Margin + (dragWidth * 0.5), y + (height * 0.5) - (dragWidth * 0.5));
-        ctx.lineTo(x + panel.Margin - (dragWidth * 0.5), y + (height * 0.5) + (dragWidth * 0.5));
-        ctx.closePath();
-        ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = ctx.strokeStyle = col;
+            ctx.fillRect(x + panel.Margin - (units), y, 2 * units, height);
 
 
-        // VALUE TOOLTIP //
-        if (this.Selected) {
-            ctx.textAlign = "left";
-            ctx.font = App.Metrics.TxtSlider;
-            var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
-            ctx.fillText(string, rightSpread + (25 * units), y + (height * 0.5) + (headerType * 0.35));
+            // GRAB TRIANGLES //
+            var dragWidth = (height) * 0.2;
+            ctx.beginPath();
+            ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
+            ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
+            ctx.lineTo(x + panel.Margin + dragWidth, y + (height * 0.5));
+            ctx.lineTo(x + panel.Margin, y + (height * 0.5) + dragWidth);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = App.Palette[8];// WHITE
+            ctx.beginPath();
+            ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
+            ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
+            ctx.lineTo(x + panel.Margin + (dragWidth * 0.5), y + (height * 0.5) - (dragWidth * 0.5));
+            ctx.lineTo(x + panel.Margin - (dragWidth * 0.5), y + (height * 0.5) + (dragWidth * 0.5));
+            ctx.closePath();
+            ctx.fill();
+
+
+            // VALUE TOOLTIP //
+            if (this.Selected) {
+                ctx.textAlign = "left";
+                ctx.font = App.Metrics.TxtSlider;
+                var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
+                ctx.fillText(string, rightSpread + (25 * units), y + (height * 0.5) + (headerType * 0.35));
+            }
         }
     }
 
