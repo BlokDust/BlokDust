@@ -168,6 +168,8 @@ class Granular extends Source {
     CreateSource(){
         this.Sources.push( new Tone.Signal() );
         // return it
+
+        //TODO these extra sources need setting up somehow
         return super.CreateSource();
     }
 

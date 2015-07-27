@@ -61,12 +61,16 @@ class Soundcloud extends Source {
 
     CreateSource(){
         this.Sources.push( new Tone.Simpler() );
-        this.Sources.forEach((s: Tone.Simpler)=> {
+        this.Sources.forEach((s: Tone.Simpler, i: number)=> {
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
             s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
+
+            if (i > 0){
+                s.player.buffer = this.Sources[0].player.buffer;
+            }
         });
         return super.CreateSource();
     }
