@@ -72,6 +72,9 @@ class SoundCloudAudio {
             //tags: 'blokdust',
             //license: 'cc-by',
             q: query,
+            duration: {
+                to: 510000 // 8.5 mins
+            },
             limit: 200
         }, callback);
     }

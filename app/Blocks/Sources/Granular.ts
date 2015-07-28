@@ -124,7 +124,7 @@ class Granular extends Source {
 
         // LOAD FIRST BUFFER //
         this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
-            console.log(e);
+            //console.log(e);
             this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
             this._IsLoaded = true;
 
@@ -136,7 +136,7 @@ class Granular extends Source {
             }
             var duration = this.GetDuration();
             this.Params.region = duration/2;
-            console.log(duration);
+            //console.log(duration);
 
             // UPDATE OPTIONS FORM //
             if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {

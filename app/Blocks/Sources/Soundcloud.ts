@@ -79,7 +79,7 @@ class Soundcloud extends Source {
         //TODO: We don't need to do this for every source in Sources array. Once is enough
         // Update waveform
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
-            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,150,2,95);
+            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
             var duration = this.GetDuration();
             this.Params.startPosition = 0;
             this.Params.endPosition = duration;
@@ -301,7 +301,7 @@ class Soundcloud extends Source {
                 });
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer._buffer,150,2,95);
+                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
                 if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
                     this.UpdateOptionsForm();
                     (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);

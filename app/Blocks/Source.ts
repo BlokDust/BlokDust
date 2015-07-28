@@ -476,7 +476,7 @@ class Source extends Block implements ISource {
         return this;
     }
 
-    GetWaveformFromBuffer(buffer,detail,precision,normal) {
+    /*GetWaveformFromBuffer(buffer,detail,precision,normal) {
 
         console.log(buffer);
 
@@ -520,7 +520,57 @@ class Source extends Block implements ISource {
         }
 
         return newWaveform;
+    }*/
+
+    GetWaveformFromBuffer(buffer,points,stepsPerPoint,normal) {
+
+        console.log(buffer);
+        console.log("minutes: "+ (buffer.duration/60));
+
+        //TODO - maybe add some duration breakpoints - less detail for larger samples
+
+        var waveform = [];
+        var newWaveform = [];
+        var peak = 0.0;
+
+        // MERGE LEFT & RIGHT CHANNELS //
+        var left = buffer.getChannelData(0);
+        if (buffer.numberOfChannels>1) {
+            var right = buffer.getChannelData(1);
+            for (var i=0; i<left.length; i++) {
+                waveform[i] = (left[i] + right[i])*0.5;
+            }
+        } else {
+            waveform = left;
+        }
+
+        var slice = Math.ceil( waveform.length / points );
+        var step = Math.ceil( slice / 8 ); // 8 is temp replacing stepsPerPoint here
+
+        // FOR EACH DETAIL POINT //
+        for(var i=0; i<points; i++) {
+
+            // AVERAGE PEAK BETWEEN POINTS //
+            var max = 0.0;
+            for (var j = 0; j < slice; j += step) {
+                var datum = waveform[(i * slice) + j];
+                if (datum < 0) { datum = -datum;}
+                if (datum > max) {max = datum;}
+            }
+            if (max > peak) {peak = max;}
+            newWaveform.push(max);
+        }
+
+        // SOFT NORMALISE //
+        var percent = normal/100; // normalisation strength
+        var mult = (((1/peak) - 1)*percent) + 1;
+        for (var i=0; i<newWaveform.length; i++) {
+            newWaveform[i] = newWaveform[i] * mult;
+        }
+
+        return newWaveform;
     }
+
 
     MouseDown() {
         super.MouseDown();
