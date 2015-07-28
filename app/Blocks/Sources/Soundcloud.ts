@@ -3,6 +3,7 @@ import Source = require("../Source");
 import BlocksSketch = require("../../BlocksSketch");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
+import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 
 class Soundcloud extends Source {
 
@@ -31,18 +32,11 @@ class Soundcloud extends Source {
 
         this._WaveForm = [];
         this.SearchResults = [];
+        this.LoadProgress = 0;
 
         var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
         this.Params.track = localUrl;
-
-
-        /*SoundCloudAudio.Search('dream pop', (tracks) => {
-            tracks.forEach((track) => {
-                console.log(track);
-                console.log(track.user.username, track.title, track.id, track.tag_list);
-            });
-        });*/
 
         super.Init(sketch);
 
@@ -77,7 +71,8 @@ class Soundcloud extends Source {
 
     SetBuffers() {
         //TODO: We don't need to do this for every source in Sources array. Once is enough
-        // Update waveform
+
+        // LOAD FIRST BUFFER //
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
             var duration = this.GetDuration();
@@ -94,23 +89,29 @@ class Soundcloud extends Source {
             this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = e;
             });
-
         });
+
+        // LOAD PROGRESS //
+        var me = this;
+        this._FirstBuffer.onprogress = function(percent) {
+            console.log("progress:" + Math.round(percent * 100) + "%");
+            me.LoadProgress = percent;
+        };
     }
 
     Search(query: string) {
         this.SearchResults = [];
         SoundCloudAudio.Search(query, (tracks) => {
             tracks.forEach((track) => {
-                this.SearchResults.push(track);
+                this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
             });
         });
     }
 
     LoadTrack(track) {
         this.Params.track = SoundCloudAudio.LoadTrack(track);
-        this.Params.trackName = track.title;
-        this.Params.user = track.user.username;
+        this.Params.trackName = track.TitleShort;
+        this.Params.user = track.UserShort;
         this._WaveForm = [];
         this.SetBuffers();
 

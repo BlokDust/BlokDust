@@ -10,6 +10,7 @@ import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
 import Voice = require("./Interaction/VoiceObject");
+import SoundcloudTrack = require("../UI/SoundcloudTrack");
 
 class Source extends Block implements ISource {
 
@@ -40,7 +41,8 @@ class Source extends Block implements ISource {
     public LaserPowered: boolean;
     public UpdateCollision: boolean;
     public Collisions: any[];
-    public SearchResults: any[];
+    public SearchResults: SoundcloudTrack[];
+    public LoadProgress: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -527,7 +529,21 @@ class Source extends Block implements ISource {
         console.log(buffer);
         console.log("minutes: "+ (buffer.duration/60));
 
+        // defaults //
+        stepsPerPoint = 8; // checks per division
+        var leftOnly = false; // don't perform channel merge
+
         //TODO - maybe add some duration breakpoints - less detail for larger samples
+        //TODO #2 - actually, get it best and try to make asynchronous
+
+        if (buffer.duration>240) { // 4 minutes
+            stepsPerPoint = 5;
+            leftOnly = true;
+            if (points > 160) {
+                points = 160;
+            }
+            console.log("detail nerfed");
+        }
 
         var waveform = [];
         var newWaveform = [];
@@ -535,7 +551,7 @@ class Source extends Block implements ISource {
 
         // MERGE LEFT & RIGHT CHANNELS //
         var left = buffer.getChannelData(0);
-        if (buffer.numberOfChannels>1) {
+        if (buffer.numberOfChannels>1 && !leftOnly) {
             var right = buffer.getChannelData(1);
             for (var i=0; i<left.length; i++) {
                 waveform[i] = (left[i] + right[i])*0.5;
@@ -545,7 +561,7 @@ class Source extends Block implements ISource {
         }
 
         var slice = Math.ceil( waveform.length / points );
-        var step = Math.ceil( slice / 8 ); // 8 is temp replacing stepsPerPoint here
+        var step = Math.ceil( slice / stepsPerPoint );
 
         // FOR EACH DETAIL POINT //
         for(var i=0; i<points; i++) {

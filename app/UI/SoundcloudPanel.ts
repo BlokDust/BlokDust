@@ -100,9 +100,8 @@ class SoundcloudPanel extends DisplayObject{
             ctx.font = App.Metrics.TxtItalic;
             ctx.textAlign = "left";
 
+
             // TRACKS //
-
-
             //clipping path //
             ctx.save();
             ctx.beginPath();
@@ -114,14 +113,14 @@ class SoundcloudPanel extends DisplayObject{
             ctx.clip();
 
             // track loop //
-
             for (var i=0; i<results; i++) {
                 var p = Math.floor(i/itemNo);
                 var n = i - (p * itemNo);
                 var x = this.OffsetX + ((pageW + (10*units)) * p);
                 var y = centerY - (70*units) + ((n*40)*units);
 
-                if (p>(this._Page-4) && p<(this._Page+2)) { // range to draw
+                // TODO - try and reduce this some more (if not tweening, just p==(this._Page-1) )
+                if (p>(this._Page-3) && p<(this._Page+1)) { // range to draw
 
                     // divider //
                     if (n<4 && i<(results-1)) {
@@ -148,16 +147,9 @@ class SoundcloudPanel extends DisplayObject{
 
                     // text //
                     ctx.fillStyle = App.Palette[8]; // White
-                    //TODO copy these into string array(s) so query not made every draw frame
                     var track = block.SearchResults[i];
-                    var title = track.title;
-                    var user = track.user.username;
-                    if (title.length>this._CharLimit) {
-                    title = title.substring(0,this._CharLimit) + "...";
-                    }
-                    if (user.length>this._CharLimit) {
-                        user = user.substring(0,this._CharLimit) + "...";
-                    }
+                    var title = track.Title;
+                    var user = track.User;
                     ctx.fillText(title.toUpperCase(), x + margin + units, y - (10*units));
                     ctx.fillText("By "+this.Capitalise(user), x + margin + units, y);
 
@@ -189,23 +181,10 @@ class SoundcloudPanel extends DisplayObject{
             if (results > itemNo) {
                 // PAGE NO //
                 ctx.font = App.Metrics.TxtHeader;
-
                 var pNo = ""+this._Page;
-                /*if (this._Page<10) {
-                    pNo = "0"+this._Page;
-                }*/
                 var pTotal = ""+Math.ceil(results/itemNo);
-                /*if (Math.ceil(results/itemNo)<10) {
-                    pTotal = "0"+Math.ceil(results/itemNo)
-                }*/
-                /*ctx.textAlign = "right";
-                ctx.fillText(pNo, margin - (80*units), centerY - (75*units));*/
                 ctx.textAlign = "center";
                 ctx.fillText(pNo + "/" + pTotal, margin - (75*units), centerY - (68*units));
-                /*ctx.textAlign = "left";
-                ctx.fillText(pTotal, margin - (70*units), centerY - (55*units));*/
-                /*ctx.textAlign = "left";
-                ctx.fillText(pNo + "/" + pTotal, margin - units, centerY + (145*units));*/
             }
 
 
@@ -234,9 +213,6 @@ class SoundcloudPanel extends DisplayObject{
 
             // TITLE //
             ctx.strokeStyle = App.Palette[8]; // White
-            /*ctx.textAlign = "right";
-            ctx.font = App.Metrics.TxtMid;
-            ctx.fillText(this._CopyJson.searchLine.toUpperCase(), (appWidth*0.5) - (225*units), centerY - (126*units) );*/
             ctx.beginPath();
             ctx.moveTo(margin, centerY - (110*units));
             ctx.lineTo(margin + pageW, centerY - (110*units));
@@ -397,23 +373,18 @@ class SoundcloudPanel extends DisplayObject{
             return;
         }
 
+        // LOAD SAMPLE //
         for (var i=5; i<10; i++) {
-            if (this._RollOvers[i]) { // links
+            if (this._RollOvers[i]) {
                 var n = ((this._Page-2)*this._ItemNo)+i;
                 var track = block.SearchResults[n];
                 if (track) {
                     block.LoadTrack(track);
                     this.ClosePanel();
                 }
-
-
                 return;
             }
         }
-
-
-
-
     }
 
     MouseUp(point) {
@@ -427,11 +398,9 @@ class SoundcloudPanel extends DisplayObject{
         var units = App.Unit;
         var shareX = this.OffsetX + App.Width;
         var centerY = this.OffsetY + (App.Height * 0.5);
-        var buttonY = centerY + (35*units);
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
         var appWidth = App.Width;
-
 
         ctx.font = midType;
         var searchW = ctx.measureText(this._CopyJson.searchLine.toUpperCase()).width;
@@ -447,6 +416,10 @@ class SoundcloudPanel extends DisplayObject{
         this._RollOvers[7] = this.HitRect((appWidth*0.5) - (210*units),centerY - (units*18),420*units,40*units, point.x, point.y); // 3
         this._RollOvers[8] = this.HitRect((appWidth*0.5) - (210*units),centerY + (units*22),420*units,40*units, point.x, point.y); // 4
         this._RollOvers[9] = this.HitRect((appWidth*0.5) - (210*units),centerY + (units*62),420*units,40*units, point.x, point.y); // 5
+    }
+
+    Resize() {
+        //TODO sort XOffset positioning
     }
 
     RandomSearch() {

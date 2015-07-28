@@ -20,6 +20,7 @@ interface ISource extends IBlock{
     UpdateCollision: boolean;
     Collisions: any[];
     SearchResults: any[];
+    LoadProgress: number;
     //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];

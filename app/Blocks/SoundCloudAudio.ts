@@ -54,7 +54,7 @@ class SoundCloudAudio {
     }
 
     static LoadTrack(track: any) {
-        var trackUrl = track.uri;
+        var trackUrl = track.URI;
         return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }
 

@@ -49,7 +49,7 @@ class WaveRegion extends WaveForm{
             ctx.textAlign = "center";
             ctx.fillStyle = App.Palette[8];// WHITE
             ctx.font = App.Metrics.TxtMid;
-            ctx.fillText("LOADING SAMPLE", (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType*0.45));
+            ctx.fillText("LOADING SAMPLE " + Math.round(panel.SelectedBlock.LoadProgress * 100) + "%", (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType*0.45));
         }
 
         else {

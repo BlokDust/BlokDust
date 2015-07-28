@@ -4,6 +4,7 @@ import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
+import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 
 class Granular extends Source {
 
@@ -41,7 +42,6 @@ class Granular extends Source {
         super.Init(sketch);
 
         this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
-        //this.Params.track = SoundCloudAudio.PickTrack(SoundCloudAudioType.Granular,0);
 
 
         this.CreateSource();
@@ -71,15 +71,15 @@ class Granular extends Source {
         this.SearchResults = [];
         SoundCloudAudio.Search(query, (tracks) => {
             tracks.forEach((track) => {
-                this.SearchResults.push(track);
+                this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
             });
         });
     }
 
     LoadTrack(track) {
         this.Params.track = SoundCloudAudio.LoadTrack(track);
-        this.Params.trackName = track.title;
-        this.Params.user = track.user.username;
+        this.Params.trackName = track.TitleShort;
+        this.Params.user = track.UserShort;
         this._WaveForm = [];
         this.SetupGrains();
 
@@ -124,7 +124,6 @@ class Granular extends Source {
 
         // LOAD FIRST BUFFER //
         this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
-            //console.log(e);
             this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
             this._IsLoaded = true;
 
@@ -136,8 +135,8 @@ class Granular extends Source {
             }
             var duration = this.GetDuration();
             this.Params.region = duration/2;
-            //console.log(duration);
 
+            
             // UPDATE OPTIONS FORM //
             if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
                 this.UpdateOptionsForm();
@@ -147,6 +146,13 @@ class Granular extends Source {
             // start if powered //
             this.GrainLoop();
         });
+
+        // LOAD PROGRESS //
+        var me = this;
+        this._FirstBuffer.onprogress = function(percent) {
+            console.log("progress:" + Math.round(percent * 100) + "%");
+            me.LoadProgress = percent;
+        };
     }
 
 
