@@ -2,7 +2,7 @@ import SoundCloudAudioType = require('./SoundCloudAudioType');
 
 class SoundCloudAudio {
 
-    public SC: any;
+    public SC: any; //TODO - we're defining this in 3 different places and it's not working properly, unable to check if undefined
 
     constructor(){
         SC.initialize({
@@ -54,6 +54,11 @@ class SoundCloudAudio {
     }
 
     static LoadTrack(track: any) {
+        // ERROR CHECK //
+        SC.get('/tracks/'+track.id, function(track, error) {
+            if (error) { App.Message("Something went wrong, try another track.") }
+        });
+
         var trackUrl = track.URI;
         return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }

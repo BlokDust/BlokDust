@@ -15,6 +15,7 @@ import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
+import AnimationsLayer = require("./UI/AnimationsLayer");
 import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
@@ -73,6 +74,7 @@ class App implements IApp{
     private _FontsLoaded: number;
     private _PaletteLoaded: boolean;
     public Splash: Splash;
+    public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
 
     // todo: move to BlockStore
@@ -185,6 +187,7 @@ class App implements IApp{
 
         // CREATE SPLASH SCREEN //
         this.Splash = new Splash;
+        this.AnimationsLayer = new AnimationsLayer;
     }
 
     // FONT LOAD CALLBACK //
@@ -306,6 +309,7 @@ class App implements IApp{
         if (this.Scene==2) {
             this.BlocksSketch.Update();
         }
+        this.AnimationsLayer.Update();
 
     }
 

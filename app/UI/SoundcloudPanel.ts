@@ -18,7 +18,6 @@ class SoundcloudPanel extends DisplayObject{
     private _RollOvers: boolean[];
     private _Page:number = 1;
     private _ItemNo:number = 5;
-    private _CharLimit:number = 65;
     private _Blink = 0;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -31,8 +30,6 @@ class SoundcloudPanel extends DisplayObject{
 
         this._RollOvers = [];
         this.SearchString = "Hello";
-
-
 
         this._CopyJson = {
             genUrl: "Generate share link",
@@ -50,9 +47,6 @@ class SoundcloudPanel extends DisplayObject{
             saving: "saving...",
             tweetText: "I made this @blokdust creation: "
         };
-
-
-
     }
 
 
@@ -62,16 +56,11 @@ class SoundcloudPanel extends DisplayObject{
 
 
     Draw() {
-
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
-        var urlType = App.Metrics.TxtUrl;
-        var italicType = App.Metrics.TxtItalic2;
         var units = App.Unit;
         var centerY = this.OffsetY + (App.Height * 0.5);
-        var shareX = this.OffsetX + App.Width;
-        var buttonY = centerY + (35*units);
         var appWidth = App.Width;
         var appHeight = App.Height;
         var margin = (appWidth*0.5) - (210*units);
@@ -84,8 +73,6 @@ class SoundcloudPanel extends DisplayObject{
             ctx.fillStyle = App.Palette[2];// Black
             ctx.globalAlpha = 0.95;
             ctx.fillRect(0,this.OffsetY,appWidth,appHeight);
-
-
             ctx.globalAlpha = 1;
 
 
@@ -150,9 +137,8 @@ class SoundcloudPanel extends DisplayObject{
                     var track = block.SearchResults[i];
                     var title = track.Title;
                     var user = track.User;
-                    ctx.fillText(title.toUpperCase(), x + margin + units, y - (10*units));
-                    ctx.fillText("By "+this.Capitalise(user), x + margin + units, y);
-
+                    ctx.fillText(title, x + margin + units, y - (10*units));
+                    ctx.fillText("By "+user, x + margin + units, y);
 
 
                     // arrow //
@@ -174,9 +160,13 @@ class SoundcloudPanel extends DisplayObject{
                 maxNo = results;
             }
 
+
             // ITEM NUMBERS //
             if (results > 0) {
                 ctx.fillText("" + (1 + (itemNo * (pageNo - 1))) + " - " + maxNo + " of " + results, margin, centerY + (160 * units));
+            } else {
+                App.AnimationsLayer.Spin();
+                App.AnimationsLayer.DrawSprite('loading',appWidth*0.5, appHeight*0.5,16,true);
             }
             if (results > itemNo) {
                 // PAGE NO //
@@ -198,6 +188,7 @@ class SoundcloudPanel extends DisplayObject{
             ctx.lineTo((appWidth*0.5) - (295 * units), centerY);
             ctx.lineTo((appWidth*0.5) - (275 * units), centerY + (20*units));
             ctx.stroke();
+
 
             // FORWARD ARROW //
             ctx.strokeStyle = App.Palette[1]; // Grey
@@ -221,6 +212,7 @@ class SoundcloudPanel extends DisplayObject{
             ctx.font = headType;
             ctx.fillText(this.SearchString.toUpperCase(), margin, centerY - (120*units) );
             var titleW = ctx.measureText(this.SearchString.toUpperCase()).width;
+
 
             // TYPE BAR //
             if (this._Blink > 50) {
@@ -254,8 +246,6 @@ class SoundcloudPanel extends DisplayObject{
             ctx.moveTo((appWidth*0.5) + (237.5*units), centerY - (142.5*units));
             ctx.lineTo((appWidth*0.5) + (222.5*units), centerY - (157.5*units));
             ctx.stroke();
-
-
         }
     }
 
@@ -292,9 +282,6 @@ class SoundcloudPanel extends DisplayObject{
             context.fillText( words.join(' '), x, y + (lineHeight*currentLine) );
     }
 
-    Capitalise(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
 
     //-------------------------------------------------------------------------------------------
     //  TWEEN
@@ -321,8 +308,6 @@ class SoundcloudPanel extends DisplayObject{
         offsetTween.start(this.LastVisualTick);
     }
 
-
-
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
@@ -339,14 +324,10 @@ class SoundcloudPanel extends DisplayObject{
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
     }
 
-
-
-
     MouseDown(point) {
         this.HitTests(point);
 
         var block = App.BlocksSketch.OptionsPanel.SelectedBlock;
-
 
         if (this._RollOvers[1]) { // close
             this.ClosePanel();
@@ -428,7 +409,6 @@ class SoundcloudPanel extends DisplayObject{
         this.SearchString = q;
         return q;
     }
-
 }
 
 export = SoundcloudPanel;

@@ -38,7 +38,7 @@ class ToolTip extends DisplayObject {
 
         ctx.font = App.Metrics.TxtMid;
         var thisWidth = ctx.measureText(this.Name.toUpperCase()).width + (40*units);
-        var x = this.Position.x + ((<BlocksSketch>this.Sketch).ScaledCellWidth.width*0);
+        var x = this.Position.x;
         var y = this.Position.y;
 
         // BG //

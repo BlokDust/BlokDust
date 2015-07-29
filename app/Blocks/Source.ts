@@ -530,22 +530,21 @@ class Source extends Block implements ISource {
         console.log("minutes: "+ (buffer.duration/60));
 
         // defaults //
-        stepsPerPoint = 8; // checks per division
+        stepsPerPoint = 10; // checks per division
         var leftOnly = false; // don't perform channel merge
 
-        //TODO - maybe add some duration breakpoints - less detail for larger samples
-        //TODO #2 - actually, get it best and try to make asynchronous
 
-        if (buffer.duration>240) { // 4 minutes
-            stepsPerPoint = 5;
-            leftOnly = true;
-            if (points > 160) {
-                points = 160;
+        //TODO if too slow consider making asynchronous
+
+        /*if (buffer.duration>240) { // 4 minutes
+            stepsPerPoint = 6;
+            //leftOnly = true;
+            if (points > 180) {
+                points = 180;
             }
             console.log("detail nerfed");
-        }
+        }*/
 
-        var waveform = [];
         var newWaveform = [];
         var peak = 0.0;
 
@@ -553,28 +552,31 @@ class Source extends Block implements ISource {
         var left = buffer.getChannelData(0);
         if (buffer.numberOfChannels>1 && !leftOnly) {
             var right = buffer.getChannelData(1);
-            for (var i=0; i<left.length; i++) {
-                waveform[i] = (left[i] + right[i])*0.5;
-            }
-        } else {
-            waveform = left;
         }
 
-        var slice = Math.ceil( waveform.length / points );
+        var slice = Math.ceil( left.length / points );
         var step = Math.ceil( slice / stepsPerPoint );
 
         // FOR EACH DETAIL POINT //
         for(var i=0; i<points; i++) {
 
             // AVERAGE PEAK BETWEEN POINTS //
-            var max = 0.0;
+            var max1 = 0.0;
+            var max2 = 0.0;
             for (var j = 0; j < slice; j += step) {
-                var datum = waveform[(i * slice) + j];
+                var datum = left[(i * slice) + j];
                 if (datum < 0) { datum = -datum;}
-                if (datum > max) {max = datum;}
+                if (datum > max1) {max1 = datum;}
+                if (right) {
+                    var datum2 = right[(i * slice) + j];
+                    if (datum2 < 0) { datum2 = -datum2;}
+                    if (datum2 > max2) {max2 = datum2;}
+                    if (max2 > max1) {max1 = max2;}
+                }
+
             }
-            if (max > peak) {peak = max;}
-            newWaveform.push(max);
+            if (max1 > peak) {peak = max1;} // set overall peak used for normalising
+            newWaveform.push(max1);
         }
 
         // SOFT NORMALISE //

@@ -91,6 +91,10 @@ class Metrics {
 
         return dpr / bsr;
     }
+
+    //public ConvertScaledGridUnitsToAbsolute(point: Point): Point {
+    //    return new Point((this.ScaledCellWidth.width * point.x) + this.TranslateTransform.X, (this.ScaledCellWidth.width * point.y) + this.TranslateTransform.Y);
+    //}
 }
 
 export = Metrics;

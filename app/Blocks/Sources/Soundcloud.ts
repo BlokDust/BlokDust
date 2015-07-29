@@ -25,8 +25,8 @@ class Soundcloud extends Source {
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 11,
                 track: '',
-                trackName: 'Voices',
-                user: 'SparkleFinger'
+                trackName: 'TEUFELSBERG',
+                user: 'BGXA'
             };
         }
 
@@ -39,15 +39,7 @@ class Soundcloud extends Source {
         this.Params.track = localUrl;
 
         super.Init(sketch);
-
         this.CreateSource();
-
-        /*this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
-            e = this.Sources[i].envelope;
-        });
-        this.Sources.forEach((s: Tone.Simpler) => {
-            s.connect(this.EffectsChainInput);
-        });*/
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -70,16 +62,18 @@ class Soundcloud extends Source {
     }
 
     SetBuffers() {
-        //TODO: We don't need to do this for every source in Sources array. Once is enough
+        //TODO: maybe set buffer to null first
 
         // LOAD FIRST BUFFER //
+        App.AnimationsLayer.AddToList(this);
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
+            App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration();
             this.Params.startPosition = 0;
             this.Params.endPosition = duration;
             this.Params.loopStart = duration * 0.5;
-            this.Params.loopEnd = duration * 0.75;
+            this.Params.loopEnd = duration;
 
             if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
                 this.UpdateOptionsForm();
@@ -88,24 +82,27 @@ class Soundcloud extends Source {
 
             this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = e;
+                s.player.loopStart = this.Params.loopStart;
+                s.player.loopEnd = this.Params.loopEnd;
             });
+
+            // IF PLAYING, RE-TRIGGER //
+            if (this.IsPowered()) {
+                this.TriggerAttack();
+            }
         });
 
-        // LOAD PROGRESS //
-        var me = this;
-        this._FirstBuffer.onprogress = function(percent) {
-            console.log("progress:" + Math.round(percent * 100) + "%");
-            me.LoadProgress = percent;
-        };
     }
 
     Search(query: string) {
         this.SearchResults = [];
-        SoundCloudAudio.Search(query, (tracks) => {
-            tracks.forEach((track) => {
-                this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
+        if (window.SC) {
+            SoundCloudAudio.Search(query, (tracks) => {
+                tracks.forEach((track) => {
+                    this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
+                });
             });
-        });
+        }
     }
 
     LoadTrack(track) {
@@ -113,6 +110,12 @@ class Soundcloud extends Source {
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
         this._WaveForm = [];
+
+        // STOP SOUND //
+        this.Sources.forEach((s: any)=> {
+            s.triggerRelease();
+        });
+
         this.SetBuffers();
 
         if (App.BlocksSketch.OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {

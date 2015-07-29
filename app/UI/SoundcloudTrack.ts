@@ -27,6 +27,8 @@ class SoundcloudTrack {
         } else {
             this.TitleShort = title;
         }
+        this.Title = this.Title.toUpperCase();
+        this.TitleShort = this.TitleShort.toUpperCase();
 
         // USER //
         if (user.length>this._Long) {
@@ -39,10 +41,16 @@ class SoundcloudTrack {
         } else {
             this.UserShort = user;
         }
+        this.User = this.Capitalise(this.User);
+        this.UserShort = this.Capitalise(this.UserShort);
 
         // URI //
         this.URI = uri;
 
+    }
+
+    Capitalise(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
 }

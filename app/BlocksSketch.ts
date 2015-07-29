@@ -25,6 +25,7 @@ import ZoomButtons = require("./UI/ZoomButtons");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
+import AnimationsLayer = require("./UI/AnimationsLayer");
 import LaserBeams = require("./LaserBeams");
 import Laser = require("./Blocks/Power/Laser");
 import PowerSource = require("./Blocks/Power/PowerSource");
@@ -306,6 +307,9 @@ class BlocksSketch extends Grid {
 
         // LASER BEAMS //
         this._LaserBeams.Draw();
+
+        // BLOCK ANIMATIONS //
+        App.AnimationsLayer.Draw();
 
         // UI //
         this._ToolTip.Draw();
@@ -799,6 +803,7 @@ class BlocksSketch extends Grid {
         block.MouseDown();
         this.SelectedBlock = block;
         this.IsDraggingABlock = true;
+
     }
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
