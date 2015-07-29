@@ -203,6 +203,7 @@ class BlocksSketch extends Grid {
         });
 
         this._Invalidate();
+        this.SketchResize();
     }
 
 
@@ -265,9 +266,6 @@ class BlocksSketch extends Grid {
 
 
     SketchResize() {
-        // Update size record //
-        //this.Metrics();
-
         if (this.OptionsPanel.Scale==1) {
             this.OptionsPanel.SelectedBlock.UpdateOptionsForm();
             this.OptionsPanel.Populate(this.OptionsPanel.SelectedBlock.OptionsForm,false);
@@ -275,6 +273,7 @@ class BlocksSketch extends Grid {
         this._Header.Populate(this._Header.MenuJson);
         this._ZoomButtons.UpdatePositions();
         this.SharePanel.Resize();
+        this.SoundcloudPanel.Resize();
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 

@@ -32,20 +32,10 @@ class SoundcloudPanel extends DisplayObject{
         this.SearchString = "Hello";
 
         this._CopyJson = {
-            genUrl: "Generate share link",
-            shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",
-            copyLine: "Share your creation with this unique URL:",
             titleLine: "Title",
             searchLine: "Search SoundCloud",
-            domain: "?c=",
-            facebook: "post to facebook",
-            twitter: "post to twitter",
-            google: "post to google +",
-            bookmark: "bookmark creation",
-            save: "overwrite",
-            saveAs: "create new",
             saving: "saving...",
-            tweetText: "I made this @blokdust creation: "
+            noResults: "No results found"
         };
     }
 
@@ -165,8 +155,20 @@ class SoundcloudPanel extends DisplayObject{
             if (results > 0) {
                 ctx.fillText("" + (1 + (itemNo * (pageNo - 1))) + " - " + maxNo + " of " + results, margin, centerY + (160 * units));
             } else {
-                App.AnimationsLayer.Spin();
-                App.AnimationsLayer.DrawSprite('loading',appWidth*0.5, appHeight*0.5,16,true);
+
+                //SEARCHING //
+                if (block.Searching) {
+                    App.AnimationsLayer.Spin();
+                    App.AnimationsLayer.DrawSprite('loading',appWidth*0.5, centerY,16,true);
+                }
+                // NO RESULTS //
+                else {
+                    ctx.font = App.Metrics.TxtHeader;
+                    ctx.textAlign = "center";
+                    ctx.fillText(this._CopyJson.noResults.toLocaleUpperCase(), appWidth*0.5, centerY + (10*units));
+
+                }
+
             }
             if (results > itemNo) {
                 // PAGE NO //
@@ -400,12 +402,13 @@ class SoundcloudPanel extends DisplayObject{
     }
 
     Resize() {
-        //TODO sort XOffset positioning
+        this.OffsetX = - ((this._Page-1) * (430*App.Unit));
     }
 
     RandomSearch() {
         var words = ['shoe','cat','dog','horse','train','snow','petrol','paper','flower','clock','car','skull','space','dust','metal','flag','chips','dome','red','hand','gang','wet','dance','patrol','arm','gun','land','brick','camel','sun','night','rain','blood'];
         var q = ""+ words[Math.floor(Math.random()*words.length)] + " " + words[Math.floor(Math.random()*words.length)];
+        q = "dog train";
         this.SearchString = q;
         return q;
     }

@@ -55,10 +55,10 @@ class SoundCloudAudio {
 
     static LoadTrack(track: any) {
         // ERROR CHECK //
-        SC.get('/tracks/'+track.id, function(track, error) {
+        /*SC.get('/tracks/'+track.id, function(track, error) {
             if (error) { App.Message("Something went wrong, try another track.") }
         });
-
+        */
         var trackUrl = track.URI;
         return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }

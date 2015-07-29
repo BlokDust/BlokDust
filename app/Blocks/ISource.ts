@@ -2,6 +2,7 @@ import IBlock = require("./IBlock");
 import Source = require("./Source");
 import IEffect = require("./IEffect");
 import Voice = require("./Interaction/VoiceObject");
+import SoundcloudTrack = require("../UI/SoundcloudTrack");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface ISource extends IBlock{
@@ -19,8 +20,8 @@ interface ISource extends IBlock{
     LaserPowered: boolean;
     UpdateCollision: boolean;
     Collisions: any[];
-    SearchResults: any[];
-    LoadProgress: number;
+    SearchResults: SoundcloudTrack[];
+    Searching: Boolean;
     //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];

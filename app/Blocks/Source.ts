@@ -42,7 +42,7 @@ class Source extends Block implements ISource {
     public UpdateCollision: boolean;
     public Collisions: any[];
     public SearchResults: SoundcloudTrack[];
-    public LoadProgress: number;
+    public Searching: boolean;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);

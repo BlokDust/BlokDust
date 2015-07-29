@@ -67,7 +67,6 @@ class SharePanel extends DisplayObject{
 
         this.SessionTitle = this.GenerateLabel();
         this.Resize();
-
     }
 
     GetUrl() {

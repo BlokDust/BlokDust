@@ -21,6 +21,8 @@ class Granular extends Source {
     private _WaveForm: number[];
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
+    private _FallBackTrack: SoundcloudTrack;
+    public LoadTimeout: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -31,6 +33,7 @@ class Granular extends Source {
                 region: 0,
                 spread: 1.5,
                 grainlength: 0.25,
+                timeout: 20, // seconds before load deemed failed
                 track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
                 trackName: 'TEUFELSBERG',
                 user: 'BGXA'
@@ -45,6 +48,8 @@ class Granular extends Source {
 
         this._WaveForm = [];
         this.SearchResults = [];
+        this.Searching = false;
+        this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
         super.Init(sketch);
 
@@ -64,18 +69,25 @@ class Granular extends Source {
     }
 
     Search(query: string) {
+        this.Searching = true;
         this.SearchResults = [];
         if (window.SC) {
             SoundCloudAudio.Search(query, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
                 });
+                this.Searching = false;
             });
         }
     }
 
-    LoadTrack(track) {
-        this.Params.track = SoundCloudAudio.LoadTrack(track);
+    LoadTrack(track,fullUrl?:boolean) {
+        fullUrl = fullUrl || false;
+        if (fullUrl) {
+            this.Params.track = track.URI;
+        } else {
+            this.Params.track = SoundCloudAudio.LoadTrack(track);
+        }
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
         this._WaveForm = [];
@@ -85,6 +97,12 @@ class Granular extends Source {
             this.UpdateOptionsForm();
             App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
         }
+    }
+
+    TrackFallBack() {
+        //TODO what if it's the first track failing? fallback matches current
+        this.LoadTrack(this._FallBackTrack,true);
+        App.Message("Load Failed: This Track Is Unavailable. Reloading last track.");
     }
 
     CreateGrains() {
@@ -115,12 +133,15 @@ class Granular extends Source {
         // RESET //
         this._IsLoaded = false;
         var duration = this.GetDuration();
-        //this.Params.region = duration/2;
 
 
         // LOAD FIRST BUFFER //
-        App.AnimationsLayer.AddToList(this);
+        App.AnimationsLayer.AddToList(this); // load animations
+        if (this._FirstBuffer) { // cancel previous loads
+            this._FirstBuffer.dispose();
+        }
         this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
+            clearTimeout(this.LoadTimeout);
             this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
             App.AnimationsLayer.RemoveFromList(this);
             this._IsLoaded = true;
@@ -128,14 +149,15 @@ class Granular extends Source {
 
             // COPY BUFFER TO GRAINS //
             for (var i=0; i<this.GrainsAmount; i++) {
-                // fill buffer //
                 this.Grains[i].buffer = e.buffer;
             }
+            
             var duration = this.GetDuration();
             if (!this._LoadFromShare) {
                 this.Params.region = duration / 2;
             }
-
+            this._LoadFromShare = false;
+            this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             // UPDATE OPTIONS FORM //
             if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
@@ -146,6 +168,17 @@ class Granular extends Source {
             // start if powered //
             this.GrainLoop();
         });
+
+        var me = this;
+        this.LoadTimeout = setTimeout( function() {
+            me.TrackFallBack();
+        },(this.Params.timeout*1000));
+
+        //TODO - onerror doesn't seem to work
+        this._FirstBuffer.onerror = function() {
+            console.log("error");
+            me.TrackFallBack();
+        };
 
     }
 

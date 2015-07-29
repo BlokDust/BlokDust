@@ -12,6 +12,8 @@ class Soundcloud extends Source {
     public Sources : Tone.Simpler[];
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
+    private _FallBackTrack: SoundcloudTrack;
+    public LoadTimeout: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {
@@ -25,6 +27,7 @@ class Soundcloud extends Source {
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 11,
+                timeout: 20, // seconds before load deemed failed
                 track: '../Assets/ImpulseResponses/teufelsberg01.wav',
                 trackName: 'TEUFELSBERG',
                 user: 'BGXA'
@@ -39,7 +42,8 @@ class Soundcloud extends Source {
 
         this._WaveForm = [];
         this.SearchResults = [];
-        this.LoadProgress = 0;
+        this.Searching = false;
+        this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
         //var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
         //this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
@@ -69,7 +73,6 @@ class Soundcloud extends Source {
     }
 
     SetBuffers() {
-        //TODO: maybe set buffer to null first
 
         // STOP SOUND //
         this.Sources.forEach((s: any)=> {
@@ -77,8 +80,12 @@ class Soundcloud extends Source {
         });
 
         // LOAD FIRST BUFFER //
-        App.AnimationsLayer.AddToList(this);
+        App.AnimationsLayer.AddToList(this); // load animations
+        if (this._FirstBuffer) { // cancel previous loads
+            this._FirstBuffer.dispose();
+        }
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
+            clearTimeout(this.LoadTimeout);
             this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
             App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration();
@@ -88,6 +95,8 @@ class Soundcloud extends Source {
                 this.Params.loopStart = duration * 0.5;
                 this.Params.loopEnd = duration;
             }
+            this._LoadFromShare = false;
+            this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
                 this.UpdateOptionsForm();
@@ -102,28 +111,45 @@ class Soundcloud extends Source {
 
             // IF PLAYING, RE-TRIGGER //
             if (this.IsPowered()) {
-                console.log("retrigger");
                 this.TriggerAttack();
             }
         });
+        var me = this;
+        this.LoadTimeout = setTimeout( function() {
+            me.TrackFallBack();
+        },(this.Params.timeout*1000));
+
+        //TODO - onerror doesn't seem to work
+        this._FirstBuffer.onerror = function() {
+            console.log("error");
+            me.TrackFallBack();
+        };
 
     }
 
     Search(query: string) {
+        this.Searching = true;
         this.SearchResults = [];
         if (window.SC) {
             SoundCloudAudio.Search(query, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });
+                this.Searching = false;
             });
         }
     }
 
-    LoadTrack(track) {
-        this.Params.track = SoundCloudAudio.LoadTrack(track);
+    LoadTrack(track,fullUrl?:boolean) {
+        fullUrl = fullUrl || false;
+        if (fullUrl) {
+            this.Params.track = track.URI;
+        } else {
+            this.Params.track = SoundCloudAudio.LoadTrack(track);
+        }
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
+        this.Params.reverse = false;
         this._WaveForm = [];
 
         this.SetBuffers();
@@ -134,9 +160,14 @@ class Soundcloud extends Source {
         }
     }
 
+    TrackFallBack() {
+        //TODO what if it's the first track failing? fallback matches current
+        this.LoadTrack(this._FallBackTrack,true);
+        App.Message("Load Failed: This Track Is Unavailable. Reloading last track.");
+    }
+
     FirstSetup() {
         if (this._FirstRelease) {
-            console.log("first setup");
             this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
             this.SetBuffers();
 

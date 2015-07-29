@@ -73,10 +73,12 @@ class Splash {
 
             var dx = (App.Width*0.5);
             var dy = (App.Height*0.5) + (App.Height*this.LoadOffset);
-            this._Ctx.fillStyle = App.Palette[8];// Grey
+            this._Ctx.fillStyle = App.Palette[8];// white
             this._Ctx.textAlign = "center";
             this._Ctx.font = App.Metrics.TxtHeader;
-            this._Ctx.fillText("LOADING SCENE",dx,dy + (12 * App.Unit));
+            this._Ctx.fillText("LOADING SCENE",dx,dy + (26 * App.Unit));
+            App.AnimationsLayer.Spin();
+            App.AnimationsLayer.DrawSprite('loading',dx, dy - (16 * App.Unit),16,true);
         }
 
 
