@@ -188,7 +188,7 @@ class SharePanel extends DisplayObject{
             if (this._Saving) {
                 ctx.font = midType;
                 ctx.textAlign = "center";
-                ctx.fillText(this._CopyJson.saving.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (70 * units));
+                ctx.fillText(this._CopyJson.saving.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (75 * units));
                 App.AnimationsLayer.Spin();
                 App.AnimationsLayer.DrawSprite('loading',appWidth*0.5, centerY + (50 * units),16,true);
             }

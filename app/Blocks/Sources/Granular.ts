@@ -20,8 +20,10 @@ class Granular extends Source {
     private _NoteOn: boolean = false;
     private _WaveForm: number[];
     private _FirstBuffer: any;
+    private _LoadFromShare: boolean = false;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
@@ -29,10 +31,16 @@ class Granular extends Source {
                 region: 0,
                 spread: 1.5,
                 grainlength: 0.25,
-                track: '',
+                track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
                 trackName: 'TEUFELSBERG',
                 user: 'BGXA'
             };
+        } else {
+            this._LoadFromShare = true;
+            var me = this;
+            setTimeout(function() {
+                me.FirstSetup();
+            },100);
         }
 
         this._WaveForm = [];
@@ -40,7 +48,7 @@ class Granular extends Source {
 
         super.Init(sketch);
 
-        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
+        //this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
 
         this.CreateSource();
         this.CreateEnvelope();
@@ -124,7 +132,9 @@ class Granular extends Source {
                 this.Grains[i].buffer = e.buffer;
             }
             var duration = this.GetDuration();
-            this.Params.region = duration/2;
+            if (!this._LoadFromShare) {
+                this.Params.region = duration / 2;
+            }
 
 
             // UPDATE OPTIONS FORM //
@@ -137,6 +147,24 @@ class Granular extends Source {
             this.GrainLoop();
         });
 
+    }
+
+    FirstSetup() {
+        if (this._FirstRelease) {
+
+            this.Sources.forEach((s: Tone.Signal, i: number) => {
+                s.connect(this.Envelopes[i]);
+            });
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+                e.connect(this.EffectsChainInput);
+            });
+
+            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
+            this.SetupGrains();
+
+            this._FirstRelease = false;
+        }
     }
 
     GetDuration(): number {
@@ -206,21 +234,7 @@ class Granular extends Source {
 
 
     MouseUp() {
-        if (this._FirstRelease) {
-
-            this.Sources.forEach((s: Tone.Signal, i: number) => {
-                s.connect(this.Envelopes[i]);
-            });
-
-            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-                e.connect(this.EffectsChainInput);
-            });
-
-            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
-            this.SetupGrains();
-
-            this._FirstRelease = false;
-        }
+        this.FirstSetup();
 
         super.MouseUp();
     }

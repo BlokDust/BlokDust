@@ -11,6 +11,7 @@ class Soundcloud extends Source {
     private _FirstRelease: boolean = true;
     public Sources : Tone.Simpler[];
     private _FirstBuffer: any;
+    private _LoadFromShare: boolean = false;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {
@@ -24,19 +25,25 @@ class Soundcloud extends Source {
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 11,
-                track: '',
+                track: '../Assets/ImpulseResponses/teufelsberg01.wav',
                 trackName: 'TEUFELSBERG',
                 user: 'BGXA'
             };
+        } else {
+            this._LoadFromShare = true;
+            var me = this;
+            setTimeout(function() {
+                me.FirstSetup();
+            },100);
         }
 
         this._WaveForm = [];
         this.SearchResults = [];
         this.LoadProgress = 0;
 
-        var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
-        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
-        this.Params.track = localUrl;
+        //var localUrl = '../Assets/ImpulseResponses/teufelsberg01.wav';
+        //this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Soundcloud);
+        //this.Params.track = localUrl;
 
         super.Init(sketch);
         this.CreateSource();
@@ -64,16 +71,23 @@ class Soundcloud extends Source {
     SetBuffers() {
         //TODO: maybe set buffer to null first
 
+        // STOP SOUND //
+        this.Sources.forEach((s: any)=> {
+            s.triggerRelease();
+        });
+
         // LOAD FIRST BUFFER //
         App.AnimationsLayer.AddToList(this);
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
             App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration();
-            this.Params.startPosition = 0;
-            this.Params.endPosition = duration;
-            this.Params.loopStart = duration * 0.5;
-            this.Params.loopEnd = duration;
+            if (!this._LoadFromShare) {
+                this.Params.startPosition = 0;
+                this.Params.endPosition = duration;
+                this.Params.loopStart = duration * 0.5;
+                this.Params.loopEnd = duration;
+            }
 
             if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
                 this.UpdateOptionsForm();
@@ -88,6 +102,7 @@ class Soundcloud extends Source {
 
             // IF PLAYING, RE-TRIGGER //
             if (this.IsPowered()) {
+                console.log("retrigger");
                 this.TriggerAttack();
             }
         });
@@ -111,16 +126,29 @@ class Soundcloud extends Source {
         this.Params.user = track.UserShort;
         this._WaveForm = [];
 
-        // STOP SOUND //
-        this.Sources.forEach((s: any)=> {
-            s.triggerRelease();
-        });
-
         this.SetBuffers();
 
         if (App.BlocksSketch.OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();
             App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+    }
+
+    FirstSetup() {
+        if (this._FirstRelease) {
+            console.log("first setup");
+            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
+            this.SetBuffers();
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+                e = this.Sources[i].envelope;
+            });
+
+            this.Sources.forEach((s: Tone.Simpler) => {
+                s.connect(this.EffectsChainInput);
+            });
+
+            this._FirstRelease = false;
         }
     }
 
@@ -184,20 +212,7 @@ class Soundcloud extends Source {
     }
 
     MouseUp() {
-        if (this._FirstRelease) {
-            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
-            this.SetBuffers();
-
-            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
-                e = this.Sources[i].envelope;
-            });
-
-            this.Sources.forEach((s: Tone.Simpler) => {
-                s.connect(this.EffectsChainInput);
-            });
-
-            this._FirstRelease = false;
-        }
+        this.FirstSetup();
 
         super.MouseUp();
     }
