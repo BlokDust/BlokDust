@@ -20,7 +20,7 @@ class Microphone extends Source {
 
         super.Init(sketch);
 
-        this.Volume = App.AudioMixer.Master.context.createGain();
+        this.Volume = App.Audio.ctx.createGain();
         this.Volume.gain.value = this.Params.gain;
 
         //this.CreateSource();

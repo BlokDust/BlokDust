@@ -95,7 +95,7 @@ class MIDIController extends Keyboard {
         var cmd = e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
             channel = e.data[0] & 0xf,
             type = e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
-            note = App.AudioMixer.Master.midiToNote(e.data[1]),
+            note = App.Audio.Master.midiToNote(e.data[1]),
             velocity = e.data[2];
 
         console.log(

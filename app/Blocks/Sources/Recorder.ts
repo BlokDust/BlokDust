@@ -36,9 +36,9 @@ class RecorderBlock extends Source {
         super.Init(sketch);
 
         this.CreateSource();
-        this.BufferSource = App.AudioMixer.Master.context.createBufferSource();
+        this.BufferSource = App.Audio.ctx.createBufferSource();
 
-        this.Recorder = new Recorder(App.AudioMixer.Master, {
+        this.Recorder = new Recorder(App.Audio.Master, {
             workerPath: App.Config.RecorderWorkerPath
         });
 
@@ -118,18 +118,18 @@ class RecorderBlock extends Source {
 
             // if BufferSource doesn't exist create it
             if (!this.BufferSource) {
-                this.BufferSource = this.Sources[0].context.createBufferSource();
+                this.BufferSource = App.Audio.ctx.createBufferSource();
             }
             // If we already have a BufferSource and the buffer is set, reset it to null and create a new one
             else if (this.BufferSource && this.BufferSource.buffer !== null){
                 this.BufferSource = null;
-                this.BufferSource = this.Sources[0].context.createBufferSource();
+                this.BufferSource = App.Audio.ctx.createBufferSource();
             }
 
             // TODO: add an overlay function which would merge new buffers with old buffers
 
             // Create a new buffer and set the buffers to the recorded data
-            this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
+            this.BufferSource.buffer = App.Audio.ctx.createBuffer(1, buffers[0].length, 44100);
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 

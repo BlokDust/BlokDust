@@ -12,9 +12,6 @@ class ToneSource extends Source {
     //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
 
-    //TODO: move this
-    NoteIndex = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
@@ -150,11 +147,11 @@ class ToneSource extends Source {
                 this.Sources[0].frequency.value = value;
                 break;
             case 'transpose':
-                this.Sources[0].frequency.value = App.Config.BaseNote * this.interval2freq(value);
+                this.Sources[0].frequency.value = App.Config.BaseNote * App.Tone.intervalToFrequencyRatio(value);
 
                 // TODO: Make the params output this Note Index instead of semitone value
                 var octave = Math.floor(value / 12) + 4;
-                var note = this.NoteIndex[Math.abs(value%12)];
+                var note = App.Audio.NoteIndex[Math.abs(value%12)];
                 console.log(`Note: ${note}${octave}`);
                 break;
         }

@@ -1,6 +1,5 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import AudioSettings = require("../../../Core/Audio/AudioSettings");
 import BlocksSketch = require("../../../BlocksSketch");
 
 class Gain extends PostEffect {
@@ -16,7 +15,7 @@ class Gain extends PostEffect {
             };
         }
 
-        this.Effect = App.AudioMixer.Master.context.createGain();
+        this.Effect = App.Audio.ctx.createGain();
         this.Effect.gain.value = (this.Params.gain/10)+1;
 
         //this.Effect = new Tone.Signal(1, 'db');

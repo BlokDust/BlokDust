@@ -4,7 +4,7 @@ import IEffect = require("./Blocks/ISource");
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
-import AudioMixer = require("./Core/Audio/AudioMixer");
+import Audio = require("./Core/Audio/Audio");
 import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
@@ -20,7 +20,7 @@ interface IApp {
     ResourceManager: ResourceManager;
     CommandManager: CommandManager;
     CompositionId: string;
-    AudioMixer: AudioMixer;
+    Audio: Audio;
     InputManager: InputManager;
     KeyboardInput: KeyboardInput;
     CommandsInputManager: CommandsInputManager;

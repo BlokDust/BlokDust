@@ -11,7 +11,7 @@ class Chopper extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        this.Effect = App.AudioMixer.Master.context.createGain();
+        this.Effect = App.Audio.ctx.createGain();
 
         if (!this.Params) {
             this.Params = {
@@ -27,8 +27,6 @@ class Chopper extends PostEffect {
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
 
-        //this.Transport = Tone.Transport;
-        //this.Transport.start();
         this.SetVolume();
     }
 

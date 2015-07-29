@@ -66,7 +66,7 @@ class Source extends Block implements ISource {
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
             this.EffectsChainInput.connect(this.EffectsChainOutput);
-            this.EffectsChainOutput.connect(App.AudioMixer.Master);
+            this.EffectsChainOutput.connect(App.Audio.Master);
 
         }
 
@@ -327,7 +327,7 @@ class Source extends Block implements ISource {
                 this.UpdateCollision = true;
             }
             var block = this;
-            var seconds = App.AudioMixer.Master.toSeconds(duration) * 1000;
+            var seconds = App.Audio.Master.toSeconds(duration) * 1000;
             setTimeout( function() {
                 block.PowerConnections -= 1;
                 if (block.UpdateCollision!==undefined) {
