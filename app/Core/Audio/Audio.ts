@@ -4,7 +4,7 @@ class Audio {
     public ctx: AudioContext;
     public Master: Tone.Master;
     public MasterVolume: number = -10; // in decibels
-    public NoteIndex = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
     constructor() {
 

@@ -42,18 +42,13 @@ class Keyboard extends PreEffect {
 
             if (this.IsPressed){
                 source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
-                    //FIXME: use the new TriggerRelease method
+                    //TODO: use the new TriggerRelease method
                     e.triggerRelease();
                 });
 
             }
 
-            //FIXME: Change this to only set the main frequency back.
-            source.Sources.forEach((s: any) => {
-                if (s.frequency){
-                    s.frequency.value = source.Params.frequency;
-                }
-            });
+            source.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(source.Params.transpose));
 
         }
 
@@ -184,7 +179,9 @@ class Keyboard extends PreEffect {
      * @constructor
      */
     public GetFrequencyOfNote(note, source): number {
-        return source.Sources[0].noteToFrequency(note) * this.GetConnectedPitchPreEffects(source);
+        return source.Sources[0].noteToFrequency(note) *
+            this.GetConnectedPitchPreEffects(source) *
+            App.Audio.Tone.intervalToFrequencyRatio(source.Params.transpose);
     }
 
     /**

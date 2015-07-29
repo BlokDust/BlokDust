@@ -132,11 +132,6 @@ class ToneSource extends Source {
         };
     }
 
-    //TODO: move this
-    interval2freq(interval: number): number {
-        return Math.pow(2,(interval/12));
-    }
-
     SetParam(param: string,value: any) {
 
 
@@ -147,7 +142,7 @@ class ToneSource extends Source {
                 this.Sources[0].frequency.value = value;
                 break;
             case 'transpose':
-                this.Sources[0].frequency.value = App.Config.BaseNote * App.Tone.intervalToFrequencyRatio(value);
+                this.Sources[0].frequency.value = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(value);
 
                 // TODO: Make the params output this Note Index instead of semitone value
                 var octave = Math.floor(value / 12) + 4;
