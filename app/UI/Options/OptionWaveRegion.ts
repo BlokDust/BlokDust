@@ -41,50 +41,19 @@ class WaveRegion extends WaveForm{
         var height = this.Size.height;
         var origin = this.Origin;
         var dataType = Math.round(units*10);
-        var headerType = Math.round(units*33);
         var xs = [this.Handles[0].Position.x,this.Handles[1].Position.x,this.Handles[2].Position.x,this.Handles[3].Position.x];
         var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
 
-        if (!this.Waveform.length) {
-            ctx.textAlign = "center";
-            ctx.fillStyle = App.Palette[8];// WHITE
-            ctx.font = App.Metrics.TxtItalic;
-            //ctx.fillText("LOADING SAMPLE", (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (19*units));
-            App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
-        }
+        //TODO move common stuff to OptionWave (also tidy this mess)
+        if (this.Waveform.length) {
 
-        else {
             // LINES //
             ctx.lineWidth = 1;
             ctx.globalAlpha = 1;
-
-            ctx.fillStyle = ctx.strokeStyle = "#282b31";
-            //panel.diagonalFill(xs[2] + panel.Margin,y,xs[3] - xs[2],height,9);
-
-            /*ctx.fillStyle = ctx.strokeStyle = App.Palette[2];
-            panel.diagonalFill(panel.Margin,y,xs[0],height,5);
-            panel.diagonalFill(xs[1] + panel.Margin,y,panel.Range - xs[1],height,5);*/
-
             ctx.globalAlpha = 1;
             ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
 
             var x = xs[2];
-
-            // TXT BOXES //
-            /*ctx.beginPath();
-
-            ctx.moveTo(xs[0] + panel.Margin,y);
-            ctx.lineTo(xs[0] + panel.Margin + (25*units),y);
-            ctx.lineTo(xs[0] + panel.Margin + (25*units),y + (dataType*1.5));
-            ctx.lineTo(xs[0] + panel.Margin,y + (dataType*1.5));
-
-            ctx.moveTo(xs[2] + panel.Margin,y);
-            ctx.lineTo(xs[2] + panel.Margin + (27*units),y);
-            ctx.lineTo(xs[2] + panel.Margin + (27*units),y + (dataType*1.5));
-            ctx.lineTo(xs[2] + panel.Margin,y + (dataType*1.5));
-
-            ctx.stroke();*/
-
             var sliderNo = 2;
             // LOOP LINES //
 
@@ -165,28 +134,13 @@ class WaveRegion extends WaveForm{
             ctx.font = App.Metrics.TxtItalic;
 
             ctx.textAlign = "left";
-            /*ctx.fillText("Play", xs[0] + panel.Margin + (dragWidth) + (5*units), y + (height * 0.5) + (dataType*0.35));
-            ctx.fillText("Loop", xs[2] + panel.Margin + (dragWidth*0.5) + (5*units), y + (height * 0.5) + (dataType*0.35));*/
-
             ctx.fillText("Start", xs[0] + panel.Margin + (5*units), y + (dataType*0.8));
             if (this.Mode) {
                 ctx.fillText("Loop", xs[2] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
             } else {
                 ctx.fillText("End", xs[1] + panel.Margin + (5*units), y + (height) - (dataType*0.4));
             }
-
         }
-
-
-
-
-        // VALUE TOOLTIP //
-        /*if (this.Selected) {
-            ctx.textAlign = "left";
-            ctx.font = panel.Sketch.TxtSlider;
-            var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
-            ctx.fillText(string, rightSpread + (25 * units), y + (height * 0.5) + (headerType * 0.35));
-        }*/
     }
 
 

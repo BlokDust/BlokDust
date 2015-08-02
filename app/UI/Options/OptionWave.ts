@@ -35,11 +35,16 @@ class WaveForm extends Option{
             ctx.stroke();
         }
 
+        if (!this.Waveform.length) {
+            ctx.textAlign = "center";
+            ctx.fillStyle = App.Palette[8];// WHITE
+            ctx.font = App.Metrics.TxtItalic;
+            App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
+        }
 
         if (this.Handles && this.Waveform.length && this.Mode) {
             ctx.strokeStyle = ctx.fillStyle = App.Palette[15]; // highlight
             ctx.fillStyle = ctx.strokeStyle = "#282b31";
-            //ctx.fillRect(panel.Margin + this.Handles[2].Position.x,y,this.Handles[3].Position.x - this.Handles[2].Position.x,height);
             panel.diagonalFill(panel.Margin + this.Handles[2].Position.x,y,this.Handles[3].Position.x - this.Handles[2].Position.x,height,9);
         }
 

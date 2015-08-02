@@ -10,7 +10,9 @@ import Option = require("./Options/Option");
 import Slider = require("./Options/OptionSlider");
 import WaveSlider = require("./Options/OptionWaveSlider");
 import WaveRegion = require("./Options/OptionWaveRegion");
+import WaveImage = require("./Options/OptionWaveImage");
 import Sample = require("./Options/OptionSample");
+import ActionButton = require("./Options/OptionActionButton");
 import Buttons = require("./Options/OptionButtonSelect");
 import SwitchArray = require("./Options/OptionSwitchArray");
 import Switch = require("./Options/OptionSwitch");
@@ -100,7 +102,13 @@ class OptionsPanel extends DisplayObject {
             } else if (json.parameters[i].type == "sample") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
+            } else if (json.parameters[i].type == "actionbutton") {
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "waveslider") {
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
+            } else if (json.parameters[i].type == "waveimage") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "waveregion") {
@@ -238,6 +246,16 @@ class OptionsPanel extends DisplayObject {
                 optionList.push(new WaveSlider(new Point(sliderX,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,option.props.spread));
             }
 
+            // WAVE IMAGE //
+            else if (option.type == "waveimage") {
+                var sliderO = this.Margin;
+                var waveform = [];
+                if (option.props.wavearray) {
+                    waveform = option.props.wavearray;
+                }
+                optionList.push(new WaveImage(new Point(0,optionY),new Size(1,optionHeight[i]),sliderO,option.name,waveform));
+            }
+
 
             // WAVE REGION //
             else if (option.type == "waveregion") {
@@ -267,6 +285,11 @@ class OptionsPanel extends DisplayObject {
             // SAMPLE LOADER //
             else if (option.type == "sample") {
                 optionList.push(new Sample(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.props.user,option.setting));
+            }
+
+            // ACTION BUTTON //
+            else if (option.type == "actionbutton") {
+                optionList.push(new ActionButton(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.text,option.setting));
             }
 
 
@@ -623,7 +646,15 @@ class OptionsPanel extends DisplayObject {
                     this.Sketch.SoundcloudPanel.OpenPanel();
                     return;
                 }
-
+            }
+            if (this.Options[i].Type=="actionbutton") {
+                if (this.Options[i].HandleRoll[0]) {
+                    var val = 0;
+                    console.log("" + this.Options[i].Setting +" | "+ val);
+                    // SET VALUE IN BLOCK //
+                    this.SelectedBlock.SetParam(this.Options[i].Setting, val);
+                    return;
+                }
             }
 
         }
@@ -741,8 +772,12 @@ class OptionsPanel extends DisplayObject {
                         this.Options[i].SubHandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
                     }
                 }
-            } else if (this.Options[i].Type == "sample") {
+            }
+            else if (this.Options[i].Type == "sample") {
                 this.Options[i].HandleRoll[0] = this.HitRect(this.Position.x + this.Margin + (this.Range * 0.5), this.Position.y + this.Options[i].Position.y, (this.Range * 0.5), this.Options[i].Size.height, mx, my);
+            }
+            else if (this.Options[i].Type == "actionbutton") {
+                this.Options[i].HandleRoll[0] = this.HitRect(this.Position.x + this.Margin + (this.Range * 0.25), this.Position.y + this.Options[i].Position.y, (this.Range * 0.5), this.Options[i].Size.height, mx, my);
             }
         }
 

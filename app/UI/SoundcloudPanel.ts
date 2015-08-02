@@ -19,6 +19,7 @@ class SoundcloudPanel extends DisplayObject{
     private _Page:number = 1;
     private _ItemNo:number = 5;
     private _Blink = 0;
+    private _SelectedBlock: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -70,7 +71,7 @@ class SoundcloudPanel extends DisplayObject{
             ctx.fillStyle = App.Palette[8]; // White
             ctx.strokeStyle = App.Palette[1]; // Grey
             ctx.lineWidth = 2;
-            var block = App.BlocksSketch.OptionsPanel.SelectedBlock;
+            var block = this._SelectedBlock;
             var results = block.SearchResults.length;
             var itemNo = this._ItemNo;
             var pageNo = this._Page;
@@ -316,27 +317,32 @@ class SoundcloudPanel extends DisplayObject{
 
 
     OpenPanel() {
+        this._SelectedBlock = App.BlocksSketch.OptionsPanel.SelectedBlock;
+        this._Page = this._SelectedBlock.ResultsPage;
+        this.SearchString = this._SelectedBlock.SearchString;
         this.Open = true;
         this.OffsetY = -App.Height;
+        this.OffsetX = - ((this._Page-1) * (430*App.Unit));
         this.DelayTo(this,0,500,0,"OffsetY");
 
     }
 
     ClosePanel() {
+        this._SelectedBlock.ResultsPage = this._Page;
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
     }
 
     MouseDown(point) {
         this.HitTests(point);
 
-        var block = App.BlocksSketch.OptionsPanel.SelectedBlock;
+        var block = this._SelectedBlock;
 
         if (this._RollOvers[1]) { // close
             this.ClosePanel();
             return;
         }
         if (this._RollOvers[2]) { // search
-            App.BlocksSketch.OptionsPanel.SelectedBlock.Search(this.RandomSearch());
+            block.Search(this.RandomSearch(this._SelectedBlock));
             this._Page = 1;
             this.OffsetX = 0;
             return;
@@ -405,11 +411,12 @@ class SoundcloudPanel extends DisplayObject{
         this.OffsetX = - ((this._Page-1) * (430*App.Unit));
     }
 
-    RandomSearch() {
-        var words = ['shoe','cat','dog','horse','train','snow','petrol','paper','flower','clock','car','skull','space','dust','metal','flag','chips','dome','red','hand','gang','wet','dance','patrol','arm','gun','land','brick','camel','sun','night','rain','blood'];
+    RandomSearch(block) {
+        var words = ['shoe','cat','dog','horse','train','snow','petrol','paper','flower','clock','car','skull','space','dust','metal','flag','chips','dome','red','hand','gang','wet','dance','patrol','arm','gun','land','brick','camel','sun','night','rain','blood','bang','hit','sample','drum','snare','clap','echo'];
         var q = ""+ words[Math.floor(Math.random()*words.length)] + " " + words[Math.floor(Math.random()*words.length)];
-        q = "dog train";
+        //q = "impulse response";
         this.SearchString = q;
+        block.SearchString = q;
         return q;
     }
 }

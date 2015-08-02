@@ -22,6 +22,8 @@ interface ISource extends IBlock{
     Collisions: any[];
     SearchResults: SoundcloudTrack[];
     Searching: Boolean;
+    ResultsPage: number;
+    SearchString: string;
     //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];

@@ -115,6 +115,7 @@ class Soundcloud extends Source {
             }
         });
         var me = this;
+        clearTimeout(this.LoadTimeout);
         this.LoadTimeout = setTimeout( function() {
             me.TrackFallBack();
         },(this.Params.timeout*1000));
@@ -127,11 +128,166 @@ class Soundcloud extends Source {
 
     }
 
+    DataToBuffer() {
+
+        var seconds = 2;
+        var sampleRate = this.Sources[0].context.sampleRate;
+
+        var gain = 1;
+
+        var voices = 1 + Math.round(Math.random()*3);
+        var harmonics = Math.round(Math.random()*13);
+        var lfo = 1;
+        var lfoFreq = 1 + Math.round(Math.random()*15);
+
+        console.log(voices);
+        console.log(harmonics);
+
+        var freq = [];
+        var currentVal = [];
+        var polarity = [];
+        var vGain = [];
+        var drift = [];
+        var type = [];
+
+
+        var frequencies = [440,880,1320,1760,2200,2640,3080,3520,3960,220];
+        var pool = ['a2','a3','a4','b3','b4','c3','c4','c5','d3','d4','e3','e4','f3','f4','g3','g4'];
+        var sequence = [];
+        var sequenceLength = Math.pow(2,1 + Math.round(Math.random()*6));
+        for (var i=0; i<sequenceLength; i++) {
+            sequence.push(this.Sources[0].noteToFrequency(pool[Math.floor(Math.random()*pool.length)]));
+        }
+
+        var data = new Float32Array(sampleRate*seconds);
+        var noise = Math.random()*0.5;
+        var saw = Math.round(Math.random());
+        console.log(saw);
+
+        var totalGain = 0;
+        for (var i=0; i<(voices + harmonics + lfo); i++) {
+            if (i<voices) {
+                type[i] = 0;
+            }
+            else if (i>=voices && i< (voices + harmonics)) {
+                type[i] = 1;
+            }
+            else {
+                type[i] = 2;
+            }
+
+            freq[i] = frequencies[i];
+            currentVal[i] = 0;
+            polarity[i] = 1;
+            drift[i] = 1;
+            var dice = Math.floor(Math.random()*3);
+            if (dice==0) {
+                drift[i] = 0.9999 + (Math.random()*0.0002);
+            }
+
+            vGain[i] = 0.05 + (Math.random()*30);
+
+            if (i >= (voices + harmonics)) {
+                vGain[i] = 10 + (Math.random()*100);
+
+            }
+
+            totalGain += vGain[i];
+        }
+        var amp  = 1 / totalGain;
+
+
+
+        // GENERATE BUFFER DATA //
+        for (var i=0; i<data.length; i++) {
+
+
+            var totalVal = 0;
+            for (var j=0; j<(voices + harmonics + lfo); j++) {
+
+                if (type[j]==0) { // voices
+                    if (i == (Math.round(data.length/sequence.length) * Math.round((sequence.length/data.length)*i)) ) {
+                        console.log(i);
+                        freq[j] = sequence[Math.floor((sequence.length/data.length)*i)] + (5*j);
+                    }
+                    //freq[j] = sequence[Math.floor((sequence.length/data.length)*i)] + (5*j);
+                    freq[j] *= drift[j];
+                }
+                else if (type[j]==1) { // harmonics
+                    freq[j] = freq[0] * j;
+                }
+                 else if (type[j]==2) { // lfo
+                    freq[j] = lfoFreq;
+                }
+
+                if (freq[j]>20000) {
+                    freq[j] = 20000;
+                }
+                if (freq[j]<1) {
+                    freq[j] = 1;
+                }
+
+                totalVal += (currentVal[j] * vGain[j]);
+
+
+                var step = freq[j] * ((amp*4)/sampleRate);
+                currentVal[j] += (step * polarity[j]);
+
+                // stay within bounds //
+                if (currentVal[j] > amp) {
+                    var spill = currentVal[j] - amp;
+                    if (saw==1 && j<(voices + harmonics)) {
+                        currentVal[j] = -(amp - spill);
+                    } else {
+                        currentVal[j] = amp - spill;
+                        polarity[j] = - polarity[j];
+                    }
+
+                }
+                if (currentVal[j] < -amp) {
+                    var spill = (currentVal[j] - (-amp));
+                    currentVal[j] = (-amp) - spill;
+                    polarity[j] = - polarity[j];
+                }
+            }
+            // write to 32 bit array
+            var roam = (1 - (noise*0.5)) + (Math.random()*noise);
+            data[i] = (totalVal * roam) * gain;
+        }
+
+        // cancel any ongoing buffer loads //
+        if (this._FirstBuffer) {
+            this._FirstBuffer.dispose();
+        }
+
+        // fill buffer with data and get the waveform //
+        this._FirstBuffer = this.Sources[0].context.createBuffer(1, data.length, sampleRate);
+        this._FirstBuffer.copyToChannel(data,0,0);
+        this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
+        var duration = this.GetDuration();
+        this.Params.loopEnd = duration;
+
+        // update options panel //
+        if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+        }
+
+        // update sources //
+        this.Sources.forEach((s: Tone.Simpler)=> {
+            s.player.buffer = this._FirstBuffer;
+            s.player.loopStart = this.Params.loopStart;
+            s.player.loopEnd = this.Params.loopEnd;
+        });
+
+    }
+
     Search(query: string) {
         this.Searching = true;
+        this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, (tracks) => {
+            SoundCloudAudio.Search(query, 510, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });
@@ -168,8 +324,9 @@ class Soundcloud extends Source {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
+            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch(this));
             this.SetBuffers();
+            //this.DataToBuffer();
 
             this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
                 e = this.Sources[i].envelope;

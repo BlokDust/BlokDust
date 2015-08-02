@@ -70,9 +70,10 @@ class Granular extends Source {
 
     Search(query: string) {
         this.Searching = true;
+        this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, (tracks) => {
+            SoundCloudAudio.Search(query, 240, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
                 });
@@ -151,7 +152,7 @@ class Granular extends Source {
             for (var i=0; i<this.GrainsAmount; i++) {
                 this.Grains[i].buffer = e.buffer;
             }
-            
+
             var duration = this.GetDuration();
             if (!this._LoadFromShare) {
                 this.Params.region = duration / 2;
@@ -170,6 +171,7 @@ class Granular extends Source {
         });
 
         var me = this;
+        clearTimeout(this.LoadTimeout);
         this.LoadTimeout = setTimeout( function() {
             me.TrackFallBack();
         },(this.Params.timeout*1000));
@@ -193,7 +195,7 @@ class Granular extends Source {
                 e.connect(this.EffectsChainInput);
             });
 
-            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
+            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch(this));
             this.SetupGrains();
 
             this._FirstRelease = false;

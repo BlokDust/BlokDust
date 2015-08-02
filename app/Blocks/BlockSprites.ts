@@ -686,6 +686,34 @@ class BlockSprites {
 
                 break;
 
+            case "wavegen":
+
+                /*if (!this._Scaled) {
+                    this._XOffset = -(grd*0.5);
+                }*/
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[5];// PINK
+                this.DrawMoveTo(-1,-1);
+                this.DrawLineTo(0,-1);
+                this.DrawLineTo(1,0);
+                this.DrawLineTo(1,2);
+                this.DrawLineTo(0,2);
+                this.DrawLineTo(-1,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[10];// WHITE
+                this.DrawMoveTo(0,-1);
+                this.DrawLineTo(1,0);
+                this.DrawLineTo(1,2);
+                this.DrawLineTo(0,2);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+
+                break;
+
             case "computer keyboard":
 
                 this.Ctx.beginPath();
