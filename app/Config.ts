@@ -9,6 +9,7 @@ class Config {
     public ConvolverDefaultTracks: string[];
     public BaseNote: number;
     public SoundCloudLoadTimeout: number;
+    public ResetPitchesOnInteractionDisconnect: boolean;
 }
 
 export = Config;

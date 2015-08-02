@@ -327,9 +327,11 @@ class Granular extends Source {
      * Reset granular pitches back to their original Params setting
      */
     ResetPitch() {
-        this._tempPlaybackRate = this.Params.playbackRate;
-        for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate = this.Params.playbackRate;
+        if (App.Config.ResetPitchesOnInteractionDisconnect) {
+            this._tempPlaybackRate = this.Params.playbackRate;
+            for (var i=0; i<this.GrainsAmount; i++) {
+                this.Grains[i].playbackRate = this.Params.playbackRate;
+            }
         }
     }
 

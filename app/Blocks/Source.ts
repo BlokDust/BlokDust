@@ -460,12 +460,17 @@ class Source extends Block implements ISource {
      * Reset a sources pitch back to its Params setting
      */
     ResetPitch() {
-        if (this.Params.baseFrequency) {
-            //Oscillators
-            this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
-        } else if (this.Params.playbackRate) {
-            // Samplers
-            this.Sources[0].player.playbackRate = this.Params.playbackRate;
+        if (App.Config.ResetPitchesOnInteractionDisconnect) {
+            if (typeof this.Params.baseFrequency === 'number') {
+                //Oscillators
+                this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
+            } else if (this.Sources[0].player) {
+                // Samplers
+                this.Sources[0].player.playbackRate = this.Params.playbackRate;
+            } else if (typeof this.Sources[0].playbackRate === 'number') {
+                // Noise
+                this.Sources[0].playbackRate = this.Params.playbackRate;
+            }
         }
     }
 

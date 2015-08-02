@@ -24,5 +24,6 @@
     "PolyphonicVoices": 5,
     "PulseLength": "16n",
     "BaseNote": 261.6,
-    "SoundCloudLoadTimeout": 20
+    "SoundCloudLoadTimeout": 20,
+    "ResetPitchesOnInteractionDisconnect": true
 }
