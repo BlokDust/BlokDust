@@ -22,6 +22,7 @@ class SharePanel extends DisplayObject{
     private _UrlSelecting: boolean;
     private _RollOvers: boolean[];
     private _CommandManager;
+    private _Blink:number = 0;
     private _SessionId: string;
     private _Saving: boolean;
 
@@ -71,6 +72,18 @@ class SharePanel extends DisplayObject{
 
     GetUrl() {
         return [location.protocol, '//', location.host, location.pathname].join('');
+    }
+
+    GetString() {
+        return this.SessionTitle;
+    }
+
+    UpdateString(string) {
+        this.SessionTitle = string;
+    }
+
+    StringReturn() {
+
     }
 
     //-------------------------------------------------------------------------------------------
@@ -257,6 +270,19 @@ class SharePanel extends DisplayObject{
             ctx.textAlign = "left";
             ctx.font = headType;
             ctx.fillText(this.SessionTitle, (appWidth*0.5) - (210*units), centerY - (100*units) );
+            var titleW = ctx.measureText(this.SessionTitle.toUpperCase()).width;
+
+
+            // TYPE BAR //
+            if (this._Blink > 50) {
+                ctx.fillRect((appWidth*0.5) - (210*units) + titleW + (5*units),centerY - (123*units),2*units,26*units);
+            }
+            this._Blink += 1;
+            if (this._Blink == 100) {
+                this._Blink = 0;
+            }
+
+
 
             ctx.font = headType;
             ctx.fillText("SHARE",20*units,this.OffsetY + (30*units) + (11*units));
@@ -441,11 +467,12 @@ class SharePanel extends DisplayObject{
         shareUrl.style.display = "block";
         shareUrl.style.visibility = "true";
         this.DelayTo(this,0,500,0,"OffsetY");
-
+        App.TypingManager.Enable(this);
     }
 
     ClosePanel() {
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
+        App.TypingManager.Disable();
     }
 
     GenerateLink() {
@@ -511,6 +538,7 @@ class SharePanel extends DisplayObject{
             }
             if (this._RollOvers[2]) { // gen title
                 this.SessionTitle = this.GenerateLabel();
+                App.TypingManager.Enable(this);
                 return;
             }
             if (this._RollOvers[3]) { // gen URL

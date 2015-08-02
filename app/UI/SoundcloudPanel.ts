@@ -18,7 +18,7 @@ class SoundcloudPanel extends DisplayObject{
     private _RollOvers: boolean[];
     private _Page:number = 1;
     private _ItemNo:number = 5;
-    private _Blink = 0;
+    private _Blink:number = 0;
     private _SelectedBlock: any;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {

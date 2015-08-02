@@ -8,6 +8,7 @@ class TypingManager extends InputManager {
     public Enabled: Boolean;
     private _String: string;
     private _Panel: any;
+    private _CharLimit: number;
 
     constructor() {
         super();
@@ -15,6 +16,7 @@ class TypingManager extends InputManager {
         this.Enabled = false;
         this._String = "";
         this._Panel;
+        this._CharLimit = 20;
 
     }
 
@@ -33,10 +35,12 @@ class TypingManager extends InputManager {
 
     AddToString(code) {
         //TODO special / secondary characters
-        if ((code > 48 && code < 90) || (code > 106 && code < 111) || (code > 186 && code < 192) || (code > 219 && code < 222) || code == 32) {
-            var key = ""+String.fromCharCode(code);
-            this._String = "" + this._String + key;
-            this._Panel.UpdateString(this._String);
+        if (this._String.length<this._CharLimit) {
+            if ((code > 47 && code < 91) || (code > 105 && code < 112) || (code > 185 && code < 193) || (code > 218 && code < 223) || code == 32) {
+                var key = ""+String.fromCharCode(code);
+                this._String = "" + this._String + key;
+                this._Panel.UpdateString(this._String);
+            }
         }
     }
 
