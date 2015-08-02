@@ -128,12 +128,8 @@ class ToneSource extends Source {
         var val = value;
 
         switch(param) {
-            //case "frequency":
-            //    this.Sources[0].frequency.value = value;
-            //    break;
             case 'baseFrequency':
                 this.Sources[0].frequency.value = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(value);
-
                 // TODO: Make the params output this Note Index instead of semitone value
                 var octave = Math.floor(value / 12) + 4;
                 var note = App.Audio.NoteIndex[Math.abs(value%12)];

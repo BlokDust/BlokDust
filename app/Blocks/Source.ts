@@ -457,6 +457,20 @@ class Source extends Block implements ISource {
     }
 
     /**
+     * Reset a sources pitch back to its Params setting
+     */
+    ResetPitch() {
+        if (this.Params.baseFrequency) {
+            //Oscillators
+            this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
+        } else if (this.Params.playbackRate) {
+            // Samplers
+            this.Sources[0].player.playbackRate = this.Params.playbackRate;
+        }
+    }
+
+
+    /**
      * Shifts a notes pitch up or down a number of octaves
      * @example -2 would shift the note down by 2 octaves.
      * @param {number} octaves

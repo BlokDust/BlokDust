@@ -23,6 +23,7 @@ class Granular extends Source {
     private _LoadFromShare: boolean = false;
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
+    private _tempPlaybackRate: number;
 
     public Params: GranularParams;
 
@@ -47,6 +48,7 @@ class Granular extends Source {
             },100);
         }
 
+        this._tempPlaybackRate = this.Params.playbackRate;
         this._WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;
@@ -285,8 +287,8 @@ class Granular extends Source {
             // MAKE SURE THESE ARE IN SYNC //
             this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
             this.Grains[this._CurrentGrain].stop();
-            this.Grains[this._CurrentGrain].playbackRate = this.Params.playbackRate;
-            this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this.Params.playbackRate)*1.9);
+            this.Grains[this._CurrentGrain].playbackRate = this._tempPlaybackRate;
+            this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
                 this.GrainLoop();
@@ -312,10 +314,23 @@ class Granular extends Source {
     }
 
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
+        pitch = pitch / App.Config.BaseNote;
         for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate = pitch / App.Config.BaseNote;
+            this.Grains[i].playbackRate = pitch;
         }
-        this.Params.playbackRate = this.Grains[0].playbackRate;
+        this._tempPlaybackRate = pitch;
+        console.log(this._tempPlaybackRate);
+        console.log(this.Params.playbackRate);
+    }
+
+    /**
+     * Reset granular pitches back to their original Params setting
+     */
+    ResetPitch() {
+        this._tempPlaybackRate = this.Params.playbackRate;
+        for (var i=0; i<this.GrainsAmount; i++) {
+            this.Grains[i].playbackRate = this.Params.playbackRate;
+        }
     }
 
     SetParam(param: string,value: number) {
