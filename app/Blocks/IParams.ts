@@ -95,7 +95,9 @@ interface ChompParams {
 interface ChopperParams extends RateDepthParams {}
 
 interface ConvolutionParams extends DryWetParams {
-    sample: string|AudioBuffer;
+    track: string|AudioBuffer;
+    trackName: string;
+    user: string;
 }
 
 interface DelayParams extends DryWetParams {

@@ -24,7 +24,6 @@ class Convolver extends PostEffect {
         if (!this.Params) {
             this.Params = {
                 mix: 1,
-                timeout: 20, // seconds before load deemed failed
                 track: '../Assets/ImpulseResponses/teufelsberg01.wav',
                 trackName: 'TEUFELSBERG',
                 user: 'BGXA'
@@ -76,7 +75,7 @@ class Convolver extends PostEffect {
         clearTimeout(this.LoadTimeout);
         this.LoadTimeout = setTimeout( function() {
             me.TrackFallBack();
-        },(this.Params.timeout*1000));
+        },(App.Config.SoundCloudLoadTimeout *1000));
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = function() {
@@ -109,7 +108,6 @@ class Convolver extends PostEffect {
         }
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
-        this.Params.reverse = false;
         this._WaveForm = [];
 
         this.SetBuffer();
