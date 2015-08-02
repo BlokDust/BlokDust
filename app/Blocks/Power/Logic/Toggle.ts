@@ -73,14 +73,14 @@ class Toggle extends Logic {
     PerformLogic() {
         super.PerformLogic();
         if (this.Params.logic) {
-            this.Params.logic = 0;
+            this.Params.logic = false;
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
                 source.TriggerRelease('all');
             }
 
         } else {
-            this.Params.logic = 1;
+            this.Params.logic = true;
             for (var i = 0; i < this.Sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
                 source.TriggerAttack();

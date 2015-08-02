@@ -12,6 +12,7 @@ class RecorderBlock extends Source {
     public RecordedBlob;
     //public PlaybackRate: number;
     private _WaveForm: number[];
+    public Params: SimplerParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -27,7 +28,8 @@ class RecorderBlock extends Source {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 0
+                volume: 0,
+                track: null,
             };
         }
 

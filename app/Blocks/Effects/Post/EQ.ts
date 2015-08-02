@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class EQ extends PostEffect {
 
     public Effect: Tone.EQMultiband;
+    public Params: EQParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -21,7 +22,7 @@ class EQ extends PostEffect {
                 gain_3: 0,
                 frequency_4: 10000,
                 Q_4: 1,
-                gain_4: 0
+                gain_4: 0,
             };
         }
 

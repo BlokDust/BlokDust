@@ -11,6 +11,7 @@ class ToneSource extends Source {
     //public Frequency: number;
     //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
+    public Params: ToneSourceParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -18,7 +19,7 @@ class ToneSource extends Source {
             this.Params = {
                 frequency: App.Config.BaseNote,
                 waveform: 2,
-                transpose: 0,
+                baseFrequency: 0,
             };
         }
 
@@ -62,7 +63,6 @@ class ToneSource extends Source {
 
     Dispose() {
         super.Dispose();
-        this.Params.frequency = null;
 
         this.Sources.forEach((s: any) => {
             s.dispose();
@@ -91,25 +91,25 @@ class ToneSource extends Source {
             "name" : "Tone",
             "parameters" : [
 
+                //{
+                //    "type" : "slider",
+                //    "name" : "Frequency",
+                //    "setting" :"frequency",
+                //    "props" : {
+                //        "value" : this.Params.frequency,
+                //        "min" : 10,
+                //        "max" : 15000,
+                //        "quantised" : true,
+                //        "centered" : false,
+                //        "logarithmic": true
+                //    }
+                //},
                 {
                     "type" : "slider",
-                    "name" : "Frequency",
-                    "setting" :"frequency",
+                    "name" : "Base Frequency",
+                    "setting" :"baseFrequency",
                     "props" : {
-                        "value" : this.Params.frequency,
-                        "min" : 10,
-                        "max" : 15000,
-                        "quantised" : true,
-                        "centered" : false,
-                        "logarithmic": true
-                    }
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Transpose",
-                    "setting" :"transpose",
-                    "props" : {
-                        "value" : this.Params.transpose,
+                        "value" : this.Params.baseFrequency,
                         "min" : -48,
                         "max" : 48,
                         "quantised" : true,
@@ -138,10 +138,10 @@ class ToneSource extends Source {
         var val = value;
 
         switch(param) {
-            case "frequency":
-                this.Sources[0].frequency.value = value;
-                break;
-            case 'transpose':
+            //case "frequency":
+            //    this.Sources[0].frequency.value = value;
+            //    break;
+            case 'baseFrequency':
                 this.Sources[0].frequency.value = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(value);
 
                 // TODO: Make the params output this Note Index instead of semitone value

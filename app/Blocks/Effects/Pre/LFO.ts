@@ -6,13 +6,14 @@ import BlocksSketch = require("../../../BlocksSketch");
 class LFO extends PreEffect {
 
     public LFO: Tone.LFO;
+    public Params: LFOParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
                 rate: 2,
-                depth: 20
+                depth: 20,
             };
         }
 

@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Delay extends PostEffect {
 
     public Effect: Tone.PingPongDelay;
+    public Params: DelayParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -12,7 +13,7 @@ class Delay extends PostEffect {
             this.Params = {
                 delayTime: 0.25,
                 feedback: 0.4,
-                mix: 0.5
+                mix: 0.5,
             };
         }
 

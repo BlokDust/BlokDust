@@ -9,6 +9,7 @@ class Soundcloud extends Source {
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
     public Sources : Tone.Simpler[];
+    public Params: SimplerParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {

@@ -5,7 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Chomp extends PostEffect {
 
     public Effect: Tone.Filter;
-    public Rate: number;
+    public Params: ChompParams;
     public Timer;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -14,7 +14,7 @@ class Chomp extends PostEffect {
             this.Params = {
                 rate: 13,
                 Q: 0.6,
-                gain: 25
+                gain: 25,
             };
         }
 
@@ -25,8 +25,6 @@ class Chomp extends PostEffect {
             "Q" : this.Params.Q,
             "gain" : this.Params.gain
         });
-
-        this.Rate = this.Params.rate;
 
         super.Init(sketch);
 
@@ -45,7 +43,7 @@ class Chomp extends PostEffect {
                 me.SetFrequency();
             }
 
-        },this.Params.rate);
+        }, this.Params.rate);
     }
 
 
@@ -73,18 +71,6 @@ class Chomp extends PostEffect {
 
         this.Params[param] = val;
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="Q") {
-            val = this.Effect.Q.value;
-        } else if (param=="gain") {
-            val = this.Effect.gain.value;
-        }
-
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();

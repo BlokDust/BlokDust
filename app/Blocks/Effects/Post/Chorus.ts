@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Chorus extends PostEffect {
 
     public Effect: Tone.Chorus;
+    public Params: ChorusParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -13,7 +14,7 @@ class Chorus extends PostEffect {
                 rate: 2,
                 delayTime: 2.22,
                 depth: 0.9,
-                feedback: 0.9
+                feedback: 0.9,
             };
         }
 

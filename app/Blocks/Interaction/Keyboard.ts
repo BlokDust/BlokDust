@@ -48,7 +48,7 @@ class Keyboard extends PreEffect {
 
             }
 
-            source.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(source.Params.transpose));
+            source.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency));
 
         }
 
@@ -181,7 +181,7 @@ class Keyboard extends PreEffect {
     public GetFrequencyOfNote(note, source): number {
         return source.Sources[0].noteToFrequency(note) *
             this.GetConnectedPitchPreEffects(source) *
-            App.Audio.Tone.intervalToFrequencyRatio(source.Params.transpose);
+            App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency);
     }
 
     /**

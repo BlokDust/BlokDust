@@ -6,6 +6,7 @@ class Gain extends PostEffect {
 
     public Effect: GainNode;
     //public Effect: Tone.Signal;
+    public Gain: GainParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 

@@ -7,6 +7,7 @@ import Power = require("../Power/Power");
 
 class MIDIController extends Keyboard {
 
+    public Params: KeyboardParams;
     private Midi: any;
     private Data: any;
     private _Cmd;
@@ -20,8 +21,8 @@ class MIDIController extends Keyboard {
         if (!this.Params) {
             this.Params = {
                 glide: 0.05,
-                polyphonic: 0, // Polyphonic mode: boolean, default: off
-                octave: 3
+                isPolyphonic: false, // Polyphonic mode: boolean, default: off
+                octave: 3,
             };
         }
 
@@ -321,7 +322,7 @@ class MIDIController extends Keyboard {
                         {
                             "name" : "Mono/Poly",
                             "setting" :"polyphonic",
-                            "value": this.Params.polyphonic
+                            "value": this.Params.isPolyphonic
                         }
                     ]
                 },

@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Convolver extends PostEffect {
 
     public Effect: Tone.Convolver;
+    public Params: ConvolutionParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 

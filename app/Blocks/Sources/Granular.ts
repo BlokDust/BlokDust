@@ -20,6 +20,8 @@ class Granular extends Source {
     public SC: SoundCloudAudio;
     private _WaveForm: number[];
 
+    public Params: GranularParams;
+
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         if (!this.Params) {
             this.Params = {

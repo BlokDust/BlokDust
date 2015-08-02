@@ -8,6 +8,7 @@ class Noise extends Source {
     public DelayedRelease: number;
     public Noise: any;
     public Waveform: string;
+    public NoiseParams: NoiseParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -19,7 +20,7 @@ class Noise extends Source {
         if (!this.Params) {
             this.Params = {
                 playback: 1,
-                waveform: 2
+                waveform: 2,
             };
         }
 

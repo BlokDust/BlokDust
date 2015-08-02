@@ -8,6 +8,7 @@ class Chopper extends PostEffect {
     public Transport;
     public Timer;
     public Effect: GainNode;
+    public Params: ChopperParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -16,7 +17,7 @@ class Chopper extends PostEffect {
         if (!this.Params) {
             this.Params = {
                 rate: 50,
-                depth: 4
+                depth: 4,
             };
         }
 

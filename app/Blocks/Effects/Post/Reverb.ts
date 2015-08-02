@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Reverb extends PostEffect {
 
     public Effect: Tone.Freeverb;
+    public Params: ReverbParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -12,7 +13,7 @@ class Reverb extends PostEffect {
             this.Params = {
                 dampening: 0.7,
                 roomSize: 0.5,
-                mix: 0.5
+                mix: 0.5,
             };
         }
 
