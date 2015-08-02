@@ -40,6 +40,20 @@ class SoundcloudPanel extends DisplayObject{
         };
     }
 
+    GetString() {
+        return this.SearchString;
+    }
+
+    UpdateString(string) {
+        this.SearchString = string;
+    }
+
+    StringReturn() {
+        this._SelectedBlock.SearchString = this.SearchString;
+        this._SelectedBlock.Search(this.SearchString);
+        this._Page = 1;
+        this.OffsetX = 0;
+    }
 
     //-------------------------------------------------------------------------------------------
     //  DRAW
@@ -324,12 +338,14 @@ class SoundcloudPanel extends DisplayObject{
         this.OffsetY = -App.Height;
         this.OffsetX = - ((this._Page-1) * (430*App.Unit));
         this.DelayTo(this,0,500,0,"OffsetY");
+        App.TypingManager.Enable(this);
 
     }
 
     ClosePanel() {
         this._SelectedBlock.ResultsPage = this._Page;
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
+        App.TypingManager.Disable();
     }
 
     MouseDown(point) {
@@ -343,6 +359,7 @@ class SoundcloudPanel extends DisplayObject{
         }
         if (this._RollOvers[2]) { // search
             block.Search(this.RandomSearch(this._SelectedBlock));
+            App.TypingManager.Enable(this);
             this._Page = 1;
             this.OffsetX = 0;
             return;

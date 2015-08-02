@@ -1,4 +1,4 @@
-import App = require("../../App");
+
 import InputManager = require("./InputManager");
 import KeyDownEventArgs = require("./KeyDownEventArgs");
 import KeyUpEventArgs = require("./KeyUpEventArgs");
@@ -134,19 +134,21 @@ class KeyboardInputManager extends InputManager {
     }
 
     KeyboardDown(e) {
-        var k = this.MasterKeyboardMap[e.keyCode];
+        if (!App.TypingManager.Enabled) {
+            var k = this.MasterKeyboardMap[e.keyCode];
 
-        //Check if this key released is in our key_map
-        if (typeof k !== 'undefined' && k !== '') {
-            //if it's already pressed (holding note)
-            if (k in this.KeysDown) {
-                return;
+            //Check if this key released is in our key_map
+            if (typeof k !== 'undefined' && k !== '') {
+                //if it's already pressed (holding note)
+                if (k in this.KeysDown) {
+                    return;
+                }
+                //pressed first time, add to object
+                this.KeysDown[k] = true;
+
+                this.KeyDown = k;
+                this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
             }
-            //pressed first time, add to object
-            this.KeysDown[k] = true;
-
-            this.KeyDown = k;
-            this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
         }
     }
 

@@ -6,6 +6,7 @@ import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
 import Audio = require("./Core/Audio/Audio");
 import InputManager = require("./Core/Inputs/InputManager");
+import TypingManager = require("./Core/Inputs/TypingManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
@@ -62,6 +63,7 @@ class App implements IApp{
     public CompositionId: string;
     public Config: Config;
     public InputManager: InputManager;
+    public TypingManager: TypingManager;
     public KeyboardInput: KeyboardInput;
     public OperationManager: OperationManager;
     public OscillatorsPool: PooledFactoryResource<Oscillator>;
@@ -161,9 +163,11 @@ class App implements IApp{
 
         // CREATE INPUT MANAGERS //
         this.InputManager = new InputManager();
+        this.TypingManager = new TypingManager();
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
+
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
