@@ -27,7 +27,7 @@ interface NoiseParams {
     waveform: number;
 }
 
-interface SimplerParams {
+interface SamplerParams {
     playbackRate: number;
     reverse: boolean;
     startPosition: number;
@@ -40,7 +40,7 @@ interface SimplerParams {
     track: string;
 }
 
-interface SoundcloudParams extends SimplerParams {
+interface SoundcloudParams extends SamplerParams {
     trackName: string;
     user: string;
 }

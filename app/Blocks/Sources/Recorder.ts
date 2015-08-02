@@ -10,13 +10,10 @@ class RecorderBlock extends Source {
     public Filename: string;
     public IsRecording: boolean = false;
     public RecordedBlob;
-    //public PlaybackRate: number;
     private _WaveForm: number[];
-    public Params: SimplerParams;
+    public Params: SamplerParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        //this.PlaybackRate = 1;
 
         if (!this.Params) {
             this.Params = {
@@ -336,46 +333,6 @@ class RecorderBlock extends Source {
         }
 
         this.Params[param] = val;
-    }
-
-    /**
-     * Trigger a Simpler's attack
-     * If no index is set trigger the first in the array
-     * @param {number | string} index
-     * Index is the position of the Envelope in Envelopes[].
-     * If index is set to 'all', all envelopes will be triggered
-     */
-    TriggerAttack(index: number|string = 0) {
-        if (index === 'all'){
-            // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
-            });
-        } else {
-            // Trigger the specific one
-            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
-        }
-    }
-
-    /**
-     * Trigger a Simpler's release
-     * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[].
-     * If index is set to 'all', all envelopes will be released
-     */
-    TriggerRelease(index: number|string = 0) {
-        // Only if it's not powered
-        if (!this.IsPowered()) {
-            if (index === 'all'){
-                // Trigger all the envelopes
-                this.Sources.forEach((s: any)=> {
-                    s.triggerRelease();
-                });
-            } else {
-                // Trigger the specific one
-                this.Sources[index].triggerRelease();
-            }
-        }
     }
 
 }

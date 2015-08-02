@@ -4,13 +4,14 @@
 
 import Grid = require("../../Grid");
 import Source = require("../Source");
+import SamplerBase = require("SamplerBase");
 import BlocksSketch = require("../../BlocksSketch");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 import WaveVoice = require("../../WaveVoice");
 
-class WaveGen extends Source {
+class WaveGen extends SamplerBase {
 
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
@@ -265,7 +266,7 @@ class WaveGen extends Source {
 
         // SETTINGS //
         var seconds = 2;
-        var sampleRate = this.Sources[0].context.sampleRate;
+        var sampleRate = App.Audio.cxt.sampleRate;
         var gain = 1;
 
         var noise = 0;
@@ -577,11 +578,11 @@ class WaveGen extends Source {
 
     PopulateBuffer(sampleRate) {
         if (!this._FirstBuffer) {
-            this._FirstBuffer = this.Sources[0].context.createBuffer(1, this._BufferData.length, sampleRate);
+            this._FirstBuffer = App.Audio.ctx.createBuffer(1, this._BufferData.length, sampleRate);
         }
         this._FirstBuffer.copyToChannel(this._BufferData,0,0);
         this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
-        var duration = this.GetDuration();
+        var duration = this.GetDuration(this._FirstBuffer);
         this.Params.loopEnd = this.Params.endPosition =duration;
         this.Params.reverse = false;
 
@@ -617,24 +618,11 @@ class WaveGen extends Source {
         }
     }
 
-    Update() {
-        super.Update();
-    }
-
     Draw() {
         super.Draw();
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"wavegen");
     }
 
-
-
-    GetDuration() {
-        if (this._FirstBuffer){
-            return this._FirstBuffer.duration;
-        } else {
-            return 0;
-        }
-    }
 
     /**
      * Trigger a Simpler's attack
@@ -698,7 +686,7 @@ class WaveGen extends Source {
                     "props" : {
                         "value" : 5,
                         "min" : 0,
-                        "max" : this.GetDuration(),
+                        "max" : this.GetDuration(this._FirstBuffer),
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this._WaveForm,
