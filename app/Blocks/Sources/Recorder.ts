@@ -1,8 +1,9 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
+import SamplerBase = require("./SamplerBase");
 
-class RecorderBlock extends Source {
+class RecorderBlock extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;

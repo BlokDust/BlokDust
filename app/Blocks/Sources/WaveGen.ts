@@ -4,7 +4,7 @@
 
 import Grid = require("../../Grid");
 import Source = require("../Source");
-import SamplerBase = require("SamplerBase");
+import SamplerBase = require("./SamplerBase");
 import BlocksSketch = require("../../BlocksSketch");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
@@ -266,7 +266,7 @@ class WaveGen extends SamplerBase {
 
         // SETTINGS //
         var seconds = 2;
-        var sampleRate = App.Audio.cxt.sampleRate;
+        var sampleRate = App.Audio.sampleRate;
         var gain = 1;
 
         var noise = 0;

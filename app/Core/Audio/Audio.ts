@@ -2,6 +2,7 @@ class Audio {
 
     public Tone: Tone;
     public ctx: AudioContext;
+    public sampleRate: number;
     public Master: Tone.Master;
     public MasterVolume: number = -10; // in decibels
     public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -13,6 +14,8 @@ class Audio {
 
         // Reference to the web audio context
         this.ctx = this.Tone.context;
+
+        this.sampleRate = this.ctx.sampleRate;
 
         // Master Output
         this.Master = Tone.Master;

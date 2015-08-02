@@ -1,6 +1,6 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
-import SamplerBase = require("../Sources/SamplerBase");
+import SamplerBase = require("./SamplerBase");
 import BlocksSketch = require("../../BlocksSketch");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
