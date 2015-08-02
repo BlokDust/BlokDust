@@ -16,6 +16,7 @@ import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import OptionsPanel = require("./UI/OptionsPanel");
 import SharePanel = require("./UI/SharePanel");
+import SoundcloudPanel = require("./UI/SoundcloudPanel");
 import SettingsPanel = require("./UI/SettingsPanel");
 import MessagePanel = require("./UI/MessagePanel");
 import Header = require("./UI/Header");
@@ -24,6 +25,7 @@ import ZoomButtons = require("./UI/ZoomButtons");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
+import AnimationsLayer = require("./UI/AnimationsLayer");
 import LaserBeams = require("./LaserBeams");
 import Laser = require("./Blocks/Power/Laser");
 import PowerSource = require("./Blocks/Power/PowerSource");
@@ -44,6 +46,7 @@ class BlocksSketch extends Grid {
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
+    public SoundcloudPanel: SoundcloudPanel;
     public SettingsPanel: SettingsPanel;
     public MessagePanel: MessagePanel;
     private _Header: Header;
@@ -161,6 +164,9 @@ class BlocksSketch extends Grid {
         this.SettingsPanel = new SettingsPanel();
         this.SettingsPanel.Init(this);
 
+        this.SoundcloudPanel = new SoundcloudPanel();
+        this.SoundcloudPanel.Init(this);
+
         this.MessagePanel = new MessagePanel();
         this.MessagePanel.Init(this);
 
@@ -197,6 +203,7 @@ class BlocksSketch extends Grid {
         });
 
         this._Invalidate();
+        this.SketchResize();
     }
 
 
@@ -259,9 +266,6 @@ class BlocksSketch extends Grid {
 
 
     SketchResize() {
-        // Update size record //
-        //this.Metrics();
-
         if (this.OptionsPanel.Scale==1) {
             this.OptionsPanel.SelectedBlock.UpdateOptionsForm();
             this.OptionsPanel.Populate(this.OptionsPanel.SelectedBlock.OptionsForm,false);
@@ -269,6 +273,7 @@ class BlocksSketch extends Grid {
         this._Header.Populate(this._Header.MenuJson);
         this._ZoomButtons.UpdatePositions();
         this.SharePanel.Resize();
+        this.SoundcloudPanel.Resize();
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 
@@ -302,6 +307,9 @@ class BlocksSketch extends Grid {
         // LASER BEAMS //
         this._LaserBeams.Draw();
 
+        // BLOCK ANIMATIONS //
+        App.AnimationsLayer.Draw();
+
         // UI //
         this._ToolTip.Draw();
         this._RecorderPanel.Draw();
@@ -309,6 +317,7 @@ class BlocksSketch extends Grid {
         this._ZoomButtons.Draw();
         this._TrashCan.Draw();
         this._Header.Draw();
+        this.SoundcloudPanel.Draw();
         this.SharePanel.Draw();
         this.SettingsPanel.Draw();
         this.MessagePanel.Draw();
@@ -411,6 +420,7 @@ class BlocksSketch extends Grid {
         var tooltip = this._ToolTip;
         var zoom = this._ZoomButtons;
         var header = this._Header;
+        var soundcloud = this.SoundcloudPanel;
         var share = this.SharePanel;
         var settings = this.SettingsPanel;
         var recorder = this._RecorderPanel;
@@ -436,7 +446,11 @@ class BlocksSketch extends Grid {
             settings.MouseDown(point);
             return;
         }
-        else if (!share.Open && !settings.Open) {
+        if (soundcloud.Open) {
+            soundcloud.MouseDown(point);
+            return;
+        }
+        if (!share.Open && !settings.Open && !soundcloud.Open) {
             header.MouseDown(point);
             if (header.MenuOver) {
                 return;
@@ -474,6 +488,7 @@ class BlocksSketch extends Grid {
             this._Transformer.PointerDown(point);
         }
     }
+
 
     private _PointerUp(point: Point, handle: () => void) {
         App.TranslateMousePointToPixelRatioPoint(point);
@@ -552,6 +567,9 @@ class BlocksSketch extends Grid {
         }
         if (this.SettingsPanel.Open) {
             this.SettingsPanel.MouseMove(point);
+        }
+        if (this.SoundcloudPanel.Open) {
+            this.SoundcloudPanel.MouseMove(point);
         }
         if (this.MessagePanel.Open) {
             this.MessagePanel.MouseMove(point);
@@ -707,11 +725,12 @@ class BlocksSketch extends Grid {
         var header = this._Header;
         var share = this.SharePanel;
         var settings = this.SettingsPanel;
+        var soundcloud = this.SoundcloudPanel;
         var recorder = this._RecorderPanel;
         var options = this.OptionsPanel;
         var message = this.MessagePanel;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || recorder.Hover || message.Hover || (options.Scale==1 && options.Hover)) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || message.Hover || (options.Scale==1 && options.Hover)) {
             console.log("UI INTERACTION");
             return true;
         }
@@ -783,6 +802,7 @@ class BlocksSketch extends Grid {
         block.MouseDown();
         this.SelectedBlock = block;
         this.IsDraggingABlock = true;
+
     }
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //

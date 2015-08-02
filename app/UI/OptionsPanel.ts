@@ -618,7 +618,13 @@ class OptionsPanel extends DisplayObject {
                     }
                 }
             }
+            if (this.Options[i].Type=="sample") {
+                if (this.Options[i].HandleRoll[0]) {
+                    this.Sketch.SoundcloudPanel.OpenPanel();
+                    return;
+                }
 
+            }
 
         }
         if (this._PanelCloseRoll) {
@@ -735,6 +741,8 @@ class OptionsPanel extends DisplayObject {
                         this.Options[i].SubHandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Handles[j].Position.x - this.Options[i].SubHandles[j].Position.x - (10 * units), this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height * 0.9) - (10 * units), (this.Options[i].SubHandles[j].Position.x * 2) + (20 * units), (20 * units), mx, my);
                     }
                 }
+            } else if (this.Options[i].Type == "sample") {
+                this.Options[i].HandleRoll[0] = this.HitRect(this.Position.x + this.Margin + (this.Range * 0.5), this.Position.y + this.Options[i].Position.y, (this.Range * 0.5), this.Options[i].Size.height, mx, my);
             }
         }
 

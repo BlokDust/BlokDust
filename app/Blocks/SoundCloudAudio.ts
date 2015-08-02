@@ -2,7 +2,7 @@ import SoundCloudAudioType = require('./SoundCloudAudioType');
 
 class SoundCloudAudio {
 
-    public SC: any;
+    public SC: any; //TODO - we're defining this in 3 different places and it's not working properly, unable to check if undefined
 
     constructor(){
         SC.initialize({
@@ -53,6 +53,16 @@ class SoundCloudAudio {
         return 'https://api.soundcloud.com/tracks/'+ track +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }
 
+    static LoadTrack(track: any) {
+        // ERROR CHECK //
+        /*SC.get('/tracks/'+track.id, function(track, error) {
+            if (error) { App.Message("Something went wrong, try another track.") }
+        });
+        */
+        var trackUrl = track.URI;
+        return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
+    }
+
     /**
      * Search the Soundcloud API for any tracks containing a string.
      * @param query String to search for
@@ -67,6 +77,10 @@ class SoundCloudAudio {
             //tags: 'blokdust',
             //license: 'cc-by',
             q: query,
+            duration: {
+                to: 510000 // 8.5 mins
+            },
+            limit: 200
         }, callback);
     }
 }

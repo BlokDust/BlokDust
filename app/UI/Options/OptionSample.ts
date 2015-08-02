@@ -18,6 +18,7 @@ class OptionSample  extends Option{
         this.Track = track;
         this.User = user;
         this.Setting = setting;
+        this.HandleRoll = [];
     }
 
 
@@ -77,8 +78,8 @@ class OptionSample  extends Option{
         // TRACK //
         ctx.font = App.Metrics.TxtItalic;
         ctx.textAlign = "left";
-        ctx.fillText(this.Track.toUpperCase(), panel.Margin, y + (height * 0.5)-units);
-        ctx.fillText("By "+this.Capitalise(this.User), panel.Margin, y + (height * 0.5) + (dataType) - (units*2));
+        ctx.fillText(this.Track, panel.Margin, y + (height * 0.5)-(2*units));
+        ctx.fillText("By "+this.User, panel.Margin, y + (height * 0.5) + (dataType) - (2*units));
 
 
         // LOAD NEW //
@@ -95,10 +96,6 @@ class OptionSample  extends Option{
         ctx.lineWidth = 1;
     }
 
-
-    Capitalise(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
 }
 
 export = OptionSample;

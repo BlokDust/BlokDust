@@ -4,6 +4,7 @@ import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
+import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 
 class Granular extends Source {
 
@@ -17,12 +18,16 @@ class Granular extends Source {
     private _IsLoaded: boolean;
     public GrainsAmount: number = 16;
     private _NoteOn: boolean = false;
-    public SC: SoundCloudAudio;
     private _WaveForm: number[];
+    private _FirstBuffer: any;
+    private _LoadFromShare: boolean = false;
+    private _FallBackTrack: SoundcloudTrack;
+    public LoadTimeout: any;
 
     public Params: GranularParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
+
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
@@ -30,32 +35,30 @@ class Granular extends Source {
                 region: 0,
                 spread: 1.5,
                 grainlength: 0.25,
-                track: '',
-                trackName: 'Voices',
-                user: 'SparkleFinger'
+                track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
+                trackName: 'TEUFELSBERG',
+                user: 'BGXA'
             };
+        } else {
+            this._LoadFromShare = true;
+            var me = this;
+            setTimeout(function() {
+                me.FirstSetup();
+            },100);
         }
 
         this._WaveForm = [];
+        this.SearchResults = [];
+        this.Searching = false;
+        this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
         super.Init(sketch);
 
-        this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
-        //this.Params.track = SoundCloudAudio.PickTrack(SoundCloudAudioType.Granular,0);
+        //this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
 
-        // moved to first mouse release //
         this.CreateSource();
         this.CreateEnvelope();
-
-        /*this.Sources.forEach((s: Tone.Signal, i: number) => {
-            s.connect(this.Envelopes[i]);
-        });
-
-        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-            e.connect(this.EffectsChainInput);
-        });
-
-        this.SetupGrains();*/
+        this.CreateGrains();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
@@ -66,65 +69,143 @@ class Granular extends Source {
         this._Envelopes.length = 0;
     }
 
+    Search(query: string) {
+        this.Searching = true;
+        this.SearchResults = [];
+        if (window.SC) {
+            SoundCloudAudio.Search(query, (tracks) => {
+                tracks.forEach((track) => {
+                    this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
+                });
+                this.Searching = false;
+            });
+        }
+    }
 
+    LoadTrack(track,fullUrl?:boolean) {
+        fullUrl = fullUrl || false;
+        if (fullUrl) {
+            this.Params.track = track.URI;
+        } else {
+            this.Params.track = SoundCloudAudio.LoadTrack(track);
+        }
+        this.Params.trackName = track.TitleShort;
+        this.Params.user = track.UserShort;
+        this._WaveForm = [];
+        this.SetupGrains();
 
-    // LOAD THE AUDIO & CONNECT UP//
-    // INITIALISE PLAYERS & ENVELOPES //
+        if (App.BlocksSketch.OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+    }
+
+    TrackFallBack() {
+        //TODO what if it's the first track failing? fallback matches current
+        this.LoadTrack(this._FallBackTrack,true);
+        App.Message("Load Failed: This Track Is Unavailable. Reloading last track.");
+    }
+
+    CreateGrains() {
+        if (!this.Grains[0]) {
+            for (var i=0; i<this.GrainsAmount; i++) {
+
+                // CREATE PLAYER //
+                this.Grains[i] = new Tone.Player();
+
+                // CREATE ENVELOPE //
+                this._Envelopes[i] = new Tone.AmplitudeEnvelope(
+                    this.Params.grainlength/2,  // Attack
+                    0.01,                       // Decay
+                    0.9,                        // Sustain
+                    this.Params.grainlength/2   // Release
+                );
+
+                // CONNECT //
+                this.Grains[i].connect(this._Envelopes[i]);
+                this._Envelopes[i].connect(this.Sources[0]);
+                this.Grains[i].playbackRate = this.Params.playbackRate;
+            }
+            this.Sources[0].connect(this.EffectsChainInput);
+        }
+    }
+
     SetupGrains() {
+        // RESET //
         this._IsLoaded = false;
         var duration = this.GetDuration();
-        this.Params.region = duration/2;
 
 
-        // Loop through GrainsAmount
-        for (var i=0; i<this.GrainsAmount; i++) {
+        // LOAD FIRST BUFFER //
+        App.AnimationsLayer.AddToList(this); // load animations
+        if (this._FirstBuffer) { // cancel previous loads
+            this._FirstBuffer.dispose();
+        }
+        this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
+            clearTimeout(this.LoadTimeout);
+            this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
+            App.AnimationsLayer.RemoveFromList(this);
+            this._IsLoaded = true;
 
-            if (i==0) { // first buffer callback
-                this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
-                    console.log(e);
-                    this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
-                    this._IsLoaded = true;
-                    var duration = this.GetDuration();
-                    this.Params.region = duration/2;
-                    console.log(duration);
 
-                    if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                        this.UpdateOptionsForm();
-                        (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                    }
+            // COPY BUFFER TO GRAINS //
+            for (var i=0; i<this.GrainsAmount; i++) {
+                this.Grains[i].buffer = e.buffer;
+            }
+            
+            var duration = this.GetDuration();
+            if (!this._LoadFromShare) {
+                this.Params.region = duration / 2;
+            }
+            this._LoadFromShare = false;
+            this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
-                    // start if powered //
-                    this.GrainLoop();
-                });
-
-            } else {  // remaining buffers
-                this.Grains[i] = new Tone.Player(this.Params.track, (e) => {
-                    console.log(e);
-                });
-
+            // UPDATE OPTIONS FORM //
+            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
+                this.UpdateOptionsForm();
+                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
             }
 
-            this._Envelopes[i] = new Tone.AmplitudeEnvelope(
-                this.Params.grainlength/2,  // Attack
-                0.01,                       // Decay
-                0.9,                        // Sustain
-                this.Params.grainlength/2   // Release
-            );
+            // start if powered //
+            this.GrainLoop();
+        });
 
-            // CONNECT //
-            this.Grains[i].connect(this._Envelopes[i]);
-            this._Envelopes[i].connect(this.Sources[0]);
-            this.Sources[0].connect(this.EffectsChainInput);
-            this.Grains[i].playbackRate = this.Params.playbackRate;
-        }
+        var me = this;
+        this.LoadTimeout = setTimeout( function() {
+            me.TrackFallBack();
+        },(App.Config.SoundCloudLoadTimeout*1000));
+
+        //TODO - onerror doesn't seem to work
+        this._FirstBuffer.onerror = function() {
+            console.log("error");
+            me.TrackFallBack();
+        };
 
     }
 
+    FirstSetup() {
+        if (this._FirstRelease) {
+
+            this.Sources.forEach((s: Tone.Signal, i: number) => {
+                s.connect(this.Envelopes[i]);
+            });
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+                e.connect(this.EffectsChainInput);
+            });
+
+            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
+            this.SetupGrains();
+
+            this._FirstRelease = false;
+        }
+    }
+
     GetDuration(): number {
-        if (this.Grains.length){
-            return this.Grains[0].buffer.duration;
+        if (this._FirstBuffer){
+            return this._FirstBuffer.buffer.duration;
         } else {
-            return 10;
+            return 0;
         }
     }
 
@@ -138,6 +219,7 @@ class Granular extends Source {
     CreateSource(){
         this.Sources.push( new Tone.Signal() );
         // return it
+        //TODO these extra sources need setting up somehow
         return super.CreateSource();
     }
 
@@ -153,7 +235,6 @@ class Granular extends Source {
 
     TriggerAttack() {
         super.TriggerAttack();
-
         if (this._IsLoaded) {
 
             /*this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
@@ -167,7 +248,6 @@ class Granular extends Source {
                 this.GrainLoop();
             }
         }
-
     }
 
     TriggerRelease() {
@@ -188,20 +268,7 @@ class Granular extends Source {
 
 
     MouseUp() {
-        if (this._FirstRelease) {
-
-            this.Sources.forEach((s: Tone.Signal, i: number) => {
-                s.connect(this.Envelopes[i]);
-            });
-
-            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-                e.connect(this.EffectsChainInput);
-            });
-
-            this.SetupGrains();
-
-            this._FirstRelease = false;
-        }
+        this.FirstSetup();
 
         super.MouseUp();
     }
@@ -271,11 +338,6 @@ class Granular extends Source {
                 break;
         }
     }
-
-
-
-
-
 
 
     UpdateOptionsForm() {
@@ -354,8 +416,6 @@ class Granular extends Source {
         clearTimeout(this.Timeout);
         this._NoteOn = false;
 
-
-
         this.Grains.forEach((g: Tone.Player)=> {
             g.dispose();
         });
@@ -375,7 +435,6 @@ class Granular extends Source {
         this.Grains.length = 0;
         this._Envelopes.length = 0;
     }
-
 }
 
 export = Granular;

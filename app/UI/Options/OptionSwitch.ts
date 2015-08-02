@@ -24,7 +24,6 @@ class OptionSwitch {
         this.Size = size;
         this._Lit = lit;
 
-        console.log(this.Selected);
     }
 
     Draw(ctx,panel,units,x,h,i) {

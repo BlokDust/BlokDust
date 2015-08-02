@@ -23,6 +23,10 @@ class ToneSource extends Source {
             };
         }
 
+        // If it's an older save before we had baseFrequency
+        if (this.Params.baseFrequency) {
+            this.Params.frequency = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency);
+        }
 
         super.Init(sketch);
 
@@ -90,23 +94,9 @@ class ToneSource extends Source {
         {
             "name" : "Tone",
             "parameters" : [
-
-                //{
-                //    "type" : "slider",
-                //    "name" : "Frequency",
-                //    "setting" :"frequency",
-                //    "props" : {
-                //        "value" : this.Params.frequency,
-                //        "min" : 10,
-                //        "max" : 15000,
-                //        "quantised" : true,
-                //        "centered" : false,
-                //        "logarithmic": true
-                //    }
-                //},
                 {
                     "type" : "slider",
-                    "name" : "Base Frequency",
+                    "name" : "Note",
                     "setting" :"baseFrequency",
                     "props" : {
                         "value" : this.Params.baseFrequency,

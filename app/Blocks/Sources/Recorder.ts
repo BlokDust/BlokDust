@@ -154,7 +154,7 @@ class RecorderBlock extends Source {
         var duration = this.GetDuration();
         this.Params.endPosition = duration;
         this.Params.loopStart = duration * 0.5;
-        this.Params.loopEnd = duration * 0.75;
+        this.Params.loopEnd = duration;
 
         if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();

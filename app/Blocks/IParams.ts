@@ -40,6 +40,11 @@ interface SimplerParams {
     track: string;
 }
 
+interface SoundcloudParams extends SimplerParams {
+    trackName: string;
+    user: string;
+}
+
 interface MicrophoneParams extends GainParams{
     monitor: boolean;
 }

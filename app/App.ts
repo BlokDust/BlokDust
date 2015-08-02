@@ -15,6 +15,7 @@ import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
+import AnimationsLayer = require("./UI/AnimationsLayer");
 import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
@@ -73,6 +74,7 @@ class App implements IApp{
     private _FontsLoaded: number;
     private _PaletteLoaded: boolean;
     public Splash: Splash;
+    public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
 
     // todo: move to BlockStore
@@ -129,7 +131,6 @@ class App implements IApp{
         this.LoadCued = false;
         this._FontsLoaded = 0;
         var me = this;
-        console.log("FONTS LOADING...");
         WebFont.load({
             custom: { families: ['Merriweather Sans:i3','Dosis:n2,n4']},
             fontactive: function (font,fvd) { me.FontsLoaded(font,fvd); },
@@ -186,11 +187,11 @@ class App implements IApp{
 
         // CREATE SPLASH SCREEN //
         this.Splash = new Splash;
+        this.AnimationsLayer = new AnimationsLayer;
     }
 
     // FONT LOAD CALLBACK //
     FontsLoaded(font,fvd) {
-        console.log("FONT LOADED: "+font+" "+fvd);
         this._FontsLoaded += 1;
         // All fonts are present - load scene
         if (this._FontsLoaded==3) {
@@ -308,6 +309,7 @@ class App implements IApp{
         if (this.Scene==2) {
             this.BlocksSketch.Update();
         }
+        this.AnimationsLayer.Update();
 
     }
 

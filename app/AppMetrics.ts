@@ -51,6 +51,8 @@ class Metrics {
         App.Width = width * ratio;
         App.Height = height * ratio;
 
+
+
         // SET GLOBAL TYPE STYLES //
         var headerType = Math.round(unit*28);
         var sliderType = Math.round(unit*33);
@@ -89,6 +91,10 @@ class Metrics {
 
         return dpr / bsr;
     }
+
+    //public ConvertScaledGridUnitsToAbsolute(point: Point): Point {
+    //    return new Point((this.ScaledCellWidth.width * point.x) + this.TranslateTransform.X, (this.ScaledCellWidth.width * point.y) + this.TranslateTransform.Y);
+    //}
 }
 
 export = Metrics;
