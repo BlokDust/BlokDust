@@ -5,7 +5,8 @@ import Particle = require("../../Particle");
 
 class Microphone extends Source {
 
-    public Volume: any;
+    public Volume: any; //TODO: This should be of type GainNode but compiler doesn't like connecting to Tone.Signal
+    public Params: MicrophoneParams;
     public Muted: boolean = false;
     private _FirstRelease: boolean = true;
     private _unmutedVolume: number = 1;
@@ -14,13 +15,13 @@ class Microphone extends Source {
         if (!this.Params) {
             this.Params = {
                 gain: 1,
-                monitor: 1 //TODO: change to boolean when available
+                monitor: true,
             };
         }
 
         super.Init(sketch);
 
-        this.Volume = App.AudioMixer.Master.context.createGain();
+        this.Volume = App.Audio.ctx.createGain();
         this.Volume.gain.value = this.Params.gain;
 
         //this.CreateSource();

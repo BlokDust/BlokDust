@@ -7,9 +7,10 @@ import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 
 class Soundcloud extends Source {
 
+    public Sources : Tone.Simpler[];
+    public Params: SoundcloudParams;
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
-    public Sources : Tone.Simpler[];
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
     private _FallBackTrack: SoundcloudTrack;
@@ -27,10 +28,9 @@ class Soundcloud extends Source {
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 11,
-                timeout: 20, // seconds before load deemed failed
                 track: '../Assets/ImpulseResponses/teufelsberg01.wav',
                 trackName: 'TEUFELSBERG',
-                user: 'BGXA'
+                user: 'BGXA',
             };
         } else {
             this._LoadFromShare = true;
@@ -118,7 +118,7 @@ class Soundcloud extends Source {
         clearTimeout(this.LoadTimeout);
         this.LoadTimeout = setTimeout( function() {
             me.TrackFallBack();
-        },(this.Params.timeout*1000));
+        },(App.Config.SoundCloudLoadTimeout*1000));
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = function() {

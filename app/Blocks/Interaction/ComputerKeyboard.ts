@@ -11,8 +11,9 @@ class ComputerKeyboard extends Keyboard {
 
     public KeyboardCommands: any = {
         OctaveUp: 'octave-up',
-        OctaveDown: 'octave-down'
+        OctaveDown: 'octave-down',
     };
+    public Params: KeyboardParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -20,7 +21,7 @@ class ComputerKeyboard extends Keyboard {
             this.Params = {
                 octave: 3,
                 glide: 0.05,
-                isPolyphonic: 0 // Polyphonic mode: boolean, default: off
+                isPolyphonic: false,
             };
         }
 
@@ -46,7 +47,7 @@ class ComputerKeyboard extends Keyboard {
     }
 
     Detach(source: ISource): void {
-        source.TriggerRelease('all'); //todo:
+        source.TriggerRelease('all');
         super.Detach(source);
     }
 
@@ -213,7 +214,7 @@ class ComputerKeyboard extends Keyboard {
                         {
                             "name" : "Mono/Poly",
                             "setting" :"polyphonic",
-                            "value": this.Params.polyphonic
+                            "value": this.Params.isPolyphonic
                         }
                     ]
                 },

@@ -812,7 +812,7 @@ class BlocksSketch extends Grid {
         var sketch = this;
         setTimeout(function() {
             sketch.Paused = false;
-            App.AudioMixer.Master.volume.rampTo(App.AudioMixer.MasterVolume,1);
+            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
         },200);
 
         if (!App.LoadCued) {

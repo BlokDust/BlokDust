@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Distortion extends PostEffect {
 
     public Effect: Tone.Distortion;
+    public Params: DistortionParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 

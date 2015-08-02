@@ -5,13 +5,14 @@ import BlocksSketch = require("../../../BlocksSketch");
 class BitCrusher extends PostEffect {
 
     public Effect: Tone.BitCrusher;
+    public Params: BitCrusherParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
                 bits: 7,
-                mix: 0.5
+                mix: 0.5,
             };
         }
 

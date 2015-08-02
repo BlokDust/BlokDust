@@ -8,6 +8,7 @@ import SoundcloudTrack = require("../../../UI/SoundcloudTrack");
 class Convolver extends PostEffect {
 
     public Effect: Tone.Convolver;
+    public Params: ConvolutionParams;
     public SearchResults: SoundcloudTrack[];
     private _FirstRelease: boolean = true;
     public Searching: boolean;

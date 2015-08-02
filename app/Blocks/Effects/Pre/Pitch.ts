@@ -10,12 +10,13 @@ import Recorder = require("../../Sources/Recorder");
 class Pitch extends PreEffect {
 
     public PitchIncrement: number;
+    public Params: PitchIncrementParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
-                pitchIncrement: 1.5 // Pitch decreases by 4ths
+                pitchIncrement: 1.5, // Pitch decreases by 4ths
             };
         }
 

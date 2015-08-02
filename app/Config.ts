@@ -8,6 +8,8 @@ class Config {
     public GranularDefaultTracks: string[];
     public ConvolverDefaultTracks: string[];
     public BaseNote: number;
+    public SoundCloudLoadTimeout: number;
+    public ResetPitchesOnInteractionDisconnect: boolean;
 }
 
 export = Config;

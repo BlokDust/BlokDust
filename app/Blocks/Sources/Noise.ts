@@ -4,22 +4,21 @@ import Source = require("../Source");
 
 class Noise extends Source {
 
-    public PlaybackRate: number;
     public DelayedRelease: number;
     public Noise: any;
     public Waveform: string;
+    public NoiseParams: NoiseParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         this.Waveform = 'brown';
-        this.PlaybackRate = 1;
 
         this.WaveIndex = ["white","pink","brown"];
 
         if (!this.Params) {
             this.Params = {
-                playback: 1,
-                waveform: 2
+                playbackRate: 1,
+                waveform: 2,
             };
         }
 
@@ -58,26 +57,8 @@ class Noise extends Source {
         return super.CreateEnvelope();
     }
 
-    TriggerAttackRelease(){
-        super.TriggerAttackRelease();
-    }
-
-    Update() {
-        super.Update();
-
-        //if (this.DelayedRelease>0) { //TODO, THIS IS SHIT
-        //    this.DelayedRelease -= 1;
-        //    if (this.DelayedRelease==0) {
-        //        this.Envelopes.forEach((e: any)=> {
-        //            e.triggerRelease();
-        //        });
-        //    }
-        //}
-    }
-
     Draw() {
         super.Draw();
-
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
     }
 
@@ -154,7 +135,6 @@ class Noise extends Source {
             e.dispose();
         });
 
-        this.PlaybackRate = null;
     }
 }
 

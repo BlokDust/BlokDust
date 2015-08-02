@@ -4,7 +4,7 @@ import Metrics = require("./AppMetrics");
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
-import AudioMixer = require("./Core/Audio/AudioMixer");
+import Audio = require("./Core/Audio/Audio");
 import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
@@ -53,7 +53,7 @@ class App implements IApp{
     public Width: number;
     public Height: number;
     public Metrics: Metrics;
-    public AudioMixer: AudioMixer = new AudioMixer();
+    public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
     public BlocksSketch: BlocksSketch;
     public Scene: number;
@@ -280,7 +280,7 @@ class App implements IApp{
         this.BlocksSketch.DisplayList = new DisplayList(d);
 
         // bring down volume and validate blocks //
-        this.AudioMixer.Master.volume.value = -100;
+        this.Audio.Master.volume.value = -100;
         this.RefreshBlocks();
         this.BlocksSketch.Paused = true;
         if (this.Scene<2) {
