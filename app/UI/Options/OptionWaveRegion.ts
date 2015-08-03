@@ -11,8 +11,8 @@ import OptionHandle = require("./OptionHandle");
 class WaveRegion extends WaveForm{
 
 
-    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], handles: any, mode: boolean) {
-        super(waveform);
+    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], handles: any, mode: boolean, emptystring?: string) {
+        super(waveform,emptystring);
 
         this.Type = "waveregion";
         this.Position = position;

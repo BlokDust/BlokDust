@@ -12,8 +12,8 @@ class WaveSlider extends WaveForm{
     public Spread: number;
 
 
-    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], spread: number) {
-        super(waveform);
+    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], spread: number, emptystring?: string) {
+        super(waveform,emptystring);
 
         this.Type = "waveslider";
         this.Position = position;

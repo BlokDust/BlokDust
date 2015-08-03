@@ -79,10 +79,7 @@ class Soundcloud extends SamplerBase {
             this._LoadFromShare = false;
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
-            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                this.UpdateOptionsForm();
-                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-            }
+            this.RefreshOptionsPanel();
 
             this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = e;
@@ -139,10 +136,7 @@ class Soundcloud extends SamplerBase {
 
         this.SetBuffers();
 
-        if (App.BlocksSketch.OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-            this.UpdateOptionsForm();
-            App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel();
     }
 
     TrackFallBack() {
@@ -271,26 +265,22 @@ class Soundcloud extends SamplerBase {
                 break;
             case "reverse":
                 value = value? true : false;
+
+                this._FirstBuffer.reverse = value;
                 this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.reverse = value;
+                    s.player.buffer = this._FirstBuffer;
                 });
                 this.Params[param] = val;
                 // Update waveform
                 this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.RefreshOptionsPanel();
                 break;
             case "loop":
                 value = value? true : false;
                 this.Sources[0].player.loop = value;
                 // update display of loop sliders
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = value;
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.Params[param] = val;
+                this.RefreshOptionsPanel();
                 break;
             case "loopStart":
                 this.Sources.forEach((s: Tone.Simpler)=> {

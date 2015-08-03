@@ -267,6 +267,10 @@ class OptionsPanel extends DisplayObject {
                 if (option.props.wavearray) {
                     waveform = option.props.wavearray;
                 }
+                var emptystring = "";
+                if (option.props.emptystring) {
+                    emptystring = option.props.emptystring;
+                }
                 var startX = this.linPosition(0, this.Range, option.props.min, option.props.max, option.nodes[0].value);
                 var endX = this.linPosition(0, this.Range, option.props.min, option.props.max, option.nodes[1].value);
                 var loopStartX = this.linPosition(0, this.Range, option.props.min, option.props.max, option.nodes[2].value);
@@ -278,7 +282,7 @@ class OptionsPanel extends DisplayObject {
                     handles[j] = new OptionHandle(new Point(xs[j],optionY),option.nodes[j].value,option.props.min, option.props.max,this.Range,0,0,0,0,option.nodes[j].setting,"");
                 }
 
-                optionList.push(new WaveRegion(new Point(0,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,handles,option.props.mode));
+                optionList.push(new WaveRegion(new Point(0,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log,waveform,handles,option.props.mode,emptystring));
 
             }
 

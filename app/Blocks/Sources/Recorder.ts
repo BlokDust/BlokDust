@@ -154,10 +154,7 @@ class RecorderBlock extends SamplerBase {
         this.Params.loopStart = duration * 0.5;
         this.Params.loopEnd = duration;
 
-        if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-            this.UpdateOptionsForm();
-            (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel();
     }
 
     GetDuration(): number {
@@ -229,7 +226,8 @@ class RecorderBlock extends SamplerBase {
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this._WaveForm,
-                        "mode" : this.Params.loop
+                        "mode" : this.Params.loop,
+                        "emptystring" : "No Sample"
                     },
                     "nodes": [
                         {
@@ -302,12 +300,9 @@ class RecorderBlock extends SamplerBase {
                 console.log("out: "+ value);
                 this.Sources[0].player.reverse = value;
                 // Update waveform
+                this.Params[param] = val;
                 this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = val;
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.RefreshOptionsPanel();
                 break;
             case "loop":
                 value = value? true : false;
@@ -315,11 +310,8 @@ class RecorderBlock extends SamplerBase {
                     s.player.loop = value;
                 });
                 // update showing loop sliders
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = val;
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.Params[param] = val;
+                this.RefreshOptionsPanel();
                 break;
             case "loopStart":
                 this.Sources.forEach((s: Tone.Simpler)=> {

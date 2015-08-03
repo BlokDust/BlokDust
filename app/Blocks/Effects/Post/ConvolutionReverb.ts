@@ -62,11 +62,7 @@ class Convolver extends PostEffect {
             //var duration = this.GetDuration();
 
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
-
-            if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                this.UpdateOptionsForm();
-                (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-            }
+            this.RefreshOptionsPanel();
 
             this.Effect.buffer = e;
 
@@ -112,10 +108,7 @@ class Convolver extends PostEffect {
 
         this.SetBuffer();
 
-        if (App.BlocksSketch.OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-            this.UpdateOptionsForm();
-            App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel();
     }
 
     TrackFallBack() {

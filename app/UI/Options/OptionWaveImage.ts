@@ -13,8 +13,8 @@ class WaveImage extends WaveForm{
     public Spread: number;
 
 
-    constructor(position: Point, size: Size, origin: number, name: string, waveform: number[]) {
-        super(waveform);
+    constructor(position: Point, size: Size, origin: number, name: string, waveform: number[], emptystring?: string) {
+        super(waveform,emptystring);
 
         this.Type = "waveimage";
         this.Position = position;

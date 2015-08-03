@@ -55,21 +55,7 @@ class WaveGen extends SamplerBase {
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 2),new Point(-1, 1));
     }
 
-    CreateSource(){
-        this.Sources.push( new Tone.Simpler() );
-        this.Sources.forEach((s: Tone.Simpler, i: number)=> {
-            s.player.loop = this.Params.loop;
-            s.player.loopStart = this.Params.loopStart;
-            s.player.loopEnd = this.Params.loopEnd;
-            s.player.retrigger = this.Params.retrigger;
-            s.player.reverse = this.Params.reverse;
 
-            if (i > 0){
-                s.player.buffer = this.Sources[0].player.buffer;
-            }
-        });
-        return super.CreateSource();
-    }
 
 
     Arp(mode,notes,octave,range,length) {
@@ -132,134 +118,12 @@ class WaveGen extends SamplerBase {
         return ((Math.floor(Math.random()*sides))==0);
     }
 
-    SetupVoices() {
-
-    }
-
-    GenerateBufferData(sampleRate,amp,octaving,glide,noise) {
-
-        var gain = 1;
-        var overflow = 800; // crossfade length
-        var data = this._BufferData;
-        var voices = this._WaveVoices;
 
 
-        // LOOP START - print to Float32Array //
-        for (var i=0; i<(data.length + overflow); i++) {
+    //-------------------------------------------------------------------------------------------
+    //  GENERATION
+    //-------------------------------------------------------------------------------------------
 
-            // FOR EACH VOICE //
-            var totalVal = 0;
-            for (var j=0; j<voices.length; j++) {
-                var v = voices[j];
-
-                // voice type //
-                switch (v.VoiceType) {
-
-                    // VOICE //
-                    case 0:
-                        if (i == (Math.round(data.length/v.Sequence.length) * Math.round((v.Sequence.length/data.length)*i)) && i<data.length) {
-                            if (v.Sequence.length==0) {
-                                if (octaving==1) {
-                                    v.FDest = (voices[0].Frequency * (2*j));
-                                }
-                                else if (octaving==2) {
-                                    v.FDest = (voices[0].Frequency / (2*j));
-                                }
-                                else {
-                                    v.FDest = (voices[0].Frequency + (5*j));
-                                }
-                                if (!v.Slide) {
-                                    v.Frequency = v.FDest;
-                                }
-                            } else {
-                                v.FDest = v.Sequence[Math.floor((v.Sequence.length/data.length)*i)];
-                                if (!v.Slide) {
-                                    v.Frequency = v.FDest;
-                                }
-                            }
-                        }
-                        // SLIDE //
-                        if (v.Slide) {
-                            v.Frequency += (((v.FDest - v.Frequency)/10000))*glide;
-                        }
-                        // DRIFT //
-                        v.Frequency *= v.Drift;
-                        break;
-
-                    // HARMONIC //
-                    case 1:
-                        v.FDest = (voices[0].Frequency * j);
-                        if (v.Slide) {
-                            v.Frequency += (((v.FDest - v.Frequency)/10000))*glide;
-                        } else {
-                            v.Frequency = v.FDest;
-                        }
-                        break;
-                }
-
-
-                // cap freq range //
-                var maxFreq = 20000;
-                if (v.Frequency>maxFreq) {
-                    v.Frequency = maxFreq;
-                }
-                if (v.Frequency<1) {
-                    v.Frequency = 1;
-                }
-
-                // update total amplitude for this sample //
-                totalVal += (v.Value * v.Volume);
-
-
-                if (v.WaveType<2) { // TRIANGLE & SAW
-
-                    // update voice value //
-                    var step = v.Frequency * ((amp*4)/sampleRate);
-                    v.Value += (step * v.Polarity);
-
-                    // stay within amplitude bounds //
-                    if (v.Value > amp) {
-                        var spill = v.Value - amp;
-                        if (v.WaveType==1 && v.VoiceType<2) {
-                            v.Value = -(amp - spill);
-                        } else {
-                            v.Value = amp - spill;
-                            v.Polarity = - v.Polarity;
-                        }
-
-                    }
-                    if (v.Value < -amp) {
-                        var spill = (v.Value - (-amp));
-                        v.Value = (-amp) - spill;
-                        v.Polarity = - v.Polarity;
-                    }
-
-                } else { // SINE
-
-                    var a1 = v.Frequency * i*Math.PI*2/sampleRate;
-                    v.Value = Math.sin(a1) * amp;
-                }
-            }
-
-
-
-            // write to 32 bit array
-            var roam = (1 - (noise*0.5)) + (Math.random()*noise);
-            var totalTotal = (totalVal * roam) * gain;
-
-            if (i < (data.length-1)) {
-                data[i] = totalTotal;
-            }
-            // CROSSFADE //
-            else {
-                var ni = i - (data.length-1);
-                var oldTotal = data[ni];
-                var gainA = 1 - ((1/overflow) * ni);
-                var gainB = (1/overflow) * ni;
-                data[ni] = (totalTotal*gainA) + (oldTotal*gainB);
-            }
-        }
-    }
 
 
     DataToBuffer() {
@@ -441,8 +305,7 @@ class WaveGen extends SamplerBase {
         }
         var amp  = 1 / totalGain;
 
-        // TODO - slower than inline code below - find out why
-        //this.GenerateBufferData(sampleRate,amp,octaving,glide,noise);
+
 
         // GENERATE BUFFER DATA //
         var waveVoices = this._WaveVoices;
@@ -574,6 +437,9 @@ class WaveGen extends SamplerBase {
         this.PopulateBuffer(sampleRate);
     }
 
+    //-------------------------------------------------------------------------------------------
+    //  SETUP BUFFERS
+    //-------------------------------------------------------------------------------------------
 
 
     PopulateBuffer(sampleRate) {
@@ -587,10 +453,7 @@ class WaveGen extends SamplerBase {
         this.Params.reverse = false;
 
         // update options panel //
-        if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-            this.UpdateOptionsForm();
-            (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel();
 
         // update sources //
         this.Sources.forEach((s: Tone.Simpler)=> {
@@ -624,45 +487,7 @@ class WaveGen extends SamplerBase {
     }
 
 
-    /**
-     * Trigger a Simpler's attack
-     * If no index is set trigger the first in the array
-     * @param {number | string} index
-     * Index is the position of the Envelope in Envelopes[].
-     * If index is set to 'all', all envelopes will be triggered
-     */
-    TriggerAttack(index: number|string = 0) {
-        if (index === 'all'){
-            // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
-            });
-        } else {
-            // Trigger the specific one
-            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
-        }
-    }
 
-    /**
-     * Trigger a Simpler's release
-     * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[].
-     * If index is set to 'all', all envelopes will be released
-     */
-    TriggerRelease(index: number|string = 0) {
-        // Only if it's not powered
-        if (!this.IsPowered()) {
-            if (index === 'all'){
-                // Trigger all the envelopes
-                this.Sources.forEach((s: any)=> {
-                    s.triggerRelease();
-                });
-            } else {
-                // Trigger the specific one
-                this.Sources[index].triggerRelease();
-            }
-        }
-    }
 
     MouseUp() {
         this.FirstSetup();
@@ -690,7 +515,8 @@ class WaveGen extends SamplerBase {
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this._WaveForm,
-                        "mode" : this.Params.loop
+                        "mode" : this.Params.loop,
+                        "emptystring" : "Generating Wave"
                     },"nodes": [
                     {
                         "setting": "startPosition",
@@ -763,10 +589,18 @@ class WaveGen extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
+                // TODO - not behaving correctly
                 this.Sources[0].player.playbackRate = value;
                 break;
             case "generate":
-                this.DataToBuffer();
+                this._WaveForm = [];
+                this.RefreshOptionsPanel();
+
+                // TODO - look into web workers for performance heavy executions like DataToBuffer
+                var me = this;
+                setTimeout(function() {
+                    me.DataToBuffer();
+                },16);
                 break;
             case "reverse":
                 value = value? true : false;
@@ -779,20 +613,17 @@ class WaveGen extends SamplerBase {
                 this.Params[param] = val;
                 // Update waveform
                 this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.RefreshOptionsPanel();
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources[0].player.loop = value;
+                //this.Sources[0].player.loop = value;
+                this.Sources.forEach((s: Tone.Simpler)=> {
+                    s.player.loop = value;
+                });
                 // update display of loop sliders
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = value;
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.Params[param] = value;
+                this.RefreshOptionsPanel();
                 break;
             case "loopStart":
                 this.Sources.forEach((s: Tone.Simpler)=> {
@@ -809,13 +640,7 @@ class WaveGen extends SamplerBase {
         this.Params[param] = value;
     }
 
-    ReverseBuffer(buffer) {
-        var newBuffer = new Float32Array(buffer.length);
-        for (var i=0; i<buffer.length; i++) {
-            newBuffer[i] = buffer[(buffer.length-1)-i];
-        }
-        return newBuffer;
-    }
+
 
     Dispose(){
         super.Dispose();
@@ -827,6 +652,14 @@ class WaveGen extends SamplerBase {
         this.Envelopes.forEach((e: Tone.Envelope) => {
             e.dispose();
         });
+    }
+
+    ReverseBuffer(buffer) {
+        var newBuffer = new Float32Array(buffer.length);
+        for (var i=0; i<buffer.length; i++) {
+            newBuffer[i] = buffer[(buffer.length-1)-i];
+        }
+        return newBuffer;
     }
 }
 

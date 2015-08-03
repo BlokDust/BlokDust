@@ -45,6 +45,7 @@ class Option implements IOption {
 
     public Waveform: number[];
     public Mode: boolean;
+    public EmptyString: string;
 
     public Switches: OptionSwitch[];
 

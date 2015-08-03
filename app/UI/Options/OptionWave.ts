@@ -9,10 +9,12 @@ import ParametersPanel = require("./../OptionsPanel");
 class WaveForm extends Option{
 
 
-    constructor (waveform) {
+    constructor (waveform,emptystring?) {
         super();
         this.Waveform = waveform;
-
+        this.EmptyString = emptystring || "";
+        console.log(this.EmptyString);
+        console.log(emptystring);
     }
 
 
@@ -36,10 +38,16 @@ class WaveForm extends Option{
         }
 
         if (!this.Waveform.length) {
-            ctx.textAlign = "center";
             ctx.fillStyle = App.Palette[8];// WHITE
-            ctx.font = App.Metrics.TxtItalic;
-            App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
+            if (this.EmptyString.length>1) {
+                ctx.textAlign = "center";
+                ctx.font = App.Metrics.TxtMid;
+                ctx.fillText(this.EmptyString.toUpperCase(), (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType * 0.4));
+            } else {
+                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
+            }
+
+
         }
 
         if (this.Handles && this.Waveform.length && this.Mode) {

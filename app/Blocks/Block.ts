@@ -155,6 +155,13 @@ class Block extends DisplayObject implements IBlock {
         });*/
     }
 
+    RefreshOptionsPanel() {
+        if (App.BlocksSketch.OptionsPanel.Scale>0 && App.BlocksSketch.OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+    }
+
     Refresh() {
         //console.log(this.Params);
         //this.UpdateParams(this.Params);
