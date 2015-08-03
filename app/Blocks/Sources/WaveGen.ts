@@ -274,6 +274,16 @@ class WaveGen extends SamplerBase {
                     }
                 }
 
+                // SAW //
+                if (w==1) { // half frequencies
+                    f *= 0.5;
+                    if (s.length>0) {
+                        for (j=0; j<s.length; j++) {
+                            s[j] *= 0.5;
+                        }
+                    }
+                }
+
                 // ORGANISE //
                 if (organise && i>0) {
                     vol = this._WaveVoices[0].Volume;
@@ -387,7 +397,7 @@ class WaveGen extends SamplerBase {
                 if (v.WaveType<2) { // TRIANGLE & SAW
 
                     // update voice value //
-                    var step = v.Frequency * ((amp*4)/sampleRate);
+                    var step = (v.Frequency * ((amp*4)/sampleRate));
                     v.Value += (step * v.Polarity);
 
                     // stay within amplitude bounds //

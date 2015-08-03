@@ -20,6 +20,7 @@ class SoundcloudPanel extends DisplayObject{
     private _ItemNo:number = 5;
     private _Blink:number = 0;
     private _SelectedBlock: any;
+    private _RandomWords: string[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -35,9 +36,17 @@ class SoundcloudPanel extends DisplayObject{
         this._CopyJson = {
             titleLine: "Title",
             searchLine: "Search SoundCloud",
+            randomLine: "Randomise",
             saving: "saving...",
             noResults: "No results found"
         };
+
+        var colors = ['black','grey','white','red','yellow','pink','green','orange','purple','blue','turquoise','cream'];
+        var animals = ['cat','dog','horse','rat','deer','snake','bat','mouse','wolf','hound','fox'];
+        var places = ['home','house','shack','work','country','county','land','mountain','lake','sea','valley','desert','plains','ocean','space','sky','temple','church','shrine'];
+        var objects = ['train','car','plane','jet','rocket','satellite','hand','head','back','eyes','legs','mouth','paper','crystal','skull','bones','flag','dust','rock','metal','mineral','plant','flower','sun','moon','day','night','gun','blood','gang','sample','drum','clap','echo','sound','song'];
+        var descriptions = ['wet','dry','hot','cold','good','bad','evil','soft','hard','light','dark','heavy','clean','dirty','short','long','royal','magic','holy'];
+        this._RandomWords = colors.concat(animals,places,objects,descriptions);
     }
 
     GetString() {
@@ -246,7 +255,6 @@ class SoundcloudPanel extends DisplayObject{
             var searchW = ctx.measureText(this._CopyJson.searchLine.toUpperCase()).width;
             ctx.fillText(this._CopyJson.searchLine.toUpperCase(), (appWidth*0.5) + (205*units) - searchW, centerY - (126*units) );
 
-
             ctx.beginPath();
             ctx.moveTo((appWidth*0.5) + (210*units), centerY - (140*units));
             ctx.lineTo((appWidth*0.5) + (200*units) - searchW, centerY - (140*units));
@@ -254,6 +262,21 @@ class SoundcloudPanel extends DisplayObject{
             ctx.lineTo((appWidth*0.5) + (210*units), centerY - (120*units));
             ctx.closePath();
             ctx.stroke();
+
+
+            // RANDOM BUTTON //
+            searchW = ctx.measureText(this._CopyJson.randomLine.toUpperCase()).width;
+            ctx.fillText(this._CopyJson.randomLine.toUpperCase(), (appWidth*0.5) + (210*units) - searchW, centerY + (160*units) );
+
+            var rx = (appWidth*0.5) + (210*units) - (searchW*0.5);
+            ctx.beginPath();
+            ctx.moveTo(rx - (7.5*units), centerY + (165*units));
+            ctx.lineTo(rx - (2.5*units), centerY + (170*units));
+            ctx.lineTo(rx + (2.5*units), centerY + (165*units));
+            ctx.lineTo(rx + (7.5*units), centerY + (170*units));
+            //ctx.lineTo(rx + (10*units), centerY + (165*units));
+            ctx.stroke();
+
 
 
             // CLOSE BUTTON //
@@ -358,6 +381,10 @@ class SoundcloudPanel extends DisplayObject{
             return;
         }
         if (this._RollOvers[2]) { // search
+            this.StringReturn();
+            return;
+        }
+        if (this._RollOvers[10]) { // random
             block.Search(this.RandomSearch(this._SelectedBlock));
             App.TypingManager.Enable(this);
             this._Page = 1;
@@ -410,6 +437,7 @@ class SoundcloudPanel extends DisplayObject{
 
         ctx.font = midType;
         var searchW = ctx.measureText(this._CopyJson.searchLine.toUpperCase()).width;
+        var randomW = ctx.measureText(this._CopyJson.randomLine.toUpperCase()).width;
 
         this._RollOvers[0] = this.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
         this._RollOvers[1] = this.HitRect((appWidth*0.5) + (210*units), centerY - (170*units),40*units,40*units, point.x, point.y); // close
@@ -422,6 +450,8 @@ class SoundcloudPanel extends DisplayObject{
         this._RollOvers[7] = this.HitRect((appWidth*0.5) - (210*units),centerY - (units*18),420*units,40*units, point.x, point.y); // 3
         this._RollOvers[8] = this.HitRect((appWidth*0.5) - (210*units),centerY + (units*22),420*units,40*units, point.x, point.y); // 4
         this._RollOvers[9] = this.HitRect((appWidth*0.5) - (210*units),centerY + (units*62),420*units,40*units, point.x, point.y); // 5
+
+        this._RollOvers[10] = this.HitRect((appWidth*0.5) + (205*units) - randomW, centerY + (136*units),randomW + (10*units),40*units, point.x, point.y); // random
     }
 
     Resize() {
@@ -429,9 +459,9 @@ class SoundcloudPanel extends DisplayObject{
     }
 
     RandomSearch(block) {
-        var words = ['shoe','cat','dog','horse','train','snow','petrol','paper','flower','clock','car','skull','space','dust','metal','flag','chips','dome','red','hand','gang','wet','dance','patrol','arm','gun','land','brick','camel','sun','night','rain','blood','bang','hit','sample','drum','snare','clap','echo'];
+        var words = this._RandomWords;
         var q = ""+ words[Math.floor(Math.random()*words.length)] + " " + words[Math.floor(Math.random()*words.length)];
-        //q = "impulse response";
+
         this.SearchString = q;
         block.SearchString = q;
         return q;

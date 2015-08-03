@@ -13,8 +13,6 @@ class WaveForm extends Option{
         super();
         this.Waveform = waveform;
         this.EmptyString = emptystring || "";
-        console.log(this.EmptyString);
-        console.log(emptystring);
     }
 
 
