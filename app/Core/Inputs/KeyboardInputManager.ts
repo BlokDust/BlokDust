@@ -6,7 +6,7 @@ import KeyUpEventArgs = require("./KeyUpEventArgs");
 class KeyboardInputManager extends InputManager {
 
     public MasterKeyboardMap: any;
-    public KeysDown: any;
+    //public KeysDown: any;
     public KeyDown: string;
     public KeyUp: string;
 
@@ -15,15 +15,15 @@ class KeyboardInputManager extends InputManager {
 
     constructor() {
         super();
-        this.KeysDown = {};
+        //this.KeysDown = {};
 
-        document.addEventListener('keydown', (e) => {
+        /*document.addEventListener('keydown', (e) => {
             this.KeyboardDown(e);
         });
 
         document.addEventListener('keyup', (e) => {
             this.KeyboardUp(e);
-        });
+        });*/
 
         /**
          * Master Keyboard Map
@@ -150,9 +150,11 @@ class KeyboardInputManager extends InputManager {
                 this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
             }
         }
+        super.KeyboardDown(e);
     }
 
     KeyboardUp(e) {
+        super.KeyboardUp(e);
         var k = this.MasterKeyboardMap[e.keyCode];
 
         //Check if this key released is in out key_map
@@ -163,6 +165,7 @@ class KeyboardInputManager extends InputManager {
 
         this.KeyUp = k;
         this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
+
     }
 }
 
