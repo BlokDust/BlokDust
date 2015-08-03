@@ -169,9 +169,9 @@ class InputManager {
         return !!this.KeysDown[name];
     }
 
-    /*IsKeyNameTouched(name: KeyMap,code: number): boolean {
-        return KeyMap[name]==code;
-    }*/
+    IsModifierDown(): boolean {
+        return (this.KeysDown[KeyMap.Ctrl] || this.KeysDown[KeyMap.CommandFF] || this.KeysDown[KeyMap.LeftWindowKey] || this.KeysDown[KeyMap.RightWindowKey]);
+    }
 }
 
 export = InputManager;

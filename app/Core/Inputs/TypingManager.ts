@@ -15,7 +15,6 @@ class TypingManager extends InputManager {
 
         this.Enabled = false;
         this._String = "";
-        this._Panel;
         this._CharLimit = 20;
 
     }
@@ -35,11 +34,13 @@ class TypingManager extends InputManager {
 
     AddToString(code) {
         //TODO special / secondary characters
-        if (this._String.length<this._CharLimit) {
-            if ((code > 47 && code < 91) || (code > 105 && code < 112) || (code > 185 && code < 193) || (code > 218 && code < 223) || code == 32) {
-                var key = ""+String.fromCharCode(code);
-                this._String = "" + this._String + key;
-                this._Panel.UpdateString(this._String);
+        if (!this.IsModifierDown()) {
+            if (this._String.length<this._CharLimit) {
+                if ((code > 47 && code < 91) || (code > 105 && code < 112) || (code > 185 && code < 193) || (code > 218 && code < 223) || code == 32) {
+                    var key = ""+String.fromCharCode(code);
+                    this._String = "" + this._String + key;
+                    this._Panel.UpdateString(this._String);
+                }
             }
         }
     }

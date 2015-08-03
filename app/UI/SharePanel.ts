@@ -66,12 +66,24 @@ class SharePanel extends DisplayObject{
             this._FirstSession = false;
         }
 
-        this.SessionTitle = this.GenerateLabel();
+        this.GetTitleFromUrl();
         this.Resize();
     }
 
     GetUrl() {
         return [location.protocol, '//', location.host, location.pathname].join('');
+    }
+
+    GetTitleFromUrl() {
+        var decoded = decodeURI(window.location.href);
+        var getName = decoded.split("&t=");
+        if (getName.length>1) {
+            this.SessionTitle = getName[1].toUpperCase();
+            this._NameUrl = "&t=" + encodeURI(getName[1]);
+            this.UpdateUrlText();
+        } else {
+            this.SessionTitle = this.GenerateLabel();
+        }
     }
 
     GetString() {
@@ -80,6 +92,8 @@ class SharePanel extends DisplayObject{
 
     UpdateString(string) {
         this.SessionTitle = string;
+        this._NameUrl = "&t=" + encodeURI(string.toLowerCase());
+        this.UpdateUrlText();
     }
 
     StringReturn() {
@@ -270,7 +284,7 @@ class SharePanel extends DisplayObject{
             ctx.textAlign = "left";
             ctx.font = headType;
             ctx.fillText(this.SessionTitle, (appWidth*0.5) - (210*units), centerY - (100*units) );
-            var titleW = ctx.measureText(this.SessionTitle.toUpperCase()).width;
+            var titleW = ctx.measureText(this.SessionTitle).width;
 
 
             // TYPE BAR //
