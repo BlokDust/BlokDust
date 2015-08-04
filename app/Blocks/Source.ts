@@ -331,7 +331,7 @@ class Source extends Block implements ISource {
                 this.UpdateCollision = true;
             }
             var block = this;
-            var seconds = App.Audio.Master.toSeconds(duration) * 1000;
+            var seconds = App.Audio.Tone.toSeconds(duration) * 1000;
             setTimeout( function() {
                 block.PowerConnections -= 1;
                 if (block.UpdateCollision!==undefined) {
