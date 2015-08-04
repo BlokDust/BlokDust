@@ -176,6 +176,7 @@ class CommandsInputManager extends InputManager {
         if (this.IsKeyNameDown(KeyMap.Ctrl) && this.IsKeyNameDown(KeyMap.s)){
             e.preventDefault();
             //this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
+            // todo: execute command
             App.BlocksSketch.SharePanel.OpenPanel();
             return;
         }
