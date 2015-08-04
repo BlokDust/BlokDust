@@ -9,3 +9,5 @@ install:
 - bower install
 script:
 - grunt
+notifications:
+  slack: blokdust:3vgx8XeB2PrikAoicabOwXTA
