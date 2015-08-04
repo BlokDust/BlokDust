@@ -1,6 +1,8 @@
 BlokDust
 ========
 
+[![Build Status](https://travis-ci.org/BlokDust/BlokDust.svg)](https://travis-ci.org/BlokDust/BlokDust)
+
 
 Clone the repository   
 `git clone https://github.com/BlokDust/BlokDust.git`
