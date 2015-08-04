@@ -230,16 +230,14 @@ class Source extends Block implements ISource {
     /**
      * Trigger a sources release
      * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[].
+     * @param index {number|string} position of the Envelope in Envelopes[].
+     * @param forceRelease {boolean} if set to true Envelopes will release regardless of power status
      * If index is set to 'all', all envelopes will be released
      */
-    TriggerRelease(index: number|string = 0) {
-
-        //console.log("ID: "+this.Id);
-
-
-        // Only if it's not powered
-        if (!this.IsPowered()) {
+    TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
+        forceRelease = (forceRelease === true) ? forceRelease : false;
+        // Only if it's not powered or force is set to true
+        if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
