@@ -28,7 +28,6 @@ class Sampler extends SamplerBase {
         }
 
         super.Init(sketch);
-        this.CreateSource();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));

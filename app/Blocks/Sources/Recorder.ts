@@ -35,7 +35,6 @@ class RecorderBlock extends SamplerBase {
 
         super.Init(sketch);
 
-        this.CreateSource();
         this.BufferSource = App.Audio.ctx.createBufferSource();
 
         this.Recorder = new Recorder(App.Audio.Master, {
