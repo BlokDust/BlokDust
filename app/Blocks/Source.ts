@@ -6,6 +6,7 @@ import BlocksSketch = require("../BlocksSketch");
 import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
+import PostEffect = require("./Effects/PostEffect");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -15,7 +16,6 @@ import SoundcloudTrack = require("../UI/SoundcloudTrack");
 class Source extends Block implements ISource {
 
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
-    public OldEffects: ObservableCollection<IEffect>;
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
@@ -77,21 +77,22 @@ class Source extends Block implements ISource {
         this.UpdateOptionsForm();
     }
 
-
     /**
-     * Add effect to this Source's list of effects
+     * Add effect to this Source's list of effects and call Effect.Attach()
      * @param effect
      */
     AddEffect(effect: IEffect) {
         this.Effects.Add(effect);
+        effect.Attach(<ISource>this);
     }
 
     /**
-     * Remove effect from this Source's list of effects
+     * Remove effect from this Source's list of effects and call Effect.Detach()
      * @param effect
      */
     RemoveEffect(effect: IEffect) {
         this.Effects.Remove(effect);
+        effect.Detach(<ISource>this);
     }
 
     /**
@@ -114,14 +115,7 @@ class Source extends Block implements ISource {
     public Refresh() {
         super.Refresh();
 
-        // Detach effects in old collection.
-        if (this.OldEffects && this.OldEffects.Count){
-            const oldEffects: IEffect[] = this.OldEffects.ToArray();
-
-            for (let k = 0; k < oldEffects.length; k++) {
-                this._DetachEffect(oldEffects[k]);
-            }
-        }
+        //TODO: Save processing by only connecting the blocks that need to be connected
 
         // List of connected effect blocks
         const effects: IEffect[] = this.Effects.ToArray();
@@ -132,39 +126,15 @@ class Source extends Block implements ISource {
         // For each connected effect
         for (let i = 0; i < effects.length; i++) {
 
-            // Run Attach method for all effect blocks that need it
-            this._AttachEffect(effects[i]);
-
             // If this is a post effect add to postEffect list
-            if (effects[i].Effect) {
+            if (effects[i] instanceof PostEffect) {
+            //if (effects[i].Effect) {
                 postEffects.push(effects[i]);
             }
         }
 
         // Reorder the post effects chain
         this.UpdateEffectsChain(postEffects);
-
-        // Update list of Old Effects
-        this.OldEffects = new ObservableCollection<IEffect>();
-        this.OldEffects.AddRange(this.Effects.ToArray());
-    }
-
-    /**
-     * Runs attach method for all effect blocks that need a bespoke way of connecting (usually pre-effect blocks)
-     * @param effect
-     * @private
-     */
-    private _AttachEffect(effect: IEffect ) {
-        effect.Attach(<ISource>this);
-    }
-
-    /**
-     * Runs detach method for all effect blocks that need a bespoke way of disconnecting (usually pre-effect blocks)
-     * @param effect
-     * @private
-     */
-    private _DetachEffect(effect: IEffect) {
-        effect.Detach(<ISource>this);
     }
 
     /**
@@ -260,16 +230,14 @@ class Source extends Block implements ISource {
     /**
      * Trigger a sources release
      * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[].
+     * @param index {number|string} position of the Envelope in Envelopes[].
+     * @param forceRelease {boolean} if set to true Envelopes will release regardless of power status
      * If index is set to 'all', all envelopes will be released
      */
-    TriggerRelease(index: number|string = 0) {
-
-        //console.log("ID: "+this.Id);
-
-
-        // Only if it's not powered
-        if (!this.IsPowered()) {
+    TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
+        forceRelease = (forceRelease === true) ? forceRelease : false;
+        // Only if it's not powered or force is set to true
+        if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -331,7 +299,7 @@ class Source extends Block implements ISource {
                 this.UpdateCollision = true;
             }
             var block = this;
-            var seconds = App.Audio.Master.toSeconds(duration) * 1000;
+            var seconds = App.Audio.Tone.toSeconds(duration) * 1000;
             setTimeout( function() {
                 block.PowerConnections -= 1;
                 if (block.UpdateCollision!==undefined) {

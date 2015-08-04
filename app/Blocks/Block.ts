@@ -163,8 +163,7 @@ class Block extends DisplayObject implements IBlock {
     }
 
     Refresh() {
-        //console.log(this.Params);
-        //this.UpdateParams(this.Params);
+
     }
 
     Stop() {

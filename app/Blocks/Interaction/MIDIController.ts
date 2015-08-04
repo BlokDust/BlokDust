@@ -96,7 +96,7 @@ class MIDIController extends Keyboard {
         var cmd = e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
             channel = e.data[0] & 0xf,
             type = e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
-            note = App.Audio.Master.midiToNote(e.data[1]),
+            note = App.Audio.Tone.midiToNote(e.data[1]),
             velocity = e.data[2];
 
         console.log(
@@ -265,16 +265,8 @@ class MIDIController extends Keyboard {
         if (this.Params.isPolyphonic) {
             // POLYPHONIC MODE
 
-            var keyPressed = this.GetKeyNoteOctaveString(keyUp);
-            //var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
-
             // Loop through all the active voices
             source.ActiveVoices.forEach((voice: Voice, i: number) => {
-
-                //var thisPitch = source.GetPitch(voice.ID)? source.GetPitch(voice.ID) : 0;
-
-                // if this active voice has the same frequency as the frequency corresponding to the keyUp
-                //if (Math.round(thisPitch) === Math.round(keyUpFrequency)) {
 
                 // if key pressed is a saved in the ActiveVoices stop it
                 if (voice.Key === keyUp) {

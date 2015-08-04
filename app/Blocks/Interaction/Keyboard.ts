@@ -41,19 +41,13 @@ class Keyboard extends PreEffect {
 
         // FOR ALL SOURCES
         for (let i = 0; i < this.Sources.Count; i++) {
-            var source: ISource = this.Sources.GetValueAt(i);
+            const source: ISource = this.Sources.GetValueAt(i);
 
-            if (this.IsPressed){
-                source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
-                    //TODO: use the new TriggerRelease method
-                    e.triggerRelease();
-                });
-
-            }
+            // Release all the sources envelopes
+            source.TriggerRelease('all', true);
 
             // Reset pitch back to original setting
             source.ResetPitch();
-
         }
 
         super.Detach(source);
