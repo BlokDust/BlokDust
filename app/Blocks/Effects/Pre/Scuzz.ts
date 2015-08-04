@@ -17,8 +17,12 @@ class Scuzz extends PreEffect {
             };
         }
 
-        this.LFO = new Tone.LFO(100, -1000, 1000);
+        this.LFO = new Tone.LFO();
+        this.LFO.frequency.value = this.Params.rate;
+        this.LFO.min = -this.Params.depth;
+        this.LFO.max = this.Params.depth;
         this.LFO.type = 'sawtooth';
+        this.LFO.start();
 
         super.Init(sketch);
 
@@ -34,10 +38,9 @@ class Scuzz extends PreEffect {
     Attach(source:ISource): void{
         super.Attach(source);
 
-        source.Sources.forEach((s: any) => {
-            if (s.detune){
-                this.LFO.connect(s.detune);
-                this.LFO.start();
+        source.Sources.forEach((osc: any) => {
+            if (osc.detune){
+                this.LFO.connect(osc.detune);
             }
         });
     }
@@ -45,11 +48,26 @@ class Scuzz extends PreEffect {
     Detach(source:ISource): void {
         super.Detach(source);
 
-        source.Sources.forEach((s: any) => {
-            if (s.detune){
-                this.LFO.stop();
+        source.Sources.forEach((osc: any) => {
+            if (osc.detune){
                 this.LFO.disconnect();
             }
+        });
+
+        this.UpdatePreEffectConnections();
+    }
+
+    UpdatePreEffectConnections() {
+        super.UpdatePreEffectConnections();
+        const sources = this.Sources.ToArray();
+        sources.forEach((source: ISource) => {
+
+            source.Sources.forEach((osc: Tone.Oscillator) => {
+                if (osc.detune){
+                    this.LFO.connect(osc.detune);
+                }
+            })
+
         });
     }
 
@@ -70,17 +88,6 @@ class Scuzz extends PreEffect {
 
         this.Params[param] = val;
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="rate") {
-            val = this.LFO.frequency.value;
-        } else if (param=="depth") {
-            val = this.LFO.max;
-        }
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();

@@ -50,7 +50,6 @@ class LFO extends PreEffect {
 
         source.Sources.forEach((osc: any) => {
             if (osc.detune){
-                // The disconnect method will disconnect all connected to it, so we need to reconnect any others
                 this.LFO.disconnect();
             }
         });
