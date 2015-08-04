@@ -372,15 +372,15 @@ class SharePanel extends DisplayObject{
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
 
-            var sketch = (<BlocksSketch>panel.Sketch);
             var units = App.Unit;
             var shareUrl = document.getElementById("shareUrl");
+            var pr = App.Metrics.PixelRatio;
 
             if (v=="OffsetX") {
-                shareUrl.style.left = "" + (this.x + (App.Width*1.5) - (units*200)) + "px";
+                shareUrl.style.left = "" + ((this.x + (App.Width*1.5) - (units*200))/pr) + "px";
             }
             if (v=="OffsetY") {
-                shareUrl.style.top = "" + (this.x + (App.Height*0.5) - (units*20)) + "px";
+                shareUrl.style.top = "" + ((this.x + (App.Height*0.5) - (units*20))/pr) + "px";
             }
         });
 
@@ -394,7 +394,7 @@ class SharePanel extends DisplayObject{
                 }
                 panel.OffsetX = 0;
                 var shareUrl = document.getElementById("shareUrl");
-                shareUrl.style.left = "200%";
+                shareUrl.style.left = "1000%";
             }
             if (v=="OffsetX" && panel._FirstSession) {
                 panel._FirstSession = false;
@@ -680,7 +680,7 @@ class SharePanel extends DisplayObject{
         shareUrl.style.font = App.Metrics.TxtUrl;
         shareUrl.style.width = "" + (units*(400/pr)) + "px";
         shareUrl.style.height = "" + (units*(40/pr)) + "px";
-        shareUrl.style.lineHeight = "" + (units/(40*pr)) + "px";
+        shareUrl.style.lineHeight = "" + (units*(40/pr)) + "px";
         shareUrl.style.color = App.Palette[8];
         shareUrl.style.display = "block";
 
@@ -693,8 +693,13 @@ class SharePanel extends DisplayObject{
             this.OffsetX = -App.Width;
         }
 
-        shareUrl.style.left = "" + ((this.OffsetX + (App.Width*1.5) - (units*200))/pr) + "px";
-        shareUrl.style.top = "" + ((this.OffsetY + (App.Height*0.5) - (units*20))/pr) + "px";
+        var offsetX = this.OffsetX/pr;
+        var offsetY = this.OffsetY/pr;
+        var width = App.Width/pr;
+        var height = App.Height/pr;
+
+        shareUrl.style.left = "" + (offsetX + (width*1.5) - (units*(200/pr))) + "px";
+        shareUrl.style.top = "" + (offsetY + (height*0.5) - (units*(20/pr))) + "px";
 
     }
 }
