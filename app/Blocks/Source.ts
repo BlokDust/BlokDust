@@ -6,6 +6,7 @@ import BlocksSketch = require("../BlocksSketch");
 import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
+import PostEffect = require("./Effects/PostEffect");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -84,6 +85,7 @@ class Source extends Block implements ISource {
      */
     AddEffect(effect: IEffect) {
         this.Effects.Add(effect);
+        effect.Attach(<ISource>this);
     }
 
     /**
@@ -92,6 +94,7 @@ class Source extends Block implements ISource {
      */
     RemoveEffect(effect: IEffect) {
         this.Effects.Remove(effect);
+        effect.Detach(<ISource>this);
     }
 
     /**
@@ -114,14 +117,7 @@ class Source extends Block implements ISource {
     public Refresh() {
         super.Refresh();
 
-        // Detach effects in old collection.
-        if (this.OldEffects && this.OldEffects.Count){
-            const oldEffects: IEffect[] = this.OldEffects.ToArray();
-
-            for (let k = 0; k < oldEffects.length; k++) {
-                this._DetachEffect(oldEffects[k]);
-            }
-        }
+        //TODO: Save processing by only connecting the blocks that need to be connected
 
         // List of connected effect blocks
         const effects: IEffect[] = this.Effects.ToArray();
@@ -132,21 +128,15 @@ class Source extends Block implements ISource {
         // For each connected effect
         for (let i = 0; i < effects.length; i++) {
 
-            // Run Attach method for all effect blocks that need it
-            this._AttachEffect(effects[i]);
-
             // If this is a post effect add to postEffect list
-            if (effects[i].Effect) {
+            if (effects[i] instanceof PostEffect) {
+            //if (effects[i].Effect) {
                 postEffects.push(effects[i]);
             }
         }
 
         // Reorder the post effects chain
         this.UpdateEffectsChain(postEffects);
-
-        // Update list of Old Effects
-        this.OldEffects = new ObservableCollection<IEffect>();
-        this.OldEffects.AddRange(this.Effects.ToArray());
     }
 
     /**
