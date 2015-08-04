@@ -203,10 +203,10 @@ class Keyboard extends PreEffect {
         for (var i = 0; i < source.Effects.Count; i++) {
             let effect = source.Effects.GetValueAt(i);
 
-            if (effect instanceof PitchComponent) {
-                let thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
-                totalPitchIncrement *= thisPitchIncrement;
-            }
+            //if (effect instanceof PitchComponent) {
+            //    let thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
+            //    totalPitchIncrement *= thisPitchIncrement;
+            //}
         }
 
         return totalPitchIncrement;

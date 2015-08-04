@@ -165,6 +165,6 @@ interface EnvelopeParams {
 interface LFOParams extends RateDepthParams {}
 interface ScuzzParams extends LFOParams {}
 
-interface PitchIncrementParams {
-    pitchIncrement: number;
+interface PitchShifterParams {
+    pitchOffset: number;
 }
