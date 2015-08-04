@@ -8,6 +8,6 @@ install:
 - npm install
 - bower install
 script:
-- grunt && grunt dist
+- grunt
 notifications:
   slack: blokdust:3vgx8XeB2PrikAoicabOwXTA
