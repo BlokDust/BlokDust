@@ -16,6 +16,7 @@ class Metrics {
     public TxtHeader: string;
     public TxtSlider: string;
     public TxtUrl: string;
+    public TxtUrl2: string;
     public TxtMid: string;
     public TxtLarge: string;
     public TxtBody: string;
@@ -57,6 +58,7 @@ class Metrics {
         var headerType = Math.round(unit*28);
         var sliderType = Math.round(unit*33);
         var urlType = Math.round(unit*(24/this.PixelRatio));
+        var urlType2 = Math.round(unit*24);
         var largeType = Math.round(unit*12);
         var midType = Math.round(unit*10);
         var bodyType = Math.round(unit*8);
@@ -67,6 +69,7 @@ class Metrics {
         this.TxtHeader = "200 " + headerType + "px Dosis";
         this.TxtSlider = "200 " + sliderType + "px Dosis";
         this.TxtUrl = "200 " + urlType + "px Dosis";
+        this.TxtUrl2 = "200 " + urlType2 + "px Dosis";
         this.TxtMid = "400 " + midType + "px Dosis";
         this.TxtLarge = "400 " + largeType + "px Dosis";
         this.TxtBody = "200 " + bodyType + "px Dosis";

@@ -110,7 +110,7 @@ class SharePanel extends DisplayObject{
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
-        var urlType = App.Metrics.TxtUrl;
+        var urlType = App.Metrics.TxtUrl2;
         var italicType = App.Metrics.TxtItalic2;
         var units = App.Unit;
         var centerY = this.OffsetY + (App.Height * 0.5);
