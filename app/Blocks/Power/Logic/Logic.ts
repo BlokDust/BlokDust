@@ -5,11 +5,13 @@ import Particle = require("../../../Particle");
 
 class Logic extends PowerEffect {
 
+    public Params: LogicParams;
+
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
-                logic: 0 //TODO: this line should be boolean when using boolean switch UI
+                logic: false //TODO: this line should be boolean when using boolean switch UI
             };
         }
 

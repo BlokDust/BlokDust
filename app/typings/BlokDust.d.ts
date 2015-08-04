@@ -15,3 +15,13 @@ interface Document{
 interface CanvasRenderingContext2D {
     divisor: number;
 }
+
+interface Float32Array {
+    /**
+     * Reverses the elements in an Array.
+     */
+    prototype: any;
+
+    reverse(): Float32Array;
+
+}

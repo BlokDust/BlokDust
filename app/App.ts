@@ -4,8 +4,9 @@ import Metrics = require("./AppMetrics");
 import OperationManager = require("./Core/Operations/OperationManager");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import CommandManager = require("./Core/Commands/CommandManager");
-import AudioMixer = require("./Core/Audio/AudioMixer");
+import Audio = require("./Core/Audio/Audio");
 import InputManager = require("./Core/Inputs/InputManager");
+import TypingManager = require("./Core/Inputs/TypingManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
@@ -53,7 +54,7 @@ class App implements IApp{
     public Width: number;
     public Height: number;
     public Metrics: Metrics;
-    public AudioMixer: AudioMixer = new AudioMixer();
+    public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
     public BlocksSketch: BlocksSketch;
     public Scene: number;
@@ -62,6 +63,7 @@ class App implements IApp{
     public CompositionId: string;
     public Config: Config;
     public InputManager: InputManager;
+    public TypingManager: TypingManager;
     public KeyboardInput: KeyboardInput;
     public OperationManager: OperationManager;
     public OscillatorsPool: PooledFactoryResource<Oscillator>;
@@ -161,9 +163,11 @@ class App implements IApp{
 
         // CREATE INPUT MANAGERS //
         this.InputManager = new InputManager();
+        this.TypingManager = new TypingManager();
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
+
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
@@ -280,7 +284,7 @@ class App implements IApp{
         this.BlocksSketch.DisplayList = new DisplayList(d);
 
         // bring down volume and validate blocks //
-        this.AudioMixer.Master.volume.value = -100;
+        this.Audio.Master.volume.value = -100;
         this.RefreshBlocks();
         this.BlocksSketch.Paused = true;
         if (this.Scene<2) {
@@ -294,9 +298,11 @@ class App implements IApp{
     // todo: move to BlockStore
     RefreshBlocks() {
         // refresh all Sources (reconnects Effects).
-        this.Blocks.forEach((b: ISource) => {
+        this.Blocks.forEach((b: IBlock) => {
             b.Refresh();
+            b.UpdateConnections();
         });
+        console.log('once!')
     }
 
     OnTicked (lastTime: number, nowTime: number) {

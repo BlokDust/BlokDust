@@ -82,7 +82,7 @@ canvas {
     background-blend-mode: normal;
 
     position: absolute;
-    left: 200%;
+    left: 1000%;
     top: -100%;
 
     width: 200px;

@@ -4,6 +4,7 @@ import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
 import ParametersPanel = require("../UI/OptionsPanel");
+import PreEffect = require("./Effects/PreEffect");
 import Size = minerva.Size;
 
 class Block extends DisplayObject implements IBlock {
@@ -155,9 +156,25 @@ class Block extends DisplayObject implements IBlock {
         });*/
     }
 
+    RefreshOptionsPanel() {
+        if (App.BlocksSketch.OptionsPanel.Scale>0 && App.BlocksSketch.OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            App.BlocksSketch.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+    }
+
     Refresh() {
-        //console.log(this.Params);
-        //this.UpdateParams(this.Params);
+
+    }
+
+    UpdateConnections() {
+        this.UpdatePreEffectConnections();
+    }
+
+    UpdatePreEffectConnections(){
+        /**
+         * For PreEffects only
+         */
     }
 
     Stop() {

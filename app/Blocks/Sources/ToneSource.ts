@@ -11,16 +11,22 @@ class ToneSource extends Source {
     //public Frequency: number;
     //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
+    public Params: ToneSourceParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
                 frequency: App.Config.BaseNote,
-                waveform: 2
+                waveform: 2,
+                baseFrequency: 0,
             };
         }
 
+        // If it's an older save before we had baseFrequency
+        if (this.Params.baseFrequency) {
+            this.Params.frequency = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency);
+        }
 
         super.Init(sketch);
 
@@ -61,7 +67,6 @@ class ToneSource extends Source {
 
     Dispose() {
         super.Dispose();
-        this.Params.frequency = null;
 
         this.Sources.forEach((s: any) => {
             s.dispose();
@@ -89,18 +94,16 @@ class ToneSource extends Source {
         {
             "name" : "Tone",
             "parameters" : [
-
                 {
                     "type" : "slider",
-                    "name" : "Frequency",
-                    "setting" :"frequency",
+                    "name" : "Note",
+                    "setting" :"baseFrequency",
                     "props" : {
-                        "value" : this.Params.frequency,
-                        "min" : 10,
-                        "max" : 15000,
+                        "value" : this.Params.baseFrequency,
+                        "min" : -48,
+                        "max" : 48,
                         "quantised" : true,
-                        "centered" : false,
-                        "logarithmic": true
+                        "centered" : true
                     }
                 },
                 {
@@ -125,8 +128,12 @@ class ToneSource extends Source {
         var val = value;
 
         switch(param) {
-            case "frequency":
-                this.Sources[0].frequency.value = value;
+            case 'baseFrequency':
+                this.Sources[0].frequency.value = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(value);
+                // TODO: Make the params output this Note Index instead of semitone value
+                var octave = Math.floor(value / 12) + 4;
+                var note = App.Audio.NoteIndex[Math.abs(value%12)];
+                console.log(`Note: ${note}${octave}`);
                 break;
         }
 

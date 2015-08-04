@@ -16,6 +16,7 @@ import Microphone = require("./Blocks/Sources/Microphone");
 import Soundcloud = require("./Blocks/Sources/Soundcloud");
 import Granular = require("./Blocks/Sources/Granular");
 import Recorder = require("./Blocks/Sources/Recorder");
+import WaveGen = require("./Blocks/Sources/WaveGen");
 
 // EFFECTS BLOCKS //
 import AutoWah = require("Blocks/Effects/Post/AutoWah");
@@ -127,6 +128,11 @@ class BlockCreator {
                         "name": "Recorder",
                         "id": Recorder,
                         "description": "Records the master output and then works as a sample player like the SoundCloud Block."
+                    },
+                    {
+                        "name": "WaveGen",
+                        "id": WaveGen,
+                        "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
                     }
                 ]
             },

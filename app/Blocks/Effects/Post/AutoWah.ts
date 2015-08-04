@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class AutoWah extends PostEffect {
 
     public Effect: Tone.AutoWah;
+    public Params: AutoWahParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -14,7 +15,7 @@ class AutoWah extends PostEffect {
                 baseFrequency: 100,
                 mix: 0.3,
                 attack: 0.75,
-                release: 0.3
+                release: 0.3,
             };
         }
 

@@ -22,6 +22,7 @@ class SharePanel extends DisplayObject{
     private _UrlSelecting: boolean;
     private _RollOvers: boolean[];
     private _CommandManager;
+    private _Blink:number = 0;
     private _SessionId: string;
     private _Saving: boolean;
 
@@ -65,12 +66,38 @@ class SharePanel extends DisplayObject{
             this._FirstSession = false;
         }
 
-        this.SessionTitle = this.GenerateLabel();
+        this.GetTitleFromUrl();
         this.Resize();
     }
 
     GetUrl() {
         return [location.protocol, '//', location.host, location.pathname].join('');
+    }
+
+    GetTitleFromUrl() {
+        var decoded = decodeURI(window.location.href);
+        var getName = decoded.split("&t=");
+        if (getName.length>1) {
+            this.SessionTitle = getName[1].toUpperCase();
+            this._NameUrl = "&t=" + encodeURI(getName[1]);
+            this.UpdateUrlText();
+        } else {
+            this.SessionTitle = this.GenerateLabel();
+        }
+    }
+
+    GetString() {
+        return this.SessionTitle;
+    }
+
+    UpdateString(string) {
+        this.SessionTitle = string;
+        this._NameUrl = "&t=" + encodeURI(string.toLowerCase());
+        this.UpdateUrlText();
+    }
+
+    StringReturn() {
+
     }
 
     //-------------------------------------------------------------------------------------------
@@ -83,7 +110,7 @@ class SharePanel extends DisplayObject{
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
-        var urlType = App.Metrics.TxtUrl;
+        var urlType = App.Metrics.TxtUrl2;
         var italicType = App.Metrics.TxtItalic2;
         var units = App.Unit;
         var centerY = this.OffsetY + (App.Height * 0.5);
@@ -257,6 +284,19 @@ class SharePanel extends DisplayObject{
             ctx.textAlign = "left";
             ctx.font = headType;
             ctx.fillText(this.SessionTitle, (appWidth*0.5) - (210*units), centerY - (100*units) );
+            var titleW = ctx.measureText(this.SessionTitle).width;
+
+
+            // TYPE BAR //
+            if (this._Blink > 50) {
+                ctx.fillRect((appWidth*0.5) - (210*units) + titleW + (5*units),centerY - (123*units),2*units,26*units);
+            }
+            this._Blink += 1;
+            if (this._Blink == 100) {
+                this._Blink = 0;
+            }
+
+
 
             ctx.font = headType;
             ctx.fillText("SHARE",20*units,this.OffsetY + (30*units) + (11*units));
@@ -332,15 +372,15 @@ class SharePanel extends DisplayObject{
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
 
-            var sketch = (<BlocksSketch>panel.Sketch);
             var units = App.Unit;
             var shareUrl = document.getElementById("shareUrl");
+            var pr = App.Metrics.PixelRatio;
 
             if (v=="OffsetX") {
-                shareUrl.style.left = "" + (this.x + (App.Width*1.5) - (units*200)) + "px";
+                shareUrl.style.left = "" + ((this.x + (App.Width*1.5) - (units*200))/pr) + "px";
             }
             if (v=="OffsetY") {
-                shareUrl.style.top = "" + (this.x + (App.Height*0.5) - (units*20)) + "px";
+                shareUrl.style.top = "" + ((this.x + (App.Height*0.5) - (units*20))/pr) + "px";
             }
         });
 
@@ -354,7 +394,7 @@ class SharePanel extends DisplayObject{
                 }
                 panel.OffsetX = 0;
                 var shareUrl = document.getElementById("shareUrl");
-                shareUrl.style.left = "200%";
+                shareUrl.style.left = "1000%";
             }
             if (v=="OffsetX" && panel._FirstSession) {
                 panel._FirstSession = false;
@@ -441,11 +481,12 @@ class SharePanel extends DisplayObject{
         shareUrl.style.display = "block";
         shareUrl.style.visibility = "true";
         this.DelayTo(this,0,500,0,"OffsetY");
-
+        App.TypingManager.Enable(this);
     }
 
     ClosePanel() {
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
+        App.TypingManager.Disable();
     }
 
     GenerateLink() {
@@ -511,6 +552,7 @@ class SharePanel extends DisplayObject{
             }
             if (this._RollOvers[2]) { // gen title
                 this.SessionTitle = this.GenerateLabel();
+                App.TypingManager.Enable(this);
                 return;
             }
             if (this._RollOvers[3]) { // gen URL
@@ -633,12 +675,12 @@ class SharePanel extends DisplayObject{
         var units = (App.Unit);
 
         //TODO: Move to AppMetrics
-
+        var pr = App.Metrics.PixelRatio;
         var shareUrl = document.getElementById("shareUrl");
         shareUrl.style.font = App.Metrics.TxtUrl;
-        shareUrl.style.width = "" + (units*400) + "px";
-        shareUrl.style.height = "" + (units*40) + "px";
-        shareUrl.style.lineHeight = "" + (units*40) + "px";
+        shareUrl.style.width = "" + (units*(400/pr)) + "px";
+        shareUrl.style.height = "" + (units*(40/pr)) + "px";
+        shareUrl.style.lineHeight = "" + (units*(40/pr)) + "px";
         shareUrl.style.color = App.Palette[8];
         shareUrl.style.display = "block";
 
@@ -651,8 +693,13 @@ class SharePanel extends DisplayObject{
             this.OffsetX = -App.Width;
         }
 
-        shareUrl.style.left = "" + (this.OffsetX + (App.Width*1.5) - (units*200)) + "px";
-        shareUrl.style.top = "" + (this.OffsetY + (App.Height*0.5) - (units*20)) + "px";
+        var offsetX = this.OffsetX/pr;
+        var offsetY = this.OffsetY/pr;
+        var width = App.Width/pr;
+        var height = App.Height/pr;
+
+        shareUrl.style.left = "" + (offsetX + (width*1.5) - (units*(200/pr))) + "px";
+        shareUrl.style.top = "" + (offsetY + (height*0.5) - (units*(20/pr))) + "px";
 
     }
 }

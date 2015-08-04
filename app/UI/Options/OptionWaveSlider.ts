@@ -12,8 +12,8 @@ class WaveSlider extends WaveForm{
     public Spread: number;
 
 
-    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], spread: number) {
-        super(waveform);
+    constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], spread: number, emptystring?: string) {
+        super(waveform,emptystring);
 
         this.Type = "waveslider";
         this.Position = position;
@@ -39,18 +39,9 @@ class WaveSlider extends WaveForm{
         var y = this.Position.y;
         var height = this.Size.height;
         var origin = this.Origin;
-        var dataType = Math.round(units*10);
         var headerType = Math.round(units*33);
 
-        if (!this.Waveform.length) {
-            ctx.textAlign = "center";
-            ctx.fillStyle = App.Palette[8];// WHITE
-            ctx.font = App.Metrics.TxtItalic;
-            //ctx.fillText("LOADING SAMPLE", (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (19*units));
-            App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
-        }
-
-         else {
+        if (this.Waveform.length) {
 
             // LINES //
             ctx.lineWidth = 2;

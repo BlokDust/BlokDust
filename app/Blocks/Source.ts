@@ -6,6 +6,7 @@ import BlocksSketch = require("../BlocksSketch");
 import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
+import PostEffect = require("./Effects/PostEffect");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -15,7 +16,6 @@ import SoundcloudTrack = require("../UI/SoundcloudTrack");
 class Source extends Block implements ISource {
 
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
-    public OldEffects: ObservableCollection<IEffect>;
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
@@ -43,6 +43,8 @@ class Source extends Block implements ISource {
     public Collisions: any[];
     public SearchResults: SoundcloudTrack[];
     public Searching: boolean;
+    public ResultsPage: number;
+    public SearchString: string;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -68,28 +70,29 @@ class Source extends Block implements ISource {
             this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
             this.EffectsChainInput.connect(this.EffectsChainOutput);
-            this.EffectsChainOutput.connect(App.AudioMixer.Master);
+            this.EffectsChainOutput.connect(App.Audio.Master);
 
         }
 
         this.UpdateOptionsForm();
     }
 
-
     /**
-     * Add effect to this Source's list of effects
+     * Add effect to this Source's list of effects and call Effect.Attach()
      * @param effect
      */
     AddEffect(effect: IEffect) {
         this.Effects.Add(effect);
+        effect.Attach(<ISource>this);
     }
 
     /**
-     * Remove effect from this Source's list of effects
+     * Remove effect from this Source's list of effects and call Effect.Detach()
      * @param effect
      */
     RemoveEffect(effect: IEffect) {
         this.Effects.Remove(effect);
+        effect.Detach(<ISource>this);
     }
 
     /**
@@ -112,14 +115,7 @@ class Source extends Block implements ISource {
     public Refresh() {
         super.Refresh();
 
-        // Detach effects in old collection.
-        if (this.OldEffects && this.OldEffects.Count){
-            const oldEffects: IEffect[] = this.OldEffects.ToArray();
-
-            for (let k = 0; k < oldEffects.length; k++) {
-                this._DetachEffect(oldEffects[k]);
-            }
-        }
+        //TODO: Save processing by only connecting the blocks that need to be connected
 
         // List of connected effect blocks
         const effects: IEffect[] = this.Effects.ToArray();
@@ -130,39 +126,15 @@ class Source extends Block implements ISource {
         // For each connected effect
         for (let i = 0; i < effects.length; i++) {
 
-            // Run Attach method for all effect blocks that need it
-            this._AttachEffect(effects[i]);
-
             // If this is a post effect add to postEffect list
-            if (effects[i].Effect) {
+            if (effects[i] instanceof PostEffect) {
+            //if (effects[i].Effect) {
                 postEffects.push(effects[i]);
             }
         }
 
         // Reorder the post effects chain
-        this.UpdateEffectsChain(postEffects);
-
-        // Update list of Old Effects
-        this.OldEffects = new ObservableCollection<IEffect>();
-        this.OldEffects.AddRange(this.Effects.ToArray());
-    }
-
-    /**
-     * Runs attach method for all effect blocks that need a bespoke way of connecting (usually pre-effect blocks)
-     * @param effect
-     * @private
-     */
-    private _AttachEffect(effect: IEffect ) {
-        effect.Attach(<ISource>this);
-    }
-
-    /**
-     * Runs detach method for all effect blocks that need a bespoke way of disconnecting (usually pre-effect blocks)
-     * @param effect
-     * @private
-     */
-    private _DetachEffect(effect: IEffect) {
-        effect.Detach(<ISource>this);
+        this.UpdatePostEffectsChain(postEffects);
     }
 
     /**
@@ -170,7 +142,7 @@ class Source extends Block implements ISource {
      * @param effects
      * @public
      */
-    public UpdateEffectsChain(effects) {
+    public UpdatePostEffectsChain(effects) {
 
         const start = this.EffectsChainInput;
         const end = this.EffectsChainOutput;
@@ -258,16 +230,14 @@ class Source extends Block implements ISource {
     /**
      * Trigger a sources release
      * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[].
+     * @param index {number|string} position of the Envelope in Envelopes[].
+     * @param forceRelease {boolean} if set to true Envelopes will release regardless of power status
      * If index is set to 'all', all envelopes will be released
      */
-    TriggerRelease(index: number|string = 0) {
-
-        //console.log("ID: "+this.Id);
-
-
-        // Only if it's not powered
-        if (!this.IsPowered()) {
+    TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
+        forceRelease = (forceRelease === true) ? forceRelease : false;
+        // Only if it's not powered or force is set to true
+        if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -329,7 +299,7 @@ class Source extends Block implements ISource {
                 this.UpdateCollision = true;
             }
             var block = this;
-            var seconds = App.AudioMixer.Master.toSeconds(duration) * 1000;
+            var seconds = App.Audio.Tone.toSeconds(duration) * 1000;
             setTimeout( function() {
                 block.PowerConnections -= 1;
                 if (block.UpdateCollision!==undefined) {
@@ -457,6 +427,25 @@ class Source extends Block implements ISource {
     }
 
     /**
+     * Reset a sources pitch back to its Params setting
+     */
+    ResetPitch() {
+        if (App.Config.ResetPitchesOnInteractionDisconnect) {
+            if (typeof this.Params.baseFrequency === 'number') {
+                //Oscillators
+                this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
+            } else if (this.Sources[0].player) {
+                // Samplers
+                this.Sources[0].player.playbackRate = this.Params.playbackRate;
+            } else if (typeof this.Sources[0].playbackRate === 'number') {
+                // Noise
+                this.Sources[0].playbackRate = this.Params.playbackRate;
+            }
+        }
+    }
+
+
+    /**
      * Shifts a notes pitch up or down a number of octaves
      * @example -2 would shift the note down by 2 octaves.
      * @param {number} octaves
@@ -478,51 +467,7 @@ class Source extends Block implements ISource {
         return this;
     }
 
-    /*GetWaveformFromBuffer(buffer,detail,precision,normal) {
 
-        console.log(buffer);
-
-        var waveform = [];
-        var newWaveform = [];
-        var peak = 0.0;
-
-        // MERGE LEFT & RIGHT CHANNELS //
-        var left = buffer.getChannelData(0);
-        if (buffer.numberOfChannels>1) {
-            var right = buffer.getChannelData(1);
-            for (var i=0; i<left.length; i++) {
-                waveform[i] = (left[i] + right[i])*0.5;
-            }
-        } else {
-            waveform = left;
-        }
-
-        var step = Math.ceil( waveform.length / detail );
-
-
-        // FOR EACH DETAIL POINT //
-        for(var i=0; i<detail; i++) {
-
-            // AVERAGE PEAK BETWEEN POINTS //
-            var max = 0.0;
-            for (var j = 0; j < step; j += precision) {
-                var datum = waveform[(i * step) + j];
-                if (datum < 0) { datum = -datum;}
-                if (datum > max) {max = datum;}
-            }
-            if (max > peak) {peak = max;}
-            newWaveform.push(max);
-        }
-
-        // SOFT NORMALISE //
-        var percent = normal/100; // normalisation strength
-        var mult = (((1/peak) - 1)*percent) + 1;
-        for (var i=0; i<newWaveform.length; i++) {
-            newWaveform[i] = newWaveform[i] * mult;
-        }
-
-        return newWaveform;
-    }*/
 
     GetWaveformFromBuffer(buffer,points,stepsPerPoint,normal) {
 

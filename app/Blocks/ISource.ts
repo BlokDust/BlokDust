@@ -22,6 +22,8 @@ interface ISource extends IBlock{
     Collisions: any[];
     SearchResults: SoundcloudTrack[];
     Searching: Boolean;
+    ResultsPage: number;
+    SearchString: string;
     //Frequency?: number;
     PlaybackRate?: number;
     Grains?: Tone.Player[];
@@ -36,10 +38,11 @@ interface ISource extends IBlock{
     ValidateEffects(): void;
     SetPitch(pitch: Tone.Frequency, sourceId?: number, rampTime?: Tone.Time): void;
     GetPitch(sourceId?: number): number;
+    ResetPitch(): void;
     OctaveShift(octavesAmount: number): void;
     GetWaveformFromBuffer(buffer: any, detail: number, precision: number,  normal: number): number[];
     TriggerAttack(index?: number|string): void;
-    TriggerRelease(index?: number|string): void;
+    TriggerRelease(index?: number|string, forceRelease?: boolean): void;
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;
     IsPowered(): boolean;
     Refresh(): void;

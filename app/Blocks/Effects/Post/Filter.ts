@@ -5,13 +5,14 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Filter extends PostEffect {
 
     public Effect: Tone.Filter;
+    public Params: FilterParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
                 frequency: 440,
-                gain: 0
+                gain: 0,
             };
         }
 

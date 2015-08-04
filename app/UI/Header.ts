@@ -28,6 +28,7 @@ class Header extends DisplayObject{
     private _ShareOver: boolean;
     private _SettingsOver: boolean;
     public MenuOver: boolean;
+    public Tweens: any[];
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
@@ -45,6 +46,7 @@ class Header extends DisplayObject{
         this._LeftOver = false;
         this._RightOver = false;
         this.MenuOver = false;
+        this.Tweens = [];
 
         this.MenuJson = BlockCreator.MenuJson;
 
@@ -350,6 +352,17 @@ class Header extends DisplayObject{
         offsetTween.easing(TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);
+
+        this.Tweens.push(offsetTween);
+    }
+
+    StopAllTweens() {
+        if (this.Tweens.length) {
+            for (var j=0; j<this.Tweens.length; j++) {
+                this.Tweens[j].stop();
+            }
+            this.Tweens = [];
+        }
     }
 
 
@@ -365,7 +378,7 @@ class Header extends DisplayObject{
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
             if (this.MenuItems[i].Hover && !(this._SelectedCategory==i && this.DropDown>0)) {
-                TWEEN.removeAll();
+                this.StopAllTweens();
                 var cat = this.MenuItems[i];
 
                 //cat.CurrentPage = 0; // RESET ITEM PAGES
@@ -459,7 +472,7 @@ class Header extends DisplayObject{
 
 
     ClosePanel() {
-        TWEEN.removeAll();
+        this.StopAllTweens();
         this.DelayTo(this,0,300,0,"DropDown");
         this.DelayTo(this,0,600,50,"Margin");
         for (var i=0; i<this.MenuItems.length; i++) {

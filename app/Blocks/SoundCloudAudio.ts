@@ -72,19 +72,26 @@ class SoundCloudAudio {
      *  How to query either creative commons OR tags. It doesn't see to be possible.
      *  Perhaps multiple we need to make multiple API requests. Alternatively we could do this all on server side.
      */
-    static Search(query: string, callback: (tracks: any[]) => any){
+    static Search(query: string, seconds: number, callback: (tracks: any[]) => any){
         SC.get('/tracks', {
             //tags: 'blokdust',
             //license: 'cc-by',
             q: query,
             duration: {
-                to: 510000 // 8.5 mins
+                //to: 510000 // 8.5 mins
+                //to: 20000 // 20 seconds
+                to: seconds*1000 // 20 seconds
             },
+            sharing: "public",
+            streamable: true,
+            downloadable: true,
+            filter: "public",
             limit: 200
         }, callback);
     }
 }
 
 export = SoundCloudAudio;
+
 
 //https://api.soundcloud.com/tracks/43883752/stream?client_id=7258ff07f16ddd167b55b8f9b9a3ed33

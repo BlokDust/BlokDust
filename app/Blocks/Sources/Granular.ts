@@ -23,6 +23,9 @@ class Granular extends Source {
     private _LoadFromShare: boolean = false;
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
+    private _tempPlaybackRate: number;
+
+    public Params: GranularParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -33,7 +36,6 @@ class Granular extends Source {
                 region: 0,
                 spread: 1.5,
                 grainlength: 0.25,
-                timeout: 20, // seconds before load deemed failed
                 track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
                 trackName: 'TEUFELSBERG',
                 user: 'BGXA'
@@ -46,6 +48,7 @@ class Granular extends Source {
             },100);
         }
 
+        this._tempPlaybackRate = this.Params.playbackRate;
         this._WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;
@@ -70,9 +73,10 @@ class Granular extends Source {
 
     Search(query: string) {
         this.Searching = true;
+        this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, (tracks) => {
+            SoundCloudAudio.Search(query, 240, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
                 });
@@ -151,7 +155,7 @@ class Granular extends Source {
             for (var i=0; i<this.GrainsAmount; i++) {
                 this.Grains[i].buffer = e.buffer;
             }
-            
+
             var duration = this.GetDuration();
             if (!this._LoadFromShare) {
                 this.Params.region = duration / 2;
@@ -170,9 +174,10 @@ class Granular extends Source {
         });
 
         var me = this;
+        clearTimeout(this.LoadTimeout);
         this.LoadTimeout = setTimeout( function() {
             me.TrackFallBack();
-        },(this.Params.timeout*1000));
+        },(App.Config.SoundCloudLoadTimeout*1000));
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = function() {
@@ -193,7 +198,7 @@ class Granular extends Source {
                 e.connect(this.EffectsChainInput);
             });
 
-            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch());
+            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch(this));
             this.SetupGrains();
 
             this._FirstRelease = false;
@@ -284,8 +289,8 @@ class Granular extends Source {
             // MAKE SURE THESE ARE IN SYNC //
             this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
             this.Grains[this._CurrentGrain].stop();
-            this.Grains[this._CurrentGrain].playbackRate = this.Params.playbackRate;
-            this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this.Params.playbackRate)*1.9);
+            this.Grains[this._CurrentGrain].playbackRate = this._tempPlaybackRate;
+            this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
                 this.GrainLoop();
@@ -311,10 +316,25 @@ class Granular extends Source {
     }
 
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
+        pitch = pitch / App.Config.BaseNote;
         for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate = pitch / App.Config.BaseNote;
+            this.Grains[i].playbackRate = pitch;
         }
-        this.Params.playbackRate = this.Grains[0].playbackRate;
+        this._tempPlaybackRate = pitch;
+        console.log(this._tempPlaybackRate);
+        console.log(this.Params.playbackRate);
+    }
+
+    /**
+     * Reset granular pitches back to their original Params setting
+     */
+    ResetPitch() {
+        if (App.Config.ResetPitchesOnInteractionDisconnect) {
+            this._tempPlaybackRate = this.Params.playbackRate;
+            for (var i=0; i<this.GrainsAmount; i++) {
+                this.Grains[i].playbackRate = this.Params.playbackRate;
+            }
+        }
     }
 
     SetParam(param: string,value: number) {

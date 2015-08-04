@@ -1,4 +1,4 @@
-import App = require("../../App");
+
 import InputManager = require("./InputManager");
 import KeyDownEventArgs = require("./KeyDownEventArgs");
 import KeyUpEventArgs = require("./KeyUpEventArgs");
@@ -6,7 +6,7 @@ import KeyUpEventArgs = require("./KeyUpEventArgs");
 class KeyboardInputManager extends InputManager {
 
     public MasterKeyboardMap: any;
-    public KeysDown: any;
+    //public KeysDown: any;
     public KeyDown: string;
     public KeyUp: string;
 
@@ -15,15 +15,15 @@ class KeyboardInputManager extends InputManager {
 
     constructor() {
         super();
-        this.KeysDown = {};
+        //this.KeysDown = {};
 
-        document.addEventListener('keydown', (e) => {
+        /*document.addEventListener('keydown', (e) => {
             this.KeyboardDown(e);
         });
 
         document.addEventListener('keyup', (e) => {
             this.KeyboardUp(e);
-        });
+        });*/
 
         /**
          * Master Keyboard Map
@@ -134,23 +134,27 @@ class KeyboardInputManager extends InputManager {
     }
 
     KeyboardDown(e) {
-        var k = this.MasterKeyboardMap[e.keyCode];
+        if (!App.TypingManager.Enabled) {
+            var k = this.MasterKeyboardMap[e.keyCode];
 
-        //Check if this key released is in our key_map
-        if (typeof k !== 'undefined' && k !== '') {
-            //if it's already pressed (holding note)
-            if (k in this.KeysDown) {
-                return;
+            //Check if this key released is in our key_map
+            if (typeof k !== 'undefined' && k !== '') {
+                //if it's already pressed (holding note)
+                if (k in this.KeysDown) {
+                    return;
+                }
+                //pressed first time, add to object
+                this.KeysDown[k] = true;
+
+                this.KeyDown = k;
+                this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
             }
-            //pressed first time, add to object
-            this.KeysDown[k] = true;
-
-            this.KeyDown = k;
-            this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
         }
+        super.KeyboardDown(e);
     }
 
     KeyboardUp(e) {
+        super.KeyboardUp(e);
         var k = this.MasterKeyboardMap[e.keyCode];
 
         //Check if this key released is in out key_map
@@ -161,6 +165,7 @@ class KeyboardInputManager extends InputManager {
 
         this.KeyUp = k;
         this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
+
     }
 }
 

@@ -6,13 +6,14 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Scuzz extends PreEffect {
 
     public LFO: Tone.LFO;
+    public Params: ScuzzParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
             this.Params = {
                 depth: 1000,
-                rate: 100
+                rate: 100,
             };
         }
 

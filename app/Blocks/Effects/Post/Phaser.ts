@@ -5,6 +5,7 @@ import BlocksSketch = require("../../../BlocksSketch");
 class Phaser extends PostEffect {
 
     public Effect: Tone.Phaser;
+    public Params: PhaserParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 

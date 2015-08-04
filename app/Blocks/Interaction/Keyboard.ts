@@ -5,6 +5,9 @@ import PitchComponent = require("./../Effects/Pre/Pitch");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import Voice = require("./VoiceObject");
+import Granular = require("../Sources/Granular");
+import Soundcloud = require("../Sources/Soundcloud");
+import Recorder = require("../Sources/Recorder");
 
 /**
  * Base class for mono, poly and midi keyboards
@@ -38,23 +41,13 @@ class Keyboard extends PreEffect {
 
         // FOR ALL SOURCES
         for (let i = 0; i < this.Sources.Count; i++) {
-            var source: ISource = this.Sources.GetValueAt(i);
+            const source: ISource = this.Sources.GetValueAt(i);
 
-            if (this.IsPressed){
-                source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
-                    //FIXME: use the new TriggerRelease method
-                    e.triggerRelease();
-                });
+            // Release all the sources envelopes
+            source.TriggerRelease('all', true);
 
-            }
-
-            //FIXME: Change this to only set the main frequency back.
-            source.Sources.forEach((s: any) => {
-                if (s.frequency){
-                    s.frequency.value = source.Params.frequency;
-                }
-            });
-
+            // Reset pitch back to original setting
+            source.ResetPitch();
         }
 
         super.Detach(source);
@@ -183,8 +176,18 @@ class Keyboard extends PreEffect {
      * @returns {number}
      * @constructor
      */
-    public GetFrequencyOfNote(note, source): number {
-        return source.Sources[0].noteToFrequency(note) * this.GetConnectedPitchPreEffects(source);
+    public GetFrequencyOfNote(note, source:ISource): number {
+        if (source.Params.baseFrequency) {
+            return source.Sources[0].noteToFrequency(note) *
+                this.GetConnectedPitchPreEffects(source) *
+                App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency);
+        } else if (source instanceof Soundcloud || source instanceof Recorder) { //TODO: make a sample base class that contains Soundclouds, Recorders, Samplers, and Waveplayers
+            return source.Sources[0].noteToFrequency(note) *
+                this.GetConnectedPitchPreEffects(source) * source.Params.playbackRate;
+        } else {
+            return source.Sources[0].noteToFrequency(note) *
+                this.GetConnectedPitchPreEffects(source);
+        }
     }
 
     /**

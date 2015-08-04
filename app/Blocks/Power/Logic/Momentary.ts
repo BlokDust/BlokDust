@@ -76,7 +76,7 @@ class Momentary extends Logic {
 
     PerformLogic() {
         // Momentarily Trigger Attack and then release
-        this.Params.logic = 1;
+        this.Params.logic = true;
         for (var i = 0; i < this.Sources.Count; i++) {
             var source = this.Sources.GetValueAt(i);
             source.TriggerAttackRelease();
@@ -84,7 +84,7 @@ class Momentary extends Logic {
                 (<ParticleEmitter>source).EmitParticle();
             }
         }
-        this.Params.logic = 0;
+        this.Params.logic = false;
     }
 }
 

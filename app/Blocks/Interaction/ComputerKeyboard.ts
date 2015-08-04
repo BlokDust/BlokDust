@@ -11,8 +11,9 @@ class ComputerKeyboard extends Keyboard {
 
     public KeyboardCommands: any = {
         OctaveUp: 'octave-up',
-        OctaveDown: 'octave-down'
+        OctaveDown: 'octave-down',
     };
+    public Params: KeyboardParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
@@ -20,7 +21,7 @@ class ComputerKeyboard extends Keyboard {
             this.Params = {
                 octave: 3,
                 glide: 0.05,
-                isPolyphonic: 0 // Polyphonic mode: boolean, default: off
+                isPolyphonic: false,
             };
         }
 
@@ -46,7 +47,7 @@ class ComputerKeyboard extends Keyboard {
     }
 
     Detach(source: ISource): void {
-        source.TriggerRelease('all'); //todo:
+        source.TriggerRelease('all');
         super.Detach(source);
     }
 
@@ -118,6 +119,9 @@ class ComputerKeyboard extends Keyboard {
                 // Yes, get one of them and remove it from FreeVoices list
                 var voice = source.FreeVoices.shift();
 
+                // Store the keydown
+                voice.Key = keyDown;
+
                 // Add it to the ActiveVoices list
                 source.ActiveVoices.push( voice );
 
@@ -131,6 +135,9 @@ class ComputerKeyboard extends Keyboard {
 
                 // No free voices available - steal the oldest one from active voices
                 var voice: Voice = source.ActiveVoices.shift();
+
+                // Store the keydown
+                voice.Key = keyDown;
 
                 // Set the new pitch
                 source.SetPitch(frequency, voice.ID);
@@ -159,16 +166,11 @@ class ComputerKeyboard extends Keyboard {
         if (this.Params.isPolyphonic) {
             // POLYPHONIC MODE
 
-            var keyPressed = this.GetKeyNoteOctaveString(keyUp);
-            var keyUpFrequency = this.GetFrequencyOfNote(keyPressed, source);
-
             // Loop through all the active voices
             source.ActiveVoices.forEach((voice: Voice, i: number) => {
 
-                var thisPitch = source.GetPitch(voice.ID)? source.GetPitch(voice.ID) : 0;
-
-                // if this active voice has the same frequency as the frequency corresponding to the keyUp
-                if (Math.round(thisPitch) === Math.round(keyUpFrequency)) {
+                // if key pressed is a saved in the ActiveVoices stop it
+                if (voice.Key === keyUp) {
                     // stop it
                     source.TriggerRelease(voice.ID);
 
@@ -213,7 +215,7 @@ class ComputerKeyboard extends Keyboard {
                         {
                             "name" : "Mono/Poly",
                             "setting" :"polyphonic",
-                            "value": this.Params.polyphonic
+                            "value": this.Params.isPolyphonic
                         }
                     ]
                 },

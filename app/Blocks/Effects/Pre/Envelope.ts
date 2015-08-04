@@ -5,6 +5,8 @@ import BlocksSketch = require("../../../BlocksSketch");
 
 class Envelope extends PreEffect {
 
+    public Params: EnvelopeParams;
+
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
         if (!this.Params) {
@@ -12,7 +14,7 @@ class Envelope extends PreEffect {
                 attack: 1,
                 decay: 5,
                 sustain: 0.7,
-                release: 4
+                release: 4,
             };
         }
 

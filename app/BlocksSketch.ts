@@ -602,12 +602,12 @@ class BlocksSketch extends Grid {
                     if (!source.Effects.Contains(effect)){
 
                         if (source instanceof PowerSource && effect instanceof PowerEffect || !(source instanceof PowerSource)) {
+                            //Add sources to effect
+                            effect.AddSource(source);
 
                             // Add effect to source
                             source.AddEffect(effect);
 
-                            //Add sources to effect
-                            effect.AddSource(source);
 
                         }
 
@@ -618,11 +618,11 @@ class BlocksSketch extends Grid {
                     // remove it as it's now too far away.
                     if (source.Effects.Contains(effect)){
 
-                        // Remove effect from source
-                        source.RemoveEffect(effect);
-
                         // Remove source from effect
                         effect.RemoveSource(source);
+
+                        // Remove effect from source
+                        source.RemoveEffect(effect);
                     }
                 }
             }
@@ -812,7 +812,7 @@ class BlocksSketch extends Grid {
         var sketch = this;
         setTimeout(function() {
             sketch.Paused = false;
-            App.AudioMixer.Master.volume.rampTo(App.AudioMixer.MasterVolume,1);
+            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
         },200);
 
         if (!App.LoadCued) {

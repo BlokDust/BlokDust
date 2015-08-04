@@ -1,5 +1,5 @@
 {
-    "MaxOperations": "20",
+    "MaxOperations": "5",
     "PixelPaletteImagePath": "img/palette6.gif",
     "SoundCloudClientId": "7258ff07f16ddd167b55b8f9b9a3ed33",
     "SoundCloudDefaultTracks": [
@@ -23,5 +23,7 @@
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
     "PolyphonicVoices": 5,
     "PulseLength": "16n",
-    "BaseNote": 440
+    "BaseNote": 261.6,
+    "SoundCloudLoadTimeout": 20,
+    "ResetPitchesOnInteractionDisconnect": true
 }

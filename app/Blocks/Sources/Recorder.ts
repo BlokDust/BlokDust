@@ -1,8 +1,9 @@
 import Grid = require("../../Grid");
 import BlocksSketch = require("../../BlocksSketch");
 import Source = require("../Source");
+import SamplerBase = require("./SamplerBase");
 
-class RecorderBlock extends Source {
+class RecorderBlock extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;
@@ -10,12 +11,10 @@ class RecorderBlock extends Source {
     public Filename: string;
     public IsRecording: boolean = false;
     public RecordedBlob;
-    public PlaybackRate: number;
     private _WaveForm: number[];
+    public Params: SamplerParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
-
-        this.PlaybackRate = 1;
 
         if (!this.Params) {
             this.Params = {
@@ -27,7 +26,8 @@ class RecorderBlock extends Source {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 0
+                volume: 0,
+                track: null,
             };
         }
 
@@ -35,10 +35,9 @@ class RecorderBlock extends Source {
 
         super.Init(sketch);
 
-        this.CreateSource();
-        this.BufferSource = App.AudioMixer.Master.context.createBufferSource();
+        this.BufferSource = App.Audio.ctx.createBufferSource();
 
-        this.Recorder = new Recorder(App.AudioMixer.Master, {
+        this.Recorder = new Recorder(App.Audio.Master, {
             workerPath: App.Config.RecorderWorkerPath
         });
 
@@ -118,18 +117,18 @@ class RecorderBlock extends Source {
 
             // if BufferSource doesn't exist create it
             if (!this.BufferSource) {
-                this.BufferSource = this.Sources[0].context.createBufferSource();
+                this.BufferSource = App.Audio.ctx.createBufferSource();
             }
             // If we already have a BufferSource and the buffer is set, reset it to null and create a new one
             else if (this.BufferSource && this.BufferSource.buffer !== null){
                 this.BufferSource = null;
-                this.BufferSource = this.Sources[0].context.createBufferSource();
+                this.BufferSource = App.Audio.ctx.createBufferSource();
             }
 
             // TODO: add an overlay function which would merge new buffers with old buffers
 
             // Create a new buffer and set the buffers to the recorded data
-            this.BufferSource.buffer = this.Sources[0].context.createBuffer(1, buffers[0].length, 44100);
+            this.BufferSource.buffer = App.Audio.ctx.createBuffer(1, buffers[0].length, 44100);
             this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
             this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
 
@@ -154,10 +153,7 @@ class RecorderBlock extends Source {
         this.Params.loopStart = duration * 0.5;
         this.Params.loopEnd = duration;
 
-        if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-            this.UpdateOptionsForm();
-            (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel();
     }
 
     GetDuration(): number {
@@ -229,7 +225,8 @@ class RecorderBlock extends Source {
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this._WaveForm,
-                        "mode" : this.Params.loop
+                        "mode" : this.Params.loop,
+                        "emptystring" : "No Sample"
                     },
                     "nodes": [
                         {
@@ -302,12 +299,9 @@ class RecorderBlock extends Source {
                 console.log("out: "+ value);
                 this.Sources[0].player.reverse = value;
                 // Update waveform
+                this.Params[param] = val;
                 this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = val;
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.RefreshOptionsPanel();
                 break;
             case "loop":
                 value = value? true : false;
@@ -315,11 +309,8 @@ class RecorderBlock extends Source {
                     s.player.loop = value;
                 });
                 // update showing loop sliders
-                if ((<BlocksSketch>this.Sketch).OptionsPanel.Scale==1 && (<BlocksSketch>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                    this.Params[param] = val;
-                    this.UpdateOptionsForm();
-                    (<BlocksSketch>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-                }
+                this.Params[param] = val;
+                this.RefreshOptionsPanel();
                 break;
             case "loopStart":
                 this.Sources.forEach((s: Tone.Simpler)=> {
@@ -334,46 +325,6 @@ class RecorderBlock extends Source {
         }
 
         this.Params[param] = val;
-    }
-
-    /**
-     * Trigger a Simpler's attack
-     * If no index is set trigger the first in the array
-     * @param {number | string} index
-     * Index is the position of the Envelope in Envelopes[].
-     * If index is set to 'all', all envelopes will be triggered
-     */
-    TriggerAttack(index: number|string = 0) {
-        if (index === 'all'){
-            // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
-            });
-        } else {
-            // Trigger the specific one
-            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
-        }
-    }
-
-    /**
-     * Trigger a Simpler's release
-     * If no index is set release the first in the array
-     * @param index number|string position of the Envelope in Envelopes[].
-     * If index is set to 'all', all envelopes will be released
-     */
-    TriggerRelease(index: number|string = 0) {
-        // Only if it's not powered
-        if (!this.IsPowered()) {
-            if (index === 'all'){
-                // Trigger all the envelopes
-                this.Sources.forEach((s: any)=> {
-                    s.triggerRelease();
-                });
-            } else {
-                // Trigger the specific one
-                this.Sources[index].triggerRelease();
-            }
-        }
     }
 
 }
