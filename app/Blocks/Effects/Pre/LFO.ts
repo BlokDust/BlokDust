@@ -21,9 +21,6 @@ class LFO extends PreEffect {
         this.LFO.frequency.value = this.Params.rate;
         this.LFO.min = -this.Params.depth;
         this.LFO.max = this.Params.depth;
-
-
-        //this.LFO = new Tone.LFO(this.Params.rate, -this.Params.depth, this.Params.depth);
         this.LFO.type = 'triangle';
         this.LFO.start();
 
@@ -41,10 +38,9 @@ class LFO extends PreEffect {
     Attach(source:ISource): void{
         super.Attach(source);
 
-        console.log('attach', source);
-        source.Sources.forEach((s: any) => {
-            if (s.detune){
-                this.LFO.connect(s.detune);
+        source.Sources.forEach((osc: any) => {
+            if (osc.detune){
+                this.LFO.connect(osc.detune);
             }
         });
     }
@@ -52,14 +48,12 @@ class LFO extends PreEffect {
     Detach(source:ISource): void {
         super.Detach(source);
 
-        console.log('detach');
-        source.Sources.forEach((s: any) => {
-            if (s.detune){
+        source.Sources.forEach((osc: any) => {
+            if (osc.detune){
                 // The disconnect method will disconnect all connected to it, so we need to reconnect any others
                 this.LFO.disconnect();
             }
         });
-
 
         this.UpdatePreEffectConnections();
     }
@@ -67,11 +61,11 @@ class LFO extends PreEffect {
     UpdatePreEffectConnections() {
         super.UpdatePreEffectConnections();
         const sources = this.Sources.ToArray();
-        sources.forEach((s: ISource) => {
+        sources.forEach((source: ISource) => {
 
-            s.Sources.forEach((s: Tone.Oscillator) => {
-                if (s.detune){
-                    this.LFO.connect(s.detune);
+            source.Sources.forEach((osc: Tone.Oscillator) => {
+                if (osc.detune){
+                    this.LFO.connect(osc.detune);
                 }
             })
 
@@ -96,17 +90,6 @@ class LFO extends PreEffect {
 
         this.Params[param] = val;
     }
-
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="rate") {
-            val = this.LFO.frequency.value;
-        } else if (param=="depth") {
-            val = this.LFO.max;
-        }
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();

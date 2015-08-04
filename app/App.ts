@@ -302,7 +302,6 @@ class App implements IApp{
             b.Refresh();
             b.UpdateConnections();
         });
-        console.log('once!')
     }
 
     OnTicked (lastTime: number, nowTime: number) {

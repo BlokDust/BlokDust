@@ -157,17 +157,18 @@ class LaserBeams {
                     } // end if powered
 
                     // FOR EACH COLLISION CHECK RELEASE //
-                    for (var j = 0; j < laser.Collisions.length; j++) {
-                        var block = laser.Collisions[j];
-                        if (collisions.length==0 || $.inArray(block, collisions)==-1) {
-                            console.log("RELEASE "+ block.Id);
-                            if (!(block instanceof Logic)) {
-                                block.PowerConnections -= 1;
-                                block.TriggerRelease();
+                    if (laser.Collisions && laser.Collisions.length){
+                        for (var j = 0; j < laser.Collisions.length; j++) {
+                            var block = laser.Collisions[j];
+                            if (collisions.length==0 || $.inArray(block, collisions)==-1) {
+                                console.log("RELEASE "+ block.Id);
+                                if (!(block instanceof Logic)) {
+                                    block.PowerConnections -= 1;
+                                    block.TriggerRelease();
+                                }
                             }
                         }
                     }
-                    //console.log(collisions);
                     // UPDATE COLLISIONS ARRAY
                     laser.Collisions = collisions;
 

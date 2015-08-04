@@ -73,6 +73,31 @@ class Envelope extends PreEffect {
 
     }
 
+    UpdatePreEffectConnections() {
+        super.UpdatePreEffectConnections();
+
+        const sources = this.Sources.ToArray();
+        sources.forEach((source: ISource) => {
+
+            if (source.Envelopes.length) {
+                source.Envelopes.forEach((e: Tone.Envelope) => {
+                    e.attack = this.Params.attack;
+                    e.decay = this.Params.decay;
+                    e.sustain = this.Params.sustain;
+                    e.release = this.Params.release;
+                });
+            } else if (source.Sources[0] instanceof Tone.Simpler) {
+                source.Sources.forEach((s: Tone.Simpler) => {
+                    let e = s.envelope;
+                    e.attack = this.Params.attack;
+                    e.decay = this.Params.decay;
+                    e.sustain = this.Params.sustain;
+                    e.release = this.Params.release;
+                });
+            }
+        });
+    }
+
     SetParam(param: string, value: number) {
         super.SetParam(param, value);
 
