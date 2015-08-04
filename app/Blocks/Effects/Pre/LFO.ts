@@ -17,8 +17,15 @@ class LFO extends PreEffect {
             };
         }
 
-        this.LFO = new Tone.LFO(this.Params.rate, -this.Params.depth, this.Params.depth);
+        this.LFO = new Tone.LFO();
+        this.LFO.frequency.value = this.Params.rate;
+        this.LFO.min = -this.Params.depth;
+        this.LFO.max = this.Params.depth;
+
+
+        //this.LFO = new Tone.LFO(this.Params.rate, -this.Params.depth, this.Params.depth);
         this.LFO.type = 'triangle';
+        this.LFO.start();
 
         super.Init(sketch);
 
@@ -34,11 +41,10 @@ class LFO extends PreEffect {
     Attach(source:ISource): void{
         super.Attach(source);
 
-
+        console.log('attach', source);
         source.Sources.forEach((s: any) => {
             if (s.detune){
                 this.LFO.connect(s.detune);
-                this.LFO.start();
             }
         });
     }
@@ -46,15 +52,34 @@ class LFO extends PreEffect {
     Detach(source:ISource): void {
         super.Detach(source);
 
+        console.log('detach');
         source.Sources.forEach((s: any) => {
             if (s.detune){
-                this.LFO.stop();
+                // The disconnect method will disconnect all connected to it, so we need to reconnect any others
                 this.LFO.disconnect();
             }
+        });
+
+
+        this.UpdatePreEffectConnections();
+    }
+
+    UpdatePreEffectConnections() {
+        super.UpdatePreEffectConnections();
+        const sources = this.Sources.ToArray();
+        sources.forEach((s: ISource) => {
+
+            s.Sources.forEach((s: Tone.Oscillator) => {
+                if (s.detune){
+                    this.LFO.connect(s.detune);
+                }
+            })
+
         });
     }
 
     Dispose() {
+        this.LFO.stop();
         this.LFO.dispose();
     }
 

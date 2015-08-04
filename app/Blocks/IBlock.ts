@@ -28,6 +28,7 @@ interface IBlock extends IDisplayObject{
     SetParam(param: string, value: number): void;
     GetParam(param: string): void;
     UpdateParams(params: any): void;
+    UpdateConnections(): void;
 }
 
 export = IBlock;
