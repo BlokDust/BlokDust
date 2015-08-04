@@ -675,12 +675,12 @@ class SharePanel extends DisplayObject{
         var units = (App.Unit);
 
         //TODO: Move to AppMetrics
-
+        var pr = App.Metrics.PixelRatio;
         var shareUrl = document.getElementById("shareUrl");
         shareUrl.style.font = App.Metrics.TxtUrl;
-        shareUrl.style.width = "" + (units*400) + "px";
-        shareUrl.style.height = "" + (units*40) + "px";
-        shareUrl.style.lineHeight = "" + (units*40) + "px";
+        shareUrl.style.width = "" + (units*(400/pr)) + "px";
+        shareUrl.style.height = "" + (units*(40/pr)) + "px";
+        shareUrl.style.lineHeight = "" + (units/(40*pr)) + "px";
         shareUrl.style.color = App.Palette[8];
         shareUrl.style.display = "block";
 
@@ -693,8 +693,8 @@ class SharePanel extends DisplayObject{
             this.OffsetX = -App.Width;
         }
 
-        shareUrl.style.left = "" + (this.OffsetX + (App.Width*1.5) - (units*200)) + "px";
-        shareUrl.style.top = "" + (this.OffsetY + (App.Height*0.5) - (units*20)) + "px";
+        shareUrl.style.left = "" + ((this.OffsetX + (App.Width*1.5) - (units*200))/pr) + "px";
+        shareUrl.style.top = "" + ((this.OffsetY + (App.Height*0.5) - (units*20))/pr) + "px";
 
     }
 }
