@@ -16,7 +16,6 @@ import SoundcloudTrack = require("../UI/SoundcloudTrack");
 class Source extends Block implements ISource {
 
     public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
-    public OldEffects: ObservableCollection<IEffect>;
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
@@ -78,9 +77,8 @@ class Source extends Block implements ISource {
         this.UpdateOptionsForm();
     }
 
-
     /**
-     * Add effect to this Source's list of effects
+     * Add effect to this Source's list of effects and call Effect.Attach()
      * @param effect
      */
     AddEffect(effect: IEffect) {
@@ -89,7 +87,7 @@ class Source extends Block implements ISource {
     }
 
     /**
-     * Remove effect from this Source's list of effects
+     * Remove effect from this Source's list of effects and call Effect.Detach()
      * @param effect
      */
     RemoveEffect(effect: IEffect) {
@@ -137,24 +135,6 @@ class Source extends Block implements ISource {
 
         // Reorder the post effects chain
         this.UpdateEffectsChain(postEffects);
-    }
-
-    /**
-     * Runs attach method for all effect blocks that need a bespoke way of connecting (usually pre-effect blocks)
-     * @param effect
-     * @private
-     */
-    private _AttachEffect(effect: IEffect ) {
-        effect.Attach(<ISource>this);
-    }
-
-    /**
-     * Runs detach method for all effect blocks that need a bespoke way of disconnecting (usually pre-effect blocks)
-     * @param effect
-     * @private
-     */
-    private _DetachEffect(effect: IEffect) {
-        effect.Detach(<ISource>this);
     }
 
     /**
