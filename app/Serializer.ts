@@ -39,8 +39,8 @@ class Serializer {
         }
 
         var json = {
-            ZoomLevel: App.BlocksSketch.ZoomLevel,
-            ZoomPosition: App.BlocksSketch.ZoomPosition,
+            ZoomLevel: App.ZoomLevel,
+            DragOffset: App.DragOffset,
             Composition: [],
             Version: Version.Version
         };
@@ -131,7 +131,7 @@ class Serializer {
 
         var saveFile = new SaveFile();
         saveFile.ZoomLevel = parsed.ZoomLevel;
-        saveFile.ZoomPosition = new Point(parsed.ZoomPosition.x, parsed.ZoomPosition.y);
+        saveFile.DragOffset = new Point(parsed.DragOffset.x, parsed.DragOffset.y);
         saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
 
         return saveFile;

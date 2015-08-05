@@ -273,9 +273,10 @@ class App implements IApp{
         this.Deserialize(data);
 
         // set initial zoom level/position
-        this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
-        this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
-
+        this.ZoomLevel = this._SaveFile.ZoomLevel;
+        this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
+        this.BlocksSketch.ZoomButtons.UpdateSlot(this.ZoomLevel);
+        this.Metrics.UpdateGridScale();
 
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {

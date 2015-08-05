@@ -80,6 +80,10 @@ class ToolTip extends DisplayObject {
         this._AlphaTween.start(this.LastVisualTick);
     }
 
+    StopTween() {
+        TWEEN.remove(this._AlphaTween);
+    }
+
 
 }
 

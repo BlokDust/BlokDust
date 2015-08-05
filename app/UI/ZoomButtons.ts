@@ -14,25 +14,30 @@ class ZoomButtons extends DisplayObject {
     private _OutPos: Point;
     public Tweens: any[];
     private _ZoomSlots: number[];
-    private _CurrentSlot: number;
+    public CurrentSlot: number;
+    public ZoomAlpha: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;
         var units = App.Unit;
-        this._InPos = new Point(30*units,App.Height - (30*units));
-        this._OutPos = new Point(70*units,App.Height - (30*units));
+        this.UpdatePositions();
         this.Tweens = [];
 
         this._ZoomSlots = [0.25,0.5,1,2,4];
-        this._CurrentSlot = 2;
+        this.CurrentSlot = 1;
+        this.ZoomAlpha = 0;
     }
 
     UpdatePositions() {
         var units = App.Unit;
         this._InPos = new Point(30*units,App.Height - (30*units));
         this._OutPos = new Point(70*units,App.Height - (30*units));
+    }
+
+    UpdateSlot(zoom) {
+        this.CurrentSlot = this._ZoomSlots.indexOf(zoom);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -46,7 +51,7 @@ class ZoomButtons extends DisplayObject {
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = App.Palette[8];// White
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[8];// White
 
         var zin = this._InPos;
         var zout = this._OutPos;
@@ -99,8 +104,17 @@ class ZoomButtons extends DisplayObject {
             ctx.stroke();
         }
 
+        if (this.ZoomAlpha>0) {
+            ctx.globalAlpha = this.ZoomAlpha;
+            ctx.textAlign = "center";
+            ctx.font = App.Metrics.TxtUrl2;
+            var string = "x " + (Math.round(App.ZoomLevel * 100) / 100);
+            ctx.fillText(string,50*units,App.Height - (50*units));
+        }
 
 
+
+        ctx.globalAlpha = 1;
 
     }
 
@@ -115,7 +129,9 @@ class ZoomButtons extends DisplayObject {
         offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
-            panel.Metrics.UpdateGridScale();
+            if (v=="ZoomLevel") {
+                panel.Metrics.UpdateGridScale();
+            }
         });
         offsetTween.easing(TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
@@ -162,16 +178,24 @@ class ZoomButtons extends DisplayObject {
 
 
     ZoomIn() {
-        if (this._CurrentSlot<this._ZoomSlots.length-1) {
-            this._CurrentSlot +=1;
-            this.DelayTo(App,this._ZoomSlots[this._CurrentSlot],500,0,"ZoomLevel");
+        if (this.CurrentSlot<this._ZoomSlots.length-1) {
+            App.BlocksSketch.OptionsPanel.Close();
+            this.CurrentSlot +=1;
+            this.StopAllTweens();
+            this.ZoomAlpha = 1;
+            this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
+            this.DelayTo(this,0,500,700,"ZoomAlpha");
         }
     }
 
     ZoomOut() {
-        if (this._CurrentSlot>0) {
-            this._CurrentSlot -=1;
-            this.DelayTo(App,this._ZoomSlots[this._CurrentSlot],500,0,"ZoomLevel");
+        if (this.CurrentSlot>0) {
+            App.BlocksSketch.OptionsPanel.Close();
+            this.CurrentSlot -=1;
+            this.StopAllTweens();
+            this.ZoomAlpha = 1;
+            this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
+            this.DelayTo(this,0,500,700,"ZoomAlpha");
         }
     }
 

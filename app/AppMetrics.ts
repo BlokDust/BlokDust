@@ -135,6 +135,12 @@ class Metrics {
         return new Point(x,y);
     }
 
+    public UnscaledPointOnGrid(point: Point): Point {
+        var x = (this.C.x + App.DragOffset.x) + (point.x * App.GridSize);
+        var y = (this.C.y + App.DragOffset.y) + (point.y * App.GridSize);
+        return new Point(x,y);
+    }
+
     public FloatOnGrid(point: Point): Point {
         var x = (this.C.x + App.ScaledDragOffset.x) + (point.x * App.ZoomLevel);
         var y = (this.C.y + App.ScaledDragOffset.y) + (point.y * App.ZoomLevel);

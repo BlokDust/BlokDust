@@ -92,25 +92,25 @@ class Grid extends Fayde.Drawing.SketchContext {
         return new Size(this.Width * this.ScaleTransform.ScaleX, this.Height * this.ScaleTransform.ScaleY);
     }
 
-    public GetRandomGridPosition(): Point{
+    /*public GetRandomGridPosition(): Point{
         var p = new Point(Math.random() * this.Width, Math.random() * this.Height);
         p = this.SnapToGrid(p);
         return this.ConvertAbsoluteToGridUnits(p);
-    }
+    }*/
 
     // BLOCK SNAPPING //
-    public SnapToGrid(point: Point): Point {
+    /*public SnapToGrid(point: Point): Point {
 
         var w = this.CellWidth.width;
         var x = Math.round((point.x)/w)*w;
         var y = Math.round((point.y)/w)*w;
 
         return new Point(x, y);
-    }
+    }*/
 
     // convert a point in base coordinate space
     // into transformed coordinate space.
-    public ConvertBaseToTransformed(point: Point): Point {
+    /*public ConvertBaseToTransformed(point: Point): Point {
 
         point = point.Clone();
 
@@ -150,15 +150,15 @@ class Grid extends Fayde.Drawing.SketchContext {
 
     public ConvertGridUnitsToAbsolute(point: Point): Point {
         return new Point(this.CellWidth.width * point.x, this.CellWidth.width * point.y);
-    }
+    }*/
 
-    public ConvertScaledGridUnitsToAbsolute(point: Point): Point {
+    /*public ConvertScaledGridUnitsToAbsolute(point: Point): Point {
         return new Point((this.ScaledCellWidth.width * point.x) + this.TranslateTransform.X, (this.ScaledCellWidth.width * point.y) + this.TranslateTransform.Y);
-    }
+    }*/
 
-    public ConvertAbsoluteToGridUnits(point: Point): Point {
+    /*public ConvertAbsoluteToGridUnits(point: Point): Point {
         return new Point(point.x / this.CellWidth.width, point.y / this.CellWidth.width);
-    }
+    }*/
 
     /*public GetHeightDivisor(): number {
         // the vertical divisor is the amount you need to divide the canvas height by in order to get the cell width

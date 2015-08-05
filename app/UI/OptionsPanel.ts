@@ -41,6 +41,7 @@ class OptionsPanel extends DisplayObject {
     public InitJson;
     private _JsonMemory;
     public Hover: boolean;
+    public Opening: boolean;
     public Outline: Point[] = [];
 
     constructor() {
@@ -59,6 +60,7 @@ class OptionsPanel extends DisplayObject {
         this._Name = "";
         this._NameWidth = 0;
         this.Hover = false;
+        this.Opening = false;
 
         this.Options = [];
         this.SliderColours = [];
@@ -165,8 +167,6 @@ class OptionsPanel extends DisplayObject {
 
 
         // POPULATE PANEL //
-        this.Position.x = 250*units;
-        this.Position.y = Math.round(this.Ctx.canvas.height*0.6);
         this.Size.width = panelW;
         this.Size.height = panelH;
         this.Margin = panelM;
@@ -393,9 +393,9 @@ class OptionsPanel extends DisplayObject {
         }
         this.Options = optionList; // update slider array
 
-        if (open){
-            this.PanelScale(this,1,200);
-        }
+        //if (open){
+        //    this.PanelScale(this,1,200);
+        //}
 
 
     }
@@ -590,6 +590,42 @@ class OptionsPanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
+    Open(block) {
+        block.UpdateOptionsForm();
+        if (block.OptionsForm) {
+            var newBlock: boolean = (block!==this.SelectedBlock);
+            if(this.Scale==1 && newBlock) {
+                this.Close();
+            }
+            this.Opening = true;
+            this.SelectedBlock = block;
+            App.BlocksSketch.StageDragger.Jump(block.Position,this.Position);
+
+            var me = this;
+            setTimeout(function() {
+                me.Opening = false;
+                me.Populate(block.OptionsForm,true);
+                me.PanelScale(me,1,200);
+            },400);
+        }
+    }
+
+    Refresh() {
+        if (this.Scale==1) {
+            this.SelectedBlock.UpdateOptionsForm();
+            this.Populate(this.SelectedBlock.OptionsForm, false);
+        }
+    }
+
+    Resize() {
+        this.Position.x = 250*App.Unit;
+        this.Position.y = Math.round(App.Height*0.6);
+    }
+
+    Close() {
+        this.PanelScale(this,0,200);
+    }
+
     //TODO: move into interaction functions within option components, as with drawing
     MouseDown(mx,my) {
         this.RolloverCheck(mx,my);
@@ -663,7 +699,7 @@ class OptionsPanel extends DisplayObject {
 
         }
         if (this._PanelCloseRoll) {
-            this.PanelScale(this,0,200);
+            this.Close();
         }
     }
 
