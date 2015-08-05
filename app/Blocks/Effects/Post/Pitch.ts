@@ -5,6 +5,8 @@ import PitchShifter = require("./PitchShifter");
 
 class Pitch extends PostEffect {
 
+    public Input: GainNode;
+    public Output: GainNode;
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
 
@@ -16,7 +18,9 @@ class Pitch extends PostEffect {
             };
         }
 
-        this.Effect = new PitchShifter();
+        this.Effect = new PitchShifter(App.Audio.ctx);
+        this.Input = this.Effect.input;
+        this.Output = this.Effect.output;
 
 
         super.Init(sketch);

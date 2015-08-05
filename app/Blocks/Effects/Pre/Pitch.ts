@@ -146,11 +146,11 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import BlocksSketch = require("../../../BlocksSketch");
-import PitchShifter = require("../Post/PitchShifter");
+//import PitchShifter = require("../Post/PitchShifter");
 
 class Pitch extends PostEffect {
 
-    public Effect: PitchShifter;
+    //public Effect: PitchShifter;
     public Params: PitchShifterParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
@@ -161,7 +161,7 @@ class Pitch extends PostEffect {
             };
         }
 
-        this.Effect = new PitchShifter();
+        //this.Effect = new PitchShifter();
 
         super.Init(sketch);
 
