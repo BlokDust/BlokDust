@@ -15,7 +15,7 @@ class ToolTip extends DisplayObject {
     public Position: Point;
     private _AlphaTween: TWEEN.Tween;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Name = "";
@@ -78,6 +78,10 @@ class ToolTip extends DisplayObject {
         });
         this._AlphaTween.easing(TWEEN.Easing.Quintic.InOut);
         this._AlphaTween.start(this.LastVisualTick);
+    }
+
+    StopTween() {
+        TWEEN.remove(this._AlphaTween);
     }
 
 

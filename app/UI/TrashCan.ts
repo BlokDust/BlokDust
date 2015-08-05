@@ -8,7 +8,7 @@ class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this._RollOver = false;

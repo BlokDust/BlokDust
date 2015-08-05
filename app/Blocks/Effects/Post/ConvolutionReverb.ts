@@ -19,7 +19,7 @@ class Convolver extends PostEffect {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {
@@ -33,6 +33,12 @@ class Convolver extends PostEffect {
             setTimeout(function() {
                 me.FirstSetup();
             },100);
+        }
+
+        if (!this.Params.trackName) { //TODO patch for older version, can remove in future
+            this.Params.trackName = 'TEUFELSBERG';
+            this.Params.user = 'BGXA';
+            this.Params.track = '../Assets/ImpulseResponses/teufelsberg01.wav';
         }
 
         this._WaveForm = [];

@@ -7,7 +7,7 @@ class BitCrusher extends PostEffect {
     public Effect: Tone.BitCrusher;
     public Params: BitCrusherParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

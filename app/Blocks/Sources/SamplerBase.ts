@@ -5,13 +5,11 @@ import BlocksSketch = require("../../BlocksSketch");
 class SamplerBase extends Source {
 
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         super.Init(sketch);
         this.CreateSource();
 
-        // Define Outline for HitTest
-        this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }
 
     CreateSource(){

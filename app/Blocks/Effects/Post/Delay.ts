@@ -7,7 +7,7 @@ class Delay extends PostEffect {
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

@@ -30,14 +30,14 @@ class Header extends DisplayObject{
     public MenuOver: boolean;
     public Tweens: any[];
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this._Units = 1.7;
         this.Height = 60;
         this.MenuItems = [];
         this.ItemsPerPage = 6;
-        this.DropDownHeight = (this.Sketch.Width / (this.ItemsPerPage + 1)) / (<Grid>this.Sketch).Unit.width;
+        this.DropDownHeight = (App.Width / (this.ItemsPerPage + 1)) / App.Unit;
         this.DropDown = 0;
         this._SelectedCategory = 0;
         this._MenuCols = [9,5,7,4,3];
@@ -488,7 +488,7 @@ class Header extends DisplayObject{
 
     HitTests(point) {
         var units = App.Unit;
-        var grd = (<Grid>this.Sketch).CellWidth.width;
+        var grd = App.GridSize;
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {

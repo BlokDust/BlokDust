@@ -8,7 +8,7 @@ class Scuzz extends PreEffect {
     public LFO: Tone.LFO;
     public Params: ScuzzParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

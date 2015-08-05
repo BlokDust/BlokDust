@@ -9,7 +9,7 @@ class Noise extends Source {
     public Waveform: string;
     public NoiseParams: NoiseParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         this.Waveform = 'brown';
 

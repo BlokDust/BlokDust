@@ -46,7 +46,7 @@ class Source extends Block implements ISource {
     public ResultsPage: number;
     public SearchString: string;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Sources = [];

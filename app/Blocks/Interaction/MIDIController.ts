@@ -16,7 +16,7 @@ class MIDIController extends Keyboard {
     private _Note;
     private _Velocity;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

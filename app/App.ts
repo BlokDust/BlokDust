@@ -51,6 +51,11 @@ class App implements IApp{
     private _SaveFile: SaveFile;
     public Unit: number;
     public GridSize: number;
+    public ScaledUnit: number;
+    public ScaledGridSize: number;
+    public ZoomLevel: number;
+    public DragOffset: Point;
+    public ScaledDragOffset: Point;
     public Width: number;
     public Height: number;
     public Metrics: Metrics;
@@ -237,6 +242,7 @@ class App implements IApp{
                 // fail silently
                 this.CompositionId = null;
                 this.Splash.LoadOffset = 1;
+                console.log(error);
             });
         } else {
             this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
@@ -249,6 +255,7 @@ class App implements IApp{
     CreateBlockSketch() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
+        this.BlocksSketch.Setup();
         this.Blocks = [];
 
         // add blocks to BlocksSketch DisplayList
@@ -268,9 +275,10 @@ class App implements IApp{
         this.Deserialize(data);
 
         // set initial zoom level/position
-        this.BlocksSketch.ZoomLevel = this._SaveFile.ZoomLevel;
-        this.BlocksSketch.ZoomPosition = new Point(this._SaveFile.ZoomPosition.x, this._SaveFile.ZoomPosition.y);
-
+        this.ZoomLevel = this._SaveFile.ZoomLevel;
+        this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
+        this.BlocksSketch.ZoomButtons.UpdateSlot(this.ZoomLevel);
+        this.Metrics.UpdateGridScale();
 
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {
@@ -351,6 +359,10 @@ class App implements IApp{
 
     get Canvas() {
         return this._Canvas;
+    }
+
+    get Ctx() {
+        return this._Canvas.getContext("2d");
     }
 
     Resize(): void {

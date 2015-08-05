@@ -11,7 +11,7 @@ class Microphone extends Source {
     private _FirstRelease: boolean = true;
     private _unmutedVolume: number = 1;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         if (!this.Params) {
             this.Params = {
                 gain: 1,

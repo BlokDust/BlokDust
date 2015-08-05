@@ -87,7 +87,7 @@ class AnimationsLayer {
         if (this.ActiveBlocks.length>0) {
             for (var i=0; i<this.ActiveBlocks.length; i++) {
                 var block = this.ActiveBlocks[i];
-                var blockPos = App.BlocksSketch.ConvertScaledGridUnitsToAbsolute(block.Position);
+                var blockPos = App.Metrics.PointOnGrid(block.Position);
                 this.DrawBubble(blockPos.x,blockPos.y);
                 this.DrawSprite("loading",blockPos.x,blockPos.y,6,false);
             }

@@ -13,7 +13,7 @@ class Effect extends Block implements IEffect {
     Source: ISource;
     public Sources: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.UpdateOptionsForm();

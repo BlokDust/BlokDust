@@ -9,7 +9,7 @@ class ParticleEmitter extends PowerSource {
     private _rateCounter: number;
 
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {
@@ -31,7 +31,7 @@ class ParticleEmitter extends PowerSource {
 
 
     EmitParticle() {
-        var position = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(this.Position);
+        var position = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
         var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
         vector.Mult(this.Params.speed);
         var size = 2 + (Math.random());

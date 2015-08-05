@@ -7,7 +7,7 @@ class AutoWah extends PostEffect {
     public Effect: Tone.AutoWah;
     public Params: AutoWahParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

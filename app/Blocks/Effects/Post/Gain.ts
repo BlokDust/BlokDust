@@ -8,7 +8,7 @@ class Gain extends PostEffect {
     //public Effect: Tone.Signal;
     public Gain: GainParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

@@ -8,7 +8,7 @@ class LFO extends PreEffect {
     public LFO: Tone.LFO;
     public Params: LFOParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

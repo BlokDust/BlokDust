@@ -96,22 +96,24 @@ module.exports = function (grunt) {
                     {
                         src: [
                             '<%= dirs.dist %>/lib/**',
+                            '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js',
                             '!<%= dirs.dist %>/lib/fayde/dist/fayde.js',
+                            '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
                             '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
-                            '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
-                            '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js'
+                            '!<%= dirs.dist %>/lib/pixelpalette/dist/PixelPalette.js'
                         ],
                         filter: 'isFile'
                     },
                     {
                         src: [
                             '<%= dirs.dist %>/lib/*',
+                            '!<%= dirs.dist %>/lib/bower-webfontloader/**',
                             '!<%= dirs.dist %>/lib/fayde/**',
+                            '!<%= dirs.dist %>/lib/lzma/**',
                             '!<%= dirs.dist %>/lib/minerva/**',
                             '!<%= dirs.dist %>/lib/nullstone/**',
-                            '!<%= dirs.dist %>/lib/lzma/**',
-                            '!<%= dirs.dist %>/lib/bower-webfontloader/**'
+                            '!<%= dirs.dist %>/lib/pixelpalette/**'
                         ]
                     }
                 ]
@@ -283,7 +285,7 @@ module.exports = function (grunt) {
 
     grunt.registerTask('dist', '', function() {
 
-        grunt.task.run('bump:patch');
+        //grunt.task.run('bump:patch');
 
         refresh();
 

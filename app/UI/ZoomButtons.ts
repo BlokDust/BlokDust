@@ -12,22 +12,39 @@ class ZoomButtons extends DisplayObject {
     public OutRoll: boolean;
     private _InPos: Point;
     private _OutPos: Point;
+    public Tweens: any[];
+    private _ZoomSlots: number[];
+    public CurrentSlot: number;
+    public ZoomAlpha: number;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;
         var units = App.Unit;
-        this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
-        this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
+        this.UpdatePositions();
+        this.Tweens = [];
 
+        this._ZoomSlots = [0.25,0.5,1,2,4];
+        this.CurrentSlot = 2;
+        this.ZoomAlpha = 0;
     }
 
     UpdatePositions() {
         var units = App.Unit;
-        this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
-        this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
+        this._InPos = new Point(30*units,App.Height - (30*units));
+        this._OutPos = new Point(70*units,App.Height - (30*units));
     }
+
+    UpdateSlot(zoom) {
+        this.CurrentSlot = this._ZoomSlots.indexOf(zoom);
+        console.log(this.CurrentSlot);
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  DRAW
+    //-------------------------------------------------------------------------------------------
+
 
     Draw() {
         var units = App.Unit;
@@ -35,7 +52,7 @@ class ZoomButtons extends DisplayObject {
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = App.Palette[8];// White
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[8];// White
 
         var zin = this._InPos;
         var zout = this._OutPos;
@@ -88,10 +105,56 @@ class ZoomButtons extends DisplayObject {
             ctx.stroke();
         }
 
+        if (this.ZoomAlpha>0) {
+            ctx.globalAlpha = this.ZoomAlpha;
+            ctx.textAlign = "center";
+            ctx.font = App.Metrics.TxtUrl2;
+            var string = "x " + (Math.round(App.ZoomLevel * 100) / 100);
+            ctx.fillText(string,50*units,App.Height - (50*units));
+        }
 
 
+
+        ctx.globalAlpha = 1;
 
     }
+
+    //-------------------------------------------------------------------------------------------
+    //  TWEEN
+    //-------------------------------------------------------------------------------------------
+
+
+    DelayTo(panel,destination,t,delay,v){
+
+        var offsetTween = new TWEEN.Tween({x: panel[""+v]});
+        offsetTween.to({x: destination}, t);
+        offsetTween.onUpdate(function () {
+            panel[""+v] = this.x;
+            if (v=="ZoomLevel") {
+                panel.Metrics.UpdateGridScale();
+            }
+        });
+        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.delay(delay);
+        offsetTween.start(this.LastVisualTick);
+
+        this.Tweens.push(offsetTween);
+    }
+
+    StopAllTweens() {
+        if (this.Tweens.length) {
+            for (var j=0; j<this.Tweens.length; j++) {
+                this.Tweens[j].stop();
+            }
+            this.Tweens = [];
+        }
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
+
 
     MouseMove(point) {
         var units = App.Unit;
@@ -107,14 +170,37 @@ class ZoomButtons extends DisplayObject {
     MouseDown(point) {
 
         if (this.InRoll) {
-            (<BlocksSketch>this.Sketch).ZoomIn();
+            this.ZoomIn();
         }
         if (this.OutRoll) {
-            (<BlocksSketch>this.Sketch).ZoomOut();
+            this.ZoomOut();
         }
-
-
     }
+
+
+    ZoomIn() {
+        if (this.CurrentSlot<this._ZoomSlots.length-1) {
+            App.BlocksSketch.OptionsPanel.Close();
+            this.CurrentSlot +=1;
+            this.StopAllTweens();
+            this.ZoomAlpha = 1;
+            this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
+            this.DelayTo(this,0,500,700,"ZoomAlpha");
+        }
+    }
+
+    ZoomOut() {
+        if (this.CurrentSlot>0) {
+            App.BlocksSketch.OptionsPanel.Close();
+            this.CurrentSlot -=1;
+            this.StopAllTweens();
+            this.ZoomAlpha = 1;
+            this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
+            this.DelayTo(this,0,500,700,"ZoomAlpha");
+        }
+    }
+
+
 
 }
 

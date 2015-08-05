@@ -138,6 +138,10 @@ class InputManager {
         // if it's undefined
         if (typeof k === 'undefined') return;
 
+        if (k==8) { // backspace prevent default
+            e.preventDefault();
+        }
+
         // add to dictionary
         this.KeysDown[k] = true;
 

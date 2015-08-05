@@ -9,14 +9,12 @@ import IBlock = require("../Blocks/IBlock");
 class ConnectionLines {
 
     private _Ctx: CanvasRenderingContext2D;
-    private _GridCell: number;
     private _Sketch: BlocksSketch;
 
     Init(sketch: BlocksSketch): void {
 
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
-        this._GridCell = sketch.CellWidth.width;
     }
 
     Draw() {
@@ -32,15 +30,13 @@ class ConnectionLines {
                 // draw connections to modifiers
                 var modifiers = (<ISource>block).Effects.ToArray();
 
-                var grd = this._Sketch.ScaledCellWidth.width; // this.Grid.Width / this.Grid.Divisor;
+                var grd = App.ScaledGridSize; // this.Grid.Width / this.Grid.Divisor;
 
                 for(var i = 0; i < modifiers.length; i++){
                     var target: IEffect = modifiers[i];
 
-                    var myPos = this._Sketch.ConvertGridUnitsToAbsolute(block.Position);
-                    myPos = this._Sketch.ConvertBaseToTransformed(myPos);
-                    var targetPos = this._Sketch.ConvertGridUnitsToAbsolute(target.Position);
-                    targetPos = this._Sketch.ConvertBaseToTransformed(targetPos);
+                    var myPos = App.Metrics.PointOnGrid(block.Position);
+                    var targetPos = App.Metrics.PointOnGrid(target.Position);
 
                     var xDif = (targetPos.x - myPos.x) / grd;
                     var yDif = (targetPos.y - myPos.y) / grd;

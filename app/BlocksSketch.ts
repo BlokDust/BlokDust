@@ -22,6 +22,7 @@ import MessagePanel = require("./UI/MessagePanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
+import StageDragger = require("./UI/StageDragger");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
@@ -32,16 +33,15 @@ import PowerSource = require("./Blocks/Power/PowerSource");
 import PowerEffect = require("./Blocks/Power/PowerEffect");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
-import Transformer = Fayde.Transformer.Transformer;
+import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class BlocksSketch extends Grid {
+class BlocksSketch {
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
     private _DisplayList: DisplayList;
-    private _Transformer: Transformer;
     public Paused: boolean;
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
@@ -51,7 +51,8 @@ class BlocksSketch extends Grid {
     public MessagePanel: MessagePanel;
     private _Header: Header;
     private _ToolTip: ToolTip;
-    private _ZoomButtons: ZoomButtons;
+    public ZoomButtons: ZoomButtons;
+    public StageDragger: StageDragger;
     private _TrashCan: TrashCan;
     private _ConnectionLines: ConnectionLines;
     private _RecorderPanel: RecorderPanel;
@@ -59,36 +60,20 @@ class BlocksSketch extends Grid {
     private _ToolTipTimeout;
     private _PointerPoint: Point;
     private _SelectedBlockPosition: Point;
-    private _ZoomLevel: number;
-    private _ZoomPosition: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
-
-    get ZoomLevel(): number {
-        return this._Transformer.ZoomLevel;
-    }
-
-    set ZoomLevel(value: number) {
-        this._ZoomLevel = value;
-    }
-
-    get ZoomPosition(): Point {
-        return new Point(
-            this._Transformer.TranslateTransform.X,
-            this._Transformer.TranslateTransform.Y);
-    }
-
-    set ZoomPosition(value: Point) {
-        this._ZoomPosition = value;
-    }
+    public Width: number;
+    public Height: number;
+    public Ctx: CanvasRenderingContext2D;
+    public SketchSession: SketchSession;
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
     constructor() {
-        super();
+        //super();
     }
 
     get DisplayList(): DisplayList {
@@ -100,12 +85,9 @@ class BlocksSketch extends Grid {
     }
 
     Setup(){
-        super.Setup();
-
-        //TODO can go once Grid is updated to new metrics system
-        this.ScaleToFit = true;
-        this.GridSize = 15;
-        this.Divisor = 850; // 70
+        this.Width = App.Width;
+        this.Height = App.Height;
+        this.Ctx = App.Ctx;
 
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
@@ -129,25 +111,6 @@ class BlocksSketch extends Grid {
         // METRICS //
         this._PointerPoint = new Point();
         this._SelectedBlockPosition = new Point();
-
-        // TRANSFORMER //
-        // todo: make these default values
-        this._Transformer = new Transformer();
-        this._Transformer.ZoomLevel = this._ZoomLevel || 0;
-        this._Transformer.ZoomLevels = 5;
-        this._Transformer.ZoomFactor = 2;
-        this._Transformer.DragAccelerationEnabled = true;
-        this._Transformer.ConstrainToViewport = false;
-        this._Transformer.AnimationSpeed = 250;
-        this._Transformer.UpdateTransform.on(this._UpdateTransform, this);
-        this._Transformer.SizeChanged(this.Size);
-
-        if (this._ZoomPosition){
-            var translateTransform = new TranslateTransform();
-            translateTransform.X = this._ZoomPosition.x;
-            translateTransform.Y = this._ZoomPosition.y;
-            this._Transformer.TranslateTransform = translateTransform;
-        }
 
         // INSTANCES //
         this.BlockSprites = new BlockSprites();
@@ -176,8 +139,11 @@ class BlocksSketch extends Grid {
         this._ToolTip = new ToolTip();
         this._ToolTip.Init(this);
 
-        this._ZoomButtons = new ZoomButtons();
-        this._ZoomButtons.Init(this);
+        this.ZoomButtons = new ZoomButtons();
+        this.ZoomButtons.Init(this);
+
+        this.StageDragger = new StageDragger();
+        this.StageDragger .Init(this);
 
         this._TrashCan = new TrashCan();
         this._TrashCan.Init(this);
@@ -215,10 +181,8 @@ class BlocksSketch extends Grid {
     Update() {
 
         if (!this.Paused) {
-            super.Update();
+            //super.Update();
 
-            // update transformer
-            this._Transformer.SizeChanged(this.Size);
 
             // update blocks
             for (var i = 0; i < App.Blocks.length; i++) {
@@ -228,10 +192,6 @@ class BlocksSketch extends Grid {
 
             if (App.Particles.length) {
                 this.UpdateParticles();
-            }
-
-            if (this.OptionsPanel.Scale==1) {
-                this.OptionsPanel.Update();
             }
 
             this._LaserBeams.Update();
@@ -256,7 +216,7 @@ class BlocksSketch extends Grid {
                 particle.ReturnToPool();
                 continue;
             }
-            particle.ParticleCollision(this.ConvertBaseToTransformed(particle.Position), particle);
+            particle.ParticleCollision(App.Metrics.FloatOnGrid(particle.Position), particle);
             particle.Move();
             currentParticles.push(particle);
         }
@@ -266,12 +226,10 @@ class BlocksSketch extends Grid {
 
 
     SketchResize() {
-        if (this.OptionsPanel.Scale==1) {
-            this.OptionsPanel.SelectedBlock.UpdateOptionsForm();
-            this.OptionsPanel.Populate(this.OptionsPanel.SelectedBlock.OptionsForm,false);
-        }
+        this.OptionsPanel.Close();
+        this.OptionsPanel.Resize();
         this._Header.Populate(this._Header.MenuJson);
-        this._ZoomButtons.UpdatePositions();
+        this.ZoomButtons.UpdatePositions();
         this.SharePanel.Resize();
         this.SoundcloudPanel.Resize();
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
@@ -292,8 +250,6 @@ class BlocksSketch extends Grid {
         this.Ctx.fillStyle = App.Palette[0];
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
-        // DEBUG GRID //
-        super.Draw();
 
         // LINES //
         this._ConnectionLines.Draw();
@@ -314,7 +270,8 @@ class BlocksSketch extends Grid {
         this._ToolTip.Draw();
         this._RecorderPanel.Draw();
         this.OptionsPanel.Draw();
-        this._ZoomButtons.Draw();
+        this.ZoomButtons.Draw();
+        this.StageDragger.Draw();
         this._TrashCan.Draw();
         this._Header.Draw();
         this.SoundcloudPanel.Draw();
@@ -329,8 +286,8 @@ class BlocksSketch extends Grid {
 
             // todo: pre-render these in a single canvas
             var particle = App.Particles[i];
-            var pos = this.ConvertBaseToTransformed(particle.Position);
-            var unit = this.ScaledUnit.width;
+            var pos = App.Metrics.FloatOnGrid(particle.Position);
+            var unit = App.ScaledUnit;
             var sx = pos.x;
             var sy = pos.y;
             var size = particle.Size * unit;
@@ -374,7 +331,6 @@ class BlocksSketch extends Grid {
     MouseMove(e: MouseEvent){
         var position: Point = new Point(e.clientX, e.clientY);
         this._PointerMove(position);
-        this._CheckHover(position);
     }
 
     TouchDown(e: any){
@@ -414,11 +370,12 @@ class BlocksSketch extends Grid {
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
+
         var UI: Boolean;
         var collision: Boolean;
 
         var tooltip = this._ToolTip;
-        var zoom = this._ZoomButtons;
+        var zoom = this.ZoomButtons;
         var header = this._Header;
         var soundcloud = this.SoundcloudPanel;
         var share = this.SharePanel;
@@ -431,7 +388,7 @@ class BlocksSketch extends Grid {
         UI = this._UIInteraction(point);
 
         if (tooltip.Open) {
-            this._ToolTipClose(tooltip);
+            this.ToolTipClose();
         }
 
         if (message.Hover) {
@@ -485,7 +442,7 @@ class BlocksSketch extends Grid {
 
         // STAGE DRAGGING //
         if (!collision && !UI){
-            this._Transformer.PointerDown(point);
+            this.StageDragger.MouseDown(point);
         }
     }
 
@@ -503,7 +460,7 @@ class BlocksSketch extends Grid {
         if (!blockDelete) {
             // BLOCK //
             if (this.SelectedBlock){
-                if (this.SelectedBlock.HitTest(point)){
+                if (this.SelectedBlock.IsPressed){
                     handle();
                     this.SelectedBlock.MouseUp();
 
@@ -516,11 +473,7 @@ class BlocksSketch extends Grid {
 
             // OPEN PANEL //
             if (OptionTimeout) {
-                this.SelectedBlock.UpdateOptionsForm();
-                if (this.SelectedBlock.OptionsForm) {
-                    this.OptionsPanel.SelectedBlock = this.SelectedBlock;
-                    this.OptionsPanel.Populate(this.SelectedBlock.OptionsForm,true);
-                }
+                this.OptionsPanel.Open(this.SelectedBlock);
             }
         }
 
@@ -538,7 +491,7 @@ class BlocksSketch extends Grid {
                 this.OptionsPanel.MouseUp();
             }
 
-            this._Transformer.PointerUp();
+            this.StageDragger.MouseUp();
         }
 
     }
@@ -547,6 +500,8 @@ class BlocksSketch extends Grid {
 
     private _PointerMove(point: Point){
         App.TranslateMousePointToPixelRatioPoint(point);
+
+        this._CheckHover(point);
 
         // BLOCK //
         if (this.SelectedBlock){
@@ -576,9 +531,9 @@ class BlocksSketch extends Grid {
         }
         this._Header.MouseMove(point);
         this._RecorderPanel.MouseMove(point);
-        this._ZoomButtons.MouseMove(point);
+        this.ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
-        this._Transformer.PointerMove(point);
+        this.StageDragger.MouseMove(point);
     }
 
 
@@ -595,8 +550,8 @@ class BlocksSketch extends Grid {
 
                 // if a source is close enough to the effect, add the effect
                 // to its internal list.
-                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
-                var distanceFromEffect = source.DistanceFrom(this.ConvertGridUnitsToAbsolute(effect.Position));
+                var catchmentArea = App.Metrics.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
+                var distanceFromEffect = source.DistanceFrom(App.Metrics.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
                     if (!source.Effects.Contains(effect)){
@@ -648,8 +603,8 @@ class BlocksSketch extends Grid {
                 return true;
             }
         }
-        // CLOSE PARAMS IF NO BLOCK CLICKED //
-        this.OptionsPanel.PanelScale(this.OptionsPanel,0,200);
+        // CLOSE OPTIONS IF NO BLOCK CLICKED //
+        this.OptionsPanel.Close();
 
         return false;
     }
@@ -672,7 +627,7 @@ class BlocksSketch extends Grid {
                     // GET BLOCK NAME //
                     if (block.OptionsForm) {
                         panel.Name = block.OptionsForm.name;
-                        var blockPos = this.ConvertScaledGridUnitsToAbsolute(block.Position);
+                        var blockPos = App.Metrics.PointOnGrid(block.Position);
                         panel.Position.x = blockPos.x;
                         panel.Position.y = blockPos.y;
                         blockHover = true;
@@ -683,7 +638,7 @@ class BlocksSketch extends Grid {
         }
 
         // OPEN TOOLTIP IF NOT ALREADY OPEN //
-        if (blockHover && !panel.Open) {
+        if (blockHover && !panel.Open && !this.OptionsPanel.Opening) {
             panel.Open = true;
             if (panel.Alpha>0) {
                 panel.AlphaTo(panel,100,600);
@@ -699,19 +654,18 @@ class BlocksSketch extends Grid {
         }
         // CLOSE IF NO LONGER HOVERING //
         if (!blockHover && panel.Open) {
-             this._ToolTipClose(panel);
+             this.ToolTipClose();
         }
 
     }
 
 
-    private _ToolTipClose(panel) {
-        if (this._ToolTipTimeout) {
-            clearTimeout(this._ToolTipTimeout);
-        }
+    public ToolTipClose() {
+        var panel = this._ToolTip;
+        clearTimeout(this._ToolTipTimeout);
+        panel.StopTween();
         panel.AlphaTo(panel,0,200);
         panel.Open = false;
-
     }
 
     private _ABlockHasBeenMoved(block) {
@@ -721,7 +675,7 @@ class BlocksSketch extends Grid {
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
     private _UIInteraction(point) {
 
-        var zoom = this._ZoomButtons;
+        var zoom = this.ZoomButtons;
         var header = this._Header;
         var share = this.SharePanel;
         var settings = this.SettingsPanel;
@@ -821,22 +775,6 @@ class BlocksSketch extends Grid {
     }
 
 
-    //-------------------------------------------------------------------------------------------
-    //  ZOOMING
-    //-------------------------------------------------------------------------------------------
-
-
-    private _UpdateTransform(sender: Transformer, e: Fayde.Transformer.TransformerEventArgs) : void {
-        this.TransformGroup = <Fayde.Media.TransformGroup>e.Transforms;
-    }
-
-    public ZoomIn() {
-        this._Transformer.Zoom(1);
-    }
-
-    public ZoomOut() {
-        this._Transformer.Zoom(-1);
-    }
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS
@@ -846,7 +784,7 @@ class BlocksSketch extends Grid {
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
         this.SelectedBlock.MouseUp();
-        this.OptionsPanel.PanelScale(this.OptionsPanel,0,200); // todo: shouldn't this happen in the SelectedBlock setter?
+        this.OptionsPanel.Close();
         App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
         this.SelectedBlock = null;
 

@@ -14,7 +14,7 @@ class RecorderBlock extends SamplerBase {
     private _WaveForm: number[];
     public Params: SamplerParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

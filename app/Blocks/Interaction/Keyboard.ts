@@ -17,7 +17,7 @@ class Keyboard extends PreEffect {
     public BaseFrequency: number;
     public KeysDown: any = {};
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
     }
 

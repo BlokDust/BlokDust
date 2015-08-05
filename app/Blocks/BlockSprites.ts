@@ -16,7 +16,7 @@ class BlockSprites {
     private _XOffset: number;
     private _YOffset: number;
 
-    Init(sketch: Fayde.Drawing.SketchContext) {
+    Init(sketch: any) {
 
         this.Ctx = sketch.Ctx;
         this.Grid = <Grid>sketch;
@@ -32,7 +32,7 @@ class BlockSprites {
         this._Position = pos;
         this._XOffset = 0;
         this._YOffset = 0;
-        var grd = this.Grid.CellWidth.width;
+        var grd = App.GridSize;
 
         switch (block) {
 
@@ -921,6 +921,33 @@ class BlockSprites {
     DrawMoveTo(x, y) {
         var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
         var p;
+        var grd = App.GridSize;
+        if (this._Scaled) {
+            p = App.Metrics.GetRelativePoint(pos, new Point(x, y));
+            p = App.Metrics.PointOnGrid(p);
+        } else {
+            p = new Point(pos.x + (x*grd),pos.y + (y*grd));
+        }
+        this.Ctx.moveTo(p.x, p.y);
+    }
+
+
+    DrawLineTo(x, y) {
+        var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
+        var p;
+        var grd = App.GridSize;
+        if (this._Scaled) {
+            p = App.Metrics.GetRelativePoint(pos, new Point(x, y));
+            p = App.Metrics.PointOnGrid(p);
+        } else {
+            p = new Point(pos.x + (x*grd),pos.y + (y*grd));
+        }
+        this.Ctx.lineTo(p.x, p.y);
+    }
+
+    /*DrawMoveTo(x, y) {
+        var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
+        var p;
         if (this._Scaled) {
             p = this.Grid.GetRelativePoint(pos, new Point(x, y));
             p = this.GetTransformedPoint(p);
@@ -943,14 +970,10 @@ class BlockSprites {
             p = this.Grid.GetRelativePoint(pos, pos2);
         }
         this.Ctx.lineTo(p.x, p.y);
-    }
+    }*/
 
 
-    // converts a point in grid units to absolute units and transforms it
-    GetTransformedPoint(point: Point): Point {
-        var p: Point = this.Grid.ConvertGridUnitsToAbsolute(point);
-        return this.Grid.ConvertBaseToTransformed(p);
-    }
+
 
 
 }

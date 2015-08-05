@@ -22,7 +22,7 @@ class Block extends DisplayObject implements IBlock {
     public Params: any;
     private _Duplicable: boolean = false;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Update();
@@ -49,22 +49,18 @@ class Block extends DisplayObject implements IBlock {
     // x and y are grid units. grid units are the divisor of the blocks view (1/50)
     // so if x = -1, that's (width/50)*-1
     DrawMoveTo(x, y) {
-        var p = (<Grid>this.Sketch).GetRelativePoint(this.Position, new Point(x, y));
-        p = this.GetTransformedPoint(p);
+        var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
+        p = App.Metrics.PointOnGrid(p);
         this.Ctx.moveTo(p.x, p.y);
     }
 
     DrawLineTo(x, y) {
-        var p = (<Grid>this.Sketch).GetRelativePoint(this.Position, new Point(x, y));
-        p = this.GetTransformedPoint(p);
+        var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
+        p = App.Metrics.PointOnGrid(p);
         this.Ctx.lineTo(p.x, p.y);
     }
 
-    // converts a point in grid units to absolute units and transforms it
-    GetTransformedPoint(point: Point): Point {
-        var p: Point = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(point);
-        return (<Grid>this.Sketch).ConvertBaseToTransformed(p);
-    }
+
 
     ParticleCollision(particle: Particle) {
 
@@ -95,10 +91,12 @@ class Block extends DisplayObject implements IBlock {
             }
             // MOVE //
             else {
-                point = (<Grid>this.Sketch).ConvertTransformedToBase(point);
+                /*point = (<Grid>this.Sketch).ConvertTransformedToBase(point);
                 point = (<Grid>this.Sketch).SnapToGrid(point);
-                point = (<Grid>this.Sketch).ConvertAbsoluteToGridUnits(point);
-                this.Position = point;
+                point = (<Grid>this.Sketch).ConvertAbsoluteToGridUnits(point);*/
+                this.Position = App.Metrics.CursorToGrid(point);
+
+                //this.Position = point;
             }
 
         }
@@ -126,7 +124,7 @@ class Block extends DisplayObject implements IBlock {
 
     // absolute point
     DistanceFrom(point: Point): number{
-        var p = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(this.Position);
+        var p = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
         return Math.distanceBetween(p.x, p.y, point.x, point.y);
     }
 
