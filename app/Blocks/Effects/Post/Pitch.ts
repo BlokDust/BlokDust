@@ -1,12 +1,10 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import BlocksSketch = require("../../../BlocksSketch");
-import PitchShifter = require("./PitchShifter");
+import PitchShifter = require("../Post/PitchShifter");
 
 class Pitch extends PostEffect {
 
-    public Input: GainNode;
-    public Output: GainNode;
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
 
@@ -19,9 +17,6 @@ class Pitch extends PostEffect {
         }
 
         this.Effect = new PitchShifter(App.Audio.ctx);
-        this.Input = this.Effect.input;
-        this.Output = this.Effect.output;
-
 
         super.Init(sketch);
 
@@ -54,12 +49,12 @@ class Pitch extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Phaser",
+            "name" : "Pitch",
             "parameters" : [
 
                 {
                     "type" : "slider",
-                    "name" : "Pitch-shift",
+                    "name" : "Pitchshift",
                     "setting" :"pitchOffset",
                     "props" : {
                         "value" : this.Params.pitchOffset,

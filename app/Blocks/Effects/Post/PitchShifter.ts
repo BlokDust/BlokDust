@@ -6,14 +6,15 @@
 class PitchShifter {
 
     private previousPitch: number = -1;
-    private delayTime: number = 0.50;
+
+    private delayTime: number = 0.1;
 
     public static get FADE_TIME(): number {
-        return 0.25;
+        return 0.05;
     }
 
     public static get BUFFER_TIME(): number {
-        return 0.50;
+        return 0.1;
     }
 
     private shiftDownBuffer: AudioBuffer;
@@ -197,6 +198,26 @@ class PitchShifter {
         }
 
         return buffer;
+    }
+
+    connect(unit, outputNum, inputNum) {
+        if (Array.isArray(this.output)){
+            outputNum = outputNum ? outputNum : 0;
+            this.output[outputNum].connect(unit, 0, inputNum);
+        } else {
+            this.output.connect(unit, outputNum, inputNum);
+        }
+        return this;
+    }
+
+    disconnect(outputNum) {
+        if (Array.isArray(this.output)){
+            outputNum = outputNum ? outputNum : 0;
+            this.output[outputNum].disconnect();
+        } else {
+            this.output.disconnect();
+        }
+        return this;
     }
 }
 

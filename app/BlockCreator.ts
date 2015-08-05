@@ -34,7 +34,7 @@ import Gain = require("Blocks/Effects/Post/Gain");
 import LFO = require("Blocks/Effects/Pre/LFO");
 import Panner = require("Blocks/Effects/Post/Panner");
 import Phaser = require("Blocks/Effects/Post/Phaser");
-import Pitch = require("Blocks/Effects/Pre/Pitch");
+import Pitch = require("Blocks/Effects/Post/Pitch");
 import Reverb = require("Blocks/Effects/Post/Reverb");
 import Scuzz = require("Blocks/Effects/Pre/Scuzz");
 
@@ -214,7 +214,7 @@ class BlockCreator {
                     {
                         "name": "Pitch",
                         "id": Pitch,
-                        "description": "Multiplies pitch. Can connect to any source block."
+                        "description": "Shift the pitch of any source block."
                     },
                     {
                         "name": "Reverb",
