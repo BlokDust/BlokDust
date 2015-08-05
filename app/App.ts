@@ -242,6 +242,7 @@ class App implements IApp{
                 // fail silently
                 this.CompositionId = null;
                 this.Splash.LoadOffset = 1;
+                console.log(error);
             });
         } else {
             this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it

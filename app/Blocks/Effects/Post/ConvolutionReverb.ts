@@ -35,6 +35,12 @@ class Convolver extends PostEffect {
             },100);
         }
 
+        if (!this.Params.trackName) { //TODO patch for older version, can remove in future
+            this.Params.trackName = 'TEUFELSBERG';
+            this.Params.user = 'BGXA';
+            this.Params.track = '../Assets/ImpulseResponses/teufelsberg01.wav';
+        }
+
         this._WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;

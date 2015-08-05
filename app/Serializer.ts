@@ -131,7 +131,13 @@ class Serializer {
 
         var saveFile = new SaveFile();
         saveFile.ZoomLevel = parsed.ZoomLevel;
-        saveFile.DragOffset = new Point(parsed.DragOffset.x, parsed.DragOffset.y);
+        if (parsed.DragOffset) {
+            saveFile.DragOffset = new Point(parsed.DragOffset.x, parsed.DragOffset.y);
+        } else {
+            saveFile.DragOffset = new Point(0, 0);
+            saveFile.ZoomLevel = 1;
+        }
+
         saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
 
         return saveFile;
