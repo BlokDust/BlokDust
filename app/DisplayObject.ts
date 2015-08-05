@@ -39,11 +39,9 @@ class DisplayObject implements IDisplayObject {
     }
 
     public Draw() {
-
     }
 
     public Dispose(): void {
-
     }
 
     // IS CLICK WITHIN THIS BOX //
