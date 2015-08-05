@@ -15,7 +15,7 @@ class RecorderPanel extends DisplayObject {
     public Hover: boolean;
 
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this._Blocks = [];

@@ -33,6 +33,7 @@ import PowerSource = require("./Blocks/Power/PowerSource");
 import PowerEffect = require("./Blocks/Power/PowerEffect");
 import BlockSprites = require("./Blocks/BlockSprites");
 import BlockCreator = require("./BlockCreator");
+import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
@@ -62,8 +63,10 @@ class BlocksSketch extends Grid {
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
-
-
+    public Width: number;
+    public Height: number;
+    public Ctx: CanvasRenderingContext2D;
+    public SketchSession: SketchSession;
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -82,12 +85,9 @@ class BlocksSketch extends Grid {
     }
 
     Setup(){
-        super.Setup();
-
-        //TODO can go once Grid is updated to new metrics system
-        this.ScaleToFit = true;
-        this.GridSize = 15;
-        this.Divisor = 850; // 70
+        this.Width = App.Width;
+        this.Height = App.Height;
+        this.Ctx = App.Ctx;
 
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
@@ -181,7 +181,7 @@ class BlocksSketch extends Grid {
     Update() {
 
         if (!this.Paused) {
-            super.Update();
+            //super.Update();
 
 
             // update blocks
@@ -250,8 +250,6 @@ class BlocksSketch extends Grid {
         this.Ctx.fillStyle = App.Palette[0];
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
-        // DEBUG GRID //
-        super.Draw();
 
         // LINES //
         this._ConnectionLines.Draw();

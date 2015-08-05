@@ -16,7 +16,7 @@ class BlockSprites {
     private _XOffset: number;
     private _YOffset: number;
 
-    Init(sketch: Fayde.Drawing.SketchContext) {
+    Init(sketch: any) {
 
         this.Ctx = sketch.Ctx;
         this.Grid = <Grid>sketch;

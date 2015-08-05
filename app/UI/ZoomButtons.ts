@@ -17,7 +17,7 @@ class ZoomButtons extends DisplayObject {
     public CurrentSlot: number;
     public ZoomAlpha: number;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;

@@ -10,7 +10,7 @@ class StageDragger  extends DisplayObject {
     private _Dragging: boolean = false;
     public Tweens: any[];
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Tweens = [];

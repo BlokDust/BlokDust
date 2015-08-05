@@ -5,7 +5,7 @@ var MAX_MSPF: number = 1000 / MAX_FPS;
 
 class DisplayObject implements IDisplayObject {
     ZIndex: number;
-    Sketch: Fayde.Drawing.SketchContext;
+    Sketch: any;
     Width: number;
     Height: number;
     Position: Point;
@@ -13,7 +13,7 @@ class DisplayObject implements IDisplayObject {
     public Timer: Fayde.ClockTimer;
     public LastVisualTick: number = new Date(0).getTime();
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         if (sketch) this.Sketch = sketch;
         if (!this.Sketch) throw new Exception("Sketch not specified for DisplayObject");
 

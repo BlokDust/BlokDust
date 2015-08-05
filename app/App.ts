@@ -358,6 +358,10 @@ class App implements IApp{
         return this._Canvas;
     }
 
+    get Ctx() {
+        return this._Canvas.getContext("2d");
+    }
+
     Resize(): void {
 
         this.Metrics.Metrics();

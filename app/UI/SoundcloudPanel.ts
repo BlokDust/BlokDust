@@ -22,7 +22,7 @@ class SoundcloudPanel extends DisplayObject{
     private _SelectedBlock: any;
     private _RandomWords: string[];
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Open = false;

@@ -48,7 +48,7 @@ class OptionsPanel extends DisplayObject {
         super();
     }
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this._Units = 1.7;

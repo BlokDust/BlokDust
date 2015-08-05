@@ -19,7 +19,7 @@ class MessagePanel extends DisplayObject {
     private _ButtonWidth: number;
 
 
-    Init(sketch?:Fayde.Drawing.SketchContext):void {
+    Init(sketch?:any):void {
         super.Init(sketch);
 
         this._Roll = [];

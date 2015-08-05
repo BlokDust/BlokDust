@@ -21,7 +21,7 @@ class SettingsPanel extends DisplayObject{
     private _OpenTab: number;
     private _VersionNumber: string;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Open = false;
