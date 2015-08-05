@@ -17,6 +17,7 @@ class Pitch extends PostEffect {
         }
 
         this.Effect = new PitchShifter(App.Audio.ctx);
+        this.Effect.PitchOffset = this.Params.pitchOffset;
 
         super.Init(sketch);
 
