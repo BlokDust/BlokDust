@@ -26,7 +26,7 @@ class ZoomButtons extends DisplayObject {
         this.Tweens = [];
 
         this._ZoomSlots = [0.25,0.5,1,2,4];
-        this.CurrentSlot = 1;
+        this.CurrentSlot = 2;
         this.ZoomAlpha = 0;
     }
 
@@ -38,6 +38,7 @@ class ZoomButtons extends DisplayObject {
 
     UpdateSlot(zoom) {
         this.CurrentSlot = this._ZoomSlots.indexOf(zoom);
+        console.log(this.CurrentSlot);
     }
 
     //-------------------------------------------------------------------------------------------
