@@ -19,7 +19,7 @@ class Convolver extends PostEffect {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

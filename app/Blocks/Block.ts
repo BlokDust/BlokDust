@@ -22,7 +22,7 @@ class Block extends DisplayObject implements IBlock {
     public Params: any;
     private _Duplicable: boolean = false;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Update();

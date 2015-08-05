@@ -13,7 +13,7 @@ class ToneSource extends Source {
     public Envelopes: Tone.AmplitudeEnvelope[];
     public Params: ToneSourceParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

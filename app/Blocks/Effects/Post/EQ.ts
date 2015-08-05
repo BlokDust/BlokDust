@@ -7,7 +7,7 @@ class EQ extends PostEffect {
     public Effect: Tone.EQMultiband;
     public Params: EQParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

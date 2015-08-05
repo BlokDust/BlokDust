@@ -9,7 +9,7 @@ class ParticleEmitter extends PowerSource {
     private _rateCounter: number;
 
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

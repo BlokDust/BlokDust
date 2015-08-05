@@ -5,7 +5,7 @@ import BlocksSketch = require("../../BlocksSketch");
 
 class Laser extends PowerSource {
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

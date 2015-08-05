@@ -7,7 +7,7 @@ class Logic extends PowerEffect {
 
     public Params: LogicParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

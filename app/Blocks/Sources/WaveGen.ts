@@ -21,7 +21,7 @@ class WaveGen extends SamplerBase {
     private _BufferData: Float32Array;
     private _WaveVoices: WaveVoice[];
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,

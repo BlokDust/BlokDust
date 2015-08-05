@@ -10,7 +10,7 @@ class Sampler extends SamplerBase {
     public Sources : Tone.Simpler[];
     public Params: SamplerParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

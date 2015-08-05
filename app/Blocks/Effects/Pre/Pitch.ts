@@ -12,7 +12,7 @@ class Pitch extends PreEffect {
     public PitchIncrement: number;
     public Params: PitchIncrementParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

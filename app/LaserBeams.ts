@@ -18,8 +18,7 @@ class LaserBeams {
     public UpdateAllLasers: boolean;
     //private _TestPoints: Point[];
 
-    Init(sketch: BlocksSketch): void {
-
+    Init(sketch: any): void {
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;
         this.UpdateAllLasers = false;

@@ -15,7 +15,7 @@ class ComputerKeyboard extends Keyboard {
     };
     public Params: KeyboardParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

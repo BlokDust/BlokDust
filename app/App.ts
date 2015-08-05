@@ -254,6 +254,7 @@ class App implements IApp{
     CreateBlockSketch() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
+        this.BlocksSketch.Setup();
         this.Blocks = [];
 
         // add blocks to BlocksSketch DisplayList

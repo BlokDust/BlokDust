@@ -10,7 +10,7 @@ class Chopper extends PostEffect {
     public Effect: GainNode;
     public Params: ChopperParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         this.Effect = App.Audio.ctx.createGain();
 

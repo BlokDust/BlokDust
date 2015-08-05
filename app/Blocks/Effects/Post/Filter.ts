@@ -7,7 +7,7 @@ class Filter extends PostEffect {
     public Effect: Tone.Filter;
     public Params: FilterParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

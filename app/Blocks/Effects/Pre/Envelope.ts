@@ -7,7 +7,7 @@ class Envelope extends PreEffect {
 
     public Params: EnvelopeParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

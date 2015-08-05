@@ -37,7 +37,7 @@ import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class BlocksSketch extends Grid {
+class BlocksSketch {
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
@@ -73,7 +73,7 @@ class BlocksSketch extends Grid {
     //-------------------------------------------------------------------------------------------
 
     constructor() {
-        super();
+        //super();
     }
 
     get DisplayList(): DisplayList {

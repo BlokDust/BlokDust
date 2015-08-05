@@ -27,7 +27,7 @@ class Granular extends Source {
 
     public Params: GranularParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

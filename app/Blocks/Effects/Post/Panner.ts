@@ -6,7 +6,7 @@ class Panner extends PostEffect {
 
     public Effect: Tone.AutoPanner;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {

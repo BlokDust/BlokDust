@@ -7,7 +7,7 @@ class Chorus extends PostEffect {
     public Effect: Tone.Chorus;
     public Params: ChorusParams;
 
-    Init(sketch?: Fayde.Drawing.SketchContext): void {
+    Init(sketch?: any): void {
 
         if (!this.Params) {
             this.Params = {
