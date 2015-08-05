@@ -4,6 +4,7 @@ import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
 import BlocksSketch = require("../BlocksSketch");
 import ParametersPanel = require("../UI/OptionsPanel");
+import PreEffect = require("./Effects/PreEffect");
 import Size = minerva.Size;
 
 class Block extends DisplayObject implements IBlock {
@@ -162,6 +163,16 @@ class Block extends DisplayObject implements IBlock {
 
     Refresh() {
 
+    }
+
+    UpdateConnections() {
+        this.UpdatePreEffectConnections();
+    }
+
+    UpdatePreEffectConnections(){
+        /**
+         * For PreEffects only
+         */
     }
 
     Stop() {

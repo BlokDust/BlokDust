@@ -35,6 +35,7 @@ class CommandsInputManager extends InputManager {
             if ((this.IsKeyNameDown(this.KeyMap.Ctrl) || this.IsKeyNameDown(this.KeyMap.LeftWindowKey) || this.IsKeyNameDown(this.KeyMap.CommandFF)) && this.IsKeyNameDown(this.KeyMap.s)){
                 e.preventDefault();
                 //this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
+                // todo: use command
                 App.BlocksSketch.SharePanel.OpenPanel();
                 return;
             }

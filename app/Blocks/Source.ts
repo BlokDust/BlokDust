@@ -134,7 +134,7 @@ class Source extends Block implements ISource {
         }
 
         // Reorder the post effects chain
-        this.UpdateEffectsChain(postEffects);
+        this.UpdatePostEffectsChain(postEffects);
     }
 
     /**
@@ -142,7 +142,7 @@ class Source extends Block implements ISource {
      * @param effects
      * @public
      */
-    public UpdateEffectsChain(effects) {
+    public UpdatePostEffectsChain(effects) {
 
         const start = this.EffectsChainInput;
         const end = this.EffectsChainOutput;
