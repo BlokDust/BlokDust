@@ -12,22 +12,33 @@ class ZoomButtons extends DisplayObject {
     public OutRoll: boolean;
     private _InPos: Point;
     private _OutPos: Point;
+    public Tweens: any[];
+    private _ZoomSlots: number[];
+    private _CurrentSlot: number;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;
         var units = App.Unit;
-        this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
-        this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
+        this._InPos = new Point(30*units,App.Height - (30*units));
+        this._OutPos = new Point(70*units,App.Height - (30*units));
+        this.Tweens = [];
 
+        this._ZoomSlots = [0.25,0.5,1,2,4];
+        this._CurrentSlot = 2;
     }
 
     UpdatePositions() {
         var units = App.Unit;
-        this._InPos = new Point(30*units,(<BlocksSketch>this.Sketch).Height - (30*units));
-        this._OutPos = new Point(70*units,(<BlocksSketch>this.Sketch).Height - (30*units));
+        this._InPos = new Point(30*units,App.Height - (30*units));
+        this._OutPos = new Point(70*units,App.Height - (30*units));
     }
+
+    //-------------------------------------------------------------------------------------------
+    //  DRAW
+    //-------------------------------------------------------------------------------------------
+
 
     Draw() {
         var units = App.Unit;
@@ -93,6 +104,41 @@ class ZoomButtons extends DisplayObject {
 
     }
 
+    //-------------------------------------------------------------------------------------------
+    //  TWEEN
+    //-------------------------------------------------------------------------------------------
+
+
+    DelayTo(panel,destination,t,delay,v){
+
+        var offsetTween = new TWEEN.Tween({x: panel[""+v]});
+        offsetTween.to({x: destination}, t);
+        offsetTween.onUpdate(function () {
+            panel[""+v] = this.x;
+            panel.Metrics.UpdateGridScale();
+        });
+        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.delay(delay);
+        offsetTween.start(this.LastVisualTick);
+
+        this.Tweens.push(offsetTween);
+    }
+
+    StopAllTweens() {
+        if (this.Tweens.length) {
+            for (var j=0; j<this.Tweens.length; j++) {
+                this.Tweens[j].stop();
+            }
+            this.Tweens = [];
+        }
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
+
+
     MouseMove(point) {
         var units = App.Unit;
         var zin = this._InPos;
@@ -107,14 +153,29 @@ class ZoomButtons extends DisplayObject {
     MouseDown(point) {
 
         if (this.InRoll) {
-            (<BlocksSketch>this.Sketch).ZoomIn();
+            this.ZoomIn();
         }
         if (this.OutRoll) {
-            (<BlocksSketch>this.Sketch).ZoomOut();
+            this.ZoomOut();
         }
-
-
     }
+
+
+    ZoomIn() {
+        if (this._CurrentSlot<this._ZoomSlots.length-1) {
+            this._CurrentSlot +=1;
+            this.DelayTo(App,this._ZoomSlots[this._CurrentSlot],500,0,"ZoomLevel");
+        }
+    }
+
+    ZoomOut() {
+        if (this._CurrentSlot>0) {
+            this._CurrentSlot -=1;
+            this.DelayTo(App,this._ZoomSlots[this._CurrentSlot],500,0,"ZoomLevel");
+        }
+    }
+
+
 
 }
 

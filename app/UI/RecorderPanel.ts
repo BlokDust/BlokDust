@@ -51,8 +51,8 @@ class RecorderPanel extends DisplayObject {
 
         for (var i = 0; i < this._Blocks.length; i++) {
             var block = this._Blocks[i];
-            var myPos = (<BlocksSketch>this.Sketch).ConvertGridUnitsToAbsolute(block.Position);
-            myPos = (<BlocksSketch>this.Sketch).ConvertBaseToTransformed(myPos);
+            var myPos = App.Metrics.PointOnGrid(block.Position);
+            //myPos = (<BlocksSketch>this.Sketch).ConvertBaseToTransformed(myPos);
             this.DrawPanel(myPos.x,myPos.y,block.IsRecording,this._Roll[i]);
         }
     }
@@ -156,8 +156,8 @@ class RecorderPanel extends DisplayObject {
 
         for (var i = 0; i < this._Blocks.length; i++) {
             var block = this._Blocks[i];
-            var myPos = (<BlocksSketch>this.Sketch).ConvertGridUnitsToAbsolute(block.Position);
-            myPos = (<BlocksSketch>this.Sketch).ConvertBaseToTransformed(myPos);
+            var myPos = App.Metrics.PointOnGrid(block.Position);
+            //myPos = (<BlocksSketch>this.Sketch).ConvertBaseToTransformed(myPos);
             this._Roll[i] = this.HitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
             if (this._Roll[i]==true) {
                 console.log("ROLL " + i);

@@ -51,6 +51,11 @@ class App implements IApp{
     private _SaveFile: SaveFile;
     public Unit: number;
     public GridSize: number;
+    public ScaledUnit: number;
+    public ScaledGridSize: number;
+    public ZoomLevel: number;
+    public DragOffset: Point;
+    public ScaledDragOffset: Point;
     public Width: number;
     public Height: number;
     public Metrics: Metrics;

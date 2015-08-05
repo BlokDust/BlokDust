@@ -22,6 +22,7 @@ import MessagePanel = require("./UI/MessagePanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
+import StageDragger = require("./UI/StageDragger");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
@@ -52,6 +53,7 @@ class BlocksSketch extends Grid {
     private _Header: Header;
     private _ToolTip: ToolTip;
     private _ZoomButtons: ZoomButtons;
+    private _StageDragger: StageDragger;
     private _TrashCan: TrashCan;
     private _ConnectionLines: ConnectionLines;
     private _RecorderPanel: RecorderPanel;
@@ -179,6 +181,8 @@ class BlocksSketch extends Grid {
         this._ZoomButtons = new ZoomButtons();
         this._ZoomButtons.Init(this);
 
+        this._StageDragger = new StageDragger();
+
         this._TrashCan = new TrashCan();
         this._TrashCan.Init(this);
 
@@ -256,7 +260,7 @@ class BlocksSketch extends Grid {
                 particle.ReturnToPool();
                 continue;
             }
-            particle.ParticleCollision(this.ConvertBaseToTransformed(particle.Position), particle);
+            particle.ParticleCollision(App.Metrics.FloatOnGrid(particle.Position), particle);
             particle.Move();
             currentParticles.push(particle);
         }
@@ -329,8 +333,8 @@ class BlocksSketch extends Grid {
 
             // todo: pre-render these in a single canvas
             var particle = App.Particles[i];
-            var pos = this.ConvertBaseToTransformed(particle.Position);
-            var unit = this.ScaledUnit.width;
+            var pos = App.Metrics.FloatOnGrid(particle.Position);
+            var unit = App.ScaledUnit;
             var sx = pos.x;
             var sy = pos.y;
             var size = particle.Size * unit;
@@ -414,6 +418,8 @@ class BlocksSketch extends Grid {
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
+        console.log(App.Metrics.CursorToGrid(point));
+
         var UI: Boolean;
         var collision: Boolean;
 
@@ -485,7 +491,8 @@ class BlocksSketch extends Grid {
 
         // STAGE DRAGGING //
         if (!collision && !UI){
-            this._Transformer.PointerDown(point);
+            //this._Transformer.PointerDown(point);
+            this._StageDragger.MouseDown(point);
         }
     }
 
@@ -503,7 +510,7 @@ class BlocksSketch extends Grid {
         if (!blockDelete) {
             // BLOCK //
             if (this.SelectedBlock){
-                if (this.SelectedBlock.HitTest(point)){
+                if (this.SelectedBlock.IsPressed){
                     handle();
                     this.SelectedBlock.MouseUp();
 
@@ -538,7 +545,8 @@ class BlocksSketch extends Grid {
                 this.OptionsPanel.MouseUp();
             }
 
-            this._Transformer.PointerUp();
+            //this._Transformer.PointerUp();
+            this._StageDragger.MouseUp();
         }
 
     }
@@ -578,7 +586,8 @@ class BlocksSketch extends Grid {
         this._RecorderPanel.MouseMove(point);
         this._ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
-        this._Transformer.PointerMove(point);
+        //this._Transformer.PointerMove(point);
+        this._StageDragger.MouseMove(point);
     }
 
 
@@ -595,8 +604,8 @@ class BlocksSketch extends Grid {
 
                 // if a source is close enough to the effect, add the effect
                 // to its internal list.
-                var catchmentArea = this.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
-                var distanceFromEffect = source.DistanceFrom(this.ConvertGridUnitsToAbsolute(effect.Position));
+                var catchmentArea = App.Metrics.ConvertGridUnitsToAbsolute(new Point(effect.CatchmentArea, effect.CatchmentArea));
+                var distanceFromEffect = source.DistanceFrom(App.Metrics.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
                     if (!source.Effects.Contains(effect)){
@@ -672,7 +681,7 @@ class BlocksSketch extends Grid {
                     // GET BLOCK NAME //
                     if (block.OptionsForm) {
                         panel.Name = block.OptionsForm.name;
-                        var blockPos = this.ConvertScaledGridUnitsToAbsolute(block.Position);
+                        var blockPos = App.Metrics.PointOnGrid(block.Position);
                         panel.Position.x = blockPos.x;
                         panel.Position.y = blockPos.y;
                         blockHover = true;

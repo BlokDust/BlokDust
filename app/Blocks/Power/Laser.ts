@@ -85,7 +85,8 @@ class Laser extends PowerSource {
                         "min" : -1000,
                         "max" : 1000,
                         "quantised" : true,
-                        "centered" : true
+                        "centered" : true,
+                        "snap" : true
                     }
                 },
 

@@ -34,7 +34,7 @@ class LaserBeams {
 
     QuadPartition(p1,p2,angle) {
 
-        var margin = this._Sketch.ScaledCellWidth.width*1.7;
+        var margin = App.ScaledGridSize*1.7;
         var laser = p1;
         var target = p2;
 
@@ -79,7 +79,7 @@ class LaserBeams {
     UpdateCollisions() {
         var p1,p2,vector,line,outline;
         var rectSize = 1.7; // size of rectangle for rough check (in grid cells)
-        var grd = this._Sketch.ScaledCellWidth.width * rectSize;
+        var grd = App.ScaledGridSize * rectSize;
 
         // LOOK FOR LASERS //
         for (var i = 0; i < App.Blocks.length; i++){
@@ -100,7 +100,7 @@ class LaserBeams {
                     if (laser.Params.selfPoweredMode || laser.IsPowered()) {
 
 
-                        vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)), this._Sketch.ScaledUnit.width);
+                        vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)), App.ScaledUnit);
                         line = Vector.MultN(vector, laser.Params.range);
 
                         // FOR EACH LASER LOOK FOR SOURCE COLLISIONS //
@@ -109,11 +109,11 @@ class LaserBeams {
                             if (block !== laser && (block instanceof Source || block instanceof Logic)) {
 
                                 outline = [];
-                                p1 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(laser.Position));
-                                p2 = this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(block.Position));
+                                p1 = App.Metrics.PointOnGrid(laser.Position);
+                                p2 = App.Metrics.PointOnGrid(block.Position);
 
                                 // IF IN RANGE //
-                                if (this.PointFromPoint(p1.x, p1.y, p2.x, p2.y) < ((laser.Params.range * this._Sketch.ScaledUnit.width) + grd)) {
+                                if (this.PointFromPoint(p1.x, p1.y, p2.x, p2.y) < ((laser.Params.range * App.ScaledUnit) + grd)) {
 
                                     // IF IN QUADRANT //
                                     if (this.QuadPartition(p1, p2, laser.Params.angle)) {
@@ -123,7 +123,7 @@ class LaserBeams {
 
                                             // INTERSECT CHECK //
                                             for (var k = 0; k < block.Outline.length; k++) {
-                                                outline.push(this._Sketch.ConvertBaseToTransformed(this._Sketch.ConvertGridUnitsToAbsolute(this._Sketch.GetRelativePoint(block.Outline[k], block.Position))));
+                                                outline.push(App.Metrics.PointOnGrid(App.Metrics.GetRelativePoint(block.Outline[k], block.Position)));
                                             }
                                             p2 = new Point(p1.x + line.X, p1.y + line.Y);
                                             if (Intersection.intersectLinePolygon(p1, p2, outline).status == "Intersection") {
@@ -185,7 +185,7 @@ class LaserBeams {
 
 
     Draw() {
-        var unit = this._Sketch.ScaledUnit.width;
+        var unit = App.ScaledUnit;
         var myPos,vector;
         this._Ctx.strokeStyle = this._Ctx.fillStyle = "#fff";
         this._Ctx.globalAlpha = 1;
@@ -200,8 +200,7 @@ class LaserBeams {
                 // If we're in self powered mode, or if this is powered
                 if (laser.Params.selfPoweredMode || laser.IsPowered()) {
 
-                    myPos = this._Sketch.ConvertGridUnitsToAbsolute(laser.Position);
-                    myPos = this._Sketch.ConvertBaseToTransformed(myPos);
+                    myPos = App.Metrics.PointOnGrid(laser.Position);
 
                     vector = Vector.FromAngle(Math.degreesToRadians(laser.Params.angle));
                     vector.Mult(laser.Params.range * unit);

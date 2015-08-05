@@ -24,6 +24,15 @@ class Metrics {
     public TxtItalic2: string;
     public TxtData: string;
 
+    public C: Point; // center screen
+
+    constructor() {
+        App.ZoomLevel = 1;
+        App.DragOffset = new Point(0,0);
+        App.ScaledDragOffset = new Point(0,0);
+        this.C = new Point(0,0);
+    }
+
 
     Metrics() {
 
@@ -39,8 +48,10 @@ class Metrics {
 
         // DEFINE UNIT & GRID SIZE //
         App.Unit = (width/screenDivision)*ratio;
+        App.ScaledUnit = App.Unit * App.ZoomLevel;
         var unit = App.Unit;
         App.GridSize = gridSize * unit;
+        App.ScaledGridSize = App.GridSize * App.ZoomLevel;
 
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
@@ -51,6 +62,8 @@ class Metrics {
         (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
         App.Width = width * ratio;
         App.Height = height * ratio;
+        this.C.x = App.Width * 0.5;
+        this.C.y = App.Height * 0.5;
 
 
 
@@ -83,6 +96,15 @@ class Metrics {
         styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1] + '; background-blend-mode: normal; mix-blend-mode: normal;}';
     }
 
+
+    UpdateGridScale() {
+        App.ScaledUnit = App.Unit * App.ZoomLevel;
+        App.ScaledGridSize = App.GridSize * App.ZoomLevel;
+        App.ScaledDragOffset.x = App.DragOffset.x * App.ZoomLevel;
+        App.ScaledDragOffset.y = App.DragOffset.y * App.ZoomLevel;
+    }
+
+
     get PixelRatio(): number {
         const ctx:any = document.createElement("canvas").getContext("2d");
         const dpr = window.devicePixelRatio || 1;
@@ -95,9 +117,37 @@ class Metrics {
         return dpr / bsr;
     }
 
-    //public ConvertScaledGridUnitsToAbsolute(point: Point): Point {
-    //    return new Point((this.ScaledCellWidth.width * point.x) + this.TranslateTransform.X, (this.ScaledCellWidth.width * point.y) + this.TranslateTransform.Y);
-    //}
+
+    //-------------------------------------------------------------------------------------------
+    //  UNIT CONVERSIONS
+    //-------------------------------------------------------------------------------------------
+
+
+    public CursorToGrid(point: Point): Point {
+        var x = Math.round(((point.x - App.ScaledDragOffset.x) - this.C.x)/App.ScaledGridSize);
+        var y = Math.round(((point.y - App.ScaledDragOffset.y) - this.C.y)/App.ScaledGridSize);
+        return new Point(x,y);
+    }
+
+    public PointOnGrid(point: Point): Point {
+        var x = (this.C.x + App.ScaledDragOffset.x) + (point.x * App.ScaledGridSize);
+        var y = (this.C.y + App.ScaledDragOffset.y) + (point.y * App.ScaledGridSize);
+        return new Point(x,y);
+    }
+
+    public FloatOnGrid(point: Point): Point {
+        var x = (this.C.x + App.ScaledDragOffset.x) + (point.x * App.ZoomLevel);
+        var y = (this.C.y + App.ScaledDragOffset.y) + (point.y * App.ZoomLevel);
+        return new Point(x,y);
+    }
+
+    public GetRelativePoint(point: Point, offset: Point): Point {
+        return new Point(point.x + offset.x, point.y + offset.y);
+    }
+
+    public ConvertGridUnitsToAbsolute(point: Point): Point {
+        return new Point(App.GridSize * point.x, App.GridSize * point.y);
+    }
 }
 
 export = Metrics;
