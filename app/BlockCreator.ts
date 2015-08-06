@@ -13,6 +13,7 @@ import IBlock = require("./Blocks/IBlock");
 import ToneSource = require("./Blocks/Sources/ToneSource");
 import Noise = require("./Blocks/Sources/Noise");
 import Microphone = require("./Blocks/Sources/Microphone");
+import Sampler = require("./Blocks/Sources/Sampler");
 import Soundcloud = require("./Blocks/Sources/Soundcloud");
 import Granular = require("./Blocks/Sources/Granular");
 import Recorder = require("./Blocks/Sources/Recorder");
@@ -119,6 +120,11 @@ class BlockCreator {
                         "name": "SoundCloud",
                         "id": Soundcloud,
                         "description": "A sampler player loaded with a SoundCloud track of your choice."
+                    },
+                    {
+                        "name": "Sampler",
+                        "id": Sampler,
+                        "description": "A sampler player loaded with an audio file from your device."
                     },
                     {
                         "name": "Granular",
