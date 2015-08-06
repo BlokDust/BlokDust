@@ -11,7 +11,7 @@ class Logic extends PowerEffect {
 
         if (!this.Params) {
             this.Params = {
-                logic: false //TODO: this line should be boolean when using boolean switch UI
+                logic: false,
             };
         }
 

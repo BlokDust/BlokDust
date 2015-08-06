@@ -5,7 +5,7 @@ import Particle = require("../../Particle");
 
 class Microphone extends Source {
 
-    public Volume: any; //TODO: This should be of type GainNode but compiler doesn't like connecting to Tone.Signal
+    public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone
     public Params: MicrophoneParams;
     public Muted: boolean = false;
     private _FirstRelease: boolean = true;
@@ -102,28 +102,28 @@ class Microphone extends Source {
         super.MouseUp();
     }
 
-    UpdateOptionsForm() {
-        super.UpdateOptionsForm();
-
-        this.OptionsForm =
-        {
-            "name" : "Microphone",
-            "parameters" : [
-
-                {
-                    "type" : "slider",
-                    "name" : "Monitor",
-                    "setting" :"monitor",
-                    "props" : {
-                        "value" : this.Params.monitor,
-                        "min" : 0,
-                        "max" : 1,
-                        "quantised" : true
-                    }
-                }
-            ]
-        };
-    }
+    //UpdateOptionsForm() {
+    //    super.UpdateOptionsForm();
+    //
+    //    this.OptionsForm =
+    //    {
+    //        "name" : "Microphone",
+    //        "parameters" : [
+    //
+    //            {
+    //                "type" : "slider",
+    //                "name" : "Monitor",
+    //                "setting" :"monitor",
+    //                "props" : {
+    //                    "value" : this.Params.monitor,
+    //                    "min" : 0,
+    //                    "max" : 1,
+    //                    "quantised" : true
+    //                }
+    //            }
+    //        ]
+    //    };
+    //}
 
     SetParam(param: string,value: any) {
 

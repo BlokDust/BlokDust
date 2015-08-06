@@ -50,13 +50,12 @@ class PitchShifter {
         this.shiftDownBuffer = this.createDelayTimeBuffer(false);
         this.shiftUpBuffer = this.createDelayTimeBuffer(true);
 
-        //todo: for loop!
         this.bufferSources.forEach((bufferSource: AudioBufferSourceNode, i: number) => {
             bufferSource.buffer = i < 2 ? this.shiftDownBuffer : this.shiftUpBuffer;
             bufferSource.loop = true;
         });
 
-        // for switching between oct-up and oct-down //todo FOR LOOP!
+        // for switching between oct-up and oct-down
         for (let i = 0; i < 4; i++){
             this.modGains.push(this.context.createGain());
             this.bufferSources[i].connect(this.modGains[i])

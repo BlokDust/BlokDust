@@ -30,7 +30,7 @@ import Distortion = require("Blocks/Effects/Post/Distortion");
 import Envelope = require("Blocks/Effects/Pre/Envelope");
 import EQ = require("Blocks/Effects/Post/EQ");
 import Filter = require("Blocks/Effects/Post/Filter");
-import Gain = require("Blocks/Effects/Post/Gain");
+import Volume = require("Blocks/Effects/Post/Gain");
 import LFO = require("Blocks/Effects/Pre/LFO");
 import Panner = require("Blocks/Effects/Post/Panner");
 import Phaser = require("Blocks/Effects/Post/Phaser");
@@ -197,11 +197,6 @@ class BlockCreator {
                         "description": "A 'peaking' filter used for boosting or suppressing frequencies. Can connect to any source block."
                     },
                     {
-                        "name": "Gain",
-                        "id": Gain,
-                        "description": "Increase or decrease the volume. Can connect to any source block."
-                    },
-                    {
                         "name": "LFO",
                         "id": LFO,
                         "description": "Modulates pitch, Can connect to Tone blocks."
@@ -225,6 +220,11 @@ class BlockCreator {
                         "name": "Scuzz",
                         "id": Scuzz,
                         "description": "No idea. Can connect to Tone Blocks."
+                    },
+                    {
+                        "name": "Volume",
+                        "id": Volume,
+                        "description": "Increase or decrease the volume. Can connect to any source block."
                     }
                 ]
             },

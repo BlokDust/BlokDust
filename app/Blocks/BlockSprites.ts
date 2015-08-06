@@ -330,7 +330,7 @@ class BlockSprites {
 
                 break;
 
-            case "gain":
+            case "volume":
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);

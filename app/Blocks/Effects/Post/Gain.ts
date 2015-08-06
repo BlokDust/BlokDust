@@ -30,7 +30,7 @@ class Gain extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"gain");
+        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"volume");
     }
 
     Dispose(){
@@ -49,7 +49,7 @@ class Gain extends PostEffect {
 
         this.OptionsForm =
         {
-            "name": "Gain",
+            "name": "Volume",
             "parameters": [
                 {
                     "type" : "slider",

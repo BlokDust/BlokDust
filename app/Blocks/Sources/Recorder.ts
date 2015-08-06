@@ -54,10 +54,6 @@ class RecorderBlock extends SamplerBase {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
-
-
-        //RECORD BUTTON TODO: make this a command in the command manager
-        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
     }
 
     Update() {
@@ -67,22 +63,6 @@ class RecorderBlock extends SamplerBase {
     Draw() {
         super.Draw();
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"recorder");
-    }
-
-    KeyDownCallback(e){
-
-        /**
-         *  SPACEBAR RECORDING
-         *  NOTE: disabled this as it causes problems when you have multiple recorders on the stage.
-         *
-         *  TODO: create a global 'activate' button which triggers the
-         *  functionality of the last block that was pressed
-         */
-
-        //if ((<any>e).KeyDown === 'spacebar'){
-        //    //Start recording on spacebar
-        //    this.ToggleRecording();
-        //}
     }
 
     ToggleRecording(){
@@ -178,7 +158,6 @@ class RecorderBlock extends SamplerBase {
 
     Dispose(){
         super.Dispose();
-        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
         this.BufferSource = null;
         this.Recorder.clear();
         this.Recorder = null;

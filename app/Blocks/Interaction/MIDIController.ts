@@ -30,10 +30,8 @@ class MIDIController extends Keyboard {
 
         // request MIDI access
         if(navigator.requestMIDIAccess){
-            console.log(this);
             navigator.requestMIDIAccess({sysex: false}).then(this.OnMIDISuccess.bind(this), this.OnMIDIFailure.bind(this));
         } else {
-            console.log('No MIDI support in your browser. Check here: http://caniuse.com/midi'); //Todo: display this in a modal box
             App.Message('No MIDI support in your browser', {
                 'seconds': 2,
                 'confirmation': true,
