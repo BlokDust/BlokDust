@@ -5,6 +5,7 @@ import BlocksSketch = require("../../BlocksSketch");
 
 class Laser extends PowerSource {
 
+
     Init(sketch?: any): void {
 
         if (!this.Params) {
@@ -18,6 +19,7 @@ class Laser extends PowerSource {
 
         this.UpdateCollision = true;
         this.Collisions = [];
+        this.CheckRange = this.Params.range;
 
         super.Init(sketch);
 
@@ -120,6 +122,7 @@ class Laser extends PowerSource {
 
 
         this.Params[""+param] = val;
+        this.CheckRange = this.Params.range;
     }
 }
 

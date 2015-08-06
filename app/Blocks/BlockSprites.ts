@@ -26,7 +26,7 @@ class BlockSprites {
         this._YOffset = 0;
     }
 
-    Draw(pos: Point,scaled: boolean, block: string) {
+    Draw(pos: Point,scaled: boolean, block: string,pos2?: Point) {
 
         this._Scaled = scaled;
         this._Position = pos;
@@ -910,11 +910,52 @@ class BlockSprites {
 
                 break;
 
+            case "void":
+
+                /*if (!this._Scaled) {
+                    this._YOffset = (grd*0.5);
+                }*/
+                this.Ctx.fillStyle = App.Palette[14];// DARK
+                /*if (!this._Scaled) {
+                    this.Ctx.fillStyle = App.Palette[14];// DARK
+                }*/
+                this.Ctx.beginPath();
+                this.DrawMoveTo(-1,0);
+                this.DrawLineTo(0,-1);
+                this.DrawLineTo(1,0);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.fillStyle = App.Palette[8];// WHITE
+                if (!this._Scaled) {
+                    this.DrawPixel(-1,2,2);
+                } else {
+                    this.DrawPixel(pos2.x,pos2.y,2);
+                }
+
+                this.DrawPixel(-3,-8,1);
+                this.DrawPixel(1,-4,1);
+                this.DrawPixel(8,-3,1);
+                this.DrawPixel(-8,1,1);
+                this.DrawPixel(1,9,1);
+                break;
 
         }
 
 
 
+    }
+
+    DrawPixel(x,y,size) {
+        var s = size * 0.5;
+        this.Ctx.beginPath();
+        this.DrawFloatMoveTo(x,y);
+        this.DrawFloatLineTo(x+s,y);
+        this.DrawFloatLineTo(x+s,y+s);
+        this.DrawFloatLineTo(x,y+s);
+        this.Ctx.closePath();
+        this.Ctx.fill();
     }
 
 
@@ -945,32 +986,28 @@ class BlockSprites {
         this.Ctx.lineTo(p.x, p.y);
     }
 
-    /*DrawMoveTo(x, y) {
+    DrawFloatMoveTo(x, y) {
         var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
         var p;
         if (this._Scaled) {
-            p = this.Grid.GetRelativePoint(pos, new Point(x, y));
-            p = this.GetTransformedPoint(p);
+            p =  App.Metrics.PointOnGrid(new Point(pos.x + ((x/App.GridSize)*App.Unit),pos.y + ((y/App.GridSize)*App.Unit)));
         } else {
-            var pos2 = this.Grid.ConvertGridUnitsToAbsolute(new Point(x, y));
-            p = this.Grid.GetRelativePoint(pos, pos2);
+            p = new Point(pos.x + (x*App.Unit),pos.y + (y*App.Unit));
         }
         this.Ctx.moveTo(p.x, p.y);
     }
 
 
-    DrawLineTo(x, y) {
+    DrawFloatLineTo(x, y) {
         var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
         var p;
         if (this._Scaled) {
-            p = this.Grid.GetRelativePoint(pos, new Point(x, y));
-            p = this.GetTransformedPoint(p);
+            p =  App.Metrics.PointOnGrid(new Point(pos.x + ((x/App.GridSize)*App.Unit),pos.y + ((y/App.GridSize)*App.Unit)));
         } else {
-            var pos2 = this.Grid.ConvertGridUnitsToAbsolute(new Point(x, y));
-            p = this.Grid.GetRelativePoint(pos, pos2);
+            p = new Point(pos.x + (x*App.Unit),pos.y + (y*App.Unit));
         }
         this.Ctx.lineTo(p.x, p.y);
-    }*/
+    }
 
 
 

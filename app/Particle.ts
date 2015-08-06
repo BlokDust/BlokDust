@@ -3,6 +3,7 @@ import IBlock = require("./Blocks/IBlock");
 import Source = require("./Blocks/Source");
 import Logic = require("./Blocks/Power/Logic/Logic");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
+import Void = require("./Blocks/Power/Void");
 import Vector = Utils.Maths.Vector;
 
 class Particle implements IPooledObject {
@@ -47,13 +48,20 @@ class Particle implements IPooledObject {
 
             var block: IBlock = App.Blocks[i];
 
+            if (block instanceof Void) {
+                if (block.HitTest(point)){
+                    this.Dispose();
+                    return;
+                }
+            }
+
             // Particle can only collide with Switches and Sources but not Particle Emitters
             if (block instanceof Logic || block instanceof Source && !(block instanceof ParticleEmitter)) {
                 if (block.HitTest(point)){
                     block.ParticleCollision(particle);
+                    return;
                 }
             }
-
         }
     }
 }

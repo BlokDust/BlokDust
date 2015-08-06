@@ -41,6 +41,7 @@ class Source extends Block implements ISource {
     public LaserPowered: boolean;
     public UpdateCollision: boolean;
     public Collisions: any[];
+    public CheckRange: number;
     public SearchResults: SoundcloudTrack[];
     public Searching: boolean;
     public ResultsPage: number;
