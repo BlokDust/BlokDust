@@ -20,6 +20,7 @@ interface ISource extends IBlock{
     LaserPowered: boolean;
     UpdateCollision: boolean;
     Collisions: any[];
+    CheckRange: number;
     SearchResults: SoundcloudTrack[];
     Searching: Boolean;
     ResultsPage: number;

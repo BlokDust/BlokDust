@@ -44,6 +44,7 @@ import Power = require("./Blocks/Power/Power");
 import Toggle = require("./Blocks/Power/Logic/Toggle");
 import Momentary = require("./Blocks/Power/Logic/Momentary");
 import Laser = require("./Blocks/Power/Laser");
+import Void = require("./Blocks/Power/Void");
 
 // INTERACTION BLOCKS //
 import ComputerKeyboard = require("Blocks/Interaction/ComputerKeyboard");
@@ -241,6 +242,11 @@ class BlockCreator {
                         "name": "Power",
                         "id": Power,
                         "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
+                    },
+                    {
+                        "name": "Void",
+                        "id": Void,
+                        "description": "Absorbs any laser beams or particles that touch it."
                     },
                     {
                         "name": "Toggle Switch",
