@@ -36,7 +36,7 @@ class Header extends DisplayObject{
         this._Units = 1.7;
         this.Height = 60;
         this.MenuItems = [];
-        this.ItemsPerPage = 6;
+        this.ItemsPerPage = App.Metrics.ItemsPerPage;
         this.DropDownHeight = (App.Width / (this.ItemsPerPage + 1)) / App.Unit;
         this.DropDown = 0;
         this._SelectedCategory = 0;
@@ -52,12 +52,6 @@ class Header extends DisplayObject{
 
         this.Populate(this.MenuJson);
 
-
-        //TODO: this is compensating for font loading, look into font loading
-        /*var header = this;
-        setTimeout(function() {
-            header.Populate(header.MenuJson);
-        },2000);*/
     }
 
     //-------------------------------------------------------------------------------------------
@@ -71,6 +65,7 @@ class Header extends DisplayObject{
         var gutter = 60;
         var menuCats = [];
 
+        this.ItemsPerPage = App.Metrics.ItemsPerPage;
         this.DropDownHeight = (this.Sketch.Width / (this.ItemsPerPage + 1)) / units;
 
 
@@ -105,6 +100,7 @@ class Header extends DisplayObject{
 
             // POPULATE CATEGORIES //
             var itemN = json.categories[i].items.length;
+            menuCats[i].Pages = Math.floor((itemN-1)/this.ItemsPerPage);
 
             for (var j=0; j<itemN; j++) {
                 var name = json.categories[i].items[j].name.toUpperCase();
@@ -117,7 +113,6 @@ class Header extends DisplayObject{
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
                 menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <BlocksSketch>this.Sketch));
-                menuCats[i].Pages = Math.floor(itemN/this.ItemsPerPage);
             }
 
         }
@@ -155,8 +150,11 @@ class Header extends DisplayObject{
         ctx.globalAlpha = 1;
         ctx.fillStyle = App.Palette[8];// Grey
         ctx.textAlign = "left";
-        ctx.font = "200 " + headerType + "px Dosis";
-        ctx.fillText("BLOKDUST",20*units,(thisHeight * 0.5) + (headerType * 0.38));
+
+        if (App.Metrics.Device!=="mobile") {
+            ctx.font = "200 " + headerType + "px Dosis";
+            ctx.fillText("BLOKDUST",20*units,(thisHeight * 0.5) + (headerType * 0.38));
+        }
 
 
         // DIVIDERS //
@@ -372,7 +370,7 @@ class Header extends DisplayObject{
 
 
     MouseDown(point) {
-        //this.HitTests(point);
+        this.HitTests(point);
         var units = App.Unit;
 
         // SELECT CATEGORY //

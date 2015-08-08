@@ -81,6 +81,8 @@ class LaserBeams {
         var rectSize = 1.7; // size of rectangle for rough check (in grid cells)
         var grd = App.ScaledGridSize * rectSize;
 
+        // SETUP LISTS //
+        // TODO: do this once when Blocks[] changes
         var voidlist = []; // we'll make a list of all void blocks so we can check those first
         var sourcelist = []; // get all other checks;
         var laserlist = [];

@@ -90,39 +90,10 @@ class Noise extends Source {
 
         var val = value;
 
-        if (param == "waveform") {
-            /*switch(Math.round(value)){
-                case 1: value = "white";
-                    break;
-                case 2: value = "pink";
-                    break;
-                case 3: value = "brown";
-                    break;
-            }
-            this.Waveform = value;*/
-        }
         this.Params[""+param] = val;
-
-
         super.SetParam(param,value);
     }
 
-    GetParam(param: string){
-        var val;
-        if (param == "waveform") {
-            switch(super.GetParam(param)){
-                case "white": val = 1;
-                    break;
-                case "pink": val = 2;
-                    break;
-                case "brown": val = 3;
-                    break;
-            }
-        } else {
-            val = super.GetParam(param)
-        }
-        return val;
-    }
 
     Dispose() {
         super.Dispose();

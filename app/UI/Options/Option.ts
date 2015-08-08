@@ -15,6 +15,7 @@ class Option implements IOption {
     public Size:Size;
     public Name:string;
     public Setting:string;
+    public DisplayConversion: any;
 
     public Origin:number;
     public Selected:boolean;

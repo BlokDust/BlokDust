@@ -244,14 +244,14 @@ class BlockCreator {
                         "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
                     },
                     {
-                        "name": "Void",
-                        "id": Void,
-                        "description": "Absorbs any laser beams or particles that touch it."
-                    },
-                    {
                         "name": "Toggle Switch",
                         "id": Toggle,
                         "description": "Toggles energy for source blocks, particle emitters & lasers."
+                    },
+                    {
+                        "name": "Void",
+                        "id": Void,
+                        "description": "Absorbs any laser beams or particles that touch it."
                     },
                     {
                         "name": "Momentary Switch",
@@ -281,7 +281,6 @@ class BlockCreator {
                     }
                 ]
             }
-
         ]
     };
 

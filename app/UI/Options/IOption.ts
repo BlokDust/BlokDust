@@ -12,6 +12,7 @@ interface IOption {
     Size: Size;
     Name: string;
     Setting: string;
+    DisplayConversion: any;
 
 
     Origin: number;

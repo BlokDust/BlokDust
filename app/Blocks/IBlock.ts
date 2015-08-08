@@ -26,8 +26,7 @@ interface IBlock extends IDisplayObject{
     DistanceFrom(point: Point): number;
     UpdateOptionsForm(): void;
     SetParam(param: string, value: number): void;
-    GetParam(param: string): void;
-    UpdateParams(params: any): void;
+    BackwardsCompatibilityPatch(): void;
     UpdateConnections(): void;
 }
 

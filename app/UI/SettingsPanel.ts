@@ -448,7 +448,7 @@ class SettingsPanel extends DisplayObject{
     }
 
     MouseDown(point) {
-        //this.HitTests(point);
+        this.HitTests(point);
         if (this._RollOvers[0]) {
             this.ClosePanel();
             return;

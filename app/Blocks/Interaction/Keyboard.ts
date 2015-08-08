@@ -6,7 +6,7 @@ import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import Voice = require("./VoiceObject");
 import Granular = require("../Sources/Granular");
-import Soundcloud = require("../Sources/Soundcloud");
+import SamplerBase = require("../Sources/SamplerBase");
 import Recorder = require("../Sources/Recorder");
 
 /**
@@ -177,11 +177,11 @@ class Keyboard extends PreEffect {
      * @constructor
      */
     public GetFrequencyOfNote(note, source:ISource): number {
-        if (source.Params.baseFrequency) {
+        if (source.Params.baseFrequency || source.Params.fine) {
             return source.Sources[0].noteToFrequency(note) *
                 this.GetConnectedPitchPreEffects(source) *
-                App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency);
-        } else if (source instanceof Soundcloud || source instanceof Recorder) { //TODO: make a sample base class that contains Soundclouds, Recorders, Samplers, and Waveplayers
+                App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency + source.Params.fine); //TODO - keyboards and other controllers should be dumber than this, not needing to know about block specific frequency modifiers
+        } else if (source instanceof SamplerBase) {
             return source.Sources[0].noteToFrequency(note) *
                 this.GetConnectedPitchPreEffects(source) * source.Params.playbackRate;
         } else {

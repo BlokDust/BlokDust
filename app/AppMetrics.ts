@@ -25,18 +25,27 @@ class Metrics {
     public TxtData: string;
 
     public C: Point; // center screen
+    public OptionsX: number; // x position of options panel
+    public OptionsPoint: Point;
+    public ItemsPerPage: number; // blocks per page in category display
+    public Device: string;
+    private _ScreenDivision: number;
 
     constructor() {
         App.ZoomLevel = 1;
         App.DragOffset = new Point(0,0);
         App.ScaledDragOffset = new Point(0,0);
         this.C = new Point(0,0);
+        this.OptionsX = 0.3;
+        this.OptionsPoint = new Point(0.3,0.6); //screen percentage
+        this.ItemsPerPage = 6;
+        this.Device = "desktop";
     }
 
 
     Metrics() {
 
-        var screenDivision = 850; // divisions of the screen width to make unit
+        this._ScreenDivision = 850; // divisions of the screen width to make unit
         var gridSize = 15;  // unit width of a grid cell
 
         // GET DISPLAY SIZE //
@@ -46,8 +55,12 @@ class Metrics {
         const ratio = this.PixelRatio;
 
 
+        //DEVICE BREAKPOINTS //
+        this.DeviceCheck();
+
+
         // DEFINE UNIT & GRID SIZE //
-        App.Unit = (width/screenDivision)*ratio;
+        App.Unit = (width/this._ScreenDivision)*ratio;
         App.ScaledUnit = App.Unit * App.ZoomLevel;
         var unit = App.Unit;
         App.GridSize = gridSize * unit;
@@ -66,7 +79,6 @@ class Metrics {
         App.BlocksSketch.Height = App.Height;
         this.C.x = App.Width * 0.5;
         this.C.y = App.Height * 0.5;
-
 
 
         // SET GLOBAL TYPE STYLES //
@@ -117,6 +129,43 @@ class Metrics {
             ctx.backingStorePixelRatio || 1;
 
         return dpr / bsr;
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  DEVICE RESPONSE
+    //-------------------------------------------------------------------------------------------
+
+
+    public DeviceCheck() {
+        // DEVICE BREAKPOINTS //
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // MOBILE //
+        if (height > (width*1.3)) {
+            this._ScreenDivision = 475;
+            this.OptionsPoint = new Point(0.5,0.4);
+            this.ItemsPerPage = 3;
+            this.Device = "mobile";
+            console.log("MOBILE");
+        }
+
+        // TABLET //
+        else if (height > (width*1.15)) {
+            this._ScreenDivision = 675;
+            this.OptionsPoint = new Point(0.1,0.5);
+            this.ItemsPerPage = 5;
+            this.Device = "tablet";
+            console.log("TABLET");
+        }
+
+        // DESKTOP //
+        else {
+            this.OptionsPoint = new Point(0.3,0.6);
+            this.ItemsPerPage = 6;
+            this.Device = "desktop";
+            console.log("DESKTOP");
+        }
     }
 
 

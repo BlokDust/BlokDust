@@ -547,7 +547,7 @@ class Source extends Block implements ISource {
         this.TriggerRelease();
     }
 
-    GetParam(param: string) {
+    /*GetParam(param: string) {
 
         var val;
         switch (param){
@@ -579,7 +579,7 @@ class Source extends Block implements ISource {
         }
         return val;
 
-    }
+    }*/
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
@@ -605,9 +605,9 @@ class Source extends Block implements ISource {
         }
     }
 
-    UpdateParams(params: any) {
+    /*UpdateParams(params: any) {
         super.UpdateParams(params);
-    }
+    }*/
 
     Draw(){
         super.Draw();

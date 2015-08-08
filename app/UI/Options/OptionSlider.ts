@@ -112,7 +112,12 @@ class Slider extends Option{
         if (this.Selected) {
             ctx.textAlign = "left";
             ctx.font = App.Metrics.TxtSlider;
-            var string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
+            var string = "";
+            if (this.DisplayConversion) {
+                string = "" + this.DisplayConversion(this.Value);
+            } else {
+                string = panel.NumberWithCommas("" + (Math.round(this.Value * 100) / 100));
+            }
             ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
         }
     }

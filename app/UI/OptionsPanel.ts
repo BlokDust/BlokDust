@@ -157,8 +157,16 @@ class OptionsPanel extends DisplayObject {
 
 
 
-        var panelW = 450*units;
+        var panelW;
+        if (App.Metrics.Device!=="mobile") {
+            panelW = 450*units;
+        } else {
+            panelW = App.Width + (44*units);
+        }
+
         var panelR = panelW - (panelM + (25*units));
+
+
 
 
         // NAME //
@@ -225,7 +233,9 @@ class OptionsPanel extends DisplayObject {
 
 
                 optionList.push(new Slider(new Point(sliderX,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log));
-
+                if (option.props.convertDisplay) {
+                    optionList[i].DisplayConversion = option.props.convertDisplay;
+                }
             }
 
             // WAVE SLIDER //
@@ -599,7 +609,7 @@ class OptionsPanel extends DisplayObject {
             }
             this.Opening = true;
             this.SelectedBlock = block;
-            App.BlocksSketch.StageDragger.Jump(block.Position,this.Position);
+            App.BlocksSketch.StageDragger.Jump(block.Position,new Point(App.Width*App.Metrics.OptionsPoint.x,App.Height*App.Metrics.OptionsPoint.y));
 
             var me = this;
             setTimeout(function() {
@@ -618,8 +628,14 @@ class OptionsPanel extends DisplayObject {
     }
 
     Resize() {
-        this.Position.x = 250*App.Unit;
-        this.Position.y = Math.round(App.Height*0.6);
+        if (App.Metrics.Device!=="mobile") {
+            this.Position.x = Math.round(App.Width*App.Metrics.OptionsPoint.x);
+            this.Position.y = Math.round(App.Height*App.Metrics.OptionsPoint.y);
+        } else {
+            this.Position.x = -44 * App.Unit;
+            this.Position.y = Math.round(App.Height*0.65);
+        }
+
     }
 
     Close() {
@@ -656,7 +672,6 @@ class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="switches") {
                 for (var j=0;j<this.Options[i].Switches.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
-                        //this.Options[i].Switches[j].Selected = !this.Options[i].Switches[j].Selected;
                         this.SwitchValue(this.Options[i].Switches[j],"Selected","Setting");
 
                         return;

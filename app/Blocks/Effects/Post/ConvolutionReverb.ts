@@ -9,6 +9,7 @@ class Convolver extends PostEffect {
 
     public Effect: Tone.Convolver;
     public Params: ConvolutionParams;
+    public Defaults: ConvolutionParams;
     public SearchResults: SoundcloudTrack[];
     private _FirstRelease: boolean = true;
     public Searching: boolean;
@@ -21,25 +22,21 @@ class Convolver extends PostEffect {
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                mix: 1,
-                track: '../Assets/ImpulseResponses/teufelsberg01.wav',
-                trackName: 'TEUFELSBERG',
-                user: 'BGXA'
-            };
-        } else {
+        if (this.Params) { // TODO - must be better way, refresh function?
             var me = this;
             setTimeout(function() {
                 me.FirstSetup();
             },100);
         }
 
-        if (!this.Params.trackName) { //TODO patch for older version, can remove in future
-            this.Params.trackName = 'TEUFELSBERG';
-            this.Params.user = 'BGXA';
-            this.Params.track = '../Assets/ImpulseResponses/teufelsberg01.wav';
-        }
+        this.Defaults = {
+            mix: 1,
+            track: '../Assets/ImpulseResponses/teufelsberg01.wav',
+            trackName: 'TEUFELSBERG',
+            user: 'BGXA'
+        };
+        this.PopulateParams();
+
 
         this._WaveForm = [];
         this.SearchResults = [];

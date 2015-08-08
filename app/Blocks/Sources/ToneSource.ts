@@ -12,21 +12,25 @@ class ToneSource extends Source {
     //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
     public Params: ToneSourceParams;
+    public Defaults: ToneSourceParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                frequency: App.Config.BaseNote,
-                waveform: 2,
-                baseFrequency: 0,
-            };
-        }
+
+        this.Defaults = {
+            frequency: App.Config.BaseNote,
+            waveform: 2,
+            baseFrequency: 0,
+            fine: 0
+        };
+        this.PopulateParams();
+
 
         // If it's an older save before we had baseFrequency
-        if (this.Params.baseFrequency) {
+        /*if (this.Params.baseFrequency) {
             this.Params.frequency = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency);
-        }
+            console.log("IF");
+        }*/
 
         super.Init(sketch);
 
@@ -46,9 +50,13 @@ class ToneSource extends Source {
         this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
     }
 
+    BackwardsCompatibilityPatch() {
+        this.Params.frequency = this.GetFrequency();
+    }
+
     CreateSource(){
         // add it to the list of sources
-        this.Sources.push( new Tone.Oscillator(this.Params.frequency, this.WaveIndex[this.Params.waveform]));
+        this.Sources.push( new Tone.Oscillator(this.GetFrequency(), this.WaveIndex[this.Params.waveform]));
 
         // return it
         return super.CreateSource();
@@ -103,6 +111,19 @@ class ToneSource extends Source {
                         "min" : -48,
                         "max" : 48,
                         "quantised" : true,
+                        "centered" : true,
+                        "convertDisplay" : this.DisplayNote
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Fine",
+                    "setting" :"fine",
+                    "props" : {
+                        "value" : this.Params.fine,
+                        "min" : -1,
+                        "max" : 1,
+                        "quantised" : false,
                         "centered" : true
                     }
                 },
@@ -129,17 +150,32 @@ class ToneSource extends Source {
 
         switch(param) {
             case 'baseFrequency':
-                this.Sources[0].frequency.value = App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(value);
+                this.Sources[0].frequency.value = this.GetFrequency(value,this.Params.fine);
                 // TODO: Make the params output this Note Index instead of semitone value
                 var octave = Math.floor(value / 12) + 4;
                 var note = App.Audio.NoteIndex[Math.abs(value%12)];
                 console.log(`Note: ${note}${octave}`);
+                break;
+            case 'fine':
+                this.Sources[0].frequency.value = this.GetFrequency(this.Params.baseFrequency, value);
                 break;
         }
 
         this.Params[param] = val;
 
         super.SetParam(param,value);
+    }
+
+    DisplayNote(value: number) {
+        var octave = Math.floor(value / 12) + 4;
+        var note = App.Audio.NoteIndex[Math.abs(value%12)];
+        return "" + note + "" + octave;
+    }
+
+    GetFrequency(baseFrequency?: number, fine?: number) {
+        baseFrequency = baseFrequency || this.Params.baseFrequency;
+        fine = fine || this.Params.fine;
+        return App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(baseFrequency + fine);
     }
 }
 

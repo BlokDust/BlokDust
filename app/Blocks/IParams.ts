@@ -20,6 +20,7 @@ interface ToneSourceParams {
     frequency: number;
     waveform: number|string;
     baseFrequency: number;
+    fine: number;
 }
 
 interface NoiseParams {
