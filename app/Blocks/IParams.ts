@@ -163,7 +163,9 @@ interface EnvelopeParams {
     release: number;
 }
 
-interface LFOParams extends RateDepthParams {}
+interface LFOParams extends RateDepthParams {
+    waveform: number;
+}
 interface ScuzzParams extends LFOParams {}
 
 interface PitchShifterParams {

@@ -4,6 +4,7 @@
 import Size = minerva.Size;
 import OptionHandle = require("./OptionHandle");
 import OptionSwitch = require("./OptionSwitch");
+import OptionButton = require("./OptionButton");
 import OptionSubHandle = require("./OptionSubHandle");
 
 interface IOption {
@@ -33,9 +34,6 @@ interface IOption {
     Handles: OptionHandle[];
     SubHandles: OptionSubHandle[];
 
-    ButtonStyle: number;
-    ButtonNo: number;
-
     Spread: number;
 
     Track: string;
@@ -46,6 +44,9 @@ interface IOption {
     EmptyString: string;
 
     Switches: OptionSwitch[];
+    Buttons: OptionButton[];
+
+    ButtonMode: string;
 
     Draw(ctx,units,i,panel): void;
 

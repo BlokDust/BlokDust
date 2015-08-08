@@ -70,7 +70,7 @@ class Noise extends Source {
             "name" : "Noise",
             "parameters" : [
 
-                {
+                /*{
                     "type" : "slider",
                     "name" : "Waveform",
                     "setting" :"waveform",
@@ -81,6 +81,26 @@ class Noise extends Source {
                         "quantised" : true,
                         "centered" : false
                     }
+                },*/
+                {
+                    "type" : "buttons",
+                    "name" : "Wave",
+                    "setting" :"waveform",
+                    "props" : {
+                        "value" : this.Params.waveform,
+                        "mode" : "string"
+                    },
+                    "buttons": [
+                        {
+                            "name" : "White"
+                        },
+                        {
+                            "name" : "Pink"
+                        },
+                        {
+                            "name" : "Brown"
+                        }
+                    ]
                 }
             ]
         };

@@ -46,7 +46,14 @@ class DisplayObject implements IDisplayObject {
 
     // IS CLICK WITHIN THIS BOX //
     HitRect(x,y,w,h,mx,my) {
-        return (mx>x && mx<(x+w) && my>y && my<(y+h));
+        var hit;
+        if (mx>x && mx<(x+w) && my>y && my<(y+h)) {
+            hit = true;
+            //App.Canvas.style.cursor="pointer";
+        } else {
+            hit = false;
+        }
+        return hit;
     }
 }
 

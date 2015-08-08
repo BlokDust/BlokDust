@@ -6,6 +6,7 @@ import IOption = require("./IOption");
 import OptionHandle = require("./OptionHandle");
 import OptionSubHandle = require("./OptionSubHandle");
 import OptionSwitch = require("./OptionSwitch");
+import OptionButton = require("./OptionButton");
 import Size = minerva.Size;
 
 class Option implements IOption {
@@ -36,8 +37,6 @@ class Option implements IOption {
     public SubHandleRoll: boolean[];
     public SubHandles: OptionSubHandle[];
 
-    public ButtonStyle: number;
-    public ButtonNo: number;
 
     public Spread: number;
 
@@ -49,7 +48,9 @@ class Option implements IOption {
     public EmptyString: string;
 
     public Switches: OptionSwitch[];
+    public Buttons: OptionButton[];
 
+    public ButtonMode: string;
 
     constructor() {
 

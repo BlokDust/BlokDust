@@ -7,6 +7,7 @@ class LFO extends PreEffect {
 
     public LFO: Tone.LFO;
     public Params: LFOParams;
+    public WaveIndex: string[];
 
     Init(sketch?: any): void {
 
@@ -14,14 +15,16 @@ class LFO extends PreEffect {
             this.Params = {
                 rate: 2,
                 depth: 20,
+                waveform: 2
             };
         }
+        this.WaveIndex = ["sine","square","triangle","sawtooth"];
 
         this.LFO = new Tone.LFO();
         this.LFO.frequency.value = this.Params.rate;
         this.LFO.min = -this.Params.depth;
         this.LFO.max = this.Params.depth;
-        this.LFO.type = 'triangle';
+        this.LFO.type = this.WaveIndex[this.Params.waveform];
         this.LFO.start();
 
         super.Init(sketch);
@@ -85,6 +88,8 @@ class LFO extends PreEffect {
         } else if (param=="depth") {
             this.LFO.min = -val;
             this.LFO.max = val;
+        } else if (param=="waveform") {
+            this.LFO.type = this.WaveIndex[val];
         }
 
         this.Params[param] = val;
@@ -122,6 +127,29 @@ class LFO extends PreEffect {
                         "quantised" : false,
                         "centered" : false
                     }
+                },
+                {
+                    "type" : "buttons",
+                    "name" : "Wave",
+                    "setting" :"waveform",
+                    "props" : {
+                        "value" : this.Params.waveform,
+                        "mode" : "wave"
+                    },
+                    "buttons": [
+                        {
+                            "name" : "Sine"
+                        },
+                        {
+                            "name" : "Square"
+                        },
+                        {
+                            "name" : "Triangle"
+                        },
+                        {
+                            "name" : "Saw"
+                        }
+                    ]
                 }
             ]
         };

@@ -128,17 +128,29 @@ class ToneSource extends Source {
                     }
                 },
                 {
-                    "type" : "slider",
-                    "name" : "Waveform",
+                    "type" : "buttons",
+                    "name" : "Wave",
                     "setting" :"waveform",
                     "props" : {
                         "value" : this.Params.waveform,
-                        "min" : 0,
-                        "max" : 3,
-                        "quantised" : true,
-                        "centered" : false
-                    }
+                        "mode" : "wave"
+                    },
+                    "buttons": [
+                        {
+                            "name" : "Sine"
+                        },
+                        {
+                            "name" : "Square"
+                        },
+                        {
+                            "name" : "Triangle"
+                        },
+                        {
+                            "name" : "Saw"
+                        }
+                    ]
                 }
+
             ]
         };
     }
@@ -151,7 +163,6 @@ class ToneSource extends Source {
         switch(param) {
             case 'baseFrequency':
                 this.Sources[0].frequency.value = this.GetFrequency(value,this.Params.fine);
-                // TODO: Make the params output this Note Index instead of semitone value
                 var octave = Math.floor(value / 12) + 4;
                 var note = App.Audio.NoteIndex[Math.abs(value%12)];
                 console.log(`Note: ${note}${octave}`);
