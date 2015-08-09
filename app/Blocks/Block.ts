@@ -59,6 +59,7 @@ class Block extends DisplayObject implements IBlock {
         }
     }
 
+
     BackwardsCompatibilityPatch() {
         // set in sub class if needed //
     }
