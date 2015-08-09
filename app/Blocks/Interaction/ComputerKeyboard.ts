@@ -105,7 +105,7 @@ class ComputerKeyboard extends Keyboard {
         } else if (key === 'octave-down' && this.Params.octave != 0) {
             for (var i = 0; i < sources.Count; i++) {
                 var source = this.Sources.GetValueAt(i);
-                source.OctaveShift(1);
+                source.OctaveShift(-1);
             }
             this.Params.octave--;
             this.RefreshOptionsPanel();
