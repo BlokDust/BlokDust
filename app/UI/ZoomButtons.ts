@@ -21,7 +21,6 @@ class ZoomButtons extends DisplayObject {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;
-        var units = App.Unit;
         this.UpdatePositions();
         this.Tweens = [];
 
@@ -38,7 +37,6 @@ class ZoomButtons extends DisplayObject {
 
     UpdateSlot(zoom) {
         this.CurrentSlot = this._ZoomSlots.indexOf(zoom);
-        console.log(this.CurrentSlot);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -157,6 +155,20 @@ class ZoomButtons extends DisplayObject {
 
 
     MouseMove(point) {
+        this.HitTests(point);
+    }
+
+    MouseDown(point) {
+        this.HitTests(point);
+        if (this.InRoll) {
+            this.ZoomIn();
+        }
+        if (this.OutRoll) {
+            this.ZoomOut();
+        }
+    }
+
+    HitTests(point) {
         var units = App.Unit;
         var zin = this._InPos;
         var zout = this._OutPos;
@@ -164,17 +176,6 @@ class ZoomButtons extends DisplayObject {
 
         this.InRoll = this.HitRect(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
         this.OutRoll = this.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
-
-    }
-
-    MouseDown(point) {
-
-        if (this.InRoll) {
-            this.ZoomIn();
-        }
-        if (this.OutRoll) {
-            this.ZoomOut();
-        }
     }
 
 

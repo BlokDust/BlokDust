@@ -20,7 +20,14 @@ class Block extends DisplayObject implements IBlock {
     public ZIndex;
     public OptionsForm;
     public Params: any;
+    public Defaults: any;
     private _Duplicable: boolean = false;
+
+
+    //-------------------------------------------------------------------------------------------
+    //  SETUP
+    //-------------------------------------------------------------------------------------------
+
 
     Init(sketch?: any): void {
         super.Init(sketch);
@@ -28,43 +35,53 @@ class Block extends DisplayObject implements IBlock {
         this.Update();
     }
 
-    Update() {
 
+    PopulateParams() {
+
+        // duplicate Params //
+        var paramsCopy = {};
+        if (this.Params) {
+            this.BackwardsCompatibilityPatch();
+            for (var key in this.Params) {
+                paramsCopy[""+key] = this.Params[""+key];
+            }
+        }
+
+        // set new params //
+        var params = this.Params = {};
+        var defaults = this.Defaults;
+        for (var key in defaults) {
+            if (paramsCopy[""+key] || paramsCopy[""+key]==0) {
+                params[""+key] = paramsCopy[""+key];
+            } else {
+                params[""+key] = defaults[""+key];
+            }
+        }
+    }
+
+    BackwardsCompatibilityPatch() {
+        // set in sub class if needed //
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  LOOPS
+    //-------------------------------------------------------------------------------------------
+
+
+    Update() {
     }
 
     Draw() {
         super.Draw();
-
-        //if (this.IsRenderCached) return;
-
         this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
-
-        /*if (window.debug){
-            this.Ctx.fillStyle = "#fff";
-            var pos = this.Grid.GetAbsPosition(this._GetRelGridPosition(new Point(-2, -2)));
-            this.Ctx.fillText("" + this.ZIndex, pos.x, pos.y);
-        }*/
-    }
-
-    // x and y are grid units. grid units are the divisor of the blocks view (1/50)
-    // so if x = -1, that's (width/50)*-1
-    DrawMoveTo(x, y) {
-        var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
-        p = App.Metrics.PointOnGrid(p);
-        this.Ctx.moveTo(p.x, p.y);
-    }
-
-    DrawLineTo(x, y) {
-        var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
-        p = App.Metrics.PointOnGrid(p);
-        this.Ctx.lineTo(p.x, p.y);
     }
 
 
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
 
-    ParticleCollision(particle: Particle) {
-
-    }
 
     MouseDown() {
         this.IsPressed = true;
@@ -91,67 +108,52 @@ class Block extends DisplayObject implements IBlock {
             }
             // MOVE //
             else {
-                /*point = (<Grid>this.Sketch).ConvertTransformedToBase(point);
-                point = (<Grid>this.Sketch).SnapToGrid(point);
-                point = (<Grid>this.Sketch).ConvertAbsoluteToGridUnits(point);*/
                 this.Position = App.Metrics.CursorToGrid(point);
-
-                //this.Position = point;
             }
-
         }
     }
 
-    Dispose() {
-        super.Dispose();
 
-    }
+    //-------------------------------------------------------------------------------------------
+    //  COLLISIONS
+    //-------------------------------------------------------------------------------------------
 
-    // absolute point
+
     HitTest(point: Point): boolean {
-
         this.Ctx.beginPath();
         this.DrawMoveTo(this.Outline[0].x, this.Outline[0].y);
-
         for (var i = 1; i < this.Outline.length; i++) {
             this.DrawLineTo(this.Outline[i].x, this.Outline[i].y);
         }
-
         this.Ctx.closePath();
-
         return this.Ctx.isPointInPath(point.x, point.y);
     }
 
-    // absolute point
-    DistanceFrom(point: Point): number{
-        var p = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
-        return Math.distanceBetween(p.x, p.y, point.x, point.y);
+    DrawMoveTo(x, y) {
+        var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
+        p = App.Metrics.PointOnGrid(p);
+        this.Ctx.moveTo(p.x, p.y);
     }
 
-    UpdateOptionsForm() {
+    DrawLineTo(x, y) {
+        var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
+        p = App.Metrics.PointOnGrid(p);
+        this.Ctx.lineTo(p.x, p.y);
+    }
 
+    ParticleCollision(particle: Particle) {
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  OPTIONS PANEL
+    //-------------------------------------------------------------------------------------------
+
+
+    UpdateOptionsForm() {
     }
 
     SetParam(param: string,value: number) {
-        // implemented in sub class
-    }
-
-    GetParam(param: string) {
-        // implemented in sub class
-    }
-
-    UpdateParams(params: any) {
-        console.log("refreshing");
-
-        for (var key in params) {
-            if (params.hasOwnProperty(key)) {
-                console.log(key + " -> " + params[key]);
-                this.SetParam(key, params[key]);
-            }
-        }
-        /*params.forEach((param: any) => {
-            this.SetParam(param.setting, param.props);
-        });*/
     }
 
     RefreshOptionsPanel() {
@@ -161,8 +163,18 @@ class Block extends DisplayObject implements IBlock {
         }
     }
 
-    Refresh() {
 
+    //-------------------------------------------------------------------------------------------
+    //  CONNECTIONS
+    //-------------------------------------------------------------------------------------------
+
+
+    DistanceFrom(point: Point): number{
+        var p = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
+        return Math.distanceBetween(p.x, p.y, point.x, point.y);
+    }
+
+    Refresh() {
     }
 
     UpdateConnections() {
@@ -176,7 +188,16 @@ class Block extends DisplayObject implements IBlock {
     }
 
     Stop() {
+    }
 
+
+    //-------------------------------------------------------------------------------------------
+    //  DISPOSE
+    //-------------------------------------------------------------------------------------------
+
+
+    Dispose() {
+        super.Dispose();
     }
 }
 

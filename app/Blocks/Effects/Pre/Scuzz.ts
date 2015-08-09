@@ -7,6 +7,7 @@ class Scuzz extends PreEffect {
 
     public LFO: Tone.LFO;
     public Params: ScuzzParams;
+    public WaveIndex: string[];
 
     Init(sketch?: any): void {
 
@@ -14,14 +15,16 @@ class Scuzz extends PreEffect {
             this.Params = {
                 depth: 1000,
                 rate: 100,
+                waveform: 2
             };
         }
+        this.WaveIndex = ["sine","square","triangle","sawtooth"];
 
         this.LFO = new Tone.LFO();
         this.LFO.frequency.value = this.Params.rate;
         this.LFO.min = -this.Params.depth;
         this.LFO.max = this.Params.depth;
-        this.LFO.type = 'sawtooth';
+        this.LFO.type = this.WaveIndex[this.Params.waveform];
         this.LFO.start();
 
         super.Init(sketch);

@@ -13,8 +13,9 @@ import WaveRegion = require("./Options/OptionWaveRegion");
 import WaveImage = require("./Options/OptionWaveImage");
 import Sample = require("./Options/OptionSample");
 import ActionButton = require("./Options/OptionActionButton");
-import Buttons = require("./Options/OptionButtonSelect");
+import ButtonArray = require("./Options/OptionButtonArray");
 import SwitchArray = require("./Options/OptionSwitchArray");
+import Button = require("./Options/OptionButton");
 import Switch = require("./Options/OptionSwitch");
 import ADSR = require("./Options/OptionADSR");
 import Parametric = require("./Options/OptionParametric");
@@ -117,8 +118,8 @@ class OptionsPanel extends DisplayObject {
                 getHeight += 60;
                 optionHeight[i] = 60 * units;
             } else if (json.parameters[i].type == "buttons") {
-                getHeight += 144;
-                optionHeight[i] = 144 * units;
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "ADSR") {
                 getHeight += 120;
                 optionHeight[i] = 120 * units;
@@ -157,8 +158,16 @@ class OptionsPanel extends DisplayObject {
 
 
 
-        var panelW = 450*units;
+        var panelW;
+        if (App.Metrics.Device!=="mobile") {
+            panelW = 450*units;
+        } else {
+            panelW = App.Width + (44*units);
+        }
+
         var panelR = panelW - (panelM + (25*units));
+
+
 
 
         // NAME //
@@ -225,7 +234,9 @@ class OptionsPanel extends DisplayObject {
 
 
                 optionList.push(new Slider(new Point(sliderX,optionY),new Size(1,optionHeight[i]),sliderO,option.props.value,option.props.min,option.props.max,option.props.quantised,option.name,option.setting,log));
-
+                if (option.props.convertDisplay) {
+                    optionList[i].DisplayConversion = option.props.convertDisplay;
+                }
             }
 
             // WAVE SLIDER //
@@ -315,8 +326,19 @@ class OptionsPanel extends DisplayObject {
 
             // BUTTONS //
             else if (option.type == "buttons") {
-                var value = 0;
-                optionList.push(new Buttons(new Point(0,optionY),new Size(this.Range,optionHeight[i]),value,option.name,option.setting));
+                var buttons = [];
+                var margin = 20*units;
+                var buttonWidth = (this.Range - (margin * (option.buttons.length-1))) / option.buttons.length;
+                buttonWidth = this.Range / 5;
+                var buttonStartX = (this.Range * 0.5) - (buttonWidth * (option.buttons.length * 0.5));
+                var buttonX = 0;
+                for (var j=0; j<option.buttons.length; j++) {
+                    buttonX = buttonStartX + (j * (buttonWidth));
+                    buttons[j] = new Button(new Point(buttonX,optionY), option.buttons[j].name, j==option.props.value, j, new Size(buttonWidth,optionHeight[i]));
+                }
+
+
+                optionList.push(new ButtonArray(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,option.setting,buttons,option.props.mode));
 
             }
 
@@ -599,7 +621,7 @@ class OptionsPanel extends DisplayObject {
             }
             this.Opening = true;
             this.SelectedBlock = block;
-            App.BlocksSketch.StageDragger.Jump(block.Position,this.Position);
+            App.BlocksSketch.StageDragger.Jump(block.Position,new Point(App.Width*App.Metrics.OptionsPoint.x,App.Height*App.Metrics.OptionsPoint.y));
 
             var me = this;
             setTimeout(function() {
@@ -618,8 +640,14 @@ class OptionsPanel extends DisplayObject {
     }
 
     Resize() {
-        this.Position.x = 250*App.Unit;
-        this.Position.y = Math.round(App.Height*0.6);
+        if (App.Metrics.Device!=="mobile") {
+            this.Position.x = Math.round(App.Width*App.Metrics.OptionsPoint.x);
+            this.Position.y = Math.round(App.Height*App.Metrics.OptionsPoint.y);
+        } else {
+            this.Position.x = -44 * App.Unit;
+            this.Position.y = Math.round(App.Height*0.65);
+        }
+
     }
 
     Close() {
@@ -656,9 +684,19 @@ class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="switches") {
                 for (var j=0;j<this.Options[i].Switches.length;j++) {
                     if (this.Options[i].HandleRoll[j]) {
-                        //this.Options[i].Switches[j].Selected = !this.Options[i].Switches[j].Selected;
                         this.SwitchValue(this.Options[i].Switches[j],"Selected","Setting");
-
+                        return;
+                    }
+                }
+            }
+            if (this.Options[i].Type=="buttons") {
+                for (var j=0;j<this.Options[i].Buttons.length;j++) {
+                    if (this.Options[i].HandleRoll[j]) {
+                        for (var h=0;h<this.Options[i].Buttons.length;h++) {
+                            this.Options[i].Buttons[h].Selected = false;
+                        }
+                        this.Options[i].Buttons[j].Selected = true;
+                        this.PushValue(this.Options[i],j,"Setting");
                         return;
                     }
                 }
@@ -802,6 +840,11 @@ class OptionsPanel extends DisplayObject {
             else if (this.Options[i].Type == "switches") {
                 for (var j=0; j<this.Options[i].Switches.length; j++) {
                     this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Switches[j].Size.width, this.Options[i].Switches[j].Size.height, mx, my);
+                }
+            }
+            else if (this.Options[i].Type == "buttons") {
+                for (var j=0; j<this.Options[i].Buttons.length; j++) {
+                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Buttons[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Buttons[j].Size.width, this.Options[i].Buttons[j].Size.height, mx, my);
                 }
             }
             else if (this.Options[i].Type == "parametric") {
@@ -951,6 +994,14 @@ class OptionsPanel extends DisplayObject {
         console.log("to " + object[""+setting] +" | "+ val);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], val);
+
+    }
+
+    PushValue(object,value,setting) {
+
+        console.log("" + object[""+setting] +" | "+ value);
+        // SET VALUE IN BLOCK //
+        this.SelectedBlock.SetParam(object[""+setting], value);
 
     }
 

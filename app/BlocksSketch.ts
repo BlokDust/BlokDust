@@ -500,6 +500,7 @@ class BlocksSketch {
 
     private _PointerMove(point: Point){
         App.TranslateMousePointToPixelRatioPoint(point);
+        App.Canvas.style.cursor="default";
 
         this._CheckHover(point);
 

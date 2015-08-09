@@ -6,17 +6,17 @@ class Chorus extends PostEffect {
 
     public Effect: Tone.Chorus;
     public Params: ChorusParams;
+    public Defaults: ChorusParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                rate: 2,
-                delayTime: 2.22,
-                depth: 0.9,
-                feedback: 0.9,
-            };
-        }
+        this.Defaults = {
+            rate: 1.5,
+            delayTime: 1.5,
+            depth: 0.75,
+            feedback: 0.4
+        };
+        this.PopulateParams();
 
 
         this.Effect = new Tone.Chorus({
@@ -43,6 +43,7 @@ class Chorus extends PostEffect {
         this.Effect.dispose();
     }
 
+
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
         var val = value;
@@ -58,21 +59,6 @@ class Chorus extends PostEffect {
         this.Params[param] = val;
     }
 
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="rate") {
-            val = this.Effect.frequency.value;
-        } else if (param=="delayTime") {
-            val = this.Effect.delayTime;
-        } else if (param=="depth") {
-            val = this.Effect.depth;
-        } else if (param=="feedback") {
-            val = this.Effect.feedback.value;
-        }
-
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -128,7 +114,7 @@ class Chorus extends PostEffect {
                     "props" : {
                         "value" : this.Params.feedback,
                         "min" : 0,
-                        "max" : 1,
+                        "max" : 0.8,
                         "quantised" : false,
                         "centered" : false
                     }
