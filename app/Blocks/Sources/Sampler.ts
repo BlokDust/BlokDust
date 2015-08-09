@@ -36,6 +36,95 @@ class Sampler extends SamplerBase {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
     }
 
+    FileReaderInit() {
+        // Check for the various File API support.
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            // Great success! All the File APIs are supported.
+        } else {
+            App.Message('The File APIs are not fully supported in this browser.')
+        }
+
+        document.getElementById('fileInput').innerHTML = '<input type="file" id="files" name="files[]" multiple />';
+
+
+    }
+
+    SetupDropZone() {
+        var dropZone = document.getElementById('drop_zone');
+        dropZone.addEventListener('dragover', this.HandleDragOver, false);
+        dropZone.addEventListener('drop', this.HandleFileSelect, false);
+    }
+
+    HandleFileSelect(event) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        var files = event.dataTransfer.files; // FileList object.
+
+        // files is a FileList of File objects. List some properties.
+        for (var i = 0, f; f = files[i]; i++) {
+            // Only process audio files.
+            if (!f.type.match('audio.*')) { //TODO: check this
+                continue;
+            }
+            //list all files
+            console.log(f);
+
+            var reader = new FileReader();
+            reader.onerror = this.ErrorHandler;
+            reader.onprogress = this.UpdateProgress;
+            reader.onabort = function(e) {
+                alert('File read cancelled');
+            };
+
+            // Closure to capture the file information.
+            reader.onload = (function(theFile) {
+                return function(e) {
+                    // Render thumbnail.
+                    console.log(e);
+                    console.log(theFile); // create buffer from this
+                };
+            })(f);
+
+            // Read in the image file as a data URL.
+            reader.readAsDataURL(f);
+        }
+    }
+
+    ErrorHandler(event) {
+        switch(event.target.error.code) {
+            case event.target.error.NOT_FOUND_ERR:
+                alert('File Not Found!');
+                break;
+            case event.target.error.NOT_READABLE_ERR:
+                alert('File is not readable');
+                break;
+            case event.target.error.ABORT_ERR:
+                break; // noop
+            default:
+                alert('An error occurred reading this file.'); //TODO: App.Message
+        }
+    }
+
+    UpdateProgress(event) {
+        // evt is an ProgressEvent.
+        if (event.lengthComputable) {
+            var percentLoaded = Math.round((event.loaded / event.total) * 100);
+            // Increase the progress bar length.
+            if (percentLoaded < 100) {
+                console.log(percentLoaded + '%');
+            }
+        }
+    }
+
+    HandleDragOver(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+
+        //TODO: DRAW THE BLOCK HERE
+    }
+
     Draw() {
         super.Draw();
         (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"sampler");
