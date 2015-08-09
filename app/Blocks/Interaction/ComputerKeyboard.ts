@@ -211,7 +211,8 @@ class ComputerKeyboard extends Keyboard {
                         {
                             "name" : "Mono/Poly",
                             "setting" :"polyphonic",
-                            "value": this.Params.isPolyphonic
+                            "value": this.Params.isPolyphonic,
+                            "mode": "fewMany"
                         }
                     ]
                 },

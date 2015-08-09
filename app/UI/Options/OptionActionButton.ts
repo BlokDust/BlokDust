@@ -69,7 +69,7 @@ class OptionActionButton  extends Option{
 
         // TEXT //
         ctx.textAlign = "center";
-        ctx.fillText(this.Name.toUpperCase(), panel.Margin + (panel.Range*0.5), y + (height * 0.5) + (dataType * 0.4));
+        ctx.fillText(this._Text.toUpperCase(), panel.Margin + (panel.Range*0.5), y + (height * 0.5) + (dataType * 0.4));
 
 
     }

@@ -51,6 +51,7 @@ import Void = require("./Blocks/Power/Void");
 import ComputerKeyboard = require("Blocks/Interaction/ComputerKeyboard");
 import MIDIController = require("Blocks/Interaction/MIDIController");
 
+
 class BlockCreator {
 
     //TODO: Do all the blocks need to be here??? What does this do?
@@ -291,9 +292,19 @@ class BlockCreator {
     };
 
     public static GetBlock(type: any): IBlock {
+        type = this.LostBlockCheck(type);
         var b = eval("new " + type + "()");
         b.Type = eval(type);
         return b;
+    }
+
+    // BACKWARDS COMPATIBILITY //
+    // PATCH CHANGED BLOCK NAMES //
+    public static LostBlockCheck(type: any) {
+        if ((""+type) == "Gain") {
+            type = "Volume";
+        }
+        return type;
     }
 
 }

@@ -52,7 +52,8 @@ class Toggle extends Logic {
                             "name": "Off/On",
                             "setting": "logic",
                             "value": this.Params.logic,
-                            "lit" : true
+                            "lit" : true,
+                            "mode": "offOn"
                         }
                     ]
                 }

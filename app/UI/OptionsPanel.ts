@@ -312,11 +312,15 @@ class OptionsPanel extends DisplayObject {
             else if (option.type == "switches") {
 
                 var switches = [];
+                var margin = 20*units;
                 var switchWidth = 60*units;
-                var switchX = [0,(this.Range*0.5) - (switchWidth*0.5),this.Range - switchWidth];
-
+                switchWidth = (this.Range - (margin * 3)) / 4;
+                //var switchX = [0,(this.Range*0.5) - (switchWidth*0.5),this.Range - switchWidth];
+                var switchStartX = (this.Range * 0.5) - (((switchWidth * option.switches.length) + (margin * (option.switches.length -1))) * 0.5);
+                var switchX = 0;
                 for (var j=0; j<option.switches.length; j++) {
-                    switches[j] = new Switch(new Point(switchX[j],optionY), option.switches[j].name, option.switches[j].setting, option.switches[j].value,new Size(switchWidth,optionHeight[i]*0.43),option.switches[j].lit);
+                    switchX = switchStartX + (j * (switchWidth + margin));
+                    switches[j] = new Switch(new Point(switchX,optionY), option.switches[j].name, option.switches[j].setting, option.switches[j].value,new Size(switchWidth,optionHeight[i]*0.43),option.switches[j].lit, option.switches[j].mode);
                 }
 
 
@@ -839,12 +843,12 @@ class OptionsPanel extends DisplayObject {
             }
             else if (this.Options[i].Type == "switches") {
                 for (var j=0; j<this.Options[i].Switches.length; j++) {
-                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Switches[j].Size.width, this.Options[i].Switches[j].Size.height, mx, my);
+                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Switches[j].Position.x, this.Position.y + this.Options[i].Position.y, this.Options[i].Switches[j].Size.width, this.Options[i].Size.height * 0.7, mx, my);
                 }
             }
             else if (this.Options[i].Type == "buttons") {
                 for (var j=0; j<this.Options[i].Buttons.length; j++) {
-                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Buttons[j].Position.x, this.Position.y + this.Options[i].Position.y + (this.Options[i].Size.height*0.16), this.Options[i].Buttons[j].Size.width, this.Options[i].Buttons[j].Size.height, mx, my);
+                    this.Options[i].HandleRoll[j] = this.HitRect(this.Position.x + this.Margin + this.Options[i].Buttons[j].Position.x, this.Position.y + this.Options[i].Position.y, this.Options[i].Buttons[j].Size.width, this.Options[i].Size.height, mx, my);
                 }
             }
             else if (this.Options[i].Type == "parametric") {

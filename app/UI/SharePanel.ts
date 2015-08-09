@@ -50,7 +50,7 @@ class SharePanel extends DisplayObject{
             shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",
             copyLine: "Share your creation with this unique URL:",
             titleLine: "Title",
-            generateLine: "Generate Title",
+            generateLine: "Randomise Title",
             domain: this.GetUrl() + "?c=",
             facebook: "post to facebook",
             twitter: "post to twitter",

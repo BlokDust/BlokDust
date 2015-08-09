@@ -316,15 +316,14 @@ class App implements IApp{
     }
 
     Update() : void {
-        if (this.Scene==2) {
+        if (this.Scene === 2) {
             this.BlocksSketch.Update();
         }
         this.AnimationsLayer.Update();
-
     }
 
     Draw(): void {
-        if (this.Scene==2) {
+        if (this.Scene === 2) {
             this.BlocksSketch.Draw();
         }
         if (this.Scene>0) {
@@ -339,14 +338,17 @@ class App implements IApp{
     Deserialize(json: string): any {
         this._SaveFile = Serializer.Deserialize(json);
         this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
+        this.Blocks.sort((a: IBlock, b: IBlock) => {
+            return a.ZIndex - b.ZIndex;
+        });
     }
 
     //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
     //    this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
     //}
 
-    Message(string?: string, options?: any) {
-        this.BlocksSketch.MessagePanel.NewMessage(string, options);
+    Message(message?: string, options?: any) {
+        this.BlocksSketch.MessagePanel.NewMessage(message, options);
     }
 
     CreateCanvas() {

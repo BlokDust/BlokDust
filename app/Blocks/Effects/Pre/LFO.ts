@@ -7,17 +7,18 @@ class LFO extends PreEffect {
 
     public LFO: Tone.LFO;
     public Params: LFOParams;
+    public Defaults: LFOParams;
     public WaveIndex: string[];
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                rate: 2,
-                depth: 20,
-                waveform: 2
-            };
-        }
+        this.Defaults = {
+            rate: 2,
+            depth: 20,
+            waveform: 2
+        };
+        this.PopulateParams();
+
         this.WaveIndex = ["sine","square","triangle","sawtooth"];
 
         this.LFO = new Tone.LFO();
