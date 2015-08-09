@@ -167,16 +167,13 @@ class App implements IApp{
 
 
         // CREATE INPUT MANAGERS //
-        this.InputManager = new InputManager();
         this.TypingManager = new TypingManager();
         this.DragFileInputManager = new DragFileInputManager();
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
 
-
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
-
 
         // LOAD PALETTE //
         var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);

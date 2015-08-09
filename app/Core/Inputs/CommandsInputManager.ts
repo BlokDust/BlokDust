@@ -4,8 +4,6 @@ import KeyUpEventArgs = require("./KeyUpEventArgs");
 import Commands = require("../../Commands");
 import CommandManager = require("../Commands/CommandManager");
 
-
-
 class CommandsInputManager extends InputManager {
 
     private _CommandManager;
@@ -18,11 +16,13 @@ class CommandsInputManager extends InputManager {
 
     KeyboardDown(e) {
         super.KeyboardDown(e);
+        if (!this.IsEnabled) return;
         this.CreateCommand(e);
     }
 
     KeyboardUp(e) {
         super.KeyboardUp(e);
+        if (!this.IsEnabled) return;
         this.CreateCommand(e);
     }
 
@@ -31,11 +31,10 @@ class CommandsInputManager extends InputManager {
 
         //console.log(this.KeysDown);
 
-        if (!App.TypingManager.Enabled) {
+        if (!App.TypingManager.IsEnabled) { // todo: use flux
             if ((this.IsKeyNameDown(this.KeyMap.Ctrl) || this.IsKeyNameDown(this.KeyMap.LeftWindowKey) || this.IsKeyNameDown(this.KeyMap.CommandFF)) && this.IsKeyNameDown(this.KeyMap.s)){
                 e.preventDefault();
-                //this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
-                // todo: use command
+                // todo: use flux
                 App.BlocksSketch.SharePanel.OpenPanel();
                 return;
             }

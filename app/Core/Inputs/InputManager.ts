@@ -113,6 +113,7 @@ class InputManager {
 
     public KeysDown: any;
     public KeyMap: any;
+    public IsEnabled: boolean = true;
 
     KeyDownChange = new nullstone.Event<KeyDownEventArgs>();
     KeyUpChange = new nullstone.Event<KeyUpEventArgs>();
@@ -123,10 +124,12 @@ class InputManager {
         this.KeysDown = {};
 
         document.addEventListener('keydown', (e) => {
+            if (!this.IsEnabled) return;
             this.KeyboardDown(e);
         });
 
         document.addEventListener('keyup', (e) => {
+            if (!this.IsEnabled) return;
             this.KeyboardUp(e);
         });
     }
@@ -138,7 +141,7 @@ class InputManager {
         // if it's undefined
         if (typeof k === 'undefined') return;
 
-        if (k==8) { // backspace prevent default
+        if (k === 8) { // backspace prevent default
             e.preventDefault();
         }
 
