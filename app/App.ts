@@ -7,6 +7,7 @@ import CommandManager = require("./Core/Commands/CommandManager");
 import Audio = require("./Core/Audio/Audio");
 import InputManager = require("./Core/Inputs/InputManager");
 import TypingManager = require("./Core/Inputs/TypingManager");
+import DragFileInputManager = require("./Core/Inputs/DragFileInputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
@@ -68,6 +69,7 @@ class App implements IApp{
     public Config: Config;
     public InputManager: InputManager;
     public TypingManager: TypingManager;
+    public DragFileInputManager: DragFileInputManager;
     public KeyboardInput: KeyboardInput;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
@@ -167,6 +169,7 @@ class App implements IApp{
         // CREATE INPUT MANAGERS //
         this.InputManager = new InputManager();
         this.TypingManager = new TypingManager();
+        this.DragFileInputManager = new DragFileInputManager();
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();

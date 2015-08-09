@@ -11,7 +11,7 @@ class Sampler extends SamplerBase {
     public Params: SamplerParams;
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
-    private _FirstBuffer: any;
+    private _FirstBuffer: Tone.Buffer;
     private _LoadFromShare: boolean = false;
     private _fileInput: HTMLElement = document.getElementById('audioFileInput');
 
@@ -75,18 +75,8 @@ class Sampler extends SamplerBase {
             App.Message('The File APIs are not fully supported in this browser.')
         }
 
-
-        //TODO - put this in a static class - we don't want listeners for every sampler block
-        // Setup the drag and drop listeners.
-        var dropZone = document.getElementsByTagName('canvas')[0];
-        dropZone.addEventListener('dragenter', this.HandleDragEnter, false);
-        dropZone.addEventListener('dragover', this.HandleDragOver, false);
-        dropZone.addEventListener('dragleave', this.HandleDragLeave, false);
-        dropZone.addEventListener('drop', this.HandleFileDropped.bind(this), false);
         this._fileInput.addEventListener('change', this.HandleFileUploadButton.bind(this), false);
     }
-
-
 
     /**
      * Upload file button
@@ -99,46 +89,24 @@ class Sampler extends SamplerBase {
         this._fileInput.dispatchEvent(event);
     }
 
-    HandleFileDropped(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        var files = e.dataTransfer.files; // FileList object.
-        this.DecodeFileData(files);
-        console.dir(e.dataTransfer.files[0]);
-    }
-
     HandleFileUploadButton(e) {
         var files = e.target.files; // FileList object
         this.DecodeFileData(files);
         console.dir(e.target.files[0]);
     }
 
-    HandleDragEnter(e) {
-        console.log('file drag entered area');
-    }
-
-    HandleDragOver(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-        console.log('file drag over');
-    }
-
-    HandleDragLeave(e) {
-        console.log('file left drag area');
-    }
-
     DecodeFileData(files) {
         console.log(files[0]);
 
-        // TODO: Only process audio files.
-        //if (!files[0].type.match('audio.*')) {
-        //    App.Message('This is not an audio file, please try again with a .wav or an .mp3');
-        //}
-        //TODO: Only process files of a certain length
-        //if (files[0].size > SOME_HUGE_LENGTH) {
-        //    App.Message('The audio file is too large. The maximum size is 10mb');
-        //}
+        //Only process audio files.
+        if (!files[0].type.match('audio.*')) {
+            App.Message('This is not an audio file, please try again with a .wav, .mp3 or .ogg');
+            return;
+        }
+        //Only process files of a certain length
+        if (files[0].size > 100000000) {
+            App.Message('The audio file is too large. The maximum size is 100mb');
+        }
 
         var reader = new FileReader();
         reader.onerror = this.ErrorHandler;
@@ -333,14 +301,10 @@ class Sampler extends SamplerBase {
                 break;
             case "reverse":
                 value = value? true : false;
-
-                this._FirstBuffer.reverse = value;
-                this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.buffer = this._FirstBuffer;
-                });
+                this.Sources[0].player.reverse = value;
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
+                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":
@@ -367,13 +331,6 @@ class Sampler extends SamplerBase {
 
     Dispose(){
         super.Dispose();
-
-        //Remove event listeners
-        var dropZone = document.getElementsByTagName('canvas')[0];
-        dropZone.removeEventListener('dragenter', this.HandleDragEnter, false);
-        dropZone.removeEventListener('dragover', this.HandleDragOver, false);
-        dropZone.removeEventListener('dragleave', this.HandleDragLeave, false);
-        dropZone.removeEventListener('drop', this.HandleFileDropped, false);
         this._fileInput.removeEventListener('change', this.HandleFileUploadButton, false);
     }
 }
