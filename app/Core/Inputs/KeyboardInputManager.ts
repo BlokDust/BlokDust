@@ -134,27 +134,30 @@ class KeyboardInputManager extends InputManager {
     }
 
     KeyboardDown(e) {
-        if (!App.TypingManager.Enabled) {
-            var k = this.MasterKeyboardMap[e.keyCode];
+        if (!this.IsEnabled) return;
 
-            //Check if this key released is in our key_map
-            if (typeof k !== 'undefined' && k !== '') {
-                //if it's already pressed (holding note)
-                if (k in this.KeysDown) {
-                    return;
-                }
-                //pressed first time, add to object
-                this.KeysDown[k] = true;
+        var k = this.MasterKeyboardMap[e.keyCode];
 
-                this.KeyDown = k;
-                this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
+        //Check if this key released is in our key_map
+        if (typeof k !== 'undefined' && k !== '') {
+            //if it's already pressed (holding note)
+            if (k in this.KeysDown) {
+                return;
             }
+            //pressed first time, add to object
+            this.KeysDown[k] = true;
+
+            this.KeyDown = k;
+            this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
         }
+
         super.KeyboardDown(e);
     }
 
     KeyboardUp(e) {
         super.KeyboardUp(e);
+        if (!this.IsEnabled) return;
+
         var k = this.MasterKeyboardMap[e.keyCode];
 
         //Check if this key released is in out key_map

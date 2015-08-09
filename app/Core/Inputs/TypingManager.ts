@@ -5,7 +5,6 @@ import InputManager = require("./InputManager");
 
 class TypingManager extends InputManager {
 
-    public Enabled: Boolean;
     private _String: string;
     private _Panel: any;
     private _CharLimit: number;
@@ -13,24 +12,25 @@ class TypingManager extends InputManager {
     constructor() {
         super();
 
-        this.Enabled = false;
+        this.IsEnabled = false;
         this._String = "";
         this._CharLimit = 20;
-
     }
-
 
     KeyboardDown(e) {
         super.KeyboardDown(e);
+        if (!this.IsEnabled) return;
 
-        if (this.Enabled) {
-            var code = e.keyCode;
-            this.AddToString(code);
-            this.RemoveFromString();
-            this.StringReturn();
-        }
+        var code = e.keyCode;
+        this.AddToString(code);
+        this.RemoveFromString();
+        this.StringReturn();
     }
 
+    KeyboardUp(e) {
+        super.KeyboardUp(e);
+        if (!this.IsEnabled) return;
+    }
 
     AddToString(code) {
         //TODO special / secondary characters
@@ -58,22 +58,15 @@ class TypingManager extends InputManager {
         }
     }
 
-
-    KeyboardUp(e) {
-        super.KeyboardUp(e);
-    }
-
     Enable(panel) {
-        this.Enabled = true;
+        this.IsEnabled = true;
         this._Panel = panel;
         this._String = panel.GetString();
     }
 
     Disable() {
-        this.Enabled = false;
+        this.IsEnabled = false;
     }
-
-
 }
 
 export = TypingManager;
