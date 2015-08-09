@@ -227,13 +227,15 @@ class Soundcloud extends SamplerBase {
                             "name": "Reverse",
                             "setting": "reverse",
                             "value": this.Params.reverse,
-                            "lit" : true
+                            "lit" : true,
+                            "mode": "offOn"
                         },
                         {
                             "name": "Looping",
                             "setting": "loop",
                             "value": this.Params.loop,
-                            "lit" : true
+                            "lit" : true,
+                            "mode": "offOn"
                         }
                     ]
                 },
