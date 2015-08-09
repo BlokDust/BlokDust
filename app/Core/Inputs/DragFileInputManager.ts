@@ -2,42 +2,35 @@ import InputManager = require("./InputManager");
 
 class DragFileInputManager extends InputManager {
 
+    public DragEnter = new nullstone.Event<DragEvent>();
+    public DragMove = new nullstone.Event<DragEvent>();
+    public DragLeave = new nullstone.Event<DragEvent>();
+    public Dropped = new nullstone.Event<DragEvent>();
+
     constructor() {
         super();
-        this.SetDragDropListeners();
 
-    }
-
-    SetDragDropListeners(){
         var dropZone = document.getElementsByTagName('canvas')[0];
-        dropZone.addEventListener('dragenter', this.HandleDragEnter, false);
-        dropZone.addEventListener('dragover', this.HandleDragOver, false);
-        dropZone.addEventListener('dragleave', this.HandleDragLeave, false);
-        dropZone.addEventListener('drop', this.HandleFileDropped.bind(this), false);
+        dropZone.addEventListener('dragenter', this.OnDragEnter.bind(this));
+        dropZone.addEventListener('dragover', this.OnDragMove.bind(this));
+        dropZone.addEventListener('dragleave', this.OnDragLeave.bind(this));
+        dropZone.addEventListener('drop', this.OnFileDropped.bind(this));
     }
 
-    HandleFileDropped(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        var files = e.dataTransfer.files; // FileList object.
-
-        //TODO: open new sampler block and DecodeFileData(files)
-        //this.DecodeFileData(files);
-        console.log(files[0].name + ' dropped');
+    OnFileDropped(e) {
+        this.Dropped.raise(this, e);
     }
 
-    HandleDragEnter(e) {
-        console.log('file drag entered area');
+    OnDragEnter(e) {
+        this.DragEnter.raise(this, e);
     }
 
-    HandleDragOver(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        console.log('file drag over');
+    OnDragMove(e) {
+        this.DragMove.raise(this, e);
     }
 
-    HandleDragLeave(e) {
-        console.log('file left drag area');
+    OnDragLeave(e) {
+        this.DragLeave.raise(this, e);
     }
 }
 
