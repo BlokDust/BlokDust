@@ -71,10 +71,10 @@ class ComputerKeyboard extends Keyboard {
                 this.KeyboardDown(e.KeyDown, source);
             }
         } else {
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                this._ExecuteKeyboardCommand(e.KeyDown, source);
-            }
+            //for (var i = 0; i < this.Sources.Count; i++) {
+            //    var source = this.Sources.GetValueAt(i);
+                this._ExecuteKeyboardCommand(e.KeyDown, this.Sources);
+            //}
         }
     }
 
@@ -94,15 +94,19 @@ class ComputerKeyboard extends Keyboard {
     }
 
     // OCTAVE SHIFT //
-    private _ExecuteKeyboardCommand(key: string, source: ISource) {
+    private _ExecuteKeyboardCommand(key: string, sources: any) {
         if (key == 'octave-up' && this.Params.octave < 9) {
-            //this.SetParam("octave",this.Params.octave+1);
-            source.OctaveShift(1);
+            for (var i = 0; i < sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                source.OctaveShift(1);
+            }
             this.Params.octave++;
             this.RefreshOptionsPanel();
         } else if (key === 'octave-down' && this.Params.octave != 0) {
-            //this.SetParam("octave",this.Params.octave-1);
-            source.OctaveShift(-1);
+            for (var i = 0; i < sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                source.OctaveShift(1);
+            }
             this.Params.octave--;
             this.RefreshOptionsPanel();
         }
