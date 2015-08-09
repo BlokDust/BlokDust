@@ -116,10 +116,15 @@ class BlocksSketch {
 
             var files = e.dataTransfer.files; // FileList object.
 
-            //TODO: open new sampler block and DecodeFileData(files)
-            //this.DecodeFileData(files);
-            console.log(files[0].name + ' dropped');
-            console.log(e);
+            App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+                if (buffer) {
+                    //TODO: set the buffer of this newly created Sampler
+                    console.log(file.name + ' dropped');
+                }
+            });
+
+
+
         }, this);
 
         App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
