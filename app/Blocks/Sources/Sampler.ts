@@ -1,9 +1,7 @@
 import Grid = require("../../Grid");
 import SamplerBase = require("./SamplerBase");
 import BlocksSketch = require("../../BlocksSketch");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import Audio = require('../../Core/Audio/Audio');
 
 class Sampler extends SamplerBase {
 
@@ -59,8 +57,10 @@ class Sampler extends SamplerBase {
                 s.connect(this.EffectsChainInput);
             });
 
+
             this.FileReaderInit();
 
+            //TODO: this should be called when someone presses upload new audio file button
             this.HandleFileUploadButtonClick();
 
             this._FirstRelease = false;
@@ -91,40 +91,12 @@ class Sampler extends SamplerBase {
 
     HandleFileUploadButton(e) {
         var files = e.target.files; // FileList object
-        this.DecodeFileData(files);
-        console.dir(e.target.files[0]);
-    }
-
-    DecodeFileData(files) {
-        console.log(files[0]);
-
-        //Only process audio files.
-        if (!files[0].type.match('audio.*')) {
-            App.Message('This is not an audio file, please try again with a .wav, .mp3 or .ogg');
-            return;
-        }
-        //Only process files of a certain length
-        if (files[0].size > 100000000) {
-            App.Message('The audio file is too large. The maximum size is 100mb');
-        }
-
-        var reader = new FileReader();
-        reader.onerror = this.ErrorHandler;
-        reader.onprogress = this.UpdateProgress;
-        reader.onabort = function(e) {
-            App.message('File read cancelled');
-        };
-        reader.onload = (ev:any) => {
-            this.Params.trackName = files[0].name;
-
-            App.Audio.ctx.decodeAudioData(ev.target.result, (theBuffer) => {
-                this.SetBuffers(theBuffer);
-            }, function(){ //error function
-                App.message('Sorry, we could not process this audio file.');
-            });
-        };
-
-        reader.readAsArrayBuffer(files[0]);
+        App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+            if (buffer) {
+                this.SetBuffers(buffer);
+                this.Params.trackName = files[0].name;
+            }
+        });
     }
 
     SetBuffers(buffer: AudioBuffer) {
@@ -171,33 +143,6 @@ class Sampler extends SamplerBase {
             console.error("Error loading audio file");
             App.Message('Error loading audio file');
         };
-    }
-
-    ErrorHandler(event) {
-        switch(event.target.error.code) {
-            case event.target.error.NOT_FOUND_ERR:
-                App.Message('File Not Found!');
-                break;
-            case event.target.error.NOT_READABLE_ERR:
-                App.Message('File is not readable');
-                break;
-            case event.target.error.ABORT_ERR:
-                break; // noop
-            default:
-                App.Message('An error occurred reading this file.');
-        }
-    }
-
-    UpdateProgress(event) {
-        // event is a ProgressEvent.
-        if (event.lengthComputable) {
-            var percentLoaded = Math.round((event.loaded / event.total) * 100);
-            // Increase the progress bar length.
-            if (percentLoaded < 100) {
-                console.log(percentLoaded + '%');
-            }
-            console.log(percentLoaded + '%');
-        }
     }
 
     Draw() {

@@ -2,6 +2,7 @@ import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
 import Source = require("./Blocks/Source");
 import IEffect = require("./Blocks/IEffect");
+import Sampler = require("./Blocks/Sources/Sampler");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
 import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
@@ -111,6 +112,8 @@ class BlocksSketch {
         App.DragFileInputManager.Dropped.on((s: any, e: any) => {
             e.stopPropagation();
             e.preventDefault();
+            this.CreateBlockFromType(Sampler);
+
             var files = e.dataTransfer.files; // FileList object.
 
             //TODO: open new sampler block and DecodeFileData(files)
