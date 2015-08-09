@@ -96,6 +96,7 @@ class Serializer {
         b.Id = block.Id;
         b.Type = this._GetBlockSerializationType(block);
         b.Position = block.Position;
+        b.ZIndex = block.ZIndex;
         if (block.Params) b.Params = block.Params;
 
         // if it's a source block
@@ -173,6 +174,7 @@ class Serializer {
             block.LastPosition = new Point(b.Position.x, b.Position.y);
             block.Params = b.Params;
             block.Type = this._GetBlockDeserializationType(b);
+            block.ZIndex = b.ZIndex;
 
             Serializer._DeserializationDictionary[b.Id] = block;
         }
