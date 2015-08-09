@@ -20,6 +20,7 @@ class WaveGen extends SamplerBase {
     private _LoadFromShare: boolean = false;
     private _BufferData: Float32Array;
     private _WaveVoices: WaveVoice[];
+    private _SeedLoad: boolean;
 
     Init(sketch?: any): void {
         if (!this.Params) {
@@ -33,7 +34,8 @@ class WaveGen extends SamplerBase {
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 11,
-                generate: null
+                generate: null,
+                seed: {}
             };
         } else {
             this._LoadFromShare = true;
@@ -45,7 +47,7 @@ class WaveGen extends SamplerBase {
 
         this._WaveForm = [];
         this._WaveVoices = [];
-
+        this._SeedLoad = true;
 
 
         super.Init(sketch);
@@ -125,7 +127,9 @@ class WaveGen extends SamplerBase {
 
 
 
+
     DataToBuffer() {
+
 
         // SETTINGS //
         var seconds = 2;
@@ -314,6 +318,38 @@ class WaveGen extends SamplerBase {
         }
         var amp  = 1 / totalGain;
 
+        // get seed //
+        if (this.Params.seed.waveVoices && this._SeedLoad) {
+
+            var seed = this.Params.seed;
+            console.log(this.Params.seed);
+            sequenceLength = seed.sequenceLength;
+            seconds = seed.seconds;
+            gain = seed.gain;
+            noise = seed.noise;
+            octaving = seed.octaving;
+            glide = seed.glide;
+            this._WaveVoices = seed.waveVoices;
+            voices = seed.voices;
+            harmonics = seed.harmonics;
+            amp = seed.amp;
+            this._SeedLoad = false;
+        }
+
+        //set seed //
+        this.Params.seed = {
+            sequenceLength: sequenceLength,
+            seconds: seconds,
+            gain: gain,
+            noise: noise,
+            octaving: octaving,
+            glide: glide,
+            waveVoices: this._WaveVoices,
+            voices: voices,
+            harmonics: harmonics,
+            amp: amp
+        };
+        console.log(this.Params.seed);
 
 
         // GENERATE BUFFER DATA //
