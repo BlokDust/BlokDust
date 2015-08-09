@@ -105,6 +105,36 @@ class BlocksSketch {
             this._Invalidate();
         }, this);
 
+
+        // FILE DRAGGING //
+
+        App.DragFileInputManager.Dropped.on((s: any, e: any) => {
+            e.stopPropagation();
+            e.preventDefault();
+            var files = e.dataTransfer.files; // FileList object.
+
+            //TODO: open new sampler block and DecodeFileData(files)
+            //this.DecodeFileData(files);
+            console.log(files[0].name + ' dropped');
+            console.log(e);
+        }, this);
+
+        App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
+            console.log('file drag entered area');
+        }, this);
+
+        App.DragFileInputManager.DragMove.on((s: any, e: any) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('file drag over');
+        }, this);
+
+        App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
+            console.log('file left drag area');
+        }, this);
+
+
+
         OptionTimeout = false; // todo: remove
 
         // METRICS //
