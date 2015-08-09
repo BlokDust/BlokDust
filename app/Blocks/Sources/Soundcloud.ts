@@ -91,16 +91,16 @@ class Soundcloud extends SamplerBase {
                 this.TriggerAttack();
             }
         });
-        var me = this;
+
         clearTimeout(this.LoadTimeout);
-        this.LoadTimeout = setTimeout( function() {
-            me.TrackFallBack();
+        this.LoadTimeout = setTimeout( () => {
+            this.TrackFallBack();
         },(App.Config.SoundCloudLoadTimeout*1000));
 
         //TODO - onerror doesn't seem to work
-        this._FirstBuffer.onerror = function() {
+        this._FirstBuffer.onerror = () => {
             console.log("error");
-            me.TrackFallBack();
+            this.TrackFallBack();
         };
 
     }

@@ -9,7 +9,6 @@ import InputManager = require("./Core/Inputs/InputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
-import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Particle = require("./Particle"); // todo: should be IParticle
@@ -26,7 +25,6 @@ interface IApp {
     CommandsInputManager: CommandsInputManager;
     PointerInputManager: PointerInputManager;
     ParticlesPool: PooledFactoryResource<Particle>;
-    OscillatorsPool: PooledFactoryResource<Oscillator>;
     Particles: Particle[];
     Palette: string[];
     Blocks: IBlock[];

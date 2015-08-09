@@ -17,7 +17,6 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
 import AnimationsLayer = require("./UI/AnimationsLayer");
-import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
@@ -71,7 +70,6 @@ class App implements IApp{
     public TypingManager: TypingManager;
     public KeyboardInput: KeyboardInput;
     public OperationManager: OperationManager;
-    public OscillatorsPool: PooledFactoryResource<Oscillator>;
     public Palette: string[] = [];
     public Particles: Particle[] = [];
     public ParticlesPool: PooledFactoryResource<Particle>;
@@ -175,7 +173,6 @@ class App implements IApp{
 
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
-        this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
 
         // LOAD PALETTE //

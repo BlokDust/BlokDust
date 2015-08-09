@@ -11,7 +11,6 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
 import Particle = require("./Particle");
-import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import OptionsPanel = require("./UI/OptionsPanel");

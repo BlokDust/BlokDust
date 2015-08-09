@@ -12,6 +12,8 @@ class Sampler extends SamplerBase {
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
     private _FirstBuffer: any;
+    private _LoadFromShare: boolean = false;
+    private _fileInput: HTMLElement = document.getElementById('audioFileInput');
 
     Init(sketch?: any): void {
 
@@ -27,13 +29,42 @@ class Sampler extends SamplerBase {
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 11,
                 track: '',
+                trackName: '',
             };
+        } else {
+            this._LoadFromShare = true;
+            setTimeout(() => {
+                this.FirstSetup();
+            }, 100);
         }
+
+        this._WaveForm = [];
 
         super.Init(sketch);
 
+        this.FileReaderInit();
+
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
+    }
+
+    FirstSetup() {
+        if (this._FirstRelease) {
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope, i: number)=> {
+                e = this.Sources[i].envelope;
+            });
+
+            this.Sources.forEach((s: Tone.Simpler) => {
+                s.connect(this.EffectsChainInput);
+            });
+
+            this.FileReaderInit();
+
+            this.HandleFileUploadButtonClick();
+
+            this._FirstRelease = false;
+        }
     }
 
     FileReaderInit() {
@@ -44,85 +75,161 @@ class Sampler extends SamplerBase {
             App.Message('The File APIs are not fully supported in this browser.')
         }
 
-        document.getElementById('fileInput').innerHTML = '<input type="file" id="files" name="files[]" multiple />';
 
-
-    }
-
-    SetupDropZone() {
-        var dropZone = document.getElementById('drop_zone');
+        //TODO - put this in a static class - we don't want listeners for every sampler block
+        // Setup the drag and drop listeners.
+        var dropZone = document.getElementsByTagName('canvas')[0];
+        dropZone.addEventListener('dragenter', this.HandleDragEnter, false);
         dropZone.addEventListener('dragover', this.HandleDragOver, false);
-        dropZone.addEventListener('drop', this.HandleFileSelect, false);
+        dropZone.addEventListener('dragleave', this.HandleDragLeave, false);
+        dropZone.addEventListener('drop', this.HandleFileDropped.bind(this), false);
+        this._fileInput.addEventListener('change', this.HandleFileUploadButton.bind(this), false);
     }
 
-    HandleFileSelect(event) {
-        event.stopPropagation();
-        event.preventDefault();
 
-        var files = event.dataTransfer.files; // FileList object.
 
-        // files is a FileList of File objects. List some properties.
-        for (var i = 0, f; f = files[i]; i++) {
-            // Only process audio files.
-            if (!f.type.match('audio.*')) { //TODO: check this
-                continue;
-            }
-            //list all files
-            console.log(f);
+    /**
+     * Upload file button
+     * Because the input is hidden from view, we need to dispatch the input's event
+     * to open the file choice dialog
+     */
+    HandleFileUploadButtonClick() {
+        var event = document.createEvent('HTMLEvents');
+        event.initEvent('click', true, false);
+        this._fileInput.dispatchEvent(event);
+    }
 
-            var reader = new FileReader();
-            reader.onerror = this.ErrorHandler;
-            reader.onprogress = this.UpdateProgress;
-            reader.onabort = function(e) {
-                alert('File read cancelled');
-            };
+    HandleFileDropped(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var files = e.dataTransfer.files; // FileList object.
+        this.DecodeFileData(files);
+        console.dir(e.dataTransfer.files[0]);
+    }
 
-            // Closure to capture the file information.
-            reader.onload = (function(theFile) {
-                return function(e) {
-                    // Render thumbnail.
-                    console.log(e);
-                    console.log(theFile); // create buffer from this
-                };
-            })(f);
+    HandleFileUploadButton(e) {
+        var files = e.target.files; // FileList object
+        this.DecodeFileData(files);
+        console.dir(e.target.files[0]);
+    }
 
-            // Read in the image file as a data URL.
-            reader.readAsDataURL(f);
+    HandleDragEnter(e) {
+        console.log('file drag entered area');
+    }
+
+    HandleDragOver(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+        console.log('file drag over');
+    }
+
+    HandleDragLeave(e) {
+        console.log('file left drag area');
+    }
+
+    DecodeFileData(files) {
+        console.log(files[0]);
+
+        // TODO: Only process audio files.
+        //if (!files[0].type.match('audio.*')) {
+        //    App.Message('This is not an audio file, please try again with a .wav or an .mp3');
+        //}
+        //TODO: Only process files of a certain length
+        //if (files[0].size > SOME_HUGE_LENGTH) {
+        //    App.Message('The audio file is too large. The maximum size is 10mb');
+        //}
+
+        var reader = new FileReader();
+        reader.onerror = this.ErrorHandler;
+        reader.onprogress = this.UpdateProgress;
+        reader.onabort = function(e) {
+            App.message('File read cancelled');
+        };
+        reader.onload = (ev:any) => {
+            this.Params.trackName = files[0].name;
+
+            App.Audio.ctx.decodeAudioData(ev.target.result, (theBuffer) => {
+                this.SetBuffers(theBuffer);
+            }, function(){ //error function
+                App.message('Sorry, we could not process this audio file.');
+            });
+        };
+
+        reader.readAsArrayBuffer(files[0]);
+    }
+
+    SetBuffers(buffer: AudioBuffer) {
+        // STOP SOUND //
+        this.Sources.forEach((s: any)=> {
+            s.triggerRelease();
+        });
+
+        // LOAD FIRST BUFFER //
+        App.AnimationsLayer.AddToList(this); // load animations
+        if (this._FirstBuffer) { // cancel previous loads
+            this._FirstBuffer.dispose();
         }
+
+        this._FirstBuffer = new Tone.Buffer();
+        this._FirstBuffer.buffer = buffer;
+
+        this._WaveForm = this.GetWaveformFromBuffer(buffer,200,5,95);
+        App.AnimationsLayer.RemoveFromList(this);
+        var duration = this.GetDuration(this._FirstBuffer);
+        if (!this._LoadFromShare) {
+            this.Params.startPosition = 0;
+            this.Params.endPosition = duration;
+            this.Params.loopStart = duration * 0.5;
+            this.Params.loopEnd = duration;
+        }
+        this._LoadFromShare = false;
+
+        this.RefreshOptionsPanel();
+
+        this.Sources.forEach((s: Tone.Simpler)=> {
+            s.player.buffer = buffer;
+            s.player.loopStart = this.Params.loopStart;
+            s.player.loopEnd = this.Params.loopEnd;
+        });
+
+        // IF PLAYING, RE-TRIGGER //
+        if (this.IsPowered()) {
+            this.TriggerAttack();
+        }
+
+        //TODO - onerror doesn't seem to work
+        this._FirstBuffer.onerror = () => {
+            console.error("Error loading audio file");
+            App.Message('Error loading audio file');
+        };
     }
 
     ErrorHandler(event) {
         switch(event.target.error.code) {
             case event.target.error.NOT_FOUND_ERR:
-                alert('File Not Found!');
+                App.Message('File Not Found!');
                 break;
             case event.target.error.NOT_READABLE_ERR:
-                alert('File is not readable');
+                App.Message('File is not readable');
                 break;
             case event.target.error.ABORT_ERR:
                 break; // noop
             default:
-                alert('An error occurred reading this file.'); //TODO: App.Message
+                App.Message('An error occurred reading this file.');
         }
     }
 
     UpdateProgress(event) {
-        // evt is an ProgressEvent.
+        // event is a ProgressEvent.
         if (event.lengthComputable) {
             var percentLoaded = Math.round((event.loaded / event.total) * 100);
             // Increase the progress bar length.
             if (percentLoaded < 100) {
                 console.log(percentLoaded + '%');
             }
+            console.log(percentLoaded + '%');
         }
-    }
-
-    HandleDragOver(event) {
-        event.stopPropagation();
-        event.preventDefault();
-        event.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-
-        //TODO: DRAW THE BLOCK HERE
     }
 
     Draw() {
@@ -260,6 +367,14 @@ class Sampler extends SamplerBase {
 
     Dispose(){
         super.Dispose();
+
+        //Remove event listeners
+        var dropZone = document.getElementsByTagName('canvas')[0];
+        dropZone.removeEventListener('dragenter', this.HandleDragEnter, false);
+        dropZone.removeEventListener('dragover', this.HandleDragOver, false);
+        dropZone.removeEventListener('dragleave', this.HandleDragLeave, false);
+        dropZone.removeEventListener('drop', this.HandleFileDropped, false);
+        this._fileInput.removeEventListener('change', this.HandleFileUploadButton, false);
     }
 }
 

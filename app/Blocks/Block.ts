@@ -178,7 +178,7 @@ class Block extends DisplayObject implements IBlock {
     }
 
     UpdateConnections() {
-        this.UpdatePreEffectConnections();
+        //this.UpdatePreEffectConnections();
     }
 
     UpdatePreEffectConnections(){

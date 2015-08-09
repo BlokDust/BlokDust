@@ -39,6 +39,7 @@ interface SamplerParams {
     retrigger: boolean;
     volume: number;
     track: string;
+    trackName: string;
 }
 
 interface SoundcloudParams extends SamplerParams {
