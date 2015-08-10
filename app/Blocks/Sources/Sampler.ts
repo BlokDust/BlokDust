@@ -1,6 +1,6 @@
 import Grid = require("../../Grid");
 import SamplerBase = require("./SamplerBase");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import Audio = require('../../Core/Audio/Audio');
 
 class Sampler extends SamplerBase {
@@ -147,7 +147,7 @@ class Sampler extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"sampler");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"sampler");
     }
 
     UpdateOptionsForm() {

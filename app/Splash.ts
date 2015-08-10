@@ -264,7 +264,7 @@ class Splash {
         setTimeout(function() {
             App.Scene = 2;
             if (App.LoadCued) {
-                App.BlocksSketch.CompositionLoaded();
+                App.Stage.CompositionLoaded();
             }
         },(viewLength*5) + (tweenLength*5) + initDelay + 200);
     }

@@ -5,7 +5,7 @@ import Version = require("./../_Version");
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 import MenuCategory = require("./MenuCategory");
 
 class SettingsPanel extends DisplayObject{

@@ -12,7 +12,7 @@ class SaveAsCommandHandler implements ICommandHandler {
         var op:IOperation = new SaveOperation(App.Serialize(), null, null);
         return App.OperationManager.Do(op).then((result) => {
             App.CompositionId = result.Id;
-            App.BlocksSketch.SharePanel.ReturnLink(result.Id);
+            App.Stage.SharePanel.ReturnLink(result.Id);
             App.SessionId = result.SessionId;
             //console.log(result.Id, result.Message);
         });

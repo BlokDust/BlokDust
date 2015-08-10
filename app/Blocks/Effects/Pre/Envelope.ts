@@ -1,7 +1,7 @@
 import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class Envelope extends PreEffect {
 
@@ -27,7 +27,7 @@ class Envelope extends PreEffect {
     Draw() {
         super.Draw();
 
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
     Attach(source: ISource): void{

@@ -1,6 +1,6 @@
 import Effect = require("../../Effect");
 import ISource = require("../../ISource");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 import Particle = require("../../../Particle");
 import ParticleEmitter = require("./../ParticleEmitter");
 import Logic = require("./Logic");
@@ -34,7 +34,7 @@ class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary switch");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary switch");
     }
 
     Dispose(){

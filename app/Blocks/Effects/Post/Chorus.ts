@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class Chorus extends PostEffect {
 
@@ -36,7 +36,7 @@ class Chorus extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"chorus");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"chorus");
     }
 
     Dispose() {

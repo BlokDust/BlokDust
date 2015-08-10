@@ -2,7 +2,7 @@
  * Created by luketwyman on 17/03/2015.
  */
 
-import BlocksSketch = require("./BlocksSketch");
+import Stage = require("./Stage");
 import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 import Laser = require("./Blocks/Power/Laser");
 import Void = require("./Blocks/Power/Void");
@@ -16,7 +16,7 @@ import Vector = Utils.Maths.Vector;
 class LaserBeams {
 
     private _Ctx: CanvasRenderingContext2D;
-    private _Sketch: BlocksSketch;
+    private _Sketch: Stage;
     public UpdateAllLasers: boolean;
     //private _TestPoints: Point[];
 

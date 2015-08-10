@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class Filter extends PostEffect {
 
@@ -33,7 +33,7 @@ class Filter extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"filter");
     }
 
     Dispose(){

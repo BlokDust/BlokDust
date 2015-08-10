@@ -2,7 +2,7 @@ import Keyboard = require("./Keyboard");
 import Voice = require("./VoiceObject");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
@@ -37,7 +37,7 @@ class ComputerKeyboard extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position, true, "computer keyboard");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position, true, "computer keyboard");
     }
 
     Attach(source: ISource): void {

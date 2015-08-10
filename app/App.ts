@@ -20,7 +20,7 @@ import Fonts = require("./UI/Fonts");
 import AnimationsLayer = require("./UI/AnimationsLayer");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
-import BlocksSketch = require("./BlocksSketch");
+import Stage = require("./Stage");
 import Splash = require("./Splash");
 import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
@@ -61,7 +61,7 @@ class App implements IApp{
     public Metrics: Metrics;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
-    public BlocksSketch: BlocksSketch;
+    public Stage: Stage;
     public Scene: number;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
@@ -254,16 +254,16 @@ class App implements IApp{
     }
 
 
-    // CREATE BLOCKSSKETCH & BEGIN DRAWING/ANIMATING //
+    // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateBlockSketch() {
-        // create BlocksSketch
-        this.BlocksSketch = new BlocksSketch();
+        // create Stage
+        this.Stage = new Stage();
         this.Blocks = [];
 
-        // add blocks to BlocksSketch DisplayList
+        // add blocks to Stage DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
-        this.BlocksSketch.DisplayList = new DisplayList(d);
+        this.Stage.DisplayList = new DisplayList(d);
 
         // set up animation loop
         this._ClockTimer.RegisterTimer(this);
@@ -279,28 +279,28 @@ class App implements IApp{
         // set initial zoom level/position
         this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
-        this.BlocksSketch.ZoomButtons.UpdateSlot(this.ZoomLevel);
+        this.Stage.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
 
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {
-            b.Init(this.BlocksSketch);
+            b.Init(this.Stage);
         });
 
-        // add blocks to BlocksSketch DisplayList
+        // add blocks to Stage DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
-        this.BlocksSketch.DisplayList = new DisplayList(d);
+        this.Stage.DisplayList = new DisplayList(d);
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
         this.RefreshBlocks();
-        this.BlocksSketch.Pause();
+        this.Stage.Pause();
 
         if (this.Scene < 2) {
             this.LoadCued = true;
         } else {
-            this.BlocksSketch.CompositionLoaded();
+            this.Stage.CompositionLoaded();
         }
 
     }
@@ -315,21 +315,21 @@ class App implements IApp{
     }
 
     OnTicked (lastTime: number, nowTime: number) {
-        this.BlocksSketch.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
+        this.Stage.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
         this.Update();
         this.Draw();
     }
 
     Update() : void {
         if (this.Scene === 2) {
-            this.BlocksSketch.Update();
+            this.Stage.Update();
         }
         this.AnimationsLayer.Update();
     }
 
     Draw(): void {
         if (this.Scene === 2) {
-            this.BlocksSketch.Draw();
+            this.Stage.Draw();
         }
         if (this.Scene > 0) {
             this.Splash.Draw();
@@ -349,11 +349,11 @@ class App implements IApp{
     }
 
     //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-    //    this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    //    this.Stage.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
     //}
 
     Message(message?: string, options?: any) {
-        this.BlocksSketch.MessagePanel.NewMessage(message, options);
+        this.Stage.MessagePanel.NewMessage(message, options);
     }
 
     CreateCanvas() {
@@ -372,8 +372,8 @@ class App implements IApp{
     Resize(): void {
 
         this.Metrics.Metrics();
-        if (this.BlocksSketch.OptionsPanel) {
-            this.BlocksSketch.SketchResize();
+        if (this.Stage.OptionsPanel) {
+            this.Stage.SketchResize();
         }
 
     }

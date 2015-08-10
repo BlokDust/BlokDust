@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 import PitchShifter = require("../Post/PitchShifter");
 
 class Pitch extends PostEffect {
@@ -27,7 +27,7 @@ class Pitch extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
     }
 
     Dispose(){

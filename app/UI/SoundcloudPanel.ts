@@ -5,7 +5,7 @@
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 
 class SoundcloudPanel extends DisplayObject{
 
@@ -352,7 +352,7 @@ class SoundcloudPanel extends DisplayObject{
 
 
     OpenPanel() {
-        this._SelectedBlock = App.BlocksSketch.OptionsPanel.SelectedBlock;
+        this._SelectedBlock = App.Stage.OptionsPanel.SelectedBlock;
         this._Page = this._SelectedBlock.ResultsPage;
         this.SearchString = this._SelectedBlock.SearchString;
         this.Open = true;

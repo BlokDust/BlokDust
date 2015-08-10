@@ -4,7 +4,7 @@
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 import DisplayObject = require("../DisplayObject");
 
 class ToolTip extends DisplayObject {

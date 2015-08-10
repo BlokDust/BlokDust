@@ -4,7 +4,7 @@
 
 
 import Block = require("../Block");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 
 
 class Void extends Block {
@@ -32,7 +32,7 @@ class Void extends Block {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"void",this.StarPos);
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"void",this.StarPos);
     }
 
     Dispose(){

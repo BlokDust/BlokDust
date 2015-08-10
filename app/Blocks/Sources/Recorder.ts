@@ -1,5 +1,5 @@
 import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
 
@@ -63,7 +63,7 @@ class RecorderBlock extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"recorder");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"recorder");
     }
 
     ToggleRecording(){

@@ -1,7 +1,7 @@
 import PreEffect = require("../PreEffect");
 import Grid = require("../../../Grid");
 import ISource = require("../../ISource");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class Scuzz extends PreEffect {
 
@@ -35,7 +35,7 @@ class Scuzz extends PreEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
     }
 
     Attach(source:ISource): void{
