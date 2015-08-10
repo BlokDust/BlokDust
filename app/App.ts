@@ -232,14 +232,10 @@ class App implements IApp{
 
     // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
+        console.log("loading..");
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
-                /*var me = this;
-                var data = data;
-                setTimeout(function() {
-                    me.PopulateSketch(data);
-                },6000);*/
                 this.PopulateSketch(data);
             }).catch((error: string) => {
                 // fail silently

@@ -519,7 +519,6 @@ class WaveGen extends SamplerBase {
     }
 
 
-
     FirstSetup() {
         if (this._FirstRelease) {
             this.DataToBuffer();
