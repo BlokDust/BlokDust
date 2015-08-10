@@ -1,28 +1,23 @@
 /**
  * Created by luketwyman on 28/07/2015.
  */
-
+import DisplayObject = require("../DisplayObject");
 import Block = require("../Blocks/Block");
 
-var MAX_FPS: number = 100;
-var MAX_MSPF: number = 1000 / MAX_FPS;
 
-class AnimationsLayer {
+class AnimationsLayer extends DisplayObject {
 
-    public Initialised: boolean = false;
-    public Timer: Fayde.ClockTimer;
-    public LastVisualTick: number = new Date(0).getTime();
+
     private _Ctx: CanvasRenderingContext2D;
     public ActiveBlocks: Block[];
     private Loop: number;
 
-    constructor () {
+    Init(sketch?: any): void {
+        super.Init(sketch);
         this._Ctx = App.Canvas.getContext("2d");
         this.ActiveBlocks = [];
         this.Loop = 0;
 
-        this.StartAnimating();
-        this.Initialised = true;
     }
 
     Update() {
@@ -46,18 +41,6 @@ class AnimationsLayer {
         }
     }
 
-    StartAnimating(): void {
-        this.Timer = new Fayde.ClockTimer();
-        this.Timer.RegisterTimer(this);
-    }
-
-    OnTicked (lastTime: number, nowTime: number) {
-        var now = new Date().getTime();
-        if (now - this.LastVisualTick < MAX_MSPF) return;
-        this.LastVisualTick = now;
-
-        TWEEN.update(nowTime);
-    }
 
     AddToList(block) {
         this.RemoveFromList(block);
@@ -76,12 +59,6 @@ class AnimationsLayer {
     //-------------------------------------------------------------------------------------------
 
     public Draw() {
-        var units = App.Unit;
-        var ctx = this._Ctx;
-        var dx = App.Width * 0.5;
-        var dy = App.Height * 0.5;
-        var italic = App.TxtItalic;
-        var grd = App.GridSize;
 
 
         if (this.ActiveBlocks.length>0) {

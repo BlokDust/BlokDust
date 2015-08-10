@@ -17,6 +17,7 @@ import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
+import ColorThemes = require("./UI/ColorThemes");
 import AnimationsLayer = require("./UI/AnimationsLayer");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
@@ -80,6 +81,7 @@ class App implements IApp{
     private _SessionId: string;
     private _FontsLoaded: number;
     private _PaletteLoaded: boolean;
+    public ColorThemes: ColorThemes;
     public Splash: Splash;
     public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
@@ -176,12 +178,8 @@ class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // LOAD PALETTE //
-        var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);
-        pixelPalette.Load((palette: string[]) => {
-            this.Palette = palette;
-            this._PaletteLoaded = true;
-            this.LoadReady();
-        });
+        this.ColorThemes = new ColorThemes();
+        this.LoadColorTheme(0,true);
 
         // SOUNDCLOUD INIT //
         // todo: create server-side session
@@ -193,7 +191,9 @@ class App implements IApp{
 
         // CREATE SPLASH SCREEN //
         this.Splash = new Splash;
+        this.Splash.Init(this);
         this.AnimationsLayer = new AnimationsLayer;
+        this.AnimationsLayer.Init(this);
     }
 
     // FONT LOAD CALLBACK //
@@ -306,6 +306,17 @@ class App implements IApp{
         this.Blocks.forEach((b: IBlock) => {
             b.Refresh();
             b.UpdateConnections();
+        });
+    }
+
+    LoadColorTheme(theme,firstLoad) {
+        var pixelPalette = new PixelPalette(this.ColorThemes.Themes[theme].PaletteURL);
+        pixelPalette.Load((palette: string[]) => {
+            this.Palette = palette;
+            this._PaletteLoaded = true;
+            if (firstLoad) {
+                this.LoadReady();
+            }
         });
     }
 
