@@ -1,7 +1,7 @@
 import PowerSource = require("./PowerSource");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
-import Stage = require("../../Stage");
+import MainScene = require("../../MainScene");
 import Vector = Utils.Maths.Vector;
 
 class ParticleEmitter extends PowerSource {
@@ -76,7 +76,7 @@ class ParticleEmitter extends PowerSource {
     Draw() {
         super.Draw();
 
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
 
         //if (window.debug){
         //    this.Ctx.fillStyle = "#fff";

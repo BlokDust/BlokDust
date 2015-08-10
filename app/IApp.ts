@@ -12,7 +12,7 @@ import PointerInputManager = require("./Core/Inputs/PointerInputManager");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Particle = require("./Particle"); // todo: should be IParticle
-import Stage = require("./Stage");
+import MainScene = require("./MainScene");
 
 interface IApp {
     OperationManager: OperationManager;
@@ -30,7 +30,7 @@ interface IApp {
     Blocks: IBlock[];
     Sources: IBlock[];
     Effects: IBlock[];
-    Stage: Stage;
+    MainScene: MainScene;
 
     Setup(): void;
 }

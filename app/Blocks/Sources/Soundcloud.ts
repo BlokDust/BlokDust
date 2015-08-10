@@ -1,7 +1,7 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
-import Stage = require("../../Stage");
+import MainScene = require("../../MainScene");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
@@ -146,7 +146,7 @@ class Soundcloud extends SamplerBase {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.Stage.SoundcloudPanel.RandomSearch(this));
+            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetBuffers();
             //this.DataToBuffer();
 
@@ -164,7 +164,7 @@ class Soundcloud extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
     }
 
     UpdateOptionsForm() {

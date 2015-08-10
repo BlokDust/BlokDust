@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 12/07/2015.
  */
-import Stage = require("./../Stage");
+import MainScene = require("./../MainScene");
 import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
 import IBlock = require("../Blocks/IBlock");

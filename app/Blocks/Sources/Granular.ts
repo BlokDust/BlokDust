@@ -1,5 +1,5 @@
 import Source = require("../Source");
-import Stage = require("../../Stage");
+import MainScene = require("../../MainScene");
 import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import SoundCloudAudio = require('../SoundCloudAudio');
@@ -97,9 +97,9 @@ class Granular extends Source {
         this._WaveForm = [];
         this.SetupGrains();
 
-        if (App.Stage.OptionsPanel.Scale==1 && (<Stage>this.Sketch).OptionsPanel.SelectedBlock==this) {
+        if (App.MainScene.OptionsPanel.Scale==1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();
-            App.Stage.OptionsPanel.Populate(this.OptionsForm, false);
+            App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
         }
     }
 
@@ -164,9 +164,9 @@ class Granular extends Source {
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             // UPDATE OPTIONS FORM //
-            if ((<Stage>this.Sketch).OptionsPanel.Scale==1 && (<Stage>this.Sketch).OptionsPanel.SelectedBlock==this) {
+            if ((<MainScene>this.Sketch).OptionsPanel.Scale==1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock==this) {
                 this.UpdateOptionsForm();
-                (<Stage>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                (<MainScene>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
             }
 
             // start if powered //
@@ -198,7 +198,7 @@ class Granular extends Source {
                 e.connect(this.EffectsChainInput);
             });
 
-            this.Search(App.Stage.SoundcloudPanel.RandomSearch(this));
+            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetupGrains();
 
             this._FirstRelease = false;
@@ -215,7 +215,7 @@ class Granular extends Source {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"granular");
         if (this._WaveForm.length>0) {
         }
     }

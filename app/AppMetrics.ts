@@ -75,8 +75,8 @@ class Metrics {
         App.Ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         App.Width = width * ratio;
         App.Height = height * ratio;
-        App.Stage.Width = App.Width;
-        App.Stage.Height = App.Height;
+        App.MainScene.Width = App.Width;
+        App.MainScene.Height = App.Height;
         this.C.x = App.Width * 0.5;
         this.C.y = App.Height * 0.5;
 

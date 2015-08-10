@@ -12,7 +12,7 @@ class SaveCommandHandler implements ICommandHandler {
         var op:IOperation = new SaveOperation(App.Serialize(), App.CompositionId, App.SessionId);
         return App.OperationManager.Do(op).then((result) => {
             App.CompositionId = result.Id;
-            App.Stage.SharePanel.ReturnLink(result.Id);
+            App.MainScene.SharePanel.ReturnLink(result.Id);
             App.SessionId = result.SessionId;
             //console.log(result.Id, result.Message);
         });

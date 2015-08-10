@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class Chomp extends PostEffect {
 
@@ -49,7 +49,7 @@ class Chomp extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
     }
 
     Dispose(){

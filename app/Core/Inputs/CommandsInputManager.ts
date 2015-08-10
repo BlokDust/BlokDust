@@ -35,7 +35,7 @@ class CommandsInputManager extends InputManager {
             if ((this.IsKeyNameDown(this.KeyMap.Ctrl) || this.IsKeyNameDown(this.KeyMap.LeftWindowKey) || this.IsKeyNameDown(this.KeyMap.CommandFF)) && this.IsKeyNameDown(this.KeyMap.s)){
                 e.preventDefault();
                 // todo: use flux
-                App.Stage.SharePanel.OpenPanel();
+                App.MainScene.SharePanel.OpenPanel();
                 return;
             }
 

@@ -20,7 +20,7 @@ import Fonts = require("./UI/Fonts");
 import AnimationsLayer = require("./UI/AnimationsLayer");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
-import Stage = require("./Stage");
+import MainScene = require("./MainScene");
 import Splash = require("./Splash");
 import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
@@ -61,7 +61,7 @@ class App implements IApp{
     public Metrics: Metrics;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
-    public Stage: Stage;
+    public MainScene: MainScene;
     public Scene: number;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
@@ -254,16 +254,16 @@ class App implements IApp{
     }
 
 
-    // CREATE Stage & BEGIN DRAWING/ANIMATING //
+    // CREATE MainScene & BEGIN DRAWING/ANIMATING //
     CreateBlockSketch() {
-        // create Stage
-        this.Stage = new Stage();
+        // create MainScene
+        this.MainScene = new MainScene();
         this.Blocks = [];
 
-        // add blocks to Stage DisplayList
+        // add blocks to MainScene DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
-        this.Stage.DisplayList = new DisplayList(d);
+        this.MainScene.DisplayList = new DisplayList(d);
 
         // set up animation loop
         this._ClockTimer.RegisterTimer(this);
@@ -279,28 +279,28 @@ class App implements IApp{
         // set initial zoom level/position
         this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
-        this.Stage.ZoomButtons.UpdateSlot(this.ZoomLevel);
+        this.MainScene.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
 
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {
-            b.Init(this.Stage);
+            b.Init(this.MainScene);
         });
 
-        // add blocks to Stage DisplayList
+        // add blocks to MainScene DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
-        this.Stage.DisplayList = new DisplayList(d);
+        this.MainScene.DisplayList = new DisplayList(d);
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
         this.RefreshBlocks();
-        this.Stage.Pause();
+        this.MainScene.Pause();
 
         if (this.Scene < 2) {
             this.LoadCued = true;
         } else {
-            this.Stage.CompositionLoaded();
+            this.MainScene.CompositionLoaded();
         }
 
     }
@@ -315,21 +315,21 @@ class App implements IApp{
     }
 
     OnTicked (lastTime: number, nowTime: number) {
-        this.Stage.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
+        this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
         this.Update();
         this.Draw();
     }
 
     Update() : void {
         if (this.Scene === 2) {
-            this.Stage.Update();
+            this.MainScene.Update();
         }
         this.AnimationsLayer.Update();
     }
 
     Draw(): void {
         if (this.Scene === 2) {
-            this.Stage.Draw();
+            this.MainScene.Draw();
         }
         if (this.Scene > 0) {
             this.Splash.Draw();
@@ -349,11 +349,11 @@ class App implements IApp{
     }
 
     //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-    //    this.Stage.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    //    this.MainScene.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
     //}
 
     Message(message?: string, options?: any) {
-        this.Stage.MessagePanel.NewMessage(message, options);
+        this.MainScene.MessagePanel.NewMessage(message, options);
     }
 
     CreateCanvas() {
@@ -361,19 +361,21 @@ class App implements IApp{
         document.body.appendChild(this._Canvas);
     }
 
-    get Canvas() {
+    get Canvas(): HTMLCanvasElement {
         return this._Canvas;
     }
 
-    get Ctx(): CanvasRenderingContext2D {
+    //todo: typing as CanvasRenderingContext2D causes "Property 'fillStyle' is missing in type 'WebGLRenderingContext'"
+    // upgrade to newer compiler (1.5) which has no error - requires gulp as grunt-typescript seemingly no longer supported
+    get Ctx() {
         return this._Canvas.getContext("2d");
     }
 
     Resize(): void {
 
         this.Metrics.Metrics();
-        if (this.Stage.OptionsPanel) {
-            this.Stage.SketchResize();
+        if (this.MainScene.OptionsPanel) {
+            this.MainScene.SketchResize();
         }
 
     }

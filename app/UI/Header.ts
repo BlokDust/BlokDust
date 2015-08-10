@@ -3,7 +3,7 @@
  */
 
 import BlockCreator = require("./../BlockCreator");
-import Stage = require("./../Stage");
+import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
 import Grid = require("./../Grid");
 import MenuCategory = require("./MenuCategory");
@@ -112,7 +112,7 @@ class Header extends DisplayObject{
                 var point = new Point(0,(this.Height + (this.DropDownHeight*0.5))*units);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
-                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <Stage>this.Sketch));
+                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.Sketch));
             }
 
         }
@@ -243,7 +243,7 @@ class Header extends DisplayObject{
 
                     if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
                         ctx.globalAlpha = 0.5;
-                        (<Stage>this.Sketch).BlockSprites.Draw(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
+                        (<MainScene>this.Sketch).BlockSprites.Draw(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
                     }
                 }
 
@@ -454,11 +454,11 @@ class Header extends DisplayObject{
 
         // SHARE //
         if (this._ShareOver) {
-            (<Stage>this.Sketch).SharePanel.OpenPanel();
+            (<MainScene>this.Sketch).SharePanel.OpenPanel();
         }
         // SETTINGS //
         if (this._SettingsOver) {
-            (<Stage>this.Sketch).SettingsPanel.OpenPanel();
+            (<MainScene>this.Sketch).SettingsPanel.OpenPanel();
         }
 
 

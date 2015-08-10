@@ -1,7 +1,7 @@
 import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class LFO extends PreEffect {
 
@@ -36,7 +36,7 @@ class LFO extends PreEffect {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
     Attach(source:ISource): void{

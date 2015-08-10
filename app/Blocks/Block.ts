@@ -2,7 +2,7 @@ import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import Particle = require("../Particle");
 import DisplayObject = require("../DisplayObject");
-import Stage = require("../Stage");
+import MainScene = require("../MainScene");
 import ParametersPanel = require("../UI/OptionsPanel");
 import PreEffect = require("./Effects/PreEffect");
 import Size = minerva.Size;
@@ -103,8 +103,8 @@ class Block extends DisplayObject implements IBlock {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if ((<Stage>this.Sketch).AltDown && this._Duplicable) {
-                (<Stage>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
+            if ((<MainScene>this.Sketch).AltDown && this._Duplicable) {
+                (<MainScene>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
                 this.MouseUp();
             }
             // MOVE //
@@ -158,9 +158,9 @@ class Block extends DisplayObject implements IBlock {
     }
 
     RefreshOptionsPanel() {
-        if (App.Stage.OptionsPanel.Scale>0 && App.Stage.OptionsPanel.SelectedBlock==this) {
+        if (App.MainScene.OptionsPanel.Scale>0 && App.MainScene.OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();
-            App.Stage.OptionsPanel.Populate(this.OptionsForm, false);
+            App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
         }
     }
 

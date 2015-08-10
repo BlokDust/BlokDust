@@ -2,7 +2,7 @@
  * Created by luketwyman on 28/01/2015.
  */
 
-import Stage = require("./../Stage");
+import MainScene = require("./../MainScene");
 import Grid = require("./../Grid");
 import IBlock = require("../Blocks/IBlock");
 import LFO = require("../Blocks/Effects/Pre/LFO");
@@ -21,11 +21,11 @@ class MenuItem {
     public InfoHover: boolean;
     public BackHover: boolean;
     public InfoOffset: number;
-    private _Sketch: Stage;
+    private _Sketch: MainScene;
     public MouseIsDown: boolean;
     public MousePoint: Point;
 
-    constructor (position: Point, size: Size, name: string, id, description: string, sketch: Stage) {
+    constructor (position: Point, size: Size, name: string, id, description: string, sketch: MainScene) {
         this.Position = position;
         this.Size = size;
         this.Name = name;

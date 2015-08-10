@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class EQ extends PostEffect {
 
@@ -65,7 +65,7 @@ class EQ extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
     }
 
     Dispose(){

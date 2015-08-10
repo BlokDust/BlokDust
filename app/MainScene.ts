@@ -22,7 +22,7 @@ import MessagePanel = require("./UI/MessagePanel");
 import Header = require("./UI/Header");
 import ToolTip = require("./UI/ToolTip");
 import ZoomButtons = require("./UI/ZoomButtons");
-import StageDragger = require("./UI/StageDragger");
+import MainSceneDragger = require("./UI/StageDragger");
 import TrashCan = require("./UI/TrashCan");
 import ConnectionLines = require("./UI/ConnectionLines");
 import RecorderPanel = require("./UI/RecorderPanel");
@@ -37,7 +37,7 @@ import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class Stage extends Fayde.Drawing.SketchContext{
+class MainScene extends Fayde.Drawing.SketchContext{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
@@ -51,7 +51,7 @@ class Stage extends Fayde.Drawing.SketchContext{
     private _Header: Header;
     private _ToolTip: ToolTip;
     public ZoomButtons: ZoomButtons;
-    public StageDragger: StageDragger;
+    public MainSceneDragger: MainSceneDragger;
     private _TrashCan: TrashCan;
     private _ConnectionLines: ConnectionLines;
     private _RecorderPanel: RecorderPanel;
@@ -167,8 +167,8 @@ class Stage extends Fayde.Drawing.SketchContext{
         this.ZoomButtons = new ZoomButtons();
         this.ZoomButtons.Init(this);
 
-        this.StageDragger = new StageDragger();
-        this.StageDragger .Init(this);
+        this.MainSceneDragger = new MainSceneDragger();
+        this.MainSceneDragger .Init(this);
 
         this._TrashCan = new TrashCan();
         this._TrashCan.Init(this);
@@ -286,7 +286,7 @@ class Stage extends Fayde.Drawing.SketchContext{
         this._RecorderPanel.Draw();
         this.OptionsPanel.Draw();
         this.ZoomButtons.Draw();
-        this.StageDragger.Draw();
+        this.MainSceneDragger.Draw();
         this._TrashCan.Draw();
         this._Header.Draw();
         this.SoundcloudPanel.Draw();
@@ -455,9 +455,9 @@ class Stage extends Fayde.Drawing.SketchContext{
         }
 
 
-        // STAGE DRAGGING //
+        // MainScene DRAGGING //
         if (!collision && !UI){
-            this.StageDragger.MouseDown(point);
+            this.MainSceneDragger.MouseDown(point);
         }
     }
 
@@ -506,7 +506,7 @@ class Stage extends Fayde.Drawing.SketchContext{
                 this.OptionsPanel.MouseUp();
             }
 
-            this.StageDragger.MouseUp();
+            this.MainSceneDragger.MouseUp();
         }
 
     }
@@ -549,7 +549,7 @@ class Stage extends Fayde.Drawing.SketchContext{
         this._RecorderPanel.MouseMove(point);
         this.ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
-        this.StageDragger.MouseMove(point);
+        this.MainSceneDragger.MouseMove(point);
     }
 
 
@@ -805,4 +805,4 @@ class Stage extends Fayde.Drawing.SketchContext{
     }
 }
 
-export = Stage;
+export = MainScene;

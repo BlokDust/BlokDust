@@ -1,6 +1,6 @@
 import Effect = require("../../Effect");
 import ISource = require("../../ISource");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import Logic = require("./Logic");
 
@@ -32,7 +32,7 @@ class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle switch");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle switch");
     }
 
     UpdateOptionsForm() {

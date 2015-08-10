@@ -12,6 +12,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-text-replace');
     grunt.loadNpmTasks('grunt-typescript');
+    grunt.loadNpmTasks('grunt-sync');
 
     version(grunt);
 
@@ -55,16 +56,7 @@ module.exports = function (grunt) {
                 src: [
                     '<%= dirs.app %>/**/*.ts',
                     '!<%= dirs.lib %>/**/*.ts',
-                    '<%= dirs.typings %>/*.ts',
-                    '<%= dirs.lib %>/tone/utils/TypeScript/Tone.d.ts',
-                    '<%= dirs.lib %>/fayde/dist/fayde.d.ts',
-                    '<%= dirs.lib %>/minerva/dist/minerva.d.ts',
-                    '<%= dirs.lib %>/nullstone/dist/nullstone.d.ts',
-                    '<%= dirs.lib %>/fayde.drawing/dist/fayde.drawing.d.ts',
-                    '<%= dirs.lib %>/fayde.transformer/dist/fayde.transformer.d.ts',
-                    '<%= dirs.lib %>/utils/dist/utils.d.ts',
-                    '<%= dirs.lib %>/tween.ts/src/Tween.d.ts',
-                    '<%= dirs.lib %>/extensions/typings/extensions.d.ts'
+                    '<%= dirs.typings %>/*.ts'
                 ],
                 dest: dirs.build,
                 options: {
@@ -272,6 +264,31 @@ module.exports = function (grunt) {
             apply: {
                 src: './VersionTemplate.ts',
                 dest: './app/_Version.ts'
+            }
+        },
+
+        sync: {
+            bowerComponents: {
+                files: [
+                    {
+                        // all files that need to be copied from /lib to /src/typings post bower install
+                        cwd: '<%= dirs.lib %>',
+                        expand: true,
+                        flatten: true,
+                        src: [
+                            'tone/utils/TypeScript/Tone.d.ts',
+                            'fayde/dist/fayde.d.ts',
+                            'minerva/dist/minerva.d.ts',
+                            'nullstone/dist/nullstone.d.ts',
+                            'fayde.drawing/dist/fayde.drawing.d.ts',
+                            'fayde.transformer/dist/fayde.transformer.d.ts',
+                            'utils/dist/utils.d.ts',
+                            'tween.ts/src/Tween.d.ts',
+                            'extensions/typings/extensions.d.ts'
+                        ],
+                        dest: '<%= dirs.typings %>'
+                    }
+                ]
             }
         }
     });

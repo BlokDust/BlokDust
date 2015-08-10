@@ -5,7 +5,7 @@
 import IBlock = require("./IBlock");
 import Grid = require("../Grid");
 import DisplayObject = require("../DisplayObject");
-import Stage = require("../Stage");
+import MainScene = require("../MainScene");
 
 class BlockSprites {
 

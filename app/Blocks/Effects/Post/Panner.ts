@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class Panner extends PostEffect {
 
@@ -26,7 +26,7 @@ class Panner extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"panner");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"panner");
     }
 
     Dispose(){

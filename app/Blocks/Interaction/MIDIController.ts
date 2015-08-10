@@ -1,7 +1,7 @@
 import Keyboard = require("./Keyboard");
 import Voice = require("./VoiceObject");
 import ISource = require("../ISource");
-import Stage = require("../../Stage");
+import MainScene = require("../../MainScene");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 
@@ -189,7 +189,7 @@ class MIDIController extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
     }
 
     Attach(source: ISource): void {

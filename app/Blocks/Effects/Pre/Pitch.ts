@@ -1,7 +1,7 @@
 //import PreEffect = require("../PreEffect");
 //import ISource = require("../../ISource");
 //import Grid = require("../../../Grid");
-//import Stage = require("../../../Stage");
+//import MainScene = require("../../../MainScene");
 //import ToneSource = require("../../Sources/ToneSource");
 //import Soundcloud = require("../../Sources/Soundcloud");
 //import Granular = require("../../Sources/Granular");
@@ -30,7 +30,7 @@
 //
 //    Draw() {
 //        super.Draw();
-//        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
+//        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"pitch");
 //    }
 //
 //    Dispose(){

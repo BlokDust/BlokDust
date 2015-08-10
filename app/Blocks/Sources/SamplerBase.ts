@@ -1,6 +1,6 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
-import Stage = require("../../Stage");
+import MainScene = require("../../MainScene");
 
 class SamplerBase extends Source {
 

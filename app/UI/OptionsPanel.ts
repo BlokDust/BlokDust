@@ -5,7 +5,7 @@
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
-import Stage = require("./../Stage");
+import MainScene = require("./../MainScene");
 import Option = require("./Options/Option");
 import Slider = require("./Options/OptionSlider");
 import WaveSlider = require("./Options/OptionWaveSlider");
@@ -625,7 +625,7 @@ class OptionsPanel extends DisplayObject {
             }
             this.Opening = true;
             this.SelectedBlock = block;
-            App.Stage.StageDragger.Jump(block.Position,new Point(App.Width*App.Metrics.OptionsPoint.x,App.Height*App.Metrics.OptionsPoint.y));
+            App.MainScene.MainSceneDragger.Jump(block.Position,new Point(App.Width*App.Metrics.OptionsPoint.x,App.Height*App.Metrics.OptionsPoint.y));
 
             var me = this;
             setTimeout(function() {

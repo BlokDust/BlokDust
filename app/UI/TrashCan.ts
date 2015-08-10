@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 01/02/2015.
  */
-import Stage = require("./../Stage");
+import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
 
 class TrashCan extends DisplayObject {
@@ -17,10 +17,10 @@ class TrashCan extends DisplayObject {
     Draw() {
         var units = App.Unit;
         var ctx = this.Ctx;
-        var tx = (<Stage>this.Sketch).Width - (30*units);
-        var ty = (<Stage>this.Sketch).Height - (30*units);
+        var tx = (<MainScene>this.Sketch).Width - (30*units);
+        var ty = (<MainScene>this.Sketch).Height - (30*units);
         var s = 1;
-        if (this._RollOver && (<Stage>this.Sketch).IsDraggingABlock) {
+        if (this._RollOver && (<MainScene>this.Sketch).IsDraggingABlock) {
             s = 1.2;
         }
 
@@ -47,12 +47,12 @@ class TrashCan extends DisplayObject {
 
     MouseMove(point) {
         var units = App.Unit;
-        this._RollOver = this.HitRect((<Stage>this.Sketch).Width - (60*units),(<Stage>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
+        this._RollOver = this.HitRect((<MainScene>this.Sketch).Width - (60*units),(<MainScene>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 
     MouseUp() {
         if (this._RollOver) {
-            (<Stage>this.Sketch).DeleteSelectedBlock();
+            (<MainScene>this.Sketch).DeleteSelectedBlock();
             return true;
         }
         return false;

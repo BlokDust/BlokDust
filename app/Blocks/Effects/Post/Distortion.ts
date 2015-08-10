@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class Distortion extends PostEffect {
 
@@ -28,7 +28,7 @@ class Distortion extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
 
     }
 

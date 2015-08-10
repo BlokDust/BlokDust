@@ -2,6 +2,7 @@
   "name": "BlokDust",
   "version": "0.1.40",
   "dependencies": {
+    "bower-webfontloader": "~1.5.16",
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
     "fayde": "~0.16.15",
@@ -12,8 +13,8 @@
     "pixelpalette": "edsilv/pixelpalette#~0.1.9",
     "RecorderJS": "lukephills/Recorderjs#~1.0.3",
     "tone": "lukephills/Tone.js#dev",
-    "utils": "edsilv/utils#~0.0.22",
-    "bower-webfontloader": "~1.5.16"
+    "tween.ts": "edsilv/tween.ts#~0.1.2",
+    "utils": "edsilv/utils#~0.0.22"
   },
   "resolutions": {
     "fayde": "~0.16.11"

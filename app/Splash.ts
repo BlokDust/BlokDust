@@ -69,14 +69,14 @@ class Splash {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
             this.Ctx.fillStyle = App.Palette[0];
-            this._Ctx.fillRect(dx,dy,App.Width,App.Height);
+            this.Ctx.fillRect(dx,dy,App.Width,App.Height);
 
             var dx = (App.Width*0.5);
             var dy = (App.Height*0.5) + (App.Height*this.LoadOffset);
-            this._Ctx.fillStyle = App.Palette[8];// white
-            this._Ctx.textAlign = "center";
-            this._Ctx.font = App.Metrics.TxtHeader;
-            this._Ctx.fillText("LOADING SCENE",dx,dy + (26 * App.Unit));
+            this.Ctx.fillStyle = App.Palette[8];// white
+            this.Ctx.textAlign = "center";
+            this.Ctx.font = App.Metrics.TxtHeader;
+            this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * App.Unit));
             App.AnimationsLayer.Spin();
             App.AnimationsLayer.DrawSprite('loading',dx, dy - (16 * App.Unit),16,true);
         }
@@ -204,10 +204,10 @@ class Splash {
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
         var headerType = 100*App.Unit;
-        this._Ctx.fillStyle = App.Palette[8];// Grey
-        this._Ctx.textAlign = "center";
-        this._Ctx.font = "200 " + headerType + "px Dosis";
-        this._Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
+        this.Ctx.fillStyle = App.Palette[8];// Grey
+        this.Ctx.textAlign = "center";
+        this.Ctx.font = "200 " + headerType + "px Dosis";
+        this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
 
     }
 
@@ -230,7 +230,7 @@ class Splash {
         var dx = (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*(this._Offset.y+this.YOffset));
 
-        this._Ctx.fillRect(dx,dy,App.Width,App.Height);
+        this.Ctx.fillRect(dx,dy,App.Width,App.Height);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -264,7 +264,7 @@ class Splash {
         setTimeout(function() {
             App.Scene = 2;
             if (App.LoadCued) {
-                App.Stage.CompositionLoaded();
+                App.MainScene.CompositionLoaded();
             }
         },(viewLength*5) + (tweenLength*5) + initDelay + 200);
     }

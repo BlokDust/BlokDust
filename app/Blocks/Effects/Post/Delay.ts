@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class Delay extends PostEffect {
 
@@ -29,7 +29,7 @@ class Delay extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
     }
 
     Dispose(){

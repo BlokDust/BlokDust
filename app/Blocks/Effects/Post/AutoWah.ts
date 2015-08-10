@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import Stage = require("../../../Stage");
+import MainScene = require("../../../MainScene");
 
 class AutoWah extends PostEffect {
 
@@ -42,7 +42,7 @@ class AutoWah extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
     }
 
     Dispose() {

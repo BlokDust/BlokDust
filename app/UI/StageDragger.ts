@@ -26,7 +26,7 @@ class StageDragger  extends DisplayObject {
             var cx = App.Metrics.C.x;
             var cy = App.Metrics.C.y;
             var units = App.Unit;
-            var ctx = App.Stage.Ctx;
+            var ctx = App.MainScene.Ctx;
 
             ctx.strokeStyle = App.Palette[8]; // White
             ctx.lineWidth = 2;
@@ -103,7 +103,7 @@ class StageDragger  extends DisplayObject {
         var x = (-point.x * App.GridSize) + ((to.x - App.Metrics.C.x)/App.ZoomLevel);
         var y = (-point.y * App.GridSize) + ((to.y - App.Metrics.C.y)/App.ZoomLevel);
         this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
-        App.Stage.ToolTipClose();
+        App.MainScene.ToolTipClose();
     }
 
 }
