@@ -1,5 +1,5 @@
 import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import Source = require("../Source");
 
 class Noise extends Source {
@@ -59,7 +59,7 @@ class Noise extends Source {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
     }
 
     UpdateOptionsForm() {

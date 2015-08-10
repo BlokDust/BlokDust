@@ -110,7 +110,6 @@ enum KeyMap {
 
 class InputManager {
 
-
     public KeysDown: any;
     public KeyMap: any;
     public IsEnabled: boolean = true;
@@ -121,7 +120,7 @@ class InputManager {
     constructor() {
 
         this.KeyMap = KeyMap;
-        this.KeysDown = {};
+        this.ClearKeysDown();
 
         document.addEventListener('keydown', (e) => {
             if (!this.IsEnabled) return;
@@ -132,6 +131,10 @@ class InputManager {
             if (!this.IsEnabled) return;
             this.KeyboardUp(e);
         });
+    }
+
+    ClearKeysDown() {
+        this.KeysDown = {};
     }
 
     KeyboardDown(e) {

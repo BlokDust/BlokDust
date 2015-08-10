@@ -1,4 +1,4 @@
-///<amd-dependency path="fayde.transformer"/>.
+///<amd-dependency path="utils"/>.
 import IPooledFactoryResource = require("./IPooledFactoryResource");
 import IPooledObject = require("./IPooledObject");
 import Queue = Utils.Collections.Queue;

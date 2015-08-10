@@ -1,5 +1,5 @@
 import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import Source = require("../Source");
 import Particle = require("../../Particle");
 
@@ -143,7 +143,7 @@ class Microphone extends Source {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"microphone");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"microphone");
     }
 
     Dispose() {

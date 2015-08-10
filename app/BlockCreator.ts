@@ -51,51 +51,7 @@ import Void = require("./Blocks/Power/Void");
 import ComputerKeyboard = require("Blocks/Interaction/ComputerKeyboard");
 import MIDIController = require("Blocks/Interaction/MIDIController");
 
-
 class BlockCreator {
-
-    //TODO: Do all the blocks need to be here??? What does this do?
-
-    // create instances of blocks for GetBlock() to return.
-
-    //// SOURCE BLOCKS //
-    //private static ToneSource: ToneSource = new ToneSource();
-    //private static Noise: Noise = new Noise();
-    //private static Microphone: Microphone = new Microphone();
-    //private static Soundcloud: Soundcloud = new Soundcloud();
-    //private static Granular: Granular = new Granular();
-    //private static Recorder: Recorder = new Recorder();
-    //
-    //// EFFECT BLOCKS //
-    //private static AutoWah: AutoWah = new AutoWah();
-    //private static BitCrusher: BitCrusher = new BitCrusher();
-    //private static Chomp: Chomp = new Chomp();
-    //private static Chopper: Chopper = new Chopper();
-    //private static Chorus: Chorus = new Chorus();
-    //private static Convolver: Convolver = new Convolver();
-    //private static Delay: Delay = new Delay();
-    //private static Distortion: Distortion = new Distortion();
-    //private static Envelope: Envelope = new Envelope();
-    //private static EQ: EQ = new EQ();
-    //private static Filter: Filter = new Filter();
-    //private static Gain: Gain = new Gain();
-    //private static LFO: LFO = new LFO();
-    //private static Panner: Panner = new Panner();
-    //private static Pitch: Pitch = new Pitch();
-    //private static Reverb: Reverb = new Reverb();
-    //private static Scuzz: Scuzz = new Scuzz();
-    //
-    //// POWER BLOCKS //
-    //private static ParticleEmitter: ParticleEmitter = new ParticleEmitter();
-    //private static Power: Power = new Power();
-    //private static Toggle: Toggle = new Toggle();
-    //private static Momentary: Momentary = new Momentary();
-    //private static Laser: Laser = new Laser();
-    //
-    //// INTERACTION BLOCKS //
-    //private static ComputerKeyboard: ComputerKeyboard = new ComputerKeyboard();
-    //private static ComputerKeyboard: ComputerKeyboard = new ComputerKeyboard();
-    //private static MIDIController: MIDIController = new MIDIController();
 
     public static MenuJson: any = {
         "categories": [
@@ -144,8 +100,6 @@ class BlockCreator {
                     }
                 ]
             },
-
-            // todo: put descriptions in config.json? then they can potentially be localised
             {
                 "name": "Effects",
                 "items": [
@@ -236,7 +190,6 @@ class BlockCreator {
                     }
                 ]
             },
-
             {
                 "name": "Power",
                 "items": [
@@ -272,7 +225,6 @@ class BlockCreator {
                     }
                 ]
             },
-
             {
                 "name": "Interaction",
                 "items": [
@@ -301,7 +253,7 @@ class BlockCreator {
     // BACKWARDS COMPATIBILITY //
     // PATCH CHANGED BLOCK NAMES //
     public static LostBlockCheck(type: any) {
-        if ((""+type) == "Gain") {
+        if (("" + type) === "Gain") { // todo: coerce to string using .toString() or <String>?
             type = "Volume";
         }
         return type;

@@ -2,6 +2,7 @@ import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
 import Source = require("./Blocks/Source");
 import IEffect = require("./Blocks/IEffect");
+import Sampler = require("./Blocks/Sources/Sampler");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
 import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
@@ -36,12 +37,11 @@ import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class BlocksSketch {
+class Stage extends Fayde.Drawing.SketchContext{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
     private _DisplayList: DisplayList;
-    public Paused: boolean;
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
@@ -62,17 +62,13 @@ class BlocksSketch {
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
-    public Width: number;
-    public Height: number;
-    public Ctx: CanvasRenderingContext2D;
-    public SketchSession: SketchSession;
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
     constructor() {
-        //super();
+        super();
     }
 
     get DisplayList(): DisplayList {
@@ -84,10 +80,8 @@ class BlocksSketch {
     }
 
     Setup(){
-        this.Width = App.Width;
-        this.Height = App.Height;
-        this.Ctx = App.Ctx;
 
+        super.Setup();
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
@@ -105,18 +99,22 @@ class BlocksSketch {
             this._Invalidate();
         }, this);
 
-
         // FILE DRAGGING //
 
         App.DragFileInputManager.Dropped.on((s: any, e: any) => {
             e.stopPropagation();
             e.preventDefault();
+            this.CreateBlockFromType(Sampler);
+
             var files = e.dataTransfer.files; // FileList object.
 
-            //TODO: open new sampler block and DecodeFileData(files)
-            //this.DecodeFileData(files);
-            console.log(files[0].name + ' dropped');
-            console.log(e);
+            App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+                if (buffer) {
+                    //TODO: set the buffer of this newly created Sampler
+                    console.log(file.name + ' dropped');
+                }
+            });
+
         }, this);
 
         App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
@@ -132,8 +130,6 @@ class BlocksSketch {
         App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
             console.log('file left drag area');
         }, this);
-
-
 
         OptionTimeout = false; // todo: remove
 
@@ -201,37 +197,29 @@ class BlocksSketch {
         this.SketchResize();
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  UPDATE
     //-------------------------------------------------------------------------------------------
 
-
     Update() {
 
-        if (!this.Paused) {
-            //super.Update();
+        if (this.IsPaused) return;
 
+        super.Update();
 
-            // update blocks
-            for (var i = 0; i < App.Blocks.length; i++) {
-                var block: IBlock = App.Blocks[i];
-                block.Update();
-            }
-
-            if (App.Particles.length) {
-                this.UpdateParticles();
-            }
-
-            this._LaserBeams.Update();
-            this._RecorderPanel.Update();
+        // update blocks
+        for (var i = 0; i < App.Blocks.length; i++) {
+            var block: IBlock = App.Blocks[i];
+            block.Update();
         }
 
+        if (App.Particles.length) {
+            this.UpdateParticles();
+        }
 
+        this._LaserBeams.Update();
+        this._RecorderPanel.Update();
     }
-
-
-
 
     // PARTICLES //
     UpdateParticles() {
@@ -253,7 +241,6 @@ class BlocksSketch {
         App.Particles = currentParticles;
     }
 
-
     SketchResize() {
         this.OptionsPanel.Close();
         this.OptionsPanel.Resize();
@@ -264,16 +251,15 @@ class BlocksSketch {
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 
-
-
-
-
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-
     Draw(){
+
+        if (this.IsPaused) return;
+
+        super.Draw();
 
         // BG //
         this.Ctx.fillStyle = App.Palette[0];
@@ -761,7 +747,7 @@ class BlocksSketch {
     }
 
     _ValidateBlocks() {
-        // todo: make this a command that all blocks subscribe to?
+        // todo: move this to flux-style blocksstore
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();
@@ -793,9 +779,9 @@ class BlocksSketch {
     CompositionLoaded() {
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
-        var sketch = this;
-        setTimeout(function() {
-            sketch.Paused = false;
+
+        setTimeout(() => {
+            this.Play();
             App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
         },200);
 
@@ -804,12 +790,9 @@ class BlocksSketch {
         }
     }
 
-
-
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS
     //-------------------------------------------------------------------------------------------
-
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
@@ -822,4 +805,4 @@ class BlocksSketch {
     }
 }
 
-export = BlocksSketch;
+export = Stage;

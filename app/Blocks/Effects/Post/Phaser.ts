@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class Phaser extends PostEffect {
 
@@ -34,7 +34,7 @@ class Phaser extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"phaser");
     }
 
     Dispose(){

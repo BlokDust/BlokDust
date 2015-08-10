@@ -3,7 +3,7 @@
  */
 import Size = minerva.Size;
 import Grid = require("./../Grid");
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 import DisplayObject = require("../DisplayObject");
 
 class ZoomButtons extends DisplayObject {
@@ -181,7 +181,7 @@ class ZoomButtons extends DisplayObject {
 
     ZoomIn() {
         if (this.CurrentSlot<this._ZoomSlots.length-1) {
-            App.BlocksSketch.OptionsPanel.Close();
+            App.Stage.OptionsPanel.Close();
             this.CurrentSlot +=1;
             this.StopAllTweens();
             this.ZoomAlpha = 1;
@@ -192,7 +192,7 @@ class ZoomButtons extends DisplayObject {
 
     ZoomOut() {
         if (this.CurrentSlot>0) {
-            App.BlocksSketch.OptionsPanel.Close();
+            App.Stage.OptionsPanel.Close();
             this.CurrentSlot -=1;
             this.StopAllTweens();
             this.ZoomAlpha = 1;

@@ -5,7 +5,7 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
@@ -538,7 +538,7 @@ class WaveGen extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"wavegen");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"wavegen");
     }
 
 

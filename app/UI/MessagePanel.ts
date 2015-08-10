@@ -2,7 +2,7 @@
  * Created by luketwyman on 12/07/2015.
  */
 
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 import DisplayObject = require("../DisplayObject");
 import Size = minerva.Size;
 
@@ -56,9 +56,9 @@ class MessagePanel extends DisplayObject {
         var units = App.Unit;
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
-        var y = (<BlocksSketch>this.Sketch).Height*0.75;
-        var cx = (<BlocksSketch>this.Sketch).Width*0.5;
-        var w = (<BlocksSketch>this.Sketch).Width;
+        var y = (<Stage>this.Sketch).Height*0.75;
+        var cx = (<Stage>this.Sketch).Width*0.5;
+        var w = (<Stage>this.Sketch).Width;
 
         if (this._Alpha>0) {
             ctx.textAlign = "center";
@@ -147,7 +147,7 @@ class MessagePanel extends DisplayObject {
             var units = App.Unit;
             var ctx = this.Ctx;
             var midType = App.Metrics.TxtMid;
-            var cx = (<BlocksSketch>this.Sketch).Width*0.5;
+            var cx = (<Stage>this.Sketch).Width*0.5;
             ctx.font = midType;
             this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
             this._ButtonWidth = (20*units) + ctx.measureText(this._Value.buttonText.toUpperCase()).width;
@@ -225,12 +225,12 @@ class MessagePanel extends DisplayObject {
         var units = App.Unit;
 
         if (this._Value.confirmation) {
-            this._Roll[0] = this.HitRect(this._CloseX  - (20*units), ((<BlocksSketch>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+            this._Roll[0] = this.HitRect(this._CloseX  - (20*units), ((<Stage>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
         } else {
             this._Roll[0] = false;
         }
         if (this._Value.buttonText!=="") {
-            this._Roll[1] = this.HitRect(this._CloseX, ((<BlocksSketch>this.Sketch).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
+            this._Roll[1] = this.HitRect(this._CloseX, ((<Stage>this.Sketch).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
         } else {
             this._Roll[1] = false;
         }

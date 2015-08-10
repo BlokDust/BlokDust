@@ -2,7 +2,7 @@ import Keyboard = require("./Keyboard");
 import Voice = require("./VoiceObject");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
@@ -37,7 +37,7 @@ class ComputerKeyboard extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position, true, "computer keyboard");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position, true, "computer keyboard");
     }
 
     Attach(source: ISource): void {
@@ -71,10 +71,10 @@ class ComputerKeyboard extends Keyboard {
                 this.KeyboardDown(e.KeyDown, source);
             }
         } else {
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
-                this._ExecuteKeyboardCommand(e.KeyDown, source);
-            }
+            //for (var i = 0; i < this.Sources.Count; i++) {
+            //    var source = this.Sources.GetValueAt(i);
+                this._ExecuteKeyboardCommand(e.KeyDown, this.Sources);
+            //}
         }
     }
 
@@ -94,15 +94,19 @@ class ComputerKeyboard extends Keyboard {
     }
 
     // OCTAVE SHIFT //
-    private _ExecuteKeyboardCommand(key: string, source: ISource) {
+    private _ExecuteKeyboardCommand(key: string, sources: any) {
         if (key == 'octave-up' && this.Params.octave < 9) {
-            //this.SetParam("octave",this.Params.octave+1);
-            source.OctaveShift(1);
+            for (var i = 0; i < sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                source.OctaveShift(1);
+            }
             this.Params.octave++;
             this.RefreshOptionsPanel();
         } else if (key === 'octave-down' && this.Params.octave != 0) {
-            //this.SetParam("octave",this.Params.octave-1);
-            source.OctaveShift(-1);
+            for (var i = 0; i < sources.Count; i++) {
+                var source = this.Sources.GetValueAt(i);
+                source.OctaveShift(-1);
+            }
             this.Params.octave--;
             this.RefreshOptionsPanel();
         }

@@ -1,7 +1,7 @@
 import PowerSource = require("./PowerSource");
 import Grid = require("../../Grid");
 import App = require("../../App");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 
 class Laser extends PowerSource {
 
@@ -53,7 +53,7 @@ class Laser extends PowerSource {
     Draw() {
         super.Draw();
 
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"laser");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"laser");
 
     }
 

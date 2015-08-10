@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class Gain extends PostEffect {
 
@@ -30,7 +30,7 @@ class Gain extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"volume");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"volume");
     }
 
     Dispose(){

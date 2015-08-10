@@ -1,7 +1,7 @@
 /**
  * Created by luketwyman on 14/02/2015.
  */
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
 import IBlock = require("../Blocks/IBlock");
@@ -9,9 +9,9 @@ import IBlock = require("../Blocks/IBlock");
 class ConnectionLines {
 
     private _Ctx: CanvasRenderingContext2D;
-    private _Sketch: BlocksSketch;
+    private _Sketch: Stage;
 
-    Init(sketch: BlocksSketch): void {
+    Init(sketch: Stage): void {
 
         this._Ctx = sketch.Ctx;
         this._Sketch = sketch;

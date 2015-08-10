@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 
 class BitCrusher extends PostEffect {
 
@@ -28,7 +28,7 @@ class BitCrusher extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"bit crusher");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"bit crusher");
 
     }
 

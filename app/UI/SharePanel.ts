@@ -5,7 +5,7 @@
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
-import BlocksSketch = require("./../BlocksSketch");
+import Stage = require("./../Stage");
 import Commands = require("./../Commands");
 import CommandManager = require("../Core/Commands/CommandManager");
 
@@ -542,7 +542,7 @@ class SharePanel extends DisplayObject{
 
     MouseDown(point) {
         this.HitTests(point);
-        //var units = (<BlocksSketch>this.Sketch).Unit.width;
+        //var units = (<Stage>this.Sketch).Unit.width;
 
         if (!this._RollOvers[0]) { // url
 

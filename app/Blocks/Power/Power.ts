@@ -1,7 +1,7 @@
 import Effect = require("../Effect");
 import PowerEffect = require("./PowerEffect");
 import ISource = require("../ISource");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 
 
 class Power extends PowerEffect {
@@ -31,7 +31,7 @@ class Power extends PowerEffect {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
     }
 
     Dispose(){

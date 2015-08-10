@@ -19,10 +19,9 @@ import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
 import ColorThemes = require("./UI/ColorThemes");
 import AnimationsLayer = require("./UI/AnimationsLayer");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
-import BlocksSketch = require("./BlocksSketch");
+import Stage = require("./Stage");
 import Splash = require("./Splash");
 import Commands = require("./Commands");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
@@ -40,10 +39,11 @@ import Source = require("./Blocks/Source");
 import Effect = require("./Blocks/Effect");
 import IApp = require("./IApp");
 import SaveFile = require("./SaveFile");
+import FocusManager = require("./Core/Inputs/FocusManager");
+import FocusManagerEventArgs = require("./Core/Inputs/FocusManagerEventArgs");
+import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import SketchSession = Fayde.Drawing.SketchSession;
-
-declare var PixelPalette;
 
 class App implements IApp{
 
@@ -62,10 +62,11 @@ class App implements IApp{
     public Metrics: Metrics;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
-    public BlocksSketch: BlocksSketch;
+    public Stage: Stage;
     public Scene: number;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
+    public FocusManager: FocusManager;
     public CompositionId: string;
     public Config: Config;
     public InputManager: InputManager;
@@ -135,7 +136,6 @@ class App implements IApp{
             this.Resize();
         }
 
-
         // LOAD FONTS AND SETUP CALLBACK //
         this.LoadCued = false;
         this._FontsLoaded = 0;
@@ -174,6 +174,12 @@ class App implements IApp{
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
+        this.FocusManager = new FocusManager();
+        this.FocusManager.FocusChanged.on((s: any, e: FocusManagerEventArgs) => {
+            if (!e.HasFocus){
+                this.CommandsInputManager.ClearKeysDown();
+            }
+        }, this);
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
@@ -207,7 +213,7 @@ class App implements IApp{
 
     // FONT FAILURE TIMEOUT //
     FontsNotLoaded() {
-        if (this._FontsLoaded!==3) {
+        if (this._FontsLoaded !== 3) {
             console.log("FONTS ARE MISSING");
             // proceed anyway for now
             this.LoadReady();
@@ -216,7 +222,7 @@ class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady() {
-        if (this._FontsLoaded==3 && this._PaletteLoaded) {
+        if (this._FontsLoaded === 3 && this._PaletteLoaded) {
             this.LoadComposition();
             this.Scene = 1;
             this.Splash.StartTween();
@@ -248,17 +254,16 @@ class App implements IApp{
     }
 
 
-    // CREATE BLOCKSSKETCH & BEGIN DRAWING/ANIMATING //
+    // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateBlockSketch() {
-        // create BlocksSketch
-        this.BlocksSketch = new BlocksSketch();
-        this.BlocksSketch.Setup();
+        // create Stage
+        this.Stage = new Stage();
         this.Blocks = [];
 
-        // add blocks to BlocksSketch DisplayList
+        // add blocks to Stage DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
-        this.BlocksSketch.DisplayList = new DisplayList(d);
+        this.Stage.DisplayList = new DisplayList(d);
 
         // set up animation loop
         this._ClockTimer.RegisterTimer(this);
@@ -274,28 +279,28 @@ class App implements IApp{
         // set initial zoom level/position
         this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
-        this.BlocksSketch.ZoomButtons.UpdateSlot(this.ZoomLevel);
+        this.Stage.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
 
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {
-            b.Init(this.BlocksSketch);
+            b.Init(this.Stage);
         });
 
-
-        // add blocks to BlocksSketch DisplayList
+        // add blocks to Stage DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
-        this.BlocksSketch.DisplayList = new DisplayList(d);
+        this.Stage.DisplayList = new DisplayList(d);
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
         this.RefreshBlocks();
-        this.BlocksSketch.Paused = true;
-        if (this.Scene<2) {
+        this.Stage.Pause();
+
+        if (this.Scene < 2) {
             this.LoadCued = true;
         } else {
-            this.BlocksSketch.CompositionLoaded();
+            this.Stage.CompositionLoaded();
         }
 
     }
@@ -321,23 +326,23 @@ class App implements IApp{
     }
 
     OnTicked (lastTime: number, nowTime: number) {
-        this.BlocksSketch.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
+        this.Stage.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
         this.Update();
         this.Draw();
     }
 
     Update() : void {
         if (this.Scene === 2) {
-            this.BlocksSketch.Update();
+            this.Stage.Update();
         }
         this.AnimationsLayer.Update();
     }
 
     Draw(): void {
         if (this.Scene === 2) {
-            this.BlocksSketch.Draw();
+            this.Stage.Draw();
         }
-        if (this.Scene>0) {
+        if (this.Scene > 0) {
             this.Splash.Draw();
         }
     }
@@ -355,11 +360,11 @@ class App implements IApp{
     }
 
     //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-    //    this.BlocksSketch.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
+    //    this.Stage.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
     //}
 
     Message(message?: string, options?: any) {
-        this.BlocksSketch.MessagePanel.NewMessage(message, options);
+        this.Stage.MessagePanel.NewMessage(message, options);
     }
 
     CreateCanvas() {
@@ -378,8 +383,8 @@ class App implements IApp{
     Resize(): void {
 
         this.Metrics.Metrics();
-        if (this.BlocksSketch.OptionsPanel) {
-            this.BlocksSketch.SketchResize();
+        if (this.Stage.OptionsPanel) {
+            this.Stage.SketchResize();
         }
 
     }

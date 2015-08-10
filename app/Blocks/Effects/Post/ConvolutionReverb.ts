@@ -1,6 +1,6 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
-import BlocksSketch = require("../../../BlocksSketch");
+import Stage = require("../../../Stage");
 import SoundCloudAudio = require('../../SoundCloudAudio');
 import SoundCloudAudioType = require('../../SoundCloudAudioType');
 import SoundcloudTrack = require("../../../UI/SoundcloudTrack");
@@ -122,7 +122,7 @@ class Convolver extends PostEffect {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.BlocksSketch.SoundcloudPanel.RandomSearch(this));
+            this.Search(App.Stage.SoundcloudPanel.RandomSearch(this));
             this.SetBuffer();
             this._FirstRelease = false;
         }
@@ -140,7 +140,7 @@ class Convolver extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"convolution");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"convolution");
     }
 
     MouseUp() {

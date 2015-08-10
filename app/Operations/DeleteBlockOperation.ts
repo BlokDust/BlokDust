@@ -19,7 +19,7 @@ class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> implements 
 
         (<any>this._Block).Stop();
         this.Operations.push(new MoveBlockOperation(block));
-        this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.BlocksSketch.DisplayList));
+        this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.Stage.DisplayList));
         this.Operations.push(new RemoveItemFromArrayOperation(block, App.Blocks));
     }
 

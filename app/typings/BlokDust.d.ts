@@ -1,6 +1,7 @@
 // todo: type App
 declare var App: any;
 declare var LZMA: any;
+declare var PixelPalette;
 
 interface Window{
     App: any;

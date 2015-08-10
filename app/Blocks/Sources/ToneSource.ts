@@ -1,5 +1,5 @@
 import Grid = require("../../Grid");
-import BlocksSketch = require("../../BlocksSketch");
+import Stage = require("../../Stage");
 import Source = require("../Source");
 import Effect = require("../Effect");
 import Block = require("../Block");
@@ -92,7 +92,7 @@ class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        (<BlocksSketch>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
+        (<Stage>this.Sketch).BlockSprites.Draw(this.Position,true,"tone");
     }
 
     UpdateOptionsForm() {
