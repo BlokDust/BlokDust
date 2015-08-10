@@ -8,39 +8,17 @@ class FocusManager {
 
     constructor() {
 
-        var that = this;
-
-        //document.body.addEventListener("focus", function() {
-        //    that.HasFocus = true;
-        //    that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
-        //}, true);
-        //
-        //document.body.addEventListener("blur", function() {
-        //    that.HasFocus = false;
-        //    that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
-        //}, true);
-
-        document.body.onfocus = function() {
-            that.HasFocus = true;
-            that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
+        window.onfocus = () => {
+            //$('#debug').html('focus');
+            this.HasFocus = true;
+            this.FocusChanged.raise(this, new FocusManagerEventArgs(this.HasFocus));
         };
 
-        document.body.onblur = function() {
-            that.HasFocus = false;
-            that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
+        window.onblur = () => {
+            //$('#debug').html('blur');
+            this.HasFocus = false;
+            this.FocusChanged.raise(this, new FocusManagerEventArgs(this.HasFocus));
         };
-
-        //$(function() {
-        //    $('canvas').focus(function() {
-        //        that.HasFocus = true;
-        //        that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
-        //    });
-        //
-        //    $('canvas').blur(function() {
-        //        that.HasFocus = false;
-        //        that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
-        //    });
-        //});
     }
 }
 
