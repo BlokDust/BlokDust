@@ -72,7 +72,7 @@ class Metrics {
         canvas.height = height * ratio;
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
-        (<any>canvas).getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+        App.Ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         App.Width = width * ratio;
         App.Height = height * ratio;
         App.Stage.Width = App.Width;
@@ -120,7 +120,7 @@ class Metrics {
 
 
     get PixelRatio(): number {
-        const ctx:any = document.createElement("canvas").getContext("2d");
+        const ctx = App.Ctx;
         const dpr = window.devicePixelRatio || 1;
         const bsr = ctx.webkitBackingStorePixelRatio ||
             ctx.mozBackingStorePixelRatio ||

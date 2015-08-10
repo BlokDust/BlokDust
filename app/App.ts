@@ -365,7 +365,7 @@ class App implements IApp{
         return this._Canvas;
     }
 
-    get Ctx() {
+    get Ctx(): CanvasRenderingContext2D {
         return this._Canvas.getContext("2d");
     }
 
