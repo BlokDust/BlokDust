@@ -7,6 +7,7 @@ import CommandManager = require("./Core/Commands/CommandManager");
 import Audio = require("./Core/Audio/Audio");
 import InputManager = require("./Core/Inputs/InputManager");
 import TypingManager = require("./Core/Inputs/TypingManager");
+import DragFileInputManager = require("./Core/Inputs/DragFileInputManager");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
@@ -17,7 +18,6 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
 import AnimationsLayer = require("./UI/AnimationsLayer");
-import Oscillator = require("./PooledOscillator");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
@@ -70,9 +70,9 @@ class App implements IApp{
     public Config: Config;
     public InputManager: InputManager;
     public TypingManager: TypingManager;
+    public DragFileInputManager: DragFileInputManager;
     public KeyboardInput: KeyboardInput;
     public OperationManager: OperationManager;
-    public OscillatorsPool: PooledFactoryResource<Oscillator>;
     public Palette: string[] = [];
     public Particles: Particle[] = [];
     public ParticlesPool: PooledFactoryResource<Particle>;
@@ -168,6 +168,7 @@ class App implements IApp{
 
         // CREATE INPUT MANAGERS //
         this.TypingManager = new TypingManager();
+        this.DragFileInputManager = new DragFileInputManager();
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
@@ -179,7 +180,6 @@ class App implements IApp{
         }, this);
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
-        this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
 
         // LOAD PALETTE //
         var pixelPalette = new PixelPalette(this.Config.PixelPaletteImagePath);

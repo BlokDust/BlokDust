@@ -28,6 +28,7 @@ class RecorderBlock extends SamplerBase {
                 retrigger: false, //Don't retrigger attack if already playing
                 volume: 0,
                 track: null,
+                trackName: '',
             };
         }
 

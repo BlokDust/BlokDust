@@ -2,6 +2,7 @@ import IBlock = require("./Blocks/IBlock");
 import ISource = require("./Blocks/ISource");
 import Source = require("./Blocks/Source");
 import IEffect = require("./Blocks/IEffect");
+import Sampler = require("./Blocks/Sources/Sampler");
 import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
 import IOperation = require("./Core/Operations/IOperation");
 import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
@@ -11,7 +12,6 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Grid = require("./Grid");
 import DisplayList = require("./DisplayList");
 import Particle = require("./Particle");
-import Oscillator = require("./PooledOscillator");
 import IPooledObject = require("./Core/Resources/IPooledObject");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import OptionsPanel = require("./UI/OptionsPanel");
@@ -105,6 +105,43 @@ class BlocksSketch {
         App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
+
+
+        // FILE DRAGGING //
+
+        App.DragFileInputManager.Dropped.on((s: any, e: any) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.CreateBlockFromType(Sampler);
+
+            var files = e.dataTransfer.files; // FileList object.
+
+            App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+                if (buffer) {
+                    //TODO: set the buffer of this newly created Sampler
+                    console.log(file.name + ' dropped');
+                }
+            });
+
+
+
+        }, this);
+
+        App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
+            console.log('file drag entered area');
+        }, this);
+
+        App.DragFileInputManager.DragMove.on((s: any, e: any) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('file drag over');
+        }, this);
+
+        App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
+            console.log('file left drag area');
+        }, this);
+
+
 
         OptionTimeout = false; // todo: remove
 

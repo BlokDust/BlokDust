@@ -5,7 +5,11 @@
 /**
  *  Source Params
  */
-interface GranularParams {
+interface IParams {
+    //name: string;
+}
+
+interface GranularParams extends IParams {
     playbackRate: number;
     density: number;
     region: number;
@@ -16,19 +20,19 @@ interface GranularParams {
     user: string;
 }
 
-interface ToneSourceParams {
+interface ToneSourceParams extends IParams {
     frequency: number;
     waveform: number|string;
     baseFrequency: number;
     fine: number;
 }
 
-interface NoiseParams {
+interface NoiseParams extends IParams {
     playback: number;
     waveform: number;
 }
 
-interface SamplerParams {
+interface SamplerParams extends IParams {
     playbackRate: number;
     reverse: boolean;
     startPosition: number;
@@ -39,6 +43,7 @@ interface SamplerParams {
     retrigger: boolean;
     volume: number;
     track: string;
+    trackName: string;
 }
 
 interface SoundcloudParams extends SamplerParams {
@@ -53,14 +58,14 @@ interface MicrophoneParams extends GainParams{
 /**
  * Power Params
  */
-interface LogicParams {
+interface LogicParams extends IParams {
     logic: boolean;
 }
 
 /**
  * Interaction Params
  */
-interface KeyboardParams {
+interface KeyboardParams extends IParams {
     octave: number;
     glide: number;
     isPolyphonic: boolean;
@@ -70,7 +75,7 @@ interface KeyboardParams {
 /**
  * Post Effect Params
  */
-interface AutoWahParams {
+interface AutoWahParams extends IParams {
     octaves: number;
     baseFrequency: number;
     mix: number;
@@ -87,7 +92,7 @@ interface ChorusParams extends RateDepthParams {
     feedback: number;
 }
 
-interface ChompParams {
+interface ChompParams extends IParams {
     rate: number;
     Q: number;
     gain: number;
@@ -110,11 +115,11 @@ interface DistortionParams extends DryWetParams {
     drive: number;
 }
 
-interface DryWetParams {
+interface DryWetParams  extends IParams {
     mix: number;
 }
 
-interface EQParams {
+interface EQParams extends IParams {
     frequency_1: number;
     Q_1: number;
     gain_1: number;
@@ -133,7 +138,7 @@ interface FilterParams extends GainParams {
     frequency: number;
 }
 
-interface GainParams {
+interface GainParams  extends IParams {
     gain: number;
 }
 
@@ -141,7 +146,7 @@ interface PhaserParams extends DryWetParams, RateDepthParams {
     baseFrequency: number;
 }
 
-interface RateDepthParams {
+interface RateDepthParams extends IParams {
     rate: number;
     depth: number;
 }
@@ -156,7 +161,7 @@ interface ReverbParams extends DryWetParams {
 /**
  * PreEffect Params
  */
-interface EnvelopeParams {
+interface EnvelopeParams extends IParams {
     attack: number;
     decay: number;
     sustain: number;
@@ -168,6 +173,6 @@ interface LFOParams extends RateDepthParams {
 }
 interface ScuzzParams extends LFOParams {}
 
-interface PitchShifterParams {
+interface PitchShifterParams extends IParams {
     pitchOffset: number;
 }

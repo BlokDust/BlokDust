@@ -626,6 +626,35 @@ class BlockSprites {
 
                 break;
 
+            case "sampler":
+
+                if (!this._Scaled) {
+                    this._XOffset = -(grd*0.5);
+                    this._YOffset = (grd*0.5);
+                }
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[1];// RED
+                this.DrawMoveTo(-1,0);
+                this.DrawLineTo(0,-1);
+                this.DrawLineTo(1,-1);
+                this.DrawLineTo(2,0);
+                this.DrawLineTo(1,1);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                this.Ctx.beginPath();
+                this.Ctx.fillStyle = App.Palette[9];// ORANGE
+                this.DrawMoveTo(1,0);
+                this.DrawLineTo(2,0);
+                this.DrawLineTo(1,1);
+                this.DrawLineTo(0,1);
+                this.Ctx.closePath();
+                this.Ctx.fill();
+
+                break;
+
             case "granular":
 
                 if (!this._Scaled) {

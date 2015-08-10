@@ -2,7 +2,6 @@
  * Created by luketwyman on 26/07/2015.
  */
 
-
 import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
@@ -26,7 +25,6 @@ class SoundcloudPanel extends DisplayObject{
         super.Init(sketch);
 
         this.Open = false;
-
         this.OffsetX = 0;
         this.OffsetY = -this.Sketch.Height;
 
@@ -362,7 +360,6 @@ class SoundcloudPanel extends DisplayObject{
         this.OffsetX = - ((this._Page-1) * (430*App.Unit));
         this.DelayTo(this,0,500,0,"OffsetY");
         App.TypingManager.Enable(this);
-
     }
 
     ClosePanel() {
@@ -370,6 +367,7 @@ class SoundcloudPanel extends DisplayObject{
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
         App.TypingManager.Disable();
     }
+
 
     MouseDown(point) {
         this.HitTests(point);

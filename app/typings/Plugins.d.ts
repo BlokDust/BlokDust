@@ -8,4 +8,8 @@ interface JQueryStatic {
 
 interface Window {
     $: any;
+    File: any;
+    FileReader: any;
+    FileList: any;
+    Blob: any;
 }
