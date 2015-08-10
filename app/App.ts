@@ -39,10 +39,10 @@ import Source = require("./Blocks/Source");
 import Effect = require("./Blocks/Effect");
 import IApp = require("./IApp");
 import SaveFile = require("./SaveFile");
+import FocusManager = require("./Core/Inputs/FocusManager");
+import FocusManagerEventArgs = require("./Core/Inputs/FocusManagerEventArgs");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import SketchSession = Fayde.Drawing.SketchSession;
-
-declare var PixelPalette;
 
 class App implements IApp{
 
@@ -65,6 +65,7 @@ class App implements IApp{
     public Scene: number;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
+    public FocusManager: FocusManager;
     public CompositionId: string;
     public Config: Config;
     public InputManager: InputManager;
@@ -133,7 +134,6 @@ class App implements IApp{
             this.Resize();
         }
 
-
         // LOAD FONTS AND SETUP CALLBACK //
         this.LoadCued = false;
         this._FontsLoaded = 0;
@@ -171,6 +171,12 @@ class App implements IApp{
         this.KeyboardInput = new KeyboardInput();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
+        this.FocusManager = new FocusManager();
+        this.FocusManager.FocusChanged.on((s: any, e: FocusManagerEventArgs) => {
+            if (!e.HasFocus){
+                this.CommandsInputManager.ClearKeysDown();
+            }
+        }, this);
 
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
         this.OscillatorsPool = new PooledFactoryResource<Oscillator>(10, 100, Oscillator.prototype);
@@ -326,7 +332,7 @@ class App implements IApp{
         if (this.Scene === 2) {
             this.BlocksSketch.Draw();
         }
-        if (this.Scene>0) {
+        if (this.Scene > 0) {
             this.Splash.Draw();
         }
     }

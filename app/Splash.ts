@@ -7,9 +7,9 @@ import DisplayObject = require("./DisplayObject");
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
 
+//todo: inherit from DisplayObject? code duplication not necessary.
 class Splash {
 
-    //TODO: we should be able to use TWEEN in a normal global way without having to duplicate this DisplayObject stuff
     public Initialised: boolean = false;
     public Timer: Fayde.ClockTimer;
     public LastVisualTick: number = new Date(0).getTime();

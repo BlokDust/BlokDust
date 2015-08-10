@@ -44,6 +44,7 @@ class DisplayObject implements IDisplayObject {
     public Dispose(): void {
     }
 
+    // todo: this is more of a util than something DisplayObject-specific
     // IS CLICK WITHIN THIS BOX //
     HitRect(x,y,w,h,mx,my) {
         var hit;

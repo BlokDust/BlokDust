@@ -11,6 +11,7 @@ import Source = require("./Blocks/Source");
 import IEffect = require("./Blocks/IEffect");
 import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
+import Vector = Utils.Maths.Vector;
 
 class LaserBeams {
 

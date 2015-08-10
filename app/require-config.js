@@ -5,7 +5,6 @@ require.config({
         "exjs": "lib/exjs/dist/ex",
         "extensions": "lib/extensions/dist/extensions",
         "fayde.drawing": "lib/fayde.drawing/dist/fayde.drawing",
-        "fayde.transformer": "lib/fayde.transformer/dist/fayde.transformer",
         "intersection": "lib/intersection/intersection",
         "jquery": "lib/jquery/dist/jquery",
         "lzma": "lib/lzma/src/lzma",
@@ -23,13 +22,6 @@ require.config({
         },
         "fayde.drawing": {
             "exports": "Fayde.Drawing"
-        },
-        "fayde.transformer": {
-            "exports": "Fayde.Transformer",
-            "deps": [
-                "utils",
-                "tween"
-            ]
         },
         "tween": {
             "exports": "TWEEN",
@@ -59,7 +51,6 @@ require([
     "exjs",
     "extensions",
     "fayde.drawing",
-    "fayde.transformer",
     "intersection",
     "lzma",
     "Recorderjs/recorder",
