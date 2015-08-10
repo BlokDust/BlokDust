@@ -2,6 +2,11 @@ declare module Fayde.Drawing {
     var Version: string;
 }
 declare module Fayde.Drawing {
+    interface ISketchContext {
+        Ctx: CanvasRenderingContext2D;
+    }
+}
+declare module Fayde.Drawing {
     class Sketch extends FrameworkElement {
         CreateLayoutUpdater(): sketch.SketchUpdater;
         static IsAnimatedProperty: DependencyProperty;
@@ -52,7 +57,7 @@ declare module Fayde.Drawing {
     }
 }
 declare module Fayde.Drawing {
-    class SketchSession {
+    class SketchSession implements ISketchContext {
         private _Canvas;
         Ctx: CanvasRenderingContext2D;
         Width: number;

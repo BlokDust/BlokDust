@@ -1,4 +1,5 @@
 import IDisplayObject = require("./IDisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
@@ -13,7 +14,7 @@ class DisplayObject implements IDisplayObject {
     public Timer: Fayde.ClockTimer;
     public LastVisualTick: number = new Date(0).getTime();
 
-    Init(sketch?: any): void {
+    Init(sketch?: ISketchContext): void {
         if (sketch) this.Sketch = sketch;
         if (!this.Sketch) throw new Exception("Sketch not specified for DisplayObject");
 

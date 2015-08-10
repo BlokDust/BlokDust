@@ -457,8 +457,18 @@ class SettingsPanel extends DisplayObject{
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
             if (this.MenuItems[i].Hover) {
-                TWEEN.removeAll();
+                TWEEN.removeAll(); // TODO - swap for local tween pool
                 var cat = this.MenuItems[i];
+
+                if (i==0) {
+                    App.LoadColorTheme(1,false);
+                }
+                if (i==1) {
+                    App.LoadColorTheme(0,false);
+                }
+                if (i==2) {
+                    App.LoadColorTheme(2,false);
+                }
 
                 this.DelayTo(cat,1,400,0,"Selected");
                 this._OpenTab = i; // I'M THE SELECTED CATEGORY

@@ -494,8 +494,12 @@ class WaveGen extends SamplerBase {
         this._FirstBuffer.copyToChannel(this._BufferData,0,0);
         this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
         var duration = this.GetDuration(this._FirstBuffer);
-        this.Params.loopEnd = this.Params.endPosition =duration;
-        this.Params.reverse = false;
+        if (!this._LoadFromShare) {
+            this.Params.startPosition = 0;
+            this.Params.loopStart = duration * 0.5;
+            this.Params.loopEnd = this.Params.endPosition = duration;
+            this.Params.reverse = false;
+        }
 
         // update options panel //
         this.RefreshOptionsPanel();
@@ -506,8 +510,13 @@ class WaveGen extends SamplerBase {
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
         });
-    }
 
+        // IF POWERED ON LOAD - TRIGGER //
+        if (this.IsPowered() && this._LoadFromShare) {
+            this.TriggerAttack();
+        }
+        this._LoadFromShare = false;
+    }
 
 
     FirstSetup() {

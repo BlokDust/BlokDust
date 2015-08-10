@@ -4,15 +4,9 @@
 
 import DisplayObject = require("./DisplayObject");
 
-var MAX_FPS: number = 100;
-var MAX_MSPF: number = 1000 / MAX_FPS;
 
-//todo: inherit from DisplayObject? code duplication not necessary.
-class Splash {
+class Splash extends DisplayObject{
 
-    public Initialised: boolean = false;
-    public Timer: Fayde.ClockTimer;
-    public LastVisualTick: number = new Date(0).getTime();
     private _Ctx: CanvasRenderingContext2D;
     public XOffset: number;
     public YOffset: number;
@@ -21,33 +15,17 @@ class Splash {
     private _Center: Point;
     private _Offset: Point;
 
-    constructor () {
-        this._Ctx = App.Canvas.getContext("2d");
+
+    Init(sketch?: any): void {
+        super.Init(sketch);
+        this._Ctx = this.Sketch.Ctx;
         this._Offset = new Point(0,0);
         this.XOffset = 0;
         this.YOffset = -1;
         this.LoadOffset = 0;
-
-        //this.StartAnimating();
-        this.Initialised = true;
     }
 
-    update() {
 
-    }
-
-    StartAnimating(): void {
-        this.Timer = new Fayde.ClockTimer();
-        this.Timer.RegisterTimer(this);
-    }
-
-    OnTicked (lastTime: number, nowTime: number) {
-        var now = new Date().getTime();
-        if (now - this.LastVisualTick < MAX_MSPF) return;
-        this.LastVisualTick = now;
-
-        TWEEN.update(nowTime);
-    }
 
     get Ctx(): CanvasRenderingContext2D{
         return this._Ctx;
@@ -61,8 +39,9 @@ class Splash {
     public Draw() {
 
         var colorful = false;
+        var units = App.Unit;
 
-        this._Scale = 100 * App.Unit;
+        this._Scale = 100 * units;
 
         // LOADING //
         if (App.Scene==2 && !App.LoadCued && App.CompositionId) {
@@ -78,7 +57,7 @@ class Splash {
             this.Ctx.font = App.Metrics.TxtHeader;
             this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * App.Unit));
             App.AnimationsLayer.Spin();
-            App.AnimationsLayer.DrawSprite('loading',dx, dy - (16 * App.Unit),16,true);
+            App.AnimationsLayer.DrawSprite('loading',dx, dy - (16 * units),16,true);
         }
 
 
@@ -203,7 +182,7 @@ class Splash {
         this.CenterRect();
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
-        var headerType = 100*App.Unit;
+        var headerType = 100*units;
         this.Ctx.fillStyle = App.Palette[8];// Grey
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";

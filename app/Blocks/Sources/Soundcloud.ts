@@ -74,6 +74,7 @@ class Soundcloud extends SamplerBase {
                 this.Params.endPosition = duration;
                 this.Params.loopStart = duration * 0.5;
                 this.Params.loopEnd = duration;
+                this.Params.reverse = false;
             }
             this._LoadFromShare = false;
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
