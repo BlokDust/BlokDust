@@ -81,7 +81,7 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
 
     Setup(){
 
-        //super.Setup();
+        super.Setup();
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
@@ -98,7 +98,6 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
         App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
-
 
         // FILE DRAGGING //
 
@@ -131,8 +130,6 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
         App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
             console.log('file left drag area');
         }, this);
-
-
 
         OptionTimeout = false; // todo: remove
 
@@ -200,17 +197,15 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
         this.SketchResize();
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  UPDATE
     //-------------------------------------------------------------------------------------------
-
 
     Update() {
 
         if (this.IsPaused) return;
 
-        //super.Update();
+        super.Update();
 
         // update blocks
         for (var i = 0; i < App.Blocks.length; i++) {
@@ -246,7 +241,6 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
         App.Particles = currentParticles;
     }
 
-
     SketchResize() {
         this.OptionsPanel.Close();
         this.OptionsPanel.Resize();
@@ -257,18 +251,15 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 
-
-
-
-
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-
     Draw(){
 
-        //super.Draw();
+        if (this.IsPaused) return;
+
+        super.Draw();
 
         // BG //
         this.Ctx.fillStyle = App.Palette[0];
@@ -756,7 +747,7 @@ class BlocksSketch extends Fayde.Drawing.SketchContext{
     }
 
     _ValidateBlocks() {
-        // todo: make this a command that all blocks subscribe to?
+        // todo: move this to flux-style blocksstore
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();
