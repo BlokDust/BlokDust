@@ -51,9 +51,8 @@ import Void = require("./Blocks/Power/Void");
 import ComputerKeyboard = require("Blocks/Interaction/ComputerKeyboard");
 import MIDIController = require("Blocks/Interaction/MIDIController");
 
-
 class BlockCreator {
-    
+
     public static MenuJson: any = {
         "categories": [
             {
@@ -101,8 +100,6 @@ class BlockCreator {
                     }
                 ]
             },
-
-            // todo: put descriptions in config.json? then they can potentially be localised
             {
                 "name": "Effects",
                 "items": [
@@ -193,7 +190,6 @@ class BlockCreator {
                     }
                 ]
             },
-
             {
                 "name": "Power",
                 "items": [
@@ -229,7 +225,6 @@ class BlockCreator {
                     }
                 ]
             },
-
             {
                 "name": "Interaction",
                 "items": [
@@ -258,7 +253,7 @@ class BlockCreator {
     // BACKWARDS COMPATIBILITY //
     // PATCH CHANGED BLOCK NAMES //
     public static LostBlockCheck(type: any) {
-        if ((""+type) == "Gain") {
+        if (("" + type) === "Gain") { // todo: coerce to string using .toString() or <String>?
             type = "Volume";
         }
         return type;

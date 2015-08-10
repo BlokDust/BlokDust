@@ -5,7 +5,7 @@
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
     "fayde": "~0.16.15",
-    "fayde.drawing": "edsilv/fayde.drawing#~0.4.0",
+    "fayde.drawing": "edsilv/fayde.drawing#~0.4.2",
     "intersection": "BlokDust/intersection",
     "jquery": "~2.1.3",
     "lzma": "nmrugg/LZMA-JS",

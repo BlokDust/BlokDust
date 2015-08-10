@@ -18,7 +18,6 @@ import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
 import Fonts = require("./UI/Fonts");
 import AnimationsLayer = require("./UI/AnimationsLayer");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import Serializer = require("./Serializer");
 import Grid = require("./Grid");
 import BlocksSketch = require("./BlocksSketch");
@@ -41,6 +40,7 @@ import IApp = require("./IApp");
 import SaveFile = require("./SaveFile");
 import FocusManager = require("./Core/Inputs/FocusManager");
 import FocusManagerEventArgs = require("./Core/Inputs/FocusManagerEventArgs");
+import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import SketchSession = Fayde.Drawing.SketchSession;
 
@@ -213,7 +213,7 @@ class App implements IApp{
 
     // FONT FAILURE TIMEOUT //
     FontsNotLoaded() {
-        if (this._FontsLoaded!==3) {
+        if (this._FontsLoaded !== 3) {
             console.log("FONTS ARE MISSING");
             // proceed anyway for now
             this.LoadReady();
@@ -222,7 +222,7 @@ class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady() {
-        if (this._FontsLoaded==3 && this._PaletteLoaded) {
+        if (this._FontsLoaded === 3 && this._PaletteLoaded) {
             this.LoadComposition();
             this.Scene = 1;
             this.Splash.StartTween();
@@ -258,7 +258,6 @@ class App implements IApp{
     CreateBlockSketch() {
         // create BlocksSketch
         this.BlocksSketch = new BlocksSketch();
-        this.BlocksSketch.Setup();
         this.Blocks = [];
 
         // add blocks to BlocksSketch DisplayList
@@ -288,7 +287,6 @@ class App implements IApp{
             b.Init(this.BlocksSketch);
         });
 
-
         // add blocks to BlocksSketch DisplayList
         var d = new DisplayObjectCollection();
         d.AddRange(this.Blocks);
@@ -297,8 +295,9 @@ class App implements IApp{
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
         this.RefreshBlocks();
-        this.BlocksSketch.Paused = true;
-        if (this.Scene<2) {
+        this.BlocksSketch.Pause();
+
+        if (this.Scene < 2) {
             this.LoadCued = true;
         } else {
             this.BlocksSketch.CompositionLoaded();

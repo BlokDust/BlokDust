@@ -37,12 +37,11 @@ import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class BlocksSketch {
+class BlocksSketch extends Fayde.Drawing.SketchContext{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
     private _DisplayList: DisplayList;
-    public Paused: boolean;
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
@@ -63,17 +62,13 @@ class BlocksSketch {
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
     public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
-    public Width: number;
-    public Height: number;
-    public Ctx: CanvasRenderingContext2D;
-    public SketchSession: SketchSession;
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
     constructor() {
-        //super();
+        super();
     }
 
     get DisplayList(): DisplayList {
@@ -85,10 +80,8 @@ class BlocksSketch {
     }
 
     Setup(){
-        this.Width = App.Width;
-        this.Height = App.Height;
-        this.Ctx = App.Ctx;
 
+        //super.Setup();
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
@@ -122,8 +115,6 @@ class BlocksSketch {
                     console.log(file.name + ' dropped');
                 }
             });
-
-
 
         }, this);
 
@@ -217,29 +208,23 @@ class BlocksSketch {
 
     Update() {
 
-        if (!this.Paused) {
-            //super.Update();
+        if (this.IsPaused) return;
 
+        //super.Update();
 
-            // update blocks
-            for (var i = 0; i < App.Blocks.length; i++) {
-                var block: IBlock = App.Blocks[i];
-                block.Update();
-            }
-
-            if (App.Particles.length) {
-                this.UpdateParticles();
-            }
-
-            this._LaserBeams.Update();
-            this._RecorderPanel.Update();
+        // update blocks
+        for (var i = 0; i < App.Blocks.length; i++) {
+            var block: IBlock = App.Blocks[i];
+            block.Update();
         }
 
+        if (App.Particles.length) {
+            this.UpdateParticles();
+        }
 
+        this._LaserBeams.Update();
+        this._RecorderPanel.Update();
     }
-
-
-
 
     // PARTICLES //
     UpdateParticles() {
@@ -282,6 +267,8 @@ class BlocksSketch {
 
 
     Draw(){
+
+        //super.Draw();
 
         // BG //
         this.Ctx.fillStyle = App.Palette[0];
@@ -801,9 +788,9 @@ class BlocksSketch {
     CompositionLoaded() {
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
-        var sketch = this;
-        setTimeout(function() {
-            sketch.Paused = false;
+
+        setTimeout(() => {
+            this.Play();
             App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
         },200);
 
@@ -812,12 +799,9 @@ class BlocksSketch {
         }
     }
 
-
-
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS
     //-------------------------------------------------------------------------------------------
-
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
