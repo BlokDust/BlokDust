@@ -20,12 +20,12 @@ class FocusManager {
         //    that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
         //}, true);
 
-        document.onfocus = function() {
+        document.body.onfocus = function() {
             that.HasFocus = true;
             that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
         };
 
-        document.onblur = function() {
+        document.body.onblur = function() {
             that.HasFocus = false;
             that.FocusChanged.raise(that, new FocusManagerEventArgs(that.HasFocus));
         };
