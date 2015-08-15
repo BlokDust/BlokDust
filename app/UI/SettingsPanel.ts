@@ -55,7 +55,7 @@ class SettingsPanel extends DisplayObject{
             },
 
             silverton: {
-                blurb: "Edward Silverton - client and server architecture.",
+                blurb: "Edward Silverton - client & server core development & architecture.",
                 url: "edsilv.com",
                 twitter: "@edsilv"
             },
