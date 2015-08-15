@@ -95,6 +95,18 @@ class MainScene extends Fayde.Drawing.SketchContext{
             this.MouseMove(e);
         }, this);
 
+        App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
+            this.TouchStart(e);
+        }, this);
+
+        App.PointerInputManager.TouchEnd.on((s: any, e: TouchEvent) => {
+            this.TouchEnd(e);
+        }, this);
+
+        App.PointerInputManager.TouchMove.on((s: any, e: TouchEvent) => {
+            this.TouchMove(e);
+        }, this);
+
         App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
         }, this);
@@ -329,17 +341,13 @@ class MainScene extends Fayde.Drawing.SketchContext{
         //var point = (<any>e).args.Source.MousePosition;
         var position: Point = new Point(e.clientX, e.clientY);
 
-        this._PointerDown(position, () => {
-            e.cancelBubble = false;
-        });
+        this._PointerDown(position);
     }
 
     MouseUp(e: MouseEvent){
         var position: Point = new Point(e.clientX, e.clientY);
 
-        this._PointerUp(position, () => {
-            //e.cancelBubble = false;
-        });
+        this._PointerUp(position);
         this._CheckHover(position);
     }
 
@@ -348,28 +356,24 @@ class MainScene extends Fayde.Drawing.SketchContext{
         this._PointerMove(position);
     }
 
-    TouchDown(e: any){
+    TouchStart(e: any){
         //var pos: Fayde.Input.TouchPoint = e.GetTouchPoint(null);
-        var pos = e.args.Device.GetTouchPoint(null);
-        var point = new Point(pos.Position.x, pos.Position.y);
+        var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
+        var point = new Point(touch.clientX, touch.clientY);
 
-        this._PointerDown(point, () => {
-            //e.cancelBubble = false;
-        });
+        this._PointerDown(point);
     }
 
-    TouchUp(e: any){
-        var pos = e.args.Device.GetTouchPoint(null);
-        var point = new Point(pos.Position.x, pos.Position.y);
+    TouchEnd(e: any){
+        var touch = e.changedTouches[0]; // e.args.Device.GetTouchPoint(null);
+        var point = new Point(touch.clientX, touch.clientY);
 
-        this._PointerUp(point, () => {
-            //e.cancelBubble = false;
-        });
+        this._PointerUp(point);
     }
 
     TouchMove(e: any){
-        var pos = e.args.Device.GetTouchPoint(null);
-        var point = new Point(pos.Position.x, pos.Position.y);
+        var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
+        var point = new Point(touch.clientX, touch.clientY);
 
         this._PointerMove(point);
     }
@@ -379,7 +383,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
     // AGNOSTIC EVENTS //
 
-    private _PointerDown(point: Point, handle: () => void) {
+    private _PointerDown(point: Point) {
         App.TranslateMousePointToPixelRatioPoint(point);
 
         this._IsPointerDown = true;
@@ -446,7 +450,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
         // BLOCK CLICK //
         if (!UI) {
-            collision = this._CheckCollision(point, handle);
+            collision = this._CheckCollision(point);
         }
 
         if (collision) {
@@ -462,7 +466,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
     }
 
 
-    private _PointerUp(point: Point, handle: () => void) {
+    private _PointerUp(point: Point) {
         App.TranslateMousePointToPixelRatioPoint(point);
         this._IsPointerDown = false;
 
@@ -476,7 +480,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
             // BLOCK //
             if (this.SelectedBlock){
                 if (this.SelectedBlock.IsPressed){
-                    handle();
+
                     this.SelectedBlock.MouseUp();
 
                     // if the block has moved, create an undoable operation.
@@ -492,7 +496,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
             }
         }
 
-
         // UI //
         if (this.SharePanel.Open) {
             this.SharePanel.MouseUp(point);
@@ -502,7 +505,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
         } else {
             this._Header.MouseUp();
 
-            if (this.OptionsPanel.Scale==1) {
+            if (this.OptionsPanel.Scale===1) {
                 this.OptionsPanel.MouseUp();
             }
 
@@ -601,12 +604,11 @@ class MainScene extends Fayde.Drawing.SketchContext{
     }
 
     // COLLISION CHECK ON BLOCK //
-    private _CheckCollision(point: Point, handle: () => void): Boolean {
+    private _CheckCollision(point: Point): Boolean {
         // LOOP BLOCKS //
         for (var i = App.Blocks.length - 1; i >= 0; i--) {
             var block:IBlock = App.Blocks[i];
             if (block.HitTest(point)) {
-                handle();
                 block.MouseDown();
                 this.SelectedBlock = block;
 
