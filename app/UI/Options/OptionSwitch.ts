@@ -47,7 +47,7 @@ class OptionSwitch {
 
             if (this.Selected) {
                 if (this._Lit) {
-                    ctx.fillStyle = App.Palette[8];// WHITE
+                    ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
                 }
                 ctx.fillRect(x + (w*0.5),y + (h*0.16),w*0.5,h*0.42);
             } else {
@@ -57,7 +57,7 @@ class OptionSwitch {
 
         else if (style==1) {
 
-            ctx.strokeStyle = "#393d43";
+            ctx.strokeStyle = App.Palette[1];
             ctx.beginPath();
             ctx.moveTo(Math.round(x + (w*0.5)), y + (h*0.15));
             ctx.lineTo(Math.round(x + (w*0.5)), y + (h*0.55));
@@ -68,7 +68,7 @@ class OptionSwitch {
 
 
             if (this.Selected) {
-                ctx.strokeStyle = "#282b31";
+                ctx.strokeStyle = App.Palette[1];
                 //panel.diagonalFill(x, y + (h*0.15), w * 0.5, h * 0.4,9);
                 ctx.fillStyle = col;
                 //ctx.fillRect(x + (w*0.65), y + (h*0.55), w * 0.2, h * 0.05);
@@ -76,7 +76,7 @@ class OptionSwitch {
                 ctx.fillRect(x + (w*0.5), y + (h*0.55), w * 0.5, h * 0.05);
                 //ctx.fillRect(x + (w*0.5), y + (h*0.15), w * 0.5, h * 0.4);
             } else {
-                ctx.strokeStyle = "#282b31";
+                ctx.strokeStyle = App.Palette[1];
                 //panel.diagonalFill(x + (w*0.5), y + (h*0.15), w * 0.5, h * 0.4,9);
                 ctx.fillStyle = col;
                 //ctx.fillRect(x + (w*0.15), y + (h*0.55), w * 0.2, h * 0.05);
@@ -86,7 +86,7 @@ class OptionSwitch {
             }
 
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[8];// WHITE
+            ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
             var cx = x + (w*0.5);
             var cy = y + (h * 0.35);
             var lx = x + (w*0.25);
@@ -139,7 +139,7 @@ class OptionSwitch {
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "center";
         ctx.fillText(this.Name.toUpperCase(), x + (w*0.5), y + (h*0.84));

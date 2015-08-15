@@ -12,6 +12,7 @@ class SettingsPanel extends DisplayObject{
 
     public Open: boolean;
     public OffsetY: number;
+    //public TabOffset: number[];
     private _RollOvers: boolean[];
     private _CopyJson: any;
     public MenuItems: MenuCategory[] = [];
@@ -26,6 +27,8 @@ class SettingsPanel extends DisplayObject{
 
         this.Open = false;
         this.OffsetY = -this.Sketch.Height;
+        //this.TabOffset = [-this.Sketch.Height, -this.Sketch.Height, -this.Sketch.Height];
+
         this._RollOvers = [];
         this.Height = 60;
         this.MenuItems = [];
@@ -33,11 +36,6 @@ class SettingsPanel extends DisplayObject{
         this._OpenTab = 2;
         this._VersionNumber = Version.Version;
 
-        /*this._CopyJson = {
-            credits: "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton.",
-            creditsFull: "Luke T is responsible for concept, design & UI, Luke P is responsible for audio development & interaction, and Edward is responsible for core development, project structure & server stuff.",
-            thanks: "Thanks also to Yotam Mann and Brad Sickles."
-        };*/
 
         this._CopyJson = {
             about: "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton. Developed in Brighton UK and released in 2015, BlokDust uses the Web Audio API and makes use of Tone.js as an audio framework. The project is open source, and we hope to see a community of contributors emerge though GitHub & SoundCloud.",
@@ -119,7 +117,7 @@ class SettingsPanel extends DisplayObject{
             var name = json.categories[i].name.toUpperCase();
             var point = new Point(catX + (catWidth[i]*0.5),0);
             var size = new Size(catWidth[i],16);
-            menuCats[i] = new MenuCategory(point,size,name,0);
+            menuCats[i] = new MenuCategory(point,size,name,-this.Sketch.Height);
             catX += catWidth[i];
         }
 
@@ -141,12 +139,11 @@ class SettingsPanel extends DisplayObject{
         var italicType2 = App.Metrics.TxtItalic2;
         var units = App.Unit;
         var grid = App.GridSize;
-        var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
-        var tabY = centerY - (180*units);
-        tabY = this.OffsetY;
-        var menuWidth = (this.Sketch.Width/7)*4;
+        var centerY = this.OffsetY + (App.Height * 0.5);
+        var tabY = this.OffsetY;
+        var menuWidth = (App.Width/7)*4;
         var halfWidth = menuWidth * 0.5;
-        var dx = (this.Sketch.Width*0.5);
+        var dx = (App.Width*0.5);
         var pageY = tabY + (120*units);
 
 
@@ -156,14 +153,15 @@ class SettingsPanel extends DisplayObject{
             ctx.fillStyle = App.Palette[2];// Black
             ctx.globalAlpha = 0.95;
             if (this.Open) {
-                ctx.fillRect(0,this.OffsetY,this.Sketch.Width,this.Sketch.Height); // solid
+                ctx.fillRect(0,this.OffsetY,App.Width,App.Height); // solid
             }
             ctx.globalAlpha = 1;
+
 
             // CLOSE BUTTON //
             var closeY = tabY + (30*units);
             ctx.lineWidth = 2;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[8]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.beginPath();
             ctx.moveTo(dx + halfWidth + (12.5*units), closeY - (7.5*units));
             ctx.lineTo(dx + halfWidth + (27.5*units), closeY + (7.5*units));
@@ -183,71 +181,78 @@ class SettingsPanel extends DisplayObject{
             ctx.font = headType;
             ctx.fillText("SETTINGS",20*units,this.OffsetY + (30*units) + (11*units));
 
-            ctx.font = largeType;
-            this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY, units*16, Math.ceil(menuWidth));
-            //this.WordWrap(ctx, this._CopyJson.thanks, dx - halfWidth, centerY + (164 * units), units*16, menuWidth);
 
+
+            // CLIPPING BOX //
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(dx - halfWidth,tabY + (60*units));
+            ctx.lineTo(dx + halfWidth,tabY + (60*units));
+            ctx.lineTo(dx + halfWidth,App.Height);
+            ctx.lineTo(dx - halfWidth,App.Height);
+            ctx.closePath();
+            ctx.clip();
+
+
+            // TAB 2 //
+            var tab = this.MenuItems[1].YOffset;
+
+            this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
+
+
+
+            // TAB 3 //
+            var tab = this.MenuItems[2].YOffset;
+
+            ctx.font = largeType;
+            this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
 
 
             var xs = [x1,x2,x3];
             for (var i=1; i<4; i++) {
                 if (this._RollOvers[i]) {
-
-                    //ctx.fillRect(xs[i-1] - (10*units),thirdY + (38*units),2*units,2*units);
                     ctx.fillStyle = App.Palette[3];// Blue
                     ctx.beginPath();
-                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (43*units) - (grid*0.5));
-                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (43*units) - (grid*0.5));
-                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (43*units));
+                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (43*units) - (grid*0.5) + tab);
+                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (43*units) - (grid*0.5) + tab);
+                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (43*units) + tab);
                     ctx.closePath();
                     ctx.fill();
                 }
                 if (this._RollOvers[i+3]) {
-                    //ctx.fillRect(xs[i-1] - (10*units),thirdY + (52*units),2*units,2*units);
                     ctx.fillStyle = App.Palette[3];// Blue
                     ctx.beginPath();
-                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (57*units) - (grid*0.5));
-                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (57*units) - (grid*0.5));
-                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (57*units));
+                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (57*units) - (grid*0.5) + tab);
+                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (57*units) - (grid*0.5) + tab);
+                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (57*units) + tab);
                     ctx.closePath();
                     ctx.fill();
                 }
             }
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[8]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.font = italicType2;
 
             // BLURBS //
-            this.WordWrap(ctx, this._CopyJson.twyman.blurb, x1, thirdY, units*14, Math.ceil(thirdWidth));
-            this.WordWrap(ctx, this._CopyJson.phillips.blurb, x2, thirdY, units*14, Math.ceil(thirdWidth));
-            this.WordWrap(ctx, this._CopyJson.silverton.blurb, x3, thirdY, units*14, Math.ceil(thirdWidth));
+            this.WordWrap(ctx, this._CopyJson.twyman.blurb, x1, thirdY + tab, units*14, Math.ceil(thirdWidth));
+            this.WordWrap(ctx, this._CopyJson.phillips.blurb, x2, thirdY + tab, units*14, Math.ceil(thirdWidth));
+            this.WordWrap(ctx, this._CopyJson.silverton.blurb, x3, thirdY + tab, units*14, Math.ceil(thirdWidth));
 
             // URLS //
-            ctx.fillText(this._CopyJson.twyman.url, x1, thirdY + (42 * units));
-            ctx.fillText(this._CopyJson.phillips.url, x2, thirdY + (42 * units));
-            ctx.fillText(this._CopyJson.silverton.url, x3, thirdY + (42 * units));
+            ctx.fillText(this._CopyJson.twyman.url, x1, thirdY + (42 * units) + tab);
+            ctx.fillText(this._CopyJson.phillips.url, x2, thirdY + (42 * units) + tab);
+            ctx.fillText(this._CopyJson.silverton.url, x3, thirdY + (42 * units) + tab);
 
             // TWITTERS //
-            ctx.fillText(this._CopyJson.twyman.twitter, x1, thirdY + (56 * units));
-            ctx.fillText(this._CopyJson.phillips.twitter, x2, thirdY + (56 * units));
-            ctx.fillText(this._CopyJson.silverton.twitter, x3, thirdY + (56 * units));
+            ctx.fillText(this._CopyJson.twyman.twitter, x1, thirdY + (56 * units) + tab);
+            ctx.fillText(this._CopyJson.phillips.twitter, x2, thirdY + (56 * units) + tab);
+            ctx.fillText(this._CopyJson.silverton.twitter, x3, thirdY + (56 * units) + tab);
 
-            //ctx.fillText(this._CopyJson.build, dx - halfWidth, centerY + (180 * units));
-            ctx.textAlign = "right";
-            ctx.fillText(this._CopyJson.build, this.Sketch.Width - (20*units), this.OffsetY + this.Sketch.Height - (20 * units));
+
 
 
             // BLOCKS //
-            var blockY = thirdY - grid - (10*units);
-            /*ctx.lineWidth = 1;
-            ctx.strokeStyle = App.Palette[15];// White
-
-            // Horizontal //
-            ctx.beginPath();
-            ctx.moveTo(x1 + grid,blockY - (grid));
-            ctx.lineTo(x3 + grid,blockY - (grid));
-            ctx.stroke();*/
-
+            var blockY = thirdY - grid - (10*units) + tab;
 
             ctx.fillStyle = App.Palette[4];// red
             ctx.beginPath();
@@ -327,6 +332,13 @@ class SettingsPanel extends DisplayObject{
             ctx.fill();
 
 
+            // END TAB 3 //
+            ctx.restore();
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            ctx.font = italicType2;
+            ctx.textAlign = "right";
+            ctx.fillText(this._CopyJson.build, this.Sketch.Width - (20*units), this.OffsetY + this.Sketch.Height - (20 * units));
+
 
             // DIVIDERS //
             ctx.lineWidth = 2;
@@ -347,10 +359,6 @@ class SettingsPanel extends DisplayObject{
                 }
             }
 
-            /*ctx.moveTo(Math.round(dx - halfWidth + thirdWidth + (gutter*0.5)), thirdY - (14*units));
-            ctx.lineTo(Math.round(dx - halfWidth + thirdWidth + (gutter*0.5)), thirdY + (60*units));
-            ctx.moveTo(Math.round(dx - halfWidth + (thirdWidth*2) + (gutter*1.5)), thirdY - (14*units));
-            ctx.lineTo(Math.round(dx - halfWidth + (thirdWidth*2) + (gutter*1.5)), thirdY + (60*units));*/
 
             ctx.stroke();
 
@@ -441,6 +449,7 @@ class SettingsPanel extends DisplayObject{
         this.Open = true;
         this.OffsetY = -this.Sketch.Height;
         this.DelayTo(this,0,500,0,"OffsetY");
+        this.MenuItems[this._OpenTab].YOffset = 0;
     }
 
     ClosePanel() {
@@ -460,17 +469,20 @@ class SettingsPanel extends DisplayObject{
                 TWEEN.removeAll(); // TODO - swap for local tween pool
                 var cat = this.MenuItems[i];
 
-                if (i==0) {
-                    App.LoadColorTheme(1,false);
+                /*if (i==0) {
+                    App.Color.LoadTheme(App.Color.CurrentTheme - 1,false);
                 }
                 if (i==1) {
-                    App.LoadColorTheme(0,false);
-                }
-                if (i==2) {
-                    App.LoadColorTheme(2,false);
-                }
+                    App.Color.LoadTheme(App.Color.CurrentTheme + 1,false);
+                }*/
 
                 this.DelayTo(cat,1,400,0,"Selected");
+                this.DelayTo(cat,0,400,400,"YOffset");
+
+
+
+
+
                 this._OpenTab = i; // I'M THE SELECTED CATEGORY
 
                 // RESET NON-SELECTED CATEGORIES //
@@ -478,6 +490,7 @@ class SettingsPanel extends DisplayObject{
                     if (j!==i) {
                         var cat = this.MenuItems[j];
                         this.DelayTo(cat,0,250,0,"Selected");
+                        this.DelayTo(cat,-this.Sketch.Height,250,0,"YOffset");
                     }
                 }
                 return;
@@ -507,8 +520,7 @@ class SettingsPanel extends DisplayObject{
     HitTests(point) {
         var units = App.Unit;
         var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
-        var tabY = centerY - (180*units);
-        tabY = this.OffsetY;
+        var tabY = this.OffsetY;
         var pageY = tabY + (120*units);
         var closeY = tabY + (30*units);
         var dx = (this.Sketch.Width*0.5);
@@ -525,8 +537,8 @@ class SettingsPanel extends DisplayObject{
         this._RollOvers[0] = this.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
 
         for (var i=1; i<4; i++) {
-            this._RollOvers[i] = this.HitRect(xs[i-1], thirdY + (30*units),thirdWidth,20*units, point.x, point.y); // url
-            this._RollOvers[i+3] = this.HitRect(xs[i-1], thirdY + (50*units),thirdWidth,20*units, point.x, point.y); // twitter
+            this._RollOvers[i] = this.HitRect(xs[i-1], thirdY + (30*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
+            this._RollOvers[i+3] = this.HitRect(xs[i-1], thirdY + (50*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
         }
 
 

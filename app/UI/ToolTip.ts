@@ -55,7 +55,7 @@ class ToolTip extends DisplayObject {
 
         // NAME //
         ctx.globalAlpha = thisAlpha;
-        ctx.fillStyle = App.Palette[8]; // WHITE
+        ctx.fillStyle = App.Palette[App.Color.Txt]; // WHITE
         ctx.textAlign = "left";
         ctx.fillText(this.Name.toUpperCase(), x + (30*units), y + (10*units) + (dataType*0.36));
     }

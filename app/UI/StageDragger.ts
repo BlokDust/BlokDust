@@ -28,7 +28,7 @@ class StageDragger  extends DisplayObject {
             var units = App.Unit;
             var ctx = App.MainScene.Ctx;
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(cx - (5*units),cy);

@@ -81,8 +81,7 @@ class App implements IApp{
     public ResourceManager: ResourceManager;
     private _SessionId: string;
     private _FontsLoaded: number;
-    private _PaletteLoaded: boolean;
-    public ColorThemes: ColorThemes;
+    public Color: ColorThemes;
     public Splash: Splash;
     public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
@@ -184,8 +183,8 @@ class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // LOAD PALETTE //
-        this.ColorThemes = new ColorThemes();
-        this.LoadColorTheme(0,true);
+        this.Color = new ColorThemes();
+        this.Color.LoadTheme(0,true);
 
         // SOUNDCLOUD INIT //
         // todo: create server-side session
@@ -222,7 +221,7 @@ class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady() {
-        if (this._FontsLoaded === 3 && this._PaletteLoaded) {
+        if (this._FontsLoaded === 3 && this.Color.Loaded) {
             this.LoadComposition();
             this.Scene = 1;
             this.Splash.StartTween();
@@ -232,7 +231,6 @@ class App implements IApp{
 
     // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
-        console.log("loading..");
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
@@ -310,8 +308,8 @@ class App implements IApp{
         });
     }
 
-    LoadColorTheme(theme,firstLoad) {
-        var pixelPalette = new PixelPalette(this.ColorThemes.Themes[theme].PaletteURL);
+    /*LoadColorTheme(theme,firstLoad) {
+        var pixelPalette = new PixelPalette(this.Color.Themes[theme].PaletteURL);
         pixelPalette.Load((palette: string[]) => {
             this.Palette = palette;
             this._PaletteLoaded = true;
@@ -319,7 +317,7 @@ class App implements IApp{
                 this.LoadReady();
             }
         });
-    }
+    }*/
 
     OnTicked (lastTime: number, nowTime: number) {
         this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);

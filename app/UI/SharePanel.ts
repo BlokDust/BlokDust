@@ -153,7 +153,7 @@ class SharePanel extends DisplayObject{
                 }
                 ctx.font = urlType;
                 ctx.textAlign = "center";
-                ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
                 ctx.fillText(this._CopyJson.genUrl.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (9 * units));
                 ctx.font = italicType;
                 ctx.textAlign = "left";
@@ -191,7 +191,7 @@ class SharePanel extends DisplayObject{
                 }
                 ctx.font = urlType;
                 ctx.textAlign = "center";
-                ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
                 ctx.fillText(this._CopyJson.save.toUpperCase(), this.OffsetX + (appWidth * 0.5) - (108.75 * units), centerY + (9 * units));
                 ctx.fillText(this._CopyJson.saveAs.toUpperCase(), this.OffsetX + (appWidth * 0.5) + (108.75 * units), centerY + (9 * units));
                 ctx.font = italicType;
@@ -200,7 +200,7 @@ class SharePanel extends DisplayObject{
 
                 // SKIP //
                 ctx.lineWidth = 2;
-                ctx.strokeStyle = App.Palette[8]; // White
+                ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
                 ctx.beginPath();
                 ctx.moveTo( this.OffsetX + (appWidth*0.5) + (275 * units), centerY - (20*units));
                 ctx.lineTo( this.OffsetX + (appWidth*0.5) + (295 * units), centerY);
@@ -221,7 +221,7 @@ class SharePanel extends DisplayObject{
 
             // BACK ARROW //
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.beginPath();
             ctx.moveTo(shareX + (appWidth*0.5) - (275 * units), centerY - (20*units));
             ctx.lineTo(shareX + (appWidth*0.5) - (295 * units), centerY);
@@ -262,7 +262,7 @@ class SharePanel extends DisplayObject{
             }
 
             // SHARE COPY //
-            ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+            ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
             ctx.textAlign = "left";
             ctx.font = midType;
             ctx.font = italicType;

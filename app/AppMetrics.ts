@@ -181,8 +181,8 @@ class Metrics {
     }
 
     public PointOnGrid(point: Point): Point {
-        var x = (this.C.x + App.ScaledDragOffset.x) + (point.x * App.ScaledGridSize);
-        var y = (this.C.y + App.ScaledDragOffset.y) + (point.y * App.ScaledGridSize);
+        var x = ((this.C.x + App.ScaledDragOffset.x) + (point.x * App.ScaledGridSize));
+        var y = ((this.C.y + App.ScaledDragOffset.y) + (point.y * App.ScaledGridSize));
         return new Point(x,y);
     }
 

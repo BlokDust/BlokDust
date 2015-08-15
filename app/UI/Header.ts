@@ -148,7 +148,7 @@ class Header extends DisplayObject{
 
         // TT //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = App.Palette[8];// Grey
+        ctx.fillStyle = App.Palette[App.Color.Txt];// Grey
         ctx.textAlign = "left";
 
         if (App.Metrics.Device!=="mobile") {
@@ -258,7 +258,7 @@ class Header extends DisplayObject{
 
 
             // PAGINATION //
-            ctx.strokeStyle = "#393d43"; // White
+            ctx.strokeStyle = App.Palette[1]; // White
             ctx.lineWidth = 2;
 
             // CLIPPING RECTANGLE //
@@ -271,9 +271,9 @@ class Header extends DisplayObject{
             ctx.closePath();
             ctx.clip();
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             if (cat.CurrentPage == 0) {
-                ctx.strokeStyle = "#393d43"; // Grey
+                ctx.strokeStyle = App.Palette[1]; // Grey
             }
 
             // LEFT ARROW //
@@ -283,9 +283,9 @@ class Header extends DisplayObject{
             ctx.lineTo((margin * units) - (20 * units), (this.Height + (this.DropDown * 0.5) + 20) * units);
             ctx.stroke();
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             if (cat.CurrentPage == cat.Pages) {
-                ctx.strokeStyle = "#393d43"; // Grey
+                ctx.strokeStyle = App.Palette[1]; // Grey
             }
 
             // RIGHT ARROW //
@@ -302,7 +302,7 @@ class Header extends DisplayObject{
         // SETTINGS BTN //
         ctx.globalAlpha = 1;
         margin = this.DropDownHeight*0.5;
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
