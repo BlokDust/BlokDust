@@ -84,7 +84,7 @@ class Parametric extends Option{
         var bodyType = units*5;
         ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
         ctx.font = "400 " + bodyType + "px PT Sans"; //TODO: convert to newer font system
-        ctx.fillStyle = App.Palette[8];
+        ctx.fillStyle = App.Palette[App.Color.Txt];
         //ctx.fillStyle = "#393d43";
 
         for (var j=0; j<markers.length; j++) {
@@ -133,7 +133,7 @@ class Parametric extends Option{
         ctx.lineTo(panel.Margin + panel.Range, y + (height*0.8));
         ctx.closePath();
         ctx.clip();
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];
         panel.diagonalFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 9);
         ctx.restore();
 
@@ -141,7 +141,7 @@ class Parametric extends Option{
         // LINE //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = App.Palette[8];
+        ctx.strokeStyle = App.Palette[App.Color.Txt];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, ly - (this.LineGain[0]));
         for (var j=0; j<this.Smoothness; j++) {

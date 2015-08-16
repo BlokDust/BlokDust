@@ -97,7 +97,7 @@ class AnimationsLayer extends DisplayObject {
             grd = 0;
         }
         ctx.globalAlpha = 1;
-        ctx.fillStyle = App.Palette[8];
+        ctx.fillStyle = App.Palette[App.Color.Txt];
         switch (index) {
 
             case "loading":

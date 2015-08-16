@@ -89,7 +89,7 @@ class SoundcloudPanel extends DisplayObject{
 
 
             // RESULTS //
-            ctx.fillStyle = App.Palette[8]; // White
+            ctx.fillStyle = App.Palette[App.Color.Txt]; // White
             ctx.strokeStyle = App.Palette[1]; // Grey
             ctx.lineWidth = 2;
             var block = this._SelectedBlock;
@@ -145,7 +145,7 @@ class SoundcloudPanel extends DisplayObject{
                     }
 
                     // text //
-                    ctx.fillStyle = App.Palette[8]; // White
+                    ctx.fillStyle = App.Palette[App.Color.Txt]; // White
                     var track = block.SearchResults[i];
                     var title = track.Title;
                     var user = track.User;
@@ -154,7 +154,7 @@ class SoundcloudPanel extends DisplayObject{
 
 
                     // arrow //
-                    ctx.strokeStyle = App.Palette[8];
+                    ctx.strokeStyle = App.Palette[App.Color.Txt];
                     ctx.beginPath();
                     ctx.moveTo(x + margin + pageW - (25 * units), y - (10.5*units));
                     ctx.lineTo(x + margin + pageW - (20 * units), y - (5.5*units));
@@ -205,7 +205,7 @@ class SoundcloudPanel extends DisplayObject{
             // BACK ARROW //
             ctx.strokeStyle = App.Palette[1]; // Grey
             if (this._Page>1) {
-                ctx.strokeStyle = App.Palette[8]; // White
+                ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             }
             ctx.beginPath();
             ctx.moveTo((appWidth*0.5) - (275 * units), centerY - (20*units));
@@ -217,7 +217,7 @@ class SoundcloudPanel extends DisplayObject{
             // FORWARD ARROW //
             ctx.strokeStyle = App.Palette[1]; // Grey
             if (this._Page < Math.ceil(results/itemNo)) {
-                ctx.strokeStyle = App.Palette[8]; // White
+                ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             }
             ctx.beginPath();
             ctx.moveTo((appWidth*0.5) + (275 * units), centerY - (20*units));
@@ -227,7 +227,7 @@ class SoundcloudPanel extends DisplayObject{
 
 
             // TITLE //
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.beginPath();
             ctx.moveTo(margin, centerY - (110*units));
             ctx.lineTo(margin + pageW, centerY - (110*units));

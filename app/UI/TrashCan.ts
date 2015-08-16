@@ -24,6 +24,8 @@ class TrashCan extends DisplayObject {
             s = 1.2;
         }
 
+        ctx.strokeStyle = App.Palette[App.Color.Txt];// Grey
+
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(tx - ((11*s)*units), ty - ((11*s)*units)); // tl

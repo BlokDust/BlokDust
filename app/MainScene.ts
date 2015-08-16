@@ -338,7 +338,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
     // FIRST TOUCHES //
     MouseDown(e: MouseEvent){
-        //var point = (<any>e).args.Source.MousePosition;
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerDown(position);
@@ -360,7 +359,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
         //var pos: Fayde.Input.TouchPoint = e.GetTouchPoint(null);
         var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
         var point = new Point(touch.clientX, touch.clientY);
-
         this._PointerDown(point);
     }
 
@@ -378,9 +376,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
         this._PointerMove(point);
     }
 
-
-
-
     // AGNOSTIC EVENTS //
 
     private _PointerDown(point: Point) {
@@ -388,7 +383,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
         this._IsPointerDown = true;
         this._PointerPoint = point;
-
 
         var UI: Boolean;
         var collision: Boolean;
@@ -414,6 +408,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
             message.MouseDown(point);
             return;
         }
+
         if (share.Open) {
             share.MouseDown(point);
             return;
@@ -480,7 +475,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
             // BLOCK //
             if (this.SelectedBlock){
                 if (this.SelectedBlock.IsPressed){
-
                     this.SelectedBlock.MouseUp();
 
                     // if the block has moved, create an undoable operation.

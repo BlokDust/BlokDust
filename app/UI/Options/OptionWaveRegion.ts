@@ -44,14 +44,14 @@ class WaveRegion extends WaveForm{
         var xs = [this.Handles[0].Position.x,this.Handles[1].Position.x,this.Handles[2].Position.x,this.Handles[3].Position.x];
         var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
 
-        //TODO move common stuff to OptionWave (also tidy this mess)
+
         if (this.Waveform.length) {
 
             // LINES //
             ctx.lineWidth = 1;
             ctx.globalAlpha = 1;
             ctx.globalAlpha = 1;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
 
             var x = xs[2];
             var sliderNo = 2;
@@ -111,7 +111,7 @@ class WaveRegion extends WaveForm{
 
             if (this.Mode) {
                 for (var j=2; j<4; j++) {
-                    ctx.fillStyle = App.Palette[8];// WHITE
+                    ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
 
                     x = xs[j];
 
@@ -130,7 +130,7 @@ class WaveRegion extends WaveForm{
 
 
 
-            ctx.fillStyle = App.Palette[8];// WHITE
+            ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
             ctx.font = App.Metrics.TxtItalic;
 
             ctx.textAlign = "left";

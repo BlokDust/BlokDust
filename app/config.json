@@ -2,8 +2,15 @@
     "MaxOperations": "5",
     "PixelPaletteImagePath": [
         "img/palette6.gif",
-        "img/palette2.gif",
-        "img/palette8.gif"
+        "img/palette9.gif",
+        "img/palette10.gif",
+        "img/palette14.gif",
+        "img/palette18.gif",
+        "img/palette25.gif",
+        "img/palette27.gif",
+        "img/palette24.gif",
+        "img/palette28.gif",
+        "img/palette19.gif"
     ],
     "SoundCloudClientId": "7258ff07f16ddd167b55b8f9b9a3ed33",
     "SoundCloudDefaultTracks": [

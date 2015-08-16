@@ -1,6 +1,6 @@
 {
   "name": "BlokDust",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "dependencies": {
     "bower-webfontloader": "~1.5.16",
     "exjs": "~0.2.10",
@@ -10,7 +10,7 @@
     "intersection": "BlokDust/intersection",
     "jquery": "~2.1.3",
     "lzma": "nmrugg/LZMA-JS",
-    "pixelpalette": "edsilv/pixelpalette#~0.1.9",
+    "pixelpalette": "whitevinyl/pixelpalette#blokdust",
     "RecorderJS": "lukephills/Recorderjs#~1.0.3",
     "tone": "lukephills/Tone.js#dev",
     "tween.ts": "edsilv/tween.ts#~0.1.2",
