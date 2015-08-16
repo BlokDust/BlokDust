@@ -1,3 +1,6 @@
+import EffectsChainManager = require("./EffectsChainManager");
+import AudioNodeConnectionManager = require("./AudioNodeConnectionManager");
+
 class Audio {
 
     public Tone: Tone;
@@ -6,6 +9,8 @@ class Audio {
     public Master: Tone.Master;
     public MasterVolume: number = -10; // in decibels
     public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    public EffectsChainManager: EffectsChainManager;
+    public AudioNodeConnectionManager: AudioNodeConnectionManager;
 
     constructor() {
 
@@ -22,6 +27,12 @@ class Audio {
 
         // Master Gain Level
         this.Master.volume.value = this.MasterVolume;
+
+        //AudioNode Connection Manager
+        this.AudioNodeConnectionManager = new AudioNodeConnectionManager();
+
+        //Effects chain manager
+        this.EffectsChainManager = new EffectsChainManager();
 
     }
 

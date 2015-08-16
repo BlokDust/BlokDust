@@ -199,7 +199,7 @@ class PitchShifter {
         return buffer;
     }
 
-    connect(unit, outputNum, inputNum) {
+    connect(unit, outputNum?, inputNum?) {
         if (Array.isArray(this.output)){
             outputNum = outputNum ? outputNum : 0;
             this.output[outputNum].connect(unit, 0, inputNum);
@@ -209,13 +209,18 @@ class PitchShifter {
         return this;
     }
 
-    disconnect(outputNum) {
+    disconnect(outputNum?) {
         if (Array.isArray(this.output)){
             outputNum = outputNum ? outputNum : 0;
             this.output[outputNum].disconnect();
         } else {
             this.output.disconnect();
         }
+        return this;
+    }
+
+    toMaster(){
+        this.connect(App.Audio.Master);
         return this;
     }
 }

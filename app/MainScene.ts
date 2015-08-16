@@ -579,7 +579,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                             // Add effect to source
                             source.AddEffect(effect);
 
-
+                            this._Invalidate();
                         }
 
 
@@ -594,6 +594,8 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
                         // Remove effect from source
                         source.RemoveEffect(effect);
+
+                        this._Invalidate();
                     }
                 }
             }
@@ -744,6 +746,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
     private _Invalidate(){
         this._ValidateBlocks();
         this._CheckProximity();
+        App.Audio.EffectsChainManager.Update();
     }
 
     _ValidateBlocks() {
