@@ -7,6 +7,7 @@ import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
 import MainScene = require("./../MainScene");
 import MenuCategory = require("./MenuCategory");
+import ThemeSelector = require("./ColorThemeSelector");
 
 class SettingsPanel extends DisplayObject{
 
@@ -21,13 +22,13 @@ class SettingsPanel extends DisplayObject{
     public Height: number;
     private _OpenTab: number;
     private _VersionNumber: string;
+    private _ThemeSelector: ThemeSelector;
 
     Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Open = false;
         this.OffsetY = -this.Sketch.Height;
-        //this.TabOffset = [-this.Sketch.Height, -this.Sketch.Height, -this.Sketch.Height];
 
         this._RollOvers = [];
         this.Height = 60;
@@ -35,6 +36,9 @@ class SettingsPanel extends DisplayObject{
         this._MenuCols = [9,5,7,4,3];
         this._OpenTab = 2;
         this._VersionNumber = Version.Version;
+
+        // OPTIONS //
+        this._ThemeSelector = new ThemeSelector;
 
 
         this._CopyJson = {
@@ -197,14 +201,15 @@ class SettingsPanel extends DisplayObject{
             // TAB 2 //
             var tab = this.MenuItems[1].YOffset;
 
-            this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
-
+            this._ThemeSelector.Draw(ctx, dx - halfWidth, pageY + tab, menuWidth, 60*units, units);
 
 
             // TAB 3 //
             var tab = this.MenuItems[2].YOffset;
 
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.font = largeType;
+            ctx.textAlign = "left";
             this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
 
 
@@ -432,8 +437,6 @@ class SettingsPanel extends DisplayObject{
                     panel.Open = false;
                 }
             }
-            console.log("SETTINGS");
-            console.log(panel.Open);
         });
         offsetTween.easing(TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
@@ -469,19 +472,8 @@ class SettingsPanel extends DisplayObject{
                 TWEEN.removeAll(); // TODO - swap for local tween pool
                 var cat = this.MenuItems[i];
 
-                /*if (i==0) {
-                    App.Color.LoadTheme(App.Color.CurrentTheme - 1,false);
-                }
-                if (i==1) {
-                    App.Color.LoadTheme(App.Color.CurrentTheme + 1,false);
-                }*/
-
                 this.DelayTo(cat,1,400,0,"Selected");
                 this.DelayTo(cat,0,400,400,"YOffset");
-
-
-
-
 
                 this._OpenTab = i; // I'M THE SELECTED CATEGORY
 
@@ -498,6 +490,24 @@ class SettingsPanel extends DisplayObject{
         }
 
 
+        // OPTIONS //
+        if (this._ThemeSelector.HandleRoll[0]) {
+            App.Color.CurrentThemeNo -= 1;
+            if (App.Color.CurrentThemeNo < 0) {
+                App.Color.CurrentThemeNo = App.Color.Themes.length-1;
+            }
+            App.Color.LoadTheme(App.Color.CurrentThemeNo,false);
+        }
+        if (this._ThemeSelector.HandleRoll[1]) {
+            App.Color.CurrentThemeNo += 1;
+            if (App.Color.CurrentThemeNo > (App.Color.Themes.length-1)) {
+                App.Color.CurrentThemeNo = 0;
+            }
+            App.Color.LoadTheme(App.Color.CurrentThemeNo,false);
+        }
+
+
+
         // EXTERNAL URLS //
         var urls = [this._CopyJson.twyman.url,this._CopyJson.phillips.url,this._CopyJson.silverton.url,this._CopyJson.twyman.twitter,this._CopyJson.phillips.twitter,this._CopyJson.silverton.twitter];
         for (var i=1; i<7; i++) {
@@ -507,10 +517,8 @@ class SettingsPanel extends DisplayObject{
                } else {
                    window.open("http://"+urls[i-1],"_blank");
                }
-
            }
         }
-
     }
 
     MouseMove(point) {
@@ -547,6 +555,11 @@ class SettingsPanel extends DisplayObject{
             var cat = this.MenuItems[i];
             cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
         }
+
+        // OPTIONS HIT TESTS //
+        var selector = this._ThemeSelector;
+        selector.HandleRoll[0] = this.HitRect(dx - halfWidth - (10*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
+        selector.HandleRoll[1] = this.HitRect(dx + halfWidth - (30*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
     }
 
     MouseUp(point) {

@@ -3,20 +3,29 @@
  */
 
 import ColorTheme = require("./ColorTheme");
+import DisplayObject = require("../DisplayObject");
 
-class ColorThemes {
+class ColorThemes extends DisplayObject {
 
     public Themes: ColorTheme[];
     public Loaded: boolean;
-    public CurrentTheme: number;
+    public CurrentTheme: ColorTheme;
+    public CurrentThemeNo: number;
     private _Defaults: any;
     private _Value: any;
+    public NewPalette: any[];
 
     // set color references
     // drawing might use: ctx.fillStyle = App.Palette[App.Color.Txt];
     public Txt: number;
 
-    constructor() {
+    //-------------------------------------------------------------------------------------------
+    //  SETUP
+    //-------------------------------------------------------------------------------------------
+
+
+    Init(sketch?: any): void {
+        super.Init(sketch);
 
         this.Loaded = false;
 
@@ -87,31 +96,67 @@ class ColorThemes {
             txt: this._Defaults.txt
         };
 
+        this.Txt = 16;
+
     }
+
+    //-------------------------------------------------------------------------------------------
+    //  LOAD
+    //-------------------------------------------------------------------------------------------
+
 
     LoadTheme(theme,firstLoad) {
 
-        this.CurrentTheme = theme;
+        this.CurrentThemeNo = theme;
+        this.CurrentTheme = this.Themes[theme];
         var selectedtheme = this.Themes[theme];
         this._Value.txt = selectedtheme.Options.txt || this._Defaults.txt;
 
 
         this.Loaded = false;
         var pixelPalette = new PixelPalette(selectedtheme.PaletteURL);
-        pixelPalette.Load((palette: string[]) => {
+        pixelPalette.Load((palette: any[]) => {
 
-            App.Palette = palette;
-            this.Txt = this._Value.txt;
+            this.Txt = palette.length;
+            palette.push(palette[this._Value.txt].clone());
+            this.NewPalette = palette;
 
-
+            var shareUrl = document.getElementById("shareUrl");
+            shareUrl.style.color = this.NewPalette[this.Txt];
 
             this.Loaded = true;
             if (firstLoad) {
+                App.Palette = palette;
                 App.LoadReady();
             } else {
-                App.Message(selectedtheme.Name);
+                for (var i=0; i<palette.length; i++) {
+                    this.ColorTo(App.Palette[i],this.NewPalette[i],700);
+                }
             }
         });
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  TWEEN
+    //-------------------------------------------------------------------------------------------
+
+
+    ColorTo(color,destination,t){
+
+        var offsetTween = new TWEEN.Tween({r: color.R, g: color.G, b: color.B, a: color.A});
+        offsetTween.to({r: destination.R, g: destination.G, b: destination.B, a: destination.A}, t);
+        offsetTween.onUpdate(function () {
+            color.R = Math.round(this.r);
+            color.G = Math.round(this.g);
+            color.B = Math.round(this.b);
+            color.A = Math.round(this.a);
+            color.toString = () => {
+                return 'rgba(' + color.R + ',' + color.G + ',' + color.B + ',' + color.A + ')';
+            }
+        });
+        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.start(this.LastVisualTick);
+
     }
 
 }
