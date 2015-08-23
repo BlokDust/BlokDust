@@ -138,7 +138,6 @@ class MenuItem {
     MouseDown(point) {
         this.MouseIsDown = true;
         this.MousePoint = new Point(point.x,point.y);
-        console.log("touchDown");
     }
 
     MouseMove(point,header,cutoff) {

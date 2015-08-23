@@ -380,7 +380,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
     // AGNOSTIC EVENTS //
 
     private _PointerDown(point: Point) {
-        App.TranslateMousePointToPixelRatioPoint(point);
+        App.Metrics.ConvertToPixelRatioPoint(point);
 
         this._IsPointerDown = true;
         this._PointerPoint = point;
@@ -463,7 +463,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
 
     private _PointerUp(point: Point) {
-        App.TranslateMousePointToPixelRatioPoint(point);
+        App.Metrics.ConvertToPixelRatioPoint(point);
         this._IsPointerDown = false;
 
         if (this.IsDraggingABlock) {
@@ -512,7 +512,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
 
     private _PointerMove(point: Point){
-        App.TranslateMousePointToPixelRatioPoint(point);
+        App.Metrics.ConvertToPixelRatioPoint(point);
         App.Canvas.style.cursor="default";
 
         this._CheckHover(point);

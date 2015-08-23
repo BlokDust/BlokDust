@@ -35,6 +35,14 @@
 
     ga('create', 'UA-47890586-3', 'auto');
     ga('send', 'pageview');
+
+    function trackEvent(category, action, label) {
+        _gaq.push(['_trackEvent', category, action, label]);
+    }
+
+    function trackVariable(slot, name, value, scope) {
+        _gaq.push(['_setCustomVar', Number(slot), name, value, Number(scope)]);
+    }
 </script>
 
 </body>

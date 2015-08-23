@@ -364,6 +364,18 @@ class App implements IApp{
         return this._Canvas.getContext("2d");
     }
 
+    TrackEvent(category: string, action: string, label: string, value?: number): void{
+        if (isNaN(value)){
+            window.trackEvent(category, action, label);
+        } else {
+            window.trackEvent(category, action, label, value);
+        }
+    }
+
+    TrackVariable(slot: number, name: string, value: string, scope: number): void{
+        window.trackVariable(slot, name, value, scope);
+    }
+
     Resize(): void {
 
         this.Metrics.Metrics();
@@ -371,12 +383,6 @@ class App implements IApp{
             this.MainScene.SketchResize();
         }
 
-    }
-
-    //todo move to Metrics, is a metrics conversion
-    TranslateMousePointToPixelRatioPoint(point: Point){
-        point.x *= this.Metrics.PixelRatio;
-        point.y *= this.Metrics.PixelRatio;
     }
 
 }

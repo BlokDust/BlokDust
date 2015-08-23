@@ -228,6 +228,11 @@ class Metrics {
     public ConvertGridUnitsToAbsolute(point: Point): Point {
         return new Point(App.GridSize * point.x, App.GridSize * point.y);
     }
+
+    public ConvertToPixelRatioPoint(point: Point){
+        point.x *= this.PixelRatio;
+        point.y *= this.PixelRatio;
+    }
 }
 
 export = Metrics;
