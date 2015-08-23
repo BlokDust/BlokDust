@@ -681,7 +681,7 @@ class SharePanel extends DisplayObject{
         shareUrl.style.width = "" + (units*(400/pr)) + "px";
         shareUrl.style.height = "" + (units*(40/pr)) + "px";
         shareUrl.style.lineHeight = "" + (units*(40/pr)) + "px";
-        shareUrl.style.color = App.Palette[8];
+        shareUrl.style.color = App.Palette[App.Color.Txt];
         shareUrl.style.display = "block";
 
         if (!this.Open) {

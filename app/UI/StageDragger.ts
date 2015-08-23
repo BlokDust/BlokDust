@@ -9,17 +9,32 @@ class StageDragger  extends DisplayObject {
     private _OffsetStart: Point;
     private _Dragging: boolean = false;
     public Tweens: any[];
+    public Destination: Point;
 
     Init(sketch?: any): void {
         super.Init(sketch);
 
         this.Tweens = [];
+        this.Destination = new Point(App.DragOffset.x,App.DragOffset.y);
     }
 
     //-------------------------------------------------------------------------------------------
-    //  DRAW
+    //  LOOPS
     //-------------------------------------------------------------------------------------------
 
+
+    Update() {
+
+        if ( Math.round(App.DragOffset.x)!==Math.round(this.Destination.x) || Math.round(App.DragOffset.y)!==Math.round(this.Destination.y) ) {
+            var speed = App.Config.ScrollEasing;
+            App.DragOffset.x += (((this.Destination.x - App.DragOffset.x)/100) * speed);
+            App.DragOffset.y += (((this.Destination.y - App.DragOffset.y)/100) * speed);
+
+            App.Metrics.UpdateGridScale();
+            console.log(App.DragOffset.x);
+        }
+
+    }
 
     Draw() {
         if (this._Dragging && ((App.DragOffset.x!==this._OffsetStart.x) || (App.DragOffset.y!==this._OffsetStart.y))) {
@@ -46,11 +61,14 @@ class StageDragger  extends DisplayObject {
 
     DelayTo(panel,destination,t,delay,v){
 
+        var me = this;
         var offsetTween = new TWEEN.Tween({x: panel[""+v].x, y: panel[""+v].y});
         offsetTween.to({x: destination.x, y: destination.y}, t);
         offsetTween.onUpdate(function () {
             panel[""+v].x = this.x;
             panel[""+v].y = this.y;
+            me.Destination.x = this.x;
+            me.Destination.y = this.y;
             panel.Metrics.UpdateGridScale();
         });
         offsetTween.easing(TWEEN.Easing.Exponential.InOut);
@@ -68,7 +86,6 @@ class StageDragger  extends DisplayObject {
             this.Tweens = [];
         }
     }
-
 
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
@@ -93,18 +110,26 @@ class StageDragger  extends DisplayObject {
 
     Drag(point: Point) {
         var speed = App.Config.ScrollSpeed;
-        App.DragOffset.x = this._OffsetStart.x + (((point.x - this._DragStart.x)*(speed/App.ZoomLevel)));
+        /*App.DragOffset.x = this._OffsetStart.x + (((point.x - this._DragStart.x)*(speed/App.ZoomLevel)));
         App.DragOffset.y = this._OffsetStart.y + (((point.y - this._DragStart.y)*(speed/App.ZoomLevel)));
-        App.Metrics.UpdateGridScale();
+        App.Metrics.UpdateGridScale();*/
+
+        //this.StopAllTweens();
+        this.Destination.x = this._OffsetStart.x + (((point.x - this._DragStart.x)*(speed/App.ZoomLevel)));
+        this.Destination.y = this._OffsetStart.y + (((point.y - this._DragStart.y)*(speed/App.ZoomLevel)));
+
     }
 
     Jump(point: Point, to: Point) {
         this.StopAllTweens();
         var x = (-point.x * App.GridSize) + ((to.x - App.Metrics.C.x)/App.ZoomLevel);
         var y = (-point.y * App.GridSize) + ((to.y - App.Metrics.C.y)/App.ZoomLevel);
-        this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
+        //this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
+        this.Destination = new Point(x,y);
         App.MainScene.ToolTipClose();
     }
+
+
 
 }
 

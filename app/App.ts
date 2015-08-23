@@ -16,7 +16,6 @@ import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
-import Fonts = require("./UI/Fonts");
 import ColorThemes = require("./UI/ColorThemes");
 import AnimationsLayer = require("./UI/AnimationsLayer");
 import Serializer = require("./Serializer");
@@ -183,7 +182,8 @@ class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // LOAD PALETTE //
-        this.Color = new ColorThemes();
+        this.Color = new ColorThemes;
+        this.Color.Init(this);
         this.Color.LoadTheme(0,true);
 
         // SOUNDCLOUD INIT //
@@ -308,16 +308,7 @@ class App implements IApp{
         });
     }
 
-    /*LoadColorTheme(theme,firstLoad) {
-        var pixelPalette = new PixelPalette(this.Color.Themes[theme].PaletteURL);
-        pixelPalette.Load((palette: string[]) => {
-            this.Palette = palette;
-            this._PaletteLoaded = true;
-            if (firstLoad) {
-                this.LoadReady();
-            }
-        });
-    }*/
+
 
     OnTicked (lastTime: number, nowTime: number) {
         this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
@@ -353,9 +344,6 @@ class App implements IApp{
         });
     }
 
-    //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-    //    this.MainScene.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
-    //}
 
     Message(message?: string, options?: any) {
         this.MainScene.MessagePanel.NewMessage(message, options);
@@ -385,6 +373,7 @@ class App implements IApp{
 
     }
 
+    //todo move to Metrics, is a metrics conversion
     TranslateMousePointToPixelRatioPoint(point: Point){
         point.x *= this.Metrics.PixelRatio;
         point.y *= this.Metrics.PixelRatio;
