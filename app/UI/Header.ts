@@ -402,6 +402,7 @@ class Header extends DisplayObject{
         for (var i=0; i<this.MenuItems.length; i++) {
             if (this.MenuItems[i].Hover && !(this._SelectedCategory==i && this.DropDown>0)) {
                 this.StopAllTweens();
+                this.CloseOptions();
                 var cat = this.MenuItems[i];
 
                 //cat.CurrentPage = 0; // RESET ITEM PAGES
@@ -479,11 +480,13 @@ class Header extends DisplayObject{
 
         // SHARE //
         if (this._ShareOver) {
-            (<MainScene>this.Sketch).SharePanel.OpenPanel();
+            this.CloseOptions();
+            App.MainScene.SharePanel.OpenPanel();
         }
         // SETTINGS //
         if (this._SettingsOver) {
-            (<MainScene>this.Sketch).SettingsPanel.OpenPanel();
+            this.CloseOptions();
+            App.MainScene.SettingsPanel.OpenPanel();
         }
 
 
@@ -501,6 +504,12 @@ class Header extends DisplayObject{
         for (var i=0; i<this.MenuItems.length; i++) {
             this.DelayTo(this.MenuItems[i],0,250,0,"Selected");
             this.DelayTo(this.MenuItems[i],this.DropDownHeight,250,0,"YOffset");
+        }
+    }
+
+    CloseOptions() {
+        if (App.MainScene.OptionsPanel.Scale>0) {
+            App.MainScene.OptionsPanel.Close();
         }
     }
 

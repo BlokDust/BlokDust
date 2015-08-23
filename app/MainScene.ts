@@ -180,7 +180,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
         this.ZoomButtons.Init(this);
 
         this.MainSceneDragger = new MainSceneDragger();
-        this.MainSceneDragger .Init(this);
+        this.MainSceneDragger.Init(this);
 
         this._TrashCan = new TrashCan();
         this._TrashCan.Init(this);
@@ -231,6 +231,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
         this._LaserBeams.Update();
         this._RecorderPanel.Update();
+        this.MainSceneDragger.Update();
     }
 
     // PARTICLES //
@@ -319,7 +320,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
             var sy = pos.y;
             var size = particle.Size * unit;
 
-            this.Ctx.fillStyle = "#ff90a7";
+            this.Ctx.fillStyle = App.Palette[8];
             this.Ctx.globalAlpha = 1;
             this.Ctx.beginPath();
             this.Ctx.moveTo(sx-(size),sy); //l
@@ -523,6 +524,9 @@ class MainScene extends Fayde.Drawing.SketchContext{
             if (this.IsDraggingABlock && (Math.round(this.SelectedBlock.Position.x)!==Math.round(this._SelectedBlockPosition.x) || Math.round(this.SelectedBlock.Position.y)!==Math.round(this._SelectedBlockPosition.y) ) ) {
                 this._SelectedBlockPosition = this.SelectedBlock.Position; // new grid position
                 this._ABlockHasBeenMoved(this.SelectedBlock);
+                if (this.OptionsPanel.Scale==1) {
+                    this.OptionsPanel.Close();
+                }
             }
         }
 

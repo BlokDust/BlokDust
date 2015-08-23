@@ -56,6 +56,12 @@ class ColorThemes extends DisplayObject {
                 App.Config.PixelPaletteImagePath[3]
             )
 
+            ,new ColorTheme(
+                "CONSOLE",
+                App.Config.PixelPaletteImagePath[10]
+
+            )
+
             /*,new ColorTheme(
                 "KORAL",
                 App.Config.PixelPaletteImagePath[4]
@@ -130,7 +136,7 @@ class ColorThemes extends DisplayObject {
                 App.LoadReady();
             } else {
                 for (var i=0; i<palette.length; i++) {
-                    this.ColorTo(App.Palette[i],this.NewPalette[i],700);
+                    this.ColorTo(App.Palette[i],this.NewPalette[i],800);
                 }
             }
         });

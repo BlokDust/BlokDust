@@ -42,6 +42,7 @@ class SettingsPanel extends DisplayObject{
 
 
         this._CopyJson = {
+            title: "General",
             about: "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton. Developed in Brighton UK and released in 2015, BlokDust uses the Web Audio API and makes use of Tone.js as an audio framework. The project is open source, and we hope to see a community of contributors emerge though GitHub & SoundCloud.",
 
             twyman: {
@@ -72,7 +73,7 @@ class SettingsPanel extends DisplayObject{
                     name: "connect"
                 },
                 {
-                    name: "general"
+                    name: "settings"
                 },
                 {
                     name: "about"
@@ -95,6 +96,9 @@ class SettingsPanel extends DisplayObject{
         var gutter = 60;
         var menuCats = [];
 
+        if (App.Metrics.Device!=="desktop") {
+            gutter = 40;
+        }
 
 
         // GET NUMBER OF CATEGORIES //
@@ -121,7 +125,11 @@ class SettingsPanel extends DisplayObject{
             var name = json.categories[i].name.toUpperCase();
             var point = new Point(catX + (catWidth[i]*0.5),0);
             var size = new Size(catWidth[i],16);
-            menuCats[i] = new MenuCategory(point,size,name,-this.Sketch.Height);
+            var offset = -this.Sketch.Height;
+            if (this._OpenTab===i) {
+                offset = 0;
+            }
+            menuCats[i] = new MenuCategory(point,size,name,offset);
             catX += catWidth[i];
         }
 
@@ -183,17 +191,17 @@ class SettingsPanel extends DisplayObject{
 
             ctx.textAlign = "left";
             ctx.font = headType;
-            ctx.fillText("SETTINGS",20*units,this.OffsetY + (30*units) + (11*units));
+            ctx.fillText(this._CopyJson.title.toUpperCase(),20*units,this.OffsetY + (30*units) + (11*units));
 
 
 
             // CLIPPING BOX //
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(dx - halfWidth,tabY + (60*units));
-            ctx.lineTo(dx + halfWidth,tabY + (60*units));
-            ctx.lineTo(dx + halfWidth,App.Height);
-            ctx.lineTo(dx - halfWidth,App.Height);
+            ctx.moveTo(dx - (App.Width*0.5),tabY + (60*units));
+            ctx.lineTo(dx + (App.Width*0.5),tabY + (60*units));
+            ctx.lineTo(dx + (App.Width*0.5),App.Height);
+            ctx.lineTo(dx - (App.Width*0.5),App.Height);
             ctx.closePath();
             ctx.clip();
 
