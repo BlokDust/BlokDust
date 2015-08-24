@@ -107,7 +107,6 @@ class Source extends Block implements ISource {
                 this.RemoveEffect(effect);
             }
         }
-        //console.log('validate effects');
     }
 
     private _OnEffectsChanged() {
@@ -117,113 +116,7 @@ class Source extends Block implements ISource {
 
     public Refresh() {
         super.Refresh();
-
-
-        //TODO: Instead of only updating this block here. Update all the blocks post effects
-
-        ////loop for round each Source in App.Blocks
-        //App.Blocks.forEach((block, i) => {
-        //    if (block instanceof Source) {
-        //
-        //        // List of connected effect blocks
-        //        const effects: IEffect[] = block.Effects.ToArray();
-        //
-        //        // List of PostEffect blocks
-        //        const postEffects: IEffect[] = [];
-        //
-        //        // For each connected effect
-        //        for (let i = 0; i < effects.length; i++) {
-        //
-        //            // If this is a post effect add to postEffect list
-        //            if (effects[i] instanceof PostEffect) {
-        //            //    if (effects[i].Effect) {
-        //                postEffects.push(effects[i]);
-        //            }
-        //        }
-        //
-        //        // Reorder the post effects chain
-        //        block.UpdatePostEffectsChain(postEffects);
-        //    }
-        //});
-
-
-        //// List of connected effect blocks
-        //const effects: IEffect[] = this.Effects.ToArray();
-        //
-        //// List of PostEffect blocks
-        //const postEffects: IEffect[] = [];
-        //
-        //// For each connected effect
-        //for (let i = 0; i < effects.length; i++) {
-        //
-        //    // If this is a post effect add to postEffect list
-        //    if (effects[i] instanceof PostEffect) {
-        //    //if (effects[i].Effect) {
-        //        postEffects.push(effects[i]);
-        //    }
-        //}
-        //
-        //// Reorder the post effects chain
-        //this.UpdatePostEffectsChain(postEffects);
     }
-
-    /**
-     * Connects all this Source's post-effect blocks in series
-     * @param effects
-     * @public
-     */
-    //public UpdatePostEffectsChain(effects) {
-    //
-    //    console.log('connect these effects', this, effects);
-    //
-    //    // This sources input gain
-    //    const sourceInput = this.EffectsChainInput;
-    //
-    //    // This sources output gain
-    //    const sourceOutput = this.EffectsChainOutput;
-    //
-    //    // if this source has any post effects
-    //    if (effects.length) {
-    //
-    //        // disconnect the input
-    //        sourceInput.disconnect();
-    //
-    //        // save current effect as the first effect in the loop
-    //        let currentEffect = effects[0].Effect;
-    //
-    //        // connect the input to it
-    //        sourceInput.connect(currentEffect);
-    //
-    //        // if we any more effects loop through them
-    //        for (let i = 1; i < effects.length; i++) {
-    //            // save the next effect in the loop
-    //            const nextEffect = effects[i].Effect;
-    //
-    //            // disconnect the current effect and connect it to the next effect
-    //            currentEffect.disconnect();
-    //            currentEffect.connect(nextEffect);
-    //
-    //            // the next effect becomes the current effect
-    //            currentEffect = nextEffect;
-    //        }
-    //
-    //        // disconnect the last effect
-    //        //console.log(effects[effects.length - 1]);
-    //        effects[effects.length - 1].Effect.disconnect();
-    //
-    //        // connect the last effect to the source output
-    //        effects[effects.length - 1].Effect.connect(sourceOutput);
-    //
-    //        // connect the output to master
-    //        sourceOutput.toMaster();
-    //
-    //    } else {
-    //        // this source doesn't have post effects so just connect the input to the output
-    //        sourceInput.disconnect();
-    //        sourceInput.connect(sourceOutput);
-    //    }
-    //
-    //}
 
 
     CreateSource(){

@@ -8,6 +8,7 @@ interface IBlock extends IDisplayObject{
     Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;
+    IsChained: boolean;
     Position: Point;
     LastPosition: Point;
     OptionsForm: any;

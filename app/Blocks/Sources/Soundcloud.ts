@@ -114,6 +114,7 @@ class Soundcloud extends SamplerBase {
         this.SearchResults = [];
         if (window.SC) {
             SoundCloudAudio.Search(query, 510, (tracks) => {
+                //FIXME: we need an error parameter for this callback. If SC timesout there are no tracks returned
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });
