@@ -5,6 +5,7 @@ import Grid = require("../Grid");
 interface IBlock extends IDisplayObject{
     Id: number;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
+    Connections: Fayde.Collections.ObservableCollection<IBlock>
     Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;

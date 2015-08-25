@@ -6,7 +6,8 @@ import SoundcloudTrack = require("../UI/SoundcloudTrack");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface ISource extends IBlock{
-    Effects: Fayde.Collections.ObservableCollection<IEffect>;
+    Connections: Fayde.Collections.ObservableCollection<IEffect>;
+    //Effects: Fayde.Collections.ObservableCollection<IEffect>;
     AddEffect(effect: IEffect): void;
     RemoveEffect(effect: IEffect): void;
     Sources?: any[]; // Use this when available: Tone.Oscillator || Tone.Noise

@@ -15,7 +15,7 @@ import SoundcloudTrack = require("../UI/SoundcloudTrack");
 
 class Source extends Block implements ISource {
 
-    public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
+    public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
@@ -61,7 +61,7 @@ class Source extends Block implements ISource {
         this.ParticlePowered = false;
         this.LaserPowered = false;
 
-        this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
+        this.Connections.CollectionChanged.on(this._OnEffectsChanged, this);
 
         if (!(this instanceof Power)) {
 
@@ -83,7 +83,7 @@ class Source extends Block implements ISource {
      * @param effect
      */
     AddEffect(effect: IEffect) {
-        this.Effects.Add(effect);
+        this.Connections.Add(effect);
         effect.Attach(<ISource>this);
     }
 
@@ -92,7 +92,7 @@ class Source extends Block implements ISource {
      * @param effect
      */
     RemoveEffect(effect: IEffect) {
-        this.Effects.Remove(effect);
+        this.Connections.Remove(effect);
         effect.Detach(<ISource>this);
     }
 
@@ -100,8 +100,8 @@ class Source extends Block implements ISource {
     * Validate that the block's effects still exist
     */
     public ValidateEffects() {
-        for (let i = 0; i < this.Effects.Count; i++){
-            let effect:IEffect = this.Effects.GetValueAt(i);
+        for (let i = 0; i < this.Connections.Count; i++){
+            let effect:IEffect = this.Connections.GetValueAt(i);
 
             if (!App.Effects.contains(effect)){
                 this.RemoveEffect(effect);
@@ -267,9 +267,9 @@ class Source extends Block implements ISource {
         if (this.IsPressed || this.PowerConnections>0) {
             return true;
 
-        } else if (this.Effects.Count) {
-            for (let i = 0; i < this.Effects.Count; i++) {
-                const effect: IEffect = this.Effects.GetValueAt(i);
+        } else if (this.Connections.Count) {
+            for (let i = 0; i < this.Connections.Count; i++) {
+                const effect: IEffect = this.Connections.GetValueAt(i);
 
                 //If connected to power block OR connected to a logic block that is 'on'
                 if (effect instanceof Power || effect instanceof Logic && effect.Params.logic){

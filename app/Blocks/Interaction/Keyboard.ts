@@ -40,8 +40,8 @@ class Keyboard extends PreEffect {
     Detach(source:ISource): void {
 
         // FOR ALL SOURCES
-        for (let i = 0; i < this.Sources.Count; i++) {
-            const source: ISource = this.Sources.GetValueAt(i);
+        for (let i = 0; i < this.Connections.Count; i++) {
+            const source: ISource = this.Connections.GetValueAt(i);
 
             // Release all the sources envelopes
             source.TriggerRelease('all', true);
@@ -65,8 +65,8 @@ class Keyboard extends PreEffect {
             value = value/100;
         }
         else if (param == "octave") {
-            for (let i = 0, source: ISource; i < this.Sources.Count; i++) {
-                source = this.Sources.GetValueAt(i);
+            for (let i = 0, source: ISource; i < this.Connections.Count; i++) {
+                source = this.Connections.GetValueAt(i);
                 let diff: number = value - this.Params.octave;
                 source.OctaveShift(diff);
             }
@@ -74,8 +74,8 @@ class Keyboard extends PreEffect {
         else if (param === 'polyphonic') {
             this.Params.isPolyphonic = value;
             // ALL SOURCES
-            for (let i = 0; i < this.Sources.Count; i++) {
-                let source: ISource = this.Sources.GetValueAt(i);
+            for (let i = 0; i < this.Connections.Count; i++) {
+                let source: ISource = this.Connections.GetValueAt(i);
 
                 source.TriggerRelease('all');
 

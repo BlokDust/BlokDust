@@ -66,14 +66,14 @@ class ComputerKeyboard extends Keyboard {
             this.KeysDown = e.KeysDown;
 
             // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
+            for (var i = 0; i < this.Connections.Count; i++) {
+                var source: ISource = this.Connections.GetValueAt(i);
                 this.KeyboardDown(e.KeyDown, source);
             }
         } else {
             //for (var i = 0; i < this.Sources.Count; i++) {
             //    var source = this.Sources.GetValueAt(i);
-                this._ExecuteKeyboardCommand(e.KeyDown, this.Sources);
+                this._ExecuteKeyboardCommand(e.KeyDown, this.Connections);
             //}
         }
     }
@@ -81,8 +81,8 @@ class ComputerKeyboard extends Keyboard {
     KeyUpCallback(e: any){
 
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        for (var i = 0; i < this.Sources.Count; i++) {
-            var source = this.Sources.GetValueAt(i);
+        for (var i = 0; i < this.Connections.Count; i++) {
+            var source: ISource = this.Connections.GetValueAt(i);
 
             // If its an octave shift no need to call KeyboardUp
             if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
@@ -97,14 +97,14 @@ class ComputerKeyboard extends Keyboard {
     private _ExecuteKeyboardCommand(key: string, sources: any) {
         if (key == 'octave-up' && this.Params.octave < 9) {
             for (var i = 0; i < sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
+                var source: ISource = this.Connections.GetValueAt(i);
                 source.OctaveShift(1);
             }
             this.Params.octave++;
             this.RefreshOptionsPanel();
         } else if (key === 'octave-down' && this.Params.octave != 0) {
             for (var i = 0; i < sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
+                var source: ISource = this.Connections.GetValueAt(i);
                 source.OctaveShift(-1);
             }
             this.Params.octave--;

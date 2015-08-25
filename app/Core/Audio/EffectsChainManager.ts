@@ -54,14 +54,16 @@ class EffectsChainManager {
     }
 
     ParseConnections(chain: AudioChain, parentBlock: IBlock){
+
         // if parentBlock isn't in audioChain
-        if (!parentBlock.isIn(AudioChain)){
+        if (chain.Connections.indexOf(parentBlock) === -1){
             // add parentBlock to audioChain
             chain.Connections.push(parentBlock);
             // set parentBlock.isChained = true
             parentBlock.IsChained = true;
             // forEach connected childbock (source / effect)
-            parentBlock.Connections.forEach((childBlock) => {
+            let parentConnections = parentBlock.Connections.ToArray();
+            parentConnections.forEach((childBlock) => {
                 // ParseConnections(audioChain, childBlock)
                 this.ParseConnections(chain, childBlock);
             });
@@ -412,7 +414,7 @@ class EffectsChainManager {
 
     public GetPostEffectsFromSource(source: ISource): IEffect[] {
         // List of connected effect blocks
-        const effects:IEffect[] = source.Effects.ToArray();
+        const effects:IEffect[] = source.Connections.ToArray();
 
         // List of PostEffect blocks
         const postEffects:IEffect[] = [];

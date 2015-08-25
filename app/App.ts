@@ -349,7 +349,7 @@ class App implements IApp{
 
     Deserialize(json: string): any {
         this._SaveFile = Serializer.Deserialize(json);
-        this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Sources || (<ISource>block).Effects).toArray();
+        this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Connections || (<ISource>block).Connections).toArray();
         this.Blocks.sort((a: IBlock, b: IBlock) => {
             return a.ZIndex - b.ZIndex;
         });

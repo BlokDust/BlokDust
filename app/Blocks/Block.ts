@@ -6,6 +6,7 @@ import MainScene = require("../MainScene");
 import ParametersPanel = require("../UI/OptionsPanel");
 import PreEffect = require("./Effects/PreEffect");
 import Size = minerva.Size;
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 class Block extends DisplayObject implements IBlock {
 
@@ -14,8 +15,11 @@ class Block extends DisplayObject implements IBlock {
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
+    public IsChained: boolean = false;
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
+    public Connections: ObservableCollection<IBlock> = new ObservableCollection<IBlock>();
+
     public Outline: Point[] = [];
     public ZIndex;
     public OptionsForm;

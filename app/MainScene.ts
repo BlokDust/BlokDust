@@ -570,7 +570,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                 var distanceFromEffect = source.DistanceFrom(App.Metrics.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
-                    if (!source.Effects.Contains(effect)){
+                    if (!source.Connections.Contains(effect)){
 
                         if (source instanceof PowerSource && effect instanceof PowerEffect || !(source instanceof PowerSource)) {
                             //Add sources to effect
@@ -587,7 +587,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                 } else {
                     // if the source already has the effect on its internal list
                     // remove it as it's now too far away.
-                    if (source.Effects.Contains(effect)){
+                    if (source.Connections.Contains(effect)){
 
                         // Remove source from effect
                         effect.RemoveSource(source);

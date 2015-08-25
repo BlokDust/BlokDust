@@ -76,7 +76,7 @@ class Envelope extends PreEffect {
     UpdatePreEffectConnections() {
         super.UpdatePreEffectConnections();
 
-        const sources = this.Sources.ToArray();
+        const sources: ISource[] = this.Connections.ToArray();
         sources.forEach((source: ISource) => {
 
             if (source.Envelopes.length) {
@@ -103,9 +103,9 @@ class Envelope extends PreEffect {
 
         this.Params[param] = value;
 
-        if (this.Sources.Count) {
-            for (let i = 0; i < this.Sources.Count; i++) {
-                const source = this.Sources.GetValueAt(i);
+        if (this.Connections.Count) {
+            for (let i = 0; i < this.Connections.Count; i++) {
+                const source: ISource = this.Connections.GetValueAt(i);
 
                 source.Envelopes.forEach((e: Tone.Envelope) => {
                     e.attack = this.Params.attack;

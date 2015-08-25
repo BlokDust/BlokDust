@@ -23,12 +23,12 @@ class ConnectionLines {
         this._Ctx.lineWidth = 1;
         this._Ctx.beginPath();
 
-        for (var j = 0; j < App.Blocks.length; j++) {
-            var block: IBlock = App.Blocks[j];
-            if ((<ISource>block).Effects) {
+        for (var j = 0; j < App.Sources.length; j++) {
+            var block: IBlock = App.Sources[j];
+            if ((<ISource>block).Connections.Count) {
 
                 // draw connections to modifiers
-                var modifiers = (<ISource>block).Effects.ToArray();
+                var modifiers = (<ISource>block).Connections.ToArray();
 
                 var grd = App.ScaledGridSize; // this.Grid.Width / this.Grid.Divisor;
 

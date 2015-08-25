@@ -63,7 +63,7 @@ class LFO extends PreEffect {
 
     UpdatePreEffectConnections() {
         super.UpdatePreEffectConnections();
-        const sources = this.Sources.ToArray();
+        const sources: ISource[] = this.Connections.ToArray();
         sources.forEach((source: ISource) => {
 
             source.Sources.forEach((osc: Tone.Oscillator) => {

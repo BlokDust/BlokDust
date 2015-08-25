@@ -118,9 +118,9 @@ class MIDIController extends Keyboard {
             }
 
             // ALL SOURCES TRIGGER KEYBOARD UP
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
+            if (this.Connections.Count) {
+                for (var i = 0; i < this.Connections.Count; i++) {
+                    var source: ISource = this.Connections.GetValueAt(i);
                     this.KeyboardUp(note, source);
                 }
             }
@@ -132,9 +132,9 @@ class MIDIController extends Keyboard {
             this.KeysDown[note] = true;
 
             // ALL SOURCES TRIGGER KEYBOARD DOWN
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
+            if (this.Connections.Count) {
+                for (var i = 0; i < this.Connections.Count; i++) {
+                    var source: ISource = this.Connections.GetValueAt(i);
                     this.KeyboardDown(note, source);
                 }
             }

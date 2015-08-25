@@ -100,25 +100,25 @@ class Serializer {
         if (block.Params) b.Params = block.Params;
 
         // if it's a source block
-        if ((<ISource>block).Effects && (<ISource>block).Effects.Count){
+        if ((<ISource>block).Connections && (<ISource>block).Connections.Count){
             b.Effects = [];
 
             if (parentBlock){
                 b.Effects.push(parentBlock.Id);
             }
 
-            this._SerializeBlocks(b.Effects, (<ISource>block).Effects.ToArray(), b);
+            this._SerializeBlocks(b.Effects, (<ISource>block).Connections.ToArray(), b);
         }
 
         // if it's an effect block
-        if ((<IEffect>block).Sources && (<IEffect>block).Sources.Count){
+        if ((<IEffect>block).Connections && (<IEffect>block).Connections.Count){
             b.Sources = [];
 
             if (parentBlock){
                 b.Sources.push(parentBlock.Id);
             }
 
-            this._SerializeBlocks(b.Sources, (<IEffect>block).Sources.ToArray(), b);
+            this._SerializeBlocks(b.Sources, (<IEffect>block).Connections.ToArray(), b);
         }
 
         return b;
@@ -180,15 +180,15 @@ class Serializer {
         }
 
         // if it's a source block
-        if((<ISource>b).Effects){
+        if((<ISource>b).Connections){
             var effects = <IEffect[]>Serializer._DeserializeBlocks(b.Effects);
-            (<ISource>block).Effects.AddRange(effects);
+            (<ISource>block).Connections.AddRange(effects);
         }
 
         // if it's an effect block
-        if((<IEffect>b).Sources){
+        if((<IEffect>b).Connections){
             var sources = <ISource[]>Serializer._DeserializeBlocks(b.Sources);
-            (<IEffect>block).Sources.AddRange(sources);
+            (<IEffect>block).Connections.AddRange(sources);
         }
 
         return block;

@@ -11,7 +11,7 @@ class Effect extends Block implements IEffect {
     public Effect; // ANY TYPE OF TONE POST EFFECT
 
     Source: ISource;
-    public Sources: ObservableCollection<ISource> = new ObservableCollection<ISource>();
+    public Connections: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
     Init(sketch?: any): void {
         super.Init(sketch);
@@ -35,7 +35,7 @@ class Effect extends Block implements IEffect {
      * @constructor
      */
     AddSource(source: ISource) {
-        this.Sources.Add(source);
+        this.Connections.Add(source);
     }
 
     /**
@@ -44,15 +44,15 @@ class Effect extends Block implements IEffect {
      * @constructor
      */
     RemoveSource(source: ISource) {
-        this.Sources.Remove(source);
+        this.Connections.Remove(source);
     }
 
     /**
      * Validate that the block's effects still exist
      */
     public ValidateSources(){
-        for (var i = 0; i < this.Sources.Count; i++){
-            var src: ISource = this.Sources.GetValueAt(i);
+        for (var i = 0; i < this.Connections.Count; i++){
+            var src: ISource = this.Connections.GetValueAt(i);
 
             if (!App.Sources.contains(src)){
                 this.RemoveSource(src);
@@ -66,9 +66,9 @@ class Effect extends Block implements IEffect {
      * @constructor
      */
     public TriggerReleaseAll() {
-        if (this.Sources.Count) {
-            for (var i = 0; i < this.Sources.Count; i++) {
-                var source = this.Sources.GetValueAt(i);
+        if (this.Connections.Count) {
+            for (var i = 0; i < this.Connections.Count; i++) {
+                var source: ISource = this.Connections.GetValueAt(i);
 
                 source.TriggerRelease();
             }
