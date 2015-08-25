@@ -5,15 +5,13 @@
 class ColorTheme {
     public Name: string;
     public PaletteURL: string;
-    public MenuOrder: number[];
-    public OptionsOrder: number[];
+    public Options: any;
 
-    constructor(name: string, url: string, menuOrder?: number[], optionsOrder?: number[]) {
+    constructor(name: string, url: string, options?: any) {
 
         this.Name = name;
         this.PaletteURL = url;
-        this.MenuOrder = menuOrder;
-        this.OptionsOrder = optionsOrder;
+        this.Options = options || {};
 
     }
 }

@@ -18,7 +18,7 @@ class Splash extends DisplayObject{
 
     Init(sketch?: any): void {
         super.Init(sketch);
-        this._Ctx = this.Sketch.Ctx;
+        this._Ctx = App.Canvas.getContext("2d");
         this._Offset = new Point(0,0);
         this.XOffset = 0;
         this.YOffset = -1;
@@ -39,6 +39,7 @@ class Splash extends DisplayObject{
     public Draw() {
 
         var colorful = false;
+        var ctx = this._Ctx;
         var units = App.Unit;
 
         this._Scale = 100 * units;
@@ -47,15 +48,15 @@ class Splash extends DisplayObject{
         if (App.Scene==2 && !App.LoadCued && App.CompositionId) {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
-            this.Ctx.fillStyle = App.Palette[0];
-            this.Ctx.fillRect(dx,dy,App.Width,App.Height);
+            ctx.fillStyle = App.Palette[0];
+            ctx.fillRect(dx,dy,App.Width,App.Height);
 
             var dx = (App.Width*0.5);
             var dy = (App.Height*0.5) + (App.Height*this.LoadOffset);
-            this.Ctx.fillStyle = App.Palette[8];// white
-            this.Ctx.textAlign = "center";
-            this.Ctx.font = App.Metrics.TxtHeader;
-            this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * App.Unit));
+            ctx.fillStyle = App.Palette[App.Color.Txt];// white
+            ctx.textAlign = "center";
+            ctx.font = App.Metrics.TxtHeader;
+            ctx.fillText("LOADING SCENE",dx,dy + (26 * units));
             App.AnimationsLayer.Spin();
             App.AnimationsLayer.DrawSprite('loading',dx, dy - (16 * units),16,true);
         }
@@ -64,91 +65,91 @@ class Splash extends DisplayObject{
 
         //TODO use blocksprites with multiplier argument
         this._Offset = new Point(0,1);
-        this.Ctx.fillStyle = "#111";
+        ctx.fillStyle = "#111";
         this.CenterRect();
 
 
         // Convolution
         this._Center = new Point(-0.5,-0.5);
         this._Offset = new Point(0,0);
-        this.Ctx.fillStyle = App.Palette[3];// BLUE
+        ctx.fillStyle = App.Palette[3];// BLUE
         if (!colorful) {this.Ctx.fillStyle = App.Palette[2];}
         this.CenterRect();
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[8];// WHITE
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(2,0);
         this.DrawLineTo(0,2);
         this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[4];// GREEN
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(0,0);
         this.DrawLineTo(0,2);
         this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[6];// YELLOW
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[6];// YELLOW
         this.DrawMoveTo(0,0);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
 
         // gain
         this._Center = new Point(-0.5,0);
         this._Offset = new Point(-1,0);
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        ctx.fillStyle = App.Palette[4];// GREEN
         if (!colorful) {this.Ctx.fillStyle = App.Palette[0];}
         this.CenterRect();
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[5];// PURPLE
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[5];// PURPLE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(2,1);
         this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[3];// BLUE
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[3];// BLUE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,0);
         this.DrawLineTo(1,1);
         this.DrawLineTo(0,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
         // noise
         this._Center = new Point(0,-0.5);
         this._Offset = new Point(-1,-1);
-        this.Ctx.fillStyle = App.Palette[5];// PURPLE
+        ctx.fillStyle = App.Palette[5];// PURPLE
         if (!colorful) {this.Ctx.fillStyle = App.Palette[2];}
         this.CenterRect();
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[4];// GREEN
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(-1,2);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[8];// WHITE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(0,0);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
 
         // distortion
@@ -157,36 +158,36 @@ class Splash extends DisplayObject{
         this.Ctx.fillStyle = App.Palette[6];// PURPLE
         if (!colorful) {this.Ctx.fillStyle = App.Palette[0];}
         this.CenterRect();
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[7];// RED
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[7];// RED
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(1,0);
         this.DrawLineTo(-1,2);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
-        this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9];// PINK
+        ctx.beginPath();
+        ctx.fillStyle = App.Palette[9];// PINK
         this.DrawLineTo(-1,-1);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(0,0);
         this.DrawLineTo(-1,1);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        ctx.closePath();
+        ctx.fill();
 
 
         this._Center = new Point(0,0);
         this._Offset = new Point(1,-1);
-        this.Ctx.fillStyle = App.Palette[2];// DARK
+        ctx.fillStyle = App.Palette[2];// DARK
         this.CenterRect();
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
         var headerType = 100*units;
-        this.Ctx.fillStyle = App.Palette[8];// Grey
-        this.Ctx.textAlign = "center";
-        this.Ctx.font = "200 " + headerType + "px Dosis";
-        this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
+        ctx.fillStyle = App.Palette[App.Color.Txt];// Grey
+        ctx.textAlign = "center";
+        ctx.font = "200 " + headerType + "px Dosis";
+        ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
 
     }
 
@@ -209,7 +210,7 @@ class Splash extends DisplayObject{
         var dx = (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*(this._Offset.y+this.YOffset));
 
-        this.Ctx.fillRect(dx,dy,App.Width,App.Height);
+        this._Ctx.fillRect(dx,dy,App.Width,App.Height);
     }
 
     //-------------------------------------------------------------------------------------------

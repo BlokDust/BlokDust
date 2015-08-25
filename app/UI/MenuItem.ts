@@ -45,7 +45,7 @@ class MenuItem {
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
 
         // NAME //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// White
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt];// White
         var dataType = units*10;
         ctx.textAlign = "center";
         ctx.font = App.Metrics.TxtMid;

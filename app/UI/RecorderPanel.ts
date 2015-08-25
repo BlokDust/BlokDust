@@ -76,7 +76,7 @@ class RecorderPanel extends DisplayObject {
 
         // BUTTON //
         if (rec) {
-            ctx.fillStyle = App.Palette[8]; // WHITE
+            ctx.fillStyle = App.Palette[App.Color.Txt]; // WHITE
         } else {
             ctx.fillStyle = App.Palette[13]; // RED
         }
@@ -89,7 +89,7 @@ class RecorderPanel extends DisplayObject {
         ctx.fill();
 
         if (rec) {
-            ctx.fillStyle = App.Palette[8]; // WHITE
+            ctx.fillStyle = App.Palette[App.Color.Txt]; // WHITE
         } else {
             ctx.fillStyle = App.Palette[12]; // RED
         }
@@ -101,7 +101,7 @@ class RecorderPanel extends DisplayObject {
         ctx.fill();
 
         if (hover) {
-            ctx.fillStyle = App.Palette[8]; // WHITE
+            ctx.fillStyle = App.Palette[App.Color.Txt]; // WHITE
             ctx.fillRect(x - grd,y - (w*0.5) - (h*0.5) - grd,4*units,4*units);
         }
 

@@ -36,7 +36,7 @@ class WaveForm extends Option{
         }
 
         if (!this.Waveform.length) {
-            ctx.fillStyle = App.Palette[8];// WHITE
+            ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
             if (this.EmptyString.length>1) {
                 ctx.textAlign = "center";
                 ctx.font = App.Metrics.TxtMid;
@@ -49,8 +49,7 @@ class WaveForm extends Option{
         }
 
         if (this.Handles && this.Waveform.length && this.Mode) {
-            ctx.strokeStyle = ctx.fillStyle = App.Palette[15]; // highlight
-            ctx.fillStyle = ctx.strokeStyle = "#282b31";
+            ctx.strokeStyle = App.Palette[1];
             panel.diagonalFill(panel.Margin + this.Handles[2].Position.x,y,this.Handles[3].Position.x - this.Handles[2].Position.x,height,9);
         }
 
@@ -108,7 +107,7 @@ class WaveForm extends Option{
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

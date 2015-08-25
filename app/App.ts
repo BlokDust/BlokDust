@@ -16,7 +16,6 @@ import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import DisplayObjectCollection = require("./DisplayObjectCollection");
 import Particle = require("./Particle");
-import Fonts = require("./UI/Fonts");
 import ColorThemes = require("./UI/ColorThemes");
 import AnimationsLayer = require("./UI/AnimationsLayer");
 import Serializer = require("./Serializer");
@@ -81,8 +80,7 @@ class App implements IApp{
     public ResourceManager: ResourceManager;
     private _SessionId: string;
     private _FontsLoaded: number;
-    private _PaletteLoaded: boolean;
-    public ColorThemes: ColorThemes;
+    public Color: ColorThemes;
     public Splash: Splash;
     public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
@@ -184,8 +182,9 @@ class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // LOAD PALETTE //
-        this.ColorThemes = new ColorThemes();
-        this.LoadColorTheme(0,true);
+        this.Color = new ColorThemes;
+        this.Color.Init(this);
+        this.Color.LoadTheme(0,true);
 
         // SOUNDCLOUD INIT //
         // todo: create server-side session
@@ -222,7 +221,7 @@ class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady() {
-        if (this._FontsLoaded === 3 && this._PaletteLoaded) {
+        if (this._FontsLoaded === 3 && this.Color.Loaded) {
             this.LoadComposition();
             this.Scene = 1;
             this.Splash.StartTween();
@@ -232,7 +231,6 @@ class App implements IApp{
 
     // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
-        console.log("loading..");
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
@@ -310,16 +308,7 @@ class App implements IApp{
         });
     }
 
-    LoadColorTheme(theme,firstLoad) {
-        var pixelPalette = new PixelPalette(this.ColorThemes.Themes[theme].PaletteURL);
-        pixelPalette.Load((palette: string[]) => {
-            this.Palette = palette;
-            this._PaletteLoaded = true;
-            if (firstLoad) {
-                this.LoadReady();
-            }
-        });
-    }
+
 
     OnTicked (lastTime: number, nowTime: number) {
         this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
@@ -355,9 +344,6 @@ class App implements IApp{
         });
     }
 
-    //Message(string?: string, seconds?: number, confirmation?: boolean, buttonText?: string, buttonEvent?: any) {
-    //    this.MainScene.MessagePanel.NewMessage(string,seconds,confirmation,buttonText,buttonEvent);
-    //}
 
     Message(message?: string, options?: any) {
         this.MainScene.MessagePanel.NewMessage(message, options);
@@ -378,6 +364,18 @@ class App implements IApp{
         return this._Canvas.getContext("2d");
     }
 
+    TrackEvent(category: string, action: string, label: string, value?: number): void{
+        if (isNaN(value)){
+            window.trackEvent(category, action, label);
+        } else {
+            window.trackEvent(category, action, label, value);
+        }
+    }
+
+    TrackVariable(slot: number, name: string, value: string, scope: number): void{
+        window.trackVariable(slot, name, value, scope);
+    }
+
     Resize(): void {
 
         this.Metrics.Metrics();
@@ -385,11 +383,6 @@ class App implements IApp{
             this.MainScene.SketchResize();
         }
 
-    }
-
-    TranslateMousePointToPixelRatioPoint(point: Point){
-        point.x *= this.Metrics.PixelRatio;
-        point.y *= this.Metrics.PixelRatio;
     }
 
 }

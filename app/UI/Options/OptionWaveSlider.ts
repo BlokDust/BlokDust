@@ -46,7 +46,7 @@ class WaveSlider extends WaveForm{
             // LINES //
             ctx.lineWidth = 2;
             ctx.globalAlpha = 1;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[8];// WHITE
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
 
             var spread = (panel.Range / (this.Max - this.Min)) * this.Spread;
 
@@ -100,6 +100,7 @@ class WaveSlider extends WaveForm{
 
 
             // VALUE TOOLTIP //
+            ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
             if (this.Selected) {
                 ctx.textAlign = "left";
                 ctx.font = App.Metrics.TxtSlider;
