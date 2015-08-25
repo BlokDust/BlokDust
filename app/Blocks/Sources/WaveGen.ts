@@ -496,7 +496,7 @@ class WaveGen extends SamplerBase {
         var duration = this.GetDuration(this._FirstBuffer);
         if (!this._LoadFromShare) {
             this.Params.startPosition = 0;
-            this.Params.loopStart = duration * 0.5;
+            this.Params.loopStart = 0;
             this.Params.loopEnd = this.Params.endPosition = duration;
             this.Params.reverse = false;
         }

@@ -54,7 +54,7 @@ class MenuCategory {
 
 
         // TEXT //
-        ctx.fillStyle = App.Palette[8];// White
+        ctx.fillStyle = App.Palette[App.Color.Txt];// White
         ctx.fillText(this.Name, x ,offset + (thisHeight * 0.5) + (dataType * 0.38));
 
         // HOVER //

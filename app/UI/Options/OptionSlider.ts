@@ -58,7 +58,7 @@ class Slider extends Option{
 
 
         // BAR //
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];
         if (origin !== panel.Margin) {
             panel.diagonalFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 9);
         }
@@ -101,8 +101,8 @@ class Slider extends Option{
         ctx.closePath();
         ctx.fill();
 
-
         // PARAM NAME //
+        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

@@ -78,7 +78,8 @@ class ADSR extends Option{
         ctx.lineTo(panel.Range + panel.Margin + units, y + (height*0.9));
         ctx.closePath();
         ctx.clip();
-        ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        //ctx.fillStyle = ctx.strokeStyle = "#282b31";
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];
         panel.diagonalFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 9);
         ctx.restore();
 
@@ -86,7 +87,7 @@ class ADSR extends Option{
         // LINE //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = App.Palette[8];
+        ctx.strokeStyle = App.Palette[App.Color.Txt];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height*0.9));
         ctx.lineTo(panel.Margin + a, y + (height*0.1)); // ATTACK

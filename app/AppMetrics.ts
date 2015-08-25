@@ -29,6 +29,7 @@ class Metrics {
     public OptionsPoint: Point;
     public ItemsPerPage: number; // blocks per page in category display
     public Device: string;
+    private _DeviceZoom: number;
     private _ScreenDivision: number;
 
     constructor() {
@@ -40,6 +41,7 @@ class Metrics {
         this.OptionsPoint = new Point(0.3,0.6); //screen percentage
         this.ItemsPerPage = 6;
         this.Device = "desktop";
+        this._DeviceZoom = 1;
     }
 
 
@@ -61,10 +63,10 @@ class Metrics {
 
         // DEFINE UNIT & GRID SIZE //
         App.Unit = (width/this._ScreenDivision)*ratio;
-        App.ScaledUnit = App.Unit * App.ZoomLevel;
+        App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
         var unit = App.Unit;
         App.GridSize = gridSize * unit;
-        App.ScaledGridSize = App.GridSize * App.ZoomLevel;
+        App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;
 
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
@@ -112,10 +114,10 @@ class Metrics {
 
 
     UpdateGridScale() {
-        App.ScaledUnit = App.Unit * App.ZoomLevel;
-        App.ScaledGridSize = App.GridSize * App.ZoomLevel;
-        App.ScaledDragOffset.x = App.DragOffset.x * App.ZoomLevel;
-        App.ScaledDragOffset.y = App.DragOffset.y * App.ZoomLevel;
+        App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
+        App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;
+        App.ScaledDragOffset.x = (App.DragOffset.x * App.ZoomLevel);
+        App.ScaledDragOffset.y = (App.DragOffset.y * App.ZoomLevel);
     }
 
 
@@ -141,28 +143,49 @@ class Metrics {
         const width = window.innerWidth;
         const height = window.innerHeight;
 
-        // MOBILE //
+        // MOBILE PORTRAIT //
         if (height > (width*1.3)) {
             this._ScreenDivision = 475;
             this.OptionsPoint = new Point(0.5,0.4);
             this.ItemsPerPage = 3;
+            this._DeviceZoom = 1.5;
             this.Device = "mobile";
             console.log("MOBILE");
         }
 
-        // TABLET //
-        else if (height > (width*1.15)) {
-            this._ScreenDivision = 675;
-            this.OptionsPoint = new Point(0.1,0.5);
-            this.ItemsPerPage = 5;
+        // TABLET PORTRAIT //
+        else if (height > (width*1.1)) {
+            this._ScreenDivision = 600;
+            this.OptionsPoint = new Point(0.2,0.5);
+            this.ItemsPerPage = 4;
+            this._DeviceZoom = 1.2;
             this.Device = "tablet";
             console.log("TABLET");
         }
+
+        /*// MOBILE LANDSCAPE //
+        else if (width<800) {
+            this._ScreenDivision = 600;
+            this.OptionsPoint = new Point(0.2,0.5);
+            this.ItemsPerPage = 4;
+            this.Device = "mobileLandscape";
+            console.log("MOBILE LANDSCAPE");
+        }*/
+
+        /*// TABLET LANDSCAPE //
+        else if (width<1000) {
+            this._ScreenDivision = 675;
+            this.OptionsPoint = new Point(0.2,0.5);
+            this.ItemsPerPage = 5;
+            this.Device = "tabletLandscape";
+            console.log("TABLET LANDSCAPE");
+        }*/
 
         // DESKTOP //
         else {
             this.OptionsPoint = new Point(0.3,0.6);
             this.ItemsPerPage = 6;
+            this._DeviceZoom = 1;
             this.Device = "desktop";
             console.log("DESKTOP");
         }
@@ -181,8 +204,8 @@ class Metrics {
     }
 
     public PointOnGrid(point: Point): Point {
-        var x = (this.C.x + App.ScaledDragOffset.x) + (point.x * App.ScaledGridSize);
-        var y = (this.C.y + App.ScaledDragOffset.y) + (point.y * App.ScaledGridSize);
+        var x = ((this.C.x + App.ScaledDragOffset.x) + (point.x * App.ScaledGridSize));
+        var y = ((this.C.y + App.ScaledDragOffset.y) + (point.y * App.ScaledGridSize));
         return new Point(x,y);
     }
 
@@ -204,6 +227,11 @@ class Metrics {
 
     public ConvertGridUnitsToAbsolute(point: Point): Point {
         return new Point(App.GridSize * point.x, App.GridSize * point.y);
+    }
+
+    public ConvertToPixelRatioPoint(point: Point){
+        point.x *= this.PixelRatio;
+        point.y *= this.PixelRatio;
     }
 }
 

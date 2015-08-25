@@ -7,6 +7,8 @@ interface Window{
     App: any;
     debug: boolean;
     SC: any;
+    trackEvent(category: string, action: string, label: string, value?: number);
+    trackVariable(slot: number, name: string, value: string, scope: number);
 }
 
 interface Document{

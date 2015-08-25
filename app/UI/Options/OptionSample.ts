@@ -52,14 +52,14 @@ class OptionSample  extends Option{
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
 
         // INFO BUTTON //
-        ctx.strokeStyle = App.Palette[8];// WHITE
+        ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
         ctx.lineWidth = 1;
         ctx.textAlign = "center";
         var ix = panel.Margin + (panel.Range*0.575);

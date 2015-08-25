@@ -14,6 +14,7 @@ class Header extends DisplayObject{
 
     private _Units: number;
     public Height: number;
+    private _Rows: number;
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
     public ItemsPerPage: number;
@@ -35,6 +36,7 @@ class Header extends DisplayObject{
 
         this._Units = 1.7;
         this.Height = 60;
+        this._Rows = 1;
         this.MenuItems = [];
         this.ItemsPerPage = App.Metrics.ItemsPerPage;
         this.DropDownHeight = (App.Width / (this.ItemsPerPage + 1)) / App.Unit;
@@ -64,6 +66,15 @@ class Header extends DisplayObject{
         var dataType = units*10;
         var gutter = 60;
         var menuCats = [];
+        this._Rows = 1;
+
+        if (App.Metrics.Device==="tablet") {
+            gutter = 40;
+        }
+        if (App.Metrics.Device==="mobile") {
+            this._Rows = 2;
+        }
+
 
         this.ItemsPerPage = App.Metrics.ItemsPerPage;
         this.DropDownHeight = (this.Sketch.Width / (this.ItemsPerPage + 1)) / units;
@@ -88,12 +99,12 @@ class Header extends DisplayObject{
 
         // start x for positioning //
         var catX = ((this.Sketch.Width*0.5) - (menuWidth*0.5));
-
+        var rowOffset = ((this._Rows-1)*this.Height)*units;
 
         // POPULATE MENU //
         for (var i=0; i<n; i++) {
             var name = json.categories[i].name.toUpperCase();
-            var point = new Point(catX + (catWidth[i]*0.5),0);
+            var point = new Point(catX + (catWidth[i]*0.5),rowOffset);
             var size = new Size(catWidth[i],16);
             menuCats[i] = new MenuCategory(point,size,name,this.DropDownHeight);
             catX += catWidth[i];
@@ -109,7 +120,7 @@ class Header extends DisplayObject{
                 if (json.categories[i].items[j].description) {
                     description = json.categories[i].items[j].description;
                 }
-                var point = new Point(0,(this.Height + (this.DropDownHeight*0.5))*units);
+                var point = new Point(0,((this.Height + (this.DropDownHeight*0.5))*units) + rowOffset);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
                 menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.Sketch));
@@ -135,26 +146,32 @@ class Header extends DisplayObject{
         var headerType = Math.round(units*28);
         var thisHeight = Math.round(this.Height*units);
         var dropDown = Math.round(this.DropDown*units);
-
+        var rowOffset = ((this._Rows-1)*this.Height)*units;
 
         // BG //
         ctx.fillStyle = App.Palette[2];// Black
+
         ctx.globalAlpha = 0.16;
-        ctx.fillRect(0,0,this.Sketch.Width,thisHeight + (5*units) + dropDown); // shadow
+        ctx.fillRect(0,0,this.Sketch.Width,thisHeight + (5*units) + dropDown + rowOffset); // shadow
         ctx.globalAlpha = 0.9; //0.9
-        ctx.fillRect(0,0,this.Sketch.Width,thisHeight  + dropDown); // solid
+        ctx.fillRect(0,0,this.Sketch.Width,thisHeight  + dropDown + rowOffset); // solid
 
 
 
         // TT //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = App.Palette[8];// Grey
-        ctx.textAlign = "left";
+        ctx.fillStyle = App.Palette[App.Color.Txt];// Grey
+        ctx.font = "200 " + headerType + "px Dosis";
 
-        if (App.Metrics.Device!=="mobile") {
-            ctx.font = "200 " + headerType + "px Dosis";
-            ctx.fillText("BLOKDUST",20*units,(thisHeight * 0.5) + (headerType * 0.38));
+        if (App.Metrics.Device==="mobile") {
+            ctx.textAlign = "center";
+            ctx.fillText("BLOKDUST", App.Width*0.5, (thisHeight * 0.5) + (headerType * 0.38));
+        } else {
+            ctx.textAlign = "left";
+            ctx.fillText("BLOKDUST", 20 * units, (thisHeight * 0.5) + (headerType * 0.38));
         }
+
+
 
 
         // DIVIDERS //
@@ -164,10 +181,18 @@ class Header extends DisplayObject{
         // Horizontal //
         if (dropDown>0) {
             ctx.beginPath();
+            ctx.moveTo(20*units,thisHeight + rowOffset);
+            ctx.lineTo(this.Sketch.Width-(20*units),thisHeight + rowOffset);
+            ctx.stroke();
+        }
+
+        if (App.Metrics.Device==="mobile") {
+            ctx.beginPath();
             ctx.moveTo(20*units,thisHeight);
             ctx.lineTo(this.Sketch.Width-(20*units),thisHeight);
             ctx.stroke();
         }
+
 
         // Vertical //
         var margin = this.DropDownHeight*0.5;
@@ -176,8 +201,8 @@ class Header extends DisplayObject{
             var cat = this.MenuItems[i];
             var menuX = cat.Position.x;
             if (i > 0) {
-                ctx.moveTo(Math.round(menuX - (cat.Size.width*0.5)), (thisHeight * 0.5) - (16 * units));
-                ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), (thisHeight * 0.5) + (16 * units));
+                ctx.moveTo(Math.round(menuX - (cat.Size.width*0.5)), rowOffset + (thisHeight * 0.5) - (16 * units));
+                ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), rowOffset + (thisHeight * 0.5) + (16 * units));
             }
         }
         //between share & settings //
@@ -198,7 +223,7 @@ class Header extends DisplayObject{
             ctx.fillStyle = App.Palette[col];
 
             // DRAW CAT HEADER //
-            cat.Draw(ctx,units,this,0);
+            cat.Draw(ctx,units,this,rowOffset);
 
 
             // ITEMS //
@@ -217,10 +242,10 @@ class Header extends DisplayObject{
 
                 ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(Math.floor(margin*units),(this.Height)*units);
-                ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),(this.Height)*units);
-                ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),(this.Height + clipHeight)*units);
-                ctx.lineTo(Math.floor(margin*units),(this.Height + clipHeight)*units);
+                ctx.moveTo(Math.floor(margin*units),(this.Height*units) + rowOffset);
+                ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),(this.Height*units) + rowOffset);
+                ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),((this.Height + clipHeight)*units) + rowOffset);
+                ctx.lineTo(Math.floor(margin*units),((this.Height + clipHeight)*units) + rowOffset);
                 ctx.closePath();
                 ctx.clip();
 
@@ -258,41 +283,41 @@ class Header extends DisplayObject{
 
 
             // PAGINATION //
-            ctx.strokeStyle = "#393d43"; // White
+            ctx.strokeStyle = App.Palette[1]; // White
             ctx.lineWidth = 2;
 
             // CLIPPING RECTANGLE //
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(0, this.Height * units);
-            ctx.lineTo(this.Sketch.Width, this.Height * units);
-            ctx.lineTo(this.Sketch.Width, (this.Height + this.DropDown) * units);
-            ctx.lineTo(0, (this.Height + this.DropDown) * units);
+            ctx.moveTo(0, (this.Height * units) + rowOffset);
+            ctx.lineTo(this.Sketch.Width, (this.Height * units) + rowOffset);
+            ctx.lineTo(this.Sketch.Width, ((this.Height + this.DropDown) * units) + rowOffset);
+            ctx.lineTo(0, ((this.Height + this.DropDown) * units) + rowOffset);
             ctx.closePath();
             ctx.clip();
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             if (cat.CurrentPage == 0) {
-                ctx.strokeStyle = "#393d43"; // Grey
+                ctx.strokeStyle = App.Palette[1]; // Grey
             }
 
             // LEFT ARROW //
             ctx.beginPath();
-            ctx.moveTo((margin * units) - (20 * units), (this.Height + (this.DropDown * 0.5) - 20) * units);
-            ctx.lineTo((margin * units) - (40 * units), (this.Height + (this.DropDown * 0.5)) * units);
-            ctx.lineTo((margin * units) - (20 * units), (this.Height + (this.DropDown * 0.5) + 20) * units);
+            ctx.moveTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
+            ctx.lineTo((margin * units) - (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
+            ctx.lineTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
             ctx.stroke();
 
-            ctx.strokeStyle = App.Palette[8]; // White
+            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             if (cat.CurrentPage == cat.Pages) {
-                ctx.strokeStyle = "#393d43"; // Grey
+                ctx.strokeStyle = App.Palette[1]; // Grey
             }
 
             // RIGHT ARROW //
             ctx.beginPath();
-            ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), (this.Height + (this.DropDown * 0.5) - 20) * units);
-            ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), (this.Height + (this.DropDown * 0.5)) * units);
-            ctx.lineTo(this.Sketch.Width - (margin * units) + (20 * units), (this.Height + (this.DropDown * 0.5) + 20) * units);
+            ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
+            ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
+            ctx.lineTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
             ctx.stroke();
 
 
@@ -302,7 +327,7 @@ class Header extends DisplayObject{
         // SETTINGS BTN //
         ctx.globalAlpha = 1;
         margin = this.DropDownHeight*0.5;
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[8]; // White
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
@@ -377,6 +402,7 @@ class Header extends DisplayObject{
         for (var i=0; i<this.MenuItems.length; i++) {
             if (this.MenuItems[i].Hover && !(this._SelectedCategory==i && this.DropDown>0)) {
                 this.StopAllTweens();
+                this.CloseOptions();
                 var cat = this.MenuItems[i];
 
                 //cat.CurrentPage = 0; // RESET ITEM PAGES
@@ -454,16 +480,18 @@ class Header extends DisplayObject{
 
         // SHARE //
         if (this._ShareOver) {
-            (<MainScene>this.Sketch).SharePanel.OpenPanel();
+            this.CloseOptions();
+            App.MainScene.SharePanel.OpenPanel();
         }
         // SETTINGS //
         if (this._SettingsOver) {
-            (<MainScene>this.Sketch).SettingsPanel.OpenPanel();
+            this.CloseOptions();
+            App.MainScene.SettingsPanel.OpenPanel();
         }
 
 
         // CLOSE DROPDOWN //
-        if (point.y > ((this.Height + this.DropDown)*units) && this.DropDown > 0) {
+        if (!this.MenuOver && (this.DropDown > 0)) {
             this.ClosePanel();
         }
     }
@@ -479,6 +507,12 @@ class Header extends DisplayObject{
         }
     }
 
+    CloseOptions() {
+        if (App.MainScene.OptionsPanel.Scale>0) {
+            App.MainScene.OptionsPanel.Close();
+        }
+    }
+
 
     MouseMove(point) {
         this.HitTests(point);
@@ -487,11 +521,12 @@ class Header extends DisplayObject{
     HitTests(point) {
         var units = App.Unit;
         var grd = App.GridSize;
+        var rowOffset = ((this._Rows-1)*this.Height)*units;
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), rowOffset + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
 
             //ITEMS HIT TEST //
             if (this._SelectedCategory==i) {
@@ -509,8 +544,8 @@ class Header extends DisplayObject{
         }
 
         // SCROLL HIT TEST //
-        this._LeftOver = this.HitRect(0, (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
-        this._RightOver = this.HitRect(this.Sketch.Width - (this.Margin*units), (this.Height + 20)*units, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._LeftOver = this.HitRect(0, ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._RightOver = this.HitRect(this.Sketch.Width - (this.Margin*units), ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
 
         // SHARE & SETTINGS HIT TESTS //
         this.Ctx.font = "400 " + (units*10) + "px Dosis";
@@ -520,7 +555,7 @@ class Header extends DisplayObject{
 
 
         // WHOLE MENU //
-        this.MenuOver = (point.y < ((this.Height + this.DropDown)*units));
+        this.MenuOver = (point.y < (((this.Height + this.DropDown)*units) + rowOffset));
     }
 
     MouseUp() {
