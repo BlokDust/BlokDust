@@ -4,15 +4,16 @@ import ISource = require("../../Blocks/ISource");
 import Source = require("../../Blocks/Source")
 import PostEffect = require("../../Blocks/Effects/PostEffect");
 import AudioChain = require("./AudioChain");
-//import Group = require("./Group");
 
 class EffectsChainManager {
 
     private _Debug: boolean = true;
     public Chains: AudioChain[] = [];
+    public EffectConnectionMethod: string;
+    private _MuteBufferTime: number = 50;
 
     constructor() {
-
+        this.EffectConnectionMethod = App.Config.EffectConnectionMethod;
     }
 
     /**
@@ -23,40 +24,51 @@ class EffectsChainManager {
         if (this._Debug) console.clear();
 
         this.Disconnect();
+
+    }
+
+    private _DisconnectionDone(){
         const chains = this.CreateChains();
         this.Connect(chains);
     }
 
     public Disconnect() {
-        // Disconnect everything first!
-        App.Sources.forEach((source: ISource) => {
+        //First mute everything
+        App.Audio.Master.mute = true;
+        setTimeout(()=> {
+            // Disconnect everything first!
+            App.Sources.forEach((source:ISource) => {
 
-            const effects: IEffect[] = this.GetPostEffectsFromSource(source);
+                const effects:IEffect[] = this.GetPostEffectsFromSource(source);
 
-            // This sources input gain
-            const sourceInput: any = source.AudioInput;
+                // This sources input gain
+                const sourceInput:Tone.Signal = source.AudioInput;
 
-            // disconnect the input
-            if (this._Debug) console.log((<any>source).__proto__, ' disconnected.');
-            sourceInput.disconnect();
+                // disconnect the input
+                if (this._Debug) console.log(source, ' disconnected.');
 
-            // if this source has any post effects, disconnect those too
-            if (effects.length) {
+                sourceInput.disconnect();
 
-                effects.forEach((effect: IEffect) => {
-                    if (this._Debug) console.log((<any>effect).__proto__, ' disconnected.');
-                    effect.Effect.disconnect();
-                });
+                // if this source has any post effects, disconnect those too
+                if (effects.length) {
 
-            }
+                    effects.forEach((effect:IEffect) => {
+                        if (this._Debug) console.log(effect, ' disconnected.');
+                        effect.Effect.disconnect();
+                    });
 
-        });
+                }
 
-        App.Blocks.forEach((block: IBlock) => {
-            block.IsChained = false;
-        });
-        // Reset the chains array
-        this.Chains = [];
+            });
+
+            App.Blocks.forEach((block:IBlock) => {
+                block.IsChained = false;
+            });
+            // Reset the chains array
+            this.Chains = [];
+
+            this._DisconnectionDone();
+        }, this._MuteBufferTime);
     }
 
     private _ParseConnections(chain: AudioChain, parentBlock: IBlock){
@@ -115,7 +127,7 @@ class EffectsChainManager {
                 if (this._Debug) console.warn('Connect: ', sources, ' to: ', effects);
 
                 // connect all effects in series and then to master
-                App.Audio.Tone.connectSeries(...effects).toMaster();
+                //App.Audio.Tone.connectSeries(...effects).toMaster();
 
                 if (effects.length) {
                     let currentUnit = effects[0].Effect;
@@ -127,7 +139,8 @@ class EffectsChainManager {
 
                     // Connect all sources to the first effect
                     sources.forEach((s: ISource) => {
-                       s.AudioInput.connect(effects[0].Effect);
+                        s.AudioInput.connect(effects[0].Effect);
+                        s.AudioInput.rampTo(1, 1);
                     });
 
                     // Connect last effect to master
@@ -140,17 +153,14 @@ class EffectsChainManager {
                         source.AudioInput.toMaster();
                     });
                 }
-
-
             }
-
-            // Now loop
-
-
-
-            //App.Tone.connectSeries(...effects);
-
         });
+
+        // Lastly unmute everything
+        setTimeout(() => {
+            App.Audio.Master.mute = false;
+        }, this._MuteBufferTime);
+
     }
 
     public GetPostEffectsFromSource(source: ISource): IEffect[] {

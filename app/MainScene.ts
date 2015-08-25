@@ -581,6 +581,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                             source.AddEffect(effect);
 
                             this._Invalidate();
+                            App.Audio.EffectsChainManager.Update();
                         }
 
 
@@ -597,6 +598,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                         source.RemoveEffect(effect);
 
                         this._Invalidate();
+                        App.Audio.EffectsChainManager.Update();
                     }
                 }
             }
@@ -746,7 +748,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
     private _Invalidate(){
         this._ValidateBlocks();
         this._CheckProximity();
-        App.Audio.EffectsChainManager.Update();
+
     }
 
     _ValidateBlocks() {

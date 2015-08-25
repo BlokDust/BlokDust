@@ -39,5 +39,6 @@
     "SoundCloudLoadTimeout": 20,
     "ResetPitchesOnInteractionDisconnect": true,
     "ScrollSpeed": 1.4,
-    "ScrollEasing": 15
+    "ScrollEasing": 15,
+    "EffectConnectionStyle": "accumulative"
 }
