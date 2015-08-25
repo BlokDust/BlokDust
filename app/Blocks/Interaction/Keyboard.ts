@@ -115,13 +115,13 @@ class Keyboard extends PreEffect {
                     s.start();
 
                     // Connect Envelope to the Effects Chain
-                    e.connect(source.EffectsChainInput);
+                    e.connect(source.AudioInput);
                 } else {
                     // No CreateEnvelope()
                     // Check if it's a Sampler Source (they have their own envelopes built in)
                     if (source.Sources[0] instanceof Tone.Simpler) {
                         e = source.Sources[i].envelope;
-                        s.connect(source.EffectsChainInput)
+                        s.connect(source.AudioInput)
                     }
                 }
 
@@ -196,12 +196,12 @@ class Keyboard extends PreEffect {
      * @returns {number}
      * @constructor
      */
-    public GetConnectedPitchPreEffects(source) {
+    public GetConnectedPitchPreEffects(source: ISource) {
 
         let totalPitchIncrement: number = 1;
 
-        for (var i = 0; i < source.Effects.Count; i++) {
-            let effect = source.Effects.GetValueAt(i);
+        for (var i = 0; i < source.Connections.Count; i++) {
+            let effect = source.Connections.GetValueAt(i);
 
             //if (effect instanceof PitchComponent) {
             //    let thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;

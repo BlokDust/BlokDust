@@ -38,7 +38,7 @@ class ToneSource extends Source {
         this.CreateEnvelope();
 
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-            e.connect(this.EffectsChainInput);
+            e.connect(this.AudioInput);
         });
 
         this.Sources.forEach((s: Tone.Oscillator, i: number)=> {

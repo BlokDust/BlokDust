@@ -129,7 +129,7 @@ class Granular extends Source {
                 this._Envelopes[i].connect(this.Sources[0]);
                 this.Grains[i].playbackRate = this.Params.playbackRate;
             }
-            this.Sources[0].connect(this.EffectsChainInput);
+            this.Sources[0].connect(this.AudioInput);
         }
     }
 
@@ -195,7 +195,7 @@ class Granular extends Source {
             });
 
             this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-                e.connect(this.EffectsChainInput);
+                e.connect(this.AudioInput);
             });
 
             this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));

@@ -157,7 +157,7 @@ class Soundcloud extends SamplerBase {
             });
 
             this.Sources.forEach((s: Tone.Simpler) => {
-                s.connect(this.EffectsChainInput);
+                s.connect(this.AudioInput);
             });
 
             this._FirstRelease = false;

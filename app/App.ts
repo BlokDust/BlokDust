@@ -154,6 +154,8 @@ class App implements IApp{
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
 
+        // initialise core audio
+        this.Audio.Init();
 
         // REGISTER COMMAND HANDLERS //
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));

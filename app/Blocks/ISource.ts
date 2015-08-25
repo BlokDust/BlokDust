@@ -12,7 +12,7 @@ interface ISource extends IBlock{
     RemoveEffect(effect: IEffect): void;
     Sources?: any[]; // Use this when available: Tone.Oscillator || Tone.Noise
     Envelopes?: Tone.AmplitudeEnvelope[];
-    EffectsChainInput?: Tone.Signal;
+    AudioInput?: Tone.Signal;
     //EffectsChainOutput?: Tone.Signal;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;

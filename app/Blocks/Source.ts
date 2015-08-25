@@ -19,8 +19,8 @@ class Source extends Block implements ISource {
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
-    public EffectsChainInput: Tone.Signal;
-    public EffectsChainOutput: Tone.Signal;
+    public AudioInput: Tone.Signal;
+    //public EffectsChainOutput: Tone.Signal;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -65,13 +65,13 @@ class Source extends Block implements ISource {
 
         if (!(this instanceof Power)) {
 
-            this.EffectsChainInput = new Tone.Signal();
-            this.EffectsChainOutput = new Tone.Signal();
+            this.AudioInput = new Tone.Signal();
+            //this.EffectsChainOutput = new Tone.Signal();
 
-            this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
+            //this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
 
-            this.EffectsChainInput.connect(this.EffectsChainOutput);
-            this.EffectsChainOutput.connect(App.Audio.Master);
+            //this.EffectsChainInput.connect(this.EffectsChainOutput);
+            this.AudioInput.connect(App.Audio.Master);
 
         }
 
@@ -304,8 +304,8 @@ class Source extends Block implements ISource {
         super.Dispose();
 
         // Delete Signal nodes
-        if (this.EffectsChainInput) this.EffectsChainInput.dispose();
-        if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
+        if (this.AudioInput) this.AudioInput.dispose();
+        //if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
 
 
         if (this.ActiveVoices.length) {

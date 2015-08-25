@@ -47,7 +47,7 @@ class RecorderBlock extends SamplerBase {
         });
 
         this.Sources.forEach((s: Tone.Simpler) => {
-            s.connect(this.EffectsChainInput);
+            s.connect(this.AudioInput);
             s.volume.value = this.Params.volume;
         });
 

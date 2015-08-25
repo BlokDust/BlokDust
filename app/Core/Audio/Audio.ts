@@ -12,7 +12,7 @@ class Audio {
     public EffectsChainManager: EffectsChainManager;
     public AudioNodeConnectionManager: AudioNodeConnectionManager;
 
-    constructor() {
+    Init() {
 
         // Reference to Tone
         this.Tone = new Tone();

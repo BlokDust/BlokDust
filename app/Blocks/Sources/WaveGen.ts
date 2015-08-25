@@ -15,7 +15,7 @@ class WaveGen extends SamplerBase {
 
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
-    public Sources : Tone.Simpler[];
+    public Sources: Tone.Simpler[];
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
     private _BufferData: Float32Array;
@@ -528,7 +528,7 @@ class WaveGen extends SamplerBase {
             });
 
             this.Sources.forEach((s: Tone.Simpler) => {
-                s.connect(this.EffectsChainInput);
+                s.connect(this.AudioInput);
             });
 
             this._FirstRelease = false;

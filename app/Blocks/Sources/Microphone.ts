@@ -26,7 +26,7 @@ class Microphone extends Source {
 
         //this.CreateSource();
 
-        this.Volume.connect(this.EffectsChainInput);
+        this.Volume.connect(this.AudioInput);
 
         // moved to first mouse release //
         /*// Microphone should be muted and only unmuted when powered
