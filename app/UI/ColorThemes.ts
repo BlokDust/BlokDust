@@ -92,7 +92,6 @@ class ColorThemes extends DisplayObject {
         ];
 
 
-
         this._Defaults = {
             txt: 8
         };

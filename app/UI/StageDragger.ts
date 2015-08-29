@@ -94,6 +94,7 @@ class StageDragger  extends DisplayObject {
         this._DragStart = new Point(point.x,point.y);
         this._OffsetStart = new Point(App.DragOffset.x,App.DragOffset.y);
         this._Dragging = true;
+        console.log(App.DragOffset);
     }
 
     MouseMove(point: Point) {
@@ -115,7 +116,7 @@ class StageDragger  extends DisplayObject {
         //this.StopAllTweens();
         this.Destination.x = this._OffsetStart.x + (((point.x - this._DragStart.x)*(speed/App.ZoomLevel)));
         this.Destination.y = this._OffsetStart.y + (((point.y - this._DragStart.y)*(speed/App.ZoomLevel)));
-
+        //console.log(this.Destination);
     }
 
     Jump(point: Point, to: Point) {

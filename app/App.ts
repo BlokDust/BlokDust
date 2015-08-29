@@ -282,6 +282,9 @@ class App implements IApp{
         }
         this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
+        if (this.MainScene.MainSceneDragger) {
+            this.MainScene.MainSceneDragger.Destination = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
+        }
         this.MainScene.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
 
