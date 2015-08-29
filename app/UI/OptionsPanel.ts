@@ -44,6 +44,9 @@ class OptionsPanel extends DisplayObject {
     public Hover: boolean;
     public Opening: boolean;
     public Outline: Point[] = [];
+    private _DrawReady: boolean;
+    public Canvas: any;
+    private _Img: any;
 
     constructor() {
         super();
@@ -62,6 +65,7 @@ class OptionsPanel extends DisplayObject {
         this._NameWidth = 0;
         this.Hover = false;
         this.Opening = false;
+        this._DrawReady = false;
 
         this.Options = [];
         this.SliderColours = [];
@@ -74,7 +78,22 @@ class OptionsPanel extends DisplayObject {
             ]
         };
 
+
+        //this.CreateCanvas();
+        this.Canvas = App.SubCanvas[0];
+
+
+
         this.Populate(this.InitJson,false);
+    }
+
+    /*CreateCanvas() {
+        this.Canvas = document.createElement("canvas");
+        document.body.appendChild(this.Canvas);
+    }*/
+
+    get Ctx(): CanvasRenderingContext2D{
+        return this.Canvas.getContext("2d");
     }
 
     //-------------------------------------------------------------------------------------------
@@ -423,7 +442,7 @@ class OptionsPanel extends DisplayObject {
         //    this.PanelScale(this,1,200);
         //}
 
-
+        this._DrawReady = true;
     }
 
     UpdateOptions() {
@@ -461,6 +480,7 @@ class OptionsPanel extends DisplayObject {
             }
 
         }
+        this._DrawReady = true;
     }
 
 
@@ -478,12 +498,82 @@ class OptionsPanel extends DisplayObject {
 
     Draw() {
         var units = App.Unit;
+        var ctxOuter = App.Ctx;
         var ctx = this.Ctx;
-        var dataType = Math.round(units*10);
-        var headerType = Math.round(units*33);
 
-        // START A TRANSFORM HERE //
-        ctx.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
+        // DRAW OFFSCREEN //
+        if (this._DrawReady) {
+            this.DrawToOffscreenCanvas(ctx);
+            this._DrawReady = false;
+        }
+
+        if (this.Scale>0) {
+
+            ctxOuter.globalAlpha = 1;
+            //ctxOuter.drawImage(this._Img,0,0);
+
+            // START A TRANSFORM HERE //
+            ctxOuter.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
+
+            ctxOuter.drawImage(this.Canvas,0,-Math.round(App.Metrics.C.y));
+
+
+            //this.DrawToOffscreenCanvas(ctx);
+            /*var sx = 0;
+             var sy = 0;
+
+
+             // PANEL //
+             ctx.font = App.Metrics.TxtMid;
+             ctx.textAlign = "right";
+
+
+             // DRAW PANEL //
+             ctx.fillStyle = App.Palette[2];// Shadow
+             ctx.globalAlpha = 0.16;
+             this.panelDraw(sx, sy + (5 * units));
+             ctx.fillStyle = App.Palette[2];// Black
+             ctx.globalAlpha = 0.9;
+             this.panelDraw(sx, sy);
+             ctx.globalAlpha = 1;
+
+
+             // CLOSE X //
+             ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
+             ctx.lineWidth = 2;
+             ctx.beginPath();
+             ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
+             ctx.lineTo(sx + this.Size.width - (16 * units), sy - (this.Size.height * 0.5) - (4 * units));
+             ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) - (4 * units));
+             ctx.lineTo(sx + this.Size.width - (16 * units), sy - (this.Size.height * 0.5) + (4 * units));
+             ctx.stroke();
+             ctx.lineWidth = 1;
+
+
+             // TITLE //
+             ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+             ctx.textAlign = "left";
+             ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
+
+
+             // DRAW OPTIONS //
+             for (var i = 0; i < this.Options.length; i++) {
+             this.Options[i].Draw(ctx,units,i,this);
+             }*/
+            ctxOuter.setTransform(1, 0, 0, 1, 0, 0);
+
+        }
+
+
+    }
+
+    DrawToOffscreenCanvas(ctx) {
+
+        ctx.clearRect(0,0,App.Width,App.Height);
+
+        ctx.setTransform(1, 0, 0, 1, 0, Math.round(App.Metrics.C.y));
+
+        var units = App.Unit;
         var sx = 0;
         var sy = 0;
 
@@ -761,6 +851,10 @@ class OptionsPanel extends DisplayObject {
                 }
             }
         }
+
+        if (this.Hover) {
+            this._DrawReady = true;
+        }
     }
 
 
@@ -953,7 +1047,7 @@ class OptionsPanel extends DisplayObject {
 
     // UPDATE THE VALUE IN THE BLOCK //
     UpdateValue(object,value,min,max,rangemin,rangemax,setting,axis,log) {
-
+        this._DrawReady = true;
         // CALCULATE VALUE //
         if (log==true) {
             object[""+value] = this.logValue(rangemin,rangemax,object[""+min],object[""+max],object.Position[""+axis]);
@@ -986,7 +1080,7 @@ class OptionsPanel extends DisplayObject {
     }
 
     SwitchValue(object,value,setting) {
-
+        this._DrawReady = true;
         console.log("from " + object[""+setting] +" | "+ object[""+value]);
         object[""+value] = ! object[""+value];
 
@@ -1002,7 +1096,7 @@ class OptionsPanel extends DisplayObject {
     }
 
     PushValue(object,value,setting) {
-
+        this._DrawReady = true;
         console.log("" + object[""+setting] +" | "+ value);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], value);

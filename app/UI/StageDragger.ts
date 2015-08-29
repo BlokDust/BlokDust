@@ -31,9 +31,7 @@ class StageDragger  extends DisplayObject {
             App.DragOffset.y += (((this.Destination.y - App.DragOffset.y)/100) * speed);
 
             App.Metrics.UpdateGridScale();
-            console.log(App.DragOffset.x);
         }
-
     }
 
     Draw() {
@@ -124,8 +122,8 @@ class StageDragger  extends DisplayObject {
         this.StopAllTweens();
         var x = (-point.x * App.GridSize) + ((to.x - App.Metrics.C.x)/App.ZoomLevel);
         var y = (-point.y * App.GridSize) + ((to.y - App.Metrics.C.y)/App.ZoomLevel);
-        //this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
-        this.Destination = new Point(x,y);
+        this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
+        //this.Destination = new Point(x,y);
         App.MainScene.ToolTipClose();
     }
 
