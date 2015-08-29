@@ -76,7 +76,7 @@ class Granular extends Source {
         this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, 240, (tracks) => {
+            SoundCloudAudio.Search(query, App.Config.GranularMaxTrackLength, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
                 });

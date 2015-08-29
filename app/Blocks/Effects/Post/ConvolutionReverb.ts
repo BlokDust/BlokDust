@@ -89,7 +89,7 @@ class Convolver extends PostEffect {
         this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, 18, (tracks) => {
+            SoundCloudAudio.Search(query, App.Config.ConvolverMaxTrackLength, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });

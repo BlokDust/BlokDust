@@ -131,7 +131,7 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
                     // Connect all sources to the first effect
                     sources.forEach((s: ISource) => {
                         s.AudioInput.connect(effects[0].Effect);
-                        s.AudioInput.rampTo(1, 1);
+                        //s.AudioInput.rampTo(1, 1);
                     });
 
                     // Connect last effect to master
