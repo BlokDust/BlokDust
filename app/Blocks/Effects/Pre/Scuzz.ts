@@ -2,6 +2,7 @@ import PreEffect = require("../PreEffect");
 import Grid = require("../../../Grid");
 import ISource = require("../../ISource");
 import MainScene = require("../../../MainScene");
+import AudioChain = require("../../../Core/Audio/ConnectionMethods/AudioChain");
 
 class Scuzz extends PreEffect {
 
@@ -57,11 +58,11 @@ class Scuzz extends PreEffect {
             }
         });
 
-        this.UpdatePreEffectConnections();
     }
 
-    UpdatePreEffectConnections() {
-        super.UpdatePreEffectConnections();
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
+
         const sources: ISource[] = this.Connections.ToArray();
         sources.forEach((source: ISource) => {
 

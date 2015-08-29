@@ -310,7 +310,6 @@ class App implements IApp{
         // refresh all Sources (reconnects Effects).
         this.Blocks.forEach((b: IBlock) => {
             b.Refresh();
-            b.UpdateConnections();
         });
     }
 

@@ -1,10 +1,12 @@
 import ConnectionMethodManager = require("./ConnectionMethodManager");
 import IBlock = require("../../../Blocks/IBlock");
 import IEffect = require("../../../Blocks/IEffect");
+import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
 import ISource = require("../../../Blocks/ISource");
 import Source = require("../../../Blocks/Source");
 import Effect = require("../../../Blocks/Effect");
 import PostEffect = require("../../../Blocks/Effects/PostEffect");
+import PreEffect = require("../../../Blocks/Effects/PreEffect");
 import AudioChain = require("./AudioChain");
 import Convolver = require("../../../Blocks/Effects/Post/ConvolutionReverb");
 
@@ -48,37 +50,6 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
                 block.IsChained = false;
             });
 
-            //App.Sources.forEach((source:ISource) => {
-            //
-            //    const effects:IEffect[] = this.GetPostEffectsFromSource(source);
-            //
-            //    // This sources input gain
-            //    const sourceInput:Tone.Signal = source.AudioInput;
-            //
-            //    // disconnect the input
-            //    sourceInput.disconnect();
-            //
-            //    // if this source has any post effects, disconnect those too
-            //    if (effects.length) {
-            //
-            //        effects.forEach((effect:IEffect) => {
-            //            if (this._Debug) console.log(effect, ' disconnected.');
-            //            effect.Effect.disconnect();
-            //
-            //            if (effect instanceof Convolver) {
-            //                console.log('hello')
-            //            }
-            //
-            //
-            //        });
-            //
-            //    }
-            //
-            //});
-            //
-            //App.Blocks.forEach((block:IBlock) => {
-            //    block.IsChained = false;
-            //});
             // Reset the chains array
             this.Chains = [];
 
@@ -116,6 +87,21 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
                 this._ParseConnections(chain, block)
             }
         });
+
+        // Now sort connections into lists of Sources, PostEffects and PreEffects
+        this.Chains.forEach((chain: AudioChain) => {
+            chain.Connections.forEach((block: IBlock) => {
+                if (block instanceof Source) {
+                    chain.Sources.push(<ISource>block);
+                } else if (block instanceof PostEffect){
+                    chain.PostEffects.push(<IEffect>block);
+                } else if (block instanceof PreEffect) {
+                    chain.PreEffects.push(<PreEffect>block);
+                } else {
+                    chain.Others.push(block);
+                }
+            });
+        });
         return this.Chains;
     }
 
@@ -125,45 +111,37 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
         // loop through chains
         chains.forEach((chain: AudioChain) => {
 
-            // seperate connections into effects and sources
-            let effects: IEffect[] = [];
-            let sources: ISource[] = [];
-            chain.Connections.forEach((block: IBlock) => {
-                if (block instanceof Source) {
-                    sources.push(<ISource>block);
-                } else if (block instanceof PostEffect){
-                    effects.push(<IEffect>block);
-                }
+            chain.PreEffects.forEach((preEffect: IPreEffect) => {
+                preEffect.UpdateConnections(chain);
             });
 
             // If there are sources
-            if (sources.length) {
+            if (chain.Sources.length) {
 
-                if (this._Debug) console.warn('Connect: ', sources, ' to: ', effects);
+                if (this._Debug) console.warn('Connect: ', chain.Sources, ' to: ', chain.PostEffects);
 
                 // connect all effects in series and then to master
                 //App.Audio.Tone.connectSeries(...effects).toMaster();
 
-                if (effects.length) {
-                    let currentUnit = effects[0].Effect;
-                    for (let i = 1; i < effects.length; i++) {
-                        const toUnit = effects[i].Effect;
+                if (chain.PostEffects.length) {
+                    let currentUnit = chain.PostEffects[0].Effect;
+                    for (let i = 1; i <  chain.PostEffects.length; i++) {
+                        const toUnit =  chain.PostEffects[i].Effect;
                         currentUnit.connect(toUnit);
                         currentUnit = toUnit;
                     }
 
                     // Connect all sources to the first effect
-                    sources.forEach((s: ISource) => {
-                        s.AudioInput.connect(effects[0].Effect);
-                        //s.AudioInput.rampTo(1, 1);
+                    chain.Sources.forEach((source: ISource) => {
+                        source.AudioInput.connect(chain.PostEffects[0].Effect);
                     });
 
                     // Connect last effect to master
-                    effects[effects.length - 1].Effect.toMaster();
+                    chain.PostEffects[chain.PostEffects.length - 1].Effect.toMaster();
 
                 } else {
                     // No effects so connect all sources to Master
-                    sources.forEach((source: ISource) => {
+                    chain.Sources.forEach((source: ISource) => {
                         // connect to the first Effect in the effects list
                         source.AudioInput.toMaster();
                     });

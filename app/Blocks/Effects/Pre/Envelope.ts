@@ -2,6 +2,7 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import AudioChain = require("../../../Core/Audio/ConnectionMethods/AudioChain");
 
 class Envelope extends PreEffect {
 
@@ -73,11 +74,11 @@ class Envelope extends PreEffect {
 
     }
 
-    UpdatePreEffectConnections() {
-        super.UpdatePreEffectConnections();
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
         const sources: ISource[] = App.Audio.EffectsChainManager.ConnectionMethodManager.GetSourcesFromPreEffect(this);
-        console.log(sources);
+        console.log(chain);
         sources.forEach((source: ISource) => {
 
             if (source.Envelopes.length) {

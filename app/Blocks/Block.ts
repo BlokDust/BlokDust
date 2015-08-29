@@ -182,16 +182,6 @@ class Block extends DisplayObject implements IBlock {
     Refresh() {
     }
 
-    UpdateConnections() {
-        this.UpdatePreEffectConnections();
-    }
-
-    UpdatePreEffectConnections(){
-        /**
-         * For PreEffects only
-         */
-    }
-
     Stop() {
     }
 

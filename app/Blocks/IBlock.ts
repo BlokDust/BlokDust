@@ -29,7 +29,6 @@ interface IBlock extends IDisplayObject{
     UpdateOptionsForm(): void;
     SetParam(param: string, value: number): void;
     BackwardsCompatibilityPatch(): void;
-    UpdateConnections(): void;
 }
 
 export = IBlock;
