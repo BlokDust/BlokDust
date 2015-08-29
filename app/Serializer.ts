@@ -44,7 +44,8 @@ class Serializer {
             ZoomLevel: App.ZoomLevel,
             DragOffset: App.DragOffset,
             Composition: [],
-            Version: Version.Version
+            Version: Version.Version,
+            ColorThemeNo: App.Color.CurrentThemeNo
         };
 
         this._SerializeBlocks(json.Composition, blocks);
@@ -143,6 +144,7 @@ class Serializer {
         }
 
         saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
+        saveFile.ColorThemeNo = parsed.ColorThemeNo;
 
         return saveFile;
     }
