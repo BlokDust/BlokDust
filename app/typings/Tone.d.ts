@@ -913,6 +913,7 @@ declare module Tone {
         dispose(): Tone.Simpler;
         triggerAttack(time?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time, velocity?: number): Tone.Simpler;
         triggerRelease(time?: Tone.Time): Tone.Simpler;
+        triggerAttackRelease(length: Tone.Time, time?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time, velocity?: number): Tone.Simpler;
     }
 
     var Scale: {

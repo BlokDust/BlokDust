@@ -1,5 +1,5 @@
 declare module Fayde {
-    var Version: string;
+    var version: string;
 }
 declare module Fayde {
     var XMLNS: string;
@@ -886,6 +886,8 @@ declare module Fayde.Controls {
     }
     enum TextTrimming {
         None = 0,
+        WordEllipsis = 1,
+        CharacterEllipsis = 2,
     }
     enum ClickMode {
         Release = 0,
@@ -1754,174 +1756,6 @@ declare module Fayde.Controls {
         ImageChanged(source: Media.Imaging.BitmapSource): void;
     }
 }
-declare module Fayde.Controls.Internal {
-    interface ICursorAdvancer {
-        CursorDown(cursor: number, isPage: boolean): number;
-        CursorUp(cursor: number, isPage: boolean): number;
-        CursorNextWord(cursor: number): number;
-        CursorPrevWord(cursor: number): number;
-        CursorNextChar(cursor: number): number;
-        CursorPrevChar(cursor: number): number;
-        CursorLineBegin(cursor: number): number;
-        CursorLineEnd(cursor: number): number;
-        CursorBegin(cursor: number): number;
-        CursorEnd(cursor: number): number;
-    }
-    class TextBoxCursorAdvancer implements ICursorAdvancer {
-        private $textOwner;
-        constructor($textOwner: Text.ITextOwner);
-        CursorDown(cursor: number, isPage: boolean): number;
-        CursorUp(cursor: number, isPage: boolean): number;
-        CursorNextWord(cursor: number): number;
-        CursorPrevWord(cursor: number): number;
-        CursorNextChar(cursor: number): number;
-        CursorPrevChar(cursor: number): number;
-        CursorLineBegin(cursor: number): number;
-        CursorLineEnd(cursor: number): number;
-        CursorBegin(cursor: number): number;
-        CursorEnd(cursor: number): number;
-    }
-    class PasswordBoxCursorAdvancer implements ICursorAdvancer {
-        private $textOwner;
-        constructor($textOwner: Text.ITextOwner);
-        CursorDown(cursor: number, isPage: boolean): number;
-        CursorUp(cursor: number, isPage: boolean): number;
-        CursorNextWord(cursor: number): number;
-        CursorPrevWord(cursor: number): number;
-        CursorNextChar(cursor: number): number;
-        CursorPrevChar(cursor: number): number;
-        CursorLineBegin(cursor: number): number;
-        CursorLineEnd(cursor: number): number;
-        CursorBegin(cursor: number): number;
-        CursorEnd(cursor: number): number;
-    }
-}
-declare module Fayde.Controls.Internal {
-    interface IItemContainersOwner {
-        PrepareContainerForItem(container: UIElement, item: any): any;
-        ClearContainerForItem(container: UIElement, item: any): any;
-        GetContainerForItem(): UIElement;
-        IsItemItsOwnContainer(item: any): boolean;
-    }
-    interface IItemContainersManager {
-        IsRecycling: boolean;
-        IndexFromContainer(container: UIElement): number;
-        ContainerFromIndex(index: number): UIElement;
-        ItemFromContainer(container: UIElement): any;
-        ContainerFromItem(item: any): UIElement;
-        OnItemsAdded(index: number, newItems: any[]): any;
-        OnItemsRemoved(index: number, oldItems: any[]): any;
-        DisposeContainers(index?: number, count?: number): UIElement[];
-        CreateGenerator(index: number, count: number): IContainerGenerator;
-        GetEnumerator(index?: number, count?: number): IContainerEnumerator;
-    }
-    class ItemContainersManager implements IItemContainersManager {
-        Owner: IItemContainersOwner;
-        private _Items;
-        private _Containers;
-        private _Cache;
-        IsRecycling: boolean;
-        constructor(Owner: IItemContainersOwner);
-        IndexFromContainer(container: UIElement): number;
-        ContainerFromIndex(index: number): UIElement;
-        ItemFromContainer(container: UIElement): any;
-        ContainerFromItem(item: any): UIElement;
-        OnItemsAdded(index: number, newItems: any[]): void;
-        OnItemsRemoved(index: number, oldItems: any[]): void;
-        DisposeContainers(index?: number, count?: number): UIElement[];
-        CreateGenerator(index: number, count: number): IContainerGenerator;
-        GetEnumerator(start?: number, count?: number): IContainerEnumerator;
-    }
-    interface IContainerGenerator {
-        IsCurrentNew: boolean;
-        Current: UIElement;
-        CurrentItem: any;
-        CurrentIndex: number;
-        GenerateIndex: number;
-        Generate(): boolean;
-    }
-    interface IContainerEnumerator extends nullstone.IEnumerator<UIElement> {
-        CurrentItem: any;
-        CurrentIndex: number;
-    }
-}
-declare module Fayde.Controls.Internal {
-    interface IRange {
-        Minimum: number;
-        Maximum: number;
-        Value: number;
-        OnMinimumChanged(oldMin: number, newMin: number): any;
-        OnMaximumChanged(oldMax: number, newMax: number): any;
-        OnValueChanged(oldVal: number, newVal: number): any;
-    }
-    interface IRangeCoercer {
-        OnMinimumChanged(oldMinimum: number, newMinimum: number): any;
-        OnMaximumChanged(oldMaximum: number, newMaximum: number): any;
-        OnValueChanged(oldValue: number, newValue: number): any;
-    }
-    class RangeCoercer implements IRangeCoercer {
-        Range: IRange;
-        OnCoerceMaximum: (val: any) => void;
-        OnCoerceValue: (val: any) => void;
-        InitialMax: number;
-        InitialVal: number;
-        RequestedMax: number;
-        RequestedVal: number;
-        PreCoercedMax: number;
-        PreCoercedVal: number;
-        CoerceDepth: number;
-        Minimum: number;
-        Maximum: number;
-        Value: number;
-        constructor(Range: IRange, OnCoerceMaximum: (val: any) => void, OnCoerceValue: (val: any) => void);
-        OnMinimumChanged(oldMinimum: number, newMinimum: number): void;
-        OnMaximumChanged(oldMaximum: number, newMaximum: number): void;
-        OnValueChanged(oldValue: number, newValue: number): void;
-        CoerceMaximum(): void;
-        CoerceValue(): void;
-    }
-}
-declare module Fayde.Controls.Internal {
-    class TextBoxContentProxy {
-        private $$element;
-        setElement(fe: FrameworkElement, view: TextBoxView): void;
-        setHorizontalScrollBar(sbvis: ScrollBarVisibility): void;
-        setVerticalScrollBar(sbvis: ScrollBarVisibility): void;
-    }
-}
-declare module Fayde.Controls.Internal {
-    import TextBoxViewUpdater = minerva.controls.textboxview.TextBoxViewUpdater;
-    class TextBoxViewNode extends FENode {
-        LayoutUpdater: TextBoxViewUpdater;
-    }
-    class TextBoxView extends FrameworkElement {
-        XamlNode: TextBoxViewNode;
-        CreateLayoutUpdater(): TextBoxViewUpdater;
-        private _AutoRun;
-        constructor();
-        private _InlineChanged(obj?);
-        setFontProperty(propd: DependencyProperty, value: any): void;
-        setFontAttr(attrName: string, value: any): void;
-        setCaretBrush(value: Media.Brush): void;
-        setIsFocused(isFocused: boolean): void;
-        setIsReadOnly(isReadOnly: boolean): void;
-        setTextAlignment(textAlignment: TextAlignment): void;
-        setTextWrapping(textWrapping: TextWrapping): void;
-        setSelectionStart(selectionStart: number): void;
-        setSelectionLength(selectionLength: number): void;
-        setText(text: string): void;
-        GetCursorFromPoint(point: Point): number;
-    }
-}
-declare module Fayde.Controls.Internal {
-    class VirtualizingPanelContainerOwner implements minerva.IVirtualizingContainerOwner {
-        private $$panel;
-        constructor($$panel: VirtualizingPanel);
-        itemCount: number;
-        createGenerator(index: number, count: number): minerva.IVirtualizingGenerator;
-        remove(index: number, count: number): void;
-    }
-}
 declare module Fayde.Controls {
     interface IItemCollection extends nullstone.ICollection<any> {
         ItemsChanged: nullstone.Event<Collections.CollectionChangedEventArgs>;
@@ -2174,152 +2008,6 @@ declare module Fayde.Controls {
         DisplayText: string;
     }
 }
-declare module Fayde.Controls.Primitives {
-    class DragCompletedEventArgs extends RoutedEventArgs {
-        HorizontalChange: number;
-        VerticalChange: number;
-        Canceled: boolean;
-        constructor(horizontal: number, vertical: number, canceled: boolean);
-    }
-    class DragDeltaEventArgs extends RoutedEventArgs {
-        HorizontalChange: number;
-        VerticalChange: number;
-        constructor(horizontal: number, vertical: number);
-    }
-    class DragStartedEventArgs extends RoutedEventArgs {
-        HorizontalOffset: number;
-        VerticalOffset: number;
-        constructor(horizontal: number, vertical: number);
-    }
-}
-declare module Fayde.Controls.Primitives {
-    import OverlayUpdater = minerva.controls.overlay.OverlayUpdater;
-    class OverlayNode extends FENode {
-        LayoutUpdater: OverlayUpdater;
-        XObject: Overlay;
-        private _Layer;
-        private _Mask;
-        EnsureLayer(): Panel;
-        EnsureMask(): Border;
-        private _OnMaskMouseDown(sender, args);
-        UpdateMask(): void;
-        OnIsAttachedChanged(newIsAttached: boolean): void;
-        RegisterInitiator(initiator: UIElement): void;
-    }
-    class Overlay extends FrameworkElement {
-        XamlNode: OverlayNode;
-        CreateNode(): OverlayNode;
-        CreateLayoutUpdater(): OverlayUpdater;
-        static VisualProperty: DependencyProperty;
-        static VisualUriProperty: DependencyProperty;
-        static VisualViewModelProperty: DependencyProperty;
-        static IsOpenProperty: DependencyProperty;
-        static MaskBrushProperty: DependencyProperty;
-        static ClosedCommandProperty: DependencyProperty;
-        Visual: UIElement;
-        VisualUri: Uri;
-        VisualViewModel: any;
-        IsOpen: boolean;
-        MaskBrush: Media.Brush;
-        ClosedCommand: Input.ICommand;
-        Opened: nullstone.Event<nullstone.IEventArgs>;
-        Closed: nullstone.Event<OverlayClosedEventArgs>;
-        constructor();
-        InitBindings(): void;
-        private _ContentControlForUri;
-        private _IgnoreClose;
-        private _OnVisualChanged(args);
-        private _OnVisualUriChanged(args);
-        private _OnVisualViewModelChanged(args);
-        private _SetVisualUri(uri);
-        private _ClearVisualUri();
-        private _OnIsOpenChanged(args);
-        private _DoOpen();
-        private _DoClose(result?);
-        Open(): void;
-        Close(result?: boolean): void;
-        private _GetDialogResult();
-        static FindOverlay(visual: UIElement): Overlay;
-    }
-}
-declare module Fayde.Controls.Primitives {
-    class OverlayClosedEventArgs implements nullstone.IEventArgs {
-        Result: boolean;
-        Data: any;
-        constructor(result: boolean, data: any);
-    }
-}
-declare module Fayde.Controls.Primitives {
-    class ScrollData implements minerva.IScrollData {
-        canHorizontallyScroll: boolean;
-        canVerticallyScroll: boolean;
-        offsetX: number;
-        offsetY: number;
-        cachedOffsetX: number;
-        cachedOffsetY: number;
-        viewportWidth: number;
-        viewportHeight: number;
-        extentWidth: number;
-        extentHeight: number;
-        maxDesiredWidth: number;
-        maxDesiredHeight: number;
-        scrollOwner: ScrollViewer;
-        invalidate(): void;
-    }
-}
-declare module Fayde.Controls.Primitives {
-    enum ScrollEventType {
-        SmallDecrement = 0,
-        SmallIncrement = 1,
-        LargeDecrement = 2,
-        LargeIncrement = 3,
-        ThumbPosition = 4,
-        ThumbTrack = 5,
-        First = 6,
-        Last = 7,
-        EndScroll = 8,
-    }
-    class ScrollEventArgs extends RoutedEventArgs {
-        ScrollEventType: ScrollEventType;
-        Value: number;
-        constructor(scrollEventType: ScrollEventType, value: number);
-    }
-}
-declare module Fayde.Controls.Primitives {
-    class SelectionChangedEventArgs extends RoutedEventArgs {
-        OldValues: any[];
-        NewValues: any[];
-        constructor(oldValues: any[], newValues: any[]);
-    }
-}
-declare module Fayde.Controls.Primitives {
-    class SelectorSelection {
-        private _Owner;
-        private _SelectedItems;
-        private _SelectedItem;
-        private _IsUpdating;
-        private _AnchorIndex;
-        Mode: SelectionMode;
-        IsUpdating: boolean;
-        constructor(owner: Selector);
-        private _HandleOwnerSelectionChanged(sender, e);
-        RepopulateSelectedItems(): void;
-        ClearSelection(ignoreSelectedValue?: boolean): void;
-        Select(item: any): void;
-        private _SelectSingle(item, selIndex);
-        private _SelectExtended(item, selIndex);
-        private _SelectMultiple(item, selIndex);
-        SelectRange(startIndex: number, endIndex: number): void;
-        SelectAll(items: any[]): void;
-        SelectOnly(item: any): void;
-        Unselect(item: any): void;
-        AddToSelected(item: any): void;
-        RemoveFromSelected(item: any): void;
-        ReplaceSelection(item: any): void;
-        UpdateSelectorProperties(item: any, index: number, value: any): void;
-        UpdateCollectionView(item: any): boolean;
-    }
-}
 declare module Fayde.Controls {
     class ProgressBar extends Primitives.RangeBase {
         private _Track;
@@ -2487,6 +2175,7 @@ declare module Fayde.Controls {
         TextWrapping: TextWrapping;
         HorizontalScrollBarVisibility: ScrollBarVisibility;
         VerticalScrollBarVisibility: ScrollBarVisibility;
+        TextChanged: RoutedEvent<RoutedEventArgs>;
         constructor();
         OnApplyTemplate(): void;
         DisplayText: string;
@@ -2652,42 +2341,6 @@ declare module Fayde {
         UnregisterName(name: string): void;
         Absorb(otherNs: NameScope): void;
     }
-}
-declare module Fayde.Providers {
-    enum StyleIndex {
-        VisualTree = 0,
-        ApplicationResources = 1,
-        Theme = 2,
-        Count = 3,
-    }
-    enum StyleMask {
-        None = 0,
-        VisualTree = 1,
-        ApplicationResources = 2,
-        Theme = 4,
-        All = 7,
-    }
-    interface IImplicitStyleHolder {
-        _ImplicitStyles: Style[];
-        _StyleMask: number;
-    }
-    class ImplicitStyleBroker {
-        static Set(fe: FrameworkElement, mask: StyleMask, styles?: Style[]): void;
-        private static SetImpl(fe, mask, styles);
-        static Clear(fe: FrameworkElement, mask: StyleMask): void;
-        private static ApplyStyles(fe, mask, styles);
-    }
-}
-declare module Fayde.Providers {
-    interface IStyleHolder {
-        _LocalStyle: Style;
-    }
-    class LocalStyleBroker {
-        static Set(fe: FrameworkElement, newStyle: Style): void;
-    }
-}
-declare module Fayde.Providers {
-    function SwapStyles(fe: FrameworkElement, oldWalker: IStyleWalker, newWalker: IStyleWalker, isImplicit: boolean): void;
 }
 declare module Fayde {
     interface IResourcable {
@@ -2994,87 +2647,6 @@ declare module Fayde.Data {
         ConvertBack(value: any, targetType: IType, parameter: any, culture: any): any;
     }
     var IValueConverter_: nullstone.Interface<IValueConverter>;
-}
-declare module Fayde.Data {
-    interface IOutValue {
-        Value: any;
-    }
-    class PropertyPath implements ICloneable {
-        private _Path;
-        private _ExpandedPath;
-        private _Propd;
-        constructor(path?: string, expandedPath?: string);
-        static CreateFromParameter(parameter: any): PropertyPath;
-        TryResolveDependencyProperty(refobj: IOutValue, promotedValues: any[]): DependencyProperty;
-        Path: string;
-        ExpandedPath: string;
-        ParsePath: string;
-        HasDependencyProperty: boolean;
-        DependencyProperty: DependencyProperty;
-        static ResolvePropertyPath(refobj: IOutValue, propertyPath: PropertyPath, promotedValues: any[]): DependencyProperty;
-        Clone(): PropertyPath;
-    }
-}
-declare module Fayde.Data {
-    interface IPropertyPathParserData {
-        typeName: string;
-        propertyName: string;
-        index: number;
-    }
-    enum PropertyNodeType {
-        None = 0,
-        AttachedProperty = 1,
-        Indexed = 2,
-        Property = 3,
-    }
-    class PropertyPathParser {
-        Path: string;
-        constructor(path: string);
-        Step(data: IPropertyPathParserData): PropertyNodeType;
-    }
-}
-declare module Fayde.Data {
-    interface IPropertyPathWalkerListener {
-        IsBrokenChanged(): any;
-        ValueChanged(): any;
-    }
-    interface IPropertyPathNode {
-        Next: IPropertyPathNode;
-        Value: any;
-        IsBroken: boolean;
-        ValueType: IType;
-        GetSource(): any;
-        SetSource(source: any): any;
-        SetValue(value: any): any;
-        Listen(listener: IPropertyPathNodeListener): any;
-        Unlisten(listener: IPropertyPathNodeListener): any;
-    }
-    interface ICollectionViewNode extends IPropertyPathNode {
-        BindToView: boolean;
-    }
-    interface IPropertyPathNodeListener {
-        IsBrokenChanged(node: IPropertyPathNode): any;
-        ValueChanged(node: IPropertyPathNode): any;
-    }
-    class PropertyPathWalker implements IPropertyPathNodeListener {
-        Path: string;
-        IsDataContextBound: boolean;
-        Source: any;
-        ValueInternal: any;
-        Node: IPropertyPathNode;
-        FinalNode: IPropertyPathNode;
-        private _Listener;
-        IsPathBroken: boolean;
-        FinalPropertyName: string;
-        constructor(path: string, bindDirectlyToSource?: boolean, bindsToView?: boolean, isDataContextBound?: boolean);
-        GetValue(item: any): any;
-        Update(source: any): void;
-        Listen(listener: IPropertyPathWalkerListener): void;
-        Unlisten(listener: IPropertyPathWalkerListener): void;
-        IsBrokenChanged(node: IPropertyPathNode): void;
-        ValueChanged(node: IPropertyPathNode): void;
-        GetContext(): any;
-    }
 }
 declare module Fayde.Data {
     class RelativeSource implements nullstone.markup.IMarkupExtension, ICloneable {
@@ -3615,72 +3187,6 @@ interface TouchList {
 interface TouchEvent extends UIEvent {
     initTouchEvent(type: string, canBubble: boolean, cancelable: boolean, view: any, detail: number, ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean, touches: TouchList, targetTouches: TouchList, changedTouches: TouchList): any;
 }
-declare module Fayde.Input.TouchInternal {
-    interface ITouchHandler {
-        HandleTouches(type: Input.TouchInputType, touches: ActiveTouchBase[], emitLeave?: boolean, emitEnter?: boolean): boolean;
-    }
-    class ActiveTouchBase {
-        Identifier: number;
-        Position: Point;
-        Device: Input.ITouchDevice;
-        InputList: UINode[];
-        private _IsEmitting;
-        private _PendingCapture;
-        private _PendingReleaseCapture;
-        private _Captured;
-        private _CapturedInputList;
-        private _FinishReleaseCaptureFunc;
-        constructor(touchHandler: ITouchHandler);
-        Capture(uie: UIElement): boolean;
-        ReleaseCapture(uie: UIElement): void;
-        private _PerformCapture(uin);
-        private _PerformReleaseCapture();
-        Emit(type: Input.TouchInputType, newInputList: UINode[], emitLeave?: boolean, emitEnter?: boolean): boolean;
-        private _EmitList(type, list, endIndex?);
-        GetTouchPoint(relativeTo: UIElement): TouchPoint;
-        CreateTouchPoint(p: Point): TouchPoint;
-        private CreateTouchDevice();
-    }
-}
-declare module Fayde.Input.TouchInternal {
-    interface IOffset {
-        left: number;
-        top: number;
-    }
-    class TouchInteropBase implements Fayde.Input.ITouchInterop, ITouchHandler {
-        Input: Engine.InputManager;
-        CanvasOffset: IOffset;
-        ActiveTouches: ActiveTouchBase[];
-        CoordinateOffset: IOffset;
-        Register(input: Engine.InputManager, canvas: HTMLCanvasElement): void;
-        private _CalcOffset(canvas);
-        HandleTouches(type: Input.TouchInputType, touches: ActiveTouchBase[], emitLeave?: boolean, emitEnter?: boolean): boolean;
-    }
-}
-declare module Fayde.Input.TouchInternal {
-    class NonPointerTouchInterop extends TouchInteropBase {
-        Register(input: Engine.InputManager, canvas: HTMLCanvasElement): void;
-        private _HandleTouchStart(e);
-        private _HandleTouchEnd(e);
-        private _HandleTouchMove(e);
-        private _HandleTouchEnter(e);
-        private _HandleTouchLeave(e);
-        private TouchArrayFromList(list);
-        private FindTouchInList(identifier);
-    }
-}
-declare module Fayde.Input.TouchInternal {
-    class PointerTouchInterop extends TouchInteropBase {
-        Register(input: Engine.InputManager, canvas: HTMLCanvasElement): void;
-        private _HandlePointerDown(e);
-        private _HandlePointerUp(e);
-        private _HandlePointerMove(e);
-        private _HandlePointerEnter(e);
-        private _HandlePointerLeave(e);
-        private GetActiveTouch(e);
-        private FindTouchInList(identifier);
-    }
-}
 declare module Fayde.Input {
     interface ITouchDevice {
         Identifier: number;
@@ -4041,6 +3547,1555 @@ declare module Fayde.Markup {
         private $$coerce();
     }
 }
+declare module Fayde.Markup {
+    function Resolve(uri: string): any;
+    function Resolve(uri: Uri): any;
+}
+declare module Fayde.Markup {
+    class StaticResource implements nullstone.markup.IMarkupExtension {
+        ResourceKey: string;
+        private $$app;
+        private $$resources;
+        init(val: string): void;
+        transmute(os: any[]): any;
+        setContext(app: Application, resources: ResourceDictionary[]): void;
+    }
+}
+declare module Fayde.Media {
+    class Brush extends DependencyObject implements minerva.IBrush {
+        static TransformProperty: DependencyProperty;
+        Transform: Media.Transform;
+        private _CachedBounds;
+        private _CachedBrush;
+        constructor();
+        isTransparent(): boolean;
+        setupBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
+        toHtml5Object(): any;
+        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
+        InvalidateBrush(): void;
+    }
+}
+declare module Fayde.Media {
+    class Geometry extends DependencyObject implements minerva.IGeometry {
+        private _Path;
+        private _LocalBounds;
+        static TransformProperty: DependencyProperty;
+        Transform: Transform;
+        constructor();
+        GetBounds(pars?: minerva.path.IStrokeParameters): minerva.Rect;
+        Draw(ctx: minerva.core.render.RenderContext): void;
+        ComputePathBounds(pars: minerva.path.IStrokeParameters): minerva.Rect;
+        InvalidateGeometry(): void;
+        _Build(): minerva.path.Path;
+        Serialize(): string;
+    }
+    class GeometryCollection extends XamlObjectCollection<Geometry> {
+        AddingToCollection(value: Geometry, error: BError): boolean;
+        RemovedFromCollection(value: Geometry, isValueSafe: boolean): void;
+    }
+}
+declare module Fayde.Media {
+    class EllipseGeometry extends Geometry {
+        static CenterProperty: DependencyProperty;
+        static RadiusXProperty: DependencyProperty;
+        static RadiusYProperty: DependencyProperty;
+        Center: Point;
+        RadiusX: number;
+        RadiusY: number;
+        _Build(): minerva.path.Path;
+    }
+}
+declare module Fayde.Media {
+    class GeneralTransform extends DependencyObject {
+        Inverse: GeneralTransform;
+        Transform(p: minerva.IPoint): Point;
+        TransformBounds(r: minerva.Rect): minerva.Rect;
+        TryTransform(inPoint: minerva.IPoint, outPoint: minerva.IPoint): boolean;
+    }
+    class InternalTransform extends GeneralTransform implements minerva.ITransform {
+        private _Raw;
+        constructor(raw: number[]);
+        Inverse: InternalTransform;
+        Value: Matrix3D;
+        getRaw(): number[];
+        Transform(p: minerva.IPoint): Point;
+        TransformBounds(r: minerva.Rect): minerva.Rect;
+        CreateMatrix3DProjection(): Matrix3DProjection;
+    }
+}
+declare module Fayde.Shapes {
+    enum ShapeFlags {
+        None = 0,
+        Empty = 1,
+        Normal = 2,
+        Degenerate = 4,
+        Radii = 8,
+    }
+    enum PenLineCap {
+        Flat = 0,
+        Square = 1,
+        Round = 2,
+        Triangle = 3,
+    }
+    enum PenLineJoin {
+        Miter = 0,
+        Bevel = 1,
+        Round = 2,
+    }
+    enum FillRule {
+        EvenOdd = 0,
+        NonZero = 1,
+    }
+    enum SweepDirection {
+        Counterclockwise = 0,
+        Clockwise = 1,
+    }
+}
+declare module Fayde.Media {
+    class GeometryGroup extends Geometry {
+        static FillRulleProperty: DependencyProperty;
+        static ChildrenProperty: ImmutableDependencyProperty<GeometryCollection>;
+        FillRule: Shapes.FillRule;
+        Children: GeometryCollection;
+        constructor();
+        ComputePathBounds(pars: minerva.path.IStrokeParameters): minerva.Rect;
+        Draw(ctx: minerva.core.render.RenderContext): void;
+    }
+}
+declare module Fayde.Media {
+    class GradientBrush extends Brush {
+        static GradientStopsProperty: ImmutableDependencyProperty<GradientStopCollection>;
+        static MappingModeProperty: DependencyProperty;
+        static SpreadMethodProperty: DependencyProperty;
+        GradientStops: GradientStopCollection;
+        MappingMode: BrushMappingMode;
+        SpreadMethod: GradientSpreadMethod;
+        constructor();
+        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
+        CreatePad(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
+        CreateRepeat(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
+        CreateReflect(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
+    }
+}
+declare module Fayde.Media {
+    interface IGradientStop {
+        Color: Color;
+        Offset: number;
+    }
+    class GradientStop extends DependencyObject implements IGradientStop {
+        static ColorProperty: DependencyProperty;
+        static OffsetProperty: DependencyProperty;
+        Color: Color;
+        Offset: number;
+        toString(): string;
+    }
+    class GradientStopCollection extends XamlObjectCollection<GradientStop> {
+        AddingToCollection(value: GradientStop, error: BError): boolean;
+        RemovedFromCollection(value: GradientStop, isValueSafe: boolean): boolean;
+        getPaddedEnumerable(): nullstone.IEnumerable<IGradientStop>;
+    }
+}
+declare module Fayde.Media {
+    class LineGeometry extends Geometry {
+        static StartPointProperty: DependencyProperty;
+        static EndPointProperty: DependencyProperty;
+        StartPoint: Point;
+        EndPoint: Point;
+        _Build(): minerva.path.Path;
+    }
+}
+declare module Fayde.Media {
+    class LinearGradientBrush extends GradientBrush {
+        static StartPointProperty: DependencyProperty;
+        static EndPointProperty: DependencyProperty;
+        StartPoint: Point;
+        EndPoint: Point;
+        CreatePad(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasGradient;
+        CreateRepeat(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasGradient;
+        CreateReflect(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasGradient;
+        private CreateInterpolated(ctx, interpolator);
+        private _GetPointData(bounds);
+        toString(): string;
+    }
+}
+declare module Fayde.Media {
+    class Matrix {
+        _Raw: number[];
+        private _Inverse;
+        constructor(raw?: number[]);
+        static Identity: Matrix;
+        M11: number;
+        M12: number;
+        M21: number;
+        M22: number;
+        OffsetX: number;
+        OffsetY: number;
+        Inverse: Matrix;
+        private _OnChanged();
+        Clone(): Matrix;
+    }
+}
+declare module Fayde.Media {
+    interface IMatrix3DChangedListener {
+        Callback: (newMatrix3D: Matrix3D) => void;
+        Detach(): any;
+    }
+    class Matrix3D {
+        _Raw: number[];
+        private _Inverse;
+        static FromRaw(raw: number[]): Matrix3D;
+        M11: number;
+        M12: number;
+        M13: number;
+        M14: number;
+        M21: number;
+        M22: number;
+        M23: number;
+        M24: number;
+        M31: number;
+        M32: number;
+        M33: number;
+        M34: number;
+        OffsetX: number;
+        OffsetY: number;
+        OffsetZ: number;
+        M44: number;
+        Inverse: Matrix3D;
+        private _Listeners;
+        Listen(func: (newMatrix: Matrix3D) => void): IMatrix3DChangedListener;
+        private _OnChanged();
+    }
+}
+declare module Fayde.Media {
+    class Projection extends DependencyObject implements minerva.IProjection {
+        private _ProjectionMatrix;
+        private _ObjectWidth;
+        ObjectWidth: number;
+        private _ObjectHeight;
+        ObjectHeight: number;
+        setObjectSize(objectWidth: number, objectHeight: number): void;
+        getDistanceFromXYPlane(): number;
+        getTransform(): number[];
+        CreateProjectionMatrix(): Matrix3D;
+        InvalidateProjection(): void;
+    }
+}
+declare module Fayde.Media {
+    class Matrix3DProjection extends Projection {
+        static ProjectionMatrixProperty: DependencyProperty;
+        ProjectionMatrix: Matrix3D;
+        CreateProjectionMatrix(): Matrix3D;
+    }
+}
+declare module Fayde.Media {
+    function ParseGeometry(val: string): Geometry;
+    function ParseShapePoints(val: string): Point[];
+}
+declare module Fayde.Media {
+    class PathFigure extends DependencyObject {
+        static IsClosedProperty: DependencyProperty;
+        static StartPointProperty: DependencyProperty;
+        static IsFilledProperty: DependencyProperty;
+        static SegmentsProperty: ImmutableDependencyProperty<PathSegmentCollection>;
+        static SegmentsSourceProperty: DependencyProperty;
+        IsClosed: boolean;
+        Segments: PathSegmentCollection;
+        SegmentsSource: nullstone.IEnumerable<PathSegment>;
+        StartPoint: Point;
+        IsFilled: boolean;
+        private _OnSegmentsSourceChanged(args);
+        private _Path;
+        constructor();
+        private _Build();
+        private InvalidatePathFigure();
+        MergeInto(rp: minerva.path.Path): void;
+    }
+    class PathFigureCollection extends XamlObjectCollection<PathFigure> {
+        AddingToCollection(value: PathFigure, error: BError): boolean;
+        RemovedFromCollection(value: PathFigure, isValueSafe: boolean): void;
+    }
+}
+declare module Fayde.Media {
+    class PathGeometry extends Geometry implements minerva.shapes.path.IPathGeometry {
+        private _OverridePath;
+        static FillRuleProperty: DependencyProperty;
+        static FiguresProperty: ImmutableDependencyProperty<PathFigureCollection>;
+        FillRule: Shapes.FillRule;
+        Figures: PathFigureCollection;
+        fillRule: minerva.FillRule;
+        constructor();
+        OverridePath(path: minerva.path.Path): void;
+        _Build(): minerva.path.Path;
+        InvalidateFigures(): void;
+    }
+}
+declare module Fayde.Media {
+    class PathSegment extends DependencyObject {
+        _Append(path: minerva.path.Path): void;
+    }
+    class PathSegmentCollection extends XamlObjectCollection<PathSegment> {
+        private _Modifying;
+        AddingToCollection(value: PathSegment, error: BError): boolean;
+        RemovedFromCollection(value: PathSegment, isValueSafe: boolean): void;
+        private _Source;
+        SetSource(source: nullstone.IEnumerable<PathSegment>): void;
+        private _OnSegmentsCollectionChanged(sender, args);
+    }
+}
+declare module Fayde.Media {
+    class ArcSegment extends PathSegment {
+        static IsLargeArcProperty: DependencyProperty;
+        static PointProperty: DependencyProperty;
+        static RotationAngleProperty: DependencyProperty;
+        static SizeProperty: DependencyProperty;
+        static SweepDirectionProperty: DependencyProperty;
+        IsLargeArc: boolean;
+        Point: Point;
+        RotationAngle: number;
+        Size: minerva.Size;
+        SweepDirection: Shapes.SweepDirection;
+        _Append(path: minerva.path.Path): void;
+    }
+    class BezierSegment extends PathSegment {
+        static Point1Property: DependencyProperty;
+        static Point2Property: DependencyProperty;
+        static Point3Property: DependencyProperty;
+        Point1: Point;
+        Point2: Point;
+        Point3: Point;
+        _Append(path: minerva.path.Path): void;
+    }
+    class LineSegment extends PathSegment {
+        static PointProperty: DependencyProperty;
+        Point: Point;
+        _Append(path: minerva.path.Path): void;
+    }
+    class PolyBezierSegment extends PathSegment {
+        static PointsProperty: ImmutableDependencyProperty<Shapes.PointCollection>;
+        Points: Shapes.PointCollection;
+        constructor();
+        _Append(path: minerva.path.Path): void;
+    }
+    class PolyLineSegment extends PathSegment {
+        static PointsProperty: ImmutableDependencyProperty<Shapes.PointCollection>;
+        Points: Shapes.PointCollection;
+        constructor();
+        _Append(path: minerva.path.Path): void;
+    }
+    class PolyQuadraticBezierSegment extends PathSegment {
+        static PointsProperty: ImmutableDependencyProperty<Shapes.PointCollection>;
+        Points: Shapes.PointCollection;
+        constructor();
+        _Append(path: minerva.path.Path): void;
+    }
+    class QuadraticBezierSegment extends PathSegment {
+        static Point1Property: DependencyProperty;
+        static Point2Property: DependencyProperty;
+        Point1: Point;
+        Point2: Point;
+        _Append(path: minerva.path.Path): void;
+    }
+}
+declare module Fayde.Media {
+    class PlaneProjection extends Projection {
+        static CenterOfRotationXProperty: DependencyProperty;
+        static CenterOfRotationYProperty: DependencyProperty;
+        static CenterOfRotationZProperty: DependencyProperty;
+        static GlobalOffsetXProperty: DependencyProperty;
+        static GlobalOffsetYProperty: DependencyProperty;
+        static GlobalOffsetZProperty: DependencyProperty;
+        static LocalOffsetXProperty: DependencyProperty;
+        static LocalOffsetYProperty: DependencyProperty;
+        static LocalOffsetZProperty: DependencyProperty;
+        static RotationXProperty: DependencyProperty;
+        static RotationYProperty: DependencyProperty;
+        static RotationZProperty: DependencyProperty;
+        CenterOfRotationX: number;
+        CenterOfRotationY: number;
+        CenterOfRotationZ: number;
+        GlobalOffsetX: number;
+        GlobalOffsetY: number;
+        GlobalOffsetZ: number;
+        LocalOffsetX: number;
+        LocalOffsetY: number;
+        LocalOffsetZ: number;
+        RotationX: number;
+        RotationY: number;
+        RotationZ: number;
+        getDistanceFromXYPlane(): number;
+        CreateProjectionMatrix3D(): Matrix3D;
+    }
+}
+declare module Fayde.Media {
+    class RadialGradientBrush extends GradientBrush {
+        static CenterProperty: DependencyProperty;
+        static GradientOriginProperty: DependencyProperty;
+        static RadiusXProperty: DependencyProperty;
+        static RadiusYProperty: DependencyProperty;
+        Center: Point;
+        GradientOrigin: Point;
+        RadiusX: number;
+        RadiusY: number;
+        CreatePad(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
+        CreateRepeat(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasPattern;
+        CreateReflect(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasPattern;
+        private CreateInterpolated(data, bounds, reflect);
+        private FitPattern(ctx, fill, data, bounds);
+        private _GetPointData(bounds);
+    }
+}
+declare module Fayde.Media {
+    class RectangleGeometry extends Geometry {
+        static RectProperty: DependencyProperty;
+        static RadiusXProperty: DependencyProperty;
+        static RadiusYProperty: DependencyProperty;
+        Rect: minerva.Rect;
+        RadiusX: number;
+        RadiusY: number;
+        _Build(): minerva.path.Path;
+    }
+}
+declare module Fayde.Media {
+    class SolidColorBrush extends Brush {
+        static ColorProperty: DependencyProperty;
+        Color: Color;
+        constructor(...args: any[]);
+        isTransparent(): boolean;
+        static FromColor(color: Color): SolidColorBrush;
+        setupBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
+        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
+    }
+}
+declare module Fayde.Media {
+    class TextOptions {
+        static TextHintingModeProperty: DependencyProperty;
+        static GetTextHintingMode(d: DependencyObject): TextHintingMode;
+        static SetTextHintingMode(d: DependencyObject, value: TextHintingMode): void;
+    }
+}
+declare module Fayde.Media {
+    class TileBrush extends Brush {
+        static AlignmentXProperty: DependencyProperty;
+        static AlignmentYProperty: DependencyProperty;
+        static StretchProperty: DependencyProperty;
+        AlignmentX: AlignmentX;
+        AlignmentY: AlignmentY;
+        Stretch: Stretch;
+        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasPattern;
+        GetTileExtents(): minerva.Rect;
+        DrawTile(canvasCtx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
+    }
+}
+declare module Fayde.Media {
+    class Transform extends GeneralTransform implements minerva.ITransform {
+        private _Value;
+        constructor();
+        Value: Matrix;
+        getRaw(): number[];
+        Inverse: Transform;
+        Transform(p: minerva.IPoint): Point;
+        TransformBounds(r: minerva.Rect): minerva.Rect;
+        TryTransform(inPoint: minerva.IPoint, outPoint: minerva.IPoint): boolean;
+        InvalidateValue(): void;
+        _BuildValue(): number[];
+        static copyMatTo(t: Transform, mat: number[]): void;
+    }
+    class MatrixTransform extends Transform {
+        static MatrixProperty: DependencyProperty;
+        Matrix: Matrix;
+        _BuildValue(): number[];
+        Clone(): MatrixTransform;
+    }
+}
+declare module Fayde.Media {
+    class RotateTransform extends Transform {
+        static AngleProperty: DependencyProperty;
+        static CenterXProperty: DependencyProperty;
+        static CenterYProperty: DependencyProperty;
+        Angle: number;
+        CenterX: number;
+        CenterY: number;
+        _BuildValue(): number[];
+    }
+    class ScaleTransform extends Transform {
+        static CenterXProperty: DependencyProperty;
+        static CenterYProperty: DependencyProperty;
+        static ScaleXProperty: DependencyProperty;
+        static ScaleYProperty: DependencyProperty;
+        CenterX: number;
+        CenterY: number;
+        ScaleX: number;
+        ScaleY: number;
+        _BuildValue(): number[];
+    }
+    class SkewTransform extends Transform {
+        static AngleXProperty: DependencyProperty;
+        static AngleYProperty: DependencyProperty;
+        static CenterXProperty: DependencyProperty;
+        static CenterYProperty: DependencyProperty;
+        AngleX: number;
+        AngleY: number;
+        CenterX: number;
+        CenterY: number;
+        _BuildValue(): number[];
+    }
+    class TranslateTransform extends Transform {
+        static XProperty: DependencyProperty;
+        static YProperty: DependencyProperty;
+        X: number;
+        Y: number;
+        _BuildValue(): number[];
+    }
+    class TransformCollection extends XamlObjectCollection<Transform> {
+        AddingToCollection(value: Transform, error: BError): boolean;
+        RemovedFromCollection(value: Transform, isValueSafe: boolean): boolean;
+    }
+    class TransformGroup extends Transform {
+        static ChildrenProperty: ImmutableDependencyProperty<TransformCollection>;
+        Children: TransformCollection;
+        constructor();
+        _BuildValue(): number[];
+    }
+}
+declare module Fayde.Navigation {
+    function Navigate(source: DependencyObject, targetName: string, navigateUri: Uri): void;
+}
+declare module Fayde.Navigation {
+    class NavigationService {
+        Href: string;
+        Hash: string;
+        LocationChanged: nullstone.Event<{}>;
+        constructor();
+        CurrentUri: Uri;
+        Navigate(uri: Uri): boolean;
+        private _HandleFragmentChange();
+    }
+}
+declare module Fayde.Navigation {
+    class RouteMapper extends DependencyObject {
+        static RouteMappingsProperty: ImmutableDependencyProperty<XamlObjectCollection<RouteMapping>>;
+        static ViewModelProviderProperty: DependencyProperty;
+        RouteMappings: XamlObjectCollection<RouteMapping>;
+        ViewModelProvider: Fayde.MVVM.IViewModelProvider;
+        constructor();
+        MapUri(uri: Uri): Route;
+    }
+}
+declare module Fayde.Navigation {
+    class RouteMapping extends DependencyObject {
+        static ViewProperty: DependencyProperty;
+        static UriProperty: DependencyProperty;
+        View: Uri;
+        Uri: Uri;
+        MapUri(uri: Uri): Route;
+    }
+}
+declare module Fayde.Navigation {
+    class UriMapper extends DependencyObject {
+        static UriMappingsProperty: ImmutableDependencyProperty<XamlObjectCollection<UriMapping>>;
+        UriMappings: XamlObjectCollection<UriMapping>;
+        constructor();
+        MapUri(uri: Uri): Uri;
+    }
+}
+declare module Fayde.Navigation {
+    class UriMapping extends DependencyObject {
+        static MappedUriProperty: DependencyProperty;
+        static UriProperty: DependencyProperty;
+        MappedUri: Uri;
+        Uri: Uri;
+        MapUri(uri: Uri): Uri;
+    }
+}
+declare class Color implements ICloneable {
+    private static __NoAlphaRegex;
+    private static __AlphaRegex;
+    R: number;
+    G: number;
+    B: number;
+    A: number;
+    Add(color2: Color): Color;
+    Subtract(color2: Color): Color;
+    Multiply(factor: number): Color;
+    Equals(other: Color): boolean;
+    toString(): string;
+    ToHexStringNoAlpha(): string;
+    Clone(): Color;
+    static LERP(start: Color, end: Color, p: number): Color;
+    static FromRgba(r: number, g: number, b: number, a: number): Color;
+    static FromHex(hex: string): Color;
+    static KnownColors: {
+        AliceBlue: Color;
+        AntiqueWhite: Color;
+        Aqua: Color;
+        Aquamarine: Color;
+        Azure: Color;
+        Beige: Color;
+        Bisque: Color;
+        Black: Color;
+        BlanchedAlmond: Color;
+        Blue: Color;
+        BlueViolet: Color;
+        Brown: Color;
+        BurlyWood: Color;
+        CadetBlue: Color;
+        Chartreuse: Color;
+        Chocolate: Color;
+        Coral: Color;
+        CornflowerBlue: Color;
+        Cornsilk: Color;
+        Crimson: Color;
+        Cyan: Color;
+        DarkBlue: Color;
+        DarkCyan: Color;
+        DarkGoldenrod: Color;
+        DarkGray: Color;
+        DarkGreen: Color;
+        DarkKhaki: Color;
+        DarkMagenta: Color;
+        DarkOliveGreen: Color;
+        DarkOrange: Color;
+        DarkOrchid: Color;
+        DarkRed: Color;
+        DarkSalmon: Color;
+        DarkSeaGreen: Color;
+        DarkSlateBlue: Color;
+        DarkSlateGray: Color;
+        DarkTurquoise: Color;
+        DarkViolet: Color;
+        DeepPink: Color;
+        DeepSkyBlue: Color;
+        DimGray: Color;
+        DodgerBlue: Color;
+        Firebrick: Color;
+        FloralWhite: Color;
+        ForestGreen: Color;
+        Fuchsia: Color;
+        Gainsboro: Color;
+        GhostWhite: Color;
+        Gold: Color;
+        Goldenrod: Color;
+        Gray: Color;
+        Green: Color;
+        GreenYellow: Color;
+        Honeydew: Color;
+        HotPink: Color;
+        IndianRed: Color;
+        Indigo: Color;
+        Ivory: Color;
+        Khaki: Color;
+        Lavender: Color;
+        LavenderBlush: Color;
+        LawnGreen: Color;
+        LemonChiffon: Color;
+        LightBlue: Color;
+        LightCoral: Color;
+        LightCyan: Color;
+        LightGoldenrodYellow: Color;
+        LightGray: Color;
+        LightGreen: Color;
+        LightPink: Color;
+        LightSalmon: Color;
+        LightSeaGreen: Color;
+        LightSkyBlue: Color;
+        LightSlateGray: Color;
+        LightSteelBlue: Color;
+        LightYellow: Color;
+        Lime: Color;
+        LimeGreen: Color;
+        Linen: Color;
+        Magenta: Color;
+        Maroon: Color;
+        MediumAquamarine: Color;
+        MediumBlue: Color;
+        MediumOrchid: Color;
+        MediumPurple: Color;
+        MediumSeaGreen: Color;
+        MediumSlateBlue: Color;
+        MediumSpringGreen: Color;
+        MediumTurquoise: Color;
+        MediumVioletRed: Color;
+        MidnightBlue: Color;
+        MintCream: Color;
+        MistyRose: Color;
+        Moccasin: Color;
+        NavajoWhite: Color;
+        Navy: Color;
+        OldLace: Color;
+        Olive: Color;
+        OliveDrab: Color;
+        Orange: Color;
+        OrangeRed: Color;
+        Orchid: Color;
+        PaleGoldenrod: Color;
+        PaleGreen: Color;
+        PaleTurquoise: Color;
+        PaleVioletRed: Color;
+        PapayaWhip: Color;
+        PeachPuff: Color;
+        Peru: Color;
+        Pink: Color;
+        Plum: Color;
+        PowderBlue: Color;
+        Purple: Color;
+        Red: Color;
+        RosyBrown: Color;
+        RoyalBlue: Color;
+        SaddleBrown: Color;
+        Salmon: Color;
+        SandyBrown: Color;
+        SeaGreen: Color;
+        SeaShell: Color;
+        Sienna: Color;
+        Silver: Color;
+        SkyBlue: Color;
+        SlateBlue: Color;
+        SlateGray: Color;
+        Snow: Color;
+        SpringGreen: Color;
+        SteelBlue: Color;
+        Tan: Color;
+        Teal: Color;
+        Thistle: Color;
+        Tomato: Color;
+        Transparent: Color;
+        Turquoise: Color;
+        Violet: Color;
+        Wheat: Color;
+        White: Color;
+        WhiteSmoke: Color;
+        Yellow: Color;
+        YellowGreen: Color;
+    };
+}
+declare class CornerRadius extends minerva.CornerRadius implements ICloneable {
+    Clone(): CornerRadius;
+}
+declare enum DurationType {
+    Automatic = 0,
+    Forever = 1,
+    TimeSpan = 2,
+}
+declare class Duration implements ICloneable {
+    private _Type;
+    private _TimeSpan;
+    constructor(ts?: TimeSpan);
+    Clone(): Duration;
+    Type: DurationType;
+    TimeSpan: TimeSpan;
+    HasTimeSpan: boolean;
+    IsForever: boolean;
+    IsAutomatic: boolean;
+    IsZero: boolean;
+    static Automatic: Duration;
+    static Forever: Duration;
+}
+declare class FontFamily implements ICloneable {
+    FamilyNames: string;
+    constructor(FamilyNames: string);
+    toString(): string;
+    Clone(): FontFamily;
+}
+declare class KeyTime implements ICloneable {
+    private _IsPaced;
+    private _IsUniform;
+    private _TimeSpan;
+    private _Percent;
+    IsValid: boolean;
+    static CreateUniform(): KeyTime;
+    static CreateTimeSpan(ts: TimeSpan): KeyTime;
+    Clone(): KeyTime;
+    IsPaced: boolean;
+    IsUniform: boolean;
+    HasTimeSpan: boolean;
+    TimeSpan: TimeSpan;
+    HasPercent: boolean;
+    Percent: number;
+}
+declare class Length {
+}
+declare class Rect extends minerva.Rect {
+    Clone(): Rect;
+}
+declare class Size extends minerva.Size {
+    Clone(): Size;
+}
+declare class Thickness extends minerva.Thickness {
+    Clone(): Thickness;
+    toString(): string;
+}
+declare module Fayde {
+    function splitCommaList(str: string): string[];
+}
+declare class BError {
+    static Argument: number;
+    static InvalidOperation: number;
+    static XamlParse: number;
+    static Attach: number;
+    Message: string;
+    Number: number;
+    Data: any;
+    ThrowException(): void;
+}
+declare module Fayde {
+    function Bootstrap(onLoaded?: (app: Application) => any): void;
+}
+declare module Fayde {
+    function LoadConfigJson(onComplete: (config: any, err?: any) => void): void;
+}
+declare module Fayde {
+    module Render {
+        var Debug: boolean;
+        var DebugIndent: number;
+    }
+    module Layout {
+        var Debug: boolean;
+        var DebugIndent: number;
+    }
+    module Media {
+        module Animation {
+            var Log: boolean;
+            var LogApply: boolean;
+        }
+        module VSM {
+            var Debug: boolean;
+        }
+    }
+    module Data {
+        var Debug: boolean;
+        var IsCounterEnabled: boolean;
+        var DataContextCounter: number;
+    }
+    var IsInspectionOn: boolean;
+}
+declare module NumberEx {
+    function AreClose(val1: number, val2: number): boolean;
+    function IsLessThanClose(val1: number, val2: number): boolean;
+    function IsGreaterThanClose(val1: number, val2: number): boolean;
+}
+declare module StringEx {
+    function Format(format: string, ...items: any[]): string;
+}
+interface ITimelineEvent {
+    Type: string;
+    Name: string;
+    Time: number;
+}
+interface ITimelineGroup {
+    Type: string;
+    Data: string;
+    Start: number;
+    Length: number;
+}
+declare class TimelineProfile {
+    private static _Events;
+    static Groups: ITimelineGroup[];
+    static TimelineStart: number;
+    static IsNextLayoutPassProfiled: boolean;
+    static Parse(isStart: boolean, name: string): void;
+    static Navigate(isStart: boolean, name?: string): void;
+    static LayoutPass(isStart: boolean): void;
+    private static _FinishEvent(type, name?);
+}
+declare module Fayde.Shapes {
+    class DoubleCollection extends XamlObjectCollection<XamlObject> {
+    }
+}
+declare module Fayde.Shapes {
+    import ShapeUpdater = minerva.shapes.shape.ShapeUpdater;
+    class Shape extends FrameworkElement {
+        CreateLayoutUpdater(): ShapeUpdater;
+        static FillProperty: DependencyProperty;
+        static StretchProperty: DependencyProperty;
+        static StrokeProperty: DependencyProperty;
+        static StrokeThicknessProperty: DependencyProperty;
+        static StrokeDashArrayProperty: DependencyProperty;
+        static StrokeDashCapProperty: DependencyProperty;
+        static StrokeDashOffsetProperty: DependencyProperty;
+        static StrokeEndLineCapProperty: DependencyProperty;
+        static StrokeLineJoinProperty: DependencyProperty;
+        static StrokeMiterLimitProperty: DependencyProperty;
+        static StrokeStartLineCapProperty: DependencyProperty;
+        Fill: Media.Brush;
+        Stretch: Media.Stretch;
+        Stroke: Media.Brush;
+        StrokeThickness: number;
+        StrokeDashArray: DoubleCollection;
+        StrokeDashCap: PenLineCap;
+        StrokeDashOffset: number;
+        StrokeEndLineCap: PenLineCap;
+        StrokeLineJoin: PenLineJoin;
+        StrokeMiterLimit: number;
+        StrokeStartLineCap: PenLineCap;
+        constructor();
+    }
+}
+declare module Fayde.Shapes {
+    import EllipseUpdater = minerva.shapes.ellipse.EllipseUpdater;
+    class Ellipse extends Shape {
+        CreateLayoutUpdater(): EllipseUpdater;
+        constructor();
+    }
+}
+declare module Fayde.Shapes {
+    import LineUpdater = minerva.shapes.line.LineUpdater;
+    class Line extends Shape {
+        CreateLayoutUpdater(): LineUpdater;
+        static X1Property: DependencyProperty;
+        static Y1Property: DependencyProperty;
+        static X2Property: DependencyProperty;
+        static Y2Property: DependencyProperty;
+        X1: number;
+        Y1: number;
+        X2: number;
+        Y2: number;
+    }
+}
+declare module Fayde.Shapes {
+    import PathUpdater = minerva.shapes.path.PathUpdater;
+    class Path extends Shape {
+        CreateLayoutUpdater(): PathUpdater;
+        private static _DataCoercer(dobj, propd, value);
+        static DataProperty: DependencyProperty;
+        Data: Media.Geometry;
+    }
+}
+declare module Fayde.Shapes {
+    class PointCollection implements nullstone.ICollection<Point> {
+        private _ht;
+        Count: number;
+        static FromData(data: string): PointCollection;
+        static FromArray(data: Point[]): PointCollection;
+        GetValueAt(index: number): Point;
+        SetValueAt(index: number, value: Point): boolean;
+        Add(value: Point): void;
+        AddRange(points: Point[]): void;
+        Insert(index: number, value: Point): void;
+        Remove(value: Point): boolean;
+        RemoveAt(index: number): void;
+        Clear(): void;
+        IndexOf(value: Point): number;
+        Contains(value: Point): boolean;
+        getEnumerator(reverse?: boolean): nullstone.IEnumerator<Point>;
+    }
+}
+declare module Fayde.Shapes {
+    import PolygonUpdater = minerva.shapes.polygon.PolygonUpdater;
+    class Polygon extends Shape {
+        CreateLayoutUpdater(): PolygonUpdater;
+        private static _PointsCoercer(dobj, propd, value);
+        static FillRuleProperty: DependencyProperty;
+        static PointsProperty: DependencyProperty;
+        FillRule: FillRule;
+        Points: PointCollection;
+        constructor();
+    }
+}
+declare module Fayde.Shapes {
+    import PolylineUpdater = minerva.shapes.polyline.PolylineUpdater;
+    class Polyline extends Shape {
+        CreateLayoutUpdater(): PolylineUpdater;
+        private static _PointsCoercer(d, propd, value);
+        static FillRuleProperty: DependencyProperty;
+        static PointsProperty: DependencyProperty;
+        FillRule: FillRule;
+        Points: PointCollection;
+        constructor();
+    }
+}
+declare module Fayde.Shapes {
+    import RectangleUpdater = minerva.shapes.rectangle.RectangleUpdater;
+    class Rectangle extends Shape {
+        CreateLayoutUpdater(): RectangleUpdater;
+        static RadiusXProperty: DependencyProperty;
+        static RadiusYProperty: DependencyProperty;
+        RadiusX: number;
+        RadiusY: number;
+        constructor();
+    }
+}
+declare module Fayde.Text.Buffer {
+    function cut(text: string, start: number, len: number): string;
+    function insert(text: string, index: number, str: string): string;
+    function replace(text: string, start: number, len: number, str: string): string;
+}
+declare module Fayde.Text {
+    interface ITextOwner {
+        text: string;
+    }
+}
+declare module Fayde.Text {
+    enum EmitChangedType {
+        NOTHING = 0,
+        SELECTION = 1,
+        TEXT = 2,
+    }
+    class Proxy implements ITextOwner {
+        selAnchor: number;
+        selCursor: number;
+        selText: string;
+        text: string;
+        maxLength: number;
+        acceptsReturn: boolean;
+        private $$batch;
+        private $$emit;
+        private $$syncing;
+        private $$eventsMask;
+        private $$history;
+        SyncSelectionStart: (value: number) => void;
+        SyncSelectionLength: (value: number) => void;
+        SyncText: (value: string) => void;
+        constructor(eventsMask: EmitChangedType, maxUndoCount: number);
+        setAnchorCursor(anchor: number, cursor: number): boolean;
+        enterText(newText: string): boolean;
+        removeText(start: number, length: number): boolean;
+        undo(): void;
+        redo(): void;
+        begin(): void;
+        end(): void;
+        beginSelect(cursor: number): void;
+        adjustSelection(cursor: number): void;
+        selectAll(): void;
+        clearSelection(start: number): void;
+        select(start: number, length: number): boolean;
+        setSelectionStart(value: number): void;
+        setSelectionLength(value: number): void;
+        setText(value: string): void;
+        private $syncEmit(syncText?);
+        private $syncText();
+    }
+}
+declare module Fayde.Validation {
+    function Emit(fe: FrameworkElement, binding: Data.Binding, oldError: ValidationError, error: ValidationError): void;
+}
+declare module Fayde.Validation {
+    import ReadOnlyObservableCollection = Collections.ReadOnlyObservableCollection;
+    var HasErrorProperty: DependencyProperty;
+    var ErrorsProperty: DependencyProperty;
+    function GetErrors(dobj: DependencyObject): ReadOnlyObservableCollection<ValidationError>;
+    function GetHasError(dobj: DependencyObject): boolean;
+    function AddError(element: FrameworkElement, error: ValidationError): void;
+    function RemoveError(element: FrameworkElement, error: ValidationError): void;
+}
+declare module Fayde.Validation {
+    class ValidationError {
+        ErrorContent: any;
+        Exception: Exception;
+        PropertyName: string;
+        constructor(content: any, exception: Exception, propertyName: string);
+        constructor(content: any, exception: Error, propertyName: string);
+    }
+}
+declare module Fayde.Validation {
+    enum ValidationErrorEventAction {
+        Added = 0,
+        Removed = 1,
+    }
+}
+declare module Fayde.Validation {
+    class ValidationErrorEventArgs extends RoutedEventArgs {
+        Action: ValidationErrorEventAction;
+        Error: ValidationError;
+        constructor(action: ValidationErrorEventAction, error: ValidationError);
+    }
+}
+declare module Fayde.Controls.Internal {
+    interface ICursorAdvancer {
+        CursorDown(cursor: number, isPage: boolean): number;
+        CursorUp(cursor: number, isPage: boolean): number;
+        CursorNextWord(cursor: number): number;
+        CursorPrevWord(cursor: number): number;
+        CursorNextChar(cursor: number): number;
+        CursorPrevChar(cursor: number): number;
+        CursorLineBegin(cursor: number): number;
+        CursorLineEnd(cursor: number): number;
+        CursorBegin(cursor: number): number;
+        CursorEnd(cursor: number): number;
+    }
+    class TextBoxCursorAdvancer implements ICursorAdvancer {
+        private $textOwner;
+        constructor($textOwner: Text.ITextOwner);
+        CursorDown(cursor: number, isPage: boolean): number;
+        CursorUp(cursor: number, isPage: boolean): number;
+        CursorNextWord(cursor: number): number;
+        CursorPrevWord(cursor: number): number;
+        CursorNextChar(cursor: number): number;
+        CursorPrevChar(cursor: number): number;
+        CursorLineBegin(cursor: number): number;
+        CursorLineEnd(cursor: number): number;
+        CursorBegin(cursor: number): number;
+        CursorEnd(cursor: number): number;
+    }
+    class PasswordBoxCursorAdvancer implements ICursorAdvancer {
+        private $textOwner;
+        constructor($textOwner: Text.ITextOwner);
+        CursorDown(cursor: number, isPage: boolean): number;
+        CursorUp(cursor: number, isPage: boolean): number;
+        CursorNextWord(cursor: number): number;
+        CursorPrevWord(cursor: number): number;
+        CursorNextChar(cursor: number): number;
+        CursorPrevChar(cursor: number): number;
+        CursorLineBegin(cursor: number): number;
+        CursorLineEnd(cursor: number): number;
+        CursorBegin(cursor: number): number;
+        CursorEnd(cursor: number): number;
+    }
+}
+declare module Fayde.Controls.Internal {
+    interface IItemContainersOwner {
+        PrepareContainerForItem(container: UIElement, item: any): any;
+        ClearContainerForItem(container: UIElement, item: any): any;
+        GetContainerForItem(): UIElement;
+        IsItemItsOwnContainer(item: any): boolean;
+    }
+    interface IItemContainersManager {
+        IsRecycling: boolean;
+        IndexFromContainer(container: UIElement): number;
+        ContainerFromIndex(index: number): UIElement;
+        ItemFromContainer(container: UIElement): any;
+        ContainerFromItem(item: any): UIElement;
+        OnItemsAdded(index: number, newItems: any[]): any;
+        OnItemsRemoved(index: number, oldItems: any[]): any;
+        DisposeContainers(index?: number, count?: number): UIElement[];
+        CreateGenerator(index: number, count: number): IContainerGenerator;
+        GetEnumerator(index?: number, count?: number): IContainerEnumerator;
+    }
+    class ItemContainersManager implements IItemContainersManager {
+        Owner: IItemContainersOwner;
+        private _Items;
+        private _Containers;
+        private _Cache;
+        IsRecycling: boolean;
+        constructor(Owner: IItemContainersOwner);
+        IndexFromContainer(container: UIElement): number;
+        ContainerFromIndex(index: number): UIElement;
+        ItemFromContainer(container: UIElement): any;
+        ContainerFromItem(item: any): UIElement;
+        OnItemsAdded(index: number, newItems: any[]): void;
+        OnItemsRemoved(index: number, oldItems: any[]): void;
+        DisposeContainers(index?: number, count?: number): UIElement[];
+        CreateGenerator(index: number, count: number): IContainerGenerator;
+        GetEnumerator(start?: number, count?: number): IContainerEnumerator;
+    }
+    interface IContainerGenerator {
+        IsCurrentNew: boolean;
+        Current: UIElement;
+        CurrentItem: any;
+        CurrentIndex: number;
+        GenerateIndex: number;
+        Generate(): boolean;
+    }
+    interface IContainerEnumerator extends nullstone.IEnumerator<UIElement> {
+        CurrentItem: any;
+        CurrentIndex: number;
+    }
+}
+declare module Fayde.Controls.Internal {
+    interface IRange {
+        Minimum: number;
+        Maximum: number;
+        Value: number;
+        OnMinimumChanged(oldMin: number, newMin: number): any;
+        OnMaximumChanged(oldMax: number, newMax: number): any;
+        OnValueChanged(oldVal: number, newVal: number): any;
+    }
+    interface IRangeCoercer {
+        OnMinimumChanged(oldMinimum: number, newMinimum: number): any;
+        OnMaximumChanged(oldMaximum: number, newMaximum: number): any;
+        OnValueChanged(oldValue: number, newValue: number): any;
+    }
+    class RangeCoercer implements IRangeCoercer {
+        Range: IRange;
+        OnCoerceMaximum: (val: any) => void;
+        OnCoerceValue: (val: any) => void;
+        InitialMax: number;
+        InitialVal: number;
+        RequestedMax: number;
+        RequestedVal: number;
+        PreCoercedMax: number;
+        PreCoercedVal: number;
+        CoerceDepth: number;
+        Minimum: number;
+        Maximum: number;
+        Value: number;
+        constructor(Range: IRange, OnCoerceMaximum: (val: any) => void, OnCoerceValue: (val: any) => void);
+        OnMinimumChanged(oldMinimum: number, newMinimum: number): void;
+        OnMaximumChanged(oldMaximum: number, newMaximum: number): void;
+        OnValueChanged(oldValue: number, newValue: number): void;
+        CoerceMaximum(): void;
+        CoerceValue(): void;
+    }
+}
+declare module Fayde.Controls.Internal {
+    class TextBoxContentProxy {
+        private $$element;
+        setElement(fe: FrameworkElement, view: TextBoxView): void;
+        setHorizontalScrollBar(sbvis: ScrollBarVisibility): void;
+        setVerticalScrollBar(sbvis: ScrollBarVisibility): void;
+    }
+}
+declare module Fayde.Controls.Internal {
+    import TextBoxViewUpdater = minerva.controls.textboxview.TextBoxViewUpdater;
+    class TextBoxViewNode extends FENode {
+        LayoutUpdater: TextBoxViewUpdater;
+    }
+    class TextBoxView extends FrameworkElement {
+        XamlNode: TextBoxViewNode;
+        CreateLayoutUpdater(): TextBoxViewUpdater;
+        private _AutoRun;
+        constructor();
+        private _InlineChanged(obj?);
+        setFontProperty(propd: DependencyProperty, value: any): void;
+        setFontAttr(attrName: string, value: any): void;
+        setCaretBrush(value: Media.Brush): void;
+        setIsFocused(isFocused: boolean): void;
+        setIsReadOnly(isReadOnly: boolean): void;
+        setTextAlignment(textAlignment: TextAlignment): void;
+        setTextWrapping(textWrapping: TextWrapping): void;
+        setSelectionStart(selectionStart: number): void;
+        setSelectionLength(selectionLength: number): void;
+        setText(text: string): void;
+        GetCursorFromPoint(point: Point): number;
+    }
+}
+declare module Fayde.Controls.Internal {
+    class VirtualizingPanelContainerOwner implements minerva.IVirtualizingContainerOwner {
+        private $$panel;
+        constructor($$panel: VirtualizingPanel);
+        itemCount: number;
+        createGenerator(index: number, count: number): minerva.IVirtualizingGenerator;
+        remove(index: number, count: number): void;
+    }
+}
+declare module Fayde.Controls.Primitives {
+    class DragCompletedEventArgs extends RoutedEventArgs {
+        HorizontalChange: number;
+        VerticalChange: number;
+        Canceled: boolean;
+        constructor(horizontal: number, vertical: number, canceled: boolean);
+    }
+    class DragDeltaEventArgs extends RoutedEventArgs {
+        HorizontalChange: number;
+        VerticalChange: number;
+        constructor(horizontal: number, vertical: number);
+    }
+    class DragStartedEventArgs extends RoutedEventArgs {
+        HorizontalOffset: number;
+        VerticalOffset: number;
+        constructor(horizontal: number, vertical: number);
+    }
+}
+declare module Fayde.Controls.Primitives {
+    import OverlayUpdater = minerva.controls.overlay.OverlayUpdater;
+    class OverlayNode extends FENode {
+        LayoutUpdater: OverlayUpdater;
+        XObject: Overlay;
+        private _Layer;
+        private _Mask;
+        EnsureLayer(): Panel;
+        EnsureMask(): Border;
+        private _OnMaskMouseDown(sender, args);
+        UpdateMask(): void;
+        OnIsAttachedChanged(newIsAttached: boolean): void;
+        RegisterInitiator(initiator: UIElement): void;
+    }
+    class Overlay extends FrameworkElement {
+        XamlNode: OverlayNode;
+        CreateNode(): OverlayNode;
+        CreateLayoutUpdater(): OverlayUpdater;
+        static VisualProperty: DependencyProperty;
+        static VisualUriProperty: DependencyProperty;
+        static VisualViewModelProperty: DependencyProperty;
+        static IsOpenProperty: DependencyProperty;
+        static MaskBrushProperty: DependencyProperty;
+        static ClosedCommandProperty: DependencyProperty;
+        Visual: UIElement;
+        VisualUri: Uri;
+        VisualViewModel: any;
+        IsOpen: boolean;
+        MaskBrush: Media.Brush;
+        ClosedCommand: Input.ICommand;
+        Opened: nullstone.Event<nullstone.IEventArgs>;
+        Closed: nullstone.Event<OverlayClosedEventArgs>;
+        constructor();
+        InitBindings(): void;
+        private _ContentControlForUri;
+        private _IgnoreClose;
+        private _OnVisualChanged(args);
+        private _OnVisualUriChanged(args);
+        private _OnVisualViewModelChanged(args);
+        private _SetVisualUri(uri);
+        private _ClearVisualUri();
+        private _OnIsOpenChanged(args);
+        private _DoOpen();
+        private _DoClose(result?);
+        Open(): void;
+        Close(result?: boolean): void;
+        private _GetDialogResult();
+        static FindOverlay(visual: UIElement): Overlay;
+    }
+}
+declare module Fayde.Controls.Primitives {
+    class OverlayClosedEventArgs implements nullstone.IEventArgs {
+        Result: boolean;
+        Data: any;
+        constructor(result: boolean, data: any);
+    }
+}
+declare module Fayde.Controls.Primitives {
+    class ScrollData implements minerva.IScrollData {
+        canHorizontallyScroll: boolean;
+        canVerticallyScroll: boolean;
+        offsetX: number;
+        offsetY: number;
+        cachedOffsetX: number;
+        cachedOffsetY: number;
+        viewportWidth: number;
+        viewportHeight: number;
+        extentWidth: number;
+        extentHeight: number;
+        maxDesiredWidth: number;
+        maxDesiredHeight: number;
+        scrollOwner: ScrollViewer;
+        invalidate(): void;
+    }
+}
+declare module Fayde.Controls.Primitives {
+    enum ScrollEventType {
+        SmallDecrement = 0,
+        SmallIncrement = 1,
+        LargeDecrement = 2,
+        LargeIncrement = 3,
+        ThumbPosition = 4,
+        ThumbTrack = 5,
+        First = 6,
+        Last = 7,
+        EndScroll = 8,
+    }
+    class ScrollEventArgs extends RoutedEventArgs {
+        ScrollEventType: ScrollEventType;
+        Value: number;
+        constructor(scrollEventType: ScrollEventType, value: number);
+    }
+}
+declare module Fayde.Controls.Primitives {
+    class SelectionChangedEventArgs extends RoutedEventArgs {
+        OldValues: any[];
+        NewValues: any[];
+        constructor(oldValues: any[], newValues: any[]);
+    }
+}
+declare module Fayde.Controls.Primitives {
+    class SelectorSelection {
+        private _Owner;
+        private _SelectedItems;
+        private _SelectedItem;
+        private _IsUpdating;
+        private _AnchorIndex;
+        Mode: SelectionMode;
+        IsUpdating: boolean;
+        constructor(owner: Selector);
+        private _HandleOwnerSelectionChanged(sender, e);
+        RepopulateSelectedItems(): void;
+        ClearSelection(ignoreSelectedValue?: boolean): void;
+        Select(item: any): void;
+        private _SelectSingle(item, selIndex);
+        private _SelectExtended(item, selIndex);
+        private _SelectMultiple(item, selIndex);
+        SelectRange(startIndex: number, endIndex: number): void;
+        SelectAll(items: any[]): void;
+        SelectOnly(item: any): void;
+        Unselect(item: any): void;
+        AddToSelected(item: any): void;
+        RemoveFromSelected(item: any): void;
+        ReplaceSelection(item: any): void;
+        UpdateSelectorProperties(item: any, index: number, value: any): void;
+        UpdateCollectionView(item: any): boolean;
+    }
+}
+declare module Fayde.Providers {
+    enum StyleIndex {
+        VisualTree = 0,
+        ApplicationResources = 1,
+        Theme = 2,
+        Count = 3,
+    }
+    enum StyleMask {
+        None = 0,
+        VisualTree = 1,
+        ApplicationResources = 2,
+        Theme = 4,
+        All = 7,
+    }
+    interface IImplicitStyleHolder {
+        _ImplicitStyles: Style[];
+        _StyleMask: number;
+    }
+    class ImplicitStyleBroker {
+        static Set(fe: FrameworkElement, mask: StyleMask, styles?: Style[]): void;
+        private static SetImpl(fe, mask, styles);
+        static Clear(fe: FrameworkElement, mask: StyleMask): void;
+        private static ApplyStyles(fe, mask, styles);
+    }
+}
+declare module Fayde.Providers {
+    interface IStyleHolder {
+        _LocalStyle: Style;
+    }
+    class LocalStyleBroker {
+        static Set(fe: FrameworkElement, newStyle: Style): void;
+    }
+}
+declare module Fayde.Providers {
+    function SwapStyles(fe: FrameworkElement, oldWalker: IStyleWalker, newWalker: IStyleWalker, isImplicit: boolean): void;
+}
+declare module Fayde.Data {
+    interface IOutValue {
+        Value: any;
+    }
+    class PropertyPath implements ICloneable {
+        private _Path;
+        private _ExpandedPath;
+        private _Propd;
+        constructor(path?: string, expandedPath?: string);
+        static CreateFromParameter(parameter: any): PropertyPath;
+        TryResolveDependencyProperty(refobj: IOutValue, promotedValues: any[]): DependencyProperty;
+        Path: string;
+        ExpandedPath: string;
+        ParsePath: string;
+        HasDependencyProperty: boolean;
+        DependencyProperty: DependencyProperty;
+        static ResolvePropertyPath(refobj: IOutValue, propertyPath: PropertyPath, promotedValues: any[]): DependencyProperty;
+        Clone(): PropertyPath;
+    }
+}
+declare module Fayde.Data {
+    interface IPropertyPathParserData {
+        typeName: string;
+        propertyName: string;
+        index: number;
+    }
+    enum PropertyNodeType {
+        None = 0,
+        AttachedProperty = 1,
+        Indexed = 2,
+        Property = 3,
+    }
+    class PropertyPathParser {
+        Path: string;
+        constructor(path: string);
+        Step(data: IPropertyPathParserData): PropertyNodeType;
+    }
+}
+declare module Fayde.Data {
+    interface IPropertyPathWalkerListener {
+        IsBrokenChanged(): any;
+        ValueChanged(): any;
+    }
+    interface IPropertyPathNode {
+        Next: IPropertyPathNode;
+        Value: any;
+        IsBroken: boolean;
+        ValueType: IType;
+        GetSource(): any;
+        SetSource(source: any): any;
+        SetValue(value: any): any;
+        Listen(listener: IPropertyPathNodeListener): any;
+        Unlisten(listener: IPropertyPathNodeListener): any;
+    }
+    interface ICollectionViewNode extends IPropertyPathNode {
+        BindToView: boolean;
+    }
+    interface IPropertyPathNodeListener {
+        IsBrokenChanged(node: IPropertyPathNode): any;
+        ValueChanged(node: IPropertyPathNode): any;
+    }
+    class PropertyPathWalker implements IPropertyPathNodeListener {
+        Path: string;
+        IsDataContextBound: boolean;
+        Source: any;
+        ValueInternal: any;
+        Node: IPropertyPathNode;
+        FinalNode: IPropertyPathNode;
+        private _Listener;
+        IsPathBroken: boolean;
+        FinalPropertyName: string;
+        constructor(path: string, bindDirectlyToSource?: boolean, bindsToView?: boolean, isDataContextBound?: boolean);
+        GetValue(item: any): any;
+        Update(source: any): void;
+        Listen(listener: IPropertyPathWalkerListener): void;
+        Unlisten(listener: IPropertyPathWalkerListener): void;
+        IsBrokenChanged(node: IPropertyPathNode): void;
+        ValueChanged(node: IPropertyPathNode): void;
+        GetContext(): any;
+    }
+}
+declare module Fayde.Input.TouchInternal {
+    interface ITouchHandler {
+        HandleTouches(type: Input.TouchInputType, touches: ActiveTouchBase[], emitLeave?: boolean, emitEnter?: boolean): boolean;
+    }
+    class ActiveTouchBase {
+        Identifier: number;
+        Position: Point;
+        Device: Input.ITouchDevice;
+        InputList: UINode[];
+        private _IsEmitting;
+        private _PendingCapture;
+        private _PendingReleaseCapture;
+        private _Captured;
+        private _CapturedInputList;
+        private _FinishReleaseCaptureFunc;
+        constructor(touchHandler: ITouchHandler);
+        Capture(uie: UIElement): boolean;
+        ReleaseCapture(uie: UIElement): void;
+        private _PerformCapture(uin);
+        private _PerformReleaseCapture();
+        Emit(type: Input.TouchInputType, newInputList: UINode[], emitLeave?: boolean, emitEnter?: boolean): boolean;
+        private _EmitList(type, list, endIndex?);
+        GetTouchPoint(relativeTo: UIElement): TouchPoint;
+        CreateTouchPoint(p: Point): TouchPoint;
+        private CreateTouchDevice();
+    }
+}
+declare module Fayde.Input.TouchInternal {
+    interface IOffset {
+        left: number;
+        top: number;
+    }
+    class TouchInteropBase implements Fayde.Input.ITouchInterop, ITouchHandler {
+        Input: Engine.InputManager;
+        CanvasOffset: IOffset;
+        ActiveTouches: ActiveTouchBase[];
+        CoordinateOffset: IOffset;
+        Register(input: Engine.InputManager, canvas: HTMLCanvasElement): void;
+        private _CalcOffset(canvas);
+        HandleTouches(type: Input.TouchInputType, touches: ActiveTouchBase[], emitLeave?: boolean, emitEnter?: boolean): boolean;
+    }
+}
+declare module Fayde.Input.TouchInternal {
+    class NonPointerTouchInterop extends TouchInteropBase {
+        Register(input: Engine.InputManager, canvas: HTMLCanvasElement): void;
+        private _HandleTouchStart(e);
+        private _HandleTouchEnd(e);
+        private _HandleTouchMove(e);
+        private _HandleTouchEnter(e);
+        private _HandleTouchLeave(e);
+        private TouchArrayFromList(list);
+        private FindTouchInList(identifier);
+    }
+}
+declare module Fayde.Input.TouchInternal {
+    class PointerTouchInterop extends TouchInteropBase {
+        Register(input: Engine.InputManager, canvas: HTMLCanvasElement): void;
+        private _HandlePointerDown(e);
+        private _HandlePointerUp(e);
+        private _HandlePointerMove(e);
+        private _HandlePointerEnter(e);
+        private _HandlePointerLeave(e);
+        private GetActiveTouch(e);
+        private FindTouchInList(identifier);
+    }
+}
 declare module Fayde.Markup.Internal {
     interface IActiveObject {
         obj: any;
@@ -4083,20 +5138,6 @@ declare module Fayde.Markup.Internal {
         get(): ResourceDictionary[];
     }
     function createResourcesActor(cur: IActiveObject, resources: ResourceDictionary[]): IResourcesActor;
-}
-declare module Fayde.Markup {
-    function Resolve(uri: string): any;
-    function Resolve(uri: Uri): any;
-}
-declare module Fayde.Markup {
-    class StaticResource implements nullstone.markup.IMarkupExtension {
-        ResourceKey: string;
-        private $$app;
-        private $$resources;
-        init(val: string): void;
-        transmute(os: any[]): any;
-        setContext(app: Application, resources: ResourceDictionary[]): void;
-    }
 }
 declare module Fayde.Media.Animation {
     enum EasingMode {
@@ -4567,38 +5608,6 @@ declare module Fayde.Media.Animation {
         GetNaturalDurationCore(): Duration;
     }
 }
-declare module Fayde.Media {
-    class Brush extends DependencyObject implements minerva.IBrush {
-        static TransformProperty: DependencyProperty;
-        Transform: Media.Transform;
-        private _CachedBounds;
-        private _CachedBrush;
-        constructor();
-        isTransparent(): boolean;
-        setupBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
-        toHtml5Object(): any;
-        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
-        InvalidateBrush(): void;
-    }
-}
-declare module Fayde.Media {
-    class GeneralTransform extends DependencyObject {
-        Inverse: GeneralTransform;
-        Transform(p: minerva.IPoint): Point;
-        TransformBounds(r: minerva.Rect): minerva.Rect;
-        TryTransform(inPoint: minerva.IPoint, outPoint: minerva.IPoint): boolean;
-    }
-    class InternalTransform extends GeneralTransform implements minerva.ITransform {
-        private _Raw;
-        constructor(raw: number[]);
-        Inverse: InternalTransform;
-        Value: Matrix3D;
-        getRaw(): number[];
-        Transform(p: minerva.IPoint): Point;
-        TransformBounds(r: minerva.Rect): minerva.Rect;
-        CreateMatrix3DProjection(): Matrix3DProjection;
-    }
-}
 declare module Fayde.Media.Effects {
     class Effect extends DependencyObject implements minerva.IEffect {
         static EffectMappingProperty: DependencyProperty;
@@ -4613,167 +5622,6 @@ declare module Fayde.Media.Effects {
         static RadiusProperty: DependencyProperty;
         Radius: number;
     }
-}
-declare class Color implements ICloneable {
-    private static __NoAlphaRegex;
-    private static __AlphaRegex;
-    R: number;
-    G: number;
-    B: number;
-    A: number;
-    Add(color2: Color): Color;
-    Subtract(color2: Color): Color;
-    Multiply(factor: number): Color;
-    Equals(other: Color): boolean;
-    toString(): string;
-    ToHexStringNoAlpha(): string;
-    Clone(): Color;
-    static LERP(start: Color, end: Color, p: number): Color;
-    static FromRgba(r: number, g: number, b: number, a: number): Color;
-    static FromHex(hex: string): Color;
-    static KnownColors: {
-        AliceBlue: Color;
-        AntiqueWhite: Color;
-        Aqua: Color;
-        Aquamarine: Color;
-        Azure: Color;
-        Beige: Color;
-        Bisque: Color;
-        Black: Color;
-        BlanchedAlmond: Color;
-        Blue: Color;
-        BlueViolet: Color;
-        Brown: Color;
-        BurlyWood: Color;
-        CadetBlue: Color;
-        Chartreuse: Color;
-        Chocolate: Color;
-        Coral: Color;
-        CornflowerBlue: Color;
-        Cornsilk: Color;
-        Crimson: Color;
-        Cyan: Color;
-        DarkBlue: Color;
-        DarkCyan: Color;
-        DarkGoldenrod: Color;
-        DarkGray: Color;
-        DarkGreen: Color;
-        DarkKhaki: Color;
-        DarkMagenta: Color;
-        DarkOliveGreen: Color;
-        DarkOrange: Color;
-        DarkOrchid: Color;
-        DarkRed: Color;
-        DarkSalmon: Color;
-        DarkSeaGreen: Color;
-        DarkSlateBlue: Color;
-        DarkSlateGray: Color;
-        DarkTurquoise: Color;
-        DarkViolet: Color;
-        DeepPink: Color;
-        DeepSkyBlue: Color;
-        DimGray: Color;
-        DodgerBlue: Color;
-        Firebrick: Color;
-        FloralWhite: Color;
-        ForestGreen: Color;
-        Fuchsia: Color;
-        Gainsboro: Color;
-        GhostWhite: Color;
-        Gold: Color;
-        Goldenrod: Color;
-        Gray: Color;
-        Green: Color;
-        GreenYellow: Color;
-        Honeydew: Color;
-        HotPink: Color;
-        IndianRed: Color;
-        Indigo: Color;
-        Ivory: Color;
-        Khaki: Color;
-        Lavender: Color;
-        LavenderBlush: Color;
-        LawnGreen: Color;
-        LemonChiffon: Color;
-        LightBlue: Color;
-        LightCoral: Color;
-        LightCyan: Color;
-        LightGoldenrodYellow: Color;
-        LightGray: Color;
-        LightGreen: Color;
-        LightPink: Color;
-        LightSalmon: Color;
-        LightSeaGreen: Color;
-        LightSkyBlue: Color;
-        LightSlateGray: Color;
-        LightSteelBlue: Color;
-        LightYellow: Color;
-        Lime: Color;
-        LimeGreen: Color;
-        Linen: Color;
-        Magenta: Color;
-        Maroon: Color;
-        MediumAquamarine: Color;
-        MediumBlue: Color;
-        MediumOrchid: Color;
-        MediumPurple: Color;
-        MediumSeaGreen: Color;
-        MediumSlateBlue: Color;
-        MediumSpringGreen: Color;
-        MediumTurquoise: Color;
-        MediumVioletRed: Color;
-        MidnightBlue: Color;
-        MintCream: Color;
-        MistyRose: Color;
-        Moccasin: Color;
-        NavajoWhite: Color;
-        Navy: Color;
-        OldLace: Color;
-        Olive: Color;
-        OliveDrab: Color;
-        Orange: Color;
-        OrangeRed: Color;
-        Orchid: Color;
-        PaleGoldenrod: Color;
-        PaleGreen: Color;
-        PaleTurquoise: Color;
-        PaleVioletRed: Color;
-        PapayaWhip: Color;
-        PeachPuff: Color;
-        Peru: Color;
-        Pink: Color;
-        Plum: Color;
-        PowderBlue: Color;
-        Purple: Color;
-        Red: Color;
-        RosyBrown: Color;
-        RoyalBlue: Color;
-        SaddleBrown: Color;
-        Salmon: Color;
-        SandyBrown: Color;
-        SeaGreen: Color;
-        SeaShell: Color;
-        Sienna: Color;
-        Silver: Color;
-        SkyBlue: Color;
-        SlateBlue: Color;
-        SlateGray: Color;
-        Snow: Color;
-        SpringGreen: Color;
-        SteelBlue: Color;
-        Tan: Color;
-        Teal: Color;
-        Thistle: Color;
-        Tomato: Color;
-        Transparent: Color;
-        Turquoise: Color;
-        Violet: Color;
-        Wheat: Color;
-        White: Color;
-        WhiteSmoke: Color;
-        Yellow: Color;
-        YellowGreen: Color;
-    };
 }
 declare module Fayde.Media.Effects {
     class DropShadowEffect extends Effect {
@@ -4791,108 +5639,6 @@ declare module Fayde.Media.Effects {
         ShadowDepth: number;
         GetPadding(thickness: Thickness): boolean;
         PreRender(ctx: minerva.core.render.RenderContext): void;
-    }
-}
-declare module Fayde.Media {
-    class Geometry extends DependencyObject implements minerva.IGeometry {
-        private _Path;
-        private _LocalBounds;
-        static TransformProperty: DependencyProperty;
-        Transform: Transform;
-        constructor();
-        GetBounds(pars?: minerva.path.IStrokeParameters): minerva.Rect;
-        Draw(ctx: minerva.core.render.RenderContext): void;
-        ComputePathBounds(pars: minerva.path.IStrokeParameters): minerva.Rect;
-        InvalidateGeometry(): void;
-        _Build(): minerva.path.Path;
-        Serialize(): string;
-    }
-    class GeometryCollection extends XamlObjectCollection<Geometry> {
-        AddingToCollection(value: Geometry, error: BError): boolean;
-        RemovedFromCollection(value: Geometry, isValueSafe: boolean): void;
-    }
-}
-declare module Fayde.Media {
-    class EllipseGeometry extends Geometry {
-        static CenterProperty: DependencyProperty;
-        static RadiusXProperty: DependencyProperty;
-        static RadiusYProperty: DependencyProperty;
-        Center: Point;
-        RadiusX: number;
-        RadiusY: number;
-        _Build(): minerva.path.Path;
-    }
-}
-declare module Fayde.Shapes {
-    enum ShapeFlags {
-        None = 0,
-        Empty = 1,
-        Normal = 2,
-        Degenerate = 4,
-        Radii = 8,
-    }
-    enum PenLineCap {
-        Flat = 0,
-        Square = 1,
-        Round = 2,
-        Triangle = 3,
-    }
-    enum PenLineJoin {
-        Miter = 0,
-        Bevel = 1,
-        Round = 2,
-    }
-    enum FillRule {
-        EvenOdd = 0,
-        NonZero = 1,
-    }
-    enum SweepDirection {
-        Counterclockwise = 0,
-        Clockwise = 1,
-    }
-}
-declare module Fayde.Media {
-    class GeometryGroup extends Geometry {
-        static FillRulleProperty: DependencyProperty;
-        static ChildrenProperty: ImmutableDependencyProperty<GeometryCollection>;
-        FillRule: Shapes.FillRule;
-        Children: GeometryCollection;
-        constructor();
-        ComputePathBounds(pars: minerva.path.IStrokeParameters): minerva.Rect;
-        Draw(ctx: minerva.core.render.RenderContext): void;
-    }
-}
-declare module Fayde.Media {
-    class GradientBrush extends Brush {
-        static GradientStopsProperty: ImmutableDependencyProperty<GradientStopCollection>;
-        static MappingModeProperty: DependencyProperty;
-        static SpreadMethodProperty: DependencyProperty;
-        GradientStops: GradientStopCollection;
-        MappingMode: BrushMappingMode;
-        SpreadMethod: GradientSpreadMethod;
-        constructor();
-        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
-        CreatePad(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
-        CreateRepeat(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
-        CreateReflect(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
-    }
-}
-declare module Fayde.Media {
-    interface IGradientStop {
-        Color: Color;
-        Offset: number;
-    }
-    class GradientStop extends DependencyObject implements IGradientStop {
-        static ColorProperty: DependencyProperty;
-        static OffsetProperty: DependencyProperty;
-        Color: Color;
-        Offset: number;
-        toString(): string;
-    }
-    class GradientStopCollection extends XamlObjectCollection<GradientStop> {
-        AddingToCollection(value: GradientStop, error: BError): boolean;
-        RemovedFromCollection(value: GradientStop, isValueSafe: boolean): boolean;
-        getPaddedEnumerable(): nullstone.IEnumerable<IGradientStop>;
     }
 }
 declare module Fayde.Media.Imaging {
@@ -4942,19 +5688,6 @@ declare module Fayde.Media.Imaging {
         SetSource(buffer: ArrayBuffer): void;
     }
 }
-declare module Fayde.Media {
-    class TileBrush extends Brush {
-        static AlignmentXProperty: DependencyProperty;
-        static AlignmentYProperty: DependencyProperty;
-        static StretchProperty: DependencyProperty;
-        AlignmentX: AlignmentX;
-        AlignmentY: AlignmentY;
-        Stretch: Stretch;
-        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasPattern;
-        GetTileExtents(): minerva.Rect;
-        DrawTile(canvasCtx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
-    }
-}
 declare module Fayde.Media.Imaging {
     class ImageBrush extends TileBrush implements IImageChangedListener {
         private static _SourceCoercer(d, propd, value);
@@ -4974,15 +5707,6 @@ declare module Fayde.Media.Imaging {
 declare module Fayde.Media.Imaging {
     function encodeImage(buffer: ArrayBuffer): Uri;
 }
-declare module Fayde.Media {
-    class LineGeometry extends Geometry {
-        static StartPointProperty: DependencyProperty;
-        static EndPointProperty: DependencyProperty;
-        StartPoint: Point;
-        EndPoint: Point;
-        _Build(): minerva.path.Path;
-    }
-}
 declare module Fayde.Media.LinearGradient {
     interface IInterpolator {
         x0: number;
@@ -5001,228 +5725,6 @@ declare module Fayde.Media.LinearGradient {
         y: number;
     }
     function calcMetrics(dir: ICoordinates, first: ICoordinates, last: ICoordinates, bounds: minerva.Rect): void;
-}
-declare module Fayde.Media {
-    class LinearGradientBrush extends GradientBrush {
-        static StartPointProperty: DependencyProperty;
-        static EndPointProperty: DependencyProperty;
-        StartPoint: Point;
-        EndPoint: Point;
-        CreatePad(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasGradient;
-        CreateRepeat(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasGradient;
-        CreateReflect(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasGradient;
-        private CreateInterpolated(ctx, interpolator);
-        private _GetPointData(bounds);
-        toString(): string;
-    }
-}
-declare module Fayde.Media {
-    class Matrix {
-        _Raw: number[];
-        private _Inverse;
-        constructor(raw?: number[]);
-        static Identity: Matrix;
-        M11: number;
-        M12: number;
-        M21: number;
-        M22: number;
-        OffsetX: number;
-        OffsetY: number;
-        Inverse: Matrix;
-        private _OnChanged();
-        Clone(): Matrix;
-    }
-}
-declare module Fayde.Media {
-    interface IMatrix3DChangedListener {
-        Callback: (newMatrix3D: Matrix3D) => void;
-        Detach(): any;
-    }
-    class Matrix3D {
-        _Raw: number[];
-        private _Inverse;
-        static FromRaw(raw: number[]): Matrix3D;
-        M11: number;
-        M12: number;
-        M13: number;
-        M14: number;
-        M21: number;
-        M22: number;
-        M23: number;
-        M24: number;
-        M31: number;
-        M32: number;
-        M33: number;
-        M34: number;
-        OffsetX: number;
-        OffsetY: number;
-        OffsetZ: number;
-        M44: number;
-        Inverse: Matrix3D;
-        private _Listeners;
-        Listen(func: (newMatrix: Matrix3D) => void): IMatrix3DChangedListener;
-        private _OnChanged();
-    }
-}
-declare module Fayde.Media {
-    class Projection extends DependencyObject implements minerva.IProjection {
-        private _ProjectionMatrix;
-        private _ObjectWidth;
-        ObjectWidth: number;
-        private _ObjectHeight;
-        ObjectHeight: number;
-        setObjectSize(objectWidth: number, objectHeight: number): void;
-        getDistanceFromXYPlane(): number;
-        getTransform(): number[];
-        CreateProjectionMatrix(): Matrix3D;
-        InvalidateProjection(): void;
-    }
-}
-declare module Fayde.Media {
-    class Matrix3DProjection extends Projection {
-        static ProjectionMatrixProperty: DependencyProperty;
-        ProjectionMatrix: Matrix3D;
-        CreateProjectionMatrix(): Matrix3D;
-    }
-}
-declare module Fayde.Media {
-    function ParseGeometry(val: string): Geometry;
-    function ParseShapePoints(val: string): Point[];
-}
-declare module Fayde.Media {
-    class PathFigure extends DependencyObject {
-        static IsClosedProperty: DependencyProperty;
-        static StartPointProperty: DependencyProperty;
-        static IsFilledProperty: DependencyProperty;
-        static SegmentsProperty: ImmutableDependencyProperty<PathSegmentCollection>;
-        static SegmentsSourceProperty: DependencyProperty;
-        IsClosed: boolean;
-        Segments: PathSegmentCollection;
-        SegmentsSource: nullstone.IEnumerable<PathSegment>;
-        StartPoint: Point;
-        IsFilled: boolean;
-        private _OnSegmentsSourceChanged(args);
-        private _Path;
-        constructor();
-        private _Build();
-        private InvalidatePathFigure();
-        MergeInto(rp: minerva.path.Path): void;
-    }
-    class PathFigureCollection extends XamlObjectCollection<PathFigure> {
-        AddingToCollection(value: PathFigure, error: BError): boolean;
-        RemovedFromCollection(value: PathFigure, isValueSafe: boolean): void;
-    }
-}
-declare module Fayde.Media {
-    class PathGeometry extends Geometry implements minerva.shapes.path.IPathGeometry {
-        private _OverridePath;
-        static FillRuleProperty: DependencyProperty;
-        static FiguresProperty: ImmutableDependencyProperty<PathFigureCollection>;
-        FillRule: Shapes.FillRule;
-        Figures: PathFigureCollection;
-        fillRule: minerva.FillRule;
-        constructor();
-        OverridePath(path: minerva.path.Path): void;
-        _Build(): minerva.path.Path;
-        InvalidateFigures(): void;
-    }
-}
-declare module Fayde.Media {
-    class PathSegment extends DependencyObject {
-        _Append(path: minerva.path.Path): void;
-    }
-    class PathSegmentCollection extends XamlObjectCollection<PathSegment> {
-        private _Modifying;
-        AddingToCollection(value: PathSegment, error: BError): boolean;
-        RemovedFromCollection(value: PathSegment, isValueSafe: boolean): void;
-        private _Source;
-        SetSource(source: nullstone.IEnumerable<PathSegment>): void;
-        private _OnSegmentsCollectionChanged(sender, args);
-    }
-}
-declare module Fayde.Media {
-    class ArcSegment extends PathSegment {
-        static IsLargeArcProperty: DependencyProperty;
-        static PointProperty: DependencyProperty;
-        static RotationAngleProperty: DependencyProperty;
-        static SizeProperty: DependencyProperty;
-        static SweepDirectionProperty: DependencyProperty;
-        IsLargeArc: boolean;
-        Point: Point;
-        RotationAngle: number;
-        Size: minerva.Size;
-        SweepDirection: Shapes.SweepDirection;
-        _Append(path: minerva.path.Path): void;
-    }
-    class BezierSegment extends PathSegment {
-        static Point1Property: DependencyProperty;
-        static Point2Property: DependencyProperty;
-        static Point3Property: DependencyProperty;
-        Point1: Point;
-        Point2: Point;
-        Point3: Point;
-        _Append(path: minerva.path.Path): void;
-    }
-    class LineSegment extends PathSegment {
-        static PointProperty: DependencyProperty;
-        Point: Point;
-        _Append(path: minerva.path.Path): void;
-    }
-    class PolyBezierSegment extends PathSegment {
-        static PointsProperty: ImmutableDependencyProperty<Shapes.PointCollection>;
-        Points: Shapes.PointCollection;
-        constructor();
-        _Append(path: minerva.path.Path): void;
-    }
-    class PolyLineSegment extends PathSegment {
-        static PointsProperty: ImmutableDependencyProperty<Shapes.PointCollection>;
-        Points: Shapes.PointCollection;
-        constructor();
-        _Append(path: minerva.path.Path): void;
-    }
-    class PolyQuadraticBezierSegment extends PathSegment {
-        static PointsProperty: ImmutableDependencyProperty<Shapes.PointCollection>;
-        Points: Shapes.PointCollection;
-        constructor();
-        _Append(path: minerva.path.Path): void;
-    }
-    class QuadraticBezierSegment extends PathSegment {
-        static Point1Property: DependencyProperty;
-        static Point2Property: DependencyProperty;
-        Point1: Point;
-        Point2: Point;
-        _Append(path: minerva.path.Path): void;
-    }
-}
-declare module Fayde.Media {
-    class PlaneProjection extends Projection {
-        static CenterOfRotationXProperty: DependencyProperty;
-        static CenterOfRotationYProperty: DependencyProperty;
-        static CenterOfRotationZProperty: DependencyProperty;
-        static GlobalOffsetXProperty: DependencyProperty;
-        static GlobalOffsetYProperty: DependencyProperty;
-        static GlobalOffsetZProperty: DependencyProperty;
-        static LocalOffsetXProperty: DependencyProperty;
-        static LocalOffsetYProperty: DependencyProperty;
-        static LocalOffsetZProperty: DependencyProperty;
-        static RotationXProperty: DependencyProperty;
-        static RotationYProperty: DependencyProperty;
-        static RotationZProperty: DependencyProperty;
-        CenterOfRotationX: number;
-        CenterOfRotationY: number;
-        CenterOfRotationZ: number;
-        GlobalOffsetX: number;
-        GlobalOffsetY: number;
-        GlobalOffsetZ: number;
-        LocalOffsetX: number;
-        LocalOffsetY: number;
-        LocalOffsetZ: number;
-        RotationX: number;
-        RotationY: number;
-        RotationZ: number;
-        getDistanceFromXYPlane(): number;
-        CreateProjectionMatrix3D(): Matrix3D;
-    }
 }
 declare module Fayde.Media.RadialGradient {
     interface IExtender {
@@ -5247,124 +5749,6 @@ declare module Fayde.Media.RadialGradient {
         balanced: boolean;
     }
     function createExtender(data: IRadialPointData, bounds: minerva.Rect): IExtender;
-}
-declare module Fayde.Media {
-    class RadialGradientBrush extends GradientBrush {
-        static CenterProperty: DependencyProperty;
-        static GradientOriginProperty: DependencyProperty;
-        static RadiusXProperty: DependencyProperty;
-        static RadiusYProperty: DependencyProperty;
-        Center: Point;
-        GradientOrigin: Point;
-        RadiusX: number;
-        RadiusY: number;
-        CreatePad(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
-        CreateRepeat(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasPattern;
-        CreateReflect(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): CanvasPattern;
-        private CreateInterpolated(data, bounds, reflect);
-        private FitPattern(ctx, fill, data, bounds);
-        private _GetPointData(bounds);
-    }
-}
-declare module Fayde.Media {
-    class RectangleGeometry extends Geometry {
-        static RectProperty: DependencyProperty;
-        static RadiusXProperty: DependencyProperty;
-        static RadiusYProperty: DependencyProperty;
-        Rect: minerva.Rect;
-        RadiusX: number;
-        RadiusY: number;
-        _Build(): minerva.path.Path;
-    }
-}
-declare module Fayde.Media {
-    class SolidColorBrush extends Brush {
-        static ColorProperty: DependencyProperty;
-        Color: Color;
-        constructor(...args: any[]);
-        isTransparent(): boolean;
-        static FromColor(color: Color): SolidColorBrush;
-        setupBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): void;
-        CreateBrush(ctx: CanvasRenderingContext2D, bounds: minerva.Rect): any;
-    }
-}
-declare module Fayde.Media {
-    class TextOptions {
-        static TextHintingModeProperty: DependencyProperty;
-        static GetTextHintingMode(d: DependencyObject): TextHintingMode;
-        static SetTextHintingMode(d: DependencyObject, value: TextHintingMode): void;
-    }
-}
-declare module Fayde.Media {
-    class Transform extends GeneralTransform implements minerva.ITransform {
-        private _Value;
-        constructor();
-        Value: Matrix;
-        getRaw(): number[];
-        Inverse: Transform;
-        Transform(p: minerva.IPoint): Point;
-        TransformBounds(r: minerva.Rect): minerva.Rect;
-        TryTransform(inPoint: minerva.IPoint, outPoint: minerva.IPoint): boolean;
-        InvalidateValue(): void;
-        _BuildValue(): number[];
-        static copyMatTo(t: Transform, mat: number[]): void;
-    }
-    class MatrixTransform extends Transform {
-        static MatrixProperty: DependencyProperty;
-        Matrix: Matrix;
-        _BuildValue(): number[];
-        Clone(): MatrixTransform;
-    }
-}
-declare module Fayde.Media {
-    class RotateTransform extends Transform {
-        static AngleProperty: DependencyProperty;
-        static CenterXProperty: DependencyProperty;
-        static CenterYProperty: DependencyProperty;
-        Angle: number;
-        CenterX: number;
-        CenterY: number;
-        _BuildValue(): number[];
-    }
-    class ScaleTransform extends Transform {
-        static CenterXProperty: DependencyProperty;
-        static CenterYProperty: DependencyProperty;
-        static ScaleXProperty: DependencyProperty;
-        static ScaleYProperty: DependencyProperty;
-        CenterX: number;
-        CenterY: number;
-        ScaleX: number;
-        ScaleY: number;
-        _BuildValue(): number[];
-    }
-    class SkewTransform extends Transform {
-        static AngleXProperty: DependencyProperty;
-        static AngleYProperty: DependencyProperty;
-        static CenterXProperty: DependencyProperty;
-        static CenterYProperty: DependencyProperty;
-        AngleX: number;
-        AngleY: number;
-        CenterX: number;
-        CenterY: number;
-        _BuildValue(): number[];
-    }
-    class TranslateTransform extends Transform {
-        static XProperty: DependencyProperty;
-        static YProperty: DependencyProperty;
-        X: number;
-        Y: number;
-        _BuildValue(): number[];
-    }
-    class TransformCollection extends XamlObjectCollection<Transform> {
-        AddingToCollection(value: Transform, error: BError): boolean;
-        RemovedFromCollection(value: Transform, isValueSafe: boolean): boolean;
-    }
-    class TransformGroup extends Transform {
-        static ChildrenProperty: ImmutableDependencyProperty<TransformCollection>;
-        Children: TransformCollection;
-        constructor();
-        _BuildValue(): number[];
-    }
 }
 declare module Fayde.Media.VSM {
     class VisualState extends DependencyObject {
@@ -5444,307 +5828,6 @@ declare module Fayde.Media.VSM {
         IsDefault: boolean;
     }
 }
-declare module Fayde.Navigation {
-    function Navigate(source: DependencyObject, targetName: string, navigateUri: Uri): void;
-}
-declare module Fayde.Navigation {
-    class NavigationService {
-        Href: string;
-        Hash: string;
-        LocationChanged: nullstone.Event<{}>;
-        constructor();
-        CurrentUri: Uri;
-        Navigate(uri: Uri): boolean;
-        private _HandleFragmentChange();
-    }
-}
-declare module Fayde.Navigation {
-    class RouteMapper extends DependencyObject {
-        static RouteMappingsProperty: ImmutableDependencyProperty<XamlObjectCollection<RouteMapping>>;
-        static ViewModelProviderProperty: DependencyProperty;
-        RouteMappings: XamlObjectCollection<RouteMapping>;
-        ViewModelProvider: Fayde.MVVM.IViewModelProvider;
-        constructor();
-        MapUri(uri: Uri): Route;
-    }
-}
-declare module Fayde.Navigation {
-    class RouteMapping extends DependencyObject {
-        static ViewProperty: DependencyProperty;
-        static UriProperty: DependencyProperty;
-        View: Uri;
-        Uri: Uri;
-        MapUri(uri: Uri): Route;
-    }
-}
-declare module Fayde.Navigation {
-    class UriMapper extends DependencyObject {
-        static UriMappingsProperty: ImmutableDependencyProperty<XamlObjectCollection<UriMapping>>;
-        UriMappings: XamlObjectCollection<UriMapping>;
-        constructor();
-        MapUri(uri: Uri): Uri;
-    }
-}
-declare module Fayde.Navigation {
-    class UriMapping extends DependencyObject {
-        static MappedUriProperty: DependencyProperty;
-        static UriProperty: DependencyProperty;
-        MappedUri: Uri;
-        Uri: Uri;
-        MapUri(uri: Uri): Uri;
-    }
-}
-declare class CornerRadius extends minerva.CornerRadius implements ICloneable {
-    Clone(): CornerRadius;
-}
-declare enum DurationType {
-    Automatic = 0,
-    Forever = 1,
-    TimeSpan = 2,
-}
-declare class Duration implements ICloneable {
-    private _Type;
-    private _TimeSpan;
-    constructor(ts?: TimeSpan);
-    Clone(): Duration;
-    Type: DurationType;
-    TimeSpan: TimeSpan;
-    HasTimeSpan: boolean;
-    IsForever: boolean;
-    IsAutomatic: boolean;
-    IsZero: boolean;
-    static Automatic: Duration;
-    static Forever: Duration;
-}
-declare class FontFamily implements ICloneable {
-    FamilyNames: string;
-    constructor(FamilyNames: string);
-    toString(): string;
-    Clone(): FontFamily;
-}
-declare class KeyTime implements ICloneable {
-    private _IsPaced;
-    private _IsUniform;
-    private _TimeSpan;
-    private _Percent;
-    IsValid: boolean;
-    static CreateUniform(): KeyTime;
-    static CreateTimeSpan(ts: TimeSpan): KeyTime;
-    Clone(): KeyTime;
-    IsPaced: boolean;
-    IsUniform: boolean;
-    HasTimeSpan: boolean;
-    TimeSpan: TimeSpan;
-    HasPercent: boolean;
-    Percent: number;
-}
-declare class Length {
-}
-declare class Rect extends minerva.Rect {
-    Clone(): Rect;
-}
-declare class Size extends minerva.Size {
-    Clone(): Size;
-}
-declare class Thickness extends minerva.Thickness {
-    Clone(): Thickness;
-    toString(): string;
-}
-declare module Fayde {
-    function splitCommaList(str: string): string[];
-}
-declare class BError {
-    static Argument: number;
-    static InvalidOperation: number;
-    static XamlParse: number;
-    static Attach: number;
-    Message: string;
-    Number: number;
-    Data: any;
-    ThrowException(): void;
-}
-declare module Fayde {
-    function Bootstrap(onLoaded?: (app: Application) => any): void;
-}
-declare module Fayde {
-    function LoadConfigJson(onComplete: (config: any, err?: any) => void): void;
-}
-declare module Fayde {
-    module Render {
-        var Debug: boolean;
-        var DebugIndent: number;
-    }
-    module Layout {
-        var Debug: boolean;
-        var DebugIndent: number;
-    }
-    module Media {
-        module Animation {
-            var Log: boolean;
-            var LogApply: boolean;
-        }
-        module VSM {
-            var Debug: boolean;
-        }
-    }
-    module Data {
-        var Debug: boolean;
-        var IsCounterEnabled: boolean;
-        var DataContextCounter: number;
-    }
-    var IsInspectionOn: boolean;
-}
-declare module NumberEx {
-    function AreClose(val1: number, val2: number): boolean;
-    function IsLessThanClose(val1: number, val2: number): boolean;
-    function IsGreaterThanClose(val1: number, val2: number): boolean;
-}
-declare module StringEx {
-    function Format(format: string, ...items: any[]): string;
-}
-interface ITimelineEvent {
-    Type: string;
-    Name: string;
-    Time: number;
-}
-interface ITimelineGroup {
-    Type: string;
-    Data: string;
-    Start: number;
-    Length: number;
-}
-declare class TimelineProfile {
-    private static _Events;
-    static Groups: ITimelineGroup[];
-    static TimelineStart: number;
-    static IsNextLayoutPassProfiled: boolean;
-    static Parse(isStart: boolean, name: string): void;
-    static Navigate(isStart: boolean, name?: string): void;
-    static LayoutPass(isStart: boolean): void;
-    private static _FinishEvent(type, name?);
-}
-declare module Fayde.Shapes {
-    class DoubleCollection extends XamlObjectCollection<XamlObject> {
-    }
-}
-declare module Fayde.Shapes {
-    import ShapeUpdater = minerva.shapes.shape.ShapeUpdater;
-    class Shape extends FrameworkElement {
-        CreateLayoutUpdater(): ShapeUpdater;
-        static FillProperty: DependencyProperty;
-        static StretchProperty: DependencyProperty;
-        static StrokeProperty: DependencyProperty;
-        static StrokeThicknessProperty: DependencyProperty;
-        static StrokeDashArrayProperty: DependencyProperty;
-        static StrokeDashCapProperty: DependencyProperty;
-        static StrokeDashOffsetProperty: DependencyProperty;
-        static StrokeEndLineCapProperty: DependencyProperty;
-        static StrokeLineJoinProperty: DependencyProperty;
-        static StrokeMiterLimitProperty: DependencyProperty;
-        static StrokeStartLineCapProperty: DependencyProperty;
-        Fill: Media.Brush;
-        Stretch: Media.Stretch;
-        Stroke: Media.Brush;
-        StrokeThickness: number;
-        StrokeDashArray: DoubleCollection;
-        StrokeDashCap: PenLineCap;
-        StrokeDashOffset: number;
-        StrokeEndLineCap: PenLineCap;
-        StrokeLineJoin: PenLineJoin;
-        StrokeMiterLimit: number;
-        StrokeStartLineCap: PenLineCap;
-        constructor();
-    }
-}
-declare module Fayde.Shapes {
-    import EllipseUpdater = minerva.shapes.ellipse.EllipseUpdater;
-    class Ellipse extends Shape {
-        CreateLayoutUpdater(): EllipseUpdater;
-        constructor();
-    }
-}
-declare module Fayde.Shapes {
-    import LineUpdater = minerva.shapes.line.LineUpdater;
-    class Line extends Shape {
-        CreateLayoutUpdater(): LineUpdater;
-        static X1Property: DependencyProperty;
-        static Y1Property: DependencyProperty;
-        static X2Property: DependencyProperty;
-        static Y2Property: DependencyProperty;
-        X1: number;
-        Y1: number;
-        X2: number;
-        Y2: number;
-    }
-}
-declare module Fayde.Shapes {
-    import PathUpdater = minerva.shapes.path.PathUpdater;
-    class Path extends Shape {
-        CreateLayoutUpdater(): PathUpdater;
-        private static _DataCoercer(dobj, propd, value);
-        static DataProperty: DependencyProperty;
-        Data: Media.Geometry;
-    }
-}
-declare module Fayde.Shapes {
-    class PointCollection implements nullstone.ICollection<Point> {
-        private _ht;
-        Count: number;
-        static FromData(data: string): PointCollection;
-        static FromArray(data: Point[]): PointCollection;
-        GetValueAt(index: number): Point;
-        SetValueAt(index: number, value: Point): boolean;
-        Add(value: Point): void;
-        AddRange(points: Point[]): void;
-        Insert(index: number, value: Point): void;
-        Remove(value: Point): boolean;
-        RemoveAt(index: number): void;
-        Clear(): void;
-        IndexOf(value: Point): number;
-        Contains(value: Point): boolean;
-        getEnumerator(reverse?: boolean): nullstone.IEnumerator<Point>;
-    }
-}
-declare module Fayde.Shapes {
-    import PolygonUpdater = minerva.shapes.polygon.PolygonUpdater;
-    class Polygon extends Shape {
-        CreateLayoutUpdater(): PolygonUpdater;
-        private static _PointsCoercer(dobj, propd, value);
-        static FillRuleProperty: DependencyProperty;
-        static PointsProperty: DependencyProperty;
-        FillRule: FillRule;
-        Points: PointCollection;
-        constructor();
-    }
-}
-declare module Fayde.Shapes {
-    import PolylineUpdater = minerva.shapes.polyline.PolylineUpdater;
-    class Polyline extends Shape {
-        CreateLayoutUpdater(): PolylineUpdater;
-        private static _PointsCoercer(d, propd, value);
-        static FillRuleProperty: DependencyProperty;
-        static PointsProperty: DependencyProperty;
-        FillRule: FillRule;
-        Points: PointCollection;
-        constructor();
-    }
-}
-declare module Fayde.Shapes {
-    import RectangleUpdater = minerva.shapes.rectangle.RectangleUpdater;
-    class Rectangle extends Shape {
-        CreateLayoutUpdater(): RectangleUpdater;
-        static RadiusXProperty: DependencyProperty;
-        static RadiusYProperty: DependencyProperty;
-        RadiusX: number;
-        RadiusY: number;
-        constructor();
-    }
-}
-declare module Fayde.Text.Buffer {
-    function cut(text: string, start: number, len: number): string;
-    function insert(text: string, index: number, str: string): string;
-    function replace(text: string, start: number, len: number, str: string): string;
-}
 declare module Fayde.Text.History {
     class DeleteAction implements IAction {
         SelectionAnchor: number;
@@ -5805,86 +5888,6 @@ declare module Fayde.Text.History {
         replace(anchor: number, cursor: number, text: string, start: number, length: number, newText: string): void;
         delete(anchor: number, cursor: number, text: string, start: number, length: number): void;
         private $doAction(action);
-    }
-}
-declare module Fayde.Text {
-    interface ITextOwner {
-        text: string;
-    }
-}
-declare module Fayde.Text {
-    enum EmitChangedType {
-        NOTHING = 0,
-        SELECTION = 1,
-        TEXT = 2,
-    }
-    class Proxy implements ITextOwner {
-        selAnchor: number;
-        selCursor: number;
-        selText: string;
-        text: string;
-        maxLength: number;
-        acceptsReturn: boolean;
-        private $$batch;
-        private $$emit;
-        private $$syncing;
-        private $$eventsMask;
-        private $$history;
-        SyncSelectionStart: (value: number) => void;
-        SyncSelectionLength: (value: number) => void;
-        SyncText: (value: string) => void;
-        constructor(eventsMask: EmitChangedType, maxUndoCount: number);
-        setAnchorCursor(anchor: number, cursor: number): boolean;
-        enterText(newText: string): boolean;
-        removeText(start: number, length: number): boolean;
-        undo(): void;
-        redo(): void;
-        begin(): void;
-        end(): void;
-        beginSelect(cursor: number): void;
-        adjustSelection(cursor: number): void;
-        selectAll(): void;
-        clearSelection(start: number): void;
-        select(start: number, length: number): boolean;
-        setSelectionStart(value: number): void;
-        setSelectionLength(value: number): void;
-        setText(value: string): void;
-        private $syncEmit(syncText?);
-        private $syncText();
-    }
-}
-declare module Fayde.Validation {
-    function Emit(fe: FrameworkElement, binding: Data.Binding, oldError: ValidationError, error: ValidationError): void;
-}
-declare module Fayde.Validation {
-    import ReadOnlyObservableCollection = Collections.ReadOnlyObservableCollection;
-    var HasErrorProperty: DependencyProperty;
-    var ErrorsProperty: DependencyProperty;
-    function GetErrors(dobj: DependencyObject): ReadOnlyObservableCollection<ValidationError>;
-    function GetHasError(dobj: DependencyObject): boolean;
-    function AddError(element: FrameworkElement, error: ValidationError): void;
-    function RemoveError(element: FrameworkElement, error: ValidationError): void;
-}
-declare module Fayde.Validation {
-    class ValidationError {
-        ErrorContent: any;
-        Exception: Exception;
-        PropertyName: string;
-        constructor(content: any, exception: Exception, propertyName: string);
-        constructor(content: any, exception: Error, propertyName: string);
-    }
-}
-declare module Fayde.Validation {
-    enum ValidationErrorEventAction {
-        Added = 0,
-        Removed = 1,
-    }
-}
-declare module Fayde.Validation {
-    class ValidationErrorEventArgs extends RoutedEventArgs {
-        Action: ValidationErrorEventAction;
-        Error: ValidationError;
-        constructor(action: ValidationErrorEventAction, error: ValidationError);
     }
 }
 declare module Fayde {

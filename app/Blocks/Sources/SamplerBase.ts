@@ -63,7 +63,7 @@ class SamplerBase extends Source {
             });
         } else {
             // Trigger the specific one
-            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+            this.Sources[index].triggerAttackRelease(duration, '+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
         }
     }
 
