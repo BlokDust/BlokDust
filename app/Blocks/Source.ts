@@ -7,6 +7,7 @@ import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import PostEffect = require("./Effects/PostEffect");
+import AudioChain = require("../Core/Audio/ConnectionMethods/AudioChain");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -109,14 +110,37 @@ class Source extends Block implements ISource {
         }
     }
 
+    UpdateConnections(chain: AudioChain) {
+        this._EnvelopeReset();
+    }
+
+    private _EnvelopeReset() {
+        if (this.Envelopes.length) {
+            this.Envelopes.forEach((e: Tone.Envelope) => {
+                e.attack = 0.02;
+                e.decay = 0.5;
+                e.sustain = 0.5;
+                e.release = 0.02;
+            });
+        } else if (this.Sources[0] instanceof Tone.Simpler) {
+            this.Sources.forEach((s: Tone.Simpler) => {
+                let e = s.envelope;
+                e.attack = 0.02;
+                e.decay = 0.5;
+                e.sustain = 0.5;
+                e.release = 0.02;
+            });
+        }
+    }
+
     private _OnEffectsChanged() {
         //console.log('effects-changed')
         this.Refresh();
     }
 
-    public Refresh() {
-        super.Refresh();
-    }
+    //public Refresh() {
+    //    super.Refresh();
+    //}
 
 
     CreateSource(){

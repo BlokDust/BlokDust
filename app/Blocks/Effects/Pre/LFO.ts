@@ -40,39 +40,17 @@ class LFO extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
-    Attach(source:ISource): void{
-        super.Attach(source);
-
-        source.Sources.forEach((osc: any) => {
-            if (osc.detune){
-                this.LFO.connect(osc.detune);
-            }
-        });
-    }
-
-    Detach(source:ISource): void {
-        super.Detach(source);
-
-        source.Sources.forEach((osc: any) => {
-            if (osc.detune){
-                this.LFO.disconnect();
-            }
-        });
-
-    }
-
     UpdateConnections(chain: AudioChain) {
         super.UpdateConnections(chain);
 
-        const sources: ISource[] = this.Connections.ToArray();
-        sources.forEach((source: ISource) => {
+        this.LFO.disconnect();
 
+        chain.Sources.forEach((source: ISource) => {
             source.Sources.forEach((osc: Tone.Oscillator) => {
                 if (osc.detune){
                     this.LFO.connect(osc.detune);
                 }
             })
-
         });
     }
 

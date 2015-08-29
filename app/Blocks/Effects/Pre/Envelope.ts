@@ -31,55 +31,20 @@ class Envelope extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
-    Attach(source: ISource): void{
-        super.Attach(source);
-
-        if (source.Envelopes.length) {
-            source.Envelopes.forEach((e: Tone.Envelope) => {
-                e.attack = this.Params.attack;
-                e.decay = this.Params.decay;
-                e.sustain = this.Params.sustain;
-                e.release = this.Params.release;
-            });
-        } else if (source.Sources[0] instanceof Tone.Simpler) {
-            source.Sources.forEach((s: Tone.Simpler) => {
-                let e = s.envelope;
-                e.attack = this.Params.attack;
-                e.decay = this.Params.decay;
-                e.sustain = this.Params.sustain;
-                e.release = this.Params.release;
-            });
-        }
-    }
-
-    Detach(source: ISource): void{
-        super.Detach(source);
-
-        if (source.Envelopes.length) {
-            source.Envelopes.forEach((e: Tone.Envelope) => {
-                e.attack = 0.02;
-                e.decay = 0.5;
-                e.sustain = 0.5;
-                e.release = 0.02;
-            });
-        } else if (source.Sources[0] instanceof Tone.Simpler) {
-            source.Sources.forEach((s: Tone.Simpler) => {
-                let e = s.envelope;
-                e.attack = 0.02;
-                e.decay = 0.5;
-                e.sustain = 0.5;
-                e.release = 0.02;
-            });
-        }
-
-    }
+    //Attach(source: ISource): void{
+    //    super.Attach(source);
+    //
+    //}
+    //
+    //Detach(source: ISource): void{
+    //    super.Detach(source);
+    //
+    //}
 
     UpdateConnections(chain: AudioChain) {
         super.UpdateConnections(chain);
 
-        const sources: ISource[] = App.Audio.EffectsChainManager.ConnectionMethodManager.GetSourcesFromPreEffect(this);
-        console.log(chain);
-        sources.forEach((source: ISource) => {
+        chain.Sources.forEach((source: ISource) => {
 
             if (source.Envelopes.length) {
                 source.Envelopes.forEach((e: Tone.Envelope) => {
@@ -90,7 +55,7 @@ class Envelope extends PreEffect {
                 });
             } else if (source.Sources[0] instanceof Tone.Simpler) {
                 source.Sources.forEach((s: Tone.Simpler) => {
-                    let e = s.envelope;
+                    const e = s.envelope;
                     e.attack = this.Params.attack;
                     e.decay = this.Params.decay;
                     e.sustain = this.Params.sustain;
@@ -105,17 +70,25 @@ class Envelope extends PreEffect {
 
         this.Params[param] = value;
 
-        if (this.Connections.Count) {
-            for (let i = 0; i < this.Connections.Count; i++) {
-                const source: ISource = this.Connections.GetValueAt(i);
-
-                source.Envelopes.forEach((e: Tone.Envelope) => {
-                    e.attack = this.Params.attack;
-                    e.decay = this.Params.decay;
-                    e.sustain = this.Params.sustain;
-                    e.release = this.Params.release;
-                });
-            }
+        if (this.Chain && this.Chain.Sources) {
+            this.Chain.Sources.forEach((source: ISource) => {
+                if (source.Envelopes.length) {
+                    source.Envelopes.forEach((e: Tone.Envelope) => {
+                        e.attack = this.Params.attack;
+                        e.decay = this.Params.decay;
+                        e.sustain = this.Params.sustain;
+                        e.release = this.Params.release;
+                    });
+                } else if (source.Sources[0] instanceof Tone.Simpler) {
+                    source.Sources.forEach((s: Tone.Simpler) => {
+                        const e = s.envelope;
+                        e.attack = this.Params.attack;
+                        e.decay = this.Params.decay;
+                        e.sustain = this.Params.sustain;
+                        e.release = this.Params.release;
+                    });
+                }
+            });
         }
     }
 

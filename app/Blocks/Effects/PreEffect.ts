@@ -4,10 +4,6 @@ import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
 
 class PreEffect extends Effect implements IPreEffect {
 
-    UpdateConnections(chain: AudioChain) {
-
-    }
-
 }
 
 export = PreEffect;

@@ -5,6 +5,7 @@ import DisplayObject = require("../DisplayObject");
 import MainScene = require("../MainScene");
 import ParametersPanel = require("../UI/OptionsPanel");
 import PreEffect = require("./Effects/PreEffect");
+import AudioChain = require("../Core/Audio/ConnectionMethods/AudioChain");
 import Size = minerva.Size;
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
@@ -16,6 +17,7 @@ class Block extends DisplayObject implements IBlock {
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
     public IsChained: boolean = false;
+    public Chain: AudioChain;
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     public Connections: ObservableCollection<IBlock> = new ObservableCollection<IBlock>();
@@ -173,6 +175,9 @@ class Block extends DisplayObject implements IBlock {
     //  CONNECTIONS
     //-------------------------------------------------------------------------------------------
 
+    UpdateConnections(chain: AudioChain) {
+        this.Chain = chain;
+    }
 
     DistanceFrom(point: Point): number{
         var p = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);

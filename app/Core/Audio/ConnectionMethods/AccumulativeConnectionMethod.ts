@@ -8,8 +8,6 @@ import Effect = require("../../../Blocks/Effect");
 import PostEffect = require("../../../Blocks/Effects/PostEffect");
 import PreEffect = require("../../../Blocks/Effects/PreEffect");
 import AudioChain = require("./AudioChain");
-import Convolver = require("../../../Blocks/Effects/Post/ConvolutionReverb");
-
 
 class AccumulativeConnectionMethod extends ConnectionMethodManager {
 
@@ -111,8 +109,13 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
         // loop through chains
         chains.forEach((chain: AudioChain) => {
 
-            chain.PreEffects.forEach((preEffect: IPreEffect) => {
-                preEffect.UpdateConnections(chain);
+            // Sources blocks need an individual update method to reset disconnected PreEffects
+            chain.Sources.forEach((block: IBlock) => {
+                block.UpdateConnections(chain);
+            });
+            // PreEffects need an individual update method to setup exclusive functionality
+            chain.PreEffects.forEach((block: IBlock) => {
+                block.UpdateConnections(chain);
             });
 
             // If there are sources
@@ -154,26 +157,6 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
             App.Audio.Master.mute = false;
         }, this._MuteBufferTime);
 
-    }
-
-    public GetPostEffectsFromSource(source: ISource): IEffect[] {
-        // List of connected effect blocks
-        const effects:IEffect[] = source.Connections.ToArray();
-
-        // List of PostEffect blocks
-        const postEffects:IEffect[] = [];
-
-        // For each connected effect
-        for (let i = 0; i < effects.length; i++) {
-
-            // If this is a post effect add to postEffect list
-            if (effects[i] instanceof PostEffect) {
-                //    if (effects[i].Effect) {
-                postEffects.push(effects[i]);
-            }
-        }
-
-        return postEffects;
     }
 }
 
