@@ -15,7 +15,7 @@ class WaveForm extends Option{
         this.EmptyString = emptystring || "";
     }
 
-    
+
     Draw(ctx,units,i,panel) {
         super.Draw(ctx,units,i,panel);
 

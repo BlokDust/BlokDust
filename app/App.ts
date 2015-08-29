@@ -277,6 +277,9 @@ class App implements IApp{
         this.Deserialize(data);
 
         // set initial zoom level/position
+        if (this._SaveFile.ColorThemeNo) {
+            this.Color.LoadTheme(this._SaveFile.ColorThemeNo,false);
+        }
         this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
         this.MainScene.ZoomButtons.UpdateSlot(this.ZoomLevel);
