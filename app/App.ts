@@ -84,6 +84,7 @@ class App implements IApp{
     public Splash: Splash;
     public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
+    public SubCanvas: HTMLCanvasElement[];
 
     // todo: move to BlockStore
     get Sources(): IBlock[] {
@@ -127,6 +128,9 @@ class App implements IApp{
 
         this.CreateCanvas();
         this.Scene = 0;
+
+        this.SubCanvas = [];
+        this.CreateSubCanvas(0); // optionsPanel
 
         // METRICS //
         this.Metrics = new Metrics();
@@ -359,6 +363,13 @@ class App implements IApp{
     get Canvas(): HTMLCanvasElement {
         return this._Canvas;
     }
+
+    CreateSubCanvas(i) {
+        this.SubCanvas[i] = document.createElement("canvas");
+        document.body.appendChild(this.SubCanvas[i]);
+    }
+
+
 
     //todo: typing as CanvasRenderingContext2D causes "Property 'fillStyle' is missing in type 'WebGLRenderingContext'"
     // upgrade to newer compiler (1.5) which has no error - requires gulp as grunt-typescript seemingly no longer supported

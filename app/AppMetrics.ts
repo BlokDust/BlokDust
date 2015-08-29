@@ -74,6 +74,15 @@ class Metrics {
         canvas.height = height * ratio;
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
+
+        for (var i=0; i<App.SubCanvas.length; i++) {
+            var c = App.SubCanvas[i];
+            c.width = width * ratio;
+            c.height = height * ratio;
+            c.style.width = width + "px";
+            c.style.height = height + "px";
+        }
+
         App.Ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         App.Width = width * ratio;
         App.Height = height * ratio;

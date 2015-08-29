@@ -324,6 +324,32 @@ class Header extends DisplayObject{
             ctx.restore();
         }
 
+
+        // SETTINGS & SHARE HOVER //
+        var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
+
+        ctx.fillStyle = App.Palette[2];// Black
+        ctx.globalAlpha = 0.9;
+        if (this._ShareOver) {
+            var shx = this.Sketch.Width - (margin * units) - (btnWidth*0.5);
+            ctx.beginPath();
+            ctx.moveTo(shx - (10*units),this.Height*units);
+            ctx.lineTo(shx,(this.Height + 10)*units);
+            ctx.lineTo(shx + (10*units),this.Height*units);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if (this._SettingsOver) {
+            var shx = this.Sketch.Width - (margin * units) + (30*units);
+            ctx.beginPath();
+            ctx.moveTo(shx - (10*units),this.Height*units);
+            ctx.lineTo(shx,(this.Height + 10)*units);
+            ctx.lineTo(shx + (10*units),this.Height*units);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+
         // SETTINGS BTN //
         ctx.globalAlpha = 1;
         margin = this.DropDownHeight*0.5;
@@ -343,7 +369,7 @@ class Header extends DisplayObject{
 
 
         // SHARE BTN //
-        var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
+
         ctx.moveTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5) - (5 * units), ((this.Height*0.75) - 6) * units);
         ctx.lineTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5), ((this.Height*0.75) - 1) * units);
         ctx.lineTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5) + (5 * units), ((this.Height*0.75) - 6) * units);
