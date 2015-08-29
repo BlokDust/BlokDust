@@ -1,4 +1,4 @@
-import IBlock = require("../../Blocks/IBlock");
+import IBlock = require("../../../Blocks/IBlock");
 
 class AudioChain {
     public Connections: IBlock[] = [];
