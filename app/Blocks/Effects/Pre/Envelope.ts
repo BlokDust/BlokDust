@@ -76,7 +76,8 @@ class Envelope extends PreEffect {
     UpdatePreEffectConnections() {
         super.UpdatePreEffectConnections();
 
-        const sources: ISource[] = this.Connections.ToArray();
+        const sources: ISource[] = App.Audio.EffectsChainManager.ConnectionMethodManager.GetSourcesFromPreEffect(this);
+        console.log(sources);
         sources.forEach((source: ISource) => {
 
             if (source.Envelopes.length) {

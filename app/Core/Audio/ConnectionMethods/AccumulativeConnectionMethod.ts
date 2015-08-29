@@ -3,13 +3,17 @@ import IBlock = require("../../../Blocks/IBlock");
 import IEffect = require("../../../Blocks/IEffect");
 import ISource = require("../../../Blocks/ISource");
 import Source = require("../../../Blocks/Source");
+import Effect = require("../../../Blocks/Effect");
 import PostEffect = require("../../../Blocks/Effects/PostEffect");
 import AudioChain = require("./AudioChain");
+import Convolver = require("../../../Blocks/Effects/Post/ConvolutionReverb");
 
 
 class AccumulativeConnectionMethod extends ConnectionMethodManager {
 
-    private _MuteBufferTime: number = 50;
+    private _MuteBufferTime: number = 35;
+    private connectionTimeout;
+    private unMuteTimeout;
 
     constructor(){
         super()
@@ -28,33 +32,53 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
     public Disconnect() {
         //First mute everything
         App.Audio.Master.mute = true;
-        setTimeout(()=> {
+
+        clearTimeout(this.connectionTimeout);
+        clearTimeout(this.unMuteTimeout);
+
+        this.connectionTimeout = setTimeout(()=> {
             // Disconnect everything first!
-            App.Sources.forEach((source:ISource) => {
 
-                const effects:IEffect[] = this.GetPostEffectsFromSource(source);
-
-                // This sources input gain
-                const sourceInput:Tone.Signal = source.AudioInput;
-
-                // disconnect the input
-                sourceInput.disconnect();
-
-                // if this source has any post effects, disconnect those too
-                if (effects.length) {
-
-                    effects.forEach((effect:IEffect) => {
-                        if (this._Debug) console.log(effect, ' disconnected.');
-                        effect.Effect.disconnect();
-                    });
-
+            App.Blocks.forEach((block: IBlock) => {
+                if (block instanceof Source) {
+                    (<ISource>block).AudioInput.disconnect();
+                } else if (block instanceof PostEffect) {
+                    (<IEffect>block).Effect.disconnect();
                 }
-
-            });
-
-            App.Blocks.forEach((block:IBlock) => {
                 block.IsChained = false;
             });
+
+            //App.Sources.forEach((source:ISource) => {
+            //
+            //    const effects:IEffect[] = this.GetPostEffectsFromSource(source);
+            //
+            //    // This sources input gain
+            //    const sourceInput:Tone.Signal = source.AudioInput;
+            //
+            //    // disconnect the input
+            //    sourceInput.disconnect();
+            //
+            //    // if this source has any post effects, disconnect those too
+            //    if (effects.length) {
+            //
+            //        effects.forEach((effect:IEffect) => {
+            //            if (this._Debug) console.log(effect, ' disconnected.');
+            //            effect.Effect.disconnect();
+            //
+            //            if (effect instanceof Convolver) {
+            //                console.log('hello')
+            //            }
+            //
+            //
+            //        });
+            //
+            //    }
+            //
+            //});
+            //
+            //App.Blocks.forEach((block:IBlock) => {
+            //    block.IsChained = false;
+            //});
             // Reset the chains array
             this.Chains = [];
 
@@ -148,7 +172,7 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
         });
 
         // Lastly unmute everything
-        setTimeout(() => {
+        this.unMuteTimeout = setTimeout(() => {
             App.Audio.Master.mute = false;
         }, this._MuteBufferTime);
 

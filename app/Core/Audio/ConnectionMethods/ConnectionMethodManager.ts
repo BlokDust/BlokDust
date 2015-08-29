@@ -5,7 +5,7 @@ import PostEffect = require("../../../Blocks/Effects/PostEffect");
 
 class ConnectionMethodManager {
 
-    protected _Debug: boolean = true;
+    protected _Debug: boolean = false;
     public Chains: AudioChain[] = [];
 
     constructor(){
@@ -21,7 +21,7 @@ class ConnectionMethodManager {
         const effects:IEffect[] = source.Connections.ToArray();
 
         // List of PostEffect blocks
-        const postEffects:IEffect[] = [];
+        const postEffects: IEffect[] = [];
 
         // For each connected effect
         for (let i = 0; i < effects.length; i++) {
@@ -34,6 +34,10 @@ class ConnectionMethodManager {
         }
 
         return postEffects;
+    }
+
+    GetSourcesFromPreEffect(effect: IEffect): ISource[] {
+        return effect.Connections.ToArray();
     }
 }
 

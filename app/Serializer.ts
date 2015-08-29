@@ -1,5 +1,7 @@
 import IEffect = require("./Blocks/IEffect");
+import Effect = require("./Blocks/Effect");
 import ISource = require("./Blocks/ISource");
+import Source = require("./Blocks/Source");
 import IBlock = require("./Blocks/IBlock");
 import Grid = require("./Grid");
 import ToneSource = require("./Blocks/Sources/ToneSource");
@@ -100,7 +102,8 @@ class Serializer {
         if (block.Params) b.Params = block.Params;
 
         // if it's a source block
-        if ((<ISource>block).Connections && (<ISource>block).Connections.Count){
+        if (block instanceof Source && (<ISource>block).Connections.Count){
+        //if ((<ISource>block).Effects && (<ISource>block).Effects.Count){
             b.Effects = [];
 
             if (parentBlock){
@@ -111,7 +114,7 @@ class Serializer {
         }
 
         // if it's an effect block
-        if ((<IEffect>block).Connections && (<IEffect>block).Connections.Count){
+        if (block instanceof Effect && (<IEffect>block).Connections.Count){
             b.Sources = [];
 
             if (parentBlock){
@@ -180,13 +183,13 @@ class Serializer {
         }
 
         // if it's a source block
-        if((<ISource>b).Connections){
+        if((<any>b).Effects){
             var effects = <IEffect[]>Serializer._DeserializeBlocks(b.Effects);
             (<ISource>block).Connections.AddRange(effects);
         }
 
         // if it's an effect block
-        if((<IEffect>b).Connections){
+        if((<any>b).Sources){
             var sources = <ISource[]>Serializer._DeserializeBlocks(b.Sources);
             (<IEffect>block).Connections.AddRange(sources);
         }

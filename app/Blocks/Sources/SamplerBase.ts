@@ -55,6 +55,18 @@ class SamplerBase extends Source {
         }
     }
 
+    TriggerAttackRelease(index: number|string = 0, duration: Tone.Time = App.Config.PulseLength) {
+        if (index === 'all'){
+            // Trigger all the envelopes
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttackRelease(duration, '+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+            });
+        } else {
+            // Trigger the specific one
+            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+        }
+    }
+
     /**
      * Trigger a Simpler's release
      * If no index is set release the first in the array

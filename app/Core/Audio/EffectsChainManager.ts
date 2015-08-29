@@ -14,7 +14,6 @@ class EffectsChainManager {
 
     public ConnectionMethodType: ConnectionMethodType;
     public ConnectionMethodManager: ConnectionMethodManager;
-    protected _Debug: boolean = true;
 
     constructor() {
         // Set the connection method
@@ -40,7 +39,6 @@ class EffectsChainManager {
      * @public
      */
     public Update() {
-        if (this._Debug) console.clear();
         this.ConnectionMethodManager.Update();
     }
 
