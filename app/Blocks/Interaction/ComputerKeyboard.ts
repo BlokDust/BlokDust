@@ -40,16 +40,12 @@ class ComputerKeyboard extends Keyboard {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position, true, "computer keyboard");
     }
 
-    Attach(source: ISource): void {
-        super.Attach(source);
 
-
-    }
-
-    Detach(source: ISource): void {
-        source.TriggerRelease('all');
-        super.Detach(source);
-    }
+    //
+    //Detach(source: ISource): void {
+    //    source.TriggerRelease('all');
+    //    super.Detach(source);
+    //}
 
     Dispose(){
         super.Dispose();
@@ -66,47 +62,39 @@ class ComputerKeyboard extends Keyboard {
             this.KeysDown = e.KeysDown;
 
             // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
-            for (var i = 0; i < this.Connections.Count; i++) {
-                var source: ISource = this.Connections.GetValueAt(i);
+            this.Chain.Sources.forEach((source: ISource) => {
                 this.KeyboardDown(e.KeyDown, source);
-            }
+            });
         } else {
-            //for (var i = 0; i < this.Sources.Count; i++) {
-            //    var source = this.Sources.GetValueAt(i);
-                this._ExecuteKeyboardCommand(e.KeyDown, this.Connections);
-            //}
+            this._ExecuteKeyboardCommand(e.KeyDown, this.Chain.Sources);
         }
     }
 
     KeyUpCallback(e: any){
 
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        for (var i = 0; i < this.Connections.Count; i++) {
-            var source: ISource = this.Connections.GetValueAt(i);
-
+        this.Chain.Sources.forEach((source: ISource) => {
             // If its an octave shift no need to call KeyboardUp
             if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
                 this.KeyboardUp(e.KeyUp, source);
             }
-        }
+        });
 
         this.KeysDown = e.KeysDown;
     }
 
     // OCTAVE SHIFT //
-    private _ExecuteKeyboardCommand(key: string, sources: any) {
+    private _ExecuteKeyboardCommand(key: string, sources: ISource[]) {
         if (key == 'octave-up' && this.Params.octave < 9) {
-            for (var i = 0; i < sources.Count; i++) {
-                var source: ISource = this.Connections.GetValueAt(i);
+            sources.forEach((source: ISource) => {
                 source.OctaveShift(1);
-            }
+            });
             this.Params.octave++;
             this.RefreshOptionsPanel();
-        } else if (key === 'octave-down' && this.Params.octave != 0) {
-            for (var i = 0; i < sources.Count; i++) {
-                var source: ISource = this.Connections.GetValueAt(i);
+        } else if (key === 'octave-down' && this.Params.octave !== 0) {
+            sources.forEach((source: ISource) => {
                 source.OctaveShift(-1);
-            }
+            });
             this.Params.octave--;
             this.RefreshOptionsPanel();
         }

@@ -62,16 +62,9 @@ class Source extends Block implements ISource {
         this.ParticlePowered = false;
         this.LaserPowered = false;
 
-        this.Connections.CollectionChanged.on(this._OnEffectsChanged, this);
-
         if (!(this instanceof Power)) {
 
             this.AudioInput = new Tone.Signal();
-            //this.EffectsChainOutput = new Tone.Signal();
-
-            //this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
-
-            //this.EffectsChainInput.connect(this.EffectsChainOutput);
             this.AudioInput.connect(App.Audio.Master);
 
         }
@@ -111,37 +104,34 @@ class Source extends Block implements ISource {
     }
 
     UpdateConnections(chain: AudioChain) {
+        // Reset Envelopes back to original setting
         this._EnvelopeReset();
+
+        // Release all the sources envelopes
+        this.TriggerRelease('all', true);
+
+        // Reset pitch back to original setting
+        this.ResetPitch();
     }
 
     private _EnvelopeReset() {
         if (this.Envelopes.length) {
             this.Envelopes.forEach((e: Tone.Envelope) => {
-                e.attack = 0.02;
-                e.decay = 0.5;
-                e.sustain = 0.5;
-                e.release = 0.02;
+                e.attack = this.Settings.envelope.attack;
+                e.decay = this.Settings.envelope.decay;
+                e.sustain = this.Settings.envelope.sustain;
+                e.release = this.Settings.envelope.release;
             });
         } else if (this.Sources[0] instanceof Tone.Simpler) {
             this.Sources.forEach((s: Tone.Simpler) => {
-                let e = s.envelope;
-                e.attack = 0.02;
-                e.decay = 0.5;
-                e.sustain = 0.5;
-                e.release = 0.02;
+                const e = s.envelope;
+                e.attack = this.Settings.envelope.attack;
+                e.decay = this.Settings.envelope.decay;
+                e.sustain = this.Settings.envelope.sustain;
+                e.release = this.Settings.envelope.release;
             });
         }
     }
-
-    private _OnEffectsChanged() {
-        //console.log('effects-changed')
-        this.Refresh();
-    }
-
-    //public Refresh() {
-    //    super.Refresh();
-    //}
-
 
     CreateSource(){
         if (this.Sources[this.Sources.length-1]){
@@ -517,40 +507,6 @@ class Source extends Block implements ISource {
         super.MouseUp();
         this.TriggerRelease();
     }
-
-    /*GetParam(param: string) {
-
-        var val;
-        switch (param){
-            case "frequency":
-                this.Sources.forEach((s: any)=> {
-                    val = s.frequency.value;
-                });
-                break;
-            case "detune":
-                this.Sources.forEach((s: any)=> {
-                    val = s.detune.value;
-                });
-                break;
-            case "waveform":
-                this.Sources.forEach((s: any)=> {
-                    val = s.type;
-                });
-                break;
-            case "volume":
-                this.Sources.forEach((s: any)=> {
-                    val = s.gain.value;
-                });
-                break;
-            case "playbackRate":
-                this.Sources.forEach((s: any)=> {
-                    val = s.playbackRate;
-                });
-                break;
-        }
-        return val;
-
-    }*/
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);

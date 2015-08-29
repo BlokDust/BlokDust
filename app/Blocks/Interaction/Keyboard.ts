@@ -1,7 +1,7 @@
 import PreEffect = require("../Effects/PreEffect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-//import PitchComponent = require("./../Effects/Pre/Pitch");
+import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import Voice = require("./VoiceObject");
@@ -25,32 +25,47 @@ class Keyboard extends PreEffect {
         super.Draw();
     }
 
-    Attach(source:ISource): void{
-        super.Attach(source);
-        this.SetBaseFrequency(source);
-        this.KeysDown = {};
+    //Attach(source:ISource): void{
+    //    super.Attach(source);
+    //    this.SetBaseFrequency(source);
+    //    this.KeysDown = {};
+    //
+    //    // Check to see if we have enough sources on this block
+    //    if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
+    //        // Create extra polyphonic voices
+    //        this.CreateVoices(source);
+    //    }
+    //}
 
-        // Check to see if we have enough sources on this block
-        if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
-            // Create extra polyphonic voices
-            this.CreateVoices(source);
-        }
-    }
+    //Detach(source:ISource): void {
+    //
+    //    // FOR ALL SOURCES
+    //    for (let i = 0; i < this.Connections.Count; i++) {
+    //        const source: ISource = this.Connections.GetValueAt(i);
+    //
+    //        // Release all the sources envelopes
+    //        source.TriggerRelease('all', true);
+    //
+    //        // Reset pitch back to original setting
+    //        source.ResetPitch();
+    //    }
+    //
+    //    super.Detach(source);
+    //}
 
-    Detach(source:ISource): void {
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-        // FOR ALL SOURCES
-        for (let i = 0; i < this.Connections.Count; i++) {
-            const source: ISource = this.Connections.GetValueAt(i);
+        chain.Sources.forEach((source: ISource) => {
+            this.SetBaseFrequency(source);
+            this.KeysDown = {};
 
-            // Release all the sources envelopes
-            source.TriggerRelease('all', true);
-
-            // Reset pitch back to original setting
-            source.ResetPitch();
-        }
-
-        super.Detach(source);
+            // Check to see if we have enough sources on this block
+            if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
+                // Create extra polyphonic voices
+                this.CreateVoices(source);
+            }
+        });
     }
 
     Dispose(){
