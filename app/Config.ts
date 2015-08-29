@@ -10,7 +10,6 @@ class Config {
     public BaseNote: number;
     public SoundCloudLoadTimeout: number;
     public ResetPitchesOnInteractionDisconnect: boolean;
-    public EffectConnectionMethod: string;
 }
 
 export = Config;
