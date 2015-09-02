@@ -274,7 +274,7 @@ class RecorderBlock extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                this.Sources[0].player.playbackRate = value;
+                this.Sources[0].player.playbackRate.value = value;
                 break;
             case "reverse":
                 value = value? true : false;

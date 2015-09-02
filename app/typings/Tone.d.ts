@@ -806,7 +806,7 @@ declare module Tone {
         loop: boolean;
         loopEnd: Tone.Time;
         loopStart: Tone.Time;
-        playbackRate: number;
+        playbackRate: Tone.Signal;
         retrigger: boolean;
         reverse: boolean;
         startPosition: Tone.Time;

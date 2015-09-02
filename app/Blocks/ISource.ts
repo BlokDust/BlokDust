@@ -7,13 +7,11 @@ import ObservableCollection = Fayde.Collections.ObservableCollection;
 
 interface ISource extends IBlock{
     Connections: Fayde.Collections.ObservableCollection<IEffect>;
-    //Effects: Fayde.Collections.ObservableCollection<IEffect>;
     AddEffect(effect: IEffect): void;
     RemoveEffect(effect: IEffect): void;
-    Sources?: any[]; // Use this when available: Tone.Oscillator || Tone.Noise
+    Sources?: any[];
     Envelopes?: Tone.AmplitudeEnvelope[];
     AudioInput?: Tone.Signal;
-    //EffectsChainOutput?: Tone.Signal;
     OutputGain?: Tone.Signal;
     Settings?: ToneSettings;
     WaveIndex: string[];
@@ -27,8 +25,6 @@ interface ISource extends IBlock{
     Searching: Boolean;
     ResultsPage: number;
     SearchString: string;
-    //Frequency?: number;
-    PlaybackRate?: number;
     Grains?: Tone.Player[];
     MaxDensity?: number;
     RecordedAudio?: any;

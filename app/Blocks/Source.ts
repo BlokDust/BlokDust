@@ -21,7 +21,6 @@ class Source extends Block implements ISource {
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
     public AudioInput: Tone.Signal;
-    //public EffectsChainOutput: Tone.Signal;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -357,11 +356,11 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            this.Sources[id].player.playbackRate = pitch / App.Config.BaseNote;
+            this.Sources[id].player.playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
 
-        } else if (typeof this.Sources[id].playbackRate === 'number') {
+        } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            this.Sources[id].playbackRate = pitch / App.Config.BaseNote;
+            this.Sources[id].playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
         }
     }
 
@@ -377,11 +376,11 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            return this.Sources[id].player.playbackRate * App.Config.BaseNote;
+            return this.Sources[id].player.playbackRate.value * App.Config.BaseNote;
 
-        } else if (typeof this.Sources[id].playbackRate === 'number') {
+        } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            return this.Sources[id].playbackRate * App.Config.BaseNote;
+            return this.Sources[id].playbackRate.value * App.Config.BaseNote;
 
         } else {
             return 0;
@@ -398,10 +397,10 @@ class Source extends Block implements ISource {
                 this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
             } else if (this.Sources[0].player) {
                 // Samplers
-                this.Sources[0].player.playbackRate = this.Params.playbackRate;
-            } else if (typeof this.Sources[0].playbackRate === 'number') {
+                this.Sources[0].player.playbackRate.value = this.Params.playbackRate;
+            } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
                 // Noise
-                this.Sources[0].playbackRate = this.Params.playbackRate;
+                this.Sources[0].playbackRate.value = this.Params.playbackRate;
             }
         }
     }

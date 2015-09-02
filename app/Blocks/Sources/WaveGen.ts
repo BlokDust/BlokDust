@@ -646,7 +646,7 @@ class WaveGen extends SamplerBase {
         switch(param) {
             case "playbackRate":
                 // TODO - not behaving correctly
-                this.Sources[0].player.playbackRate = value;
+                this.Sources[0].player.playbackRate.value = value;
                 break;
             case "generate":
                 this._WaveForm = [];

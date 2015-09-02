@@ -127,7 +127,7 @@ class Granular extends Source {
                 // CONNECT //
                 this.Grains[i].connect(this._Envelopes[i]);
                 this._Envelopes[i].connect(this.Sources[0]);
-                this.Grains[i].playbackRate = this.Params.playbackRate;
+                this.Grains[i].playbackRate.value = this.Params.playbackRate;
             }
             this.Sources[0].connect(this.AudioInput);
         }
@@ -289,7 +289,7 @@ class Granular extends Source {
             // MAKE SURE THESE ARE IN SYNC //
             this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
             this.Grains[this._CurrentGrain].stop();
-            this.Grains[this._CurrentGrain].playbackRate = this._tempPlaybackRate;
+            this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
             this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
@@ -318,7 +318,7 @@ class Granular extends Source {
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         pitch = pitch / App.Config.BaseNote;
         for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate = pitch;
+            this.Grains[i].playbackRate.value = pitch;
         }
         this._tempPlaybackRate = pitch;
         console.log(this._tempPlaybackRate);
@@ -332,7 +332,7 @@ class Granular extends Source {
         if (App.Config.ResetPitchesOnInteractionDisconnect) {
             this._tempPlaybackRate = this.Params.playbackRate;
             for (var i=0; i<this.GrainsAmount; i++) {
-                this.Grains[i].playbackRate = this.Params.playbackRate;
+                this.Grains[i].playbackRate.value = this.Params.playbackRate;
             }
         }
     }

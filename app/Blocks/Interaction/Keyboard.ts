@@ -194,37 +194,12 @@ class Keyboard extends PreEffect {
     public GetFrequencyOfNote(note, source:ISource): number {
         if (source.Params.baseFrequency || source.Params.fine) {
             return source.Sources[0].noteToFrequency(note) *
-                this.GetConnectedPitchPreEffects(source) *
                 App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency + source.Params.fine); //TODO - keyboards and other controllers should be dumber than this, not needing to know about block specific frequency modifiers
         } else if (source instanceof SamplerBase) {
-            return source.Sources[0].noteToFrequency(note) *
-                this.GetConnectedPitchPreEffects(source) * source.Params.playbackRate;
+            return source.Sources[0].noteToFrequency(note) * source.Params.playbackRate;
         } else {
-            return source.Sources[0].noteToFrequency(note) *
-                this.GetConnectedPitchPreEffects(source);
+            return source.Sources[0].noteToFrequency(note);
         }
-    }
-
-    /**
-     * Checks a Sources connected pitch effects and gets the total pitch increment
-     * @param source
-     * @returns {number}
-     * @constructor
-     */
-    public GetConnectedPitchPreEffects(source: ISource) {
-
-        let totalPitchIncrement: number = 1;
-
-        for (var i = 0; i < source.Connections.Count; i++) {
-            let effect = source.Connections.GetValueAt(i);
-
-            //if (effect instanceof PitchComponent) {
-            //    let thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
-            //    totalPitchIncrement *= thisPitchIncrement;
-            //}
-        }
-
-        return totalPitchIncrement;
     }
 
     /**

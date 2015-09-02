@@ -46,11 +46,14 @@ class LFO extends PreEffect {
         this.LFO.disconnect();
 
         chain.Sources.forEach((source: ISource) => {
-            source.Sources.forEach((osc: Tone.Oscillator) => {
-                if (osc.detune){
-                    this.LFO.connect(osc.detune);
+            source.Sources.forEach((s: any) => {
+                if ((<Tone.Oscillator>s).detune) {
+                    this.LFO.connect((<Tone.Oscillator>s).detune);
+                } else if ((<Tone.Simpler>s).player.playbackRate) {
+
+                    this.LFO.connect((<any>s).player.playbackRate); //TODO: make playbackRate a Tone.Signal
                 }
-            })
+            });
         });
     }
 
