@@ -6,8 +6,8 @@ import AudioChain = require("../../../Core/Audio/ConnectionMethods/AudioChain");
 
 class LFO extends PreEffect {
 
-    public LFO: Tone.LFO;
-    public Params: LFOParams;
+    public OscLFO: Tone.LFO;
+    public SamplerLFO: Tone.LFO;
     public Defaults: LFOParams;
     public WaveIndex: string[];
 
@@ -22,17 +22,27 @@ class LFO extends PreEffect {
 
         this.WaveIndex = ["sine","square","triangle","sawtooth"];
 
-        this.LFO = new Tone.LFO();
-        this.LFO.frequency.value = this.Params.rate;
-        this.LFO.min = -this.Params.depth;
-        this.LFO.max = this.Params.depth;
-        this.LFO.type = this.WaveIndex[this.Params.waveform];
-        this.LFO.start();
+        this.OscLFO = new Tone.LFO();
+        this.SamplerLFO = new Tone.LFO();
+        this.OscLFO.frequency.value = this.Params.rate;
+        this.SamplerLFO.frequency.value = this.Params.rate;
+        this.OscLFO.min = -this.Params.depth;
+        this.SamplerLFO.min = LFO.ConvertLFODepthToPlaybackDepth(-this.Params.depth);
+        this.OscLFO.max = this.Params.depth;
+        this.SamplerLFO.max = LFO.ConvertLFODepthToPlaybackDepth(this.Params.depth);
+        this.OscLFO.type = this.WaveIndex[this.Params.waveform];
+        this.SamplerLFO.type = this.WaveIndex[this.Params.waveform];
+        this.OscLFO.start();
+        this.SamplerLFO.start();
 
         super.Init(sketch);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
+    }
+
+    static ConvertLFODepthToPlaybackDepth(val): number {
+        return (val/400) + 1;
     }
 
     Draw() {
@@ -43,24 +53,27 @@ class LFO extends PreEffect {
     UpdateConnections(chain: AudioChain) {
         super.UpdateConnections(chain);
 
-        this.LFO.disconnect();
+        this.OscLFO.disconnect();
+        this.SamplerLFO.disconnect();
 
         chain.Sources.forEach((source: ISource) => {
             source.Sources.forEach((s: any) => {
                 if ((<Tone.Oscillator>s).detune) {
-                    this.LFO.connect((<Tone.Oscillator>s).detune);
+                    this.OscLFO.connect((<Tone.Oscillator>s).detune);
                 } else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
-                    this.LFO.connect((<Tone.Simpler>s).player.playbackRate);
+                    this.SamplerLFO.connect((<Tone.Simpler>s).player.playbackRate);
                 }  else if ((<Tone.Noise>s).playbackRate) {
-                    this.LFO.connect((<Tone.Noise>s).playbackRate);
+                    this.SamplerLFO.connect((<Tone.Noise>s).playbackRate);
                 }
             });
         });
     }
 
     Dispose() {
-        this.LFO.stop();
-        this.LFO.dispose();
+        this.OscLFO.stop();
+        this.SamplerLFO.stop();
+        this.OscLFO.dispose();
+        this.SamplerLFO.dispose();
     }
 
     SetParam(param: string,value: number) {
@@ -68,14 +81,17 @@ class LFO extends PreEffect {
         var val = value;
 
         if (param=="rate") {
-            this.LFO.frequency.value = val;
+            this.OscLFO.frequency.value = val;
+            this.SamplerLFO.frequency.value = val;
         } else if (param=="depth") {
-            this.LFO.min = -val;
-            this.LFO.max = val;
+            this.OscLFO.min = -val;
+            this.SamplerLFO.min = LFO.ConvertLFODepthToPlaybackDepth(-val);
+            this.OscLFO.max = val;
+            this.SamplerLFO.max = LFO.ConvertLFODepthToPlaybackDepth(val);
         } else if (param=="waveform") {
-            this.LFO.type = this.WaveIndex[val];
+            this.OscLFO.type = this.WaveIndex[val];
+            this.SamplerLFO.type = this.WaveIndex[val];
         }
-
         this.Params[param] = val;
     }
 
