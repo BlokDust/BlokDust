@@ -109,12 +109,8 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
         // loop through chains
         chains.forEach((chain: AudioChain) => {
 
-            // Sources blocks need an individual update method to reset disconnected PreEffects
-            chain.Sources.forEach((block: IBlock) => {
-                block.UpdateConnections(chain);
-            });
-            // PreEffects need an individual update method to setup exclusive functionality
-            chain.PreEffects.forEach((block: IBlock) => {
+            // Certain blocks need an individual update method for exclusive functionality. ie preEffects, Power, Source resets
+            chain.Connections.forEach((block: IBlock) => {
                 block.UpdateConnections(chain);
             });
 

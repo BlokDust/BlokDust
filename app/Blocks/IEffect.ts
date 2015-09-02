@@ -6,14 +6,13 @@ interface IEffect extends IBlock {
     Effect: any; // TODO: ANY TYPE OF TONE POST EFFECT
     Name?: string;
 
-    //Sources: Fayde.Collections.ObservableCollection<ISource>;
     Connections: Fayde.Collections.ObservableCollection<ISource>;
 
     AddSource(effect: ISource): void;
     RemoveSource(effect: ISource): void;
 
-    Attach(source: ISource): void;
-    Detach(source: ISource): void;
+    //Attach(source: ISource): void;
+    //Detach(source: ISource): void;
 
     ValidateSources(): void;
 }

@@ -23,11 +23,11 @@ class Effect extends Block implements IEffect {
         super.Update();
     }
 
-    Attach(source: ISource): void {
-    }
-
-    Detach(source: ISource): void {
-    }
+    //Attach(source: ISource): void {
+    //}
+    //
+    //Detach(source: ISource): void {
+    //}
 
     /**
      * Add source to this Effect's list of sources
@@ -61,19 +61,19 @@ class Effect extends Block implements IEffect {
     }
 
 
-    /**
-     * Call all connected sources' TriggerRelease method
-     * @constructor
-     */
-    public TriggerReleaseAll() {
-        if (this.Connections.Count) {
-            for (var i = 0; i < this.Connections.Count; i++) {
-                var source: ISource = this.Connections.GetValueAt(i);
-
-                source.TriggerRelease();
-            }
-        }
-    }
+    ///**
+    // * Call all connected sources' TriggerRelease method
+    // * @constructor
+    // */
+    //public TriggerReleaseAll() {
+    //    if (this.Connections.Count) {
+    //        for (var i = 0; i < this.Connections.Count; i++) {
+    //            var source: ISource = this.Connections.GetValueAt(i);
+    //
+    //            source.TriggerRelease();
+    //        }
+    //    }
+    //}
 
     Dispose(): void {
         super.Dispose();

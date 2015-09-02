@@ -1,3 +1,4 @@
+import IBlock = require("./IBlock");
 import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
@@ -77,7 +78,7 @@ class Source extends Block implements ISource {
      */
     AddEffect(effect: IEffect) {
         this.Connections.Add(effect);
-        effect.Attach(<ISource>this);
+        //effect.Attach(<ISource>this);
     }
 
     /**
@@ -86,7 +87,7 @@ class Source extends Block implements ISource {
      */
     RemoveEffect(effect: IEffect) {
         this.Connections.Remove(effect);
-        effect.Detach(<ISource>this);
+        //effect.Detach(<ISource>this);
     }
 
     /**
@@ -103,6 +104,8 @@ class Source extends Block implements ISource {
     }
 
     UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
+
         // Reset Envelopes back to original setting
         this._EnvelopeReset();
 
@@ -157,6 +160,7 @@ class Source extends Block implements ISource {
      */
     TriggerAttack(index: number|string = 0) {
 
+        console.log(this);
         // Only if the source has envelopes
         if (this.Envelopes.length) {
 
@@ -276,23 +280,19 @@ class Source extends Block implements ISource {
      * Checks whether the block is connected to a Power
      * @returns {boolean}
      */
-    IsPowered() {
+    IsPowered(): boolean {
+        let bool: boolean = false;
         if (this.IsPressed || this.PowerConnections>0) {
-            return true;
-
-        } else if (this.Connections.Count) {
-            for (let i = 0; i < this.Connections.Count; i++) {
-                const effect: IEffect = this.Connections.GetValueAt(i);
-
+            bool = true;
+        } else if (this.Chain && this.Chain.Connections) {
+            this.Chain.Connections.forEach((block: IBlock) => {
                 //If connected to power block OR connected to a logic block that is 'on'
-                if (effect instanceof Power || effect instanceof Logic && effect.Params.logic){
-                    return true;
+                if (block instanceof Power || block instanceof Logic && block.Params.logic){
+                    bool = true;
                 }
-            }
+            });
         }
-        else {
-            return false;
-        }
+        return bool;
     }
 
     /**

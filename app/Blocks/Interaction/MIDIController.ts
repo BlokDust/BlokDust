@@ -4,6 +4,7 @@ import ISource = require("../ISource");
 import MainScene = require("../../MainScene");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
+import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
 
 class MIDIController extends Keyboard {
 
@@ -186,15 +187,15 @@ class MIDIController extends Keyboard {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
     }
 
-    Attach(source: ISource): void {
-        if (!((source instanceof Power) || (source instanceof Microphone))) {
-            this.CreateVoices(source);
-        }
-    }
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-    Detach(source: ISource): void {
-        source.TriggerRelease('all');
-        super.Detach(source);
+        chain.Sources.forEach((source: ISource) => {
+            if (!((source instanceof Power) || (source instanceof Microphone))) {
+                this.CreateVoices(source);
+            }
+            source.TriggerRelease('all');
+        });
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
