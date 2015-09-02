@@ -110,7 +110,9 @@ class Source extends Block implements ISource {
         this._EnvelopeReset();
 
         // Release all the sources envelopes
-        this.TriggerRelease('all', true);
+        if (!this.IsPowered() || !this.IsPressed) {
+            this.TriggerRelease('all', true);
+        }
 
         // Reset pitch back to original setting
         this.ResetPitch();
@@ -160,7 +162,7 @@ class Source extends Block implements ISource {
      */
     TriggerAttack(index: number|string = 0) {
 
-        console.log(this);
+        console.log('TriggerAttack: ',this);
         // Only if the source has envelopes
         if (this.Envelopes.length) {
 
@@ -202,6 +204,7 @@ class Source extends Block implements ISource {
     TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
         forceRelease = (forceRelease === true) ? forceRelease : false;
         // Only if it's not powered or force is set to true
+        console.log('TriggerRelease: ',this);
         if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes

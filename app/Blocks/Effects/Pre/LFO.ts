@@ -49,9 +49,10 @@ class LFO extends PreEffect {
             source.Sources.forEach((s: any) => {
                 if ((<Tone.Oscillator>s).detune) {
                     this.LFO.connect((<Tone.Oscillator>s).detune);
-                } else if ((<Tone.Simpler>s).player.playbackRate) {
-
-                    this.LFO.connect((<any>s).player.playbackRate); //TODO: make playbackRate a Tone.Signal
+                } else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
+                    this.LFO.connect((<Tone.Simpler>s).player.playbackRate);
+                }  else if ((<Tone.Noise>s).playbackRate) {
+                    this.LFO.connect((<Tone.Noise>s).playbackRate);
                 }
             });
         });

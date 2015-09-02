@@ -679,6 +679,7 @@ declare module Tone {
     };
 
     interface Noise extends Tone.Source {
+        playbackRate: Tone.Signal;
         type: string;
         dispose(): Tone.Noise;
     }
