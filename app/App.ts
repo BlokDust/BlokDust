@@ -67,6 +67,7 @@ class App implements IApp{
     public CommandsInputManager: CommandsInputManager;
     public FocusManager: FocusManager;
     public CompositionId: string;
+    public CompositionName: string;
     public Config: Config;
     public InputManager: InputManager;
     public TypingManager: TypingManager;
@@ -84,6 +85,7 @@ class App implements IApp{
     public Splash: Splash;
     public AnimationsLayer: AnimationsLayer;
     public LoadCued: boolean;
+    public IsLoadedFromSave: boolean = false;
     public SubCanvas: HTMLCanvasElement[];
 
     // todo: move to BlockStore
@@ -136,19 +138,18 @@ class App implements IApp{
         this.Metrics = new Metrics();
         window.onresize = () => {
             this.Resize();
-        }
+        };
 
         // LOAD FONTS AND SETUP CALLBACK //
         this.LoadCued = false;
         this._FontsLoaded = 0;
-        var me = this;
         WebFont.load({
             custom: { families: ['Merriweather Sans:i3','Dosis:n2,n4']},
-            fontactive: function (font,fvd) { me.FontsLoaded(font,fvd); },
+            fontactive: (font,fvd) => { this.FontsLoaded(font,fvd) },
             timeout: 3000 // 3 seconds
         });
-        setTimeout(function () {
-            me.FontsNotLoaded();
+        setTimeout(() => {
+            this.FontsNotLoaded();
         },3020);
 
 
@@ -211,7 +212,7 @@ class App implements IApp{
     FontsLoaded(font,fvd) {
         this._FontsLoaded += 1;
         // All fonts are present - load scene
-        if (this._FontsLoaded==3) {
+        if (this._FontsLoaded === 3) {
             this.LoadReady();
         }
     }
@@ -231,13 +232,13 @@ class App implements IApp{
             this.LoadComposition();
             this.Scene = 1;
             this.Splash.StartTween();
-            var me = this;
         }
     }
 
     // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
+        this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
                 this.PopulateSketch(data);
@@ -300,7 +301,13 @@ class App implements IApp{
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
-        this.RefreshBlocks();
+
+        //Connect the effects chain
+        this.Audio.EffectsChainManager.Update();
+
+        this.IsLoadedFromSave = true;
+        console.log(`Loaded "${this.CompositionName}"`);
+
         this.MainScene.Pause();
 
         if (this.Scene < 2) {
@@ -309,14 +316,6 @@ class App implements IApp{
             this.MainScene.CompositionLoaded();
         }
 
-    }
-
-    // todo: move to BlockStore
-    RefreshBlocks() {
-        // refresh all Sources (reconnects Effects).
-        this.Blocks.forEach((b: IBlock) => {
-            b.Refresh();
-        });
     }
 
 

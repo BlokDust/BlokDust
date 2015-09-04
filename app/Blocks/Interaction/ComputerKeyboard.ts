@@ -105,7 +105,7 @@ class ComputerKeyboard extends Keyboard {
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length)) {
             // POLYPHONIC MODE
 
             // Are there any free voices?

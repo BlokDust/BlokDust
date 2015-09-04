@@ -25,7 +25,10 @@ class SamplerBase extends Source {
                 s.player.buffer = this.Sources[0].player.buffer;
             }
         });
-        return super.CreateSource();
+
+        if (this.Sources[this.Sources.length-1]){
+            return this.Sources[this.Sources.length-1];
+        }
     }
 
     GetDuration(buffer) {

@@ -2,6 +2,7 @@ import Grid = require("../../Grid");
 import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import Particle = require("../../Particle");
+import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
 
 class Microphone extends Source {
 
@@ -66,6 +67,15 @@ class Microphone extends Source {
     CreateSource(){
         this.Sources.push( new Tone.Microphone() );
         return super.CreateSource();
+    }
+
+    UpdateConnections(chain: AudioChain) {
+        this.Chain = chain;
+
+        // Release the microphones envelope
+        if (!this.IsPressed) {
+            this.TriggerRelease();
+        }
     }
 
     TriggerAttack(index?: number|string){

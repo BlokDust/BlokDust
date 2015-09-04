@@ -73,13 +73,12 @@ class Momentary extends Logic {
     PerformLogic() {
         // Momentarily Trigger Attack and then release
         this.Params.logic = true;
-        for (var i = 0; i < this.Connections.Count; i++) {
-            var source = this.Connections.GetValueAt(i);
+        this.Chain.Sources.forEach((source: ISource) => {
             source.TriggerAttackRelease();
             if (source instanceof ParticleEmitter){
                 (<ParticleEmitter>source).EmitParticle();
             }
-        }
+        });
         this.Params.logic = false;
     }
 }

@@ -16,11 +16,10 @@ class Power extends PowerEffect {
     UpdateConnections(chain: AudioChain) {
         super.UpdateConnections(chain);
 
-        console.log(chain.Sources);
         chain.Sources.forEach((source: ISource) => {
-            //if (!source.IsPressed){
-            //    source.TriggerRelease('all');
-            //}
+            if (!source.IsPressed){
+                source.TriggerRelease('all');
+            }
             source.TriggerAttack();
         });
     }

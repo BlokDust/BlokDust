@@ -2,6 +2,7 @@ import AudioChain = require("./AudioChain");
 import IEffect = require("../../../Blocks/IEffect");
 import ISource = require("../../../Blocks/ISource");
 import IBlock = require("../../../Blocks/IBlock");
+import PowerEffect = require("../../../Blocks/Power/PowerEffect");
 import PostEffect = require("../../../Blocks/Effects/PostEffect");
 import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
 

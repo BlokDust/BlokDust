@@ -7,6 +7,7 @@ class Audio {
     public ctx: AudioContext;
     public sampleRate: number;
     public Master: Tone.Master;
+    public Meter: Tone.Meter;
     public MasterVolume: number = -10; // in decibels
     public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     public EffectsChainManager: EffectsChainManager;
@@ -25,6 +26,10 @@ class Audio {
         // Master Output
         this.Master = Tone.Master;
 
+        //Meter
+        this.Meter = new Tone.Meter();
+        this.Master.connect(this.Meter);
+
         // Master Gain Level
         this.Master.volume.value = this.MasterVolume;
 
@@ -34,6 +39,18 @@ class Audio {
         //Effects chain manager
         this.EffectsChainManager = new EffectsChainManager();
 
+    }
+
+    get MeterVolumeDb(): number {
+        return this.Meter.getDb();
+    }
+
+    get MeterVolume(): number {
+        return this.Meter.getLevel();
+    }
+
+    get HasClipped(): boolean {
+        return this.Meter.isClipped();
     }
 
     DecodeFileData(files, callback: (file: any, buffer: AudioBuffer) => any) {

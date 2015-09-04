@@ -162,7 +162,7 @@ class Source extends Block implements ISource {
      */
     TriggerAttack(index: number|string = 0) {
 
-        console.log('TriggerAttack: ',this);
+        //console.log('TriggerAttack: ',this);
         // Only if the source has envelopes
         if (this.Envelopes.length) {
 
@@ -204,7 +204,7 @@ class Source extends Block implements ISource {
     TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
         forceRelease = (forceRelease === true) ? forceRelease : false;
         // Only if it's not powered or force is set to true
-        console.log('TriggerRelease: ',this);
+        //console.log('TriggerRelease: ',this);
         if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
@@ -507,7 +507,7 @@ class Source extends Block implements ISource {
 
     MouseUp() {
         super.MouseUp();
-        this.TriggerRelease();
+        this.TriggerRelease('all');
     }
 
     SetParam(param: string,value: number) {

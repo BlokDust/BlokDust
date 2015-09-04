@@ -26,7 +26,7 @@ class RecorderBlock extends SamplerBase {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 0,
+                volume: 9,
                 track: null,
                 trackName: '',
             };
@@ -177,13 +177,16 @@ class RecorderBlock extends SamplerBase {
             s.player.loopEnd = this.Params.loopEnd;
             s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
+            s.volume.value = this.Params.volume;
 
             if (i > 0){
                 s.player.buffer = this.Sources[0].player.buffer;
             }
         });
 
-        return super.CreateSource();
+        if (this.Sources[this.Sources.length-1]){
+            return this.Sources[this.Sources.length-1];
+        }
     }
 
     UpdateOptionsForm() {

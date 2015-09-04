@@ -72,17 +72,15 @@ class Toggle extends Logic {
         super.PerformLogic();
         if (this.Params.logic) {
             this.Params.logic = false;
-            for (var i = 0; i < this.Connections.Count; i++) {
-                var source: ISource = this.Connections.GetValueAt(i);
+            this.Chain.Sources.forEach((source: ISource) => {
                 source.TriggerRelease('all');
-            }
+            });
 
         } else {
             this.Params.logic = true;
-            for (var i = 0; i < this.Connections.Count; i++) {
-                var source: ISource = this.Connections.GetValueAt(i);
+            this.Chain.Sources.forEach((source: ISource) => {
                 source.TriggerAttack();
-            }
+            });
         }
     }
 }

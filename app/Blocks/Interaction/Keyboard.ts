@@ -25,34 +25,6 @@ class Keyboard extends PreEffect {
         super.Draw();
     }
 
-    //Attach(source:ISource): void{
-    //    super.Attach(source);
-    //    this.SetBaseFrequency(source);
-    //    this.KeysDown = {};
-    //
-    //    // Check to see if we have enough sources on this block
-    //    if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
-    //        // Create extra polyphonic voices
-    //        this.CreateVoices(source);
-    //    }
-    //}
-
-    //Detach(source:ISource): void {
-    //
-    //    // FOR ALL SOURCES
-    //    for (let i = 0; i < this.Connections.Count; i++) {
-    //        const source: ISource = this.Connections.GetValueAt(i);
-    //
-    //        // Release all the sources envelopes
-    //        source.TriggerRelease('all', true);
-    //
-    //        // Reset pitch back to original setting
-    //        source.ResetPitch();
-    //    }
-    //
-    //    super.Detach(source);
-    //}
-
     UpdateConnections(chain: AudioChain) {
         super.UpdateConnections(chain);
 
@@ -89,15 +61,12 @@ class Keyboard extends PreEffect {
         else if (param === 'polyphonic') {
             this.Params.isPolyphonic = value;
             // ALL SOURCES
-            for (let i = 0; i < this.Connections.Count; i++) {
-                let source: ISource = this.Connections.GetValueAt(i);
-
+            this.Chain.Sources.forEach((source: ISource) => {
                 source.TriggerRelease('all');
-
                 // Create extra polyphonic voices
                 this.CreateVoices(source);
-            }
-
+            });
+            App.Audio.EffectsChainManager.Update();
         }
 
         this.Params[param] = value;

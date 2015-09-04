@@ -583,8 +583,6 @@ class MainScene extends Fayde.Drawing.SketchContext{
                             this._Invalidate();
                             App.Audio.EffectsChainManager.Update();
                         }
-
-
                     }
                 } else {
                     // if the source already has the effect on its internal list

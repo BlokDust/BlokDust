@@ -42,9 +42,8 @@ class Granular extends Source {
             };
         } else {
             this._LoadFromShare = true;
-            var me = this;
-            setTimeout(function() {
-                me.FirstSetup();
+            setTimeout(() => {
+                this.FirstSetup();
             },100);
         }
 
