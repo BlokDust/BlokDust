@@ -246,7 +246,7 @@ class App implements IApp{
                 // fail silently
                 this.CompositionId = null;
                 this.Splash.LoadOffset = 1;
-                console.log(error);
+                console.error(error);
             });
         } else {
             this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
@@ -289,6 +289,9 @@ class App implements IApp{
         this.MainScene.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
 
+        this.IsLoadedFromSave = true;
+        console.log(`Loaded "${this.CompositionName}"`);
+
         // initialise blocks (give them a ctx to draw to)
         this.Blocks.forEach((b: IBlock) => {
             b.Init(this.MainScene);
@@ -305,8 +308,7 @@ class App implements IApp{
         //Connect the effects chain
         this.Audio.EffectsChainManager.Update();
 
-        this.IsLoadedFromSave = true;
-        console.log(`Loaded "${this.CompositionName}"`);
+
 
         this.MainScene.Pause();
 
@@ -348,7 +350,7 @@ class App implements IApp{
 
     Deserialize(json: string): any {
         this._SaveFile = Serializer.Deserialize(json);
-        this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IEffect>block).Connections || (<ISource>block).Connections).toArray();
+        this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IBlock>block).Connections).toArray();
         this.Blocks.sort((a: IBlock, b: IBlock) => {
             return a.ZIndex - b.ZIndex;
         });

@@ -1,8 +1,8 @@
-declare var Recorder: {
-    new(AudioSource: any, config?: any): Recorder;
+declare var RecorderJS: {
+    new(AudioSource: any, config?: any): RecorderJS;
 };
 
-interface Recorder {
+interface RecorderJS {
     record(): void;
     stop(): void;
     clear(): void;

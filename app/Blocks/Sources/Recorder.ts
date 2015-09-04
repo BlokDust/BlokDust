@@ -3,7 +3,7 @@ import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
 
-class RecorderBlock extends SamplerBase {
+class Recorder extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;
@@ -38,7 +38,7 @@ class RecorderBlock extends SamplerBase {
 
         this.BufferSource = App.Audio.ctx.createBufferSource();
 
-        this.Recorder = new Recorder(App.Audio.Master, {
+        this.Recorder = new RecorderJS(App.Audio.Master, {
             workerPath: App.Config.RecorderWorkerPath
         });
 
@@ -314,4 +314,4 @@ class RecorderBlock extends SamplerBase {
 
 }
 
-export = RecorderBlock;
+export = Recorder;
