@@ -2,7 +2,7 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
-import AudioChain = require("../../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
 
 class Envelope extends PreEffect {
 

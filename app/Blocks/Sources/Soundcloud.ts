@@ -280,7 +280,9 @@ class Soundcloud extends SamplerBase {
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources[0].player.loop = value;
+                this.Sources.forEach((s: Tone.Simpler)=> {
+                    s.player.loop = value;
+                });
                 // update display of loop sliders
                 this.Params[param] = val;
                 this.RefreshOptionsPanel();

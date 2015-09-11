@@ -1,7 +1,7 @@
 import IDisplayObject = require("../IDisplayObject");
 import Particle = require("../Particle");
 import Grid = require("../Grid");
-import AudioChain = require("../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../Core/Audio/Connections/AudioChain");
 
 interface IBlock extends IDisplayObject{
     Id: number;

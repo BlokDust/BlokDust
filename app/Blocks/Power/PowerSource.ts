@@ -1,5 +1,5 @@
 import Source = require("../Source");
-import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class PowerSource extends Source {
 

@@ -581,7 +581,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                             source.AddEffect(effect);
 
                             this._Invalidate();
-                            App.Audio.EffectsChainManager.Update();
+                            App.Audio.ConnectionManager.Update();
                         }
                     }
                 } else {
@@ -596,7 +596,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                         source.RemoveEffect(effect);
 
                         this._Invalidate();
-                        App.Audio.EffectsChainManager.Update();
+                        App.Audio.ConnectionManager.Update();
                     }
                 }
             }

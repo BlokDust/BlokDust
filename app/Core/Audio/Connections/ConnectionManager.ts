@@ -1,37 +1,43 @@
-import ConnectionMethodManager = require("./ConnectionMethodManager");
-import IBlock = require("../../../Blocks/IBlock");
-import IEffect = require("../../../Blocks/IEffect");
-import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
-import ISource = require("../../../Blocks/ISource");
-import Source = require("../../../Blocks/Source");
-import Effect = require("../../../Blocks/Effect");
-import PostEffect = require("../../../Blocks/Effects/PostEffect");
-import PreEffect = require("../../../Blocks/Effects/PreEffect");
 import AudioChain = require("./AudioChain");
+import IEffect = require("../../../Blocks/IEffect");
+import Source = require("../../../Blocks/Source");
+import ISource = require("../../../Blocks/ISource");
+import IBlock = require("../../../Blocks/IBlock");
+import PowerEffect = require("../../../Blocks/Power/PowerEffect");
+import PostEffect = require("../../../Blocks/Effects/PostEffect");
+import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
+import PreEffect = require("../../../Blocks/Effects/PreEffect");
 
-class AccumulativeConnectionMethod extends ConnectionMethodManager {
+class ConnectionManager {
+
+    protected _Debug: boolean = false;
+    public Chains: AudioChain[] = [];
 
     private _MuteBufferTime: number = 35;
     private connectionTimeout;
     private unMuteTimeout;
 
     constructor(){
-        super()
+
     }
 
-    Update() {
-        super.Update();
-        this.Disconnect();
-    }
+    public Update(){
+        if (this._Debug) console.clear();
 
-    private _DisconnectionDone(){
-        const chains = this.CreateChains();
-        this.Connect(chains);
-    }
-
-    public Disconnect() {
         //First mute everything
         App.Audio.Master.mute = true;
+
+        this.Disconnect(() => {
+            const chains = this.CreateChains();
+            this.Connect(chains);
+        });
+    }
+
+    /**
+     * Disconnects all blocks
+     * @param callback to be called when disconnection has finished
+     */
+    protected Disconnect(callback: Function) {
 
         clearTimeout(this.connectionTimeout);
         clearTimeout(this.unMuteTimeout);
@@ -51,61 +57,11 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
             // Reset the chains array
             this.Chains = [];
 
-            this._DisconnectionDone();
+            callback();
         }, this._MuteBufferTime);
     }
 
-    private _ParseConnections(chain: AudioChain, parentBlock: IBlock){
-
-        // if parentBlock isn't already in a Chain
-        if (chain.Connections.indexOf(parentBlock) === -1){
-            // add parentBlock to Chain
-            chain.Connections.push(parentBlock);
-            // set parentBlock.isChained = true
-            parentBlock.IsChained = true;
-            // forEach connected childbock (source / effect)
-            let parentConnections = parentBlock.Connections.ToArray();
-            parentConnections.forEach((childBlock) => {
-                // ParseConnections(audioChain, childBlock)
-                this._ParseConnections(chain, childBlock);
-            });
-
-        }
-
-    }
-
-    public CreateChains(): AudioChain[] {
-        // for each block
-        App.Blocks.forEach((block:IBlock) => {
-            // if block isn't chained
-            if (!block.IsChained) {
-                //create audioChain, add to audioChains[]
-                var chain:AudioChain = new AudioChain();
-                this.Chains.push(chain);
-                this._ParseConnections(chain, block)
-            }
-        });
-
-        // Now sort connections into lists of Sources, PostEffects and PreEffects
-        this.Chains.forEach((chain: AudioChain) => {
-            chain.Connections.forEach((block: IBlock) => {
-                if (block instanceof Source) {
-                    chain.Sources.push(<ISource>block);
-                } else if (block instanceof PostEffect){
-                    chain.PostEffects.push(<IEffect>block);
-                } else if (block instanceof PreEffect) {
-                    chain.PreEffects.push(<PreEffect>block);
-                } else {
-                    chain.Others.push(block);
-                }
-            });
-        });
-        return this.Chains;
-    }
-
-    //TODO: Move this method to connection manager.
-    // Once we've built our chains we aren't doing any specific functionality any longer
-    public Connect(chains: AudioChain[]) {
+    protected Connect(chains: AudioChain[]) {
         if (this._Debug) console.log(chains);
 
         // loop through chains
@@ -133,7 +89,6 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
                 if (this._Debug) console.warn('Connect: ', chain.Sources, ' to: ', chain.PostEffects);
 
                 // connect all effects in series and then to master
-                //App.Audio.Tone.connectSeries(...effects).toMaster();
 
                 if (chain.PostEffects.length) {
                     let currentUnit = chain.PostEffects[0].Effect;
@@ -167,6 +122,51 @@ class AccumulativeConnectionMethod extends ConnectionMethodManager {
         }, this._MuteBufferTime);
 
     }
+
+    public CreateChains(): AudioChain[] {
+        return this.Chains;
+    }
+
+    protected SortChainedBlocks(){
+        // Now sort connections into lists of Sources, PostEffects and PreEffects
+        this.Chains.forEach((chain: AudioChain) => {
+            chain.Connections.forEach((block: IBlock) => {
+                if (block instanceof Source) {
+                    chain.Sources.push(<ISource>block);
+                } else if (block instanceof PostEffect){
+                    chain.PostEffects.push(<IEffect>block);
+                } else if (block instanceof PreEffect) {
+                    chain.PreEffects.push(<PreEffect>block);
+                } else {
+                    chain.Others.push(block);
+                }
+            });
+        });
+    }
+
+    public GetChainFromBlock(block:IBlock): AudioChain | boolean {
+        let _chain: any;
+        this.Chains.forEach((chain: AudioChain) => {
+            // if block is in chain return the chain
+            if (chain.Connections.indexOf(block) !== -1) {
+                _chain = chain;
+            }
+        });
+
+        return _chain;
+    }
+
+    public GetChainFromPreEffect(block:IPreEffect): AudioChain | boolean {
+        var _chain: any;
+        this.Chains.forEach((chain: AudioChain) => {
+            // if block is in chain return the chain
+            if (chain.PreEffects.indexOf(block) !== -1) {
+                _chain = chain;
+            }
+        });
+
+        return _chain;
+    }
 }
 
-export = AccumulativeConnectionMethod;
+export = ConnectionManager;

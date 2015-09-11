@@ -306,7 +306,7 @@ class App implements IApp{
         this.Audio.Master.volume.value = -100;
 
         //Connect the effects chain
-        this.Audio.EffectsChainManager.Update();
+        this.Audio.ConnectionManager.Update();
 
 
 

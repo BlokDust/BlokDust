@@ -5,7 +5,7 @@ import DisplayObject = require("../DisplayObject");
 import MainScene = require("../MainScene");
 import ParametersPanel = require("../UI/OptionsPanel");
 import PreEffect = require("./Effects/PreEffect");
-import AudioChain = require("../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../Core/Audio/Connections/AudioChain");
 import Size = minerva.Size;
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 

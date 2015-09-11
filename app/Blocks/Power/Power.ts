@@ -2,7 +2,7 @@ import Effect = require("../Effect");
 import PowerEffect = require("./PowerEffect");
 import ISource = require("../ISource");
 import MainScene = require("../../MainScene");
-import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class Power extends PowerEffect {
 

@@ -3,7 +3,7 @@ import ISource = require("../../ISource");
 import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import Logic = require("./Logic");
-import AudioChain = require("../../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
 
 class Toggle extends Logic {
 

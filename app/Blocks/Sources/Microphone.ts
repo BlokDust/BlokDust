@@ -2,7 +2,7 @@ import Grid = require("../../Grid");
 import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import Particle = require("../../Particle");
-import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class Microphone extends Source {
 

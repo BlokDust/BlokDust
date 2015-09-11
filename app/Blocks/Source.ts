@@ -8,7 +8,7 @@ import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import PostEffect = require("./Effects/PostEffect");
-import AudioChain = require("../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../Core/Audio/Connections/AudioChain");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -433,7 +433,7 @@ class Source extends Block implements ISource {
 
 
 
-    GetWaveformFromBuffer(buffer,points,stepsPerPoint,normal) {
+    GetWaveformFromBuffer(buffer, points, stepsPerPoint, normal) {
 
         console.log(buffer);
         console.log("minutes: "+ (buffer.duration/60));

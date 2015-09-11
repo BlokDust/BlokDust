@@ -1,7 +1,7 @@
 import PreEffect = require("../Effects/PreEffect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import Voice = require("./VoiceObject");
@@ -66,7 +66,7 @@ class Keyboard extends PreEffect {
                 // Create extra polyphonic voices
                 this.CreateVoices(source);
             });
-            App.Audio.EffectsChainManager.Update();
+            App.Audio.ConnectionManager.Update();
         }
 
         this.Params[param] = value;

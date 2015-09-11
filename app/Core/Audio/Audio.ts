@@ -1,5 +1,8 @@
-import EffectsChainManager = require("./EffectsChainManager");
 import AudioNodeConnectionManager = require("./AudioNodeConnectionManager");
+import ConnectionMethodType = require("./Connections/ConnectionMethodType");
+import ConnectionManager = require("./Connections/ConnectionManager");
+import SimpleConnectionMethod = require("./Connections/ConnectionMethods/SimpleConnectionMethod");
+import AccumulativeConnectionMethod = require("./Connections/ConnectionMethods/AccumulativeConnectionMethod");
 
 class Audio {
 
@@ -10,8 +13,10 @@ class Audio {
     public Meter: Tone.Meter;
     public MasterVolume: number = -10; // in decibels
     public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    public EffectsChainManager: EffectsChainManager;
+
     public AudioNodeConnectionManager: AudioNodeConnectionManager;
+    public ConnectionMethodType: ConnectionMethodType;
+    public ConnectionManager: ConnectionManager;
 
     Init() {
 
@@ -36,8 +41,18 @@ class Audio {
         //AudioNode Connection Manager
         this.AudioNodeConnectionManager = new AudioNodeConnectionManager();
 
-        //Effects chain manager
-        this.EffectsChainManager = new EffectsChainManager();
+        // Set the connection method type
+        this.ConnectionMethodType = ConnectionMethodType.Accumulative;
+        switch (this.ConnectionMethodType) {
+            case ConnectionMethodType.Simple:
+                this.ConnectionManager = new SimpleConnectionMethod();
+                break;
+            case ConnectionMethodType.Accumulative:
+                this.ConnectionManager = new AccumulativeConnectionMethod();
+                break;
+            default:
+                console.error('No connection method set');
+        }
 
     }
 

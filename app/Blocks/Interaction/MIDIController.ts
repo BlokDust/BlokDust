@@ -4,7 +4,7 @@ import ISource = require("../ISource");
 import MainScene = require("../../MainScene");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
-import AudioChain = require("../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class MIDIController extends Keyboard {
 

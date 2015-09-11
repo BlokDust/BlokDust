@@ -4,7 +4,7 @@ import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import ParticleEmitter = require("./../ParticleEmitter");
 import Logic = require("./Logic");
-import AudioChain = require("../../../Core/Audio/ConnectionMethods/AudioChain");
+import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
 
 class Momentary extends Logic {
 
