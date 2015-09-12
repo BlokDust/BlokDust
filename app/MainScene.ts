@@ -120,7 +120,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
 
             var files = e.dataTransfer.files; // FileList object.
 
-            App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+            App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
                 if (buffer) {
                     //TODO: set the buffer of this newly created Sampler
                     console.log(file.name + ' dropped');

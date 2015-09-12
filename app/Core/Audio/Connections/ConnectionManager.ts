@@ -27,9 +27,10 @@ class ConnectionManager {
         //First mute everything
         App.Audio.Master.mute = true;
 
-        this.Disconnect(() => {
+        this._Disconnect(() => {
             const chains = this.CreateChains();
-            this.Connect(chains);
+            this._SortChainedBlocks(chains);
+            this._Connect(chains);
         });
     }
 
@@ -37,7 +38,7 @@ class ConnectionManager {
      * Disconnects all blocks
      * @param callback to be called when disconnection has finished
      */
-    protected Disconnect(callback: Function) {
+    private _Disconnect(callback: Function) {
 
         clearTimeout(this.connectionTimeout);
         clearTimeout(this.unMuteTimeout);
@@ -61,7 +62,7 @@ class ConnectionManager {
         }, this._MuteBufferTime);
     }
 
-    protected Connect(chains: AudioChain[]) {
+    private _Connect(chains: AudioChain[]) {
         if (this._Debug) console.log(chains);
 
         // loop through chains
@@ -123,13 +124,17 @@ class ConnectionManager {
 
     }
 
+    /**
+     * Base CreateChains method.
+     * @returns {AudioChain[]}
+     */
     public CreateChains(): AudioChain[] {
         return this.Chains;
     }
 
-    protected SortChainedBlocks(){
+    private _SortChainedBlocks(chains: AudioChain[]){
         // Now sort connections into lists of Sources, PostEffects and PreEffects
-        this.Chains.forEach((chain: AudioChain) => {
+        chains.forEach((chain: AudioChain) => {
             chain.Connections.forEach((block: IBlock) => {
                 if (block instanceof Source) {
                     chain.Sources.push(<ISource>block);

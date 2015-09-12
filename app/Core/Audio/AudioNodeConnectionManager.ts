@@ -18,7 +18,7 @@ class AudioNodeConnectionManager {
         (<any>AudioNode).prototype._toneConnect = AudioNode.prototype.connect;
         AudioNode.prototype.connect = function (destination: any, outNum, inNum) {
             if (destination instanceof PostEffect) {
-                destination = destination.Effect;
+                destination = (<IEffect>destination).Effect;
             }
             this._toneConnect(destination, outNum, inNum);
         };

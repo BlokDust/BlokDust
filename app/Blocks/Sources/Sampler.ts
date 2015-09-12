@@ -91,7 +91,7 @@ class Sampler extends SamplerBase {
 
     HandleFileUploadButton(e) {
         var files = e.target.files; // FileList object
-        App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+        App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
             if (buffer) {
                 this.SetBuffers(buffer);
                 this.Params.trackName = files[0].name;
