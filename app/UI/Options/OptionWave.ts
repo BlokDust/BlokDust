@@ -16,7 +16,6 @@ class WaveForm extends Option{
     }
 
 
-
     Draw(ctx,units,i,panel) {
         super.Draw(ctx,units,i,panel);
 

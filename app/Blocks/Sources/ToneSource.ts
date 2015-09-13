@@ -38,7 +38,7 @@ class ToneSource extends Source {
         this.CreateEnvelope();
 
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-            e.connect(this.EffectsChainInput);
+            e.connect(this.AudioInput);
         });
 
         this.Sources.forEach((s: Tone.Oscillator, i: number)=> {
@@ -157,14 +157,11 @@ class ToneSource extends Source {
 
     SetParam(param: string,value: any) {
 
-
-        var val = value;
-
         switch(param) {
             case 'baseFrequency':
                 this.Sources[0].frequency.value = this.GetFrequency(value,this.Params.fine);
-                var octave = Math.floor(value / 12) + 4;
-                var note = App.Audio.NoteIndex[Math.abs(value%12)];
+                const octave = Math.floor(value / 12) + 4;
+                const note = App.Audio.NoteIndex[Math.abs(value%12)];
                 console.log(`Note: ${note}${octave}`);
                 break;
             case 'fine':
@@ -172,14 +169,14 @@ class ToneSource extends Source {
                 break;
         }
 
-        this.Params[param] = val;
+        this.Params[param] = value;
 
         super.SetParam(param,value);
     }
 
     DisplayNote(value: number) {
-        var octave = Math.floor(value / 12) + 4;
-        var note = App.Audio.NoteIndex[Math.abs(value%12)];
+        const octave = Math.floor(value / 12) + 4;
+        const note = App.Audio.NoteIndex[Math.abs(value%12)];
         return "" + note + "" + octave;
     }
 

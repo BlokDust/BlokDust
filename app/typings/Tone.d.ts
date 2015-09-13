@@ -679,6 +679,7 @@ declare module Tone {
     };
 
     interface Noise extends Tone.Source {
+        playbackRate: Tone.Signal;
         type: string;
         dispose(): Tone.Noise;
     }
@@ -806,7 +807,7 @@ declare module Tone {
         loop: boolean;
         loopEnd: Tone.Time;
         loopStart: Tone.Time;
-        playbackRate: number;
+        playbackRate: Tone.Signal;
         retrigger: boolean;
         reverse: boolean;
         startPosition: Tone.Time;
@@ -913,6 +914,7 @@ declare module Tone {
         dispose(): Tone.Simpler;
         triggerAttack(time?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time, velocity?: number): Tone.Simpler;
         triggerRelease(time?: Tone.Time): Tone.Simpler;
+        triggerAttackRelease(length: Tone.Time, time?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time, velocity?: number): Tone.Simpler;
     }
 
     var Scale: {

@@ -54,7 +54,7 @@ class Sampler extends SamplerBase {
             });
 
             this.Sources.forEach((s: Tone.Simpler) => {
-                s.connect(this.EffectsChainInput);
+                s.connect(this.AudioInput);
             });
 
 
@@ -242,7 +242,7 @@ class Sampler extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                this.Sources[0].player.playbackRate = value;
+                this.Sources[0].player.playbackRate.value = value;
                 break;
             case "reverse":
                 value = value? true : false;
@@ -254,7 +254,9 @@ class Sampler extends SamplerBase {
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources[0].player.loop = value;
+                this.Sources.forEach((s: Tone.Simpler)=> {
+                    s.player.loop = value;
+                });
                 // update display of loop sliders
                 this.Params[param] = val;
                 this.RefreshOptionsPanel();

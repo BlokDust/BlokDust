@@ -1,7 +1,7 @@
 import PreEffect = require("../Effects/PreEffect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-//import PitchComponent = require("./../Effects/Pre/Pitch");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import Voice = require("./VoiceObject");
@@ -25,32 +25,19 @@ class Keyboard extends PreEffect {
         super.Draw();
     }
 
-    Attach(source:ISource): void{
-        super.Attach(source);
-        this.SetBaseFrequency(source);
-        this.KeysDown = {};
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-        // Check to see if we have enough sources on this block
-        if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
-            // Create extra polyphonic voices
-            this.CreateVoices(source);
-        }
-    }
+        chain.Sources.forEach((source: ISource) => {
+            this.SetBaseFrequency(source);
+            this.KeysDown = {};
 
-    Detach(source:ISource): void {
-
-        // FOR ALL SOURCES
-        for (let i = 0; i < this.Sources.Count; i++) {
-            const source: ISource = this.Sources.GetValueAt(i);
-
-            // Release all the sources envelopes
-            source.TriggerRelease('all', true);
-
-            // Reset pitch back to original setting
-            source.ResetPitch();
-        }
-
-        super.Detach(source);
+            // Check to see if we have enough sources on this block
+            if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
+                // Create extra polyphonic voices
+                this.CreateVoices(source);
+            }
+        });
     }
 
     Dispose(){
@@ -65,8 +52,8 @@ class Keyboard extends PreEffect {
             value = value/100;
         }
         else if (param == "octave") {
-            for (let i = 0, source: ISource; i < this.Sources.Count; i++) {
-                source = this.Sources.GetValueAt(i);
+            for (let i = 0, source: ISource; i < this.Connections.Count; i++) {
+                source = this.Connections.GetValueAt(i);
                 let diff: number = value - this.Params.octave;
                 source.OctaveShift(diff);
             }
@@ -74,15 +61,12 @@ class Keyboard extends PreEffect {
         else if (param === 'polyphonic') {
             this.Params.isPolyphonic = value;
             // ALL SOURCES
-            for (let i = 0; i < this.Sources.Count; i++) {
-                let source: ISource = this.Sources.GetValueAt(i);
-
+            this.Chain.Sources.forEach((source: ISource) => {
                 source.TriggerRelease('all');
-
                 // Create extra polyphonic voices
                 this.CreateVoices(source);
-            }
-
+            });
+            App.Audio.ConnectionManager.Update();
         }
 
         this.Params[param] = value;
@@ -115,13 +99,13 @@ class Keyboard extends PreEffect {
                     s.start();
 
                     // Connect Envelope to the Effects Chain
-                    e.connect(source.EffectsChainInput);
+                    e.connect(source.AudioInput);
                 } else {
                     // No CreateEnvelope()
                     // Check if it's a Sampler Source (they have their own envelopes built in)
                     if (source.Sources[0] instanceof Tone.Simpler) {
                         e = source.Sources[i].envelope;
-                        s.connect(source.EffectsChainInput)
+                        s.connect(source.AudioInput)
                     }
                 }
 
@@ -179,37 +163,12 @@ class Keyboard extends PreEffect {
     public GetFrequencyOfNote(note, source:ISource): number {
         if (source.Params.baseFrequency || source.Params.fine) {
             return source.Sources[0].noteToFrequency(note) *
-                this.GetConnectedPitchPreEffects(source) *
                 App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency + source.Params.fine); //TODO - keyboards and other controllers should be dumber than this, not needing to know about block specific frequency modifiers
         } else if (source instanceof SamplerBase) {
-            return source.Sources[0].noteToFrequency(note) *
-                this.GetConnectedPitchPreEffects(source) * source.Params.playbackRate;
+            return source.Sources[0].noteToFrequency(note) * source.Params.playbackRate;
         } else {
-            return source.Sources[0].noteToFrequency(note) *
-                this.GetConnectedPitchPreEffects(source);
+            return source.Sources[0].noteToFrequency(note);
         }
-    }
-
-    /**
-     * Checks a Sources connected pitch effects and gets the total pitch increment
-     * @param source
-     * @returns {number}
-     * @constructor
-     */
-    public GetConnectedPitchPreEffects(source) {
-
-        let totalPitchIncrement: number = 1;
-
-        for (var i = 0; i < source.Effects.Count; i++) {
-            let effect = source.Effects.GetValueAt(i);
-
-            //if (effect instanceof PitchComponent) {
-            //    let thisPitchIncrement = (<PitchComponent>effect).PitchIncrement;
-            //    totalPitchIncrement *= thisPitchIncrement;
-            //}
-        }
-
-        return totalPitchIncrement;
     }
 
     /**

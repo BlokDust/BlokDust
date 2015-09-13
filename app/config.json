@@ -22,6 +22,7 @@
         "172375224",
         "43883752"
     ],
+    "SoundCloudMaxTrackLength": 510,
     "GranularDefaultTracks": [
         "24456532",
         "183588346",
@@ -31,7 +32,9 @@
         "76097469",
         "130501492"
     ],
+    "GranularMaxTrackLength": 240,
     "ConvolverDefaultTracks": [],
+    "ConvolverMaxTrackLength": 12,
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
     "PolyphonicVoices": 5,
     "PulseLength": "16n",
@@ -39,5 +42,5 @@
     "SoundCloudLoadTimeout": 20,
     "ResetPitchesOnInteractionDisconnect": true,
     "ScrollSpeed": 1.4,
-    "ScrollEasing": 15
+    "ScrollEasing": 30
 }

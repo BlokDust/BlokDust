@@ -2,13 +2,13 @@ import Grid = require("../../Grid");
 import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import Particle = require("../../Particle");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class Microphone extends Source {
 
     public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone
     public Params: MicrophoneParams;
     public Muted: boolean = false;
-    private _FirstRelease: boolean = true;
     private _unmutedVolume: number = 1;
 
     Init(sketch?: any): void {
@@ -21,21 +21,16 @@ class Microphone extends Source {
 
         super.Init(sketch);
 
+        this.CreateSource();
         this.Volume = App.Audio.ctx.createGain();
-        this.Volume.gain.value = this.Params.gain;
-
-        //this.CreateSource();
-
-        this.Volume.connect(this.EffectsChainInput);
-
-        // moved to first mouse release //
-        /*// Microphone should be muted and only unmuted when powered
-        this.Mute();
 
         this.Sources.forEach((s: Tone.Microphone)=> {
             s.connect(this.Volume);
             s.start();
-        });*/
+        });
+
+        this.Volume.gain.value = this.Params.gain;
+        this.Volume.connect(this.AudioInput);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
@@ -63,9 +58,18 @@ class Microphone extends Source {
         }
     }
 
-    CreateSource(){
+    CreateSource(): Tone.Microphone {
         this.Sources.push( new Tone.Microphone() );
-        return super.CreateSource();
+        return this.Sources[this.Sources.length-1];
+    }
+
+    UpdateConnections(chain: AudioChain) {
+        this.Chain = chain;
+
+        // Release the microphones envelope
+        if (!this.IsPressed) {
+            this.TriggerRelease();
+        }
     }
 
     TriggerAttack(index?: number|string){
@@ -85,45 +89,6 @@ class Microphone extends Source {
             this.Mute();
         }, this.Sources[0].toSeconds(duration)*1000);
     }
-
-    MouseUp() {
-        if (this._FirstRelease) {
-            this.CreateSource();
-            // Microphone should be muted and only unmuted when powered
-            //this.Mute();
-
-            this.Sources.forEach((s: Tone.Microphone)=> {
-                s.connect(this.Volume);
-                s.start();
-            });
-            this._FirstRelease = false;
-        }
-
-        super.MouseUp();
-    }
-
-    //UpdateOptionsForm() {
-    //    super.UpdateOptionsForm();
-    //
-    //    this.OptionsForm =
-    //    {
-    //        "name" : "Microphone",
-    //        "parameters" : [
-    //
-    //            {
-    //                "type" : "slider",
-    //                "name" : "Monitor",
-    //                "setting" :"monitor",
-    //                "props" : {
-    //                    "value" : this.Params.monitor,
-    //                    "min" : 0,
-    //                    "max" : 1,
-    //                    "quantised" : true
-    //                }
-    //            }
-    //        ]
-    //    };
-    //}
 
     SetParam(param: string,value: any) {
 
@@ -152,6 +117,9 @@ class Microphone extends Source {
         this.Sources.forEach((s: Tone.Microphone)=> {
             s.dispose();
         });
+
+        this.Volume = null;
+        this.Muted = null;
     }
 }
 

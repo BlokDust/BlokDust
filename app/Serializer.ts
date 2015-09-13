@@ -1,5 +1,7 @@
 import IEffect = require("./Blocks/IEffect");
+import Effect = require("./Blocks/Effect");
 import ISource = require("./Blocks/ISource");
+import Source = require("./Blocks/Source");
 import IBlock = require("./Blocks/IBlock");
 import Grid = require("./Grid");
 import ToneSource = require("./Blocks/Sources/ToneSource");
@@ -42,7 +44,8 @@ class Serializer {
             ZoomLevel: App.ZoomLevel,
             DragOffset: App.DragOffset,
             Composition: [],
-            Version: Version.Version
+            Version: Version.Version,
+            ColorThemeNo: App.Color.CurrentThemeNo
         };
 
         this._SerializeBlocks(json.Composition, blocks);
@@ -100,25 +103,26 @@ class Serializer {
         if (block.Params) b.Params = block.Params;
 
         // if it's a source block
-        if ((<ISource>block).Effects && (<ISource>block).Effects.Count){
+        if (block instanceof Source && (<ISource>block).Connections.Count){
+        //if ((<ISource>block).Effects && (<ISource>block).Effects.Count){
             b.Effects = [];
 
             if (parentBlock){
                 b.Effects.push(parentBlock.Id);
             }
 
-            this._SerializeBlocks(b.Effects, (<ISource>block).Effects.ToArray(), b);
+            this._SerializeBlocks(b.Effects, (<ISource>block).Connections.ToArray(), b);
         }
 
         // if it's an effect block
-        if ((<IEffect>block).Sources && (<IEffect>block).Sources.Count){
+        if (block instanceof Effect && (<IEffect>block).Connections.Count){
             b.Sources = [];
 
             if (parentBlock){
                 b.Sources.push(parentBlock.Id);
             }
 
-            this._SerializeBlocks(b.Sources, (<IEffect>block).Sources.ToArray(), b);
+            this._SerializeBlocks(b.Sources, (<IEffect>block).Connections.ToArray(), b);
         }
 
         return b;
@@ -140,6 +144,7 @@ class Serializer {
         }
 
         saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
+        saveFile.ColorThemeNo = parsed.ColorThemeNo;
 
         return saveFile;
     }
@@ -180,15 +185,15 @@ class Serializer {
         }
 
         // if it's a source block
-        if((<ISource>b).Effects){
+        if((<any>b).Effects){
             var effects = <IEffect[]>Serializer._DeserializeBlocks(b.Effects);
-            (<ISource>block).Effects.AddRange(effects);
+            (<ISource>block).Connections.AddRange(effects);
         }
 
         // if it's an effect block
-        if((<IEffect>b).Sources){
+        if((<any>b).Sources){
             var sources = <ISource[]>Serializer._DeserializeBlocks(b.Sources);
-            (<IEffect>block).Sources.AddRange(sources);
+            (<IEffect>block).Connections.AddRange(sources);
         }
 
         return block;

@@ -6,11 +6,11 @@ import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
 import IBlock = require("../Blocks/IBlock");
 import DisplayObject = require("../DisplayObject");
-import RecorderBlock = require("../Blocks/Sources/Recorder");
+import Recorder = require("../Blocks/Sources/Recorder");
 
 class RecorderPanel extends DisplayObject {
 
-    private _Blocks: RecorderBlock[];
+    private _Blocks: Recorder[];
     private _Roll: boolean[];
     public Hover: boolean;
 
@@ -35,7 +35,7 @@ class RecorderPanel extends DisplayObject {
         var blocks = [];
         for (var i = 0; i < App.Blocks.length; i++) {
             var block:IBlock = App.Blocks[i];
-            if (block instanceof RecorderBlock) {
+            if (block instanceof Recorder) {
                 blocks.push(block);
             }
         }

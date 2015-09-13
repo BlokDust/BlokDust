@@ -131,6 +131,7 @@ declare module nullstone {
         exports: string;
         deps: string[];
         rootModule: any;
+        isLoaded: boolean;
         loadAsync(): async.IAsyncRequest<Library>;
         resolveType(moduleName: string, name: string, oresolve: IOutType): boolean;
         add(type: any, name?: string): ILibrary;
@@ -151,6 +152,7 @@ declare module nullstone {
         useMin: boolean;
         sourcePath: string;
         basePath: string;
+        isLoaded: boolean;
         constructor(name: string);
         rootModule: any;
         loadAsync(): async.IAsyncRequest<Library>;

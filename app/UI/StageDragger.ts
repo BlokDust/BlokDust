@@ -31,9 +31,7 @@ class StageDragger  extends DisplayObject {
             App.DragOffset.y += (((this.Destination.y - App.DragOffset.y)/100) * speed);
 
             App.Metrics.UpdateGridScale();
-            console.log(App.DragOffset.x);
         }
-
     }
 
     Draw() {
@@ -96,6 +94,7 @@ class StageDragger  extends DisplayObject {
         this._DragStart = new Point(point.x,point.y);
         this._OffsetStart = new Point(App.DragOffset.x,App.DragOffset.y);
         this._Dragging = true;
+        console.log(App.DragOffset);
     }
 
     MouseMove(point: Point) {
@@ -117,15 +116,15 @@ class StageDragger  extends DisplayObject {
         //this.StopAllTweens();
         this.Destination.x = this._OffsetStart.x + (((point.x - this._DragStart.x)*(speed/App.ZoomLevel)));
         this.Destination.y = this._OffsetStart.y + (((point.y - this._DragStart.y)*(speed/App.ZoomLevel)));
-
+        //console.log(this.Destination);
     }
 
     Jump(point: Point, to: Point) {
         this.StopAllTweens();
         var x = (-point.x * App.GridSize) + ((to.x - App.Metrics.C.x)/App.ZoomLevel);
         var y = (-point.y * App.GridSize) + ((to.y - App.Metrics.C.y)/App.ZoomLevel);
-        //this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
-        this.Destination = new Point(x,y);
+        this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
+        //this.Destination = new Point(x,y);
         App.MainScene.ToolTipClose();
     }
 

@@ -42,9 +42,8 @@ class Granular extends Source {
             };
         } else {
             this._LoadFromShare = true;
-            var me = this;
-            setTimeout(function() {
-                me.FirstSetup();
+            setTimeout(() => {
+                this.FirstSetup();
             },100);
         }
 
@@ -76,7 +75,7 @@ class Granular extends Source {
         this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, 240, (tracks) => {
+            SoundCloudAudio.Search(query, App.Config.GranularMaxTrackLength, (tracks) => {
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
                 });
@@ -127,9 +126,9 @@ class Granular extends Source {
                 // CONNECT //
                 this.Grains[i].connect(this._Envelopes[i]);
                 this._Envelopes[i].connect(this.Sources[0]);
-                this.Grains[i].playbackRate = this.Params.playbackRate;
+                this.Grains[i].playbackRate.value = this.Params.playbackRate;
             }
-            this.Sources[0].connect(this.EffectsChainInput);
+            this.Sources[0].connect(this.AudioInput);
         }
     }
 
@@ -195,7 +194,7 @@ class Granular extends Source {
             });
 
             this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
-                e.connect(this.EffectsChainInput);
+                e.connect(this.AudioInput);
             });
 
             this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
@@ -289,7 +288,7 @@ class Granular extends Source {
             // MAKE SURE THESE ARE IN SYNC //
             this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
             this.Grains[this._CurrentGrain].stop();
-            this.Grains[this._CurrentGrain].playbackRate = this._tempPlaybackRate;
+            this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
             this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
@@ -318,7 +317,7 @@ class Granular extends Source {
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         pitch = pitch / App.Config.BaseNote;
         for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate = pitch;
+            this.Grains[i].playbackRate.value = pitch;
         }
         this._tempPlaybackRate = pitch;
         console.log(this._tempPlaybackRate);
@@ -332,7 +331,7 @@ class Granular extends Source {
         if (App.Config.ResetPitchesOnInteractionDisconnect) {
             this._tempPlaybackRate = this.Params.playbackRate;
             for (var i=0; i<this.GrainsAmount; i++) {
-                this.Grains[i].playbackRate = this.Params.playbackRate;
+                this.Grains[i].playbackRate.value = this.Params.playbackRate;
             }
         }
     }

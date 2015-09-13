@@ -4,6 +4,7 @@ import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import ParticleEmitter = require("./../ParticleEmitter");
 import Logic = require("./Logic");
+import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
 
 class Momentary extends Logic {
 
@@ -14,22 +15,17 @@ class Momentary extends Logic {
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
 
-    Attach(source:ISource): void {
-        super.Attach(source);
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-        if (this.Params.logic) {
-            source.TriggerAttack();
-        }
-
-    }
-
-    Detach(source:ISource): void {
-
-        if (!source.IsPressed){
-            source.TriggerRelease('all');
-        }
-
-        super.Detach(source);
+        chain.Sources.forEach((source: ISource) => {
+            if (this.Params.logic) {
+                source.TriggerAttack();
+            }
+            if (!source.IsPressed){
+                source.TriggerRelease('all');
+            }
+        });
     }
 
     Draw() {
@@ -77,13 +73,12 @@ class Momentary extends Logic {
     PerformLogic() {
         // Momentarily Trigger Attack and then release
         this.Params.logic = true;
-        for (var i = 0; i < this.Sources.Count; i++) {
-            var source = this.Sources.GetValueAt(i);
+        this.Chain.Sources.forEach((source: ISource) => {
             source.TriggerAttackRelease();
             if (source instanceof ParticleEmitter){
                 (<ParticleEmitter>source).EmitParticle();
             }
-        }
+        });
         this.Params.logic = false;
     }
 }

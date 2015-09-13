@@ -76,6 +76,7 @@ require([
     "Tone/source/Noise",
     "Tone/source/Oscillator",
     "Tone/source/Player",
+    "Tone/component/Meter",
     "tween",
     "utils"
 ], function (text, config, App, PixelPalette, Tone, jquery) {

@@ -2,6 +2,7 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
 
 class Envelope extends PreEffect {
 
@@ -30,54 +31,20 @@ class Envelope extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
-    Attach(source: ISource): void{
-        super.Attach(source);
+    //Attach(source: ISource): void{
+    //    super.Attach(source);
+    //
+    //}
+    //
+    //Detach(source: ISource): void{
+    //    super.Detach(source);
+    //
+    //}
 
-        if (source.Envelopes.length) {
-            source.Envelopes.forEach((e: Tone.Envelope) => {
-                e.attack = this.Params.attack;
-                e.decay = this.Params.decay;
-                e.sustain = this.Params.sustain;
-                e.release = this.Params.release;
-            });
-        } else if (source.Sources[0] instanceof Tone.Simpler) {
-            source.Sources.forEach((s: Tone.Simpler) => {
-                let e = s.envelope;
-                e.attack = this.Params.attack;
-                e.decay = this.Params.decay;
-                e.sustain = this.Params.sustain;
-                e.release = this.Params.release;
-            });
-        }
-    }
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-    Detach(source: ISource): void{
-        super.Detach(source);
-
-        if (source.Envelopes.length) {
-            source.Envelopes.forEach((e: Tone.Envelope) => {
-                e.attack = 0.02;
-                e.decay = 0.5;
-                e.sustain = 0.5;
-                e.release = 0.02;
-            });
-        } else if (source.Sources[0] instanceof Tone.Simpler) {
-            source.Sources.forEach((s: Tone.Simpler) => {
-                let e = s.envelope;
-                e.attack = 0.02;
-                e.decay = 0.5;
-                e.sustain = 0.5;
-                e.release = 0.02;
-            });
-        }
-
-    }
-
-    UpdatePreEffectConnections() {
-        super.UpdatePreEffectConnections();
-
-        const sources = this.Sources.ToArray();
-        sources.forEach((source: ISource) => {
+        chain.Sources.forEach((source: ISource) => {
 
             if (source.Envelopes.length) {
                 source.Envelopes.forEach((e: Tone.Envelope) => {
@@ -88,7 +55,7 @@ class Envelope extends PreEffect {
                 });
             } else if (source.Sources[0] instanceof Tone.Simpler) {
                 source.Sources.forEach((s: Tone.Simpler) => {
-                    let e = s.envelope;
+                    const e = s.envelope;
                     e.attack = this.Params.attack;
                     e.decay = this.Params.decay;
                     e.sustain = this.Params.sustain;
@@ -103,17 +70,25 @@ class Envelope extends PreEffect {
 
         this.Params[param] = value;
 
-        if (this.Sources.Count) {
-            for (let i = 0; i < this.Sources.Count; i++) {
-                const source = this.Sources.GetValueAt(i);
-
-                source.Envelopes.forEach((e: Tone.Envelope) => {
-                    e.attack = this.Params.attack;
-                    e.decay = this.Params.decay;
-                    e.sustain = this.Params.sustain;
-                    e.release = this.Params.release;
-                });
-            }
+        if (this.Chain && this.Chain.Sources) {
+            this.Chain.Sources.forEach((source: ISource) => {
+                if (source.Envelopes.length) {
+                    source.Envelopes.forEach((e: Tone.Envelope) => {
+                        e.attack = this.Params.attack;
+                        e.decay = this.Params.decay;
+                        e.sustain = this.Params.sustain;
+                        e.release = this.Params.release;
+                    });
+                } else if (source.Sources[0] instanceof Tone.Simpler) {
+                    source.Sources.forEach((s: Tone.Simpler) => {
+                        const e = s.envelope;
+                        e.attack = this.Params.attack;
+                        e.decay = this.Params.decay;
+                        e.sustain = this.Params.sustain;
+                        e.release = this.Params.release;
+                    });
+                }
+            });
         }
     }
 

@@ -28,7 +28,7 @@ class Noise extends Source {
         this.CreateEnvelope();
 
         this.Envelopes.forEach((e: any)=> {
-            e.connect(this.EffectsChainInput);
+            e.connect(this.AudioInput);
         });
 
         this.Sources.forEach((s: any, i:number)=> {

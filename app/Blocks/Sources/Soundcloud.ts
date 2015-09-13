@@ -35,9 +35,9 @@ class Soundcloud extends SamplerBase {
             };
         } else {
             this._LoadFromShare = true;
-            var me = this;
-            setTimeout(function() {
-                me.FirstSetup();
+
+            setTimeout(() => {
+                this.FirstSetup();
             },100);
         }
 
@@ -113,7 +113,8 @@ class Soundcloud extends SamplerBase {
         this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
-            SoundCloudAudio.Search(query, 510, (tracks) => {
+            SoundCloudAudio.Search(query, App.Config.SoundCloudMaxTrackLength, (tracks) => {
+                //FIXME: we need an error parameter for this callback. If SC timesout there are no tracks returned
                 tracks.forEach((track) => {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });
@@ -156,7 +157,7 @@ class Soundcloud extends SamplerBase {
             });
 
             this.Sources.forEach((s: Tone.Simpler) => {
-                s.connect(this.EffectsChainInput);
+                s.connect(this.AudioInput);
             });
 
             this._FirstRelease = false;
@@ -263,7 +264,7 @@ class Soundcloud extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                this.Sources[0].player.playbackRate = value;
+                this.Sources[0].player.playbackRate.value = value;
                 break;
             case "reverse":
                 value = value? true : false;
@@ -279,7 +280,9 @@ class Soundcloud extends SamplerBase {
                 break;
             case "loop":
                 value = value? true : false;
-                this.Sources[0].player.loop = value;
+                this.Sources.forEach((s: Tone.Simpler)=> {
+                    s.player.loop = value;
+                });
                 // update display of loop sliders
                 this.Params[param] = val;
                 this.RefreshOptionsPanel();

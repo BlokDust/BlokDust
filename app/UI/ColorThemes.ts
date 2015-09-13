@@ -36,19 +36,24 @@ class ColorThemes extends DisplayObject {
             )
 
             ,new ColorTheme(
-                "FJORD",
-                App.Config.PixelPaletteImagePath[1]
-            )
-
-            ,new ColorTheme(
                 "PENCIL CONTROL",
                 App.Config.PixelPaletteImagePath[2]
             )
 
             ,new ColorTheme(
+                "FJORD",
+                App.Config.PixelPaletteImagePath[1]
+            )
+
+            /*,new ColorTheme(
                 "HOYA",
                 App.Config.PixelPaletteImagePath[6],
                 { txt: 11 }
+            )*/
+            ,new ColorTheme(
+                "CONSOLE",
+                App.Config.PixelPaletteImagePath[10]
+
             )
 
             ,new ColorTheme(
@@ -57,12 +62,6 @@ class ColorThemes extends DisplayObject {
             )
 
             ,new ColorTheme(
-                "CONSOLE",
-                App.Config.PixelPaletteImagePath[10]
-
-            )
-
-            /*,new ColorTheme(
                 "KORAL",
                 App.Config.PixelPaletteImagePath[4]
             )
@@ -70,12 +69,12 @@ class ColorThemes extends DisplayObject {
             ,new ColorTheme(
                 "SEA CUCUMBER",
                 App.Config.PixelPaletteImagePath[9]
-            )*/
+            )
 
-            /*,new ColorTheme(
+            ,new ColorTheme(
                 "VINE BLUSH",
                 App.Config.PixelPaletteImagePath[5]
-            )*/
+            )
 
             ,new ColorTheme(
                 "RIKI",
@@ -91,7 +90,6 @@ class ColorThemes extends DisplayObject {
 
 
         ];
-
 
 
         this._Defaults = {

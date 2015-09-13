@@ -4,6 +4,7 @@ import ISource = require("../ISource");
 import MainScene = require("../../MainScene");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class MIDIController extends Keyboard {
 
@@ -118,12 +119,9 @@ class MIDIController extends Keyboard {
             }
 
             // ALL SOURCES TRIGGER KEYBOARD UP
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
-                    this.KeyboardUp(note, source);
-                }
-            }
+            this.Chain.Sources.forEach((source: ISource) => {
+                this.KeyboardUp(note, source);
+            });
         }
 
         else if (cmd === 9) {
@@ -132,12 +130,9 @@ class MIDIController extends Keyboard {
             this.KeysDown[note] = true;
 
             // ALL SOURCES TRIGGER KEYBOARD DOWN
-            if (this.Sources.Count) {
-                for (var i = 0; i < this.Sources.Count; i++) {
-                    var source = this.Sources.GetValueAt(i);
-                    this.KeyboardDown(note, source);
-                }
-            }
+            this.Chain.Sources.forEach((source: ISource) => {
+                this.KeyboardDown(note, source);
+            });
 
 
         }
@@ -192,15 +187,15 @@ class MIDIController extends Keyboard {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
     }
 
-    Attach(source: ISource): void {
-        if (!((source instanceof Power) || (source instanceof Microphone))) {
-            this.CreateVoices(source);
-        }
-    }
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-    Detach(source: ISource): void {
-        source.TriggerRelease('all');
-        super.Detach(source);
+        chain.Sources.forEach((source: ISource) => {
+            if (!((source instanceof Power) || (source instanceof Microphone))) {
+                this.CreateVoices(source);
+            }
+            source.TriggerRelease('all');
+        });
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {

@@ -25,7 +25,10 @@ class SamplerBase extends Source {
                 s.player.buffer = this.Sources[0].player.buffer;
             }
         });
-        return super.CreateSource();
+
+        if (this.Sources[this.Sources.length-1]){
+            return this.Sources[this.Sources.length-1];
+        }
     }
 
     GetDuration(buffer) {
@@ -52,6 +55,18 @@ class SamplerBase extends Source {
         } else {
             // Trigger the specific one
             this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+        }
+    }
+
+    TriggerAttackRelease(index: number|string = 0, duration: Tone.Time = App.Config.PulseLength) {
+        if (index === 'all'){
+            // Trigger all the envelopes
+            this.Sources.forEach((s: any)=> {
+                s.triggerAttackRelease(duration, '+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+            });
+        } else {
+            // Trigger the specific one
+            this.Sources[index].triggerAttackRelease(duration, '+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
         }
     }
 

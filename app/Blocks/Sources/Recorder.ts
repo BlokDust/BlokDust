@@ -3,7 +3,7 @@ import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
 
-class RecorderBlock extends SamplerBase {
+class Recorder extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;
@@ -26,7 +26,7 @@ class RecorderBlock extends SamplerBase {
                 loopStart: 0,
                 loopEnd: 0,
                 retrigger: false, //Don't retrigger attack if already playing
-                volume: 0,
+                volume: 9,
                 track: null,
                 trackName: '',
             };
@@ -38,7 +38,7 @@ class RecorderBlock extends SamplerBase {
 
         this.BufferSource = App.Audio.ctx.createBufferSource();
 
-        this.Recorder = new Recorder(App.Audio.Master, {
+        this.Recorder = new RecorderJS(App.Audio.Master, {
             workerPath: App.Config.RecorderWorkerPath
         });
 
@@ -47,7 +47,7 @@ class RecorderBlock extends SamplerBase {
         });
 
         this.Sources.forEach((s: Tone.Simpler) => {
-            s.connect(this.EffectsChainInput);
+            s.connect(this.AudioInput);
             s.volume.value = this.Params.volume;
         });
 
@@ -177,13 +177,16 @@ class RecorderBlock extends SamplerBase {
             s.player.loopEnd = this.Params.loopEnd;
             s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
+            s.volume.value = this.Params.volume;
 
             if (i > 0){
                 s.player.buffer = this.Sources[0].player.buffer;
             }
         });
 
-        return super.CreateSource();
+        if (this.Sources[this.Sources.length-1]){
+            return this.Sources[this.Sources.length-1];
+        }
     }
 
     UpdateOptionsForm() {
@@ -274,7 +277,7 @@ class RecorderBlock extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                this.Sources[0].player.playbackRate = value;
+                this.Sources[0].player.playbackRate.value = value;
                 break;
             case "reverse":
                 value = value? true : false;
@@ -311,4 +314,4 @@ class RecorderBlock extends SamplerBase {
 
 }
 
-export = RecorderBlock;
+export = Recorder;

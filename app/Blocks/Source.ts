@@ -1,3 +1,4 @@
+import IBlock = require("./IBlock");
 import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Block = require("./Block");
@@ -7,6 +8,7 @@ import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
 import PostEffect = require("./Effects/PostEffect");
+import AudioChain = require("../Core/Audio/Connections/AudioChain");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -15,12 +17,11 @@ import SoundcloudTrack = require("../UI/SoundcloudTrack");
 
 class Source extends Block implements ISource {
 
-    public Effects: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
+    public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
-    public EffectsChainInput: Tone.Signal;
-    public EffectsChainOutput: Tone.Signal;
+    public AudioInput: Tone.Signal;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -61,17 +62,10 @@ class Source extends Block implements ISource {
         this.ParticlePowered = false;
         this.LaserPowered = false;
 
-        this.Effects.CollectionChanged.on(this._OnEffectsChanged, this);
-
         if (!(this instanceof Power)) {
 
-            this.EffectsChainInput = new Tone.Signal();
-            this.EffectsChainOutput = new Tone.Signal();
-
-            this.EffectsChainOutput.output.gain.value = this.Settings.output.volume;
-
-            this.EffectsChainInput.connect(this.EffectsChainOutput);
-            this.EffectsChainOutput.connect(App.Audio.Master);
+            this.AudioInput = new Tone.Signal();
+            this.AudioInput.connect(App.Audio.Master);
 
         }
 
@@ -83,8 +77,8 @@ class Source extends Block implements ISource {
      * @param effect
      */
     AddEffect(effect: IEffect) {
-        this.Effects.Add(effect);
-        effect.Attach(<ISource>this);
+        this.Connections.Add(effect);
+        //effect.Attach(<ISource>this);
     }
 
     /**
@@ -92,16 +86,16 @@ class Source extends Block implements ISource {
      * @param effect
      */
     RemoveEffect(effect: IEffect) {
-        this.Effects.Remove(effect);
-        effect.Detach(<ISource>this);
+        this.Connections.Remove(effect);
+        //effect.Detach(<ISource>this);
     }
 
     /**
     * Validate that the block's effects still exist
     */
     public ValidateEffects() {
-        for (let i = 0; i < this.Effects.Count; i++){
-            let effect:IEffect = this.Effects.GetValueAt(i);
+        for (let i = 0; i < this.Connections.Count; i++){
+            let effect:IEffect = this.Connections.GetValueAt(i);
 
             if (!App.Effects.contains(effect)){
                 this.RemoveEffect(effect);
@@ -109,68 +103,39 @@ class Source extends Block implements ISource {
         }
     }
 
-    private _OnEffectsChanged() {
-        this.Refresh();
-    }
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-    public Refresh() {
-        super.Refresh();
+        // Reset Envelopes back to original setting
+        this._EnvelopeReset();
 
-        //TODO: Save processing by only connecting the blocks that need to be connected
-
-        // List of connected effect blocks
-        const effects: IEffect[] = this.Effects.ToArray();
-
-        // List of PostEffect blocks
-        const postEffects: IEffect[] = [];
-
-        // For each connected effect
-        for (let i = 0; i < effects.length; i++) {
-
-            // If this is a post effect add to postEffect list
-            if (effects[i] instanceof PostEffect) {
-            //if (effects[i].Effect) {
-                postEffects.push(effects[i]);
-            }
+        // Release all the sources envelopes
+        if (!this.IsPowered() || !this.IsPressed) {
+            this.TriggerRelease('all', true);
         }
 
-        // Reorder the post effects chain
-        this.UpdatePostEffectsChain(postEffects);
+        // Reset pitch back to original setting
+        this.ResetPitch();
     }
 
-    /**
-     * Connects all this Source's post-effect blocks in series
-     * @param effects
-     * @public
-     */
-    public UpdatePostEffectsChain(effects) {
-
-        const start = this.EffectsChainInput;
-        const end = this.EffectsChainOutput;
-
-        if (effects.length) {
-
-            start.disconnect();
-
-            start.connect(effects[0].Effect);
-            let currentUnit = effects[0].Effect;
-
-            for (let i = 1; i < effects.length; i++) {
-                const toUnit = effects[i].Effect;
-                currentUnit.disconnect();
-                currentUnit.connect(toUnit);
-                currentUnit = toUnit;
-            }
-            effects[effects.length - 1].Effect.disconnect();
-            effects[effects.length - 1].Effect.connect(end);
-            end.toMaster();
-        } else {
-            start.disconnect();
-            start.connect(end);
+    private _EnvelopeReset() {
+        if (this.Envelopes.length) {
+            this.Envelopes.forEach((e: Tone.Envelope) => {
+                e.attack = this.Settings.envelope.attack;
+                e.decay = this.Settings.envelope.decay;
+                e.sustain = this.Settings.envelope.sustain;
+                e.release = this.Settings.envelope.release;
+            });
+        } else if (this.Sources[0] instanceof Tone.Simpler) {
+            this.Sources.forEach((s: Tone.Simpler) => {
+                const e = s.envelope;
+                e.attack = this.Settings.envelope.attack;
+                e.decay = this.Settings.envelope.decay;
+                e.sustain = this.Settings.envelope.sustain;
+                e.release = this.Settings.envelope.release;
+            });
         }
-
     }
-
 
     CreateSource(){
         if (this.Sources[this.Sources.length-1]){
@@ -197,6 +162,7 @@ class Source extends Block implements ISource {
      */
     TriggerAttack(index: number|string = 0) {
 
+        //console.log('TriggerAttack: ',this);
         // Only if the source has envelopes
         if (this.Envelopes.length) {
 
@@ -238,6 +204,7 @@ class Source extends Block implements ISource {
     TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
         forceRelease = (forceRelease === true) ? forceRelease : false;
         // Only if it's not powered or force is set to true
+        //console.log('TriggerRelease: ',this);
         if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
@@ -316,23 +283,19 @@ class Source extends Block implements ISource {
      * Checks whether the block is connected to a Power
      * @returns {boolean}
      */
-    IsPowered() {
+    IsPowered(): boolean {
+        let bool: boolean = false;
         if (this.IsPressed || this.PowerConnections>0) {
-            return true;
-
-        } else if (this.Effects.Count) {
-            for (let i = 0; i < this.Effects.Count; i++) {
-                const effect: IEffect = this.Effects.GetValueAt(i);
-
+            bool = true;
+        } else if (this.Chain && this.Chain.Connections) {
+            this.Chain.Connections.forEach((block: IBlock) => {
                 //If connected to power block OR connected to a logic block that is 'on'
-                if (effect instanceof Power || effect instanceof Logic && effect.Params.logic){
-                    return true;
+                if (block instanceof Power || block instanceof Logic && block.Params.logic){
+                    bool = true;
                 }
-            }
+            });
         }
-        else {
-            return false;
-        }
+        return bool;
     }
 
     /**
@@ -357,8 +320,8 @@ class Source extends Block implements ISource {
         super.Dispose();
 
         // Delete Signal nodes
-        if (this.EffectsChainInput) this.EffectsChainInput.dispose();
-        if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
+        if (this.AudioInput) this.AudioInput.dispose();
+        //if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
 
 
         if (this.ActiveVoices.length) {
@@ -396,11 +359,11 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            this.Sources[id].player.playbackRate = pitch / App.Config.BaseNote;
+            this.Sources[id].player.playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
 
-        } else if (typeof this.Sources[id].playbackRate === 'number') {
+        } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            this.Sources[id].playbackRate = pitch / App.Config.BaseNote;
+            this.Sources[id].playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
         }
     }
 
@@ -416,11 +379,11 @@ class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            return this.Sources[id].player.playbackRate * App.Config.BaseNote;
+            return this.Sources[id].player.playbackRate.value * App.Config.BaseNote;
 
-        } else if (typeof this.Sources[id].playbackRate === 'number') {
+        } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            return this.Sources[id].playbackRate * App.Config.BaseNote;
+            return this.Sources[id].playbackRate.value * App.Config.BaseNote;
 
         } else {
             return 0;
@@ -437,10 +400,10 @@ class Source extends Block implements ISource {
                 this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
             } else if (this.Sources[0].player) {
                 // Samplers
-                this.Sources[0].player.playbackRate = this.Params.playbackRate;
-            } else if (typeof this.Sources[0].playbackRate === 'number') {
+                this.Sources[0].player.playbackRate.value = this.Params.playbackRate;
+            } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
                 // Noise
-                this.Sources[0].playbackRate = this.Params.playbackRate;
+                this.Sources[0].playbackRate.value = this.Params.playbackRate;
             }
         }
     }
@@ -470,7 +433,7 @@ class Source extends Block implements ISource {
 
 
 
-    GetWaveformFromBuffer(buffer,points,stepsPerPoint,normal) {
+    GetWaveformFromBuffer(buffer, points, stepsPerPoint, normal) {
 
         console.log(buffer);
         console.log("minutes: "+ (buffer.duration/60));
@@ -544,42 +507,8 @@ class Source extends Block implements ISource {
 
     MouseUp() {
         super.MouseUp();
-        this.TriggerRelease();
+        this.TriggerRelease('all');
     }
-
-    /*GetParam(param: string) {
-
-        var val;
-        switch (param){
-            case "frequency":
-                this.Sources.forEach((s: any)=> {
-                    val = s.frequency.value;
-                });
-                break;
-            case "detune":
-                this.Sources.forEach((s: any)=> {
-                    val = s.detune.value;
-                });
-                break;
-            case "waveform":
-                this.Sources.forEach((s: any)=> {
-                    val = s.type;
-                });
-                break;
-            case "volume":
-                this.Sources.forEach((s: any)=> {
-                    val = s.gain.value;
-                });
-                break;
-            case "playbackRate":
-                this.Sources.forEach((s: any)=> {
-                    val = s.playbackRate;
-                });
-                break;
-        }
-        return val;
-
-    }*/
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);

@@ -15,7 +15,7 @@ class WaveGen extends SamplerBase {
 
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
-    public Sources : Tone.Simpler[];
+    public Sources: Tone.Simpler[];
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
     private _BufferData: Float32Array;
@@ -223,9 +223,9 @@ class WaveGen extends SamplerBase {
             scale = scales[Math.floor(Math.random()*scales.length)];
         }
 
-        console.log("mode: "+arpMode);
+        /*console.log("mode: "+arpMode);
         console.log("range: "+range);
-        console.log("octave: "+octave);
+        console.log("octave: "+octave);*/
 
         // CREATE DATA ARRAY //
         this._BufferData = new Float32Array(sampleRate*seconds);
@@ -240,13 +240,13 @@ class WaveGen extends SamplerBase {
         if (this.Dice(8)) {
             voices = 1 + Math.round(Math.random()*20);
             harmonics = 3 + Math.round(Math.random()*6);
-            console.log("DENSE");
+            //console.log("DENSE");
         }
         if (this.Dice(8)) {
             voices = 10 + Math.round(Math.random()*10);
             harmonics = 3;
             lfo = 0;
-            console.log("DENSE2");
+            //console.log("DENSE2");
         }
 
         // VOICE LOOP //
@@ -322,7 +322,7 @@ class WaveGen extends SamplerBase {
         if (this.Params.seed.waveVoices && this._SeedLoad) {
 
             var seed = this.Params.seed;
-            console.log(this.Params.seed);
+            //console.log(this.Params.seed);
             sequenceLength = seed.sequenceLength;
             seconds = seed.seconds;
             gain = seed.gain;
@@ -349,7 +349,7 @@ class WaveGen extends SamplerBase {
             harmonics: harmonics,
             amp: amp
         };
-        console.log(this.Params.seed);
+        //console.log(this.Params.seed);
 
 
         // GENERATE BUFFER DATA //
@@ -528,7 +528,7 @@ class WaveGen extends SamplerBase {
             });
 
             this.Sources.forEach((s: Tone.Simpler) => {
-                s.connect(this.EffectsChainInput);
+                s.connect(this.AudioInput);
             });
 
             this._FirstRelease = false;
@@ -646,7 +646,7 @@ class WaveGen extends SamplerBase {
         switch(param) {
             case "playbackRate":
                 // TODO - not behaving correctly
-                this.Sources[0].player.playbackRate = value;
+                this.Sources[0].player.playbackRate.value = value;
                 break;
             case "generate":
                 this._WaveForm = [];

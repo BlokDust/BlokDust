@@ -2,7 +2,7 @@ import Effect = require("../Effect");
 import PowerEffect = require("./PowerEffect");
 import ISource = require("../ISource");
 import MainScene = require("../../MainScene");
-
+import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
 class Power extends PowerEffect {
 
@@ -13,20 +13,15 @@ class Power extends PowerEffect {
 
     }
 
-    Attach(source:ISource): void {
-        super.Attach(source);
+    UpdateConnections(chain: AudioChain) {
+        super.UpdateConnections(chain);
 
-        source.TriggerAttack();
-
-    }
-
-    Detach(source:ISource): void {
-
-        if (!source.IsPressed){
-            source.TriggerRelease('all');
-        }
-
-        super.Detach(source);
+        chain.Sources.forEach((source: ISource) => {
+            if (!source.IsPressed){
+                source.TriggerRelease('all');
+            }
+            source.TriggerAttack();
+        });
     }
 
     Draw() {
