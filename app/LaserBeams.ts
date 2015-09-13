@@ -13,6 +13,10 @@ import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import Vector = Utils.Maths.Vector;
 
+import IApp = require("./IApp");
+
+declare var App: IApp;
+
 class LaserBeams {
 
     private _Ctx: CanvasRenderingContext2D;

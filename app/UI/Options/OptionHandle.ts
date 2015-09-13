@@ -2,6 +2,10 @@
  * Created by luketwyman on 19/01/2015.
  */
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class OptionHandle {
 
     public Position: Point;

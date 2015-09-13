@@ -20,7 +20,6 @@ import Grid = require("./Grid");
 import IApp = require("./IApp");
 import IBlock = require("./Blocks/IBlock");
 import IEffect = require("./Blocks/IEffect");
-import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
 import InputManager = require("./Core/Inputs/InputManager");
 import ISource = require("./Blocks/ISource");
 import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
@@ -28,6 +27,7 @@ import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import MainScene = require("./MainScene");
 import Metrics = require("./AppMetrics");
 import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 import OperationManager = require("./Core/Operations/OperationManager");
 import Particle = require("./Particle");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
@@ -38,12 +38,11 @@ import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import SaveFile = require("./SaveFile");
 import Serializer = require("./Serializer");
+import SketchSession = Fayde.Drawing.SketchSession;
 import Source = require("./Blocks/Source");
 import Splash = require("./Splash");
 import TypingManager = require("./Core/Inputs/TypingManager");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import SketchSession = Fayde.Drawing.SketchSession;
 
 class App implements IApp{
 
@@ -90,12 +89,12 @@ class App implements IApp{
     public SubCanvas: HTMLCanvasElement[];
 
     // todo: move to BlockStore
-    get Sources(): IBlock[] {
+    get Sources(): ISource[] {
         return this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
     // todo: move to BlockStore
-    get Effects(): IBlock[] {
+    get Effects(): IEffect[] {
         return this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
@@ -228,7 +227,7 @@ class App implements IApp{
     }
 
     // PROCEED WHEN ALL SOCKETS LOADED //
-    LoadReady() {
+    LoadReady(): void {
         if (this._FontsLoaded === 3 && this.Color.Loaded) {
             this.LoadComposition();
             this.Scene = 1;
@@ -358,7 +357,7 @@ class App implements IApp{
     }
 
 
-    Message(message?: string, options?: any) {
+    Message(message?: string, options?: any): void {
         this.MainScene.MessagePanel.NewMessage(message, options);
     }
 
@@ -375,8 +374,6 @@ class App implements IApp{
         this.SubCanvas[i] = document.createElement("canvas");
         document.body.appendChild(this.SubCanvas[i]);
     }
-
-
 
     //todo: typing as CanvasRenderingContext2D causes "Property 'fillStyle' is missing in type 'WebGLRenderingContext'"
     // upgrade to newer compiler (1.5) which has no error - requires gulp as grunt-typescript seemingly no longer supported
@@ -411,6 +408,10 @@ class App implements IApp{
 
     }
 
+}
+
+interface Window{
+    App: IApp;
 }
 
 export = App;

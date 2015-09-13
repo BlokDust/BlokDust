@@ -5,6 +5,10 @@ import Effect = require("../Effect");
 import Block = require("../Block");
 import Particle = require("../../Particle");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class ToneSource extends Source {
 
     public Sources: Tone.Oscillator[];

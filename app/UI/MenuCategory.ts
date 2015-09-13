@@ -6,6 +6,10 @@ import Grid = require("./../Grid");
 import Header = require("./Header");
 import MenuItem = require("./MenuItem");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class MenuCategory {
 
     public Position: Point;

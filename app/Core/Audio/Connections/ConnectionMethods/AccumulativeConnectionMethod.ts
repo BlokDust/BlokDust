@@ -9,6 +9,10 @@ import PostEffect = require("../../../../Blocks/Effects/PostEffect");
 import PreEffect = require("../../../../Blocks/Effects/PreEffect");
 import AudioChain = require("../AudioChain");
 
+import IApp = require("../../../../IApp");
+
+declare var App: IApp;
+
 class AccumulativeConnectionMethod extends ConnectionManager {
 
     constructor(){

@@ -3,6 +3,10 @@
  */
 import DisplayObject = require("../DisplayObject");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class StageDragger  extends DisplayObject {
 
     private _DragStart: Point;

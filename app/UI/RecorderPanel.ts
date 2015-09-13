@@ -8,6 +8,10 @@ import IBlock = require("../Blocks/IBlock");
 import DisplayObject = require("../DisplayObject");
 import Recorder = require("../Blocks/Sources/Recorder");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class RecorderPanel extends DisplayObject {
 
     private _Blocks: Recorder[];

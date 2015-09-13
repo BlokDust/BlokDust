@@ -3,6 +3,10 @@ import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
 import PitchShifter = require("../Post/PitchShifter");
 
+import IApp = require("../../../IApp");
+
+declare var App: IApp;
+
 class Pitch extends PostEffect {
 
     public Effect: PitchShifter;

@@ -4,6 +4,10 @@ import KeyUpEventArgs = require("./KeyUpEventArgs");
 import Commands = require("../../Commands");
 import CommandManager = require("../Commands/CommandManager");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class CommandsInputManager extends InputManager {
 
     private _CommandManager;

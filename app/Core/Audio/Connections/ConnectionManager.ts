@@ -8,6 +8,10 @@ import PostEffect = require("../../../Blocks/Effects/PostEffect");
 import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
 import PreEffect = require("../../../Blocks/Effects/PreEffect");
 
+import IApp = require("../../../IApp");
+
+declare var App: IApp;
+
 class ConnectionManager {
 
     protected _Debug: boolean = false;

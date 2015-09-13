@@ -8,6 +8,10 @@ import OptionsPanel = require("./../OptionsPanel");
 import OptionSubHandle = require("./OptionSubHandle");
 import Size = minerva.Size;
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class Parametric extends Option{
 
     public Handles: OptionHandle[];

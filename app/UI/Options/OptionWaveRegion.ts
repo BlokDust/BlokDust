@@ -8,6 +8,10 @@ import Size = minerva.Size;
 import ParametersPanel = require("./../OptionsPanel");
 import OptionHandle = require("./OptionHandle");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class WaveRegion extends WaveForm{
 
 

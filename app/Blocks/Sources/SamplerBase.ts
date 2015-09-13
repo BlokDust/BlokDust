@@ -2,6 +2,10 @@ import Grid = require("../../Grid");
 import Source = require("../Source");
 import MainScene = require("../../MainScene");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class SamplerBase extends Source {
 
 

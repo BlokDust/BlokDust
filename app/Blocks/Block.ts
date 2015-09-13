@@ -9,6 +9,10 @@ import AudioChain = require("../Core/Audio/Connections/AudioChain");
 import Size = minerva.Size;
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class Block extends DisplayObject implements IBlock {
 
     public Id: number;

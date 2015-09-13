@@ -15,6 +15,10 @@ import Logic = require("./Power/Logic/Logic");
 import Voice = require("./Interaction/VoiceObject");
 import SoundcloudTrack = require("../UI/SoundcloudTrack");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class Source extends Block implements ISource {
 
     public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();

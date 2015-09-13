@@ -1,5 +1,9 @@
 import SoundCloudAudioType = require('./SoundCloudAudioType');
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class SoundCloudAudio {
 
     public SC: any; //TODO - we're defining this in 3 different places and it's not working properly, unable to check if undefined

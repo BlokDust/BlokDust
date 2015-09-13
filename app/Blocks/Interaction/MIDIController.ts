@@ -6,6 +6,10 @@ import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;

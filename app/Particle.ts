@@ -6,6 +6,10 @@ import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
 import Void = require("./Blocks/Power/Void");
 import Vector = Utils.Maths.Vector;
 
+import IApp = require("./IApp");
+
+declare var App: IApp;
+
 class Particle implements IPooledObject {
 
     public Disposed: boolean = false;

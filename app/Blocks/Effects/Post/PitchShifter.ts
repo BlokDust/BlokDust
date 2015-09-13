@@ -3,6 +3,10 @@
  * https://github.com/cwilso/Audio-Input-Effects/blob/master/js/jungle.js
  */
 
+import IApp = require("../../../IApp");
+
+declare var App: IApp;
+
 class PitchShifter {
 
     private previousPitch: number = -1;

@@ -5,6 +5,10 @@
 import ColorTheme = require("./ColorTheme");
 import DisplayObject = require("../DisplayObject");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class ColorThemes extends DisplayObject {
 
     public Themes: ColorTheme[];

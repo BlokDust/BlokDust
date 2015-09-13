@@ -4,6 +4,10 @@ import Particle = require("../../Particle");
 import MainScene = require("../../MainScene");
 import Vector = Utils.Maths.Vector;
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;

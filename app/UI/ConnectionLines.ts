@@ -6,6 +6,10 @@ import IEffect = require("../Blocks/IEffect");
 import ISource = require("../Blocks/ISource");
 import IBlock = require("../Blocks/IBlock");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class ConnectionLines {
 
     private _Ctx: CanvasRenderingContext2D;

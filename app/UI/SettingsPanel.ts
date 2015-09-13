@@ -9,6 +9,10 @@ import MainScene = require("./../MainScene");
 import MenuCategory = require("./MenuCategory");
 import ThemeSelector = require("./ColorThemeSelector");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class SettingsPanel extends DisplayObject{
 
     public Open: boolean;

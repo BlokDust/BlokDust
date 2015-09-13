@@ -2,6 +2,10 @@ import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
 
+import IApp = require("../../../IApp");
+
+declare var App: IApp;
+
 class Gain extends PostEffect {
 
     public Effect: GainNode;

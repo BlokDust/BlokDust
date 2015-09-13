@@ -37,6 +37,10 @@ import SketchSession = Fayde.Drawing.SketchSession;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
+import IApp = require("./IApp");
+
+declare var App: IApp;
+
 class MainScene extends Fayde.Drawing.SketchContext{
 
     private _SelectedBlock: IBlock;
@@ -750,7 +754,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
     }
 
     _ValidateBlocks() {
-        // todo: move this to flux-style blocksstore
+        // todo: move this to redux store
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();

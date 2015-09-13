@@ -3,6 +3,10 @@ import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class Recorder extends SamplerBase {
 
     public Sources : Tone.Simpler[];

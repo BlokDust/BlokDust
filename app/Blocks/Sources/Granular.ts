@@ -6,6 +6,10 @@ import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class Granular extends Source {
 
     public Sources: Tone.Signal[];

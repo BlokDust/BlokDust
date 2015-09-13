@@ -3,6 +3,10 @@ import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
 import MoveBlockOperation = require("../Operations/MoveBlockOperation");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class MoveBlockCommandHandler implements ICommandHandler {
 
     constructor() {

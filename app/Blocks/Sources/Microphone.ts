@@ -4,6 +4,10 @@ import Source = require("../Source");
 import Particle = require("../../Particle");
 import AudioChain = require("../../Core/Audio/Connections/AudioChain");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class Microphone extends Source {
 
     public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone

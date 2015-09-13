@@ -7,6 +7,10 @@ import Option = require("./Option");
 import Size = minerva.Size;
 import ParametersPanel = require("./../OptionsPanel");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class OptionButton {
 
     public Position: Point;

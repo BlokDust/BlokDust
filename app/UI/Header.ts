@@ -10,6 +10,10 @@ import MenuCategory = require("./MenuCategory");
 import MenuItem = require("./MenuItem");
 import Size = minerva.Size;
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class Header extends DisplayObject{
 
     private _Units: number;

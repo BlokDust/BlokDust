@@ -6,6 +6,10 @@ import Option = require("./Option");
 import ParametersPanel = require("./../OptionsPanel");
 import Size = minerva.Size;
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class ButtonArray extends Option{
 
 

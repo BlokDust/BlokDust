@@ -3,6 +3,10 @@ import IBlock = require("../Blocks/IBlock");
 import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
 import AddItemToArrayOperation = require("../Core/Operations/AddItemToArrayOperation");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class CreateBlockCommandHandler implements ICommandHandler {
 
     constructor() {
