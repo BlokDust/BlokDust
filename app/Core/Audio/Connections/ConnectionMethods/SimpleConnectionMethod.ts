@@ -2,11 +2,12 @@ import ConnectionManager = require("../ConnectionManager");
 import IEffect = require("../../../../Blocks/IEffect");
 import ISource = require("../../../../Blocks/ISource");
 import IBlock = require("../../../../Blocks/IBlock");
+import IAudioChain = require("../IAudioChain");
 import AudioChain = require("../AudioChain");
 
 class SimpleConnectionMethod extends ConnectionManager {
 
-    constructor(){
+    constructor() {
         super();
     }
 
@@ -15,11 +16,11 @@ class SimpleConnectionMethod extends ConnectionManager {
      * @returns {AudioChain[]}
      * @constructor
      */
-    public CreateChains(): AudioChain[] {
+    public CreateChains(): IAudioChain[] {
         // for each source
         App.Sources.forEach((source:ISource) => {
             //create audioChain, add to audioChains[]
-            let chain:AudioChain = new AudioChain();
+            let chain: IAudioChain = new AudioChain();
             this.Chains.push(chain);
 
             //Get the source's connections

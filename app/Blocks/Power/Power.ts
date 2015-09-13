@@ -2,7 +2,7 @@ import Effect = require("../Effect");
 import PowerEffect = require("./PowerEffect");
 import ISource = require("../ISource");
 import MainScene = require("../../MainScene");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
 
 class Power extends PowerEffect {
 
@@ -13,7 +13,7 @@ class Power extends PowerEffect {
 
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         chain.Sources.forEach((source: ISource) => {

@@ -1,4 +1,4 @@
-import AudioChain = require("./AudioChain");
+import IAudioChain = require("./IAudioChain");
 import IEffect = require("../../../Blocks/IEffect");
 import Source = require("../../../Blocks/Source");
 import ISource = require("../../../Blocks/ISource");
@@ -11,7 +11,7 @@ import PreEffect = require("../../../Blocks/Effects/PreEffect");
 class ConnectionManager {
 
     protected _Debug: boolean = false;
-    public Chains: AudioChain[] = [];
+    public Chains: IAudioChain[] = [];
 
     private _MuteBufferTime: number = 35;
     private connectionTimeout;
@@ -29,7 +29,7 @@ class ConnectionManager {
 
         this._Disconnect(() => {
             const chains = this.CreateChains();
-            this._SortChainedBlocks(chains);
+            //this._SortChainedBlocks(chains);
             this._Connect(chains);
         });
     }
@@ -62,11 +62,11 @@ class ConnectionManager {
         }, this._MuteBufferTime);
     }
 
-    private _Connect(chains: AudioChain[]) {
+    private _Connect(chains: IAudioChain[]) {
         if (this._Debug) console.log(chains);
 
         // loop through chains
-        chains.forEach((chain: AudioChain) => {
+        chains.forEach((chain: IAudioChain) => {
 
             // Certain blocks need an individual update method for exclusive functionality.
             // Source resets, PreEffect update values, Powers triggering sources
@@ -79,10 +79,10 @@ class ConnectionManager {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
             });
-            chain.Others.forEach((block: IBlock) => {
-                block.UpdateConnections(chain);
-                block.Chain = chain;
-            });
+            //chain.Others.forEach((block: IBlock) => {
+            //    block.UpdateConnections(chain);
+            //    block.Chain = chain;
+            //});
 
             // If there are sources
             if (chain.Sources.length) {
@@ -91,21 +91,22 @@ class ConnectionManager {
 
                 // connect all effects in series and then to master
 
-                if (chain.PostEffects.length) {
-                    let currentUnit = chain.PostEffects[0].Effect;
-                    for (let i = 1; i <  chain.PostEffects.length; i++) {
-                        const toUnit =  chain.PostEffects[i].Effect;
+                var p = chain.PostEffects;
+                if (p.length) {
+                    let currentUnit = p[0].Effect;
+                    for (let i = 1; i <  p.length; i++) {
+                        const toUnit =  p[i].Effect;
                         currentUnit.connect(toUnit);
                         currentUnit = toUnit;
                     }
 
                     // Connect all sources to the first effect
                     chain.Sources.forEach((source: ISource) => {
-                        source.AudioInput.connect(chain.PostEffects[0].Effect);
+                        source.AudioInput.connect(p[0].Effect);
                     });
 
                     // Connect last effect to master
-                    chain.PostEffects[chain.PostEffects.length - 1].Effect.toMaster();
+                    chain.PostEffects[p.length - 1].Effect.toMaster();
 
                 } else {
                     // No effects so connect all sources to Master
@@ -128,30 +129,30 @@ class ConnectionManager {
      * Base CreateChains method.
      * @returns {AudioChain[]}
      */
-    public CreateChains(): AudioChain[] {
+    public CreateChains(): IAudioChain[] {
         return this.Chains;
     }
 
-    private _SortChainedBlocks(chains: AudioChain[]){
-        // Now sort connections into lists of Sources, PostEffects and PreEffects
-        chains.forEach((chain: AudioChain) => {
-            chain.Connections.forEach((block: IBlock) => {
-                if (block instanceof Source) {
-                    chain.Sources.push(<ISource>block);
-                } else if (block instanceof PostEffect){
-                    chain.PostEffects.push(<IEffect>block);
-                } else if (block instanceof PreEffect) {
-                    chain.PreEffects.push(<PreEffect>block);
-                } else {
-                    chain.Others.push(block);
-                }
-            });
-        });
-    }
+    //private _SortChainedBlocks(chains: AudioChain[]){
+    //    // Now sort connections into lists of Sources, PostEffects and PreEffects
+    //    chains.forEach((chain: AudioChain) => {
+    //        chain.Connections.forEach((block: IBlock) => {
+    //            if (block instanceof Source) {
+    //                chain.Sources.push(<ISource>block);
+    //            } else if (block instanceof PostEffect){
+    //                chain.PostEffects.push(<IEffect>block);
+    //            } else if (block instanceof PreEffect) {
+    //                chain.PreEffects.push(<PreEffect>block);
+    //            } else {
+    //                chain.Others.push(block);
+    //            }
+    //        });
+    //    });
+    //}
 
-    public GetChainFromBlock(block:IBlock): AudioChain | boolean {
+    public GetChainFromBlock(block:IBlock): IAudioChain | boolean {
         let _chain: any;
-        this.Chains.forEach((chain: AudioChain) => {
+        this.Chains.forEach((chain: IAudioChain) => {
             // if block is in chain return the chain
             if (chain.Connections.indexOf(block) !== -1) {
                 _chain = chain;
@@ -161,9 +162,9 @@ class ConnectionManager {
         return _chain;
     }
 
-    public GetChainFromPreEffect(block:IPreEffect): AudioChain | boolean {
+    public GetChainFromPreEffect(block:IPreEffect): IAudioChain | boolean {
         var _chain: any;
-        this.Chains.forEach((chain: AudioChain) => {
+        this.Chains.forEach((chain: IAudioChain) => {
             // if block is in chain return the chain
             if (chain.PreEffects.indexOf(block) !== -1) {
                 _chain = chain;

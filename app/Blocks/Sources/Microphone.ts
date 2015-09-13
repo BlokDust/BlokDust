@@ -2,7 +2,7 @@ import Grid = require("../../Grid");
 import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import Particle = require("../../Particle");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
 
 class Microphone extends Source {
 
@@ -63,7 +63,7 @@ class Microphone extends Source {
         return this.Sources[this.Sources.length-1];
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
 
         // Release the microphones envelope

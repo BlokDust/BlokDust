@@ -4,7 +4,7 @@ import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import ParticleEmitter = require("./../ParticleEmitter");
 import Logic = require("./Logic");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
 
 class Momentary extends Logic {
 
@@ -15,7 +15,7 @@ class Momentary extends Logic {
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         chain.Sources.forEach((source: ISource) => {

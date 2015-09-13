@@ -124,7 +124,15 @@ declare module WebMidi{
         port: MIDIPort;
     }
 
-    export interface MIDIConnectionEventInit{
+    export interface MIDIConnectionEventInit {
         port: MIDIPort;
+    }
+
+    export interface MIDIMessageArgs {
+        cmd: number,
+        channel: number,
+        type: number,
+        note: string,
+        velocity: number,
     }
 }

@@ -1,8 +1,10 @@
+import MIDIMessageArgs = require('./MIDIMessageArgs');
+
 class MIDIManager {
 
     public HasMIDICapability: boolean = false;
     public MIDI: WebMidi.MIDIAccess;
-    public MIDIMessage = new nullstone.Event<WebMidi.MIDIMessageEvent>();
+    public MIDIMessage = new nullstone.Event<MIDIMessageArgs>();
 
     public Init() {
         // request MIDI access
@@ -22,6 +24,10 @@ class MIDIManager {
         }
     }
 
+    /**
+     * On MIDI ready initialize
+     * @param midi {WebMidi.MIDIAccess}
+     */
     private _OnMIDIInit(midi: WebMidi.MIDIAccess) {
         this.MIDI = midi;
         console.log('MIDI success', this.MIDI);
@@ -29,6 +35,9 @@ class MIDIManager {
         this.MIDI.onstatechange = this.HookUpMIDIInput.bind(this);
     }
 
+    /**
+     * Loops through all connected MIDI inputs, binds onMidiMessage and displays the device info
+     */
     public HookUpMIDIInput() {
         var inputs = this.MIDI.inputs.values();
         for ( var input = inputs.next(); input && !input.done; input = inputs.next()) {
@@ -55,13 +64,21 @@ class MIDIManager {
      */
     private _OnMIDIMessage(e: WebMidi.MIDIMessageEvent) {
 
-        this.MIDIMessage.raise(this, e);
-
         var cmd = e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
             channel = e.data[0] & 0xf,
             type = e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
             note = App.Audio.Tone.midiToNote(e.data[1]),
             velocity = e.data[2];
+
+        var MessageArgs: WebMidi.MIDIMessageArgs = {
+            cmd: e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
+            channel: e.data[0] & 0xf,
+            type: e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
+            note: App.Audio.Tone.midiToNote(e.data[1]),
+            velocity: e.data[2],
+        };
+
+        this.MIDIMessage.raise(this, new MIDIMessageArgs(MessageArgs));
 
         console.log(
             'cmd:', cmd,
@@ -90,7 +107,5 @@ class MIDIManager {
         }
         return i;
     }
-
-
 }
 export = MIDIManager;

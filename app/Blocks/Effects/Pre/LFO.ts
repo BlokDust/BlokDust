@@ -2,7 +2,7 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
 
 class LFO extends PreEffect {
 
@@ -50,7 +50,7 @@ class LFO extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         this.OscLFO.disconnect();

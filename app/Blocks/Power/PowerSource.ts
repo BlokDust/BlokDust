@@ -1,5 +1,5 @@
 import Source = require("../Source");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
 
 class PowerSource extends Source {
 
@@ -9,7 +9,7 @@ class PowerSource extends Source {
         super.Init(sketch);
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
     }
 

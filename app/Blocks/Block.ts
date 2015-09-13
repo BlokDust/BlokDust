@@ -5,6 +5,7 @@ import DisplayObject = require("../DisplayObject");
 import MainScene = require("../MainScene");
 import ParametersPanel = require("../UI/OptionsPanel");
 import PreEffect = require("./Effects/PreEffect");
+import IAudioChain = require("../Core/Audio/Connections/IAudioChain");
 import AudioChain = require("../Core/Audio/Connections/AudioChain");
 import Size = minerva.Size;
 import ObservableCollection = Fayde.Collections.ObservableCollection;
@@ -20,8 +21,7 @@ class Block extends DisplayObject implements IBlock {
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     public Connections: ObservableCollection<IBlock> = new ObservableCollection<IBlock>();
-    public Chain: AudioChain = new AudioChain();
-
+    public Chain: IAudioChain;
     public Outline: Point[] = [];
     public ZIndex;
     public OptionsForm;
@@ -175,7 +175,7 @@ class Block extends DisplayObject implements IBlock {
     //  CONNECTIONS
     //-------------------------------------------------------------------------------------------
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
     }
 

@@ -1,7 +1,7 @@
 import IDisplayObject = require("../IDisplayObject");
 import Particle = require("../Particle");
 import Grid = require("../Grid");
-import AudioChain = require("../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../Core/Audio/Connections/IAudioChain");
 
 interface IBlock extends IDisplayObject{
     Id: number;
@@ -11,7 +11,7 @@ interface IBlock extends IDisplayObject{
     IsPressed: boolean;
     IsSelected: boolean;
     IsChained: boolean;
-    Chain: AudioChain;
+    Chain: IAudioChain;
     Position: Point;
     LastPosition: Point;
     OptionsForm: any;
@@ -27,7 +27,7 @@ interface IBlock extends IDisplayObject{
     Dispose(): void;
     Stop(): void;
     HitTest(point: Point): boolean;
-    UpdateConnections(chain: AudioChain)
+    UpdateConnections(chain: IAudioChain)
     DistanceFrom(point: Point): number;
     UpdateOptionsForm(): void;
     SetParam(param: string, value: number): void;

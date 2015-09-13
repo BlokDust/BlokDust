@@ -3,7 +3,7 @@ import ISource = require("../../ISource");
 import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import Logic = require("./Logic");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
 
 class Toggle extends Logic {
 
@@ -14,7 +14,7 @@ class Toggle extends Logic {
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         chain.Sources.forEach((source: ISource) => {

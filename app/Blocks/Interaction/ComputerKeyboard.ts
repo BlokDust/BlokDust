@@ -62,24 +62,29 @@ class ComputerKeyboard extends Keyboard {
             this.KeysDown = e.KeysDown;
 
             // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
-            this.Chain.Sources.forEach((source: ISource) => {
-                this.KeyboardDown(e.KeyDown, source);
-            });
+            if (this.Chain){ //TODO: should create empty chain for all blocks
+                this.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardDown(e.KeyDown, source);
+                });
+            }
+
         } else {
             this._ExecuteKeyboardCommand(e.KeyDown, this.Chain.Sources);
         }
     }
 
     KeyUpCallback(e: any){
+        if (this.Chain){ //TODO: should create empty chain for all blocks
 
-        // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        this.Chain.Sources.forEach((source: ISource) => {
-            // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
-                this.KeyboardUp(e.KeyUp, source);
-            }
-        });
+            // FOR ALL SOURCES TRIGGER KEYBOARD UP
+            this.Chain.Sources.forEach((source: ISource) => {
+                // If its an octave shift no need to call KeyboardUp
+                if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
+                    this.KeyboardUp(e.KeyUp, source);
+                }
+            });
 
+        }
         this.KeysDown = e.KeysDown;
     }
 

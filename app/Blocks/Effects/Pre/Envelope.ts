@@ -2,7 +2,7 @@ import PreEffect = require("../PreEffect");
 import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
 
 class Envelope extends PreEffect {
 
@@ -41,7 +41,7 @@ class Envelope extends PreEffect {
     //
     //}
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         chain.Sources.forEach((source: ISource) => {

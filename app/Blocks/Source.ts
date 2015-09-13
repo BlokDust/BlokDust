@@ -7,8 +7,7 @@ import MainScene = require("../MainScene");
 import Particle = require("../Particle");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import Soundcloud = require("./Sources/Soundcloud");
-import PostEffect = require("./Effects/PostEffect");
-import AudioChain = require("../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../Core/Audio/Connections/IAudioChain");
 import Power = require("./Power/Power");
 import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
@@ -103,7 +102,7 @@ class Source extends Block implements ISource {
         }
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         // Reset Envelopes back to original setting

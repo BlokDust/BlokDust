@@ -1,7 +1,7 @@
 import PreEffect = require("../Effects/PreEffect");
 import ISource = require("../ISource");
 import Grid = require("../../Grid");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import Voice = require("./VoiceObject");
@@ -25,7 +25,7 @@ class Keyboard extends PreEffect {
         super.Draw();
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         chain.Sources.forEach((source: ISource) => {

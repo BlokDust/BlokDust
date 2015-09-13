@@ -1,5 +1,6 @@
 import ConnectionManager = require("../ConnectionManager");
 import IBlock = require("../../../../Blocks/IBlock");
+import IAudioChain = require("../IAudioChain");
 import AudioChain = require("../AudioChain");
 
 class AccumulativeConnectionMethod extends ConnectionManager {
@@ -14,13 +15,13 @@ class AccumulativeConnectionMethod extends ConnectionManager {
      * connected after in series.
      * @returns {AudioChain[]}
      */
-    public CreateChains(): AudioChain[] {
+    public CreateChains(): IAudioChain[] {
         // for each block
         App.Blocks.forEach((block:IBlock) => {
             // if block isn't chained
             if (!block.IsChained) {
                 //create audioChain, add to audioChains[]
-                let chain:AudioChain = new AudioChain();
+                let chain: IAudioChain = new AudioChain();
                 this.Chains.push(chain);
                 this._ParseConnections(chain, block)
             }
@@ -29,7 +30,7 @@ class AccumulativeConnectionMethod extends ConnectionManager {
         return this.Chains;
     }
 
-    private _ParseConnections(chain: AudioChain, parentBlock: IBlock){
+    private _ParseConnections(chain: IAudioChain, parentBlock: IBlock){
 
         // if parentBlock isn't already in a Chain
         if (chain.Connections.indexOf(parentBlock) === -1){
@@ -42,9 +43,7 @@ class AccumulativeConnectionMethod extends ConnectionManager {
             parentConnections.forEach((childBlock) => {
                 this._ParseConnections(chain, childBlock);
             });
-
         }
-
     }
 }
 

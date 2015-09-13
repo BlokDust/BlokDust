@@ -1,4 +1,3 @@
-
 class KeyDownEventArgs implements nullstone.IEventArgs {
 
     KeyDown: string;
