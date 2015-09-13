@@ -358,7 +358,9 @@ class App implements IApp{
 
 
     Message(message?: string, options?: any) {
-        this.MainScene.MessagePanel.NewMessage(message, options);
+        if (this.MainScene) {
+            this.MainScene.MessagePanel.NewMessage(message, options);
+        }
     }
 
     CreateCanvas() {

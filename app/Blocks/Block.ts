@@ -17,10 +17,10 @@ class Block extends DisplayObject implements IBlock {
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
     public IsChained: boolean = false;
-    public Chain: AudioChain;
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     public Connections: ObservableCollection<IBlock> = new ObservableCollection<IBlock>();
+    public Chain: AudioChain = new AudioChain();
 
     public Outline: Point[] = [];
     public ZIndex;

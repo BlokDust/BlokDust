@@ -1,5 +1,6 @@
 import AudioNodeConnectionManager = require("./AudioNodeConnectionManager");
 import AudioFileManager = require("./AudioFileManager");
+import MIDIManager = require("./MIDIManager");
 import ConnectionMethodType = require("./Connections/ConnectionMethodType");
 import ConnectionManager = require("./Connections/ConnectionManager");
 import SimpleConnectionMethod = require("./Connections/ConnectionMethods/SimpleConnectionMethod");
@@ -17,6 +18,7 @@ class Audio {
 
     public AudioNodeConnectionManager: AudioNodeConnectionManager;
     public AudioFileManager: AudioFileManager;
+    public MIDIManager: MIDIManager;
     public ConnectionMethodType: ConnectionMethodType;
     public ConnectionManager: ConnectionManager;
 
@@ -58,6 +60,10 @@ class Audio {
 
         // Audio File manager
         this.AudioFileManager = new AudioFileManager();
+
+        // MIDI Manager
+        this.MIDIManager = new MIDIManager();
+        this.MIDIManager.Init();
 
     }
 
