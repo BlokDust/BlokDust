@@ -1,46 +1,47 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
-import Config = require("./Config");
-import Metrics = require("./AppMetrics");
-import OperationManager = require("./Core/Operations/OperationManager");
-import ResourceManager = require("./Core/Resources/ResourceManager");
-import CommandManager = require("./Core/Commands/CommandManager");
-import Audio = require("./Core/Audio/Audio");
-import InputManager = require("./Core/Inputs/InputManager");
-import TypingManager = require("./Core/Inputs/TypingManager");
-import DragFileInputManager = require("./Core/Inputs/DragFileInputManager");
-import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
-import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
-import PointerInputManager = require("./Core/Inputs/PointerInputManager");
-import IEffect = require("./Blocks/IEffect");
-import ISource = require("./Blocks/ISource");
-import IBlock = require("./Blocks/IBlock");
-import DisplayObjectCollection = require("./DisplayObjectCollection");
-import Particle = require("./Particle");
-import ColorThemes = require("./UI/ColorThemes");
 import AnimationsLayer = require("./UI/AnimationsLayer");
-import Serializer = require("./Serializer");
-import Grid = require("./Grid");
-import MainScene = require("./MainScene");
-import Splash = require("./Splash");
-import Commands = require("./Commands");
+import Audio = require("./Core/Audio/Audio");
+import ColorThemes = require("./UI/ColorThemes");
 import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
+import CommandManager = require("./Core/Commands/CommandManager");
+import Commands = require("./Commands");
+import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
+import Config = require("./Config");
 import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
 import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
-import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
-import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
-import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
-import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
-import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
-import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
-import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
 import DisplayList = require("./DisplayList");
-import Source = require("./Blocks/Source");
+import DisplayObjectCollection = require("./DisplayObjectCollection");
+import DragFileInputManager = require("./Core/Inputs/DragFileInputManager");
 import Effect = require("./Blocks/Effect");
-import IApp = require("./IApp");
-import SaveFile = require("./SaveFile");
 import FocusManager = require("./Core/Inputs/FocusManager");
 import FocusManagerEventArgs = require("./Core/Inputs/FocusManagerEventArgs");
+import GA = require("./GA");
+import Grid = require("./Grid");
+import IApp = require("./IApp");
+import IBlock = require("./Blocks/IBlock");
+import IEffect = require("./Blocks/IEffect");
+import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
+import InputManager = require("./Core/Inputs/InputManager");
+import ISource = require("./Blocks/ISource");
+import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
+import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
+import MainScene = require("./MainScene");
+import Metrics = require("./AppMetrics");
+import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
+import OperationManager = require("./Core/Operations/OperationManager");
+import Particle = require("./Particle");
+import PointerInputManager = require("./Core/Inputs/PointerInputManager");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
+import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
+import ResourceManager = require("./Core/Resources/ResourceManager");
+import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
+import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
+import SaveFile = require("./SaveFile");
+import Serializer = require("./Serializer");
+import Source = require("./Blocks/Source");
+import Splash = require("./Splash");
+import TypingManager = require("./Core/Inputs/TypingManager");
+import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 import SketchSession = Fayde.Drawing.SketchSession;
 
@@ -372,7 +373,13 @@ class App implements IApp{
         }
     }
 
-    TrackVariable(slot: number, name: string, value: string, scope: number): void{
+    /**
+     * @param {number} slot - 1-5 (5 slots per scope)
+     * @param {string} name - the name for the custom variable
+     * @param {number} value - the value of the custom variable
+     * @param {string} scope - visitor, session, page
+     */
+    TrackVariable(slot: number, name: string, value: string, scope: GA.Scope): void{
         window.trackVariable(slot, name, value, scope);
     }
 
