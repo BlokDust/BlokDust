@@ -39,6 +39,9 @@ class Block extends DisplayObject implements IBlock {
         super.Init(sketch);
 
         this.Update();
+
+        //Give every block an empty chain. TODO: probably only need this for powers and preeffects
+        this.Chain = new AudioChain();
     }
 
 

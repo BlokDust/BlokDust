@@ -5,6 +5,7 @@ import ISource = require("../../../Blocks/ISource");
 import IBlock = require("../../../Blocks/IBlock");
 import PowerEffect = require("../../../Blocks/Power/PowerEffect");
 import PostEffect = require("../../../Blocks/Effects/PostEffect");
+import IPostEffect = require("../../../Blocks/Effects/IPostEffect");
 import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
 import PreEffect = require("../../../Blocks/Effects/PreEffect");
 
@@ -29,7 +30,7 @@ class ConnectionManager {
 
         this._Disconnect(() => {
             const chains = this.CreateChains();
-            //this._SortChainedBlocks(chains);
+            this._SortChainedBlocks(chains);
             this._Connect(chains);
         });
     }
@@ -133,22 +134,22 @@ class ConnectionManager {
         return this.Chains;
     }
 
-    //private _SortChainedBlocks(chains: AudioChain[]){
-    //    // Now sort connections into lists of Sources, PostEffects and PreEffects
-    //    chains.forEach((chain: AudioChain) => {
-    //        chain.Connections.forEach((block: IBlock) => {
-    //            if (block instanceof Source) {
-    //                chain.Sources.push(<ISource>block);
-    //            } else if (block instanceof PostEffect){
-    //                chain.PostEffects.push(<IEffect>block);
-    //            } else if (block instanceof PreEffect) {
-    //                chain.PreEffects.push(<PreEffect>block);
-    //            } else {
-    //                chain.Others.push(block);
-    //            }
-    //        });
-    //    });
-    //}
+    private _SortChainedBlocks(chains: IAudioChain[]){
+        // Now sort connections into lists of Sources, PostEffects and PreEffects
+        chains.forEach((chain: IAudioChain) => {
+            chain.Connections.forEach((block: IBlock) => {
+                if (block instanceof Source) {
+                    chain.Sources.push(<ISource>block);
+                } else if (block instanceof PostEffect){
+                    chain.PostEffects.push(<IPostEffect>block);
+                } else if (block instanceof PreEffect) {
+                    chain.PreEffects.push(<IPreEffect>block);
+                } else {
+                    chain.Others.push(block);
+                }
+            });
+        });
+    }
 
     public GetChainFromBlock(block:IBlock): IAudioChain | boolean {
         let _chain: any;

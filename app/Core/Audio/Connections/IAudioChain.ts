@@ -1,12 +1,14 @@
 import IBlock = require("../../../Blocks/IBlock");
-import IEffect = require("../../../Blocks/IEffect");
+import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
+import IPostEffect = require("../../../Blocks/Effects/IPostEffect");
 import ISource = require("../../../Blocks/ISource");
 
 interface IAudioChain {
     Connections: IBlock[];
     Sources: ISource[];
-    PostEffects: IEffect[];
-    PreEffects: IEffect[];
+    PostEffects: IPostEffect[];
+    PreEffects: IPreEffect[];
+    Others: IBlock[];
 }
 
 export = IAudioChain;

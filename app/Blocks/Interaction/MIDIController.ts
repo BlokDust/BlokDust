@@ -68,12 +68,10 @@ class MIDIController extends Keyboard {
             this.KeysDown[note] = true;
 
             // ALL SOURCES TRIGGER KEYBOARD DOWN
-            if (this.Chain) {
-                this.Chain.Sources.forEach((source: ISource) => {
-                    this.KeyboardDown(note, source);
-                });
-            }
 
+            this.Chain.Sources.forEach((source: ISource) => {
+                this.KeyboardDown(note, source);
+            });
 
 
         }
