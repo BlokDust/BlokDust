@@ -38,6 +38,7 @@ interface String {
     b64_to_utf8(str: string): string;
     contains(str: string): boolean;
     endsWith(text: string): boolean;
+    hashCode(): string;
     ltrim(): string;
     rtrim(): string;
     startsWith(text: string): boolean;
