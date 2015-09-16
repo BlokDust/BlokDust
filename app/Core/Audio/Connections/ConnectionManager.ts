@@ -80,10 +80,10 @@ class ConnectionManager {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
             });
-            //chain.Others.forEach((block: IBlock) => {
-            //    block.UpdateConnections(chain);
-            //    block.Chain = chain;
-            //});
+            chain.Others.forEach((block: IBlock) => {
+                block.UpdateConnections(chain);
+                block.Chain = chain;
+            });
 
             // If there are sources
             if (chain.Sources.length) {
