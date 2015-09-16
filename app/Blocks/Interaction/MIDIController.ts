@@ -7,6 +7,10 @@ import Power = require("../Power/Power");
 import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
 import MIDIManager = require("../../Core/Audio/MIDIManager");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;

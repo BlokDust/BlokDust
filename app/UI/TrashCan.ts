@@ -1,8 +1,11 @@
 /**
  * Created by luketwyman on 01/02/2015.
  */
-import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
+import IApp = require("../IApp");
+import MainScene = require("./../MainScene");
+
+declare var App: IApp;
 
 class TrashCan extends DisplayObject {
 

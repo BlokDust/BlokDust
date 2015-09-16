@@ -9,6 +9,10 @@ import MainScene = require("./../MainScene");
 import Commands = require("./../Commands");
 import CommandManager = require("../Core/Commands/CommandManager");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class SharePanel extends DisplayObject{
 
     public Open: boolean;

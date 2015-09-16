@@ -2,6 +2,10 @@
  * Created by luketwyman on 21/07/2015.
  */
 
+import IApp = require("./IApp");
+
+declare var App: IApp;
+
 class Metrics {
 
 
@@ -36,6 +40,7 @@ class Metrics {
         App.ZoomLevel = 1;
         App.DragOffset = new Point(0,0);
         App.ScaledDragOffset = new Point(0,0);
+
         this.C = new Point(0,0);
         this.OptionsX = 0.3;
         this.OptionsPoint = new Point(0.3,0.6); //screen percentage

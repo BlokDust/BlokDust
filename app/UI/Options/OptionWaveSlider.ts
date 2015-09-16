@@ -5,7 +5,11 @@
 import Option = require("./Option");
 import WaveForm = require("./OptionWave");
 import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
+import ParametersPanel = require("../OptionsPanel");
+
+import IApp = require("../../IApp");
+
+declare var App: IApp;
 
 class WaveSlider extends WaveForm{
 

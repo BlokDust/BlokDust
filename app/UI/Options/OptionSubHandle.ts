@@ -4,6 +4,10 @@
 
 import OptionHandle = require("./OptionHandle");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class SubHandle {
 
     public Position: Point;

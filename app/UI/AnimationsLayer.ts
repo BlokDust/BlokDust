@@ -4,6 +4,8 @@
 import DisplayObject = require("../DisplayObject");
 import Block = require("../Blocks/Block");
 
+import IApp = require("../IApp");
+declare var App: IApp;
 
 class AnimationsLayer extends DisplayObject {
 

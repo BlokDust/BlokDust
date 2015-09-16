@@ -7,6 +7,10 @@ import MoveBlockOperation = require("./MoveBlockOperation");
 import IBlock = require("../Blocks/IBlock");
 import IDisplayObject = require("../IDisplayObject");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IUndoableOperation, ICompoundOperation
 {
     private _Block: IBlock;

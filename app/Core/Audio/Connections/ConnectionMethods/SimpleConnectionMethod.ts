@@ -5,6 +5,10 @@ import IBlock = require("../../../../Blocks/IBlock");
 import IAudioChain = require("../IAudioChain");
 import AudioChain = require("../AudioChain");
 
+import IApp = require("../../../../IApp");
+
+declare var App: IApp;
+
 class SimpleConnectionMethod extends ConnectionManager {
 
     constructor() {

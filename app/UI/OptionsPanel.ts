@@ -23,6 +23,10 @@ import OptionHandle = require("./Options/OptionHandle");
 import OptionSubHandle = require("./Options/OptionSubHandle");
 import DisplayObject = require("../DisplayObject");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class OptionsPanel extends DisplayObject {
 
     public Position: Point;

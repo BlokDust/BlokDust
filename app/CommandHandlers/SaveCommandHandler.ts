@@ -2,6 +2,10 @@ import ICommandHandler = require("../Core/Commands/ICommandHandler");
 import IOperation = require("../Core/Operations/IOperation");
 import SaveOperation = require("../Operations/SaveOperation");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class SaveCommandHandler implements ICommandHandler {
 
     constructor() {

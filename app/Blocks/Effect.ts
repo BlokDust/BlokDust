@@ -5,6 +5,10 @@ import ISource = require("./ISource");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class Effect extends Block implements IEffect {
 
     public CatchmentArea: number = 6; // grid units

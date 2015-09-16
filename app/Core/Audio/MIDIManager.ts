@@ -1,4 +1,6 @@
 import MIDIMessageArgs = require('./MIDIMessageArgs');
+import IApp = require("../../IApp");
+declare var App: IApp;
 
 class MIDIManager {
 

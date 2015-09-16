@@ -7,6 +7,10 @@ import Grid = require("../Grid");
 import DisplayObject = require("../DisplayObject");
 import MainScene = require("../MainScene");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class BlockSprites {
 
     public Grid: Grid;

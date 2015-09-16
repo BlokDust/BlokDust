@@ -11,6 +11,10 @@ import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 import WaveVoice = require("../../WaveVoice");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class WaveGen extends SamplerBase {
 
     private _WaveForm: number[];

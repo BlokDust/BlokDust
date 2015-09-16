@@ -11,6 +11,10 @@ import SaveFile = require("./SaveFile");
 import Version = require("./_Version");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
+import IApp = require("./IApp");
+
+declare var App: IApp;
+
 class Serializer {
 
     private static _Debug = false;

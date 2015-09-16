@@ -2,6 +2,11 @@
  * Created by luketwyman on 15/08/2015.
  */
 
+
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class ThemeSelector {
 
     public HandleRoll: boolean[];

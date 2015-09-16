@@ -7,6 +7,10 @@ import OptionHandle = require("./OptionHandle");
 import ParametersPanel = require("./../OptionsPanel");
 import Size = minerva.Size;
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class ADSR extends Option{
 
     private _Node:any[];

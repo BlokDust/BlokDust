@@ -7,6 +7,10 @@ import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class ComputerKeyboard extends Keyboard {
 
     public KeyboardCommands: any = {

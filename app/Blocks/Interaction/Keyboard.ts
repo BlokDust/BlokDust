@@ -9,6 +9,10 @@ import Granular = require("../Sources/Granular");
 import SamplerBase = require("../Sources/SamplerBase");
 import Recorder = require("../Sources/Recorder");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 /**
  * Base class for mono, poly and midi keyboards
  */

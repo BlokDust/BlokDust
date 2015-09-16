@@ -6,9 +6,12 @@ import ConnectionManager = require("./Connections/ConnectionManager");
 import SimpleConnectionMethod = require("./Connections/ConnectionMethods/SimpleConnectionMethod");
 import AccumulativeConnectionMethod = require("./Connections/ConnectionMethods/AccumulativeConnectionMethod");
 
-class Audio {
+import IApp = require("../../IApp");
+declare var App: IApp;
 
-    public Tone: Tone;
+export class Audio {
+
+    public Tone: ITone;
     public ctx: AudioContext;
     public sampleRate: number;
     public Master: Tone.Master;
@@ -79,7 +82,4 @@ class Audio {
         return this.Meter.isClipped();
     }
 
-
 }
-
-export = Audio;

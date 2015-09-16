@@ -13,6 +13,10 @@ import ISource = require("./Blocks/ISource");
 import IBlock = require("./Blocks/IBlock");
 import Vector = Utils.Maths.Vector;
 
+import IApp = require("./IApp");
+
+declare var App: IApp;
+
 class LaserBeams {
 
     private _Ctx: CanvasRenderingContext2D;
@@ -242,8 +246,8 @@ class LaserBeams {
         this._Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
         this._Ctx.beginPath();
 
-        for (var j=0; j<App.Blocks.length; j++) {
-            var laser: ISource  = App.Blocks[j];
+        for (var j=0; j<App.Sources.length; j++) {
+            var laser: ISource  = App.Sources[j];
             if (laser instanceof Laser) {
 
                 // If we're in self powered mode, or if this is powered

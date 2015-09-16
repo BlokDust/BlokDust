@@ -3,7 +3,7 @@
 // Definitions by: Luke Phillips <https://github.com/lukephills>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
-declare class Tone {
+declare interface Tone {
     new(inputs?: number, outputs?: number): Tone;
     context: AudioContext;
     input: GainNode;

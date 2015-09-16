@@ -4,6 +4,10 @@ import Source = require("../Source");
 import Particle = require("../../Particle");
 import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
 
+import IApp = require("../../IApp");
+
+declare var App: IApp;
+
 class Microphone extends Source {
 
     public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone
@@ -82,7 +86,7 @@ class Microphone extends Source {
         }
     }
 
-    TriggerAttackRelease(duration: number){
+    TriggerAttackRelease(duration: Tone.Time){
         this.Unmute();
         if (!duration) duration = App.Config.PulseLength;
         setTimeout(() => {

@@ -6,6 +6,10 @@ import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
 import Size = minerva.Size;
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class MessagePanel extends DisplayObject {
 
     private _Roll:boolean[];

@@ -1,11 +1,14 @@
 /**
  * Created by luketwyman on 26/01/2015.
  */
-import Size = minerva.Size;
+import DisplayObject = require("../DisplayObject");
 import Grid = require("./../Grid");
+import IApp = require("../IApp");
 import IBlock = require("./../Blocks/IBlock");
 import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
+import Size = minerva.Size;
+
+declare var App: IApp;
 
 class ToolTip extends DisplayObject {
 

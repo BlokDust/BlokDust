@@ -9,6 +9,10 @@ import LFO = require("../Blocks/Effects/Pre/LFO");
 import Recorder = require("../Blocks/Sources/Recorder");
 import Size = minerva.Size;
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class MenuItem {
 
     public Position: Point;

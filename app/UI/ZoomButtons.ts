@@ -6,6 +6,10 @@ import Grid = require("./../Grid");
 import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
 
+import IApp = require("../IApp");
+
+declare var App: IApp;
+
 class ZoomButtons extends DisplayObject {
 
     public InRoll: boolean;

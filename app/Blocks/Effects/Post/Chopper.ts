@@ -1,6 +1,9 @@
-import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
+import IApp = require("../../../IApp");
 import MainScene = require("../../../MainScene");
+import PostEffect = require("../PostEffect");
+
+declare var App: IApp;
 
 class Chopper extends PostEffect {
 
