@@ -1,10 +1,10 @@
-import Effect = require("../Effect");
-import PowerEffect = require("./PowerEffect");
-import ISource = require("../ISource");
-import MainScene = require("../../MainScene");
-import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
+import {Effect} from '../Effect';
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../ISource';
+import {MainScene} from '../../MainScene';
+import {PowerEffect} from './PowerEffect';
 
-class Power extends PowerEffect {
+export class Power extends PowerEffect {
 
     Init(sketch?: any): void {
         super.Init(sketch);
@@ -33,5 +33,3 @@ class Power extends PowerEffect {
         super.Dispose();
     }
 }
-
-export = Power;

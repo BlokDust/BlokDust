@@ -1,10 +1,10 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
-import Particle = require("../../Particle");
-import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
+import {Grid} from '../../Grid';
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {Source} from '../Source';
 
-class Microphone extends Source {
+export class Microphone extends Source {
 
     public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone
     public Params: MicrophoneParams;
@@ -122,5 +122,3 @@ class Microphone extends Source {
         this.Muted = null;
     }
 }
-
-export = Microphone;

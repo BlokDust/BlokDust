@@ -1,5 +1,3 @@
-interface Validator{
+export interface IValidator{
     State: boolean;
 }
-
-export = Validator;

@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class BitCrusher extends PostEffect {
+export class BitCrusher extends PostEffect {
 
     public Effect: Tone.BitCrusher;
     public Params: BitCrusherParams;
@@ -27,9 +26,7 @@ class BitCrusher extends PostEffect {
 
     Draw() {
         super.Draw();
-
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"bit crusher");
-
     }
 
 
@@ -86,5 +83,3 @@ class BitCrusher extends PostEffect {
         };
     }
 }
-
-export = BitCrusher;

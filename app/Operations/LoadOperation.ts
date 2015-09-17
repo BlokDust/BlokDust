@@ -1,8 +1,7 @@
-import IOperation = require("../Core/Operations/IOperation");
-import IBlock = require("../Blocks/IBlock");
+import {IBlock} from '../Blocks/IBlock';
+import {IOperation} from '../Core/Operations/IOperation';
 
-class LoadOperation<String> implements IOperation
-{
+export class LoadOperation<String> implements IOperation {
     private _Id: any;
     private _LZMA: any;
 
@@ -53,5 +52,3 @@ class LoadOperation<String> implements IOperation
 
     }
 }
-
-export = LoadOperation;

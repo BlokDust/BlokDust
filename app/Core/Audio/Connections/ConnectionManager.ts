@@ -1,15 +1,15 @@
-import IAudioChain = require("./IAudioChain");
-import IEffect = require("../../../Blocks/IEffect");
-import Source = require("../../../Blocks/Source");
-import ISource = require("../../../Blocks/ISource");
-import IBlock = require("../../../Blocks/IBlock");
-import PowerEffect = require("../../../Blocks/Power/PowerEffect");
-import PostEffect = require("../../../Blocks/Effects/PostEffect");
-import IPostEffect = require("../../../Blocks/Effects/IPostEffect");
-import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
-import PreEffect = require("../../../Blocks/Effects/PreEffect");
+import {IAudioChain} from "./IAudioChain";
+import {IBlock} from "../../../Blocks/IBlock";
+import {IEffect} from "../../../Blocks/IEffect";
+import {IPostEffect} from "../../../Blocks/Effects/IPostEffect";
+import {IPreEffect} from "../../../Blocks/Effects/IPreEffect";
+import {ISource} from "../../../Blocks/ISource";
+import {Source} from "../../../Blocks/Source";
+import {PostEffect} from "../../../Blocks/Effects/PostEffect";
+import {PowerEffect} from "../../../Blocks/Power/PowerEffect";
+import {PreEffect} from "../../../Blocks/Effects/PreEffect";
 
-class ConnectionManager {
+export class ConnectionManager {
 
     protected _Debug: boolean = false;
     public Chains: IAudioChain[] = [];
@@ -175,5 +175,3 @@ class ConnectionManager {
         return _chain;
     }
 }
-
-export = ConnectionManager;

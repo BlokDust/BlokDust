@@ -1,6 +1,6 @@
-import ISource = require("../ISource");
+import {ISource} from '../ISource';
 
-class VoiceCreator {
+export class VoiceCreator {
 
     public ID: number;
     private _key: string;
@@ -18,5 +18,3 @@ class VoiceCreator {
     }
 
 }
-
-export = VoiceCreator;

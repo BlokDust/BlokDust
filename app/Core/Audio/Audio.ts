@@ -1,12 +1,12 @@
-import AudioNodeConnectionManager = require("./AudioNodeConnectionManager");
-import AudioFileManager = require("./AudioFileManager");
-import MIDIManager = require("./MIDIManager");
-import ConnectionMethodType = require("./Connections/ConnectionMethodType");
-import ConnectionManager = require("./Connections/ConnectionManager");
-import SimpleConnectionMethod = require("./Connections/ConnectionMethods/SimpleConnectionMethod");
-import AccumulativeConnectionMethod = require("./Connections/ConnectionMethods/AccumulativeConnectionMethod");
+import {AccumulativeConnectionMethod} from './Connections/ConnectionMethods/AccumulativeConnectionMethod';
+import {AudioFileManager} from './AudioFileManager';
+import {AudioNodeConnectionManager} from './AudioNodeConnectionManager';
+import {ConnectionManager} from './Connections/ConnectionManager';
+import {ConnectionMethodType} from './Connections/ConnectionMethodType';
+import {MIDIManager} from './MIDIManager';
+import {SimpleConnectionMethod} from './Connections/ConnectionMethods/SimpleConnectionMethod';
 
-class Audio {
+export class Audio {
 
     public Tone: Tone;
     public ctx: AudioContext;
@@ -78,8 +78,4 @@ class Audio {
     get HasClipped(): boolean {
         return this.Meter.isClipped();
     }
-
-
 }
-
-export = Audio;

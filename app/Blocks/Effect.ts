@@ -1,11 +1,11 @@
-import IBlock = require("./IBlock");
-import Block = require("./Block");
-import IEffect = require("./IEffect");
-import ISource = require("./ISource");
-import Grid = require("../Grid");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {Block} from './Block';
+import {Grid} from '../Grid';
+import {IBlock} from './IBlock';
+import {IEffect} from './IEffect';
+import {ISource} from './ISource';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
 
-class Effect extends Block implements IEffect {
+export class Effect extends Block implements IEffect {
 
     public CatchmentArea: number = 6; // grid units
     public Effect; // ANY TYPE OF TONE POST EFFECT
@@ -79,5 +79,3 @@ class Effect extends Block implements IEffect {
         super.Dispose();
     }
 }
-
-export = Effect;

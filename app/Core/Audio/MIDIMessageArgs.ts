@@ -1,4 +1,4 @@
-class MIDIMessageArgs implements nullstone.IEventArgs {
+export class MIDIMessageArgs implements nullstone.IEventArgs {
 
     e: WebMidi.MIDIMessageArgs;
 
@@ -6,5 +6,3 @@ class MIDIMessageArgs implements nullstone.IEventArgs {
         Object.defineProperty(this, 'e', { value: e, writable: false });
     }
 }
-
-export = MIDIMessageArgs;

@@ -1,16 +1,13 @@
-/**
- * Created by luketwyman on 26/01/2015.
- */
-import Size = minerva.Size;
-import Grid = require("./../Grid");
-import IBlock = require("./../Blocks/IBlock");
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
+import Size = minerva.Size; //TODO: es6 modules
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from './../Grid';
+import {IBlock} from './../Blocks/IBlock';
+import {MainScene} from './../MainScene';
 
-class ToolTip extends DisplayObject {
+export class ToolTip extends DisplayObject {
 
-    public Name: string;
     public Alpha: number;
+    public Name: string;
     public Open: boolean;
     public Position: Point;
     private _AlphaTween: TWEEN.Tween;
@@ -84,7 +81,4 @@ class ToolTip extends DisplayObject {
         TWEEN.remove(this._AlphaTween);
     }
 
-
 }
-
-export = ToolTip;

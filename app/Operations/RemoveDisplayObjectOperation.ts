@@ -1,10 +1,9 @@
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import DisplayList = require("../DisplayList");
-import IDisplayObject = require("../IDisplayObject");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {DisplayList} from '../DisplayList';
+import {IDisplayObject} from '../IDisplayObject';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
 
-class RemoveDisplayObjectOperation implements IUndoableOperation
-{
+export class RemoveDisplayObjectOperation implements IUndoableOperation {
     private _DisplayList: DisplayList;
     private _DisplayObject: IDisplayObject;
     private _Index: number;
@@ -40,5 +39,3 @@ class RemoveDisplayObjectOperation implements IUndoableOperation
         this._DisplayObject = null;
     }
 }
-
-export = RemoveDisplayObjectOperation;

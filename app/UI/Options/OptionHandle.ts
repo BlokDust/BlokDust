@@ -1,8 +1,4 @@
-/**
- * Created by luketwyman on 19/01/2015.
- */
-
-class OptionHandle {
+export class OptionHandle {
 
     public Position: Point;
 
@@ -72,5 +68,3 @@ class OptionHandle {
     }
 
 }
-
-export = OptionHandle;

@@ -1,10 +1,7 @@
-import PowerSource = require("./PowerSource");
-import Grid = require("../../Grid");
-import App = require("../../App");
-import MainScene = require("../../MainScene");
+import {MainScene} from '../../MainScene';
+import {PowerSource} from './PowerSource';
 
-class Laser extends PowerSource {
-
+export class Laser extends PowerSource {
 
     Init(sketch?: any): void {
 
@@ -125,5 +122,3 @@ class Laser extends PowerSource {
         this.CheckRange = this.Params.range;
     }
 }
-
-export = Laser;

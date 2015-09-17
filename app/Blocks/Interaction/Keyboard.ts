@@ -1,18 +1,18 @@
-import PreEffect = require("../Effects/PreEffect");
-import ISource = require("../ISource");
-import Grid = require("../../Grid");
-import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
-import Microphone = require("../Sources/Microphone");
-import Power = require("../Power/Power");
-import Voice = require("./VoiceObject");
-import Granular = require("../Sources/Granular");
-import SamplerBase = require("../Sources/SamplerBase");
-import Recorder = require("../Sources/Recorder");
+import {Granular} from '../Sources/Granular';
+import {Grid} from '../../Grid';
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../ISource';
+import {Microphone} from '../Sources/Microphone';
+import {Power} from '../Power/Power';
+import {PreEffect} from '../Effects/PreEffect';
+import {Recorder} from '../Sources/Recorder';
+import {SamplerBase} from '../Sources/SamplerBase';
+import {VoiceCreator as Voice} from './VoiceObject';
 
 /**
  * Base class for mono, poly and midi keyboards
  */
-class Keyboard extends PreEffect {
+export class Keyboard extends PreEffect {
 
     public BaseFrequency: number;
     public KeysDown: any = {};
@@ -182,5 +182,3 @@ class Keyboard extends PreEffect {
     }
 
 }
-
-export = Keyboard;

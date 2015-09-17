@@ -1,7 +1,7 @@
-import Source = require("../Source");
-import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {Source} from '../Source';
 
-class PowerSource extends Source {
+export class PowerSource extends Source {
 
     Init(sketch?: any): void {
 
@@ -14,5 +14,3 @@ class PowerSource extends Source {
     }
 
 }
-
-export = PowerSource;

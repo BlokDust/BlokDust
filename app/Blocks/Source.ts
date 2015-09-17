@@ -1,20 +1,20 @@
-import IBlock = require("./IBlock");
-import IEffect = require("./IEffect");
-import ISource = require("./ISource");
-import Block = require("./Block");
-import Grid = require("../Grid");
-import MainScene = require("../MainScene");
-import Particle = require("../Particle");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import Soundcloud = require("./Sources/Soundcloud");
-import IAudioChain = require("../Core/Audio/Connections/IAudioChain");
-import Power = require("./Power/Power");
-import PowerSource = require("./Power/PowerSource");
-import Logic = require("./Power/Logic/Logic");
-import Voice = require("./Interaction/VoiceObject");
-import SoundcloudTrack = require("../UI/SoundcloudTrack");
+import {Block} from './Block';
+import {Grid} from '../Grid';
+import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
+import {IBlock} from './IBlock';
+import {IEffect} from './IEffect';
+import {ISource} from './ISource';
+import {Logic} from './Power/Logic/Logic';
+import {MainScene} from '../MainScene';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 module
+import {Particle} from '../Particle';
+import {Power} from './Power/Power';
+import {PowerSource} from './Power/PowerSource';
+import {Soundcloud} from './Sources/Soundcloud';
+import {SoundcloudTrack} from '../UI/SoundcloudTrack';
+import {VoiceCreator as Voice} from './Interaction/VoiceObject';
 
-class Source extends Block implements ISource {
+export class Source extends Block implements ISource {
 
     public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
 
@@ -542,5 +542,3 @@ class Source extends Block implements ISource {
     }
 
 }
-
-export = Source;

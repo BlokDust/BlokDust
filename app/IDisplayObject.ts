@@ -1,5 +1,4 @@
-
-interface IDisplayObject {
+export interface IDisplayObject {
     ZIndex: number;
     //RenderCacheCanvas: HTMLCanvasElement;
     //RenderCacheCtx: CanvasRenderingContext2D;
@@ -11,5 +10,3 @@ interface IDisplayObject {
     Height: number;
     Position: Point;
 }
-
-export = IDisplayObject;

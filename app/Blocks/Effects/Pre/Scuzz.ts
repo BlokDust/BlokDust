@@ -1,10 +1,9 @@
-import PreEffect = require("../PreEffect");
-import Grid = require("../../../Grid");
-import ISource = require("../../ISource");
-import MainScene = require("../../../MainScene");
-import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {MainScene} from '../../../MainScene';
+import {PreEffect} from '../PreEffect';
 
-class Scuzz extends PreEffect {
+export class Scuzz extends PreEffect {
 
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
@@ -132,5 +131,3 @@ class Scuzz extends PreEffect {
         };
     }
 }
-
-export = Scuzz;

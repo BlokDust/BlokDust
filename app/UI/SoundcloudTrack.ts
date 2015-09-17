@@ -1,8 +1,4 @@
-/**
- * Created by luketwyman on 28/07/2015.
- */
-
-class SoundcloudTrack {
+export class SoundcloudTrack {
 
     public Title: string;
     public TitleShort: string;
@@ -12,7 +8,7 @@ class SoundcloudTrack {
     private _Long: number = 65;
     private _Short: number = 30;
 
-    constructor(title,user,uri) {
+    constructor(title, user, uri) {
 
         // TODO - second pass of shortening, using measureText to account for esp wide characters (Chinese for example)
 
@@ -54,5 +50,3 @@ class SoundcloudTrack {
     }
 
 }
-
-export = SoundcloudTrack;

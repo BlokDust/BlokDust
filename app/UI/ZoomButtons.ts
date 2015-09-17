@@ -1,12 +1,9 @@
-/**
- * Created by luketwyman on 27/01/2015.
- */
-import Size = minerva.Size;
-import Grid = require("./../Grid");
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from './../Grid';
+import {MainScene} from './../MainScene';
+import Size = minerva.Size; //TODO: es6 modules
 
-class ZoomButtons extends DisplayObject {
+export class ZoomButtons extends DisplayObject {
 
     public InRoll: boolean;
     public OutRoll: boolean;
@@ -200,9 +197,4 @@ class ZoomButtons extends DisplayObject {
             this.DelayTo(this,0,500,700,"ZoomAlpha");
         }
     }
-
-
-
 }
-
-export = ZoomButtons;

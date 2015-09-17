@@ -1,13 +1,13 @@
-import IAudioChain = require("./IAudioChain");
-import IBlock = require("../../../Blocks/IBlock");
-import ISource = require("../../../Blocks/ISource");
-import Source = require("../../../Blocks/Source");
-import PreEffect = require("../../../Blocks/Effects/PreEffect");
-import IPreEffect = require("../../../Blocks/Effects/IPreEffect");
-import PostEffect = require("../../../Blocks/Effects/PostEffect");
-import IPostEffect = require("../../../Blocks/Effects/IPostEffect");
+import {IAudioChain} from './IAudioChain';
+import {IBlock} from '../../../Blocks/IBlock';
+import {IPostEffect} from '../../../Blocks/Effects/IPostEffect';
+import {IPreEffect} from '../../../Blocks/Effects/IPreEffect';
+import {ISource} from '../../../Blocks/ISource';
+import {PostEffect} from '../../../Blocks/Effects/PostEffect';
+import {PreEffect} from '../../../Blocks/Effects/PreEffect';
+import {Source} from '../../../Blocks/Source';
 
-class AudioChain implements IAudioChain{
+export class AudioChain implements IAudioChain {
     public Connections: IBlock[] = [];
     public Sources: ISource[] = [];
     public PostEffects: IPostEffect[] = [];
@@ -30,7 +30,4 @@ class AudioChain implements IAudioChain{
     //    return <IPreEffect[]>this.Connections.en().where(b => b instanceof PreEffect).toArray();
     //}
 }
-
-
-export = AudioChain;
 

@@ -1,7 +1,6 @@
-import IOperation = require("../Core/Operations/IOperation");
+import {IOperation} from '../Core/Operations/IOperation';
 
-class SaveOperation<String> implements IOperation
-{
+export class SaveOperation<String> implements IOperation {
     private _JSON: any;
     private _LZMA: any;
 
@@ -65,10 +64,8 @@ class SaveOperation<String> implements IOperation
     }
 }
 
-class PostData {
+export class PostData {
     constructor(public Id: string, public Data: string, public SessionId) {
 
     }
 }
-
-export = SaveOperation;

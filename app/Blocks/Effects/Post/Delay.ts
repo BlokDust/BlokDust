@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Delay extends PostEffect {
+export class Delay extends PostEffect {
 
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
@@ -114,5 +113,3 @@ class Delay extends PostEffect {
         };
     }
 }
-
-export = Delay;

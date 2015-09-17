@@ -1,11 +1,11 @@
-import ConnectionManager = require("../ConnectionManager");
-import IEffect = require("../../../../Blocks/IEffect");
-import ISource = require("../../../../Blocks/ISource");
-import IBlock = require("../../../../Blocks/IBlock");
-import IAudioChain = require("../IAudioChain");
-import AudioChain = require("../AudioChain");
+import {AudioChain} from '../AudioChain';
+import {ConnectionManager} from '../ConnectionManager';
+import {IAudioChain} from '../IAudioChain';
+import {IBlock} from '../../../../Blocks/IBlock';
+import {IEffect} from '../../../../Blocks/IEffect';
+import {ISource} from '../../../../Blocks/ISource';
 
-class SimpleConnectionMethod extends ConnectionManager {
+export class SimpleConnectionMethod extends ConnectionManager {
 
     constructor() {
         super();
@@ -38,5 +38,3 @@ class SimpleConnectionMethod extends ConnectionManager {
         return this.Chains;
     }
 }
-
-export = SimpleConnectionMethod;

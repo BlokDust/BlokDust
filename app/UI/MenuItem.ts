@@ -1,15 +1,7 @@
-/**
- * Created by luketwyman on 28/01/2015.
- */
+import {MainScene} from './../MainScene';
+import Size = minerva.Size; //TODO: es6 modules
 
-import MainScene = require("./../MainScene");
-import Grid = require("./../Grid");
-import IBlock = require("../Blocks/IBlock");
-import LFO = require("../Blocks/Effects/Pre/LFO");
-import Recorder = require("../Blocks/Sources/Recorder");
-import Size = minerva.Size;
-
-class MenuItem {
+export class MenuItem {
 
     public Position: Point;
     public Size: Size;
@@ -158,7 +150,4 @@ class MenuItem {
         this.MouseIsDown = false;
     }
 
-
 }
-
-export = MenuItem;

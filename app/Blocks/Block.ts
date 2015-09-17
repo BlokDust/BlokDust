@@ -1,16 +1,16 @@
-import IBlock = require("./IBlock");
-import Grid = require("../Grid");
-import Particle = require("../Particle");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("../MainScene");
-import ParametersPanel = require("../UI/OptionsPanel");
-import PreEffect = require("./Effects/PreEffect");
-import IAudioChain = require("../Core/Audio/Connections/IAudioChain");
-import AudioChain = require("../Core/Audio/Connections/AudioChain");
-import Size = minerva.Size;
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {AudioChain} from '../Core/Audio/Connections/AudioChain';
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from '../Grid';
+import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
+import {IBlock} from './IBlock';
+import {MainScene} from '../MainScene';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
+import {Particle} from '../Particle';
+import {PreEffect} from './Effects/PreEffect';
+import Size = minerva.Size; //TODO: es6 modules
 
-class Block extends DisplayObject implements IBlock {
+export class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Type: any;
@@ -114,6 +114,7 @@ class Block extends DisplayObject implements IBlock {
             // ALT-DRAG COPY
             if ((<MainScene>this.Sketch).AltDown && this._Duplicable) {
                 (<MainScene>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
+                //TODO: es6 modules broke this!!!
                 this.MouseUp();
             }
             // MOVE //
@@ -203,5 +204,3 @@ class Block extends DisplayObject implements IBlock {
         super.Dispose();
     }
 }
-
-export = Block;

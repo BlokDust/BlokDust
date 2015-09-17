@@ -1,13 +1,13 @@
-import Keyboard = require("./Keyboard");
-import Voice = require("./VoiceObject");
-import ISource = require("../ISource");
-import MainScene = require("../../MainScene");
-import Microphone = require("../Sources/Microphone");
-import Power = require("../Power/Power");
-import IAudioChain = require("../../Core/Audio/Connections/IAudioChain");
-import MIDIManager = require("../../Core/Audio/MIDIManager");
+import {Keyboard} from './Keyboard';
+import {VoiceCreator as Voice} from './VoiceObject';
+import {ISource} from '../ISource';
+import {MainScene} from '../../MainScene';
+import {Microphone} from '../Sources/Microphone';
+import {Power} from '../Power/Power';
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {MIDIManager} from '../../Core/Audio/MIDIManager';
 
-class MIDIController extends Keyboard {
+export class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;
 
@@ -254,5 +254,3 @@ class MIDIController extends Keyboard {
     }
 
 }
-
-export = MIDIController;

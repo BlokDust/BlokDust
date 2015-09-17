@@ -1,16 +1,8 @@
-/**
- * Created by luketwyman on 31/07/2015.
- */
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-/**
- * Created by luketwyman on 24/02/2015.
- */
-
-import Option = require("./Option");
-import ParametersPanel = require("./../OptionsPanel");
-import Size = minerva.Size;
-
-class OptionActionButton  extends Option{
+export class OptionActionButton extends Option {
 
     private _Text: string;
 
@@ -75,5 +67,3 @@ class OptionActionButton  extends Option{
     }
 
 }
-
-export = OptionActionButton;

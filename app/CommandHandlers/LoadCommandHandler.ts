@@ -1,8 +1,8 @@
-import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IOperation = require("../Core/Operations/IOperation");
-import LoadOperation = require("../Operations/LoadOperation");
+import {ICommandHandler} from '../Core/Commands/ICommandHandler';
+import {IOperation} from '../Core/Operations/IOperation';
+import {LoadOperation} from '../Operations/LoadOperation';
 
-class LoadCommandHandler implements ICommandHandler {
+export class LoadCommandHandler implements ICommandHandler {
 
     constructor() {
 
@@ -13,5 +13,3 @@ class LoadCommandHandler implements ICommandHandler {
         return App.OperationManager.Do(op);
     }
 }
-
-export = LoadCommandHandler;

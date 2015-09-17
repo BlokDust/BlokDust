@@ -1,10 +1,6 @@
-import IEffect = require("./../IEffect");
+import {IEffect} from './../IEffect';
 
-interface IPostEffect extends IEffect {
-
+export interface IPostEffect extends IEffect {
     connect;
     disconnect;
-
 }
-
-export = IPostEffect;

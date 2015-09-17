@@ -1,10 +1,10 @@
-import InputManager = require("./InputManager");
-import KeyDownEventArgs = require("./KeyDownEventArgs");
-import KeyUpEventArgs = require("./KeyUpEventArgs");
-import Commands = require("../../Commands");
-import CommandManager = require("../Commands/CommandManager");
+import {Commands} from '../../Commands';
+import {CommandManager}from '../Commands/CommandManager';
+import {InputManager} from './InputManager';
+import {KeyDownEventArgs} from './KeyDownEventArgs';
+import {KeyUpEventArgs} from './KeyUpEventArgs';
 
-class CommandsInputManager extends InputManager {
+export class CommandsInputManager extends InputManager {
 
     private _CommandManager;
 
@@ -55,5 +55,3 @@ class CommandsInputManager extends InputManager {
 
     }
 }
-
-export = CommandsInputManager;

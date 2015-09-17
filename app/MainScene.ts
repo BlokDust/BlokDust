@@ -1,43 +1,43 @@
-import IBlock = require("./Blocks/IBlock");
-import ISource = require("./Blocks/ISource");
-import Source = require("./Blocks/Source");
-import IEffect = require("./Blocks/IEffect");
-import Sampler = require("./Blocks/Sources/Sampler");
-import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
-import IOperation = require("./Core/Operations/IOperation");
-import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
-import Commands = require("./Commands");
-import ICommandHandler = require("./Core/Commands/ICommandHandler");
-import DisplayObjectCollection = require("./DisplayObjectCollection");
-import Grid = require("./Grid");
-import DisplayList = require("./DisplayList");
-import Particle = require("./Particle");
-import IPooledObject = require("./Core/Resources/IPooledObject");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import OptionsPanel = require("./UI/OptionsPanel");
-import SharePanel = require("./UI/SharePanel");
-import SoundcloudPanel = require("./UI/SoundcloudPanel");
-import SettingsPanel = require("./UI/SettingsPanel");
-import MessagePanel = require("./UI/MessagePanel");
-import Header = require("./UI/Header");
-import ToolTip = require("./UI/ToolTip");
-import ZoomButtons = require("./UI/ZoomButtons");
-import MainSceneDragger = require("./UI/StageDragger");
-import TrashCan = require("./UI/TrashCan");
-import ConnectionLines = require("./UI/ConnectionLines");
-import RecorderPanel = require("./UI/RecorderPanel");
-import AnimationsLayer = require("./UI/AnimationsLayer");
-import LaserBeams = require("./LaserBeams");
-import Laser = require("./Blocks/Power/Laser");
-import PowerSource = require("./Blocks/Power/PowerSource");
-import PowerEffect = require("./Blocks/Power/PowerEffect");
-import BlockSprites = require("./Blocks/BlockSprites");
-import BlockCreator = require("./BlockCreator");
-import SketchSession = Fayde.Drawing.SketchSession;
+import {AnimationsLayer} from './UI/AnimationsLayer';
+import {BlockSprites} from './Blocks/BlockSprites';
+import {BlockCreator} from './BlockCreator';
+import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
+import {Commands} from './Commands';
+import {ConnectionLines} from './UI/ConnectionLines';
+import {DisplayList} from './DisplayList';
+import {DisplayObjectCollection} from './DisplayObjectCollection';
+import {Grid} from './Grid';
+import {Header} from './UI/Header';
+import {IBlock} from './Blocks/IBlock';
+import {ICommandHandler} from './Core/Commands/ICommandHandler';
+import {IEffect} from './Blocks/IEffect';
+import {IOperation} from './Core/Operations/IOperation';
+import {IPooledObject} from './Core/Resources/IPooledObject';
+import {ISource} from './Blocks/ISource';
+import {IUndoableOperation} from './Core/Operations/IUndoableOperation';
+import {Laser} from './Blocks/Power/Laser';
+import {LaserBeams} from './LaserBeams';
+import {StageDragger as MainSceneDragger} from './UI/StageDragger';
+import {MessagePanel} from './UI/MessagePanel';
+import {OptionsPanel} from './UI/OptionsPanel';
+import {Particle} from './Particle';
+import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {PowerEffect} from './Blocks/Power/PowerEffect';
+import {PowerSource} from './Blocks/Power/PowerSource';
+import {RecorderPanel} from './UI/RecorderPanel';
+import {Source} from './Blocks/Source';
+import {Sampler} from './Blocks/Sources/Sampler';
+import {SharePanel} from './UI/SharePanel';
+import SketchSession = Fayde.Drawing.SketchSession; //TODO: es6 module
+import {SoundcloudPanel} from './UI/SoundcloudPanel';
+import {SettingsPanel} from './UI/SettingsPanel';
+import {ToolTip} from './UI/ToolTip';
+import {TrashCan} from './UI/TrashCan';
+import {ZoomButtons} from './UI/ZoomButtons';
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class MainScene extends Fayde.Drawing.SketchContext{
+export class MainScene extends Fayde.Drawing.SketchContext{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
@@ -116,7 +116,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
         App.DragFileInputManager.Dropped.on((s: any, e: any) => {
             e.stopPropagation();
             e.preventDefault();
-            this.CreateBlockFromType(Sampler);
+            const b: Sampler = this.CreateBlockFromType(Sampler);
 
             var files = e.dataTransfer.files; // FileList object.
 
@@ -125,6 +125,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
                     //TODO: set the buffer of this newly created Sampler
                     console.log(file.name + ' dropped');
                 }
+
             });
 
         }, this);
@@ -762,9 +763,8 @@ class MainScene extends Fayde.Drawing.SketchContext{
         }
     }
 
-    //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
-    CreateBlockFromType<T extends IBlock>(t: {new(): T; }){
-        var block: IBlock = new t();
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }): T {
+        var block: T = new t();
         block.Id = App.GetBlockId();
         block.Position = this._PointerPoint;
         block.Init(this);
@@ -775,7 +775,7 @@ class MainScene extends Fayde.Drawing.SketchContext{
         block.MouseDown();
         this.SelectedBlock = block;
         this.IsDraggingABlock = true;
-
+        return block;
     }
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
@@ -807,5 +807,3 @@ class MainScene extends Fayde.Drawing.SketchContext{
         //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 }
-
-export = MainScene;

@@ -1,16 +1,11 @@
-/**
- * Created by luketwyman on 25/01/2015.
- */
+import {BlockCreator} from './../BlockCreator';
+import {DisplayObject} from '../DisplayObject';
+import {MainScene} from './../MainScene';
+import {MenuCategory} from './MenuCategory';
+import {MenuItem} from './MenuItem';
+import Size = minerva.Size; //TODO: es6 modules
 
-import BlockCreator = require("./../BlockCreator");
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
-import Grid = require("./../Grid");
-import MenuCategory = require("./MenuCategory");
-import MenuItem = require("./MenuItem");
-import Size = minerva.Size;
-
-class Header extends DisplayObject{
+export class Header extends DisplayObject {
 
     private _Units: number;
     public Height: number;
@@ -591,13 +586,4 @@ class Header extends DisplayObject{
             cat.Items[i].MouseUp();
         }
     }
-
-
-
-
-
-
-
 }
-
-export = Header;

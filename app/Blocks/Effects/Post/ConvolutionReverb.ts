@@ -1,24 +1,24 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import SoundCloudAudio = require('../../SoundCloudAudio');
-import SoundCloudAudioType = require('../../SoundCloudAudioType');
-import SoundcloudTrack = require("../../../UI/SoundcloudTrack");
+import {Grid} from '../../../Grid';
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
+import {SoundCloudAudio} from  '../../SoundCloudAudio';
+import {SoundCloudAudioType} from '../../SoundCloudAudioType';
+import {SoundcloudTrack} from '../../../UI/SoundcloudTrack';
 
-class Convolver extends PostEffect {
+export class Convolver extends PostEffect {
 
-    public Effect: Tone.Convolver;
-    public Params: ConvolutionParams;
     public Defaults: ConvolutionParams;
-    public SearchResults: SoundcloudTrack[];
-    private _FirstRelease: boolean = true;
-    public Searching: boolean;
+    public Effect: Tone.Convolver;
+    public LoadTimeout: any;
+    public Params: ConvolutionParams;
     public ResultsPage: number;
+    public SearchResults: SoundcloudTrack[];
+    public Searching: boolean;
     public SearchString: string;
     private _FirstBuffer: any;
-    private _WaveForm: number[];
+    private _FirstRelease: boolean = true;
     private _FallBackTrack: SoundcloudTrack;
-    public LoadTimeout: any;
+    private _WaveForm: number[];
 
     Init(sketch?: any): void {
 
@@ -262,5 +262,3 @@ class Convolver extends PostEffect {
         return newWaveform;
     }
 }
-
-export = Convolver;

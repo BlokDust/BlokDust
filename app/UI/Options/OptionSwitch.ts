@@ -1,12 +1,8 @@
-/**
- * Created by luketwyman on 06/07/2015.
- */
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
-
-class OptionSwitch {
+export class OptionSwitch {
 
     public Position: Point;
     public Name:string;
@@ -148,5 +144,3 @@ class OptionSwitch {
     }
 
 }
-
-export = OptionSwitch;

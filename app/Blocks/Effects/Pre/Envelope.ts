@@ -1,10 +1,9 @@
-import PreEffect = require("../PreEffect");
-import ISource = require("../../ISource");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {MainScene} from '../../../MainScene';
+import {PreEffect} from '../PreEffect';
 
-class Envelope extends PreEffect {
+export class Envelope extends PreEffect {
 
     public Params: EnvelopeParams;
 
@@ -30,16 +29,6 @@ class Envelope extends PreEffect {
 
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
-
-    //Attach(source: ISource): void{
-    //    super.Attach(source);
-    //
-    //}
-    //
-    //Detach(source: ISource): void{
-    //    super.Detach(source);
-    //
-    //}
 
     UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
@@ -138,5 +127,3 @@ class Envelope extends PreEffect {
         };
     }
 }
-
-export = Envelope;

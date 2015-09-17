@@ -1,20 +1,12 @@
-import IBlock = require("./IBlock");
-import ISource = require("./ISource");
+import {IBlock} from './IBlock';
+import {ISource} from './ISource';
 
-interface IEffect extends IBlock {
+export interface IEffect extends IBlock {
     CatchmentArea: number;
+    Connections: Fayde.Collections.ObservableCollection<ISource>;
     Effect: any; // TODO: ANY TYPE OF TONE POST EFFECT
     Name?: string;
-
-    Connections: Fayde.Collections.ObservableCollection<ISource>;
-
     AddSource(effect: ISource): void;
     RemoveSource(effect: ISource): void;
-
-    //Attach(source: ISource): void;
-    //Detach(source: ISource): void;
-
     ValidateSources(): void;
 }
-
-export = IEffect;

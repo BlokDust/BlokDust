@@ -1,11 +1,7 @@
-/**
- * Created by luketwyman on 28/07/2015.
- */
-import DisplayObject = require("../DisplayObject");
-import Block = require("../Blocks/Block");
+import {DisplayObject} from '../DisplayObject';
+import {Block} from '../Blocks/Block';
 
-
-class AnimationsLayer extends DisplayObject {
+export class AnimationsLayer extends DisplayObject {
 
 
     private _Ctx: CanvasRenderingContext2D;
@@ -113,7 +109,4 @@ class AnimationsLayer extends DisplayObject {
 
         }
     }
-
 }
-
-export = AnimationsLayer;

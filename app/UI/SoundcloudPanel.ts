@@ -1,13 +1,9 @@
-/**
- * Created by luketwyman on 26/07/2015.
- */
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from './../Grid';
+import {MainScene} from './../MainScene';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Size = minerva.Size;
-import Grid = require("./../Grid");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("./../MainScene");
-
-class SoundcloudPanel extends DisplayObject{
+export class SoundcloudPanel extends DisplayObject{
 
     public Open: boolean;
     public OffsetX: number;
@@ -465,5 +461,3 @@ class SoundcloudPanel extends DisplayObject{
         return q;
     }
 }
-
-export = SoundcloudPanel;

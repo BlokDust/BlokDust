@@ -1,8 +1,5 @@
-import IFactoryResource = require("./IFactoryResource");
+import {IFactoryResource} from './IFactoryResource';
 
-interface IPooledFactoryResource<T>
-{
+export interface IPooledFactoryResource<T> {
 
 }
-
-export = IPooledFactoryResource;

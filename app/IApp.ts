@@ -1,20 +1,20 @@
-import IBlock = require("./Blocks/IBlock");
-import ISource = require("./Blocks/ISource");
-import IEffect = require("./Blocks/ISource");
-import OperationManager = require("./Core/Operations/OperationManager");
-import ResourceManager = require("./Core/Resources/ResourceManager");
-import CommandManager = require("./Core/Commands/CommandManager");
-import Audio = require("./Core/Audio/Audio");
-import InputManager = require("./Core/Inputs/InputManager");
-import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
-import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
-import PointerInputManager = require("./Core/Inputs/PointerInputManager");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import Serializer = require("./Serializer");
-import Particle = require("./Particle"); // todo: should be IParticle
-import MainScene = require("./MainScene");
+import {Audio} from './Core/Audio/Audio';
+import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
+import {CommandManager} from './Core/Commands/CommandManager';
+import {IBlock} from './Blocks/IBlock';
+import {IEffect} from './Blocks/IEffect';
+import {InputManager} from './Core/Inputs/InputManager';
+import {ISource} from './Blocks/ISource';
+import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {MainScene} from './MainScene';
+import {OperationManager} from './Core/Operations/OperationManager';
+import {Particle} from './Particle'; // todo: should be IParticle
+import {PointerInputManager} from './Core/Inputs/PointerInputManager';
+import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {ResourceManager} from './Core/Resources/ResourceManager';
+import {Serializer} from './Serializer';
 
-interface IApp {
+export interface IApp {
     OperationManager: OperationManager;
     ResourceManager: ResourceManager;
     CommandManager: CommandManager;
@@ -34,5 +34,3 @@ interface IApp {
 
     Setup(): void;
 }
-
-export = IApp;

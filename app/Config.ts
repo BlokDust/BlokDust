@@ -1,4 +1,4 @@
-class Config {
+export class Config {
     public MaxOperations: number;
     public PixelPaletteImagePath: string[];
     public SoundCloudClientId: string;
@@ -14,5 +14,3 @@ class Config {
     public SoundCloudLoadTimeout: number;
     public ResetPitchesOnInteractionDisconnect: boolean;
 }
-
-export = Config;

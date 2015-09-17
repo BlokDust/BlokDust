@@ -1,8 +1,8 @@
-import IUndoableOperation = require("./IUndoableOperation");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {IUndoableOperation} from './IUndoableOperation';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
 
-class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
-{
+export class AddItemToObservableCollectionOperation<T> implements IUndoableOperation {
+
     private _Item: T;
     private _Collection: ObservableCollection<T>;
     private _Index: number;
@@ -47,5 +47,3 @@ class AddItemToObservableCollectionOperation<T> implements IUndoableOperation
         this._Collection = null;
     }
 }
-
-export = AddItemToObservableCollectionOperation;

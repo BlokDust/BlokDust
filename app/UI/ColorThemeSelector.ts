@@ -1,8 +1,4 @@
-/**
- * Created by luketwyman on 15/08/2015.
- */
-
-class ThemeSelector {
+export class ThemeSelector {
 
     public HandleRoll: boolean[];
 
@@ -86,7 +82,4 @@ class ThemeSelector {
         ctx.fill();
     }
 
-
 }
-
-export = ThemeSelector;

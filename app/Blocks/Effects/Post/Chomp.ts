@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Chomp extends PostEffect {
+export class Chomp extends PostEffect {
 
     public Effect: Tone.Filter;
     public Params: ChompParams;
@@ -122,5 +121,3 @@ class Chomp extends PostEffect {
         };
     }
 }
-
-export = Chomp;

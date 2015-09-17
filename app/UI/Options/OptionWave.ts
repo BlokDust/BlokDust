@@ -1,13 +1,8 @@
-/**
- * Created by luketwyman on 23/02/2015.
- */
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
-
-class WaveForm extends Option{
-
+export class WaveForm extends Option {
 
     constructor (waveform,emptystring?) {
         super();
@@ -113,9 +108,4 @@ class WaveForm extends Option{
 
 
     }
-
-
 }
-
-
-export = WaveForm;

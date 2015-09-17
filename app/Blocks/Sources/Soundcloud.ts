@@ -1,12 +1,12 @@
-import Grid = require("../../Grid");
-import Source = require("../Source");
-import SamplerBase = require("./SamplerBase");
-import MainScene = require("../../MainScene");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import {Grid} from '../../Grid';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
+import {SoundCloudAudio} from '../SoundCloudAudio';
+import {SoundCloudAudioType} from '../SoundCloudAudioType';
+import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {Source} from '../Source';
 
-class Soundcloud extends SamplerBase {
+export class Soundcloud extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SoundcloudParams;
@@ -306,5 +306,3 @@ class Soundcloud extends SamplerBase {
         super.Dispose();
     }
 }
-
-export = Soundcloud;

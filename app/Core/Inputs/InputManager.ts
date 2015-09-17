@@ -1,11 +1,9 @@
+import {Commands} from '../../Commands';
+import {CommandManager} from '../Commands/CommandManager';
+import {KeyDownEventArgs} from './KeyDownEventArgs';
+import {KeyUpEventArgs} from './KeyUpEventArgs';
 
-import KeyDownEventArgs = require("./KeyDownEventArgs");
-import KeyUpEventArgs = require("./KeyUpEventArgs");
-import Commands = require("../../Commands");
-import CommandManager = require("../Commands/CommandManager");
-
-
-enum KeyMap {
+export enum KeyMap {
     Backspace = 8,
     Tab = 9,
     Enter = 13,
@@ -108,7 +106,7 @@ enum KeyMap {
     CommandFF = 224
 }
 
-class InputManager {
+export class InputManager {
 
     public KeysDown: any;
     public KeyMap: any;
@@ -183,5 +181,3 @@ class InputManager {
         return (this.KeysDown[KeyMap.Ctrl] || this.KeysDown[KeyMap.CommandFF] || this.KeysDown[KeyMap.LeftWindowKey] || this.KeysDown[KeyMap.RightWindowKey]);
     }
 }
-
-export = InputManager;

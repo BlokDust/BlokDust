@@ -1,8 +1,7 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
+import {MainScene} from '../../MainScene';
+import {Source} from '../Source';
 
-class Noise extends Source {
+export class Noise extends Source {
 
     public DelayedRelease: number;
     public Noise: any;
@@ -128,5 +127,3 @@ class Noise extends Source {
 
     }
 }
-
-export = Noise;

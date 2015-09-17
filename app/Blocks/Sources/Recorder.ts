@@ -1,9 +1,8 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
-import SamplerBase = require("./SamplerBase");
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
+import {Source} from '../Source';
 
-class Recorder extends SamplerBase {
+export class Recorder extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;
@@ -313,5 +312,3 @@ class Recorder extends SamplerBase {
     }
 
 }
-
-export = Recorder;

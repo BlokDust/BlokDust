@@ -1,11 +1,10 @@
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import ICompoundOperation = require("../Core/Operations/ICompoundOperation");
-import CompoundOperation = require("../Core/Operations/CompoundOperation");
-import ChangePropertyOperation = require("../Core/Operations/ChangePropertyOperation");
-import IBlock = require("../Blocks/IBlock");
+import {ChangePropertyOperation} from '../Core/Operations/ChangePropertyOperation';
+import {CompoundOperation} from '../Core/Operations/CompoundOperation';
+import {IBlock} from '../Blocks/IBlock';
+import {ICompoundOperation} from '../Core/Operations/ICompoundOperation';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 
-class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IUndoableOperation, ICompoundOperation
-{
+export class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IUndoableOperation, ICompoundOperation {
     private _Block: IBlock;
 
     // todo: why is it necessary to cast block as 'any'??
@@ -28,5 +27,3 @@ class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IU
 
     }
 }
-
-export = MoveBlockOperation;

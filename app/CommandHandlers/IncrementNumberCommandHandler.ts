@@ -1,9 +1,9 @@
-import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IBlock = require("../Blocks/IBlock");
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import IncrementNumberCompoundOperation = require("../Operations/IncrementNumberCompoundOperation");
+import {IBlock} from '../Blocks/IBlock';
+import {ICommandHandler} from '../Core/Commands/ICommandHandler';
+import {IncrementNumberCompoundOperation} from '../Operations/IncrementNumberCompoundOperation';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 
-class IncrementNumberCommandHandler implements ICommandHandler {
+export class IncrementNumberCommandHandler implements ICommandHandler {
 
     constructor() {
 
@@ -16,5 +16,3 @@ class IncrementNumberCommandHandler implements ICommandHandler {
         });
     }
 }
-
-export = IncrementNumberCommandHandler;

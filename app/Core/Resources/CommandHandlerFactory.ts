@@ -1,8 +1,8 @@
-import ICommandHandler = require("../Commands/ICommandHandler");
-import IFactoryResource = require("./IFactoryResource");
-import IValidator = require("../Validators/IValidator");
+import {ICommandHandler} from '../Commands/ICommandHandler';
+import {IFactoryResource} from './IFactoryResource';
+import {IValidator} from '../Validators/IValidator';
 
-class CommandHandlerFactory<T extends ICommandHandler> implements IFactoryResource<T> {
+export class CommandHandlerFactory<T extends ICommandHandler> implements IFactoryResource<T> {
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
@@ -25,5 +25,3 @@ class CommandHandlerFactory<T extends ICommandHandler> implements IFactoryResour
         return this._Type;
     }
 }
-
-export = CommandHandlerFactory;

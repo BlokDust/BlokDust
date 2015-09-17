@@ -1,14 +1,13 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Chopper extends PostEffect {
+export class Chopper extends PostEffect {
 
+    public Effect: GainNode;
+    public Params: ChopperParams;
     public Polarity: number;
     public Transport;
     public Timer;
-    public Effect: GainNode;
-    public Params: ChopperParams;
 
     Init(sketch?: any): void {
 
@@ -108,5 +107,3 @@ class Chopper extends PostEffect {
         this.Params[param] = val;
     }
 }
-
-export = Chopper;

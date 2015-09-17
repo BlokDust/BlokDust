@@ -1,13 +1,10 @@
-/**
- * Created by luketwyman on 16/01/2015.
- */
-import Size = minerva.Size;
-import OptionHandle = require("./OptionHandle");
-import OptionSwitch = require("./OptionSwitch");
-import OptionButton = require("./OptionButton");
-import OptionSubHandle = require("./OptionSubHandle");
+import {OptionButton} from './OptionButton';
+import {OptionHandle} from './OptionHandle';
+import {OptionSubHandle} from './OptionSubHandle';
+import {OptionSwitch} from './OptionSwitch';
+import Size = minerva.Size; //TODO: es6 modules
 
-interface IOption {
+export interface IOption {
     Type: String;
     Position: Point;
     Size: Size;
@@ -51,5 +48,3 @@ interface IOption {
     Draw(ctx,units,i,panel): void;
 
 }
-
-export = IOption;

@@ -1,9 +1,6 @@
-/**
- * Created by luketwyman on 05/08/2015.
- */
-import DisplayObject = require("../DisplayObject");
+import {DisplayObject} from '../DisplayObject';
 
-class StageDragger  extends DisplayObject {
+export class StageDragger  extends DisplayObject {
 
     private _DragStart: Point;
     private _OffsetStart: Point;
@@ -128,8 +125,4 @@ class StageDragger  extends DisplayObject {
         App.MainScene.ToolTipClose();
     }
 
-
-
 }
-
-export = StageDragger;

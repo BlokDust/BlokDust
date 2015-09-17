@@ -1,14 +1,11 @@
-/**
- * Created by luketwyman on 12/07/2015.
- */
-import MainScene = require("./../MainScene");
-import IEffect = require("../Blocks/IEffect");
-import ISource = require("../Blocks/ISource");
-import IBlock = require("../Blocks/IBlock");
-import DisplayObject = require("../DisplayObject");
-import Recorder = require("../Blocks/Sources/Recorder");
+import {DisplayObject} from '../DisplayObject';
+import {IBlock} from '../Blocks/IBlock';
+import {IEffect} from '../Blocks/IEffect';
+import {ISource} from '../Blocks/ISource';
+import {MainScene} from './../MainScene';
+import {Recorder} from '../Blocks/Sources/Recorder';
 
-class RecorderPanel extends DisplayObject {
+export class RecorderPanel extends DisplayObject {
 
     private _Blocks: Recorder[];
     private _Roll: boolean[];
@@ -159,8 +156,4 @@ class RecorderPanel extends DisplayObject {
         }
 
     }
-
-
 }
-
-export = RecorderPanel;

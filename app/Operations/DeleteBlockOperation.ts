@@ -1,14 +1,14 @@
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import ICompoundOperation = require("../Core/Operations/ICompoundOperation");
-import CompoundOperation = require("../Core/Operations/CompoundOperation");
-import RemoveItemFromArrayOperation = require("../Core/Operations/RemoveItemFromArrayOperation");
-import RemoveDisplayObjectOperation = require("./RemoveDisplayObjectOperation");
-import MoveBlockOperation = require("./MoveBlockOperation");
-import IBlock = require("../Blocks/IBlock");
-import IDisplayObject = require("../IDisplayObject");
+import {CompoundOperation} from '../Core/Operations/CompoundOperation';
+import {IBlock} from '../Blocks/IBlock';
+import {ICompoundOperation} from '../Core/Operations/ICompoundOperation';
+import {IDisplayObject} from '../IDisplayObject';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
+import {MoveBlockOperation} from './MoveBlockOperation';
+import {RemoveItemFromArrayOperation} from '../Core/Operations/RemoveItemFromArrayOperation';
+import {RemoveDisplayObjectOperation} from './RemoveDisplayObjectOperation';
 
-class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IUndoableOperation, ICompoundOperation
-{
+export class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> implements IUndoableOperation, ICompoundOperation {
+
     private _Block: IBlock;
 
     // todo: why is it necessary to cast block as 'any'??
@@ -36,5 +36,3 @@ class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> implements 
         this._Block = null;
     }
 }
-
-export = DeleteBlockOperation;

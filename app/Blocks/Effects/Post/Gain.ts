@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Gain extends PostEffect {
+export class Gain extends PostEffect {
 
     public Effect: GainNode;
     //public Effect: Tone.Signal;
@@ -69,5 +68,3 @@ class Gain extends PostEffect {
         };
     }
 }
-
-export = Gain;

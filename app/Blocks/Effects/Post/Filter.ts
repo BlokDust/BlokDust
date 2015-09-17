@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Filter extends PostEffect {
+export class Filter extends PostEffect {
 
     public Effect: Tone.Filter;
     public Params: FilterParams;
@@ -98,5 +97,3 @@ class Filter extends PostEffect {
         };
     }
 }
-
-export = Filter;

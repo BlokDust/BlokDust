@@ -1,12 +1,11 @@
-
-import ResourceManager = require("../Resources/ResourceManager");
-import IResource = require("../Resources/IResource");
-import IFactoryResource = require("../Resources/IFactoryResource");
-import ICommandHandler = require("../Commands/ICommandHandler");
-import CommandHandlerFactory = require("../Resources/CommandHandlerFactory");
+import {ICommandHandler} from '../Commands/ICommandHandler';
+import {CommandHandlerFactory} from '../Resources/CommandHandlerFactory';
+import {IFactoryResource} from '../Resources/IFactoryResource';
+import {IResource} from '../Resources/IResource';
+import {ResourceManager} from '../Resources/ResourceManager';
 
 // https://github.com/CadetEditor/CoreEditor-as/blob/master/coreAppEx/src/core/appEx/managers/CommandManager.as
-class CommandManager {
+export class CommandManager {
 
     private _ResourceManager: ResourceManager;
     private _CommandHandlerFactories: CommandHandlerFactory<ICommandHandler>[] = [];
@@ -41,5 +40,3 @@ class CommandManager {
         }, this);
     }
 }
-
-export = CommandManager;

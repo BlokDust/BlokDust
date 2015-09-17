@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class AutoWah extends PostEffect {
+export class AutoWah extends PostEffect {
 
     public Effect: Tone.AutoWah;
     public Params: AutoWahParams;
@@ -158,5 +157,3 @@ class AutoWah extends PostEffect {
         };
     }
 }
-
-export = AutoWah;

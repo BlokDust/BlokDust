@@ -1,11 +1,7 @@
-/**
- * Created by luketwyman on 09/08/2015.
- */
+import {ColorTheme} from './ColorTheme';
+import {DisplayObject} from '../DisplayObject';
 
-import ColorTheme = require("./ColorTheme");
-import DisplayObject = require("../DisplayObject");
-
-class ColorThemes extends DisplayObject {
+export class ColorThemes extends DisplayObject {
 
     public Themes: ColorTheme[];
     public Loaded: boolean;
@@ -164,5 +160,3 @@ class ColorThemes extends DisplayObject {
     }
 
 }
-
-export = ColorThemes;

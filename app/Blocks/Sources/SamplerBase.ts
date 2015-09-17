@@ -1,9 +1,8 @@
-import Grid = require("../../Grid");
-import Source = require("../Source");
-import MainScene = require("../../MainScene");
+import {Grid} from '../../Grid';
+import {MainScene} from '../../MainScene';
+import {Source} from '../Source';
 
-class SamplerBase extends Source {
-
+export class SamplerBase extends Source {
 
     Init(sketch?: any): void {
 
@@ -113,5 +112,3 @@ class SamplerBase extends Source {
         });
     }
 }
-
-export = SamplerBase;

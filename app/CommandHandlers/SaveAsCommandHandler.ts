@@ -1,8 +1,8 @@
-import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IOperation = require("../Core/Operations/IOperation");
-import SaveOperation = require("../Operations/SaveOperation");
+import {ICommandHandler} from '../Core/Commands/ICommandHandler';
+import {IOperation} from '../Core/Operations/IOperation';
+import {SaveOperation} from '../Operations/SaveOperation';
 
-class SaveAsCommandHandler implements ICommandHandler {
+export class SaveAsCommandHandler implements ICommandHandler {
 
     constructor() {
 
@@ -18,5 +18,3 @@ class SaveAsCommandHandler implements ICommandHandler {
         });
     }
 }
-
-export = SaveAsCommandHandler;

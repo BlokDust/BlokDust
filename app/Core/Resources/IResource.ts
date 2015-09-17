@@ -1,7 +1,4 @@
 
-interface IResource<T>
-{
+export interface IResource<T> {
     //Id: string;
 }
-
-export = IResource;

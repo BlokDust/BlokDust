@@ -1,9 +1,9 @@
 ///<amd-dependency path="utils"/>.
-import IPooledFactoryResource = require("./IPooledFactoryResource");
-import IPooledObject = require("./IPooledObject");
-import Queue = Utils.Collections.Queue;
+import {IPooledFactoryResource} from './IPooledFactoryResource';
+import {IPooledObject} from './IPooledObject';
+import Queue = Utils.Collections.Queue; //TODO: es6 modules
 
-class PooledFactoryResource<T extends IPooledObject> implements IPooledFactoryResource<T> {
+export class PooledFactoryResource<T extends IPooledObject> implements IPooledFactoryResource<T> {
 
     private _Type: T;
     private _PropertyDescriptor: PropertyDescriptorMap;
@@ -173,5 +173,3 @@ class PooledFactoryResource<T extends IPooledObject> implements IPooledFactoryRe
         //GC.SuppressFinalize(objectToDestroy);
     }
 }
-
-export = PooledFactoryResource;

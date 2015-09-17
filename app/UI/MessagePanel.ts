@@ -1,12 +1,8 @@
-/**
- * Created by luketwyman on 12/07/2015.
- */
+import {DisplayObject} from '../DisplayObject';
+import {MainScene} from './../MainScene';
+import Size = minerva.Size; //TODO: es6 modules
 
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
-import Size = minerva.Size;
-
-class MessagePanel extends DisplayObject {
+export class MessagePanel extends DisplayObject {
 
     private _Roll:boolean[];
     public Hover:boolean;
@@ -240,5 +236,3 @@ class MessagePanel extends DisplayObject {
         }
     }
 }
-
-export = MessagePanel;

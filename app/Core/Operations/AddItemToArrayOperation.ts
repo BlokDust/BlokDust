@@ -1,7 +1,6 @@
-import IUndoableOperation = require("./IUndoableOperation");
+import {IUndoableOperation} from './IUndoableOperation';
 
-class AddItemToArrayOperation<T> implements IUndoableOperation
-{
+export class AddItemToArrayOperation<T> implements IUndoableOperation {
     private _Item: T;
     private _Array: Array<T>;
     private _Index: number;
@@ -41,5 +40,3 @@ class AddItemToArrayOperation<T> implements IUndoableOperation
         this._Array = null;
     }
 }
-
-export = AddItemToArrayOperation;

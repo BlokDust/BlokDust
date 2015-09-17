@@ -1,8 +1,6 @@
-import Effect = require("./../Effect");
-import IPreEffect = require("./IPreEffect");
+import {Effect} from './../Effect';
+import {IPreEffect} from './IPreEffect';
 
-class PreEffect extends Effect implements IPreEffect {
+export class PreEffect extends Effect implements IPreEffect {
 
 }
-
-export = PreEffect;

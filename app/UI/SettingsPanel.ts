@@ -1,15 +1,11 @@
-/**
- * Created by luketwyman on 13/06/2015.
- */
-import Version = require("./../_Version");
-import Size = minerva.Size;
-import Grid = require("./../Grid");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("./../MainScene");
-import MenuCategory = require("./MenuCategory");
-import ThemeSelector = require("./ColorThemeSelector");
+import {DisplayObject} from '../DisplayObject';
+import {MainScene} from './../MainScene';
+import {MenuCategory} from './MenuCategory';
+import Size = minerva.Size; //TODO: es6 modules
+import {ThemeSelector} from './ColorThemeSelector';
+import {Version} from './../_Version';
 
-class SettingsPanel extends DisplayObject{
+export class SettingsPanel extends DisplayObject{
 
     public Open: boolean;
     public OffsetY: number;
@@ -35,7 +31,8 @@ class SettingsPanel extends DisplayObject{
         this.MenuItems = [];
         this._MenuCols = [9,5,7,4,3];
         this._OpenTab = 2;
-        this._VersionNumber = Version.Version;
+        this._VersionNumber = Version;
+        console.log(Version);
 
         // OPTIONS //
         this._ThemeSelector = new ThemeSelector;
@@ -574,5 +571,3 @@ class SettingsPanel extends DisplayObject{
     }
 
 }
-
-export = SettingsPanel;

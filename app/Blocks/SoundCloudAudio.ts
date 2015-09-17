@@ -1,6 +1,6 @@
-import SoundCloudAudioType = require('./SoundCloudAudioType');
+import {SoundCloudAudioType} from './SoundCloudAudioType';
 
-class SoundCloudAudio {
+export class SoundCloudAudio {
 
     public SC: any; //TODO - we're defining this in 3 different places and it's not working properly, unable to check if undefined
 
@@ -90,8 +90,5 @@ class SoundCloudAudio {
         }, callback);
     }
 }
-
-export = SoundCloudAudio;
-
 
 //https://api.soundcloud.com/tracks/43883752/stream?client_id=7258ff07f16ddd167b55b8f9b9a3ed33

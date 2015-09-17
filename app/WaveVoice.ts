@@ -1,8 +1,4 @@
-/**
- * Created by luketwyman on 31/07/2015.
- */
-
-class WaveVoice {
+export class WaveVoice {
 
     public VoiceType: number;
     public WaveType: number;
@@ -29,8 +25,4 @@ class WaveVoice {
         this.FDest = frequency;
 
     }
-
-
 }
-
-export = WaveVoice;

@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Distortion extends PostEffect {
+export class Distortion extends PostEffect {
 
     public Effect: Tone.Distortion;
     public Params: DistortionParams;
@@ -97,5 +96,3 @@ class Distortion extends PostEffect {
         };
     }
 }
-
-export = Distortion;

@@ -1,13 +1,9 @@
-/**
- * Created by luketwyman on 17/01/2015.
- */
+import {Option} from './Option';
+import {OptionHandle} from './OptionHandle';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import OptionHandle = require("./OptionHandle");
-import ParametersPanel = require("./../OptionsPanel");
-import Size = minerva.Size;
-
-class ADSR extends Option{
+export class ADSR extends Option {
 
     private _Node:any[];
 
@@ -157,6 +153,3 @@ class ADSR extends Option{
 
 
 }
-
-
-export = ADSR;

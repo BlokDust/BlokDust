@@ -1,11 +1,10 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
-import Effect = require("../Effect");
-import Block = require("../Block");
-import Particle = require("../../Particle");
+import {Block} from '../Block';
+import {Effect} from '../Effect';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {Source} from '../Source';
 
-class ToneSource extends Source {
+export class ToneSource extends Source {
 
     public Sources: Tone.Oscillator[];
     //public Frequency: number;
@@ -186,5 +185,3 @@ class ToneSource extends Source {
         return App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(baseFrequency + fine);
     }
 }
-
-export = ToneSource;

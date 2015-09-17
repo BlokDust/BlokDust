@@ -1,9 +1,9 @@
-import Grid = require("../../Grid");
-import SamplerBase = require("./SamplerBase");
-import MainScene = require("../../MainScene");
-import Audio = require('../../Core/Audio/Audio');
+import {Audio} from '../../Core/Audio/Audio';
+import {Grid} from '../../Grid';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
 
-class Sampler extends SamplerBase {
+export class Sampler extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SamplerParams;
@@ -281,5 +281,3 @@ class Sampler extends SamplerBase {
         this._fileInput.removeEventListener('change', this.HandleFileUploadButton, false);
     }
 }
-
-export = Sampler;

@@ -1,9 +1,7 @@
-import IOperation = require("./IOperation");
+import {IOperation} from './IOperation';
 
-interface ICompoundOperation extends IOperation {
+export interface ICompoundOperation extends IOperation {
     Operations: IOperation[];
     AddOperation: (op: IOperation) => void;
     RemoveOperation: (op: IOperation) => void;
 }
-
-export = ICompoundOperation;

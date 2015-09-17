@@ -1,9 +1,9 @@
-import IDisplayObject = require("../IDisplayObject");
-import Particle = require("../Particle");
-import Grid = require("../Grid");
-import IAudioChain = require("../Core/Audio/Connections/IAudioChain");
+import {IDisplayObject} from "../IDisplayObject";
+import {Particle} from "../Particle";
+import {Grid} from "../Grid";
+import {IAudioChain} from "../Core/Audio/Connections/IAudioChain";
 
-interface IBlock extends IDisplayObject{
+export interface IBlock extends IDisplayObject{
     Id: number;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Connections: Fayde.Collections.ObservableCollection<IBlock>
@@ -33,5 +33,3 @@ interface IBlock extends IDisplayObject{
     SetParam(param: string, value: number): void;
     BackwardsCompatibilityPatch(): void;
 }
-
-export = IBlock;

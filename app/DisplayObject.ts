@@ -1,10 +1,10 @@
-import IDisplayObject = require("./IDisplayObject");
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {IDisplayObject} from './IDisplayObject';
+import ISketchContext = Fayde.Drawing.ISketchContext; //TODO: es6 modules
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
 
-class DisplayObject implements IDisplayObject {
+export class DisplayObject implements IDisplayObject {
     ZIndex: number;
     Sketch: any;
     Width: number;
@@ -58,5 +58,3 @@ class DisplayObject implements IDisplayObject {
         return hit;
     }
 }
-
-export = DisplayObject;

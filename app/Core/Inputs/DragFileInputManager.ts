@@ -1,6 +1,6 @@
-import InputManager = require("./InputManager");
+import {InputManager} from './InputManager';
 
-class DragFileInputManager extends InputManager {
+export class DragFileInputManager extends InputManager {
 
     public DragEnter = new nullstone.Event<DragEvent>();
     public DragMove = new nullstone.Event<DragEvent>();
@@ -33,5 +33,3 @@ class DragFileInputManager extends InputManager {
         this.DragLeave.raise(this, e);
     }
 }
-
-export = DragFileInputManager;

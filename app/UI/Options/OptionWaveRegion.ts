@@ -1,15 +1,10 @@
-/**
- * Created by luketwyman on 23/02/2015.
- */
+import {Option} from './Option';
+import {OptionHandle} from './OptionHandle';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
+import {WaveForm} from './OptionWave';
 
-import Option = require("./Option");
-import WaveForm = require("./OptionWave");
-import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
-import OptionHandle = require("./OptionHandle");
-
-class WaveRegion extends WaveForm{
-
+export class WaveRegion extends WaveForm{
 
     constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], handles: any, mode: boolean, emptystring?: string) {
         super(waveform,emptystring);
@@ -143,8 +138,4 @@ class WaveRegion extends WaveForm{
         }
     }
 
-
 }
-
-
-export = WaveRegion;

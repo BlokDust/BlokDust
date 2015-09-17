@@ -1,48 +1,47 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
-import Config = require("./Config");
-import Metrics = require("./AppMetrics");
-import OperationManager = require("./Core/Operations/OperationManager");
-import ResourceManager = require("./Core/Resources/ResourceManager");
-import CommandManager = require("./Core/Commands/CommandManager");
-import Audio = require("./Core/Audio/Audio");
-import InputManager = require("./Core/Inputs/InputManager");
-import TypingManager = require("./Core/Inputs/TypingManager");
-import DragFileInputManager = require("./Core/Inputs/DragFileInputManager");
-import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
-import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
-import PointerInputManager = require("./Core/Inputs/PointerInputManager");
-import IEffect = require("./Blocks/IEffect");
-import ISource = require("./Blocks/ISource");
-import IBlock = require("./Blocks/IBlock");
-import DisplayObjectCollection = require("./DisplayObjectCollection");
-import Particle = require("./Particle");
-import ColorThemes = require("./UI/ColorThemes");
-import AnimationsLayer = require("./UI/AnimationsLayer");
-import Serializer = require("./Serializer");
-import Grid = require("./Grid");
-import MainScene = require("./MainScene");
-import Splash = require("./Splash");
-import Commands = require("./Commands");
-import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
-import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
-import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
-import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
-import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
-import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
-import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
-import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
-import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
-import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
-import DisplayList = require("./DisplayList");
-import Source = require("./Blocks/Source");
-import Effect = require("./Blocks/Effect");
-import IApp = require("./IApp");
-import SaveFile = require("./SaveFile");
-import FocusManager = require("./Core/Inputs/FocusManager");
-import FocusManagerEventArgs = require("./Core/Inputs/FocusManagerEventArgs");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import SketchSession = Fayde.Drawing.SketchSession;
+import {AnimationsLayer} from './UI/AnimationsLayer';
+import {Audio} from './Core/Audio/Audio';
+import {ColorThemes} from './UI/ColorThemes';
+import {CommandManager} from './Core/Commands/CommandManager';
+import {Commands} from './Commands';
+import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
+import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
+import {Config} from './Config';
+import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
+import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
+import {DisplayList} from './DisplayList';
+import {DisplayObjectCollection} from './DisplayObjectCollection';
+import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
+import {Effect} from './Blocks/Effect';
+import {FocusManager} from './Core/Inputs/FocusManager';
+import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
+import {Grid} from './Grid';
+import {IApp} from './IApp';
+import {IBlock} from './Blocks/IBlock';
+import {IEffect} from './Blocks/IEffect';
+import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
+import {ISource} from './Blocks/ISource';
+import {InputManager} from './Core/Inputs/InputManager';
+import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {LoadCommandHandler} from './CommandHandlers/LoadCommandHandler';
+import {MainScene} from './MainScene';
+import {Metrics} from './AppMetrics';
+import {MoveBlockCommandHandler} from './CommandHandlers/MoveBlockCommandHandler';
+import {OperationManager} from './Core/Operations/OperationManager';
+import {PointerInputManager} from './Core/Inputs/PointerInputManager';
+import {ResourceManager} from './Core/Resources/ResourceManager';
+import {TypingManager} from './Core/Inputs/TypingManager';
+import {Particle} from './Particle';
+import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {RedoCommandHandler} from './CommandHandlers/RedoCommandHandler';
+import {SaveAsCommandHandler} from './CommandHandlers/SaveAsCommandHandler';
+import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
+import {SaveFile} from './SaveFile';
+import {Serializer} from './Serializer';
+import SketchSession = Fayde.Drawing.SketchSession; //TODO: es6 modules
+import {Source} from './Blocks/Source';
+import {Splash} from './Splash';
+import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 
 class App implements IApp{
 
@@ -407,5 +406,4 @@ class App implements IApp{
     }
 
 }
-
 export = App;

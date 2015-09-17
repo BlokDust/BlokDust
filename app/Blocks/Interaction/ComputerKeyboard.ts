@@ -1,13 +1,12 @@
-import Keyboard = require("./Keyboard");
-import Voice = require("./VoiceObject");
-import ISource = require("../ISource");
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
-import Microphone = require("../Sources/Microphone");
-import Power = require("../Power/Power");
+import {ISource} from '../ISource';
+import {Keyboard} from './Keyboard';
+import {KeyDownEventArgs} from '../../Core/Inputs/KeyDownEventArgs';
+import {MainScene} from '../../MainScene';
+import {Microphone} from '../Sources/Microphone';
+import {Power} from '../Power/Power';
+import {VoiceCreator as Voice} from './VoiceObject';
 
-class ComputerKeyboard extends Keyboard {
+export class ComputerKeyboard extends Keyboard {
 
     public KeyboardCommands: any = {
         OctaveUp: 'octave-up',
@@ -256,8 +255,4 @@ class ComputerKeyboard extends Keyboard {
             ]
         };
     }
-
-
 }
-
-export = ComputerKeyboard;

@@ -1,11 +1,11 @@
-import Effect = require("../../Effect");
-import ISource = require("../../ISource");
-import MainScene = require("../../../MainScene");
-import Particle = require("../../../Particle");
-import Logic = require("./Logic");
-import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
+import {Effect} from '../../Effect';
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {Logic} from './Logic';
+import {MainScene} from '../../../MainScene';
+import {Particle} from '../../../Particle';
 
-class Toggle extends Logic {
+export class Toggle extends Logic {
 
     Init(sketch?: any): void {
 
@@ -84,5 +84,3 @@ class Toggle extends Logic {
         }
     }
 }
-
-export = Toggle;

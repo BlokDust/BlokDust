@@ -1,12 +1,12 @@
-import IPooledObject = require("./Core/Resources/IPooledObject");
-import IBlock = require("./Blocks/IBlock");
-import Source = require("./Blocks/Source");
-import Logic = require("./Blocks/Power/Logic/Logic");
-import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
-import Void = require("./Blocks/Power/Void");
-import Vector = Utils.Maths.Vector;
+import {IPooledObject} from "./Core/Resources/IPooledObject";
+import {IBlock} from "./Blocks/IBlock";
+import {Source} from "./Blocks/Source";
+import {Logic} from "./Blocks/Power/Logic/Logic";
+import {ParticleEmitter} from "./Blocks/Power/ParticleEmitter";
+import {Void} from "./Blocks/Power/Void";
+import Vector = Utils.Maths.Vector; //TODO: es6 module
 
-class Particle implements IPooledObject {
+export class Particle implements IPooledObject {
 
     public Disposed: boolean = false;
     public Life: number;
@@ -65,5 +65,3 @@ class Particle implements IPooledObject {
         }
     }
 }
-
-export = Particle;

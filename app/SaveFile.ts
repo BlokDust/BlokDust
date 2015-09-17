@@ -1,10 +1,8 @@
-import IBlock = require("./Blocks/IBlock");
+import {IBlock} from './Blocks/IBlock';
 
-class SaveFile {
-    public ZoomLevel: number;
-    public DragOffset: Point;
-    public Composition: IBlock[];
+export class SaveFile {
     public ColorThemeNo: number;
+    public Composition: IBlock[];
+    public DragOffset: Point;
+    public ZoomLevel: number;
 }
-
-export = SaveFile;

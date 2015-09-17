@@ -1,8 +1,7 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 
-class Reverb extends PostEffect {
+export class Reverb extends PostEffect {
 
     public Effect: Tone.Freeverb;
     public Params: ReverbParams;
@@ -113,5 +112,3 @@ class Reverb extends PostEffect {
         };
     }
 }
-
-export = Reverb;

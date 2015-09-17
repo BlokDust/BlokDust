@@ -1,12 +1,9 @@
-/**
- * Created by luketwyman on 14/02/2015.
- */
-import MainScene = require("./../MainScene");
-import IEffect = require("../Blocks/IEffect");
-import ISource = require("../Blocks/ISource");
-import IBlock = require("../Blocks/IBlock");
+import {IBlock} from '../Blocks/IBlock';
+import {IEffect} from '../Blocks/IEffect';
+import {ISource} from '../Blocks/ISource';
+import {MainScene} from './../MainScene';
 
-class ConnectionLines {
+export class ConnectionLines {
 
     private _Ctx: CanvasRenderingContext2D;
     private _Sketch: MainScene;
@@ -109,5 +106,3 @@ class ConnectionLines {
     }
 
 }
-
-export = ConnectionLines;

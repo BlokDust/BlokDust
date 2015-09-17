@@ -1,13 +1,12 @@
-import PowerSource = require("./PowerSource");
-import Grid = require("../../Grid");
-import Particle = require("../../Particle");
-import MainScene = require("../../MainScene");
-import Vector = Utils.Maths.Vector;
+import {Grid} from '../../Grid';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {PowerSource} from './PowerSource';
+import Vector = Utils.Maths.Vector; //TODO: es6 modules
 
-class ParticleEmitter extends PowerSource {
+export class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
-
 
     Init(sketch?: any): void {
 
@@ -163,5 +162,3 @@ class ParticleEmitter extends PowerSource {
         this.Params[""+param] = val;
     }
 }
-
-export = ParticleEmitter;

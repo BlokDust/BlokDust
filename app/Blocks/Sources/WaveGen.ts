@@ -1,17 +1,13 @@
-/**
- * Created by luketwyman on 31/07/2015.
- */
+import {Grid} from '../../Grid';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
+import {SoundCloudAudio} from '../SoundCloudAudio';
+import {SoundCloudAudioType} from '../SoundCloudAudioType';
+import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {Source} from '../Source';
+import {WaveVoice} from '../../WaveVoice';
 
-import Grid = require("../../Grid");
-import Source = require("../Source");
-import SamplerBase = require("./SamplerBase");
-import MainScene = require("../../MainScene");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
-import WaveVoice = require("../../WaveVoice");
-
-class WaveGen extends SamplerBase {
+export class WaveGen extends SamplerBase {
 
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
@@ -718,5 +714,3 @@ class WaveGen extends SamplerBase {
         return newBuffer;
     }
 }
-
-export = WaveGen;

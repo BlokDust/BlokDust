@@ -1,9 +1,9 @@
-import ConnectionManager = require("../ConnectionManager");
-import IBlock = require("../../../../Blocks/IBlock");
-import IAudioChain = require("../IAudioChain");
-import AudioChain = require("../AudioChain");
+import {AudioChain} from '../AudioChain';
+import {ConnectionManager} from '../ConnectionManager';
+import {IAudioChain} from '../IAudioChain';
+import {IBlock} from '../../../../Blocks/IBlock';
 
-class AccumulativeConnectionMethod extends ConnectionManager {
+export class AccumulativeConnectionMethod extends ConnectionManager {
 
     constructor(){
         super();
@@ -46,5 +46,3 @@ class AccumulativeConnectionMethod extends ConnectionManager {
         }
     }
 }
-
-export = AccumulativeConnectionMethod;

@@ -1,8 +1,4 @@
-/**
- * Created by luketwyman on 21/07/2015.
- */
-
-class Metrics {
+export class Metrics {
 
 
 
@@ -243,5 +239,3 @@ class Metrics {
         point.y *= this.PixelRatio;
     }
 }
-
-export = Metrics;

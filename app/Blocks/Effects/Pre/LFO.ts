@@ -1,14 +1,13 @@
-import PreEffect = require("../PreEffect");
-import ISource = require("../../ISource");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {MainScene} from '../../../MainScene';
+import {PreEffect} from '../PreEffect';
 
-class LFO extends PreEffect {
+export class LFO extends PreEffect {
 
+    public Defaults: LFOParams;
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
-    public Defaults: LFOParams;
     public WaveIndex: string[];
 
     Init(sketch?: any): void {
@@ -155,5 +154,3 @@ class LFO extends PreEffect {
         };
     }
 }
-
-export = LFO;

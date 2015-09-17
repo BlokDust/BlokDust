@@ -1,10 +1,7 @@
-/**
- * Created by luketwyman on 01/02/2015.
- */
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
+import {DisplayObject} from '../DisplayObject';
+import {MainScene} from './../MainScene';
 
-class TrashCan extends DisplayObject {
+export class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
@@ -61,5 +58,3 @@ class TrashCan extends DisplayObject {
     }
 
 }
-
-export = TrashCan;

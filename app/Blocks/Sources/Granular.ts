@@ -1,12 +1,12 @@
-import Source = require("../Source");
-import MainScene = require("../../MainScene");
-import Grid = require("../../Grid");
-import Particle = require("../../Particle");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import {Grid} from '../../Grid';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {SoundCloudAudio} from '../SoundCloudAudio';
+import {SoundCloudAudioType} from '../SoundCloudAudioType';
+import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {Source} from '../Source';
 
-class Granular extends Source {
+export class Granular extends Source {
 
     public Sources: Tone.Signal[];
     public Grains: Tone.Player[] = [];
@@ -454,5 +454,3 @@ class Granular extends Source {
         this._Envelopes.length = 0;
     }
 }
-
-export = Granular;

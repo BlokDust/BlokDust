@@ -1,11 +1,9 @@
-import Effect = require("../Effect");
+import {Effect} from '../Effect';
 
-class PowerEffect extends Effect {
+export class PowerEffect extends Effect {
 
     Init(sketch?: any): void {
         super.Init(sketch);
     }
 
 }
-
-export = PowerEffect;

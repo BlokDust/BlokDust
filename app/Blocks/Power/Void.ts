@@ -1,13 +1,7 @@
-/**
- * Created by luketwyman on 05/08/2015.
- */
+import {Block} from '../Block';
+import {MainScene} from '../../MainScene';
 
-
-import Block = require("../Block");
-import MainScene = require("../../MainScene");
-
-
-class Void extends Block {
+export class Void extends Block {
 
     public StarPos: Point;
 
@@ -39,5 +33,3 @@ class Void extends Block {
         super.Dispose();
     }
 }
-
-export = Void;

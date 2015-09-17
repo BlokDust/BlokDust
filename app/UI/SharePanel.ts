@@ -1,15 +1,10 @@
-/**
- * Created by luketwyman on 13/06/2015.
- */
+import Size = minerva.Size; //TODO: es6 modules
+import {Commands} from './../Commands';
+import {CommandManager} from '../Core/Commands/CommandManager';
+import {DisplayObject} from '../DisplayObject';
+import {MainScene} from './../MainScene';
 
-import Size = minerva.Size;
-import Grid = require("./../Grid");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("./../MainScene");
-import Commands = require("./../Commands");
-import CommandManager = require("../Core/Commands/CommandManager");
-
-class SharePanel extends DisplayObject{
+export class SharePanel extends DisplayObject{
 
     public Open: boolean;
     public OffsetX: number;
@@ -703,5 +698,3 @@ class SharePanel extends DisplayObject{
 
     }
 }
-
-export = SharePanel;

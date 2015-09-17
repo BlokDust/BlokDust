@@ -1,6 +1,6 @@
-import MIDIMessageArgs = require('./MIDIMessageArgs');
+import {MIDIMessageArgs} from './MIDIMessageArgs';
 
-class MIDIManager {
+export class MIDIManager {
 
     public HasMIDICapability: boolean = false;
     public MIDI: WebMidi.MIDIAccess;
@@ -108,4 +108,3 @@ class MIDIManager {
         return i;
     }
 }
-export = MIDIManager;

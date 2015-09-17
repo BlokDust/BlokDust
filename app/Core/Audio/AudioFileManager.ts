@@ -1,4 +1,4 @@
-class AudioFileManager {
+export class AudioFileManager {
 
     DecodeFileData(files, callback: (file: any, buffer: AudioBuffer) => any) {
         //Only process audio files.
@@ -55,7 +55,4 @@ class AudioFileManager {
             console.log(percentLoaded + '%');
         }
     }
-
 }
-
-export = AudioFileManager;

@@ -1,12 +1,12 @@
-import Effect = require("../../Effect");
-import ISource = require("../../ISource");
-import MainScene = require("../../../MainScene");
-import Particle = require("../../../Particle");
-import ParticleEmitter = require("./../ParticleEmitter");
-import Logic = require("./Logic");
-import IAudioChain = require("../../../Core/Audio/Connections/IAudioChain");
+import {Effect} from '../../Effect';
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {Logic} from './Logic';
+import {MainScene} from '../../../MainScene';
+import {Particle} from '../../../Particle';
+import {ParticleEmitter} from './../ParticleEmitter';
 
-class Momentary extends Logic {
+export class Momentary extends Logic {
 
     Init(sketch?: any): void {
 
@@ -82,5 +82,3 @@ class Momentary extends Logic {
         this.Params.logic = false;
     }
 }
-
-export = Momentary;
