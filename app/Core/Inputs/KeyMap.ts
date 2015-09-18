@@ -1,4 +1,4 @@
-export const enum KeyMap {
+export enum KeyMap {
     Backspace = 8,
     Tab = 9,
     Enter = 13,

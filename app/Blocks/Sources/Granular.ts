@@ -145,7 +145,7 @@ export class Granular extends Source {
         }
         this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
-            this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
             App.AnimationsLayer.RemoveFromList(this);
             this._IsLoaded = true;
 

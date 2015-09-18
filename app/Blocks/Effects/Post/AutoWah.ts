@@ -67,20 +67,6 @@ export class AutoWah extends PostEffect {
         this.Params[param] = val;
     }
 
-  /*  GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="octaves") {
-            val = this.Effect.octaves;
-        } else if (param=="baseFrequency") {
-            val = this.Effect.baseFrequency;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        }
-
-        return val;
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 

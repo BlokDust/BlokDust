@@ -488,7 +488,7 @@ export class WaveGen extends SamplerBase {
             this._FirstBuffer = App.Audio.ctx.createBuffer(1, this._BufferData.length, sampleRate);
         }
         this._FirstBuffer.copyToChannel(this._BufferData,0,0);
-        this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
+        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
         var duration = this.GetDuration(this._FirstBuffer);
         if (!this._LoadFromShare) {
             this.Params.startPosition = 0;
@@ -664,7 +664,7 @@ export class WaveGen extends SamplerBase {
                 });
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":

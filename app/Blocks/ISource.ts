@@ -39,7 +39,6 @@ export interface ISource extends IBlock {
     GetPitch(sourceId?: number): number;
     ResetPitch(): void;
     OctaveShift(octavesAmount: number): void;
-    GetWaveformFromBuffer(buffer: any, detail: number, precision: number,  normal: number): number[];
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string, forceRelease?: boolean): void;
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;

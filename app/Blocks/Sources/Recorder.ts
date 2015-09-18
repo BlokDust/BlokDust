@@ -127,7 +127,7 @@ export class Recorder extends SamplerBase {
 
     UpdateWaveform(){
         // Update waveform
-        this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
         var duration = this.GetDuration();
         this.Params.endPosition = duration;
         this.Params.loopStart = duration * 0.5;
@@ -284,7 +284,7 @@ export class Recorder extends SamplerBase {
                 this.Sources[0].player.reverse = value;
                 // Update waveform
                 this.Params[param] = val;
-                this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":

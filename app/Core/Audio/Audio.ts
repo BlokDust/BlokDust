@@ -5,6 +5,7 @@ import {ConnectionManager} from './Connections/ConnectionManager';
 import {ConnectionMethodType} from './Connections/ConnectionMethodType';
 import {MIDIManager} from './MIDIManager';
 import {SimpleConnectionMethod} from './Connections/ConnectionMethods/SimpleConnectionMethod';
+import {Waveform} from './Waveform';
 
 export class Audio {
 
@@ -21,6 +22,7 @@ export class Audio {
     public MIDIManager: MIDIManager;
     public ConnectionMethodType: ConnectionMethodType;
     public ConnectionManager: ConnectionManager;
+    public Waveform: Waveform;
 
     Init() {
 
@@ -64,6 +66,9 @@ export class Audio {
         // MIDI Manager
         this.MIDIManager = new MIDIManager();
         this.MIDIManager.Init();
+
+        // Waveform Class
+        this.Waveform = new Waveform();
 
     }
 

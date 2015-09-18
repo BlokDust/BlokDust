@@ -114,7 +114,7 @@ export class Sampler extends SamplerBase {
         this._FirstBuffer = new Tone.Buffer();
         this._FirstBuffer.buffer = buffer;
 
-        this._WaveForm = this.GetWaveformFromBuffer(buffer,200,5,95);
+        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(buffer,200,5,95);
         App.AnimationsLayer.RemoveFromList(this);
         var duration = this.GetDuration(this._FirstBuffer);
         if (!this._LoadFromShare) {
@@ -249,7 +249,7 @@ export class Sampler extends SamplerBase {
                 this.Sources[0].player.reverse = value;
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":

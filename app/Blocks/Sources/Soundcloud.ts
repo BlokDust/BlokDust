@@ -66,7 +66,7 @@ export class Soundcloud extends SamplerBase {
         }
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
-            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
             App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration(this._FirstBuffer);
             if (!this._LoadFromShare) {
@@ -275,7 +275,7 @@ export class Soundcloud extends SamplerBase {
                 });
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":
