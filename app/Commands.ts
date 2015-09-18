@@ -1,4 +1,4 @@
-export enum Commands {
+export const enum Commands {
     CREATE_BLOCK,
     DELETE_BLOCK,
     LOAD,

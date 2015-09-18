@@ -3,6 +3,7 @@ import {CommandHandlerFactory} from '../Resources/CommandHandlerFactory';
 import {IFactoryResource} from '../Resources/IFactoryResource';
 import {IResource} from '../Resources/IResource';
 import {ResourceManager} from '../Resources/ResourceManager';
+import {Commands} from '../../Commands';
 
 // https://github.com/CadetEditor/CoreEditor-as/blob/master/coreAppEx/src/core/appEx/managers/CommandManager.as
 export class CommandManager {
@@ -23,7 +24,7 @@ export class CommandManager {
         }
     }
 
-    public ExecuteCommand(command: string, parameters?: any): Promise<any> {
+    public ExecuteCommand(command: Commands, parameters?: any): Promise<any> {
         // todo: use metric to determine best CommandHandlerFactory to use.
         var commandHandlerFactories: CommandHandlerFactory<ICommandHandler>[] = this._GetCommandHandlerFactories(command);
 
@@ -34,7 +35,7 @@ export class CommandManager {
         return commandHandler.Execute(parameters);
     }
 
-    private _GetCommandHandlerFactories(command: string): CommandHandlerFactory<ICommandHandler>[]{
+    private _GetCommandHandlerFactories(command: Commands): CommandHandlerFactory<ICommandHandler>[]{
         return this._CommandHandlerFactories.filter((item:CommandHandlerFactory<ICommandHandler>) => {
             return item.Command == command;
         }, this);

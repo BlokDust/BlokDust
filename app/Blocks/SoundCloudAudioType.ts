@@ -1,4 +1,4 @@
-export enum SoundCloudAudioType {
+export const enum SoundCloudAudioType {
     Soundcloud,
     Granular,
     Convolution

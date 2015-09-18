@@ -1,4 +1,4 @@
-export enum ConnectionMethodType {
+export const enum ConnectionMethodType {
     Simple,
     Accumulative,
     Original,

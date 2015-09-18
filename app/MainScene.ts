@@ -481,7 +481,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                        App.CommandManager.ExecuteCommand(Commands[Commands.MOVE_BLOCK], this.SelectedBlock);
+                        App.CommandManager.ExecuteCommand(Commands.MOVE_BLOCK, this.SelectedBlock);
                     }
                 }
             }
@@ -770,7 +770,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         block.Init(this);
         block.Type = t;
 
-        App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
+        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
 
         block.MouseDown();
         this.SelectedBlock = block;
@@ -801,7 +801,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         if (!this.SelectedBlock) return;
         this.SelectedBlock.MouseUp();
         this.OptionsPanel.Close();
-        App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
+        App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
 
         //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);

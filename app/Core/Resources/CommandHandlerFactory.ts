@@ -1,6 +1,7 @@
 import {ICommandHandler} from '../Commands/ICommandHandler';
 import {IFactoryResource} from './IFactoryResource';
 import {IValidator} from '../Validators/IValidator';
+import {Commands} from '../../Commands';
 
 export class CommandHandlerFactory<T extends ICommandHandler> implements IFactoryResource<T> {
 
@@ -8,10 +9,10 @@ export class CommandHandlerFactory<T extends ICommandHandler> implements IFactor
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
 
     private _Type: T;
-    public Command: string;
+    public Command: Commands;
     private _Validators: IValidator[];
 
-    constructor(command: string, type: T, validators: IValidator[] = []) {
+    constructor(command: Commands, type: T, validators: IValidator[] = []) {
         this.Command = command;
         this._Type = type;
         this._Validators = validators;

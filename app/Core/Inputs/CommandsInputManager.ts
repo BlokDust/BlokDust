@@ -1,6 +1,7 @@
 import {Commands} from '../../Commands';
 import {CommandManager}from '../Commands/CommandManager';
 import {InputManager} from './InputManager';
+import {KeyMap} from './KeyMap';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 
@@ -32,22 +33,22 @@ export class CommandsInputManager extends InputManager {
         //console.log(this.KeysDown);
 
         if (!App.TypingManager.IsEnabled) { // todo: use flux
-            if ((this.IsKeyNameDown(this.KeyMap.Ctrl) || this.IsKeyNameDown(this.KeyMap.LeftWindowKey) || this.IsKeyNameDown(this.KeyMap.CommandFF)) && this.IsKeyNameDown(this.KeyMap.s)){
+            if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.s)){
                 e.preventDefault();
                 // todo: use flux
                 App.MainScene.SharePanel.OpenPanel();
                 return;
             }
 
-            if ((this.IsKeyNameDown(this.KeyMap.Ctrl) || this.IsKeyNameDown(this.KeyMap.LeftWindowKey) || this.IsKeyNameDown(this.KeyMap.CommandFF)) && this.IsKeyNameDown(this.KeyMap.Shift) && this.IsKeyNameDown(this.KeyMap.z)){
+            if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.Shift) && this.IsKeyNameDown(KeyMap.z)){
                 e.preventDefault();
-                this._CommandManager.ExecuteCommand(Commands[Commands.REDO]);
+                this._CommandManager.ExecuteCommand(Commands.REDO);
                 return;
             }
 
-            if ((this.IsKeyNameDown(this.KeyMap.Ctrl) || this.IsKeyNameDown(this.KeyMap.LeftWindowKey) || this.IsKeyNameDown(this.KeyMap.CommandFF)) && this.IsKeyNameDown(this.KeyMap.z)){
+            if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.z)){
                 e.preventDefault();
-                this._CommandManager.ExecuteCommand(Commands[Commands.UNDO]);
+                this._CommandManager.ExecuteCommand(Commands.UNDO);
                 return;
             }
         }
