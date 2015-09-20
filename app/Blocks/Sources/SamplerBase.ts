@@ -1,6 +1,8 @@
-import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
+
+declare var App: IApp;
 
 export class SamplerBase extends Source {
 

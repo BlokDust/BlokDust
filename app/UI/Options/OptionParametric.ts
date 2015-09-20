@@ -1,8 +1,11 @@
+import {IApp} from '../../IApp';
 import {Option} from './Option';
 import {OptionHandle} from './OptionHandle';
 import {OptionsPanel} from './../OptionsPanel';
 import {OptionSubHandle} from './OptionSubHandle';
 import Size = minerva.Size;
+
+declare var App: IApp;
 
 export class Parametric extends Option {
 

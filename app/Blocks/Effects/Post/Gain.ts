@@ -1,5 +1,8 @@
+import {IApp} from '../../../IApp';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
+
+declare var App: IApp;
 
 export class Gain extends PostEffect {
 

@@ -1,6 +1,7 @@
+import {IApp} from './IApp';
+declare var App: IApp;
+
 export class Metrics {
-
-
 
     // APP WIDE MEASURING AND CONVERSION //
     /*
@@ -32,6 +33,7 @@ export class Metrics {
         App.ZoomLevel = 1;
         App.DragOffset = new Point(0,0);
         App.ScaledDragOffset = new Point(0,0);
+
         this.C = new Point(0,0);
         this.OptionsX = 0.3;
         this.OptionsPoint = new Point(0.3,0.6); //screen percentage

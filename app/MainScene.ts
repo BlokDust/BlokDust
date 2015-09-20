@@ -8,6 +8,7 @@ import {DisplayList} from './DisplayList';
 import {DisplayObjectCollection} from './DisplayObjectCollection';
 import {Grid} from './Grid';
 import {Header} from './UI/Header';
+import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {ICommandHandler} from './Core/Commands/ICommandHandler';
 import {IEffect} from './Blocks/IEffect';
@@ -34,6 +35,8 @@ import {SettingsPanel} from './UI/SettingsPanel';
 import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {ZoomButtons} from './UI/ZoomButtons';
+
+declare var App: IApp;
 
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
@@ -751,7 +754,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
     }
 
     _ValidateBlocks() {
-        // todo: move this to flux-style blocksstore
+        // todo: move this to redux store
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();

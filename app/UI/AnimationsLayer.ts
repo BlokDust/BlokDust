@@ -1,10 +1,12 @@
 import {DisplayObject} from '../DisplayObject';
 import {Block} from '../Blocks/Block';
+import {IApp} from '../IApp';
+
+declare var App: IApp;
 
 export class AnimationsLayer extends DisplayObject {
 
-
-    private _Ctx: CanvasRenderingContext2D;
+    private _Ctx: any; //TODO: should be CanvasRenderingContext2D but get error CanvasRenderingContext2D | WebGLRenderingContext' is not assignable...
     public ActiveBlocks: Block[];
     private Loop: number;
 

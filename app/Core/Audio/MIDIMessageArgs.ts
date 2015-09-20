@@ -1,8 +1,8 @@
 export class MIDIMessageArgs implements nullstone.IEventArgs {
 
-    e: WebMidi.MIDIMessageArgs;
+    MIDI: WebMidi.MIDIMessageArgs;
 
-    constructor (e: WebMidi.MIDIMessageArgs) {
-        Object.defineProperty(this, 'e', { value: e, writable: false });
+    constructor (MIDI: WebMidi.MIDIMessageArgs) {
+        Object.defineProperty(this, 'MIDI', { value: MIDI, writable: false });
     }
 }

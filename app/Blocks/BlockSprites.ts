@@ -1,7 +1,10 @@
+import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
 import {Grid} from '../Grid';
 import {DisplayObject} from '../DisplayObject';
 import {MainScene} from '../MainScene';
+
+declare var App: IApp;
 
 export class BlockSprites {
 

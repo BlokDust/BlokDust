@@ -4,6 +4,7 @@ import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
 import {OptionButton as Button} from './Options/OptionButton';
 import {ButtonArray} from './Options/OptionButtonArray';
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
 import {Option} from './Options/Option';
@@ -17,6 +18,8 @@ import {SwitchArray} from './Options/OptionSwitchArray';
 import {WaveImage} from './Options/OptionWaveImage';
 import {WaveRegion} from './Options/OptionWaveRegion';
 import {WaveSlider} from './Options/OptionWaveSlider';
+
+declare var App: IApp;
 
 export class OptionsPanel extends DisplayObject {
 

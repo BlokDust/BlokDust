@@ -1,3 +1,4 @@
+import {IApp} from '../../../IApp';
 import {IAudioChain} from "./IAudioChain";
 import {IBlock} from "../../../Blocks/IBlock";
 import {IEffect} from "../../../Blocks/IEffect";
@@ -8,6 +9,8 @@ import {Source} from "../../../Blocks/Source";
 import {PostEffect} from "../../../Blocks/Effects/PostEffect";
 import {PowerEffect} from "../../../Blocks/Power/PowerEffect";
 import {PreEffect} from "../../../Blocks/Effects/PreEffect";
+
+declare var App: IApp;
 
 export class ConnectionManager {
 

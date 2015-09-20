@@ -1,4 +1,7 @@
+import {IApp} from '../../IApp';
 import {MIDIMessageArgs} from './MIDIMessageArgs';
+
+declare var App: IApp;
 
 export class MIDIManager {
 
@@ -70,7 +73,7 @@ export class MIDIManager {
             note = App.Audio.Tone.midiToNote(e.data[1]),
             velocity = e.data[2];
 
-        var MessageArgs: WebMidi.MIDIMessageArgs = {
+        var args: WebMidi.MIDIMessageArgs = {
             cmd: e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
             channel: e.data[0] & 0xf,
             type: e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
@@ -78,7 +81,7 @@ export class MIDIManager {
             velocity: e.data[2],
         };
 
-        this.MIDIMessage.raise(this, new MIDIMessageArgs(MessageArgs));
+        this.MIDIMessage.raise(this, new MIDIMessageArgs(args));
 
         console.log(
             'cmd:', cmd,

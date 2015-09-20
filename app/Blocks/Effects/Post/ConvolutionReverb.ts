@@ -1,9 +1,12 @@
-import {Grid} from '../../../Grid';
+import {IApp} from '../../../IApp';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {SoundCloudAudio} from  '../../../Core/Audio/SoundCloudAudio';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloudAudioType';
 import {SoundcloudTrack} from '../../../UI/SoundcloudTrack';
+
+
+declare var App: IApp;
 
 export class Convolver extends PostEffect {
 

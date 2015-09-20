@@ -1,8 +1,11 @@
+import {IApp} from '../../IApp';
 import {Option} from './Option';
 import {OptionHandle} from './OptionHandle';
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import Size = minerva.Size; //TODO: es6 modules
 import {WaveForm} from './OptionWave';
+
+declare var App: IApp;
 
 export class WaveRegion extends WaveForm{
 

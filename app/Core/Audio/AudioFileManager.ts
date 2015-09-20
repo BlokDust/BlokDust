@@ -1,3 +1,7 @@
+import {IApp} from '../../IApp';
+
+declare var App: IApp;
+
 export class AudioFileManager {
 
     DecodeFileData(files, callback: (file: any, buffer: AudioBuffer) => any) {
@@ -15,13 +19,13 @@ export class AudioFileManager {
         reader.onerror = AudioFileManager.ErrorHandler;
         reader.onprogress = AudioFileManager.UpdateProgress;
         reader.onabort = function(e) {
-            App.message('File read cancelled');
+            App.Message('File read cancelled');
         };
         reader.onload = (ev:any) => {
             App.Audio.ctx.decodeAudioData(ev.target.result, (theBuffer) => {
                 callback(files[0], theBuffer);
             }, function(){ //error function
-                App.message('Sorry, we could not process this audio file.');
+                App.Message('Sorry, we could not process this audio file.');
                 console.error('Sorry, we could not process this audio file.');
                 callback(files[0], undefined);
             });

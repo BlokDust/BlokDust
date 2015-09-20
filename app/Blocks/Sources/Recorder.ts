@@ -1,6 +1,9 @@
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
 import {Source} from '../Source';
+
+declare var App: IApp;
 
 export class Recorder extends SamplerBase {
 

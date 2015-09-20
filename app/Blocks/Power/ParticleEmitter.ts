@@ -1,8 +1,11 @@
-import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {PowerSource} from './PowerSource';
 import Vector = Utils.Maths.Vector; //TODO: es6 modules
+
+
+declare var App: IApp;
 
 export class ParticleEmitter extends PowerSource {
 

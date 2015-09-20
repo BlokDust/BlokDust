@@ -1,4 +1,4 @@
-import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
@@ -6,6 +6,8 @@ import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
 import {WaveVoice} from '../../WaveVoice';
+
+declare var App: IApp;
 
 export class WaveGen extends SamplerBase {
 

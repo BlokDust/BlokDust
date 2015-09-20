@@ -1,7 +1,9 @@
 import {Audio} from '../../Core/Audio/Audio';
-import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
+
+declare var App: IApp;
 
 export class Sampler extends SamplerBase {
 
@@ -250,6 +252,7 @@ export class Sampler extends SamplerBase {
                 this.Params[param] = val;
                 // Update waveform
                 this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
+
                 this.RefreshOptionsPanel();
                 break;
             case "loop":

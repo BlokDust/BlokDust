@@ -1,5 +1,8 @@
+import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
 import Size = minerva.Size; //TODO: es6 modules
+
+declare var App: IApp;
 
 export class MenuItem {
 

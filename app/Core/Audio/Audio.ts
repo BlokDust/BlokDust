@@ -3,11 +3,15 @@ import {AudioFileManager} from './AudioFileManager';
 import {AudioNodeConnectionManager} from './AudioNodeConnectionManager';
 import {ConnectionManager} from './Connections/ConnectionManager';
 import {ConnectionMethodType} from './Connections/ConnectionMethodType';
+import {IApp} from '../../IApp';
+import {IAudio} from './IAudio';
 import {MIDIManager} from './MIDIManager';
 import {SimpleConnectionMethod} from './Connections/ConnectionMethods/SimpleConnectionMethod';
 import {Waveform} from './Waveform';
 
-export class Audio {
+declare var App: IApp;
+
+export class Audio implements IAudio {
 
     public Tone: Tone;
     public ctx: AudioContext;

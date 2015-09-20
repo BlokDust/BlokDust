@@ -1,8 +1,11 @@
 import Size = minerva.Size; //TODO: es6 modules
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from './../Grid';
+import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
+
+declare var App: IApp;
 
 export class ToolTip extends DisplayObject {
 

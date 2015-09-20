@@ -15,6 +15,7 @@ import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {Effect} from './Blocks/Effect';
 import {FocusManager} from './Core/Inputs/FocusManager';
 import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
+import {GA} from './GA';
 import {Grid} from './Grid';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
@@ -88,13 +89,13 @@ class App implements IApp{
     public SubCanvas: HTMLCanvasElement[];
 
     // todo: move to BlockStore
-    get Sources(): IBlock[] {
-        return this.Blocks.en().where(b => b instanceof Source).toArray();
+    get Sources(): ISource[] {
+        return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
     // todo: move to BlockStore
-    get Effects(): IBlock[] {
-        return this.Blocks.en().where(b => b instanceof Effect).toArray();
+    get Effects(): IEffect[] {
+        return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
     get SessionId(): string {
@@ -226,7 +227,7 @@ class App implements IApp{
     }
 
     // PROCEED WHEN ALL SOCKETS LOADED //
-    LoadReady() {
+    LoadReady(): void {
         if (this._FontsLoaded === 3 && this.Color.Loaded) {
             this.LoadComposition();
             this.Scene = 1;
@@ -355,7 +356,6 @@ class App implements IApp{
         });
     }
 
-
     Message(message?: string, options?: any) {
         if (this.MainScene) {
             this.MainScene.MessagePanel.NewMessage(message, options);
@@ -376,8 +376,6 @@ class App implements IApp{
         document.body.appendChild(this.SubCanvas[i]);
     }
 
-
-
     //todo: typing as CanvasRenderingContext2D causes "Property 'fillStyle' is missing in type 'WebGLRenderingContext'"
     // upgrade to newer compiler (1.5) which has no error - requires gulp as grunt-typescript seemingly no longer supported
     get Ctx() {
@@ -392,7 +390,13 @@ class App implements IApp{
         }
     }
 
-    TrackVariable(slot: number, name: string, value: string, scope: number): void{
+    /**
+     * @param {number} slot - 1-5 (5 slots per scope)
+     * @param {string} name - the name for the custom variable
+     * @param {number} value - the value of the custom variable
+     * @param {string} scope - visitor, session, page
+     */
+    TrackVariable(slot: number, name: string, value: string, scope: GA.Scope): void{
         window.trackVariable(slot, name, value, scope);
     }
 
@@ -406,4 +410,10 @@ class App implements IApp{
     }
 
 }
+
+
+interface Window{
+    App: IApp;
+}
+
 export = App;

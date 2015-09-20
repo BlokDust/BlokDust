@@ -1,4 +1,7 @@
+import {IApp} from '../../IApp';
 import {SoundCloudAudioType} from './SoundCloudAudioType';
+
+declare var App: IApp;
 
 export class SoundCloudAudio {
 

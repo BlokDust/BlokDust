@@ -1,11 +1,15 @@
-import {Keyboard} from './Keyboard';
-import {VoiceCreator as Voice} from './VoiceObject';
+import {IApp} from '../../IApp';
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {ISource} from '../ISource';
+import {Keyboard} from './Keyboard';
 import {MainScene} from '../../MainScene';
 import {Microphone} from '../Sources/Microphone';
-import {Power} from '../Power/Power';
-import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {MIDIManager} from '../../Core/Audio/MIDIManager';
+import {MIDIMessageArgs} from '../../Core/Audio/MIDIMessageArgs';
+import {Power} from '../Power/Power';
+import {VoiceCreator as Voice} from './VoiceObject';
+
+declare var App: IApp;
 
 export class MIDIController extends Keyboard {
 
@@ -34,12 +38,12 @@ export class MIDIController extends Keyboard {
      * @param MIDIManager {MIDIManager}
      * @param e {WebMidi.MIDIMessageEvent}
      */
-    private _OnMIDIMessage(MIDIManager: MIDIManager, e: WebMidi.MIDIMessageEvent) {
-        var cmd = e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
-            channel = e.data[0] & 0xf,
-            type = e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
-            note = App.Audio.Tone.midiToNote(e.data[1]),
-            velocity = e.data[2];
+    private _OnMIDIMessage(MIDIManager: MIDIManager, e: MIDIMessageArgs) {
+        var cmd = e.MIDI.cmd,// this gives us our [command/channel, note, velocity] data.
+            channel = e.MIDI.channel,
+            type = e.MIDI.type, // channel agnostic message type. Thanks, Phil Burk.
+            note = e.MIDI.note,
+            velocity = e.MIDI.velocity;
 
         if (channel == 9) return;
 

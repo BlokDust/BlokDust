@@ -1,5 +1,6 @@
 import {Granular} from '../Sources/Granular';
 import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {ISource} from '../ISource';
 import {Microphone} from '../Sources/Microphone';
@@ -8,6 +9,8 @@ import {PreEffect} from '../Effects/PreEffect';
 import {Recorder} from '../Sources/Recorder';
 import {SamplerBase} from '../Sources/SamplerBase';
 import {VoiceCreator as Voice} from './VoiceObject';
+
+declare var App: IApp;
 
 /**
  * Base class for mono, poly and midi keyboards

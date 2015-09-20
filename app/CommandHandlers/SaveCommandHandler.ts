@@ -1,6 +1,9 @@
+import {IApp} from '../IApp';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IOperation} from '../Core/Operations/IOperation';
 import {SaveOperation} from '../Operations/SaveOperation';
+
+declare var App: IApp;
 
 export class SaveCommandHandler implements ICommandHandler {
 

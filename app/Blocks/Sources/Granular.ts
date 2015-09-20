@@ -1,10 +1,12 @@
-import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
+
+declare var App: IApp;
 
 export class Granular extends Source {
 

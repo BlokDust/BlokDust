@@ -1,5 +1,8 @@
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
+
+declare var App: IApp;
 
 export class TrashCan extends DisplayObject {
 

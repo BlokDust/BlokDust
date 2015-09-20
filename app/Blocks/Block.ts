@@ -1,6 +1,7 @@
 import {AudioChain} from '../Core/Audio/Connections/AudioChain';
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from '../Grid';
+import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {MainScene} from '../MainScene';
@@ -9,6 +10,8 @@ import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
 import {Particle} from '../Particle';
 import {PreEffect} from './Effects/PreEffect';
 import Size = minerva.Size; //TODO: es6 modules
+
+declare var App: IApp;
 
 export class Block extends DisplayObject implements IBlock {
 

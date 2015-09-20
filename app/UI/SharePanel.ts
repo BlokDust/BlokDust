@@ -1,10 +1,13 @@
-import Size = minerva.Size; //TODO: es6 modules
 import {Commands} from './../Commands';
 import {CommandManager} from '../Core/Commands/CommandManager';
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
+import Size = minerva.Size; //TODO: es6 modules
 
-export class SharePanel extends DisplayObject{
+declare var App: IApp;
+
+export class SharePanel extends DisplayObject {
 
     public Open: boolean;
     public OffsetX: number;

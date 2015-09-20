@@ -1,8 +1,11 @@
 import {Block} from '../Block';
 import {Effect} from '../Effect';
+import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Source} from '../Source';
+
+declare var App: IApp;
 
 export class ToneSource extends Source {
 

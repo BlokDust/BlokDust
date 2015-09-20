@@ -1,7 +1,10 @@
 import {AddItemToArrayOperation} from '../Core/Operations/AddItemToArrayOperation';
+import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
+
+declare var App: IApp;
 
 export class CreateBlockCommandHandler implements ICommandHandler {
 

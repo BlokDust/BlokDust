@@ -1,10 +1,13 @@
-import {IPooledObject} from "./Core/Resources/IPooledObject";
+import {IApp} from './IApp';
 import {IBlock} from "./Blocks/IBlock";
+import {IPooledObject} from "./Core/Resources/IPooledObject";
 import {Source} from "./Blocks/Source";
 import {Logic} from "./Blocks/Power/Logic/Logic";
 import {ParticleEmitter} from "./Blocks/Power/ParticleEmitter";
 import {Void} from "./Blocks/Power/Void";
 import Vector = Utils.Maths.Vector; //TODO: es6 module
+
+declare var App: IApp;
 
 export class Particle implements IPooledObject {
 

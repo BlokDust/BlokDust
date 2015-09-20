@@ -1,3 +1,4 @@
+import {IApp} from '../../IApp';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {KeyDownEventArgs} from '../../Core/Inputs/KeyDownEventArgs';
@@ -5,6 +6,8 @@ import {MainScene} from '../../MainScene';
 import {Microphone} from '../Sources/Microphone';
 import {Power} from '../Power/Power';
 import {VoiceCreator as Voice} from './VoiceObject';
+
+declare var App: IApp;
 
 export class ComputerKeyboard extends Keyboard {
 

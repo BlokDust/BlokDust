@@ -1,6 +1,6 @@
 import {BlockCreator} from './BlockCreator';
 import {Effect} from './Blocks/Effect';
-import {Grid} from './Grid';
+import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {ISource} from './Blocks/ISource';
@@ -8,6 +8,8 @@ import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es
 import {SaveFile} from './SaveFile';
 import {Source} from './Blocks/Source';
 import {Version as Version} from './_Version';
+
+declare var App: IApp;
 
 export class Serializer {
 

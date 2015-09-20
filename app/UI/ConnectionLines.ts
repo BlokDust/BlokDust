@@ -1,7 +1,10 @@
+import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
 import {ISource} from '../Blocks/ISource';
 import {MainScene} from './../MainScene';
+
+declare var App: IApp;
 
 export class ConnectionLines {
 

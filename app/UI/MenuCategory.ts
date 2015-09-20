@@ -1,5 +1,8 @@
 import {Header} from './Header';
+import {IApp} from '../IApp';
 import {MenuItem} from './MenuItem';
+
+declare var App: IApp;
 
 export class MenuCategory {
 

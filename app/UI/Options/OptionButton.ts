@@ -1,6 +1,9 @@
+import {IApp} from '../../IApp';
 import {Option} from './Option';
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import Size = minerva.Size;
+
+declare var App: IApp;
 
 export class OptionButton {
 

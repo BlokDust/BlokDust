@@ -1,7 +1,10 @@
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from './../Grid';
+import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
 import Size = minerva.Size; //TODO: es6 modules
+
+declare var App: IApp;
 
 export class ZoomButtons extends DisplayObject {
 

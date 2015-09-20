@@ -1,6 +1,9 @@
+import {IApp} from '../../../IApp';
 import {MainScene} from '../../../MainScene';
 import {PitchShifter} from '../Post/PitchShifter';
 import {PostEffect} from '../PostEffect';
+
+declare var App: IApp;
 
 export class Pitch extends PostEffect {
 

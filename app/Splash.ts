@@ -1,8 +1,11 @@
 import {DisplayObject} from './DisplayObject';
+import {IApp} from './IApp';
+
+declare var App: IApp;
 
 export class Splash extends DisplayObject{
 
-    private _Ctx: CanvasRenderingContext2D;
+    private _Ctx: any; //TODO: should be CanvasRenderingContext2D but get error CanvasRenderingContext2D | WebGLRenderingContext' is not assignable...
     public XOffset: number;
     public YOffset: number;
     public LoadOffset: number;
@@ -22,7 +25,7 @@ export class Splash extends DisplayObject{
 
 
 
-    get Ctx(): CanvasRenderingContext2D{
+    get Ctx(): CanvasRenderingContext2D {
         return this._Ctx;
     }
 

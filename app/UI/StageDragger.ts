@@ -1,4 +1,7 @@
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
+
+declare var App: IApp;
 
 export class StageDragger  extends DisplayObject {
 

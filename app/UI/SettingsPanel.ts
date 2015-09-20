@@ -1,9 +1,12 @@
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import Size = minerva.Size; //TODO: es6 modules
 import {ThemeSelector} from './ColorThemeSelector';
 import {Version} from './../_Version';
+
+declare var App: IApp;
 
 export class SettingsPanel extends DisplayObject{
 

@@ -1,5 +1,6 @@
 import {Block} from './Block';
 import {Grid} from '../Grid';
+import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
@@ -13,6 +14,8 @@ import {PowerSource} from './Power/PowerSource';
 import {Soundcloud} from './Sources/Soundcloud';
 import {SoundcloudTrack} from '../UI/SoundcloudTrack';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
+
+declare var App: IApp;
 
 export class Source extends Block implements ISource {
 

@@ -1,3 +1,7 @@
+import {IApp} from '../IApp';
+
+declare var App: IApp;
+
 export class ThemeSelector {
 
     public HandleRoll: boolean[];

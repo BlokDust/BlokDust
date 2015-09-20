@@ -1,4 +1,7 @@
+import {IApp} from '../../IApp';
 import {OptionHandle} from './OptionHandle';
+
+declare var App: IApp;
 
 export class OptionSubHandle {
 

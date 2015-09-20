@@ -1,6 +1,9 @@
+import {IApp} from '../IApp';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IOperation} from '../Core/Operations/IOperation';
 import {LoadOperation} from '../Operations/LoadOperation';
+
+declare var App: IApp;
 
 export class LoadCommandHandler implements ICommandHandler {
 

@@ -1,9 +1,12 @@
 import {Block} from './Block';
 import {Grid} from '../Grid';
+import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
 import {ISource} from './ISource';
 import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+
+declare var App: IApp;
 
 export class Effect extends Block implements IEffect {
 

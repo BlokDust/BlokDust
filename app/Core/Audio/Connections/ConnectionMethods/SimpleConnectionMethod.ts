@@ -1,9 +1,12 @@
 import {AudioChain} from '../AudioChain';
 import {ConnectionManager} from '../ConnectionManager';
+import {IApp} from '../../../../IApp';
 import {IAudioChain} from '../IAudioChain';
 import {IBlock} from '../../../../Blocks/IBlock';
 import {IEffect} from '../../../../Blocks/IEffect';
 import {ISource} from '../../../../Blocks/ISource';
+
+declare var App: IApp;
 
 export class SimpleConnectionMethod extends ConnectionManager {
 

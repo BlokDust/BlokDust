@@ -1,9 +1,12 @@
 import {Commands} from '../../Commands';
 import {CommandManager}from '../Commands/CommandManager';
+import {IApp} from '../../IApp';
 import {InputManager} from './InputManager';
 import {KeyMap} from './KeyMap';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
+
+declare var App: IApp;
 
 export class CommandsInputManager extends InputManager {
 

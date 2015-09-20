@@ -1,3 +1,4 @@
+import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {ISource} from './Blocks/ISource';
@@ -8,6 +9,8 @@ import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
 import {Source} from './Blocks/Source';
 import Vector = Utils.Maths.Vector; //TODO: es6 modules
 import {Void} from './Blocks/Power/Void';
+
+declare var App: IApp;
 
 export class LaserBeams {
 
@@ -238,8 +241,8 @@ export class LaserBeams {
         this._Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
         this._Ctx.beginPath();
 
-        for (var j=0; j<App.Blocks.length; j++) {
-            var laser: ISource  = App.Blocks[j];
+        for (var j=0; j<App.Sources.length; j++) {
+            var laser: ISource  = App.Sources[j];
             if (laser instanceof Laser) {
 
                 // If we're in self powered mode, or if this is powered

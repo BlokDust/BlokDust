@@ -1,8 +1,11 @@
 import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Source} from '../Source';
+
+declare var App: IApp;
 
 export class Microphone extends Source {
 
@@ -82,7 +85,7 @@ export class Microphone extends Source {
         }
     }
 
-    TriggerAttackRelease(duration: number){
+    TriggerAttackRelease(duration: Tone.Time){
         this.Unmute();
         if (!duration) duration = App.Config.PulseLength;
         setTimeout(() => {

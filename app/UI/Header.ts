@@ -1,9 +1,12 @@
 import {BlockCreator} from './../BlockCreator';
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {MenuItem} from './MenuItem';
 import Size = minerva.Size; //TODO: es6 modules
+
+declare var App: IApp;
 
 export class Header extends DisplayObject {
 

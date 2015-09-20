@@ -1,5 +1,8 @@
 import {ColorTheme} from './ColorTheme';
 import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
+
+declare var App: IApp;
 
 export class ColorThemes extends DisplayObject {
 

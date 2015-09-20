@@ -1,10 +1,7 @@
-// todo: type App
-declare var App: any;
 declare var LZMA: any;
 declare var PixelPalette;
 
 interface Window{
-    App: any;
     debug: boolean;
     SC: any;
     trackEvent(category: string, action: string, label: string, value?: number);
@@ -17,6 +14,10 @@ interface Document{
 
 interface CanvasRenderingContext2D {
     divisor: number;
+    webkitBackingStorePixelRatio: number;
+    mozBackingStorePixelRatio: number;
+    msBackingStorePixelRatio: number;
+    oBackingStorePixelRatio: number;
 }
 
 interface Float32Array {
