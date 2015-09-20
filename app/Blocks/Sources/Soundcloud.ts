@@ -1,8 +1,8 @@
 import {Grid} from '../../Grid';
 import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
-import {SoundCloudAudio} from '../SoundCloudAudio';
-import {SoundCloudAudioType} from '../SoundCloudAudioType';
+import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
+import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
 
