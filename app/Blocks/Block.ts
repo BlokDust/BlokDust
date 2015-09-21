@@ -1,13 +1,14 @@
-import IBlock = require("./IBlock");
-import Grid = require("../Grid");
-import Particle = require("../Particle");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("../MainScene");
-import ParametersPanel = require("../UI/OptionsPanel");
-import PreEffect = require("./Effects/PreEffect");
 import AudioChain = require("../Core/Audio/Connections/AudioChain");
-import Size = minerva.Size;
+import DisplayObject = require("../DisplayObject");
+import Grid = require("../Grid");
+import IBlock = require("./IBlock");
+import IDisplayObject = require("../IDisplayObject");
+import MainScene = require("../MainScene");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
+import ParametersPanel = require("../UI/OptionsPanel");
+import Particle = require("../Particle");
+import PreEffect = require("./Effects/PreEffect");
+import Size = minerva.Size;
 
 class Block extends DisplayObject implements IBlock {
 

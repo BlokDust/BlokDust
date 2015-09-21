@@ -19,6 +19,7 @@ import GA = require("./GA");
 import Grid = require("./Grid");
 import IApp = require("./IApp");
 import IBlock = require("./Blocks/IBlock");
+import IDisplayObject = require("./IDisplayObject");
 import IEffect = require("./Blocks/IEffect");
 import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
 import InputManager = require("./Core/Inputs/InputManager");
@@ -28,6 +29,7 @@ import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
 import MainScene = require("./MainScene");
 import Metrics = require("./AppMetrics");
 import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 import OperationManager = require("./Core/Operations/OperationManager");
 import Particle = require("./Particle");
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
@@ -38,12 +40,11 @@ import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
 import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
 import SaveFile = require("./SaveFile");
 import Serializer = require("./Serializer");
+import SketchSession = Fayde.Drawing.SketchSession;
 import Source = require("./Blocks/Source");
 import Splash = require("./Splash");
 import TypingManager = require("./Core/Inputs/TypingManager");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import SketchSession = Fayde.Drawing.SketchSession;
 
 class App implements IApp{
 
@@ -203,7 +204,7 @@ class App implements IApp{
         }
 
         // CREATE SPLASH SCREEN //
-        this.Splash = new Splash;
+        this.Splash = new Splash();
         this.Splash.Init(this);
         this.AnimationsLayer = new AnimationsLayer;
         this.AnimationsLayer.Init(this);
@@ -260,6 +261,8 @@ class App implements IApp{
     CreateBlockSketch() {
         // create MainScene
         this.MainScene = new MainScene();
+        this.MainScene.Init(this);
+
         this.Blocks = [];
 
         // add blocks to MainScene DisplayList
@@ -324,7 +327,7 @@ class App implements IApp{
 
 
     OnTicked (lastTime: number, nowTime: number) {
-        this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
+        //this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
         this.Update();
         this.Draw();
     }

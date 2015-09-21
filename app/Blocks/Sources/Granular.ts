@@ -96,7 +96,7 @@ class Granular extends Source {
         this._WaveForm = [];
         this.SetupGrains();
 
-        if (App.MainScene.OptionsPanel.Scale==1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock==this) {
+        if (App.MainScene.OptionsPanel.Scale === 1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock.Id === this.Id) {
             this.UpdateOptionsForm();
             App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
         }
@@ -163,7 +163,7 @@ class Granular extends Source {
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             // UPDATE OPTIONS FORM //
-            if ((<MainScene>this.Sketch).OptionsPanel.Scale==1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock==this) {
+            if ((<MainScene>this.Sketch).OptionsPanel.Scale === 1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock.Id === this.Id) {
                 this.UpdateOptionsForm();
                 (<MainScene>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
             }

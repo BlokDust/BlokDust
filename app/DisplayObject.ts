@@ -5,19 +5,19 @@ var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
 
 class DisplayObject implements IDisplayObject {
-    ZIndex: number;
+    Height: number;
+    Initialised: boolean = false;
+    Position: Point;
+    IsPaused: boolean = false;
+    public FrameCount: number = 0;
+    public LastVisualTick: number = new Date(0).getTime();
+    public Timer: Fayde.ClockTimer;
     Sketch: any;
     Width: number;
-    Height: number;
-    Position: Point;
-    Initialised: boolean = false;
-    public Timer: Fayde.ClockTimer;
-    public LastVisualTick: number = new Date(0).getTime();
+    ZIndex: number;
 
-    Init(sketch?: ISketchContext): void {
-        if (sketch) this.Sketch = sketch;
-        if (!this.Sketch) throw new Exception("Sketch not specified for DisplayObject");
-
+    Init(sketch?: any): void {
+        this.Sketch = sketch;
         this.StartAnimating();
         this.Initialised = true;
     }
@@ -39,23 +39,31 @@ class DisplayObject implements IDisplayObject {
         return this.Sketch.Ctx;
     }
 
-    public Draw() {
+    public Setup(): void {
+
+    }
+
+    public Draw(): void {
+        this.FrameCount++;
     }
 
     public Dispose(): void {
     }
 
-    // todo: this is more of a util than something DisplayObject-specific
-    // IS CLICK WITHIN THIS BOX //
-    HitRect(x,y,w,h,mx,my) {
-        var hit;
-        if (mx>x && mx<(x+w) && my>y && my<(y+h)) {
-            hit = true;
-            //App.Canvas.style.cursor="pointer";
-        } else {
-            hit = false;
-        }
-        return hit;
+    public Play(): void {
+        this.IsPaused = false;
+    }
+
+    public Pause(): void {
+        this.IsPaused = true;
+    }
+
+    HitRect(x, y, w, h, mx, my): boolean {
+        return Utils.Measurements.Dimensions.HitRect(x, y, w, h, mx, my);
+    }
+
+    Update(): void {
+
     }
 }
 

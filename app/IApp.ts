@@ -1,18 +1,19 @@
-import IBlock = require("./Blocks/IBlock");
-import ISource = require("./Blocks/ISource");
-import IEffect = require("./Blocks/ISource");
-import OperationManager = require("./Core/Operations/OperationManager");
-import ResourceManager = require("./Core/Resources/ResourceManager");
-import CommandManager = require("./Core/Commands/CommandManager");
 import Audio = require("./Core/Audio/Audio");
-import InputManager = require("./Core/Inputs/InputManager");
-import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
+import CommandManager = require("./Core/Commands/CommandManager");
 import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
+import IBlock = require("./Blocks/IBlock");
+import IDisplayObject = require("./IDisplayObject");
+import IEffect = require("./Blocks/ISource");
+import InputManager = require("./Core/Inputs/InputManager");
+import ISource = require("./Blocks/ISource");
+import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
+import MainScene = require("./MainScene");
+import OperationManager = require("./Core/Operations/OperationManager");
+import Particle = require("./Particle"); // todo: should be IParticle
 import PointerInputManager = require("./Core/Inputs/PointerInputManager");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
+import ResourceManager = require("./Core/Resources/ResourceManager");
 import Serializer = require("./Serializer");
-import Particle = require("./Particle"); // todo: should be IParticle
-import MainScene = require("./MainScene");
 
 interface IApp {
     OperationManager: OperationManager;

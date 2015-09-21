@@ -1,15 +1,20 @@
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 interface IDisplayObject {
-    ZIndex: number;
-    //RenderCacheCanvas: HTMLCanvasElement;
-    //RenderCacheCtx: CanvasRenderingContext2D;
     Ctx: CanvasRenderingContext2D;
-    Init: (sketch?: any) => void;
-    Initialised: boolean;
-    Draw: () => void;
-    Width: number;
+    Draw(): void;
     Height: number;
+    Init(sketch?: ISketchContext): void;
+    Initialised: boolean;
+    IsPaused: boolean;
+    Pause(): void;
+    Play(): void;
     Position: Point;
+    Setup(): void;
+    Update(): void;
+    Width: number;
+    ZIndex: number;
+
 }
 
 export = IDisplayObject;

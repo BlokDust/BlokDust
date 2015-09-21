@@ -14,7 +14,7 @@
     "RecorderJS": "lukephills/Recorderjs#master",
     "tone": "lukephills/Tone.js#master",
     "tween.ts": "edsilv/tween.ts#~0.1.2",
-    "utils": "edsilv/utils#~0.0.22"
+    "utils": "edsilv/utils#~0.0.25"
   },
   "resolutions": {
     "fayde": "~0.16.11"
