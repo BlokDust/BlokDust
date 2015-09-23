@@ -416,4 +416,4 @@ interface Window{
     App: IApp;
 }
 
-export = App;
+export default App;

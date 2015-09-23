@@ -85,7 +85,7 @@ require([
     window.$ = jquery;
 
     $(document).ready(function() {
-        window.App = new App(config);
+        window.App = new App.default(config);
         window.App.Setup();
     });
 });
