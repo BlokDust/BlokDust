@@ -3,12 +3,13 @@ import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
 import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Envelope extends PreEffect {
 
     public Params: EnvelopeParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

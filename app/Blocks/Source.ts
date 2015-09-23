@@ -14,6 +14,7 @@ import PowerSource = require("./Power/PowerSource");
 import Logic = require("./Power/Logic/Logic");
 import Voice = require("./Interaction/VoiceObject");
 import SoundcloudTrack = require("../UI/SoundcloudTrack");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Source extends Block implements ISource {
 
@@ -48,7 +49,7 @@ class Source extends Block implements ISource {
     public ResultsPage: number;
     public SearchString: string;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Sources = [];

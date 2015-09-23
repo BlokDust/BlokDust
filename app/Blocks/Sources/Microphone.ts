@@ -3,6 +3,7 @@ import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import Particle = require("../../Particle");
 import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Microphone extends Source {
 
@@ -11,7 +12,7 @@ class Microphone extends Source {
     public Muted: boolean = false;
     private _unmutedVolume: number = 1;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         if (!this.Params) {
             this.Params = {
                 gain: 1,

@@ -7,6 +7,7 @@ import ISource = require("../Blocks/ISource");
 import IBlock = require("../Blocks/IBlock");
 import DisplayObject = require("../DisplayObject");
 import Recorder = require("../Blocks/Sources/Recorder");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class RecorderPanel extends DisplayObject {
 
@@ -14,8 +15,7 @@ class RecorderPanel extends DisplayObject {
     private _Roll: boolean[];
     public Hover: boolean;
 
-
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this._Blocks = [];

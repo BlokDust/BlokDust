@@ -6,6 +6,7 @@ import Grid = require("./../Grid");
 import IBlock = require("./../Blocks/IBlock");
 import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class ToolTip extends DisplayObject {
 
@@ -15,7 +16,7 @@ class ToolTip extends DisplayObject {
     public Position: Point;
     private _AlphaTween: TWEEN.Tween;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Name = "";

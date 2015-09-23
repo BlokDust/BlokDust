@@ -2,6 +2,7 @@ import Grid = require("../../Grid");
 import MainScene = require("../../MainScene");
 import Source = require("../Source");
 import SamplerBase = require("./SamplerBase");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Recorder extends SamplerBase {
 
@@ -14,7 +15,7 @@ class Recorder extends SamplerBase {
     private _WaveForm: number[];
     public Params: SamplerParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

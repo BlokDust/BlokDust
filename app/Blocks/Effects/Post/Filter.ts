@@ -1,13 +1,14 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Filter extends PostEffect {
 
     public Effect: Tone.Filter;
     public Params: FilterParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

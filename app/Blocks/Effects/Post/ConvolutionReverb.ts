@@ -4,6 +4,7 @@ import MainScene = require("../../../MainScene");
 import SoundCloudAudio = require('../../SoundCloudAudio');
 import SoundCloudAudioType = require('../../SoundCloudAudioType');
 import SoundcloudTrack = require("../../../UI/SoundcloudTrack");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Convolver extends PostEffect {
 
@@ -20,7 +21,7 @@ class Convolver extends PostEffect {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (this.Params) { // TODO - must be better way, refresh function?
             var me = this;

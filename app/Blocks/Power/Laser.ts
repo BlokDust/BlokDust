@@ -2,11 +2,12 @@ import PowerSource = require("./PowerSource");
 import Grid = require("../../Grid");
 import App = require("../../App");
 import MainScene = require("../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Laser extends PowerSource {
 
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

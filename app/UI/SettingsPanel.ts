@@ -8,6 +8,7 @@ import DisplayObject = require("../DisplayObject");
 import MainScene = require("./../MainScene");
 import MenuCategory = require("./MenuCategory");
 import ThemeSelector = require("./ColorThemeSelector");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class SettingsPanel extends DisplayObject{
 
@@ -24,7 +25,7 @@ class SettingsPanel extends DisplayObject{
     private _VersionNumber: string;
     private _ThemeSelector: ThemeSelector;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Open = false;

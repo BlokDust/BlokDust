@@ -1,13 +1,14 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Distortion extends PostEffect {
 
     public Effect: Tone.Distortion;
     public Params: DistortionParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

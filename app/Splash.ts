@@ -3,7 +3,7 @@
  */
 
 import DisplayObject = require("./DisplayObject");
-
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Splash extends DisplayObject{
 
@@ -16,7 +16,7 @@ class Splash extends DisplayObject{
     private _Offset: Point;
 
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
         this._Ctx = App.Canvas.getContext("2d");
         this._Offset = new Point(0,0);

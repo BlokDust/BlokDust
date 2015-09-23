@@ -14,8 +14,9 @@ import PointerInputManager = require("./Core/Inputs/PointerInputManager");
 import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
 import ResourceManager = require("./Core/Resources/ResourceManager");
 import Serializer = require("./Serializer");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
-interface IApp {
+interface IApp extends ISketchContext {
     OperationManager: OperationManager;
     ResourceManager: ResourceManager;
     CommandManager: CommandManager;
@@ -32,8 +33,6 @@ interface IApp {
     Sources: IBlock[];
     Effects: IBlock[];
     MainScene: MainScene;
-
-    Setup(): void;
 }
 
 export = IApp;

@@ -9,6 +9,7 @@ import ParametersPanel = require("../UI/OptionsPanel");
 import Particle = require("../Particle");
 import PreEffect = require("./Effects/PreEffect");
 import Size = minerva.Size;
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Block extends DisplayObject implements IBlock {
 
@@ -36,7 +37,7 @@ class Block extends DisplayObject implements IBlock {
     //-------------------------------------------------------------------------------------------
 
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Update();

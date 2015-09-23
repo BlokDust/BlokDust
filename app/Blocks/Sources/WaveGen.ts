@@ -10,6 +10,7 @@ import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
 import WaveVoice = require("../../WaveVoice");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class WaveGen extends SamplerBase {
 
@@ -22,7 +23,7 @@ class WaveGen extends SamplerBase {
     private _WaveVoices: WaveVoice[];
     private _SeedLoad: boolean;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,

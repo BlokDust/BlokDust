@@ -5,13 +5,13 @@
 
 import Block = require("../Block");
 import MainScene = require("../../MainScene");
-
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Void extends Block {
 
     public StarPos: Point;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Outline.push(new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(0,1));

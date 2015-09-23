@@ -1,6 +1,7 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Gain extends PostEffect {
 
@@ -8,7 +9,7 @@ class Gain extends PostEffect {
     //public Effect: Tone.Signal;
     public Gain: GainParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

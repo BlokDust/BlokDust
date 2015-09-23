@@ -9,6 +9,7 @@ import Grid = require("./../Grid");
 import MenuCategory = require("./MenuCategory");
 import MenuItem = require("./MenuItem");
 import Size = minerva.Size;
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Header extends DisplayObject{
 
@@ -31,7 +32,7 @@ class Header extends DisplayObject{
     public MenuOver: boolean;
     public Tweens: any[];
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this._Units = 1.7;

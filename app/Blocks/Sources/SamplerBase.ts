@@ -1,11 +1,12 @@
 import Grid = require("../../Grid");
 import Source = require("../Source");
 import MainScene = require("../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class SamplerBase extends Source {
 
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         super.Init(sketch);
         this.CreateSource();

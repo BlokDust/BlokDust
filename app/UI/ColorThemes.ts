@@ -4,6 +4,7 @@
 
 import ColorTheme = require("./ColorTheme");
 import DisplayObject = require("../DisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class ColorThemes extends DisplayObject {
 
@@ -24,7 +25,7 @@ class ColorThemes extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Loaded = false;

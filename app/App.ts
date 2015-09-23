@@ -45,6 +45,7 @@ import Source = require("./Blocks/Source");
 import Splash = require("./Splash");
 import TypingManager = require("./Core/Inputs/TypingManager");
 import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class App implements IApp{
 
@@ -192,7 +193,7 @@ class App implements IApp{
 
         // LOAD PALETTE //
         this.Color = new ColorThemes;
-        this.Color.Init(this);
+        this.Color.Init(<ISketchContext>this);
         this.Color.LoadTheme(0,true);
 
         // SOUNDCLOUD INIT //
@@ -205,13 +206,13 @@ class App implements IApp{
 
         // CREATE SPLASH SCREEN //
         this.Splash = new Splash();
-        this.Splash.Init(this);
-        this.AnimationsLayer = new AnimationsLayer;
-        this.AnimationsLayer.Init(this);
+        this.Splash.Init(<ISketchContext>this);
+        this.AnimationsLayer = new AnimationsLayer();
+        this.AnimationsLayer.Init(<ISketchContext>this);
     }
 
     // FONT LOAD CALLBACK //
-    FontsLoaded(font,fvd) {
+    FontsLoaded(font, fvd) {
         this._FontsLoaded += 1;
         // All fonts are present - load scene
         if (this._FontsLoaded === 3) {
@@ -253,15 +254,15 @@ class App implements IApp{
         } else {
             this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
-        this.CreateBlockSketch();
+        this.CreateMainScene();
     }
 
 
     // CREATE MainScene & BEGIN DRAWING/ANIMATING //
-    CreateBlockSketch() {
+    CreateMainScene() {
         // create MainScene
         this.MainScene = new MainScene();
-        this.MainScene.Init(this);
+        this.MainScene.Init(<ISketchContext>this);
 
         this.Blocks = [];
 
@@ -283,13 +284,16 @@ class App implements IApp{
 
         // set initial zoom level/position
         if (this._SaveFile.ColorThemeNo) {
-            this.Color.LoadTheme(this._SaveFile.ColorThemeNo,false);
+            this.Color.LoadTheme(this._SaveFile.ColorThemeNo, false);
         }
+
         this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
+
         if (this.MainScene.MainSceneDragger) {
             this.MainScene.MainSceneDragger.Destination = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
         }
+
         this.MainScene.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
 

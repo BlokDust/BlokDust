@@ -8,6 +8,7 @@ import Voice = require("./VoiceObject");
 import Granular = require("../Sources/Granular");
 import SamplerBase = require("../Sources/SamplerBase");
 import Recorder = require("../Sources/Recorder");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 /**
  * Base class for mono, poly and midi keyboards
@@ -17,7 +18,7 @@ class Keyboard extends PreEffect {
     public BaseFrequency: number;
     public KeysDown: any = {};
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
     }
 

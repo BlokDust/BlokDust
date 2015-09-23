@@ -1,8 +1,9 @@
 import Effect = require("../Effect");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class PowerEffect extends Effect {
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
     }
 

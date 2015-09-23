@@ -22,6 +22,7 @@ import Parametric = require("./Options/OptionParametric");
 import OptionHandle = require("./Options/OptionHandle");
 import OptionSubHandle = require("./Options/OptionSubHandle");
 import DisplayObject = require("../DisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class OptionsPanel extends DisplayObject {
 
@@ -52,7 +53,7 @@ class OptionsPanel extends DisplayObject {
         super();
     }
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this._Units = 1.7;

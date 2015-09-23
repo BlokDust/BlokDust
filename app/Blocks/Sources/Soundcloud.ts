@@ -5,6 +5,7 @@ import MainScene = require("../../MainScene");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Soundcloud extends SamplerBase {
 
@@ -17,7 +18,7 @@ class Soundcloud extends SamplerBase {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,

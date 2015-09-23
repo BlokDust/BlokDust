@@ -5,19 +5,24 @@ var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
 
 class DisplayObject implements IDisplayObject {
-    Height: number;
-    Initialised: boolean = false;
-    Position: Point;
-    IsPaused: boolean = false;
+    public Height: number;
+    public Initialised: boolean = false;
+    public IsPaused: boolean = false;
+    public Position: Point;
     public FrameCount: number = 0;
     public LastVisualTick: number = new Date(0).getTime();
     public Timer: Fayde.ClockTimer;
-    Sketch: any;
-    Width: number;
-    ZIndex: number;
+    public Sketch: any;
+    public Width: number;
+    public ZIndex: number;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         this.Sketch = sketch;
+
+        this.Setup();
+        this.Update();
+        this.Draw();
+
         this.StartAnimating();
         this.Initialised = true;
     }

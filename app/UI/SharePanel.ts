@@ -8,6 +8,7 @@ import DisplayObject = require("../DisplayObject");
 import MainScene = require("./../MainScene");
 import Commands = require("./../Commands");
 import CommandManager = require("../Core/Commands/CommandManager");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class SharePanel extends DisplayObject{
 
@@ -26,7 +27,7 @@ class SharePanel extends DisplayObject{
     private _SessionId: string;
     private _Saving: boolean;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Open = false;

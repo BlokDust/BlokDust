@@ -6,6 +6,7 @@ import Size = minerva.Size;
 import Grid = require("./../Grid");
 import DisplayObject = require("../DisplayObject");
 import MainScene = require("./../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class SoundcloudPanel extends DisplayObject{
 
@@ -21,7 +22,7 @@ class SoundcloudPanel extends DisplayObject{
     private _SelectedBlock: any;
     private _RandomWords: string[];
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Open = false;

@@ -3,12 +3,13 @@
  */
 import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this._RollOver = false;

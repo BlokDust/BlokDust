@@ -4,6 +4,7 @@ import IEffect = require("./IEffect");
 import ISource = require("./ISource");
 import Grid = require("../Grid");
 import ObservableCollection = Fayde.Collections.ObservableCollection;
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Effect extends Block implements IEffect {
 
@@ -13,7 +14,7 @@ class Effect extends Block implements IEffect {
     Source: ISource;
     public Connections: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.UpdateOptionsForm();

@@ -5,6 +5,7 @@ import MainScene = require("../../MainScene");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
 import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class MIDIController extends Keyboard {
 
@@ -17,7 +18,7 @@ class MIDIController extends Keyboard {
     private _Note;
     private _Velocity;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

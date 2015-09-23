@@ -2,8 +2,9 @@
  * Created by luketwyman on 05/08/2015.
  */
 import DisplayObject = require("../DisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class StageDragger  extends DisplayObject {
+class StageDragger extends DisplayObject {
 
     private _DragStart: Point;
     private _OffsetStart: Point;
@@ -11,7 +12,7 @@ class StageDragger  extends DisplayObject {
     public Tweens: any[];
     public Destination: Point;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Tweens = [];

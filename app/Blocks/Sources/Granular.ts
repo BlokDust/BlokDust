@@ -5,6 +5,7 @@ import Particle = require("../../Particle");
 import SoundCloudAudio = require('../SoundCloudAudio');
 import SoundCloudAudioType = require('../SoundCloudAudioType');
 import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Granular extends Source {
 
@@ -27,7 +28,7 @@ class Granular extends Source {
 
     public Params: GranularParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

@@ -1,6 +1,7 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Chorus extends PostEffect {
 
@@ -8,7 +9,7 @@ class Chorus extends PostEffect {
     public Params: ChorusParams;
     public Defaults: ChorusParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         this.Defaults = {
             rate: 1.5,

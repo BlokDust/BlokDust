@@ -197,7 +197,7 @@ class MainScene extends DisplayObject{
 
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
-            if (e.keyCode==18) {
+            if (e.keyCode === 18) {
                 this.AltDown = true;
             }
         });

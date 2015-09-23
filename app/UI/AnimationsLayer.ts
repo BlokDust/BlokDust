@@ -3,7 +3,7 @@
  */
 import DisplayObject = require("../DisplayObject");
 import Block = require("../Blocks/Block");
-
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class AnimationsLayer extends DisplayObject {
 
@@ -12,7 +12,7 @@ class AnimationsLayer extends DisplayObject {
     public ActiveBlocks: Block[];
     private Loop: number;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
         this._Ctx = App.Canvas.getContext("2d");
         this.ActiveBlocks = [];

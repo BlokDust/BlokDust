@@ -2,6 +2,7 @@ import Grid = require("../../Grid");
 import SamplerBase = require("./SamplerBase");
 import MainScene = require("../../MainScene");
 import Audio = require('../../Core/Audio/Audio');
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Sampler extends SamplerBase {
 
@@ -13,7 +14,7 @@ class Sampler extends SamplerBase {
     private _LoadFromShare: boolean = false;
     private _fileInput: HTMLElement = document.getElementById('audioFileInput');
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

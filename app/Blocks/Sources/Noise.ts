@@ -1,6 +1,7 @@
 import Grid = require("../../Grid");
 import MainScene = require("../../MainScene");
 import Source = require("../Source");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Noise extends Source {
 
@@ -9,7 +10,7 @@ class Noise extends Source {
     public Waveform: string;
     public NoiseParams: NoiseParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         this.Waveform = 'brown';
 

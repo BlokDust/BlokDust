@@ -1,6 +1,7 @@
 import PostEffect = require("../PostEffect");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Chopper extends PostEffect {
 
@@ -10,7 +11,7 @@ class Chopper extends PostEffect {
     public Effect: GainNode;
     public Params: ChopperParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         this.Effect = App.Audio.ctx.createGain();
 

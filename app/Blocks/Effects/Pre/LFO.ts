@@ -3,6 +3,7 @@ import ISource = require("../../ISource");
 import Grid = require("../../../Grid");
 import MainScene = require("../../../MainScene");
 import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class LFO extends PreEffect {
 
@@ -11,7 +12,7 @@ class LFO extends PreEffect {
     public Defaults: LFOParams;
     public WaveIndex: string[];
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         this.Defaults = {
             rate: 2,

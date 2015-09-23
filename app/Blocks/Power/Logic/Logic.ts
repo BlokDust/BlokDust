@@ -2,12 +2,13 @@ import Effect = require("../../Effect");
 import PowerEffect = require("./../PowerEffect");
 import ISource = require("../../ISource");
 import Particle = require("../../../Particle");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Logic extends PowerEffect {
 
     public Params: LogicParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

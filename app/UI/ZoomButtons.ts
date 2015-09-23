@@ -5,6 +5,7 @@ import Size = minerva.Size;
 import Grid = require("./../Grid");
 import MainScene = require("./../MainScene");
 import DisplayObject = require("../DisplayObject");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class ZoomButtons extends DisplayObject {
 
@@ -17,7 +18,7 @@ class ZoomButtons extends DisplayObject {
     public CurrentSlot: number;
     public ZoomAlpha: number;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;

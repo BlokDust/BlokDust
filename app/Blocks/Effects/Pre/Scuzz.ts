@@ -3,6 +3,7 @@ import Grid = require("../../../Grid");
 import ISource = require("../../ISource");
 import MainScene = require("../../../MainScene");
 import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Scuzz extends PreEffect {
 
@@ -11,7 +12,7 @@ class Scuzz extends PreEffect {
     public Params: ScuzzParams;
     public WaveIndex: string[];
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

@@ -3,13 +3,14 @@ import Grid = require("../../Grid");
 import Particle = require("../../Particle");
 import MainScene = require("../../MainScene");
 import Vector = Utils.Maths.Vector;
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
 
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {

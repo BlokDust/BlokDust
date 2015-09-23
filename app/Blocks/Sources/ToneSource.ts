@@ -4,6 +4,7 @@ import Source = require("../Source");
 import Effect = require("../Effect");
 import Block = require("../Block");
 import Particle = require("../../Particle");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class ToneSource extends Source {
 
@@ -14,7 +15,7 @@ class ToneSource extends Source {
     public Params: ToneSourceParams;
     public Defaults: ToneSourceParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
 
         this.Defaults = {

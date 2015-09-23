@@ -4,10 +4,11 @@ import MainScene = require("../../../MainScene");
 import Particle = require("../../../Particle");
 import Logic = require("./Logic");
 import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class Toggle extends Logic {
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         super.Init(sketch);
 

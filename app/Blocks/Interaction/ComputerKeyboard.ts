@@ -6,6 +6,7 @@ import MainScene = require("../../MainScene");
 import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
 import Microphone = require("../Sources/Microphone");
 import Power = require("../Power/Power");
+import ISketchContext = Fayde.Drawing.ISketchContext;
 
 class ComputerKeyboard extends Keyboard {
 
@@ -15,7 +16,7 @@ class ComputerKeyboard extends Keyboard {
     };
     public Params: KeyboardParams;
 
-    Init(sketch?: any): void {
+    Init(sketch: ISketchContext): void {
 
         if (!this.Params) {
             this.Params = {
