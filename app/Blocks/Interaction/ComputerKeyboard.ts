@@ -63,21 +63,23 @@ export class ComputerKeyboard extends Keyboard {
         if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_'){
             this.KeysDown = e.KeysDown;
 
-            // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
-            this.Chain.Sources.forEach((source: ISource) => {
+            // ALL SOURCES TRIGGER KEYBOARD DOWN
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 this.KeyboardDown(e.KeyDown, source);
             });
 
 
         } else {
-            this._ExecuteKeyboardCommand(e.KeyDown, this.Chain.Sources);
+            this._ExecuteKeyboardCommand(e.KeyDown, this.Connections.ToArray());
         }
     }
 
     KeyUpCallback(e: any){
 
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        this.Chain.Sources.forEach((source: ISource) => {
+        let connections: ISource[] = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             // If its an octave shift no need to call KeyboardUp
             if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
                 this.KeyboardUp(e.KeyUp, source);

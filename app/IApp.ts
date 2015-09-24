@@ -9,6 +9,7 @@ import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
+import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {ISource} from './Blocks/ISource';
 import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
 import {MainScene} from './MainScene';
@@ -49,6 +50,7 @@ export interface IApp {
     Particles: Particle[];
     ParticlesPool: PooledFactoryResource<Particle>;
     PointerInputManager: PointerInputManager;
+    PowerEffects: IPowerEffect[];
     ResourceManager: ResourceManager;
     ScaledDragOffset: Point;
     ScaledGridSize: number;

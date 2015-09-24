@@ -1,5 +1,6 @@
 import {ISource} from '../ISource';
 
+//TODO: use es6 Map or Set instead
 export class VoiceCreator {
 
     public ID: number;

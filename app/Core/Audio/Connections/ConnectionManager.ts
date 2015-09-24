@@ -3,6 +3,7 @@ import {IAudioChain} from "./IAudioChain";
 import {IBlock} from "../../../Blocks/IBlock";
 import {IEffect} from "../../../Blocks/IEffect";
 import {IPostEffect} from "../../../Blocks/Effects/IPostEffect";
+import {IPowerEffect} from "../../../Blocks/Power/IPowerEffect";
 import {IPreEffect} from "../../../Blocks/Effects/IPreEffect";
 import {ISource} from "../../../Blocks/ISource";
 import {Source} from "../../../Blocks/Source";
@@ -33,8 +34,9 @@ export class ConnectionManager {
 
         this._Disconnect(() => {
             const chains = this.CreateChains();
+            const powerEffects = App.PowerEffects;
             this._SortChainedBlocks(chains);
-            this._Connect(chains);
+            this._Connect(chains, powerEffects);
         });
     }
 
@@ -66,7 +68,7 @@ export class ConnectionManager {
         }, this._MuteBufferTime);
     }
 
-    private _Connect(chains: IAudioChain[]) {
+    private _Connect(chains: IAudioChain[], powerEffects: IPowerEffect[]) {
         if (this._Debug) console.log(chains);
 
         // loop through chains
@@ -75,15 +77,11 @@ export class ConnectionManager {
             // Certain blocks need an individual update method for exclusive functionality.
             // Source resets, PreEffect update values, Powers triggering sources
             // Powers MUST update last in this list because they rely on Sources having sound ready
-            chain.Sources.forEach((block: IBlock) => {
+            chain.Sources.forEach((block: ISource) => {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
             });
-            chain.PreEffects.forEach((block: IBlock) => {
-                block.UpdateConnections(chain);
-                block.Chain = chain;
-            });
-            chain.Others.forEach((block: IBlock) => {
+            chain.PreEffects.forEach((block: IPreEffect) => {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
             });
@@ -122,6 +120,10 @@ export class ConnectionManager {
             }
         });
 
+        powerEffects.forEach((powerEffect: IPowerEffect) => {
+            powerEffect.UpdateConnections()
+        });
+
         // Lastly unmute everything
         this.unMuteTimeout = setTimeout(() => {
             App.Audio.Master.mute = false;
@@ -147,8 +149,8 @@ export class ConnectionManager {
                     chain.PostEffects.push(<IPostEffect>block);
                 } else if (block instanceof PreEffect) {
                     chain.PreEffects.push(<IPreEffect>block);
-                } else {
-                    chain.Others.push(block);
+                //} else {
+                //    chain.PowerEffects.push(<IPowerEffect>block);
                 }
             });
         });

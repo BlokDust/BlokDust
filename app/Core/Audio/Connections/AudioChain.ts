@@ -1,18 +1,17 @@
 import {IAudioChain} from './IAudioChain';
 import {IBlock} from '../../../Blocks/IBlock';
 import {IPostEffect} from '../../../Blocks/Effects/IPostEffect';
+//import {IPowerEffect} from "../../../Blocks/Power/IPowerEffect";
 import {IPreEffect} from '../../../Blocks/Effects/IPreEffect';
 import {ISource} from '../../../Blocks/ISource';
-import {PostEffect} from '../../../Blocks/Effects/PostEffect';
-import {PreEffect} from '../../../Blocks/Effects/PreEffect';
-import {Source} from '../../../Blocks/Source';
 
 export class AudioChain implements IAudioChain {
+
     public Connections: IBlock[] = [];
     public Sources: ISource[] = [];
     public PostEffects: IPostEffect[] = [];
     public PreEffects: IPreEffect[] = [];
-    public Others: IBlock[] = [];
+    //public PowerEffects: IPowerEffect[] = [];
 
     constructor() {
 

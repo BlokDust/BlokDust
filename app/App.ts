@@ -21,6 +21,7 @@ import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
+import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {ISource} from './Blocks/ISource';
 import {InputManager} from './Core/Inputs/InputManager';
 import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
@@ -30,6 +31,7 @@ import {Metrics} from './AppMetrics';
 import {MoveBlockCommandHandler} from './CommandHandlers/MoveBlockCommandHandler';
 import {OperationManager} from './Core/Operations/OperationManager';
 import {PointerInputManager} from './Core/Inputs/PointerInputManager';
+import {PowerEffect} from './Blocks/Power/PowerEffect';
 import {ResourceManager} from './Core/Resources/ResourceManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {Particle} from './Particle';
@@ -44,7 +46,7 @@ import {Source} from './Blocks/Source';
 import {Splash} from './Splash';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 
-class App implements IApp{
+export default class App implements IApp{
 
     private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
@@ -96,6 +98,10 @@ class App implements IApp{
     // todo: move to BlockStore
     get Effects(): IEffect[] {
         return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
+    }
+
+    get PowerEffects(): IPowerEffect[] {
+        return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
     }
 
     get SessionId(): string {
@@ -415,5 +421,3 @@ class App implements IApp{
 interface Window{
     App: IApp;
 }
-
-export default App;

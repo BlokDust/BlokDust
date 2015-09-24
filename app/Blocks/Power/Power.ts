@@ -1,5 +1,4 @@
 import {Effect} from '../Effect';
-import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {ISource} from '../ISource';
 import {MainScene} from '../../MainScene';
 import {PowerEffect} from './PowerEffect';
@@ -13,10 +12,9 @@ export class Power extends PowerEffect {
 
     }
 
-    UpdateConnections(chain: IAudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
+    UpdateConnections() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             if (!source.IsPressed){
                 source.TriggerRelease('all');
             }

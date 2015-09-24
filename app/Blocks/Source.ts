@@ -287,13 +287,15 @@ export class Source extends Block implements ISource {
      */
     IsPowered(): boolean {
         let bool: boolean = false;
-        if (this.IsPressed || this.PowerConnections>0) {
-            bool = true;
-        } else if (this.Chain && this.Chain.Connections) {
+        // FIXME: move this to power sources
+        //if (this.IsPressed || this.PowerConnections>0) {
+        //    bool = true;
+        if (this.Chain && this.Chain.Connections) {
             this.Chain.Connections.forEach((block: IBlock) => {
                 //If connected to power block OR connected to a logic block that is 'on'
                 if (block instanceof Power || block instanceof Logic && block.Params.logic){
                     bool = true;
+                    //TODO: refactor this. break loop if it has power
                 }
             });
         }
@@ -436,14 +438,16 @@ export class Source extends Block implements ISource {
     MouseDown() {
         super.MouseDown();
         this.TriggerAttack();
-
     }
 
     MouseUp() {
         super.MouseUp();
-        this.TriggerRelease('all');
+        if (!this.IsPowered()) {
+            this.TriggerRelease('all');
+        }
     }
 
+    //TODO: This shouldn't be here
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
         var jsonVariable = {};
@@ -466,14 +470,6 @@ export class Source extends Block implements ISource {
                 });
                 break;
         }
-    }
-
-    /*UpdateParams(params: any) {
-        super.UpdateParams(params);
-    }*/
-
-    Draw(){
-        super.Draw();
     }
 
 }

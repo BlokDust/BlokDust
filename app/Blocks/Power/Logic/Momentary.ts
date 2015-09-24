@@ -1,5 +1,4 @@
 import {Effect} from '../../Effect';
-import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
@@ -15,10 +14,9 @@ export class Momentary extends Logic {
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
 
-    UpdateConnections(chain: IAudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
+    UpdateConnections() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             if (this.Params.logic) {
                 source.TriggerAttack();
             }
@@ -73,7 +71,8 @@ export class Momentary extends Logic {
     PerformLogic() {
         // Momentarily Trigger Attack and then release
         this.Params.logic = true;
-        this.Chain.Sources.forEach((source: ISource) => {
+        let connections: ISource[] = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             source.TriggerAttackRelease();
             if (source instanceof ParticleEmitter){
                 (<ParticleEmitter>source).EmitParticle();

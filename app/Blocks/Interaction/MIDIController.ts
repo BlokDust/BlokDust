@@ -1,5 +1,4 @@
 import {IApp} from '../../IApp';
-import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {MainScene} from '../../MainScene';
@@ -58,12 +57,10 @@ export class MIDIController extends Keyboard {
             }
 
             // ALL SOURCES TRIGGER KEYBOARD UP
-            if (this.Chain){
-                this.Chain.Sources.forEach((source: ISource) => {
-                    this.KeyboardUp(note, source);
-                });
-            }
-
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
+                this.KeyboardUp(note, source);
+            });
         }
 
         else if (cmd === 9) {
@@ -72,8 +69,8 @@ export class MIDIController extends Keyboard {
             this.KeysDown[note] = true;
 
             // ALL SOURCES TRIGGER KEYBOARD DOWN
-
-            this.Chain.Sources.forEach((source: ISource) => {
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 this.KeyboardDown(note, source);
             });
 
@@ -97,17 +94,6 @@ export class MIDIController extends Keyboard {
     Draw() {
         super.Draw();
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
-    }
-
-    UpdateConnections(chain: IAudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
-            if (!((source instanceof Power) || (source instanceof Microphone))) {
-                this.CreateVoices(source);
-            }
-            source.TriggerRelease('all');
-        });
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
