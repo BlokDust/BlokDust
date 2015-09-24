@@ -286,20 +286,18 @@ export class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered(): boolean {
-        let bool: boolean = false;
-        // FIXME: move this to power sources
-        //if (this.IsPressed || this.PowerConnections>0) {
-        //    bool = true;
-        if (this.Chain && this.Chain.Connections) {
-            this.Chain.Connections.forEach((block: IBlock) => {
-                //If connected to power block OR connected to a logic block that is 'on'
-                if (block instanceof Power || block instanceof Logic && block.Params.logic){
-                    bool = true;
-                    //TODO: refactor this. break loop if it has power
-                }
-            });
+        if (this.IsPressed || this.PowerConnections>0) {
+            return true;
         }
-        return bool;
+        let connections: IEffect[] = this.Connections.ToArray();
+        for (let i = 0, _len = connections.length; i < _len; i++) {
+            //If connected to power block OR connected to a logic block that is 'on'
+            if (connections[i] instanceof Power ||
+                connections[i] instanceof Logic && connections[i].Params.logic) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -442,9 +440,7 @@ export class Source extends Block implements ISource {
 
     MouseUp() {
         super.MouseUp();
-        if (!this.IsPowered()) {
-            this.TriggerRelease('all');
-        }
+        this.TriggerRelease('all');
     }
 
     //TODO: This shouldn't be here

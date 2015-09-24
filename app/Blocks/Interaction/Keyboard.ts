@@ -24,6 +24,7 @@ export class Keyboard extends Interaction {
         super.Draw();
     }
 
+    //FIXME: we don't want to reset the frequency everytime this gets called
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {

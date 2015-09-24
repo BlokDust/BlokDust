@@ -1,4 +1,7 @@
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {IBlock} from '../IBlock';
+import {Logic} from './Logic/Logic';
+import {Power} from './Power';
 import {Source} from '../Source';
 
 export class PowerSource extends Source {
