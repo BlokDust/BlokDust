@@ -117,6 +117,7 @@ export class LaserBeams {
 
                 // if this blocks collisions should be updated
                 if (laser.UpdateCollision) {
+
                     laser.UpdateCollision = false;
                     laser.CheckRange = laser.Params.range;
                     var collisions = [];
@@ -184,7 +185,7 @@ export class LaserBeams {
                                                 else {
                                                     collisions.push(block);
                                                     if (laser.Collisions.length == 0 || $.inArray(block, laser.Collisions) == -1) {
-                                                        console.log("HIT " + block.Id);
+                                                        //console.log("HIT " + block.Id);
                                                         if (block instanceof Logic) {
                                                             block.PerformLogic();
                                                         } else {
@@ -192,7 +193,7 @@ export class LaserBeams {
                                                                 block.TriggerAttack();
                                                                 //block.ScheduleAttack();
                                                             }
-                                                            console.log(block.PowerConnections);
+                                                            //console.log(block.PowerConnections);
                                                             block.PowerConnections += 1;
                                                         }
                                                     }

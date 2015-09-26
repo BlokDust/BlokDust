@@ -1,8 +1,11 @@
 import {Effect} from '../../Effect';
+import {IApp} from '../../../IApp';
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
 import {Particle} from '../../../Particle';
+
+declare var App: IApp;
 
 export class Toggle extends Logic {
 
@@ -88,6 +91,7 @@ export class Toggle extends Logic {
                 });
             });
         }
+        App.MainScene.LaserBeams.UpdateAllLasers = true;
         this.RefreshOptionsPanel();
     }
 }

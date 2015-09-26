@@ -59,7 +59,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
     private _TrashCan: TrashCan;
     private _ConnectionLines: ConnectionLines;
     private _RecorderPanel: RecorderPanel;
-    private _LaserBeams: LaserBeams;
+    public LaserBeams: LaserBeams;
     private _ToolTipTimeout;
     private _PointerPoint: Point;
     private _SelectedBlockPosition: Point;
@@ -196,8 +196,8 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         this._RecorderPanel = new RecorderPanel();
         this._RecorderPanel.Init(this);
 
-        this._LaserBeams = new LaserBeams();
-        this._LaserBeams.Init(this);
+        this.LaserBeams = new LaserBeams();
+        this.LaserBeams.Init(this);
 
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
@@ -234,7 +234,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
             this.UpdateParticles();
         }
 
-        this._LaserBeams.Update();
+        this.LaserBeams.Update();
         this._RecorderPanel.Update();
         this.MainSceneDragger.Update();
         this.OptionsPanel.Update();
@@ -295,7 +295,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         this.DrawParticles();
 
         // LASER BEAMS //
-        this._LaserBeams.Draw();
+        this.LaserBeams.Draw();
 
         // BLOCK ANIMATIONS //
         App.AnimationsLayer.Draw();
@@ -694,7 +694,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
     }
 
     private _ABlockHasBeenMoved(block) {
-        this._LaserBeams.UpdateAllLasers = true;
+        this.LaserBeams.UpdateAllLasers = true;
     }
 
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //

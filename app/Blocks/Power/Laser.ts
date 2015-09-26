@@ -85,8 +85,8 @@ export class Laser extends PowerSource {
                     "setting" :"rotate",
                     "props" : {
                         "value" : this.Params.rotate,
-                        "min" : -1000,
-                        "max" : 1000,
+                        "min" : -500,
+                        "max" : 500,
                         "quantised" : true,
                         "centered" : true,
                         "snap" : true
