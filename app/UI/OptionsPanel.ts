@@ -650,8 +650,10 @@ export class OptionsPanel extends DisplayObject {
 
 
     diagonalFill(x,y,w,h,s) {
+        var pr = App.Metrics.PixelRatio;
+        s = s *pr;
         var ctx = this.Ctx;
-        var lineNo = Math.round((w+h) / (s*App.Metrics.PixelRatio));
+        var lineNo = Math.round((w+h) / (s));
         var pos1 = new Point(0,0);
         var pos2 = new Point(0,0);
         ctx.beginPath();
