@@ -1,3 +1,4 @@
+import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
@@ -104,7 +105,7 @@ export class MIDIController extends Keyboard {
 
         var frequency = this.GetFrequencyOfNote(keyDown, source);
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Are there any free voices?
@@ -157,7 +158,7 @@ export class MIDIController extends Keyboard {
 
     KeyboardUp(keyUp:string, source:ISource): void {
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Loop through all the active voices
