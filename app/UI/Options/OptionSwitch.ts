@@ -1,12 +1,11 @@
-/**
- * Created by luketwyman on 06/07/2015.
- */
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
+declare var App: IApp;
 
-class OptionSwitch {
+export class OptionSwitch {
 
     public Position: Point;
     public Name:string;
@@ -148,5 +147,3 @@ class OptionSwitch {
     }
 
 }
-
-export = OptionSwitch;

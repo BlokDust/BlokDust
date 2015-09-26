@@ -1,10 +1,6 @@
-import Effect = require("./../Effect");
-import IEffect = require("./../IEffect");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import {IEffect} from './../IEffect';
 
-interface IPreEffect extends IEffect {
-    Chain: AudioChain;
-    UpdateConnections(chain: AudioChain): void;
+export interface IPreEffect extends IEffect {
+    ////Chain: IAudioChain;
+    //UpdateConnections(chain: IAudioChain): void;
 }
-
-export = IPreEffect;

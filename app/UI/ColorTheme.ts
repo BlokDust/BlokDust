@@ -1,8 +1,4 @@
-/**
- * Created by luketwyman on 09/08/2015.
- */
-
-class ColorTheme {
+export class ColorTheme {
     public Name: string;
     public PaletteURL: string;
     public Options: any;
@@ -15,5 +11,3 @@ class ColorTheme {
 
     }
 }
-
-export = ColorTheme;

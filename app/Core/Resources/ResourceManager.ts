@@ -1,7 +1,7 @@
-import IResource = require("./IResource");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {IResource} from './IResource';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
 
-class ResourceManager {
+export class ResourceManager {
 
     private _Resources: ObservableCollection<IResource<any>> = new ObservableCollection<IResource<any>>();
 
@@ -17,5 +17,3 @@ class ResourceManager {
         this.ResourceAdded.raise(resource, new Fayde.RoutedEventArgs());
     }
 }
-
-export = ResourceManager;

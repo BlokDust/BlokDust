@@ -1,6 +1,7 @@
-import ISource = require("../ISource");
+import {ISource} from '../ISource';
 
-class VoiceCreator {
+//TODO: use es6 Map or Set instead
+export class VoiceCreator {
 
     public ID: number;
     private _key: string;
@@ -18,5 +19,3 @@ class VoiceCreator {
     }
 
 }
-
-export = VoiceCreator;

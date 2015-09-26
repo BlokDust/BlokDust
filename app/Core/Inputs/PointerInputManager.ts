@@ -1,9 +1,8 @@
-import App = require("../../App");
-import InputManager = require("./InputManager");
-import Commands = require("../../Commands");
-import CommandManager = require("../Commands/CommandManager");
+import {Commands} from '../../Commands';
+import {CommandManager} from '../Commands/CommandManager';
+import {InputManager} from './InputManager';
 
-class MouseInputManager extends InputManager {
+export class PointerInputManager extends InputManager {
 
     MouseDown = new nullstone.Event<MouseEvent>();
     MouseUp = new nullstone.Event<MouseEvent>();
@@ -70,5 +69,3 @@ class MouseInputManager extends InputManager {
         this.TouchMove.raise(this, e);
     }
 }
-
-export = MouseInputManager;

@@ -1,13 +1,11 @@
-/**
- * Created by luketwyman on 02/08/2015.
- */
-import InputManager = require("./InputManager");
+import {InputManager} from './InputManager';
+import {KeyMap} from './KeyMap';
 
-class TypingManager extends InputManager {
+export class TypingManager extends InputManager {
 
+    private _CharLimit: number;
     private _String: string;
     private _Panel: any;
-    private _CharLimit: number;
 
     constructor() {
         super();
@@ -46,14 +44,14 @@ class TypingManager extends InputManager {
     }
 
     RemoveFromString() {
-        if (this.IsKeyNameDown(this.KeyMap.Backspace)) {
+        if (this.IsKeyNameDown(KeyMap.Backspace)) {
             this._String = this._String.substring(0, this._String.length-1);
             this._Panel.UpdateString(this._String);
         }
     }
 
     StringReturn() {
-        if (this.IsKeyNameDown(this.KeyMap.Enter)) {
+        if (this.IsKeyNameDown(KeyMap.Enter)) {
             this._Panel.StringReturn();
         }
     }
@@ -68,5 +66,3 @@ class TypingManager extends InputManager {
         this.IsEnabled = false;
     }
 }
-
-export = TypingManager;

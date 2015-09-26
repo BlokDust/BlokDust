@@ -1,10 +1,17 @@
-import AudioNodeConnectionManager = require("./AudioNodeConnectionManager");
-import ConnectionMethodType = require("./Connections/ConnectionMethodType");
-import ConnectionManager = require("./Connections/ConnectionManager");
-import SimpleConnectionMethod = require("./Connections/ConnectionMethods/SimpleConnectionMethod");
-import AccumulativeConnectionMethod = require("./Connections/ConnectionMethods/AccumulativeConnectionMethod");
+import {AccumulativeConnectionMethod} from './Connections/ConnectionMethods/AccumulativeConnectionMethod';
+import {AudioFileManager} from './AudioFileManager';
+import {AudioNodeConnectionManager} from './AudioNodeConnectionManager';
+import {ConnectionManager} from './Connections/ConnectionManager';
+import {ConnectionMethodType} from './Connections/ConnectionMethodType';
+import {IApp} from '../../IApp';
+import {IAudio} from './IAudio';
+import {MIDIManager} from './MIDIManager';
+import {SimpleConnectionMethod} from './Connections/ConnectionMethods/SimpleConnectionMethod';
+import {Waveform} from './Waveform';
 
-class Audio {
+declare var App: IApp;
+
+export class Audio implements IAudio {
 
     public Tone: Tone;
     public ctx: AudioContext;
@@ -15,8 +22,11 @@ class Audio {
     public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
     public AudioNodeConnectionManager: AudioNodeConnectionManager;
+    public AudioFileManager: AudioFileManager;
+    public MIDIManager: MIDIManager;
     public ConnectionMethodType: ConnectionMethodType;
     public ConnectionManager: ConnectionManager;
+    public Waveform: Waveform;
 
     Init() {
 
@@ -54,6 +64,16 @@ class Audio {
                 console.error('No connection method set');
         }
 
+        // Audio File manager
+        this.AudioFileManager = new AudioFileManager();
+
+        // MIDI Manager
+        this.MIDIManager = new MIDIManager();
+        this.MIDIManager.Init();
+
+        // Waveform Class
+        this.Waveform = new Waveform();
+
     }
 
     get MeterVolumeDb(): number {
@@ -67,62 +87,4 @@ class Audio {
     get HasClipped(): boolean {
         return this.Meter.isClipped();
     }
-
-    DecodeFileData(files, callback: (file: any, buffer: AudioBuffer) => any) {
-        //Only process audio files.
-        if (!files[0].type.match('audio.*')) {
-            App.Message('This is not an audio file, please try again with a .wav, .mp3 or .ogg');
-            return;
-        }
-        //Only process files of a certain length
-        if (files[0].size > 100000000) {
-            App.Message('The audio file is too large. The maximum size is 100mb');
-        }
-
-        var reader = new FileReader();
-        reader.onerror = this.ErrorHandler;
-        reader.onprogress = this.UpdateProgress;
-        reader.onabort = function(e) {
-            App.message('File read cancelled');
-        };
-        reader.onload = (ev:any) => {
-            App.Audio.ctx.decodeAudioData(ev.target.result, (theBuffer) => {
-                callback(files[0], theBuffer);
-            }, function(){ //error function
-                App.message('Sorry, we could not process this audio file.');
-                console.error('Sorry, we could not process this audio file.');
-                callback(files[0], undefined);
-            });
-        };
-        reader.readAsArrayBuffer(files[0]);
-    }
-
-    ErrorHandler(event) {
-        switch(event.target.error.code) {
-            case event.target.error.NOT_FOUND_ERR:
-                App.Message('File Not Found!');
-                break;
-            case event.target.error.NOT_READABLE_ERR:
-                App.Message('File is not readable');
-                break;
-            case event.target.error.ABORT_ERR:
-                break; // noop
-            default:
-                App.Message('An error occurred reading this file.');
-        }
-    }
-
-    UpdateProgress(event) {
-        // event is a ProgressEvent.
-        if (event.lengthComputable) {
-            var percentLoaded = Math.round((event.loaded / event.total) * 100);
-            // Increase the progress bar length.
-            if (percentLoaded < 100) {
-                console.log(percentLoaded + '%');
-            }
-            console.log(percentLoaded + '%');
-        }
-    }
 }
-
-export = Audio;

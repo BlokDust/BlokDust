@@ -1,8 +1,8 @@
-import IOperation = require("./IOperation");
-import IUndoableOperation = require("./IUndoableOperation");
+import {IOperation} from './IOperation';
+import {IUndoableOperation} from './IUndoableOperation';
 import ObservableCollection = Fayde.Collections.ObservableCollection;
 
-class OperationManager {
+export class OperationManager {
 
     private _DebugEnabled: boolean = true;
     private _Operations: ObservableCollection<IOperation> = new ObservableCollection<IOperation>();
@@ -171,5 +171,3 @@ class OperationManager {
         return this.Head < this._Operations.Count - 1;
     }
 }
-
-export = OperationManager;

@@ -14,6 +14,6 @@
     "grunt-open": "^0.2.3",
     "grunt-sync": "^0.2.4",
     "grunt-text-replace": "^0.4.0",
-    "grunt-typescript": "^0.6.1"
+    "grunt-typescript": "^0.7.0"
   }
 }

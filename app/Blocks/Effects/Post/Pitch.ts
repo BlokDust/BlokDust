@@ -1,9 +1,11 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import PitchShifter = require("../Post/PitchShifter");
+import {IApp} from '../../../IApp';
+import {MainScene} from '../../../MainScene';
+import {PitchShifter} from '../Post/PitchShifter';
+import {PostEffect} from '../PostEffect';
 
-class Pitch extends PostEffect {
+declare var App: IApp;
+
+export class Pitch extends PostEffect {
 
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
@@ -69,5 +71,3 @@ class Pitch extends PostEffect {
         };
     }
 }
-
-export = Pitch;

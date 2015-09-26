@@ -3,7 +3,11 @@
  * https://github.com/cwilso/Audio-Input-Effects/blob/master/js/jungle.js
  */
 
-class PitchShifter {
+import {IApp} from '../../../IApp';
+
+declare var App: IApp;
+
+export class PitchShifter {
 
     private previousPitch: number = -1;
 
@@ -224,6 +228,4 @@ class PitchShifter {
         return this;
     }
 }
-
-export = PitchShifter;
 

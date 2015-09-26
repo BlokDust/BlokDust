@@ -1,12 +1,11 @@
-/**
- * Created by luketwyman on 11/01/2015.
- */
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import ParametersPanel = require("./../OptionsPanel");
-import Size = minerva.Size;
+declare var App: IApp;
 
-class Slider extends Option{
+export class Slider extends Option {
 
     constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean) {
         super();
@@ -121,9 +120,4 @@ class Slider extends Option{
             ctx.fillText(string, x + panel.Margin + (25 * units), y + (height * 0.5) + (headerType * 0.35));
         }
     }
-
-
 }
-
-
-export = Slider;

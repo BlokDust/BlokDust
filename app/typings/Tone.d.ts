@@ -3,8 +3,11 @@
 // Definitions by: Luke Phillips <https://github.com/lukephills>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
+interface ToneFactory {
+    new(inputs?: number, outputs?: number): Tone
+}
+
 declare class Tone {
-    new(inputs?: number, outputs?: number): Tone;
     context: AudioContext;
     input: GainNode;
     output: GainNode;
@@ -25,6 +28,7 @@ declare class Tone {
     gainToDb(gain: number): number;
     get(params?:any): any;
     interpolate(input: number, outputMin: number, outputMax: number): number;
+    intervalToFrequencyRatio(interval: number): number;
     isFrequency(freq: number): boolean;
     isFunction(arg: any): boolean;
     isUndef(arg: any): boolean;
@@ -158,7 +162,7 @@ declare module Tone {
         url: string;
         load(url: string, callback?: (e: any) => any ): Tone.Buffer;
         dispose(): Tone.Buffer;
-        buffer: Tone.Buffer | AudioBuffer;
+        buffer: AudioBuffer;
         get(): AudioBuffer;
         set(buffer: AudioBuffer | string ): Tone.Buffer;
     }

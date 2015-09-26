@@ -1,14 +1,13 @@
-/**
- * Created by luketwyman on 06/02/2015.
- */
-
-import Option = require("./Option");
-import OptionHandle = require("./OptionHandle");
-import OptionsPanel = require("./../OptionsPanel");
-import OptionSubHandle = require("./OptionSubHandle");
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionHandle} from './OptionHandle';
+import {OptionsPanel} from './../OptionsPanel';
+import {OptionSubHandle} from './OptionSubHandle';
 import Size = minerva.Size;
 
-class Parametric extends Option{
+declare var App: IApp;
+
+export class Parametric extends Option {
 
     public Handles: OptionHandle[];
     public SubHandles: OptionSubHandle[];
@@ -284,5 +283,3 @@ class Parametric extends Option{
     }
 
 }
-
-export = Parametric;

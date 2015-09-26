@@ -1,9 +1,9 @@
-import IEffect = require("../../Blocks/IEffect");
-import ISource = require("../../Blocks/ISource");
-import Source = require("../../Blocks/Source")
-import PostEffect = require("../../Blocks/Effects/PostEffect");
+import {IEffect} from '../../Blocks/IEffect';
+import {ISource} from '../../Blocks/ISource';
+import {PostEffect} from '../../Blocks/Effects/PostEffect';
+import {Source} from '../../Blocks/Source';
 
-class AudioNodeConnectionManager {
+export class AudioNodeConnectionManager {
 
     static Debug: boolean = false;
 
@@ -18,13 +18,9 @@ class AudioNodeConnectionManager {
         (<any>AudioNode).prototype._toneConnect = AudioNode.prototype.connect;
         AudioNode.prototype.connect = function (destination: any, outNum, inNum) {
             if (destination instanceof PostEffect) {
-                destination = destination.Effect;
+                destination = (<IEffect>destination).Effect;
             }
             this._toneConnect(destination, outNum, inNum);
         };
     }
-
-
 }
-
-export = AudioNodeConnectionManager;

@@ -1,6 +1,9 @@
-import ICommandHandler = require("../Core/Commands/ICommandHandler");
+import {IApp} from '../IApp';
+import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 
-class RedoCommandHandler implements ICommandHandler {
+declare var App: IApp;
+
+export class RedoCommandHandler implements ICommandHandler {
 
     constructor() {
 
@@ -12,5 +15,3 @@ class RedoCommandHandler implements ICommandHandler {
         }
     }
 }
-
-export = RedoCommandHandler;

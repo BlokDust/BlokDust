@@ -1,6 +1,6 @@
-import IDisplayObject = require("./IDisplayObject");
+import {IDisplayObject} from './IDisplayObject';
 
-class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collections.ObservableCollection<T> {
+export class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collections.ObservableCollection<T> {
 
     constructor(){
         super();
@@ -47,5 +47,3 @@ class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collection
         return this.GetValueAt(this.Count - 1);
     }
 }
-
-export = DisplayObjectCollection;

@@ -1,12 +1,11 @@
-/**
- * Created by luketwyman on 24/02/2015.
- */
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import ParametersPanel = require("./../OptionsPanel");
-import Size = minerva.Size;
+declare var App: IApp;
 
-class OptionSample  extends Option{
+export class OptionSample  extends Option {
 
     constructor(position: Point, size: Size, name: string, track: string, user: string, setting: string) {
         super();
@@ -97,5 +96,3 @@ class OptionSample  extends Option{
     }
 
 }
-
-export = OptionSample;

@@ -1,8 +1,8 @@
-import IOperation = require("IOperation");
-import IUndoableOperation = require("IUndoableOperation");
-import ICompoundOperation = require("ICompoundOperation");
+import {ICompoundOperation} from 'ICompoundOperation';
+import {IOperation} from 'IOperation';
+import {IUndoableOperation} from 'IUndoableOperation';
 
-class CompoundOperation<T> implements ICompoundOperation {
+export class CompoundOperation<T> implements ICompoundOperation {
     public Operations: IOperation[] = [];
 
     public AddOperation(operation: IOperation): void {
@@ -45,5 +45,3 @@ class CompoundOperation<T> implements ICompoundOperation {
         });
     }
 }
-
-export = CompoundOperation;

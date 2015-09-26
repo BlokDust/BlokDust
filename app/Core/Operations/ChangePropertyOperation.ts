@@ -1,7 +1,6 @@
-import IUndoableOperation = require("./IUndoableOperation");
+import {IUndoableOperation} from './IUndoableOperation';
 
-class ChangePropertyOperation<T> implements IUndoableOperation
-{
+export class ChangePropertyOperation<T> implements IUndoableOperation {
     private _Object: T;
     private _PropertyName: string;
     private _OldValue: any;
@@ -45,5 +44,3 @@ class ChangePropertyOperation<T> implements IUndoableOperation
         this._Object = null;
     }
 }
-
-export = ChangePropertyOperation;

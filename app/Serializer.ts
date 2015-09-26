@@ -1,17 +1,17 @@
-import IEffect = require("./Blocks/IEffect");
-import Effect = require("./Blocks/Effect");
-import ISource = require("./Blocks/ISource");
-import Source = require("./Blocks/Source");
-import IBlock = require("./Blocks/IBlock");
-import Grid = require("./Grid");
-import ToneSource = require("./Blocks/Sources/ToneSource");
-import BitCrusher = require("./Blocks/Effects/Post/BitCrusher");
-import BlockCreator = require("./BlockCreator");
-import SaveFile = require("./SaveFile");
-import Version = require("./_Version");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {BlockCreator} from './BlockCreator';
+import {Effect} from './Blocks/Effect';
+import {IApp} from './IApp';
+import {IBlock} from './Blocks/IBlock';
+import {IEffect} from './Blocks/IEffect';
+import {ISource} from './Blocks/ISource';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+import {SaveFile} from './SaveFile';
+import {Source} from './Blocks/Source';
+import {Version as Version} from './_Version';
 
-class Serializer {
+declare var App: IApp;
+
+export class Serializer {
 
     private static _Debug = false;
     private static _SerializationDictionary: any;
@@ -44,7 +44,7 @@ class Serializer {
             ZoomLevel: App.ZoomLevel,
             DragOffset: App.DragOffset,
             Composition: [],
-            Version: Version.Version,
+            Version: Version, //FIXME
             ColorThemeNo: App.Color.CurrentThemeNo
         };
 
@@ -173,12 +173,10 @@ class Serializer {
             block = Serializer._DeserializationDictionary[b];
         } else {
             block = this._GetBlockDeserializationType(b);
-
             block.Id = b.Id;
             block.Position = new Point(b.Position.x, b.Position.y);
             block.LastPosition = new Point(b.Position.x, b.Position.y);
             block.Params = b.Params;
-            block.Type = this._GetBlockDeserializationType(b);
             block.ZIndex = b.ZIndex;
 
             Serializer._DeserializationDictionary[b.Id] = block;
@@ -203,5 +201,3 @@ class Serializer {
         return BlockCreator.GetBlock(b.Type);
     }
 }
-
-export = Serializer;

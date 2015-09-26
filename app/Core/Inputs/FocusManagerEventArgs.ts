@@ -1,5 +1,4 @@
-
-class FocusEventArgs implements nullstone.IEventArgs {
+export class FocusManagerEventArgs implements nullstone.IEventArgs {
 
     HasFocus: boolean;
 
@@ -7,5 +6,3 @@ class FocusEventArgs implements nullstone.IEventArgs {
         Object.defineProperty(this, 'HasFocus', { value: hasFocus, writable: false });
     }
 }
-
-export = FocusEventArgs;

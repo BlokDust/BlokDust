@@ -1,9 +1,12 @@
-import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IBlock = require("../Blocks/IBlock");
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import DeleteBlockOperation = require("../Operations/DeleteBlockOperation");
+import {DeleteBlockOperation} from '../Operations/DeleteBlockOperation';
+import {IApp} from '../IApp';
+import {IBlock} from '../Blocks/IBlock';
+import {ICommandHandler} from '../Core/Commands/ICommandHandler';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 
-class DeleteBlockCommandHandler implements ICommandHandler {
+declare var App: IApp;
+
+export class DeleteBlockCommandHandler implements ICommandHandler {
 
     constructor() {
 
@@ -14,5 +17,3 @@ class DeleteBlockCommandHandler implements ICommandHandler {
         return App.OperationManager.Do(op);
     }
 }
-
-export = DeleteBlockCommandHandler;

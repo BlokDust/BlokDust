@@ -3,55 +3,98 @@
  * ------------------------
  *
  * 1: Import the block module below
- * 2: Add the block Name, ID & Description to "MenuJson" for it to appear in the menu
+ * 2: Add the static variable name so that the block can be initialised on deserialization
+ * 3: Add the block Name, ID & Description to "MenuJson" for it to appear in the menu
  *
  */
 
-import IBlock = require("./Blocks/IBlock");
+import {IBlock} from './Blocks/IBlock';
 
 // SOURCE BLOCKS //
-import ToneSource = require("./Blocks/Sources/ToneSource");
-import Noise = require("./Blocks/Sources/Noise");
-import Microphone = require("./Blocks/Sources/Microphone");
-import Sampler = require("./Blocks/Sources/Sampler");
-import Soundcloud = require("./Blocks/Sources/Soundcloud");
-import Granular = require("./Blocks/Sources/Granular");
-import Recorder = require("./Blocks/Sources/Recorder");
-import WaveGen = require("./Blocks/Sources/WaveGen");
+import {Granular} from './Blocks/Sources/Granular';
+import {Microphone} from './Blocks/Sources/Microphone';
+import {Noise} from './Blocks/Sources/Noise';
+import {Recorder} from './Blocks/Sources/Recorder';
+import {Sampler} from './Blocks/Sources/Sampler';
+import {Soundcloud} from './Blocks/Sources/Soundcloud';
+import {ToneSource} from './Blocks/Sources/ToneSource';
+import {WaveGen} from './Blocks/Sources/WaveGen';
 
 // EFFECTS BLOCKS //
-import AutoWah = require("Blocks/Effects/Post/AutoWah");
-import BitCrusher = require("Blocks/Effects/Post/BitCrusher");
-import Chomp = require("Blocks/Effects/Post/Chomp");
-import Chopper = require("Blocks/Effects/Post/Chopper");
-import Chorus = require("Blocks/Effects/Post/Chorus");
-import Convolver = require("Blocks/Effects/Post/ConvolutionReverb");
-import Delay = require("Blocks/Effects/Post/Delay");
-import Distortion = require("Blocks/Effects/Post/Distortion");
-import Envelope = require("Blocks/Effects/Pre/Envelope");
-import EQ = require("Blocks/Effects/Post/EQ");
-import Filter = require("Blocks/Effects/Post/Filter");
-import Volume = require("Blocks/Effects/Post/Gain");
-import LFO = require("Blocks/Effects/Pre/LFO");
-import Panner = require("Blocks/Effects/Post/Panner");
-import Phaser = require("Blocks/Effects/Post/Phaser");
-import Pitch = require("Blocks/Effects/Post/Pitch");
-import Reverb = require("Blocks/Effects/Post/Reverb");
-import Scuzz = require("Blocks/Effects/Pre/Scuzz");
+import {AutoWah} from 'Blocks/Effects/Post/AutoWah';
+import {BitCrusher} from 'Blocks/Effects/Post/BitCrusher';
+import {Chomp} from 'Blocks/Effects/Post/Chomp';
+import {Chopper} from 'Blocks/Effects/Post/Chopper';
+import {Chorus} from 'Blocks/Effects/Post/Chorus';
+import {Convolver} from 'Blocks/Effects/Post/ConvolutionReverb';
+import {Delay} from 'Blocks/Effects/Post/Delay';
+import {Distortion} from 'Blocks/Effects/Post/Distortion';
+import {Envelope} from 'Blocks/Effects/Pre/Envelope';
+import {EQ} from 'Blocks/Effects/Post/EQ';
+import {Filter} from 'Blocks/Effects/Post/Filter';
+import {LFO} from 'Blocks/Effects/Pre/LFO';
+import {Panner} from 'Blocks/Effects/Post/Panner';
+import {Phaser} from 'Blocks/Effects/Post/Phaser';
+import {Pitch} from 'Blocks/Effects/Post/Pitch';
+import {Reverb} from 'Blocks/Effects/Post/Reverb';
+import {Scuzz} from 'Blocks/Effects/Pre/Scuzz';
+import {Gain as Volume} from 'Blocks/Effects/Post/Gain';
 
 // POWER BLOCKS //
-import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
-import Power = require("./Blocks/Power/Power");
-import Toggle = require("./Blocks/Power/Logic/Toggle");
-import Momentary = require("./Blocks/Power/Logic/Momentary");
-import Laser = require("./Blocks/Power/Laser");
-import Void = require("./Blocks/Power/Void");
+import {Laser} from './Blocks/Power/Laser';
+import {Momentary} from './Blocks/Power/Logic/Momentary';
+import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
+import {Power} from './Blocks/Power/Power';
+import {Toggle} from './Blocks/Power/Logic/Toggle';
+import {Void} from './Blocks/Power/Void';
 
 // INTERACTION BLOCKS //
-import ComputerKeyboard = require("Blocks/Interaction/ComputerKeyboard");
-import MIDIController = require("Blocks/Interaction/MIDIController");
+import {ComputerKeyboard} from 'Blocks/Interaction/ComputerKeyboard';
+import {MIDIController} from 'Blocks/Interaction/MIDIController';
 
-class BlockCreator {
+export class BlockCreator {
+
+    // SOURCE BLOCKS //
+    public static Granular = Granular;
+    public static Microphone = Microphone;
+    public static Noise = Noise;
+    public static Recorder = Recorder;
+    public static Sampler = Sampler;
+    public static Soundcloud = Soundcloud;
+    public static ToneSource = ToneSource;
+    public static WaveGen = WaveGen;
+
+    // EFFECTS BLOCKS //
+    public static AutoWah = AutoWah;
+    public static BitCrusher = BitCrusher;
+    public static Chomp = Chomp;
+    public static Chopper = Chopper;
+    public static Chorus = Chorus;
+    public static Convolver = Convolver;
+    public static Delay = Delay;
+    public static Distortion = Distortion;
+    public static Envelope = Envelope;
+    public static EQ = EQ;
+    public static Filter = Filter;
+    public static LFO = LFO;
+    public static Panner = Panner;
+    public static Phaser = Phaser;
+    public static Pitch = Pitch;
+    public static Reverb = Reverb;
+    public static Scuzz = Scuzz;
+    public static Volume = Volume;
+
+        // POWER BLOCKS //
+    public static Laser = Laser;
+    public static Momentary = Momentary;
+    public static ParticleEmitter = ParticleEmitter;
+    public static Power = Power;
+    public static Toggle = Toggle;
+    public static Void = Void;
+
+        // INTERACTION BLOCKS //
+    public static ComputerKeyboard = ComputerKeyboard;
+    public static MIDIController = MIDIController;
 
     public static MenuJson: any = {
         "categories": [
@@ -243,22 +286,19 @@ class BlockCreator {
         ]
     };
 
-    public static GetBlock(type: any): IBlock {
+    public static GetBlock(type: string): IBlock {
         type = this.LostBlockCheck(type);
-        var b = eval("new " + type + "()");
-        b.Type = eval(type);
+        var b = eval("new BlockCreator." + type + "()");
+        b.Type = eval('BlockCreator.'+type);
         return b;
     }
 
     // BACKWARDS COMPATIBILITY //
     // PATCH CHANGED BLOCK NAMES //
-    public static LostBlockCheck(type: any) {
+    public static LostBlockCheck(type: string): string {
         if (("" + type) === "Gain") { // todo: coerce to string using .toString() or <String>?
             type = "Volume";
         }
         return type;
     }
-
 }
-
-export = BlockCreator;

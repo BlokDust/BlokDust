@@ -1,8 +1,8 @@
-/**
- * Created by luketwyman on 15/08/2015.
- */
+import {IApp} from '../IApp';
 
-class ThemeSelector {
+declare var App: IApp;
+
+export class ThemeSelector {
 
     public HandleRoll: boolean[];
 
@@ -86,7 +86,4 @@ class ThemeSelector {
         ctx.fill();
     }
 
-
 }
-
-export = ThemeSelector;

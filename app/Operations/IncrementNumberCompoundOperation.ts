@@ -1,9 +1,9 @@
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import ICompoundOperation = require("../Core/Operations/ICompoundOperation");
-import CompoundOperation = require("../Core/Operations/CompoundOperation");
-import IncrementNumberOperation = require("../Core/Operations/IncrementNumberOperation");
+import {CompoundOperation} from '../Core/Operations/CompoundOperation';
+import {ICompoundOperation} from '../Core/Operations/ICompoundOperation';
+import {IncrementNumberOperation} from '../Core/Operations/IncrementNumberOperation';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 
-class IncrementNumberCompoundOperation<Number> extends CompoundOperation<Number> implements IUndoableOperation, ICompoundOperation
+export class IncrementNumberCompoundOperation<Number> extends CompoundOperation<Number> implements IUndoableOperation, ICompoundOperation
 {
     private _Number: number;
 
@@ -28,5 +28,3 @@ class IncrementNumberCompoundOperation<Number> extends CompoundOperation<Number>
 
     }
 }
-
-export = IncrementNumberCompoundOperation;

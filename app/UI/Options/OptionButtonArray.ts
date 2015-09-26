@@ -1,13 +1,11 @@
-/**
- * Created by luketwyman on 16/01/2015.
- */
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import ParametersPanel = require("./../OptionsPanel");
-import Size = minerva.Size;
+declare var App: IApp;
 
-class ButtonArray extends Option{
-
+export class ButtonArray extends Option {
 
     constructor(position: Point, size: Size, name: string, setting: string, buttons: any, mode: string) {
         super();
@@ -72,6 +70,3 @@ class ButtonArray extends Option{
     }
 
 }
-
-
-export = ButtonArray;

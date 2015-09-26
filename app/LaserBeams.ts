@@ -1,19 +1,18 @@
-/**
- * Created by luketwyman on 17/03/2015.
- */
+import {IApp} from './IApp';
+import {IBlock} from './Blocks/IBlock';
+import {IEffect} from './Blocks/IEffect';
+import {ISource} from './Blocks/ISource';
+import {Laser} from './Blocks/Power/Laser';
+import {Logic} from './Blocks/Power/Logic/Logic';
+import {MainScene} from './MainScene';
+import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
+import {Source} from './Blocks/Source';
+import Vector = Utils.Maths.Vector; //TODO: es6 modules
+import {Void} from './Blocks/Power/Void';
 
-import MainScene = require("./MainScene");
-import ParticleEmitter = require("./Blocks/Power/ParticleEmitter");
-import Laser = require("./Blocks/Power/Laser");
-import Void = require("./Blocks/Power/Void");
-import Logic = require("./Blocks/Power/Logic/Logic");
-import Source = require("./Blocks/Source");
-import IEffect = require("./Blocks/IEffect");
-import ISource = require("./Blocks/ISource");
-import IBlock = require("./Blocks/IBlock");
-import Vector = Utils.Maths.Vector;
+declare var App: IApp;
 
-class LaserBeams {
+export class LaserBeams {
 
     private _Ctx: CanvasRenderingContext2D;
     private _Sketch: MainScene;
@@ -242,8 +241,8 @@ class LaserBeams {
         this._Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
         this._Ctx.beginPath();
 
-        for (var j=0; j<App.Blocks.length; j++) {
-            var laser: ISource  = App.Blocks[j];
+        for (var j=0; j<App.Sources.length; j++) {
+            var laser: ISource  = App.Sources[j];
             if (laser instanceof Laser) {
 
                 // If we're in self powered mode, or if this is powered
@@ -273,5 +272,3 @@ class LaserBeams {
     }
 
 }
-
-export = LaserBeams;

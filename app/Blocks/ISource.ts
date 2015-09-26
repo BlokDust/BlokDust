@@ -1,14 +1,12 @@
-import IBlock = require("./IBlock");
-import Source = require("./Source");
-import IEffect = require("./IEffect");
-import Voice = require("./Interaction/VoiceObject");
-import SoundcloudTrack = require("../UI/SoundcloudTrack");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {IBlock} from './IBlock';
+import {IEffect} from './IEffect';
+import {SoundcloudTrack} from '../UI/SoundcloudTrack';
+import {Source} from './Source';
+import {VoiceCreator as Voice} from './Interaction/VoiceObject';
+import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 module
 
-interface ISource extends IBlock{
+export interface ISource extends IBlock {
     Connections: Fayde.Collections.ObservableCollection<IEffect>;
-    AddEffect(effect: IEffect): void;
-    RemoveEffect(effect: IEffect): void;
     Sources?: any[];
     Envelopes?: Tone.AmplitudeEnvelope[];
     AudioInput?: Tone.Signal;
@@ -32,6 +30,8 @@ interface ISource extends IBlock{
     LoopEndPosition?: number;
     ActiveVoices: Voice[];
     FreeVoices: Voice[];
+    AddEffect(effect: IEffect): void;
+    RemoveEffect(effect: IEffect): void;
     CreateSource(): any;
     CreateEnvelope(): Tone.AmplitudeEnvelope;
     ValidateEffects(): void;
@@ -39,12 +39,9 @@ interface ISource extends IBlock{
     GetPitch(sourceId?: number): number;
     ResetPitch(): void;
     OctaveShift(octavesAmount: number): void;
-    GetWaveformFromBuffer(buffer: any, detail: number, precision: number,  normal: number): number[];
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string, forceRelease?: boolean): void;
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;
     IsPowered(): boolean;
     Refresh(): void;
 }
-
-export = ISource;

@@ -1,20 +1,32 @@
-import IBlock = require("../../../Blocks/IBlock");
-import ISource = require("../../../Blocks/ISource");
-import IEffect = require("../../../Blocks/IEffect");
-import PreEffect = require("../../../Blocks/Effects/PreEffect");
+import {IAudioChain} from './IAudioChain';
+import {IBlock} from '../../../Blocks/IBlock';
+import {IPostEffect} from '../../../Blocks/Effects/IPostEffect';
+//import {IPowerEffect} from "../../../Blocks/Power/IPowerEffect";
+import {IPreEffect} from '../../../Blocks/Effects/IPreEffect';
+import {ISource} from '../../../Blocks/ISource';
 
-class AudioChain {
+export class AudioChain implements IAudioChain {
+
     public Connections: IBlock[] = [];
     public Sources: ISource[] = [];
-    public PostEffects: IEffect[] = [];
-    public PreEffects: PreEffect[] = [];
-    public Others: IBlock[] = [];
+    public PostEffects: IPostEffect[] = [];
+    public PreEffects: IPreEffect[] = [];
+    //public PowerEffects: IPowerEffect[] = [];
 
     constructor() {
 
     }
+    // TODO: make these getters work instead
+    //get Sources(): ISource[] {
+    //    return <ISource[]>this.Connections.en().where(b => b instanceof Source).toArray();
+    //}
+    //
+    //get PostEffects(): IPostEffect[] {
+    //    return <IPostEffect[]>this.Connections.en().where(b => b instanceof PostEffect).toArray();
+    //}
+    //
+    //get PreEffects(): IPreEffect[] {
+    //    return <IPreEffect[]>this.Connections.en().where(b => b instanceof PreEffect).toArray();
+    //}
 }
-
-
-export = AudioChain;
 

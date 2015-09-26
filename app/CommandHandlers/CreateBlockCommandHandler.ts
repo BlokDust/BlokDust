@@ -1,9 +1,12 @@
-import ICommandHandler = require("../Core/Commands/ICommandHandler");
-import IBlock = require("../Blocks/IBlock");
-import IUndoableOperation = require("../Core/Operations/IUndoableOperation");
-import AddItemToArrayOperation = require("../Core/Operations/AddItemToArrayOperation");
+import {AddItemToArrayOperation} from '../Core/Operations/AddItemToArrayOperation';
+import {IApp} from '../IApp';
+import {IBlock} from '../Blocks/IBlock';
+import {ICommandHandler} from '../Core/Commands/ICommandHandler';
+import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 
-class CreateBlockCommandHandler implements ICommandHandler {
+declare var App: IApp;
+
+export class CreateBlockCommandHandler implements ICommandHandler {
 
     constructor() {
 
@@ -14,5 +17,3 @@ class CreateBlockCommandHandler implements ICommandHandler {
         return App.OperationManager.Do(op);
     }
 }
-
-export = CreateBlockCommandHandler;

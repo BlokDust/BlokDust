@@ -1,7 +1,5 @@
-enum EffectConnectionMethodType {
+export const enum ConnectionMethodType {
     Simple,
     Accumulative,
     Original,
 }
-
-export = EffectConnectionMethodType;

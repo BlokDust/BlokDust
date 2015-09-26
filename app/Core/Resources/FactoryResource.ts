@@ -1,6 +1,6 @@
-import IFactoryResource = require("./IFactoryResource");
+import {IFactoryResource} from './IFactoryResource';
 
-class FactoryResource<T> implements IFactoryResource<T> {
+export class FactoryResource<T> implements IFactoryResource<T> {
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
@@ -21,5 +21,3 @@ class FactoryResource<T> implements IFactoryResource<T> {
         return this._Type;
     }
 }
-
-export = FactoryResource;

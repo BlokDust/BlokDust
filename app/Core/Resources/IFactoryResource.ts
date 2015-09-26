@@ -1,9 +1,6 @@
-import IResource = require("./IResource");
+import {IResource} from './IResource';
 
-interface IFactoryResource<T> extends IResource<T>
-{
+export interface IFactoryResource<T> extends IResource<T> {
     GetInstance(): T;
     GetType(): T;
 }
-
-export = IFactoryResource;

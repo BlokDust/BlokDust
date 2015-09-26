@@ -1,7 +1,6 @@
-import IUndoableOperation = require("./IUndoableOperation");
+import {IUndoableOperation} from './IUndoableOperation';
 
-class IncrementNumberOperation<Number> implements IUndoableOperation
-{
+export class IncrementNumberOperation<Number> implements IUndoableOperation {
     private _Number: number;
 
     constructor(n: number) {
@@ -38,5 +37,3 @@ class IncrementNumberOperation<Number> implements IUndoableOperation
 
     }
 }
-
-export = IncrementNumberOperation;

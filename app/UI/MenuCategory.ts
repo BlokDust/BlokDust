@@ -1,12 +1,10 @@
-/**
- * Created by luketwyman on 26/01/2015.
- */
+import {Header} from './Header';
+import {IApp} from '../IApp';
+import {MenuItem} from './MenuItem';
 
-import Grid = require("./../Grid");
-import Header = require("./Header");
-import MenuItem = require("./MenuItem");
+declare var App: IApp;
 
-class MenuCategory {
+export class MenuCategory {
 
     public Position: Point;
     public Size: minerva.Size;
@@ -73,5 +71,3 @@ class MenuCategory {
     }
 
 }
-
-export = MenuCategory;

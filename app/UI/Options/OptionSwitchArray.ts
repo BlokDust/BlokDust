@@ -1,13 +1,11 @@
-/**
- * Created by luketwyman on 16/01/2015.
- */
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
 
-import Option = require("./Option");
-import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
+declare var App: IApp;
 
-class SwitchArray extends Option{
-
+export class SwitchArray extends Option {
 
     constructor(position: Point, size: Size, switches: any) {
         super();
@@ -44,6 +42,3 @@ class SwitchArray extends Option{
     }
 
 }
-
-
-export = SwitchArray;

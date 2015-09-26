@@ -1,11 +1,9 @@
-import Effect = require("./../Effect");
+import {Effect} from './../Effect';
+import {IPostEffect} from './IPostEffect';
 
+export class PostEffect extends Effect implements IPostEffect {
 
-class PostEffect extends Effect {
-
-    connect = Tone.prototype.connect;
-    disconnect = Tone.prototype.disconnect;
+    //connect = Tone.prototype.connect;
+    //disconnect = Tone.prototype.disconnect;
 
 }
-
-export = PostEffect;

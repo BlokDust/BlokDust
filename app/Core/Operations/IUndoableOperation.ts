@@ -1,8 +1,5 @@
-import IOperation = require("./IOperation");
+import {IOperation} from './IOperation';
 
-interface IUndoableOperation extends IOperation
-{
+export interface IUndoableOperation extends IOperation {
     Undo(): Promise<any>;
 }
-
-export = IUndoableOperation;

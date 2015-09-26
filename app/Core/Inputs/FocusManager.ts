@@ -1,7 +1,6 @@
+import {FocusManagerEventArgs} from './FocusManagerEventArgs';
 
-import FocusManagerEventArgs = require("./FocusManagerEventArgs");
-
-class FocusManager {
+export class FocusManager {
 
     public HasFocus: boolean = true;
     FocusChanged = new nullstone.Event<FocusManagerEventArgs>();
@@ -21,5 +20,3 @@ class FocusManager {
         };
     }
 }
-
-export = FocusManager;

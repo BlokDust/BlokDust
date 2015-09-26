@@ -1,7 +1,7 @@
-import DisplayObjectCollection = require("./DisplayObjectCollection");
-import IDisplayObject = require("IDisplayObject");
+import {DisplayObjectCollection} from './DisplayObjectCollection';
+import {IDisplayObject} from 'IDisplayObject';
 
-class DisplayList {
+export class DisplayList {
 
     private _DisplayObjects: DisplayObjectCollection<IDisplayObject>;
 
@@ -48,5 +48,3 @@ class DisplayList {
         this._DisplayObjects.ToBack(displayObject);
     }
 }
-
-export = DisplayList;

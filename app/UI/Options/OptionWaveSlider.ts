@@ -1,16 +1,14 @@
-/**
- * Created by luketwyman on 23/02/2015.
- */
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
+import Size = minerva.Size; //TODO: es6 modules
+import {WaveForm} from './OptionWave';
 
-import Option = require("./Option");
-import WaveForm = require("./OptionWave");
-import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
+declare var App: IApp;
 
-class WaveSlider extends WaveForm{
+export class WaveSlider extends WaveForm {
 
     public Spread: number;
-
 
     constructor(position: Point, size: Size, origin: number, value: number, min: number, max: number, quantised: boolean, name: string, setting: string, log: boolean, waveform: number[], spread: number, emptystring?: string) {
         super(waveform,emptystring);
@@ -109,9 +107,4 @@ class WaveSlider extends WaveForm{
             }
         }
     }
-
-
 }
-
-
-export = WaveSlider;

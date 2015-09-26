@@ -1,9 +1,8 @@
+import {InputManager} from './InputManager';
+import {KeyDownEventArgs} from './KeyDownEventArgs';
+import {KeyUpEventArgs} from './KeyUpEventArgs';
 
-import InputManager = require("./InputManager");
-import KeyDownEventArgs = require("./KeyDownEventArgs");
-import KeyUpEventArgs = require("./KeyUpEventArgs");
-
-class KeyboardInputManager extends InputManager {
+export class KeyboardInputManager extends InputManager {
 
     public MasterKeyboardMap: any;
     //public KeysDown: any;
@@ -171,5 +170,3 @@ class KeyboardInputManager extends InputManager {
 
     }
 }
-
-export = KeyboardInputManager;

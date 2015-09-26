@@ -1,10 +1,9 @@
-/**
- * Created by luketwyman on 08/02/2015.
- */
+import {IApp} from '../../IApp';
+import {OptionHandle} from './OptionHandle';
 
-import OptionHandle = require("./OptionHandle");
+declare var App: IApp;
 
-class SubHandle {
+export class OptionSubHandle {
 
     public Position: Point;
 
@@ -70,5 +69,3 @@ class SubHandle {
     }
 
 }
-
-export = SubHandle;

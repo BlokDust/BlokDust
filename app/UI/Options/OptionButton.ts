@@ -1,13 +1,11 @@
-/**
- * Created by luketwyman on 08/08/2015.
- */
-
-
-import Option = require("./Option");
+import {IApp} from '../../IApp';
+import {Option} from './Option';
+import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import Size = minerva.Size;
-import ParametersPanel = require("./../OptionsPanel");
 
-class OptionButton {
+declare var App: IApp;
+
+export class OptionButton {
 
     public Position: Point;
     public Name: string;
@@ -125,5 +123,3 @@ class OptionButton {
     }
 
 }
-
-export = OptionButton;

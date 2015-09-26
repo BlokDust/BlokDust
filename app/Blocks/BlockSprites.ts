@@ -1,13 +1,12 @@
-/**
- * Created by luketwyman on 29/01/2015.
- */
+import {IApp} from '../IApp';
+import {IBlock} from './IBlock';
+import {Grid} from '../Grid';
+import {DisplayObject} from '../DisplayObject';
+import {MainScene} from '../MainScene';
 
-import IBlock = require("./IBlock");
-import Grid = require("../Grid");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("../MainScene");
+declare var App: IApp;
 
-class BlockSprites {
+export class BlockSprites {
 
     public Grid: Grid;
     public Ctx: CanvasRenderingContext2D;
@@ -1037,11 +1036,4 @@ class BlockSprites {
         }
         this.Ctx.lineTo(p.x, p.y);
     }
-
-
-
-
-
 }
-
-export = BlockSprites;

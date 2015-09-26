@@ -1,15 +1,11 @@
-/**
- * Created by luketwyman on 18/01/2015.
- */
+import {IOption} from './IOption';
+import {OptionButton} from './OptionButton';
+import {OptionHandle} from './OptionHandle';
+import {OptionSubHandle} from './OptionSubHandle';
+import {OptionSwitch} from './OptionSwitch';
+import Size = minerva.Size; //TODO: es6 modules
 
-import IOption = require("./IOption");
-import OptionHandle = require("./OptionHandle");
-import OptionSubHandle = require("./OptionSubHandle");
-import OptionSwitch = require("./OptionSwitch");
-import OptionButton = require("./OptionButton");
-import Size = minerva.Size;
-
-class Option implements IOption {
+export class Option implements IOption {
 
     public Type:String;
     public Position:Point;
@@ -65,5 +61,3 @@ class Option implements IOption {
 
     }
 }
-
-export = Option;

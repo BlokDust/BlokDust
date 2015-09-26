@@ -1,8 +1,8 @@
-/**
- * Created by luketwyman on 19/01/2015.
- */
+import {IApp} from '../../IApp';
 
-class OptionHandle {
+declare var App: IApp;
+
+export class OptionHandle {
 
     public Position: Point;
 
@@ -72,5 +72,3 @@ class OptionHandle {
     }
 
 }
-
-export = OptionHandle;
