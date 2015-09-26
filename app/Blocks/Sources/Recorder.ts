@@ -295,6 +295,12 @@ export class Recorder extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
+                if (value === true && this.IsPowered()) {
+                    this.Sources.forEach((s: Tone.Simpler) => {
+                        s.player.stop();
+                        s.player.start(s.player.startPosition);
+                    });
+                }
                 // update showing loop sliders
                 this.Params[param] = val;
                 this.RefreshOptionsPanel();
