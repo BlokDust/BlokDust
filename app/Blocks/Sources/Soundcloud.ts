@@ -126,6 +126,7 @@ export class Soundcloud extends SamplerBase {
     }
 
     LoadTrack(track,fullUrl?:boolean) {
+        super.LoadTrack(track,fullUrl);
         fullUrl = fullUrl || false;
         if (fullUrl) {
             this.Params.track = track.URI;
@@ -139,7 +140,7 @@ export class Soundcloud extends SamplerBase {
 
         this.SetBuffers();
 
-        this.RefreshOptionsPanel();
+        this.RefreshOptionsPanel("animate");
     }
 
     TrackFallBack() {
@@ -285,6 +286,12 @@ export class Soundcloud extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
+                if (value === true && this.IsPowered()) {
+                    this.Sources.forEach((s: Tone.Simpler) => {
+                        s.player.stop();
+                        s.player.start(s.player.startPosition);
+                    });
+                }
                 // update display of loop sliders
                 this.Params[param] = val;
                 this.RefreshOptionsPanel();

@@ -8,6 +8,7 @@ import {Source} from '../Source';
 
 declare var App: IApp;
 
+
 export class Granular extends Source {
 
     public Sources: Tone.Signal[];
@@ -26,6 +27,7 @@ export class Granular extends Source {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
     private _tempPlaybackRate: number;
+    public ReleaseTimeout;
 
     public Params: GranularParams;
 
@@ -98,10 +100,7 @@ export class Granular extends Source {
         this._WaveForm = [];
         this.SetupGrains();
 
-        if (App.MainScene.OptionsPanel.Scale==1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock==this) {
-            this.UpdateOptionsForm();
-            App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel("animate");
     }
 
     TrackFallBack() {
@@ -165,10 +164,7 @@ export class Granular extends Source {
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             // UPDATE OPTIONS FORM //
-            if ((<MainScene>this.Sketch).OptionsPanel.Scale==1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock==this) {
-                this.UpdateOptionsForm();
-                (<MainScene>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
-            }
+            this.RefreshOptionsPanel();
 
             // start if powered //
             this.GrainLoop();
@@ -268,7 +264,24 @@ export class Granular extends Source {
         }, <number>this._Envelopes[0].release*1000);
     }
 
-    TriggerAttackRelease(){
+    TriggerAttackRelease(index: number|string = 0, duration: Tone.Time = App.Config.PulseLength){
+
+        if (this._IsLoaded) {
+
+            clearTimeout(this.EndTimeout);
+            if (!this._NoteOn) {
+
+                this._NoteOn = true;
+                this.GrainLoop();
+            }
+        }
+
+        this.ReleaseTimeout = setTimeout(() => {
+            this.EndTimeout = setTimeout(() => {
+                this._NoteOn = false;
+            }, <number>this._Envelopes[0].release*1000);
+        }, duration);
+
     }
 
 

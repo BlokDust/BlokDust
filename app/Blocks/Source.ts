@@ -1,5 +1,6 @@
 import {Block} from './Block';
 import {Grid} from '../Grid';
+import {Granular} from './Sources/Granular';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
@@ -63,6 +64,7 @@ export class Source extends Block implements ISource {
 
         this.ParticlePowered = false;
         this.LaserPowered = false;
+        this.PowerConnections = 0;
 
         if (!(this instanceof Power)) {
 
@@ -155,6 +157,7 @@ export class Source extends Block implements ISource {
         this.TriggerRelease();
     }
 
+
     /**
      * Trigger a sources attack
      * If no index is set trigger the first in the array
@@ -246,24 +249,17 @@ export class Source extends Block implements ISource {
 
         // Oscillators & Noises & Players
         if (this.Envelopes.length){
-
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
-            this.Envelopes.forEach((e: any)=> {
-                e.triggerAttackRelease(duration, time);
-            });
+            this.Envelopes[0].triggerAttackRelease(duration, time);
 
         //    Samplers
         } else if (this.Sources[0] && this.Sources[0].envelope) {
-
             // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
-            });
+            this.Sources[0].triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
 
         //    Power Source Blocks
         } else if (this.PowerConnections!==undefined) {
-
             this.PowerConnections += 1;
             if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
@@ -286,17 +282,29 @@ export class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered(): boolean {
+        //let bool: boolean = false;
         if (this.IsPressed || this.PowerConnections>0) {
             return true;
         }
-        let connections: IEffect[] = this.Connections.ToArray();
-        for (let i = 0, _len = connections.length; i < _len; i++) {
-            //If connected to power block OR connected to a logic block that is 'on'
-            if (connections[i] instanceof Power ||
-                connections[i] instanceof Logic && connections[i].Params.logic) {
-                return true;
+        let connections: IBlock[] = this.Chain.Connections;
+        for (let i = 0; i < connections.length; i++) {
+            let blockConnections: IBlock[] = connections[i].Connections.ToArray();
+            for (let i = 0; i < blockConnections.length; i++) {
+                if (blockConnections[i] instanceof Power ||
+                    blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+                    return true;
+                }
             }
         }
+        //this.Chain.Connections.forEach((block:IBlock) => {
+        //    let blockConnections: IBlock[] = block.Connections.ToArray();
+        //    for (let i = 0; i < blockConnections.length; i++) {
+        //        if (blockConnections[i] instanceof Power ||
+        //            blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+        //            bool = true;
+        //        }
+        //    }
+        //});
         return false;
     }
 

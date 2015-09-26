@@ -1,10 +1,11 @@
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {IBlock} from '../IBlock';
+import {IPowerSource} from './IPowerSource';
 import {Logic} from './Logic/Logic';
 import {Power} from './Power';
 import {Source} from '../Source';
 
-export class PowerSource extends Source {
+export class PowerSource extends Source implements IPowerSource {
 
     Init(sketch?: any): void {
 
@@ -12,8 +13,6 @@ export class PowerSource extends Source {
         super.Init(sketch);
     }
 
-    UpdateConnections(chain: IAudioChain) {
-        this.Chain = chain;
-    }
+    UpdateConnections() {}
 
 }

@@ -25,6 +25,7 @@ import {Particle} from './Particle';
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {PowerEffect} from './Blocks/Power/PowerEffect';
 import {PowerSource} from './Blocks/Power/PowerSource';
+import {Recorder} from './Blocks/Sources/Recorder';
 import {RecorderPanel} from './UI/RecorderPanel';
 import {Source} from './Blocks/Source';
 import {Sampler} from './Blocks/Sources/Sampler';
@@ -236,6 +237,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         this._LaserBeams.Update();
         this._RecorderPanel.Update();
         this.MainSceneDragger.Update();
+        this.OptionsPanel.Update();
     }
 
     // PARTICLES //
@@ -463,6 +465,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         if (!collision && !UI){
             this.MainSceneDragger.MouseDown(point);
         }
+
     }
 
 
@@ -766,12 +769,29 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         }
     }
 
-    CreateBlockFromType<T extends IBlock>(t: {new(): T; }): T {
+    DuplicateParams(params: any): any {
+        var paramsCopy = {};
+        for (var key in params) {
+            paramsCopy[""+key] = params[""+key];
+        }
+        return paramsCopy;
+    }
+
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }, params?: any): T {
         var block: T = new t();
         block.Id = App.GetBlockId();
         block.Position = this._PointerPoint;
+        if (params) block.Params = this.DuplicateParams(params);
+
+
+        //TODO:
+        //if (block instanceof Recorder) {
+        //    (<any>block).Duplicate((<any>block).BufferSource.buffer);
+        //}
+
         block.Init(this);
         block.Type = t;
+
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
 

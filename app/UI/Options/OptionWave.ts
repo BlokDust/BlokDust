@@ -24,7 +24,7 @@ export class WaveForm extends Option {
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1]; // Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -32,18 +32,20 @@ export class WaveForm extends Option {
             ctx.stroke();
         }
 
+
         if (!this.Waveform.length) {
-            ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+            ctx.fillStyle = App.Palette[App.Color.Txt]; // WHITE
             if (this.EmptyString.length>1) {
                 ctx.textAlign = "center";
                 ctx.font = App.Metrics.TxtMid;
                 ctx.fillText(this.EmptyString.toUpperCase(), (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType * 0.4));
             } else {
-                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
+                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true,panel.Ctx);
+
             }
 
-
         }
+
 
         if (this.Handles && this.Waveform.length && this.Mode) {
             ctx.strokeStyle = App.Palette[1];

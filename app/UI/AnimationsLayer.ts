@@ -87,9 +87,9 @@ export class AnimationsLayer extends DisplayObject {
         ctx.globalAlpha = 1;
     }
 
-    DrawSprite(index: string,x: number,y: number,w: number,c:boolean) {
+    DrawSprite(index: string,x: number,y: number,w: number,c:boolean,context?:CanvasRenderingContext2D) {
         var units = App.Unit;
-        var ctx = this._Ctx;
+        var ctx = context || this._Ctx;
         var grd = App.GridSize;
         if (c) { // center on x & y
             grd = 0;
@@ -101,11 +101,25 @@ export class AnimationsLayer extends DisplayObject {
             case "loading":
 
                 var angle = (this.Loop/60) * (2*Math.PI);
-                ctx.save();
+                var v1 = App.Metrics.VectorFromAngle(angle + (Math.PI*0.25));
+                var v2 = App.Metrics.VectorFromAngle(angle + (Math.PI*0.75));
+                var vx = x - (0.5*grd);
+                var vy = y - (1.5*grd);
+                var r = (w*0.75)*units;
+
+                ctx.beginPath();
+                ctx.moveTo(vx + (v1.x * r),vy + (v1.y * r));
+                ctx.lineTo(vx + (v2.x * r),vy + (v2.y * r));
+                ctx.lineTo(vx - (v1.x * r),vy - (v1.y * r));
+                ctx.lineTo(vx - (v2.x * r),vy - (v2.y * r));
+                ctx.closePath();
+                ctx.fill();
+
+                /*ctx.save();
                 ctx.translate(x - (0.5*grd),y - (1.5*grd));
                 ctx.rotate(angle);
                 ctx.fillRect(-((w*0.5)*units),-((w*0.5)*units),w*units,w*units);
-                ctx.restore();
+                ctx.restore();*/
 
                 break;
 

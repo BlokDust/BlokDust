@@ -94,7 +94,7 @@ export class StageDragger  extends DisplayObject {
         this._DragStart = new Point(point.x,point.y);
         this._OffsetStart = new Point(App.DragOffset.x,App.DragOffset.y);
         this._Dragging = true;
-        console.log(App.DragOffset);
+        //console.log(App.DragOffset);
     }
 
     MouseMove(point: Point) {

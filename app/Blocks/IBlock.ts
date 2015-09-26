@@ -3,7 +3,7 @@ import {Particle} from "../Particle";
 import {Grid} from "../Grid";
 import {IAudioChain} from "../Core/Audio/Connections/IAudioChain";
 
-export interface IBlock extends IDisplayObject{
+export interface IBlock extends IDisplayObject {
     Id: number;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Connections: Fayde.Collections.ObservableCollection<IBlock>

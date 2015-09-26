@@ -40,11 +40,9 @@ export class Block extends DisplayObject implements IBlock {
 
     Init(sketch?: any): void {
         super.Init(sketch);
+        this.Chain = new AudioChain();
 
         this.Update();
-
-        //Give every block an empty chain. TODO: probably only need this for powers and preeffects
-        this.Chain = new AudioChain();
     }
 
 
@@ -116,8 +114,7 @@ export class Block extends DisplayObject implements IBlock {
 
             // ALT-DRAG COPY
             if ((<MainScene>this.Sketch).AltDown && this._Duplicable) {
-                (<MainScene>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
-                //TODO: es6 modules broke this!!!
+                (<MainScene>this.Sketch).CreateBlockFromType(this.Type, this.Params); //TODO: TS5 reflection
                 this.MouseUp();
             }
             // MOVE //
@@ -170,10 +167,18 @@ export class Block extends DisplayObject implements IBlock {
     SetParam(param: string,value: number) {
     }
 
-    RefreshOptionsPanel() {
+    RefreshOptionsPanel(cmd?: string) {
         if (App.MainScene.OptionsPanel.Scale>0 && App.MainScene.OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();
             App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+
+        if (cmd) {
+            if (cmd==="animate") {
+                App.MainScene.OptionsPanel.Animating = true;
+            }
+        } else {
+            App.MainScene.OptionsPanel.Animating = false;
         }
     }
 

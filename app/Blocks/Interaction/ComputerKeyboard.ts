@@ -1,3 +1,4 @@
+import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
@@ -66,7 +67,9 @@ export class ComputerKeyboard extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD DOWN
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardDown(e.KeyDown, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardDown(e.KeyDown, source);
+                });
             });
 
 
@@ -80,10 +83,12 @@ export class ComputerKeyboard extends Keyboard {
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
-                this.KeyboardUp(e.KeyUp, source);
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                // If its an octave shift no need to call KeyboardUp
+                if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
+                    this.KeyboardUp(e.KeyUp, source);
+                }
+            });
         });
 
         this.KeysDown = e.KeysDown;
@@ -111,7 +116,7 @@ export class ComputerKeyboard extends Keyboard {
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
-        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length)) {
+        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length) && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Are there any free voices?
@@ -164,7 +169,7 @@ export class ComputerKeyboard extends Keyboard {
 
     KeyboardUp(keyUp:string, source:ISource): void {
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Loop through all the active voices

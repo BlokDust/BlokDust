@@ -114,7 +114,7 @@ export class Convolver extends PostEffect {
 
         this.SetBuffer();
 
-        this.RefreshOptionsPanel();
+        this.RefreshOptionsPanel("animate");
     }
 
     TrackFallBack() {

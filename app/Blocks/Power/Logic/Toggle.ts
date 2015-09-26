@@ -16,12 +16,14 @@ export class Toggle extends Logic {
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            if (this.Params.logic) {
-                source.TriggerAttack();
-            }
-            if (!source.IsPressed){
-                source.TriggerRelease('all');
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                if (this.Params.logic) {
+                    source.TriggerAttack();
+                }
+                if (!source.IsPressed) {
+                    source.TriggerRelease('all');
+                }
+            });
         });
     }
 
@@ -72,15 +74,20 @@ export class Toggle extends Logic {
             this.Params.logic = false;
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                source.TriggerRelease('all');
+                source.Chain.Sources.forEach((source: ISource) => {
+                    source.TriggerRelease('all');
+                });
             });
 
         } else {
             this.Params.logic = true;
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                source.TriggerAttack();
+                source.Chain.Sources.forEach((source: ISource) => {
+                    source.TriggerAttack();
+                });
             });
         }
+        this.RefreshOptionsPanel();
     }
 }

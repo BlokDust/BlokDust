@@ -60,11 +60,11 @@ export class Gain extends PostEffect {
                     "props": {
                         "value": this.Params.gain,
                         "min": -10,
-                        "max": 10,
+                        "max": 20,
                         //"min": 0.01,
                         //"max": 80,
                         "quantised": false,
-                        "centered": true
+                        "centered": true,
                     }
                 }
             ]

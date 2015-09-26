@@ -33,7 +33,6 @@ export class Metrics {
         App.ZoomLevel = 1;
         App.DragOffset = new Point(0,0);
         App.ScaledDragOffset = new Point(0,0);
-
         this.C = new Point(0,0);
         this.OptionsX = 0.3;
         this.OptionsPoint = new Point(0.3,0.6); //screen percentage
@@ -239,5 +238,10 @@ export class Metrics {
     public ConvertToPixelRatioPoint(point: Point){
         point.x *= this.PixelRatio;
         point.y *= this.PixelRatio;
+    }
+
+    public VectorFromAngle(angle) {
+        // point temp replaces vector
+        return new Point(Math.cos(angle),Math.sin(angle));
     }
 }

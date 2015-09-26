@@ -10,6 +10,7 @@ import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
+import {IPowerSource} from './Blocks/Power/IPowerSource';
 import {ISource} from './Blocks/ISource';
 import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
 import {MainScene} from './MainScene';
@@ -51,6 +52,7 @@ export interface IApp {
     ParticlesPool: PooledFactoryResource<Particle>;
     PointerInputManager: PointerInputManager;
     PowerEffects: IPowerEffect[];
+    PowerSources: IPowerSource[];
     ResourceManager: ResourceManager;
     ScaledDragOffset: Point;
     ScaledGridSize: number;
