@@ -17,7 +17,7 @@ declare var App: IApp;
 
 export class ConnectionManager {
 
-    protected _Debug: boolean = true;
+    protected _Debug: boolean = false;
     public Chains: IAudioChain[] = [];
 
     private _MuteBufferTime: number = 35;
