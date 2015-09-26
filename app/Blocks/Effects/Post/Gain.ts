@@ -1,9 +1,11 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {IApp} from '../../../IApp';
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Gain extends PostEffect {
+declare var App: IApp;
+
+export class Gain extends PostEffect {
 
     public Effect: GainNode;
     //public Effect: Tone.Signal;
@@ -70,5 +72,3 @@ class Gain extends PostEffect {
         };
     }
 }
-
-export = Gain;

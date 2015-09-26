@@ -1,8 +1,11 @@
-import Source = require("../Source");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {IBlock} from '../IBlock';
+import {Logic} from './Logic/Logic';
+import {Power} from './Power';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class PowerSource extends Source {
+export class PowerSource extends Source {
 
     Init(sketch: ISketchContext): void {
 
@@ -10,10 +13,8 @@ class PowerSource extends Source {
         super.Init(sketch);
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
     }
 
 }
-
-export = PowerSource;

@@ -1,10 +1,12 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
-import SamplerBase = require("./SamplerBase");
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Recorder extends SamplerBase {
+declare var App: IApp;
+
+export class Recorder extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;
@@ -129,7 +131,7 @@ class Recorder extends SamplerBase {
 
     UpdateWaveform(){
         // Update waveform
-        this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
         var duration = this.GetDuration();
         this.Params.endPosition = duration;
         this.Params.loopStart = duration * 0.5;
@@ -286,7 +288,7 @@ class Recorder extends SamplerBase {
                 this.Sources[0].player.reverse = value;
                 // Update waveform
                 this.Params[param] = val;
-                this._WaveForm = this.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":
@@ -314,5 +316,3 @@ class Recorder extends SamplerBase {
     }
 
 }
-
-export = Recorder;

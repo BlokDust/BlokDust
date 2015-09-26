@@ -1,13 +1,15 @@
-import Grid = require("../../Grid");
-import Source = require("../Source");
-import SamplerBase = require("./SamplerBase");
-import MainScene = require("../../MainScene");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
+import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
+import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
+import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Soundcloud extends SamplerBase {
+declare var App: IApp;
+
+export class Soundcloud extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SoundcloudParams;
@@ -67,7 +69,7 @@ class Soundcloud extends SamplerBase {
         }
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
-            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
             App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration(this._FirstBuffer);
             if (!this._LoadFromShare) {
@@ -276,7 +278,7 @@ class Soundcloud extends SamplerBase {
                 });
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":
@@ -307,5 +309,3 @@ class Soundcloud extends SamplerBase {
         super.Dispose();
     }
 }
-
-export = Soundcloud;

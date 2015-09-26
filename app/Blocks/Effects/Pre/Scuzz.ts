@@ -1,11 +1,10 @@
-import PreEffect = require("../PreEffect");
-import Grid = require("../../../Grid");
-import ISource = require("../../ISource");
-import MainScene = require("../../../MainScene");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {MainScene} from '../../../MainScene';
+import {PreEffect} from '../PreEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Scuzz extends PreEffect {
+export class Scuzz extends PreEffect {
 
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
@@ -52,7 +51,7 @@ class Scuzz extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         this.OscLFO.disconnect();
@@ -133,5 +132,3 @@ class Scuzz extends PreEffect {
         };
     }
 }
-
-export = Scuzz;

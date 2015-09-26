@@ -1,17 +1,20 @@
-import AudioChain = require("../Core/Audio/Connections/AudioChain");
-import DisplayObject = require("../DisplayObject");
-import Grid = require("../Grid");
-import IBlock = require("./IBlock");
-import IDisplayObject = require("../IDisplayObject");
-import MainScene = require("../MainScene");
+import {AudioChain} from '../Core/Audio/Connections/AudioChain';
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from '../Grid';
+import {IApp} from '../IApp';
+import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
+import {IBlock} from './IBlock';
+import {MainScene} from '../MainScene';
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-import ParametersPanel = require("../UI/OptionsPanel");
-import Particle = require("../Particle");
-import PreEffect = require("./Effects/PreEffect");
+import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
+import {Particle} from '../Particle';
+import {PreEffect} from './Effects/PreEffect';
 import Size = minerva.Size;
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Block extends DisplayObject implements IBlock {
+declare var App: IApp;
+
+export class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Type: any;
@@ -19,11 +22,10 @@ class Block extends DisplayObject implements IBlock {
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
     public IsChained: boolean = false;
-    public Chain: AudioChain;
     public IsPressed: boolean = false;
     public IsSelected: boolean = false;
     public Connections: ObservableCollection<IBlock> = new ObservableCollection<IBlock>();
-
+    public Chain: IAudioChain;
     public Outline: Point[] = [];
     public ZIndex;
     public OptionsForm;
@@ -31,18 +33,18 @@ class Block extends DisplayObject implements IBlock {
     public Defaults: any;
     private _Duplicable: boolean = false;
 
-
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
-
 
     Init(sketch: ISketchContext): void {
         super.Init(sketch);
 
         this.Update();
-    }
 
+        //Give every block an empty chain. TODO: probably only need this for powers and preeffects
+        this.Chain = new AudioChain();
+    }
 
     PopulateParams() {
 
@@ -67,16 +69,13 @@ class Block extends DisplayObject implements IBlock {
         }
     }
 
-
     BackwardsCompatibilityPatch() {
         // set in sub class if needed //
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  LOOPS
     //-------------------------------------------------------------------------------------------
-
 
     Update() {
     }
@@ -86,11 +85,9 @@ class Block extends DisplayObject implements IBlock {
         this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
-
 
     MouseDown() {
         this.IsPressed = true;
@@ -113,6 +110,7 @@ class Block extends DisplayObject implements IBlock {
             // ALT-DRAG COPY
             if ((<MainScene>this.Sketch).AltDown && this._Duplicable) {
                 (<MainScene>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
+                //TODO: es6 modules broke this!!!
                 this.MouseUp();
             }
             // MOVE //
@@ -122,11 +120,9 @@ class Block extends DisplayObject implements IBlock {
         }
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  COLLISIONS
     //-------------------------------------------------------------------------------------------
-
 
     HitTest(point: Point): boolean {
         this.Ctx.beginPath();
@@ -153,11 +149,9 @@ class Block extends DisplayObject implements IBlock {
     ParticleCollision(particle: Particle) {
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  OPTIONS PANEL
     //-------------------------------------------------------------------------------------------
-
 
     UpdateOptionsForm() {
     }
@@ -172,12 +166,11 @@ class Block extends DisplayObject implements IBlock {
         }
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  CONNECTIONS
     //-------------------------------------------------------------------------------------------
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
     }
 
@@ -192,15 +185,11 @@ class Block extends DisplayObject implements IBlock {
     Stop() {
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  DISPOSE
     //-------------------------------------------------------------------------------------------
-
 
     Dispose() {
         super.Dispose();
     }
 }
-
-export = Block;

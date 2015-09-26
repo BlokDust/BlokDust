@@ -1,18 +1,19 @@
-import IDisplayObject = require("./IDisplayObject");
+import {IDisplayObject} from './IDisplayObject';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;
 
-class DisplayObject implements IDisplayObject {
+export class DisplayObject implements IDisplayObject {
+
+    public FrameCount: number = 0;
     public Height: number;
     public Initialised: boolean = false;
     public IsPaused: boolean = false;
-    public Position: Point;
-    public FrameCount: number = 0;
     public LastVisualTick: number = new Date(0).getTime();
-    public Timer: Fayde.ClockTimer;
+    public Position: Point;
     public Sketch: any;
+    public Timer: Fayde.ClockTimer;
     public Width: number;
     public ZIndex: number;
 
@@ -71,5 +72,3 @@ class DisplayObject implements IDisplayObject {
 
     }
 }
-
-export = DisplayObject;

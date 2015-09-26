@@ -1,14 +1,16 @@
-import Keyboard = require("./Keyboard");
-import Voice = require("./VoiceObject");
-import ISource = require("../ISource");
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import KeyDownEventArgs = require("../../Core/Inputs/KeyDownEventArgs");
-import Microphone = require("../Sources/Microphone");
-import Power = require("../Power/Power");
+import {IApp} from '../../IApp';
+import {ISource} from '../ISource';
+import {Keyboard} from './Keyboard';
+import {KeyDownEventArgs} from '../../Core/Inputs/KeyDownEventArgs';
+import {MainScene} from '../../MainScene';
+import {Microphone} from '../Sources/Microphone';
+import {Power} from '../Power/Power';
+import {VoiceCreator as Voice} from './VoiceObject';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class ComputerKeyboard extends Keyboard {
+declare var App: IApp;
+
+export class ComputerKeyboard extends Keyboard {
 
     public KeyboardCommands: any = {
         OctaveUp: 'octave-up',
@@ -62,19 +64,23 @@ class ComputerKeyboard extends Keyboard {
         if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_'){
             this.KeysDown = e.KeysDown;
 
-            // FOR ALL SOURCES TRIGGER KEYBOARD DOWN
-            this.Chain.Sources.forEach((source: ISource) => {
+            // ALL SOURCES TRIGGER KEYBOARD DOWN
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 this.KeyboardDown(e.KeyDown, source);
             });
+
+
         } else {
-            this._ExecuteKeyboardCommand(e.KeyDown, this.Chain.Sources);
+            this._ExecuteKeyboardCommand(e.KeyDown, this.Connections.ToArray());
         }
     }
 
     KeyUpCallback(e: any){
 
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        this.Chain.Sources.forEach((source: ISource) => {
+        let connections: ISource[] = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             // If its an octave shift no need to call KeyboardUp
             if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
                 this.KeyboardUp(e.KeyUp, source);
@@ -255,8 +261,4 @@ class ComputerKeyboard extends Keyboard {
             ]
         };
     }
-
-
 }
-
-export = ComputerKeyboard;

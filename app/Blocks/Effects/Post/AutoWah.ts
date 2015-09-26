@@ -1,9 +1,8 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class AutoWah extends PostEffect {
+export class AutoWah extends PostEffect {
 
     public Effect: Tone.AutoWah;
     public Params: AutoWahParams;
@@ -68,20 +67,6 @@ class AutoWah extends PostEffect {
 
         this.Params[param] = val;
     }
-
-  /*  GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="octaves") {
-            val = this.Effect.octaves;
-        } else if (param=="baseFrequency") {
-            val = this.Effect.baseFrequency;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        }
-
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -159,5 +144,3 @@ class AutoWah extends PostEffect {
         };
     }
 }
-
-export = AutoWah;

@@ -1,44 +1,46 @@
-import AnimationsLayer = require("./UI/AnimationsLayer");
-import BlockCreator = require("./BlockCreator");
-import BlockSprites = require("./Blocks/BlockSprites");
-import ChangePropertyOperation = require("./Core/Operations/ChangePropertyOperation");
-import Commands = require("./Commands");
-import ConnectionLines = require("./UI/ConnectionLines");
-import DisplayList = require("./DisplayList");
-import DisplayObject = require("./DisplayObject");
-import DisplayObjectCollection = require("./DisplayObjectCollection");
-import Grid = require("./Grid");
-import Header = require("./UI/Header");
-import IBlock = require("./Blocks/IBlock");
-import ICommandHandler = require("./Core/Commands/ICommandHandler");
-import IEffect = require("./Blocks/IEffect");
-import IOperation = require("./Core/Operations/IOperation");
-import IPooledObject = require("./Core/Resources/IPooledObject");
-import ISource = require("./Blocks/ISource");
-import IUndoableOperation = require("./Core/Operations/IUndoableOperation");
-import Laser = require("./Blocks/Power/Laser");
-import LaserBeams = require("./LaserBeams");
-import MainSceneDragger = require("./UI/StageDragger");
-import MessagePanel = require("./UI/MessagePanel");
-import OptionsPanel = require("./UI/OptionsPanel");
-import Particle = require("./Particle");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import PowerEffect = require("./Blocks/Power/PowerEffect");
-import PowerSource = require("./Blocks/Power/PowerSource");
-import RecorderPanel = require("./UI/RecorderPanel");
-import Sampler = require("./Blocks/Sources/Sampler");
-import SettingsPanel = require("./UI/SettingsPanel");
-import SharePanel = require("./UI/SharePanel");
-import SketchSession = Fayde.Drawing.SketchSession;
-import SoundcloudPanel = require("./UI/SoundcloudPanel");
-import Source = require("./Blocks/Source");
-import ToolTip = require("./UI/ToolTip");
-import TrashCan = require("./UI/TrashCan");
-import ZoomButtons = require("./UI/ZoomButtons");
+import {AnimationsLayer} from './UI/AnimationsLayer';
+import {BlockSprites} from './Blocks/BlockSprites';
+import {BlockCreator} from './BlockCreator';
+import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
+import {Commands} from './Commands';
+import {ConnectionLines} from './UI/ConnectionLines';
+import {DisplayList} from './DisplayList';
+import {DisplayObject} from './DisplayObject';
+import {DisplayObjectCollection} from './DisplayObjectCollection';
+import {Grid} from './Grid';
+import {Header} from './UI/Header';
+import {IApp} from './IApp';
+import {IBlock} from './Blocks/IBlock';
+import {ICommandHandler} from './Core/Commands/ICommandHandler';
+import {IEffect} from './Blocks/IEffect';
+import {IOperation} from './Core/Operations/IOperation';
+import {IPooledObject} from './Core/Resources/IPooledObject';
+import {ISource} from './Blocks/ISource';
+import {IUndoableOperation} from './Core/Operations/IUndoableOperation';
+import {Laser} from './Blocks/Power/Laser';
+import {LaserBeams} from './LaserBeams';
+import {StageDragger as MainSceneDragger} from './UI/StageDragger';
+import {MessagePanel} from './UI/MessagePanel';
+import {OptionsPanel} from './UI/OptionsPanel';
+import {Particle} from './Particle';
+import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {PowerEffect} from './Blocks/Power/PowerEffect';
+import {PowerSource} from './Blocks/Power/PowerSource';
+import {RecorderPanel} from './UI/RecorderPanel';
+import {Source} from './Blocks/Source';
+import {Sampler} from './Blocks/Sources/Sampler';
+import {SharePanel} from './UI/SharePanel';
+import SketchSession = Fayde.Drawing.SketchSession; //TODO: es6 module
+import {SoundcloudPanel} from './UI/SoundcloudPanel';
+import {SettingsPanel} from './UI/SettingsPanel';
+import {ToolTip} from './UI/ToolTip';
+import {TrashCan} from './UI/TrashCan';
+import {ZoomButtons} from './UI/ZoomButtons';
 
+declare var App: IApp;
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-class MainScene extends DisplayObject{
+export class MainScene extends DisplayObject{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
@@ -117,15 +119,16 @@ class MainScene extends DisplayObject{
         App.DragFileInputManager.Dropped.on((s: any, e: any) => {
             e.stopPropagation();
             e.preventDefault();
-            this.CreateBlockFromType(Sampler);
+            const b: Sampler = this.CreateBlockFromType(Sampler);
 
             var files = e.dataTransfer.files; // FileList object.
 
-            App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+            App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
                 if (buffer) {
                     //TODO: set the buffer of this newly created Sampler
                     console.log(file.name + ' dropped');
                 }
+
             });
 
         }, this);
@@ -481,7 +484,7 @@ class MainScene extends DisplayObject{
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
-                        App.CommandManager.ExecuteCommand(Commands[Commands.MOVE_BLOCK], this.SelectedBlock);
+                        App.CommandManager.ExecuteCommand(Commands.MOVE_BLOCK, this.SelectedBlock);
                     }
                 }
             }
@@ -751,7 +754,7 @@ class MainScene extends DisplayObject{
     }
 
     _ValidateBlocks() {
-        // todo: move this to flux-style blocksstore
+        // todo: move this to redux store
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();
@@ -763,20 +766,19 @@ class MainScene extends DisplayObject{
         }
     }
 
-    //CreateBlockFromType<T extends IBlock>(m: {new(grid: Grid, position: Point): T; }){
-    CreateBlockFromType<T extends IBlock>(t: {new(): T; }){
-        var block: IBlock = new t();
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }): T {
+        var block: T = new t();
         block.Id = App.GetBlockId();
         block.Position = this._PointerPoint;
         block.Init(this);
         block.Type = t;
 
-        App.CommandManager.ExecuteCommand(Commands[Commands.CREATE_BLOCK], block);
+        App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
 
         block.MouseDown();
         this.SelectedBlock = block;
         this.IsDraggingABlock = true;
-
+        return block;
     }
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
@@ -802,11 +804,9 @@ class MainScene extends DisplayObject{
         if (!this.SelectedBlock) return;
         this.SelectedBlock.MouseUp();
         this.OptionsPanel.Close();
-        App.CommandManager.ExecuteCommand(Commands[Commands.DELETE_BLOCK], this.SelectedBlock);
+        App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
 
         //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 }
-
-export = MainScene;

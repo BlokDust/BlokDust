@@ -1,13 +1,12 @@
-import Effect = require("../../Effect");
-import ISource = require("../../ISource");
-import MainScene = require("../../../MainScene");
-import Particle = require("../../../Particle");
-import ParticleEmitter = require("./../ParticleEmitter");
-import Logic = require("./Logic");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import {Effect} from '../../Effect';
+import {ISource} from '../../ISource';
+import {Logic} from './Logic';
+import {MainScene} from '../../../MainScene';
+import {Particle} from '../../../Particle';
+import {ParticleEmitter} from './../ParticleEmitter';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Momentary extends Logic {
+export class Momentary extends Logic {
 
     Init(sketch: ISketchContext): void {
 
@@ -16,10 +15,9 @@ class Momentary extends Logic {
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
 
-    UpdateConnections(chain: AudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
+    UpdateConnections() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             if (this.Params.logic) {
                 source.TriggerAttack();
             }
@@ -74,7 +72,8 @@ class Momentary extends Logic {
     PerformLogic() {
         // Momentarily Trigger Attack and then release
         this.Params.logic = true;
-        this.Chain.Sources.forEach((source: ISource) => {
+        let connections: ISource[] = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             source.TriggerAttackRelease();
             if (source instanceof ParticleEmitter){
                 (<ParticleEmitter>source).EmitParticle();
@@ -83,5 +82,3 @@ class Momentary extends Logic {
         this.Params.logic = false;
     }
 }
-
-export = Momentary;

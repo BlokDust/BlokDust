@@ -1,14 +1,15 @@
-import PowerSource = require("./PowerSource");
-import Grid = require("../../Grid");
-import Particle = require("../../Particle");
-import MainScene = require("../../MainScene");
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {PowerSource} from './PowerSource';
 import Vector = Utils.Maths.Vector;
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class ParticleEmitter extends PowerSource {
+declare var App: IApp;
+
+export class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
-
 
     Init(sketch: ISketchContext): void {
 
@@ -164,5 +165,3 @@ class ParticleEmitter extends PowerSource {
         this.Params[""+param] = val;
     }
 }
-
-export = ParticleEmitter;

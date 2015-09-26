@@ -1,11 +1,11 @@
-/**
- * Created by luketwyman on 01/02/2015.
- */
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
+import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
+import {MainScene} from './../MainScene';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class TrashCan extends DisplayObject {
+declare var App: IApp;
+
+export class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
@@ -62,5 +62,3 @@ class TrashCan extends DisplayObject {
     }
 
 }
-
-export = TrashCan;

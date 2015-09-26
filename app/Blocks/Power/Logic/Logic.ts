@@ -1,10 +1,10 @@
-import Effect = require("../../Effect");
-import PowerEffect = require("./../PowerEffect");
-import ISource = require("../../ISource");
-import Particle = require("../../../Particle");
+import {Effect} from '../../Effect';
+import {ISource} from '../../ISource';
+import {Particle} from '../../../Particle';
+import {PowerEffect} from './../PowerEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Logic extends PowerEffect {
+export class Logic extends PowerEffect {
 
     public Params: LogicParams;
 
@@ -35,5 +35,3 @@ class Logic extends PowerEffect {
     }
 
 }
-
-export = Logic;

@@ -1,11 +1,14 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
-import Particle = require("../../Particle");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
+import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Microphone extends Source {
+declare var App: IApp;
+
+export class Microphone extends Source {
 
     public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone
     public Params: MicrophoneParams;
@@ -64,7 +67,7 @@ class Microphone extends Source {
         return this.Sources[this.Sources.length-1];
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
 
         // Release the microphones envelope
@@ -83,7 +86,7 @@ class Microphone extends Source {
         }
     }
 
-    TriggerAttackRelease(duration: number){
+    TriggerAttackRelease(duration: Tone.Time){
         this.Unmute();
         if (!duration) duration = App.Config.PulseLength;
         setTimeout(() => {
@@ -123,5 +126,3 @@ class Microphone extends Source {
         this.Muted = null;
     }
 }
-
-export = Microphone;

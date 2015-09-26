@@ -1,9 +1,8 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class EQ extends PostEffect {
+export class EQ extends PostEffect {
 
     public Effect: Tone.EQMultiband;
     public Params: EQParams;
@@ -182,5 +181,3 @@ class EQ extends PostEffect {
         };
     }
 }
-
-export = EQ;

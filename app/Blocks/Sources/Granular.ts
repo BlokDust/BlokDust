@@ -1,13 +1,15 @@
-import Source = require("../Source");
-import MainScene = require("../../MainScene");
-import Grid = require("../../Grid");
-import Particle = require("../../Particle");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
+import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
+import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Granular extends Source {
+declare var App: IApp;
+
+export class Granular extends Source {
 
     public Sources: Tone.Signal[];
     public Grains: Tone.Player[] = [];
@@ -146,7 +148,7 @@ class Granular extends Source {
         }
         this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
-            this._WaveForm = this.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
             App.AnimationsLayer.RemoveFromList(this);
             this._IsLoaded = true;
 
@@ -455,5 +457,3 @@ class Granular extends Source {
         this._Envelopes.length = 0;
     }
 }
-
-export = Granular;

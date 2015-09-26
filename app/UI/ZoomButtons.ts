@@ -1,13 +1,13 @@
-/**
- * Created by luketwyman on 27/01/2015.
- */
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from './../Grid';
+import {IApp} from '../IApp';
+import {MainScene} from './../MainScene';
 import Size = minerva.Size;
-import Grid = require("./../Grid");
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class ZoomButtons extends DisplayObject {
+declare var App: IApp;
+
+export class ZoomButtons extends DisplayObject {
 
     public InRoll: boolean;
     public OutRoll: boolean;
@@ -201,9 +201,4 @@ class ZoomButtons extends DisplayObject {
             this.DelayTo(this,0,500,700,"ZoomAlpha");
         }
     }
-
-
-
 }
-
-export = ZoomButtons;

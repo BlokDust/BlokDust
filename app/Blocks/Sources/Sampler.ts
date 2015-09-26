@@ -1,10 +1,12 @@
-import Grid = require("../../Grid");
-import SamplerBase = require("./SamplerBase");
-import MainScene = require("../../MainScene");
-import Audio = require('../../Core/Audio/Audio');
+import {Audio} from '../../Core/Audio/Audio';
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Sampler extends SamplerBase {
+declare var App: IApp;
+
+export class Sampler extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SamplerParams;
@@ -92,7 +94,7 @@ class Sampler extends SamplerBase {
 
     HandleFileUploadButton(e) {
         var files = e.target.files; // FileList object
-        App.Audio.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+        App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
             if (buffer) {
                 this.SetBuffers(buffer);
                 this.Params.trackName = files[0].name;
@@ -115,7 +117,7 @@ class Sampler extends SamplerBase {
         this._FirstBuffer = new Tone.Buffer();
         this._FirstBuffer.buffer = buffer;
 
-        this._WaveForm = this.GetWaveformFromBuffer(buffer,200,5,95);
+        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(buffer,200,5,95);
         App.AnimationsLayer.RemoveFromList(this);
         var duration = this.GetDuration(this._FirstBuffer);
         if (!this._LoadFromShare) {
@@ -250,7 +252,8 @@ class Sampler extends SamplerBase {
                 this.Sources[0].player.reverse = value;
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
+
                 this.RefreshOptionsPanel();
                 break;
             case "loop":
@@ -282,5 +285,3 @@ class Sampler extends SamplerBase {
         this._fileInput.removeEventListener('change', this.HandleFileUploadButton, false);
     }
 }
-
-export = Sampler;

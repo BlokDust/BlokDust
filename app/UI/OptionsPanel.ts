@@ -1,30 +1,28 @@
-/**
- * Created by luketwyman on 11/01/2015.
- */
-
 import Size = minerva.Size;
-import Grid = require("./../Grid");
-import IBlock = require("./../Blocks/IBlock");
-import MainScene = require("./../MainScene");
-import Option = require("./Options/Option");
-import Slider = require("./Options/OptionSlider");
-import WaveSlider = require("./Options/OptionWaveSlider");
-import WaveRegion = require("./Options/OptionWaveRegion");
-import WaveImage = require("./Options/OptionWaveImage");
-import Sample = require("./Options/OptionSample");
-import ActionButton = require("./Options/OptionActionButton");
-import ButtonArray = require("./Options/OptionButtonArray");
-import SwitchArray = require("./Options/OptionSwitchArray");
-import Button = require("./Options/OptionButton");
-import Switch = require("./Options/OptionSwitch");
-import ADSR = require("./Options/OptionADSR");
-import Parametric = require("./Options/OptionParametric");
-import OptionHandle = require("./Options/OptionHandle");
-import OptionSubHandle = require("./Options/OptionSubHandle");
-import DisplayObject = require("../DisplayObject");
+import {ADSR} from './Options/OptionADSR';
+import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
+import {OptionButton as Button} from './Options/OptionButton';
+import {ButtonArray} from './Options/OptionButtonArray';
+import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
+import {IBlock} from './../Blocks/IBlock';
+import {MainScene} from './../MainScene';
+import {Option} from './Options/Option';
+import {OptionHandle} from './Options/OptionHandle';
+import {OptionSubHandle} from './Options/OptionSubHandle';
+import {Parametric} from './Options/OptionParametric';
+import {OptionSample as Sample} from './Options/OptionSample';
+import {Slider} from './Options/OptionSlider';
+import {OptionSwitch as Switch} from './Options/OptionSwitch';
+import {SwitchArray} from './Options/OptionSwitchArray';
+import {WaveImage} from './Options/OptionWaveImage';
+import {WaveRegion} from './Options/OptionWaveRegion';
+import {WaveSlider} from './Options/OptionWaveSlider';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class OptionsPanel extends DisplayObject {
+declare var App: IApp;
+
+export class OptionsPanel extends DisplayObject {
 
     public Position: Point;
     public Size: Size;
@@ -1143,7 +1141,4 @@ class OptionsPanel extends DisplayObject {
         //console.log("" +minval + " | " +maxval + " | " +value);
         return minpos + (value - minval) / scale;
     }
-
 }
-
-export = OptionsPanel;

@@ -1,15 +1,14 @@
-import PreEffect = require("../PreEffect");
-import ISource = require("../../ISource");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {MainScene} from '../../../MainScene';
+import {PreEffect} from '../PreEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class LFO extends PreEffect {
+export class LFO extends PreEffect {
 
+    public Defaults: LFOParams;
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
-    public Defaults: LFOParams;
     public WaveIndex: string[];
 
     Init(sketch: ISketchContext): void {
@@ -51,7 +50,7 @@ class LFO extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"lfo");
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         this.OscLFO.disconnect();
@@ -156,5 +155,3 @@ class LFO extends PreEffect {
         };
     }
 }
-
-export = LFO;

@@ -1,12 +1,11 @@
-/**
- * Created by luketwyman on 09/08/2015.
- */
-
-import ColorTheme = require("./ColorTheme");
-import DisplayObject = require("../DisplayObject");
+import {ColorTheme} from './ColorTheme';
+import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class ColorThemes extends DisplayObject {
+declare var App: IApp;
+
+export class ColorThemes extends DisplayObject {
 
     public Themes: ColorTheme[];
     public Loaded: boolean;
@@ -165,5 +164,3 @@ class ColorThemes extends DisplayObject {
     }
 
 }
-
-export = ColorThemes;

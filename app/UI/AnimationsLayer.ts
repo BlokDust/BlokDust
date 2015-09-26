@@ -1,14 +1,13 @@
-/**
- * Created by luketwyman on 28/07/2015.
- */
-import DisplayObject = require("../DisplayObject");
-import Block = require("../Blocks/Block");
+import {DisplayObject} from '../DisplayObject';
+import {Block} from '../Blocks/Block';
+import {IApp} from '../IApp';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class AnimationsLayer extends DisplayObject {
+declare var App: IApp;
 
+export class AnimationsLayer extends DisplayObject {
 
-    private _Ctx: CanvasRenderingContext2D;
+    private _Ctx: any; //TODO: should be CanvasRenderingContext2D but get error CanvasRenderingContext2D | WebGLRenderingContext' is not assignable...
     public ActiveBlocks: Block[];
     private Loop: number;
 
@@ -113,7 +112,4 @@ class AnimationsLayer extends DisplayObject {
 
         }
     }
-
 }
-
-export = AnimationsLayer;

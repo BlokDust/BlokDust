@@ -1,14 +1,13 @@
-/**
- * Created by luketwyman on 26/07/2015.
- */
-
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from './../Grid';
+import {IApp} from '../IApp';
+import {MainScene} from './../MainScene';
 import Size = minerva.Size;
-import Grid = require("./../Grid");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("./../MainScene");
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class SoundcloudPanel extends DisplayObject{
+declare var App: IApp;
+
+export class SoundcloudPanel extends DisplayObject{
 
     public Open: boolean;
     public OffsetX: number;
@@ -466,5 +465,3 @@ class SoundcloudPanel extends DisplayObject{
         return q;
     }
 }
-
-export = SoundcloudPanel;

@@ -1,12 +1,6 @@
-import Effect = require("../Effect");
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {Effect} from '../Effect';
+import {IPowerEffect} from './IPowerEffect';
 
-class PowerEffect extends Effect {
-
-    Init(sketch: ISketchContext): void {
-        super.Init(sketch);
-    }
-
+export class PowerEffect extends Effect implements IPowerEffect {
+    UpdateConnections() {}
 }
-
-export = PowerEffect;

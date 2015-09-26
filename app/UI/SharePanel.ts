@@ -1,16 +1,14 @@
-/**
- * Created by luketwyman on 13/06/2015.
- */
-
+import {Commands} from './../Commands';
+import {CommandManager} from '../Core/Commands/CommandManager';
+import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
+import {MainScene} from './../MainScene';
 import Size = minerva.Size;
-import Grid = require("./../Grid");
-import DisplayObject = require("../DisplayObject");
-import MainScene = require("./../MainScene");
-import Commands = require("./../Commands");
-import CommandManager = require("../Core/Commands/CommandManager");
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class SharePanel extends DisplayObject{
+declare var App: IApp;
+
+export class SharePanel extends DisplayObject {
 
     public Open: boolean;
     public OffsetX: number;
@@ -492,13 +490,13 @@ class SharePanel extends DisplayObject{
 
     GenerateLink() {
         this._Saving = true;
-        this._CommandManager.ExecuteCommand(Commands[Commands.SAVEAS]);
+        this._CommandManager.ExecuteCommand(Commands.SAVEAS);
 
     }
 
     UpdateLink() {
         this._Saving = true;
-        this._CommandManager.ExecuteCommand(Commands[Commands.SAVE]);
+        this._CommandManager.ExecuteCommand(Commands.SAVE);
     }
 
     ReturnLink(id) {
@@ -704,5 +702,3 @@ class SharePanel extends DisplayObject{
 
     }
 }
-
-export = SharePanel;

@@ -1,10 +1,10 @@
-/**
- * Created by luketwyman on 05/08/2015.
- */
-import DisplayObject = require("../DisplayObject");
+import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class StageDragger extends DisplayObject {
+declare var App: IApp;
+
+export class StageDragger  extends DisplayObject {
 
     private _DragStart: Point;
     private _OffsetStart: Point;
@@ -129,8 +129,4 @@ class StageDragger extends DisplayObject {
         App.MainScene.ToolTipClose();
     }
 
-
-
 }
-
-export = StageDragger;

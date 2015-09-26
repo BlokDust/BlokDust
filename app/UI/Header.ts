@@ -1,17 +1,15 @@
-/**
- * Created by luketwyman on 25/01/2015.
- */
-
-import BlockCreator = require("./../BlockCreator");
-import MainScene = require("./../MainScene");
-import DisplayObject = require("../DisplayObject");
-import Grid = require("./../Grid");
-import MenuCategory = require("./MenuCategory");
-import MenuItem = require("./MenuItem");
+import {BlockCreator} from './../BlockCreator';
+import {DisplayObject} from '../DisplayObject';
+import {IApp} from '../IApp';
+import {MainScene} from './../MainScene';
+import {MenuCategory} from './MenuCategory';
+import {MenuItem} from './MenuItem';
 import Size = minerva.Size;
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Header extends DisplayObject{
+declare var App: IApp;
+
+export class Header extends DisplayObject {
 
     private _Units: number;
     public Height: number;
@@ -592,13 +590,4 @@ class Header extends DisplayObject{
             cat.Items[i].MouseUp();
         }
     }
-
-
-
-
-
-
-
 }
-
-export = Header;

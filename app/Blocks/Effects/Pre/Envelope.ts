@@ -1,11 +1,10 @@
-import PreEffect = require("../PreEffect");
-import ISource = require("../../ISource");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISource} from '../../ISource';
+import {MainScene} from '../../../MainScene';
+import {PreEffect} from '../PreEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Envelope extends PreEffect {
+export class Envelope extends PreEffect {
 
     public Params: EnvelopeParams;
 
@@ -32,17 +31,7 @@ class Envelope extends PreEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"envelope");
     }
 
-    //Attach(source: ISource): void{
-    //    super.Attach(source);
-    //
-    //}
-    //
-    //Detach(source: ISource): void{
-    //    super.Detach(source);
-    //
-    //}
-
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         chain.Sources.forEach((source: ISource) => {
@@ -139,5 +128,3 @@ class Envelope extends PreEffect {
         };
     }
 }
-
-export = Envelope;

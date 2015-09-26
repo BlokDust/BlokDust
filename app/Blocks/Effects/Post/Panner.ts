@@ -1,9 +1,8 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Panner extends PostEffect {
+export class Panner extends PostEffect {
 
     public Effect: Tone.AutoPanner;
 
@@ -73,5 +72,3 @@ class Panner extends PostEffect {
         };
     }
 }
-
-export = Panner;

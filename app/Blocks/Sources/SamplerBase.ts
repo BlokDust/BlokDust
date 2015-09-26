@@ -1,10 +1,11 @@
-import Grid = require("../../Grid");
-import Source = require("../Source");
-import MainScene = require("../../MainScene");
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class SamplerBase extends Source {
+declare var App: IApp;
 
+export class SamplerBase extends Source {
 
     Init(sketch: ISketchContext): void {
 
@@ -114,5 +115,3 @@ class SamplerBase extends Source {
         });
     }
 }
-
-export = SamplerBase;

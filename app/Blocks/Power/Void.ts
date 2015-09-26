@@ -1,13 +1,8 @@
-/**
- * Created by luketwyman on 05/08/2015.
- */
-
-
-import Block = require("../Block");
-import MainScene = require("../../MainScene");
+import {Block} from '../Block';
+import {MainScene} from '../../MainScene';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Void extends Block {
+export class Void extends Block {
 
     public StarPos: Point;
 
@@ -39,5 +34,3 @@ class Void extends Block {
         super.Dispose();
     }
 }
-
-export = Void;

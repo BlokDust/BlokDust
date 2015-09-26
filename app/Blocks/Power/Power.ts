@@ -1,11 +1,10 @@
-import Effect = require("../Effect");
-import PowerEffect = require("./PowerEffect");
-import ISource = require("../ISource");
-import MainScene = require("../../MainScene");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import {Effect} from '../Effect';
+import {ISource} from '../ISource';
+import {MainScene} from '../../MainScene';
+import {PowerEffect} from './PowerEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Power extends PowerEffect {
+export class Power extends PowerEffect {
 
     Init(sketch: ISketchContext): void {
         super.Init(sketch);
@@ -14,10 +13,9 @@ class Power extends PowerEffect {
 
     }
 
-    UpdateConnections(chain: AudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
+    UpdateConnections() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             if (!source.IsPressed){
                 source.TriggerRelease('all');
             }
@@ -34,5 +32,3 @@ class Power extends PowerEffect {
         super.Dispose();
     }
 }
-
-export = Power;

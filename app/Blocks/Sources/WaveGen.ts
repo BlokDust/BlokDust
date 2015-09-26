@@ -1,18 +1,16 @@
-/**
- * Created by luketwyman on 31/07/2015.
- */
-
-import Grid = require("../../Grid");
-import Source = require("../Source");
-import SamplerBase = require("./SamplerBase");
-import MainScene = require("../../MainScene");
-import SoundCloudAudio = require('../SoundCloudAudio');
-import SoundCloudAudioType = require('../SoundCloudAudioType');
-import SoundcloudTrack = require("../../UI/SoundcloudTrack");
-import WaveVoice = require("../../WaveVoice");
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {SamplerBase} from './SamplerBase';
+import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
+import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
+import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {Source} from '../Source';
+import {WaveVoice} from '../../WaveVoice';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class WaveGen extends SamplerBase {
+declare var App: IApp;
+
+export class WaveGen extends SamplerBase {
 
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
@@ -493,7 +491,7 @@ class WaveGen extends SamplerBase {
             this._FirstBuffer = App.Audio.ctx.createBuffer(1, this._BufferData.length, sampleRate);
         }
         this._FirstBuffer.copyToChannel(this._BufferData,0,0);
-        this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
+        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
         var duration = this.GetDuration(this._FirstBuffer);
         if (!this._LoadFromShare) {
             this.Params.startPosition = 0;
@@ -669,7 +667,7 @@ class WaveGen extends SamplerBase {
                 });
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = this.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
                 this.RefreshOptionsPanel();
                 break;
             case "loop":
@@ -719,5 +717,3 @@ class WaveGen extends SamplerBase {
         return newBuffer;
     }
 }
-
-export = WaveGen;

@@ -1,15 +1,17 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {IApp} from '../../../IApp';
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Chopper extends PostEffect {
+declare var App: IApp;
 
+export class Chopper extends PostEffect {
+
+    public Effect: GainNode;
+    public Params: ChopperParams;
     public Polarity: number;
     public Transport;
     public Timer;
-    public Effect: GainNode;
-    public Params: ChopperParams;
 
     Init(sketch: ISketchContext): void {
 
@@ -109,5 +111,3 @@ class Chopper extends PostEffect {
         this.Params[param] = val;
     }
 }
-
-export = Chopper;

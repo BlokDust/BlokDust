@@ -1,25 +1,27 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
-import SoundCloudAudio = require('../../SoundCloudAudio');
-import SoundCloudAudioType = require('../../SoundCloudAudioType');
-import SoundcloudTrack = require("../../../UI/SoundcloudTrack");
+import {IApp} from '../../../IApp';
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
+import {SoundCloudAudio} from  '../../../Core/Audio/SoundCloudAudio';
+import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloudAudioType';
+import {SoundcloudTrack} from '../../../UI/SoundcloudTrack';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Convolver extends PostEffect {
+declare var App: IApp;
 
-    public Effect: Tone.Convolver;
-    public Params: ConvolutionParams;
+export class Convolver extends PostEffect {
+
     public Defaults: ConvolutionParams;
-    public SearchResults: SoundcloudTrack[];
-    private _FirstRelease: boolean = true;
-    public Searching: boolean;
+    public Effect: Tone.Convolver;
+    public LoadTimeout: any;
+    public Params: ConvolutionParams;
     public ResultsPage: number;
+    public SearchResults: SoundcloudTrack[];
+    public Searching: boolean;
     public SearchString: string;
     private _FirstBuffer: any;
-    private _WaveForm: number[];
+    private _FirstRelease: boolean = true;
     private _FallBackTrack: SoundcloudTrack;
-    public LoadTimeout: any;
+    private _WaveForm: number[];
 
     Init(sketch: ISketchContext): void {
 
@@ -61,7 +63,7 @@ class Convolver extends PostEffect {
         }
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
-            this._WaveForm = this.GetWaveformFromBuffer(e._buffer,200,5,95);
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
             App.AnimationsLayer.RemoveFromList(this);
             //var duration = this.GetDuration();
 
@@ -209,59 +211,57 @@ class Convolver extends PostEffect {
     }
 
     //TODO - make function of Block.ts
-    GetWaveformFromBuffer(buffer,points,stepsPerPoint,normal) {
-
-        console.log(buffer);
-        console.log("minutes: "+ (buffer.duration/60));
-
-        // defaults //
-        stepsPerPoint = 10; // checks per division
-        var leftOnly = false; // don't perform channel merge
-
-
-        var newWaveform = [];
-        var peak = 0.0;
-
-        // MERGE LEFT & RIGHT CHANNELS //
-        var left = buffer.getChannelData(0);
-        if (buffer.numberOfChannels>1 && !leftOnly) {
-            var right = buffer.getChannelData(1);
-        }
-
-        var slice = Math.ceil( left.length / points );
-        var step = Math.ceil( slice / stepsPerPoint );
-
-        // FOR EACH DETAIL POINT //
-        for(var i=0; i<points; i++) {
-
-            // AVERAGE PEAK BETWEEN POINTS //
-            var max1 = 0.0;
-            var max2 = 0.0;
-            for (var j = 0; j < slice; j += step) {
-                var datum = left[(i * slice) + j];
-                if (datum < 0) { datum = -datum;}
-                if (datum > max1) {max1 = datum;}
-                if (right) {
-                    var datum2 = right[(i * slice) + j];
-                    if (datum2 < 0) { datum2 = -datum2;}
-                    if (datum2 > max2) {max2 = datum2;}
-                    if (max2 > max1) {max1 = max2;}
-                }
-
-            }
-            if (max1 > peak) {peak = max1;} // set overall peak used for normalising
-            newWaveform.push(max1);
-        }
-
-        // SOFT NORMALISE //
-        var percent = normal/100; // normalisation strength
-        var mult = (((1/peak) - 1)*percent) + 1;
-        for (var i=0; i<newWaveform.length; i++) {
-            newWaveform[i] = newWaveform[i] * mult;
-        }
-
-        return newWaveform;
-    }
+    //GetWaveformFromBuffer(buffer,points,stepsPerPoint,normal) {
+    //
+    //    console.log(buffer);
+    //    console.log(`minutes: ${buffer.duration/60}`);
+    //
+    //    // defaults //
+    //    stepsPerPoint = 10; // checks per division
+    //    var leftOnly = false; // don't perform channel merge
+    //
+    //
+    //    var newWaveform = [];
+    //    var peak = 0.0;
+    //
+    //    // MERGE LEFT & RIGHT CHANNELS //
+    //    var left = buffer.getChannelData(0);
+    //    if (buffer.numberOfChannels>1 && !leftOnly) {
+    //        var right = buffer.getChannelData(1);
+    //    }
+    //
+    //    var slice = Math.ceil( left.length / points );
+    //    var step = Math.ceil( slice / stepsPerPoint );
+    //
+    //    // FOR EACH DETAIL POINT //
+    //    for(var i=0; i<points; i++) {
+    //
+    //        // AVERAGE PEAK BETWEEN POINTS //
+    //        var max1 = 0.0;
+    //        var max2 = 0.0;
+    //        for (var j = 0; j < slice; j += step) {
+    //            var datum = left[(i * slice) + j];
+    //            if (datum < 0) { datum = -datum;}
+    //            if (datum > max1) {max1 = datum;}
+    //            if (right) {
+    //                var datum2 = right[(i * slice) + j];
+    //                if (datum2 < 0) { datum2 = -datum2;}
+    //                if (datum2 > max2) {max2 = datum2;}
+    //                if (max2 > max1) {max1 = max2;}
+    //            }
+    //
+    //        }
+    //        if (max1 > peak) {peak = max1;} // set overall peak used for normalising
+    //        newWaveform.push(max1);
+    //    }
+    //
+    //    // SOFT NORMALISE //
+    //    var percent = normal/100; // normalisation strength
+    //    var mult = (((1/peak) - 1)*percent) + 1;
+    //    for (var i=0; i<newWaveform.length; i++) {
+    //        newWaveform[i] = newWaveform[i] * mult;
+    //    }
+    //
+    //    return newWaveform;
+    //}
 }
-
-export = Convolver;

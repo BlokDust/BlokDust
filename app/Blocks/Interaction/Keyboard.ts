@@ -1,19 +1,18 @@
-import PreEffect = require("../Effects/PreEffect");
-import ISource = require("../ISource");
-import Grid = require("../../Grid");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
-import Microphone = require("../Sources/Microphone");
-import Power = require("../Power/Power");
-import Voice = require("./VoiceObject");
-import Granular = require("../Sources/Granular");
-import SamplerBase = require("../Sources/SamplerBase");
-import Recorder = require("../Sources/Recorder");
+import {Granular} from '../Sources/Granular';
+import {Grid} from '../../Grid';
+import {IApp} from '../../IApp';
+import {Interaction} from './Interaction';
+import {ISource} from '../ISource';
+import {Recorder} from '../Sources/Recorder';
+import {SamplerBase} from '../Sources/SamplerBase';
 import ISketchContext = Fayde.Drawing.ISketchContext;
+
+declare var App: IApp;
 
 /**
  * Base class for mono, poly and midi keyboards
  */
-class Keyboard extends PreEffect {
+export class Keyboard extends Interaction {
 
     public BaseFrequency: number;
     public KeysDown: any = {};
@@ -26,10 +25,10 @@ class Keyboard extends PreEffect {
         super.Draw();
     }
 
-    UpdateConnections(chain: AudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
+    //FIXME: we don't want to reset the frequency everytime this gets called
+    UpdateConnections() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             this.SetBaseFrequency(source);
             this.KeysDown = {};
 
@@ -38,6 +37,8 @@ class Keyboard extends PreEffect {
                 // Create extra polyphonic voices
                 this.CreateVoices(source);
             }
+
+            source.TriggerRelease('all'); //TODO: do we need this?
         });
     }
 
@@ -62,7 +63,8 @@ class Keyboard extends PreEffect {
         else if (param === 'polyphonic') {
             this.Params.isPolyphonic = value;
             // ALL SOURCES
-            this.Chain.Sources.forEach((source: ISource) => {
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 source.TriggerRelease('all');
                 // Create extra polyphonic voices
                 this.CreateVoices(source);
@@ -72,50 +74,6 @@ class Keyboard extends PreEffect {
 
         this.Params[param] = value;
     }
-
-    CreateVoices(source: ISource){
-        // Don't create if it's a Power or a Microphone
-        if ((source instanceof Power) || (source instanceof Microphone)) return;
-
-        // Work out how many voices we actually need (we may already have some)
-        let diff: number = App.Config.PolyphonicVoices - source.Sources.length;
-
-        // If we haven't got enough sources, create however many we need.
-        if (diff > 0){
-
-            // Loop through and create the voices
-            for (let i = 1; i <= App.Config.PolyphonicVoices; i++) {
-
-                // Create a source
-                let s: Tone.Source = source.CreateSource();
-
-                let e: Tone.AmplitudeEnvelope;
-
-                // Create an envelope and save it to `var e`
-                e = source.CreateEnvelope();
-
-                if (e) {
-                    // Connect the source to the Envelope and start
-                    s.connect(e);
-                    s.start();
-
-                    // Connect Envelope to the Effects Chain
-                    e.connect(source.AudioInput);
-                } else {
-                    // No CreateEnvelope()
-                    // Check if it's a Sampler Source (they have their own envelopes built in)
-                    if (source.Sources[0] instanceof Tone.Simpler) {
-                        e = source.Sources[i].envelope;
-                        s.connect(source.AudioInput)
-                    }
-                }
-
-                // Add the source and envelope to our FreeVoices list
-                source.FreeVoices.push( new Voice(i) );
-            }
-        }
-    }
-
 
     public SetBaseFrequency(source:ISource){
         if (source.Params && source.Params.frequency){
@@ -178,10 +136,7 @@ class Keyboard extends PreEffect {
      * @returns {number}
      * @constructor
      */
-    MidiVelocityToGain(velocity){
-        return velocity/127;
+    MidiVelocityToGain(velocity) {
+        return velocity / 127;
     }
-
 }
-
-export = Keyboard;

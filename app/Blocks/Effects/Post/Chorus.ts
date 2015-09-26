@@ -1,13 +1,12 @@
-import PostEffect = require("../PostEffect");
-import Grid = require("../../../Grid");
-import MainScene = require("../../../MainScene");
+import {MainScene} from '../../../MainScene';
+import {PostEffect} from '../PostEffect';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Chorus extends PostEffect {
+export class Chorus extends PostEffect {
 
+    public Defaults: ChorusParams;
     public Effect: Tone.Chorus;
     public Params: ChorusParams;
-    public Defaults: ChorusParams;
 
     Init(sketch: ISketchContext): void {
 
@@ -124,5 +123,3 @@ class Chorus extends PostEffect {
         };
     }
 }
-
-export = Chorus;

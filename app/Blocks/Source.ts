@@ -1,22 +1,24 @@
-import IBlock = require("./IBlock");
-import IEffect = require("./IEffect");
-import ISource = require("./ISource");
-import Block = require("./Block");
-import Grid = require("../Grid");
-import MainScene = require("../MainScene");
-import Particle = require("../Particle");
+import {Block} from './Block';
+import {Grid} from '../Grid';
+import {IApp} from '../IApp';
+import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
+import {IBlock} from './IBlock';
+import {IEffect} from './IEffect';
+import {ISource} from './ISource';
+import {Logic} from './Power/Logic/Logic';
+import {MainScene} from '../MainScene';
 import ObservableCollection = Fayde.Collections.ObservableCollection;
-import Soundcloud = require("./Sources/Soundcloud");
-import PostEffect = require("./Effects/PostEffect");
-import AudioChain = require("../Core/Audio/Connections/AudioChain");
-import Power = require("./Power/Power");
-import PowerSource = require("./Power/PowerSource");
-import Logic = require("./Power/Logic/Logic");
-import Voice = require("./Interaction/VoiceObject");
-import SoundcloudTrack = require("../UI/SoundcloudTrack");
+import {Particle} from '../Particle';
+import {Power} from './Power/Power';
+import {PowerSource} from './Power/PowerSource';
+import {Soundcloud} from './Sources/Soundcloud';
+import {SoundcloudTrack} from '../UI/SoundcloudTrack';
+import {VoiceCreator as Voice} from './Interaction/VoiceObject';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Source extends Block implements ISource {
+declare var App: IApp;
+
+export class Source extends Block implements ISource {
 
     public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
 
@@ -104,7 +106,7 @@ class Source extends Block implements ISource {
         }
     }
 
-    UpdateConnections(chain: AudioChain) {
+    UpdateConnections(chain: IAudioChain) {
         super.UpdateConnections(chain);
 
         // Reset Envelopes back to original setting
@@ -285,18 +287,18 @@ class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered(): boolean {
-        let bool: boolean = false;
         if (this.IsPressed || this.PowerConnections>0) {
-            bool = true;
-        } else if (this.Chain && this.Chain.Connections) {
-            this.Chain.Connections.forEach((block: IBlock) => {
-                //If connected to power block OR connected to a logic block that is 'on'
-                if (block instanceof Power || block instanceof Logic && block.Params.logic){
-                    bool = true;
-                }
-            });
+            return true;
         }
-        return bool;
+        let connections: IEffect[] = this.Connections.ToArray();
+        for (let i = 0, _len = connections.length; i < _len; i++) {
+            //If connected to power block OR connected to a logic block that is 'on'
+            if (connections[i] instanceof Power ||
+                connections[i] instanceof Logic && connections[i].Params.logic) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -432,78 +434,9 @@ class Source extends Block implements ISource {
         return this;
     }
 
-
-
-    GetWaveformFromBuffer(buffer, points, stepsPerPoint, normal) {
-
-        console.log(buffer);
-        console.log("minutes: "+ (buffer.duration/60));
-
-        // defaults //
-        stepsPerPoint = 10; // checks per division
-        var leftOnly = false; // don't perform channel merge
-
-
-        //TODO if too slow consider making asynchronous
-
-        /*if (buffer.duration>240) { // 4 minutes
-            stepsPerPoint = 6;
-            //leftOnly = true;
-            if (points > 180) {
-                points = 180;
-            }
-            console.log("detail nerfed");
-        }*/
-
-        var newWaveform = [];
-        var peak = 0.0;
-
-        // MERGE LEFT & RIGHT CHANNELS //
-        var left = buffer.getChannelData(0);
-        if (buffer.numberOfChannels>1 && !leftOnly) {
-            var right = buffer.getChannelData(1);
-        }
-
-        var slice = Math.ceil( left.length / points );
-        var step = Math.ceil( slice / stepsPerPoint );
-
-        // FOR EACH DETAIL POINT //
-        for(var i=0; i<points; i++) {
-
-            // AVERAGE PEAK BETWEEN POINTS //
-            var max1 = 0.0;
-            var max2 = 0.0;
-            for (var j = 0; j < slice; j += step) {
-                var datum = left[(i * slice) + j];
-                if (datum < 0) { datum = -datum;}
-                if (datum > max1) {max1 = datum;}
-                if (right) {
-                    var datum2 = right[(i * slice) + j];
-                    if (datum2 < 0) { datum2 = -datum2;}
-                    if (datum2 > max2) {max2 = datum2;}
-                    if (max2 > max1) {max1 = max2;}
-                }
-
-            }
-            if (max1 > peak) {peak = max1;} // set overall peak used for normalising
-            newWaveform.push(max1);
-        }
-
-        // SOFT NORMALISE //
-        var percent = normal/100; // normalisation strength
-        var mult = (((1/peak) - 1)*percent) + 1;
-        for (var i=0; i<newWaveform.length; i++) {
-            newWaveform[i] = newWaveform[i] * mult;
-        }
-
-        return newWaveform;
-    }
-
-
     MouseDown() {
         super.MouseDown();
         this.TriggerAttack();
-
     }
 
     MouseUp() {
@@ -511,6 +444,7 @@ class Source extends Block implements ISource {
         this.TriggerRelease('all');
     }
 
+    //TODO: This shouldn't be here
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
         var jsonVariable = {};
@@ -535,14 +469,4 @@ class Source extends Block implements ISource {
         }
     }
 
-    /*UpdateParams(params: any) {
-        super.UpdateParams(params);
-    }*/
-
-    Draw(){
-        super.Draw();
-    }
-
 }
-
-export = Source;

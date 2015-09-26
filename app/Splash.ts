@@ -1,20 +1,18 @@
-/**
- * Created by luketwyman on 21/07/2015.
- */
-
-import DisplayObject = require("./DisplayObject");
+import {DisplayObject} from './DisplayObject';
+import {IApp} from './IApp';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Splash extends DisplayObject{
+declare var App: IApp;
 
-    private _Ctx: CanvasRenderingContext2D;
+export class Splash extends DisplayObject{
+
+    private _Ctx: any; //TODO: should be CanvasRenderingContext2D but get error CanvasRenderingContext2D | WebGLRenderingContext' is not assignable...
     public XOffset: number;
     public YOffset: number;
     public LoadOffset: number;
     private _Scale: number;
     private _Center: Point;
     private _Offset: Point;
-
 
     Init(sketch: ISketchContext): void {
         super.Init(sketch);
@@ -25,9 +23,7 @@ class Splash extends DisplayObject{
         this.LoadOffset = 0;
     }
 
-
-
-    get Ctx(): CanvasRenderingContext2D{
+    get Ctx(): CanvasRenderingContext2D {
         return this._Ctx;
     }
 
@@ -254,5 +250,3 @@ class Splash extends DisplayObject{
     }
 
 }
-
-export = Splash;

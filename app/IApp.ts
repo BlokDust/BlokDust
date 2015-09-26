@@ -1,38 +1,72 @@
-import Audio = require("./Core/Audio/Audio");
-import CommandManager = require("./Core/Commands/CommandManager");
-import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
-import IBlock = require("./Blocks/IBlock");
-import IDisplayObject = require("./IDisplayObject");
-import IEffect = require("./Blocks/ISource");
-import InputManager = require("./Core/Inputs/InputManager");
-import ISource = require("./Blocks/ISource");
-import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
-import MainScene = require("./MainScene");
-import OperationManager = require("./Core/Operations/OperationManager");
-import Particle = require("./Particle"); // todo: should be IParticle
-import PointerInputManager = require("./Core/Inputs/PointerInputManager");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import ResourceManager = require("./Core/Resources/ResourceManager");
-import Serializer = require("./Serializer");
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {AnimationsLayer} from './UI/AnimationsLayer';
+import {ColorThemes} from './UI/ColorThemes';
+import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
+import {CommandManager} from './Core/Commands/CommandManager';
+import {Config} from './Config';
+import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
+import {IAudio} from './Core/Audio/IAudio';
+import {IBlock} from './Blocks/IBlock';
+import {IEffect} from './Blocks/IEffect';
+import {InputManager} from './Core/Inputs/InputManager';
+import {IPowerEffect} from './Blocks/Power/IPowerEffect';
+import {ISource} from './Blocks/ISource';
+import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {MainScene} from './MainScene';
+import {Metrics} from './AppMetrics';
+import {OperationManager} from './Core/Operations/OperationManager';
+import {Particle} from './Particle'; // todo: should be IParticle
+import {PointerInputManager} from './Core/Inputs/PointerInputManager';
+import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {ResourceManager} from './Core/Resources/ResourceManager';
+import {Serializer} from './Serializer';
+import {Splash} from './Splash';
+import {TypingManager} from './Core/Inputs/TypingManager';
 
-interface IApp extends ISketchContext {
-    OperationManager: OperationManager;
-    ResourceManager: ResourceManager;
+export interface IApp {
+
+    Audio: IAudio;
+    AnimationsLayer: AnimationsLayer;
+    Blocks: IBlock[];
+    Canvas: HTMLCanvasElement;
+    Color: ColorThemes;
+    Config: Config;
     CommandManager: CommandManager;
+    CommandsInputManager: CommandsInputManager;
     CompositionId: string;
-    Audio: Audio;
+    DragFileInputManager: DragFileInputManager;
+    DragOffset: Point;
+    Effects: IEffect[];
+    GridSize: number;
+    Height: number;
     InputManager: InputManager;
     KeyboardInput: KeyboardInput;
-    CommandsInputManager: CommandsInputManager;
-    PointerInputManager: PointerInputManager;
-    ParticlesPool: PooledFactoryResource<Particle>;
-    Particles: Particle[];
-    Palette: string[];
-    Blocks: IBlock[];
-    Sources: IBlock[];
-    Effects: IBlock[];
+    LoadCued: boolean;
     MainScene: MainScene;
-}
+    Metrics: Metrics;
+    OperationManager: OperationManager;
+    Palette: string[];
+    Particles: Particle[];
+    ParticlesPool: PooledFactoryResource<Particle>;
+    PointerInputManager: PointerInputManager;
+    PowerEffects: IPowerEffect[];
+    ResourceManager: ResourceManager;
+    ScaledDragOffset: Point;
+    ScaledGridSize: number;
+    ScaledUnit: number;
+    Scene: number;
+    SessionId: string;
+    Sources: ISource[];
+    Splash: Splash;
+    SubCanvas: HTMLCanvasElement[];
+    TypingManager: TypingManager;
+    Unit: number;
+    Width: number;
+    ZoomLevel: number;
 
-export = IApp;
+    Deserialize(json: string): any;
+    GetBlockId(): number;
+    LoadReady(): void;
+    Message(message?: string, options?: any): void;
+    Serialize(): string;
+    Setup(): void;
+}

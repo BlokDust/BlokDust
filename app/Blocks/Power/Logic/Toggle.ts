@@ -1,12 +1,11 @@
-import Effect = require("../../Effect");
-import ISource = require("../../ISource");
-import MainScene = require("../../../MainScene");
-import Particle = require("../../../Particle");
-import Logic = require("./Logic");
-import AudioChain = require("../../../Core/Audio/Connections/AudioChain");
+import {Effect} from '../../Effect';
+import {ISource} from '../../ISource';
+import {Logic} from './Logic';
+import {MainScene} from '../../../MainScene';
+import {Particle} from '../../../Particle';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class Toggle extends Logic {
+export class Toggle extends Logic {
 
     Init(sketch: ISketchContext): void {
 
@@ -15,10 +14,9 @@ class Toggle extends Logic {
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
 
-    UpdateConnections(chain: AudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
+    UpdateConnections() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
             if (this.Params.logic) {
                 source.TriggerAttack();
             }
@@ -73,17 +71,17 @@ class Toggle extends Logic {
         super.PerformLogic();
         if (this.Params.logic) {
             this.Params.logic = false;
-            this.Chain.Sources.forEach((source: ISource) => {
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 source.TriggerRelease('all');
             });
 
         } else {
             this.Params.logic = true;
-            this.Chain.Sources.forEach((source: ISource) => {
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 source.TriggerAttack();
             });
         }
     }
 }
-
-export = Toggle;

@@ -1,12 +1,14 @@
-import Grid = require("../../Grid");
-import MainScene = require("../../MainScene");
-import Source = require("../Source");
-import Effect = require("../Effect");
-import Block = require("../Block");
-import Particle = require("../../Particle");
+import {Block} from '../Block';
+import {Effect} from '../Effect';
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
+import {Particle} from '../../Particle';
+import {Source} from '../Source';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class ToneSource extends Source {
+declare var App: IApp;
+
+export class ToneSource extends Source {
 
     public Sources: Tone.Oscillator[];
     //public Frequency: number;
@@ -187,5 +189,3 @@ class ToneSource extends Source {
         return App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(baseFrequency + fine);
     }
 }
-
-export = ToneSource;

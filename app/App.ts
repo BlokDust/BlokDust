@@ -1,104 +1,108 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
-import AnimationsLayer = require("./UI/AnimationsLayer");
-import Audio = require("./Core/Audio/Audio");
-import ColorThemes = require("./UI/ColorThemes");
-import CommandHandlerFactory = require("./Core/Resources/CommandHandlerFactory");
-import CommandManager = require("./Core/Commands/CommandManager");
-import Commands = require("./Commands");
-import CommandsInputManager = require("./Core/Inputs/CommandsInputManager");
-import Config = require("./Config");
-import CreateBlockCommandHandler = require("./CommandHandlers/CreateBlockCommandHandler");
-import DeleteBlockCommandHandler = require("./CommandHandlers/DeleteBlockCommandHandler");
-import DisplayList = require("./DisplayList");
-import DisplayObjectCollection = require("./DisplayObjectCollection");
-import DragFileInputManager = require("./Core/Inputs/DragFileInputManager");
-import Effect = require("./Blocks/Effect");
-import FocusManager = require("./Core/Inputs/FocusManager");
-import FocusManagerEventArgs = require("./Core/Inputs/FocusManagerEventArgs");
-import GA = require("./GA");
-import Grid = require("./Grid");
-import IApp = require("./IApp");
-import IBlock = require("./Blocks/IBlock");
-import IDisplayObject = require("./IDisplayObject");
-import IEffect = require("./Blocks/IEffect");
-import IncrementNumberCommandHandler = require("./CommandHandlers/IncrementNumberCommandHandler");
-import InputManager = require("./Core/Inputs/InputManager");
-import ISource = require("./Blocks/ISource");
-import KeyboardInput = require("./Core/Inputs/KeyboardInputManager");
-import LoadCommandHandler = require("./CommandHandlers/LoadCommandHandler");
-import MainScene = require("./MainScene");
-import Metrics = require("./AppMetrics");
-import MoveBlockCommandHandler = require("./CommandHandlers/MoveBlockCommandHandler");
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import OperationManager = require("./Core/Operations/OperationManager");
-import Particle = require("./Particle");
-import PointerInputManager = require("./Core/Inputs/PointerInputManager");
-import PooledFactoryResource = require("./Core/Resources/PooledFactoryResource");
-import RedoCommandHandler = require("./CommandHandlers/RedoCommandHandler");
-import ResourceManager = require("./Core/Resources/ResourceManager");
-import SaveAsCommandHandler = require("./CommandHandlers/SaveAsCommandHandler");
-import SaveCommandHandler = require("./CommandHandlers/SaveCommandHandler");
-import SaveFile = require("./SaveFile");
-import Serializer = require("./Serializer");
+import {AnimationsLayer} from './UI/AnimationsLayer';
+import {Audio} from './Core/Audio/Audio';
+import {ColorThemes} from './UI/ColorThemes';
+import {CommandManager} from './Core/Commands/CommandManager';
+import {Commands} from './Commands';
+import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
+import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
+import {Config} from './Config';
+import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
+import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
+import {DisplayList} from './DisplayList';
+import {DisplayObjectCollection} from './DisplayObjectCollection';
+import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
+import {Effect} from './Blocks/Effect';
+import {FocusManager} from './Core/Inputs/FocusManager';
+import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
+import {GA} from './GA';
+import {Grid} from './Grid';
+import {IApp} from './IApp';
+import {IBlock} from './Blocks/IBlock';
+import {IEffect} from './Blocks/IEffect';
+import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
+import {IPowerEffect} from './Blocks/Power/IPowerEffect';
+import {ISource} from './Blocks/ISource';
+import {InputManager} from './Core/Inputs/InputManager';
+import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {LoadCommandHandler} from './CommandHandlers/LoadCommandHandler';
+import {MainScene} from './MainScene';
+import {Metrics} from './AppMetrics';
+import {MoveBlockCommandHandler} from './CommandHandlers/MoveBlockCommandHandler';
+import {OperationManager} from './Core/Operations/OperationManager';
+import {PointerInputManager} from './Core/Inputs/PointerInputManager';
+import {PowerEffect} from './Blocks/Power/PowerEffect';
+import {ResourceManager} from './Core/Resources/ResourceManager';
+import {TypingManager} from './Core/Inputs/TypingManager';
+import {Particle} from './Particle';
+import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {RedoCommandHandler} from './CommandHandlers/RedoCommandHandler';
+import {SaveAsCommandHandler} from './CommandHandlers/SaveAsCommandHandler';
+import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
+import {SaveFile} from './SaveFile';
+import {Serializer} from './Serializer';
 import SketchSession = Fayde.Drawing.SketchSession;
-import Source = require("./Blocks/Source");
-import Splash = require("./Splash");
-import TypingManager = require("./Core/Inputs/TypingManager");
-import UndoCommandHandler = require("./CommandHandlers/UndoCommandHandler");
+import {Source} from './Blocks/Source';
+import {Splash} from './Splash';
+import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class App implements IApp{
+export default class App implements IApp{
 
     private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
+    private _FontsLoaded: number;
     private _SaveFile: SaveFile;
-    public Unit: number;
-    public GridSize: number;
-    public ScaledUnit: number;
-    public ScaledGridSize: number;
-    public ZoomLevel: number;
-    public DragOffset: Point;
-    public ScaledDragOffset: Point;
-    public Width: number;
-    public Height: number;
-    public Metrics: Metrics;
+    private _SessionId: string;
+    public AnimationsLayer: AnimationsLayer;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
-    public MainScene: MainScene;
-    public Scene: number;
+    public Color: ColorThemes;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
-    public FocusManager: FocusManager;
     public CompositionId: string;
     public CompositionName: string;
     public Config: Config;
-    public InputManager: InputManager;
-    public TypingManager: TypingManager;
     public DragFileInputManager: DragFileInputManager;
+    public DragOffset: Point;
+    public FocusManager: FocusManager;
+    public GridSize: number;
+    public Height: number;
+    public InputManager: InputManager;
+    public IsLoadedFromSave: boolean = false;
     public KeyboardInput: KeyboardInput;
+    public LoadCued: boolean;
+    public MainScene: MainScene;
+    public Metrics: Metrics;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
     public Particles: Particle[] = [];
     public ParticlesPool: PooledFactoryResource<Particle>;
     public PointerInputManager: PointerInputManager;
     public ResourceManager: ResourceManager;
-    private _SessionId: string;
-    private _FontsLoaded: number;
-    public Color: ColorThemes;
+    public ScaledDragOffset: Point;
+    public ScaledGridSize: number;
+    public ScaledUnit: number;
+    public Scene: number;
     public Splash: Splash;
-    public AnimationsLayer: AnimationsLayer;
-    public LoadCued: boolean;
-    public IsLoadedFromSave: boolean = false;
     public SubCanvas: HTMLCanvasElement[];
+    public TypingManager: TypingManager;
+    public Unit: number;
+    public Width: number;
+    public ZoomLevel: number;
 
     // todo: move to BlockStore
-    get Sources(): IBlock[] {
-        return this.Blocks.en().where(b => b instanceof Source).toArray();
+    get Sources(): ISource[] {
+        return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
     // todo: move to BlockStore
-    get Effects(): IBlock[] {
-        return this.Blocks.en().where(b => b instanceof Effect).toArray();
+    get Effects(): IEffect[] {
+        return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
+    }
+
+    get PowerEffects(): IPowerEffect[] {
+        return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
     }
 
     get SessionId(): string {
@@ -155,7 +159,6 @@ class App implements IApp{
             this.FontsNotLoaded();
         },3020);
 
-
         // CREATE OPERATIONS MANAGERS //
         this.OperationManager = new OperationManager();
         this.OperationManager.MaxOperations = this.Config.MaxOperations;
@@ -166,15 +169,14 @@ class App implements IApp{
         this.Audio.Init();
 
         // REGISTER COMMAND HANDLERS //
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.CREATE_BLOCK], CreateBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.DELETE_BLOCK], DeleteBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.MOVE_BLOCK], MoveBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVE], SaveCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.SAVEAS], SaveAsCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.LOAD], LoadCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.UNDO], UndoCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands[Commands.REDO], RedoCommandHandler.prototype));
-
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.MOVE_BLOCK, MoveBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE, SaveCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVEAS, SaveAsCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.LOAD, LoadCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.UNDO, UndoCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.REDO, RedoCommandHandler.prototype));
 
         // CREATE INPUT MANAGERS //
         this.TypingManager = new TypingManager();
@@ -206,9 +208,9 @@ class App implements IApp{
 
         // CREATE SPLASH SCREEN //
         this.Splash = new Splash();
-        this.Splash.Init(<ISketchContext>this);
+        this.Splash.Init(this);
         this.AnimationsLayer = new AnimationsLayer();
-        this.AnimationsLayer.Init(<ISketchContext>this);
+        this.AnimationsLayer.Init(this);
     }
 
     // FONT LOAD CALLBACK //
@@ -230,7 +232,7 @@ class App implements IApp{
     }
 
     // PROCEED WHEN ALL SOCKETS LOADED //
-    LoadReady() {
+    LoadReady(): void {
         if (this._FontsLoaded === 3 && this.Color.Loaded) {
             this.LoadComposition();
             this.Scene = 1;
@@ -243,7 +245,7 @@ class App implements IApp{
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
         if(this.CompositionId) {
-            this.CommandManager.ExecuteCommand(Commands[Commands.LOAD], this.CompositionId).then((data) => {
+            this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
                 this.PopulateSketch(data);
             }).catch((error: string) => {
                 // fail silently
@@ -257,12 +259,11 @@ class App implements IApp{
         this.CreateMainScene();
     }
 
-
     // CREATE MainScene & BEGIN DRAWING/ANIMATING //
     CreateMainScene() {
         // create MainScene
         this.MainScene = new MainScene();
-        this.MainScene.Init(<ISketchContext>this);
+        this.MainScene.Init(this);
 
         this.Blocks = [];
 
@@ -328,8 +329,6 @@ class App implements IApp{
 
     }
 
-
-
     OnTicked (lastTime: number, nowTime: number) {
         //this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
         this.Update();
@@ -364,9 +363,10 @@ class App implements IApp{
         });
     }
 
-
     Message(message?: string, options?: any) {
-        this.MainScene.MessagePanel.NewMessage(message, options);
+        if (this.MainScene) {
+            this.MainScene.MessagePanel.NewMessage(message, options);
+        }
     }
 
     CreateCanvas() {
@@ -383,12 +383,10 @@ class App implements IApp{
         document.body.appendChild(this.SubCanvas[i]);
     }
 
-
-
     //todo: typing as CanvasRenderingContext2D causes "Property 'fillStyle' is missing in type 'WebGLRenderingContext'"
     // upgrade to newer compiler (1.5) which has no error - requires gulp as grunt-typescript seemingly no longer supported
     get Ctx() {
-        return this._Canvas.getContext("2d");
+        return this.Canvas.getContext("2d");
     }
 
     TrackEvent(category: string, action: string, label: string, value?: number): void{
@@ -420,4 +418,7 @@ class App implements IApp{
 
 }
 
-export = App;
+
+interface Window{
+    App: IApp;
+}

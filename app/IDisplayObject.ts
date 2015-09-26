@@ -1,6 +1,6 @@
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-interface IDisplayObject {
+export interface IDisplayObject {
     Ctx: CanvasRenderingContext2D;
     Draw(): void;
     Height: number;
@@ -14,7 +14,4 @@ interface IDisplayObject {
     Update(): void;
     Width: number;
     ZIndex: number;
-
 }
-
-export = IDisplayObject;

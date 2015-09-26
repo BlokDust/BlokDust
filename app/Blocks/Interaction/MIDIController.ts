@@ -1,22 +1,19 @@
-import Keyboard = require("./Keyboard");
-import Voice = require("./VoiceObject");
-import ISource = require("../ISource");
-import MainScene = require("../../MainScene");
-import Microphone = require("../Sources/Microphone");
-import Power = require("../Power/Power");
-import AudioChain = require("../../Core/Audio/Connections/AudioChain");
+import {IApp} from '../../IApp';
+import {ISource} from '../ISource';
+import {Keyboard} from './Keyboard';
+import {MainScene} from '../../MainScene';
+import {Microphone} from '../Sources/Microphone';
+import {MIDIManager} from '../../Core/Audio/MIDIManager';
+import {MIDIMessageArgs} from '../../Core/Audio/MIDIMessageArgs';
+import {Power} from '../Power/Power';
+import {VoiceCreator as Voice} from './VoiceObject';
 import ISketchContext = Fayde.Drawing.ISketchContext;
 
-class MIDIController extends Keyboard {
+declare var App: IApp;
+
+export class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;
-    private Midi: any;
-    private Data: any;
-    private _Cmd;
-    private _Channel;
-    private _Type;
-    private _Note;
-    private _Velocity;
 
     Init(sketch: ISketchContext): void {
 
@@ -30,82 +27,23 @@ class MIDIController extends Keyboard {
 
         super.Init(sketch);
 
-        // request MIDI access
-        if(navigator.requestMIDIAccess){
-            navigator.requestMIDIAccess({sysex: false}).then(this.OnMIDISuccess.bind(this), this.OnMIDIFailure.bind(this));
-        } else {
-            App.Message('No MIDI support in your browser', {
-                'seconds': 2,
-                'confirmation': true,
-                'buttonText': 'http://caniuse.com/midi',
-                'buttonEvent': this.CanIUse,
-            });
-        }
+        App.Audio.MIDIManager.MIDIMessage.on(this._OnMIDIMessage, this);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
-    CanIUse() {
-        window.open("http://caniuse.com/midi","_blank");
-    }
-
-    /**
-     * MIDI Success event
-     * @param midiAccess
-     * @constructor
-     */
-    private OnMIDISuccess(midiAccess){
-        // when we get a successful response, run this code
-        console.log('MIDI success', midiAccess);
-        App.Message('MIDI ready');
-
-        this.Midi = midiAccess; // this is our raw MIDI data, inputs, outputs, and sysex status
-
-        var inputs = this.Midi.inputs.values();
-
-        // loop over all available inputs and listen for any MIDI input
-        for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-            // each time there is a midi message call the OnMIDIMessage function
-            input.value.onmidimessage = this.OnMIDIMessage.bind(this);
-
-            // Show this input
-            this.DisplayInput(input);
-        }
-
-        // listen for connect/disconnect message
-        this.Midi.onstatechange = this.OnStateChange;
-    }
-
-    /**
-     * Browser doesn't support WebMIDI API event
-     * @param error - Event
-     * @constructor
-     */
-    private OnMIDIFailure(error) {
-        // when we get a failed response, run this code
-        console.log("No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim " + error);
-        App.Message(`No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim ${error}`);
-    }
-
     /**
      * MIDI Message received callback
-     * @param message
+     * @param MIDIManager {MIDIManager}
+     * @param e {WebMidi.MIDIMessageEvent}
      */
-    private OnMIDIMessage(e) {
-        var cmd = e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
-            channel = e.data[0] & 0xf,
-            type = e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
-            note = App.Audio.Tone.midiToNote(e.data[1]),
-            velocity = e.data[2];
-
-        console.log(
-            'cmd:', cmd,
-            'channel:', channel,
-            'type:', type,
-            'note:', note,
-            'velocity', velocity
-        );
+    private _OnMIDIMessage(MIDIManager: MIDIManager, e: MIDIMessageArgs) {
+        var cmd = e.MIDI.cmd,// this gives us our [command/channel, note, velocity] data.
+            channel = e.MIDI.channel,
+            type = e.MIDI.type, // channel agnostic message type. Thanks, Phil Burk.
+            note = e.MIDI.note,
+            velocity = e.MIDI.velocity;
 
         if (channel == 9) return;
 
@@ -120,7 +58,8 @@ class MIDIController extends Keyboard {
             }
 
             // ALL SOURCES TRIGGER KEYBOARD UP
-            this.Chain.Sources.forEach((source: ISource) => {
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 this.KeyboardUp(note, source);
             });
         }
@@ -131,7 +70,8 @@ class MIDIController extends Keyboard {
             this.KeysDown[note] = true;
 
             // ALL SOURCES TRIGGER KEYBOARD DOWN
-            this.Chain.Sources.forEach((source: ISource) => {
+            let connections: ISource[] = this.Connections.ToArray();
+            connections.forEach((source: ISource) => {
                 this.KeyboardDown(note, source);
             });
 
@@ -152,51 +92,9 @@ class MIDIController extends Keyboard {
         //}
     }
 
-    /**
-     * Displays the connected MIDI input device
-     * @param inputs : MIDI input value
-     * @return input Object
-     */
-    private DisplayInput(input){
-        var i = input.value;
-        console.log(`Input port: [
-            type: + ${i.type}
-            id: ${i.id}
-            manufacturer: ${i.manufacturer}
-            name: ${i.name}
-            version: ${i.version}
-        ]`);
-        App.Message(`MIDI Controller:  ${i.name} manufacturer: ${i.manufacturer}`);
-        return i;
-    }
-
-    /**
-     * When a midi connection is changed
-     * @param event
-     * @returns the event
-     */
-    private OnStateChange(event) {
-        if (event.port.type == 'input'){
-            App.Message(`MIDI Controller ${event.port.name} ${event.port.state}`);
-        }
-        return event;
-    }
-
-
     Draw() {
         super.Draw();
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
-    }
-
-    UpdateConnections(chain: AudioChain) {
-        super.UpdateConnections(chain);
-
-        chain.Sources.forEach((source: ISource) => {
-            if (!((source instanceof Power) || (source instanceof Microphone))) {
-                this.CreateVoices(source);
-            }
-            source.TriggerRelease('all');
-        });
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {
@@ -286,13 +184,7 @@ class MIDIController extends Keyboard {
 
     Dispose(){
         super.Dispose();
-        this.Midi = null;
-        this.Data = null;
-        this._Cmd = null;
-        this._Channel = null;
-        this._Type = null;
-        this._Note = null;
-        this._Velocity = null;
+        App.Audio.MIDIManager.MIDIMessage.off(this._OnMIDIMessage, this);
     }
 
     UpdateOptionsForm() {
@@ -353,5 +245,3 @@ class MIDIController extends Keyboard {
     }
 
 }
-
-export = MIDIController;
