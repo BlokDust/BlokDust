@@ -58,8 +58,10 @@ export class Keyboard extends Interaction {
         else if (param == "octave") {
             for (let i = 0, source: ISource; i < this.Connections.Count; i++) {
                 source = this.Connections.GetValueAt(i);
-                let diff: number = value - this.Params.octave;
-                source.OctaveShift(diff);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    let diff:number = value - this.Params.octave;
+                    source.OctaveShift(diff);
+                });
             }
         }
         else if (param === 'polyphonic') {

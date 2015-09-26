@@ -220,18 +220,6 @@ export class MIDIController extends Keyboard {
                 },
                 {
                     "type" : "slider",
-                    "name" : "Octave",
-                    "setting" :"octave",
-                    "props" : {
-                        "value" : this.Params.octave,
-                        "min" : 0,
-                        "max" : 9,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },
-                {
-                    "type" : "slider",
                     "name" : "Glide",
                     "setting" :"glide",
                     "props" : {
