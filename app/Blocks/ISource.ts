@@ -6,7 +6,6 @@ import {VoiceCreator as Voice} from './Interaction/VoiceObject';
 import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 module
 
 export interface ISource extends IBlock {
-    AttackScheduled: boolean;
     Connections: Fayde.Collections.ObservableCollection<IEffect>;
     Sources?: any[];
     Envelopes?: Tone.AmplitudeEnvelope[];
@@ -40,7 +39,6 @@ export interface ISource extends IBlock {
     GetPitch(sourceId?: number): number;
     ResetPitch(): void;
     OctaveShift(octavesAmount: number): void;
-    ScheduleAttack(): void;
     TriggerAttack(index?: number|string): void;
     TriggerRelease(index?: number|string, forceRelease?: boolean): void;
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;

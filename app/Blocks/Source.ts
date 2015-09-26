@@ -37,7 +37,6 @@ export class Source extends Block implements ISource {
     };
 
     public ActiveVoices: Voice[];
-    public AttackScheduled: boolean = false;
     public FreeVoices: Voice[];
     public WaveIndex: string[];
     public PowerConnections: number;
@@ -157,9 +156,6 @@ export class Source extends Block implements ISource {
         this.TriggerRelease();
     }
 
-    ScheduleAttack() {
-        this.AttackScheduled = true;
-    }
 
     /**
      * Trigger a sources attack
@@ -442,11 +438,14 @@ export class Source extends Block implements ISource {
     MouseDown() {
         super.MouseDown();
         this.TriggerAttack();
+        console.log(this.PowerConnections);
     }
 
     MouseUp() {
+        console.log(this.PowerConnections);
         super.MouseUp();
         this.TriggerRelease('all');
+        console.log(this.PowerConnections);
     }
 
     //TODO: This shouldn't be here

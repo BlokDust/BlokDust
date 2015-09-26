@@ -77,156 +77,164 @@ export class LaserBeams {
     }
 
     UpdateCollisions() {
-        var p1,p2,vector,line,outline;
-        var rectSize = 1.7; // size of rectangle for rough check (in grid cells)
-        var grd = App.ScaledGridSize * rectSize;
 
-        // SETUP LISTS //
-        // TODO: do this once when Blocks[] changes
-        var voidlist = []; // we'll make a list of all void blocks so we can check those first
-        var sourcelist = []; // get all other checks;
-        var laserlist = [];
-        var checklist = []; // void & source combined;
+        if (App.Audio.ConnectionManager.IsConnected) {
 
-        for (var i = 0; i < App.Blocks.length; i++){
-            var block: any = App.Blocks[i];
+            var p1, p2, vector, line, outline;
+            var rectSize = 1.7; // size of rectangle for rough check (in grid cells)
+            var grd = App.ScaledGridSize * rectSize;
 
-            if (block instanceof Void) {
-                voidlist.push(block);
-            }
-            if ((block instanceof Source || block instanceof Logic)) {
-                sourcelist.push(block);
-            }
-            if (block instanceof Laser) {
-                laserlist.push(block);
-            }
-            checklist = voidlist.concat(sourcelist); // combine
-        }
+            // SETUP LISTS //
+            // TODO: do this once when Blocks[] changes
+            var voidlist = []; // we'll make a list of all void blocks so we can check those first
+            var sourcelist = []; // get all other checks;
+            var laserlist = [];
+            var checklist = []; // void & source combined;
 
-        // LOOK FOR LASERS //
-        for (var i = 0; i < laserlist.length; i++){
-            var laser: ISource = laserlist[i];
+            for (var i = 0; i < App.Blocks.length; i++) {
+                var block:any = App.Blocks[i];
 
-            // gets set to true when blocks are moved
-            if (this.UpdateAllLasers) {
-                laser.UpdateCollision = true;
+                if (block instanceof Void) {
+                    voidlist.push(block);
+                }
+                if ((block instanceof Source || block instanceof Logic)) {
+                    sourcelist.push(block);
+                }
+                if (block instanceof Laser) {
+                    laserlist.push(block);
+                }
+                checklist = voidlist.concat(sourcelist); // combine
             }
 
-            // if this blocks collisions should be updated
-            if (laser.UpdateCollision) {
-                laser.UpdateCollision = false;
-                laser.CheckRange = laser.Params.range;
-                var collisions = [];
+            // LOOK FOR LASERS //
+            for (var i = 0; i < laserlist.length; i++) {
+                var laser:ISource = laserlist[i];
 
-                // If we're in self powered mode, or if this is powered
-                if (laser.Params.selfPoweredMode || laser.IsPowered()) {
+                // gets set to true when blocks are moved
+                if (this.UpdateAllLasers) {
+                    laser.UpdateCollision = true;
+                }
+
+                // if this blocks collisions should be updated
+                if (laser.UpdateCollision) {
+                    laser.UpdateCollision = false;
+                    laser.CheckRange = laser.Params.range;
+                    var collisions = [];
+
+                    // If we're in self powered mode, or if this is powered
+                    if (laser.Params.selfPoweredMode || laser.IsPowered()) {
 
 
-                    vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)), App.ScaledUnit);
-                    line = Vector.MultN(vector, laser.CheckRange);
+                        vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)), App.ScaledUnit);
+                        line = Vector.MultN(vector, laser.CheckRange);
 
-                    // FOR EACH LASER LOOK FOR SOURCE COLLISIONS //
-                    for (var j = 0; j < checklist.length; j++) {
-                        var block:any = checklist[j];
+                        // FOR EACH LASER LOOK FOR SOURCE COLLISIONS //
+                        for (var j = 0; j < checklist.length; j++) {
+                            var block:any = checklist[j];
 
-                        if (block !== laser) { // stop hitting yourself... stop hitting yourself... etc
+                            if (block !== laser) { // stop hitting yourself... stop hitting yourself... etc
 
-                            outline = [];
-                            p1 = App.Metrics.PointOnGrid(laser.Position);
-                            p2 = App.Metrics.PointOnGrid(block.Position);
 
-                            // IF IN RANGE //
-                            if (this.PointFromPoint(p1.x, p1.y, p2.x, p2.y) < ((laser.CheckRange * App.ScaledUnit) + grd)) {
+                                outline = [];
+                                p1 = App.Metrics.PointOnGrid(laser.Position);
+                                p2 = App.Metrics.PointOnGrid(block.Position);
 
-                                // IF IN QUADRANT //
-                                if (this.QuadPartition(p1, p2, laser.Params.angle)) {
+                                // IF IN RANGE //
+                                if (this.PointFromPoint(p1.x, p1.y, p2.x, p2.y) < ((laser.CheckRange * App.ScaledUnit) + grd)) {
 
-                                    //IF CLOSE TO LINE //
-                                    if (this.PointFromLine(p2.x, p2.y, p1.x, p1.y, p1.x + line.X, p1.y + line.Y, false) < grd) {
+                                    // IF IN QUADRANT //
+                                    if (this.QuadPartition(p1, p2, laser.Params.angle)) {
 
-                                        // INTERSECT CHECK //
-                                        for (var k = 0; k < block.Outline.length; k++) {
-                                            outline.push(App.Metrics.PointOnGrid(App.Metrics.GetRelativePoint(block.Outline[k], block.Position)));
-                                        }
-                                        p2 = new Point(p1.x + line.X, p1.y + line.Y);
-                                        var intersection = Intersection.intersectLinePolygon(p1, p2, outline);
-                                        if (intersection.status == "Intersection") {
+                                        //IF CLOSE TO LINE //
+                                        if (this.PointFromLine(p2.x, p2.y, p1.x, p1.y, p1.x + line.X, p1.y + line.Y, false) < grd) {
 
-                                            // THERE IS A COLLISION //
-
-                                            // VOID BLOCKS //
-                                            if (block instanceof Void) {
-                                                var intersect = intersection.points;
-                                                /*var dist1 = this.PointFromPoint(p1.x, p1.y, intersect[0].x, intersect[0].y) / App.ScaledUnit;
-                                                var dist2 = this.PointFromPoint(p1.x, p1.y, intersect[1].x, intersect[1].y) / App.ScaledUnit;
-
-                                                if (dist1 < laser.CheckRange) {
-                                                    laser.CheckRange = dist1;
-                                                }
-                                                if (dist2 < laser.CheckRange) {
-                                                    laser.CheckRange = dist2;
-                                                }*/
-
-                                                for (var h=0; h<intersect.length; h++) {
-                                                    var dist = this.PointFromPoint(p1.x, p1.y, intersect[h].x, intersect[h].y) / App.ScaledUnit;
-                                                    if (dist < laser.CheckRange) {
-                                                        laser.CheckRange = dist;
-                                                    }
-                                                }
+                                            // INTERSECT CHECK //
+                                            for (var k = 0; k < block.Outline.length; k++) {
+                                                outline.push(App.Metrics.PointOnGrid(App.Metrics.GetRelativePoint(block.Outline[k], block.Position)));
                                             }
+                                            p2 = new Point(p1.x + line.X, p1.y + line.Y);
+                                            var intersection = Intersection.intersectLinePolygon(p1, p2, outline);
+                                            if (intersection.status == "Intersection") {
 
-                                            // SOURCE BLOCKS //
-                                            else {
-                                                collisions.push(block);
-                                                if (laser.Collisions.length == 0 || $.inArray(block, laser.Collisions) == -1) {
-                                                    //console.log("HIT " + block.Id);
-                                                    if (block instanceof Logic) {
-                                                        block.PerformLogic();
-                                                    } else {
-                                                        if (!block.IsPowered()) {
-                                                            //block.TriggerAttack();
-                                                            block.ScheduleAttack();
+                                                // THERE IS A COLLISION //
+
+
+                                                // VOID BLOCKS //
+                                                if (block instanceof Void) {
+                                                    var intersect = intersection.points;
+                                                    /*var dist1 = this.PointFromPoint(p1.x, p1.y, intersect[0].x, intersect[0].y) / App.ScaledUnit;
+                                                     var dist2 = this.PointFromPoint(p1.x, p1.y, intersect[1].x, intersect[1].y) / App.ScaledUnit;
+
+                                                     if (dist1 < laser.CheckRange) {
+                                                     laser.CheckRange = dist1;
+                                                     }
+                                                     if (dist2 < laser.CheckRange) {
+                                                     laser.CheckRange = dist2;
+                                                     }*/
+
+                                                    for (var h = 0; h < intersect.length; h++) {
+                                                        var dist = this.PointFromPoint(p1.x, p1.y, intersect[h].x, intersect[h].y) / App.ScaledUnit;
+                                                        if (dist < laser.CheckRange) {
+                                                            laser.CheckRange = dist;
                                                         }
-                                                        block.PowerConnections += 1;
+                                                    }
+                                                }
+
+                                                // SOURCE BLOCKS //
+                                                else {
+                                                    collisions.push(block);
+                                                    if (laser.Collisions.length == 0 || $.inArray(block, laser.Collisions) == -1) {
+                                                        console.log("HIT " + block.Id);
+                                                        if (block instanceof Logic) {
+                                                            block.PerformLogic();
+                                                        } else {
+                                                            if (!block.IsPowered()) {
+                                                                block.TriggerAttack();
+                                                                //block.ScheduleAttack();
+                                                            }
+                                                            console.log(block.PowerConnections);
+                                                            block.PowerConnections += 1;
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
 
-                                    } // end line
+                                        } // end line
 
-                                } // end quad
+                                    } // end quad
 
-                            } // end range
+                                } // end range
 
-                        } // end if right block
+                            } // end if right block
 
-                    }// end block loop
+                        }// end block loop
 
-                } // end if powered
+                    } // end if powered
 
-                // FOR EACH COLLISION CHECK RELEASE //
-                if (laser.Collisions && laser.Collisions.length){
-                    for (var j = 0; j < laser.Collisions.length; j++) {
-                        var block = laser.Collisions[j];
-                        if (collisions.length==0 || $.inArray(block, collisions)==-1) {
-                            //console.log("RELEASE "+ block.Id);
-                            if (!(block instanceof Logic)) {
-                                block.PowerConnections -= 1;
-                                block.TriggerRelease();
+                    // FOR EACH COLLISION CHECK RELEASE //
+                    if (laser.Collisions && laser.Collisions.length) {
+                        for (var j = 0; j < laser.Collisions.length; j++) {
+                            var block = laser.Collisions[j];
+                            if (collisions.length == 0 || $.inArray(block, collisions) == -1) {
+                                //console.log("RELEASE "+ block.Id);
+                                if (!(block instanceof Logic)) {
+                                    block.PowerConnections -= 1;
+                                    block.TriggerRelease();
+                                }
                             }
                         }
                     }
-                }
-                // UPDATE COLLISIONS ARRAY
-                laser.Collisions = collisions;
+                    // UPDATE COLLISIONS ARRAY
+                    laser.Collisions = collisions;
 
-            } // end if collisions don't need updating for this block
+                } // end if collisions don't need updating for this block
 
 
-        }// end laser loop
+            } // end laser loop
 
-        this.UpdateAllLasers = false;
+            this.UpdateAllLasers = false;
+
+        } // end audiomanager is connected
     }
 
 

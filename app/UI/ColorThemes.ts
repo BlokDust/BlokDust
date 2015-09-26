@@ -70,10 +70,10 @@ export class ColorThemes extends DisplayObject {
                 App.Config.PixelPaletteImagePath[9]
             )
 
-            ,new ColorTheme(
+            /*,new ColorTheme(
                 "VINE BLUSH",
                 App.Config.PixelPaletteImagePath[5]
-            )
+            )*/
 
             ,new ColorTheme(
                 "RIKI",
@@ -85,8 +85,10 @@ export class ColorThemes extends DisplayObject {
                 App.Config.PixelPaletteImagePath[8]
             )
 
-
-
+            /*,new ColorTheme(
+                "GUM",
+                App.Config.PixelPaletteImagePath[11]
+            )*/
 
         ];
 
