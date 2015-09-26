@@ -59,7 +59,9 @@ export class MIDIController extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD UP
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardUp(note, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardUp(note, source);
+                });
             });
         }
 
@@ -71,7 +73,9 @@ export class MIDIController extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD DOWN
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardDown(note, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardDown(note, source);
+                });
             });
 
 

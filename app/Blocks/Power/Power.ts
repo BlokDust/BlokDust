@@ -15,10 +15,12 @@ export class Power extends PowerEffect {
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            if (!source.IsPressed){
-                source.TriggerRelease('all');
-            }
-            source.TriggerAttack();
+            source.Chain.Sources.forEach((source: ISource) => {
+                if (!source.IsPressed) {
+                    source.TriggerRelease('all');
+                }
+                source.TriggerAttack();
+            });
         });
     }
 

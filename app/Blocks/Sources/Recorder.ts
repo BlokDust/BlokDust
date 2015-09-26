@@ -128,6 +128,21 @@ export class Recorder extends SamplerBase {
         });
     }
 
+    //Duplicate(buffer) {
+    //    if (buffer) {
+    //        this.BufferSource.buffer = buffer;
+    //
+    //        this.UpdateWaveform();
+    //
+    //        // Set the buffers for each source
+    //        this.Sources.forEach((s: Tone.Simpler)=> {
+    //            s.player.buffer = this.BufferSource.buffer;
+    //            s.player.loopStart = this.Params.loopStart;
+    //            s.player.loopEnd = this.Params.loopEnd;
+    //        });
+    //    }
+    //}
+
     UpdateWaveform(){
         // Update waveform
         this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);

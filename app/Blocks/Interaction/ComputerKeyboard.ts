@@ -66,7 +66,9 @@ export class ComputerKeyboard extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD DOWN
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardDown(e.KeyDown, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardDown(e.KeyDown, source);
+                });
             });
 
 
@@ -80,10 +82,12 @@ export class ComputerKeyboard extends Keyboard {
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
-                this.KeyboardUp(e.KeyUp, source);
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                // If its an octave shift no need to call KeyboardUp
+                if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
+                    this.KeyboardUp(e.KeyUp, source);
+                }
+            });
         });
 
         this.KeysDown = e.KeysDown;

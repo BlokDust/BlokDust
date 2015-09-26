@@ -284,17 +284,29 @@ export class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered(): boolean {
+        //let bool: boolean = false;
         if (this.IsPressed || this.PowerConnections>0) {
             return true;
         }
-        let connections: IEffect[] = this.Connections.ToArray();
-        for (let i = 0, _len = connections.length; i < _len; i++) {
-            //If connected to power block OR connected to a logic block that is 'on'
-            if (connections[i] instanceof Power ||
-                connections[i] instanceof Logic && connections[i].Params.logic) {
-                return true;
+        let connections: IBlock[] = this.Chain.Connections;
+        for (let i = 0; i < connections.length; i++) {
+            let blockConnections: IBlock[] = connections[i].Connections.ToArray();
+            for (let i = 0; i < blockConnections.length; i++) {
+                if (blockConnections[i] instanceof Power ||
+                    blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+                    return true;
+                }
             }
         }
+        //this.Chain.Connections.forEach((block:IBlock) => {
+        //    let blockConnections: IBlock[] = block.Connections.ToArray();
+        //    for (let i = 0; i < blockConnections.length; i++) {
+        //        if (blockConnections[i] instanceof Power ||
+        //            blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+        //            bool = true;
+        //        }
+        //    }
+        //});
         return false;
     }
 

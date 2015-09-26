@@ -96,6 +96,9 @@ export class ConnectionManager {
                 block.Chain = chain;
                 if (this._Debug) console.log(block);
             });
+            chain.PowerSources.forEach((block: IPowerSource) => {
+                block.Chain = chain;
+            });
 
 
             // If there are sources
