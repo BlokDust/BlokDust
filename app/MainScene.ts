@@ -767,12 +767,14 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         }
     }
 
-    CreateBlockFromType<T extends IBlock>(t: {new(): T; }): T {
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }, params?: any): T {
         var block: T = new t();
         block.Id = App.GetBlockId();
         block.Position = this._PointerPoint;
+        if (params) block.Params = params;
         block.Init(this);
         block.Type = t;
+
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
 

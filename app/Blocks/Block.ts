@@ -116,8 +116,7 @@ export class Block extends DisplayObject implements IBlock {
 
             // ALT-DRAG COPY
             if ((<MainScene>this.Sketch).AltDown && this._Duplicable) {
-                (<MainScene>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
-                //TODO: es6 modules broke this!!!
+                (<MainScene>this.Sketch).CreateBlockFromType(this.Type, this.Params); //TODO: TS5 reflection
                 this.MouseUp();
             }
             // MOVE //
