@@ -1,24 +1,24 @@
 import Size = minerva.Size;
 import {ADSR} from './Options/OptionADSR';
-import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
-import {OptionButton as Button} from './Options/OptionButton';
 import {ButtonArray} from './Options/OptionButtonArray';
 import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
+import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
-import {Option} from './Options/Option';
+import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
+import {OptionButton as Button} from './Options/OptionButton';
 import {OptionHandle} from './Options/OptionHandle';
-import {OptionSubHandle} from './Options/OptionSubHandle';
-import {Parametric} from './Options/OptionParametric';
 import {OptionSample as Sample} from './Options/OptionSample';
-import {Slider} from './Options/OptionSlider';
+import {OptionSubHandle} from './Options/OptionSubHandle';
 import {OptionSwitch as Switch} from './Options/OptionSwitch';
+import {Option} from './Options/Option';
+import {Parametric} from './Options/OptionParametric';
+import {Slider} from './Options/OptionSlider';
 import {SwitchArray} from './Options/OptionSwitchArray';
 import {WaveImage} from './Options/OptionWaveImage';
 import {WaveRegion} from './Options/OptionWaveRegion';
 import {WaveSlider} from './Options/OptionWaveSlider';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

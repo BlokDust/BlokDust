@@ -1,20 +1,20 @@
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 import {Block} from './Block';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
+import {ISketchContext} from '../ISketchContext';
 import {ISource} from './ISource';
 import {Logic} from './Power/Logic/Logic';
 import {MainScene} from '../MainScene';
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 import {Particle} from '../Particle';
-import {Power} from './Power/Power';
 import {PowerSource} from './Power/PowerSource';
-import {Soundcloud} from './Sources/Soundcloud';
+import {Power} from './Power/Power';
 import {SoundcloudTrack} from '../UI/SoundcloudTrack';
+import {Soundcloud} from './Sources/Soundcloud';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

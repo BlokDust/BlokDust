@@ -1,9 +1,9 @@
+import Vector = Utils.Maths.Vector;
 import {IApp} from '../../IApp';
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {PowerSource} from './PowerSource';
-import Vector = Utils.Maths.Vector;
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

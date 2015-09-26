@@ -1,8 +1,8 @@
 import {Effect} from '../../Effect';
+import {ISketchContext} from '../../../ISketchContext';
 import {ISource} from '../../ISource';
 import {Particle} from '../../../Particle';
 import {PowerEffect} from './../PowerEffect';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Logic extends PowerEffect {
 

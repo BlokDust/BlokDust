@@ -1,11 +1,11 @@
+import Size = minerva.Size;
 import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
+import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
-import Size = minerva.Size;
 import {ThemeSelector} from './ColorThemeSelector';
 import {Version} from './../_Version';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

@@ -1,11 +1,11 @@
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 import {Block} from './Block';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
+import {ISketchContext} from '../ISketchContext';
 import {ISource} from './ISource';
-import ObservableCollection = Fayde.Collections.ObservableCollection;
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

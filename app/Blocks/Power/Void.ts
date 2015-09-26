@@ -1,6 +1,6 @@
 import {Block} from '../Block';
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Void extends Block {
 
@@ -8,9 +8,7 @@ export class Void extends Block {
 
     Init(sketch: ISketchContext): void {
         super.Init(sketch);
-
         this.Outline.push(new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(0,1));
-
         this.StarPos = this.RandomStarPos();
     }
 

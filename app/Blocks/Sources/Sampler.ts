@@ -1,8 +1,8 @@
 import {Audio} from '../../Core/Audio/Audio';
 import {IApp} from '../../IApp';
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

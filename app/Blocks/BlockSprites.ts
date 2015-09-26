@@ -1,8 +1,8 @@
-import ISketchContext = Fayde.Drawing.ISketchContext;
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
+import {ISketchContext} from '../ISketchContext';
 import {MainScene} from '../MainScene';
 
 declare var App: IApp;

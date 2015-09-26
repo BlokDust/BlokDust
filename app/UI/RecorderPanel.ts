@@ -2,10 +2,10 @@ import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
+import {ISketchContext} from '../ISketchContext';
 import {ISource} from '../Blocks/ISource';
 import {MainScene} from './../MainScene';
 import {Recorder} from '../Blocks/Sources/Recorder';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

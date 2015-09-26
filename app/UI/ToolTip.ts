@@ -1,10 +1,10 @@
-import Size = minerva.Size; //TODO: es6 modules
+import Size = minerva.Size;
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from './../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {ISketchContext} from '../ISketchContext';
 
 declare var App: IApp;
 

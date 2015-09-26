@@ -1,10 +1,10 @@
 import {Grid} from '../../Grid';
 import {IApp} from '../../IApp';
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Source} from '../Source';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

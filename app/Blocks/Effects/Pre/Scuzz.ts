@@ -1,8 +1,8 @@
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
+import {ISketchContext} from '../../../ISketchContext';
 import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
 import {PreEffect} from '../PreEffect';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Scuzz extends PreEffect {
 

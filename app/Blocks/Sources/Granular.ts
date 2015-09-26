@@ -1,11 +1,11 @@
 import {IApp} from '../../IApp';
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
-import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
+import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

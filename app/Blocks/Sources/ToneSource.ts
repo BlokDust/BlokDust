@@ -1,10 +1,10 @@
 import {Block} from '../Block';
 import {Effect} from '../Effect';
 import {IApp} from '../../IApp';
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Source} from '../Source';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 
@@ -19,15 +19,14 @@ export class ToneSource extends Source {
 
     Init(sketch: ISketchContext): void {
 
-
         this.Defaults = {
             frequency: App.Config.BaseNote,
             waveform: 2,
             baseFrequency: 0,
             fine: 0
         };
-        this.PopulateParams();
 
+        this.PopulateParams();
 
         // If it's an older save before we had baseFrequency
         /*if (this.Params.baseFrequency) {

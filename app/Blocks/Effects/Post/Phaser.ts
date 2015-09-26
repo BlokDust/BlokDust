@@ -1,6 +1,6 @@
+import {ISketchContext} from '../../../ISketchContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Phaser extends PostEffect {
 

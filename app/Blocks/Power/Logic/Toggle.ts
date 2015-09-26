@@ -1,9 +1,9 @@
 import {Effect} from '../../Effect';
+import {ISketchContext} from '../../../ISketchContext';
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
 import {Particle} from '../../../Particle';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Toggle extends Logic {
 

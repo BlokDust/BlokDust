@@ -28,7 +28,6 @@ import {RecorderPanel} from './UI/RecorderPanel';
 import {Source} from './Blocks/Source';
 import {Sampler} from './Blocks/Sources/Sampler';
 import {SharePanel} from './UI/SharePanel';
-import SketchSession = Fayde.Drawing.SketchSession; //TODO: es6 module
 import {SoundcloudPanel} from './UI/SoundcloudPanel';
 import {SettingsPanel} from './UI/SettingsPanel';
 import {ToolTip} from './UI/ToolTip';

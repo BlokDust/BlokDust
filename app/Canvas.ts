@@ -1,5 +1,5 @@
-import ISketchContext = Fayde.Drawing.ISketchContext;
 import Size = minerva.Size;
+import {ISketchContext} from './ISketchContext';
 
 export class Canvas implements ISketchContext {
 

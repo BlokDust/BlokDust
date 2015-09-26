@@ -1,4 +1,5 @@
 import {IApp} from '../../IApp';
+import {ISketchContext} from '../../ISketchContext';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {MainScene} from '../../MainScene';
@@ -7,7 +8,6 @@ import {MIDIManager} from '../../Core/Audio/MIDIManager';
 import {MIDIMessageArgs} from '../../Core/Audio/MIDIMessageArgs';
 import {Power} from '../Power/Power';
 import {VoiceCreator as Voice} from './VoiceObject';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

@@ -1,6 +1,4 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
-import ISketchContext = Fayde.Drawing.ISketchContext;
-import SketchSession = Fayde.Drawing.SketchSession;
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
 import {Canvas} from './Canvas';
@@ -324,7 +322,7 @@ export default class App implements IApp{
         // Connect the effects chain
         this.Audio.ConnectionManager.Update();
 
-        this.MainScene.Pause();
+        //this.MainScene.Pause();
 
         if (this.Scene < 2) {
             this.LoadCued = true;
@@ -336,14 +334,14 @@ export default class App implements IApp{
     OnTicked (lastTime: number, nowTime: number) {
 
         if (this.Scene === 1){
-            this.MainScene.IsVisible = false;
-            this.Splash.Play();
+            //this.MainScene.IsVisible = false;
+            //this.Splash.Play();
         }
 
         if (this.Scene === 2) {
-            this.Splash.Pause();
-            this.Splash.IsVisible = false;
-            this.MainScene.Play();
+            //this.Splash.Pause();
+            //this.Splash.IsVisible = false;
+            //this.MainScene.Play();
         }
     }
 

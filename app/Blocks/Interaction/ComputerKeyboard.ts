@@ -1,4 +1,5 @@
 import {IApp} from '../../IApp';
+import {ISketchContext} from '../../ISketchContext';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {KeyDownEventArgs} from '../../Core/Inputs/KeyDownEventArgs';
@@ -6,7 +7,6 @@ import {MainScene} from '../../MainScene';
 import {Microphone} from '../Sources/Microphone';
 import {Power} from '../Power/Power';
 import {VoiceCreator as Voice} from './VoiceObject';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 
@@ -16,6 +16,7 @@ export class ComputerKeyboard extends Keyboard {
         OctaveUp: 'octave-up',
         OctaveDown: 'octave-down',
     };
+
     public Params: KeyboardParams;
 
     Init(sketch: ISketchContext): void {

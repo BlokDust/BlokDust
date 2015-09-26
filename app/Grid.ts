@@ -1,5 +1,5 @@
-export class Grid extends Fayde.Drawing.SketchContext {
+export class Grid  {
     constructor() {
-        super();
+        //super();
     }
 }

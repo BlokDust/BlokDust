@@ -1,9 +1,9 @@
+import Size = minerva.Size;
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from './../Grid';
 import {IApp} from '../IApp';
+import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
-import Size = minerva.Size;
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

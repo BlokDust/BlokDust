@@ -1,4 +1,4 @@
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {ISketchContext} from './ISketchContext';
 
 export interface IDisplayObject extends ISketchContext{
     Ctx: CanvasRenderingContext2D;

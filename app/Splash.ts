@@ -1,6 +1,6 @@
 import {DisplayObject} from './DisplayObject';
 import {IApp} from './IApp';
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {ISketchContext} from './ISketchContext';
 
 declare var App: IApp;
 

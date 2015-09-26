@@ -1,6 +1,6 @@
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {PowerSource} from './PowerSource';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Laser extends PowerSource {
 

@@ -1,11 +1,11 @@
+import Size = minerva.Size;
 import {BlockCreator} from './../BlockCreator';
 import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
+import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {MenuItem} from './MenuItem';
-import Size = minerva.Size;
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

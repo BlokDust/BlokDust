@@ -1,17 +1,15 @@
 import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
-import ISketchContext = Fayde.Drawing.ISketchContext;
+import {ISketchContext} from '../../ISketchContext';
 
 declare var App: IApp;
 
 export class SamplerBase extends Source {
 
     Init(sketch: ISketchContext): void {
-
         super.Init(sketch);
         this.CreateSource();
-
     }
 
     CreateSource(){

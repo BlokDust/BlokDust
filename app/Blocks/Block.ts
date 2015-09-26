@@ -1,16 +1,16 @@
+import ObservableCollection = Fayde.Collections.ObservableCollection;
 import {AudioChain} from '../Core/Audio/Connections/AudioChain';
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
+import {ISketchContext} from '../ISketchContext';
 import {MainScene} from '../MainScene';
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
 import {Particle} from '../Particle';
 import {PreEffect} from './Effects/PreEffect';
 import Size = minerva.Size;
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 declare var App: IApp;
 

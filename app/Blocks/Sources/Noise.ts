@@ -1,6 +1,6 @@
+import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export class Noise extends Source {
 
