@@ -126,6 +126,7 @@ export class Soundcloud extends SamplerBase {
     }
 
     LoadTrack(track,fullUrl?:boolean) {
+        super.LoadTrack(track,fullUrl);
         fullUrl = fullUrl || false;
         if (fullUrl) {
             this.Params.track = track.URI;
@@ -139,7 +140,7 @@ export class Soundcloud extends SamplerBase {
 
         this.SetBuffers();
 
-        this.RefreshOptionsPanel();
+        this.RefreshOptionsPanel("animate");
     }
 
     TrackFallBack() {

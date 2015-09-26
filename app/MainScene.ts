@@ -236,6 +236,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         this._LaserBeams.Update();
         this._RecorderPanel.Update();
         this.MainSceneDragger.Update();
+        this.OptionsPanel.Update();
     }
 
     // PARTICLES //

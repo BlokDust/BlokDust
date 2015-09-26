@@ -170,10 +170,18 @@ export class Block extends DisplayObject implements IBlock {
     SetParam(param: string,value: number) {
     }
 
-    RefreshOptionsPanel() {
+    RefreshOptionsPanel(cmd?: string) {
         if (App.MainScene.OptionsPanel.Scale>0 && App.MainScene.OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();
             App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+
+        if (cmd) {
+            if (cmd==="animate") {
+                App.MainScene.OptionsPanel.Animating = true;
+            }
+        } else {
+            App.MainScene.OptionsPanel.Animating = false;
         }
     }
 

@@ -24,12 +24,16 @@ export class ConnectionManager {
     private connectionTimeout;
     private unMuteTimeout;
 
+    public IsConnected: boolean = true;
+
     constructor(){
 
     }
 
     public Update(){
         if (this._Debug) console.clear();
+
+        this.IsConnected = false;
 
         //First mute everything
         App.Audio.Master.mute = true;
@@ -40,7 +44,9 @@ export class ConnectionManager {
             const powerSources = App.PowerSources;
             this._SortChainedBlocks(chains);
             this._Connect(chains, powerEffects, powerSources);
+            this.IsConnected = true;
         });
+
     }
 
     /**
@@ -84,10 +90,6 @@ export class ConnectionManager {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
                 if (this._Debug) console.log(block);
-                if (block.AttackScheduled) {
-                    block.TriggerAttack();
-                    block.AttackScheduled = false;
-                }
             });
             chain.PreEffects.forEach((block: IPreEffect) => {
                 block.UpdateConnections(chain);

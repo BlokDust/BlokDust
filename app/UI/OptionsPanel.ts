@@ -44,7 +44,7 @@ export class OptionsPanel extends DisplayObject {
     public Outline: Point[] = [];
     private _DrawReady: boolean;
     public Canvas: any;
-    private _Img: any;
+    public Animating: boolean;
 
     constructor() {
         super();
@@ -64,6 +64,7 @@ export class OptionsPanel extends DisplayObject {
         this.Hover = false;
         this.Opening = false;
         this._DrawReady = false;
+        this.Animating = false;
 
         this.Options = [];
         this.SliderColours = [];
@@ -486,6 +487,10 @@ export class OptionsPanel extends DisplayObject {
         if (this._JsonMemory.updateeveryframe==true) {
             //this.UpdateOptions();
         }
+
+        if (this.Animating) {
+            this._DrawReady = true;
+        }
     }
 
 
@@ -501,9 +506,12 @@ export class OptionsPanel extends DisplayObject {
 
         // DRAW OFFSCREEN //
         if (this._DrawReady) {
+
             this.DrawToOffscreenCanvas(ctx);
             this._DrawReady = false;
         }
+
+
 
         if (this.Scale>0) {
 
@@ -643,7 +651,7 @@ export class OptionsPanel extends DisplayObject {
 
     diagonalFill(x,y,w,h,s) {
         var ctx = this.Ctx;
-        var lineNo = Math.round((w+h) / s);
+        var lineNo = Math.round((w+h) / (s*App.Metrics.PixelRatio));
         var pos1 = new Point(0,0);
         var pos2 = new Point(0,0);
         ctx.beginPath();
@@ -882,6 +890,9 @@ export class OptionsPanel extends DisplayObject {
 
                 if (handles[3].Position.x < (handles[2].Position.x+1)) { // loopend before loopstart
                     this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
+                }
+                if (handles[3].Position.x < (handles[0].Position.x)) { // loopend before start
+                    this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[0].Position.x) + this.Position.x + this.Margin, my);
                 }
                 if (handles[1].Position.x < (handles[0].Position.x+1)) { // end before start
                     this.HandleSet(i, 1, 0, this.Options[i].Size.height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);

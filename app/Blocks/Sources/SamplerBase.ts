@@ -113,4 +113,8 @@ export class SamplerBase extends Source {
             e.dispose();
         });
     }
+
+    LoadTrack(track,fullUrl?:boolean) {
+
+    }
 }
