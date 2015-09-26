@@ -82,5 +82,6 @@ export class Toggle extends Logic {
                 source.TriggerAttack();
             });
         }
+        this.RefreshOptionsPanel();
     }
 }

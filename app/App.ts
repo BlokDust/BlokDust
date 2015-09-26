@@ -22,6 +22,7 @@ import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
+import {IPowerSource} from './Blocks/Power/IPowerSource';
 import {ISource} from './Blocks/ISource';
 import {InputManager} from './Core/Inputs/InputManager';
 import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
@@ -32,6 +33,7 @@ import {MoveBlockCommandHandler} from './CommandHandlers/MoveBlockCommandHandler
 import {OperationManager} from './Core/Operations/OperationManager';
 import {PointerInputManager} from './Core/Inputs/PointerInputManager';
 import {PowerEffect} from './Blocks/Power/PowerEffect';
+import {PowerSource} from './Blocks/Power/PowerSource';
 import {ResourceManager} from './Core/Resources/ResourceManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {Particle} from './Particle';
@@ -41,7 +43,7 @@ import {SaveAsCommandHandler} from './CommandHandlers/SaveAsCommandHandler';
 import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
 import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
-import SketchSession = Fayde.Drawing.SketchSession; //TODO: es6 modules
+import SketchSession = Fayde.Drawing.SketchSession;
 import {Source} from './Blocks/Source';
 import {Splash} from './Splash';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
@@ -102,6 +104,10 @@ export default class App implements IApp{
 
     get PowerEffects(): IPowerEffect[] {
         return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
+    }
+
+    get PowerSources(): IPowerSource[] {
+        return <IPowerSource[]>this.Blocks.en().where(b => b instanceof PowerSource).toArray();
     }
 
     get SessionId(): string {

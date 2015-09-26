@@ -184,7 +184,8 @@ export class LaserBeams {
                                                         block.PerformLogic();
                                                     } else {
                                                         if (!block.IsPowered()) {
-                                                            block.TriggerAttack();
+                                                            //block.TriggerAttack();
+                                                            block.ScheduleAttack();
                                                         }
                                                         block.PowerConnections += 1;
                                                     }

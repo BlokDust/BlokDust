@@ -780,6 +780,15 @@ declare module Tone {
         dispose(): Tone.PanVol;
     }
 
+    var PitchShift: {
+        new(pitch?: number): Tone.PitchShift;
+    }
+
+    interface PitchShift extends Tone.Effect {
+        pitch: number
+        windowSize: number;
+    }
+
     var Phaser: {
         new(rate?: any, depth?: number, baseFrequency?: number): Tone.Phaser;
     };

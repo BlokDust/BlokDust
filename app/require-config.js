@@ -71,6 +71,7 @@ require([
     "Tone/effect/Freeverb",
     "Tone/effect/Phaser",
     "Tone/effect/PingPongDelay",
+    "Tone/effect/PitchShift",
     "Tone/instrument/Simpler",
     "Tone/source/Microphone",
     "Tone/source/Noise",

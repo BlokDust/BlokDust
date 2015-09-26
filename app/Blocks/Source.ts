@@ -37,6 +37,7 @@ export class Source extends Block implements ISource {
     };
 
     public ActiveVoices: Voice[];
+    public AttackScheduled: boolean = false;
     public FreeVoices: Voice[];
     public WaveIndex: string[];
     public PowerConnections: number;
@@ -63,6 +64,7 @@ export class Source extends Block implements ISource {
 
         this.ParticlePowered = false;
         this.LaserPowered = false;
+        this.PowerConnections = 0;
 
         if (!(this instanceof Power)) {
 
@@ -153,6 +155,10 @@ export class Source extends Block implements ISource {
 
     Stop() {
         this.TriggerRelease();
+    }
+
+    ScheduleAttack() {
+        this.AttackScheduled = true;
     }
 
     /**
