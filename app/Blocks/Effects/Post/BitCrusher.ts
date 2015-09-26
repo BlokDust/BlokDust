@@ -27,9 +27,8 @@ export class BitCrusher extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"bit crusher");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position, true, "bit crusher");
     }
-
 
     Dispose() {
         this.Effect.dispose();

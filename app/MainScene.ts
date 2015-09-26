@@ -4,9 +4,7 @@ import {BlockCreator} from './BlockCreator';
 import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
 import {Commands} from './Commands';
 import {ConnectionLines} from './UI/ConnectionLines';
-import {DisplayList} from './DisplayList';
 import {DisplayObject} from './DisplayObject';
-import {DisplayObjectCollection} from './DisplayObjectCollection';
 import {Grid} from './Grid';
 import {Header} from './UI/Header';
 import {IApp} from './IApp';
@@ -44,7 +42,6 @@ export class MainScene extends DisplayObject{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
-    private _DisplayList: DisplayList;
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
@@ -72,14 +69,6 @@ export class MainScene extends DisplayObject{
 
     constructor() {
         super();
-    }
-
-    get DisplayList(): DisplayList {
-        return this._DisplayList;
-    }
-
-    set DisplayList(value: DisplayList) {
-        this._DisplayList = value;
     }
 
     Setup(){
@@ -153,49 +142,80 @@ export class MainScene extends DisplayObject{
         this._PointerPoint = new Point();
         this._SelectedBlockPosition = new Point();
 
-        // INSTANCES //
-        this.BlockSprites = new BlockSprites();
-        this.BlockSprites.Init(this);
+        //this._ConnectionLines.Draw();
+        //this._LaserBeams.Draw();
+        //this._ConnectionLines.Draw();
+        //this._ToolTip.Draw();
+        //this._RecorderPanel.Draw();
+        //this.OptionsPanel.Draw();
+        //this.ZoomButtons.Draw();
+        //this.MainSceneDragger.Draw();
+        //this._TrashCan.Draw();
+        //this._Header.Draw();
+        //this.SoundcloudPanel.Draw();
+        //this.SharePanel.Draw();
+        //this.SettingsPanel.Draw();
+        //this.MessagePanel.Draw();
 
         this.BlockCreator = new BlockCreator();
 
+
+        // Display Objects //
+
+        this.BlockSprites = new BlockSprites();
+        this.DisplayList.Add(this.BlockSprites);
+        this.BlockSprites.Init(this);
+
         this.OptionsPanel = new OptionsPanel();
+        this.DisplayList.Add(this.OptionsPanel);
         this.OptionsPanel.Init(this);
 
         this.SharePanel = new SharePanel();
+        this.DisplayList.Add(this.SharePanel);
         this.SharePanel.Init(this);
 
         this.SettingsPanel = new SettingsPanel();
+        this.DisplayList.Add(this.SettingsPanel);
         this.SettingsPanel.Init(this);
 
         this.SoundcloudPanel = new SoundcloudPanel();
+        this.DisplayList.Add(this.SoundcloudPanel);
         this.SoundcloudPanel.Init(this);
 
         this.MessagePanel = new MessagePanel();
+        this.DisplayList.Add(this.MessagePanel);
         this.MessagePanel.Init(this);
 
         this._Header = new Header();
+        this.DisplayList.Add(this._Header);
         this._Header.Init(this);
 
         this._ToolTip = new ToolTip();
+        this.DisplayList.Add(this._ToolTip);
         this._ToolTip.Init(this);
 
         this.ZoomButtons = new ZoomButtons();
+        this.DisplayList.Add(this.ZoomButtons);
         this.ZoomButtons.Init(this);
 
         this.MainSceneDragger = new MainSceneDragger();
+        this.DisplayList.Add(this.MainSceneDragger);
         this.MainSceneDragger.Init(this);
 
         this._TrashCan = new TrashCan();
+        this.DisplayList.Add(this._TrashCan);
         this._TrashCan.Init(this);
 
         this._ConnectionLines = new ConnectionLines();
+        this.DisplayList.Add(this._ConnectionLines);
         this._ConnectionLines.Init(this);
 
         this._RecorderPanel = new RecorderPanel();
+        this.DisplayList.Add(this._RecorderPanel);
         this._RecorderPanel.Init(this);
 
         this._LaserBeams = new LaserBeams();
+        this.DisplayList.Add(this._LaserBeams);
         this._LaserBeams.Init(this);
 
         // todo: use input manager
@@ -232,10 +252,6 @@ export class MainScene extends DisplayObject{
         if (App.Particles.length) {
             this.UpdateParticles();
         }
-
-        this._LaserBeams.Update();
-        this._RecorderPanel.Update();
-        this.MainSceneDragger.Update();
     }
 
     // PARTICLES //
@@ -272,46 +288,18 @@ export class MainScene extends DisplayObject{
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-    Draw(){
-
-        if (this.IsPaused) return;
+    Draw(): void {
 
         super.Draw();
 
         // BG //
         this.Ctx.fillStyle = App.Palette[0];
+        this.Ctx.globalAlpha = 1;
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
-
-
-        // LINES //
-        this._ConnectionLines.Draw();
-
-        // BLOCKS //
-        this.DisplayList.Draw();
 
         // PARTICLES //
         this.DrawParticles();
-
-        // LASER BEAMS //
-        this._LaserBeams.Draw();
-
-        // BLOCK ANIMATIONS //
-        App.AnimationsLayer.Draw();
-
-        // UI //
-        this._ToolTip.Draw();
-        this._RecorderPanel.Draw();
-        this.OptionsPanel.Draw();
-        this.ZoomButtons.Draw();
-        this.MainSceneDragger.Draw();
-        this._TrashCan.Draw();
-        this._Header.Draw();
-        this.SoundcloudPanel.Draw();
-        this.SharePanel.Draw();
-        this.SettingsPanel.Draw();
-        this.MessagePanel.Draw();
     }
-
 
     DrawParticles() {
         for (var i = 0; i < App.Particles.length; i++) {
@@ -334,7 +322,6 @@ export class MainScene extends DisplayObject{
             this.Ctx.closePath();
             this.Ctx.fill();
         }
-
     }
 
     //-------------------------------------------------------------------------------------------
@@ -418,19 +405,24 @@ export class MainScene extends DisplayObject{
             share.MouseDown(point);
             return;
         }
+
         if (settings.Open) {
             settings.MouseDown(point);
             return;
         }
+
         if (soundcloud.Open) {
             soundcloud.MouseDown(point);
             return;
         }
+
         if (!share.Open && !settings.Open && !soundcloud.Open) {
             header.MouseDown(point);
+
             if (header.MenuOver) {
                 return;
             }
+
             zoom.MouseDown(point);
             if (zoom.InRoll || zoom.OutRoll) {
                 return;
@@ -442,6 +434,7 @@ export class MainScene extends DisplayObject{
                     return;
                 }
             }
+
             recorder.MouseDown(point);
             if (recorder.Hover) {
                 return;
@@ -458,13 +451,11 @@ export class MainScene extends DisplayObject{
             this._SelectedBlockPosition = this.SelectedBlock.Position; // memory of start position
         }
 
-
         // MainScene DRAGGING //
         if (!collision && !UI){
             this.MainSceneDragger.MouseDown(point);
         }
     }
-
 
     private _PointerUp(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
@@ -510,14 +501,11 @@ export class MainScene extends DisplayObject{
 
             this.MainSceneDragger.MouseUp();
         }
-
     }
-
-
 
     private _PointerMove(point: Point){
         App.Metrics.ConvertToPixelRatioPoint(point);
-        App.Canvas.style.cursor="default";
+        App.Canvas.Style.cursor="default";
 
         this._CheckHover(point);
 
@@ -557,17 +545,16 @@ export class MainScene extends DisplayObject{
         this.MainSceneDragger.MouseMove(point);
     }
 
-
     // PROXIMITY CHECK //
     private _CheckProximity(){
         // loop through all Source blocks checking proximity to Effect blocks.
         // if within CatchmentArea, add Effect to Source.Effects and add Source to Effect.Sources
 
         for (var j = 0; j < App.Sources.length; j++) {
-            var source:ISource = App.Sources[j];
+            var source: ISource = App.Sources[j];
 
             for (var i = 0; i < App.Effects.length; i++) {
-                var effect:IEffect = App.Effects[i];
+                var effect: IEffect = App.Effects[i];
 
                 // if a source is close enough to the effect, add the effect
                 // to its internal list.
@@ -620,11 +607,12 @@ export class MainScene extends DisplayObject{
                 OptionTimeout = true;
                 setTimeout(function() {
                     OptionTimeout = false;
-                },200);
+                }, 200);
 
                 return true;
             }
         }
+
         // CLOSE OPTIONS IF NO BLOCK CLICKED //
         this.OptionsPanel.Close();
 
@@ -638,9 +626,10 @@ export class MainScene extends DisplayObject{
         var panel = this._ToolTip;
 
         // CHECK BLOCKS FOR HOVER //
-        if (this.OptionsPanel.Scale==1) {
+        if (this.OptionsPanel.Scale === 1) {
             panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
         }
+
         if (!panelCheck && !this._IsPointerDown) {
             for (var i = App.Blocks.length - 1; i >= 0; i--) {
                 var block:IBlock = App.Blocks[i];
@@ -663,30 +652,27 @@ export class MainScene extends DisplayObject{
         if (blockHover && !panel.Open && !this.OptionsPanel.Opening) {
             panel.Open = true;
             if (panel.Alpha>0) {
-                panel.AlphaTo(panel,100,600);
+                panel.AlphaTo(panel, 100, 600);
             } else {
                 this._ToolTipTimeout = setTimeout(function() {
-                    if (panel.Alpha==0) {
-                        panel.AlphaTo(panel,100,600);
+                    if (panel.Alpha === 0) {
+                        panel.AlphaTo(panel, 100, 600);
                     }
                 },550);
             }
-
-
         }
+
         // CLOSE IF NO LONGER HOVERING //
         if (!blockHover && panel.Open) {
              this.ToolTipClose();
         }
-
     }
-
 
     public ToolTipClose() {
         var panel = this._ToolTip;
         clearTimeout(this._ToolTipTimeout);
         panel.StopTween();
-        panel.AlphaTo(panel,0,200);
+        panel.AlphaTo(panel, 0, 200);
         panel.Open = false;
     }
 
@@ -719,11 +705,9 @@ export class MainScene extends DisplayObject{
         return (mx > x && mx < (x + w) && my > y && my < (y + h));
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  BLOCKS
     //-------------------------------------------------------------------------------------------
-
 
     get SelectedBlock(): IBlock {
         return this._SelectedBlock;
@@ -750,7 +734,6 @@ export class MainScene extends DisplayObject{
     private _Invalidate(){
         this._ValidateBlocks();
         this._CheckProximity();
-
     }
 
     _ValidateBlocks() {

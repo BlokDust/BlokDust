@@ -51,7 +51,7 @@ export class Laser extends PowerSource {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"laser");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"laser");
 
     }
 

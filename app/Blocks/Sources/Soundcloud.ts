@@ -169,7 +169,7 @@ export class Soundcloud extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"soundcloud");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"soundcloud");
     }
 
     UpdateOptionsForm() {

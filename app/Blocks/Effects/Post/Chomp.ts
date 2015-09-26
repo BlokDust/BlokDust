@@ -49,7 +49,7 @@ export class Chomp extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"chomp");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position, true, "chomp");
     }
 
     Dispose(){

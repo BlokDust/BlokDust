@@ -33,6 +33,20 @@ export class DisplayList {
         return this._DisplayObjects.Contains(displayObject);
     }
 
+    public Setup(){
+        for (var i = 0; i < this._DisplayObjects.Count; i++){
+            var displayObject: IDisplayObject = this._DisplayObjects.GetValueAt(i);
+            displayObject.Setup();
+        }
+    }
+
+    public Update(){
+        for (var i = 0; i < this._DisplayObjects.Count; i++){
+            var displayObject: IDisplayObject = this._DisplayObjects.GetValueAt(i);
+            displayObject.Update();
+        }
+    }
+
     public Draw(){
         for (var i = 0; i < this._DisplayObjects.Count; i++){
             var displayObject: IDisplayObject = this._DisplayObjects.GetValueAt(i);

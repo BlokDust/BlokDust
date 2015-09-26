@@ -1,3 +1,6 @@
+import ISketchContext = Fayde.Drawing.ISketchContext;
+import Vector = Utils.Maths.Vector;
+import {DisplayObject} from './DisplayObject';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
@@ -7,24 +10,19 @@ import {Logic} from './Blocks/Power/Logic/Logic';
 import {MainScene} from './MainScene';
 import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
 import {Source} from './Blocks/Source';
-import Vector = Utils.Maths.Vector; //TODO: es6 modules
 import {Void} from './Blocks/Power/Void';
 
 declare var App: IApp;
 
-export class LaserBeams {
+export class LaserBeams extends DisplayObject {
 
-    private _Ctx: CanvasRenderingContext2D;
-    private _Sketch: MainScene;
     public UpdateAllLasers: boolean;
     //private _TestPoints: Point[];
 
     Init(sketch: any): void {
-        this._Ctx = sketch.Ctx;
-        this._Sketch = sketch;
+        super.Init(sketch);
         this.UpdateAllLasers = false;
         //this._TestPoints = [];
-
     }
 
     Update() {
@@ -228,18 +226,14 @@ export class LaserBeams {
         this.UpdateAllLasers = false;
     }
 
-
-
-
-
     Draw() {
         var unit = App.ScaledUnit;
         var myPos,vector;
-        this._Ctx.strokeStyle = this._Ctx.fillStyle = App.Palette[8];
-        this._Ctx.globalAlpha = 1;
+        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[8];
+        this.Ctx.globalAlpha = 1;
 
-        this._Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
-        this._Ctx.beginPath();
+        this.Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
+        this.Ctx.beginPath();
 
         for (var j=0; j<App.Sources.length; j++) {
             var laser: ISource  = App.Sources[j];
@@ -253,22 +247,21 @@ export class LaserBeams {
                     vector = Vector.FromAngle(Math.degreesToRadians(laser.Params.angle));
                     vector.Mult(laser.CheckRange * unit);
 
-                    this._Ctx.moveTo(myPos.x, myPos.y);
-                    this._Ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
+                    this.Ctx.moveTo(myPos.x, myPos.y);
+                    this.Ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
                 }
             }
         }
-        this._Ctx.stroke();
-        this._Ctx.lineWidth = 1;
+        this.Ctx.stroke();
+        this.Ctx.lineWidth = 1;
 
         // TEST //
-        /*this._Ctx.beginPath();
-        this._Ctx.moveTo(0,0);
+        /*this.Ctx.beginPath();
+        this.Ctx.moveTo(0,0);
         for (var i=0; i<this._TestPoints.length; i++) {
-            //this._Ctx.fillRect(this._TestPoints[i].x - (30*unit),this._TestPoints[i].y - (30*unit),60*unit,60*unit);
-            this._Ctx.lineTo(this._TestPoints[i].x,this._TestPoints[i].y);
+            //this.Ctx.fillRect(this._TestPoints[i].x - (30*unit),this._TestPoints[i].y - (30*unit),60*unit,60*unit);
+            this.Ctx.lineTo(this._TestPoints[i].x,this._TestPoints[i].y);
         }
-        this._Ctx.stroke();*/
+        this.Ctx.stroke();*/
     }
-
 }

@@ -29,7 +29,7 @@ export class Delay extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"delay");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"delay");
     }
 
     Dispose(){

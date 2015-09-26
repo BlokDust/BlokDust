@@ -48,7 +48,7 @@ export class Scuzz extends PreEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"scuzz");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"scuzz");
     }
 
     UpdateConnections(chain: IAudioChain) {

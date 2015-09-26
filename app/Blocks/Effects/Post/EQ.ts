@@ -65,7 +65,7 @@ export class EQ extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"eq");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"eq");
     }
 
     Dispose(){

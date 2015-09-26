@@ -28,7 +28,7 @@ export class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle switch");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"toggle switch");
     }
 
     UpdateOptionsForm() {

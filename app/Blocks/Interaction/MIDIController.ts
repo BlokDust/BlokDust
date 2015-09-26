@@ -94,7 +94,7 @@ export class MIDIController extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"midi controller");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"midi controller");
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {

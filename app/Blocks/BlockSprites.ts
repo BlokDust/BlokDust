@@ -1,12 +1,13 @@
+import ISketchContext = Fayde.Drawing.ISketchContext;
+import {DisplayObject} from '../DisplayObject';
+import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
-import {Grid} from '../Grid';
-import {DisplayObject} from '../DisplayObject';
 import {MainScene} from '../MainScene';
 
 declare var App: IApp;
 
-export class BlockSprites {
+export class BlockSprites extends DisplayObject {
 
     public Grid: Grid;
     public Ctx: CanvasRenderingContext2D;
@@ -15,9 +16,8 @@ export class BlockSprites {
     private _XOffset: number;
     private _YOffset: number;
 
-    Init(sketch: any) {
-
-        this.Ctx = sketch.Ctx;
+    Init(sketch: ISketchContext) {
+        super.Init(sketch);
         this.Grid = <Grid>sketch;
         this._Scaled = true;
         this._Position = new Point(0,0);
@@ -25,7 +25,7 @@ export class BlockSprites {
         this._YOffset = 0;
     }
 
-    Draw(pos: Point,scaled: boolean, block: string,pos2?: Point) {
+    DrawSprite(pos: Point, scaled: boolean, block: string, pos2?: Point) {
 
         this._Scaled = scaled;
         this._Position = pos;

@@ -497,7 +497,7 @@ export class OptionsPanel extends DisplayObject {
 
     Draw() {
         var units = App.Unit;
-        var ctxOuter = App.Ctx;
+        var ctxOuter = App.Canvas.Ctx;
         var ctx = this.Ctx;
 
         // DRAW OFFSCREEN //
@@ -506,7 +506,7 @@ export class OptionsPanel extends DisplayObject {
             this._DrawReady = false;
         }
 
-        if (this.Scale>0) {
+        if (this.Scale > 0) {
 
             ctxOuter.globalAlpha = 1;
             //ctxOuter.drawImage(this._Img,0,0);

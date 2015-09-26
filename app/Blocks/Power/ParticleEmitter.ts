@@ -78,7 +78,7 @@ export class ParticleEmitter extends PowerSource {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"particle emitter");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"particle emitter");
 
         //if (window.debug){
         //    this.Ctx.fillStyle = "#fff";

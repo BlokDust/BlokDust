@@ -29,7 +29,7 @@ export class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary switch");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"momentary switch");
     }
 
     Dispose(){

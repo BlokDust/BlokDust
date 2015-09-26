@@ -1,11 +1,13 @@
 import {AnimationsLayer} from './UI/AnimationsLayer';
+import {Canvas} from './Canvas';
 import {ColorThemes} from './UI/ColorThemes';
-import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {CommandManager} from './Core/Commands/CommandManager';
+import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {Config} from './Config';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
+import {IDisplayObject} from './IDisplayObject';
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
@@ -27,7 +29,7 @@ export interface IApp {
     Audio: IAudio;
     AnimationsLayer: AnimationsLayer;
     Blocks: IBlock[];
-    Canvas: HTMLCanvasElement;
+    Canvas: Canvas;
     Color: ColorThemes;
     Config: Config;
     CommandManager: CommandManager;

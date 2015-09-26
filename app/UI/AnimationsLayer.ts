@@ -7,25 +7,20 @@ declare var App: IApp;
 
 export class AnimationsLayer extends DisplayObject {
 
-    private _Ctx: any; //TODO: should be CanvasRenderingContext2D but get error CanvasRenderingContext2D | WebGLRenderingContext' is not assignable...
-    public ActiveBlocks: Block[];
-    private Loop: number;
+    public ActiveBlocks: Block[] = [];
+    private Loop: number = 0;
 
     Init(sketch: ISketchContext): void {
         super.Init(sketch);
-        this._Ctx = App.Canvas.getContext("2d");
-        this.ActiveBlocks = [];
-        this.Loop = 0;
-
     }
 
     Update() {
 
-        if (this.ActiveBlocks.length>0) {
+        if (this.ActiveBlocks.length > 0) {
             this.Loop += 1;
         }
 
-        if (this.Loop==60) {
+        if (this.Loop === 60) {
             this.Loop = 0;
         }
 
@@ -35,23 +30,22 @@ export class AnimationsLayer extends DisplayObject {
         if (this.ActiveBlocks.length<1) {
             this.Loop += 1;
         }
-        if (this.Loop==60) {
+        if (this.Loop === 60) {
             this.Loop = 0;
         }
     }
-
 
     AddToList(block) {
         this.RemoveFromList(block);
         this.ActiveBlocks.push(block);
     }
+
     RemoveFromList(block) {
         var b = this.ActiveBlocks.indexOf(block);
         if(b != -1) {
             this.ActiveBlocks.splice(b,1);
         }
     }
-
 
     //-------------------------------------------------------------------------------------------
     //  DRAWING
@@ -74,39 +68,37 @@ export class AnimationsLayer extends DisplayObject {
 
 
     DrawBubble(x,y) {
-        var ctx = this._Ctx;
         var grd = App.GridSize;
 
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[2];
-        ctx.globalAlpha = 0.95;
-        ctx.beginPath();
-        ctx.moveTo(x - (grd),y - (2*grd));
-        ctx.lineTo(x,y - (2*grd));
-        ctx.lineTo(x,y);
-        ctx.lineTo(x - (grd),y - (grd));
-        ctx.fill();
-        ctx.globalAlpha = 1;
+        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[2];
+        this.Ctx.globalAlpha = 0.95;
+        this.Ctx.beginPath();
+        this.Ctx.moveTo(x - (grd),y - (2*grd));
+        this.Ctx.lineTo(x,y - (2*grd));
+        this.Ctx.lineTo(x,y);
+        this.Ctx.lineTo(x - (grd),y - (grd));
+        this.Ctx.fill();
+        this.Ctx.globalAlpha = 1;
     }
 
     DrawSprite(index: string,x: number,y: number,w: number,c:boolean) {
         var units = App.Unit;
-        var ctx = this._Ctx;
         var grd = App.GridSize;
         if (c) { // center on x & y
             grd = 0;
         }
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = App.Palette[App.Color.Txt];
+        this.Ctx.globalAlpha = 1;
+        this.Ctx.fillStyle = App.Palette[App.Color.Txt];
         switch (index) {
 
             case "loading":
 
                 var angle = (this.Loop/60) * (2*Math.PI);
-                ctx.save();
-                ctx.translate(x - (0.5*grd),y - (1.5*grd));
-                ctx.rotate(angle);
-                ctx.fillRect(-((w*0.5)*units),-((w*0.5)*units),w*units,w*units);
-                ctx.restore();
+                this.Ctx.save();
+                this.Ctx.translate(x - (0.5*grd),y - (1.5*grd));
+                this.Ctx.rotate(angle);
+                this.Ctx.fillRect(-((w*0.5)*units),-((w*0.5)*units),w*units,w*units);
+                this.Ctx.restore();
 
                 break;
 

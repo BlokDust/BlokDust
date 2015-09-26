@@ -68,10 +68,10 @@ export class Metrics {
 
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
-        canvas.width = width * ratio;
-        canvas.height = height * ratio;
-        canvas.style.width = width + "px";
-        canvas.style.height = height + "px";
+        canvas.Width = width * ratio;
+        canvas.Height = height * ratio;
+        canvas.Style.width = width + "px";
+        canvas.Style.height = height + "px";
 
         for (var i=0; i<App.SubCanvas.length; i++) {
             var c = App.SubCanvas[i];
@@ -81,7 +81,7 @@ export class Metrics {
             c.style.height = height + "px";
         }
 
-        App.Ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        App.Canvas.Ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         App.Width = width * ratio;
         App.Height = height * ratio;
         App.MainScene.Width = App.Width;
@@ -129,7 +129,7 @@ export class Metrics {
 
 
     get PixelRatio(): number {
-        const ctx = App.Ctx;
+        const ctx = App.Canvas.Ctx;
         const dpr = window.devicePixelRatio || 1;
         const bsr = ctx.webkitBackingStorePixelRatio ||
             ctx.mozBackingStorePixelRatio ||

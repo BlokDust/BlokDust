@@ -92,7 +92,7 @@ export class MenuItem {
 
 
         // ICON //
-        this._Sketch.BlockSprites.Draw(new Point(x,y-(7.5*units)), false, this.Name.toLowerCase());
+        this._Sketch.BlockSprites.DrawSprite(new Point(x,y-(7.5*units)), false, this.Name.toLowerCase());
 
     }
 

@@ -59,7 +59,7 @@ export class Noise extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"noise");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"noise");
     }
 
     UpdateOptionsForm() {

@@ -1,55 +1,57 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
+import ISketchContext = Fayde.Drawing.ISketchContext;
+import SketchSession = Fayde.Drawing.SketchSession;
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
+import {Canvas} from './Canvas';
 import {ColorThemes} from './UI/ColorThemes';
-import {CommandManager} from './Core/Commands/CommandManager';
-import {Commands} from './Commands';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
+import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
+import {Commands} from './Commands';
 import {Config} from './Config';
 import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
 import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
 import {DisplayList} from './DisplayList';
+import {DisplayObject} from './DisplayObject';
 import {DisplayObjectCollection} from './DisplayObjectCollection';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {Effect} from './Blocks/Effect';
-import {FocusManager} from './Core/Inputs/FocusManager';
 import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
+import {FocusManager} from './Core/Inputs/FocusManager';
 import {GA} from './GA';
 import {Grid} from './Grid';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
+import {IDisplayObject} from './IDisplayObject';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
+import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {ISource} from './Blocks/ISource';
-import {InputManager} from './Core/Inputs/InputManager';
 import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
 import {LoadCommandHandler} from './CommandHandlers/LoadCommandHandler';
 import {MainScene} from './MainScene';
 import {Metrics} from './AppMetrics';
 import {MoveBlockCommandHandler} from './CommandHandlers/MoveBlockCommandHandler';
 import {OperationManager} from './Core/Operations/OperationManager';
-import {PointerInputManager} from './Core/Inputs/PointerInputManager';
-import {PowerEffect} from './Blocks/Power/PowerEffect';
-import {ResourceManager} from './Core/Resources/ResourceManager';
-import {TypingManager} from './Core/Inputs/TypingManager';
 import {Particle} from './Particle';
+import {PointerInputManager} from './Core/Inputs/PointerInputManager';
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
+import {PowerEffect} from './Blocks/Power/PowerEffect';
 import {RedoCommandHandler} from './CommandHandlers/RedoCommandHandler';
+import {ResourceManager} from './Core/Resources/ResourceManager';
 import {SaveAsCommandHandler} from './CommandHandlers/SaveAsCommandHandler';
 import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
 import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
-import SketchSession = Fayde.Drawing.SketchSession;
 import {Source} from './Blocks/Source';
 import {Splash} from './Splash';
+import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
-import ISketchContext = Fayde.Drawing.ISketchContext;
 
 export default class App implements IApp{
 
-    private _Canvas: HTMLCanvasElement;
     private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
@@ -57,6 +59,7 @@ export default class App implements IApp{
     public AnimationsLayer: AnimationsLayer;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
+    public Canvas: Canvas;
     public Color: ColorThemes;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
@@ -135,7 +138,7 @@ export default class App implements IApp{
 
     public Setup(){
 
-        this.CreateCanvas();
+        this.Canvas = new Canvas();
         this.Scene = 0;
 
         this.SubCanvas = [];
@@ -150,14 +153,16 @@ export default class App implements IApp{
         // LOAD FONTS AND SETUP CALLBACK //
         this.LoadCued = false;
         this._FontsLoaded = 0;
+
         WebFont.load({
             custom: { families: ['Merriweather Sans:i3','Dosis:n2,n4']},
-            fontactive: (font,fvd) => { this.FontsLoaded(font,fvd) },
+            fontactive: (font, fvd) => { this.FontsLoaded(font, fvd) },
             timeout: 3000 // 3 seconds
         });
+
         setTimeout(() => {
             this.FontsNotLoaded();
-        },3020);
+        }, 3020);
 
         // CREATE OPERATIONS MANAGERS //
         this.OperationManager = new OperationManager();
@@ -195,8 +200,8 @@ export default class App implements IApp{
 
         // LOAD PALETTE //
         this.Color = new ColorThemes;
-        this.Color.Init(<ISketchContext>this);
-        this.Color.LoadTheme(0,true);
+        this.Color.Init(this.Canvas);
+        this.Color.LoadTheme(0, true);
 
         // SOUNDCLOUD INIT //
         // todo: create server-side session
@@ -208,9 +213,10 @@ export default class App implements IApp{
 
         // CREATE SPLASH SCREEN //
         this.Splash = new Splash();
-        this.Splash.Init(this);
+        this.Splash.Init(this.Canvas);
+
         this.AnimationsLayer = new AnimationsLayer();
-        this.AnimationsLayer.Init(this);
+        this.AnimationsLayer.Init(this.Canvas);
     }
 
     // FONT LOAD CALLBACK //
@@ -263,19 +269,23 @@ export default class App implements IApp{
     CreateMainScene() {
         // create MainScene
         this.MainScene = new MainScene();
-        this.MainScene.Init(this);
+        this.MainScene.Init(this.Canvas);
 
         this.Blocks = [];
-
-        // add blocks to MainScene DisplayList
-        var d = new DisplayObjectCollection();
-        d.AddRange(this.Blocks);
-        this.MainScene.DisplayList = new DisplayList(d);
+        this.AddBlocksToMainScene();
 
         // set up animation loop
         this._ClockTimer.RegisterTimer(this);
 
         this.Resize();
+    }
+
+    AddBlocksToMainScene(): void {
+        var d = new DisplayObjectCollection();
+        d.AddRange(this.Blocks);
+        var blocks = new DisplayObject();
+        blocks.DisplayList = new DisplayList(d);
+        this.MainScene.DisplayList.Add(blocks);
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
@@ -306,18 +316,13 @@ export default class App implements IApp{
             b.Init(this.MainScene);
         });
 
-        // add blocks to MainScene DisplayList
-        var d = new DisplayObjectCollection();
-        d.AddRange(this.Blocks);
-        this.MainScene.DisplayList = new DisplayList(d);
+        this.AddBlocksToMainScene();
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
 
-        //Connect the effects chain
+        // Connect the effects chain
         this.Audio.ConnectionManager.Update();
-
-
 
         this.MainScene.Pause();
 
@@ -326,28 +331,19 @@ export default class App implements IApp{
         } else {
             this.MainScene.CompositionLoaded();
         }
-
     }
 
     OnTicked (lastTime: number, nowTime: number) {
-        //this.MainScene.SketchSession = new SketchSession(this._Canvas, this._Canvas.width, this._Canvas.height, nowTime);
-        this.Update();
-        this.Draw();
-    }
 
-    Update() : void {
-        if (this.Scene === 2) {
-            this.MainScene.Update();
+        if (this.Scene === 1){
+            this.MainScene.IsVisible = false;
+            this.Splash.Play();
         }
-        this.AnimationsLayer.Update();
-    }
 
-    Draw(): void {
         if (this.Scene === 2) {
-            this.MainScene.Draw();
-        }
-        if (this.Scene > 0) {
-            this.Splash.Draw();
+            this.Splash.Pause();
+            this.Splash.IsVisible = false;
+            this.MainScene.Play();
         }
     }
 
@@ -369,24 +365,9 @@ export default class App implements IApp{
         }
     }
 
-    CreateCanvas() {
-        this._Canvas = document.createElement("canvas");
-        document.body.appendChild(this._Canvas);
-    }
-
-    get Canvas(): HTMLCanvasElement {
-        return this._Canvas;
-    }
-
     CreateSubCanvas(i) {
         this.SubCanvas[i] = document.createElement("canvas");
         document.body.appendChild(this.SubCanvas[i]);
-    }
-
-    //todo: typing as CanvasRenderingContext2D causes "Property 'fillStyle' is missing in type 'WebGLRenderingContext'"
-    // upgrade to newer compiler (1.5) which has no error - requires gulp as grunt-typescript seemingly no longer supported
-    get Ctx() {
-        return this.Canvas.getContext("2d");
     }
 
     TrackEvent(category: string, action: string, label: string, value?: number): void{
@@ -416,9 +397,4 @@ export default class App implements IApp{
 
     }
 
-}
-
-
-interface Window{
-    App: IApp;
 }

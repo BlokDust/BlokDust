@@ -40,7 +40,7 @@ export class ComputerKeyboard extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position, true, "computer keyboard");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position, true, "computer keyboard");
     }
 
 

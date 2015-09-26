@@ -28,7 +28,7 @@ export class Distortion extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"distortion");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"distortion");
 
     }
 

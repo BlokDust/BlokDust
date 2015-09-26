@@ -267,7 +267,7 @@ export class Header extends DisplayObject {
 
                     if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
                         ctx.globalAlpha = 0.5;
-                        (<MainScene>this.Sketch).BlockSprites.Draw(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
+                        (<MainScene>this.Sketch).BlockSprites.DrawSprite(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
                     }
                 }
 

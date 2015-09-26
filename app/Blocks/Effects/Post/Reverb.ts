@@ -28,7 +28,7 @@ export class Reverb extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"reverb");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"reverb");
     }
 
     Dispose(){

@@ -536,7 +536,7 @@ export class WaveGen extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"wavegen");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"wavegen");
     }
 
 

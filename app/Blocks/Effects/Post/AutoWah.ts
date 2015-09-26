@@ -42,7 +42,7 @@ export class AutoWah extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"autowah");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position, true, "autowah");
     }
 
     Dispose() {

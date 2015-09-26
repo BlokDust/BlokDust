@@ -112,7 +112,7 @@ export class Microphone extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"microphone");
+        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"microphone");
     }
 
     Dispose() {
