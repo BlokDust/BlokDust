@@ -251,17 +251,13 @@ export class Source extends Block implements ISource {
 
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
-            this.Envelopes.forEach((e: any)=> {
-                e.triggerAttackRelease(duration, time);
-            });
+            this.Envelopes[0].triggerAttackRelease(duration, time);
 
         //    Samplers
         } else if (this.Sources[0] && this.Sources[0].envelope) {
 
             // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
-            });
+            this.Sources[0].triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
 
         //    Power Source Blocks
         } else if (this.PowerConnections!==undefined) {

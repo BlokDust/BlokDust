@@ -674,7 +674,11 @@ export class WaveGen extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
-                if (value === true) {
+                if (value === true && this.IsPowered()) {
+                    this.Sources.forEach((s: Tone.Simpler) => {
+                        s.player.stop();
+                        s.player.start(s.player.startPosition);
+                    });
                 }
                 // update display of loop sliders
                 this.Params[param] = value;

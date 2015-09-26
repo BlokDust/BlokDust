@@ -219,7 +219,7 @@ export class LaserBeams {
                                 //console.log("RELEASE "+ block.Id);
                                 if (!(block instanceof Logic)) {
                                     block.PowerConnections -= 1;
-                                    block.TriggerRelease();
+                                    block.TriggerRelease('all'); // TODO:
                                 }
                             }
                         }
