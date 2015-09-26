@@ -1,3 +1,4 @@
+import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import {ISource} from '../ISource';
 import {Microphone} from '../Sources/Microphone';
@@ -7,11 +8,12 @@ import {VoiceCreator as Voice} from './VoiceObject';
 
 declare var App: IApp;
 
+
 export class Interaction extends PowerEffect {
 
     CreateVoices(source: ISource){
         // Don't create if it's a Power or a Microphone
-        if ((source instanceof Power) || (source instanceof Microphone)) return;
+        if ((source instanceof Power) || (source instanceof Microphone) || (source instanceof Granular)) return;
 
         // Work out how many voices we actually need (we may already have some)
         let diff: number = App.Config.PolyphonicVoices - source.Sources.length;

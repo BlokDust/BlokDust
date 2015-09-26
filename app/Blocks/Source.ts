@@ -1,5 +1,6 @@
 import {Block} from './Block';
 import {Grid} from '../Grid';
+import {Granular} from './Sources/Granular';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
@@ -248,20 +249,17 @@ export class Source extends Block implements ISource {
 
         // Oscillators & Noises & Players
         if (this.Envelopes.length){
-
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
             this.Envelopes[0].triggerAttackRelease(duration, time);
 
         //    Samplers
         } else if (this.Sources[0] && this.Sources[0].envelope) {
-
             // Trigger all the envelopes
             this.Sources[0].triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
 
         //    Power Source Blocks
         } else if (this.PowerConnections!==undefined) {
-
             this.PowerConnections += 1;
             if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
@@ -434,14 +432,11 @@ export class Source extends Block implements ISource {
     MouseDown() {
         super.MouseDown();
         this.TriggerAttack();
-        console.log(this.PowerConnections);
     }
 
     MouseUp() {
-        console.log(this.PowerConnections);
         super.MouseUp();
         this.TriggerRelease('all');
-        console.log(this.PowerConnections);
     }
 
     //TODO: This shouldn't be here

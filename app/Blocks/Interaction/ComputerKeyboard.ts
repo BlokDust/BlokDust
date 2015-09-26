@@ -1,3 +1,4 @@
+import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
@@ -111,7 +112,7 @@ export class ComputerKeyboard extends Keyboard {
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
-        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length)) {
+        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length) && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Are there any free voices?
@@ -164,7 +165,7 @@ export class ComputerKeyboard extends Keyboard {
 
     KeyboardUp(keyUp:string, source:ISource): void {
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Loop through all the active voices

@@ -464,6 +464,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         if (!collision && !UI){
             this.MainSceneDragger.MouseDown(point);
         }
+
     }
 
 
