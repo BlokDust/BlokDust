@@ -25,8 +25,8 @@ export class Particle implements IPooledObject {
     }
 
     Move() {
-        this.Position.x += this.Vector.X;
-        this.Position.y += this.Vector.Y;
+        this.Position.x += (this.Vector.X * App.Unit);
+        this.Position.y += (this.Vector.Y * App.Unit);
     }
 
     Reset(): boolean {
