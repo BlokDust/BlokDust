@@ -1,4 +1,5 @@
 import Size = minerva.Size;
+import {Device} from '../Device';
 import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
 import {ISketchContext} from '../ISketchContext';
@@ -98,14 +99,12 @@ export class SettingsPanel extends DisplayObject{
         var gutter = 60;
         var menuCats = [];
 
-        if (App.Metrics.Device!=="desktop") {
+        if (App.Metrics.Device !== Device.desktop) {
             gutter = 40;
         }
 
-
         // GET NUMBER OF CATEGORIES //
         var n = json.categories.length;
-
 
         // GET MENU & CATEGORY WIDTHS //
         ctx.font = "400 " + dataType + "px Dosis";

@@ -33,6 +33,7 @@ export class AutoWah extends PostEffect {
                 "release": 1
             }
         });
+
         this.Effect.wet.value = this.Params.mix;
 
         super.Init(sketch);
@@ -54,15 +55,15 @@ export class AutoWah extends PostEffect {
         super.SetParam(param,value);
         var val = value;
 
-        if (param=="mix") {
+        if (param === "mix") {
             this.Effect.wet.value = val;
-        } else if (param=="octaves") {
+        } else if (param === "octaves") {
             this.Effect.octaves = val;
-        } else if (param=="baseFrequency") {
+        } else if (param === "baseFrequency") {
             this.Effect.baseFrequency = val;
-        } else if (param=="attack") {
+        } else if (param === "attack") {
             this.Effect.follower.attack = val;
-        } else if (param=="release") {
+        } else if (param === "release") {
             this.Effect.follower.release = val;
         }
 

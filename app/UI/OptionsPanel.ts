@@ -1,6 +1,7 @@
 import Size = minerva.Size;
 import {ADSR} from './Options/OptionADSR';
 import {ButtonArray} from './Options/OptionButtonArray';
+import {Device} from '../Device';
 import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
@@ -78,11 +79,8 @@ export class OptionsPanel extends DisplayObject {
             ]
         };
 
-
         //this.CreateCanvas();
         this.Canvas = App.SubCanvas[0];
-
-
 
         this.Populate(this.InitJson,false);
     }
@@ -178,7 +176,7 @@ export class OptionsPanel extends DisplayObject {
 
 
         var panelW;
-        if (App.Metrics.Device!=="mobile") {
+        if (App.Metrics.Device !== Device.mobile) {
             panelW = 450*units;
         } else {
             panelW = App.Width + (44*units);
@@ -734,7 +732,7 @@ export class OptionsPanel extends DisplayObject {
     }
 
     Resize() {
-        if (App.Metrics.Device!=="mobile") {
+        if (App.Metrics.Device !== Device.mobile) {
             this.Position.x = Math.round(App.Width*App.Metrics.OptionsPoint.x);
             this.Position.y = Math.round(App.Height*App.Metrics.OptionsPoint.y);
         } else {

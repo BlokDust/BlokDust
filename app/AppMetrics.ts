@@ -1,6 +1,7 @@
 declare var App: IApp;
 import {IApp} from './IApp';
 import {Point} from './Core/Primitives/Point';
+import {Device} from './Device';
 
 export class Metrics {
 
@@ -25,7 +26,7 @@ export class Metrics {
     public OptionsX: number; // x position of options panel
     public OptionsPoint: Point;
     public ItemsPerPage: number; // blocks per page in category display
-    public Device: string;
+    public Device: Device;
     private _DeviceZoom: number;
     private _ScreenDivision: number;
 
@@ -38,10 +39,9 @@ export class Metrics {
         this.OptionsX = 0.3;
         this.OptionsPoint = new Point(0.3,0.6); //screen percentage
         this.ItemsPerPage = 6;
-        this.Device = "desktop";
+        this.Device = Device.desktop;
         this._DeviceZoom = 1;
     }
-
 
     Metrics() {
 
@@ -54,10 +54,8 @@ export class Metrics {
         const height = window.innerHeight;
         const ratio = this.PixelRatio;
 
-
         //DEVICE BREAKPOINTS //
         this.DeviceCheck();
-
 
         // DEFINE UNIT & GRID SIZE //
         App.Unit = (width/this._ScreenDivision)*ratio;
@@ -65,7 +63,6 @@ export class Metrics {
         var unit = App.Unit;
         App.GridSize = gridSize * unit;
         App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;
-
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
         canvas.Width = width * ratio;
@@ -88,7 +85,6 @@ export class Metrics {
         App.MainScene.Height = App.Height;
         this.C.x = App.Width * 0.5;
         this.C.y = App.Height * 0.5;
-
 
         // SET GLOBAL TYPE STYLES //
         var headerType = Math.round(unit*28);
@@ -113,12 +109,10 @@ export class Metrics {
         this.TxtItalic2 = "300 italic " + italicType2 + "px Merriweather Sans";
         this.TxtData = "400 " + dataType + "px PT Sans";
 
-
         // STYLE DOM SELECTED TEXT HIGHLIGHT COLOUR //
         var styleElem = document.getElementById("selectStyle");
         styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1] + '; background-blend-mode: normal; mix-blend-mode: normal;}';
     }
-
 
     UpdateGridScale() {
         App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
@@ -126,7 +120,6 @@ export class Metrics {
         App.ScaledDragOffset.x = (App.DragOffset.x * App.ZoomLevel);
         App.ScaledDragOffset.y = (App.DragOffset.y * App.ZoomLevel);
     }
-
 
     get PixelRatio(): number {
         const ctx = App.Canvas.Ctx;
@@ -144,7 +137,6 @@ export class Metrics {
     //  DEVICE RESPONSE
     //-------------------------------------------------------------------------------------------
 
-
     public DeviceCheck() {
         // DEVICE BREAKPOINTS //
         const width = window.innerWidth;
@@ -156,7 +148,7 @@ export class Metrics {
             this.OptionsPoint = new Point(0.5,0.4);
             this.ItemsPerPage = 3;
             this._DeviceZoom = 1.5;
-            this.Device = "mobile";
+            this.Device = Device.mobile;
             console.log("MOBILE");
         }
 
@@ -166,7 +158,7 @@ export class Metrics {
             this.OptionsPoint = new Point(0.2,0.5);
             this.ItemsPerPage = 4;
             this._DeviceZoom = 1.2;
-            this.Device = "tablet";
+            this.Device = Device.tablet;
             console.log("TABLET");
         }
 
@@ -193,16 +185,14 @@ export class Metrics {
             this.OptionsPoint = new Point(0.3,0.6);
             this.ItemsPerPage = 6;
             this._DeviceZoom = 1;
-            this.Device = "desktop";
+            this.Device = Device.desktop;
             console.log("DESKTOP");
         }
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  UNIT CONVERSIONS
     //-------------------------------------------------------------------------------------------
-
 
     public CursorToGrid(point: Point): Point {
         var x = Math.round(((point.x - App.ScaledDragOffset.x) - this.C.x)/App.ScaledGridSize);

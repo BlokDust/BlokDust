@@ -971,9 +971,6 @@ export class BlockSprites extends DisplayObject {
                 break;
 
         }
-
-
-
     }
 
     DrawPixel(x,y,size) {
@@ -987,7 +984,6 @@ export class BlockSprites extends DisplayObject {
         this.Ctx.fill();
     }
 
-
     DrawMoveTo(x, y) {
         var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
         var p;
@@ -1000,7 +996,6 @@ export class BlockSprites extends DisplayObject {
         }
         this.Ctx.moveTo(p.x, p.y);
     }
-
 
     DrawLineTo(x, y) {
         var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);
@@ -1025,7 +1020,6 @@ export class BlockSprites extends DisplayObject {
         }
         this.Ctx.moveTo(p.x, p.y);
     }
-
 
     DrawFloatLineTo(x, y) {
         var pos = new Point(this._Position.x + this._XOffset, this._Position.y + this._YOffset);

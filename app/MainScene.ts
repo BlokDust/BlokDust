@@ -117,7 +117,6 @@ export class MainScene extends DisplayObject{
                     //TODO: set the buffer of this newly created Sampler
                     console.log(file.name + ' dropped');
                 }
-
             });
 
         }, this);
@@ -142,23 +141,7 @@ export class MainScene extends DisplayObject{
         this._PointerPoint = new Point();
         this._SelectedBlockPosition = new Point();
 
-        //this._ConnectionLines.Draw();
-        //this._LaserBeams.Draw();
-        //this._ConnectionLines.Draw();
-        //this._ToolTip.Draw();
-        //this._RecorderPanel.Draw();
-        //this.OptionsPanel.Draw();
-        //this.ZoomButtons.Draw();
-        //this.MainSceneDragger.Draw();
-        //this._TrashCan.Draw();
-        //this._Header.Draw();
-        //this.SoundcloudPanel.Draw();
-        //this.SharePanel.Draw();
-        //this.SettingsPanel.Draw();
-        //this.MessagePanel.Draw();
-
         this.BlockCreator = new BlockCreator();
-
 
         // Display Objects //
 
@@ -185,10 +168,6 @@ export class MainScene extends DisplayObject{
         this.MessagePanel = new MessagePanel();
         this.DisplayList.Add(this.MessagePanel);
         this.MessagePanel.Init(this);
-
-        this._Header = new Header();
-        this.DisplayList.Add(this._Header);
-        this._Header.Init(this);
 
         this._ToolTip = new ToolTip();
         this.DisplayList.Add(this._ToolTip);
@@ -217,6 +196,10 @@ export class MainScene extends DisplayObject{
         this._LaserBeams = new LaserBeams();
         this.DisplayList.Add(this._LaserBeams);
         this._LaserBeams.Init(this);
+
+        this._Header = new Header();
+        this.DisplayList.Add(this._Header);
+        this._Header.Init(this);
 
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
@@ -348,7 +331,6 @@ export class MainScene extends DisplayObject{
     }
 
     TouchStart(e: any){
-        //var pos: Fayde.Input.TouchPoint = e.GetTouchPoint(null);
         var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
         var point = new Point(touch.clientX, touch.clientY);
         this._PointerDown(point);

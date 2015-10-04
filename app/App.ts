@@ -285,7 +285,7 @@ export default class App implements IApp{
         d.AddRange(this.Blocks);
         var blocks = new DisplayObject();
         blocks.DisplayList = new DisplayList(d);
-        this.MainScene.DisplayList.Add(blocks);
+        this.MainScene.DisplayList.Insert(0, blocks);
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
@@ -323,8 +323,6 @@ export default class App implements IApp{
 
         // Connect the effects chain
         this.Audio.ConnectionManager.Update();
-
-        //this.MainScene.Pause();
 
         if (this.Scene < 2) {
             this.LoadCued = true;
@@ -389,12 +387,9 @@ export default class App implements IApp{
     }
 
     Resize(): void {
-
         this.Metrics.Metrics();
         if (this.MainScene.OptionsPanel) {
             this.MainScene.SketchResize();
         }
-
     }
-
 }

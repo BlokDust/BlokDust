@@ -5,7 +5,7 @@ import Point = minerva.Point;
 
 declare var App: IApp;
 
-export class StageDragger  extends DisplayObject {
+export class StageDragger extends DisplayObject {
 
     private _DragStart: Point;
     private _OffsetStart: Point;
