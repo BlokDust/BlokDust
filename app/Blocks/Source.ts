@@ -1,4 +1,3 @@
-import ObservableCollection = Fayde.Collections.ObservableCollection;
 import {Block} from './Block';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
@@ -9,7 +8,9 @@ import {ISketchContext} from '../ISketchContext';
 import {ISource} from './ISource';
 import {Logic} from './Power/Logic/Logic';
 import {MainScene} from '../MainScene';
+import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {Particle} from '../Particle';
+import {Point} from '../Core/Primitives/Point';
 import {PowerSource} from './Power/PowerSource';
 import {Power} from './Power/Power';
 import {SoundcloudTrack} from '../UI/SoundcloudTrack';

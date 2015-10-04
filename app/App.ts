@@ -2,6 +2,7 @@
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
 import {Canvas} from './Canvas';
+import {ClockTimer} from './ClockTimer';
 import {ColorThemes} from './UI/ColorThemes';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
@@ -47,10 +48,11 @@ import {Source} from './Blocks/Source';
 import {Splash} from './Splash';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
+import Point = minerva.Point;
 
 export default class App implements IApp{
 
-    private _ClockTimer: Fayde.ClockTimer = new Fayde.ClockTimer();
+    private _ClockTimer: ClockTimer = new ClockTimer();
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
     private _SessionId: string;

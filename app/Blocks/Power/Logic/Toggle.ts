@@ -4,6 +4,7 @@ import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
 import {Particle} from '../../../Particle';
+import {Point} from '../../../Core/Primitives/Point';
 
 export class Toggle extends Logic {
 

@@ -1,5 +1,6 @@
 import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
+import {Point} from '../../Core/Primitives/Point';
 import {Source} from '../Source';
 
 export class Noise extends Source {

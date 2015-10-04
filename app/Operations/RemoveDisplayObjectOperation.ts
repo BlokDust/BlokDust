@@ -1,7 +1,7 @@
 import {DisplayList} from '../DisplayList';
 import {IDisplayObject} from '../IDisplayObject';
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
-import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 
 export class RemoveDisplayObjectOperation implements IUndoableOperation {
     private _DisplayList: DisplayList;

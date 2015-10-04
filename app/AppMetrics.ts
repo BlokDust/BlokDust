@@ -1,5 +1,6 @@
-import {IApp} from './IApp';
 declare var App: IApp;
+import {IApp} from './IApp';
+import {Point} from './Core/Primitives/Point';
 
 export class Metrics {
 
@@ -8,7 +9,6 @@ export class Metrics {
     App.Unit is the scaled unit used for all drawing and positioning.
     It's calculated by taking the screen width and dividing it by screenDivision
     */
-
 
     public TxtHeader: string;
     public TxtSlider: string;

@@ -1,5 +1,5 @@
 import {IUndoableOperation} from './IUndoableOperation';
-import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+import {ObservableCollection} from '../Collections/ObservableCollection';
 
 export class AddItemToObservableCollectionOperation<T> implements IUndoableOperation {
 

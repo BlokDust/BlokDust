@@ -4,6 +4,7 @@ import {IApp} from '../IApp';
 import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
+import {Point} from '../Core/Primitives/Point';
 import {ThemeSelector} from './ColorThemeSelector';
 import {Version} from './../_Version';
 

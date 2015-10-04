@@ -4,7 +4,8 @@ import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {ISource} from './Blocks/ISource';
-import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+import {ObservableCollection} from './Core/Collections/ObservableCollection';
+import {Point} from './Core/Primitives/Point';
 import {SaveFile} from './SaveFile';
 import {Source} from './Blocks/Source';
 import {Version as Version} from './_Version';

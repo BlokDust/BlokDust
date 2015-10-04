@@ -1,6 +1,8 @@
 import {IOperation} from './IOperation';
 import {IUndoableOperation} from './IUndoableOperation';
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import {ObservableCollection} from '../Collections/ObservableCollection';
+import {RoutedEvent} from '../Events/RoutedEvent';
+import {RoutedEventArgs} from '../Events/RoutedEventArgs';
 
 export class OperationManager {
 
@@ -10,8 +12,8 @@ export class OperationManager {
     private _CurrentOperation: Promise<any>;
     public _MaxOperations: number = 100;
 
-    OperationBegin: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
-    OperationComplete: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    OperationBegin: RoutedEvent<RoutedEventArgs> = new RoutedEvent<RoutedEventArgs>();
+    OperationComplete: RoutedEvent<RoutedEventArgs> = new RoutedEvent<RoutedEventArgs>();
 
     static CANNOT_UNDO: string = "Cannot undo";
     static CANNOT_REDO: string = "Cannot redo";
@@ -69,14 +71,14 @@ export class OperationManager {
 
         this._Operations.Add(operation);
 
-        this.OperationBegin.raise(operation, new Fayde.RoutedEventArgs());
+        this.OperationBegin.raise(operation, new RoutedEventArgs());
 
         var that = this;
 
         return this._CurrentOperation = operation.Do().then((result) => {
             that._CurrentOperation = null;
             that.Head = this._Operations.Count - 1;
-            that.OperationComplete.raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationComplete.raise(operation, new RoutedEventArgs());
 
             that._Debug();
 
@@ -94,14 +96,14 @@ export class OperationManager {
 
         var operation = this._Operations.GetValueAt(this.Head);
 
-        this.OperationBegin.raise(operation, new Fayde.RoutedEventArgs());
+        this.OperationBegin.raise(operation, new RoutedEventArgs());
 
         var that = this;
 
         return this._CurrentOperation = (<IUndoableOperation>operation).Undo().then((result) => {
             that._CurrentOperation = null;
             that.Head--;
-            that.OperationComplete.raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationComplete.raise(operation, new RoutedEventArgs());
 
             that._Debug();
 
@@ -124,7 +126,7 @@ export class OperationManager {
         return this._CurrentOperation = operation.Do().then((result) => {
             that._CurrentOperation = null;
             that.Head++;
-            that.OperationComplete.raise(operation, new Fayde.RoutedEventArgs());
+            that.OperationComplete.raise(operation, new RoutedEventArgs());
 
             that._Debug();
 

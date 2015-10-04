@@ -3,6 +3,7 @@ import {ISketchContext} from '../../../ISketchContext';
 import {MainScene} from '../../../MainScene';
 import {PitchShifter} from '../Post/PitchShifter';
 import {PostEffect} from '../PostEffect';
+import {Point} from '../../../Core/Primitives/Point';
 
 declare var App: IApp;
 

@@ -1,8 +1,9 @@
+import Size = minerva.Size;
 import {OptionButton} from './OptionButton';
 import {OptionHandle} from './OptionHandle';
 import {OptionSubHandle} from './OptionSubHandle';
 import {OptionSwitch} from './OptionSwitch';
-import Size = minerva.Size; //TODO: es6 modules
+import {Point} from '../../Core/Primitives/Point';
 
 export interface IOption {
     Type: String;
@@ -11,7 +12,6 @@ export interface IOption {
     Name: string;
     Setting: string;
     DisplayConversion: any;
-
 
     Origin: number;
     Selected: boolean;

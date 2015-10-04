@@ -1,11 +1,12 @@
+import Vector = Utils.Maths.Vector;
 import {IApp} from './IApp';
 import {IBlock} from "./Blocks/IBlock";
 import {IPooledObject} from "./Core/Resources/IPooledObject";
-import {Source} from "./Blocks/Source";
 import {Logic} from "./Blocks/Power/Logic/Logic";
 import {ParticleEmitter} from "./Blocks/Power/ParticleEmitter";
+import {Point} from './Core/Primitives/Point';
+import {Source} from "./Blocks/Source";
 import {Void} from "./Blocks/Power/Void";
-import Vector = Utils.Maths.Vector; //TODO: es6 module
 
 declare var App: IApp;
 

@@ -2,6 +2,7 @@ import {Effect} from '../Effect';
 import {ISketchContext} from '../../ISketchContext';
 import {ISource} from '../ISource';
 import {MainScene} from '../../MainScene';
+import {Point} from '../../Core/Primitives/Point';
 import {PowerEffect} from './PowerEffect';
 
 export class Power extends PowerEffect {

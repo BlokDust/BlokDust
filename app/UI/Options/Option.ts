@@ -1,26 +1,27 @@
+import Size = minerva.Size;
 import {IOption} from './IOption';
 import {OptionButton} from './OptionButton';
 import {OptionHandle} from './OptionHandle';
 import {OptionSubHandle} from './OptionSubHandle';
 import {OptionSwitch} from './OptionSwitch';
-import Size = minerva.Size; //TODO: es6 modules
+import {Point} from '../../Core/Primitives/Point';
 
 export class Option implements IOption {
 
-    public Type:String;
-    public Position:Point;
-    public Size:Size;
-    public Name:string;
-    public Setting:string;
+    public Type: String;
+    public Position: Point;
+    public Size: Size;
+    public Name: string;
+    public Setting: string;
     public DisplayConversion: any;
 
-    public Origin:number;
-    public Selected:boolean;
-    public Log:boolean;
-    public Value:number;
-    public Min:number;
-    public Max:number;
-    public Quantised:boolean;
+    public Origin: number;
+    public Selected: boolean;
+    public Log: boolean;
+    public Value: number;
+    public Min: number;
+    public Max: number;
+    public Quantised: boolean;
 
 
     public EValue: number[];
@@ -49,7 +50,6 @@ export class Option implements IOption {
     public ButtonMode: string;
 
     constructor() {
-
 
     }
 

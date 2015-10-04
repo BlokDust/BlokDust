@@ -1,4 +1,5 @@
 import {IApp} from '../../IApp';
+import {Point} from '../../Core/Primitives/Point';
 
 declare var App: IApp;
 

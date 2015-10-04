@@ -1,7 +1,8 @@
 import {IApp} from '../../IApp';
 import {Option} from './Option';
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
-import Size = minerva.Size; //TODO: es6 modules
+import Size = minerva.Size;
+import Point = minerva.Point;
 
 declare var App: IApp;
 

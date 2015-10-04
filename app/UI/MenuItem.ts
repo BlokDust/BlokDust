@@ -1,6 +1,7 @@
+import Size = minerva.Size;
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
-import Size = minerva.Size; //TODO: es6 modules
+import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
 

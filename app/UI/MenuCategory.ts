@@ -1,6 +1,7 @@
 import {Header} from './Header';
 import {IApp} from '../IApp';
 import {MenuItem} from './MenuItem';
+import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
 

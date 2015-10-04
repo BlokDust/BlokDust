@@ -1,6 +1,7 @@
-import {Option} from './Option';
+import Size = minerva.Size;
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
-import Size = minerva.Size; //TODO: es6 modules
+import {Option} from './Option';
+import {Point} from '../../Core/Primitives/Point';
 import {WaveForm} from './OptionWave';
 
 export class WaveImage extends WaveForm{

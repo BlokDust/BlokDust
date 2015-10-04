@@ -1,5 +1,6 @@
 import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
+import {Point} from '../../Core/Primitives/Point';
 import {PowerSource} from './PowerSource';
 
 export class Laser extends PowerSource {

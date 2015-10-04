@@ -14,6 +14,7 @@ import {OptionSubHandle} from './Options/OptionSubHandle';
 import {OptionSwitch as Switch} from './Options/OptionSwitch';
 import {Option} from './Options/Option';
 import {Parametric} from './Options/OptionParametric';
+import {Point} from '../Core/Primitives/Point';
 import {Slider} from './Options/OptionSlider';
 import {SwitchArray} from './Options/OptionSwitchArray';
 import {WaveImage} from './Options/OptionWaveImage';

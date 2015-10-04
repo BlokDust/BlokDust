@@ -1,4 +1,4 @@
-import ObservableCollection = Fayde.Collections.ObservableCollection;
+import Size = minerva.Size;
 import {AudioChain} from '../Core/Audio/Connections/AudioChain';
 import {DisplayObject} from '../DisplayObject';
 import {Grid} from '../Grid';
@@ -7,10 +7,13 @@ import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {ISketchContext} from '../ISketchContext';
 import {MainScene} from '../MainScene';
+import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
 import {Particle} from '../Particle';
+import {Point} from '../Core/Primitives/Point';
 import {PreEffect} from './Effects/PreEffect';
-import Size = minerva.Size;
+import {RoutedEventArgs} from '../Core/Events/RoutedEventArgs';
+import {RoutedEvent} from '../Core/Events/RoutedEvent';
 
 declare var App: IApp;
 
@@ -18,7 +21,7 @@ export class Block extends DisplayObject implements IBlock {
 
     public Id: number;
     public Type: any;
-    public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    public Click: RoutedEvent<RoutedEventArgs> = new RoutedEvent<RoutedEventArgs>();
     public Position: Point; // in grid units
     public LastPosition: Point; // in grid units
     public IsChained: boolean = false;
@@ -92,7 +95,7 @@ export class Block extends DisplayObject implements IBlock {
     MouseDown() {
         this.IsPressed = true;
         this.LastPosition = this.Position.Clone();
-        this.Click.raise(this, new Fayde.RoutedEventArgs());
+        this.Click.raise(this, new RoutedEventArgs());
     }
 
     TouchDown() {

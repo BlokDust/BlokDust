@@ -2,6 +2,7 @@ import {IApp} from '../../IApp';
 import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
+import {Point} from '../../Core/Primitives/Point';
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';

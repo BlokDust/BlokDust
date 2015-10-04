@@ -4,6 +4,7 @@ import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
+import {Point} from '../../Core/Primitives/Point';
 import {Source} from '../Source';
 
 declare var App: IApp;

@@ -1,12 +1,16 @@
-import {IDisplayObject} from "../IDisplayObject";
-import {Particle} from "../Particle";
 import {Grid} from "../Grid";
 import {IAudioChain} from "../Core/Audio/Connections/IAudioChain";
+import {IDisplayObject} from "../IDisplayObject";
+import {ObservableCollection} from '../Core/Collections/ObservableCollection';
+import {Particle} from "../Particle";
+import {Point} from '../Core/Primitives/Point';
+import {RoutedEventArgs} from '../Core/Events/RoutedEventArgs';
+import {RoutedEvent} from '../Core/Events/RoutedEvent';
 
 export interface IBlock extends IDisplayObject{
     Id: number;
-    Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
-    Connections: Fayde.Collections.ObservableCollection<IBlock>
+    Click: RoutedEvent<RoutedEventArgs>;
+    Connections: ObservableCollection<IBlock>
     Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;

@@ -9,6 +9,7 @@ import {Laser} from './Blocks/Power/Laser';
 import {Logic} from './Blocks/Power/Logic/Logic';
 import {MainScene} from './MainScene';
 import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
+import {Point} from './Core/Primitives/Point';
 import {Source} from './Blocks/Source';
 import {Void} from './Blocks/Power/Void';
 

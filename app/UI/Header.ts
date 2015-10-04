@@ -6,6 +6,7 @@ import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {MenuItem} from './MenuItem';
+import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
 

@@ -5,6 +5,7 @@ import {Keyboard} from './Keyboard';
 import {KeyDownEventArgs} from '../../Core/Inputs/KeyDownEventArgs';
 import {MainScene} from '../../MainScene';
 import {Microphone} from '../Sources/Microphone';
+import {Point} from '../../Core/Primitives/Point';
 import {Power} from '../Power/Power';
 import {VoiceCreator as Voice} from './VoiceObject';
 

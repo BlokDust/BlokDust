@@ -5,7 +5,6 @@
     "bower-webfontloader": "~1.5.16",
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
-    "fayde": "~0.16.15",
     "intersection": "BlokDust/intersection",
     "jquery": "~2.1.3",
     "lzma": "nmrugg/LZMA-JS",
@@ -16,7 +15,6 @@
     "utils": "edsilv/utils#~0.0.25"
   },
   "resolutions": {
-    "fayde": "~0.16.11"
   },
   "devDependencies": {
     "r.js": "~2.1.16"

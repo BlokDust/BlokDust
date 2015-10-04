@@ -4,6 +4,7 @@ import {Grid} from './../Grid';
 import {IApp} from '../IApp';
 import {ISketchContext} from '../ISketchContext';
 import {MainScene} from './../MainScene';
+import Point = minerva.Point;
 
 declare var App: IApp;
 

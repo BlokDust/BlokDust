@@ -1,12 +1,12 @@
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
+import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {SoundcloudTrack} from '../UI/SoundcloudTrack';
 import {Source} from './Source';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
-import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 module
 
 export interface ISource extends IBlock {
-    Connections: Fayde.Collections.ObservableCollection<IEffect>;
+    Connections: ObservableCollection<IEffect>;
     Sources?: any[];
     Envelopes?: Tone.AmplitudeEnvelope[];
     AudioInput?: Tone.Signal;

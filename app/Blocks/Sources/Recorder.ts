@@ -1,6 +1,7 @@
 import {IApp} from '../../IApp';
 import {ISketchContext} from '../../ISketchContext';
 import {MainScene} from '../../MainScene';
+import {Point} from '../../Core/Primitives/Point';
 import {SamplerBase} from './SamplerBase';
 import {Source} from '../Source';
 

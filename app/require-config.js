@@ -4,7 +4,6 @@ require.config({
         "App": "App",
         "exjs": "lib/exjs/dist/ex",
         "extensions": "lib/extensions/dist/extensions",
-        "fayde.drawing": "lib/fayde.drawing/dist/fayde.drawing",
         "intersection": "lib/intersection/intersection",
         "jquery": "lib/jquery/dist/jquery",
         "lzma": "lib/lzma/src/lzma",
@@ -19,9 +18,6 @@ require.config({
         "exjs": {
             "exports": "exjs",
             "path": "lib/exjs/dist/ex.min"
-        },
-        "fayde.drawing": {
-            "exports": "Fayde.Drawing"
         },
         "tween": {
             "exports": "TWEEN",
@@ -50,7 +46,6 @@ require([
     "jquery",
     "exjs",
     "extensions",
-    "fayde.drawing",
     "intersection",
     "lzma",
     "Recorderjs/recorder",

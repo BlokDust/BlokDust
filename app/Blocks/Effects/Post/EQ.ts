@@ -1,6 +1,7 @@
 import {ISketchContext} from '../../../ISketchContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
+import {Point} from '../../../Core/Primitives/Point';
 
 export class EQ extends PostEffect {
 

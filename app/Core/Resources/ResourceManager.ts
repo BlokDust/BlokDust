@@ -1,11 +1,13 @@
 import {IResource} from './IResource';
-import ObservableCollection = Fayde.Collections.ObservableCollection; //TODO: es6 modules
+import {ObservableCollection} from '../Collections/ObservableCollection';
+import {RoutedEvent} from '../Events/RoutedEvent';
+import {RoutedEventArgs} from '../Events/RoutedEventArgs';
 
 export class ResourceManager {
 
     private _Resources: ObservableCollection<IResource<any>> = new ObservableCollection<IResource<any>>();
 
-    ResourceAdded: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
+    ResourceAdded: RoutedEvent<RoutedEventArgs> = new RoutedEvent<RoutedEventArgs>();
 
     constructor() {
 
@@ -14,6 +16,6 @@ export class ResourceManager {
     public AddResource(resource: IResource<any>): void{
         this._Resources.Add(resource);
 
-        this.ResourceAdded.raise(resource, new Fayde.RoutedEventArgs());
+        this.ResourceAdded.raise(resource, new RoutedEventArgs());
     }
 }

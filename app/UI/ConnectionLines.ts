@@ -37,7 +37,6 @@ export class ConnectionLines extends DisplayObject {
                     var xDif = (targetPos.x - myPos.x) / grd;
                     var yDif = (targetPos.y - myPos.y) / grd;
 
-
                     this.Ctx.moveTo(myPos.x, myPos.y);
 
                     if (xDif > 0) { // RIGHT HALF

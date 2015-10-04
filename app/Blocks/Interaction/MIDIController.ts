@@ -6,6 +6,7 @@ import {MainScene} from '../../MainScene';
 import {Microphone} from '../Sources/Microphone';
 import {MIDIManager} from '../../Core/Audio/MIDIManager';
 import {MIDIMessageArgs} from '../../Core/Audio/MIDIMessageArgs';
+import {Point} from '../../Core/Primitives/Point';
 import {Power} from '../Power/Power';
 import {VoiceCreator as Voice} from './VoiceObject';
 

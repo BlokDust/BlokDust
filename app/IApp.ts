@@ -23,6 +23,7 @@ import {ResourceManager} from './Core/Resources/ResourceManager';
 import {Serializer} from './Serializer';
 import {Splash} from './Splash';
 import {TypingManager} from './Core/Inputs/TypingManager';
+import Point = minerva.Point;
 
 export interface IApp {
 

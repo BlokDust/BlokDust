@@ -5,6 +5,7 @@ import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
 import {ParticleEmitter} from './../ParticleEmitter';
 import {Particle} from '../../../Particle';
+import {Point} from '../../../Core/Primitives/Point';
 
 export class Momentary extends Logic {
 

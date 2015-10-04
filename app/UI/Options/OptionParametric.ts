@@ -1,9 +1,10 @@
+import Size = minerva.Size;
 import {IApp} from '../../IApp';
-import {Option} from './Option';
 import {OptionHandle} from './OptionHandle';
 import {OptionsPanel} from './../OptionsPanel';
 import {OptionSubHandle} from './OptionSubHandle';
-import Size = minerva.Size;
+import {Option} from './Option';
+import {Point} from '../../Core/Primitives/Point';
 
 declare var App: IApp;
 

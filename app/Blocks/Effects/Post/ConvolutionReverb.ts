@@ -5,6 +5,7 @@ import {PostEffect} from '../PostEffect';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloudAudioType';
 import {SoundCloudAudio} from  '../../../Core/Audio/SoundCloudAudio';
 import {SoundcloudTrack} from '../../../UI/SoundcloudTrack';
+import {Point} from '../../../Core/Primitives/Point';
 
 declare var App: IApp;
 

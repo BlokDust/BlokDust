@@ -1,5 +1,6 @@
 import {IApp} from '../../IApp';
 import {OptionHandle} from './OptionHandle';
+import Point = minerva.Point;
 
 declare var App: IApp;
 

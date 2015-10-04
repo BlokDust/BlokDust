@@ -1,6 +1,7 @@
 import {IDisplayObject} from './IDisplayObject';
+import {ObservableCollection} from './Core/Collections/ObservableCollection';
 
-export class DisplayObjectCollection<T extends IDisplayObject> extends Fayde.Collections.ObservableCollection<T> {
+export class DisplayObjectCollection<T extends IDisplayObject> extends ObservableCollection<T> {
 
     constructor(){
         super();

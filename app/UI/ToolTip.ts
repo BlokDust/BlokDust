@@ -5,6 +5,7 @@ import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
 import {ISketchContext} from '../ISketchContext';
+import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
 

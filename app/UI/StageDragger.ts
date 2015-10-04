@@ -1,6 +1,7 @@
 import {DisplayObject} from '../DisplayObject';
 import {IApp} from '../IApp';
 import {ISketchContext} from '../ISketchContext';
+import Point = minerva.Point;
 
 declare var App: IApp;
 
