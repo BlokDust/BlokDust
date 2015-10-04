@@ -135,8 +135,10 @@ export class Header extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
     Draw() {
+        super.Draw();
+
         var units = App.Unit;
-         var dataType = units*10;
+        var dataType = units*10;
         var headerType = Math.round(units*28);
         var thisHeight = Math.round(this.Height*units);
         var dropDown = Math.round(this.DropDown*units);
