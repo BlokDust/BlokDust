@@ -1,4 +1,4 @@
-import {CollectionChangedEventArgs} from './CollectionChangedEventArgs';
+import {CollectionChangedEventArgs} from '../Events/CollectionChangedEventArgs';
 import {INotifyCollectionChanged} from '../Events/INotifyCollectionChanged';
 import {INotifyPropertyChanged} from '../Events/INotifyPropertyChanged';
 import {PropertyChangedEventArgs} from './PropertyChangedEventArgs';
