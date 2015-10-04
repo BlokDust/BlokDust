@@ -4,7 +4,7 @@ import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 import {ISource} from './ISource';
 import {Logic} from './Power/Logic/Logic';
 import {MainScene} from '../MainScene';

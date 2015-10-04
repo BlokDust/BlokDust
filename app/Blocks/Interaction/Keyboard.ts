@@ -2,7 +2,7 @@ import {Granular} from '../Sources/Granular';
 import {Grid} from '../../Grid';
 import {IApp} from '../../IApp';
 import {Interaction} from './Interaction';
-import {ISketchContext} from '../../ISketchContext';
+import {ISketchContext} from '../../Core/Drawing/ISketchContext';
 import {ISource} from '../ISource';
 import {Recorder} from '../Sources/Recorder';
 import {SamplerBase} from '../Sources/SamplerBase';

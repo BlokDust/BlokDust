@@ -1,5 +1,5 @@
-import {DisplayList} from '../DisplayList';
-import {IDisplayObject} from '../IDisplayObject';
+import {DisplayList} from '../Core/Drawing/DisplayList';
+import {IDisplayObject} from '../Core/Drawing/IDisplayObject';
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 

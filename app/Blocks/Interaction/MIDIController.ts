@@ -1,5 +1,5 @@
 import {IApp} from '../../IApp';
-import {ISketchContext} from '../../ISketchContext';
+import {ISketchContext} from '../../Core/Drawing/ISketchContext';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {MainScene} from '../../MainScene';

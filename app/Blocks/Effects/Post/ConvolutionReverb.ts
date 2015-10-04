@@ -1,5 +1,5 @@
 import {IApp} from '../../../IApp';
-import {ISketchContext} from '../../../ISketchContext';
+import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloudAudioType';

@@ -1,5 +1,5 @@
 import {IDisplayObject} from './IDisplayObject';
-import {ObservableCollection} from './Core/Collections/ObservableCollection';
+import {ObservableCollection} from './../Collections/ObservableCollection';
 
 export class DisplayObjectCollection<T extends IDisplayObject> extends ObservableCollection<T> {
 

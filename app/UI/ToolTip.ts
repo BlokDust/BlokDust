@@ -1,10 +1,10 @@
 import Size = minerva.Size;
-import {DisplayObject} from '../DisplayObject';
+import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {Grid} from './../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;

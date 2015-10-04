@@ -1,11 +1,11 @@
 import Size = minerva.Size;
 import {AudioChain} from '../Core/Audio/Connections/AudioChain';
-import {DisplayObject} from '../DisplayObject';
+import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 import {MainScene} from '../MainScene';
 import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';

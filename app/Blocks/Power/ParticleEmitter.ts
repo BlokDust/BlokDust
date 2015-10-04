@@ -1,6 +1,6 @@
 import Vector = Utils.Maths.Vector;
 import {IApp} from '../../IApp';
-import {ISketchContext} from '../../ISketchContext';
+import {ISketchContext} from '../../Core/Drawing/ISketchContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Point} from '../../Core/Primitives/Point';

@@ -1,4 +1,4 @@
-import {DisplayObject} from '../DisplayObject';
+import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
 import Size = minerva.Size; //TODO: es6 modules

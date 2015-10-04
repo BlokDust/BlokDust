@@ -1,5 +1,5 @@
 import {ISketchContext} from './ISketchContext';
-import {ITimerListener} from './ITimerListener';
+import {ITimerListener} from './../../ITimerListener';
 import Point = minerva.Point;
 
 export interface IDisplayObject extends ISketchContext, ITimerListener{

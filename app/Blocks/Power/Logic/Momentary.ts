@@ -1,5 +1,5 @@
 import {Effect} from '../../Effect';
-import {ISketchContext} from '../../../ISketchContext';
+import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';

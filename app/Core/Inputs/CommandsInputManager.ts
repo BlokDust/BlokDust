@@ -35,11 +35,10 @@ export class CommandsInputManager extends InputManager {
 
         //console.log(this.KeysDown);
 
-        if (!App.TypingManager.IsEnabled) { // todo: use flux
+        if (!App.TypingManager.IsEnabled) {
             if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.s)){
                 e.preventDefault();
-                // todo: use flux
-                App.MainScene.SharePanel.OpenPanel();
+                 App.MainScene.SharePanel.OpenPanel();
                 return;
             }
 
@@ -55,7 +54,5 @@ export class CommandsInputManager extends InputManager {
                 return;
             }
         }
-
-
     }
 }

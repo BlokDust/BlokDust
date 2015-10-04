@@ -1,9 +1,9 @@
-import {ClockTimer} from './ClockTimer';
+import {ClockTimer} from './../../ClockTimer';
 import {DisplayList} from './DisplayList';
 import {DisplayObjectCollection} from './DisplayObjectCollection';
 import {IDisplayObject} from './IDisplayObject';
 import {ISketchContext} from './ISketchContext';
-import {Point} from './Core/Primitives/Point';
+import {Point} from './../Primitives/Point';
 
 var MAX_FPS: number = 100;
 var MAX_MSPF: number = 1000 / MAX_FPS;

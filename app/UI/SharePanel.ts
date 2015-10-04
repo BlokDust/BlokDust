@@ -1,9 +1,9 @@
 import Size = minerva.Size;
 import {CommandManager} from '../Core/Commands/CommandManager';
 import {Commands} from './../Commands';
-import {DisplayObject} from '../DisplayObject';
+import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 import {MainScene} from './../MainScene';
 
 declare var App: IApp;

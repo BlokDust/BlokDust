@@ -4,7 +4,7 @@ import {BlockSprites} from './Blocks/BlockSprites';
 import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
 import {Commands} from './Commands';
 import {ConnectionLines} from './UI/ConnectionLines';
-import {DisplayObject} from './DisplayObject';
+import {DisplayObject} from './Core/Drawing/DisplayObject';
 import {Grid} from './Grid';
 import {Header} from './UI/Header';
 import {IApp} from './IApp';

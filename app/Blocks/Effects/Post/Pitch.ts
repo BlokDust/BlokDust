@@ -1,5 +1,5 @@
 import {IApp} from '../../../IApp';
-import {ISketchContext} from '../../../ISketchContext';
+import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
 import {MainScene} from '../../../MainScene';
 import {PitchShifter} from '../Post/PitchShifter';
 import {PostEffect} from '../PostEffect';

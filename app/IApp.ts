@@ -7,7 +7,7 @@ import {Config} from './Config';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
-import {IDisplayObject} from './IDisplayObject';
+import {IDisplayObject} from './Core/Drawing/IDisplayObject';
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';

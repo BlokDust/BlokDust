@@ -1,7 +1,7 @@
 import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
-import {ISketchContext} from '../../ISketchContext';
+import {ISketchContext} from '../../Core/Drawing/ISketchContext';
 
 declare var App: IApp;
 

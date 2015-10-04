@@ -1,6 +1,6 @@
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {IBlock} from '../IBlock';
-import {ISketchContext} from '../../ISketchContext';
+import {ISketchContext} from '../../Core/Drawing/ISketchContext';
 import {Logic} from './Logic/Logic';
 import {Power} from './Power';
 import {Source} from '../Source';

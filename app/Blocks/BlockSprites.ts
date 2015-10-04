@@ -1,8 +1,8 @@
-import {DisplayObject} from '../DisplayObject';
+import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 import {MainScene} from '../MainScene';
 import {Point} from '../Core/Primitives/Point';
 

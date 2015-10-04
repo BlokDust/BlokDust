@@ -43,7 +43,7 @@ export class OperationManager {
 
     }
 
-    public Do(operation:IOperation): Promise<any> {
+    public Do(operation: IOperation): Promise<any> {
 
         if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
 

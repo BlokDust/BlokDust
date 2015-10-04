@@ -1,7 +1,7 @@
 import {ColorTheme} from './ColorTheme';
-import {DisplayObject} from '../DisplayObject';
+import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 
 declare var App: IApp;
 

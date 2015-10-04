@@ -1,5 +1,5 @@
 import Size = minerva.Size;
-import {ISketchContext} from './ISketchContext';
+import {ISketchContext} from './Core/Drawing/ISketchContext';
 
 export class Canvas implements ISketchContext {
 

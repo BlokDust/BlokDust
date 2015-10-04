@@ -1,6 +1,6 @@
 import {Grid} from "../Grid";
 import {IAudioChain} from "../Core/Audio/Connections/IAudioChain";
-import {IDisplayObject} from "../IDisplayObject";
+import {IDisplayObject} from "../Core/Drawing/IDisplayObject";
 import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {Particle} from "../Particle";
 import {Point} from '../Core/Primitives/Point';

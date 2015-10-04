@@ -4,7 +4,7 @@ import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import {ISketchContext} from '../ISketchContext';
+import {ISketchContext} from '../Core/Drawing/ISketchContext';
 import {ISource} from './ISource';
 import Point = minerva.Point;
 
