@@ -1,5 +1,5 @@
 import {IApp} from '../../../IApp';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {Point} from '../../../Core/Primitives/Point';
@@ -14,7 +14,7 @@ export class Chopper extends PostEffect {
     public Transport;
     public Timer;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         this.Effect = App.Audio.ctx.createGain();
 

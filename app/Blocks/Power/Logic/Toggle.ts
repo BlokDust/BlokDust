@@ -1,5 +1,5 @@
 import {Effect} from '../../Effect';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
@@ -8,7 +8,7 @@ import {Point} from '../../../Core/Primitives/Point';
 
 export class Toggle extends Logic {
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         super.Init(sketch);
 

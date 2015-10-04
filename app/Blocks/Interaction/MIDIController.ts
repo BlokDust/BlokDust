@@ -1,5 +1,5 @@
 import {IApp} from '../../IApp';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {MainScene} from '../../MainScene';
@@ -16,7 +16,7 @@ export class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

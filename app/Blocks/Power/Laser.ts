@@ -1,11 +1,11 @@
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../MainScene';
 import {Point} from '../../Core/Primitives/Point';
 import {PowerSource} from './PowerSource';
 
 export class Laser extends PowerSource {
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

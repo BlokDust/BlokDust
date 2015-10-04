@@ -1,8 +1,8 @@
-import {ClockTimer} from './../../ClockTimer';
+import {ClockTimer} from './../Engine/ClockTimer';
 import {DisplayList} from './DisplayList';
 import {DisplayObjectCollection} from './DisplayObjectCollection';
 import {IDisplayObject} from './IDisplayObject';
-import {ISketchContext} from './ISketchContext';
+import {IDisplayContext} from './IDisplayContext';
 import {Point} from './../Primitives/Point';
 
 var MAX_FPS: number = 100;
@@ -23,7 +23,7 @@ export class DisplayObject implements IDisplayObject {
     public Width: number;
     public ZIndex: number;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         this.Sketch = sketch;
         this.DisplayList = new DisplayList();
         this.Setup();

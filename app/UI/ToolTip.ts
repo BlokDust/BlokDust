@@ -4,7 +4,7 @@ import {Grid} from './../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
@@ -17,7 +17,7 @@ export class ToolTip extends DisplayObject {
     public Position: Point;
     private _AlphaTween: TWEEN.Tween;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Name = "";

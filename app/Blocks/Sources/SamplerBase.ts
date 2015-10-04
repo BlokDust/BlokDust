@@ -1,13 +1,13 @@
 import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 
 declare var App: IApp;
 
 export class SamplerBase extends Source {
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
         this.CreateSource();
     }

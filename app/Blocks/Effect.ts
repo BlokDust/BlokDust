@@ -4,7 +4,7 @@ import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {ISource} from './ISource';
 import Point = minerva.Point;
 
@@ -18,7 +18,7 @@ export class Effect extends Block implements IEffect {
     Source: ISource;
     public Connections: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.UpdateOptionsForm();

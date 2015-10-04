@@ -1,7 +1,7 @@
 import {Grid} from '../../Grid';
 import {IApp} from '../../IApp';
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Point} from '../../Core/Primitives/Point';
@@ -16,7 +16,7 @@ export class Microphone extends Source {
     public Muted: boolean = false;
     private _unmutedVolume: number = 1;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         if (!this.Params) {
             this.Params = {
                 gain: 1,

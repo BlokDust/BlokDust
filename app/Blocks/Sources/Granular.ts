@@ -1,5 +1,5 @@
 import {IApp} from '../../IApp';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Point} from '../../Core/Primitives/Point';
@@ -31,7 +31,7 @@ export class Granular extends Source {
 
     public Params: GranularParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

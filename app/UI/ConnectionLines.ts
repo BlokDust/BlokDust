@@ -2,14 +2,14 @@ import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {ISource} from '../Blocks/ISource';
 
 declare var App: IApp;
 
 export class ConnectionLines extends DisplayObject {
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
     }
 

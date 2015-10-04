@@ -1,5 +1,5 @@
 import {IApp} from '../../../IApp';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../../MainScene';
 import {PitchShifter} from '../Post/PitchShifter';
 import {PostEffect} from '../PostEffect';
@@ -12,7 +12,7 @@ export class Pitch extends PostEffect {
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
 
-    Init(sketch?: ISketchContext): void {
+    Init(sketch?: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

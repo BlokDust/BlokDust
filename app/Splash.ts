@@ -1,6 +1,6 @@
 import {DisplayObject} from './Core/Drawing/DisplayObject';
 import {IApp} from './IApp';
-import {ISketchContext} from './Core/Drawing/ISketchContext';
+import {IDisplayContext} from './Core/Drawing/IDisplayContext';
 import Point = minerva.Point;
 
 declare var App: IApp;
@@ -14,7 +14,7 @@ export class Splash extends DisplayObject{
     private _Center: Point;
     private _Offset: Point;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
         this._Offset = new Point(0,0);
         this.XOffset = 0;

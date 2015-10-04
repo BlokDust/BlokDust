@@ -2,7 +2,7 @@ import Size = minerva.Size;
 import {Device} from '../Device';
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {Point} from '../Core/Primitives/Point';
@@ -26,7 +26,7 @@ export class SettingsPanel extends DisplayObject{
     private _VersionNumber: string;
     private _ThemeSelector: ThemeSelector;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Open = false;

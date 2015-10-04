@@ -1,5 +1,5 @@
 import {IApp} from '../../../IApp';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloudAudioType';
@@ -24,7 +24,7 @@ export class Convolver extends PostEffect {
     private _FallBackTrack: SoundcloudTrack;
     private _WaveForm: number[];
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (this.Params) { // TODO - must be better way, refresh function?
             var me = this;

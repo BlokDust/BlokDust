@@ -1,5 +1,5 @@
 import {AnimationsLayer} from './UI/AnimationsLayer';
-import {Canvas} from './Canvas';
+import {Canvas} from './Core/Drawing/Canvas';
 import {ColorThemes} from './UI/ColorThemes';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';

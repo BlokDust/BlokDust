@@ -1,5 +1,5 @@
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
 import {Point} from '../../../Core/Primitives/Point';
@@ -12,7 +12,7 @@ export class LFO extends PreEffect {
     public SamplerLFO: Tone.LFO;
     public WaveIndex: string[];
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         this.Defaults = {
             rate: 2,

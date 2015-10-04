@@ -1,7 +1,7 @@
 import {Block} from '../Block';
 import {Effect} from '../Effect';
 import {IApp} from '../../IApp';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import {Point} from '../../Core/Primitives/Point';
@@ -18,7 +18,7 @@ export class ToneSource extends Source {
     public Params: ToneSourceParams;
     public Defaults: ToneSourceParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         this.Defaults = {
             frequency: App.Config.BaseNote,

@@ -1,7 +1,7 @@
 import {ColorTheme} from './ColorTheme';
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 
 declare var App: IApp;
 
@@ -24,7 +24,7 @@ export class ColorThemes extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Loaded = false;

@@ -1,7 +1,7 @@
 import Size = minerva.Size;
-import {ISketchContext} from './Core/Drawing/ISketchContext';
+import {IDisplayContext} from './IDisplayContext';
 
-export class Canvas implements ISketchContext {
+export class Canvas implements IDisplayContext {
 
     private _Canvas: HTMLCanvasElement;
 

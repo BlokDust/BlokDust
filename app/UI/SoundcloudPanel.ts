@@ -2,7 +2,7 @@ import Size = minerva.Size;
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {Grid} from './../Grid';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 
 declare var App: IApp;
@@ -21,7 +21,7 @@ export class SoundcloudPanel extends DisplayObject{
     private _SelectedBlock: any;
     private _RandomWords: string[];
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Open = false;

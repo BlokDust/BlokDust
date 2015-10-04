@@ -1,7 +1,7 @@
 import {Block} from '../Blocks/Block';
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 
 declare var App: IApp;
 
@@ -10,7 +10,7 @@ export class AnimationsLayer extends DisplayObject {
     public ActiveBlocks: Block[] = [];
     private Loop: number = 0;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
     }
 

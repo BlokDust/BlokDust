@@ -1,4 +1,4 @@
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../../MainScene';
 import {Point} from '../../../Core/Primitives/Point';
 import {PostEffect} from '../PostEffect';
@@ -8,7 +8,7 @@ export class BitCrusher extends PostEffect {
     public Effect: Tone.BitCrusher;
     public Params: BitCrusherParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

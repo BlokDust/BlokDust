@@ -5,7 +5,7 @@ import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from '../MainScene';
 import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
@@ -40,7 +40,7 @@ export class Block extends DisplayObject implements IBlock {
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Update();

@@ -1,5 +1,5 @@
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
 import {Point} from '../../../Core/Primitives/Point';
@@ -9,7 +9,7 @@ export class Envelope extends PreEffect {
 
     public Params: EnvelopeParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

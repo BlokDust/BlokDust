@@ -1,4 +1,4 @@
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {Point} from '../../../Core/Primitives/Point';
@@ -8,7 +8,7 @@ export class Delay extends PostEffect {
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

@@ -4,7 +4,7 @@ import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {ISource} from './ISource';
 import {Logic} from './Power/Logic/Logic';
 import {MainScene} from '../MainScene';
@@ -52,7 +52,7 @@ export class Source extends Block implements ISource {
     public ResultsPage: number;
     public SearchString: string;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Sources = [];

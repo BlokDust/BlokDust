@@ -2,7 +2,7 @@ import Size = minerva.Size;
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {Grid} from './../Grid';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 import Point = minerva.Point;
 
@@ -19,7 +19,7 @@ export class ZoomButtons extends DisplayObject {
     public CurrentSlot: number;
     public ZoomAlpha: number;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.InRoll = this.OutRoll = false;

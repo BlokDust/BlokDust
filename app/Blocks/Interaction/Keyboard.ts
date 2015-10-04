@@ -2,7 +2,7 @@ import {Granular} from '../Sources/Granular';
 import {Grid} from '../../Grid';
 import {IApp} from '../../IApp';
 import {Interaction} from './Interaction';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {ISource} from '../ISource';
 import {Recorder} from '../Sources/Recorder';
 import {SamplerBase} from '../Sources/SamplerBase';
@@ -17,7 +17,7 @@ export class Keyboard extends Interaction {
     public BaseFrequency: number;
     public KeysDown: any = {};
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
     }
 

@@ -1,8 +1,8 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
-import {Canvas} from './Canvas';
-import {ClockTimer} from './ClockTimer';
+import {Canvas} from './Core/Drawing/Canvas';
+import {ClockTimer} from './Core/Engine/ClockTimer';
 import {ColorThemes} from './UI/ColorThemes';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';

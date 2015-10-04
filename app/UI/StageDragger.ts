@@ -1,6 +1,6 @@
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import Point = minerva.Point;
 
 declare var App: IApp;
@@ -13,7 +13,7 @@ export class StageDragger extends DisplayObject {
     public Tweens: any[];
     public Destination: Point;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this.Tweens = [];

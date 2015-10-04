@@ -3,7 +3,7 @@ import {DisplayObject} from './Core/Drawing/DisplayObject';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
-import {ISketchContext} from './Core/Drawing/ISketchContext';
+import {IDisplayContext} from './Core/Drawing/IDisplayContext';
 import {ISource} from './Blocks/ISource';
 import {Laser} from './Blocks/Power/Laser';
 import {Logic} from './Blocks/Power/Logic/Logic';

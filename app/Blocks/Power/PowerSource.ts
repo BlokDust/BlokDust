@@ -1,13 +1,13 @@
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {IBlock} from '../IBlock';
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {Logic} from './Logic/Logic';
 import {Power} from './Power';
 import {Source} from '../Source';
 
 export class PowerSource extends Source {
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         this.PowerConnections = 0;
         super.Init(sketch);
     }

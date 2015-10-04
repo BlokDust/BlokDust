@@ -1,6 +1,6 @@
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 
 declare var App: IApp;
@@ -9,7 +9,7 @@ export class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this._RollOver = false;

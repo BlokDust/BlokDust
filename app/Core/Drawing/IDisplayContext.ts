@@ -1,3 +1,3 @@
-export interface ISketchContext {
+export interface IDisplayContext {
     Ctx: CanvasRenderingContext2D;
 }

@@ -2,7 +2,7 @@ import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {ISource} from '../Blocks/ISource';
 import {MainScene} from './../MainScene';
 import {Recorder} from '../Blocks/Sources/Recorder';
@@ -15,7 +15,7 @@ export class RecorderPanel extends DisplayObject {
     private _Roll: boolean[];
     public Hover: boolean;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this._Blocks = [];

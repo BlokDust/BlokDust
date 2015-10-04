@@ -2,7 +2,7 @@ import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from '../MainScene';
 import {Point} from '../Core/Primitives/Point';
 
@@ -17,7 +17,7 @@ export class BlockSprites extends DisplayObject {
     private _XOffset: number;
     private _YOffset: number;
 
-    Init(sketch: ISketchContext) {
+    Init(sketch: IDisplayContext) {
         super.Init(sketch);
         this.Grid = <Grid>sketch;
         this._Scaled = true;

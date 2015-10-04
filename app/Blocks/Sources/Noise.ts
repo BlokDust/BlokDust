@@ -1,4 +1,4 @@
-import {ISketchContext} from '../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../MainScene';
 import {Point} from '../../Core/Primitives/Point';
 import {Source} from '../Source';
@@ -10,7 +10,7 @@ export class Noise extends Source {
     public Waveform: string;
     public NoiseParams: NoiseParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         this.Waveform = 'brown';
 

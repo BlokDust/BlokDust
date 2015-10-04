@@ -5,7 +5,7 @@ import {Device} from '../Device';
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
 import {OptionButton as Button} from './Options/OptionButton';
@@ -53,7 +53,7 @@ export class OptionsPanel extends DisplayObject {
         super();
     }
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this._Units = 1.7;

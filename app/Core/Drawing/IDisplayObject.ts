@@ -1,13 +1,13 @@
-import {ISketchContext} from './ISketchContext';
-import {ITimerListener} from './../../ITimerListener';
+import {IDisplayContext} from './IDisplayContext';
+import {ITimerListener} from './../Engine/ITimerListener';
 import Point = minerva.Point;
 
-export interface IDisplayObject extends ISketchContext, ITimerListener{
+export interface IDisplayObject extends IDisplayContext, ITimerListener{
     Ctx: CanvasRenderingContext2D;
     Draw(): void;
     Height: number;
     Hide(): void;
-    Init(sketch?: ISketchContext): void;
+    Init(sketch?: IDisplayContext): void;
     Initialised: boolean;
     IsPaused: boolean;
     IsVisible: boolean;

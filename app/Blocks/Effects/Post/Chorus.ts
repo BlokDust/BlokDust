@@ -1,4 +1,4 @@
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {Point} from '../../../Core/Primitives/Point';
@@ -9,7 +9,7 @@ export class Chorus extends PostEffect {
     public Effect: Tone.Chorus;
     public Params: ChorusParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         this.Defaults = {
             rate: 1.5,

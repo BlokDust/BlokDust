@@ -1,5 +1,5 @@
 import {Effect} from '../../Effect';
-import {ISketchContext} from '../../../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
 import {ISource} from '../../ISource';
 import {Particle} from '../../../Particle';
 import {PowerEffect} from './../PowerEffect';
@@ -8,7 +8,7 @@ export class Logic extends PowerEffect {
 
     public Params: LogicParams;
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {

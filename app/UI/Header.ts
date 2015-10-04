@@ -3,7 +3,7 @@ import {BlockCreator} from './../BlockCreator';
 import {Device} from '../Device';
 import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {ISketchContext} from '../Core/Drawing/ISketchContext';
+import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {MenuItem} from './MenuItem';
@@ -32,7 +32,7 @@ export class Header extends DisplayObject {
     public MenuOver: boolean;
     public Tweens: any[];
 
-    Init(sketch: ISketchContext): void {
+    Init(sketch: IDisplayContext): void {
         super.Init(sketch);
 
         this._Units = 1.7;
