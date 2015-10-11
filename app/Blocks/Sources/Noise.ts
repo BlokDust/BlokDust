@@ -113,7 +113,6 @@ export class Noise extends Source {
         super.SetParam(param,value);
     }
 
-
     Dispose() {
         super.Dispose();
 

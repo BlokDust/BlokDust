@@ -826,7 +826,5 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         this.OptionsPanel.Close();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
-
-        //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 }

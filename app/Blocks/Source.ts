@@ -154,7 +154,7 @@ export class Source extends Block implements ISource {
     }
 
     Stop() {
-        this.TriggerRelease();
+        this.TriggerRelease('all', true);
     }
 
 

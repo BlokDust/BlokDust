@@ -1,7 +1,10 @@
 import {Effect} from '../Effect';
+import {IApp} from '../../IApp';
 import {ISource} from '../ISource';
 import {MainScene} from '../../MainScene';
 import {PowerEffect} from './PowerEffect';
+
+declare var App: IApp;
 
 export class Power extends PowerEffect {
 
@@ -29,7 +32,18 @@ export class Power extends PowerEffect {
         (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"power");
     }
 
+    Stop() {
+        //Release all connected
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
+            source.Chain.Sources.forEach((source: ISource) => {
+                if (!source.IsPressed) {
+                    source.TriggerRelease('all');
+                }
+            });
+        });
+    }
+
     Dispose(){
-        super.Dispose();
     }
 }

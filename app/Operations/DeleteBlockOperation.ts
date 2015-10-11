@@ -20,10 +20,12 @@ export class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> impl
         super();
         this._Block = block;
 
-        (<any>this._Block).Stop();
         this.Operations.push(new MoveBlockOperation(block));
         this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.MainScene.DisplayList));
         this.Operations.push(new RemoveItemFromArrayOperation(<any>block, App.Blocks));
+        (<any>this._Block).Stop(); // TODO: await Remove ItemFromArrayOperation to finish first?
+        console.log(App.Blocks);
+        setTimeout(function() {console.log(App.Blocks)}, 1000);
     }
 
     Do(): Promise<IBlock> {
