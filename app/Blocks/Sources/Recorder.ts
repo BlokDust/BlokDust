@@ -122,6 +122,7 @@ export class Recorder extends SamplerBase {
                 s.player.buffer = this.BufferSource.buffer;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
+                s.player.reverse = this.Params.reverse;
             });
 
 

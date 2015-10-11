@@ -68,7 +68,7 @@ export class Soundcloud extends SamplerBase {
         }
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
-            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
+
             App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration(this._FirstBuffer);
             if (!this._LoadFromShare) {
@@ -81,13 +81,15 @@ export class Soundcloud extends SamplerBase {
             this._LoadFromShare = false;
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
-            this.RefreshOptionsPanel();
-
             this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = e;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
+                s.player.reverse = this.Params.reverse;
             });
+
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
+            this.RefreshOptionsPanel();
 
             // IF PLAYING, RE-TRIGGER //
             if (this.IsPowered()) {

@@ -507,6 +507,7 @@ export class WaveGen extends SamplerBase {
             s.player.buffer = this._FirstBuffer;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
+            s.player.reverse = this.Params.reverse;
         });
 
         // IF POWERED ON LOAD - TRIGGER //

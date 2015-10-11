@@ -35,6 +35,7 @@ export class InputManager {
 
         var k: number = this.GetKeyByCode(e.keyCode);
 
+
         // if it's undefined
         if (typeof k === 'undefined') return;
 
