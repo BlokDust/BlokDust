@@ -75,7 +75,10 @@ export class Momentary extends Logic {
         this.Params.logic = true;
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            source.Chain.Connections.forEach((source: ISource) => {
+            source.Chain.Sources.forEach((source: ISource) => {
+                source.TriggerAttackRelease();
+            });
+            source.Chain.PowerSources.forEach((source: ISource) => {
                 source.TriggerAttackRelease();
                 if (source instanceof ParticleEmitter) {
                     (<ParticleEmitter>source).EmitParticle();
