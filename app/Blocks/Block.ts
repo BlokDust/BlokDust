@@ -16,6 +16,7 @@ declare var App: IApp;
 export class Block extends DisplayObject implements IBlock {
 
     public Id: number;
+    public BlockName: string;
     public Type: any;
     public Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs> = new Fayde.RoutedEvent<Fayde.RoutedEventArgs>();
     public Position: Point; // in grid units

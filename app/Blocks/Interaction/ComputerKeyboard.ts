@@ -21,6 +21,7 @@ export class ComputerKeyboard extends Keyboard {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Computer Keyboard";
 
         this.Defaults = {
             octave: 3,

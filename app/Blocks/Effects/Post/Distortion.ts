@@ -9,6 +9,7 @@ export class Distortion extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Distortion";
 
         this.Defaults = {
             drive: 0.65,

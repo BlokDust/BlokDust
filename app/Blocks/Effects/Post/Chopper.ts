@@ -15,6 +15,8 @@ export class Chopper extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Chopper";
+
         this.Effect = App.Audio.ctx.createGain();
 
 

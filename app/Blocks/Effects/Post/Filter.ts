@@ -9,6 +9,7 @@ export class Filter extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Filter";
 
         this.Defaults = {
             frequency: 440,

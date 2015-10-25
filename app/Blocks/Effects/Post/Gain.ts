@@ -13,6 +13,7 @@ export class Gain extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Volume";
 
         this.Defaults = {
             gain: 1.2

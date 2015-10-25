@@ -13,6 +13,8 @@ export class LFO extends PreEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "LFO";
+
         this.Defaults = {
             rate: 2,
             depth: 20,

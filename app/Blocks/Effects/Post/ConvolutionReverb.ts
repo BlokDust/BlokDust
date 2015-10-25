@@ -25,6 +25,8 @@ export class Convolver extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Convolver";
+
         if (this.Params) { // TODO - must be better way, refresh function?
             var me = this;
             setTimeout(function() {

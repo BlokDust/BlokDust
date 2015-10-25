@@ -17,6 +17,7 @@ export class Microphone extends Source {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Microphone";
 
         this.Defaults = {
             gain: 1,

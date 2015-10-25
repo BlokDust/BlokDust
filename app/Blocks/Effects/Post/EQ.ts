@@ -9,6 +9,8 @@ export class EQ extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "EQ";
+
         this.Defaults = {
             frequency_1: 50,
             Q_1: 1,

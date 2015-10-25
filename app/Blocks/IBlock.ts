@@ -5,6 +5,7 @@ import {IAudioChain} from "../Core/Audio/Connections/IAudioChain";
 
 export interface IBlock extends IDisplayObject {
     Id: number;
+    BlockName: string;
     Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
     Connections: Fayde.Collections.ObservableCollection<IBlock>
     Outline: Point[];

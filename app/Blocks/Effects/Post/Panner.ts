@@ -13,6 +13,7 @@ export class Panner extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Panner";
 
         this.Defaults = {
             frequency: 1

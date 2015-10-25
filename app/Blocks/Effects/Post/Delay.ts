@@ -9,6 +9,7 @@ export class Delay extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Delay";
 
         this.Defaults = {
             delayTime: 0.25,

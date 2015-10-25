@@ -18,6 +18,7 @@ export class MIDIController extends Keyboard {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "MIDI Keyboard";
 
         this.Defaults = {
             glide: 0.05,

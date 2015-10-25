@@ -10,6 +10,8 @@ export class Chomp extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Chomp";
+
         if (!this.Params) {
         }
 

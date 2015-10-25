@@ -9,6 +9,7 @@ export class BitCrusher extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Bit Crusher";
 
         this.Defaults = {
             bits: 7,

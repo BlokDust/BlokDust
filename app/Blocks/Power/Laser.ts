@@ -8,6 +8,7 @@ export class Laser extends PowerSource {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Laser";
 
         this.Defaults = {
             angle: -90,

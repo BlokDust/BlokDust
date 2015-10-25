@@ -9,6 +9,7 @@ export class Phaser extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Phaser";
 
         this.Defaults = {
             rate: 0.5,

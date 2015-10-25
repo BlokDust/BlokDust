@@ -13,6 +13,7 @@ export class Scuzz extends PreEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Scuzz";
 
         this.Defaults = {
             depth: 1000,

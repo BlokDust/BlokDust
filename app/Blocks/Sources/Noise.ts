@@ -11,6 +11,8 @@ export class Noise extends Source {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Noise";
+
         this.Waveform = 'brown'; // is this being updated from save if not brown?
 
         this.WaveIndex = ["white","pink","brown"];

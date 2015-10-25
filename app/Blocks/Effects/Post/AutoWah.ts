@@ -9,6 +9,7 @@ export class AutoWah extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Auto Wah";
 
         this.Defaults = {
             octaves: 5,

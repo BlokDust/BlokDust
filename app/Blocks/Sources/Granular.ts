@@ -34,6 +34,8 @@ export class Granular extends Source {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Granular";
+
         if (this.Params) {
             this._LoadFromShare = true;
             setTimeout(() => {

@@ -650,13 +650,13 @@ export class MainScene extends Fayde.Drawing.SketchContext{
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
-                    if (block.OptionsForm) {
-                        panel.Name = block.OptionsForm.name;
+                    //if (block.OptionsForm) {
+                        panel.Name = block.BlockName;
                         var blockPos = App.Metrics.PointOnGrid(block.Position);
                         panel.Position.x = blockPos.x;
                         panel.Position.y = blockPos.y;
                         blockHover = true;
-                    }
+                    //}
                     break;
                 }
             }

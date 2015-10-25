@@ -13,6 +13,7 @@ export class Pitch extends PostEffect {
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
+        this.BlockName = "Pitch Shift";
 
         this.Defaults = {
             pitchOffset: 0
@@ -53,7 +54,7 @@ export class Pitch extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Pitch",
+            "name" : "Pitch Shift",
             "parameters" : [
 
                 {

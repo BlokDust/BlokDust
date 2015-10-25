@@ -21,6 +21,8 @@ export class Soundcloud extends SamplerBase {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "SoundCloud";
+
         if (this.Params) {
             this._LoadFromShare = true;
 

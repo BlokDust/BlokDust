@@ -11,6 +11,8 @@ export class Toggle extends Logic {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Toggle Switch";
+
         super.Init(sketch);
 
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));

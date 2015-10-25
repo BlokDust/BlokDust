@@ -9,6 +9,8 @@ export class Chorus extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Chorus";
+
         this.Defaults = {
             rate: 1.5,
             delayTime: 1.5,

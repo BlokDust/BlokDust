@@ -23,6 +23,9 @@ export class WaveGen extends SamplerBase {
     public Defaults: WaveGenParams;
 
     Init(sketch?: any): void {
+
+        this.BlockName = "WaveGen";
+
         if (this.Params) {
             this._LoadFromShare = true;
             var me = this;

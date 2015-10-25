@@ -16,6 +16,7 @@ export class ToneSource extends Source {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Tone";
 
         this.Defaults = {
             frequency: App.Config.BaseNote,

@@ -10,6 +10,7 @@ export class Envelope extends PreEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Envelope";
 
         this.Defaults = {
             attack: 1,

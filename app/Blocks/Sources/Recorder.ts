@@ -19,6 +19,7 @@ export class Recorder extends SamplerBase {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Recorder";
 
         this.Defaults = {
             playbackRate: 1,

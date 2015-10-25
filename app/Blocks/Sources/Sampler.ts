@@ -18,6 +18,8 @@ export class Sampler extends SamplerBase {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Sampler";
+
         if (this.Params) {
             this._LoadFromShare = true;
             setTimeout(() => {

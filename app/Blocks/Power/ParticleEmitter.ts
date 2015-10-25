@@ -15,6 +15,7 @@ export class ParticleEmitter extends PowerSource {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Particle Emitter";
 
         this.Defaults = {
             angle: -90,

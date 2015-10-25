@@ -9,6 +9,7 @@ export class Reverb extends PostEffect {
 
     Init(sketch?: any): void {
 
+        this.BlockName = "Reverb";
 
         this.Defaults = {
             dampening: 0.7,
