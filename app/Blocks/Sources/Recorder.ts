@@ -15,24 +15,25 @@ export class Recorder extends SamplerBase {
     public RecordedBlob;
     private _WaveForm: number[];
     public Params: SamplerParams;
+    public Defaults: SamplerParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                reverse: false,
-                startPosition: 0,
-                endPosition: 0,
-                loop: true,
-                loopStart: 0,
-                loopEnd: 0,
-                retrigger: false, //Don't retrigger attack if already playing
-                volume: 9,
-                track: null,
-                trackName: '',
-            };
-        }
+
+        this.Defaults = {
+            playbackRate: 1,
+            reverse: false,
+            startPosition: 0,
+            endPosition: 0,
+            loop: true,
+            loopStart: 0,
+            loopEnd: 0,
+            retrigger: false, //Don't retrigger attack if already playing
+            volume: 9,
+            track: null,
+            trackName: ''
+        };
+        this.PopulateParams();
 
         this._WaveForm = [];
 

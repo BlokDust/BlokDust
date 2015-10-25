@@ -6,17 +6,18 @@ import {PreEffect} from '../PreEffect';
 export class Envelope extends PreEffect {
 
     public Params: EnvelopeParams;
+    public Defaults: EnvelopeParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                attack: 1,
-                decay: 5,
-                sustain: 0.7,
-                release: 4,
-            };
-        }
+
+        this.Defaults = {
+            attack: 1,
+            decay: 5,
+            sustain: 0.7,
+            release: 4
+        };
+        this.PopulateParams();
 
         super.Init(sketch);
 

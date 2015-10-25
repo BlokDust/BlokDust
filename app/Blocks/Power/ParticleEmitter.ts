@@ -10,18 +10,20 @@ declare var App: IApp;
 export class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
+    public Params: ParticleEmitterParams;
+    public Defaults: ParticleEmitterParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                angle: -90,
-                speed: 5,
-                rate: 40,
-                range: 600,
-                selfPoweredMode: false
-            };
-        }
+
+        this.Defaults = {
+            angle: -90,
+            speed: 5,
+            rate: 40,
+            range: 600,
+            selfPoweredMode: false
+        };
+        this.PopulateParams();
 
         this._rateCounter = 0;
 

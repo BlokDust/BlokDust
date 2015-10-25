@@ -17,16 +17,17 @@ export class ComputerKeyboard extends Keyboard {
         OctaveDown: 'octave-down',
     };
     public Params: KeyboardParams;
+    public Defaults: KeyboardParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                octave: 3,
-                glide: 0.05,
-                isPolyphonic: false,
-            };
-        }
+
+        this.Defaults = {
+            octave: 3,
+            glide: 0.05,
+            isPolyphonic: false
+        };
+        this.PopulateParams();
 
         super.Init(sketch);
 

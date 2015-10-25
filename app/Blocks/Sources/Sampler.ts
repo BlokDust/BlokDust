@@ -9,6 +9,7 @@ export class Sampler extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SamplerParams;
+    public Defaults: SamplerParams;
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
     private _FirstBuffer: Tone.Buffer;
@@ -17,26 +18,27 @@ export class Sampler extends SamplerBase {
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                reverse: false,
-                startPosition: 0,
-                endPosition: null,
-                loop: true,
-                loopStart: 0,
-                loopEnd: 0,
-                retrigger: false, //Don't retrigger attack if already playing
-                volume: 11,
-                track: '',
-                trackName: '',
-            };
-        } else {
+        if (this.Params) {
             this._LoadFromShare = true;
             setTimeout(() => {
                 this.FirstSetup();
             }, 100);
         }
+
+        this.Defaults = {
+            playbackRate: 1,
+            reverse: false,
+            startPosition: 0,
+            endPosition: null,
+            loop: true,
+            loopStart: 0,
+            loopEnd: 0,
+            retrigger: false, //Don't retrigger attack if already playing
+            volume: 11,
+            track: '',
+            trackName: ''
+        };
+        this.PopulateParams();
 
         this._WaveForm = [];
 

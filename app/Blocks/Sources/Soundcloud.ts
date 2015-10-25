@@ -20,28 +20,30 @@ export class Soundcloud extends SamplerBase {
     public LoadTimeout: any;
 
     Init(sketch?: any): void {
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                reverse: false,
-                startPosition: 0,
-                endPosition: null,
-                loop: true,
-                loopStart: 0,
-                loopEnd: 0,
-                retrigger: false, //Don't retrigger attack if already playing
-                volume: 11,
-                track: '../Assets/ImpulseResponses/teufelsberg01.wav',
-                trackName: 'TEUFELSBERG',
-                user: 'BGXA',
-            };
-        } else {
+
+        if (this.Params) {
             this._LoadFromShare = true;
 
             setTimeout(() => {
                 this.FirstSetup();
             },100);
         }
+
+        this.Defaults = {
+            playbackRate: 1,
+            reverse: false,
+            startPosition: 0,
+            endPosition: null,
+            loop: true,
+            loopStart: 0,
+            loopEnd: 0,
+            retrigger: false, //Don't retrigger attack if already playing
+            volume: 11,
+            track: '../Assets/ImpulseResponses/teufelsberg01.wav',
+            trackName: 'TEUFELSBERG',
+            user: 'BGXA'
+        };
+        this.PopulateParams();
 
         this._WaveForm = [];
         this.SearchResults = [];

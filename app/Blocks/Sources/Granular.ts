@@ -30,26 +30,28 @@ export class Granular extends Source {
     public ReleaseTimeout;
 
     public Params: GranularParams;
+    public Defaults: GranularParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                density: 10,
-                region: 0,
-                spread: 1.5,
-                grainlength: 0.25,
-                track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
-                trackName: 'TEUFELSBERG',
-                user: 'BGXA'
-            };
-        } else {
+        if (this.Params) {
             this._LoadFromShare = true;
             setTimeout(() => {
                 this.FirstSetup();
             },100);
         }
+
+        this.Defaults = {
+            playbackRate: 1,
+            density: 10,
+            region: 0,
+            spread: 1.5,
+            grainlength: 0.25,
+            track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
+            trackName: 'TEUFELSBERG',
+            user: 'BGXA'
+        };
+        this.PopulateParams();
 
         this._tempPlaybackRate = this.Params.playbackRate;
         this._WaveForm = [];

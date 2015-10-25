@@ -9,14 +9,15 @@ export class Pitch extends PostEffect {
 
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
+    public Defaults: PitchShifterParams;
 
     Init(sketch?: Fayde.Drawing.SketchContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                pitchOffset: 0,
-            };
-        }
+
+        this.Defaults = {
+            pitchOffset: 0
+        };
+        this.PopulateParams();
 
         this.Effect = new PitchShifter(App.Audio.ctx);
         this.Effect.PitchOffset = this.Params.pitchOffset;

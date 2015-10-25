@@ -5,15 +5,16 @@ export class Filter extends PostEffect {
 
     public Effect: Tone.Filter;
     public Params: FilterParams;
+    public Defaults: FilterParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                frequency: 440,
-                gain: 0,
-            };
-        }
+
+        this.Defaults = {
+            frequency: 440,
+            gain: 0
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",

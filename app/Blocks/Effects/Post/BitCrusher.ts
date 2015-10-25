@@ -5,15 +5,16 @@ export class BitCrusher extends PostEffect {
 
     public Effect: Tone.BitCrusher;
     public Params: BitCrusherParams;
+    public Defaults: BitCrusherParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                bits: 7,
-                mix: 0.5,
-            };
-        }
+
+        this.Defaults = {
+            bits: 7,
+            mix: 0.5
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.BitCrusher(this.Params.bits);
 

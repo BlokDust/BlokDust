@@ -14,16 +14,17 @@ declare var App: IApp;
 export class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;
+    public Defaults: KeyboardParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                glide: 0.05,
-                isPolyphonic: false, // Polyphonic mode: boolean, default: off
-                octave: 3,
-            };
-        }
+
+        this.Defaults = {
+            glide: 0.05,
+            isPolyphonic: false, // Polyphonic mode: boolean, default: off
+            octave: 3
+        };
+        this.PopulateParams();
 
         super.Init(sketch);
 

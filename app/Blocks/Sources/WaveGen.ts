@@ -19,29 +19,32 @@ export class WaveGen extends SamplerBase {
     private _BufferData: Float32Array;
     private _WaveVoices: WaveVoice[];
     private _SeedLoad: boolean;
+    public Params: WaveGenParams;
+    public Defaults: WaveGenParams;
 
     Init(sketch?: any): void {
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                reverse: false,
-                startPosition: 0,
-                endPosition: null,
-                loop: true,
-                loopStart: 0,
-                loopEnd: 0,
-                retrigger: false, //Don't retrigger attack if already playing
-                volume: 11,
-                generate: null,
-                seed: {}
-            };
-        } else {
+        if (this.Params) {
             this._LoadFromShare = true;
             var me = this;
             setTimeout(function() {
                 me.FirstSetup();
             },100);
         }
+
+        this.Defaults = {
+            playbackRate: 1,
+            reverse: false,
+            startPosition: 0,
+            endPosition: null,
+            loop: true,
+            loopStart: 0,
+            loopEnd: 0,
+            retrigger: false, //Don't retrigger attack if already playing
+            volume: 11,
+            generate: null,
+            seed: {}
+        };
+        this.PopulateParams();
 
         this._WaveForm = [];
         this._WaveVoices = [];

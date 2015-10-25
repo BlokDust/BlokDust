@@ -3,16 +3,19 @@ import {PowerSource} from './PowerSource';
 
 export class Laser extends PowerSource {
 
+    public Params: LaserParams;
+    public Defaults: LaserParams;
+
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                angle: -90,
-                range: 400,
-                rotate: 0,
-                selfPoweredMode: false
-            };
-        }
+
+        this.Defaults = {
+            angle: -90,
+            range: 400,
+            rotate: 0,
+            selfPoweredMode: false
+        };
+        this.PopulateParams();
 
         this.UpdateCollision = true;
         this.Collisions = [];

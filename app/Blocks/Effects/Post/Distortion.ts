@@ -5,15 +5,16 @@ export class Distortion extends PostEffect {
 
     public Effect: Tone.Distortion;
     public Params: DistortionParams;
+    public Defaults: DistortionParams;
 
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                drive: 0.65,
-                mix: 0.75
-            };
-        }
+
+        this.Defaults = {
+            drive: 0.65,
+            mix: 0.75
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.Distortion(this.Params.drive);
         this.Effect.wet.value = this.Params.mix;

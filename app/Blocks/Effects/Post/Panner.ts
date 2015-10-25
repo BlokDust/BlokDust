@@ -1,17 +1,23 @@
+import {IApp} from '../../../IApp';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
+
+declare var App: IApp;
 
 export class Panner extends PostEffect {
 
     public Effect: Tone.AutoPanner;
 
+    /*public Params: PannerParams;
+    public Defaults: PannerParams;*/
+
     Init(sketch?: any): void {
 
-        if (!this.Params) {
-            this.Params = {
-                frequency: 1
-            };
-        }
+
+        this.Defaults = {
+            frequency: 1
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.AutoPanner({
             "frequency": this.Params.frequency

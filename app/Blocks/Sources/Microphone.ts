@@ -11,16 +11,18 @@ export class Microphone extends Source {
 
     public Volume: any; //TODO: This should be of type GainNode. Need to extend some web audio typings for tone
     public Params: MicrophoneParams;
+    public Defaults: MicrophoneParams;
     public Muted: boolean = false;
     private _unmutedVolume: number = 1;
 
     Init(sketch?: any): void {
-        if (!this.Params) {
-            this.Params = {
-                gain: 1,
-                monitor: true,
-            };
-        }
+
+
+        this.Defaults = {
+            gain: 1,
+            monitor: true
+        };
+        this.PopulateParams();
 
         super.Init(sketch);
 
