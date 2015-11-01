@@ -34,11 +34,12 @@ import {StageDragger as MainSceneDragger} from './UI/StageDragger';
 import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {ZoomButtons} from './UI/ZoomButtons';
+import Stage = etch.drawing.Stage;
 
 declare var App: IApp;
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-export class MainScene extends DisplayObject{
+export class MainScene extends Stage{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;

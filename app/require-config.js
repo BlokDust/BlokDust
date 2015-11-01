@@ -2,6 +2,7 @@ require.config({
     baseUrl: "./",
     paths: {
         "App": "App",
+        "etch": "lib/etch/dist/etch",
         "exjs": "lib/exjs/dist/ex",
         "extensions": "lib/extensions/dist/extensions",
         "intersection": "lib/intersection/intersection",
@@ -44,6 +45,7 @@ require([
     "PixelPalette",
     "Tone/core/Tone",
     "jquery",
+    "etch",
     "exjs",
     "extensions",
     "intersection",

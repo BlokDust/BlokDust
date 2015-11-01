@@ -1,6 +1,6 @@
 // Type definitions for es6-promise
 // Project: https://github.com/jakearchibald/ES6-Promise
-// Definitions by: FranÃ§ois de Campredon <https://github.com/fdecampredon/>
+// Definitions by: François de Campredon <https://github.com/fdecampredon/>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
 interface Thenable<R> {
@@ -161,5 +161,5 @@ declare module 'es6-promise' {
     module rsvp {
         export var Promise: typeof foo;
     }
-export = rsvp;
+    export = rsvp;
 }

@@ -1,8 +1,8 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
-import {Canvas} from './Core/Drawing/Canvas';
-import {ClockTimer} from './Core/Engine/ClockTimer';
+import Canvas = etch.drawing.Canvas;
+import ClockTimer = etch.engine.ClockTimer;
 import {ColorThemes} from './UI/ColorThemes';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
@@ -11,9 +11,8 @@ import {Commands} from './Commands';
 import {Config} from './Config';
 import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
 import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
-import {DisplayList} from './Core/Drawing/DisplayList';
-import {DisplayObject} from './Core/Drawing/DisplayObject';
-import {DisplayObjectCollection} from './Core/Drawing/DisplayObjectCollection';
+import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
+import DisplayObject = etch.drawing.DisplayObject;
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {Effect} from './Blocks/Effect';
 import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
