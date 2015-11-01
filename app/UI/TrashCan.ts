@@ -1,6 +1,7 @@
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 
 declare var App: IApp;
@@ -18,10 +19,10 @@ export class TrashCan extends DisplayObject {
     Draw() {
         var units = App.Unit;
         var ctx = this.Ctx;
-        var tx = (<MainScene>this.Sketch).Width - (30*units);
-        var ty = (<MainScene>this.Sketch).Height - (30*units);
+        var tx = (<MainScene>this.DrawTo).Width - (30*units);
+        var ty = (<MainScene>this.DrawTo).Height - (30*units);
         var s = 1;
-        if (this._RollOver && (<MainScene>this.Sketch).IsDraggingABlock) {
+        if (this._RollOver && (<MainScene>this.DrawTo).IsDraggingABlock) {
             s = 1.2;
         }
 
@@ -50,12 +51,12 @@ export class TrashCan extends DisplayObject {
 
     MouseMove(point) {
         var units = App.Unit;
-        this._RollOver = this.HitRect((<MainScene>this.Sketch).Width - (60*units),(<MainScene>this.Sketch).Height - (60*units),(60*units), (60*units), point.x, point.y);
+        this._RollOver = Dimensions.HitRect((<MainScene>this.DrawTo).Width - (60*units),(<MainScene>this.DrawTo).Height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 
     MouseUp() {
         if (this._RollOver) {
-            (<MainScene>this.Sketch).DeleteSelectedBlock();
+            (<MainScene>this.DrawTo).DeleteSelectedBlock();
             return true;
         }
         return false;

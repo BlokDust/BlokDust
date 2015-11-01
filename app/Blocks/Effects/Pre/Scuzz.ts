@@ -1,8 +1,8 @@
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {PreEffect} from '../PreEffect';
 
 export class Scuzz extends PreEffect {
@@ -49,7 +49,7 @@ export class Scuzz extends PreEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"scuzz");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"scuzz");
     }
 
     UpdateConnections(chain: IAudioChain) {

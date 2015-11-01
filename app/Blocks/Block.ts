@@ -1,19 +1,18 @@
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
+import ObservableCollection = etch.collections.ObservableCollection;
+import Point = etch.primitives.Point;
+import RoutedEvent = etch.events.RoutedEvent;
+import RoutedEventArgs = etch.events.RoutedEventArgs;
 import Size = minerva.Size;
 import {AudioChain} from '../Core/Audio/Connections/AudioChain';
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
-import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from '../MainScene';
-import {ObservableCollection} from '../Core/Collections/ObservableCollection';
 import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
 import {Particle} from '../Particle';
-import {Point} from '../Core/Primitives/Point';
 import {PreEffect} from './Effects/PreEffect';
-import {RoutedEventArgs} from '../Core/Events/RoutedEventArgs';
-import {RoutedEvent} from '../Core/Events/RoutedEvent';
 
 declare var App: IApp;
 
@@ -111,8 +110,8 @@ export class Block extends DisplayObject implements IBlock {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if ((<MainScene>this.Sketch).AltDown && this._Duplicable) {
-                (<MainScene>this.Sketch).CreateBlockFromType(this.Type); //TODO: TS5 reflection
+            if ((<MainScene>this.DrawTo).AltDown && this._Duplicable) {
+                (<MainScene>this.DrawTo).CreateBlockFromType(this.Type); //TODO: TS5 reflection
                 //TODO: es6 modules broke this!!!
                 this.MouseUp();
             }

@@ -1,10 +1,9 @@
-import {Grid} from '../../Grid';
 import {IApp} from '../../IApp';
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {Source} from '../Source';
 
 declare var App: IApp;
@@ -113,7 +112,7 @@ export class Microphone extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"microphone");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"microphone");
     }
 
     Dispose() {

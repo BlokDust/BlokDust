@@ -1,8 +1,9 @@
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {ISource} from '../Blocks/ISource';
 import {MainScene} from './../MainScene';
 import {Recorder} from '../Blocks/Sources/Recorder';
@@ -151,7 +152,7 @@ export class RecorderPanel extends DisplayObject {
         for (var i = 0; i < this._Blocks.length; i++) {
             var block = this._Blocks[i];
             var myPos = App.Metrics.PointOnGrid(block.Position);
-            this._Roll[i] = this.HitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
+            this._Roll[i] = Dimensions.HitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
             if (this._Roll[i]==true) {
                 console.log("ROLL " + i);
                 this.Hover = true;

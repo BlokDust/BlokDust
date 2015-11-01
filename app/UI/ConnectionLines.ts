@@ -1,8 +1,8 @@
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
+import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../Blocks/ISource';
 
 declare var App: IApp;

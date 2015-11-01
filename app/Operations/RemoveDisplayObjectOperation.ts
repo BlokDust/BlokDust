@@ -1,19 +1,19 @@
-import {DisplayList} from '../Core/Drawing/DisplayList';
-import {IDisplayObject} from '../Core/Drawing/IDisplayObject';
+import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
+import IDisplayObject = etch.drawing.IDisplayObject;
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
-import {ObservableCollection} from '../Core/Collections/ObservableCollection';
+import ObservableCollection = etch.collections.ObservableCollection;
 
 export class RemoveDisplayObjectOperation implements IUndoableOperation {
-    private _DisplayList: DisplayList;
+    private _DisplayList: DisplayObjectCollection<IDisplayObject>;
     private _DisplayObject: IDisplayObject;
     private _Index: number;
 
-    constructor(displayObject: IDisplayObject, displayList: DisplayList) {
+    constructor(displayObject: IDisplayObject, displayList: DisplayObjectCollection<IDisplayObject>) {
         this._DisplayObject = displayObject;
         this._DisplayList = displayList;
     }
 
-    Do(): Promise<DisplayList> {
+    Do(): Promise<DisplayObjectCollection<IDisplayObject>> {
         this._Index = this._DisplayList.IndexOf(this._DisplayObject);
 
         var that = this;
@@ -24,7 +24,7 @@ export class RemoveDisplayObjectOperation implements IUndoableOperation {
         });
     }
 
-    Undo(): Promise<DisplayList> {
+    Undo(): Promise<DisplayObjectCollection<IDisplayObject>> {
         var that = this;
 
         return new Promise((resolve) => {

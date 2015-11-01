@@ -1,11 +1,11 @@
 import {IApp} from '../../../IApp';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloudAudioType';
 import {SoundCloudAudio} from  '../../../Core/Audio/SoundCloudAudio';
 import {SoundcloudTrack} from '../../../UI/SoundcloudTrack';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
@@ -144,7 +144,7 @@ export class Convolver extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"convolution");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"convolution");
     }
 
     MouseUp() {

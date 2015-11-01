@@ -1,12 +1,11 @@
-import {ObservableCollection} from '../Core/Collections/ObservableCollection';
+import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = minerva.Point;
 import {Block} from './Block';
-import {Grid} from '../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {ISource} from './ISource';
-import Point = minerva.Point;
+import ObservableCollection = etch.collections.ObservableCollection;
 
 declare var App: IApp;
 

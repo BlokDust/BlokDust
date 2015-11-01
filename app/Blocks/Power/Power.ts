@@ -1,8 +1,8 @@
 import {Effect} from '../Effect';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
 import {MainScene} from '../../MainScene';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {PowerEffect} from './PowerEffect';
 
 export class Power extends PowerEffect {
@@ -25,7 +25,7 @@ export class Power extends PowerEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"power");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"power");
     }
 
     Dispose(){

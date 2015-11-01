@@ -1,6 +1,6 @@
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import {IBlock} from '../IBlock';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {Logic} from './Logic/Logic';
 import {Power} from './Power';
 import {Source} from '../Source';

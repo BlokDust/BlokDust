@@ -1,7 +1,7 @@
 import Size = minerva.Size;
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
-import {Point} from '../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

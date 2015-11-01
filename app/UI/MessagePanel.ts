@@ -1,7 +1,8 @@
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import Size = minerva.Size;
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
-import Size = minerva.Size; //TODO: es6 modules
 
 declare var App: IApp;
 
@@ -55,9 +56,9 @@ export class MessagePanel extends DisplayObject {
         var units = App.Unit;
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
-        var y = (<MainScene>this.Sketch).Height*0.75;
-        var cx = (<MainScene>this.Sketch).Width*0.5;
-        var w = (<MainScene>this.Sketch).Width;
+        var y = (<MainScene>this.DrawTo).Height*0.75;
+        var cx = (<MainScene>this.DrawTo).Width*0.5;
+        var w = (<MainScene>this.DrawTo).Width;
 
         if (this._Alpha>0) {
             ctx.textAlign = "center";
@@ -146,7 +147,7 @@ export class MessagePanel extends DisplayObject {
             var units = App.Unit;
             var ctx = this.Ctx;
             var midType = App.Metrics.TxtMid;
-            var cx = (<MainScene>this.Sketch).Width*0.5;
+            var cx = (<MainScene>this.DrawTo).Width*0.5;
             ctx.font = midType;
             this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
             this._ButtonWidth = (20*units) + ctx.measureText(this._Value.buttonText.toUpperCase()).width;
@@ -224,12 +225,12 @@ export class MessagePanel extends DisplayObject {
         var units = App.Unit;
 
         if (this._Value.confirmation) {
-            this._Roll[0] = this.HitRect(this._CloseX  - (20*units), ((<MainScene>this.Sketch).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+            this._Roll[0] = Dimensions.HitRect(this._CloseX  - (20*units), ((<MainScene>this.DrawTo).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
         } else {
             this._Roll[0] = false;
         }
         if (this._Value.buttonText!=="") {
-            this._Roll[1] = this.HitRect(this._CloseX, ((<MainScene>this.Sketch).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
+            this._Roll[1] = Dimensions.HitRect(this._CloseX, ((<MainScene>this.DrawTo).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
         } else {
             this._Roll[1] = false;
         }

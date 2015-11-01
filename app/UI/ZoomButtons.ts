@@ -1,10 +1,10 @@
-import Size = minerva.Size;
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
-import {Grid} from './../Grid';
-import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
-import {MainScene} from './../MainScene';
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = minerva.Point;
+import Size = minerva.Size;
+import {IApp} from '../IApp';
+import {MainScene} from './../MainScene';
 
 declare var App: IApp;
 
@@ -176,10 +176,9 @@ export class ZoomButtons extends DisplayObject {
         var zout = this._OutPos;
         var area = (30*units);
 
-        this.InRoll = this.HitRect(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
-        this.OutRoll = this.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
+        this.InRoll = Dimensions.HitRect(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
+        this.OutRoll = Dimensions.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
     }
-
 
     ZoomIn() {
         if (this.CurrentSlot<this._ZoomSlots.length-1) {

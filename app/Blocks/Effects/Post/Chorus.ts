@@ -1,7 +1,7 @@
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 export class Chorus extends PostEffect {
 
@@ -37,7 +37,7 @@ export class Chorus extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"chorus");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"chorus");
     }
 
     Dispose() {

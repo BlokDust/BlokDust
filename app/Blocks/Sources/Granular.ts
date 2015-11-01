@@ -1,8 +1,8 @@
 import {IApp} from '../../IApp';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
@@ -100,7 +100,7 @@ export class Granular extends Source {
         this._WaveForm = [];
         this.SetupGrains();
 
-        if (App.MainScene.OptionsPanel.Scale === 1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock.Id === this.Id) {
+        if (App.MainScene.OptionsPanel.Scale === 1 && (<MainScene>this.DrawTo).OptionsPanel.SelectedBlock.Id === this.Id) {
             this.UpdateOptionsForm();
             App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
         }
@@ -167,9 +167,9 @@ export class Granular extends Source {
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             // UPDATE OPTIONS FORM //
-            if ((<MainScene>this.Sketch).OptionsPanel.Scale === 1 && (<MainScene>this.Sketch).OptionsPanel.SelectedBlock.Id === this.Id) {
+            if ((<MainScene>this.DrawTo).OptionsPanel.Scale === 1 && (<MainScene>this.DrawTo).OptionsPanel.SelectedBlock.Id === this.Id) {
                 this.UpdateOptionsForm();
-                (<MainScene>this.Sketch).OptionsPanel.Populate(this.OptionsForm, false);
+                (<MainScene>this.DrawTo).OptionsPanel.Populate(this.OptionsForm, false);
             }
 
             // start if powered //
@@ -218,7 +218,7 @@ export class Granular extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"granular");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"granular");
         if (this._WaveForm.length>0) {
         }
     }

@@ -1,11 +1,9 @@
-import {Grid} from "../Grid";
 import {IAudioChain} from "../Core/Audio/Connections/IAudioChain";
-import {IDisplayObject} from "../Core/Drawing/IDisplayObject";
-import {ObservableCollection} from '../Core/Collections/ObservableCollection';
+import IDisplayObject = etch.drawing.IDisplayObject;
+import ObservableCollection = etch.collections.ObservableCollection;
 import {Particle} from "../Particle";
-import {Point} from '../Core/Primitives/Point';
-import {RoutedEventArgs} from '../Core/Events/RoutedEventArgs';
-import {RoutedEvent} from '../Core/Events/RoutedEvent';
+import RoutedEventArgs = etch.events.RoutedEventArgs;
+import RoutedEvent = etch.events.RoutedEvent;
 
 export interface IBlock extends IDisplayObject{
     Id: number;

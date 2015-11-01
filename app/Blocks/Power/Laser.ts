@@ -1,6 +1,6 @@
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {PowerSource} from './PowerSource';
 
 export class Laser extends PowerSource {
@@ -52,7 +52,7 @@ export class Laser extends PowerSource {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"laser");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"laser");
 
     }
 

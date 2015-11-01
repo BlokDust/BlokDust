@@ -1,10 +1,10 @@
 import {Block} from '../Block';
 import {Effect} from '../Effect';
 import {IApp} from '../../IApp';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {Source} from '../Source';
 
 declare var App: IApp;
@@ -95,7 +95,7 @@ export class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position, true, "tone");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position, true, "tone");
     }
 
     UpdateOptionsForm() {

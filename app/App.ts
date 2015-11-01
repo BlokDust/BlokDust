@@ -1,8 +1,12 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
-import {AnimationsLayer} from './UI/AnimationsLayer';
-import {Audio} from './Core/Audio/Audio';
 import Canvas = etch.drawing.Canvas;
 import ClockTimer = etch.engine.ClockTimer;
+import DisplayObject = etch.drawing.DisplayObject;
+import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
+import IDisplayObject = etch.drawing.IDisplayObject;
+import Point = minerva.Point;
+import {AnimationsLayer} from './UI/AnimationsLayer';
+import {Audio} from './Core/Audio/Audio';
 import {ColorThemes} from './UI/ColorThemes';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
@@ -11,17 +15,13 @@ import {Commands} from './Commands';
 import {Config} from './Config';
 import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
 import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
-import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
-import DisplayObject = etch.drawing.DisplayObject;
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {Effect} from './Blocks/Effect';
 import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
 import {FocusManager} from './Core/Inputs/FocusManager';
 import {GA} from './GA';
-import {Grid} from './Grid';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
-import {IDisplayObject} from './Core/Drawing/IDisplayObject';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
 import {InputManager} from './Core/Inputs/InputManager';
@@ -47,7 +47,6 @@ import {Source} from './Blocks/Source';
 import {Splash} from './Splash';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
-import Point = minerva.Point;
 
 export default class App implements IApp{
 
@@ -280,11 +279,7 @@ export default class App implements IApp{
     }
 
     AddBlocksToMainScene(): void {
-        var d = new DisplayObjectCollection();
-        d.AddRange(this.Blocks);
-        var blocks = new DisplayObject();
-        blocks.DisplayList = new DisplayList(d);
-        this.MainScene.DisplayList.Insert(0, blocks);
+        this.MainScene.DisplayList.AddRange(this.Blocks);
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //

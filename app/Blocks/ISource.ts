@@ -1,6 +1,6 @@
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import {ObservableCollection} from '../Core/Collections/ObservableCollection';
+import ObservableCollection = etch.collections.ObservableCollection;
 import {SoundcloudTrack} from '../UI/SoundcloudTrack';
 import {Source} from './Source';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';

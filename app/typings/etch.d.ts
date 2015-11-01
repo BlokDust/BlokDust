@@ -37,6 +37,7 @@ declare module etch.primitives {
         Heading(): number;
         static Random2D(): Vector;
         static FromAngle(angle: number): Vector;
+        ToPoint(): Point;
     }
 }
 
@@ -137,7 +138,8 @@ declare module etch.drawing {
         IsInitialised: boolean;
         IsPaused: boolean;
         IsVisible: boolean;
-        Position: Vector;
+        LastVisualTick: number;
+        Position: Point;
         DrawFrom: IDisplayContext;
         DrawTo: IDisplayContext;
         Width: number;
@@ -183,7 +185,7 @@ declare module etch.drawing {
 
 import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
 import IDisplayContext = etch.drawing.IDisplayContext;
-import Vector = etch.primitives.Vector;
+import Point = etch.primitives.Point;
 declare module etch.drawing {
     interface IDisplayObject extends IDisplayContext {
         CanvasHeight: number;
@@ -199,9 +201,10 @@ declare module etch.drawing {
         IsInitialised: boolean;
         IsPaused: boolean;
         IsVisible: boolean;
+        LastVisualTick: number;
         Pause(): void;
         Play(): void;
-        Position: Vector;
+        Position: Point;
         Setup(): void;
         Show(): void;
         Update(): void;
@@ -224,6 +227,23 @@ declare module etch.drawing {
         OnTicked(lastTime: number, nowTime: number): void;
         UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
+    }
+}
+
+declare module etch.collections {
+    class PropertyChangedEventArgs implements nullstone.IEventArgs {
+        PropertyName: string;
+        constructor(propertyName: string);
+    }
+    interface INotifyPropertyChanged {
+        PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
+    }
+    var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
+}
+
+declare module etch.engine {
+    interface ITimerListener {
+        OnTicked(lastTime: number, nowTime: number): any;
     }
 }
 
@@ -281,19 +301,9 @@ declare module etch.events {
     }
 }
 
-declare module etch.engine {
-    interface ITimerListener {
-        OnTicked(lastTime: number, nowTime: number): any;
+declare module etch.primitives {
+    class Point extends minerva.Point {
+        Clone(): Point;
+        ToVector(): Vector;
     }
-}
-
-declare module etch.collections {
-    class PropertyChangedEventArgs implements nullstone.IEventArgs {
-        PropertyName: string;
-        constructor(propertyName: string);
-    }
-    interface INotifyPropertyChanged {
-        PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
-    }
-    var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
 }

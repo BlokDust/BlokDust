@@ -1,5 +1,5 @@
 import {IUndoableOperation} from './IUndoableOperation';
-import {ObservableCollection} from '../Collections/ObservableCollection';
+import ObservableCollection = etch.collections.ObservableCollection;
 
 export class RemoveItemFromObservableCollectionOperation<T> implements IUndoableOperation {
     private _Item: T;

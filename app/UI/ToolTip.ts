@@ -1,11 +1,10 @@
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = etch.primitives.Point;
 import Size = minerva.Size;
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
-import {Grid} from './../Grid';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
 import {MainScene} from './../MainScene';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
-import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
 

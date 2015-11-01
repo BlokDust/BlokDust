@@ -1,8 +1,8 @@
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {PreEffect} from '../PreEffect';
 
 export class Envelope extends PreEffect {
@@ -29,7 +29,7 @@ export class Envelope extends PreEffect {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"envelope");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"envelope");
     }
 
     UpdateConnections(chain: IAudioChain) {

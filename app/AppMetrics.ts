@@ -1,6 +1,6 @@
 declare var App: IApp;
+import Point = etch.primitives.Point;
 import {IApp} from './IApp';
-import {Point} from './Core/Primitives/Point';
 import {Device} from './Device';
 
 export class Metrics {

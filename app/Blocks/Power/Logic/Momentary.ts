@@ -1,11 +1,11 @@
 import {Effect} from '../../Effect';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
 import {ParticleEmitter} from './../ParticleEmitter';
 import {Particle} from '../../../Particle';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 export class Momentary extends Logic {
 
@@ -30,7 +30,7 @@ export class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"momentary switch");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"momentary switch");
     }
 
     Dispose(){

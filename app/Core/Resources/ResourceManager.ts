@@ -1,7 +1,7 @@
 import {IResource} from './IResource';
-import {ObservableCollection} from '../Collections/ObservableCollection';
-import {RoutedEvent} from '../Events/RoutedEvent';
-import {RoutedEventArgs} from '../Events/RoutedEventArgs';
+import ObservableCollection = etch.collections.ObservableCollection;
+import RoutedEvent = etch.events.RoutedEvent;
+import RoutedEventArgs = etch.events.RoutedEventArgs;
 
 export class ResourceManager {
 

@@ -1,9 +1,9 @@
 import {IApp} from '../../../IApp';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PitchShifter} from '../Post/PitchShifter';
 import {PostEffect} from '../PostEffect';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
@@ -31,7 +31,7 @@ export class Pitch extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"pitch");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"pitch");
     }
 
     Dispose(){

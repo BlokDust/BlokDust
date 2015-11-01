@@ -1,16 +1,14 @@
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
-import {Grid} from '../Grid';
+import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from '../IApp';
 import {IBlock} from './IBlock';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext
 import {MainScene} from '../MainScene';
-import {Point} from '../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
 export class BlockSprites extends DisplayObject {
 
-    public Grid: Grid;
     public Ctx: CanvasRenderingContext2D;
     private _Scaled: boolean;
     private _Position: Point;
@@ -19,7 +17,6 @@ export class BlockSprites extends DisplayObject {
 
     Init(sketch: IDisplayContext) {
         super.Init(sketch);
-        this.Grid = <Grid>sketch;
         this._Scaled = true;
         this._Position = new Point(0,0);
         this._XOffset = 0;

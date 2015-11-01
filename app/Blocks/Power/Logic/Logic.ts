@@ -1,5 +1,5 @@
 import {Effect} from '../../Effect';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {Particle} from '../../../Particle';
 import {PowerEffect} from './../PowerEffect';

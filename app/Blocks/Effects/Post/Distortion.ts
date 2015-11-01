@@ -1,7 +1,7 @@
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 export class Distortion extends PostEffect {
 
@@ -29,7 +29,7 @@ export class Distortion extends PostEffect {
     Draw() {
         super.Draw();
 
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"distortion");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"distortion");
 
     }
 

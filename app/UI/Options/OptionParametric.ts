@@ -4,7 +4,7 @@ import {OptionHandle} from './OptionHandle';
 import {OptionsPanel} from './../OptionsPanel';
 import {OptionSubHandle} from './OptionSubHandle';
 import {Option} from './Option';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

@@ -1,7 +1,7 @@
 import {IApp} from '../../IApp';
 import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 
 declare var App: IApp;
 

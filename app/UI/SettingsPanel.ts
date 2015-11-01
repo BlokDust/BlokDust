@@ -1,11 +1,12 @@
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = etch.primitives.Point;
 import Size = minerva.Size;
 import {Device} from '../Device';
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
-import {Point} from '../Core/Primitives/Point';
 import {ThemeSelector} from './ColorThemeSelector';
 import {Version} from './../_Version';
 
@@ -30,7 +31,7 @@ export class SettingsPanel extends DisplayObject{
         super.Init(sketch);
 
         this.Open = false;
-        this.OffsetY = -this.Sketch.Height;
+        this.OffsetY = -this.DrawTo.Height;
 
         this._RollOvers = [];
         this.Height = 60;
@@ -110,7 +111,7 @@ export class SettingsPanel extends DisplayObject{
         ctx.font = "400 " + dataType + "px Dosis";
         ctx.textAlign = "left";
         var catWidth = [];
-        var menuWidth = (this.Sketch.Width/7)*4;
+        var menuWidth = (this.DrawTo.Width/7)*4;
 
         // total text width //
         for (var i=0; i<n; i++) {
@@ -118,7 +119,7 @@ export class SettingsPanel extends DisplayObject{
         }
 
         // start x for positioning //
-        var catX = ((this.Sketch.Width*0.5) - (menuWidth*0.5));
+        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
 
 
         // POPULATE MENU //
@@ -126,7 +127,7 @@ export class SettingsPanel extends DisplayObject{
             var name = json.categories[i].name.toUpperCase();
             var point = new Point(catX + (catWidth[i]*0.5),0);
             var size = new Size(catWidth[i],16);
-            var offset = -this.Sketch.Height;
+            var offset = -this.DrawTo.Height;
             if (this._OpenTab===i) {
                 offset = 0;
             }
@@ -351,7 +352,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
             ctx.font = italicType2;
             ctx.textAlign = "right";
-            ctx.fillText(this._CopyJson.build, this.Sketch.Width - (20*units), this.OffsetY + this.Sketch.Height - (20 * units));
+            ctx.fillText(this._CopyJson.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
 
 
             // DIVIDERS //
@@ -459,13 +460,13 @@ export class SettingsPanel extends DisplayObject{
 
     OpenPanel() {
         this.Open = true;
-        this.OffsetY = -this.Sketch.Height;
+        this.OffsetY = -this.DrawTo.Height;
         this.DelayTo(this,0,500,0,"OffsetY");
         this.MenuItems[this._OpenTab].YOffset = 0;
     }
 
     ClosePanel() {
-        this.DelayTo(this,-this.Sketch.Height,500,0,"OffsetY");
+        this.DelayTo(this,-this.DrawTo.Height,500,0,"OffsetY");
     }
 
     MouseDown(point) {
@@ -491,7 +492,7 @@ export class SettingsPanel extends DisplayObject{
                     if (j!==i) {
                         var cat = this.MenuItems[j];
                         this.DelayTo(cat,0,250,0,"Selected");
-                        this.DelayTo(cat,-this.Sketch.Height,250,0,"YOffset");
+                        this.DelayTo(cat,-this.DrawTo.Height,250,0,"YOffset");
                     }
                 }
                 return;
@@ -536,12 +537,12 @@ export class SettingsPanel extends DisplayObject{
 
     HitTests(point) {
         var units = App.Unit;
-        var centerY = this.OffsetY + (this.Sketch.Height * 0.5);
+        var centerY = this.OffsetY + (this.DrawTo.Height * 0.5);
         var tabY = this.OffsetY;
         var pageY = tabY + (120*units);
         var closeY = tabY + (30*units);
-        var dx = (this.Sketch.Width*0.5);
-        var menuWidth = (this.Sketch.Width/7)*4;
+        var dx = (this.DrawTo.Width*0.5);
+        var menuWidth = (this.DrawTo.Width/7)*4;
         var halfWidth = menuWidth*0.5;
         var gutter = (40*units);
         var thirdWidth = (menuWidth - (gutter*2))/3;
@@ -551,24 +552,23 @@ export class SettingsPanel extends DisplayObject{
         var x3 = dx - halfWidth + (thirdWidth*2) + (gutter*2);
         var xs = [x1,x2,x3];
 
-        this._RollOvers[0] = this.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[0] = Dimensions.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
 
         for (var i=1; i<4; i++) {
-            this._RollOvers[i] = this.HitRect(xs[i-1], thirdY + (30*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
-            this._RollOvers[i+3] = this.HitRect(xs[i-1], thirdY + (50*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
+            this._RollOvers[i] = Dimensions.HitRect(xs[i-1], thirdY + (30*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
+            this._RollOvers[i+3] = Dimensions.HitRect(xs[i-1], thirdY + (50*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
         }
-
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = Dimensions.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
         }
 
         // OPTIONS HIT TESTS //
         var selector = this._ThemeSelector;
-        selector.HandleRoll[0] = this.HitRect(dx - halfWidth - (10*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
-        selector.HandleRoll[1] = this.HitRect(dx + halfWidth - (30*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
+        selector.HandleRoll[0] = Dimensions.HitRect(dx - halfWidth - (10*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
+        selector.HandleRoll[1] = Dimensions.HitRect(dx + halfWidth - (30*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
     }
 
     MouseUp(point) {

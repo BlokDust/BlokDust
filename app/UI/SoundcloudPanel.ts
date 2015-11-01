@@ -1,8 +1,8 @@
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
 import Size = minerva.Size;
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
-import {Grid} from './../Grid';
 import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 
 declare var App: IApp;
@@ -26,7 +26,7 @@ export class SoundcloudPanel extends DisplayObject{
 
         this.Open = false;
         this.OffsetX = 0;
-        this.OffsetY = -this.Sketch.Height;
+        this.OffsetY = -this.DrawTo.Height;
 
         this._RollOvers = [];
         this.SearchString = "Hello";
@@ -437,19 +437,19 @@ export class SoundcloudPanel extends DisplayObject{
         var searchW = ctx.measureText(this._CopyJson.searchLine.toUpperCase()).width;
         var randomW = ctx.measureText(this._CopyJson.randomLine.toUpperCase()).width;
 
-        this._RollOvers[0] = this.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = this.HitRect((appWidth*0.5) + (210*units), centerY - (170*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = this.HitRect((appWidth*0.5) + (200*units) - searchW, centerY - (150*units),searchW + (10*units),40*units, point.x, point.y); // search
-        this._RollOvers[3] = this.HitRect((appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
-        this._RollOvers[4] = this.HitRect((appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // next
+        this._RollOvers[0] = Dimensions.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
+        this._RollOvers[1] = Dimensions.HitRect((appWidth*0.5) + (210*units), centerY - (170*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[2] = Dimensions.HitRect((appWidth*0.5) + (200*units) - searchW, centerY - (150*units),searchW + (10*units),40*units, point.x, point.y); // search
+        this._RollOvers[3] = Dimensions.HitRect((appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[4] = Dimensions.HitRect((appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // next
 
-        this._RollOvers[5] = this.HitRect((appWidth*0.5) - (210*units),centerY - (units*98),420*units,40*units, point.x, point.y); // 1
-        this._RollOvers[6] = this.HitRect((appWidth*0.5) - (210*units),centerY - (units*58),420*units,40*units, point.x, point.y); // 2
-        this._RollOvers[7] = this.HitRect((appWidth*0.5) - (210*units),centerY - (units*18),420*units,40*units, point.x, point.y); // 3
-        this._RollOvers[8] = this.HitRect((appWidth*0.5) - (210*units),centerY + (units*22),420*units,40*units, point.x, point.y); // 4
-        this._RollOvers[9] = this.HitRect((appWidth*0.5) - (210*units),centerY + (units*62),420*units,40*units, point.x, point.y); // 5
+        this._RollOvers[5] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY - (units*98),420*units,40*units, point.x, point.y); // 1
+        this._RollOvers[6] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY - (units*58),420*units,40*units, point.x, point.y); // 2
+        this._RollOvers[7] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY - (units*18),420*units,40*units, point.x, point.y); // 3
+        this._RollOvers[8] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY + (units*22),420*units,40*units, point.x, point.y); // 4
+        this._RollOvers[9] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY + (units*62),420*units,40*units, point.x, point.y); // 5
 
-        this._RollOvers[10] = this.HitRect((appWidth*0.5) + (205*units) - randomW, centerY + (136*units),randomW + (10*units),40*units, point.x, point.y); // random
+        this._RollOvers[10] = Dimensions.HitRect((appWidth*0.5) + (205*units) - randomW, centerY + (136*units),randomW + (10*units),40*units, point.x, point.y); // random
     }
 
     Resize() {

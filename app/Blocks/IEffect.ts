@@ -1,6 +1,6 @@
 import {IBlock} from './IBlock';
 import {ISource} from './ISource';
-import {ObservableCollection} from '../Core/Collections/ObservableCollection';
+import ObservableCollection = etch.collections.ObservableCollection;
 
 export interface IEffect extends IBlock {
     CatchmentArea: number;

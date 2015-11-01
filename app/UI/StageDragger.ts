@@ -1,6 +1,6 @@
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
+import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = minerva.Point;
 
 declare var App: IApp;

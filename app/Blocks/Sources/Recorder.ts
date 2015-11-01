@@ -1,7 +1,7 @@
 import {IApp} from '../../IApp';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {SamplerBase} from './SamplerBase';
 import {Source} from '../Source';
 
@@ -67,7 +67,7 @@ export class Recorder extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"recorder");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"recorder");
     }
 
     ToggleRecording(){

@@ -1,12 +1,12 @@
 import {IApp} from '../../IApp';
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
 import {Keyboard} from './Keyboard';
 import {MainScene} from '../../MainScene';
 import {Microphone} from '../Sources/Microphone';
 import {MIDIManager} from '../../Core/Audio/MIDIManager';
 import {MIDIMessageArgs} from '../../Core/Audio/MIDIMessageArgs';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {Power} from '../Power/Power';
 import {VoiceCreator as Voice} from './VoiceObject';
 
@@ -95,7 +95,7 @@ export class MIDIController extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"midi controller");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"midi controller");
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {

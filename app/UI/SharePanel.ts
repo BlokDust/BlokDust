@@ -1,9 +1,10 @@
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
 import Size = minerva.Size;
 import {CommandManager} from '../Core/Commands/CommandManager';
 import {Commands} from './../Commands';
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 
 declare var App: IApp;
@@ -36,7 +37,7 @@ export class SharePanel extends DisplayObject {
         this._SessionId = "";
 
         this.OffsetX = 0;
-        this.OffsetY = -this.Sketch.Height;
+        this.OffsetY = -this.DrawTo.Height;
 
         this._UrlSelecting = false;
         this._RollOvers = [];
@@ -541,7 +542,7 @@ export class SharePanel extends DisplayObject {
 
     MouseDown(point) {
         this.HitTests(point);
-        //var units = (<MainScene>this.Sketch).Unit.width;
+        //var units = (<MainScene>this.DrawTo).Unit.width;
 
         if (!this._RollOvers[0]) { // url
 
@@ -623,25 +624,25 @@ export class SharePanel extends DisplayObject {
         ctx.font = midType;
         var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
 
-        this._RollOvers[0] = this.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = this.HitRect((appWidth*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = this.HitRect((appWidth*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
+        this._RollOvers[0] = Dimensions.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
+        this._RollOvers[1] = Dimensions.HitRect((appWidth*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[2] = Dimensions.HitRect((appWidth*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
         if (this._FirstSession) {
-            this._RollOvers[3] = this.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
+            this._RollOvers[3] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
             this._RollOvers[4] = false;
             this._RollOvers[5] = false;
             this._RollOvers[10] = false;
         } else {
             this._RollOvers[3] = false;
-            this._RollOvers[4] = this.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
-            this._RollOvers[5] = this.HitRect(this.OffsetX + (appWidth*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
-            this._RollOvers[10] = this.HitRect(this.OffsetX + (appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
+            this._RollOvers[4] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
+            this._RollOvers[5] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
+            this._RollOvers[10] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
         }
-        this._RollOvers[6] = this.HitRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
-        this._RollOvers[7] = this.HitRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
-        this._RollOvers[8] = this.HitRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
+        this._RollOvers[6] = Dimensions.HitRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
+        this._RollOvers[7] = Dimensions.HitRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
+        this._RollOvers[8] = Dimensions.HitRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
 
-        this._RollOvers[9] = this.HitRect(shareX + (appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[9] = Dimensions.HitRect(shareX + (appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
     }
 
 

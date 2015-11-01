@@ -1,6 +1,5 @@
 import {ICommandHandler} from '../Commands/ICommandHandler';
 import {IFactoryResource} from './IFactoryResource';
-import {IValidator} from '../Validators/IValidator';
 import {Commands} from '../../Commands';
 
 export class CommandHandlerFactory<T extends ICommandHandler> implements IFactoryResource<T> {
@@ -10,12 +9,10 @@ export class CommandHandlerFactory<T extends ICommandHandler> implements IFactor
 
     private _Type: T;
     public Command: Commands;
-    private _Validators: IValidator[];
 
-    constructor(command: Commands, type: T, validators: IValidator[] = []) {
+    constructor(command: Commands, type: T) {
         this.Command = command;
         this._Type = type;
-        this._Validators = validators;
     }
 
     GetInstance(): T  {

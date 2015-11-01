@@ -3,7 +3,7 @@ import {IApp} from '../../IApp';
 import {OptionHandle} from './OptionHandle';
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import {Option} from './Option';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {WaveForm} from './OptionWave';
 
 declare var App: IApp;

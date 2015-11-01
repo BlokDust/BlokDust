@@ -1,7 +1,8 @@
 ///<amd-dependency path="utils"/>.
 import {IPooledFactoryResource} from './IPooledFactoryResource';
 import {IPooledObject} from './IPooledObject';
-import Queue = Utils.Collections.Queue; //TODO: es6 modules
+import ArgumentException = etch.exceptions.ArgumentException;
+import Queue = Utils.Collections.Queue;
 
 export class PooledFactoryResource<T extends IPooledObject> implements IPooledFactoryResource<T> {
 

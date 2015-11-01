@@ -1,10 +1,10 @@
 import {Effect} from '../../Effect';
-import {IDisplayContext} from '../../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
 import {MainScene} from '../../../MainScene';
 import {Particle} from '../../../Particle';
-import {Point} from '../../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 export class Toggle extends Logic {
 
@@ -29,7 +29,7 @@ export class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"toggle switch");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"toggle switch");
     }
 
     UpdateOptionsForm() {

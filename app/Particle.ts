@@ -4,7 +4,7 @@ import {IBlock} from "./Blocks/IBlock";
 import {IPooledObject} from "./Core/Resources/IPooledObject";
 import {Logic} from "./Blocks/Power/Logic/Logic";
 import {ParticleEmitter} from "./Blocks/Power/ParticleEmitter";
-import {Point} from './Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {Source} from "./Blocks/Source";
 import {Void} from "./Blocks/Power/Void";
 

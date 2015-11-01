@@ -2,7 +2,7 @@ import Size = minerva.Size;
 import {IApp} from '../../IApp';
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import {Option} from './Option';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

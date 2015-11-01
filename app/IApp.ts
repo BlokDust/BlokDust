@@ -1,5 +1,5 @@
 import {AnimationsLayer} from './UI/AnimationsLayer';
-import {Canvas} from './Core/Drawing/Canvas';
+import Canvas = etch.drawing.Canvas;
 import {ColorThemes} from './UI/ColorThemes';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
@@ -7,7 +7,7 @@ import {Config} from './Config';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
-import {IDisplayObject} from './Core/Drawing/IDisplayObject';
+import IDisplayObject = etch.drawing.IDisplayObject;
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';

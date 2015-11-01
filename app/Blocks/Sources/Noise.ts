@@ -1,6 +1,6 @@
-import {IDisplayContext} from '../../Core/Drawing/IDisplayContext';
+import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {Source} from '../Source';
 
 export class Noise extends Source {
@@ -60,7 +60,7 @@ export class Noise extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.DrawSprite(this.Position,true,"noise");
+        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"noise");
     }
 
     UpdateOptionsForm() {

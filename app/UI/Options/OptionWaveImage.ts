@@ -1,7 +1,7 @@
 import Size = minerva.Size;
 import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import {Option} from './Option';
-import {Point} from '../../Core/Primitives/Point';
+import Point = etch.primitives.Point;
 import {WaveForm} from './OptionWave';
 
 export class WaveImage extends WaveForm{

@@ -1,13 +1,14 @@
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = etch.primitives.Point;
 import Size = minerva.Size;
 import {BlockCreator} from './../BlockCreator';
 import {Device} from '../Device';
-import {DisplayObject} from '../Core/Drawing/DisplayObject';
 import {IApp} from '../IApp';
-import {IDisplayContext} from '../Core/Drawing/IDisplayContext';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {MenuItem} from './MenuItem';
-import {Point} from '../Core/Primitives/Point';
 
 declare var App: IApp;
 
@@ -78,7 +79,7 @@ export class Header extends DisplayObject {
         }
 
         this.ItemsPerPage = App.Metrics.ItemsPerPage;
-        this.DropDownHeight = (this.Sketch.Width / (this.ItemsPerPage + 1)) / units;
+        this.DropDownHeight = (this.DrawTo.Width / (this.ItemsPerPage + 1)) / units;
 
         // GET NUMBER OF CATEGORIES //
         var n = json.categories.length;
@@ -96,7 +97,7 @@ export class Header extends DisplayObject {
         }
 
         // start x for positioning //
-        var catX = ((this.Sketch.Width*0.5) - (menuWidth*0.5));
+        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
         var rowOffset = ((this._Rows-1)*this.Height)*units;
 
         // POPULATE MENU //
@@ -121,7 +122,7 @@ export class Header extends DisplayObject {
                 var point = new Point(0,((this.Height + (this.DropDownHeight*0.5))*units) + rowOffset);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
-                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.Sketch));
+                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.DrawTo));
             }
 
         }
@@ -148,9 +149,9 @@ export class Header extends DisplayObject {
         this.Ctx.fillStyle = App.Palette[2];// Black
 
         this.Ctx.globalAlpha = 0.16;
-        this.Ctx.fillRect(0,0,this.Sketch.Width,thisHeight + (5*units) + dropDown + rowOffset); // shadow
+        this.Ctx.fillRect(0,0,this.DrawTo.Width,thisHeight + (5*units) + dropDown + rowOffset); // shadow
         this.Ctx.globalAlpha = 0.9; //0.9
-        this.Ctx.fillRect(0,0,this.Sketch.Width,thisHeight  + dropDown + rowOffset); // solid
+        this.Ctx.fillRect(0,0,this.DrawTo.Width,thisHeight  + dropDown + rowOffset); // solid
 
         // TT //
         this.Ctx.globalAlpha = 1;
@@ -173,14 +174,14 @@ export class Header extends DisplayObject {
         if (dropDown>0) {
             this.Ctx.beginPath();
             this.Ctx.moveTo(20*units,thisHeight + rowOffset);
-            this.Ctx.lineTo(this.Sketch.Width-(20*units),thisHeight + rowOffset);
+            this.Ctx.lineTo(this.DrawTo.Width-(20*units),thisHeight + rowOffset);
             this.Ctx.stroke();
         }
 
         if (App.Metrics.Device === Device.mobile) {
             this.Ctx.beginPath();
             this.Ctx.moveTo(20*units,thisHeight);
-            this.Ctx.lineTo(this.Sketch.Width-(20*units),thisHeight);
+            this.Ctx.lineTo(this.DrawTo.Width-(20*units),thisHeight);
             this.Ctx.stroke();
         }
 
@@ -197,8 +198,8 @@ export class Header extends DisplayObject {
         }
 
         //between share & settings //
-        this.Ctx.moveTo(Math.round(this.Sketch.Width - (margin * units)), (thisHeight * 0.5) - (16 * units));
-        this.Ctx.lineTo(Math.round(this.Sketch.Width - (margin * units)), (thisHeight * 0.5) + (16 * units));
+        this.Ctx.moveTo(Math.round(this.DrawTo.Width - (margin * units)), (thisHeight * 0.5) - (16 * units));
+        this.Ctx.lineTo(Math.round(this.DrawTo.Width - (margin * units)), (thisHeight * 0.5) + (16 * units));
         this.Ctx.stroke();
 
         // CATEGORIES //
@@ -232,8 +233,8 @@ export class Header extends DisplayObject {
                 this.Ctx.save();
                 this.Ctx.beginPath();
                 this.Ctx.moveTo(Math.floor(margin*units),(this.Height*units) + rowOffset);
-                this.Ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),(this.Height*units) + rowOffset);
-                this.Ctx.lineTo(Math.ceil(this.Sketch.Width - (margin*units)),((this.Height + clipHeight)*units) + rowOffset);
+                this.Ctx.lineTo(Math.ceil(this.DrawTo.Width - (margin*units)),(this.Height*units) + rowOffset);
+                this.Ctx.lineTo(Math.ceil(this.DrawTo.Width - (margin*units)),((this.Height + clipHeight)*units) + rowOffset);
                 this.Ctx.lineTo(Math.floor(margin*units),((this.Height + clipHeight)*units) + rowOffset);
                 this.Ctx.closePath();
                 this.Ctx.clip();
@@ -243,7 +244,7 @@ export class Header extends DisplayObject {
                     var xPos = (margin + (this.DropDownHeight*0.5) + (this.DropDownHeight*j) + cat.XOffset)*units;
                     var yPos = cat.YOffset;
                     cat.Items[j].Position.x = xPos; // TODO: shouldn't really be setting position in Draw, but worth setting up update?
-                    if (xPos > 0 && xPos < this.Sketch.Width) {
+                    if (xPos > 0 && xPos < this.DrawTo.Width) {
                         cat.Items[j].Draw(this.Ctx, units, xPos, yPos);
                     }
                 }
@@ -256,7 +257,7 @@ export class Header extends DisplayObject {
 
                     if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
                         this.Ctx.globalAlpha = 0.5;
-                        (<MainScene>this.Sketch).BlockSprites.DrawSprite(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
+                        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
                     }
                 }
             }
@@ -276,8 +277,8 @@ export class Header extends DisplayObject {
             this.Ctx.save();
             this.Ctx.beginPath();
             this.Ctx.moveTo(0, (this.Height * units) + rowOffset);
-            this.Ctx.lineTo(this.Sketch.Width, (this.Height * units) + rowOffset);
-            this.Ctx.lineTo(this.Sketch.Width, ((this.Height + this.DropDown) * units) + rowOffset);
+            this.Ctx.lineTo(this.DrawTo.Width, (this.Height * units) + rowOffset);
+            this.Ctx.lineTo(this.DrawTo.Width, ((this.Height + this.DropDown) * units) + rowOffset);
             this.Ctx.lineTo(0, ((this.Height + this.DropDown) * units) + rowOffset);
             this.Ctx.closePath();
             this.Ctx.clip();
@@ -301,9 +302,9 @@ export class Header extends DisplayObject {
 
             // RIGHT ARROW //
             this.Ctx.beginPath();
-            this.Ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
-            this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
-            this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
+            this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
+            this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
+            this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
             this.Ctx.stroke();
 
             this.Ctx.restore();
@@ -316,7 +317,7 @@ export class Header extends DisplayObject {
         this.Ctx.globalAlpha = 0.9;
 
         if (this._ShareOver) {
-            var shx = this.Sketch.Width - (margin * units) - (btnWidth*0.5);
+            var shx = this.DrawTo.Width - (margin * units) - (btnWidth*0.5);
             this.Ctx.beginPath();
             this.Ctx.moveTo(shx - (10*units),this.Height*units);
             this.Ctx.lineTo(shx,(this.Height + 10)*units);
@@ -326,7 +327,7 @@ export class Header extends DisplayObject {
         }
 
         if (this._SettingsOver) {
-            var shx = this.Sketch.Width - (margin * units) + (30*units);
+            var shx = this.DrawTo.Width - (margin * units) + (30*units);
             this.Ctx.beginPath();
             this.Ctx.moveTo(shx - (10*units),this.Height*units);
             this.Ctx.lineTo(shx,(this.Height + 10)*units);
@@ -342,26 +343,26 @@ export class Header extends DisplayObject {
         this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[App.Color.Txt]; // White
         this.Ctx.lineWidth = 2;
         this.Ctx.beginPath();
-        this.Ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) - 7) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) - 1) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), ((this.Height*0.5) - 7) * units);
+        this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) - 7) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) - 1) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (40 * units), ((this.Height*0.5) - 7) * units);
 
-        this.Ctx.moveTo(this.Sketch.Width - (margin * units) + (20 * units), ((this.Height*0.5) + 7) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) + 1) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) + 7) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) + (40 * units), ((this.Height*0.5) + 1) * units);
+        this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height*0.5) + 7) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) + 1) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) + 7) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (40 * units), ((this.Height*0.5) + 1) * units);
 
         // SHARE BTN //
 
-        this.Ctx.moveTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5) - (5 * units), ((this.Height*0.75) - 6) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5), ((this.Height*0.75) - 1) * units);
-        this.Ctx.lineTo(this.Sketch.Width - (margin * units) - (btnWidth*0.5) + (5 * units), ((this.Height*0.75) - 6) * units);
+        this.Ctx.moveTo(this.DrawTo.Width - (margin * units) - (btnWidth*0.5) - (5 * units), ((this.Height*0.75) - 6) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) - (btnWidth*0.5), ((this.Height*0.75) - 1) * units);
+        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) - (btnWidth*0.5) + (5 * units), ((this.Height*0.75) - 6) * units);
 
         this.Ctx.stroke();
 
         this.Ctx.textAlign = "right";
-        this.Ctx.fillText("SHARE", this.Sketch.Width - (margin * units) - (20 * units) ,((this.Height * 0.5)*units) + (dataType * 0.38));
+        this.Ctx.fillText("SHARE", this.DrawTo.Width - (margin * units) - (20 * units) ,((this.Height * 0.5)*units) + (dataType * 0.38));
         this.Ctx.textAlign = "center";
     }
 
@@ -528,16 +529,16 @@ export class Header extends DisplayObject {
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = this.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), rowOffset + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = Dimensions.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), rowOffset + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
 
             //ITEMS HIT TEST //
             if (this._SelectedCategory==i) {
                 for (var j=0; j<cat.Items.length; j++) {
                     var item = cat.Items[j];
 
-                    item.Hover = this.HitRect(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
-                    item.InfoHover = this.HitRect(item.Position.x - (52*units), item.Position.y - (42*units), 24*units, 24*units, point.x, point.y);
-                    item.BackHover = this.HitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);
+                    item.Hover = Dimensions.HitRect(item.Position.x - (2*grd), item.Position.y - (2*grd), 4*grd, 4*grd, point.x, point.y);
+                    item.InfoHover = Dimensions.HitRect(item.Position.x - (52*units), item.Position.y - (42*units), 24*units, 24*units, point.x, point.y);
+                    item.BackHover = Dimensions.HitRect(item.Position.x - ((this.DropDownHeight*0.5)*units), item.Position.y - ((this.DropDownHeight*0.5)*units), this.DropDownHeight*units, this.DropDownHeight*units, point.x, point.y);
                     item.MouseMove(point, this, (this.Height + this.DropDown - 20)*units ); // could narrow to just dragged?
 
                 }
@@ -546,14 +547,14 @@ export class Header extends DisplayObject {
         }
 
         // SCROLL HIT TEST //
-        this._LeftOver = this.HitRect(0, ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
-        this._RightOver = this.HitRect(this.Sketch.Width - (this.Margin*units), ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._LeftOver = Dimensions.HitRect(0, ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._RightOver = Dimensions.HitRect(this.DrawTo.Width - (this.Margin*units), ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
 
         // SHARE & SETTINGS HIT TESTS //
         this.Ctx.font = "400 " + (units*10) + "px Dosis";
         var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
-        this._ShareOver = this.HitRect(this.Sketch.Width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
-        this._SettingsOver = this.HitRect(this.Sketch.Width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
+        this._ShareOver = Dimensions.HitRect(this.DrawTo.Width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
+        this._SettingsOver = Dimensions.HitRect(this.DrawTo.Width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
 
         // WHOLE MENU //
         this.MenuOver = (point.y < (((this.Height + this.DropDown)*units) + rowOffset));
