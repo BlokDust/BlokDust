@@ -1405,6 +1405,11 @@ declare module Utils {
     }
 }
 declare module Utils {
+    class Documents {
+        static IsInIFrame(): boolean;
+    }
+}
+declare module Utils {
     class Events {
         static Debounce(fn: any, debounceDuration: number): () => any;
     }

@@ -90,7 +90,7 @@ module.exports = function (grunt) {
                         src: [
                             '<%= dirs.dist %>/lib/**',
                             '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js',
-                            '!<%= dirs.dist %>/lib/fayde/dist/fayde.js',
+                            '!<%= dirs.dist %>/lib/etch/dist/etch.js',
                             '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
                             '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
@@ -102,7 +102,6 @@ module.exports = function (grunt) {
                         src: [
                             '<%= dirs.dist %>/lib/*',
                             '!<%= dirs.dist %>/lib/bower-webfontloader/**',
-                            '!<%= dirs.dist %>/lib/fayde/**',
                             '!<%= dirs.dist %>/lib/lzma/**',
                             '!<%= dirs.dist %>/lib/minerva/**',
                             '!<%= dirs.dist %>/lib/nullstone/**',
@@ -283,15 +282,13 @@ module.exports = function (grunt) {
                         expand: true,
                         flatten: true,
                         src: [
-                            'tone/utils/TypeScript/Tone.d.ts',
-                            'fayde/dist/fayde.d.ts',
+                            'etch/dist/etch.d.ts',
+                            'extensions/typings/extensions.d.ts',
                             'minerva/dist/minerva.d.ts',
                             'nullstone/dist/nullstone.d.ts',
-                            'fayde.drawing/dist/fayde.drawing.d.ts',
-                            'fayde.transformer/dist/fayde.transformer.d.ts',
-                            'utils/dist/utils.d.ts',
+                            'tone/utils/TypeScript/Tone.d.ts',
                             'tween.ts/src/Tween.d.ts',
-                            'extensions/typings/extensions.d.ts'
+                            'utils/dist/utils.d.ts'
                         ],
                         dest: '<%= dirs.typings %>'
                     }

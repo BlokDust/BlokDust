@@ -913,15 +913,13 @@ declare module minerva.core.render {
     }
     class RenderContext {
         private $$transforms;
-        private $$width;
-        private $$height;
         currentTransform: number[];
-        raw: CanvasRenderingContext2D;
         hasFillRule: boolean;
-        dpiRatio: number;
+        raw: CanvasRenderingContext2D;
+        size: RenderContextSize;
         constructor(ctx: CanvasRenderingContext2D);
         static hasFillRule: boolean;
-        resize(width: number, height: number): void;
+        applyDpiRatio(): void;
         save(): void;
         restore(): void;
         setTransform(m11: number, m12: number, m21: number, m22: number, dx: number, dy: number): void;
@@ -936,6 +934,23 @@ declare module minerva.core.render {
         clipRect(rect: Rect): void;
         fillEx(brush: IBrush, region: Rect, fillRule?: FillRule): void;
         isPointInStrokeEx(strokePars: IStrokeParameters, x: number, y: number): boolean;
+    }
+}
+declare module minerva.core.render {
+    class RenderContextSize {
+        private $$ctx;
+        private $$desiredWidth;
+        private $$desiredHeight;
+        private $$changed;
+        desiredWidth: number;
+        desiredHeight: number;
+        paintWidth: number;
+        paintHeight: number;
+        dpiRatio: number;
+        init(ctx: CanvasRenderingContext2D): void;
+        queueResize(width: number, height: number): RenderContextSize;
+        commitResize(): RenderContextSize;
+        private $adjustCanvas();
     }
 }
 declare module minerva.core.render {
@@ -2420,7 +2435,6 @@ declare module minerva.engine {
         private $$dirtyRegion;
         private $$width;
         private $$height;
-        private $$sizechanged;
         width: number;
         height: number;
         init(canvas: HTMLCanvasElement): void;

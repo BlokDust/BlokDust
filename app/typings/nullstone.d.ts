@@ -1,9 +1,64 @@
 declare module nullstone {
     var version: string;
 }
+interface IFulfilledFunc<T, TResult> {
+    (value: T): void | TResult | Promise<TResult>;
+}
+interface IRejectedFunc<TResult> {
+    (reason: any): void | TResult | Promise<TResult>;
+}
+interface IResolveFunc<T> {
+    (value?: T | Promise<T>): void;
+}
+interface IRejectFunc {
+    (reason?: any): void;
+}
+interface Promise<T> {
+    then<TResult>(onFulfilled?: IFulfilledFunc<T, TResult>, onRejected?: IRejectedFunc<TResult>): Promise<TResult>;
+    catch(onRejected?: (reason: any) => T | Promise<T>): Promise<T>;
+    tap(onFulfilled?: (value: T) => void, onRejected?: (err: any) => void): Promise<T>;
+}
+interface PromiseConstructor {
+    prototype: Promise<any>;
+    new <T>(init: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
+    <T>(init: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
+    all<T>(values: Promise<void>[]): Promise<void>;
+    all<T>(...values: Promise<void>[]): Promise<void>;
+    all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
+    all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
+    race<T>(values: Promise<T>[]): Promise<T>;
+    reject<T>(reason: any): Promise<void> | Promise<T>;
+    resolve<T>(value: T | Promise<T>): Promise<T>;
+    resolve(): Promise<void>;
+}
+declare var Promise: PromiseConstructor;
+declare module nullstone {
+    class PromiseImpl<T> implements Promise<T> {
+        private $$state;
+        private $$value;
+        private $$deferreds;
+        constructor(init: (resolve: IResolveFunc<T>, reject: IRejectFunc) => void);
+        then<TResult>(onFulfilled?: IFulfilledFunc<T, TResult>, onRejected?: IRejectedFunc<TResult>): Promise<TResult>;
+        catch(onRejected?: (reason: any) => T | Promise<T>): Promise<T>;
+        tap(onFulfilled?: (value: T) => void, onRejected?: (err: any) => void): Promise<T>;
+        private _handle<TResult>(deferred);
+        static all<T>(values: Promise<void>[]): Promise<void>;
+        static all<T>(...values: Promise<void>[]): Promise<void>;
+        static all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
+        static all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
+        static race<T>(values: Promise<T>[]): Promise<T>;
+        static reject<T>(reason: any): Promise<void> | Promise<T>;
+        static resolve(): Promise<void>;
+        static resolve<T>(value: T | Promise<T>): Promise<T>;
+        private _resolve;
+        private _reject;
+        private _finale();
+        private _setImmediateFn(func);
+    }
+}
 declare module nullstone {
     class DirResolver implements ITypeResolver {
-        loadAsync(moduleName: string, name: string): async.IAsyncRequest<any>;
+        loadAsync(moduleName: string, name: string): Promise<any>;
         resolveType(moduleName: string, name: string, oresolve: IOutType): boolean;
     }
 }
@@ -132,7 +187,7 @@ declare module nullstone {
         deps: string[];
         rootModule: any;
         isLoaded: boolean;
-        loadAsync(): async.IAsyncRequest<Library>;
+        loadAsync(): Promise<Library>;
         resolveType(moduleName: string, name: string, oresolve: IOutType): boolean;
         add(type: any, name?: string): ILibrary;
         addPrimitive(type: any, name?: string): ILibrary;
@@ -155,7 +210,7 @@ declare module nullstone {
         isLoaded: boolean;
         constructor(name: string);
         rootModule: any;
-        loadAsync(): async.IAsyncRequest<Library>;
+        loadAsync(): Promise<Library>;
         private $configModule();
         resolveType(moduleName: string, name: string, oresolve: IOutType): boolean;
         add(type: any, name?: string): ILibrary;
@@ -166,7 +221,7 @@ declare module nullstone {
 declare module nullstone {
     interface ILibraryResolver extends ITypeResolver {
         libraryCreated: Event<IEventArgs>;
-        loadTypeAsync(uri: string, name: string): async.IAsyncRequest<any>;
+        loadTypeAsync(uri: string, name: string): Promise<any>;
         resolve(uri: string): ILibrary;
     }
     interface ILibraryCreatedEventArgs extends IEventArgs {
@@ -177,7 +232,7 @@ declare module nullstone {
         libraryCreated: Event<{}>;
         dirResolver: DirResolver;
         createLibrary(uri: string): ILibrary;
-        loadTypeAsync(uri: string, name: string): async.IAsyncRequest<any>;
+        loadTypeAsync(uri: string, name: string): Promise<any>;
         resolve(uri: string): ILibrary;
         resolveType(uri: string, name: string, oresolve: IOutType): boolean;
         private $$onLibraryCreated(lib);
@@ -259,7 +314,7 @@ declare module nullstone {
         defaultUri: string;
         xUri: string;
         resolveLibrary(uri: string): ILibrary;
-        loadTypeAsync(uri: string, name: string): async.IAsyncRequest<any>;
+        loadTypeAsync(uri: string, name: string): Promise<any>;
         resolveType(uri: string, name: string, oresolve: IOutType): boolean;
         add(uri: string, name: string, type: any): ITypeManager;
         addPrimitive(uri: string, name: string, type: any): ITypeManager;
@@ -272,7 +327,7 @@ declare module nullstone {
         constructor(defaultUri: string, xUri: string);
         createLibResolver(): ILibraryResolver;
         resolveLibrary(uri: string): ILibrary;
-        loadTypeAsync(uri: string, name: string): async.IAsyncRequest<any>;
+        loadTypeAsync(uri: string, name: string): Promise<any>;
         resolveType(uri: string, name: string, oresolve: IOutType): boolean;
         add(uri: string, name: string, type: any): ITypeManager;
         addPrimitive(uri: string, name: string, type: any): ITypeManager;
@@ -287,18 +342,6 @@ declare module nullstone {
         Get(type: Function): T[];
     }
     function CreateTypedAnnotation<T>(name: string): ITypedAnnotation<T>;
-}
-declare module nullstone.async {
-    interface IAsyncRequest<T> {
-        then(success: (result: T) => any, errored?: (error: any) => any): IAsyncRequest<T>;
-    }
-    interface IAsyncResolution<T> {
-        (resolve: (result: T) => any, reject: (error: any) => any): any;
-    }
-    function create<T>(resolution: IAsyncResolution<T>): IAsyncRequest<T>;
-    function resolve<T>(obj: T): IAsyncRequest<T>;
-    function reject<T>(err: any): IAsyncRequest<T>;
-    function many<T>(arr: IAsyncRequest<T>[]): IAsyncRequest<T[]>;
 }
 declare module nullstone {
     function equals(val1: any, val2: any): boolean;
@@ -383,8 +426,8 @@ declare module nullstone.markup {
         constructor(uri: string);
         isLoaded: boolean;
         createParser(): IMarkupParser<T>;
-        resolve(typemgr: ITypeManager, customCollector?: ICustomCollector, customExcluder?: ICustomExcluder): async.IAsyncRequest<any>;
-        loadAsync(): async.IAsyncRequest<Markup<T>>;
+        resolve(typemgr: ITypeManager, customCollector?: ICustomCollector, customExcluder?: ICustomExcluder): Promise<any>;
+        loadAsync(): Promise<Markup<T>>;
         loadRoot(data: string): T;
         setRoot(markup: T): Markup<T>;
     }
@@ -399,7 +442,7 @@ declare module nullstone.markup {
     interface IMarkupDependencyResolver<T> {
         add(uri: string, name: string): boolean;
         collect(root: T, customCollector?: ICustomCollector, customExcluder?: ICustomExcluder): any;
-        resolve(): async.IAsyncRequest<any>;
+        resolve(): Promise<any>;
     }
     class MarkupDependencyResolver<T> implements IMarkupDependencyResolver<T> {
         typeManager: ITypeManager;
@@ -410,7 +453,7 @@ declare module nullstone.markup {
         constructor(typeManager: ITypeManager, parser: IMarkupParser<T>);
         collect(root: T, customCollector?: ICustomCollector, customExcluder?: ICustomExcluder): void;
         add(uri: string, name: string): boolean;
-        resolve(): async.IAsyncRequest<any>;
+        resolve(): Promise<any>;
     }
 }
 declare module nullstone.markup.events {
