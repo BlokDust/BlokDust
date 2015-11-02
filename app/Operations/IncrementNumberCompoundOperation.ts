@@ -16,11 +16,11 @@ export class IncrementNumberCompoundOperation<Number> extends CompoundOperation<
         this.Operations.push(new IncrementNumberOperation(n + 2));
     }
 
-    Do(): Promise<Number> {
+    Do(): Promise<void> {
         return super.Do();
     }
 
-    Undo(): Promise<Number> {
+    Undo(): Promise<void> {
         return super.Undo();
     }
 

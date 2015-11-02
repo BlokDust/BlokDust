@@ -13,7 +13,7 @@ export class CompoundOperation<T> implements ICompoundOperation {
         this.Operations.remove(operation);
     }
 
-    public Do(): Promise<T> {
+    public Do(): Promise<void> {
         var sequence = Promise.resolve();
 
         this.Operations.forEach((op: IOperation) => {
@@ -25,7 +25,7 @@ export class CompoundOperation<T> implements ICompoundOperation {
         return sequence;
     }
 
-    public Undo(): Promise<T> {
+    public Undo(): Promise<void> {
         var ops = this.Operations.clone().reverse();
 
         var sequence = Promise.resolve();

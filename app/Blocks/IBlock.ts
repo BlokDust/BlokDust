@@ -6,32 +6,32 @@ import RoutedEventArgs = etch.events.RoutedEventArgs;
 import RoutedEvent = etch.events.RoutedEvent;
 
 export interface IBlock extends IDisplayObject{
-    Id: number;
+    BackwardsCompatibilityPatch(): void;
+    Chain: IAudioChain;
     Click: RoutedEvent<RoutedEventArgs>;
     Connections: ObservableCollection<IBlock>
-    Outline: Point[];
+    Dispose(): void;
+    DistanceFrom(point: Point): number;
+    Draw(): void;
+    HitTest(point: Point): boolean;
+    Id: number;
+    IsChained: boolean;
     IsPressed: boolean;
     IsSelected: boolean;
-    IsChained: boolean;
-    Chain: IAudioChain;
-    Position: Point;
     LastPosition: Point;
+    MouseDown(): void;
+    MouseMove(point: Point): void;
+    MouseUp(): void;
     OptionsForm: any;
+    Outline: Point[];
     Params: any;
+    ParticleCollision(particle: Particle): void;
+    Position: Point;
+    Refresh(): void;
+    SetParam(param: string, value: number): void;
+    Stop(): void;
     Type: any;
     Update(): void;
-    Draw(): void;
-    Refresh(): void;
-    MouseDown(): void;
-    ParticleCollision(particle: Particle): void;
-    MouseUp(): void;
-    MouseMove(point: Point): void;
-    Dispose(): void;
-    Stop(): void;
-    HitTest(point: Point): boolean;
     UpdateConnections(chain: IAudioChain)
-    DistanceFrom(point: Point): number;
     UpdateOptionsForm(): void;
-    SetParam(param: string, value: number): void;
-    BackwardsCompatibilityPatch(): void;
 }

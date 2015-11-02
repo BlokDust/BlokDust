@@ -15,11 +15,11 @@ export class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implem
         this.Operations.push(new ChangePropertyOperation<IBlock>(block, "Position", (<any>this._Block).LastPosition.Clone(), (<any>this._Block).Position.Clone()));
     }
 
-    Do(): Promise<IBlock> {
+    Do(): Promise<void> {
         return super.Do();
     }
 
-    Undo(): Promise<IBlock> {
+    Undo(): Promise<void> {
         return super.Undo();
     }
 

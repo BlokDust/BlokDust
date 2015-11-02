@@ -14,23 +14,22 @@ export class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> impl
 
     private _Block: IBlock;
 
-    // todo: why is it necessary to cast block as 'any'??
-
     constructor(block: IBlock) {
         super();
         this._Block = block;
 
+        // todo: why is cast as 'any' required?
         (<any>this._Block).Stop();
         this.Operations.push(new MoveBlockOperation(block));
         this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.MainScene.DisplayList));
         this.Operations.push(new RemoveItemFromArrayOperation(<any>block, App.Blocks));
     }
 
-    Do(): Promise<IBlock> {
+    Do(): Promise<void> {
         return super.Do();
     }
 
-    Undo(): Promise<IBlock> {
+    Undo(): Promise<void> {
         return super.Undo();
     }
 
