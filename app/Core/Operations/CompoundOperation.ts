@@ -18,7 +18,7 @@ export class CompoundOperation<T> implements ICompoundOperation {
 
         this.Operations.forEach((op: IOperation) => {
             sequence = sequence.then(() => {
-                return op.Do()
+                return op.Do();
             });
         });
 

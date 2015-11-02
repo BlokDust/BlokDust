@@ -46,7 +46,7 @@ export class OperationManager {
 
     public Do(operation: IOperation): Promise<any> {
 
-        if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
+        if (this._CurrentOperation) return Promise.reject(Error(OperationManager.OPERATION_IN_PROGRESS));
 
         // if about to exceed max number of operations, start trimming from start of array.
         if (this._Operations.Count === this.MaxOperations){
@@ -92,8 +92,8 @@ export class OperationManager {
 
     public Undo(): Promise<any> {
 
-        if (!this.CanUndo()) return this._Reject(OperationManager.CANNOT_UNDO);
-        if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
+        if (!this.CanUndo()) return Promise.reject(Error(OperationManager.CANNOT_UNDO));
+        if (this._CurrentOperation) return Promise.reject(Error(OperationManager.OPERATION_IN_PROGRESS));
 
         var operation = this._Operations.GetValueAt(this.Head);
 
@@ -117,8 +117,8 @@ export class OperationManager {
 
     public Redo(): Promise<any> {
 
-        if (!this.CanRedo()) return this._Reject(OperationManager.CANNOT_REDO);
-        if (this._CurrentOperation) return this._Reject(OperationManager.OPERATION_IN_PROGRESS);
+        if (!this.CanRedo()) return Promise.reject(Error(OperationManager.CANNOT_REDO));
+        if (this._CurrentOperation) return Promise.reject(Error(OperationManager.OPERATION_IN_PROGRESS));
 
         var operation = this._Operations.GetValueAt(this.Head + 1);
 
@@ -158,12 +158,6 @@ export class OperationManager {
         }
 
         //console.log(str);
-    }
-
-    private _Reject(errorMessage: string): Promise<void>{
-        return new Promise<void>(function(undefined, reject) {
-            reject(Error(errorMessage));
-        });
     }
 
     public CanUndo(): boolean {
