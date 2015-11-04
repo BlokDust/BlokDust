@@ -11,7 +11,7 @@ export class Toggle extends Logic {
 
     Init(sketch?: any): void {
 
-        this.BlockName = "Toggle Switch";
+        this.BlockName = "Toggle Power";
 
         super.Init(sketch);
 
@@ -34,7 +34,7 @@ export class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle switch");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"toggle power");
     }
 
     UpdateOptionsForm() {
@@ -42,7 +42,7 @@ export class Toggle extends Logic {
 
         this.OptionsForm =
         {
-            "name" : "Toggle Switch",
+            "name" : "Toggle Power",
             "parameters" : [
 
                 {

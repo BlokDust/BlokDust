@@ -9,7 +9,7 @@ export class Momentary extends Logic {
 
     Init(sketch?: any): void {
 
-        this.BlockName = "Momentary Switch";
+        this.BlockName = "Momentary Power";
 
         super.Init(sketch);
 
@@ -32,7 +32,7 @@ export class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary switch");
+        (<MainScene>this.Sketch).BlockSprites.Draw(this.Position,true,"momentary power");
     }
 
     Dispose(){
@@ -44,7 +44,7 @@ export class Momentary extends Logic {
 
         this.OptionsForm =
         {
-            "name" : "Momentary Switch",
+            "name" : "Momentary Power",
             "parameters" : [
                 {
                     "type" : "slider", //TODO Change to switch UI when available

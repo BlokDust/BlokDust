@@ -247,7 +247,7 @@ export class BlockCreator {
                         "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
                     },
                     {
-                        "name": "Toggle Switch",
+                        "name": "Toggle Power",
                         "id": Toggle,
                         "description": "Toggles energy for source blocks, particle emitters & lasers."
                     },
@@ -257,7 +257,7 @@ export class BlockCreator {
                         "description": "Absorbs any laser beams or particles that touch it."
                     },
                     {
-                        "name": "Momentary Switch",
+                        "name": "Momentary Power",
                         "id": Momentary,
                         "description": "Momentary energy for source blocks, particle emitters & lasers."
                     },
