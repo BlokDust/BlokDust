@@ -63,12 +63,10 @@ export class InputManager {
         return KeyMap[KeyMap[code]];
     }
 
-    // todo: use method overloading when available
     IsKeyCodeDown(code: number): boolean {
         return !!this.KeysDown[KeyMap[code]];
     }
 
-    // todo: use method overloading when available
     IsKeyNameDown(name: KeyMap): boolean {
         return !!this.KeysDown[name];
     }

@@ -14,7 +14,7 @@ export class CompoundOperation<T> implements ICompoundOperation {
     }
 
     public Do(): Promise<void> {
-        var sequence = Promise.resolve();
+        var sequence: Promise<void> = Promise.resolve();
 
         this.Operations.forEach((op: IOperation) => {
             sequence = sequence.then(() => {
@@ -28,7 +28,7 @@ export class CompoundOperation<T> implements ICompoundOperation {
     public Undo(): Promise<void> {
         var ops = this.Operations.clone().reverse();
 
-        var sequence = Promise.resolve();
+        var sequence: Promise<void> = Promise.resolve();
 
         ops.forEach((op: IUndoableOperation) => {
             sequence = sequence.then(() => {

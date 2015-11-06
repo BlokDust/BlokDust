@@ -27,7 +27,8 @@ interface PromiseConstructor {
     all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
     all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
     race<T>(values: Promise<T>[]): Promise<T>;
-    reject<T>(reason: any): Promise<void> | Promise<T>;
+    reject(reason: any): Promise<void>;
+    reject<T>(reason: any): Promise<T>;
     resolve<T>(value: T | Promise<T>): Promise<T>;
     resolve(): Promise<void>;
 }

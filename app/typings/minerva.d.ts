@@ -396,7 +396,13 @@ declare module minerva {
     function layoutError(tree: core.IUpdaterTree, pipedef: any, message: string): void;
 }
 declare module minerva {
+    function getNaturalCanvasSize(canvas: HTMLCanvasElement): Size;
+}
+declare module minerva {
     function singleton(type: Function): any;
+}
+declare module minerva.zoom {
+    var calc: () => number;
 }
 declare module minerva.pipe {
     interface IPipeData {
@@ -942,6 +948,7 @@ declare module minerva.core.render {
         private $$desiredWidth;
         private $$desiredHeight;
         private $$changed;
+        private $$lastDpiRatio;
         desiredWidth: number;
         desiredHeight: number;
         paintWidth: number;
@@ -950,6 +957,7 @@ declare module minerva.core.render {
         init(ctx: CanvasRenderingContext2D): void;
         queueResize(width: number, height: number): RenderContextSize;
         commitResize(): RenderContextSize;
+        updateDpiRatio(): boolean;
         private $adjustCanvas();
     }
 }
@@ -1704,17 +1712,6 @@ declare module minerva.controls.textblock.arrange {
         function doOverride(input: IInput, state: core.arrange.IState, output: core.arrange.IOutput, tree: TextBlockUpdaterTree, finalRect: Rect): boolean;
     }
 }
-declare module minerva.controls.textblock.hittest {
-    interface IHitTestData extends core.hittest.IHitTestData {
-        assets: ITextBlockUpdaterAssets;
-    }
-    class TextBlockHitTestPipeDef extends core.hittest.HitTestPipeDef {
-        constructor();
-    }
-    module tapins {
-        function canHitInside(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
-    }
-}
 declare module minerva.controls.textblock.measure {
     interface IInput extends core.measure.IInput, text.IDocumentContext {
         padding: Thickness;
@@ -1724,6 +1721,17 @@ declare module minerva.controls.textblock.measure {
     }
     module tapins {
         function doOverride(input: IInput, state: core.measure.IState, output: core.measure.IOutput, tree: TextBlockUpdaterTree, availableSize: Size): boolean;
+    }
+}
+declare module minerva.controls.textblock.hittest {
+    interface IHitTestData extends core.hittest.IHitTestData {
+        assets: ITextBlockUpdaterAssets;
+    }
+    class TextBlockHitTestPipeDef extends core.hittest.HitTestPipeDef {
+        constructor();
+    }
+    module tapins {
+        function canHitInside(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
     }
 }
 declare module minerva.controls.textblock.processup {
@@ -1780,17 +1788,6 @@ declare module minerva.controls.textboxview.measure {
         function doOverride(input: IInput, state: core.measure.IState, output: core.measure.IOutput, tree: TextBoxViewUpdaterTree, availableSize: Size): boolean;
     }
 }
-declare module minerva.controls.textboxview.processup {
-    interface IInput extends core.processup.IInput, text.IDocumentContext {
-    }
-    class TextBoxViewProcessUpPipeDef extends core.processup.ProcessUpPipeDef {
-        constructor();
-    }
-    module tapins {
-        function calcActualSize(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
-        function calcExtents(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
-    }
-}
 declare module minerva.controls.textboxview.render {
     interface IInput extends core.render.IInput, text.IDocumentContext {
         isCaretVisible: boolean;
@@ -1810,6 +1807,17 @@ declare module minerva.controls.textboxview.render {
         function doRender(input: IInput, state: core.render.IState, output: IOutput, ctx: core.render.RenderContext, region: Rect, tree: TextBoxViewUpdaterTree): boolean;
         function calcCaretRegion(input: IInput, state: core.render.IState, output: IOutput, ctx: core.render.RenderContext, region: Rect, tree: TextBoxViewUpdaterTree): boolean;
         function renderCaret(input: IInput, state: core.render.IState, output: IOutput, ctx: core.render.RenderContext, region: Rect, tree: TextBoxViewUpdaterTree): boolean;
+    }
+}
+declare module minerva.controls.textboxview.processup {
+    interface IInput extends core.processup.IInput, text.IDocumentContext {
+    }
+    class TextBoxViewProcessUpPipeDef extends core.processup.ProcessUpPipeDef {
+        constructor();
+    }
+    module tapins {
+        function calcActualSize(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
+        function calcExtents(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
     }
 }
 declare module minerva.controls.usercontrol.arrange {
@@ -1874,9 +1882,6 @@ declare module minerva.controls.virtualizingstackpanel.measure {
         createState(): IState;
     }
 }
-declare module minerva.shapes.ellipse.helpers {
-    function draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void;
-}
 declare module minerva.shapes.shape.hittest {
     interface IHitTestData extends core.hittest.IHitTestData {
         assets: IShapeUpdaterAssets;
@@ -1895,6 +1900,9 @@ declare module minerva.shapes.ellipse.hittest {
     module tapins {
         function drawShape(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
     }
+}
+declare module minerva.shapes.ellipse.helpers {
+    function draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void;
 }
 declare module minerva.shapes.shape.measure {
     interface IInput extends core.measure.IInput, IShapeProperties {
@@ -2451,6 +2459,7 @@ declare module minerva.engine {
         updateLayout(): boolean;
         resize(width: number, height: number): void;
         hitTest(pos: Point): core.Updater[];
+        updateDpiRatio(): void;
         static measureWidth(text: string, font: Font): number;
     }
 }
@@ -2489,6 +2498,7 @@ interface IMatrix4Static {
     equal(a: number[], b: number[]): boolean;
     multiply(a: number[], b: number[], dest?: number[]): number[];
     inverse(mat: number[], dest?: number[]): number[];
+    transpose(mat: number[], dest?: number[]): number[];
     transformVec4(mat: number[], vec: number[], dest?: number[]): number[];
     createTranslate(x: number, y: number, z: number, dest?: number[]): number[];
     createScale(x: number, y: number, z: number, dest?: number[]): number[];
@@ -2785,11 +2795,11 @@ declare module minerva.controls.grid {
 }
 declare module minerva.controls.image {
     interface IImageSource {
-        image: HTMLImageElement;
+        draw(ctx: CanvasRenderingContext2D): any;
+        createPattern(ctx: CanvasRenderingContext2D): any;
+        isEmpty: boolean;
         pixelWidth: number;
         pixelHeight: number;
-        lock(): any;
-        unlock(): any;
     }
 }
 declare module minerva.controls.image {
@@ -2999,7 +3009,16 @@ declare module minerva.controls.usercontrol {
     }
 }
 declare module minerva.controls.video {
-    class VideoUpdater extends core.Updater {
+    interface IVideoSource extends image.IImageSource {
+        getIsPlaying(): boolean;
+    }
+}
+declare module minerva.controls.video {
+    interface IVideoUpdaterAssets extends image.IImageUpdaterAssets {
+        source: IVideoSource;
+    }
+    class VideoUpdater extends image.ImageUpdater {
+        assets: IVideoUpdaterAssets;
         onSurfaceChanged(oldSurface: core.ISurface, newSurface: core.ISurface): void;
         preRender(): void;
     }

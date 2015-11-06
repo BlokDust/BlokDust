@@ -144,6 +144,7 @@ export default class App implements IApp{
 
         // METRICS //
         this.Metrics = new Metrics();
+
         window.onresize = () => {
             this.Resize();
         };
