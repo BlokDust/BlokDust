@@ -8,7 +8,7 @@ export class Distortion extends PostEffect {
     public Effect: Tone.Distortion;
     public Params: DistortionParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -20,7 +20,7 @@ export class Distortion extends PostEffect {
         this.Effect = new Tone.Distortion(this.Params.drive);
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));

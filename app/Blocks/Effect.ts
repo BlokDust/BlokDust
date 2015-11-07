@@ -17,8 +17,8 @@ export class Effect extends Block implements IEffect {
     Source: ISource;
     public Connections: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.UpdateOptionsForm();
     }

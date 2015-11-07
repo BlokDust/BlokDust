@@ -18,7 +18,7 @@ export class ToneSource extends Source {
     public Params: ToneSourceParams;
     public Defaults: ToneSourceParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         this.Defaults = {
             frequency: App.Config.BaseNote,
@@ -35,7 +35,7 @@ export class ToneSource extends Source {
             console.log("IF");
         }*/
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         this.CreateSource();
         this.CreateEnvelope();

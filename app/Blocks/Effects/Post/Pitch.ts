@@ -12,7 +12,7 @@ export class Pitch extends PostEffect {
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
 
-    Init(sketch?: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -23,7 +23,7 @@ export class Pitch extends PostEffect {
         this.Effect = new PitchShifter(App.Audio.ctx);
         this.Effect.PitchOffset = this.Params.pitchOffset;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, -1),new Point(0, 1));

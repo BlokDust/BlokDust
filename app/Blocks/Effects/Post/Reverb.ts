@@ -8,7 +8,7 @@ export class Reverb extends PostEffect {
     public Effect: Tone.Freeverb;
     public Params: ReverbParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -21,7 +21,7 @@ export class Reverb extends PostEffect {
         this.Effect = new Tone.Freeverb(this.Params.dampening, this.Params.roomSize);
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));

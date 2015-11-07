@@ -54,8 +54,8 @@ export class OptionsPanel extends DisplayObject {
         super();
     }
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this._Units = 1.7;
         this.Position = new Point(0,0);
@@ -538,7 +538,7 @@ export class OptionsPanel extends DisplayObject {
 
 
              // CLOSE X //
-             ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
+             ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
              ctx.lineWidth = 2;
              ctx.beginPath();
              ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
@@ -550,7 +550,7 @@ export class OptionsPanel extends DisplayObject {
 
 
              // TITLE //
-             ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+             ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
              ctx.textAlign = "left";
              ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
 
@@ -593,7 +593,7 @@ export class OptionsPanel extends DisplayObject {
 
 
         // CLOSE X //
-        ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
@@ -605,7 +605,7 @@ export class OptionsPanel extends DisplayObject {
 
 
         // TITLE //
-        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
         ctx.textAlign = "left";
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
 

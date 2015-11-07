@@ -8,7 +8,7 @@ export class AutoWah extends PostEffect {
     public Effect: Tone.AutoWah;
     public Params: AutoWahParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -36,7 +36,7 @@ export class AutoWah extends PostEffect {
 
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(-2, 1));

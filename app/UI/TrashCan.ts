@@ -10,8 +10,8 @@ export class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this._RollOver = false;
     }
@@ -26,7 +26,7 @@ export class TrashCan extends DisplayObject {
             s = 1.2;
         }
 
-        ctx.strokeStyle = App.Palette[App.Color.Txt];// Grey
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// Grey
 
         ctx.lineWidth = 1;
         ctx.beginPath();

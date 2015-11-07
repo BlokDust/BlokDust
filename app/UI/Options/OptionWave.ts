@@ -33,7 +33,7 @@ export class WaveForm extends Option {
         }
 
         if (!this.Waveform.length) {
-            ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
             if (this.EmptyString.length>1) {
                 ctx.textAlign = "center";
                 ctx.font = App.Metrics.TxtMid;
@@ -104,7 +104,7 @@ export class WaveForm extends Option {
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

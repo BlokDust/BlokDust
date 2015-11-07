@@ -18,7 +18,7 @@ export class Recorder extends SamplerBase {
     private _WaveForm: number[];
     public Params: SamplerParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -38,7 +38,7 @@ export class Recorder extends SamplerBase {
 
         this._WaveForm = [];
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         this.BufferSource = App.Audio.ctx.createBufferSource();
 

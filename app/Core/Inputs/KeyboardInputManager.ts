@@ -9,9 +9,6 @@ export class KeyboardInputManager extends InputManager {
     public KeyDown: string;
     public KeyUp: string;
 
-    KeyDownChange = new nullstone.Event<KeyDownEventArgs>();
-    KeyUpChange = new nullstone.Event<KeyUpEventArgs>();
-
     constructor() {
         super();
         //this.KeysDown = {};

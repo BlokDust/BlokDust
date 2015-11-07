@@ -12,7 +12,7 @@ export class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -26,7 +26,7 @@ export class ParticleEmitter extends PowerSource {
 
         this._rateCounter = 0;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2,0), new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(2,0), new Point(0,2));

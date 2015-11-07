@@ -39,8 +39,8 @@ export class Block extends DisplayObject implements IBlock {
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.Update();
 

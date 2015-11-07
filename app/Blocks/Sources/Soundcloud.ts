@@ -21,7 +21,7 @@ export class Soundcloud extends SamplerBase {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
@@ -50,7 +50,7 @@ export class Soundcloud extends SamplerBase {
         this.Searching = false;
         this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));

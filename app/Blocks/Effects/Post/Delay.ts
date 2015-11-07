@@ -8,7 +8,7 @@ export class Delay extends PostEffect {
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -22,7 +22,7 @@ export class Delay extends PostEffect {
         this.Effect.feedback.value = this.Params.feedback;
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 1),new Point(-1, 2));

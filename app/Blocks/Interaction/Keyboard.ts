@@ -16,8 +16,8 @@ export class Keyboard extends Interaction {
     public BaseFrequency: number;
     public KeysDown: any = {};
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
     }
 
     Draw() {

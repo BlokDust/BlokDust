@@ -1,13 +1,10 @@
 /// <reference path="./lib/exjs/dist/ex.d.ts"/>
 import Canvas = etch.drawing.Canvas;
-import ClockTimer = etch.engine.ClockTimer;
 import DisplayObject = etch.drawing.DisplayObject;
 import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
 import IDisplayObject = etch.drawing.IDisplayObject;
 import Point = minerva.Point;
-import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
-import {ColorThemes} from './UI/ColorThemes';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
@@ -44,21 +41,20 @@ import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
 import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
 import {Source} from './Blocks/Source';
-import {Splash} from './Splash';
+import {ThemeManager} from './UI/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
+import {ThemeChangeEventArgs} from "./UI/ThemeChangeEventArgs";
+import {AnimationsLayer} from "./UI/AnimationsLayer";
 
 export default class App implements IApp{
 
-    private _ClockTimer: ClockTimer = new ClockTimer();
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
     private _SessionId: string;
-    public AnimationsLayer: AnimationsLayer;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
     public Canvas: Canvas;
-    public Color: ColorThemes;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
     public CompositionId: string;
@@ -85,19 +81,23 @@ export default class App implements IApp{
     public ScaledGridSize: number;
     public ScaledUnit: number;
     public Scene: number;
-    public Splash: Splash;
     public SubCanvas: HTMLCanvasElement[];
+    public ThemeManager: ThemeManager;
     public TypingManager: TypingManager;
     public Unit: number;
     public Width: number;
     public ZoomLevel: number;
 
-    // todo: move to BlockStore
+    get AnimationsLayer(): AnimationsLayer{
+        return this.MainScene.AnimationsLayer;
+    }
+
+    // todo: move to store
     get Sources(): ISource[] {
         return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
-    // todo: move to BlockStore
+    // todo: move to store
     get Effects(): IEffect[] {
         return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
@@ -115,7 +115,7 @@ export default class App implements IApp{
         localStorage.setItem(this.CompositionId, this._SessionId);
     }
 
-    // todo: move to BlockStore
+    // todo: move to store
     public GetBlockId(): number {
         // loop through blocks to get max id
         var max = 0;
@@ -169,7 +169,7 @@ export default class App implements IApp{
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
 
-        // initialise core audio
+        // INITIALISE AUDIO //
         this.Audio.Init();
 
         // REGISTER COMMAND HANDLERS //
@@ -195,14 +195,10 @@ export default class App implements IApp{
             }
         }, this);
 
+        // POOLED OBJECTS //
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
-        // LOAD PALETTE //
-        this.Color = new ColorThemes;
-        this.Color.Init(this.Canvas);
-        this.Color.LoadTheme(0, true);
-
-        // SOUNDCLOUD INIT //
+        // INITIALISE SOUNDCLOUD //
         // todo: create server-side session
         if (typeof(SC) !== "undefined"){
             SC.initialize({
@@ -210,12 +206,13 @@ export default class App implements IApp{
             });
         }
 
-        // CREATE SPLASH SCREEN //
-        this.Splash = new Splash();
-        this.Splash.Init(this.Canvas);
-
-        this.AnimationsLayer = new AnimationsLayer();
-        this.AnimationsLayer.Init(this.Canvas);
+        // INITIALISE THEMEMANAGER //
+        this.ThemeManager = new ThemeManager();
+        this.ThemeManager.ThemeChanged.on((s: any, e: ThemeChangeEventArgs) => {
+            this.Palette = e.Palette;
+            this.LoadReady();
+        }, this);
+        this.ThemeManager.LoadTheme(0, true);
     }
 
     // FONT LOAD CALLBACK //
@@ -238,10 +235,10 @@ export default class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady(): void {
-        if (this._FontsLoaded === 3 && this.Color.Loaded) {
+        if (this._FontsLoaded === 3 && this.ThemeManager.Loaded) {
             this.LoadComposition();
-            this.Scene = 1;
-            this.Splash.StartTween();
+            //this.Scene = 1;
+            //this.Splash.StartTween();
         }
     }
 
@@ -251,15 +248,15 @@ export default class App implements IApp{
         this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
         if(this.CompositionId) {
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
-                this.PopulateSketch(data);
+                this.Populate(data);
             }).catch((error: string) => {
                 // fail silently
                 this.CompositionId = null;
-                this.Splash.LoadOffset = 1;
+                //this.Splash.LoadOffset = 1;
                 console.error(error);
             });
         } else {
-            this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
+            //this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
         this.CreateMainScene();
     }
@@ -273,9 +270,6 @@ export default class App implements IApp{
         this.Blocks = [];
         this.AddBlocksToMainScene();
 
-        // set up animation loop
-        this._ClockTimer.RegisterTimer(this);
-
         this.Resize();
     }
 
@@ -284,13 +278,13 @@ export default class App implements IApp{
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
-    PopulateSketch(data) {
+    Populate(data) {
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
         this.Deserialize(data);
 
         // set initial zoom level/position
         if (this._SaveFile.ColorThemeNo) {
-            this.Color.LoadTheme(this._SaveFile.ColorThemeNo, false);
+            this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);
         }
 
         this.ZoomLevel = this._SaveFile.ZoomLevel;
@@ -319,25 +313,11 @@ export default class App implements IApp{
         // Connect the effects chain
         this.Audio.ConnectionManager.Update();
 
-        if (this.Scene < 2) {
-            this.LoadCued = true;
-        } else {
+        //if (this.Scene < 2) {
+        //    this.LoadCued = true;
+        //} else {
             this.MainScene.CompositionLoaded();
-        }
-    }
-
-    OnTicked (lastTime: number, nowTime: number) {
-
-        if (this.Scene === 1){
-            //this.MainScene.IsVisible = false;
-            //this.Splash.Play();
-        }
-
-        if (this.Scene === 2) {
-            //this.Splash.Pause();
-            //this.Splash.IsVisible = false;
-            //this.MainScene.Play();
-        }
+        //}
     }
 
     Serialize(): string {
@@ -384,7 +364,7 @@ export default class App implements IApp{
     Resize(): void {
         this.Metrics.Metrics();
         if (this.MainScene.OptionsPanel) {
-            this.MainScene.SketchResize();
+            this.MainScene.Resize();
         }
     }
 }

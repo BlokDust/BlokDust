@@ -8,7 +8,7 @@ export class EQ extends PostEffect {
     public Effect: Tone.EQMultiband;
     public Params: EQParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -58,7 +58,7 @@ export class EQ extends PostEffect {
             }
         ]);
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));

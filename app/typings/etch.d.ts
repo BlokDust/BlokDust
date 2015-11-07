@@ -223,7 +223,7 @@ declare module etch.drawing {
         FrameCount: number;
         LastVisualTick: number;
         Timer: ClockTimer;
-        Init(sketch: IDisplayContext): void;
+        Init(drawTo: IDisplayContext): void;
         OnTicked(lastTime: number, nowTime: number): void;
         UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;

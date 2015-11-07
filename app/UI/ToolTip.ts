@@ -16,8 +16,8 @@ export class ToolTip extends DisplayObject {
     public Position: Point;
     private _AlphaTween: TWEEN.Tween;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.Name = "";
         this.Alpha = 0;
@@ -56,7 +56,7 @@ export class ToolTip extends DisplayObject {
 
         // NAME //
         ctx.globalAlpha = thisAlpha;
-        ctx.fillStyle = App.Palette[App.Color.Txt]; // WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // WHITE
         ctx.textAlign = "left";
         ctx.fillText(this.Name.toUpperCase(), x + (30*units), y + (10*units) + (dataType*0.36));
     }

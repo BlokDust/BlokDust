@@ -7,7 +7,7 @@ export class Panner extends PostEffect {
 
     public Effect: Tone.AutoPanner;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -19,7 +19,7 @@ export class Panner extends PostEffect {
             "frequency": this.Params.frequency
         });
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(0, 1));

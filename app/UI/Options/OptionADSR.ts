@@ -87,7 +87,7 @@ export class ADSR extends Option {
         // LINE //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = App.Palette[App.Color.Txt];
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height*0.9));
         ctx.lineTo(panel.Margin + a, y + (height*0.1)); // ATTACK

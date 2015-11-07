@@ -1,11 +1,12 @@
-import {ColorTheme} from './ColorTheme';
 import DisplayObject = etch.drawing.DisplayObject;
-import {IApp} from '../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
+import {ColorTheme} from './ColorTheme';
+import {IApp} from '../IApp';
+import {ThemeChangeEventArgs} from './ThemeChangeEventArgs';
 
 declare var App: IApp;
 
-export class ColorThemes extends DisplayObject {
+export class ThemeManager  {
 
     public Themes: ColorTheme[];
     public Loaded: boolean;
@@ -16,16 +17,16 @@ export class ColorThemes extends DisplayObject {
     public NewPalette: any[];
 
     // set color references
-    // drawing might use: ctx.fillStyle = App.Palette[App.Color.Txt];
+    // drawing might use: ctx.fillStyle = App.Palette[App.ThemeManager.Txt];
     public Txt: number;
+
+    ThemeChanged = new nullstone.Event<ThemeChangeEventArgs>();
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
-
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    constructor() {
 
         this.Loaded = false;
 
@@ -85,10 +86,6 @@ export class ColorThemes extends DisplayObject {
                 "ARROW MOUNTAIN",
                 App.Config.PixelPaletteImagePath[8]
             )
-
-
-
-
         ];
 
 
@@ -130,8 +127,7 @@ export class ColorThemes extends DisplayObject {
 
             this.Loaded = true;
             if (firstLoad) {
-                App.Palette = palette;
-                App.LoadReady();
+                this.ThemeChanged.raise(this, new ThemeChangeEventArgs(palette));
             } else {
                 for (var i=0; i<palette.length; i++) {
                     this.ColorTo(App.Palette[i],this.NewPalette[i],800);
@@ -159,8 +155,7 @@ export class ColorThemes extends DisplayObject {
             }
         });
         offsetTween.easing(TWEEN.Easing.Exponential.InOut);
-        offsetTween.start(this.LastVisualTick);
-
+        offsetTween.start();
     }
 
 }

@@ -1,17 +1,17 @@
-import {Block} from '../Blocks/Block';
 import DisplayObject = etch.drawing.DisplayObject;
-import {IApp} from '../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
+import {IApp} from '../IApp';
+import {IBlock} from '../Blocks/IBlock';
 
 declare var App: IApp;
 
 export class AnimationsLayer extends DisplayObject {
 
-    public ActiveBlocks: Block[] = [];
+    public ActiveBlocks: IBlock[] = [];
     private Loop: number = 0;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
     }
 
     Update() {
@@ -35,12 +35,12 @@ export class AnimationsLayer extends DisplayObject {
         }
     }
 
-    AddToList(block) {
+    AddToList(block: IBlock) {
         this.RemoveFromList(block);
         this.ActiveBlocks.push(block);
     }
 
-    RemoveFromList(block) {
+    RemoveFromList(block: IBlock) {
         var b = this.ActiveBlocks.indexOf(block);
         if(b != -1) {
             this.ActiveBlocks.splice(b,1);
@@ -52,20 +52,15 @@ export class AnimationsLayer extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
     public Draw() {
-
-
         if (this.ActiveBlocks.length>0) {
             for (var i=0; i<this.ActiveBlocks.length; i++) {
-                var block = this.ActiveBlocks[i];
+                var block: IBlock = this.ActiveBlocks[i];
                 var blockPos = App.Metrics.PointOnGrid(block.Position);
                 this.DrawBubble(blockPos.x,blockPos.y);
                 this.DrawSprite("loading",blockPos.x,blockPos.y,6,false);
             }
         }
-
-
     }
-
 
     DrawBubble(x,y) {
         var grd = App.GridSize;
@@ -81,14 +76,14 @@ export class AnimationsLayer extends DisplayObject {
         this.Ctx.globalAlpha = 1;
     }
 
-    DrawSprite(index: string,x: number,y: number,w: number,c:boolean) {
+    DrawSprite(index: string, x: number, y: number, w: number, c:boolean) {
         var units = App.Unit;
         var grd = App.GridSize;
         if (c) { // center on x & y
             grd = 0;
         }
         this.Ctx.globalAlpha = 1;
-        this.Ctx.fillStyle = App.Palette[App.Color.Txt];
+        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];
         switch (index) {
 
             case "loading":

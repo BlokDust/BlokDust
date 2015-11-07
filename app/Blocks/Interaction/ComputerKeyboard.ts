@@ -20,7 +20,7 @@ export class ComputerKeyboard extends Keyboard {
 
     public Params: KeyboardParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -30,7 +30,7 @@ export class ComputerKeyboard extends Keyboard {
             };
         }
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
         App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);

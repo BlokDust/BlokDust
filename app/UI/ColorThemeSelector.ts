@@ -14,13 +14,13 @@ export class ThemeSelector {
 
     Draw(ctx,x,y,width,height,units) {
 
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt];
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];
         ctx.globalAlpha = 1;
 
         // TITLE //
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
-        ctx.fillText(App.Color.CurrentTheme.Name, x + (width*0.5) - (15*units), y + (height*0.5) + (6*units));
+        ctx.fillText(App.ThemeManager.CurrentTheme.Name, x + (width*0.5) - (15*units), y + (height*0.5) + (6*units));
 
 
         // ARROWS //

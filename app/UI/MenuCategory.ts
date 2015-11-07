@@ -53,7 +53,7 @@ export class MenuCategory {
 
 
         // TEXT //
-        ctx.fillStyle = App.Palette[App.Color.Txt];// White
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// White
         ctx.fillText(this.Name, x ,offset + (thisHeight * 0.5) + (dataType * 0.38));
 
         // HOVER //

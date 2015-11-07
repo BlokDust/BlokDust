@@ -13,8 +13,8 @@ export class StageDragger extends DisplayObject {
     public Tweens: any[];
     public Destination: Point;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.Tweens = [];
         this.Destination = new Point(App.DragOffset.x,App.DragOffset.y);
@@ -43,7 +43,7 @@ export class StageDragger extends DisplayObject {
             var units = App.Unit;
             var ctx = App.MainScene.Ctx;
 
-            ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(cx - (5*units),cy);

@@ -19,8 +19,8 @@ export class ZoomButtons extends DisplayObject {
     public CurrentSlot: number;
     public ZoomAlpha: number;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.InRoll = this.OutRoll = false;
         this.UpdatePositions();
@@ -52,7 +52,7 @@ export class ZoomButtons extends DisplayObject {
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt];// White
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// White
 
         var zin = this._InPos;
         var zout = this._OutPos;

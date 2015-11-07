@@ -41,7 +41,7 @@ export class MenuItem {
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
 
         // NAME //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt];// White
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// White
         var dataType = units*10;
         ctx.textAlign = "center";
         ctx.font = App.Metrics.TxtMid;

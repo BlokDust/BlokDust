@@ -15,8 +15,8 @@ export class BlockSprites extends DisplayObject {
     private _XOffset: number;
     private _YOffset: number;
 
-    Init(sketch: IDisplayContext) {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext) {
+        super.Init(drawTo);
         this._Scaled = true;
         this._Position = new Point(0,0);
         this._XOffset = 0;

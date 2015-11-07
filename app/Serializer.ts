@@ -46,7 +46,7 @@ export class Serializer {
             DragOffset: App.DragOffset,
             Composition: [],
             Version: Version, //FIXME
-            ColorThemeNo: App.Color.CurrentThemeNo
+            ColorThemeNo: App.ThemeManager.CurrentThemeNo
         };
 
         this._SerializeBlocks(json.Composition, blocks);

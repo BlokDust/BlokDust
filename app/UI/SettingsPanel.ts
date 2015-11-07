@@ -27,8 +27,8 @@ export class SettingsPanel extends DisplayObject{
     private _VersionNumber: string;
     private _ThemeSelector: ThemeSelector;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.Open = false;
         this.OffsetY = -this.DrawTo.Height;
@@ -175,7 +175,7 @@ export class SettingsPanel extends DisplayObject{
             // CLOSE BUTTON //
             var closeY = tabY + (30*units);
             ctx.lineWidth = 2;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.beginPath();
             ctx.moveTo(dx + halfWidth + (12.5*units), closeY - (7.5*units));
             ctx.lineTo(dx + halfWidth + (27.5*units), closeY + (7.5*units));
@@ -217,7 +217,7 @@ export class SettingsPanel extends DisplayObject{
             // TAB 3 //
             var tab = this.MenuItems[2].YOffset;
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.font = largeType;
             ctx.textAlign = "left";
             this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
@@ -245,7 +245,7 @@ export class SettingsPanel extends DisplayObject{
                 }
             }
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.font = italicType2;
 
             // BLURBS //
@@ -349,7 +349,7 @@ export class SettingsPanel extends DisplayObject{
 
             // END TAB 3 //
             ctx.restore();
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.font = italicType2;
             ctx.textAlign = "right";
             ctx.fillText(this._CopyJson.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
@@ -502,18 +502,18 @@ export class SettingsPanel extends DisplayObject{
 
         // OPTIONS //
         if (this._ThemeSelector.HandleRoll[0]) {
-            App.Color.CurrentThemeNo -= 1;
-            if (App.Color.CurrentThemeNo < 0) {
-                App.Color.CurrentThemeNo = App.Color.Themes.length-1;
+            App.ThemeManager.CurrentThemeNo -= 1;
+            if (App.ThemeManager.CurrentThemeNo < 0) {
+                App.ThemeManager.CurrentThemeNo = App.ThemeManager.Themes.length-1;
             }
-            App.Color.LoadTheme(App.Color.CurrentThemeNo,false);
+            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
         }
         if (this._ThemeSelector.HandleRoll[1]) {
-            App.Color.CurrentThemeNo += 1;
-            if (App.Color.CurrentThemeNo > (App.Color.Themes.length-1)) {
-                App.Color.CurrentThemeNo = 0;
+            App.ThemeManager.CurrentThemeNo += 1;
+            if (App.ThemeManager.CurrentThemeNo > (App.ThemeManager.Themes.length-1)) {
+                App.ThemeManager.CurrentThemeNo = 0;
             }
-            App.Color.LoadTheme(App.Color.CurrentThemeNo,false);
+            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
         }
 
 

@@ -33,7 +33,7 @@ export class OptionButton {
         var w = this.Size.width;
 
         ctx.lineWidth = 2;
-        ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
         ctx.fillStyle = col;
         if (this.Selected) {
             //ctx.fillRect(x,y + (h*0.15),w,h*0.7);
@@ -67,7 +67,7 @@ export class OptionButton {
 
 
         // PARAM NAME //
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
 
         if (mode=="string") {
             ctx.font = App.Metrics.TxtMid;

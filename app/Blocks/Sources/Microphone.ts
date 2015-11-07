@@ -15,7 +15,7 @@ export class Microphone extends Source {
     public Muted: boolean = false;
     private _unmutedVolume: number = 1;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
         if (!this.Params) {
             this.Params = {
                 gain: 1,
@@ -23,7 +23,7 @@ export class Microphone extends Source {
             };
         }
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         this.CreateSource();
         this.Volume = App.Audio.ctx.createGain();

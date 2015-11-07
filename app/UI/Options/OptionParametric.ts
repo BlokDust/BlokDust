@@ -84,7 +84,7 @@ export class Parametric extends Option {
         var bodyType = units*5;
         ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
         ctx.font = "400 " + bodyType + "px PT Sans"; //TODO: convert to newer font system
-        ctx.fillStyle = App.Palette[App.Color.Txt];
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];
         //ctx.fillStyle = "#393d43";
 
         for (var j=0; j<markers.length; j++) {
@@ -141,7 +141,7 @@ export class Parametric extends Option {
         // LINE //
         ctx.lineWidth = 2;
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = App.Palette[App.Color.Txt];
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];
         ctx.beginPath();
         ctx.moveTo(panel.Margin, ly - (this.LineGain[0]));
         for (var j=0; j<this.Smoothness; j++) {

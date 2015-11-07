@@ -1,12 +1,12 @@
+import IDisplayObject = etch.drawing.IDisplayObject;
 import {CompoundOperation} from '../Core/Operations/CompoundOperation';
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {ICompoundOperation} from '../Core/Operations/ICompoundOperation';
-import IDisplayObject = etch.drawing.IDisplayObject;
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 import {MoveBlockOperation} from './MoveBlockOperation';
-import {RemoveItemFromArrayOperation} from '../Core/Operations/RemoveItemFromArrayOperation';
 import {RemoveDisplayObjectOperation} from './RemoveDisplayObjectOperation';
+import {RemoveItemFromArrayOperation} from '../Core/Operations/RemoveItemFromArrayOperation';
 
 declare var App: IApp;
 

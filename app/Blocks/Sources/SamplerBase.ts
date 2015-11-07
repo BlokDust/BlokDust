@@ -7,8 +7,8 @@ declare var App: IApp;
 
 export class SamplerBase extends Source {
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
         this.CreateSource();
     }
 

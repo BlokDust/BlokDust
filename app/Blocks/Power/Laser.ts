@@ -5,7 +5,7 @@ import {PowerSource} from './PowerSource';
 
 export class Laser extends PowerSource {
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -20,7 +20,7 @@ export class Laser extends PowerSource {
         this.Collisions = [];
         this.CheckRange = this.Params.range;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1,-1), new Point(1,-1), new Point(1,0), new Point(0,1), new Point(-1,0));

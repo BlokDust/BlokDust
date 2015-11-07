@@ -9,7 +9,7 @@ export class Chomp extends PostEffect {
     public Params: ChompParams;
     public Timer;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -27,7 +27,7 @@ export class Chomp extends PostEffect {
             "gain" : this.Params.gain
         });
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 1),new Point(0, 2),new Point(-1, 2));

@@ -31,7 +31,7 @@ export class Granular extends Source {
 
     public Params: GranularParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -57,7 +57,7 @@ export class Granular extends Source {
         this.Searching = false;
         this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         //this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
 

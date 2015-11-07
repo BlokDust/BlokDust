@@ -42,6 +42,7 @@ export class MainScene extends Stage{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
+    public AnimationsLayer: AnimationsLayer;
     public BlockSprites: BlockSprites;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
@@ -145,6 +146,10 @@ export class MainScene extends Stage{
 
         // Display Objects //
 
+        // CREATE SPLASH SCREEN //
+        //this.Splash = new Splash();
+        //this.Splash.Init(this);
+
         this.BlockSprites = new BlockSprites();
         this.DisplayList.Add(this.BlockSprites);
         this.BlockSprites.Init(this);
@@ -201,6 +206,9 @@ export class MainScene extends Stage{
         this.DisplayList.Add(this._Header);
         this._Header.Init(this);
 
+        this.AnimationsLayer = new AnimationsLayer();
+        this.AnimationsLayer.Init(this);
+
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
             if (e.keyCode === 18) {
@@ -213,7 +221,7 @@ export class MainScene extends Stage{
         });
 
         this._Invalidate();
-        this.SketchResize();
+        this.Resize();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -257,16 +265,6 @@ export class MainScene extends Stage{
         App.Particles = currentParticles;
     }
 
-    SketchResize() {
-        this.OptionsPanel.Close();
-        this.OptionsPanel.Resize();
-        this._Header.Populate(this._Header.MenuJson);
-        this.ZoomButtons.UpdatePositions();
-        this.SharePanel.Resize();
-        this.SoundcloudPanel.Resize();
-        this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
-    }
-
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
@@ -287,7 +285,7 @@ export class MainScene extends Stage{
     DrawParticles() {
         for (var i = 0; i < App.Particles.length; i++) {
 
-            // todo: pre-render these in a single canvas
+            // todo: use etch drawFrom to cache
             var particle = App.Particles[i];
             var pos = App.Metrics.FloatOnGrid(particle.Position);
             var unit = App.ScaledUnit;
@@ -747,6 +745,7 @@ export class MainScene extends Stage{
     }
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
+    // todo: don't call things directly like this, use event handlers!
     CompositionLoaded() {
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
@@ -757,7 +756,7 @@ export class MainScene extends Stage{
         },200);
 
         if (!App.LoadCued) {
-            App.Splash.EndLoad();
+            //App.Splash.EndLoad();
         }
     }
 
@@ -773,5 +772,15 @@ export class MainScene extends Stage{
         this.SelectedBlock = null;
 
         //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
+    }
+
+    Resize() {
+        this.OptionsPanel.Close();
+        this.OptionsPanel.Resize();
+        this._Header.Populate(this._Header.MenuJson);
+        this.ZoomButtons.UpdatePositions();
+        this.SharePanel.Resize();
+        this.SoundcloudPanel.Resize();
+        this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 }

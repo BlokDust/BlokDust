@@ -50,8 +50,8 @@ export class Metrics {
 
         // GET DISPLAY SIZE //
         const canvas = App.Canvas;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        var width = window.innerWidth;
+        var height = window.innerHeight;
         const ratio = this.PixelRatio;
 
         //DEVICE BREAKPOINTS //
@@ -139,8 +139,8 @@ export class Metrics {
 
     public DeviceCheck() {
         // DEVICE BREAKPOINTS //
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        var width = window.innerWidth;
+        var height = window.innerHeight;
 
         // MOBILE PORTRAIT //
         if (height > (width*1.3)) {

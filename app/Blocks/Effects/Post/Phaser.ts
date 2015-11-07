@@ -8,7 +8,7 @@ export class Phaser extends PostEffect {
     public Effect: Tone.Phaser;
     public Params: PhaserParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -27,7 +27,7 @@ export class Phaser extends PostEffect {
         });
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));

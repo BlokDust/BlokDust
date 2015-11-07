@@ -20,8 +20,8 @@ export class LaserBeams extends DisplayObject {
     public UpdateAllLasers: boolean;
     //private _TestPoints: Point[];
 
-    Init(sketch: any): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
         this.UpdateAllLasers = false;
         //this._TestPoints = [];
     }

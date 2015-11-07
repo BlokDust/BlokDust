@@ -9,8 +9,8 @@ declare var App: IApp;
 
 export class ConnectionLines extends DisplayObject {
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
     }
 
     Draw() {

@@ -12,7 +12,7 @@ export class Gain extends PostEffect {
     //public Effect: Tone.Signal;
     public Gain: GainParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -26,7 +26,7 @@ export class Gain extends PostEffect {
         //this.Effect = new Tone.Signal(1, 'db');
 
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(0, 1));

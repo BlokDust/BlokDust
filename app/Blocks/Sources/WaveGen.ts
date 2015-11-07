@@ -22,7 +22,7 @@ export class WaveGen extends SamplerBase {
     private _WaveVoices: WaveVoice[];
     private _SeedLoad: boolean;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
         if (!this.Params) {
             this.Params = {
                 playbackRate: 1,
@@ -50,7 +50,7 @@ export class WaveGen extends SamplerBase {
         this._SeedLoad = true;
 
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 2),new Point(-1, 1));

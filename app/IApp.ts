@@ -1,13 +1,13 @@
-import {AnimationsLayer} from './UI/AnimationsLayer';
 import Canvas = etch.drawing.Canvas;
-import {ColorThemes} from './UI/ColorThemes';
+import IDisplayObject = etch.drawing.IDisplayObject;
+import Point = minerva.Point;
+import {AnimationsLayer} from './UI/AnimationsLayer';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {Config} from './Config';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
-import IDisplayObject = etch.drawing.IDisplayObject;
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
@@ -22,20 +22,18 @@ import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {ResourceManager} from './Core/Resources/ResourceManager';
 import {Serializer} from './Serializer';
 import {Splash} from './Splash';
+import {ThemeManager} from "./UI/ThemeManager";
 import {TypingManager} from './Core/Inputs/TypingManager';
-import Point = minerva.Point;
 
 export interface IApp {
-
-    Audio: IAudio;
     AnimationsLayer: AnimationsLayer;
+    Audio: IAudio;
     Blocks: IBlock[];
     Canvas: Canvas;
-    Color: ColorThemes;
-    Config: Config;
     CommandManager: CommandManager;
     CommandsInputManager: CommandsInputManager;
     CompositionId: string;
+    Config: Config;
     DragFileInputManager: DragFileInputManager;
     DragOffset: Point;
     Effects: IEffect[];
@@ -59,8 +57,8 @@ export interface IApp {
     Scene: number;
     SessionId: string;
     Sources: ISource[];
-    Splash: Splash;
     SubCanvas: HTMLCanvasElement[];
+    ThemeManager: ThemeManager;
     TypingManager: TypingManager;
     Unit: number;
     Width: number;

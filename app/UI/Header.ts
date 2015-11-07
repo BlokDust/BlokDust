@@ -33,8 +33,8 @@ export class Header extends DisplayObject {
     public MenuOver: boolean;
     public Tweens: any[];
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this._Units = 1.7;
         this.Height = 60;
@@ -155,7 +155,7 @@ export class Header extends DisplayObject {
 
         // TT //
         this.Ctx.globalAlpha = 1;
-        this.Ctx.fillStyle = App.Palette[App.Color.Txt];// Grey
+        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// Grey
         this.Ctx.font = "200 " + headerType + "px Dosis";
 
         if (App.Metrics.Device === Device.mobile) {
@@ -283,7 +283,7 @@ export class Header extends DisplayObject {
             this.Ctx.closePath();
             this.Ctx.clip();
 
-            this.Ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             if (cat.CurrentPage == 0) {
                 this.Ctx.strokeStyle = App.Palette[1]; // Grey
             }
@@ -295,7 +295,7 @@ export class Header extends DisplayObject {
             this.Ctx.lineTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
             this.Ctx.stroke();
 
-            this.Ctx.strokeStyle = App.Palette[App.Color.Txt]; // White
+            this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             if (cat.CurrentPage == cat.Pages) {
                 this.Ctx.strokeStyle = App.Palette[1]; // Grey
             }
@@ -340,7 +340,7 @@ export class Header extends DisplayObject {
         // SETTINGS BTN //
         this.Ctx.globalAlpha = 1;
         margin = this.DropDownHeight*0.5;
-        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[App.Color.Txt]; // White
+        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
         this.Ctx.lineWidth = 2;
         this.Ctx.beginPath();
         this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);

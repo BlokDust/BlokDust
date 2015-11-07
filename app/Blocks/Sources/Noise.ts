@@ -10,7 +10,7 @@ export class Noise extends Source {
     public Waveform: string;
     public NoiseParams: NoiseParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         this.Waveform = 'brown';
 
@@ -23,7 +23,7 @@ export class Noise extends Source {
             };
         }
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         this.CreateSource();
         this.CreateEnvelope();

@@ -16,7 +16,7 @@ export class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -26,7 +26,7 @@ export class MIDIController extends Keyboard {
             };
         }
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         App.Audio.MIDIManager.MIDIMessage.on(this._OnMIDIMessage, this);
 

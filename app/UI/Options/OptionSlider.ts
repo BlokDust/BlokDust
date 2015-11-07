@@ -102,7 +102,7 @@ export class Slider extends Option {
         ctx.fill();
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

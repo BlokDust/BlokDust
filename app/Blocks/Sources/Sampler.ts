@@ -17,7 +17,7 @@ export class Sampler extends SamplerBase {
     private _LoadFromShare: boolean = false;
     private _fileInput: HTMLElement = document.getElementById('audioFileInput');
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -42,7 +42,7 @@ export class Sampler extends SamplerBase {
 
         this._WaveForm = [];
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         this.FileReaderInit();
 

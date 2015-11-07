@@ -24,7 +24,7 @@ export class Convolver extends PostEffect {
     private _FallBackTrack: SoundcloudTrack;
     private _WaveForm: number[];
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (this.Params) { // TODO - must be better way, refresh function?
             var me = this;
@@ -50,7 +50,7 @@ export class Convolver extends PostEffect {
         this.Effect = new Tone.Convolver();
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));

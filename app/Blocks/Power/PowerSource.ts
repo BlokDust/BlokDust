@@ -7,9 +7,9 @@ import {Source} from '../Source';
 
 export class PowerSource extends Source {
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
         this.PowerConnections = 0;
-        super.Init(sketch);
+        super.Init(drawTo);
     }
 
     UpdateConnections(chain: IAudioChain) {

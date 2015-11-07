@@ -19,8 +19,8 @@ export class MessagePanel extends DisplayObject {
     private _ButtonWidth: number;
 
 
-    Init(sketch?:any):void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext):void {
+        super.Init(drawTo);
 
         this._Roll = [];
         this.Hover = false;
@@ -76,7 +76,7 @@ export class MessagePanel extends DisplayObject {
 
             // MESSAGE TEXT //
             ctx.globalAlpha = this._Alpha;
-            ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
+            ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.fillText(this._Value.string.toUpperCase(), cx, y + (5 * units));
 
 
@@ -94,7 +94,7 @@ export class MessagePanel extends DisplayObject {
 
                 // CLOSE X //
                 ctx.globalAlpha = this._Alpha;
-                ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
+                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(clx - (4 * units), y - (34 * units));
@@ -119,7 +119,7 @@ export class MessagePanel extends DisplayObject {
                     ctx.fill();
                 }
                 ctx.textAlign = "left";
-                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.Color.Txt]; // White
+                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
                 ctx.fillText(this._Value.buttonText.toUpperCase(), clx + (10*units), y + (5 * units));
             }
         }

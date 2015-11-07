@@ -8,7 +8,7 @@ export class Logic extends PowerEffect {
 
     public Params: LogicParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -16,7 +16,7 @@ export class Logic extends PowerEffect {
             };
         }
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
     }
 

@@ -51,8 +51,8 @@ export class Source extends Block implements ISource {
     public ResultsPage: number;
     public SearchString: string;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
 
         this.Sources = [];
         this.Envelopes = [];

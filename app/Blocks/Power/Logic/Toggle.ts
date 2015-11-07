@@ -8,9 +8,9 @@ import Point = etch.primitives.Point;
 
 export class Toggle extends Logic {
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }

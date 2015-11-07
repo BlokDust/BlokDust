@@ -12,7 +12,7 @@ export class Scuzz extends PreEffect {
     public Params: ScuzzParams;
     public WaveIndex: string[];
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         if (!this.Params) {
             this.Params = {
@@ -36,7 +36,7 @@ export class Scuzz extends PreEffect {
         this.OscLFO.start();
         this.SamplerLFO.start();
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));

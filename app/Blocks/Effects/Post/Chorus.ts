@@ -9,7 +9,7 @@ export class Chorus extends PostEffect {
     public Effect: Tone.Chorus;
     public Params: ChorusParams;
 
-    Init(sketch: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
 
         this.Defaults = {
             rate: 1.5,
@@ -28,7 +28,7 @@ export class Chorus extends PostEffect {
             "feedback" : this.Params.feedback
         });
 
-        super.Init(sketch);
+        super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(0, 1),new Point(-1, 1));

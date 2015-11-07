@@ -47,7 +47,7 @@ export class OptionSwitch {
 
             if (this.Selected) {
                 if (this._Lit) {
-                    ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
                 }
                 ctx.fillRect(x + (w*0.5),y + (h*0.16),w*0.5,h*0.42);
             } else {
@@ -86,7 +86,7 @@ export class OptionSwitch {
             }
 
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[App.Color.Txt];// WHITE
+            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
             var cx = x + (w*0.5);
             var cy = y + (h * 0.35);
             var lx = x + (w*0.25);
@@ -139,7 +139,7 @@ export class OptionSwitch {
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.Color.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "center";
         ctx.fillText(this.Name.toUpperCase(), x + (w*0.5), y + (h*0.84));

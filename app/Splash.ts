@@ -14,8 +14,8 @@ export class Splash extends DisplayObject{
     private _Center: Point;
     private _Offset: Point;
 
-    Init(sketch: IDisplayContext): void {
-        super.Init(sketch);
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
         this._Offset = new Point(0,0);
         this.XOffset = 0;
         this.YOffset = -1;
@@ -36,7 +36,7 @@ export class Splash extends DisplayObject{
         this._Scale = 100 * units;
 
         // LOADING //
-        if (App.Scene==2 && !App.LoadCued && App.CompositionId) {
+        if (App.Scene === 2 && !App.LoadCued && App.CompositionId) {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
             this.Ctx.fillStyle = App.Palette[0];
@@ -44,7 +44,7 @@ export class Splash extends DisplayObject{
 
             var dx = (App.Width*0.5);
             var dy = (App.Height*0.5) + (App.Height*this.LoadOffset);
-            this.Ctx.fillStyle = App.Palette[App.Color.Txt];// white
+            this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// white
             this.Ctx.textAlign = "center";
             this.Ctx.font = App.Metrics.TxtHeader;
             this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * units));
@@ -169,7 +169,7 @@ export class Splash extends DisplayObject{
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
         var headerType = 100*units;
-        this.Ctx.fillStyle = App.Palette[App.Color.Txt];// Grey
+        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// Grey
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";
         this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
