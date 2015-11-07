@@ -435,7 +435,7 @@ export class SettingsPanel extends DisplayObject{
 
     DelayTo(panel,destination,t,delay,v){
 
-        var offsetTween = new TWEEN.Tween({x: panel[""+v]});
+        var offsetTween = new window.TWEEN.Tween({x: panel[""+v]});
         offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
@@ -448,7 +448,7 @@ export class SettingsPanel extends DisplayObject{
                 }
             }
         });
-        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);
     }
@@ -479,7 +479,7 @@ export class SettingsPanel extends DisplayObject{
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
             if (this.MenuItems[i].Hover) {
-                TWEEN.removeAll(); // TODO - swap for local tween pool
+                window.TWEEN.removeAll(); // TODO - swap for local tween pool
                 var cat = this.MenuItems[i];
 
                 this.DelayTo(cat,1,400,0,"Selected");

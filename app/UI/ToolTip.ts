@@ -14,7 +14,7 @@ export class ToolTip extends DisplayObject {
     public Name: string;
     public Open: boolean;
     public Position: Point;
-    private _AlphaTween: TWEEN.Tween;
+    private _AlphaTween: createjs.Tween;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -71,18 +71,18 @@ export class ToolTip extends DisplayObject {
         if (this._AlphaTween) {
             this._AlphaTween.stop();
         }
-        TWEEN.remove(this._AlphaTween);
-        this._AlphaTween = new TWEEN.Tween({x: this.Alpha});
+        window.TWEEN.remove(this._AlphaTween);
+        this._AlphaTween = new window.TWEEN.Tween({x: this.Alpha});
         this._AlphaTween.to({x: destination}, t);
         this._AlphaTween.onUpdate(function () {
             panel.Alpha = this.x;
         });
-        this._AlphaTween.easing(TWEEN.Easing.Quintic.InOut);
+        this._AlphaTween.easing(window.TWEEN.Easing.Quintic.InOut);
         this._AlphaTween.start(this.LastVisualTick);
     }
 
     StopTween() {
-        TWEEN.remove(this._AlphaTween);
+        window.TWEEN.remove(this._AlphaTween);
     }
 
 }

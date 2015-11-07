@@ -6,6 +6,7 @@ interface Window{
     SC: any;
     trackEvent(category: string, action: string, label: string, value?: number);
     trackVariable(slot: number, name: string, value: string, scope: number);
+    TWEEN: any;
 }
 
 interface Document{

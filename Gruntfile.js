@@ -287,7 +287,6 @@ module.exports = function (grunt) {
                             'minerva/dist/minerva.d.ts',
                             'nullstone/dist/nullstone.d.ts',
                             'tone/utils/TypeScript/Tone.d.ts',
-                            'tween.ts/src/Tween.d.ts',
                             'utils/dist/utils.d.ts'
                         ],
                         dest: '<%= dirs.typings %>'

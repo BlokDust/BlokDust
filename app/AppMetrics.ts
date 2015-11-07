@@ -130,6 +130,7 @@ export class Metrics {
             ctx.oBackingStorePixelRatio ||
             ctx.backingStorePixelRatio || 1;
 
+        //return 1;
         return dpr / bsr;
     }
 

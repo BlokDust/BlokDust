@@ -115,6 +115,17 @@ declare module etch.collections {
 /// <reference path="Exceptions/Exceptions.d.ts" />
 /// <reference path="Collections/ObservableCollection.d.ts" />
 
+declare module etch.collections {
+    class PropertyChangedEventArgs implements nullstone.IEventArgs {
+        PropertyName: string;
+        constructor(propertyName: string);
+    }
+    interface INotifyPropertyChanged {
+        PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
+    }
+    var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
+}
+
 import Size = minerva.Size;
 declare module etch.drawing {
     class Canvas implements IDisplayContext {
@@ -220,30 +231,14 @@ declare var MAX_FPS: number;
 declare var MAX_MSPF: number;
 declare module etch.drawing {
     class Stage extends DisplayObject implements ITimerListener {
-        FrameCount: number;
         LastVisualTick: number;
         Timer: ClockTimer;
-        Init(drawTo: IDisplayContext): void;
+        Updated: nullstone.Event<number>;
+        Drawn: nullstone.Event<number>;
+        Init(sketch: IDisplayContext): void;
         OnTicked(lastTime: number, nowTime: number): void;
         UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
-    }
-}
-
-declare module etch.collections {
-    class PropertyChangedEventArgs implements nullstone.IEventArgs {
-        PropertyName: string;
-        constructor(propertyName: string);
-    }
-    interface INotifyPropertyChanged {
-        PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
-    }
-    var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
-}
-
-declare module etch.engine {
-    interface ITimerListener {
-        OnTicked(lastTime: number, nowTime: number): any;
     }
 }
 
@@ -298,6 +293,12 @@ declare module etch.events {
         Handled: boolean;
         Source: any;
         OriginalSource: any;
+    }
+}
+
+declare module etch.engine {
+    interface ITimerListener {
+        OnTicked(lastTime: number, nowTime: number): any;
     }
 }
 

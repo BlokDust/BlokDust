@@ -12,7 +12,7 @@ require.config({
         "Recorderjs": "lib/RecorderJS",
         "text": "lib/requirejs-text/text",
         "Tone": "lib/tone/Tone",
-        "tween": "lib/tween.ts/build/tween.min",
+        "tween": "lib/tweenjs/src/Tween",
         "utils": "lib/utils/dist/utils"
     },
     shim: {

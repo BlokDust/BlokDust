@@ -758,7 +758,7 @@ export class MainScene extends Stage{
         if (!App.LoadCued) {
             //App.Splash.EndLoad();
         }
-    }
+    }m
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS

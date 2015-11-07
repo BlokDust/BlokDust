@@ -3,7 +3,7 @@
   "version": "0.1.41",
   "dependencies": {
     "bower-webfontloader": "~1.5.16",
-    "etch": "~0.0.9",
+    "etch": "~0.0.10",
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
     "intersection": "BlokDust/intersection",
@@ -12,8 +12,8 @@
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
     "RecorderJS": "lukephills/Recorderjs#master",
     "tone": "lukephills/Tone.js#master",
-    "tween.ts": "edsilv/tween.ts#~0.1.2",
-    "utils": "edsilv/utils#~0.0.25"
+    "utils": "edsilv/utils#~0.0.25",
+    "tweenjs": "~16.3.1"
   },
   "devDependencies": {
     "r.js": "~2.1.16"

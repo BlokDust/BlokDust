@@ -92,30 +92,22 @@ export default class App implements IApp{
         return this.MainScene.AnimationsLayer;
     }
 
-    // todo: move to store
+    // todo: move to redux store
     get Sources(): ISource[] {
         return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
-    // todo: move to store
+    // todo: move to redux store
     get Effects(): IEffect[] {
         return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
+    // todo: move to redux store
     get PowerEffects(): IPowerEffect[] {
         return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
     }
 
-    get SessionId(): string {
-        return this._SessionId || localStorage.getItem(this.CompositionId);
-    }
-
-    set SessionId(value: string) {
-        this._SessionId = value;
-        localStorage.setItem(this.CompositionId, this._SessionId);
-    }
-
-    // todo: move to store
+    // todo: move to redux store
     public GetBlockId(): number {
         // loop through blocks to get max id
         var max = 0;
@@ -128,6 +120,15 @@ export default class App implements IApp{
         }
 
         return max + 1;
+    }
+
+    get SessionId(): string {
+        return this._SessionId || localStorage.getItem(this.CompositionId);
+    }
+
+    set SessionId(value: string) {
+        this._SessionId = value;
+        localStorage.setItem(this.CompositionId, this._SessionId);
     }
 
     constructor(config: string) {
@@ -206,7 +207,7 @@ export default class App implements IApp{
             });
         }
 
-        // INITIALISE THEMEMANAGER //
+        // INITIALISE THEME //
         this.ThemeManager = new ThemeManager();
         this.ThemeManager.ThemeChanged.on((s: any, e: ThemeChangeEventArgs) => {
             this.Palette = e.Palette;
@@ -267,6 +268,10 @@ export default class App implements IApp{
         this.MainScene = new MainScene();
         this.MainScene.Init(this.Canvas);
 
+        this.MainScene.Drawn.on((s: any, time: number) => {
+            window.TWEEN.update(time);
+        }, this);
+
         this.Blocks = [];
         this.AddBlocksToMainScene();
 
@@ -317,6 +322,7 @@ export default class App implements IApp{
         //    this.LoadCued = true;
         //} else {
             this.MainScene.CompositionLoaded();
+        // todo: mainscene should listen for an event
         //}
     }
 

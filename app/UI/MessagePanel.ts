@@ -18,7 +18,6 @@ export class MessagePanel extends DisplayObject {
     private _CloseX: number;
     private _ButtonWidth: number;
 
-
     Init(drawTo: IDisplayContext):void {
         super.Init(drawTo);
 
@@ -189,14 +188,14 @@ export class MessagePanel extends DisplayObject {
 
     Tween(panel,value,destination,delay,time) {
 
-        var pTween = new TWEEN.Tween({x:panel[""+value]});
+        var pTween = new window.TWEEN.Tween({x:panel[""+value]});
         pTween.to({ x: destination }, time);
         pTween.onUpdate(function() {
             panel[""+value] = this.x;
         });
         pTween.delay(delay);
         pTween.start(this.LastVisualTick);
-        pTween.easing( TWEEN.Easing.Quintic.InOut );
+        pTween.easing( window.TWEEN.Easing.Quintic.InOut );
     }
 
     //-------------------------------------------------------------------------------------------

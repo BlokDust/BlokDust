@@ -328,7 +328,7 @@ export class SoundcloudPanel extends DisplayObject{
 
     DelayTo(panel,destination,t,delay,v){
 
-        var offsetTween = new TWEEN.Tween({x: panel[""+v]});
+        var offsetTween = new window.TWEEN.Tween({x: panel[""+v]});
         offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
@@ -341,7 +341,7 @@ export class SoundcloudPanel extends DisplayObject{
                 }
             }
         });
-        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);
     }

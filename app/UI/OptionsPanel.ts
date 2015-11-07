@@ -691,13 +691,13 @@ export class OptionsPanel extends DisplayObject {
 
     PanelScale(panel,destination,t) {
 
-        var psTween = new TWEEN.Tween({x:panel.Scale});
+        var psTween = new window.TWEEN.Tween({x:panel.Scale});
         psTween.to({ x: destination }, t);
         psTween.onUpdate(function() {
             panel.Scale = this.x;
         });
         psTween.start(this.LastVisualTick);
-        psTween.easing( TWEEN.Easing.Quintic.InOut );
+        psTween.easing( window.TWEEN.Easing.Quintic.InOut );
     }
 
     //-------------------------------------------------------------------------------------------

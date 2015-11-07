@@ -143,7 +143,7 @@ export class ThemeManager  {
 
     ColorTo(color,destination,t){
 
-        var offsetTween = new TWEEN.Tween({r: color.R, g: color.G, b: color.B, a: color.A});
+        var offsetTween = new window.TWEEN.Tween({r: color.R, g: color.G, b: color.B, a: color.A});
         offsetTween.to({r: destination.R, g: destination.G, b: destination.B, a: destination.A}, t);
         offsetTween.onUpdate(function () {
             color.R = Math.round(this.r);
@@ -154,7 +154,7 @@ export class ThemeManager  {
                 return 'rgba(' + color.R + ',' + color.G + ',' + color.B + ',' + color.A + ')';
             }
         });
-        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.start();
     }
 

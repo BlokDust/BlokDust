@@ -62,7 +62,7 @@ export class StageDragger extends DisplayObject {
     DelayTo(panel,destination,t,delay,v){
 
         var me = this;
-        var offsetTween = new TWEEN.Tween({x: panel[""+v].x, y: panel[""+v].y});
+        var offsetTween = new window.TWEEN.Tween({x: panel[""+v].x, y: panel[""+v].y});
         offsetTween.to({x: destination.x, y: destination.y}, t);
         offsetTween.onUpdate(function () {
             panel[""+v].x = this.x;
@@ -71,7 +71,7 @@ export class StageDragger extends DisplayObject {
             me.Destination.y = this.y;
             panel.Metrics.UpdateGridScale();
         });
-        offsetTween.easing(TWEEN.Easing.Exponential.InOut);
+        offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);
 
