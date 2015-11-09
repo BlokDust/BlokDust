@@ -115,17 +115,6 @@ declare module etch.collections {
 /// <reference path="Exceptions/Exceptions.d.ts" />
 /// <reference path="Collections/ObservableCollection.d.ts" />
 
-declare module etch.collections {
-    class PropertyChangedEventArgs implements nullstone.IEventArgs {
-        PropertyName: string;
-        constructor(propertyName: string);
-    }
-    interface INotifyPropertyChanged {
-        PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
-    }
-    var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
-}
-
 import Size = minerva.Size;
 declare module etch.drawing {
     class Canvas implements IDisplayContext {
@@ -206,6 +195,7 @@ declare module etch.drawing {
         Draw(): void;
         DrawFrom: IDisplayContext;
         DrawTo: IDisplayContext;
+        FrameCount: number;
         Height: number;
         Hide(): void;
         Init(drawTo: IDisplayContext, drawFrom?: IDisplayContext): void;
@@ -240,6 +230,30 @@ declare module etch.drawing {
         UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
     }
+}
+
+declare module etch.engine {
+    interface ITimerListener {
+        OnTicked(lastTime: number, nowTime: number): any;
+    }
+}
+
+declare module etch.primitives {
+    class Point extends minerva.Point {
+        Clone(): Point;
+        ToVector(): Vector;
+    }
+}
+
+declare module etch.collections {
+    class PropertyChangedEventArgs implements nullstone.IEventArgs {
+        PropertyName: string;
+        constructor(propertyName: string);
+    }
+    interface INotifyPropertyChanged {
+        PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
+    }
+    var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
 }
 
 declare module etch.events {
@@ -293,18 +307,5 @@ declare module etch.events {
         Handled: boolean;
         Source: any;
         OriginalSource: any;
-    }
-}
-
-declare module etch.engine {
-    interface ITimerListener {
-        OnTicked(lastTime: number, nowTime: number): any;
-    }
-}
-
-declare module etch.primitives {
-    class Point extends minerva.Point {
-        Clone(): Point;
-        ToVector(): Vector;
     }
 }

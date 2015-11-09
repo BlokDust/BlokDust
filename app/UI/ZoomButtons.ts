@@ -130,7 +130,7 @@ export class ZoomButtons extends DisplayObject {
         offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
-            if (v=="ZoomLevel") {
+            if (v==="ZoomLevel") {
                 panel.Metrics.UpdateGridScale();
             }
         });
@@ -182,7 +182,7 @@ export class ZoomButtons extends DisplayObject {
 
     ZoomIn() {
         if (this.CurrentSlot<this._ZoomSlots.length-1) {
-            App.MainScene.OptionsPanel.Close();
+            App.MainScene.OptionsPanel.Close(); // todo: use an event
             this.CurrentSlot +=1;
             this.StopAllTweens();
             this.ZoomAlpha = 1;
@@ -193,7 +193,7 @@ export class ZoomButtons extends DisplayObject {
 
     ZoomOut() {
         if (this.CurrentSlot>0) {
-            App.MainScene.OptionsPanel.Close();
+            App.MainScene.OptionsPanel.Close(); // todo: use an event
             this.CurrentSlot -=1;
             this.StopAllTweens();
             this.ZoomAlpha = 1;

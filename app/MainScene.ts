@@ -33,6 +33,7 @@ import {StageDragger as MainSceneDragger} from './UI/StageDragger';
 import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {ZoomButtons} from './UI/ZoomButtons';
+import Dimensions = Utils.Measurements.Dimensions;
 import Stage = etch.drawing.Stage;
 
 declare var App: IApp;
@@ -607,7 +608,7 @@ export class MainScene extends Stage{
 
         // CHECK BLOCKS FOR HOVER //
         if (this.OptionsPanel.Scale === 1) {
-            panelCheck = this._BoxCheck(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
+            panelCheck = Dimensions.HitRect(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
         }
 
         if (!panelCheck && !this._IsPointerDown) {
@@ -672,17 +673,12 @@ export class MainScene extends Stage{
         var options = this.OptionsPanel;
         var message = this.MessagePanel;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || message.Hover || (options.Scale==1 && options.Hover)) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || message.Hover || (options.Scale===1 && options.Hover)) {
             console.log("UI INTERACTION");
             return true;
         }
 
         return false;
-    }
-
-    // todo: move this to generic util
-    private _BoxCheck(x, y, w, h, mx, my) { // IS CURSOR WITHIN GIVEN BOUNDARIES
-        return (mx > x && mx < (x + w) && my > y && my < (y + h));
     }
 
     //-------------------------------------------------------------------------------------------
@@ -770,8 +766,6 @@ export class MainScene extends Stage{
         this.OptionsPanel.Close();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
-
-        //App.CommandManager.ExecuteCommand(Commands[Commands.INCREMENT_NUMBER], 1);
     }
 
     Resize() {
