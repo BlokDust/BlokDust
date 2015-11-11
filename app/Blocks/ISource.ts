@@ -47,4 +47,5 @@ export interface ISource extends IBlock {
     Refresh(): void;
     AddPower(): void;
     RemovePower(): void;
+    RemoveAllPowers(): void;
 }

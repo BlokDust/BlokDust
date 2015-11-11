@@ -122,7 +122,7 @@ export class Source extends Block implements ISource {
         // Reset pitch back to original setting
         this.ResetPitch();
 
-        this.RemovePowers();
+        this.RemoveAllPowers();
     }
 
     private _EnvelopeReset() {
@@ -484,7 +484,6 @@ export class Source extends Block implements ISource {
             this.TriggerAttack();
         }
         this.PowerAmount++;
-        console.log(this.PowerAmount);
     }
 
     RemovePower() {
@@ -494,10 +493,9 @@ export class Source extends Block implements ISource {
             return;
         }
         this.PowerAmount--;
-        console.log(this.PowerAmount);
     }
 
-    RemovePowers() {
+    RemoveAllPowers() {
         this.TriggerRelease('all');
         this.PowerAmount = 0;
     }
