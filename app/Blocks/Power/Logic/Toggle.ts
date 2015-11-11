@@ -94,11 +94,13 @@ export class Toggle extends Logic {
     }
 
     Stop() {
-        const connections = this.Connections.ToArray();
-        connections.forEach((source: ISource) => {
-            source.Chain.Sources.forEach((source: ISource) => {
-                source.RemovePower();
+        if (this.Params.logic) {
+            const connections = this.Connections.ToArray();
+            connections.forEach((source:ISource) => {
+                source.Chain.Sources.forEach((source:ISource) => {
+                    source.RemovePower();
+                });
             });
-        });
+        }
     }
 }
