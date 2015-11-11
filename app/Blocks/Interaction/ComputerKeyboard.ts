@@ -32,8 +32,8 @@ export class ComputerKeyboard extends Keyboard {
 
         super.Init(sketch);
 
-        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
+        App.PianoKeyboardManager.KeyDownChange.on(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.on(this.KeyUpCallback, this);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -56,8 +56,8 @@ export class ComputerKeyboard extends Keyboard {
         super.Dispose();
         this.Params.octave = null;
         this.KeyboardCommands = null;
-        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
+        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
     }
 
     KeyDownCallback(e: any){

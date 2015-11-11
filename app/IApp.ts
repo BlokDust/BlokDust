@@ -12,7 +12,7 @@ import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {IPowerSource} from './Blocks/Power/IPowerSource';
 import {ISource} from './Blocks/ISource';
-import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {PianoKeyboardManager} from './Core/Inputs/PianoKeyboardManager';
 import {MainScene} from './MainScene';
 import {Metrics} from './AppMetrics';
 import {OperationManager} from './Core/Operations/OperationManager';
@@ -42,7 +42,7 @@ export interface IApp {
     GridSize: number;
     Height: number;
     InputManager: InputManager;
-    KeyboardInput: KeyboardInput;
+    PianoKeyboardManager: PianoKeyboardManager;
     LoadCued: boolean;
     MainScene: MainScene;
     Metrics: Metrics;

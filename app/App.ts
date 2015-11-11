@@ -25,7 +25,7 @@ import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {IPowerSource} from './Blocks/Power/IPowerSource';
 import {ISource} from './Blocks/ISource';
 import {InputManager} from './Core/Inputs/InputManager';
-import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {PianoKeyboardManager} from './Core/Inputs/PianoKeyboardManager';
 import {LoadCommandHandler} from './CommandHandlers/LoadCommandHandler';
 import {MainScene} from './MainScene';
 import {Metrics} from './AppMetrics';
@@ -76,7 +76,7 @@ export default class App implements IApp{
     public InputManager: InputManager;
     public TypingManager: TypingManager;
     public DragFileInputManager: DragFileInputManager;
-    public KeyboardInput: KeyboardInput;
+    public PianoKeyboardManager: PianoKeyboardManager;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
     public Particles: Particle[] = [];
@@ -188,7 +188,7 @@ export default class App implements IApp{
         // CREATE INPUT MANAGERS //
         this.TypingManager = new TypingManager();
         this.DragFileInputManager = new DragFileInputManager();
-        this.KeyboardInput = new KeyboardInput();
+        this.PianoKeyboardManager = new PianoKeyboardManager();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
         this.FocusManager = new FocusManager();

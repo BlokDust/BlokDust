@@ -4,6 +4,8 @@ import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 import {KeyMap} from './KeyMap';
 
+declare var HumanInput: any;
+
 export class InputManager {
 
     public KeysDown: any;
@@ -34,7 +36,6 @@ export class InputManager {
     KeyboardDown(e) {
 
         var k: number = this.GetKeyByCode(e.keyCode);
-
 
         // if it's undefined
         if (typeof k === 'undefined') return;
