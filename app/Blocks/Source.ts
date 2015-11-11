@@ -50,6 +50,7 @@ export class Source extends Block implements ISource {
     public Searching: boolean;
     public ResultsPage: number;
     public SearchString: string;
+    public PowerAmount: number = 0;
 
     Init(sketch?: any): void {
         super.Init(sketch);
@@ -120,6 +121,8 @@ export class Source extends Block implements ISource {
 
         // Reset pitch back to original setting
         this.ResetPitch();
+
+        this.RemovePowers();
     }
 
     private _EnvelopeReset() {
@@ -474,6 +477,29 @@ export class Source extends Block implements ISource {
                 });
                 break;
         }
+    }
+
+    AddPower() {
+        if (this.PowerAmount === 0) {
+            this.TriggerAttack();
+        }
+        this.PowerAmount++;
+        console.log(this.PowerAmount);
+    }
+
+    RemovePower() {
+        if (this.PowerAmount === 1) {
+            this.TriggerRelease('all', true);
+        } else if (this.PowerAmount === 0) {
+            return;
+        }
+        this.PowerAmount--;
+        console.log(this.PowerAmount);
+    }
+
+    RemovePowers() {
+        this.TriggerRelease('all');
+        this.PowerAmount = 0;
     }
 
 }

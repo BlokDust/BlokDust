@@ -23,10 +23,7 @@ export class Toggle extends Logic {
         connections.forEach((source: ISource) => {
             source.Chain.Sources.forEach((source: ISource) => {
                 if (this.Params.logic) {
-                    source.TriggerAttack();
-                }
-                if (!source.IsPressed) {
-                    source.TriggerRelease('all');
+                    source.AddPower();
                 }
             });
         });
@@ -74,13 +71,12 @@ export class Toggle extends Logic {
     }
 
     PerformLogic() {
-        super.PerformLogic();
         if (this.Params.logic) {
             this.Params.logic = false;
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
                 source.Chain.Sources.forEach((source: ISource) => {
-                    source.TriggerRelease('all');
+                    source.RemovePower();
                 });
             });
 
@@ -89,7 +85,7 @@ export class Toggle extends Logic {
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
                 source.Chain.Sources.forEach((source: ISource) => {
-                    source.TriggerAttack();
+                    source.AddPower();
                 });
             });
         }

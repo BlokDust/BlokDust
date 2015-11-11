@@ -22,10 +22,7 @@ export class Power extends PowerEffect {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
             source.Chain.Sources.forEach((source: ISource) => {
-                if (!source.IsPressed) {
-                    source.TriggerRelease('all');
-                }
-                source.TriggerAttack();
+                source.AddPower();
             });
         });
     }
@@ -36,17 +33,12 @@ export class Power extends PowerEffect {
     }
 
     Stop() {
-        //Release all connected
+        console.log('stop?');
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
             source.Chain.Sources.forEach((source: ISource) => {
-                if (!source.IsPressed) {
-                    source.TriggerRelease('all');
-                }
+                source.RemovePower();
             });
         });
-    }
-
-    Dispose(){
     }
 }

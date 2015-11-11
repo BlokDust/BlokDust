@@ -21,10 +21,7 @@ export class Momentary extends Logic {
         connections.forEach((source: ISource) => {
             source.Chain.Sources.forEach((source: ISource) => {
                 if (this.Params.logic) {
-                    source.TriggerAttack();
-                }
-                if (!source.IsPressed) {
-                    source.TriggerRelease('all');
+                    source.AddPower();
                 }
             });
         });
@@ -78,10 +75,16 @@ export class Momentary extends Logic {
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
             source.Chain.Sources.forEach((source: ISource) => {
-                source.TriggerAttackRelease();
+                source.AddPower();
+                setTimeout(() => {
+                    source.RemovePower();
+                }, 100); //TODO: use App.Config.PulseLength here instead
             });
             source.Chain.PowerSources.forEach((source: ISource) => {
-                source.TriggerAttackRelease();
+                source.AddPower();
+                setTimeout(() => {
+                    source.RemovePower();
+                }, 100); //TODO: use App.Config.PulseLength here instead
                 if (source instanceof ParticleEmitter) {
                     (<ParticleEmitter>source).EmitParticle();
                 }
