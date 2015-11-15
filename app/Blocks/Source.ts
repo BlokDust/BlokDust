@@ -122,6 +122,7 @@ export class Source extends Block implements ISource {
         // Reset pitch back to original setting
         this.ResetPitch();
 
+        //TODO: this is causing issues with being powered by lasers
         this.RemoveAllPowers();
     }
 
@@ -262,15 +263,17 @@ export class Source extends Block implements ISource {
             this.Sources[0].triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
 
         //    Power Source Blocks
-        } else if (this.PowerConnections!==undefined) {
-            this.PowerConnections += 1;
+        } else if (this.PowerAmount!==undefined) {
+            //this.PowerConnections += 1;
+            this.AddPower();
             if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
             }
             var block = this;
             var seconds = App.Audio.Tone.toSeconds(duration) * 1000;
             setTimeout( function() {
-                block.PowerConnections -= 1;
+                //block.PowerConnections -= 1;
+                block.RemovePower();
                 if (block.UpdateCollision!==undefined) {
                     block.UpdateCollision = true;
                 }
@@ -286,7 +289,7 @@ export class Source extends Block implements ISource {
      */
     IsPowered(): boolean {
         //let bool: boolean = false;
-        if (this.IsPressed || this.PowerConnections>0) {
+        if (this.IsPressed || this.PowerConnections>0 || this.PowerAmount>0) {
             return true;
         }
         let connections: IBlock[] = this.Chain.Connections;

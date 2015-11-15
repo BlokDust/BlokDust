@@ -188,6 +188,7 @@ export class Block extends DisplayObject implements IBlock {
     //  CONNECTIONS
     //-------------------------------------------------------------------------------------------
 
+
     UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;
     }

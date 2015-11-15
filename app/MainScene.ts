@@ -57,7 +57,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
     public ZoomButtons: ZoomButtons;
     public MainSceneDragger: MainSceneDragger;
     private _TrashCan: TrashCan;
-    private _ConnectionLines: ConnectionLines;
+    public ConnectionLines: ConnectionLines;
     private _RecorderPanel: RecorderPanel;
     public LaserBeams: LaserBeams;
     private _ToolTipTimeout;
@@ -190,8 +190,8 @@ export class MainScene extends Fayde.Drawing.SketchContext{
         this._TrashCan = new TrashCan();
         this._TrashCan.Init(this);
 
-        this._ConnectionLines = new ConnectionLines();
-        this._ConnectionLines.Init(this);
+        this.ConnectionLines = new ConnectionLines();
+        this.ConnectionLines.Init(this);
 
         this._RecorderPanel = new RecorderPanel();
         this._RecorderPanel.Init(this);
@@ -286,7 +286,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
 
 
         // LINES //
-        this._ConnectionLines.Draw();
+        this.ConnectionLines.Draw();
 
         // BLOCKS //
         this.DisplayList.Draw();
@@ -388,6 +388,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
     private _PointerDown(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
 
+
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
@@ -466,6 +467,8 @@ export class MainScene extends Fayde.Drawing.SketchContext{
             this.MainSceneDragger.MouseDown(point);
         }
 
+        this.ConnectionLines.UpdateList();
+
     }
 
 
@@ -514,6 +517,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
             this.MainSceneDragger.MouseUp();
         }
 
+        this.ConnectionLines.UpdateList();
     }
 
 
@@ -695,6 +699,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
 
     private _ABlockHasBeenMoved(block) {
         this.LaserBeams.UpdateAllLasers = true;
+        this.ConnectionLines.UpdateList();
     }
 
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
@@ -753,7 +758,7 @@ export class MainScene extends Fayde.Drawing.SketchContext{
     private _Invalidate(){
         this._ValidateBlocks();
         this._CheckProximity();
-
+        this.ConnectionLines.UpdateList();
     }
 
     _ValidateBlocks() {
