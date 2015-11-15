@@ -23,6 +23,7 @@ import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {ResourceManager} from './Core/Resources/ResourceManager';
 import {Serializer} from './Serializer';
 import {Splash} from './Splash';
+import {Stage} from "./Stage";
 import {ThemeManager} from "./UI/ThemeManager";
 import {TypingManager} from './Core/Inputs/TypingManager';
 
@@ -60,6 +61,7 @@ export interface IApp {
     SessionId: string;
     Sources: ISource[];
     SubCanvas: HTMLCanvasElement[];
+    Stage: Stage;
     ThemeManager: ThemeManager;
     TypingManager: TypingManager;
     Unit: number;

@@ -39,7 +39,7 @@ import Stage = etch.drawing.Stage;
 declare var App: IApp;
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
 
-export class MainScene extends Stage{
+export class MainScene extends DisplayObject{
 
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;

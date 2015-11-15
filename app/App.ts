@@ -43,6 +43,7 @@ import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
 import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
 import {Source} from './Blocks/Source';
+import {Stage} from "./Stage";
 import {ThemeChangeEventArgs} from "./UI/ThemeChangeEventArgs";
 import {ThemeManager} from './UI/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
@@ -63,7 +64,7 @@ export default class App implements IApp{
     public CompositionName: string;
     public Config: Config;
     public DragFileInputManager: DragFileInputManager;
-    public DragOffset: Point;
+    public DragOffset: Point = new Point(0, 0);
     public FocusManager: FocusManager;
     public GridSize: number;
     public Height: number;
@@ -71,7 +72,6 @@ export default class App implements IApp{
     public IsLoadedFromSave: boolean = false;
     public KeyboardInput: KeyboardInput;
     public LoadCued: boolean;
-    public MainScene: MainScene;
     public Metrics: Metrics;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
@@ -84,6 +84,7 @@ export default class App implements IApp{
     public ScaledUnit: number;
     public Scene: number;
     public SubCanvas: HTMLCanvasElement[];
+    public Stage: Stage;
     public ThemeManager: ThemeManager;
     public TypingManager: TypingManager;
     public Unit: number;
@@ -92,6 +93,10 @@ export default class App implements IApp{
 
     get AnimationsLayer(): AnimationsLayer{
         return this.MainScene.AnimationsLayer;
+    }
+
+    get MainScene(): MainScene {
+        return this.Stage.MainScene;
     }
 
     // todo: move to redux store
@@ -140,15 +145,16 @@ export default class App implements IApp{
     public Setup(){
 
         this.Canvas = new Canvas();
+
         this.Scene = 0;
+
+        // METRICS //
+        this.Metrics = new Metrics();
 
         this.BlockSprites = new BlockSprites();
 
         this.SubCanvas = [];
         this.CreateSubCanvas(0); // optionsPanel
-
-        // METRICS //
-        this.Metrics = new Metrics();
 
         window.onresize = () => {
             this.Resize();
@@ -217,6 +223,7 @@ export default class App implements IApp{
             this.Palette = e.Palette;
             this.LoadReady();
         }, this);
+
         this.ThemeManager.LoadTheme(0, true);
     }
 
@@ -263,16 +270,15 @@ export default class App implements IApp{
         } else {
             //this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
-        this.CreateMainScene();
+        this.CreateStage();
     }
 
-    // CREATE MainScene & BEGIN DRAWING/ANIMATING //
-    CreateMainScene() {
-        // create MainScene
-        this.MainScene = new MainScene();
-        this.MainScene.Init(this.Canvas);
+    // CREATE Stage & BEGIN DRAWING/ANIMATING //
+    CreateStage() {
 
-        this.MainScene.Drawn.on((s: any, time: number) => {
+        this.Stage = new Stage();
+        this.Stage.Init(this.Canvas);
+        this.Stage.Drawn.on((s: any, time: number) => {
             window.TWEEN.update(time);
         }, this);
 
@@ -369,7 +375,9 @@ export default class App implements IApp{
 
     Resize(): void {
         this.Metrics.Metrics();
+        // todo: why check for optionspanel here?
         if (this.MainScene.OptionsPanel) {
+            // todo: resize stage which resizes children
             this.MainScene.Resize();
         }
     }
