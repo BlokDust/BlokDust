@@ -222,7 +222,6 @@ export class MainScene extends DisplayObject{
         });
 
         this._Invalidate();
-        this.Resize();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -762,13 +761,9 @@ export class MainScene extends DisplayObject{
         this.SelectedBlock = null;
     }
 
-    Resize() {
+    Resize(): void {
         this.OptionsPanel.Close();
-        this.OptionsPanel.Resize();
         this._Header.Populate(this._Header.MenuJson);
-        this.ZoomButtons.UpdatePositions();
-        this.SharePanel.Resize();
-        this.SoundcloudPanel.Resize();
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 }

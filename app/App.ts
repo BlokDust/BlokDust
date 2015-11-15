@@ -375,10 +375,6 @@ export default class App implements IApp{
 
     Resize(): void {
         this.Metrics.Metrics();
-        // todo: why check for optionspanel here?
-        if (this.MainScene.OptionsPanel) {
-            // todo: resize stage which resizes children
-            this.MainScene.Resize();
-        }
+        this.Stage.Resize();
     }
 }

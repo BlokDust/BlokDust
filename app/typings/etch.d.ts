@@ -126,6 +126,12 @@ declare module etch.collections {
     var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
 }
 
+declare module etch.engine {
+    interface ITimerListener {
+        OnTicked(lastTime: number, nowTime: number): any;
+    }
+}
+
 import Size = minerva.Size;
 declare module etch.drawing {
     class Canvas implements IDisplayContext {
@@ -247,19 +253,6 @@ declare module etch.drawing {
     }
 }
 
-declare module etch.engine {
-    interface ITimerListener {
-        OnTicked(lastTime: number, nowTime: number): any;
-    }
-}
-
-declare module etch.primitives {
-    class Point extends minerva.Point {
-        Clone(): Point;
-        ToVector(): Vector;
-    }
-}
-
 declare module etch.events {
     enum CollectionChangedAction {
         Add = 1,
@@ -311,5 +304,12 @@ declare module etch.events {
         Handled: boolean;
         Source: any;
         OriginalSource: any;
+    }
+}
+
+declare module etch.primitives {
+    class Point extends minerva.Point {
+        Clone(): Point;
+        ToVector(): Vector;
     }
 }

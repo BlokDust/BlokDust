@@ -23,18 +23,11 @@ export class ZoomButtons extends DisplayObject {
         super.Init(drawTo);
 
         this.InRoll = this.OutRoll = false;
-        this.UpdatePositions();
         this.Tweens = [];
 
         this._ZoomSlots = [0.25,0.5,1,2,4];
         this.CurrentSlot = 2;
         this.ZoomAlpha = 0;
-    }
-
-    UpdatePositions() {
-        var units = App.Unit;
-        this._InPos = new Point(30*units,App.Height - (30*units));
-        this._OutPos = new Point(70*units,App.Height - (30*units));
     }
 
     UpdateSlot(zoom) {
@@ -200,5 +193,11 @@ export class ZoomButtons extends DisplayObject {
             this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
             this.DelayTo(this,0,500,700,"ZoomAlpha");
         }
+    }
+
+    Resize(): void {
+        var units = App.Unit;
+        this._InPos = new Point(30*units,App.Height - (30*units));
+        this._OutPos = new Point(70*units,App.Height - (30*units));
     }
 }

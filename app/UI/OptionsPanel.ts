@@ -733,6 +733,8 @@ export class OptionsPanel extends DisplayObject {
     }
 
     Resize() {
+        if (!App.Width) return;
+
         if (App.Metrics.Device !== Device.mobile) {
             this.Position.x = Math.round(App.Width*App.Metrics.OptionsPoint.x);
             this.Position.y = Math.round(App.Height*App.Metrics.OptionsPoint.y);
@@ -740,7 +742,6 @@ export class OptionsPanel extends DisplayObject {
             this.Position.x = -44 * App.Unit;
             this.Position.y = Math.round(App.Height*0.65);
         }
-
     }
 
     Close() {

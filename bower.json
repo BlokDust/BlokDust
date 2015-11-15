@@ -3,7 +3,7 @@
   "version": "0.1.41",
   "dependencies": {
     "bower-webfontloader": "~1.5.16",
-    "etch": "~0.0.13",
+    "etch": "~0.0.14",
     "exjs": "~0.2.10",
     "extensions": "edsilv/extensions#~0.1.1",
     "intersection": "BlokDust/intersection",
