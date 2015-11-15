@@ -194,7 +194,9 @@ export class LaserBeams {
                                                                 //block.ScheduleAttack();
                                                             }
                                                             //console.log(block.PowerConnections);
-                                                            block.PowerConnections += 1;
+                                                            //block.PowerConnections += 1;
+                                                            block.AddPower();
+                                                            this._Sketch.ConnectionLines.UpdateList();
                                                         }
                                                     }
                                                 }
@@ -219,8 +221,10 @@ export class LaserBeams {
                             if (collisions.length == 0 || $.inArray(block, collisions) == -1) {
                                 //console.log("RELEASE "+ block.Id);
                                 if (!(block instanceof Logic)) {
-                                    block.PowerConnections -= 1;
-                                    block.TriggerRelease('all'); // TODO:
+                                    /*block.PowerConnections -= 1;
+                                    block.TriggerRelease('all'); */
+                                    block.RemovePower();
+                                    this._Sketch.ConnectionLines.UpdateList();
                                 }
                             }
                         }

@@ -5,6 +5,8 @@ import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
+import {GranularVoice} from './GranularComponents/GranularVoice';
+import {Grain} from './GranularComponents/Grain';
 
 declare var App: IApp;
 
