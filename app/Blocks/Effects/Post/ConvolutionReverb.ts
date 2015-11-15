@@ -143,8 +143,7 @@ export class Convolver extends PostEffect {
 
     Draw() {
         super.Draw();
-
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"convolution");
+        this.DrawSprite("convolution");
     }
 
     MouseUp() {

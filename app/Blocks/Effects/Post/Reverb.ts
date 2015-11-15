@@ -29,7 +29,7 @@ export class Reverb extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"reverb");
+        this.DrawSprite("reverb");
     }
 
     Dispose(){

@@ -17,9 +17,10 @@ export class MenuItem {
     public InfoHover: boolean;
     public BackHover: boolean;
     public InfoOffset: number;
-    private _Sketch: MainScene;
+    private _MainScene: MainScene;
     public MouseIsDown: boolean;
     public MousePoint: Point;
+    public Ctx: CanvasRenderingContext2D;
 
     constructor (position: Point, size: Size, name: string, id, description: string, sketch: MainScene) {
         this.Position = position;
@@ -32,69 +33,64 @@ export class MenuItem {
         this.InfoHover = false;
         this.BackHover = false;
         this.InfoOffset = 0;
-        this._Sketch = sketch;
+        this._MainScene = sketch;
         this.MouseIsDown = false;
     }
 
-    Draw(ctx,units,x: number,y: number) {
-        ctx.globalAlpha = 1;
+    Draw(displayContext: IDisplayContext, units, x: number, y: number) {
+        this.Ctx = displayContext.Ctx;
+        this.Ctx.globalAlpha = 1;
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
 
         // NAME //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// White
+        this.Ctx.fillStyle = this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// White
         var dataType = units*10;
-        ctx.textAlign = "center";
-        ctx.font = App.Metrics.TxtMid;
-        ctx.fillText(this.Name,x,y + (40*units));
-
+        this.Ctx.textAlign = "center";
+        this.Ctx.font = App.Metrics.TxtMid;
+        this.Ctx.fillText(this.Name,x,y + (40*units));
 
         // INFO BUTTON //
-        ctx.lineWidth = 1;
+        this.Ctx.lineWidth = 1;
         var ix = x - (40*units);
         var iy = y - (30*units);
         var diamond = 11;
-        ctx.beginPath();
-        ctx.moveTo(ix - (diamond*units), iy);
-        ctx.lineTo(ix, iy - (diamond*units));
-        ctx.lineTo(ix + (diamond*units), iy);
-        ctx.lineTo(ix, iy + (diamond*units));
-        ctx.closePath();
-        ctx.stroke();
-        ctx.fillText("?",ix,iy + (dataType*0.38));
-
+        this.Ctx.beginPath();
+        this.Ctx.moveTo(ix - (diamond*units), iy);
+        this.Ctx.lineTo(ix, iy - (diamond*units));
+        this.Ctx.lineTo(ix + (diamond*units), iy);
+        this.Ctx.lineTo(ix, iy + (diamond*units));
+        this.Ctx.closePath();
+        this.Ctx.stroke();
+        this.Ctx.fillText("?",ix,iy + (dataType*0.38));
 
         if (this.InfoOffset!==0) {
             // INFO ARROW //
-            ctx.lineWidth = 2;
+            this.Ctx.lineWidth = 2;
             var ay = y + (this.Size.height*1.5) - (30*units);
-            ctx.beginPath();
-            ctx.moveTo(x - (diamond*units), ay);
-            ctx.lineTo(x, ay + (diamond*units));
-            ctx.lineTo(x + (diamond*units), ay);
-            ctx.stroke();
-
+            this.Ctx.beginPath();
+            this.Ctx.moveTo(x - (diamond*units), ay);
+            this.Ctx.lineTo(x, ay + (diamond*units));
+            this.Ctx.lineTo(x + (diamond*units), ay);
+            this.Ctx.stroke();
 
             // INFO TEXT //
-            ctx.textAlign = "left";
+            this.Ctx.textAlign = "left";
             var bodyType = units*7.5;
-            ctx.font = App.Metrics.TxtItalic;
-            this.PrintAtWordWrap(ctx,this.Description, x -(this.Size.width*0.5) + (10*units),y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
-
+            this.Ctx.font = App.Metrics.TxtItalic;
+            this.PrintAtWordWrap(this.Ctx, this.Description, x -(this.Size.width*0.5) + (10*units), y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
 
             // VERTICAL LINES //
-            ctx.strokeStyle = App.Palette[1];// Grey
-            ctx.beginPath();
-            ctx.moveTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*0.5) + (20*units));
-            ctx.lineTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*1.5) - (20*units));
-            ctx.moveTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*0.5) + (20*units));
-            ctx.lineTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*1.5) - (20*units));
-            ctx.stroke();
+            this.Ctx.strokeStyle = App.Palette[1];// Grey
+            this.Ctx.beginPath();
+            this.Ctx.moveTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*0.5) + (20*units));
+            this.Ctx.lineTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*1.5) - (20*units));
+            this.Ctx.moveTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*0.5) + (20*units));
+            this.Ctx.lineTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*1.5) - (20*units));
+            this.Ctx.stroke();
         }
 
-
         // ICON //
-        this._Sketch.BlockSprites.DrawSprite(new Point(x,y-(7.5*units)), false, this.Name.toLowerCase());
-
+        App.BlockSprites.DrawSprite(displayContext, new Point(x,y-(7.5*units)), false, this.Name.toLowerCase());
     }
 
     PrintAtWordWrap( context , text, x, y, lineHeight, fitWidth) {
@@ -130,7 +126,6 @@ export class MenuItem {
             context.fillText( words.join(' '), x, y + (lineHeight*currentLine) );
     }
 
-
     MouseDown(point) {
         this.MouseIsDown = true;
         this.MousePoint = new Point(point.x,point.y);
@@ -145,7 +140,7 @@ export class MenuItem {
             if (point.y > cutoff) {
                 header.ClosePanel();
                 this.MouseIsDown = false;
-                this._Sketch.CreateBlockFromType(this.ID);
+                this._MainScene.CreateBlockFromType(this.ID);
             }
         }
     }

@@ -67,7 +67,7 @@ export class Recorder extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"recorder");
+        this.DrawSprite("recorder");
     }
 
     ToggleRecording(){

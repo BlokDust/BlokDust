@@ -36,8 +36,7 @@ export class Chorus extends PostEffect {
 
     Draw() {
         super.Draw();
-
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"chorus");
+        this.DrawSprite("chorus");
     }
 
     Dispose() {

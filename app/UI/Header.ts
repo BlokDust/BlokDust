@@ -245,7 +245,7 @@ export class Header extends DisplayObject {
                     var yPos = cat.YOffset;
                     cat.Items[j].Position.x = xPos; // TODO: shouldn't really be setting position in Draw, but worth setting up update?
                     if (xPos > 0 && xPos < this.DrawTo.Width) {
-                        cat.Items[j].Draw(this.Ctx, units, xPos, yPos);
+                        cat.Items[j].Draw(this, units, xPos, yPos);
                     }
                 }
 
@@ -257,7 +257,7 @@ export class Header extends DisplayObject {
 
                     if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
                         this.Ctx.globalAlpha = 0.5;
-                        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(cat.Items[j].MousePoint,false,cat.Items[j].Name.toLowerCase());
+                        App.BlockSprites.DrawSprite(this, cat.Items[j].MousePoint, false, cat.Items[j].Name.toLowerCase());
                     }
                 }
             }

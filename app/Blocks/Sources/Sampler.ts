@@ -151,7 +151,7 @@ export class Sampler extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"sampler");
+        this.DrawSprite("sampler");
     }
 
     UpdateOptionsForm() {

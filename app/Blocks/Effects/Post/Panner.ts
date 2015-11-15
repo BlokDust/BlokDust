@@ -27,7 +27,7 @@ export class Panner extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"panner");
+        this.DrawSprite("panner");
     }
 
     Dispose(){

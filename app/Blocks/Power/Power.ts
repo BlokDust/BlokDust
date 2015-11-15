@@ -25,7 +25,7 @@ export class Power extends PowerEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"power");
+        this.DrawSprite("power");
     }
 
     Dispose(){

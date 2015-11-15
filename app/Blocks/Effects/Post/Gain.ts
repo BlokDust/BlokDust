@@ -34,7 +34,7 @@ export class Gain extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"volume");
+        this.DrawSprite("volume");
     }
 
     Dispose(){

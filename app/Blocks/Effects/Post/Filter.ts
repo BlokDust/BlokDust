@@ -34,7 +34,7 @@ export class Filter extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"filter");
+        this.DrawSprite("filter");
     }
 
     Dispose(){

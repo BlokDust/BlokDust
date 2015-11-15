@@ -29,7 +29,7 @@ export class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"toggle switch");
+        this.DrawSprite("toggle switch");
     }
 
     UpdateOptionsForm() {

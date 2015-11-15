@@ -218,9 +218,7 @@ export class Granular extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"granular");
-        if (this._WaveForm.length>0) {
-        }
+        this.DrawSprite("granular");
     }
 
     CreateSource(){

@@ -26,7 +26,7 @@ export class Void extends Block {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"void",this.StarPos);
+        this.DrawSprite("void");
     }
 
     Dispose(){

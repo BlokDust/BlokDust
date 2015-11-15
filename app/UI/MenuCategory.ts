@@ -29,7 +29,7 @@ export class MenuCategory {
         this.CurrentPage = 0;
     }
 
-    Draw(ctx,units,header: any,offset) {
+    Draw(ctx, units, header: any, offset) {
         ctx.globalAlpha = 1;
         var dataType = units*10;
         var thisHeight = Math.round(header.Height*units);

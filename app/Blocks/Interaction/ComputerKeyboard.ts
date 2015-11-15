@@ -42,9 +42,8 @@ export class ComputerKeyboard extends Keyboard {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position, true, "computer keyboard");
+        this.DrawSprite("computer keyboard");
     }
-
 
     //
     //Detach(source: ISource): void {

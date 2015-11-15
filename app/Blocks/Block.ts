@@ -87,6 +87,11 @@ export class Block extends DisplayObject implements IBlock {
         this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
     }
 
+    // todo: use types instead of strings!
+    DrawSprite(type: string) {
+        App.BlockSprites.DrawSprite((<MainScene>this.DrawTo).BlocksContainer, this.Position, true, type);
+    }
+
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------

@@ -4,7 +4,6 @@ import {BlockSprites} from './Blocks/BlockSprites';
 import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
 import {Commands} from './Commands';
 import {ConnectionLines} from './UI/ConnectionLines';
-import DisplayObject = etch.drawing.DisplayObject;
 import {Header} from './UI/Header';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
@@ -34,6 +33,7 @@ import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {ZoomButtons} from './UI/ZoomButtons';
 import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
 import Stage = etch.drawing.Stage;
 
 declare var App: IApp;
@@ -44,7 +44,7 @@ export class MainScene extends Stage{
     private _SelectedBlock: IBlock;
     private _IsPointerDown: boolean = false;
     public AnimationsLayer: AnimationsLayer;
-    public BlockSprites: BlockSprites;
+    public BlocksContainer: DisplayObject;
     public OptionsPanel: OptionsPanel;
     public SharePanel: SharePanel;
     public SoundcloudPanel: SoundcloudPanel;
@@ -151,29 +151,13 @@ export class MainScene extends Stage{
         //this.Splash = new Splash();
         //this.Splash.Init(this);
 
-        this.BlockSprites = new BlockSprites();
-        this.DisplayList.Add(this.BlockSprites);
-        this.BlockSprites.Init(this);
+        //this.BlockSprites = new BlockSprites();
+        //this.DisplayList.Add(this.BlockSprites);
+        //this.BlockSprites.Init(this);
 
-        this.OptionsPanel = new OptionsPanel();
-        this.DisplayList.Add(this.OptionsPanel);
-        this.OptionsPanel.Init(this);
-
-        this.SharePanel = new SharePanel();
-        this.DisplayList.Add(this.SharePanel);
-        this.SharePanel.Init(this);
-
-        this.SettingsPanel = new SettingsPanel();
-        this.DisplayList.Add(this.SettingsPanel);
-        this.SettingsPanel.Init(this);
-
-        this.SoundcloudPanel = new SoundcloudPanel();
-        this.DisplayList.Add(this.SoundcloudPanel);
-        this.SoundcloudPanel.Init(this);
-
-        this.MessagePanel = new MessagePanel();
-        this.DisplayList.Add(this.MessagePanel);
-        this.MessagePanel.Init(this);
+        this.BlocksContainer = new DisplayObject();
+        this.DisplayList.Add(this.BlocksContainer);
+        this.BlocksContainer.Init(this);
 
         this._ToolTip = new ToolTip();
         this.DisplayList.Add(this._ToolTip);
@@ -203,9 +187,29 @@ export class MainScene extends Stage{
         this.DisplayList.Add(this._LaserBeams);
         this._LaserBeams.Init(this);
 
+        this.OptionsPanel = new OptionsPanel();
+        this.DisplayList.Add(this.OptionsPanel);
+        this.OptionsPanel.Init(this);
+
         this._Header = new Header();
         this.DisplayList.Add(this._Header);
         this._Header.Init(this);
+
+        this.SharePanel = new SharePanel();
+        this.DisplayList.Add(this.SharePanel);
+        this.SharePanel.Init(this);
+
+        this.SettingsPanel = new SettingsPanel();
+        this.DisplayList.Add(this.SettingsPanel);
+        this.SettingsPanel.Init(this);
+
+        this.SoundcloudPanel = new SoundcloudPanel();
+        this.DisplayList.Add(this.SoundcloudPanel);
+        this.SoundcloudPanel.Init(this);
+
+        this.MessagePanel = new MessagePanel();
+        this.DisplayList.Add(this.MessagePanel);
+        this.MessagePanel.Init(this);
 
         this.AnimationsLayer = new AnimationsLayer();
         this.AnimationsLayer.Init(this);
@@ -754,7 +758,7 @@ export class MainScene extends Stage{
         if (!App.LoadCued) {
             //App.Splash.EndLoad();
         }
-    }m
+    }
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS

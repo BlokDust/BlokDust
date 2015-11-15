@@ -48,7 +48,7 @@ export class LFO extends PreEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"lfo");
+        this.DrawSprite("lfo");
     }
 
     UpdateConnections(chain: IAudioChain) {

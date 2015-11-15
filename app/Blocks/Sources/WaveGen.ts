@@ -56,9 +56,6 @@ export class WaveGen extends SamplerBase {
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 2),new Point(-1, 1));
     }
 
-
-
-
     Arp(mode,notes,octave,range,length) {
 
         var seq = [];
@@ -537,11 +534,8 @@ export class WaveGen extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"wavegen");
+        this.DrawSprite("soundcloud");
     }
-
-
-
 
     MouseUp() {
         this.FirstSetup();

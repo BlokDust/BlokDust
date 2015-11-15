@@ -35,7 +35,7 @@ export class Phaser extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"phaser");
+        this.DrawSprite("phaser");
     }
 
     Dispose(){

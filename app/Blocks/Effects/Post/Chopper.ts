@@ -54,7 +54,7 @@ export class Chopper extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"chopper");
+        this.DrawSprite("chopper");
     }
 
     Dispose(){

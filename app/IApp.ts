@@ -2,6 +2,7 @@ import Canvas = etch.drawing.Canvas;
 import IDisplayObject = etch.drawing.IDisplayObject;
 import Point = minerva.Point;
 import {AnimationsLayer} from './UI/AnimationsLayer';
+import {BlockSprites} from "./Blocks/BlockSprites";
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {Config} from './Config';
@@ -29,6 +30,7 @@ export interface IApp {
     AnimationsLayer: AnimationsLayer;
     Audio: IAudio;
     Blocks: IBlock[];
+    BlockSprites: BlockSprites;
     Canvas: Canvas;
     CommandManager: CommandManager;
     CommandsInputManager: CommandsInputManager;

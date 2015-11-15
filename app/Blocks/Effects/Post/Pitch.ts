@@ -31,7 +31,7 @@ export class Pitch extends PostEffect {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"pitch");
+        this.DrawSprite("pitch");
     }
 
     Dispose(){

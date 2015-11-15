@@ -28,8 +28,7 @@ export class Envelope extends PreEffect {
 
     Draw() {
         super.Draw();
-
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"envelope");
+        this.DrawSprite("envelope");
     }
 
     UpdateConnections(chain: IAudioChain) {

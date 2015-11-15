@@ -95,7 +95,7 @@ export class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position, true, "tone");
+        this.DrawSprite("tone");
     }
 
     UpdateOptionsForm() {

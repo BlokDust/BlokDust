@@ -4,7 +4,9 @@ import DisplayObject = etch.drawing.DisplayObject;
 import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
 import IDisplayObject = etch.drawing.IDisplayObject;
 import Point = minerva.Point;
+import {AnimationsLayer} from "./UI/AnimationsLayer";
 import {Audio} from './Core/Audio/Audio';
+import {BlockSprites} from "./Blocks/BlockSprites";
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
@@ -41,11 +43,10 @@ import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
 import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
 import {Source} from './Blocks/Source';
+import {ThemeChangeEventArgs} from "./UI/ThemeChangeEventArgs";
 import {ThemeManager} from './UI/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
-import {ThemeChangeEventArgs} from "./UI/ThemeChangeEventArgs";
-import {AnimationsLayer} from "./UI/AnimationsLayer";
 
 export default class App implements IApp{
 
@@ -54,6 +55,7 @@ export default class App implements IApp{
     private _SessionId: string;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
+    public BlockSprites: BlockSprites;
     public Canvas: Canvas;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
@@ -139,6 +141,8 @@ export default class App implements IApp{
 
         this.Canvas = new Canvas();
         this.Scene = 0;
+
+        this.BlockSprites = new BlockSprites();
 
         this.SubCanvas = [];
         this.CreateSubCanvas(0); // optionsPanel
@@ -279,7 +283,7 @@ export default class App implements IApp{
     }
 
     AddBlocksToMainScene(): void {
-        this.MainScene.DisplayList.AddRange(this.Blocks);
+        this.MainScene.BlocksContainer.DisplayList.AddRange(this.Blocks);
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //

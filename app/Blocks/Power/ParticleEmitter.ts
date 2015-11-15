@@ -78,9 +78,7 @@ export class ParticleEmitter extends PowerSource {
 
     Draw() {
         super.Draw();
-
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"particle emitter");
-
+        this.DrawSprite("particle emitter");
         //if (window.debug){
         //    this.Ctx.fillStyle = "#fff";
         //    var pos = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));

@@ -110,8 +110,6 @@ export class Soundcloud extends SamplerBase {
 
     }
 
-
-
     Search(query: string) {
         this.Searching = true;
         this.ResultsPage = 1;
@@ -170,7 +168,7 @@ export class Soundcloud extends SamplerBase {
 
     Draw() {
         super.Draw();
-        (<MainScene>this.DrawTo).BlockSprites.DrawSprite(this.Position,true,"soundcloud");
+        this.DrawSprite("soundcloud");
     }
 
     UpdateOptionsForm() {

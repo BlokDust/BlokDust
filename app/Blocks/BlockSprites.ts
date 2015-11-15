@@ -7,7 +7,7 @@ import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
-export class BlockSprites extends DisplayObject {
+export class BlockSprites {
 
     public Ctx: CanvasRenderingContext2D;
     private _Scaled: boolean;
@@ -15,23 +15,16 @@ export class BlockSprites extends DisplayObject {
     private _XOffset: number;
     private _YOffset: number;
 
-    Init(drawTo: IDisplayContext) {
-        super.Init(drawTo);
-        this._Scaled = true;
-        this._Position = new Point(0,0);
-        this._XOffset = 0;
-        this._YOffset = 0;
-    }
+    DrawSprite(ctx: IDisplayContext, pos: Point, scaled: boolean, blockType: string, pos2?: Point) {
 
-    DrawSprite(pos: Point, scaled: boolean, block: string, pos2?: Point) {
-
+        this.Ctx = ctx.Ctx;
         this._Scaled = scaled;
         this._Position = pos;
         this._XOffset = 0;
         this._YOffset = 0;
         var grd = App.GridSize;
 
-        switch (block) {
+        switch (blockType) {
 
             // All block cases must be lower case
 
