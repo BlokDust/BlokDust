@@ -277,13 +277,8 @@ export default class App implements IApp{
         }, this);
 
         this.Blocks = [];
-        this.AddBlocksToMainScene();
 
         this.Resize();
-    }
-
-    AddBlocksToMainScene(): void {
-        this.MainScene.BlocksContainer.DisplayList.AddRange(this.Blocks);
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
@@ -314,7 +309,8 @@ export default class App implements IApp{
             b.Init(this.MainScene);
         });
 
-        this.AddBlocksToMainScene();
+        // add blocks to main scene
+        this.MainScene.BlocksContainer.DisplayList.AddRange(this.Blocks);
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;

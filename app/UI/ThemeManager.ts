@@ -155,7 +155,7 @@ export class ThemeManager  {
             }
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
-        offsetTween.start();
+        offsetTween.start(App.MainScene.LastVisualTick);
     }
 
 }

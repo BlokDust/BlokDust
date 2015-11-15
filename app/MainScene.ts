@@ -151,9 +151,9 @@ export class MainScene extends Stage{
         //this.Splash = new Splash();
         //this.Splash.Init(this);
 
-        //this.BlockSprites = new BlockSprites();
-        //this.DisplayList.Add(this.BlockSprites);
-        //this.BlockSprites.Init(this);
+        this._ConnectionLines = new ConnectionLines();
+        this.DisplayList.Add(this._ConnectionLines);
+        this._ConnectionLines.Init(this);
 
         this.BlocksContainer = new DisplayObject();
         this.DisplayList.Add(this.BlocksContainer);
@@ -174,10 +174,6 @@ export class MainScene extends Stage{
         this._TrashCan = new TrashCan();
         this.DisplayList.Add(this._TrashCan);
         this._TrashCan.Init(this);
-
-        this._ConnectionLines = new ConnectionLines();
-        this.DisplayList.Add(this._ConnectionLines);
-        this._ConnectionLines.Init(this);
 
         this._RecorderPanel = new RecorderPanel();
         this.DisplayList.Add(this._RecorderPanel);
@@ -238,12 +234,6 @@ export class MainScene extends Stage{
         if (this.IsPaused) return;
 
         super.Update();
-
-        // update blocks
-        for (var i = 0; i < App.Blocks.length; i++) {
-            var block: IBlock = App.Blocks[i];
-            block.Update();
-        }
 
         if (App.Particles.length) {
             this.UpdateParticles();
@@ -707,7 +697,7 @@ export class MainScene extends Stage{
             block.IsSelected = true;
             this._SelectedBlock = block;
 
-            this.DisplayList.ToFront(block);
+            this.BlocksContainer.DisplayList.ToFront(block);
         }
     }
 

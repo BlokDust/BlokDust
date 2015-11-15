@@ -442,12 +442,13 @@ export class SettingsPanel extends DisplayObject{
         });
 
         offsetTween.onComplete(function() {
-            if (v=="OffsetY") {
+            if (v === "OffsetY") {
                 if (destination!==0) {
                     panel.Open = false;
                 }
             }
         });
+
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);

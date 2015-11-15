@@ -21,7 +21,7 @@ export class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> impl
         // todo: why is cast as 'any' required?
         (<any>this._Block).Stop();
         this.Operations.push(new MoveBlockOperation(block));
-        this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.MainScene.DisplayList));
+        this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.MainScene.BlocksContainer.DisplayList));
         this.Operations.push(new RemoveItemFromArrayOperation(<any>block, App.Blocks));
     }
 

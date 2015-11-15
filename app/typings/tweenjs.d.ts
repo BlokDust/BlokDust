@@ -143,6 +143,7 @@ declare module createjs {
         static get(target: Object, props?: Object, pluginData?: Object, override?: boolean): Tween;
         static hasActiveTweens(target?: Object): boolean;
         static installPlugin(plugin: Object, properties: any[]): void;
+        onComplete(callback: (object?: any) => void): Tween;
         onUpdate(callback: (object?: any) => void): Tween;
         pause(tween: Tween): Tween;
         play(tween: Tween): Tween;
