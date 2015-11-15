@@ -368,15 +368,15 @@ export class Source extends Block implements ISource {
 
         if (this.Sources[id].frequency) {
             // Oscillators
-            this.Sources[id].frequency.exponentialRampToValueNow(pitch, time);
+            this.Sources[id].frequency.exponentialRampToValue(pitch, time);
 
         } else if (this.Sources[id].player) {
             // Samplers
-            this.Sources[id].player.playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
+            this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
 
         } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            this.Sources[id].playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
+            this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
         }
     }
 

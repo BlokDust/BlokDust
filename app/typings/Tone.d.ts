@@ -552,11 +552,22 @@ declare module Tone {
     }
 
     var Microphone: {
+        new(): Tone.Microphone;
+    };
+
+    interface Microphone extends Tone.ExternalInput {}
+
+    var ExternalInput: {
         new(inputNum?: number): Tone.Microphone;
     };
 
-    interface Microphone extends Tone.Source {
+    interface ExternalInput extends Tone.Source {
+        inputNum: number;
+        sources: any[];
+        close(): Tone.ExternalInput;
         dispose(): Tone.Microphone;
+        getSources(callback: (sources?: any[]) => any): Tone.ExternalInput;
+        open(callback: (error?: any) => any): Tone.ExternalInput;
     }
 
     var MidSideEffect : {
@@ -908,12 +919,30 @@ declare module Tone {
         triggerRelease(time?: Tone.Time): Tone.Sampler;
     }
 
+    var SimpleEnvelope: {
+        new(attack: any, decay?: Tone.Time, sustain?: number, release?: Tone.Time): Tone.SimpleEnvelope;
+    };
+
+    interface SimpleEnvelope extends Tone {
+        attack: Tone.Time;
+        attackCurve: string;
+        decay: Tone.Time;
+        decayCurve: string;
+        release: Tone.Time;
+        releaseCurve: string;
+        sustain: number;
+        dispose(): Tone.SimpleEnvelope;
+        triggerAttack(time?: number, velocity?: number): Tone.SimpleEnvelope;
+        triggerAttackRelease(duration: Tone.Time, time?: number, velocity?: number): Tone.SimpleEnvelope;
+        triggerRelease(time?: number): Tone.SimpleEnvelope;
+    }
+
     var Simpler: {
         new(urls?: any, options?: Object): Tone.Simpler;
     };
 
     interface Simpler extends Tone.Instrument {
-        envelope: Tone.Envelope;
+        envelope: Tone.AmplitudeEnvelope;
         player: Tone.Player;
         dispose(): Tone.Simpler;
         triggerAttack(time?: Tone.Time, offset?: Tone.Time, duration?: Tone.Time, velocity?: number): Tone.Simpler;
@@ -977,12 +1006,12 @@ declare module Tone {
         value: any; //Tone.Time | Tone.Frequency | number;
         cancelScheduledValues(startTime: Tone.Time): Tone.Signal;
         dispose(): Tone.Signal;
+        exponentialRampToValue(value: number, rampTime: Tone.Time): Tone.Signal;
         exponentialRampToValueAtTime(value: number, endTime: Tone.Time): Tone.Signal;
-        exponentialRampToValueNow(value: number, rampTime: Tone.Time): Tone.Signal;
         linearRampToValueAtTime(value: number, endTime: Tone.Time): Tone.Signal;
-        linearRampToValueNow(value: number, rampTime: Tone.Time): Tone.Signal;
+        linearRampToValue(value: number, rampTime: Tone.Time): Tone.Signal;
         rampTo(value: number, rampTime: Tone.Time): Tone.Signal;
-        setCurrentValueNow(now?: number): Tone.Signal;
+        setRampPoint(now?: number): Tone.Signal;
         setTargetAtTime(value: number, startTime: Tone.Time, timeConstant: number): Tone.Signal;
         setValueAtTime(value: number, time: Tone.Time): Tone.Signal;
         setValueCurveAtTime(values: number[], startTime: Tone.Time, duration: Tone.Time): Tone.Signal;

@@ -12,7 +12,7 @@
     "lzma": "nmrugg/LZMA-JS",
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
     "RecorderJS": "lukephills/Recorderjs#master",
-    "tone": "lukephills/Tone.js#master",
+    "tone": "lukephills/Tone.js#dev",
     "tween.ts": "edsilv/tween.ts#~0.1.2",
     "utils": "edsilv/utils#~0.0.22"
   },
