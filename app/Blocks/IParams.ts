@@ -28,7 +28,7 @@ interface ToneSourceParams extends IParams {
 }
 
 interface NoiseParams extends IParams {
-    playback: number;
+    playbackRate: number;
     waveform: number;
 }
 
@@ -46,6 +46,20 @@ interface SamplerParams extends IParams {
     trackName: string;
 }
 
+interface WaveGenParams extends IParams {
+    playbackRate: number;
+    reverse: boolean;
+    startPosition: number;
+    endPosition: number;
+    loop: boolean;
+    loopStart: number;
+    loopEnd: number;
+    retrigger: boolean;
+    volume: number;
+    generate: any;
+    seed: any;
+}
+
 interface SoundcloudParams extends SamplerParams {
     trackName: string;
     user: string;
@@ -60,6 +74,21 @@ interface MicrophoneParams extends GainParams{
  */
 interface LogicParams extends IParams {
     logic: boolean;
+}
+
+interface LaserParams extends IParams {
+    angle: number;
+    range: number;
+    rotate: number;
+    selfPoweredMode: boolean;
+}
+
+interface ParticleEmitterParams extends IParams {
+    angle: number;
+    speed: number;
+    range: number;
+    rate: number;
+    selfPoweredMode: boolean;
 }
 
 /**

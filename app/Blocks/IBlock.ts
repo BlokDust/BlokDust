@@ -5,7 +5,7 @@ import {Particle} from "../Particle";
 import RoutedEventArgs = etch.events.RoutedEventArgs;
 import RoutedEvent = etch.events.RoutedEvent;
 
-export interface IBlock extends IDisplayObject{
+export interface IBlock extends IDisplayObject {
     BackwardsCompatibilityPatch(): void;
     Chain: IAudioChain;
     Click: RoutedEvent<RoutedEventArgs>;
@@ -15,7 +15,10 @@ export interface IBlock extends IDisplayObject{
     Draw(): void;
     HitTest(point: Point): boolean;
     Id: number;
-    IsChained: boolean;
+    BlockName: string;
+    Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
+    Connections: Fayde.Collections.ObservableCollection<IBlock>
+    Outline: Point[];
     IsPressed: boolean;
     IsSelected: boolean;
     LastPosition: Point;

@@ -12,8 +12,6 @@ declare var App: IApp;
 export class ToneSource extends Source {
 
     public Sources: Tone.Oscillator[];
-    //public Frequency: number;
-    //public Waveform: string;
     public Envelopes: Tone.AmplitudeEnvelope[];
     public Params: ToneSourceParams;
     public Defaults: ToneSourceParams;

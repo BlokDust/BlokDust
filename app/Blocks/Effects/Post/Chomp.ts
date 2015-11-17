@@ -7,17 +7,22 @@ export class Chomp extends PostEffect {
 
     public Effect: Tone.Filter;
     public Params: ChompParams;
+    public Defaults: ChompParams;
     public Timer;
 
     Init(drawTo: IDisplayContext): void {
 
+        this.BlockName = "Chomp";
+
         if (!this.Params) {
-            this.Params = {
-                rate: 13,
-                Q: 0.6,
-                gain: 25,
-            };
         }
+
+        this.Defaults = {
+            rate: 13,
+            Q: 0.6,
+            gain: 25
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",

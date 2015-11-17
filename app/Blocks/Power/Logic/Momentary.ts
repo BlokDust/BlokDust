@@ -10,8 +10,10 @@ import Point = etch.primitives.Point;
 export class Momentary extends Logic {
 
     Init(drawTo: IDisplayContext): void {
+		super.Init(drawTo);
+        this.BlockName = "Momentary Power";
 
-        super.Init(drawTo);
+        super.Init(sketch);
 
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
@@ -19,18 +21,17 @@ export class Momentary extends Logic {
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            if (this.Params.logic) {
-                source.TriggerAttack();
-            }
-            if (!source.IsPressed){
-                source.TriggerRelease('all');
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                if (this.Params.logic) {
+                    source.AddPower();
+                }
+            });
         });
     }
 
     Draw() {
         super.Draw();
-        this.DrawSprite("momentary switch");
+        this.DrawSprite("momentary power");
     }
 
     Dispose(){
@@ -42,7 +43,7 @@ export class Momentary extends Logic {
 
         this.OptionsForm =
         {
-            "name" : "Momentary Switch",
+            "name" : "Momentary Power",
             "parameters" : [
                 {
                     "type" : "slider", //TODO Change to switch UI when available
@@ -75,10 +76,21 @@ export class Momentary extends Logic {
         this.Params.logic = true;
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            source.TriggerAttackRelease();
-            if (source instanceof ParticleEmitter){
-                (<ParticleEmitter>source).EmitParticle();
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                source.AddPower();
+                setTimeout(() => {
+                    source.RemovePower();
+                }, 100); //TODO: use App.Config.PulseLength here instead
+            });
+            source.Chain.PowerSources.forEach((source: ISource) => {
+                source.AddPower();
+                setTimeout(() => {
+                    source.RemovePower();
+                }, 100); //TODO: use App.Config.PulseLength here instead
+                if (source instanceof ParticleEmitter) {
+                    (<ParticleEmitter>source).EmitParticle();
+                }
+            });
         });
         this.Params.logic = false;
     }

@@ -1,4 +1,5 @@
 import {Effect} from '../../Effect';
+import {IApp} from '../../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
@@ -6,11 +7,15 @@ import {MainScene} from '../../../MainScene';
 import {Particle} from '../../../Particle';
 import Point = etch.primitives.Point;
 
+declare var App: IApp;
+
 export class Toggle extends Logic {
 
     Init(drawTo: IDisplayContext): void {
+		super.Init(drawTo);
+        this.BlockName = "Toggle Power";
 
-        super.Init(drawTo);
+        super.Init(sketch);
 
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
@@ -18,18 +23,17 @@ export class Toggle extends Logic {
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            if (this.Params.logic) {
-                source.TriggerAttack();
-            }
-            if (!source.IsPressed){
-                source.TriggerRelease('all');
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                if (this.Params.logic) {
+                    source.AddPower();
+                }
+            });
         });
     }
 
     Draw() {
         super.Draw();
-        this.DrawSprite("toggle switch");
+        this.DrawSprite("toggle power");
     }
 
     UpdateOptionsForm() {
@@ -37,7 +41,7 @@ export class Toggle extends Logic {
 
         this.OptionsForm =
         {
-            "name" : "Toggle Switch",
+            "name" : "Toggle Power",
             "parameters" : [
 
                 {
@@ -69,19 +73,35 @@ export class Toggle extends Logic {
     }
 
     PerformLogic() {
-        super.PerformLogic();
         if (this.Params.logic) {
             this.Params.logic = false;
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                source.TriggerRelease('all');
+                source.Chain.Sources.forEach((source: ISource) => {
+                    source.RemovePower();
+                });
             });
 
         } else {
             this.Params.logic = true;
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                source.TriggerAttack();
+                source.Chain.Sources.forEach((source: ISource) => {
+                    source.AddPower();
+                });
+            });
+        }
+        App.MainScene.LaserBeams.UpdateAllLasers = true;
+        this.RefreshOptionsPanel();
+    }
+
+    Stop() {
+        if (this.Params.logic) {
+            const connections = this.Connections.ToArray();
+            connections.forEach((source:ISource) => {
+                source.Chain.Sources.forEach((source:ISource) => {
+                    source.RemovePower();
+                });
             });
         }
     }

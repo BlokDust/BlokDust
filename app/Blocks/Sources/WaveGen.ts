@@ -21,29 +21,35 @@ export class WaveGen extends SamplerBase {
     private _BufferData: Float32Array;
     private _WaveVoices: WaveVoice[];
     private _SeedLoad: boolean;
+    public Params: WaveGenParams;
+    public Defaults: WaveGenParams;
 
     Init(drawTo: IDisplayContext): void {
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                reverse: false,
-                startPosition: 0,
-                endPosition: null,
-                loop: true,
-                loopStart: 0,
-                loopEnd: 0,
-                retrigger: false, //Don't retrigger attack if already playing
-                volume: 11,
-                generate: null,
-                seed: {}
-            };
-        } else {
+
+        this.BlockName = "WaveGen";
+
+        if (this.Params) {
             this._LoadFromShare = true;
             var me = this;
             setTimeout(function() {
                 me.FirstSetup();
             },100);
         }
+
+        this.Defaults = {
+            playbackRate: 1,
+            reverse: false,
+            startPosition: 0,
+            endPosition: null,
+            loop: true,
+            loopStart: 0,
+            loopEnd: 0,
+            retrigger: false, //Don't retrigger attack if already playing
+            volume: 11,
+            generate: null,
+            seed: {}
+        };
+        this.PopulateParams();
 
         this._WaveForm = [];
         this._WaveVoices = [];
@@ -506,6 +512,7 @@ export class WaveGen extends SamplerBase {
             s.player.buffer = this._FirstBuffer;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
+            s.player.reverse = this.Params.reverse;
         });
 
         // IF POWERED ON LOAD - TRIGGER //
@@ -667,10 +674,15 @@ export class WaveGen extends SamplerBase {
                 break;
             case "loop":
                 value = value? true : false;
-                //this.Sources[0].player.loop = value;
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
+                if (value === true && this.IsPowered()) {
+                    this.Sources.forEach((s: Tone.Simpler) => {
+                        s.player.stop();
+                        s.player.start(s.player.startPosition);
+                    });
+                }
                 // update display of loop sliders
                 this.Params[param] = value;
                 this.RefreshOptionsPanel();

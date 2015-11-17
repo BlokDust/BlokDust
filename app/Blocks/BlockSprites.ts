@@ -842,7 +842,7 @@ export class BlockSprites {
 
                 break;
 
-            case "toggle switch":
+            case "toggle power":
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[3]; // BLUE
@@ -869,7 +869,7 @@ export class BlockSprites {
 
                 break;
 
-            case "momentary switch":
+            case "momentary power":
 
                 this.Ctx.beginPath();
                 this.Ctx.fillStyle = App.Palette[3]; // BLUE

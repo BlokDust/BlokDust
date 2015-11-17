@@ -1,3 +1,4 @@
+import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
@@ -15,16 +16,18 @@ declare var App: IApp;
 export class MIDIController extends Keyboard {
 
     public Params: KeyboardParams;
+    public Defaults: KeyboardParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                glide: 0.05,
-                isPolyphonic: false, // Polyphonic mode: boolean, default: off
-                octave: 3,
-            };
-        }
+        this.BlockName = "MIDI Keyboard";
+
+        this.Defaults = {
+            glide: 0.05,
+            isPolyphonic: false, // Polyphonic mode: boolean, default: off
+            octave: 3
+        };
+        this.PopulateParams();
 
         super.Init(drawTo);
 
@@ -61,7 +64,9 @@ export class MIDIController extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD UP
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardUp(note, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardUp(note, source);
+                });
             });
         }
 
@@ -73,7 +78,9 @@ export class MIDIController extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD DOWN
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardDown(note, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardDown(note, source);
+                });
             });
 
 
@@ -102,7 +109,7 @@ export class MIDIController extends Keyboard {
 
         var frequency = this.GetFrequencyOfNote(keyDown, source);
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Are there any free voices?
@@ -155,7 +162,7 @@ export class MIDIController extends Keyboard {
 
     KeyboardUp(keyUp:string, source:ISource): void {
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Loop through all the active voices
@@ -214,18 +221,6 @@ export class MIDIController extends Keyboard {
                             "mode": "fewMany"
                         }
                     ]
-                },
-                {
-                    "type" : "slider",
-                    "name" : "Octave",
-                    "setting" :"octave",
-                    "props" : {
-                        "value" : this.Params.octave,
-                        "min" : 0,
-                        "max" : 9,
-                        "quantised" : true,
-                        "centered" : false
-                    }
                 },
                 {
                     "type" : "slider",

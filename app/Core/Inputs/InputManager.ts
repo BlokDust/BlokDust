@@ -4,6 +4,8 @@ import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 import {KeyMap} from './KeyMap';
 
+declare var HumanInput: any;
+
 export class InputManager {
 
     public KeysDown: any;

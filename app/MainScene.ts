@@ -22,6 +22,7 @@ import Point = etch.primitives.Point;
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {PowerEffect} from './Blocks/Power/PowerEffect';
 import {PowerSource} from './Blocks/Power/PowerSource';
+import {Recorder} from './Blocks/Sources/Recorder';
 import {RecorderPanel} from './UI/RecorderPanel';
 import {Sampler} from './Blocks/Sources/Sampler';
 import {SettingsPanel} from './UI/SettingsPanel';
@@ -55,9 +56,9 @@ export class MainScene extends DisplayObject{
     public ZoomButtons: ZoomButtons;
     public MainSceneDragger: MainSceneDragger;
     private _TrashCan: TrashCan;
-    private _ConnectionLines: ConnectionLines;
+    public ConnectionLines: ConnectionLines;
     private _RecorderPanel: RecorderPanel;
-    private _LaserBeams: LaserBeams;
+    public LaserBeams: LaserBeams;
     private _ToolTipTimeout;
     private _PointerPoint: Point;
     private _SelectedBlockPosition: Point;
@@ -175,6 +176,9 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this._TrashCan);
         this._TrashCan.Init(this);
 
+        this.ConnectionLines = new ConnectionLines();
+        this.ConnectionLines.Init(this);
+
         this._RecorderPanel = new RecorderPanel();
         this.DisplayList.Add(this._RecorderPanel);
         this._RecorderPanel.Init(this);
@@ -237,6 +241,7 @@ export class MainScene extends DisplayObject{
         if (App.Particles.length) {
             this.UpdateParticles();
         }
+        this.OptionsPanel.Update();
     }
 
     // PARTICLES //
@@ -347,6 +352,7 @@ export class MainScene extends DisplayObject{
     private _PointerDown(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
 
+
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
@@ -429,6 +435,9 @@ export class MainScene extends DisplayObject{
         if (!collision && !UI){
             this.MainSceneDragger.MouseDown(point);
         }
+
+        this.ConnectionLines.UpdateList();
+
     }
 
     private _PointerUp(point: Point) {
@@ -475,6 +484,7 @@ export class MainScene extends DisplayObject{
 
             this.MainSceneDragger.MouseUp();
         }
+        this.ConnectionLines.UpdateList();
     }
 
     private _PointerMove(point: Point){
@@ -610,13 +620,13 @@ export class MainScene extends DisplayObject{
                 if (block.HitTest(point)) {
 
                     // GET BLOCK NAME //
-                    if (block.OptionsForm) {
-                        panel.Name = block.OptionsForm.name;
+                    //if (block.OptionsForm) {
+                        panel.Name = block.BlockName;
                         var blockPos = App.Metrics.PointOnGrid(block.Position);
                         panel.Position.x = blockPos.x;
                         panel.Position.y = blockPos.y;
                         blockHover = true;
-                    }
+                    //}
                     break;
                 }
             }
@@ -651,7 +661,8 @@ export class MainScene extends DisplayObject{
     }
 
     private _ABlockHasBeenMoved(block) {
-        this._LaserBeams.UpdateAllLasers = true;
+        this.LaserBeams.UpdateAllLasers = true;
+        this.ConnectionLines.UpdateList();
     }
 
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
@@ -718,12 +729,29 @@ export class MainScene extends DisplayObject{
         }
     }
 
-    CreateBlockFromType<T extends IBlock>(t: {new(): T; }): T {
+    DuplicateParams(params: any): any {
+        var paramsCopy = {};
+        for (var key in params) {
+            paramsCopy[""+key] = params[""+key];
+        }
+        return paramsCopy;
+    }
+
+    CreateBlockFromType<T extends IBlock>(t: {new(): T; }, params?: any): T {
         var block: T = new t();
         block.Id = App.GetBlockId();
         block.Position = this._PointerPoint;
+        if (params) block.Params = this.DuplicateParams(params);
+
+
+        //TODO:
+        //if (block instanceof Recorder) {
+        //    (<any>block).Duplicate((<any>block).BufferSource.buffer);
+        //}
+
         block.Init(this);
         block.Type = t;
+
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
 

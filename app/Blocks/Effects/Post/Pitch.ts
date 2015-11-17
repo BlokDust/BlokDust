@@ -11,14 +11,16 @@ export class Pitch extends PostEffect {
 
     public Effect: PitchShifter;
     public Params: PitchShifterParams;
+    public Defaults: PitchShifterParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                pitchOffset: 0,
-            };
-        }
+        this.BlockName = "Pitch Shift";
+
+        this.Defaults = {
+            pitchOffset: 0
+        };
+        this.PopulateParams();
 
         this.Effect = new PitchShifter(App.Audio.ctx);
         this.Effect.PitchOffset = this.Params.pitchOffset;
@@ -54,7 +56,7 @@ export class Pitch extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Pitch",
+            "name" : "Pitch Shift",
             "parameters" : [
 
                 {

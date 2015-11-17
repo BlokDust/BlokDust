@@ -72,10 +72,10 @@ export class ThemeManager  {
                 App.Config.PixelPaletteImagePath[9]
             )
 
-            ,new ColorTheme(
+            /*,new ColorTheme(
                 "VINE BLUSH",
                 App.Config.PixelPaletteImagePath[5]
-            )
+            )*/
 
             ,new ColorTheme(
                 "RIKI",

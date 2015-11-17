@@ -7,25 +7,27 @@ export class EQ extends PostEffect {
 
     public Effect: Tone.EQMultiband;
     public Params: EQParams;
+    public Defaults: EQParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                frequency_1: 50,
-                Q_1: 1,
-                gain_1: 0,
-                frequency_2: 440,
-                Q_2: 1,
-                gain_2: 0,
-                frequency_3: 2000,
-                Q_3: 2.5,
-                gain_3: 0,
-                frequency_4: 10000,
-                Q_4: 1,
-                gain_4: 0,
-            };
-        }
+        this.BlockName = "EQ";
+
+        this.Defaults = {
+            frequency_1: 50,
+            Q_1: 1,
+            gain_1: 0,
+            frequency_2: 440,
+            Q_2: 1,
+            gain_2: 0,
+            frequency_3: 2000,
+            Q_3: 2.5,
+            gain_3: 0,
+            frequency_4: 10000,
+            Q_4: 1,
+            gain_4: 0
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.EQMultiband([
             {

@@ -7,14 +7,15 @@ import {PowerEffect} from './../PowerEffect';
 export class Logic extends PowerEffect {
 
     public Params: LogicParams;
+    public Defaults: LogicParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                logic: false,
-            };
-        }
+
+        this.Defaults = {
+            logic: false
+        };
+        this.PopulateParams();
 
         super.Init(drawTo);
 

@@ -16,6 +16,7 @@ export interface ISource extends IBlock {
     PowerConnections: number;
     ParticlePowered: boolean;
     LaserPowered: boolean;
+    PowerAmount: number;
     UpdateCollision: boolean;
     Collisions: any[];
     CheckRange: number;
@@ -44,4 +45,7 @@ export interface ISource extends IBlock {
     TriggerAttackRelease(duration?: Tone.Time, time?: Tone.Time, velocity?: number): void;
     IsPowered(): boolean;
     Refresh(): void;
+    AddPower(): void;
+    RemovePower(): void;
+    RemoveAllPowers(): void;
 }

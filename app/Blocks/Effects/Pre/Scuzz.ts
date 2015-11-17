@@ -10,17 +10,20 @@ export class Scuzz extends PreEffect {
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
     public Params: ScuzzParams;
+    public Defaults: ScuzzParams;
     public WaveIndex: string[];
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                depth: 1000,
-                rate: 100,
-                waveform: 2
-            };
-        }
+        this.BlockName = "Scuzz";
+
+        this.Defaults = {
+            depth: 1000,
+            rate: 100,
+            waveform: 2
+        };
+        this.PopulateParams();
+
         this.WaveIndex = ["sine","square","triangle","sawtooth"];
 
         this.OscLFO = new Tone.LFO();

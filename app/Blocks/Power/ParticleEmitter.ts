@@ -11,18 +11,21 @@ declare var App: IApp;
 export class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
+    public Params: ParticleEmitterParams;
+    public Defaults: ParticleEmitterParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                angle: -90,
-                speed: 5,
-                rate: 40,
-                range: 600,
-                selfPoweredMode: false
-            };
-        }
+        this.BlockName = "Particle Emitter";
+
+        this.Defaults = {
+            angle: -90,
+            speed: 5,
+            rate: 40,
+            range: 600,
+            selfPoweredMode: false
+        };
+        this.PopulateParams();
 
         this._rateCounter = 0;
 
@@ -111,26 +114,26 @@ export class ParticleEmitter extends PowerSource {
 
                 {
                     "type" : "slider",
-                    "name" : "Speed",
-                    "setting" :"speed",
+                    "name" : "Fire Rate",
+                    "setting" :"rate",
                     "props" : {
-                        "value" : this.Params.speed,
+                        "value" : 510 - this.Params.rate,
                         "min" : 1,
-                        "max" : 12,
-                        "quantised" : false,
+                        "max" : 500,
+                        "quantised" : true,
                         "centered" : false
                     }
                 },
 
                 {
                     "type" : "slider",
-                    "name" : "Delay Time",
-                    "setting" :"rate",
+                    "name" : "P. Speed",
+                    "setting" :"speed",
                     "props" : {
-                        "value" : this.Params.rate-5,
+                        "value" : this.Params.speed,
                         "min" : 1,
-                        "max" : 500,
-                        "quantised" : true,
+                        "max" : 12,
+                        "quantised" : false,
                         "centered" : false
                     }
                 },
@@ -158,7 +161,7 @@ export class ParticleEmitter extends PowerSource {
         if (param=="angle") {
             val = (value-90);
         } else if (param=="rate") {
-            val = (value+5);
+            val = (510 - value);
         }
 
         this.Params[""+param] = val;

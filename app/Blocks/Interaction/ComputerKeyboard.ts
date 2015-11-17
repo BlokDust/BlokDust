@@ -1,3 +1,4 @@
+import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
@@ -19,21 +20,23 @@ export class ComputerKeyboard extends Keyboard {
     };
 
     public Params: KeyboardParams;
+    public Defaults: KeyboardParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                octave: 3,
-                glide: 0.05,
-                isPolyphonic: false,
-            };
-        }
+        this.BlockName = "Computer Keyboard";
+
+        this.Defaults = {
+            octave: 3,
+            glide: 0.05,
+            isPolyphonic: false
+        };
+        this.PopulateParams();
 
         super.Init(drawTo);
 
-        App.KeyboardInput.KeyDownChange.on(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.on(this.KeyUpCallback, this);
+        App.PianoKeyboardManager.KeyDownChange.on(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.on(this.KeyUpCallback, this);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
@@ -55,8 +58,8 @@ export class ComputerKeyboard extends Keyboard {
         super.Dispose();
         this.Params.octave = null;
         this.KeyboardCommands = null;
-        App.KeyboardInput.KeyDownChange.off(this.KeyDownCallback, this);
-        App.KeyboardInput.KeyUpChange.off(this.KeyUpCallback, this);
+        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
     }
 
     KeyDownCallback(e: any){
@@ -68,7 +71,9 @@ export class ComputerKeyboard extends Keyboard {
             // ALL SOURCES TRIGGER KEYBOARD DOWN
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                this.KeyboardDown(e.KeyDown, source);
+                source.Chain.Sources.forEach((source: ISource) => {
+                    this.KeyboardDown(e.KeyDown, source);
+                });
             });
 
 
@@ -82,10 +87,12 @@ export class ComputerKeyboard extends Keyboard {
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
-                this.KeyboardUp(e.KeyUp, source);
-            }
+            source.Chain.Sources.forEach((source: ISource) => {
+                // If its an octave shift no need to call KeyboardUp
+                if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
+                    this.KeyboardUp(e.KeyUp, source);
+                }
+            });
         });
 
         this.KeysDown = e.KeysDown;
@@ -113,7 +120,7 @@ export class ComputerKeyboard extends Keyboard {
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
-        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length)) {
+        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length) && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Are there any free voices?
@@ -166,7 +173,7 @@ export class ComputerKeyboard extends Keyboard {
 
     KeyboardUp(keyUp:string, source:ISource): void {
 
-        if (this.Params.isPolyphonic) {
+        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
 
             // Loop through all the active voices

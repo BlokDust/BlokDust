@@ -5,16 +5,20 @@ import {PowerSource} from './PowerSource';
 
 export class Laser extends PowerSource {
 
+    public Params: LaserParams;
+    public Defaults: LaserParams;
+
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                angle: -90,
-                range: 400,
-                rotate: 0,
-                selfPoweredMode: false
-            };
-        }
+        this.BlockName = "Laser";
+
+        this.Defaults = {
+            angle: -90,
+            range: 400,
+            rotate: 0,
+            selfPoweredMode: false
+        };
+        this.PopulateParams();
 
         this.UpdateCollision = true;
         this.Collisions = [];
@@ -24,6 +28,10 @@ export class Laser extends PowerSource {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1,-1), new Point(1,-1), new Point(1,0), new Point(0,1), new Point(-1,0));
+    }
+
+    UpdateConnections() {
+        this.UpdateCollision = true;
     }
 
 
@@ -81,8 +89,8 @@ export class Laser extends PowerSource {
                     "setting" :"rotate",
                     "props" : {
                         "value" : this.Params.rotate,
-                        "min" : -1000,
-                        "max" : 1000,
+                        "min" : -500,
+                        "max" : 500,
                         "quantised" : true,
                         "centered" : true,
                         "snap" : true

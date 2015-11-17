@@ -23,6 +23,7 @@ export class Waveform {
 
         var newWaveform = [];
         var peak = 0.0;
+        var normThreshold = 0.01;
 
         // MERGE LEFT & RIGHT CHANNELS //
         var left = buffer.getChannelData(0);
@@ -56,11 +57,14 @@ export class Waveform {
         }
 
         // SOFT NORMALISE //
-        var percent = normal/100; // normalisation strength
-        var mult = (((1/peak) - 1)*percent) + 1;
-        for (var i=0; i<newWaveform.length; i++) {
-            newWaveform[i] = newWaveform[i] * mult;
+        if (peak > normThreshold) {
+            var percent = normal/100; // normalisation strength
+            var mult = (((1/peak) - 1)*percent) + 1;
+            for (var i=0; i<newWaveform.length; i++) {
+                newWaveform[i] = newWaveform[i] * mult;
+            }
         }
+
 
         return newWaveform;
     }

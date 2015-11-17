@@ -12,8 +12,9 @@ import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
+import {IPowerSource} from './Blocks/Power/IPowerSource';
 import {ISource} from './Blocks/ISource';
-import {KeyboardInputManager as KeyboardInput} from './Core/Inputs/KeyboardInputManager';
+import {PianoKeyboardManager} from './Core/Inputs/PianoKeyboardManager';
 import {MainScene} from './MainScene';
 import {Metrics} from './AppMetrics';
 import {OperationManager} from './Core/Operations/OperationManager';
@@ -43,7 +44,7 @@ export interface IApp {
     GridSize: number;
     Height: number;
     InputManager: InputManager;
-    KeyboardInput: KeyboardInput;
+    PianoKeyboardManager: PianoKeyboardManager;
     LoadCued: boolean;
     MainScene: MainScene;
     Metrics: Metrics;
@@ -53,6 +54,7 @@ export interface IApp {
     ParticlesPool: PooledFactoryResource<Particle>;
     PointerInputManager: PointerInputManager;
     PowerEffects: IPowerEffect[];
+    PowerSources: IPowerSource[];
     ResourceManager: ResourceManager;
     ScaledDragOffset: Point;
     ScaledGridSize: number;

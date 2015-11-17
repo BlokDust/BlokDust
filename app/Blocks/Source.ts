@@ -1,4 +1,5 @@
 import {Block} from './Block';
+import {Granular} from './Sources/Granular';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
@@ -50,6 +51,7 @@ export class Source extends Block implements ISource {
     public Searching: boolean;
     public ResultsPage: number;
     public SearchString: string;
+    public PowerAmount: number = 0;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -64,6 +66,7 @@ export class Source extends Block implements ISource {
 
         this.ParticlePowered = false;
         this.LaserPowered = false;
+        this.PowerConnections = 0;
 
         if (!(this instanceof Power)) {
 
@@ -114,11 +117,14 @@ export class Source extends Block implements ISource {
 
         // Release all the sources envelopes
         if (!this.IsPowered() || !this.IsPressed) {
-            this.TriggerRelease('all', true);
+            //this.TriggerRelease('all', true);
         }
 
         // Reset pitch back to original setting
         this.ResetPitch();
+
+        //TODO: this is causing issues with being powered by lasers
+        this.RemoveAllPowers();
     }
 
     private _EnvelopeReset() {
@@ -153,8 +159,9 @@ export class Source extends Block implements ISource {
     }
 
     Stop() {
-        this.TriggerRelease();
+        this.TriggerRelease('all', true);
     }
+
 
     /**
      * Trigger a sources attack
@@ -247,32 +254,27 @@ export class Source extends Block implements ISource {
 
         // Oscillators & Noises & Players
         if (this.Envelopes.length){
-
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
-            this.Envelopes.forEach((e: any)=> {
-                e.triggerAttackRelease(duration, time);
-            });
+            this.Envelopes[0].triggerAttackRelease(duration, time);
 
         //    Samplers
         } else if (this.Sources[0] && this.Sources[0].envelope) {
-
             // Trigger all the envelopes
-            this.Sources.forEach((s: any)=> {
-                s.triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
-            });
+            this.Sources[0].triggerAttackRelease(false, duration, time); // the false is "sample name" parameter
 
         //    Power Source Blocks
-        } else if (this.PowerConnections!==undefined) {
-
-            this.PowerConnections += 1;
+        } else if (this.PowerAmount!==undefined) {
+            //this.PowerConnections += 1;
+            this.AddPower();
             if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
             }
             var block = this;
             var seconds = App.Audio.Tone.toSeconds(duration) * 1000;
             setTimeout( function() {
-                block.PowerConnections -= 1;
+                //block.PowerConnections -= 1;
+                block.RemovePower();
                 if (block.UpdateCollision!==undefined) {
                     block.UpdateCollision = true;
                 }
@@ -287,17 +289,29 @@ export class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered(): boolean {
-        if (this.IsPressed || this.PowerConnections>0) {
+        //let bool: boolean = false;
+        if (this.IsPressed || this.PowerConnections>0 || this.PowerAmount>0) {
             return true;
         }
-        let connections: IEffect[] = this.Connections.ToArray();
-        for (let i = 0, _len = connections.length; i < _len; i++) {
-            //If connected to power block OR connected to a logic block that is 'on'
-            if (connections[i] instanceof Power ||
-                connections[i] instanceof Logic && connections[i].Params.logic) {
-                return true;
+        let connections: IBlock[] = this.Chain.Connections;
+        for (let i = 0; i < connections.length; i++) {
+            let blockConnections: IBlock[] = connections[i].Connections.ToArray();
+            for (let i = 0; i < blockConnections.length; i++) {
+                if (blockConnections[i] instanceof Power ||
+                    blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+                    return true;
+                }
             }
         }
+        //this.Chain.Connections.forEach((block:IBlock) => {
+        //    let blockConnections: IBlock[] = block.Connections.ToArray();
+        //    for (let i = 0; i < blockConnections.length; i++) {
+        //        if (blockConnections[i] instanceof Power ||
+        //            blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+        //            bool = true;
+        //        }
+        //    }
+        //});
         return false;
     }
 
@@ -467,6 +481,27 @@ export class Source extends Block implements ISource {
                 });
                 break;
         }
+    }
+
+    AddPower() {
+        if (this.PowerAmount === 0) {
+            this.TriggerAttack();
+        }
+        this.PowerAmount++;
+    }
+
+    RemovePower() {
+        if (this.PowerAmount === 1) {
+            this.TriggerRelease('all', true);
+        } else if (this.PowerAmount === 0) {
+            return;
+        }
+        this.PowerAmount--;
+    }
+
+    RemoveAllPowers() {
+        this.TriggerRelease('all');
+        this.PowerAmount = 0;
     }
 
 }

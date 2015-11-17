@@ -7,16 +7,18 @@ export class Reverb extends PostEffect {
 
     public Effect: Tone.Freeverb;
     public Params: ReverbParams;
+    public Defaults: ReverbParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                dampening: 0.7,
-                roomSize: 0.5,
-                mix: 0.5,
-            };
-        }
+        this.BlockName = "Reverb";
+
+        this.Defaults = {
+            dampening: 0.7,
+            roomSize: 0.5,
+            mix: 0.5
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.Freeverb(this.Params.dampening, this.Params.roomSize);
         this.Effect.wet.value = this.Params.mix;

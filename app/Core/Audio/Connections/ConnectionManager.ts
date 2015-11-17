@@ -4,11 +4,13 @@ import {IBlock} from "../../../Blocks/IBlock";
 import {IEffect} from "../../../Blocks/IEffect";
 import {IPostEffect} from "../../../Blocks/Effects/IPostEffect";
 import {IPowerEffect} from "../../../Blocks/Power/IPowerEffect";
+import {IPowerSource} from "../../../Blocks/Power/IPowerSource";
 import {IPreEffect} from "../../../Blocks/Effects/IPreEffect";
 import {ISource} from "../../../Blocks/ISource";
 import {Source} from "../../../Blocks/Source";
 import {PostEffect} from "../../../Blocks/Effects/PostEffect";
 import {PowerEffect} from "../../../Blocks/Power/PowerEffect";
+import {PowerSource} from "../../../Blocks/Power/PowerSource";
 import {PreEffect} from "../../../Blocks/Effects/PreEffect";
 
 declare var App: IApp;
@@ -22,6 +24,8 @@ export class ConnectionManager {
     private connectionTimeout;
     private unMuteTimeout;
 
+    public IsConnected: boolean = true;
+
     constructor(){
 
     }
@@ -29,15 +33,20 @@ export class ConnectionManager {
     public Update(){
         if (this._Debug) console.clear();
 
+        this.IsConnected = false;
+
         //First mute everything
         App.Audio.Master.mute = true;
 
         this._Disconnect(() => {
             const chains = this.CreateChains();
             const powerEffects = App.PowerEffects;
+            const powerSources = App.PowerSources;
             this._SortChainedBlocks(chains);
-            this._Connect(chains, powerEffects);
+            this._Connect(chains, powerEffects, powerSources);
+            this.IsConnected = true;
         });
+
     }
 
     /**
@@ -68,7 +77,7 @@ export class ConnectionManager {
         }, this._MuteBufferTime);
     }
 
-    private _Connect(chains: IAudioChain[], powerEffects: IPowerEffect[]) {
+    private _Connect(chains: IAudioChain[], powerEffects: IPowerEffect[], powerSources: IPowerSource[]) {
         if (this._Debug) console.log(chains);
 
         // loop through chains
@@ -80,11 +89,17 @@ export class ConnectionManager {
             chain.Sources.forEach((block: ISource) => {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
+                if (this._Debug) console.log(block);
             });
             chain.PreEffects.forEach((block: IPreEffect) => {
                 block.UpdateConnections(chain);
                 block.Chain = chain;
+                if (this._Debug) console.log(block);
             });
+            chain.PowerSources.forEach((block: IPowerSource) => {
+                block.Chain = chain;
+            });
+
 
             // If there are sources
             if (chain.Sources.length) {
@@ -121,7 +136,13 @@ export class ConnectionManager {
         });
 
         powerEffects.forEach((powerEffect: IPowerEffect) => {
-            powerEffect.UpdateConnections()
+            powerEffect.UpdateConnections();
+            if (this._Debug) console.log(powerEffect);
+        });
+
+        powerSources.forEach((powerSource: IPowerSource) => {
+            powerSource.UpdateConnections();
+            if (this._Debug) console.log(powerSource);
         });
 
         // Lastly unmute everything
@@ -143,7 +164,9 @@ export class ConnectionManager {
         // Now sort connections into lists of Sources, PostEffects and PreEffects
         chains.forEach((chain: IAudioChain) => {
             chain.Connections.forEach((block: IBlock) => {
-                if (block instanceof Source) {
+                if (block instanceof PowerSource) {
+                    chain.PowerSources.push(<IPowerSource>block);
+                } else if (block instanceof Source){
                     chain.Sources.push(<ISource>block);
                 } else if (block instanceof PostEffect){
                     chain.PostEffects.push(<IPostEffect>block);

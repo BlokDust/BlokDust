@@ -10,15 +10,17 @@ export class Gain extends PostEffect {
 
     public Effect: GainNode;
     //public Effect: Tone.Signal;
-    public Gain: GainParams;
+    public Params: GainParams;
+    public Defaults: GainParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                gain: 1.2
-            };
-        }
+        this.BlockName = "Volume";
+
+        this.Defaults = {
+            gain: 1.2
+        };
+        this.PopulateParams();
 
         this.Effect = App.Audio.ctx.createGain();
         this.Effect.gain.value = (this.Params.gain/10)+1;
@@ -62,11 +64,9 @@ export class Gain extends PostEffect {
                     "props": {
                         "value": this.Params.gain,
                         "min": -10,
-                        "max": 10,
-                        //"min": 0.01,
-                        //"max": 80,
+                        "max": 20,
                         "quantised": false,
-                        "centered": true
+                        "centered": true,
                     }
                 }
             ]

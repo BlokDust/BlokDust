@@ -8,20 +8,23 @@ export class Noise extends Source {
     public DelayedRelease: number;
     public Noise: any;
     public Waveform: string;
-    public NoiseParams: NoiseParams;
+    public Params: NoiseParams;
+    public Defaults: NoiseParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        this.Waveform = 'brown';
+        this.BlockName = "Noise";
+
+        this.Waveform = 'brown'; // is this being updated from save if not brown?
 
         this.WaveIndex = ["white","pink","brown"];
 
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                waveform: 2,
-            };
-        }
+
+        this.Defaults = {
+            playbackRate: 1,
+            waveform: 2
+        };
+        this.PopulateParams();
 
         super.Init(drawTo);
 
@@ -114,7 +117,6 @@ export class Noise extends Source {
         this.Params[""+param] = val;
         super.SetParam(param,value);
     }
-
 
     Dispose() {
         super.Dispose();

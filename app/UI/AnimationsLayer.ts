@@ -89,11 +89,25 @@ export class AnimationsLayer extends DisplayObject {
             case "loading":
 
                 var angle = (this.Loop/60) * (2*Math.PI);
-                this.Ctx.save();
-                this.Ctx.translate(x - (0.5*grd),y - (1.5*grd));
-                this.Ctx.rotate(angle);
-                this.Ctx.fillRect(-((w*0.5)*units),-((w*0.5)*units),w*units,w*units);
-                this.Ctx.restore();
+                var v1 = App.Metrics.VectorFromAngle(angle + (Math.PI*0.25));
+                var v2 = App.Metrics.VectorFromAngle(angle + (Math.PI*0.75));
+                var vx = x - (0.5*grd);
+                var vy = y - (1.5*grd);
+                var r = (w*0.75)*units;
+
+                ctx.beginPath();
+                ctx.moveTo(vx + (v1.x * r),vy + (v1.y * r));
+                ctx.lineTo(vx + (v2.x * r),vy + (v2.y * r));
+                ctx.lineTo(vx - (v1.x * r),vy - (v1.y * r));
+                ctx.lineTo(vx - (v2.x * r),vy - (v2.y * r));
+                ctx.closePath();
+                ctx.fill();
+
+                /*ctx.save();
+                ctx.translate(x - (0.5*grd),y - (1.5*grd));
+                ctx.rotate(angle);
+                ctx.fillRect(-((w*0.5)*units),-((w*0.5)*units),w*units,w*units);
+                ctx.restore();*/
 
                 break;
 

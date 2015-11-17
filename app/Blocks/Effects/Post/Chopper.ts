@@ -10,20 +10,23 @@ export class Chopper extends PostEffect {
 
     public Effect: GainNode;
     public Params: ChopperParams;
+    public defaults: ChopperParams;
     public Polarity: number;
     public Transport;
     public Timer;
 
     Init(drawTo: IDisplayContext): void {
 
+        this.BlockName = "Chopper";
+
         this.Effect = App.Audio.ctx.createGain();
 
-        if (!this.Params) {
-            this.Params = {
-                rate: 50,
-                depth: 4,
-            };
-        }
+
+        this.Defaults = {
+            rate: 50,
+            depth: 4
+        };
+        this.PopulateParams();
 
         this.Polarity = 0;
 

@@ -19,6 +19,7 @@ declare var App: IApp;
 export class Block extends DisplayObject implements IBlock {
 
     public Id: number;
+    public BlockName: string;
     public Type: any;
     public Click: RoutedEvent<RoutedEventArgs> = new RoutedEvent<RoutedEventArgs>();
     public Position: Point; // in grid units
@@ -42,10 +43,9 @@ export class Block extends DisplayObject implements IBlock {
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
 
-        this.Update();
-
-        //Give every block an empty chain. TODO: probably only need this for powers and preeffects
         this.Chain = new AudioChain();
+
+        this.Update();
     }
 
     PopulateParams() {
@@ -117,7 +117,6 @@ export class Block extends DisplayObject implements IBlock {
             // ALT-DRAG COPY
             if ((<MainScene>this.DrawTo).AltDown && this._Duplicable) {
                 (<MainScene>this.DrawTo).CreateBlockFromType(this.Type); //TODO: TS5 reflection
-                //TODO: es6 modules broke this!!!
                 this.MouseUp();
             }
             // MOVE //
@@ -166,16 +165,25 @@ export class Block extends DisplayObject implements IBlock {
     SetParam(param: string,value: number) {
     }
 
-    RefreshOptionsPanel() {
+    RefreshOptionsPanel(cmd?: string) {
         if (App.MainScene.OptionsPanel.Scale>0 && App.MainScene.OptionsPanel.SelectedBlock==this) {
             this.UpdateOptionsForm();
             App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
+        }
+
+        if (cmd) {
+            if (cmd==="animate") {
+                App.MainScene.OptionsPanel.Animating = true;
+            }
+        } else {
+            App.MainScene.OptionsPanel.Animating = false;
         }
     }
 
     //-------------------------------------------------------------------------------------------
     //  CONNECTIONS
     //-------------------------------------------------------------------------------------------
+
 
     UpdateConnections(chain: IAudioChain) {
         this.Chain = chain;

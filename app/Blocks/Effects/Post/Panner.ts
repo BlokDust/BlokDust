@@ -1,7 +1,9 @@
-import IDisplayContext = etch.drawing.IDisplayContext;
+import IDisplayContext = etch.drawing.IDisplayContext;import {IApp} from '../../../IApp';
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
+
+declare var App: IApp;
 
 export class Panner extends PostEffect {
 
@@ -9,11 +11,12 @@ export class Panner extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                frequency: 1
-            };
-        }
+        this.BlockName = "Panner";
+
+        this.Defaults = {
+            frequency: 1
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.AutoPanner({
             "frequency": this.Params.frequency

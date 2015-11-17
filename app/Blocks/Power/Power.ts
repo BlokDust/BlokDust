@@ -1,9 +1,12 @@
 import {Effect} from '../Effect';
+import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
 import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
 import {PowerEffect} from './PowerEffect';
+
+declare var App: IApp;
 
 export class Power extends PowerEffect {
 
@@ -16,10 +19,9 @@ export class Power extends PowerEffect {
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            if (!source.IsPressed){
-                source.TriggerRelease('all');
-            }
-            source.TriggerAttack();
+            source.Chain.Sources.forEach((source: ISource) => {
+                source.AddPower();
+            });
         });
     }
 
@@ -28,7 +30,12 @@ export class Power extends PowerEffect {
         this.DrawSprite("power");
     }
 
-    Dispose(){
-        super.Dispose();
+    Stop() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
+            source.Chain.Sources.forEach((source: ISource) => {
+                source.RemovePower();
+            });
+        });
     }
 }

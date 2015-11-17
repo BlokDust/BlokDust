@@ -7,16 +7,18 @@ export class Delay extends PostEffect {
 
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
+    public Defaults: DelayParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                delayTime: 0.25,
-                feedback: 0.4,
-                mix: 0.5,
-            };
-        }
+        this.BlockName = "Delay";
+
+        this.Defaults = {
+            delayTime: 0.25,
+            feedback: 0.4,
+            mix: 0.5
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.PingPongDelay(this.Params.delayTime);
         this.Effect.feedback.value = this.Params.feedback;

@@ -7,8 +7,11 @@ import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
+import {GranularVoice} from './GranularComponents/GranularVoice';
+import {Grain} from './GranularComponents/Grain';
 
 declare var App: IApp;
+
 
 export class Granular extends Source {
 
@@ -28,28 +31,33 @@ export class Granular extends Source {
     private _FallBackTrack: SoundcloudTrack;
     public LoadTimeout: any;
     private _tempPlaybackRate: number;
+    public ReleaseTimeout;
 
     public Params: GranularParams;
+    public Defaults: GranularParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                density: 10,
-                region: 0,
-                spread: 1.5,
-                grainlength: 0.25,
-                track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
-                trackName: 'TEUFELSBERG',
-                user: 'BGXA'
-            };
-        } else {
+        this.BlockName = "Granular";
+
+        if (this.Params) {
             this._LoadFromShare = true;
             setTimeout(() => {
                 this.FirstSetup();
             },100);
         }
+
+        this.Defaults = {
+            playbackRate: 1,
+            density: 10,
+            region: 0,
+            spread: 1.5,
+            grainlength: 0.25,
+            track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
+            trackName: 'TEUFELSBERG',
+            user: 'BGXA'
+        };
+        this.PopulateParams();
 
         this._tempPlaybackRate = this.Params.playbackRate;
         this._WaveForm = [];
@@ -100,10 +108,7 @@ export class Granular extends Source {
         this._WaveForm = [];
         this.SetupGrains();
 
-        if (App.MainScene.OptionsPanel.Scale === 1 && (<MainScene>this.DrawTo).OptionsPanel.SelectedBlock.Id === this.Id) {
-            this.UpdateOptionsForm();
-            App.MainScene.OptionsPanel.Populate(this.OptionsForm, false);
-        }
+        this.RefreshOptionsPanel("animate");
     }
 
     TrackFallBack() {
@@ -167,10 +172,7 @@ export class Granular extends Source {
             this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
 
             // UPDATE OPTIONS FORM //
-            if ((<MainScene>this.DrawTo).OptionsPanel.Scale === 1 && (<MainScene>this.DrawTo).OptionsPanel.SelectedBlock.Id === this.Id) {
-                this.UpdateOptionsForm();
-                (<MainScene>this.DrawTo).OptionsPanel.Populate(this.OptionsForm, false);
-            }
+            this.RefreshOptionsPanel();
 
             // start if powered //
             this.GrainLoop();
@@ -268,7 +270,24 @@ export class Granular extends Source {
         }, <number>this._Envelopes[0].release*1000);
     }
 
-    TriggerAttackRelease(){
+    TriggerAttackRelease(index: number|string = 0, duration: Tone.Time = App.Config.PulseLength){
+
+        if (this._IsLoaded) {
+
+            clearTimeout(this.EndTimeout);
+            if (!this._NoteOn) {
+
+                this._NoteOn = true;
+                this.GrainLoop();
+            }
+        }
+
+        this.ReleaseTimeout = setTimeout(() => {
+            this.EndTimeout = setTimeout(() => {
+                this._NoteOn = false;
+            }, <number>this._Envelopes[0].release*1000);
+        }, duration);
+
     }
 
 

@@ -17,24 +17,26 @@ export class Recorder extends SamplerBase {
     public RecordedBlob;
     private _WaveForm: number[];
     public Params: SamplerParams;
+    public Defaults: SamplerParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                playbackRate: 1,
-                reverse: false,
-                startPosition: 0,
-                endPosition: 0,
-                loop: true,
-                loopStart: 0,
-                loopEnd: 0,
-                retrigger: false, //Don't retrigger attack if already playing
-                volume: 9,
-                track: null,
-                trackName: '',
-            };
-        }
+        this.BlockName = "Recorder";
+
+        this.Defaults = {
+            playbackRate: 1,
+            reverse: false,
+            startPosition: 0,
+            endPosition: 0,
+            loop: true,
+            loopStart: 0,
+            loopEnd: 0,
+            retrigger: false, //Don't retrigger attack if already playing
+            volume: 9,
+            track: null,
+            trackName: ''
+        };
+        this.PopulateParams();
 
         this._WaveForm = [];
 
@@ -124,11 +126,27 @@ export class Recorder extends SamplerBase {
                 s.player.buffer = this.BufferSource.buffer;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
+                s.player.reverse = this.Params.reverse;
             });
 
 
         });
     }
+
+    //Duplicate(buffer) {
+    //    if (buffer) {
+    //        this.BufferSource.buffer = buffer;
+    //
+    //        this.UpdateWaveform();
+    //
+    //        // Set the buffers for each source
+    //        this.Sources.forEach((s: Tone.Simpler)=> {
+    //            s.player.buffer = this.BufferSource.buffer;
+    //            s.player.loopStart = this.Params.loopStart;
+    //            s.player.loopEnd = this.Params.loopEnd;
+    //        });
+    //    }
+    //}
 
     UpdateWaveform(){
         // Update waveform
@@ -297,6 +315,12 @@ export class Recorder extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loop = value;
                 });
+                if (value === true && this.IsPowered()) {
+                    this.Sources.forEach((s: Tone.Simpler) => {
+                        s.player.stop();
+                        s.player.start(s.player.startPosition);
+                    });
+                }
                 // update showing loop sliders
                 this.Params[param] = val;
                 this.RefreshOptionsPanel();

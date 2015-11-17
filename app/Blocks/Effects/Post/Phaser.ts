@@ -7,17 +7,19 @@ export class Phaser extends PostEffect {
 
     public Effect: Tone.Phaser;
     public Params: PhaserParams;
+    public Defaults: PhaserParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                rate: 0.5,
-                depth: 9,
-                baseFrequency: 500,
-                mix: 0.75
-            };
-        }
+        this.BlockName = "Phaser";
+
+        this.Defaults = {
+            rate: 0.5,
+            depth: 9,
+            baseFrequency: 500,
+            mix: 0.75
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.Phaser({
             "rate" : this.Params.rate,

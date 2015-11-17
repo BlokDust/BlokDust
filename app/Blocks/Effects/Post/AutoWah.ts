@@ -7,18 +7,20 @@ export class AutoWah extends PostEffect {
 
     public Effect: Tone.AutoWah;
     public Params: AutoWahParams;
+    public Defaults: AutoWahParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        if (!this.Params) {
-            this.Params = {
-                octaves: 5,
-                baseFrequency: 100,
-                mix: 0.3,
-                attack: 0.75,
-                release: 0.3,
-            };
-        }
+        this.BlockName = "Auto Wah";
+
+        this.Defaults = {
+            octaves: 5,
+            baseFrequency: 100,
+            mix: 0.3,
+            attack: 0.75,
+            release: 0.3
+        };
+        this.PopulateParams();
 
         this.Effect = new Tone.AutoWah({
             "baseFrequency": this.Params.baseFrequency,

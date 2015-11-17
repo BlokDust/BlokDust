@@ -7,12 +7,15 @@ import {PreEffect} from '../PreEffect';
 
 export class LFO extends PreEffect {
 
+    public Params: LFOParams;
     public Defaults: LFOParams;
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
     public WaveIndex: string[];
 
     Init(drawTo: IDisplayContext): void {
+
+        this.BlockName = "LFO";
 
         this.Defaults = {
             rate: 2,
