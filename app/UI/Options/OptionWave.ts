@@ -40,7 +40,7 @@ export class WaveForm extends Option {
                 ctx.font = App.Metrics.TxtMid;
                 ctx.fillText(this.EmptyString.toUpperCase(), (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType * 0.4));
             } else {
-                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true,panel.Ctx);
+                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
 
             }
 

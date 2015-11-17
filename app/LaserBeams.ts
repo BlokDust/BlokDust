@@ -195,7 +195,7 @@ export class LaserBeams extends DisplayObject {
                                                             //console.log(block.PowerConnections);
                                                             //block.PowerConnections += 1;
                                                             block.AddPower();
-                                                            this._Sketch.ConnectionLines.UpdateList();
+                                                            (<MainScene>this.DrawTo).ConnectionLines.UpdateList();
                                                         }
                                                     }
                                                 }
@@ -223,7 +223,7 @@ export class LaserBeams extends DisplayObject {
                                     /*block.PowerConnections -= 1;
                                     block.TriggerRelease('all'); */
                                     block.RemovePower();
-                                    this._Sketch.ConnectionLines.UpdateList();
+                                    (<MainScene>this.DrawTo).ConnectionLines.UpdateList();
                                 }
                             }
                         }

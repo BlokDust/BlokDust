@@ -18,6 +18,8 @@ export class ToneSource extends Source {
 
     Init(drawTo: IDisplayContext): void {
 
+        this.BlockName = "Tone";
+
         this.Defaults = {
             frequency: App.Config.BaseNote,
             waveform: 2,

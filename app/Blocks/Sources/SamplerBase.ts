@@ -100,6 +100,9 @@ export class SamplerBase extends Source {
 
     }
 
+    LoadTrack(track,fullUrl?:boolean) {
+
+    }
 
     Dispose(){
         super.Dispose();

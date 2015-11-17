@@ -8,11 +8,8 @@ export class Void extends Block {
     public StarPos: Point;
 
     Init(drawTo: IDisplayContext): void {
-
+        super.Init(drawTo);
         this.BlockName = "Void";
-
-        super.Init(sketch);
-
         this.Outline.push(new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(0,1));
         this.StarPos = this.RandomStarPos();
     }

@@ -95,13 +95,13 @@ export class AnimationsLayer extends DisplayObject {
                 var vy = y - (1.5*grd);
                 var r = (w*0.75)*units;
 
-                ctx.beginPath();
-                ctx.moveTo(vx + (v1.x * r),vy + (v1.y * r));
-                ctx.lineTo(vx + (v2.x * r),vy + (v2.y * r));
-                ctx.lineTo(vx - (v1.x * r),vy - (v1.y * r));
-                ctx.lineTo(vx - (v2.x * r),vy - (v2.y * r));
-                ctx.closePath();
-                ctx.fill();
+                this.Ctx.beginPath();
+                this.Ctx.moveTo(vx + (v1.x * r),vy + (v1.y * r));
+                this.Ctx.lineTo(vx + (v2.x * r),vy + (v2.y * r));
+                this.Ctx.lineTo(vx - (v1.x * r),vy - (v1.y * r));
+                this.Ctx.lineTo(vx - (v2.x * r),vy - (v2.y * r));
+                this.Ctx.closePath();
+                this.Ctx.fill();
 
                 /*ctx.save();
                 ctx.translate(x - (0.5*grd),y - (1.5*grd));

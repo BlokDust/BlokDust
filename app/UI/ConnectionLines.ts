@@ -1,26 +1,22 @@
 import DisplayObject = etch.drawing.DisplayObject;
+import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = etch.primitives.Point;
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
-import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../Blocks/ISource';
-import {Line} from '../MathObjects/Line';
 import {LineList} from '../MathObjects/LineList';
+import {Line} from '../MathObjects/Line';
 
 declare var App: IApp;
 
 export class ConnectionLines extends DisplayObject {
 
-    private _Ctx: CanvasRenderingContext2D;
-    private _Sketch: MainScene;
     private _Unpowered: Line[];
     private _Powered: Line[];
 
-    Init(sketch: MainScene): void {
-
-        this._Ctx = sketch.Ctx;
-        this._Sketch = sketch;
-
+    Init(drawTo: IDisplayContext): void {
+        super.Init(drawTo);
         this.UpdateList();
     }
 
@@ -28,41 +24,41 @@ export class ConnectionLines extends DisplayObject {
 
         var grd = App.ScaledGridSize; // this.Grid.Width / this.Grid.Divisor;
 
-        this._Ctx.strokeStyle = App.Palette[15];// BLUE
+        this.Ctx.strokeStyle = App.Palette[15];// BLUE
 
-        this._Ctx.lineWidth = 1;
+        this.Ctx.lineWidth = 1;
 
-        this._Ctx.beginPath();
+        this.Ctx.beginPath();
         for (var j = 0; j < this._Unpowered.length; j++) {
             var myPos = App.Metrics.PointOnGrid(this._Unpowered[j].Points[0]);
-            this._Ctx.moveTo(myPos.x, myPos.y);
+            this.Ctx.moveTo(myPos.x, myPos.y);
             for(var i = 1; i < this._Unpowered[j].Points.length; i++){
                 var myPos = App.Metrics.PointOnGrid(this._Unpowered[j].Points[i]);
-                this._Ctx.lineTo(myPos.x, myPos.y);
+                this.Ctx.lineTo(myPos.x, myPos.y);
             }
         }
-        this._Ctx.stroke();
+        this.Ctx.stroke();
 
-        this._Ctx.lineWidth = 2;
+        this.Ctx.lineWidth = 2;
 
-        this._Ctx.beginPath();
+        this.Ctx.beginPath();
         for (var j = 0; j < this._Powered.length; j++) {
             var myPos = App.Metrics.PointOnGrid(this._Powered[j].Points[0]);
-            this._Ctx.moveTo(myPos.x, myPos.y);
+            this.Ctx.moveTo(myPos.x, myPos.y);
             for(var i = 1; i < this._Powered[j].Points.length; i++){
                 var myPos = App.Metrics.PointOnGrid(this._Powered[j].Points[i]);
-                this._Ctx.lineTo(myPos.x, myPos.y);
+                this.Ctx.lineTo(myPos.x, myPos.y);
             }
         }
-        this._Ctx.stroke();
+        this.Ctx.stroke();
 
     }
 
     /*OldDraw() {
 
-        this._Ctx.strokeStyle = App.Palette[15];// BLUE
-        this._Ctx.lineWidth = 1;
-        this._Ctx.beginPath();
+        this.Ctx.strokeStyle = App.Palette[15];// BLUE
+        this.Ctx.lineWidth = 1;
+        this.Ctx.beginPath();
 
         for (var j = 0; j < App.Sources.length; j++) {
             var block: IBlock = App.Sources[j];
@@ -172,7 +168,6 @@ export class ConnectionLines extends DisplayObject {
 
                     var xDif = (targetPos.x - myPos.x);
                     var yDif = (targetPos.y - myPos.y);
-
 
                     myLine.Points.push(new Point(myPos.x, myPos.y));
 

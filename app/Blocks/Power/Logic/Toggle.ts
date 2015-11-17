@@ -14,9 +14,6 @@ export class Toggle extends Logic {
     Init(drawTo: IDisplayContext): void {
 		super.Init(drawTo);
         this.BlockName = "Toggle Power";
-
-        super.Init(sketch);
-
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
 

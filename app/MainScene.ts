@@ -152,9 +152,9 @@ export class MainScene extends DisplayObject{
         //this.Splash = new Splash();
         //this.Splash.Init(this);
 
-        this._ConnectionLines = new ConnectionLines();
-        this.DisplayList.Add(this._ConnectionLines);
-        this._ConnectionLines.Init(this);
+        this.ConnectionLines = new ConnectionLines();
+        this.DisplayList.Add(this.ConnectionLines);
+        this.ConnectionLines.Init(this);
 
         this.BlocksContainer = new DisplayObject();
         this.DisplayList.Add(this.BlocksContainer);
@@ -183,9 +183,9 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this._RecorderPanel);
         this._RecorderPanel.Init(this);
 
-        this._LaserBeams = new LaserBeams();
-        this.DisplayList.Add(this._LaserBeams);
-        this._LaserBeams.Init(this);
+        this.LaserBeams = new LaserBeams();
+        this.DisplayList.Add(this.LaserBeams);
+        this.LaserBeams.Init(this);
 
         this.OptionsPanel = new OptionsPanel();
         this.DisplayList.Add(this.OptionsPanel);

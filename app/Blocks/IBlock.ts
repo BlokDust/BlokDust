@@ -16,9 +16,7 @@ export interface IBlock extends IDisplayObject {
     HitTest(point: Point): boolean;
     Id: number;
     BlockName: string;
-    Click: Fayde.RoutedEvent<Fayde.RoutedEventArgs>;
-    Connections: Fayde.Collections.ObservableCollection<IBlock>
-    Outline: Point[];
+    IsChained: boolean;
     IsPressed: boolean;
     IsSelected: boolean;
     LastPosition: Point;
