@@ -96,6 +96,7 @@ export class BlockCreator {
     public static ComputerKeyboard = ComputerKeyboard;
     public static MIDIController = MIDIController;
 
+    // todo: store block names separately. use them in block.BlockName too
     public static MenuJson: any = {
         "categories": [
             {
