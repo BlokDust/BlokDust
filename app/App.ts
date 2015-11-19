@@ -37,6 +37,7 @@ import {PianoKeyboardManager} from "./Core/Inputs/PianoKeyboardManager";
 import {PointerInputManager} from './Core/Inputs/PointerInputManager';
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {PowerEffect} from './Blocks/Power/PowerEffect';
+import {PowerSource} from './Blocks/Power/PowerSource';
 import {RedoCommandHandler} from './CommandHandlers/RedoCommandHandler';
 import {ResourceManager} from './Core/Resources/ResourceManager';
 import {SaveAsCommandHandler} from './CommandHandlers/SaveAsCommandHandler';
@@ -78,7 +79,6 @@ export default class App implements IApp{
     public Particles: Particle[] = [];
     public ParticlesPool: PooledFactoryResource<Particle>;
     public PianoKeyboardManager: PianoKeyboardManager;
-    public PowerSources: IPowerSource[];
     public PointerInputManager: PointerInputManager;
     public ResourceManager: ResourceManager;
     public ScaledDragOffset: Point;
@@ -114,6 +114,10 @@ export default class App implements IApp{
     // todo: move to redux store
     get PowerEffects(): IPowerEffect[] {
         return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
+    }
+
+    get PowerSources(): IPowerSource[] {
+        return <IPowerSource[]>this.Blocks.en().where(b => b instanceof PowerSource).toArray();
     }
 
     // todo: move to redux store
