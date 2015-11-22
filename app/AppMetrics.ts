@@ -121,16 +121,7 @@ export class Metrics {
     }
 
     get PixelRatio(): number {
-        const ctx = App.Canvas.Ctx;
-        const dpr = window.devicePixelRatio || 1;
-        const bsr = ctx.webkitBackingStorePixelRatio ||
-            ctx.mozBackingStorePixelRatio ||
-            ctx.msBackingStorePixelRatio ||
-            ctx.oBackingStorePixelRatio ||
-            ctx.backingStorePixelRatio || 1;
-
-        //return 1;
-        return dpr / bsr;
+        return Utils.Device.GetPixelRatio(App.Canvas.Ctx)
     }
 
     //-------------------------------------------------------------------------------------------

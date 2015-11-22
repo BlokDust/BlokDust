@@ -140,7 +140,6 @@ export class ThemeManager  {
     //  TWEEN
     //-------------------------------------------------------------------------------------------
 
-
     ColorTo(color,destination,t){
 
         var offsetTween = new window.TWEEN.Tween({r: color.R, g: color.G, b: color.B, a: color.A});
@@ -157,5 +156,4 @@ export class ThemeManager  {
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.start(App.Stage.LastVisualTick);
     }
-
 }

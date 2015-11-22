@@ -1,8 +1,14 @@
+import Dimensions = Utils.Measurements.Dimensions;
+import DisplayObject = etch.drawing.DisplayObject;
+import IEventArgs = nullstone.IEventArgs;
+import Point = etch.primitives.Point;
+import Stage = etch.drawing.Stage;
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {BlockCreator} from './BlockCreator';
 import {BlockSprites} from './Blocks/BlockSprites';
 import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
 import {Commands} from './Commands';
+import {CompositionLoadedEventArgs} from "./CompositionLoadedEventArgs";
 import {ConnectionLines} from './UI/ConnectionLines';
 import {Header} from './UI/Header';
 import {IApp} from './IApp';
@@ -18,12 +24,11 @@ import {Laser} from './Blocks/Power/Laser';
 import {MessagePanel} from './UI/MessagePanel';
 import {OptionsPanel} from './UI/OptionsPanel';
 import {Particle} from './Particle';
-import Point = etch.primitives.Point;
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {PowerEffect} from './Blocks/Power/PowerEffect';
 import {PowerSource} from './Blocks/Power/PowerSource';
-import {Recorder} from './Blocks/Sources/Recorder';
 import {RecorderPanel} from './UI/RecorderPanel';
+import {Recorder} from './Blocks/Sources/Recorder';
 import {Sampler} from './Blocks/Sources/Sampler';
 import {SettingsPanel} from './UI/SettingsPanel';
 import {SharePanel} from './UI/SharePanel';
@@ -33,9 +38,6 @@ import {StageDragger as MainSceneDragger} from './UI/StageDragger';
 import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {ZoomButtons} from './UI/ZoomButtons';
-import Dimensions = Utils.Measurements.Dimensions;
-import DisplayObject = etch.drawing.DisplayObject;
-import Stage = etch.drawing.Stage;
 
 declare var App: IApp;
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -104,6 +106,12 @@ export class MainScene extends DisplayObject{
 
         App.OperationManager.OperationComplete.on((operation: IOperation) => {
             this._Invalidate();
+        }, this);
+
+        // COMPOSITION LOADED //
+
+        App.CompositionLoaded.on((s: any, e: CompositionLoadedEventArgs) => {
+            this.CompositionLoaded(e);
         }, this);
 
         // FILE DRAGGING //
@@ -743,7 +751,6 @@ export class MainScene extends DisplayObject{
         block.Position = this._PointerPoint;
         if (params) block.Params = this.DuplicateParams(params);
 
-
         //TODO:
         //if (block instanceof Recorder) {
         //    (<any>block).Duplicate((<any>block).BufferSource.buffer);
@@ -751,7 +758,6 @@ export class MainScene extends DisplayObject{
 
         block.Init(this);
         block.Type = t;
-
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
 
@@ -762,8 +768,16 @@ export class MainScene extends DisplayObject{
     }
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
-    // todo: don't call things directly like this, use event handlers!
-    CompositionLoaded() {
+    CompositionLoaded(e: CompositionLoadedEventArgs): void {
+        // add blocks to display list
+        this.BlocksContainer.DisplayList.AddRange(App.Blocks);
+
+        // initialise blocks (give them a ctx to draw to)
+        for (var i = 0; i < this.BlocksContainer.DisplayList.Count; i++){
+            var block: IBlock = this.BlocksContainer.DisplayList[i];
+            block.Init(this);
+        }
+
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
 
@@ -772,9 +786,15 @@ export class MainScene extends DisplayObject{
             App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
         },200);
 
-        if (!App.LoadCued) {
-            //App.Splash.EndLoad();
+        if (this.MainSceneDragger) {
+            this.MainSceneDragger.Destination = new Point(e.SaveFile.DragOffset.x, e.SaveFile.DragOffset.y);
         }
+
+        this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
+
+        //if (!App.LoadCued) {
+            //App.Splash.EndLoad();
+        //}
     }
 
     //-------------------------------------------------------------------------------------------

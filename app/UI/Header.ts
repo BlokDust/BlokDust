@@ -138,7 +138,8 @@ export class Header extends DisplayObject {
     Draw() {
         super.Draw();
 
-        var units = App.Unit;
+        var pr = App.Metrics.PixelRatio;
+        var units = App.Unit / pr;
         var dataType = units*10;
         var headerType = Math.round(units*28);
         var thisHeight = Math.round(this.Height*units);
