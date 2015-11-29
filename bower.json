@@ -12,12 +12,14 @@
     "lzma": "nmrugg/LZMA-JS",
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
     "RecorderJS": "lukephills/Recorderjs#master",
-    "tone": "lukephills/Tone.js#dev",
+    "tone": "lukephills/Tone.js#master",
     "tween.ts": "edsilv/tween.ts#~0.1.2",
     "utils": "edsilv/utils#~0.0.22"
   },
   "resolutions": {
-    "fayde": "~0.16.11"
+    "fayde": "~0.16.11",
+    "minerva": "~0.7.3",
+    "nullstone": "~0.4.5"
   },
   "devDependencies": {
     "r.js": "~2.1.16"
