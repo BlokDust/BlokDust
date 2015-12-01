@@ -17,14 +17,23 @@ export class Momentary extends Logic {
     }
 
     UpdateConnections() {
-        const connections = this.Connections.ToArray();
-        connections.forEach((source: ISource) => {
-            source.Chain.Sources.forEach((source: ISource) => {
-                if (this.Params.logic) {
-                    source.AddPower();
-                }
-            });
-        });
+        //const newConnections: ISource[] = this.Connections.ToArray();
+        //
+        //this.OldConnections.forEach((source: ISource) => {
+        //    //if momentary is on and is no longer connected to a source, remove power.
+        //    if (this.Params.logic && (newConnections.indexOf(source) === -1)) {
+        //        source.RemovePower();
+        //    }
+        //});
+        //
+        //newConnections.forEach((source: ISource) => {
+        //    //if momentary is on and source isn't already connected, add power
+        //    if (this.Params.logic && (this.OldConnections.indexOf(source) === -1)) {
+        //        source.AddPower();
+        //    }
+        //});
+        //
+        //this.OldConnections = newConnections;
     }
 
     Draw() {
@@ -74,21 +83,13 @@ export class Momentary extends Logic {
         this.Params.logic = true;
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            source.Chain.Sources.forEach((source: ISource) => {
-                source.AddPower();
-                setTimeout(() => {
-                    source.RemovePower();
-                }, 100); //TODO: use App.Config.PulseLength here instead
-            });
-            source.Chain.PowerSources.forEach((source: ISource) => {
-                source.AddPower();
-                setTimeout(() => {
-                    source.RemovePower();
-                }, 100); //TODO: use App.Config.PulseLength here instead
-                if (source instanceof ParticleEmitter) {
-                    (<ParticleEmitter>source).EmitParticle();
-                }
-            });
+            source.AddPower();
+            setTimeout(() => {
+                source.RemovePower();
+            }, 100); //TODO: use App.Config.PulseLength here instead
+            if (source instanceof ParticleEmitter) {
+                (<ParticleEmitter>source).EmitParticle();
+            }
         });
         this.Params.logic = false;
     }

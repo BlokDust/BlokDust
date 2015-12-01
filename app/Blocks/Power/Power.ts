@@ -19,12 +19,23 @@ export class Power extends PowerEffect {
     }
 
     UpdateConnections() {
-        const connections = this.Connections.ToArray();
-        connections.forEach((source: ISource) => {
-            source.Chain.Sources.forEach((source: ISource) => {
-                source.AddPower();
-            });
+        const newConnections: ISource[] = this.Connections.ToArray();
+
+        this.OldConnections.forEach((source: ISource) => {
+            //if power is no longer connected to a source, remove power.
+            if (newConnections.indexOf(source) === -1) {
+                source.RemovePower();
+            }
         });
+
+        newConnections.forEach((source: ISource) => {
+            //if source isn't already connected
+            if (this.OldConnections.indexOf(source) === -1) {
+                source.AddPower();
+            }
+        });
+
+        this.OldConnections = newConnections;
     }
 
     Draw() {
@@ -35,9 +46,7 @@ export class Power extends PowerEffect {
     Stop() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            source.Chain.Sources.forEach((source: ISource) => {
-                source.RemovePower();
-            });
+            source.RemovePower();
         });
     }
 }

@@ -244,8 +244,8 @@ export class ConnectionLines {
             }
         } // end loop
 
-        console.log(this._Powered);
-        console.log(this._Unpowered);
+        //console.log(this._Powered);
+        //console.log(this._Unpowered);
 
     }
 
