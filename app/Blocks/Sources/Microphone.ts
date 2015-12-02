@@ -30,9 +30,11 @@ export class Microphone extends Source {
         this.CreateSource();
         this.Volume = App.Audio.ctx.createGain();
 
-        this.Sources.forEach((s: Tone.Microphone)=> {
-            s.connect(this.Volume);
-            s.start();
+        this.Sources.forEach((s: Tone.Microphone) => {
+            s.open(() => {
+                s.connect(this.Volume);
+                s.start();
+            });
         });
 
         this.Volume.gain.value = this.Params.gain;
