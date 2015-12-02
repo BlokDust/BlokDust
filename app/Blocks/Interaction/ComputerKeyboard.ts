@@ -63,7 +63,7 @@ export class ComputerKeyboard extends Keyboard {
     KeyDownCallback(e: any){
 
         //if KeyDown is a keyboard note or an octave shifter
-        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_'){
+        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_' || e.KeyDown === 'blank'){
             this.KeysDown = e.KeysDown;
 
             // ALL SOURCES TRIGGER KEYBOARD DOWN
@@ -84,7 +84,7 @@ export class ComputerKeyboard extends Keyboard {
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
             // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_') {
+            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_' || e.KeyDown === 'blank') {
                 this.KeyboardUp(e.KeyUp, source);
             }
         });
@@ -114,6 +114,7 @@ export class ComputerKeyboard extends Keyboard {
 
     KeyboardDown(keyDown:string, source:ISource): void {
 
+        if (keyDown === 'blank') source.TriggerRelease('all');
         var keyPressed = this.GetKeyNoteOctaveString(keyDown);
         var frequency = this.GetFrequencyOfNote(keyPressed, source);
 
@@ -169,6 +170,7 @@ export class ComputerKeyboard extends Keyboard {
     }
 
     KeyboardUp(keyUp:string, source:ISource): void {
+        if (keyUp === 'blank') source.TriggerRelease('all');
 
         if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
             // POLYPHONIC MODE
