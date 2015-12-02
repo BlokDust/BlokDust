@@ -24,7 +24,7 @@ export class Source extends Block implements ISource {
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
-    public AudioInput: Tone.Signal;
+    public AudioInput: Tone.Mono;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -69,7 +69,7 @@ export class Source extends Block implements ISource {
 
         if (!(this instanceof Power)) {
 
-            this.AudioInput = new Tone.Signal();
+            this.AudioInput = new Tone.Mono();
             this.AudioInput.connect(App.Audio.Master);
 
         }

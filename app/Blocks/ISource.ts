@@ -9,8 +9,7 @@ export interface ISource extends IBlock {
     Connections: Fayde.Collections.ObservableCollection<IEffect>;
     Sources?: any[];
     Envelopes?: Tone.AmplitudeEnvelope[];
-    AudioInput?: Tone.Signal;
-    OutputGain?: Tone.Signal;
+    AudioInput?: Tone.Mono;
     Settings?: ToneSettings;
     WaveIndex: string[];
     PowerConnections: number;
