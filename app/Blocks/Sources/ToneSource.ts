@@ -160,16 +160,13 @@ export class ToneSource extends Source {
 
         switch(param) {
             case 'baseFrequency':
-                console.log('before setting change: '+this.Sources[0].frequency);
-                //FIXME: Frequency not changing whilst playing
-                this.Sources[0].frequency.value = this.GetFrequency(value,this.Params.fine);
-                console.log('after setting change: '+this.Sources[0].frequency)
+                this.SetPitch(this.GetFrequency(value, this.Params.fine), 0, 0);
                 const octave = Math.floor(value / 12) + 4;
                 const note = App.Audio.NoteIndex[Math.abs(value%12)];
                 console.log(`Note: ${note}${octave}`);
                 break;
             case 'fine':
-                this.Sources[0].frequency.value = this.GetFrequency(this.Params.baseFrequency, value);
+                this.SetPitch(this.GetFrequency(value, this.Params.baseFrequency), 0, 0);
                 break;
         }
 
