@@ -116,7 +116,7 @@ export class Source extends Block implements ISource {
 
         // Release all the sources envelopes
         if (!this.IsPowered() || !this.IsPressed) {
-            //this.TriggerRelease('all', true);
+            this.TriggerRelease('all', true);
         }
 
         // Reset pitch back to original setting

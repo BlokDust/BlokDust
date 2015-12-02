@@ -89,7 +89,10 @@ export class ComputerKeyboard extends Keyboard {
             }
         });
 
-        this.KeysDown = e.KeysDown;
+        //if KeyDown is a keyboard note or an octave shifter
+        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_') {
+            this.KeysDown = e.KeysDown;
+        }
     }
 
     // OCTAVE SHIFT //

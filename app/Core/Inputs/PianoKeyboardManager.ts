@@ -135,12 +135,9 @@ export class PianoKeyboardManager extends InputManager {
             this.KeyDown = k;
             this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
         }
-
-        super.KeyboardDown(e);
     }
 
     KeyboardUp(e) {
-        super.KeyboardUp(e);
         if (!this.IsEnabled) return;
 
         var k: string;
@@ -154,10 +151,9 @@ export class PianoKeyboardManager extends InputManager {
         if (typeof k !== 'undefined' && k !== '') {
             // remove this key from the keysDown object
             delete this.KeysDown[k];
+            this.KeyUp = k;
+            this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
         }
-
-        this.KeyUp = k;
-        this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
 
     }
 }
