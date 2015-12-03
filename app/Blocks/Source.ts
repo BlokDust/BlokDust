@@ -115,7 +115,7 @@ export class Source extends Block implements ISource {
         this._EnvelopeReset();
 
         // Release all the sources envelopes
-        if (!this.IsPowered() || !this.IsPressed) {
+        if (!this.IsPowered()) {
             this.TriggerRelease('all', true);
         }
 

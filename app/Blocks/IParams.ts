@@ -127,7 +127,7 @@ interface ChompParams extends IParams {
     gain: number;
 }
 
-interface ChopperParams extends RateDepthParams {}
+interface ChopperParams extends RateDepthParams, DryWetParams {}
 
 interface ConvolutionParams extends DryWetParams {
     track: string|AudioBuffer;

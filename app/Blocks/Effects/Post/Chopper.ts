@@ -85,7 +85,6 @@ export class Chopper extends PostEffect {
                         "centered": false
                     }
                 },
-
                 {
                     "type" : "slider",
                     "name": "Depth",
