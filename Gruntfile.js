@@ -199,9 +199,10 @@ module.exports = function (grunt) {
                 options: {
                     port: ports.server,
                     base: dirs.app,
+                    keepalive: true,
                     middleware: function (connect) {
                         return [
-                            connect_livereload({ port: ports.livereload }),
+                            //connect_livereload({ port: ports.livereload }),
                             mount(connect, dirs.build),
                             mount(connect, dirs.app)
                         ];
@@ -300,7 +301,7 @@ module.exports = function (grunt) {
     grunt.registerTask('bump:patch', ['version:bump', 'version:apply']);
     grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
     grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);
-    grunt.registerTask('serve:dev', ['typescript:build', 'copy:assets', 'connect:dev', 'open', 'watch']);
+    grunt.registerTask('serve:dev', ['default', 'connect:dev', 'open']);
     grunt.registerTask('serve:dist', ['connect:dist', 'open']);
 
     grunt.registerTask('dist', '', function() {
