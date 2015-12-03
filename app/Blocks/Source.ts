@@ -25,7 +25,7 @@ export class Source extends Block implements ISource {
 
     public Sources: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
-    public AudioInput: Tone.Signal;
+    public AudioInput: Tone.Mono;
     public Settings: ToneSettings = {
         envelope: {
             attack: 0.02,
@@ -70,7 +70,7 @@ export class Source extends Block implements ISource {
 
         if (!(this instanceof Power)) {
 
-            this.AudioInput = new Tone.Signal();
+            this.AudioInput = new Tone.Mono();
             this.AudioInput.connect(App.Audio.Master);
 
         }
@@ -116,15 +116,12 @@ export class Source extends Block implements ISource {
         this._EnvelopeReset();
 
         // Release all the sources envelopes
-        if (!this.IsPowered() || !this.IsPressed) {
-            //this.TriggerRelease('all', true);
+        if (!this.IsPowered()) {
+            this.TriggerRelease('all', true);
         }
 
         // Reset pitch back to original setting
         this.ResetPitch();
-
-        //TODO: this is causing issues with being powered by lasers
-        this.RemoveAllPowers();
     }
 
     private _EnvelopeReset() {
@@ -214,7 +211,6 @@ export class Source extends Block implements ISource {
     TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
         forceRelease = (forceRelease === true) ? forceRelease : false;
         // Only if it's not powered or force is set to true
-        //console.log('TriggerRelease: ',this);
         if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
@@ -289,29 +285,28 @@ export class Source extends Block implements ISource {
      * @returns {boolean}
      */
     IsPowered(): boolean {
-        //let bool: boolean = false;
         if (this.IsPressed || this.PowerConnections>0 || this.PowerAmount>0) {
             return true;
         }
-        let connections: IBlock[] = this.Chain.Connections;
-        for (let i = 0; i < connections.length; i++) {
-            let blockConnections: IBlock[] = connections[i].Connections.ToArray();
+        //let connections: IBlock[] = this.Chain.Connections;
+        //for (let i = 0; i < connections.length; i++) {
+        //    let blockConnections: IBlock[] = connections[i].Connections.ToArray();
+        //    for (let i = 0; i < blockConnections.length; i++) {
+        //        if (blockConnections[i] instanceof Power ||
+        //            blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
+        //            return true;
+        //        }
+        //    }
+        //}
+        this.Chain.Connections.forEach((block:IBlock) => {
+            let blockConnections: IBlock[] = block.Connections.ToArray();
             for (let i = 0; i < blockConnections.length; i++) {
                 if (blockConnections[i] instanceof Power ||
                     blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
                     return true;
                 }
             }
-        }
-        //this.Chain.Connections.forEach((block:IBlock) => {
-        //    let blockConnections: IBlock[] = block.Connections.ToArray();
-        //    for (let i = 0; i < blockConnections.length; i++) {
-        //        if (blockConnections[i] instanceof Power ||
-        //            blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
-        //            bool = true;
-        //        }
-        //    }
-        //});
+        });
         return false;
     }
 
@@ -372,15 +367,15 @@ export class Source extends Block implements ISource {
 
         if (this.Sources[id].frequency) {
             // Oscillators
-            this.Sources[id].frequency.exponentialRampToValueNow(pitch, time);
+            this.Sources[id].frequency.exponentialRampToValue(pitch, time);
 
         } else if (this.Sources[id].player) {
             // Samplers
-            this.Sources[id].player.playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
+            this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
 
         } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            this.Sources[id].playbackRate.exponentialRampToValueNow(pitch / App.Config.BaseNote, time);
+            this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
         }
     }
 
@@ -498,10 +493,4 @@ export class Source extends Block implements ISource {
         }
         this.PowerAmount--;
     }
-
-    RemoveAllPowers() {
-        this.TriggerRelease('all');
-        this.PowerAmount = 0;
-    }
-
 }

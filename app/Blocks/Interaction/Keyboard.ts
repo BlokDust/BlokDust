@@ -28,19 +28,16 @@ export class Keyboard extends Interaction {
     UpdateConnections() {
         const connections = this.Connections.ToArray();
         connections.forEach((source: ISource) => {
-            source.Chain.Sources.forEach((source: ISource) => {
-                this.SetBaseFrequency(source);
-                this.KeysDown = {};
+            this.SetBaseFrequency(source);
+            this.KeysDown = {};
 
-                // Check to see if we have enough sources on this block
-                if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
-                    // Create extra polyphonic voices
-                    this.CreateVoices(source);
-                }
+            // Check to see if we have enough sources on this block
+            if ((source.Sources.length === 1) && (this.Params.isPolyphonic)) {
+                // Create extra polyphonic voices
+                this.CreateVoices(source);
+            }
 
-                source.TriggerRelease('all'); //TODO: do we need this?
-            });
-
+            source.TriggerRelease('all'); //TODO: do we need this?
         });
     }
 
@@ -58,10 +55,8 @@ export class Keyboard extends Interaction {
         else if (param == "octave") {
             for (let i = 0, source: ISource; i < this.Connections.Count; i++) {
                 source = this.Connections.GetValueAt(i);
-                source.Chain.Sources.forEach((source: ISource) => {
-                    let diff:number = value - this.Params.octave;
-                    source.OctaveShift(diff);
-                });
+                let diff:number = value - this.Params.octave;
+                source.OctaveShift(diff);
             }
         }
         else if (param === 'polyphonic') {
@@ -69,11 +64,9 @@ export class Keyboard extends Interaction {
             // ALL SOURCES
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                source.Chain.Sources.forEach((source: ISource) => {
-                    source.TriggerRelease('all');
-                    // Create extra polyphonic voices
-                    this.CreateVoices(source);
-                });
+                source.TriggerRelease('all');
+                // Create extra polyphonic voices
+                this.CreateVoices(source);
             });
             App.Audio.ConnectionManager.Update();
         }

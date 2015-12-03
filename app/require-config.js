@@ -68,12 +68,14 @@ require([
     "Tone/effect/Freeverb",
     "Tone/effect/Phaser",
     "Tone/effect/PingPongDelay",
+    "Tone/effect/Tremolo",
     "Tone/instrument/Simpler",
     "Tone/source/Microphone",
     "Tone/source/Noise",
     "Tone/source/Oscillator",
     "Tone/source/Player",
     "Tone/component/Meter",
+    "Tone/component/Mono",
     "tween",
     "utils"
 ], function (text, config, App, PixelPalette, Tone, jquery) {

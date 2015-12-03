@@ -76,9 +76,9 @@ export class SamplerBase extends Source {
      * @param index number|string position of the Envelope in Envelopes[].
      * If index is set to 'all', all envelopes will be released
      */
-    TriggerRelease(index: number|string = 0) {
+    TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
         // Only if it's not powered
-        if (!this.IsPowered()) {
+        if (!this.IsPowered() || forceRelease) {
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Sources.forEach((s: any)=> {

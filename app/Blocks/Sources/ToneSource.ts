@@ -162,13 +162,13 @@ export class ToneSource extends Source {
 
         switch(param) {
             case 'baseFrequency':
-                this.Sources[0].frequency.value = this.GetFrequency(value,this.Params.fine);
+                this.SetPitch(this.GetFrequency(value, this.Params.fine), 0, 0);
                 const octave = Math.floor(value / 12) + 4;
                 const note = App.Audio.NoteIndex[Math.abs(value%12)];
                 console.log(`Note: ${note}${octave}`);
                 break;
             case 'fine':
-                this.Sources[0].frequency.value = this.GetFrequency(this.Params.baseFrequency, value);
+                this.SetPitch(this.GetFrequency(value, this.Params.baseFrequency), 0, 0);
                 break;
         }
 

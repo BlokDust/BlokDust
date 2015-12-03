@@ -62,6 +62,8 @@ export class PianoKeyboardManager extends InputManager {
             'Slash': 'note_E_d',
             'BracketLeft': 'note_B_b',
             'BracketRight': 'note_C_c',
+            'OSLeft': 'blank',
+            'OSRight': 'blank',
         };
 
         /**
@@ -101,6 +103,8 @@ export class PianoKeyboardManager extends InputManager {
             88: this.PianoKeyboardMap['KeyX'],
             89: this.PianoKeyboardMap['KeyY'],
             90: this.PianoKeyboardMap['KeyZ'],
+            91: this.PianoKeyboardMap['OSLeft'],
+            93: this.PianoKeyboardMap['OSRight'],
             107: this.PianoKeyboardMap['NumpadAdd'],
             109: this.PianoKeyboardMap['NumpadSubtract'],
             186: this.PianoKeyboardMap['Semicolon'],
@@ -131,16 +135,12 @@ export class PianoKeyboardManager extends InputManager {
             }
             //pressed first time, add to object
             this.KeysDown[k] = true;
-
             this.KeyDown = k;
             this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
         }
-
-        super.KeyboardDown(e);
     }
 
     KeyboardUp(e) {
-        super.KeyboardUp(e);
         if (!this.IsEnabled) return;
 
         var k: string;
@@ -152,12 +152,16 @@ export class PianoKeyboardManager extends InputManager {
 
         //Check if this key released is in out key_map
         if (typeof k !== 'undefined' && k !== '') {
-            // remove this key from the keysDown object
-            delete this.KeysDown[k];
+            if (k === 'blank'){
+                // if it's a blank key remove all
+                this.KeysDown = {};
+            } else {
+                // remove this key from the keysDown object
+                delete this.KeysDown[k];
+            }
+            this.KeyUp = k;
+            this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
         }
-
-        this.KeyUp = k;
-        this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
 
     }
 }
