@@ -12,7 +12,6 @@ import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {Commands} from './Commands';
 import {CompositionLoadedEventArgs} from "./CompositionLoadedEventArgs";
-import {Config} from './Config';
 import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
 import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
@@ -22,6 +21,7 @@ import {FocusManager} from './Core/Inputs/FocusManager';
 import {GA} from './GA';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
+import {IConfig} from './IConfig';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
 import {InputManager} from './Core/Inputs/InputManager';
@@ -66,7 +66,7 @@ export default class App implements IApp{
     public CommandsInputManager: CommandsInputManager;
     public CompositionId: string;
     public CompositionName: string;
-    public Config: Config;
+    public Config: IConfig;
     public DragFileInputManager: DragFileInputManager;
     public DragOffset: Point = new Point(0, 0);
     public FocusManager: FocusManager;
@@ -147,7 +147,7 @@ export default class App implements IApp{
     }
 
     constructor(config: string) {
-        this.Config = <Config>JSON.parse(config);
+        this.Config = <IConfig>JSON.parse(config);
     }
 
     public Setup(){
