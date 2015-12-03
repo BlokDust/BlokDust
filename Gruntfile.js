@@ -31,7 +31,7 @@ module.exports = function (grunt) {
     };
 
     var files = {
-    }
+    };
 
     var packageJson;
 

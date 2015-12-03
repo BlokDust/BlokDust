@@ -774,7 +774,7 @@ export class MainScene extends DisplayObject{
 
         // initialise blocks (give them a ctx to draw to)
         for (var i = 0; i < this.BlocksContainer.DisplayList.Count; i++){
-            var block: IBlock = this.BlocksContainer.DisplayList[i];
+            var block: IBlock = <IBlock>this.BlocksContainer.DisplayList.GetValueAt(i);
             block.Init(this);
         }
 
