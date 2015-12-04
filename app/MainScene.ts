@@ -722,6 +722,7 @@ export class MainScene extends DisplayObject{
     private _Invalidate(){
         this._ValidateBlocks();
         this._CheckProximity();
+        this.ConnectionLines.UpdateList();
     }
 
     _ValidateBlocks() {

@@ -22,6 +22,8 @@ export class ConnectionLines extends DisplayObject {
 
     Draw() {
 
+        this.UpdateList(); //FIXME: Luke P put this here to fix the line drawing in etch branch although I'm sure its not right.
+
         var grd = App.ScaledGridSize; // this.Grid.Width / this.Grid.Divisor;
 
         this.Ctx.strokeStyle = App.Palette[15];// BLUE
