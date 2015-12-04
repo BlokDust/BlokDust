@@ -1,4 +1,25 @@
 {
+    "Attribution": {
+        "title": "General",
+        "about": "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton. Developed in Brighton UK and released in 2015, BlokDust uses the Web Audio API and makes use of Tone.js as an audio framework. The project is open source, and we hope to see a community of contributors emerge though GitHub & SoundCloud.",
+        "twyman": {
+            "blurb": "Luke Twyman - project concept, design & UI.",
+            "url": "whitevinyldesign.com",
+            "twitter": "@whitevinylUK"
+        },
+        "phillips": {
+            "blurb": "Luke Phillips - audio development & musical interaction.",
+            "url": "femurdesign.com",
+            "twitter": "@lukephills"
+        },
+        "silverton": {
+            "blurb": "Edward Silverton - client & server architecture & core development.",
+            "url": "edsilv.com",
+            "twitter": "@edsilv"
+        },
+        "thanks": "Thanks also to Yotam Mann and Brad Sickles.",
+        "build": "Current Build: {0}"
+    },
     "MaxOperations": "5",
     "PixelPaletteImagePath": [
         "img/palette6.gif",

@@ -18,7 +18,7 @@ export class SettingsPanel extends DisplayObject{
     public OffsetY: number;
     //public TabOffset: number[];
     private _RollOvers: boolean[];
-    private _CopyJson: any;
+    private _Attribution: any;
     public MenuItems: MenuCategory[] = [];
     private _MenuCols: number[];
     public MenuJson: any;
@@ -39,37 +39,13 @@ export class SettingsPanel extends DisplayObject{
         this._MenuCols = [9,5,7,4,3];
         this._OpenTab = 2;
         this._VersionNumber = Version;
-        console.log(Version);
+        //console.log(Version);
 
         // OPTIONS //
         this._ThemeSelector = new ThemeSelector;
 
-
-        this._CopyJson = {
-            title: "General",
-            about: "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton. Developed in Brighton UK and released in 2015, BlokDust uses the Web Audio API and makes use of Tone.js as an audio framework. The project is open source, and we hope to see a community of contributors emerge though GitHub & SoundCloud.",
-
-            twyman: {
-                blurb: "Luke Twyman - project concept, design & UI.",
-                url: "whitevinyldesign.com",
-                twitter: "@whitevinylUK"
-            },
-
-            phillips: {
-                blurb: "Luke Phillips - audio development & musical interaction.",
-                url: "femurdesign.com",
-                twitter: "@lukephills"
-            },
-
-            silverton: {
-                blurb: "Edward Silverton - client & server core development & architecture.",
-                url: "edsilv.com",
-                twitter: "@edsilv"
-            },
-
-            thanks: "Thanks also to Yotam Mann and Brad Sickles.",
-            build: "Current Build: " + this._VersionNumber
-        };
+        this._Attribution = App.Config.Attribution;
+        this._Attribution.build = String.format(this._Attribution.build, this._VersionNumber);
 
         this.MenuJson = {
             categories: [
@@ -193,7 +169,7 @@ export class SettingsPanel extends DisplayObject{
 
             ctx.textAlign = "left";
             ctx.font = headType;
-            ctx.fillText(this._CopyJson.title.toUpperCase(),20*units,this.OffsetY + (30*units) + (11*units));
+            ctx.fillText(this._Attribution.title.toUpperCase(),20*units,this.OffsetY + (30*units) + (11*units));
 
 
 
@@ -220,7 +196,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.font = largeType;
             ctx.textAlign = "left";
-            this.WordWrap(ctx, this._CopyJson.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
+            this.WordWrap(ctx, this._Attribution.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
 
 
             var xs = [x1,x2,x3];
@@ -249,19 +225,19 @@ export class SettingsPanel extends DisplayObject{
             ctx.font = italicType2;
 
             // BLURBS //
-            this.WordWrap(ctx, this._CopyJson.twyman.blurb, x1, thirdY + tab, units*14, Math.ceil(thirdWidth));
-            this.WordWrap(ctx, this._CopyJson.phillips.blurb, x2, thirdY + tab, units*14, Math.ceil(thirdWidth));
-            this.WordWrap(ctx, this._CopyJson.silverton.blurb, x3, thirdY + tab, units*14, Math.ceil(thirdWidth));
+            this.WordWrap(ctx, this._Attribution.twyman.blurb, x1, thirdY + tab, units*14, Math.ceil(thirdWidth));
+            this.WordWrap(ctx, this._Attribution.phillips.blurb, x2, thirdY + tab, units*14, Math.ceil(thirdWidth));
+            this.WordWrap(ctx, this._Attribution.silverton.blurb, x3, thirdY + tab, units*14, Math.ceil(thirdWidth));
 
             // URLS //
-            ctx.fillText(this._CopyJson.twyman.url, x1, thirdY + (42 * units) + tab);
-            ctx.fillText(this._CopyJson.phillips.url, x2, thirdY + (42 * units) + tab);
-            ctx.fillText(this._CopyJson.silverton.url, x3, thirdY + (42 * units) + tab);
+            ctx.fillText(this._Attribution.twyman.url, x1, thirdY + (42 * units) + tab);
+            ctx.fillText(this._Attribution.phillips.url, x2, thirdY + (42 * units) + tab);
+            ctx.fillText(this._Attribution.silverton.url, x3, thirdY + (42 * units) + tab);
 
             // TWITTERS //
-            ctx.fillText(this._CopyJson.twyman.twitter, x1, thirdY + (56 * units) + tab);
-            ctx.fillText(this._CopyJson.phillips.twitter, x2, thirdY + (56 * units) + tab);
-            ctx.fillText(this._CopyJson.silverton.twitter, x3, thirdY + (56 * units) + tab);
+            ctx.fillText(this._Attribution.twyman.twitter, x1, thirdY + (56 * units) + tab);
+            ctx.fillText(this._Attribution.phillips.twitter, x2, thirdY + (56 * units) + tab);
+            ctx.fillText(this._Attribution.silverton.twitter, x3, thirdY + (56 * units) + tab);
 
 
 
@@ -352,7 +328,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
             ctx.font = italicType2;
             ctx.textAlign = "right";
-            ctx.fillText(this._CopyJson.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
+            ctx.fillText(this._Attribution.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
 
 
             // DIVIDERS //
@@ -520,7 +496,7 @@ export class SettingsPanel extends DisplayObject{
 
 
         // EXTERNAL URLS //
-        var urls = [this._CopyJson.twyman.url,this._CopyJson.phillips.url,this._CopyJson.silverton.url,this._CopyJson.twyman.twitter,this._CopyJson.phillips.twitter,this._CopyJson.silverton.twitter];
+        var urls = [this._Attribution.twyman.url,this._Attribution.phillips.url,this._Attribution.silverton.url,this._Attribution.twyman.twitter,this._Attribution.phillips.twitter,this._Attribution.silverton.twitter];
         for (var i=1; i<7; i++) {
            if (this._RollOvers[i]) {
                if (i>3) {

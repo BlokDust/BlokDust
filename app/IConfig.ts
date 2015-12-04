@@ -1,4 +1,5 @@
 export interface IConfig {
+    Attribution: any;
     BaseNote: number;
     ConvolverDefaultTracks: string[];
     ConvolverMaxTrackLength: number;

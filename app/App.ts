@@ -103,26 +103,27 @@ export default class App implements IApp{
         return this.Stage.MainScene;
     }
 
-    // todo: move to redux store
+    // todo: move to redux store?
     get Sources(): ISource[] {
         return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
-    // todo: move to redux store
+    // todo: move to redux store?
     get Effects(): IEffect[] {
         return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
-    // todo: move to redux store
+    // todo: move to redux store?
     get PowerEffects(): IPowerEffect[] {
         return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
     }
 
+    // todo: move to redux store?
     get PowerSources(): IPowerSource[] {
         return <IPowerSource[]>this.Blocks.en().where(b => b instanceof PowerSource).toArray();
     }
 
-    // todo: move to redux store
+    // todo: move to redux store?
     public GetBlockId(): number {
         // loop through blocks to get max id
         var max = 0;
@@ -138,12 +139,15 @@ export default class App implements IApp{
     }
 
     get SessionId(): string {
-        return this._SessionId || localStorage.getItem(this.CompositionId);
+        if (this._SessionId) return this._SessionId;
+        var sessionId: Utils.StorageItem = Utils.Storage.get(this.CompositionId, Utils.StorageType.local);
+        if (sessionId) return sessionId.value;
     }
 
     set SessionId(value: string) {
         this._SessionId = value;
-        localStorage.setItem(this.CompositionId, this._SessionId);
+        // expires in 10 years.
+        Utils.Storage.set(this.CompositionId, this._SessionId, 315360000, Utils.StorageType.local);
     }
 
     constructor(config: string) {
