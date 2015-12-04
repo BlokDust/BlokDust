@@ -74,6 +74,7 @@ module.exports = function (grunt) {
             minified: {
                 files: [
                     {
+                        // everything in dist/ except these
                         src: [
                             '<%= dirs.dist %>/*',
                             '!<%= dirs.dist %>/lib',
@@ -87,18 +88,22 @@ module.exports = function (grunt) {
                         ]
                     },
                     {
+                        // every file in dist/lib/ except these
                         src: [
                             '<%= dirs.dist %>/lib/**',
                             '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js',
                             '!<%= dirs.dist %>/lib/etch/dist/etch.js',
                             '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
                             '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js',
+                            '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js.map',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
+                            '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js.map',
                             '!<%= dirs.dist %>/lib/pixelpalette/dist/PixelPalette.js'
                         ],
                         filter: 'isFile'
                     },
                     {
+                        // every folder in dist/lib/ except these
                         src: [
                             '<%= dirs.dist %>/lib/*',
                             '!<%= dirs.dist %>/lib/bower-webfontloader/**',
