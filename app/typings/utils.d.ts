@@ -1405,6 +1405,11 @@ declare module Utils {
     }
 }
 declare module Utils {
+    class Device {
+        static GetPixelRatio(ctx: CanvasRenderingContext2D): number;
+    }
+}
+declare module Utils {
     class Documents {
         static IsInIFrame(): boolean;
     }

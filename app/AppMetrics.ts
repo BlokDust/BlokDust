@@ -51,51 +51,50 @@ export class Metrics {
         const canvas = App.Canvas;
         var width = window.innerWidth;
         var height = window.innerHeight;
-        const ratio = this.PixelRatio;
 
         //DEVICE BREAKPOINTS //
         this.DeviceCheck();
 
         // DEFINE UNIT & GRID SIZE //
-        App.Unit = (width/this._ScreenDivision)*ratio;
+        App.Unit = (width/this._ScreenDivision) * this.PixelRatio;
         App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
-        var unit = App.Unit;
-        App.GridSize = gridSize * unit;
+        App.GridSize = gridSize * App.Unit;
         App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
-        canvas.Width = width * ratio;
-        canvas.Height = height * ratio;
+        canvas.Width = width * this.PixelRatio;
+        canvas.Height = height * this.PixelRatio;
         canvas.Style.width = width + "px";
         canvas.Style.height = height + "px";
 
         for (var i=0; i<App.SubCanvas.length; i++) {
             var c = App.SubCanvas[i];
-            c.width = width * ratio;
-            c.height = height * ratio;
+            c.width = width * this.PixelRatio;
+            c.height = height * this.PixelRatio;
             c.style.width = width + "px";
             c.style.height = height + "px";
         }
 
-        App.Canvas.Ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-        App.Width = width * ratio;
-        App.Height = height * ratio;
+        //App.Canvas.Ctx.setTransform(this.PixelRatio, 0, 0, this.PixelRatio, 0, 0);
+        App.Width = width * this.PixelRatio;
+        App.Height = height * this.PixelRatio;
         App.MainScene.Width = App.Width;
         App.MainScene.Height = App.Height;
+
         this.C.x = App.Width * 0.5;
         this.C.y = App.Height * 0.5;
 
         // SET GLOBAL TYPE STYLES //
-        var headerType = Math.round(unit*28);
-        var sliderType = Math.round(unit*33);
-        var urlType = Math.round(unit*(24/this.PixelRatio));
-        var urlType2 = Math.round(unit*24);
-        var largeType = Math.round(unit*12);
-        var midType = Math.round(unit*10);
-        var bodyType = Math.round(unit*8);
-        var italicType = Math.round(unit*7.5);
-        var italicType2 = Math.round(unit*9);
-        var dataType = Math.round(unit*5);
+        var headerType = Math.round(App.Unit * 28);
+        var sliderType = Math.round(App.Unit * 33);
+        var urlType = Math.round(App.Unit * (24/this.PixelRatio));
+        var urlType2 = Math.round(App.Unit * 24);
+        var largeType = Math.round(App.Unit * 12);
+        var midType = Math.round(App.Unit * 10);
+        var bodyType = Math.round(App.Unit * 8);
+        var italicType = Math.round(App.Unit * 7.5);
+        var italicType2 = Math.round(App.Unit * 9);
+        var dataType = Math.round(App.Unit * 5);
 
         this.TxtHeader = "200 " + headerType + "px Dosis";
         this.TxtSlider = "200 " + sliderType + "px Dosis";
@@ -121,16 +120,7 @@ export class Metrics {
     }
 
     get PixelRatio(): number {
-        const ctx = App.Canvas.Ctx;
-        const dpr = window.devicePixelRatio || 1;
-        const bsr = ctx.webkitBackingStorePixelRatio ||
-            ctx.mozBackingStorePixelRatio ||
-            ctx.msBackingStorePixelRatio ||
-            ctx.oBackingStorePixelRatio ||
-            ctx.backingStorePixelRatio || 1;
-
-        //return 1;
-        return dpr / bsr;
+        return Utils.Device.GetPixelRatio(App.Canvas.Ctx)
     }
 
     //-------------------------------------------------------------------------------------------

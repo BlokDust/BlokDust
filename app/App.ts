@@ -11,7 +11,7 @@ import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {Commands} from './Commands';
-import {Config} from './Config';
+import {CompositionLoadedEventArgs} from "./CompositionLoadedEventArgs";
 import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
 import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
@@ -21,6 +21,7 @@ import {FocusManager} from './Core/Inputs/FocusManager';
 import {GA} from './GA';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
+import {IConfig} from './IConfig';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
 import {InputManager} from './Core/Inputs/InputManager';
@@ -53,6 +54,7 @@ import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 
 export default class App implements IApp{
 
+    CompositionLoaded = new nullstone.Event<CompositionLoadedEventArgs>();
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
     private _SessionId: string;
@@ -64,7 +66,7 @@ export default class App implements IApp{
     public CommandsInputManager: CommandsInputManager;
     public CompositionId: string;
     public CompositionName: string;
-    public Config: Config;
+    public Config: IConfig;
     public DragFileInputManager: DragFileInputManager;
     public DragOffset: Point = new Point(0, 0);
     public FocusManager: FocusManager;
@@ -85,8 +87,8 @@ export default class App implements IApp{
     public ScaledGridSize: number;
     public ScaledUnit: number;
     public Scene: number;
-    public SubCanvas: HTMLCanvasElement[];
     public Stage: Stage;
+    public SubCanvas: HTMLCanvasElement[];
     public ThemeManager: ThemeManager;
     public TypingManager: TypingManager;
     public Unit: number;
@@ -145,7 +147,7 @@ export default class App implements IApp{
     }
 
     constructor(config: string) {
-        this.Config = <Config>JSON.parse(config);
+        this.Config = <IConfig>JSON.parse(config);
     }
 
     public Setup(){
@@ -288,13 +290,14 @@ export default class App implements IApp{
             window.TWEEN.update(time);
         }, this);
 
-        this.Blocks = [];
-
         this.Resize();
     }
 
     // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
     Populate(data) {
+        this.IsLoadedFromSave = true;
+        console.log(`Loaded "${this.CompositionName}"`);
+
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
         this.Deserialize(data);
 
@@ -303,26 +306,10 @@ export default class App implements IApp{
             this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);
         }
 
-        this.ZoomLevel = this._SaveFile.ZoomLevel;
+        //this.ZoomLevel = this._SaveFile.ZoomLevel;
         this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
 
-        if (this.MainScene.MainSceneDragger) {
-            this.MainScene.MainSceneDragger.Destination = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
-        }
-
-        this.MainScene.ZoomButtons.UpdateSlot(this.ZoomLevel);
         this.Metrics.UpdateGridScale();
-
-        this.IsLoadedFromSave = true;
-        console.log(`Loaded "${this.CompositionName}"`);
-
-        // initialise blocks (give them a ctx to draw to)
-        this.Blocks.forEach((b: IBlock) => {
-            b.Init(this.MainScene);
-        });
-
-        // add blocks to main scene
-        this.MainScene.BlocksContainer.DisplayList.AddRange(this.Blocks);
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
@@ -333,8 +320,7 @@ export default class App implements IApp{
         //if (this.Scene < 2) {
         //    this.LoadCued = true;
         //} else {
-            this.MainScene.CompositionLoaded();
-        // todo: mainscene should listen for an event
+            this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
         //}
     }
 

@@ -229,7 +229,8 @@ export class Splash extends DisplayObject{
         setTimeout(function() {
             App.Scene = 2;
             if (App.LoadCued) {
-                App.MainScene.CompositionLoaded();
+                // todo: trigger App's CompositionLoaded event
+                //App.MainScene.CompositionLoaded();
             }
         },(viewLength*5) + (tweenLength*5) + initDelay + 200);
     }
