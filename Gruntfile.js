@@ -209,6 +209,19 @@ module.exports = function (grunt) {
                     }
                 }
             },
+            livereload: {
+                options: {
+                    port: ports.server,
+                    base: dirs.app,
+                    middleware: function (connect) {
+                        return [
+                            connect_livereload({ port: ports.livereload }),
+                            mount(connect, dirs.build),
+                            mount(connect, dirs.app)
+                        ];
+                    }
+                }
+            },
             dist: {
                 options: {
                     port: ports.server,
@@ -302,6 +315,7 @@ module.exports = function (grunt) {
     grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
     grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);
     grunt.registerTask('serve:dev', ['default', 'connect:dev', 'open']);
+    grunt.registerTask('watch:dev', ['default', 'connect:livereload', 'open', 'watch']);
     grunt.registerTask('serve:dist', ['connect:dist', 'open']);
 
     grunt.registerTask('dist', '', function() {
