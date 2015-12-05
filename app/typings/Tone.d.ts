@@ -1149,8 +1149,13 @@ declare module Tone {
     interface Tremolo extends Tone.StereoEffect {
         depth: Tone.Signal;
         frequency: Tone.Signal;
+        spread: number;
         type: string;
         dispose(): Tone.Tremolo;
+        start(): Tone.Tremolo;
+        stop(): Tone.Tremolo;
+        sync(): Tone.Tremolo;
+        unsync(): Tone.Tremolo;
     }
 
     var WaveShaper: {

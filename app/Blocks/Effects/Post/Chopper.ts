@@ -8,52 +8,61 @@ declare var App: IApp;
 
 export class Chopper extends PostEffect {
 
-    public Effect: GainNode;
+    public Effect: Tone.Tremolo;
     public Params: ChopperParams;
-    public defaults: ChopperParams;
-    public Polarity: number;
-    public Transport;
-    public Timer;
+    public Defaults: ChopperParams;
+
+    public WaveIndex: string[] = ["sine","square","triangle","sawtooth"];
+    //TODO: this is repeated in LFO.ts - Make 1 reference in App.Audio instead and type the options
 
     Init(drawTo: IDisplayContext): void {
 
         this.BlockName = "Chopper";
 
-        this.Effect = App.Audio.ctx.createGain();
-
-
         this.Defaults = {
-            rate: 50,
-            depth: 4
+            rate: 8,
+            depth: 1,
+            spread: 0,
+            waveform: 2,
+            mix: 1
         };
         this.PopulateParams();
 
-        this.Polarity = 0;
+        this.Effect = new Tone.Tremolo({
+            'frequency': this.Defaults.rate,
+            'depth': this.Defaults.depth,
+            'spread': this.Defaults.spread,
+            'type': this.Defaults[this.Params.waveform],
+            'wet': this.Defaults.mix,
+        }).start();
+
+
+        //this.Polarity = 0;
 
         super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
 
-        this.SetVolume();
+        //this.SetVolume();
     }
 
-    SetVolume() {
-        var me = this;
-        this.Timer = setTimeout(function() {
-            if (me.Effect) {
-                if (me.Polarity==0) {
-                    me.Effect.gain.value = ((5-me.Params.depth)/5);
-                    me.Polarity = 1;
-                } else {
-                    me.Effect.gain.value = 1;
-                    me.Polarity = 0;
-                }
-                me.SetVolume();
-            }
-
-        },this.Params.rate);
-    }
+    //SetVolume() {
+    //    var me = this;
+    //    this.Timer = setTimeout(function() {
+    //        if (me.Effect) {
+    //            if (me.Polarity==0) {
+    //                me.Effect.gain.value = ((5-me.Params.depth)/5);
+    //                me.Polarity = 1;
+    //            } else {
+    //                me.Effect.gain.value = 1;
+    //                me.Polarity = 0;
+    //            }
+    //            me.SetVolume();
+    //        }
+    //
+    //    },this.Params.rate);
+    //}
 
     Draw() {
         super.Draw();
@@ -62,9 +71,10 @@ export class Chopper extends PostEffect {
 
     Dispose(){
         //this.Transport.stop();
-        clearTimeout(this.Timer);
-        this.Effect.disconnect();
-        this.Effect = null;
+        //clearTimeout(this.Timer);
+        this.Effect.stop();
+        this.Effect.dispose();
+        //this.Effect = null;
     }
 
     UpdateOptionsForm() {
@@ -80,10 +90,10 @@ export class Chopper extends PostEffect {
                     "name": "Rate",
                     "setting": "rate",
                     "props": {
-                        "value": Math.round(151-this.Params.rate),
-                        "min": 1,
-                        "max": 125,
-                        "quantised": true,
+                        "value": this.Params.rate,
+                        "min": 0,
+                        "max": 50,
+                        "quantised": false,
                         "centered": false
                     }
                 },
@@ -94,23 +104,68 @@ export class Chopper extends PostEffect {
                     "props": {
                         "value": this.Params.depth,
                         "min": 0,
-                        "max": 5,
+                        "max": 1,
                         "quantised": false,
                         "centered": false
                     }
-                }
+                },
+                {
+                    "type" : "buttons",
+                    "name" : "Wave",
+                    "setting" :"waveform",
+                    "props" : {
+                        "value" : this.Params.waveform,
+                        "mode" : "wave"
+                    },
+                    "buttons": [
+                        {
+                            "name" : "Sine"
+                        },
+                        {
+                            "name" : "Square"
+                        },
+                        {
+                            "name" : "Triangle"
+                        },
+                        {
+                            "name" : "Saw"
+                        }
+                    ]
+                },
+                {
+                    "type" : "slider",
+                    "name": "Spread",
+                    "setting": "spread",
+                    "props": {
+                        "value": this.Params.spread,
+                        "min": 0,
+                        "max": 180,
+                        "quantised": false,
+                        "centered": false
+                    }
+                },
             ]
         };
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        var val = value;
 
-        if (param == "rate") {
-            val = Math.round(151-value);
+        switch (param) {
+            case "rate":
+                this.Effect.frequency.value = value;
+                break;
+            case "depth":
+                this.Effect.depth.value = value;
+                break;
+            case "waveform":
+                this.Effect.type = this.WaveIndex[value];
+                break;
+            case "spread":
+                this.Effect.spread = value;
+                break;
         }
 
-        this.Params[param] = val;
+        this.Params[param] = value;
     }
 }

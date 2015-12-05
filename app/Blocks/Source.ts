@@ -28,10 +28,10 @@ export class Source extends Block implements ISource {
     public AudioInput: Tone.Mono;
     public Settings: ToneSettings = {
         envelope: {
-            attack: 0.02,
+            attack: 0.01,
             decay: 0.5,
             sustain: 0.5,
-            release: 0.02
+            release: 0.01
         },
         output: {
             volume: 0.5
