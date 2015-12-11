@@ -1,9 +1,12 @@
-import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
 import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = etch.primitives.Point;
+import {IApp} from '../../../IApp';
+import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
 import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
-import Point = etch.primitives.Point;
 import {PreEffect} from '../PreEffect';
+
+declare var App: IApp;
 
 export class LFO extends PreEffect {
 
@@ -11,7 +14,6 @@ export class LFO extends PreEffect {
     public Defaults: LFOParams;
     public OscLFO: Tone.LFO;
     public SamplerLFO: Tone.LFO;
-    public WaveIndex: string[];
 
     Init(drawTo: IDisplayContext): void {
 
@@ -24,8 +26,6 @@ export class LFO extends PreEffect {
         };
         this.PopulateParams();
 
-        this.WaveIndex = ["sine","square","triangle","sawtooth"];
-
         this.OscLFO = new Tone.LFO();
         this.SamplerLFO = new Tone.LFO();
         this.OscLFO.frequency.value = this.Params.rate;
@@ -34,8 +34,8 @@ export class LFO extends PreEffect {
         this.SamplerLFO.min = LFO.ConvertLFODepthToPlaybackDepth(-this.Params.depth);
         this.OscLFO.max = this.Params.depth;
         this.SamplerLFO.max = LFO.ConvertLFODepthToPlaybackDepth(this.Params.depth);
-        this.OscLFO.type = this.WaveIndex[this.Params.waveform];
-        this.SamplerLFO.type = this.WaveIndex[this.Params.waveform];
+        this.OscLFO.type = App.Audio.WaveformTypeIndex[this.Params.waveform];
+        this.SamplerLFO.type = App.Audio.WaveformTypeIndex[this.Params.waveform];
         this.OscLFO.start();
         this.SamplerLFO.start();
 
@@ -93,8 +93,8 @@ export class LFO extends PreEffect {
             this.OscLFO.max = val;
             this.SamplerLFO.max = LFO.ConvertLFODepthToPlaybackDepth(val);
         } else if (param=="waveform") {
-            this.OscLFO.type = this.WaveIndex[val];
-            this.SamplerLFO.type = this.WaveIndex[val];
+            this.OscLFO.type = App.Audio.WaveformTypeIndex[val];
+            this.SamplerLFO.type = App.Audio.WaveformTypeIndex[val];
         }
         this.Params[param] = val;
     }

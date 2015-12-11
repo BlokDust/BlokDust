@@ -40,7 +40,6 @@ export class Source extends Block implements ISource {
 
     public ActiveVoices: Voice[];
     public FreeVoices: Voice[];
-    public WaveIndex: string[];
     public PowerConnections: number;
     public ParticlePowered: boolean;
     public LaserPowered: boolean;
@@ -60,9 +59,6 @@ export class Source extends Block implements ISource {
         this.Envelopes = [];
         this.ActiveVoices = [];
         this.FreeVoices = [];
-        if (!this.WaveIndex) {
-            this.WaveIndex = ["sine","square","triangle","sawtooth"];
-        }
 
         this.ParticlePowered = false;
         this.LaserPowered = false;
@@ -451,31 +447,6 @@ export class Source extends Block implements ISource {
     MouseUp() {
         super.MouseUp();
         this.TriggerRelease('all');
-    }
-
-    //TODO: This shouldn't be here
-    SetParam(param: string,value: number) {
-        super.SetParam(param,value);
-        var jsonVariable = {};
-        jsonVariable[param] = value;
-
-        switch (param){
-            case "detune":
-                this.Sources.forEach((s: any)=> {
-                    s.detune.value = value;
-                });
-                break;
-            case "waveform":
-                this.Sources.forEach((s: any)=> {
-                    s.type = this.WaveIndex[value];
-                });
-                break;
-            case "volume":
-                this.Sources.forEach((s: any)=> {
-                    s.volume.value = value;
-                });
-                break;
-        }
     }
 
     AddPower() {

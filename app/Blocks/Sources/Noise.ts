@@ -1,13 +1,15 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
+import {IApp} from '../../IApp';
+import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
+
+declare var App: IApp;
 
 export class Noise extends Source {
 
     public DelayedRelease: number;
     public Noise: any;
-    public Waveform: string;
     public Params: NoiseParams;
     public Defaults: NoiseParams;
 
@@ -15,10 +17,7 @@ export class Noise extends Source {
 
         this.BlockName = "Noise";
 
-        this.Waveform = 'brown'; // is this being updated from save if not brown?
-
-        this.WaveIndex = ["white","pink","brown"];
-
+        //this.Waveform = 'brown'; // is this being updated from save if not brown?
 
         this.Defaults = {
             playbackRate: 1,
@@ -46,7 +45,7 @@ export class Noise extends Source {
     }
 
     CreateSource(){
-        this.Sources.push( new Tone.Noise( this.WaveIndex[this.Params.waveform] ) );
+        this.Sources.push( new Tone.Noise( App.Audio.WaveformTypeIndexNoise[this.Params.waveform] ) );
         return super.CreateSource();
     }
 
@@ -74,18 +73,6 @@ export class Noise extends Source {
             "name" : "Noise",
             "parameters" : [
 
-                /*{
-                    "type" : "slider",
-                    "name" : "Waveform",
-                    "setting" :"waveform",
-                    "props" : {
-                        "value" : this.Params.waveform,
-                        "min" : 0,
-                        "max" : 2,
-                        "quantised" : true,
-                        "centered" : false
-                    }
-                },*/
                 {
                     "type" : "buttons",
                     "name" : "Wave",
@@ -111,11 +98,14 @@ export class Noise extends Source {
     }
 
     SetParam(param: string,value: any) {
-
-        var val = value;
-
-        this.Params[""+param] = val;
-        super.SetParam(param,value);
+        switch(param) {
+            case "waveform":
+                this.Sources.forEach((s:any)=> {
+                    s.type = App.Audio.WaveformTypeIndexNoise[value];
+                });
+                break;
+        }
+        this.Params[param] = value;
     }
 
     Dispose() {

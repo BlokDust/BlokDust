@@ -11,7 +11,6 @@ export interface ISource extends IBlock {
     Envelopes?: Tone.AmplitudeEnvelope[];
     AudioInput?: Tone.Mono;
     Settings?: ToneSettings;
-    WaveIndex: string[];
     PowerConnections: number;
     ParticlePowered: boolean;
     LaserPowered: boolean;

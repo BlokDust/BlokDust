@@ -12,9 +12,6 @@ export class Chopper extends PostEffect {
     public Params: ChopperParams;
     public Defaults: ChopperParams;
 
-    public WaveIndex: string[] = ["sine","square","triangle","sawtooth"];
-    //TODO: this is repeated in LFO.ts - Make 1 reference in App.Audio instead and type the options
-
     Init(drawTo: IDisplayContext): void {
 
         this.BlockName = "Chopper";
@@ -32,37 +29,15 @@ export class Chopper extends PostEffect {
             'frequency': this.Defaults.rate,
             'depth': this.Defaults.depth,
             'spread': this.Defaults.spread,
-            'type': this.Defaults[this.Params.waveform],
+            'type': App.Audio.WaveformTypeIndex[this.Defaults.waveform],
             'wet': this.Defaults.mix,
         }).start();
-
-
-        //this.Polarity = 0;
 
         super.Init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
-
-        //this.SetVolume();
     }
-
-    //SetVolume() {
-    //    var me = this;
-    //    this.Timer = setTimeout(function() {
-    //        if (me.Effect) {
-    //            if (me.Polarity==0) {
-    //                me.Effect.gain.value = ((5-me.Params.depth)/5);
-    //                me.Polarity = 1;
-    //            } else {
-    //                me.Effect.gain.value = 1;
-    //                me.Polarity = 0;
-    //            }
-    //            me.SetVolume();
-    //        }
-    //
-    //    },this.Params.rate);
-    //}
 
     Draw() {
         super.Draw();
@@ -70,11 +45,8 @@ export class Chopper extends PostEffect {
     }
 
     Dispose(){
-        //this.Transport.stop();
-        //clearTimeout(this.Timer);
         this.Effect.stop();
         this.Effect.dispose();
-        //this.Effect = null;
     }
 
     UpdateOptionsForm() {
@@ -159,7 +131,7 @@ export class Chopper extends PostEffect {
                 this.Effect.depth.value = value;
                 break;
             case "waveform":
-                this.Effect.type = this.WaveIndex[value];
+                this.Effect.type = App.Audio.WaveformTypeIndex[value];
                 break;
             case "spread":
                 this.Effect.spread = value;

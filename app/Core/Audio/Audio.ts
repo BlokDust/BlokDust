@@ -19,7 +19,9 @@ export class Audio implements IAudio {
     public Master: Tone.Master;
     public Meter: Tone.Meter;
     public MasterVolume: number = -10; // in decibels
-    public NoteIndex: string[] = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    public NoteIndex: string[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    public WaveformTypeIndex: string[] = ['sine', 'square', 'triangle', 'sawtooth'];
+    public WaveformTypeIndexNoise: string[] = ['white', 'pink', 'brown'];
 
     public AudioNodeConnectionManager: AudioNodeConnectionManager;
     public AudioFileManager: AudioFileManager;

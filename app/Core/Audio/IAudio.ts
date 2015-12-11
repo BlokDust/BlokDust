@@ -9,24 +9,24 @@ import {Waveform} from './Waveform';
 
 export interface IAudio {
 
-    Tone: Tone;
-    ctx: AudioContext;
-    sampleRate: number;
-    Master: Tone.Master;
-    Meter: Tone.Meter;
-    MasterVolume: number;
-    NoteIndex: string[];
-
-    AudioNodeConnectionManager: AudioNodeConnectionManager;
     AudioFileManager: AudioFileManager;
-    MIDIManager: MIDIManager;
-    ConnectionMethodType: ConnectionMethodType;
+    AudioNodeConnectionManager: AudioNodeConnectionManager;
     ConnectionManager: ConnectionManager;
+    ConnectionMethodType: ConnectionMethodType;
+    ctx: AudioContext;
+    HasClipped: boolean
+    Master: Tone.Master;
+    MasterVolume: number;
+    Meter: Tone.Meter;
+    MeterVolume: number
+    MeterVolumeDb: number
+    MIDIManager: MIDIManager;
+    NoteIndex: string[];
+    sampleRate: number;
+    Tone: Tone;
     Waveform: Waveform;
+    WaveformTypeIndex: string[];
+    WaveformTypeIndexNoise: string[];
 
     Init(): void
-
-    MeterVolumeDb: number
-    MeterVolume: number
-    HasClipped: boolean
 }

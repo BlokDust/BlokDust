@@ -59,7 +59,7 @@ export class ToneSource extends Source {
 
     CreateSource(){
         // add it to the list of sources
-        this.Sources.push( new Tone.Oscillator(this.GetFrequency(), this.WaveIndex[this.Params.waveform]));
+        this.Sources.push( new Tone.Oscillator(this.GetFrequency(), App.Audio.WaveformTypeIndex[this.Params.waveform]));
 
         // return it
         return super.CreateSource();
@@ -170,11 +170,14 @@ export class ToneSource extends Source {
             case 'fine':
                 this.SetPitch(this.GetFrequency(value, this.Params.baseFrequency), 0, 0);
                 break;
+            case "waveform":
+                this.Sources.forEach((s: any)=> {
+                    s.type = App.Audio.WaveformTypeIndex[value];
+                });
+                break;
         }
 
         this.Params[param] = value;
-
-        super.SetParam(param,value);
     }
 
     DisplayNote(value: number) {
