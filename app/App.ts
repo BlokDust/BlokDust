@@ -103,27 +103,22 @@ export default class App implements IApp{
         return this.Stage.MainScene;
     }
 
-    // todo: move to redux store?
     get Sources(): ISource[] {
         return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
-    // todo: move to redux store?
     get Effects(): IEffect[] {
         return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
-    // todo: move to redux store?
     get PowerEffects(): IPowerEffect[] {
         return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
     }
 
-    // todo: move to redux store?
     get PowerSources(): IPowerSource[] {
         return <IPowerSource[]>this.Blocks.en().where(b => b instanceof PowerSource).toArray();
     }
 
-    // todo: move to redux store?
     public GetBlockId(): number {
         // loop through blocks to get max id
         var max = 0;

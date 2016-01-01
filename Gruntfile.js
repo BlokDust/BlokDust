@@ -83,7 +83,7 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/img',
                             '!<%= dirs.dist %>/App.min.js',
                             '!<%= dirs.dist %>/config.json',
-                            '!<%= dirs.dist %>/default.html',
+                            '!<%= dirs.dist %>/index.html',
                             '!<%= dirs.dist %>/styles.css'
                         ]
                     },
@@ -119,7 +119,7 @@ module.exports = function (grunt) {
 
         replace: {
             minified: {
-                src: ['<%= dirs.dist %>/default.html'],
+                src: ['<%= dirs.dist %>/index.html'],
                 overwrite: true,
                 replacements: [
                     {
@@ -243,23 +243,23 @@ module.exports = function (grunt) {
 
         open: {
             serve: {
-                path: 'http://localhost:<%= ports.server %>/default.html'
+                path: 'http://localhost:<%= ports.server %>/index.html'
             }
         },
 
-        watch: {
-            src: {
-                files: [
-                    '<%= dirs.app %>/**/*.ts',
-                    '!<%= dirs.lib %>/**/*.ts',
-                    'config.json'
-                ],
-                tasks: ['typescript:build'],
-                options: {
-                    livereload: ports.livereload
-                }
-            }
-        },
+        //watch: {
+        //    src: {
+        //        files: [
+        //            '<%= dirs.app %>/**/*.ts',
+        //            '!<%= dirs.lib %>/**/*.ts',
+        //            'config.json'
+        //        ],
+        //        tasks: ['typescript:build'],
+        //        options: {
+        //            livereload: ports.livereload
+        //        }
+        //    }
+        //},
 
         exec: {
             minify: {

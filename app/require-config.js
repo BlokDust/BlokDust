@@ -10,7 +10,7 @@ require.config({
         "lzma": "lib/lzma/src/lzma",
         "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
         "Recorderjs": "lib/RecorderJS",
-        "text": "lib/requirejs-text/text",
+        "text": "lib/text/text",
         "Tone": "lib/tone/Tone",
         "tween": "lib/tweenjs/src/Tween",
         "utils": "lib/utils/dist/utils"
