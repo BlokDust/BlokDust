@@ -772,6 +772,15 @@ export class MainScene extends DisplayObject{
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
+
+        if (this.MainSceneDragger) {
+            this.MainSceneDragger.Destination = new Point(e.SaveFile.DragOffset.x, e.SaveFile.DragOffset.y);
+        }
+
+        this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
+
+        App.Metrics.UpdateGridScale();
+
         // add blocks to display list
         this.BlocksContainer.DisplayList.AddRange(App.Blocks);
 
@@ -788,12 +797,6 @@ export class MainScene extends DisplayObject{
             this.Play();
             App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
         },200);
-
-        if (this.MainSceneDragger) {
-            this.MainSceneDragger.Destination = new Point(e.SaveFile.DragOffset.x, e.SaveFile.DragOffset.y);
-        }
-
-        this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
 
         //if (!App.LoadCued) {
             //App.Splash.EndLoad();
