@@ -305,10 +305,7 @@ export default class App implements IApp{
             this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);
         }
 
-        //this.ZoomLevel = this._SaveFile.ZoomLevel;
-        this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
-
-        this.Metrics.UpdateGridScale();
+        this.ZoomLevel = this._SaveFile.ZoomLevel;
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;

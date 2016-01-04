@@ -773,14 +773,6 @@ export class MainScene extends DisplayObject{
     // GETS CALLED WHEN LOADING FROM SHARE URL //
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
 
-        if (this.MainSceneDragger) {
-            this.MainSceneDragger.Destination = new Point(e.SaveFile.DragOffset.x, e.SaveFile.DragOffset.y);
-        }
-
-        this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
-
-        App.Metrics.UpdateGridScale();
-
         // add blocks to display list
         this.BlocksContainer.DisplayList.AddRange(App.Blocks);
 
@@ -789,6 +781,14 @@ export class MainScene extends DisplayObject{
             var block: IBlock = <IBlock>this.BlocksContainer.DisplayList.GetValueAt(i);
             block.Init(this);
         }
+
+        if (this.MainSceneDragger) {
+            this.MainSceneDragger.Destination = new Point(e.SaveFile.DragOffset.x, e.SaveFile.DragOffset.y);
+        }
+
+        this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
+
+        App.Metrics.UpdateGridScale();
 
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
