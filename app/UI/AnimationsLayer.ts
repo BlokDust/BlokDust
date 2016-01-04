@@ -65,7 +65,7 @@ export class AnimationsLayer extends DisplayObject {
     DrawBubble(x,y) {
         var grd = App.GridSize;
 
-        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[2];
+        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[2].toString();
         this.Ctx.globalAlpha = 0.95;
         this.Ctx.beginPath();
         this.Ctx.moveTo(x - (grd),y - (2*grd));
@@ -83,7 +83,7 @@ export class AnimationsLayer extends DisplayObject {
             grd = 0;
         }
         this.Ctx.globalAlpha = 1;
-        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];
+        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();
         switch (index) {
 
             case "loading":

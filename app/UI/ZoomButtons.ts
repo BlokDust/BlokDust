@@ -45,7 +45,7 @@ export class ZoomButtons extends DisplayObject {
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// White
+        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// White
 
         var zin = this._InPos;
         var zout = this._OutPos;

@@ -44,7 +44,7 @@ export class ToolTip extends DisplayObject {
 
         // BG //
         ctx.globalAlpha = thisAlpha*0.9;
-        ctx.fillStyle = App.Palette[2];// Black
+        ctx.fillStyle = App.Palette[2].toString();// Black
 
         ctx.beginPath();
         ctx.moveTo(x,y);
@@ -56,7 +56,7 @@ export class ToolTip extends DisplayObject {
 
         // NAME //
         ctx.globalAlpha = thisAlpha;
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // WHITE
         ctx.textAlign = "left";
         ctx.fillText(this.Name.toUpperCase(), x + (30*units), y + (10*units) + (dataType*0.36));
     }

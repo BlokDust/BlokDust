@@ -61,7 +61,7 @@ export class OptionHandle {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8];
+        ctx.fillStyle = App.Palette[8].toString();
         ctx.beginPath();
         ctx.moveTo(x - size, y);
         ctx.lineTo(x, y - size);

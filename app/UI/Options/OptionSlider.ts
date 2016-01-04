@@ -38,7 +38,7 @@ export class Slider extends Option {
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];// Grey
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();// Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -58,7 +58,7 @@ export class Slider extends Option {
 
 
         // BAR //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();
         if (origin !== panel.Margin) {
             panel.diagonalFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 9);
         }
@@ -92,7 +92,7 @@ export class Slider extends Option {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8];// WHITE
+        ctx.fillStyle = App.Palette[8].toString();// WHITE
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -102,7 +102,7 @@ export class Slider extends Option {
         ctx.fill();
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

@@ -43,7 +43,7 @@ export class StageDragger extends DisplayObject {
             var units = App.Unit;
             var ctx = App.MainScene.Ctx;
 
-            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(cx - (5*units),cy);

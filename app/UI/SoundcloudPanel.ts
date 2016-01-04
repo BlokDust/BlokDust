@@ -82,15 +82,15 @@ export class SoundcloudPanel extends DisplayObject{
 
 
             // BG //
-            ctx.fillStyle = App.Palette[2];// Black
+            ctx.fillStyle = App.Palette[2].toString();// Black
             ctx.globalAlpha = 0.95;
             ctx.fillRect(0,this.OffsetY,appWidth,appHeight);
             ctx.globalAlpha = 1;
 
 
             // RESULTS //
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
-            ctx.strokeStyle = App.Palette[1]; // Grey
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+            ctx.strokeStyle = App.Palette[1].toString(); // Grey
             ctx.lineWidth = 2;
             var block = this._SelectedBlock;
             var results = block.SearchResults.length;
@@ -133,7 +133,7 @@ export class SoundcloudPanel extends DisplayObject{
                     if (p==(this._Page-1)) {
                         if (this._RollOvers[5+n]) {
                             var sy = centerY - (98*units) + ((40*n)*units);
-                            ctx.fillStyle = App.Palette[4]; // Col
+                            ctx.fillStyle = App.Palette[4].toString(); // Col
                             ctx.fillRect(margin - (5*units),sy,pageW + (10*units),40*units);
                             ctx.beginPath();
                             ctx.moveTo((appWidth*0.5), sy + (45*units));
@@ -145,7 +145,7 @@ export class SoundcloudPanel extends DisplayObject{
                     }
 
                     // text //
-                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
+                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
                     var track = block.SearchResults[i];
                     var title = track.Title;
                     var user = track.User;
@@ -154,13 +154,13 @@ export class SoundcloudPanel extends DisplayObject{
 
 
                     // arrow //
-                    ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];
+                    ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();
                     ctx.beginPath();
                     ctx.moveTo(x + margin + pageW - (25 * units), y - (10.5*units));
                     ctx.lineTo(x + margin + pageW - (20 * units), y - (5.5*units));
                     ctx.lineTo(x + margin + pageW - (15 * units), y - (10.5*units));
                     ctx.stroke();
-                    ctx.strokeStyle = App.Palette[1];
+                    ctx.strokeStyle = App.Palette[1].toString();
                 }
             }
             ctx.restore();
@@ -203,9 +203,9 @@ export class SoundcloudPanel extends DisplayObject{
 
 
             // BACK ARROW //
-            ctx.strokeStyle = App.Palette[1]; // Grey
+            ctx.strokeStyle = App.Palette[1].toString(); // Grey
             if (this._Page>1) {
-                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             }
             ctx.beginPath();
             ctx.moveTo((appWidth*0.5) - (275 * units), centerY - (20*units));
@@ -215,9 +215,9 @@ export class SoundcloudPanel extends DisplayObject{
 
 
             // FORWARD ARROW //
-            ctx.strokeStyle = App.Palette[1]; // Grey
+            ctx.strokeStyle = App.Palette[1].toString(); // Grey
             if (this._Page < Math.ceil(results/itemNo)) {
-                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             }
             ctx.beginPath();
             ctx.moveTo((appWidth*0.5) + (275 * units), centerY - (20*units));
@@ -227,7 +227,7 @@ export class SoundcloudPanel extends DisplayObject{
 
 
             // TITLE //
-            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.beginPath();
             ctx.moveTo(margin, centerY - (110*units));
             ctx.lineTo(margin + pageW, centerY - (110*units));

@@ -140,7 +140,7 @@ export class SettingsPanel extends DisplayObject{
         if (this.Open) {
 
             // BG //
-            ctx.fillStyle = App.Palette[2];// Black
+            ctx.fillStyle = App.Palette[2].toString();// Black
             ctx.globalAlpha = 0.95;
             if (this.Open) {
                 ctx.fillRect(0,this.OffsetY,App.Width,App.Height); // solid
@@ -151,7 +151,7 @@ export class SettingsPanel extends DisplayObject{
             // CLOSE BUTTON //
             var closeY = tabY + (30*units);
             ctx.lineWidth = 2;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.beginPath();
             ctx.moveTo(dx + halfWidth + (12.5*units), closeY - (7.5*units));
             ctx.lineTo(dx + halfWidth + (27.5*units), closeY + (7.5*units));
@@ -193,7 +193,7 @@ export class SettingsPanel extends DisplayObject{
             // TAB 3 //
             var tab = this.MenuItems[2].YOffset;
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.font = largeType;
             ctx.textAlign = "left";
             this.WordWrap(ctx, this._Attribution.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
@@ -202,7 +202,7 @@ export class SettingsPanel extends DisplayObject{
             var xs = [x1,x2,x3];
             for (var i=1; i<4; i++) {
                 if (this._RollOvers[i]) {
-                    ctx.fillStyle = App.Palette[3];// Blue
+                    ctx.fillStyle = App.Palette[3].toString();// Blue
                     ctx.beginPath();
                     ctx.moveTo(xs[i-1] - (5*units), thirdY + (43*units) - (grid*0.5) + tab);
                     ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (43*units) - (grid*0.5) + tab);
@@ -211,7 +211,7 @@ export class SettingsPanel extends DisplayObject{
                     ctx.fill();
                 }
                 if (this._RollOvers[i+3]) {
-                    ctx.fillStyle = App.Palette[3];// Blue
+                    ctx.fillStyle = App.Palette[3].toString();// Blue
                     ctx.beginPath();
                     ctx.moveTo(xs[i-1] - (5*units), thirdY + (57*units) - (grid*0.5) + tab);
                     ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (57*units) - (grid*0.5) + tab);
@@ -221,7 +221,7 @@ export class SettingsPanel extends DisplayObject{
                 }
             }
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.font = italicType2;
 
             // BLURBS //
@@ -245,7 +245,7 @@ export class SettingsPanel extends DisplayObject{
             // BLOCKS //
             var blockY = thirdY - grid - (10*units) + tab;
 
-            ctx.fillStyle = App.Palette[4];// red
+            ctx.fillStyle = App.Palette[4].toString();// red
             ctx.beginPath();
             ctx.moveTo(x1,blockY - (grid*3));
             ctx.lineTo(x1 + (grid),blockY - (grid*3));
@@ -261,7 +261,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[5];// Black
+            ctx.fillStyle = App.Palette[5].toString();// Black
             ctx.beginPath();
             ctx.moveTo(x2,blockY);
             ctx.lineTo(x2,blockY - grid);
@@ -271,7 +271,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[7];// Black
+            ctx.fillStyle = App.Palette[7].toString();// Black
             ctx.beginPath();
             ctx.moveTo(x3,blockY);
             ctx.lineTo(x3 + grid,blockY - (grid*3));
@@ -281,7 +281,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[3];// Blue
+            ctx.fillStyle = App.Palette[3].toString();// Blue
             ctx.beginPath();
             ctx.moveTo(x1,blockY);
             ctx.lineTo(x1,blockY - (grid*3));
@@ -290,7 +290,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[10];// Yellow
+            ctx.fillStyle = App.Palette[10].toString();// Yellow
             ctx.beginPath();
             ctx.moveTo(x2,blockY);
             ctx.lineTo(x2,blockY - grid);
@@ -306,7 +306,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[9];// Red
+            ctx.fillStyle = App.Palette[9].toString();// Red
             ctx.beginPath();
             ctx.moveTo(x3,blockY);
             ctx.lineTo(x3,blockY - (grid*2));
@@ -325,7 +325,7 @@ export class SettingsPanel extends DisplayObject{
 
             // END TAB 3 //
             ctx.restore();
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.font = italicType2;
             ctx.textAlign = "right";
             ctx.fillText(this._Attribution.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
@@ -333,7 +333,7 @@ export class SettingsPanel extends DisplayObject{
 
             // DIVIDERS //
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[1];// White
+            ctx.strokeStyle = App.Palette[1].toString();// White
 
             // Horizontal //
             ctx.beginPath();
@@ -363,7 +363,7 @@ export class SettingsPanel extends DisplayObject{
 
                 // SELECTION COLOUR //
                 var col = this._MenuCols[i - (Math.floor(i / this._MenuCols.length) * (this._MenuCols.length))];
-                ctx.fillStyle = App.Palette[col];
+                ctx.fillStyle = App.Palette[col].toString();
 
                 // DRAW CAT HEADER //
                 cat.Draw(ctx, units, this,tabY);

@@ -80,121 +80,121 @@ export class MainScene extends DisplayObject{
 
         super.Setup();
 
-        //App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
-        //    this.MouseDown(e);
-        //}, this);
-        //
-        //App.PointerInputManager.MouseUp.on((s: any, e: MouseEvent) => {
-        //    this.MouseUp(e);
-        //}, this);
-        //
-        //App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
-        //    this.MouseMove(e);
-        //}, this);
-        //
-        //App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
-        //    this.TouchStart(e);
-        //}, this);
-        //
-        //App.PointerInputManager.TouchEnd.on((s: any, e: TouchEvent) => {
-        //    this.TouchEnd(e);
-        //}, this);
-        //
-        //App.PointerInputManager.TouchMove.on((s: any, e: TouchEvent) => {
-        //    this.TouchMove(e);
-        //}, this);
-        //
-        //App.OperationManager.OperationComplete.on((operation: IOperation) => {
-        //    this._Invalidate();
-        //}, this);
-        //
-        //// COMPOSITION LOADED //
-        //
+        App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
+            this.MouseDown(e);
+        }, this);
+
+        App.PointerInputManager.MouseUp.on((s: any, e: MouseEvent) => {
+            this.MouseUp(e);
+        }, this);
+
+        App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
+            this.MouseMove(e);
+        }, this);
+
+        App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
+            this.TouchStart(e);
+        }, this);
+
+        App.PointerInputManager.TouchEnd.on((s: any, e: TouchEvent) => {
+            this.TouchEnd(e);
+        }, this);
+
+        App.PointerInputManager.TouchMove.on((s: any, e: TouchEvent) => {
+            this.TouchMove(e);
+        }, this);
+
+        App.OperationManager.OperationComplete.on((operation: IOperation) => {
+            this._Invalidate();
+        }, this);
+
+        // COMPOSITION LOADED //
+
         App.CompositionLoaded.on((s: any, e: CompositionLoadedEventArgs) => {
             this.CompositionLoaded(e);
         }, this);
-        //
-        //// FILE DRAGGING //
-        //
-        //App.DragFileInputManager.Dropped.on((s: any, e: any) => {
-        //    e.stopPropagation();
-        //    e.preventDefault();
-        //    const b: Sampler = this.CreateBlockFromType(Sampler);
-        //
-        //    var files = e.dataTransfer.files; // FileList object.
-        //
-        //    App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
-        //        if (buffer) {
-        //            //TODO: set the buffer of this newly created Sampler
-        //            console.log(file.name + ' dropped');
-        //        }
-        //    });
-        //
-        //}, this);
-        //
-        //App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
-        //    console.log('file drag entered area');
-        //}, this);
-        //
-        //App.DragFileInputManager.DragMove.on((s: any, e: any) => {
-        //    e.stopPropagation();
-        //    e.preventDefault();
-        //    console.log('file drag over');
-        //}, this);
-        //
-        //App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
-        //    console.log('file left drag area');
-        //}, this);
-        //
-        //OptionTimeout = false; // todo: remove
-        //
-        //// METRICS //
-        //this._PointerPoint = new Point();
-        //this._SelectedBlockPosition = new Point();
-        //
-        //this.BlockCreator = new BlockCreator();
-        //
-        //// Display Objects //
-        //
-        //// CREATE SPLASH SCREEN //
-        ////this.Splash = new Splash();
-        ////this.Splash.Init(this);
-        //
-        //this.ConnectionLines = new ConnectionLines();
-        //this.DisplayList.Add(this.ConnectionLines);
-        //this.ConnectionLines.Init(this);
-        //
-        //this.BlocksContainer = new DisplayObject();
-        //this.DisplayList.Add(this.BlocksContainer);
-        //this.BlocksContainer.Init(this);
-        //
-        //this._ToolTip = new ToolTip();
-        //this.DisplayList.Add(this._ToolTip);
-        //this._ToolTip.Init(this);
-        //
-        //this.ZoomButtons = new ZoomButtons();
-        //this.DisplayList.Add(this.ZoomButtons);
-        //this.ZoomButtons.Init(this);
-        //
-        //this.MainSceneDragger = new MainSceneDragger();
-        //this.DisplayList.Add(this.MainSceneDragger);
-        //this.MainSceneDragger.Init(this);
-        //
-        //this._TrashCan = new TrashCan();
-        //this.DisplayList.Add(this._TrashCan);
-        //this._TrashCan.Init(this);
-        //
-        //this.ConnectionLines = new ConnectionLines();
-        //this.ConnectionLines.Init(this);
-        //
-        //this._RecorderPanel = new RecorderPanel();
-        //this.DisplayList.Add(this._RecorderPanel);
-        //this._RecorderPanel.Init(this);
-        //
-        //this.LaserBeams = new LaserBeams();
-        //this.DisplayList.Add(this.LaserBeams);
-        //this.LaserBeams.Init(this);
-        //
+
+        // FILE DRAGGING //
+
+        App.DragFileInputManager.Dropped.on((s: any, e: any) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const b: Sampler = this.CreateBlockFromType(Sampler);
+
+            var files = e.dataTransfer.files; // FileList object.
+
+            App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+                if (buffer) {
+                    //TODO: set the buffer of this newly created Sampler
+                    console.log(file.name + ' dropped');
+                }
+            });
+
+        }, this);
+
+        App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
+            console.log('file drag entered area');
+        }, this);
+
+        App.DragFileInputManager.DragMove.on((s: any, e: any) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('file drag over');
+        }, this);
+
+        App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
+            console.log('file left drag area');
+        }, this);
+
+        OptionTimeout = false; // todo: remove
+
+        // METRICS //
+        this._PointerPoint = new Point();
+        this._SelectedBlockPosition = new Point();
+
+        this.BlockCreator = new BlockCreator();
+
+        // Display Objects //
+
+        // CREATE SPLASH SCREEN //
+        //this.Splash = new Splash();
+        //this.Splash.Init(this);
+
+        this.ConnectionLines = new ConnectionLines();
+        this.DisplayList.Add(this.ConnectionLines);
+        this.ConnectionLines.Init(this);
+
+        this.BlocksContainer = new DisplayObject();
+        this.DisplayList.Add(this.BlocksContainer);
+        this.BlocksContainer.Init(this);
+
+        this._ToolTip = new ToolTip();
+        this.DisplayList.Add(this._ToolTip);
+        this._ToolTip.Init(this);
+
+        this.ZoomButtons = new ZoomButtons();
+        this.DisplayList.Add(this.ZoomButtons);
+        this.ZoomButtons.Init(this);
+
+        this.MainSceneDragger = new MainSceneDragger();
+        this.DisplayList.Add(this.MainSceneDragger);
+        this.MainSceneDragger.Init(this);
+
+        this._TrashCan = new TrashCan();
+        this.DisplayList.Add(this._TrashCan);
+        this._TrashCan.Init(this);
+
+        this.ConnectionLines = new ConnectionLines();
+        this.ConnectionLines.Init(this);
+
+        this._RecorderPanel = new RecorderPanel();
+        this.DisplayList.Add(this._RecorderPanel);
+        this._RecorderPanel.Init(this);
+
+        this.LaserBeams = new LaserBeams();
+        this.DisplayList.Add(this.LaserBeams);
+        this.LaserBeams.Init(this);
+
         this.OptionsPanel = new OptionsPanel();
         this.DisplayList.Add(this.OptionsPanel);
         this.OptionsPanel.Init(this);
@@ -202,38 +202,38 @@ export class MainScene extends DisplayObject{
         this._Header = new Header();
         this.DisplayList.Add(this._Header);
         this._Header.Init(this);
-        //
-        //this.SharePanel = new SharePanel();
-        //this.DisplayList.Add(this.SharePanel);
-        //this.SharePanel.Init(this);
+
+        this.SharePanel = new SharePanel();
+        this.DisplayList.Add(this.SharePanel);
+        this.SharePanel.Init(this);
 
         this.SettingsPanel = new SettingsPanel();
         this.DisplayList.Add(this.SettingsPanel);
         this.SettingsPanel.Init(this);
 
-        //this.SoundcloudPanel = new SoundcloudPanel();
-        //this.DisplayList.Add(this.SoundcloudPanel);
-        //this.SoundcloudPanel.Init(this);
-        //
-        //this.MessagePanel = new MessagePanel();
-        //this.DisplayList.Add(this.MessagePanel);
-        //this.MessagePanel.Init(this);
-        //
-        //this.AnimationsLayer = new AnimationsLayer();
-        //this.AnimationsLayer.Init(this);
-        //
-        //// todo: use input manager
-        //document.addEventListener('keydown', (e) => {
-        //    if (e.keyCode === 18) {
-        //        this.AltDown = true;
-        //    }
-        //});
-        //
-        //document.addEventListener('keyup', (e) => {
-        //    this.AltDown = false;
-        //});
-        //
-        //this._Invalidate();
+        this.SoundcloudPanel = new SoundcloudPanel();
+        this.DisplayList.Add(this.SoundcloudPanel);
+        this.SoundcloudPanel.Init(this);
+
+        this.MessagePanel = new MessagePanel();
+        this.DisplayList.Add(this.MessagePanel);
+        this.MessagePanel.Init(this);
+
+        this.AnimationsLayer = new AnimationsLayer();
+        this.AnimationsLayer.Init(this);
+
+        // todo: use input manager
+        document.addEventListener('keydown', (e) => {
+            if (e.keyCode === 18) {
+                this.AltDown = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            this.AltDown = false;
+        });
+
+        this._Invalidate();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -249,6 +249,7 @@ export class MainScene extends DisplayObject{
         if (App.Particles.length) {
             this.UpdateParticles();
         }
+
         this.OptionsPanel.Update();
     }
 
@@ -264,6 +265,7 @@ export class MainScene extends DisplayObject{
                 particle.ReturnToPool();
                 continue;
             }
+
             particle.ParticleCollision(App.Metrics.FloatOnGrid(particle.Position), particle);
             particle.Move();
             currentParticles.push(particle);
@@ -281,7 +283,7 @@ export class MainScene extends DisplayObject{
         super.Draw();
 
         // BG //
-        this.Ctx.fillStyle = "#FF0000";//App.Palette[0];
+        this.Ctx.fillStyle = App.Palette[0].toString();
         this.Ctx.globalAlpha = 1;
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
@@ -300,7 +302,7 @@ export class MainScene extends DisplayObject{
             var sy = pos.y;
             var size = particle.Size * unit;
 
-            this.Ctx.fillStyle = App.Palette[8];
+            this.Ctx.fillStyle = App.Palette[8].toString();
             this.Ctx.globalAlpha = 1;
             this.Ctx.beginPath();
             this.Ctx.moveTo(sx-(size),sy); //l
@@ -364,7 +366,7 @@ export class MainScene extends DisplayObject{
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
-        var UI: Boolean;
+        var UIInteraction: Boolean;
         var collision: Boolean;
 
         var tooltip = this._ToolTip;
@@ -378,7 +380,7 @@ export class MainScene extends DisplayObject{
         var message = this.MessagePanel;
 
         // UI //
-        UI = this._UIInteraction(point);
+        UIInteraction = this._UIInteraction();
 
         if (tooltip.Open) {
             this.ToolTipClose();
@@ -430,7 +432,7 @@ export class MainScene extends DisplayObject{
         }
 
         // BLOCK CLICK //
-        if (!UI) {
+        if (!UIInteraction) {
             collision = this._CheckCollision(point);
         }
 
@@ -440,7 +442,7 @@ export class MainScene extends DisplayObject{
         }
 
         // MainScene DRAGGING //
-        if (!collision && !UI){
+        if (!collision && !UIInteraction){
             this.MainSceneDragger.MouseDown(point);
         }
 
@@ -486,7 +488,7 @@ export class MainScene extends DisplayObject{
         } else {
             this._Header.MouseUp();
 
-            if (this.OptionsPanel.Scale===1) {
+            if (this.OptionsPanel.Scale === 1) {
                 this.OptionsPanel.MouseUp();
             }
 
@@ -497,7 +499,7 @@ export class MainScene extends DisplayObject{
 
     private _PointerMove(point: Point){
         App.Metrics.ConvertToPixelRatioPoint(point);
-        App.Canvas.Style.cursor="default";
+        App.Canvas.Style.cursor = "default";
 
         this._CheckHover(point);
 
@@ -505,10 +507,10 @@ export class MainScene extends DisplayObject{
         if (this.SelectedBlock){
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
-            if (this.IsDraggingABlock && (Math.round(this.SelectedBlock.Position.x)!==Math.round(this._SelectedBlockPosition.x) || Math.round(this.SelectedBlock.Position.y)!==Math.round(this._SelectedBlockPosition.y) ) ) {
+            if (this.IsDraggingABlock && (Math.round(this.SelectedBlock.Position.x) !== Math.round(this._SelectedBlockPosition.x) || Math.round(this.SelectedBlock.Position.y) !== Math.round(this._SelectedBlockPosition.y) ) ) {
                 this._SelectedBlockPosition = this.SelectedBlock.Position; // new grid position
-                this._ABlockHasBeenMoved(this.SelectedBlock);
-                if (this.OptionsPanel.Scale==1) {
+                this._ABlockHasBeenMoved();
+                if (this.OptionsPanel.Scale === 1) {
                     this.OptionsPanel.Close();
                 }
             }
@@ -668,13 +670,13 @@ export class MainScene extends DisplayObject{
         panel.Open = false;
     }
 
-    private _ABlockHasBeenMoved(block) {
+    private _ABlockHasBeenMoved() {
         this.LaserBeams.UpdateAllLasers = true;
         this.ConnectionLines.UpdateList();
     }
 
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
-    private _UIInteraction(point) {
+    private _UIInteraction() {
 
         var zoom = this.ZoomButtons;
         var header = this._Header;
@@ -726,7 +728,7 @@ export class MainScene extends DisplayObject{
     }
 
     _ValidateBlocks() {
-        // todo: move this to redux store
+
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();

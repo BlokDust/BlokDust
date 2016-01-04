@@ -66,10 +66,10 @@ export class RecorderPanel extends DisplayObject {
         var h = grd*3;
 
         // DRAW PANEL //
-        ctx.fillStyle = App.Palette[14];// Shadow
+        ctx.fillStyle = App.Palette[14].toString();// Shadow
         ctx.globalAlpha = 0.16;
         this.BGDraw(x, y + (5 * units), w, h, ctx);
-        ctx.fillStyle = App.Palette[2]; // Black
+        ctx.fillStyle = App.Palette[2].toString(); // Black
         ctx.globalAlpha = 0.9;
         this.BGDraw(x, y, w, h, ctx);
         ctx.globalAlpha = 1;
@@ -77,9 +77,9 @@ export class RecorderPanel extends DisplayObject {
 
         // BUTTON //
         if (rec) {
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // WHITE
         } else {
-            ctx.fillStyle = App.Palette[13]; // RED
+            ctx.fillStyle = App.Palette[13].toString(); // RED
         }
         ctx.beginPath();
         ctx.moveTo(x - grd, y - (w*0.5) - (h*0.5)); // l
@@ -90,9 +90,9 @@ export class RecorderPanel extends DisplayObject {
         ctx.fill();
 
         if (rec) {
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // WHITE
         } else {
-            ctx.fillStyle = App.Palette[12]; // RED
+            ctx.fillStyle = App.Palette[12].toString(); // RED
         }
         ctx.beginPath();
         ctx.moveTo(x - grd, y - (w*0.5) - (h*0.5)); // l
@@ -102,7 +102,7 @@ export class RecorderPanel extends DisplayObject {
         ctx.fill();
 
         if (hover) {
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // WHITE
             ctx.fillRect(x - grd,y - (w*0.5) - (h*0.5) - grd,4*units,4*units);
         }
 

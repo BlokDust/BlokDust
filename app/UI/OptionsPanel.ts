@@ -589,17 +589,17 @@ export class OptionsPanel extends DisplayObject {
 
 
         // DRAW PANEL //
-        ctx.fillStyle = App.Palette[2];// Shadow
+        ctx.fillStyle = App.Palette[2].toString();// Shadow
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        ctx.fillStyle = App.Palette[2];// Black
+        ctx.fillStyle = App.Palette[2].toString();// Black
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
 
 
         // CLOSE X //
-        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
@@ -611,7 +611,7 @@ export class OptionsPanel extends DisplayObject {
 
 
         // TITLE //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
         ctx.textAlign = "left";
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
 

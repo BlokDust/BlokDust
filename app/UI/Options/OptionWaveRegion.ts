@@ -50,7 +50,7 @@ export class WaveRegion extends WaveForm{
             ctx.lineWidth = 1;
             ctx.globalAlpha = 1;
             ctx.globalAlpha = 1;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
 
             var x = xs[2];
             var sliderNo = 2;
@@ -98,7 +98,7 @@ export class WaveRegion extends WaveForm{
                 ctx.closePath();
                 ctx.fill();
 
-                ctx.fillStyle = App.Palette[8];// WHITE
+                ctx.fillStyle = App.Palette[8].toString();// WHITE
                 ctx.beginPath();
                 ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
                 ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -110,7 +110,7 @@ export class WaveRegion extends WaveForm{
 
             if (this.Mode) {
                 for (var j=2; j<4; j++) {
-                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
 
                     x = xs[j];
 
@@ -129,7 +129,7 @@ export class WaveRegion extends WaveForm{
 
 
 
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
             ctx.font = App.Metrics.TxtItalic;
 
             ctx.textAlign = "left";

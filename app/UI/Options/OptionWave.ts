@@ -24,7 +24,7 @@ export class WaveForm extends Option {
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1]; // Grey
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString(); // Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -34,7 +34,7 @@ export class WaveForm extends Option {
 
 
         if (!this.Waveform.length) {
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
             if (this.EmptyString.length>1) {
                 ctx.textAlign = "center";
                 ctx.font = App.Metrics.TxtMid;
@@ -48,12 +48,12 @@ export class WaveForm extends Option {
 
 
         if (this.Handles && this.Waveform.length && this.Mode) {
-            ctx.strokeStyle = App.Palette[1];
+            ctx.strokeStyle = App.Palette[1].toString();
             panel.diagonalFill(panel.Margin + this.Handles[2].Position.x,y,this.Handles[3].Position.x - this.Handles[2].Position.x,height,9);
         }
 
 
-        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.fillStyle = App.Palette[1].toString();// WHITE
 
         // WAVEFORM //
 
@@ -89,7 +89,7 @@ export class WaveForm extends Option {
 
         // FILL //
 
-        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.fillStyle = App.Palette[1].toString();// WHITE
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this.Waveform.length!==0) {
@@ -106,7 +106,7 @@ export class WaveForm extends Option {
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

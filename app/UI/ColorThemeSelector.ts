@@ -14,7 +14,7 @@ export class ThemeSelector {
 
     Draw(ctx,x,y,width,height,units) {
 
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();
         ctx.globalAlpha = 1;
 
         // TITLE //
@@ -43,32 +43,32 @@ export class ThemeSelector {
         var startX = 3;
 
 
-        ctx.fillStyle = App.Palette[0];
+        ctx.fillStyle = App.Palette[0].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX)),dy);
-        ctx.fillStyle = App.Palette[1];
+        ctx.fillStyle = App.Palette[1].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+1)),dy + grd);
 
-        ctx.fillStyle = App.Palette[3];
+        ctx.fillStyle = App.Palette[3].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+2)),dy);
-        ctx.fillStyle = App.Palette[4];
+        ctx.fillStyle = App.Palette[4].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+3)),dy + grd);
-        ctx.fillStyle = App.Palette[5];
+        ctx.fillStyle = App.Palette[5].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+4)),dy);
-        ctx.fillStyle = App.Palette[6];
+        ctx.fillStyle = App.Palette[6].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+5)),dy + grd);
-        ctx.fillStyle = App.Palette[7];
+        ctx.fillStyle = App.Palette[7].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+6)),dy);
-        ctx.fillStyle = App.Palette[8];
+        ctx.fillStyle = App.Palette[8].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+7)),dy + grd);
-        ctx.fillStyle = App.Palette[9];
+        ctx.fillStyle = App.Palette[9].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+8)),dy);
-        ctx.fillStyle = App.Palette[10];
+        ctx.fillStyle = App.Palette[10].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+9)),dy + grd);
-        ctx.fillStyle = App.Palette[14];
+        ctx.fillStyle = App.Palette[14].toString();
         this.DrawDiamond(ctx,dx + (grd*(startX+10)),dy);
 
 
-        ctx.strokeStyle = App.Palette[1];
+        ctx.strokeStyle = App.Palette[1].toString();
         ctx.beginPath();
         ctx.moveTo(x + (width*0.5), y + (5*units));
         ctx.lineTo(x + (width*0.5), y + height - (5*units));

@@ -53,12 +53,12 @@ export class MenuCategory {
 
 
         // TEXT //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// White
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// White
         ctx.fillText(this.Name, x ,offset + (thisHeight * 0.5) + (dataType * 0.38));
 
         // HOVER //
         if (this.Hover && dropDown<1) {
-            ctx.fillStyle = App.Palette[2];// Black
+            ctx.fillStyle = App.Palette[2].toString();// Black
             ctx.globalAlpha = 0.9;
 
             ctx.beginPath();

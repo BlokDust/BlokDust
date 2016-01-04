@@ -109,7 +109,7 @@ export class Metrics {
 
         // STYLE DOM SELECTED TEXT HIGHLIGHT COLOUR //
         var styleElem = document.getElementById("selectStyle");
-        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1] + '; background-blend-mode: normal; mix-blend-mode: normal;}';
+        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1].toString() + '; background-blend-mode: normal; mix-blend-mode: normal;}';
     }
 
     UpdateGridScale() {

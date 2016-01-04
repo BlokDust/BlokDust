@@ -39,12 +39,12 @@ export class Splash extends DisplayObject{
         if (App.Scene === 2 && !App.LoadCued && App.CompositionId) {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
-            this.Ctx.fillStyle = App.Palette[0];
+            this.Ctx.fillStyle = App.Palette[0].toString();
             this.Ctx.fillRect(dx,dy,App.Width,App.Height);
 
             var dx = (App.Width*0.5);
             var dy = (App.Height*0.5) + (App.Height*this.LoadOffset);
-            this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// white
+            this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// white
             this.Ctx.textAlign = "center";
             this.Ctx.font = App.Metrics.TxtHeader;
             this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * units));
@@ -60,11 +60,11 @@ export class Splash extends DisplayObject{
         // Convolution
         this._Center = new Point(-0.5,-0.5);
         this._Offset = new Point(0,0);
-        this.Ctx.fillStyle = App.Palette[3];// BLUE
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[2];}
+        this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
+        if (!colorful) {this.Ctx.fillStyle = App.Palette[2].toString();}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(2,0);
@@ -74,7 +74,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(0,0);
         this.DrawLineTo(0,2);
@@ -83,7 +83,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[6];// YELLOW
+        this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
         this.DrawMoveTo(0,0);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
@@ -93,11 +93,11 @@ export class Splash extends DisplayObject{
         // gain
         this._Center = new Point(-0.5,0);
         this._Offset = new Point(-1,0);
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[0];}
+        this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
+        if (!colorful) {this.Ctx.fillStyle = App.Palette[0].toString();}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[5];// PURPLE
+        this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(2,1);
@@ -105,7 +105,7 @@ export class Splash extends DisplayObject{
         this.Ctx.closePath();
         this.Ctx.fill();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[3];// BLUE
+        this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,0);
         this.DrawLineTo(1,1);
@@ -116,11 +116,11 @@ export class Splash extends DisplayObject{
         // noise
         this._Center = new Point(0,-0.5);
         this._Offset = new Point(-1,-1);
-        this.Ctx.fillStyle = App.Palette[5];// PURPLE
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[2];}
+        this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
+        if (!colorful) {this.Ctx.fillStyle = App.Palette[2].toString();}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4];// GREEN
+        this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,-1);
@@ -130,7 +130,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8];// WHITE
+        this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,-1);
@@ -141,11 +141,11 @@ export class Splash extends DisplayObject{
         // distortion
         this._Center = new Point(0,-0.5);
         this._Offset = new Point(0,-1);
-        this.Ctx.fillStyle = App.Palette[6];// PURPLE
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[0];}
+        this.Ctx.fillStyle = App.Palette[6].toString();// PURPLE
+        if (!colorful) {this.Ctx.fillStyle = App.Palette[0].toString();}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[7];// RED
+        this.Ctx.fillStyle = App.Palette[7].toString();// RED
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(1,0);
@@ -154,7 +154,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9];// PINK
+        this.Ctx.fillStyle = App.Palette[9].toString();// PINK
         this.DrawLineTo(-1,-1);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(0,0);
@@ -164,12 +164,12 @@ export class Splash extends DisplayObject{
 
         this._Center = new Point(0,0);
         this._Offset = new Point(1,-1);
-        this.Ctx.fillStyle = App.Palette[2];// DARK
+        this.Ctx.fillStyle = App.Palette[2].toString();// DARK
         this.CenterRect();
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
         var headerType = 100*units;
-        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// Grey
+        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// Grey
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";
         this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
