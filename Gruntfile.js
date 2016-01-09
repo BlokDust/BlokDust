@@ -303,6 +303,7 @@ module.exports = function (grunt) {
                         src: [
                             'etch/dist/etch.d.ts',
                             'extensions/typings/extensions.d.ts',
+                            'key-codes/dist/key-codes.d.ts',
                             'minerva/dist/minerva.d.ts',
                             'nullstone/dist/nullstone.d.ts',
                             'tone/utils/TypeScript/Tone.d.ts',

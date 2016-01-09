@@ -1379,18 +1379,6 @@ declare module minerva.controls.grid.arrange {
         createState(): IState;
     }
 }
-declare module minerva.controls.grid.helpers {
-    function allocateDesiredSize(rowMat: Segment[][], colMat: Segment[][]): void;
-}
-declare module minerva.controls.grid.helpers {
-    function assignSize(mat: Segment[][], start: number, end: number, size: number, unitType: GridUnitType, desiredSize: boolean): number;
-}
-declare module minerva.controls.grid.helpers {
-    function expandStarCols(mat: Segment[][], coldefs: IColumnDefinition[], availableSize: Size): void;
-}
-declare module minerva.controls.grid.helpers {
-    function expandStarRows(mat: Segment[][], rowdefs: IRowDefinition[], availableSize: Size): void;
-}
 declare module minerva.controls.grid.measure {
     class GridChildPlacement {
         matrix: Segment[][];
@@ -1452,6 +1440,18 @@ declare module minerva.controls.grid.measure {
         init(childShapes: GridChildShape[]): void;
     }
 }
+declare module minerva.controls.grid.helpers {
+    function allocateDesiredSize(rowMat: Segment[][], colMat: Segment[][]): void;
+}
+declare module minerva.controls.grid.helpers {
+    function assignSize(mat: Segment[][], start: number, end: number, size: number, unitType: GridUnitType, desiredSize: boolean): number;
+}
+declare module minerva.controls.grid.helpers {
+    function expandStarCols(mat: Segment[][], coldefs: IColumnDefinition[], availableSize: Size): void;
+}
+declare module minerva.controls.grid.helpers {
+    function expandStarRows(mat: Segment[][], rowdefs: IRowDefinition[], availableSize: Size): void;
+}
 declare module minerva.controls.panel.processup {
     interface IInput extends core.processup.IInput {
         background: IBrush;
@@ -1504,6 +1504,16 @@ declare module minerva.controls.grid.render {
         function renderGridLines(input: IInput, state: IState, output: core.render.IOutput, ctx: core.render.RenderContext, region: Rect, tree: core.IUpdaterTree): boolean;
     }
 }
+declare module minerva.controls.image.hittest {
+    interface IHitTestData extends core.hittest.IHitTestData {
+        assets: IImageUpdaterAssets;
+        imgRect: Rect;
+    }
+    class ImageHitTestPipeDef extends core.hittest.HitTestPipeDef {
+        constructor();
+        prepare(data: IHitTestData): void;
+    }
+}
 declare module minerva.controls.image.arrange {
     interface IInput extends core.arrange.IInput {
         source: IImageSource;
@@ -1517,16 +1527,6 @@ declare module minerva.controls.image.arrange {
     class ImageArrangePipeDef extends core.arrange.ArrangePipeDef {
         constructor();
         createState(): IState;
-    }
-}
-declare module minerva.controls.image.hittest {
-    interface IHitTestData extends core.hittest.IHitTestData {
-        assets: IImageUpdaterAssets;
-        imgRect: Rect;
-    }
-    class ImageHitTestPipeDef extends core.hittest.HitTestPipeDef {
-        constructor();
-        prepare(data: IHitTestData): void;
     }
 }
 declare module minerva.controls.image.measure {
@@ -1712,17 +1712,6 @@ declare module minerva.controls.textblock.arrange {
         function doOverride(input: IInput, state: core.arrange.IState, output: core.arrange.IOutput, tree: TextBlockUpdaterTree, finalRect: Rect): boolean;
     }
 }
-declare module minerva.controls.textblock.measure {
-    interface IInput extends core.measure.IInput, text.IDocumentContext {
-        padding: Thickness;
-    }
-    class TextBlockMeasurePipeDef extends core.measure.MeasurePipeDef {
-        constructor();
-    }
-    module tapins {
-        function doOverride(input: IInput, state: core.measure.IState, output: core.measure.IOutput, tree: TextBlockUpdaterTree, availableSize: Size): boolean;
-    }
-}
 declare module minerva.controls.textblock.hittest {
     interface IHitTestData extends core.hittest.IHitTestData {
         assets: ITextBlockUpdaterAssets;
@@ -1732,6 +1721,17 @@ declare module minerva.controls.textblock.hittest {
     }
     module tapins {
         function canHitInside(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
+    }
+}
+declare module minerva.controls.textblock.measure {
+    interface IInput extends core.measure.IInput, text.IDocumentContext {
+        padding: Thickness;
+    }
+    class TextBlockMeasurePipeDef extends core.measure.MeasurePipeDef {
+        constructor();
+    }
+    module tapins {
+        function doOverride(input: IInput, state: core.measure.IState, output: core.measure.IOutput, tree: TextBlockUpdaterTree, availableSize: Size): boolean;
     }
 }
 declare module minerva.controls.textblock.processup {
@@ -1788,6 +1788,17 @@ declare module minerva.controls.textboxview.measure {
         function doOverride(input: IInput, state: core.measure.IState, output: core.measure.IOutput, tree: TextBoxViewUpdaterTree, availableSize: Size): boolean;
     }
 }
+declare module minerva.controls.textboxview.processup {
+    interface IInput extends core.processup.IInput, text.IDocumentContext {
+    }
+    class TextBoxViewProcessUpPipeDef extends core.processup.ProcessUpPipeDef {
+        constructor();
+    }
+    module tapins {
+        function calcActualSize(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
+        function calcExtents(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
+    }
+}
 declare module minerva.controls.textboxview.render {
     interface IInput extends core.render.IInput, text.IDocumentContext {
         isCaretVisible: boolean;
@@ -1807,17 +1818,6 @@ declare module minerva.controls.textboxview.render {
         function doRender(input: IInput, state: core.render.IState, output: IOutput, ctx: core.render.RenderContext, region: Rect, tree: TextBoxViewUpdaterTree): boolean;
         function calcCaretRegion(input: IInput, state: core.render.IState, output: IOutput, ctx: core.render.RenderContext, region: Rect, tree: TextBoxViewUpdaterTree): boolean;
         function renderCaret(input: IInput, state: core.render.IState, output: IOutput, ctx: core.render.RenderContext, region: Rect, tree: TextBoxViewUpdaterTree): boolean;
-    }
-}
-declare module minerva.controls.textboxview.processup {
-    interface IInput extends core.processup.IInput, text.IDocumentContext {
-    }
-    class TextBoxViewProcessUpPipeDef extends core.processup.ProcessUpPipeDef {
-        constructor();
-    }
-    module tapins {
-        function calcActualSize(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
-        function calcExtents(input: IInput, state: core.processup.IState, output: core.processup.IOutput, tree: TextBoxViewUpdaterTree): boolean;
     }
 }
 declare module minerva.controls.usercontrol.arrange {
@@ -1882,6 +1882,9 @@ declare module minerva.controls.virtualizingstackpanel.measure {
         createState(): IState;
     }
 }
+declare module minerva.shapes.ellipse.helpers {
+    function draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void;
+}
 declare module minerva.shapes.shape.hittest {
     interface IHitTestData extends core.hittest.IHitTestData {
         assets: IShapeUpdaterAssets;
@@ -1900,9 +1903,6 @@ declare module minerva.shapes.ellipse.hittest {
     module tapins {
         function drawShape(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
     }
-}
-declare module minerva.shapes.ellipse.helpers {
-    function draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void;
 }
 declare module minerva.shapes.shape.measure {
     interface IInput extends core.measure.IInput, IShapeProperties {
@@ -2213,6 +2213,15 @@ declare module minerva.controls.grid.processup.tapins {
 declare module minerva.controls.grid.processup.tapins {
     function preCalcExtents(input: IInput, state: IState, output: IOutput, tree: core.IUpdaterTree): boolean;
 }
+declare module minerva.controls.image.hittest.tapins {
+    function canHitInside(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
+}
+declare module minerva.controls.image.hittest.tapins {
+    function insideChildren(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
+}
+declare module minerva.controls.image.hittest.tapins {
+    function insideStretch(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
+}
 declare module minerva.controls.image.arrange.tapins {
     function calcImageBounds(input: IInput, state: IState, output: core.arrange.IOutput, tree: core.IUpdaterTree, finalRect: Rect): boolean;
 }
@@ -2224,15 +2233,6 @@ declare module minerva.controls.image.arrange.tapins {
 }
 declare module minerva.controls.image.arrange.tapins {
     function invalidateMetrics(input: IInput, state: IState, output: core.arrange.IOutput, tree: core.IUpdaterTree, finalRect: Rect): boolean;
-}
-declare module minerva.controls.image.hittest.tapins {
-    function canHitInside(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
-}
-declare module minerva.controls.image.hittest.tapins {
-    function insideChildren(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
-}
-declare module minerva.controls.image.hittest.tapins {
-    function insideStretch(data: IHitTestData, pos: Point, hitList: core.Updater[], ctx: core.render.RenderContext): boolean;
 }
 declare module minerva.controls.image.measure.tapins {
     function calcImageBounds(input: IInput, state: IState, output: core.measure.IOutput, tree: core.IUpdaterTree, availableSize: Size): boolean;

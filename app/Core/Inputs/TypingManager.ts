@@ -1,5 +1,4 @@
 import {InputManager} from './InputManager';
-import {KeyMap} from './KeyMap';
 
 export class TypingManager extends InputManager {
 
@@ -44,14 +43,14 @@ export class TypingManager extends InputManager {
     }
 
     RemoveFromString() {
-        if (this.IsKeyNameDown(KeyMap.Backspace)) {
+        if (this.IsKeyCodeDown(KeyCode.Backspace)) {
             this._String = this._String.substring(0, this._String.length-1);
             this._Panel.UpdateString(this._String);
         }
     }
 
     StringReturn() {
-        if (this.IsKeyNameDown(KeyMap.Enter)) {
+        if (this.IsKeyCodeDown(KeyCode.Enter)) {
             this._Panel.StringReturn();
         }
     }
