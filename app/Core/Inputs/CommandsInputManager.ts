@@ -35,19 +35,19 @@ export class CommandsInputManager extends InputManager {
         //console.log(this.KeysDown);
 
         if (!App.TypingManager.IsEnabled) {
-            if ((this.IsKeyCodeDown(KeyCode.Ctrl) || this.IsKeyCodeDown(KeyCode.LeftWindowKey) || this.IsKeyCodeDown(KeyCode.CommandFF)) && this.IsKeyCodeDown(KeyCode.s)){
+            if ((this.IsKeyCodeDown(KeyCodes.KeyDown.Ctrl) || this.IsKeyCodeDown(KeyCodes.KeyDown.LeftWindowKey) || this.IsKeyCodeDown(KeyCodes.KeyDown.CommandFF)) && this.IsKeyCodeDown(KeyCodes.KeyDown.s)){
                 e.preventDefault();
                  App.MainScene.SharePanel.OpenPanel();
                 return;
             }
 
-            if ((this.IsKeyCodeDown(KeyCode.Ctrl) || this.IsKeyCodeDown(KeyCode.LeftWindowKey) || this.IsKeyCodeDown(KeyCode.CommandFF)) && this.IsKeyCodeDown(KeyCode.Shift) && this.IsKeyCodeDown(KeyCode.z)){
+            if ((this.IsKeyCodeDown(KeyCodes.KeyDown.Ctrl) || this.IsKeyCodeDown(KeyCodes.KeyDown.LeftWindowKey) || this.IsKeyCodeDown(KeyCodes.KeyDown.CommandFF)) && this.IsKeyCodeDown(KeyCodes.KeyDown.Shift) && this.IsKeyCodeDown(KeyCodes.KeyDown.z)){
                 e.preventDefault();
                 this._CommandManager.ExecuteCommand(Commands.REDO);
                 return;
             }
 
-            if ((this.IsKeyCodeDown(KeyCode.Ctrl) || this.IsKeyCodeDown(KeyCode.LeftWindowKey) || this.IsKeyCodeDown(KeyCode.CommandFF)) && this.IsKeyCodeDown(KeyCode.z)){
+            if ((this.IsKeyCodeDown(KeyCodes.KeyDown.Ctrl) || this.IsKeyCodeDown(KeyCodes.KeyDown.LeftWindowKey) || this.IsKeyCodeDown(KeyCodes.KeyDown.CommandFF)) && this.IsKeyCodeDown(KeyCodes.KeyDown.z)){
                 e.preventDefault();
                 this._CommandManager.ExecuteCommand(Commands.UNDO);
                 return;

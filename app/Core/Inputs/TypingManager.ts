@@ -43,14 +43,14 @@ export class TypingManager extends InputManager {
     }
 
     RemoveFromString() {
-        if (this.IsKeyCodeDown(KeyCode.Backspace)) {
+        if (this.IsKeyCodeDown(KeyCodes.KeyDown.Backspace)) {
             this._String = this._String.substring(0, this._String.length-1);
             this._Panel.UpdateString(this._String);
         }
     }
 
     StringReturn() {
-        if (this.IsKeyCodeDown(KeyCode.Enter)) {
+        if (this.IsKeyCodeDown(KeyCodes.KeyDown.Enter)) {
             this._Panel.StringReturn();
         }
     }

@@ -63,6 +63,6 @@ export class InputManager {
     }
 
     IsModifierDown(): boolean {
-        return (this.KeysDown[KeyCode.Ctrl] || this.KeysDown[KeyCode.CommandFF] || this.KeysDown[KeyCode.LeftWindowKey] || this.KeysDown[KeyCode.RightWindowKey]);
+        return (this.KeysDown[KeyCodes.KeyDown.Ctrl] || this.KeysDown[KeyCodes.KeyDown.CommandFF] || this.KeysDown[KeyCodes.KeyDown.LeftWindowKey] || this.KeysDown[KeyCodes.KeyDown.RightWindowKey]);
     }
 }
