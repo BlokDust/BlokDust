@@ -184,7 +184,7 @@ export class LaserBeams extends DisplayObject {
                                                 else {
                                                     collisions.push(block);
                                                     if (laser.Collisions.length == 0 || $.inArray(block, laser.Collisions) == -1) {
-                                                        //console.log("HIT " + block.Id);
+                                                        console.log("HIT " + block.Id);
                                                         if (block instanceof Logic) {
                                                             block.PerformLogic();
                                                         } else {
@@ -218,7 +218,7 @@ export class LaserBeams extends DisplayObject {
                         for (var j = 0; j < laser.Collisions.length; j++) {
                             var block = laser.Collisions[j];
                             if (collisions.length == 0 || $.inArray(block, collisions) == -1) {
-                                //console.log("RELEASE "+ block.Id);
+                                console.log("RELEASE "+ block.Id);
                                 if (!(block instanceof Logic)) {
                                     /*block.PowerConnections -= 1;
                                     block.TriggerRelease('all'); */

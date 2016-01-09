@@ -88,8 +88,8 @@ export class Block extends DisplayObject implements IBlock {
     }
 
     // todo: use types instead of strings!
-    DrawSprite(type: string) {
-        App.BlockSprites.DrawSprite((<MainScene>this.DrawTo).BlocksContainer, this.Position, true, type);
+    DrawSprite(type: string, option?: any) {
+        App.BlockSprites.DrawSprite((<MainScene>this.DrawTo).BlocksContainer, this.Position, true, type, option);
     }
 
     //-------------------------------------------------------------------------------------------
