@@ -13,6 +13,7 @@ export class Splash extends DisplayObject{
     private _Scale: number;
     private _Center: Point;
     private _Offset: Point;
+    AnimationFinished = new nullstone.Event<{}>();
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -36,7 +37,7 @@ export class Splash extends DisplayObject{
         this._Scale = 100 * units;
 
         // LOADING //
-        if (App.Scene === 2 && !App.LoadCued && App.CompositionId) {
+        if (App.IsLoadingComposition) {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
             this.Ctx.fillStyle = App.Palette[0].toString();
@@ -206,7 +207,7 @@ export class Splash extends DisplayObject{
     DelayTo(panel,destination,t,delay,v,s){
 
         var offsetTween = new window.TWEEN.Tween({x: s});
-        offsetTween.TWEEN.to({x: destination}, t);
+        offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
         });
@@ -215,7 +216,7 @@ export class Splash extends DisplayObject{
         offsetTween.start(this.LastVisualTick);
     }
 
-    StartTween() {
+    TransitionIn() {
         var initDelay = 300;
         var tweenLength = 250;
         var viewLength = 350;
@@ -226,17 +227,14 @@ export class Splash extends DisplayObject{
         this.DelayTo(this,0,tweenLength,(viewLength*3) + (tweenLength*3) + initDelay,'XOffset',1);
         this.DelayTo(this,-1,tweenLength,(viewLength*4) + (tweenLength*4) + initDelay,'XOffset',0);
         this.DelayTo(this,2,tweenLength + 200,(viewLength*5) + (tweenLength*5) + initDelay + 200,'YOffset',1);
-        setTimeout(function() {
-            App.Scene = 2;
-            if (App.LoadCued) {
-                // todo: trigger App's CompositionLoaded event
-                //App.MainScene.CompositionLoaded();
-            }
+
+        // when pre-roll is finished
+        setTimeout(() => {
+            this.AnimationFinished.raise(this, null);
         },(viewLength*5) + (tweenLength*5) + initDelay + 200);
     }
 
-    EndLoad() {
+    TransitionOut() {
         this.DelayTo(this,1,450,300,'LoadOffset',0);
     }
-
 }

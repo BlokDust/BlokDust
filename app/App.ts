@@ -73,8 +73,7 @@ export default class App implements IApp{
     public GridSize: number;
     public Height: number;
     public InputManager: InputManager;
-    public IsLoadedFromSave: boolean = false;
-    public LoadCued: boolean;
+    public IsLoadingComposition: boolean = false;
     public Metrics: Metrics;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
@@ -86,7 +85,6 @@ export default class App implements IApp{
     public ScaledDragOffset: Point;
     public ScaledGridSize: number;
     public ScaledUnit: number;
-    public Scene: number;
     public Stage: Stage;
     public SubCanvas: HTMLCanvasElement[];
     public ThemeManager: ThemeManager;
@@ -153,8 +151,6 @@ export default class App implements IApp{
 
         this.Canvas = new Canvas();
 
-        this.Scene = 0;
-
         // METRICS //
         this.Metrics = new Metrics();
 
@@ -168,7 +164,6 @@ export default class App implements IApp{
         };
 
         // LOAD FONTS AND SETUP CALLBACK //
-        this.LoadCued = false;
         this._FontsLoaded = 0;
 
         WebFont.load({
@@ -265,18 +260,19 @@ export default class App implements IApp{
     LoadComposition() {
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
+
         if(this.CompositionId) {
+            this.IsLoadingComposition = true;
+
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
-                this.Populate(data);
+                this.CompositionLoadComplete(data);
             }).catch((error: string) => {
                 // fail silently
                 this.CompositionId = null;
-                //this.Splash.LoadOffset = 1;
                 console.error(error);
             });
-        } else {
-            //this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
+
         this.CreateStage();
     }
 
@@ -292,9 +288,7 @@ export default class App implements IApp{
         this.Resize();
     }
 
-    // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
-    Populate(data) {
-        this.IsLoadedFromSave = true;
+    CompositionLoadComplete(data) {
         console.log(`Loaded "${this.CompositionName}"`);
 
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
@@ -313,11 +307,9 @@ export default class App implements IApp{
         // Connect the effects chain
         this.Audio.ConnectionManager.Update();
 
-        //if (this.Scene < 2) {
-        //    this.LoadCued = true;
-        //} else {
-            this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
-        //}
+        this.IsLoadingComposition = false;
+
+        this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }
 
     Serialize(): string {

@@ -156,10 +156,6 @@ export class MainScene extends DisplayObject{
 
         // Display Objects //
 
-        // CREATE SPLASH SCREEN //
-        //this.Splash = new Splash();
-        //this.Splash.Init(this);
-
         this.ConnectionLines = new ConnectionLines();
         this.DisplayList.Add(this.ConnectionLines);
         this.ConnectionLines.Init(this);
@@ -362,7 +358,6 @@ export class MainScene extends DisplayObject{
     private _PointerDown(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
 
-
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
@@ -418,7 +413,7 @@ export class MainScene extends DisplayObject{
                 return;
             }
 
-            if (options.Scale==1) {
+            if (options.Scale === 1) {
                 options.MouseDown(point.x,point.y); // to do : unsplit point
                 if (options.Hover) {
                     return;
@@ -517,7 +512,7 @@ export class MainScene extends DisplayObject{
         }
 
         // UI //
-        if (this.OptionsPanel.Scale==1) {
+        if (this.OptionsPanel.Scale === 1) {
             this.OptionsPanel.MouseMove(point.x,point.y);
         }
         if (this.SharePanel.Open) {
@@ -796,11 +791,7 @@ export class MainScene extends DisplayObject{
         setTimeout(() => {
             this.Play();
             App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
-        },200);
-
-        //if (!App.LoadCued) {
-            //App.Splash.EndLoad();
-        //}
+        }, 200);
     }
 
     //-------------------------------------------------------------------------------------------
