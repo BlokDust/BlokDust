@@ -723,7 +723,7 @@ export class OptionsPanel extends DisplayObject {
             }
             this.Opening = true;
             this.SelectedBlock = block;
-            App.MainScene.MainSceneDragger.Jump(block.Position,new Point(App.Width*App.Metrics.OptionsPoint.x,App.Height*App.Metrics.OptionsPoint.y));
+            App.MainScene.MainSceneDragger.Jump(block.Position,new Point(App.Metrics.OptionsPoint.x,App.Metrics.OptionsPoint.y));
 
             var me = this;
             setTimeout(function() {

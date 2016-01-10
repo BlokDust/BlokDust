@@ -29,11 +29,11 @@ export class Chopper extends PostEffect {
         this.PopulateParams();
 
         this.Effect = new Tone.Tremolo({
-            'frequency': this.Defaults.rate,
-            'depth': this.Defaults.depth,
-            'spread': this.Defaults.spread,
-            'type': this.Defaults[this.Params.waveform],
-            'wet': this.Defaults.mix,
+            'frequency': this.Params.rate,
+            'depth': this.Params.depth,
+            'spread': this.Params.spread,
+            'type': this.Params[this.Params.waveform],
+            'wet': this.Params.mix
         }).start();
 
 
