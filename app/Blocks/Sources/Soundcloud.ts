@@ -118,6 +118,7 @@ export class Soundcloud extends SamplerBase {
 
     Search(query: string) {
         this.Searching = true;
+        App.MainScene.OptionsPanel.Animating = true; //TODO: make searching an event
         this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
@@ -127,6 +128,7 @@ export class Soundcloud extends SamplerBase {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });
                 this.Searching = false;
+                App.MainScene.OptionsPanel.Animating = false;
             });
         }
     }

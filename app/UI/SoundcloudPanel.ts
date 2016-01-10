@@ -180,8 +180,8 @@ export class SoundcloudPanel extends DisplayObject{
 
                 //SEARCHING //
                 if (block.Searching) {
-                    App.AnimationsLayer.Spin();
-                    App.AnimationsLayer.DrawSprite('loading',appWidth*0.5, centerY,16,true);
+                    //App.AnimationsLayer.Spin();
+                    App.AnimationsLayer.DrawSprite(ctx,'loading',appWidth*0.5, centerY,16,true);
                 }
                 // NO RESULTS //
                 else {

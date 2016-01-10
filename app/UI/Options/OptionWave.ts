@@ -32,16 +32,17 @@ export class WaveForm extends Option {
             ctx.stroke();
         }
 
-
+        // IF NO WAVEFORM //
         if (!this.Waveform.length) {
             ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+            var ax = (panel.Range*0.5) + panel.Margin;
+            var ay = y + (height * 0.5);
             if (this.EmptyString.length>1) {
                 ctx.textAlign = "center";
                 ctx.font = App.Metrics.TxtMid;
-                ctx.fillText(this.EmptyString.toUpperCase(), (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType * 0.4));
+                ctx.fillText(this.EmptyString.toUpperCase(), ax, ay + (dataType * 0.4));
             } else {
-                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
-
+                App.AnimationsLayer.DrawSprite(ctx,'loading',ax, ay,11,true);
             }
 
         }

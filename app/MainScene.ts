@@ -207,6 +207,10 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.SettingsPanel);
         this.SettingsPanel.Init(this);
 
+        this.AnimationsLayer = new AnimationsLayer();
+        this.DisplayList.Add(this.AnimationsLayer);
+        this.AnimationsLayer.Init(this);
+
         this.SoundcloudPanel = new SoundcloudPanel();
         this.DisplayList.Add(this.SoundcloudPanel);
         this.SoundcloudPanel.Init(this);
@@ -215,9 +219,7 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.MessagePanel);
         this.MessagePanel.Init(this);
 
-        this.AnimationsLayer = new AnimationsLayer();
-        this.DisplayList.Add(this.AnimationsLayer);
-        this.AnimationsLayer.Init(this);
+
 
         // todo: use input manager
         document.addEventListener('keydown', (e) => {

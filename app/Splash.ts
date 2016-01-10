@@ -49,8 +49,8 @@ export class Splash extends DisplayObject{
             this.Ctx.textAlign = "center";
             this.Ctx.font = App.Metrics.TxtHeader;
             this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * units));
-            App.AnimationsLayer.Spin();
-            App.AnimationsLayer.DrawSprite('loading',dx, dy - (16 * units),16,true);
+            //App.AnimationsLayer.Spin();
+            App.AnimationsLayer.DrawSprite(this.Ctx,'loading',dx, dy - (16 * units),16,true);
         }
 
         //TODO use blocksprites with multiplier argument
