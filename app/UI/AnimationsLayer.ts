@@ -15,7 +15,7 @@ export class AnimationsLayer extends DisplayObject {
     }
 
     Update() {
-
+        super.Update();
         if (this.ActiveBlocks.length > 0) {
             this.Loop += 1;
         }
@@ -23,7 +23,6 @@ export class AnimationsLayer extends DisplayObject {
         if (this.Loop === 60) {
             this.Loop = 0;
         }
-
     }
 
     Spin() {

@@ -216,6 +216,7 @@ export class MainScene extends DisplayObject{
         this.MessagePanel.Init(this);
 
         this.AnimationsLayer = new AnimationsLayer();
+        this.DisplayList.Add(this.AnimationsLayer);
         this.AnimationsLayer.Init(this);
 
         // todo: use input manager
