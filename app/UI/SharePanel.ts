@@ -62,7 +62,7 @@ export class SharePanel extends DisplayObject {
             tweetText: "I made this @blokdust creation: "
         };
 
-        if (App.SessionId !== null) {
+        if (App.SessionId) {
             this._FirstSession = false;
         }
 
