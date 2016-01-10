@@ -210,10 +210,13 @@ export class Splash extends DisplayObject{
         offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
+            console.log(""+v+": "+this.x);
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);
+
+        console.log("LastVisualTick: "+this.LastVisualTick);
     }
 
     TransitionIn() {
