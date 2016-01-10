@@ -69,6 +69,7 @@ export class OptionsPanel extends DisplayObject {
         this.Opening = false;
         this._DrawReady = false;
         this.Animating = false;
+        this.Sketch = drawTo;
 
         this.Options = [];
         this.SliderColours = [];
