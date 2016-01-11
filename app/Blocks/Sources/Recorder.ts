@@ -288,6 +288,14 @@ export class Recorder extends SamplerBase {
                         "centered" : true,
                         "logarithmic": true
                     }
+                },
+                {
+                    "type" : "actionbutton",
+                    "name" : "",
+                    "setting" :"download",
+                    "props" : {
+                        "text" : "Download Recording"
+                    }
                 }
             ]
         };
@@ -334,6 +342,13 @@ export class Recorder extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
+                break;
+            case "download":
+                if (this.BufferSource.buffer===null) {
+                    App.Message("This block doesn't have a recording to download yet.");
+                } else {
+                    this.DownloadRecording();
+                }
                 break;
         }
 
