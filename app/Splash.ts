@@ -17,6 +17,11 @@ export class Splash extends DisplayObject{
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
+    }
+
+    public Setup() {
+        super.Setup();
+
         this._Offset = new Point(0,0);
         this.XOffset = 0;
         this.YOffset = -1;
@@ -30,6 +35,10 @@ export class Splash extends DisplayObject{
     public Draw() {
 
         super.Draw();
+
+        if (this.IsFirstFrame()){
+            this.TransitionIn();
+        }
 
         var colorful = false;
         var units = App.Unit;
@@ -215,8 +224,6 @@ export class Splash extends DisplayObject{
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
         offsetTween.start(this.LastVisualTick);
-
-        console.log("LastVisualTick: "+this.LastVisualTick);
     }
 
     TransitionIn() {

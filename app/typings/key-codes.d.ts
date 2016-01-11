@@ -70,8 +70,8 @@ declare module KeyCodes.KeyDown {
     var Numpad8: number;
     var Numpad9: number;
     var Multiply: number;
-    var Add: number;
-    var Subtract: number;
+    var NumpadPlus: number;
+    var NumpadMinus: number;
     var DecimalPoint: number;
     var Divide: number;
     var F1: number;
@@ -115,8 +115,12 @@ declare module KeyCodes.KeyPress {
     var Hash: number;
     var GraveAccent: number;
     var ForwardSlash: number;
+    var Asterisk: number;
+    var Plus: number;
     var Comma: number;
+    var Minus: number;
     var Period: number;
+    var ForwardSlash: number;
     var Zero: number;
     var One: number;
     var Two: number;
@@ -130,6 +134,7 @@ declare module KeyCodes.KeyPress {
     var Colon: number;
     var Semicolon: number;
     var LessThan: number;
+    var Equals: number;
     var GreaterThan: number;
     var QuestionMark: number;
     var At: number;

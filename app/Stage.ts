@@ -23,8 +23,6 @@ export class Stage extends etch.drawing.Stage{
         this.DisplayList.Add(this.Splash);
         this.Splash.Init(App.Canvas);
 
-        this.Splash.TransitionIn();
-
         this.Splash.AnimationFinished.on((s: any) => {
             if (!App.IsLoadingComposition){
                 this.MainScene.Show();
@@ -40,5 +38,25 @@ export class Stage extends etch.drawing.Stage{
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
         this.Splash.TransitionOut();
         this.MainScene.Show();
+    }
+
+    OnTicked(lastTime: number, nowTime: number) {
+        super.OnTicked(lastTime, nowTime);
+    }
+
+    UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
+        super.UpdateDisplayList(displayList);
+    }
+
+    DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
+        super.DrawDisplayList(displayList);
+    }
+
+    ResizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
+        super.ResizeDisplayList(displayList);
+    }
+
+    Resize(): void {
+        super.Resize();
     }
 }
