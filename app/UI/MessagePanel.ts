@@ -65,7 +65,7 @@ export class MessagePanel extends DisplayObject {
             var clx = this._CloseX;
 
             // DRAW PANEL //
-            ctx.fillStyle = App.Palette[2];// Shadow
+            ctx.fillStyle = App.Palette[2].toString();// Shadow
             ctx.globalAlpha = this._Alpha * 0.16;
             ctx.fillRect(0,y - (25*units),w,60*units);
 
@@ -75,14 +75,14 @@ export class MessagePanel extends DisplayObject {
 
             // MESSAGE TEXT //
             ctx.globalAlpha = this._Alpha;
-            ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.fillText(this._Value.string.toUpperCase(), cx, y + (5 * units));
 
 
             // CLOSE //
             if (this._Value.confirmation) {
 
-                ctx.fillStyle = App.Palette[2]; // Black
+                ctx.fillStyle = App.Palette[2].toString(); // Black
                 ctx.globalAlpha = this._Alpha * 0.9;
                 ctx.beginPath();
                 ctx.moveTo(clx - (20 * units), y - (30 * units));
@@ -93,7 +93,7 @@ export class MessagePanel extends DisplayObject {
 
                 // CLOSE X //
                 ctx.globalAlpha = this._Alpha;
-                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(clx - (4 * units), y - (34 * units));
@@ -107,7 +107,7 @@ export class MessagePanel extends DisplayObject {
 
             // BUTTON //
             if (this._Value.buttonText!=="") {
-                ctx.fillStyle = App.Palette[4]; // Colour
+                ctx.fillStyle = App.Palette[4].toString(); // Colour
                 ctx.fillRect(clx,y - (15*units),this._ButtonWidth,30*units);
                 if (this._Roll[1]) {
                     ctx.beginPath();
@@ -118,7 +118,7 @@ export class MessagePanel extends DisplayObject {
                     ctx.fill();
                 }
                 ctx.textAlign = "left";
-                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
+                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
                 ctx.fillText(this._Value.buttonText.toUpperCase(), clx + (10*units), y + (5 * units));
             }
         }

@@ -26,7 +26,7 @@ export class TrashCan extends DisplayObject {
             s = 1.2;
         }
 
-        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// Grey
+        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// Grey
 
         ctx.lineWidth = 1;
         ctx.beginPath();

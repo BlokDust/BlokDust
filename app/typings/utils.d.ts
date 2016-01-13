@@ -1412,11 +1412,17 @@ declare module Utils {
 declare module Utils {
     class Documents {
         static IsInIFrame(): boolean;
+        static SupportsFullscreen(): boolean;
     }
 }
 declare module Utils {
     class Events {
         static Debounce(fn: any, debounceDuration: number): () => any;
+    }
+}
+declare module Utils {
+    class Keyboard {
+        static GetCharCode(e: KeyboardEvent): number;
     }
 }
 declare module Utils.Maths {

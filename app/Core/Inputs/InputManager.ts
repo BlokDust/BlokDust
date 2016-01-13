@@ -2,7 +2,6 @@ import {Commands} from '../../Commands';
 import {CommandManager} from '../Commands/CommandManager';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
-import {KeyMap} from './KeyMap';
 
 declare var HumanInput: any;
 
@@ -35,7 +34,7 @@ export class InputManager {
 
     KeyboardDown(e) {
 
-        var k: number = this.GetKeyByCode(e.keyCode);
+        var k: number = e.keyCode;
 
         // if it's undefined
         if (typeof k === 'undefined') return;
@@ -46,34 +45,24 @@ export class InputManager {
 
         // add to dictionary
         this.KeysDown[k] = true;
-
     }
 
     KeyboardUp(e) {
 
-        var k: number = this.GetKeyByCode(e.keyCode);
+        var k: number = e.keyCode;
 
         // if it's undefined
         if (typeof k === 'undefined') return;
 
         // remove from dictionary
         delete this.KeysDown[k];
-
     }
 
-    GetKeyByCode(code: number): number {
-        return KeyMap[KeyMap[code]];
-    }
-
-    IsKeyCodeDown(code: number): boolean {
-        return !!this.KeysDown[KeyMap[code]];
-    }
-
-    IsKeyNameDown(name: KeyMap): boolean {
-        return !!this.KeysDown[name];
+    IsKeyCodeDown(keycode: number): boolean {
+        return !!this.KeysDown[keycode];
     }
 
     IsModifierDown(): boolean {
-        return (this.KeysDown[KeyMap.Ctrl] || this.KeysDown[KeyMap.CommandFF] || this.KeysDown[KeyMap.LeftWindowKey] || this.KeysDown[KeyMap.RightWindowKey]);
+        return (this.KeysDown[KeyCodes.KeyDown.Ctrl] || this.KeysDown[KeyCodes.KeyDown.CommandFF] || this.KeysDown[KeyCodes.KeyDown.LeftWindowKey] || this.KeysDown[KeyCodes.KeyDown.RightWindowKey]);
     }
 }

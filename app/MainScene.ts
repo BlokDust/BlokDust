@@ -156,10 +156,6 @@ export class MainScene extends DisplayObject{
 
         // Display Objects //
 
-        // CREATE SPLASH SCREEN //
-        //this.Splash = new Splash();
-        //this.Splash.Init(this);
-
         this.ConnectionLines = new ConnectionLines();
         this.DisplayList.Add(this.ConnectionLines);
         this.ConnectionLines.Init(this);
@@ -211,6 +207,10 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.SettingsPanel);
         this.SettingsPanel.Init(this);
 
+        this.AnimationsLayer = new AnimationsLayer();
+        this.DisplayList.Add(this.AnimationsLayer);
+        this.AnimationsLayer.Init(this);
+
         this.SoundcloudPanel = new SoundcloudPanel();
         this.DisplayList.Add(this.SoundcloudPanel);
         this.SoundcloudPanel.Init(this);
@@ -219,8 +219,7 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.MessagePanel);
         this.MessagePanel.Init(this);
 
-        this.AnimationsLayer = new AnimationsLayer();
-        this.AnimationsLayer.Init(this);
+
 
         // todo: use input manager
         document.addEventListener('keydown', (e) => {
@@ -249,6 +248,7 @@ export class MainScene extends DisplayObject{
         if (App.Particles.length) {
             this.UpdateParticles();
         }
+
         this.OptionsPanel.Update();
     }
 
@@ -264,6 +264,7 @@ export class MainScene extends DisplayObject{
                 particle.ReturnToPool();
                 continue;
             }
+
             particle.ParticleCollision(App.Metrics.FloatOnGrid(particle.Position), particle);
             particle.Move();
             currentParticles.push(particle);
@@ -281,7 +282,7 @@ export class MainScene extends DisplayObject{
         super.Draw();
 
         // BG //
-        this.Ctx.fillStyle = App.Palette[0];
+        this.Ctx.fillStyle = App.Palette[0].toString();
         this.Ctx.globalAlpha = 1;
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
@@ -300,7 +301,7 @@ export class MainScene extends DisplayObject{
             var sy = pos.y;
             var size = particle.Size * unit;
 
-            this.Ctx.fillStyle = App.Palette[8];
+            this.Ctx.fillStyle = App.Palette[8].toString();
             this.Ctx.globalAlpha = 1;
             this.Ctx.beginPath();
             this.Ctx.moveTo(sx-(size),sy); //l
@@ -360,11 +361,10 @@ export class MainScene extends DisplayObject{
     private _PointerDown(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
 
-
         this._IsPointerDown = true;
         this._PointerPoint = point;
 
-        var UI: Boolean;
+        var UIInteraction: Boolean;
         var collision: Boolean;
 
         var tooltip = this._ToolTip;
@@ -378,7 +378,7 @@ export class MainScene extends DisplayObject{
         var message = this.MessagePanel;
 
         // UI //
-        UI = this._UIInteraction(point);
+        UIInteraction = this._UIInteraction();
 
         if (tooltip.Open) {
             this.ToolTipClose();
@@ -416,7 +416,7 @@ export class MainScene extends DisplayObject{
                 return;
             }
 
-            if (options.Scale==1) {
+            if (options.Scale === 1) {
                 options.MouseDown(point.x,point.y); // to do : unsplit point
                 if (options.Hover) {
                     return;
@@ -430,7 +430,7 @@ export class MainScene extends DisplayObject{
         }
 
         // BLOCK CLICK //
-        if (!UI) {
+        if (!UIInteraction) {
             collision = this._CheckCollision(point);
         }
 
@@ -440,7 +440,7 @@ export class MainScene extends DisplayObject{
         }
 
         // MainScene DRAGGING //
-        if (!collision && !UI){
+        if (!collision && !UIInteraction){
             this.MainSceneDragger.MouseDown(point);
         }
 
@@ -486,7 +486,7 @@ export class MainScene extends DisplayObject{
         } else {
             this._Header.MouseUp();
 
-            if (this.OptionsPanel.Scale===1) {
+            if (this.OptionsPanel.Scale === 1) {
                 this.OptionsPanel.MouseUp();
             }
 
@@ -497,7 +497,7 @@ export class MainScene extends DisplayObject{
 
     private _PointerMove(point: Point){
         App.Metrics.ConvertToPixelRatioPoint(point);
-        App.Canvas.Style.cursor="default";
+        App.Canvas.Style.cursor = "default";
 
         this._CheckHover(point);
 
@@ -505,17 +505,17 @@ export class MainScene extends DisplayObject{
         if (this.SelectedBlock){
             this.SelectedBlock.MouseMove(point);
             this._CheckProximity();
-            if (this.IsDraggingABlock && (Math.round(this.SelectedBlock.Position.x)!==Math.round(this._SelectedBlockPosition.x) || Math.round(this.SelectedBlock.Position.y)!==Math.round(this._SelectedBlockPosition.y) ) ) {
+            if (this.IsDraggingABlock && (Math.round(this.SelectedBlock.Position.x) !== Math.round(this._SelectedBlockPosition.x) || Math.round(this.SelectedBlock.Position.y) !== Math.round(this._SelectedBlockPosition.y) ) ) {
                 this._SelectedBlockPosition = this.SelectedBlock.Position; // new grid position
-                this._ABlockHasBeenMoved(this.SelectedBlock);
-                if (this.OptionsPanel.Scale==1) {
+                this._ABlockHasBeenMoved();
+                if (this.OptionsPanel.Scale === 1) {
                     this.OptionsPanel.Close();
                 }
             }
         }
 
         // UI //
-        if (this.OptionsPanel.Scale==1) {
+        if (this.OptionsPanel.Scale === 1) {
             this.OptionsPanel.MouseMove(point.x,point.y);
         }
         if (this.SharePanel.Open) {
@@ -668,13 +668,13 @@ export class MainScene extends DisplayObject{
         panel.Open = false;
     }
 
-    private _ABlockHasBeenMoved(block) {
+    private _ABlockHasBeenMoved() {
         this.LaserBeams.UpdateAllLasers = true;
         this.ConnectionLines.UpdateList();
     }
 
     // IS ANYTHING ON THE UI LEVEL BEING CLICKED //
-    private _UIInteraction(point) {
+    private _UIInteraction() {
 
         var zoom = this.ZoomButtons;
         var header = this._Header;
@@ -726,7 +726,7 @@ export class MainScene extends DisplayObject{
     }
 
     _ValidateBlocks() {
-        // todo: move this to redux store
+
         for (var i = 0; i < App.Sources.length; i++){
             var src: ISource = App.Sources[i];
             src.ValidateEffects();
@@ -770,6 +770,7 @@ export class MainScene extends DisplayObject{
 
     // GETS CALLED WHEN LOADING FROM SHARE URL //
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
+
         // add blocks to display list
         this.BlocksContainer.DisplayList.AddRange(App.Blocks);
 
@@ -779,23 +780,21 @@ export class MainScene extends DisplayObject{
             block.Init(this);
         }
 
-        // validate blocks and give us a little time to stabilise / bring in volume etc
-        this._Invalidate();
-
-        setTimeout(() => {
-            this.Play();
-            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
-        },200);
-
         if (this.MainSceneDragger) {
             this.MainSceneDragger.Destination = new Point(e.SaveFile.DragOffset.x, e.SaveFile.DragOffset.y);
         }
 
         this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
 
-        //if (!App.LoadCued) {
-            //App.Splash.EndLoad();
-        //}
+        App.Metrics.UpdateGridScale();
+
+        // validate blocks and give us a little time to stabilise / bring in volume etc
+        this._Invalidate();
+
+        setTimeout(() => {
+            this.Play();
+            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
+        }, 200);
     }
 
     //-------------------------------------------------------------------------------------------

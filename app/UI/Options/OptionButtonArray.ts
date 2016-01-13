@@ -31,7 +31,7 @@ export class ButtonArray extends Option {
         var midType = Math.round(units*10);
 
         // DIVIDERS //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1];
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -50,7 +50,7 @@ export class ButtonArray extends Option {
 
         for (var j=0; j<this.Buttons.length; j++) {
             if (j>0) {
-                ctx.fillStyle = ctx.strokeStyle = App.Palette[1];
+                ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();
                 var bx = panel.Margin + this.Buttons[j].Position.x;
                 ctx.beginPath();
                 ctx.moveTo(Math.round(x + bx), y + (height*0.15));
@@ -63,7 +63,7 @@ export class ButtonArray extends Option {
         }
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (midType * 0.4));

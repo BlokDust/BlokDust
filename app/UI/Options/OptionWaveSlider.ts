@@ -45,7 +45,7 @@ export class WaveSlider extends WaveForm {
             // LINES //
             ctx.lineWidth = 2;
             ctx.globalAlpha = 1;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
 
             var spread = (panel.Range / (this.Max - this.Min)) * this.Spread;
 
@@ -88,7 +88,7 @@ export class WaveSlider extends WaveForm {
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[8];// WHITE
+            ctx.fillStyle = App.Palette[8].toString();// WHITE
             ctx.beginPath();
             ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
             ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -99,7 +99,7 @@ export class WaveSlider extends WaveForm {
 
 
             // VALUE TOOLTIP //
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
             if (this.Selected) {
                 ctx.textAlign = "left";
                 ctx.font = App.Metrics.TxtSlider;

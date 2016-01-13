@@ -92,6 +92,7 @@ export class Convolver extends PostEffect {
 
     Search(query: string) {
         this.Searching = true;
+        App.MainScene.OptionsPanel.Animating = true;
         this.ResultsPage = 1;
         this.SearchResults = [];
         if (window.SC) {
@@ -100,6 +101,7 @@ export class Convolver extends PostEffect {
                     this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
                 });
                 this.Searching = false;
+                App.MainScene.OptionsPanel.Animating = false;
             });
         }
     }

@@ -505,6 +505,12 @@ declare module nullstone.markup.events {
     }
 }
 declare module nullstone.markup.xaml {
+    class SkipBranchError extends Error {
+        root: Element;
+        constructor(root: Element);
+    }
+}
+declare module nullstone.markup.xaml {
     class XamlExtensionParser implements IMarkupExtensionParser {
         private $$defaultXmlns;
         private $$xXmlns;

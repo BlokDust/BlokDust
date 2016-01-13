@@ -57,9 +57,11 @@ export class Metrics {
 
         // DEFINE UNIT & GRID SIZE //
         App.Unit = (width/this._ScreenDivision) * this.PixelRatio;
-        App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
+        //App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
         App.GridSize = gridSize * App.Unit;
-        App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;
+        //App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;
+
+        this.UpdateGridScale();
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
         canvas.Width = width * this.PixelRatio;
@@ -75,7 +77,6 @@ export class Metrics {
             c.style.height = height + "px";
         }
 
-        //App.Canvas.Ctx.setTransform(this.PixelRatio, 0, 0, this.PixelRatio, 0, 0);
         App.Width = width * this.PixelRatio;
         App.Height = height * this.PixelRatio;
         App.MainScene.Width = App.Width;
@@ -109,7 +110,7 @@ export class Metrics {
 
         // STYLE DOM SELECTED TEXT HIGHLIGHT COLOUR //
         var styleElem = document.getElementById("selectStyle");
-        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1] + '; background-blend-mode: normal; mix-blend-mode: normal;}';
+        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1].toString() + '; background-blend-mode: normal; mix-blend-mode: normal;}';
     }
 
     UpdateGridScale() {
@@ -137,7 +138,7 @@ export class Metrics {
             this._ScreenDivision = 475;
             this.OptionsPoint = new Point(0.5,0.4);
             this.ItemsPerPage = 3;
-            this._DeviceZoom = 1.5;
+            this._DeviceZoom = 1;
             this.Device = Device.mobile;
             console.log("MOBILE");
         }
@@ -147,7 +148,7 @@ export class Metrics {
             this._ScreenDivision = 600;
             this.OptionsPoint = new Point(0.2,0.5);
             this.ItemsPerPage = 4;
-            this._DeviceZoom = 1.2;
+            this._DeviceZoom = 1;
             this.Device = Device.tablet;
             console.log("TABLET");
         }
@@ -185,26 +186,26 @@ export class Metrics {
     //-------------------------------------------------------------------------------------------
 
     public CursorToGrid(point: Point): Point {
-        var x = Math.round(((point.x - App.ScaledDragOffset.x) - this.C.x)/App.ScaledGridSize);
-        var y = Math.round(((point.y - App.ScaledDragOffset.y) - this.C.y)/App.ScaledGridSize);
+        var x = Math.round(((point.x - (App.ScaledDragOffset.x*App.Unit)) - this.C.x)/App.ScaledGridSize);
+        var y = Math.round(((point.y - (App.ScaledDragOffset.y*App.Unit)) - this.C.y)/App.ScaledGridSize);
         return new Point(x,y);
     }
 
     public PointOnGrid(point: Point): Point {
-        var x = ((this.C.x + App.ScaledDragOffset.x) + (point.x * App.ScaledGridSize));
-        var y = ((this.C.y + App.ScaledDragOffset.y) + (point.y * App.ScaledGridSize));
+        var x = ((this.C.x + (App.ScaledDragOffset.x*App.Unit)) + (point.x * App.ScaledGridSize));
+        var y = ((this.C.y + (App.ScaledDragOffset.y*App.Unit)) + (point.y * App.ScaledGridSize));
         return new Point(x,y);
     }
 
     public UnscaledPointOnGrid(point: Point): Point {
-        var x = (this.C.x + App.DragOffset.x) + (point.x * App.GridSize);
-        var y = (this.C.y + App.DragOffset.y) + (point.y * App.GridSize);
+        var x = (this.C.x + (App.DragOffset.x*App.Unit)) + (point.x * App.GridSize);
+        var y = (this.C.y + (App.DragOffset.y*App.Unit)) + (point.y * App.GridSize);
         return new Point(x,y);
     }
 
     public FloatOnGrid(point: Point): Point {
-        var x = (this.C.x + App.ScaledDragOffset.x) + (point.x * App.ZoomLevel);
-        var y = (this.C.y + App.ScaledDragOffset.y) + (point.y * App.ZoomLevel);
+        var x = (this.C.x + (App.ScaledDragOffset.x*App.Unit)) + (point.x * App.ZoomLevel);
+        var y = (this.C.y + (App.ScaledDragOffset.y*App.Unit)) + (point.y * App.ZoomLevel);
         return new Point(x,y);
     }
 

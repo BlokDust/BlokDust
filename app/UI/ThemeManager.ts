@@ -130,7 +130,7 @@ export class ThemeManager  {
                 this.ThemeChanged.raise(this, new ThemeChangeEventArgs(palette));
             } else {
                 for (var i=0; i<palette.length; i++) {
-                    this.ColorTo(App.Palette[i],this.NewPalette[i],800);
+                    this.ColorTo(App.Palette[i], this.NewPalette[i], 800);
                 }
             }
         });
@@ -140,7 +140,7 @@ export class ThemeManager  {
     //  TWEEN
     //-------------------------------------------------------------------------------------------
 
-    ColorTo(color,destination,t){
+    ColorTo(color, destination, t){
 
         var offsetTween = new window.TWEEN.Tween({r: color.R, g: color.G, b: color.B, a: color.A});
         offsetTween.to({r: destination.R, g: destination.G, b: destination.B, a: destination.A}, t);

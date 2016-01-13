@@ -322,10 +322,10 @@ export class WaveGen extends SamplerBase {
         var amp  = 1 / totalGain;
 
         // get seed //
-        if (this.Params.seed.waveVoices && this._SeedLoad) {
+        if (this.Params.seed.waveVoices && this._SeedLoad && this._LoadFromShare) {
 
             var seed = this.Params.seed;
-            //console.log(this.Params.seed);
+            console.log(this.Params.seed);
             sequenceLength = seed.sequenceLength;
             seconds = seed.seconds;
             gain = seed.gain;
@@ -541,7 +541,7 @@ export class WaveGen extends SamplerBase {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("soundcloud");
+        this.DrawSprite("wavegen");
     }
 
     MouseUp() {

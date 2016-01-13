@@ -64,7 +64,6 @@ export class Header extends DisplayObject {
 
     Populate(json) {
         var units = App.Unit;
-        var ctx = this.Ctx;
         var dataType = units*10;
         var gutter = 60;
         var menuCats = [];
@@ -138,7 +137,6 @@ export class Header extends DisplayObject {
     Draw() {
         super.Draw();
 
-        var pr = App.Metrics.PixelRatio;
         var units = App.Unit;
         var dataType = units*10;
         var headerType = Math.round(units*28);
@@ -147,7 +145,7 @@ export class Header extends DisplayObject {
         var rowOffset = ((this._Rows-1)*this.Height)*units;
 
         // BG //
-        this.Ctx.fillStyle = App.Palette[2];// Black
+        this.Ctx.fillStyle = App.Palette[2].toString();// Black
 
         this.Ctx.globalAlpha = 0.16;
         this.Ctx.fillRect(0,0,this.DrawTo.Width,thisHeight + (5*units) + dropDown + rowOffset); // shadow
@@ -156,7 +154,7 @@ export class Header extends DisplayObject {
 
         // TT //
         this.Ctx.globalAlpha = 1;
-        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// Grey
+        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// Grey
         this.Ctx.font = "200 " + headerType + "px Dosis";
 
         if (App.Metrics.Device === Device.mobile) {
@@ -168,7 +166,7 @@ export class Header extends DisplayObject {
         }
 
         // DIVIDERS //
-        this.Ctx.strokeStyle = App.Palette[1];// Grey
+        this.Ctx.strokeStyle = App.Palette[1].toString();// Grey
         this.Ctx.globalAlpha = 1;
 
         // Horizontal //
@@ -198,7 +196,7 @@ export class Header extends DisplayObject {
             }
         }
 
-        //between share & settings //
+        // between share & settings //
         this.Ctx.moveTo(Math.round(this.DrawTo.Width - (margin * units)), (thisHeight * 0.5) - (16 * units));
         this.Ctx.lineTo(Math.round(this.DrawTo.Width - (margin * units)), (thisHeight * 0.5) + (16 * units));
         this.Ctx.stroke();
@@ -213,7 +211,7 @@ export class Header extends DisplayObject {
 
             // SELECTION COLOUR //
             var col = this._MenuCols[i - (Math.floor(i/this._MenuCols.length)*(this._MenuCols.length))];
-            this.Ctx.fillStyle = App.Palette[col];
+            this.Ctx.fillStyle = App.Palette[col].toString();
 
             // DRAW CAT HEADER //
             cat.Draw(this.Ctx, units, this,rowOffset);
@@ -271,7 +269,7 @@ export class Header extends DisplayObject {
             margin = this.Margin;
 
             // PAGINATION //
-            this.Ctx.strokeStyle = App.Palette[1]; // White
+            this.Ctx.strokeStyle = App.Palette[1].toString(); // White
             this.Ctx.lineWidth = 2;
 
             // CLIPPING RECTANGLE //
@@ -284,9 +282,9 @@ export class Header extends DisplayObject {
             this.Ctx.closePath();
             this.Ctx.clip();
 
-            this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             if (cat.CurrentPage == 0) {
-                this.Ctx.strokeStyle = App.Palette[1]; // Grey
+                this.Ctx.strokeStyle = App.Palette[1].toString(); // Grey
             }
 
             // LEFT ARROW //
@@ -296,9 +294,9 @@ export class Header extends DisplayObject {
             this.Ctx.lineTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
             this.Ctx.stroke();
 
-            this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             if (cat.CurrentPage == cat.Pages) {
-                this.Ctx.strokeStyle = App.Palette[1]; // Grey
+                this.Ctx.strokeStyle = App.Palette[1].toString(); // Grey
             }
 
             // RIGHT ARROW //
@@ -314,7 +312,7 @@ export class Header extends DisplayObject {
         // SETTINGS & SHARE HOVER //
         var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
 
-        this.Ctx.fillStyle = App.Palette[2];// Black
+        this.Ctx.fillStyle = App.Palette[2].toString();// Black
         this.Ctx.globalAlpha = 0.9;
 
         if (this._ShareOver) {
@@ -341,7 +339,7 @@ export class Header extends DisplayObject {
         // SETTINGS BTN //
         this.Ctx.globalAlpha = 1;
         margin = this.DropDownHeight*0.5;
-        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt]; // White
+        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
         this.Ctx.lineWidth = 2;
         this.Ctx.beginPath();
         this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);

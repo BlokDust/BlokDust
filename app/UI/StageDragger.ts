@@ -43,7 +43,7 @@ export class StageDragger extends DisplayObject {
             var units = App.Unit;
             var ctx = App.MainScene.Ctx;
 
-            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt]; // White
+            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(cx - (5*units),cy);
@@ -116,15 +116,22 @@ export class StageDragger extends DisplayObject {
         App.Metrics.UpdateGridScale();*/
 
         //this.StopAllTweens();
-        this.Destination.x = this._OffsetStart.x + (((point.x - this._DragStart.x)*(speed/App.ZoomLevel)));
-        this.Destination.y = this._OffsetStart.y + (((point.y - this._DragStart.y)*(speed/App.ZoomLevel)));
+        this.Destination.x = (this._OffsetStart.x + ((((point.x - this._DragStart.x)/App.Unit)*(speed/App.ZoomLevel))));
+        this.Destination.y = (this._OffsetStart.y + ((((point.y - this._DragStart.y)/App.Unit)*(speed/App.ZoomLevel))));
         //console.log(this.Destination);
     }
 
     Jump(point: Point, to: Point) {
         this.StopAllTweens();
-        var x = (-point.x * App.GridSize) + ((to.x - App.Metrics.C.x)/App.ZoomLevel);
-        var y = (-point.y * App.GridSize) + ((to.y - App.Metrics.C.y)/App.ZoomLevel);
+        var blockX = (-point.x * App.GridSize);
+        var blockY = (-point.y * App.GridSize);
+
+        var screenX = ((App.Width*to.x) - (App.Metrics.C.x));
+        var screenY = ((App.Height*to.y) - (App.Metrics.C.y));
+
+        var x = (blockX + (screenX/App.ZoomLevel))/App.Unit;
+        var y = (blockY + (screenY/App.ZoomLevel))/App.Unit;
+
         this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
         //this.Destination = new Point(x,y);
         App.MainScene.ToolTipClose();

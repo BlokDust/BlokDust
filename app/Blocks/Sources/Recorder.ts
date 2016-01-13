@@ -167,16 +167,11 @@ export class Recorder extends SamplerBase {
         }
     }
 
-    GetRecordedBlob() {
-        this.Recorder.exportWAV((blob) => {
-            this.RecordedBlob = blob;
-        });
-
-        return this.RecordedBlob;
-    }
-
     DownloadRecording() {
-        this.Recorder.setupDownload(this.GetRecordedBlob(), this.Filename);
+        this.Recorder.exportWAV((blob) => {
+            console.log(`Downloading audio... Filename: ${this.Filename}, Size: ${blob.size} bytes`);
+            this.Recorder.setupDownload(blob, this.Filename);
+        });
     }
 
     Dispose(){
@@ -288,6 +283,14 @@ export class Recorder extends SamplerBase {
                         "centered" : true,
                         "logarithmic": true
                     }
+                },
+                {
+                    "type" : "actionbutton",
+                    "name" : "",
+                    "setting" :"download",
+                    "props" : {
+                        "text" : "Download Recording"
+                    }
                 }
             ]
         };
@@ -334,6 +337,13 @@ export class Recorder extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
+                break;
+            case "download":
+                if (this.BufferSource.buffer===null) {
+                    App.Message("This block doesn't have a recording to download yet.");
+                } else {
+                    this.DownloadRecording();
+                }
                 break;
         }
 

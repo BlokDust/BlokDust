@@ -73,8 +73,7 @@ export default class App implements IApp{
     public GridSize: number;
     public Height: number;
     public InputManager: InputManager;
-    public IsLoadedFromSave: boolean = false;
-    public LoadCued: boolean;
+    public IsLoadingComposition: boolean = false;
     public Metrics: Metrics;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
@@ -86,7 +85,6 @@ export default class App implements IApp{
     public ScaledDragOffset: Point;
     public ScaledGridSize: number;
     public ScaledUnit: number;
-    public Scene: number;
     public Stage: Stage;
     public SubCanvas: HTMLCanvasElement[];
     public ThemeManager: ThemeManager;
@@ -103,27 +101,22 @@ export default class App implements IApp{
         return this.Stage.MainScene;
     }
 
-    // todo: move to redux store?
     get Sources(): ISource[] {
         return <ISource[]>this.Blocks.en().where(b => b instanceof Source).toArray();
     }
 
-    // todo: move to redux store?
     get Effects(): IEffect[] {
         return <IEffect[]>this.Blocks.en().where(b => b instanceof Effect).toArray();
     }
 
-    // todo: move to redux store?
     get PowerEffects(): IPowerEffect[] {
         return <IPowerEffect[]>this.Blocks.en().where(b => b instanceof PowerEffect).toArray();
     }
 
-    // todo: move to redux store?
     get PowerSources(): IPowerSource[] {
         return <IPowerSource[]>this.Blocks.en().where(b => b instanceof PowerSource).toArray();
     }
 
-    // todo: move to redux store?
     public GetBlockId(): number {
         // loop through blocks to get max id
         var max = 0;
@@ -158,8 +151,6 @@ export default class App implements IApp{
 
         this.Canvas = new Canvas();
 
-        this.Scene = 0;
-
         // METRICS //
         this.Metrics = new Metrics();
 
@@ -173,7 +164,6 @@ export default class App implements IApp{
         };
 
         // LOAD FONTS AND SETUP CALLBACK //
-        this.LoadCued = false;
         this._FontsLoaded = 0;
 
         WebFont.load({
@@ -270,18 +260,19 @@ export default class App implements IApp{
     LoadComposition() {
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
+
         if(this.CompositionId) {
+            this.IsLoadingComposition = true;
+
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
-                this.Populate(data);
+                this.CompositionLoadComplete(data);
             }).catch((error: string) => {
                 // fail silently
                 this.CompositionId = null;
-                //this.Splash.LoadOffset = 1;
                 console.error(error);
             });
-        } else {
-            //this.Splash.LoadOffset = 1; // TODO should delete Splash once definitely done with it
         }
+
         this.CreateStage();
     }
 
@@ -297,9 +288,7 @@ export default class App implements IApp{
         this.Resize();
     }
 
-    // IF LOADING FROM SHARE URL, SET UP ALL BLOCKS //
-    Populate(data) {
-        this.IsLoadedFromSave = true;
+    CompositionLoadComplete(data) {
         console.log(`Loaded "${this.CompositionName}"`);
 
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
@@ -310,10 +299,7 @@ export default class App implements IApp{
             this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);
         }
 
-        //this.ZoomLevel = this._SaveFile.ZoomLevel;
-        this.DragOffset = new Point(this._SaveFile.DragOffset.x, this._SaveFile.DragOffset.y);
-
-        this.Metrics.UpdateGridScale();
+        this.ZoomLevel = this._SaveFile.ZoomLevel;
 
         // bring down volume and validate blocks //
         this.Audio.Master.volume.value = -100;
@@ -321,11 +307,9 @@ export default class App implements IApp{
         // Connect the effects chain
         this.Audio.ConnectionManager.Update();
 
-        //if (this.Scene < 2) {
-        //    this.LoadCued = true;
-        //} else {
-            this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
-        //}
+        this.IsLoadingComposition = false;
+
+        this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }
 
     Serialize(): string {

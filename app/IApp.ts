@@ -45,8 +45,8 @@ export interface IApp {
     GridSize: number;
     Height: number;
     InputManager: InputManager;
+    IsLoadingComposition: boolean;
     PianoKeyboardManager: PianoKeyboardManager;
-    LoadCued: boolean;
     MainScene: MainScene;
     Metrics: Metrics;
     OperationManager: OperationManager;
@@ -60,7 +60,6 @@ export interface IApp {
     ScaledDragOffset: Point;
     ScaledGridSize: number;
     ScaledUnit: number;
-    Scene: number;
     SessionId: string;
     Sources: ISource[];
     SubCanvas: HTMLCanvasElement[];

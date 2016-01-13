@@ -24,7 +24,7 @@ export class WaveForm extends Option {
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1]; // Grey
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString(); // Grey
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -32,28 +32,29 @@ export class WaveForm extends Option {
             ctx.stroke();
         }
 
-
+        // IF NO WAVEFORM //
         if (!this.Waveform.length) {
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+            var ax = (panel.Range*0.5) + panel.Margin;
+            var ay = y + (height * 0.5);
             if (this.EmptyString.length>1) {
                 ctx.textAlign = "center";
                 ctx.font = App.Metrics.TxtMid;
-                ctx.fillText(this.EmptyString.toUpperCase(), (panel.Range*0.5) + panel.Margin, y + (height * 0.5) + (dataType * 0.4));
+                ctx.fillText(this.EmptyString.toUpperCase(), ax, ay + (dataType * 0.4));
             } else {
-                App.AnimationsLayer.DrawSprite('loading',(panel.Range*0.5) + panel.Margin, y + (height * 0.5),11,true);
-
+                App.AnimationsLayer.DrawSprite(ctx,'loading',ax, ay,11,true);
             }
 
         }
 
 
         if (this.Handles && this.Waveform.length && this.Mode) {
-            ctx.strokeStyle = App.Palette[1];
+            ctx.strokeStyle = App.Palette[1].toString();
             panel.diagonalFill(panel.Margin + this.Handles[2].Position.x,y,this.Handles[3].Position.x - this.Handles[2].Position.x,height,9);
         }
 
 
-        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.fillStyle = App.Palette[1].toString();// WHITE
 
         // WAVEFORM //
 
@@ -89,7 +90,7 @@ export class WaveForm extends Option {
 
         // FILL //
 
-        ctx.fillStyle = App.Palette[1];// WHITE
+        ctx.fillStyle = App.Palette[1].toString();// WHITE
         ctx.beginPath();
         ctx.moveTo(panel.Margin, y + (height * 0.5)); // left mid
         if (this.Waveform.length!==0) {
@@ -106,7 +107,7 @@ export class WaveForm extends Option {
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
+        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

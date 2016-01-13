@@ -2,7 +2,6 @@ import {Commands} from '../../Commands';
 import {CommandManager}from '../Commands/CommandManager';
 import {IApp} from '../../IApp';
 import {InputManager} from './InputManager';
-import {KeyMap} from './KeyMap';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 
@@ -36,19 +35,19 @@ export class CommandsInputManager extends InputManager {
         //console.log(this.KeysDown);
 
         if (!App.TypingManager.IsEnabled) {
-            if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.s)){
+            if ((this.IsKeyCodeDown(KeyCodes.KeyDown.Ctrl) || this.IsKeyCodeDown(KeyCodes.KeyDown.LeftWindowKey) || this.IsKeyCodeDown(KeyCodes.KeyDown.CommandFF)) && this.IsKeyCodeDown(KeyCodes.KeyDown.s)){
                 e.preventDefault();
                  App.MainScene.SharePanel.OpenPanel();
                 return;
             }
 
-            if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.Shift) && this.IsKeyNameDown(KeyMap.z)){
+            if ((this.IsKeyCodeDown(KeyCodes.KeyDown.Ctrl) || this.IsKeyCodeDown(KeyCodes.KeyDown.LeftWindowKey) || this.IsKeyCodeDown(KeyCodes.KeyDown.CommandFF)) && this.IsKeyCodeDown(KeyCodes.KeyDown.Shift) && this.IsKeyCodeDown(KeyCodes.KeyDown.z)){
                 e.preventDefault();
                 this._CommandManager.ExecuteCommand(Commands.REDO);
                 return;
             }
 
-            if ((this.IsKeyNameDown(KeyMap.Ctrl) || this.IsKeyNameDown(KeyMap.LeftWindowKey) || this.IsKeyNameDown(KeyMap.CommandFF)) && this.IsKeyNameDown(KeyMap.z)){
+            if ((this.IsKeyCodeDown(KeyCodes.KeyDown.Ctrl) || this.IsKeyCodeDown(KeyCodes.KeyDown.LeftWindowKey) || this.IsKeyCodeDown(KeyCodes.KeyDown.CommandFF)) && this.IsKeyCodeDown(KeyCodes.KeyDown.z)){
                 e.preventDefault();
                 this._CommandManager.ExecuteCommand(Commands.UNDO);
                 return;

@@ -24,10 +24,9 @@ export class Void extends Block {
         return new Point(x,y);
     }
 
-
     Draw() {
         super.Draw();
-        this.DrawSprite("void");
+        this.DrawSprite("void",this.StarPos);
     }
 
     Dispose(){
