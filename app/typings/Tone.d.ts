@@ -564,6 +564,7 @@ declare module Tone {
     interface ExternalInput extends Tone.Source {
         inputNum: number;
         sources: any[];
+        supported: boolean;
         close(): Tone.ExternalInput;
         dispose(): Tone.Microphone;
         getSources(callback: (sources?: any[]) => any): Tone.ExternalInput;

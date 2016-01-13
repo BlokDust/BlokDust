@@ -28,6 +28,10 @@ export class Microphone extends Source {
 
         super.Init(drawTo);
 
+        if (!(<any>navigator).getUserMedia) {
+            App.Message(`Unfortunately the microphone will not work in this browser because it doesn't support 'getUserMedia'. Try using the latest Chrome`);
+        };
+
         this.CreateSource();
         this.Volume = App.Audio.ctx.createGain();
 
