@@ -34,7 +34,7 @@ export class OptionButton {
 
         ctx.lineWidth = 2;
         ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
-        ctx.fillStyle = col;
+        ctx.fillStyle = col.toString();
         if (this.Selected) {
             //ctx.fillRect(x,y + (h*0.15),w,h*0.7);
             /*ctx.beginPath();

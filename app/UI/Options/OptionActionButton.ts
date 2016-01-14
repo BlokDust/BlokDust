@@ -23,11 +23,14 @@ export class OptionActionButton extends Option {
     }
 
 
-    Draw(ctx,units,i,panel) {
+    Draw(ctx,units,i,panel,yoveride?) {
         super.Draw(ctx, units, i, panel);
 
         var x = this.Position.x;
         var y = this.Position.y;
+        if (yoveride) {
+            y = yoveride;
+        }
         var height = this.Size.height;
         var origin = this.Origin;
         var dataType = Math.round(units * 10);
@@ -52,7 +55,7 @@ export class OptionActionButton extends Option {
 
         // BUTTON //
         var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
-        ctx.fillStyle = col;// col
+        ctx.fillStyle = col.toString();// col
         ctx.fillRect(panel.Margin + (panel.Range*0.25), y + (height*0.2), panel.Range*0.5, height*0.6);
 
 

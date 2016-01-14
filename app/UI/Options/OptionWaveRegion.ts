@@ -82,7 +82,7 @@ export class WaveRegion extends WaveForm{
             ctx.globalAlpha = 1;
 
             for (var j=0; j<sliderNo; j++) {
-                ctx.fillStyle = ctx.strokeStyle = col;
+                ctx.fillStyle = ctx.strokeStyle = col.toString();
 
 
                 x = xs[j];

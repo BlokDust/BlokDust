@@ -7,8 +7,12 @@ import {Device} from '../Device';
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
-import {ThemeSelector} from './ColorThemeSelector';
+import {ThemeSelector} from './Options/OptionColorTheme';
 import {Version} from './../_Version';
+import {Option} from './Options/Option';
+import {Slider} from './Options/OptionSlider';
+import {OptionMeter} from './Options/OptionMeter';
+import {OptionActionButton} from './Options/OptionActionButton';
 
 declare var App: IApp;
 
@@ -26,6 +30,11 @@ export class SettingsPanel extends DisplayObject{
     private _OpenTab: number;
     private _VersionNumber: string;
     private _ThemeSelector: ThemeSelector;
+    public Options: Option[];
+    private _OptionsRoll: boolean[];
+    public Range: number;
+    public Margin: number;
+    public SliderColours: string[];
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -37,12 +46,16 @@ export class SettingsPanel extends DisplayObject{
         this.Height = 60;
         this.MenuItems = [];
         this._MenuCols = [9,5,7,4,3];
-        this._OpenTab = 2;
+        this._OpenTab = 0;
         this._VersionNumber = Version;
         //console.log(Version);
 
         // OPTIONS //
-        this._ThemeSelector = new ThemeSelector;
+        this.Range = 0;
+        this.Margin = 0;
+        this.SliderColours = [];
+        this.Options = [];
+        this._OptionsRoll = [];
 
         this._Attribution = App.Config.Attribution;
         this._Attribution.build = String.format(this._Attribution.build, this._VersionNumber);
@@ -50,10 +63,10 @@ export class SettingsPanel extends DisplayObject{
         this.MenuJson = {
             categories: [
                 {
-                    name: "connect"
+                    name: "settings"
                 },
                 {
-                    name: "settings"
+                    name: "connect"
                 },
                 {
                     name: "about"
@@ -113,6 +126,8 @@ export class SettingsPanel extends DisplayObject{
 
         this.MenuItems = menuCats;
         this.MenuItems[this._OpenTab].Selected = 1;
+
+        this.PopulateOptions();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -135,7 +150,7 @@ export class SettingsPanel extends DisplayObject{
         var halfWidth = menuWidth * 0.5;
         var dx = (App.Width*0.5);
         var pageY = tabY + (120*units);
-
+        var tab;
 
         if (this.Open) {
 
@@ -162,7 +177,7 @@ export class SettingsPanel extends DisplayObject{
 
             var gutter = (40*units);
             var thirdWidth = (menuWidth - (gutter*2))/3;
-            var thirdY = pageY + (170 * units);
+            var thirdY = pageY + (130 * units);
             var x1 = dx - halfWidth;
             var x2 = dx - halfWidth + thirdWidth + gutter;
             var x3 = dx - halfWidth + (thirdWidth*2) + (gutter*2);
@@ -184,14 +199,21 @@ export class SettingsPanel extends DisplayObject{
             ctx.clip();
 
 
-            // TAB 2 //
-            var tab = this.MenuItems[1].YOffset;
 
-            this._ThemeSelector.Draw(ctx, dx - halfWidth, pageY + tab, menuWidth, 60*units, units);
+            // TAB 1 //
+            tab = this.MenuItems[0].YOffset;
+
+            this.Options[0].Draw(ctx,units,0,this,pageY + tab);
+            this.Options[1].Draw(ctx,units,1,this,pageY + tab + (60*units));
+            this.Options[2].Draw(ctx,units,2,this,pageY + tab + (108*units));
+            this.Options[3].Draw(ctx,units,3,this,pageY + tab + (156*units));
+
+            // TAB 2 //
+            tab = this.MenuItems[1].YOffset;
 
 
             // TAB 3 //
-            var tab = this.MenuItems[2].YOffset;
+            tab = this.MenuItems[2].YOffset;
 
             ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
             ctx.font = largeType;
@@ -404,6 +426,10 @@ export class SettingsPanel extends DisplayObject{
             context.fillText( words.join(' '), x, y + (lineHeight*currentLine) );
     }
 
+    NumberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     //-------------------------------------------------------------------------------------------
     //  TWEEN
     //-------------------------------------------------------------------------------------------
@@ -440,10 +466,62 @@ export class SettingsPanel extends DisplayObject{
         this.OffsetY = -this.DrawTo.Height;
         this.DelayTo(this,0,500,0,"OffsetY");
         this.MenuItems[this._OpenTab].YOffset = 0;
+        //this.Populate();
     }
 
     ClosePanel() {
         this.DelayTo(this,-this.DrawTo.Height,500,0,"OffsetY");
+    }
+
+    PopulateOptions() {
+        var optionList = [];
+        var optionY = [];
+        var optionNames = ["Color Theme","Master Volume","DB Meter","Tour"];
+
+        var units = App.Unit;
+        var centerY = this.OffsetY + (this.DrawTo.Height * 0.5);
+        var tabY = this.OffsetY;
+        var pageY = tabY + (120*units);
+        var dx = (this.DrawTo.Width*0.5);
+        var menuWidth = (this.DrawTo.Width/7)*4;
+        var halfWidth = menuWidth*0.5;
+
+        // MARGIN WIDTH //
+        var mw = 0;
+        this.Ctx.font = App.Metrics.TxtMid;
+        for (var i=0;i<optionNames.length;i++) {
+            var nw = this.Ctx.measureText(optionNames[i].toUpperCase()).width;
+            if (nw > mw) {
+                mw = nw;
+                console.log(nw);
+            }
+        }
+        var marginWidth = mw + (15*units);
+
+        this.Margin = dx - halfWidth + marginWidth;
+        this.Range = menuWidth - marginWidth;
+        this.SliderColours = [App.Palette[5],App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7]];
+
+
+        // COLOR THEME //
+        optionList.push(new ThemeSelector(optionNames[0]));
+
+        // VOLUME //
+        var sliderValue = App.Audio.Master.volume.value + 70;
+        var sliderSetting = "volume";
+        var sliderX = this.linPosition(0, this.Range, 0, 60, sliderValue);
+        var sliderO = this.Margin;
+        optionList.push(new Slider(new Point(sliderX,pageY + this.MenuItems[1].YOffset + (60*units)),new Size(1,48*App.Unit),sliderO,sliderValue,0,60,true,optionNames[1],sliderSetting,false));
+
+        // METER //
+        optionList.push(new OptionMeter(optionNames[2]));
+
+        // TUTORIAL //
+        optionList.push(new OptionActionButton(new Point(0,pageY + this.MenuItems[1].YOffset + (156*units)),new Size(1,48*App.Unit),optionNames[3],"Launch Tutorial","tutorial"));
+
+
+
+        this.Options = optionList;
     }
 
     MouseDown(point) {
@@ -451,6 +529,46 @@ export class SettingsPanel extends DisplayObject{
         if (this._RollOvers[0]) {
             this.ClosePanel();
             return;
+        }
+
+        // OPTIONS //
+        for (var i=0;i<this.Options.length;i++) {
+
+            if (this._OptionsRoll[i]) {
+                this.Options[i].Selected = true;
+
+                if (this.Options[i].Type=="themeSelector") {
+                    var option = this.Options[i];
+                    if (option.HandleRoll[0]) {
+                        App.ThemeManager.CurrentThemeNo -= 1;
+                        if (App.ThemeManager.CurrentThemeNo < 0) {
+                            App.ThemeManager.CurrentThemeNo = App.ThemeManager.Themes.length-1;
+                        }
+                        App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
+                    }
+                    if (option.HandleRoll[1]) {
+                        App.ThemeManager.CurrentThemeNo += 1;
+                        if (App.ThemeManager.CurrentThemeNo > (App.ThemeManager.Themes.length-1)) {
+                            App.ThemeManager.CurrentThemeNo = 0;
+                        }
+                        App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
+                    }
+                }
+
+                if (this.Options[i].Type=="slider") {
+                    this.SliderSet(i, point.x);
+                }
+
+                if (this.Options[i].Type=="meter") {
+                    this.Options[i].MonitorReset();
+                }
+                if (this.Options[i].Type == "actionbutton") {
+                    if (this.Options[i].HandleRoll[0]) {
+                        this.ActionButton(this.Options[i].Setting);
+                    }
+                }
+
+            }
         }
 
         // SELECT CATEGORY //
@@ -477,22 +595,6 @@ export class SettingsPanel extends DisplayObject{
         }
 
 
-        // OPTIONS //
-        if (this._ThemeSelector.HandleRoll[0]) {
-            App.ThemeManager.CurrentThemeNo -= 1;
-            if (App.ThemeManager.CurrentThemeNo < 0) {
-                App.ThemeManager.CurrentThemeNo = App.ThemeManager.Themes.length-1;
-            }
-            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
-        }
-        if (this._ThemeSelector.HandleRoll[1]) {
-            App.ThemeManager.CurrentThemeNo += 1;
-            if (App.ThemeManager.CurrentThemeNo > (App.ThemeManager.Themes.length-1)) {
-                App.ThemeManager.CurrentThemeNo = 0;
-            }
-            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
-        }
-
 
 
         // EXTERNAL URLS //
@@ -510,6 +612,15 @@ export class SettingsPanel extends DisplayObject{
 
     MouseMove(point) {
         this.HitTests(point);
+
+        for (var i=0;i<this.Options.length;i++) {
+            if (this.Options[i].Selected) {
+                if (this.Options[i].Type=="slider") {
+                    this.SliderSet(i, point.x);
+                }
+            }
+        }
+
     }
 
     HitTests(point) {
@@ -523,11 +634,12 @@ export class SettingsPanel extends DisplayObject{
         var halfWidth = menuWidth*0.5;
         var gutter = (40*units);
         var thirdWidth = (menuWidth - (gutter*2))/3;
-        var thirdY = pageY + (170 * units);
+        var thirdY = pageY + (130 * units);
         var x1 = dx - halfWidth;
         var x2 = dx - halfWidth + thirdWidth + gutter;
         var x3 = dx - halfWidth + (thirdWidth*2) + (gutter*2);
         var xs = [x1,x2,x3];
+        var tab;
 
         this._RollOvers[0] = Dimensions.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
 
@@ -543,12 +655,112 @@ export class SettingsPanel extends DisplayObject{
         }
 
         // OPTIONS HIT TESTS //
-        var selector = this._ThemeSelector;
-        selector.HandleRoll[0] = Dimensions.HitRect(dx - halfWidth - (10*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
-        selector.HandleRoll[1] = Dimensions.HitRect(dx + halfWidth - (30*units), pageY + this.MenuItems[1].YOffset, 40*units, 60*units, point.x, point.y);
+        tab = this.MenuItems[0].YOffset;
+        for (var i=0;i<this.Options.length;i++) {
+            if (this.Options[i].Type == "slider") {
+                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab + (60*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+            }
+            if (this.Options[i].Type == "meter") {
+                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab + (108*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+            }
+            if (this.Options[i].Type == "themeSelector") {
+                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab, this.Range + (20*units), 60*App.Unit, point.x, point.y);
+                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab, 40*units, 60*units, point.x, point.y);
+                this.Options[i].HandleRoll[1] = Dimensions.HitRect(this.Margin + this.Range - (30*units), pageY + tab, 40*units, 60*units, point.x, point.y);
+            }
+            if (this.Options[i].Type == "actionbutton") {
+                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab + (156*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Margin + (this.Range * 0.25), pageY + tab + (156*units), (this.Range * 0.5), this.Options[i].Size.height, point.x, point.y);
+            }
+        }
     }
 
     MouseUp(point) {
+        for (var i=0;i<this.Options.length;i++) {
+            this.Options[i].Selected = false;
+        }
+    }
+
+    // DRAGGING A SLIDER //
+    SliderSet(n,mx) {
+        var units = App.Unit;
+        var centerY = this.OffsetY + (this.DrawTo.Height * 0.5);
+        var tabY = this.OffsetY;
+        var pageY = tabY + (120*units);
+        var dx = (this.DrawTo.Width*0.5);
+        var menuWidth = (this.DrawTo.Width/7)*4;
+        var halfWidth = menuWidth*0.5;
+
+        this.Options[n].Position.x = mx - this.Margin;
+        this.Options[n].Position.x = this.ValueInRange(this.Options[n].Position.x,0,this.Range);
+        var log = false;
+        this.UpdateValue(this.Options[n],"Value","Min","Max",0, this.Range,"Setting","x",log);
+    }
+
+    ActionButton(setting) {
+        switch (setting) {
+            case "tutorial" :
+                console.log("tutorial manually launched");
+                break;
+        }
+    }
+
+    // UPDATE THE VALUE IN THE BLOCK //
+    UpdateValue(object,value,min,max,rangemin,rangemax,setting,axis,log) {
+
+        // CALCULATE VALUE //
+        object[""+value] = this.linValue(rangemin,rangemax,object[""+min],object[""+max],object.Position[""+axis]);
+
+
+        // QUANTIZE //
+        if (object.Quantised) {
+            object[""+value] = Math.round(object[""+value]);
+            object.Position["" + axis] = this.linPosition(rangemin, rangemax, object["" + min], object["" + max], object["" + value]);
+        }
+
+        // SET VALUE //
+        var val = object[""+value];
+        console.log("" + object[""+setting] +" | "+ val);
+        switch (object[""+setting]) {
+            case "volume":
+                App.Audio.Master.volume.value = val - 70;
+                if (val===0) {
+                    App.Audio.Master.volume.value = val - 200;
+                }
+                break;
+        }
+    }
+
+
+
+    //-------------------------------------------------------------------------------------------
+    //  MATHS
+    //-------------------------------------------------------------------------------------------
+
+    ValueInRange(value,floor,ceiling) {
+        if (value < floor) {
+            value = floor;
+        }
+        if (value> ceiling) {
+            value = ceiling;
+        }
+        return value;
+    }
+
+    linValue(minpos,maxpos,minval,maxval,position) {
+        var scale = (maxval - minval) / (maxpos - minpos);
+        //console.log("" +minval + " | " +maxval + " | " +position);
+        return (position - minpos) * scale + minval;
+    }
+
+    linPosition(minpos,maxpos,minval,maxval,value) {
+        var scale = (maxval - minval) / (maxpos - minpos);
+        //console.log("" +minval + " | " +maxval + " | " +value);
+        return minpos + (value - minval) / scale;
+    }
+
+
+    Resize() {
     }
 
 }

@@ -90,11 +90,11 @@ export class Metrics {
         var sliderType = Math.round(App.Unit * 33);
         var urlType = Math.round(App.Unit * (24/this.PixelRatio));
         var urlType2 = Math.round(App.Unit * 24);
-        var largeType = Math.round(App.Unit * 12);
+        var largeType = Math.round(App.Unit * 11);
         var midType = Math.round(App.Unit * 10);
         var bodyType = Math.round(App.Unit * 8);
         var italicType = Math.round(App.Unit * 7.5);
-        var italicType2 = Math.round(App.Unit * 9);
+        var italicType2 = Math.round(App.Unit * 8);
         var dataType = Math.round(App.Unit * 5);
 
         this.TxtHeader = "200 " + headerType + "px Dosis";

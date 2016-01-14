@@ -1,26 +1,51 @@
 import {IApp} from '../IApp';
+import {Option} from './Option';
 
 declare var App: IApp;
 
-export class ThemeSelector {
+export class ThemeSelector  extends Option {
 
     public HandleRoll: boolean[];
 
-    constructor() {
+    constructor(name) {
+        super();
 
+        this.Type = "themeSelector";
+        this.Name = name;
         this.HandleRoll = [];
 
     }
 
-    Draw(ctx,x,y,width,height,units) {
+    Draw(ctx,units,i,panel,yoveride?) {
+        super.Draw(ctx,units,i,panel);
+        var width = panel.Range;
+        var height = 60*units;
+        var x = panel.Margin;
+        var y = yoveride || 0;
 
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();
+        var dataType = Math.round(units*10);
+
+        // DIVIDERS //
         ctx.globalAlpha = 1;
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();// Grey
+        if (i !== (panel.Options.length - 1)) {
+            ctx.beginPath();
+            ctx.moveTo(panel.Margin - units, y + height);
+            ctx.lineTo(panel.Range + panel.Margin + units, y + height);
+            ctx.stroke();
+        }
+
+
 
         // TITLE //
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(App.ThemeManager.CurrentTheme.Name, x + (width*0.5) - (15*units), y + (height*0.5) + (6*units));
+
+
+        // PARAM NAME //
+        ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
 
         // ARROWS //

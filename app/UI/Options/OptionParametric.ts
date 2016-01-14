@@ -82,7 +82,7 @@ export class Parametric extends Option {
         var markerNames = ["20","50","100","200","1k","2k","5k","10k","20k"];
         ctx.textAlign = "center";
         var bodyType = units*5;
-        ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
+        //ctx.font = "300 italic " + bodyType + "px Merriweather Sans";
         ctx.font = "400 " + bodyType + "px PT Sans"; //TODO: convert to newer font system
         ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();
         //ctx.fillStyle = "#393d43";

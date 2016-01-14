@@ -43,7 +43,7 @@ export class OptionSwitch {
         if (style==0) {
             ctx.fillStyle = App.Palette[1].toString();// GREY
             ctx.fillRect(x,y + (h*0.16),w,h*0.43);
-            ctx.fillStyle = col;
+            ctx.fillStyle = col.toString();
 
             if (this.Selected) {
                 if (this._Lit) {

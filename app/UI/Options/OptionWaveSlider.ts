@@ -74,7 +74,7 @@ export class WaveSlider extends WaveForm {
             }
 
             ctx.globalAlpha = 1;
-            ctx.fillStyle = ctx.strokeStyle = col;
+            ctx.fillStyle = ctx.strokeStyle = col.toString();
             ctx.fillRect(x + panel.Margin - (units), y, 2 * units, height);
 
 

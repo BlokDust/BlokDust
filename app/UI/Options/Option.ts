@@ -5,6 +5,8 @@ import {OptionHandle} from './OptionHandle';
 import {OptionSubHandle} from './OptionSubHandle';
 import {OptionSwitch} from './OptionSwitch';
 import Point = etch.primitives.Point;
+import {IApp} from '../../IApp';
+declare var App: IApp;
 
 export class Option implements IOption {
 
@@ -53,11 +55,41 @@ export class Option implements IOption {
 
     }
 
-    Draw(ctx,units,i,panel) {
+    Draw(ctx,units,i,panel,yoveride?) {
 
     }
 
     PlotGraph() {
 
+    }
+
+    MonitorReset() {
+
+    }
+
+    DiagonalFill(ctx,x,y,w,h,s) {
+        var pr = App.Metrics.PixelRatio;
+        s = s *pr;
+        var lineNo = Math.round((w+h) / (s));
+        var pos1 = new Point(0,0);
+        var pos2 = new Point(0,0);
+        ctx.beginPath();
+        for (var j=0;j<lineNo;j++) {
+            pos1.x = (s * 0.5) + (s * j);
+            pos1.y = 0;
+            pos2.x = pos1.x - h;
+            pos2.y = h;
+            if (pos2.x<0) {
+                pos2.y = h + pos2.x;
+                pos2.x = 0;
+            }
+            if (pos1.x>w) {
+                pos1.y = (pos1.x-w);
+                pos1.x = w;
+            }
+            ctx.moveTo(x + pos1.x, y + pos1.y);
+            ctx.lineTo(x + pos2.x, y + pos2.y);
+        }
+        ctx.stroke();
     }
 }

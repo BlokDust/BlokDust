@@ -32,7 +32,7 @@ export class ThemeManager  {
 
         this.Themes = [
             new ColorTheme(
-                "DARK CREAM",
+                "MODE STEREO",
                 App.Config.PixelPaletteImagePath[0]
             )
 

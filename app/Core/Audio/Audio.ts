@@ -30,6 +30,10 @@ export class Audio implements IAudio {
     public ConnectionManager: ConnectionManager;
     public Waveform: Waveform;
 
+    public Level: number;
+    public Peak: number;
+    public Clip: boolean;
+
     Init() {
 
         // Reference to Tone
@@ -46,6 +50,9 @@ export class Audio implements IAudio {
         //Meter
         this.Meter = new Tone.Meter();
         this.Master.connect(this.Meter);
+        this.Level = 0;
+        this.Peak = 0;
+        this.Clip = false;
 
         // Master Gain Level
         this.Master.volume.value = this.MasterVolume;
@@ -88,5 +95,21 @@ export class Audio implements IAudio {
 
     get HasClipped(): boolean {
         return this.Meter.isClipped();
+    }
+
+    Monitor() {
+        this.Level = this.MeterVolumeDb;
+
+        if (this.Level > this.Peak) {
+            this.Peak = this.Level;
+        }
+        if (this.Peak > 0) {
+            this.Clip = true;
+        }
+    }
+
+    MonitorReset() {
+        this.Peak = 0;
+        this.Clip = false;
     }
 }

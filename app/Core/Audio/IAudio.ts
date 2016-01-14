@@ -14,7 +14,7 @@ export interface IAudio {
     ConnectionManager: ConnectionManager;
     ConnectionMethodType: ConnectionMethodType;
     ctx: AudioContext;
-    HasClipped: boolean
+    HasClipped: boolean;
     Master: Tone.Master;
     MasterVolume: number;
     Meter: Tone.Meter;
@@ -28,5 +28,12 @@ export interface IAudio {
     WaveformTypeIndex: string[];
     WaveformTypeIndexNoise: string[];
 
-    Init(): void
+    Init(): void;
+
+    Monitor(): void;
+    MonitorReset(): void;
+
+    Level: number;
+    Peak: number;
+    Clip: boolean;
 }
