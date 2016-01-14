@@ -48,6 +48,18 @@ export class OptionMeter  extends Option {
         this.DiagonalFill(ctx,x + this._Zero,y + units,panel.Range - this._Zero,46*units,9);
 
 
+        // TITLE //
+        ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();
+        ctx.font = App.Metrics.TxtMid;
+        ctx.textAlign = "right";
+        ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
+
+        // MARKER //
+        var bodyType = units*5;
+        ctx.font = "400 " + bodyType + "px PT Sans"; //TODO: convert to newer font system
+        ctx.textAlign = "right";
+        ctx.fillText("0dB", x + this._Zero - (5*units), y + (height * 0.5) + (2.5 * units));
+
         // BAR //
         var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
         ctx.fillStyle = ctx.strokeStyle = col.toString();
@@ -66,16 +78,7 @@ export class OptionMeter  extends Option {
 
         //ctx.fillRect(x + this._Zero,y + (9*units),units,30*units);
 
-        // TITLE //
-        ctx.font = App.Metrics.TxtMid;
-        ctx.textAlign = "right";
-        ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));
 
-        // MARKER //
-        var bodyType = units*5;
-        ctx.font = "400 " + bodyType + "px PT Sans"; //TODO: convert to newer font system
-        ctx.textAlign = "right";
-        ctx.fillText("0dB", x + this._Zero - (5*units), y + (height * 0.5) + (2.5 * units));
 
     }
 

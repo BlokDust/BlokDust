@@ -191,6 +191,10 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.LaserBeams);
         this.LaserBeams.Init(this);
 
+        this.AnimationsLayer = new AnimationsLayer();
+        this.DisplayList.Add(this.AnimationsLayer);
+        this.AnimationsLayer.Init(this);
+
         this.OptionsPanel = new OptionsPanel();
         this.DisplayList.Add(this.OptionsPanel);
         this.OptionsPanel.Init(this);
@@ -206,10 +210,6 @@ export class MainScene extends DisplayObject{
         this.SettingsPanel = new SettingsPanel();
         this.DisplayList.Add(this.SettingsPanel);
         this.SettingsPanel.Init(this);
-
-        this.AnimationsLayer = new AnimationsLayer();
-        this.DisplayList.Add(this.AnimationsLayer);
-        this.AnimationsLayer.Init(this);
 
         this.SoundcloudPanel = new SoundcloudPanel();
         this.DisplayList.Add(this.SoundcloudPanel);
