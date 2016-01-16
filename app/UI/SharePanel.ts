@@ -484,6 +484,7 @@ export class SharePanel extends DisplayObject {
     }
 
     ClosePanel() {
+        this._Saving = false;
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
         App.TypingManager.Disable();
     }
@@ -500,7 +501,6 @@ export class SharePanel extends DisplayObject {
 
     ReturnLink(id) {
         this._Saving = false;
-        console.log(id);
         this._SessionId = id;
         this.UpdateUrlText();
         this.DelayTo(this,-App.Width,500,0,"OffsetX");
