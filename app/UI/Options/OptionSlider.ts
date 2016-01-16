@@ -41,7 +41,8 @@ export class Slider extends Option {
 
         // DIVIDERS //
         ctx.globalAlpha = 1;
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();// Grey
+        App.FillColor(ctx,App.Palette[1]);
+        App.StrokeColor(ctx,App.Palette[1]);
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);
@@ -61,7 +62,6 @@ export class Slider extends Option {
 
 
         // BAR //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();
         if (origin !== panel.Margin) {
             panel.diagonalFill(panel.Margin - units, y + units, panel.Range + (2 * units), height - (2 * units), 9);
         }
@@ -71,7 +71,7 @@ export class Slider extends Option {
         }
         ctx.globalAlpha = 1;
         var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
-        ctx.fillStyle = ctx.strokeStyle = col.toString();
+        App.FillColor(ctx,col);
         ctx.beginPath();
         ctx.moveTo(origin + offset, y);
         ctx.lineTo(x + panel.Margin, y);
@@ -95,7 +95,7 @@ export class Slider extends Option {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8].toString();// WHITE
+        App.FillColor(ctx,App.Palette[8]);
         ctx.beginPath();
         ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
         ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -105,7 +105,7 @@ export class Slider extends Option {
         ctx.fill();
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "right";
         ctx.fillText(this.Name.toUpperCase(), panel.Margin - (15 * units), y + (height * 0.5) + (dataType * 0.4));

@@ -51,8 +51,7 @@ export class OptionHandle {
 
     Draw(ctx,x,y,size,col) {
 
-
-        ctx.fillStyle = col;
+        App.FillColor(ctx,col);
         ctx.beginPath();
         ctx.moveTo(x - size, y);
         ctx.lineTo(x, y - size);
@@ -61,7 +60,7 @@ export class OptionHandle {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8].toString();
+        App.FillColor(ctx,App.Palette[8]);
         ctx.beginPath();
         ctx.moveTo(x - size, y);
         ctx.lineTo(x, y - size);

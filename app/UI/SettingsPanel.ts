@@ -35,6 +35,7 @@ export class SettingsPanel extends DisplayObject{
     public Range: number;
     public Margin: number;
     public SliderColours: string[];
+    private _CopyJson: any;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -72,6 +73,19 @@ export class SettingsPanel extends DisplayObject{
                     name: "about"
                 }
             ]
+        };
+
+        this._CopyJson = {
+            guideLine: "Visit the BlokDust companion guide for an in depth Wiki, tutorials, news & more:",
+            guideURL: "BlokDust Guide",
+            copyLine: "Spread the word about BlokDust:",
+            connectLine: "Connect with BlokDust elsewhere:",
+            generateLine: "Randomise Title",
+            facebook: "share on facebook",
+            twitter: "share on twitter",
+            google: "share on google +",
+            bookmark: "bookmark creation",
+            tweetText: "Browser-based music making with @blokdust - "
         };
 
         this.Populate(this.MenuJson);
@@ -141,6 +155,7 @@ export class SettingsPanel extends DisplayObject{
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
         var largeType = App.Metrics.TxtLarge;
+        var urlType = App.Metrics.TxtUrl2;
         var italicType2 = App.Metrics.TxtItalic2;
         var units = App.Unit;
         var grid = App.GridSize;
@@ -149,13 +164,14 @@ export class SettingsPanel extends DisplayObject{
         var menuWidth = (App.Width/7)*4;
         var halfWidth = menuWidth * 0.5;
         var dx = (App.Width*0.5);
+        var leftX = dx - halfWidth;
         var pageY = tabY + (120*units);
         var tab;
 
         if (this.Open) {
 
             // BG //
-            ctx.fillStyle = App.Palette[2].toString();// Black
+            App.FillColor(ctx,App.Palette[2]);
             ctx.globalAlpha = 0.95;
             if (this.Open) {
                 ctx.fillRect(0,this.OffsetY,App.Width,App.Height); // solid
@@ -166,7 +182,8 @@ export class SettingsPanel extends DisplayObject{
             // CLOSE BUTTON //
             var closeY = tabY + (30*units);
             ctx.lineWidth = 2;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.beginPath();
             ctx.moveTo(dx + halfWidth + (12.5*units), closeY - (7.5*units));
             ctx.lineTo(dx + halfWidth + (27.5*units), closeY + (7.5*units));
@@ -211,40 +228,122 @@ export class SettingsPanel extends DisplayObject{
             // TAB 2 //
             tab = this.MenuItems[1].YOffset;
 
+            App.FillColor(ctx,App.Palette[4]);
+            ctx.fillRect(dx - (210*units),pageY + tab + (10*units),420*units,40*units);
+
+            ctx.font = urlType;
+            ctx.textAlign = "center";
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.fillText(this._CopyJson.guideURL.toUpperCase(), dx, pageY + tab + (39*units));
+
+
+
+
+            var buttonY = pageY + tab + (100*units);
+
+            // SHARE BUTTONS //
+            ctx.fillStyle = "#fc4742";// gp //TODO: Store these share colours somewhere
+            ctx.fillRect(dx + (80*units),buttonY,130*units,30*units);
+            if (this._RollOvers[8]) {
+                ctx.beginPath();
+                ctx.moveTo(dx + (145*units), buttonY + (39*units));
+                ctx.lineTo(dx + (135*units), buttonY + (29*units));
+                ctx.lineTo(dx + (155*units), buttonY + (29*units));
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.fillStyle = "#2db0e7"; // tw
+            ctx.fillRect(dx - (65*units),buttonY,130*units,30*units);
+            if (this._RollOvers[7]) {
+                ctx.beginPath();
+                ctx.moveTo(dx, buttonY + (39*units));
+                ctx.lineTo(dx - (10*units), buttonY + (29*units));
+                ctx.lineTo(dx + (10*units), buttonY + (29*units));
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.fillStyle = "#2152ad"; // fb
+            ctx.fillRect(dx - (210*units),buttonY,130*units,30*units);
+            if (this._RollOvers[6]) {
+                ctx.beginPath();
+                ctx.moveTo(dx - (145*units), buttonY + (39*units));
+                ctx.lineTo(dx - (135*units), buttonY + (29*units));
+                ctx.lineTo(dx - (155*units), buttonY + (29*units));
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // SHARE COPY //
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.textAlign = "left";
+            ctx.font = italicType2;
+            ctx.fillText(this._CopyJson.copyLine, dx - (210*units), buttonY - (10*units) );
+            ctx.fillText(this._CopyJson.guideLine, dx - (210*units), pageY + tab );
+            ctx.textAlign = "center";
+            ctx.font = midType;
+            ctx.fillText(this._CopyJson.facebook.toUpperCase(), dx - (145*units), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.twitter.toUpperCase(), dx, buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.google.toUpperCase(), dx  + (145*units), buttonY + (18.5*units) );
+
+
 
             // TAB 3 //
             tab = this.MenuItems[2].YOffset;
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.font = largeType;
             ctx.textAlign = "left";
             this.WordWrap(ctx, this._Attribution.about, dx - halfWidth, pageY + tab, units*16, Math.ceil(menuWidth));
 
 
             var xs = [x1,x2,x3];
+            var widths = [];
+            var strings = [
+                this._Attribution.twyman.url,this._Attribution.phillips.url,this._Attribution.silverton.url,
+                this._Attribution.twyman.twitter,this._Attribution.phillips.twitter,this._Attribution.silverton.twitter
+            ];
+            ctx.font = italicType2;
+            for (var i=1; i<=(strings.length); i++) {
+                widths.push(ctx.measureText(strings[i-1]).width);
+            }
+
+
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.lineWidth = 1;
             for (var i=1; i<4; i++) {
                 if (this._RollOvers[i]) {
-                    ctx.fillStyle = App.Palette[3].toString();// Blue
+                    /*App.FillColor(ctx,App.Palette[3]);
                     ctx.beginPath();
                     ctx.moveTo(xs[i-1] - (5*units), thirdY + (43*units) - (grid*0.5) + tab);
                     ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (43*units) - (grid*0.5) + tab);
                     ctx.lineTo(xs[i-1] - (5*units),thirdY + (43*units) + tab);
                     ctx.closePath();
-                    ctx.fill();
+                    ctx.fill();*/
+
+                    ctx.beginPath();
+                    ctx.moveTo(xs[i-1], thirdY + (44*units) + tab);
+                    ctx.lineTo(xs[i-1] + (widths[i-1]),thirdY + (44*units) + tab);
+                    ctx.stroke();
                 }
                 if (this._RollOvers[i+3]) {
-                    ctx.fillStyle = App.Palette[3].toString();// Blue
+                    /*App.FillColor(ctx,App.Palette[3]);
                     ctx.beginPath();
                     ctx.moveTo(xs[i-1] - (5*units), thirdY + (57*units) - (grid*0.5) + tab);
                     ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (57*units) - (grid*0.5) + tab);
                     ctx.lineTo(xs[i-1] - (5*units),thirdY + (57*units) + tab);
                     ctx.closePath();
-                    ctx.fill();
+                    ctx.fill();*/
+
+                    ctx.beginPath();
+                    ctx.moveTo(xs[i-1], thirdY + (58*units) + tab);
+                    ctx.lineTo(xs[i-1] + (widths[i+2]),thirdY + (58*units) + tab);
+                    ctx.stroke();
                 }
             }
 
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
-            ctx.font = italicType2;
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+
 
             // BLURBS //
             this.WordWrap(ctx, this._Attribution.twyman.blurb, x1, thirdY + tab, units*14, Math.ceil(thirdWidth));
@@ -267,7 +366,7 @@ export class SettingsPanel extends DisplayObject{
             // BLOCKS //
             var blockY = thirdY - grid - (10*units) + tab;
 
-            ctx.fillStyle = App.Palette[4].toString();// red
+            App.FillColor(ctx,App.Palette[4]);
             ctx.beginPath();
             ctx.moveTo(x1,blockY - (grid*3));
             ctx.lineTo(x1 + (grid),blockY - (grid*3));
@@ -283,7 +382,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[5].toString();// Black
+            App.FillColor(ctx,App.Palette[5]);
             ctx.beginPath();
             ctx.moveTo(x2,blockY);
             ctx.lineTo(x2,blockY - grid);
@@ -293,7 +392,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[7].toString();// Black
+            App.FillColor(ctx,App.Palette[7]);
             ctx.beginPath();
             ctx.moveTo(x3,blockY);
             ctx.lineTo(x3 + grid,blockY - (grid*3));
@@ -303,7 +402,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[3].toString();// Blue
+            App.FillColor(ctx,App.Palette[3]);
             ctx.beginPath();
             ctx.moveTo(x1,blockY);
             ctx.lineTo(x1,blockY - (grid*3));
@@ -312,7 +411,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[10].toString();// Yellow
+            App.FillColor(ctx,App.Palette[10]);
             ctx.beginPath();
             ctx.moveTo(x2,blockY);
             ctx.lineTo(x2,blockY - grid);
@@ -328,7 +427,7 @@ export class SettingsPanel extends DisplayObject{
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = App.Palette[9].toString();// Red
+            App.FillColor(ctx,App.Palette[9]);
             ctx.beginPath();
             ctx.moveTo(x3,blockY);
             ctx.lineTo(x3,blockY - (grid*2));
@@ -347,7 +446,7 @@ export class SettingsPanel extends DisplayObject{
 
             // END TAB 3 //
             ctx.restore();
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.font = italicType2;
             ctx.textAlign = "right";
             ctx.fillText(this._Attribution.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
@@ -355,7 +454,7 @@ export class SettingsPanel extends DisplayObject{
 
             // DIVIDERS //
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[1].toString();// White
+            App.StrokeColor(ctx,App.Palette[1]);
 
             // Horizontal //
             ctx.beginPath();
@@ -371,9 +470,9 @@ export class SettingsPanel extends DisplayObject{
                     ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), tabY + (44*units));
                 }
             }
-
-
             ctx.stroke();
+
+
 
             // CATEGORIES //
             ctx.textAlign = "center";
@@ -385,7 +484,7 @@ export class SettingsPanel extends DisplayObject{
 
                 // SELECTION COLOUR //
                 var col = this._MenuCols[i - (Math.floor(i / this._MenuCols.length) * (this._MenuCols.length))];
-                ctx.fillStyle = App.Palette[col].toString();
+                App.FillColor(ctx,App.Palette[col]);
 
                 // DRAW CAT HEADER //
                 cat.Draw(ctx, units, this,tabY);
@@ -493,7 +592,6 @@ export class SettingsPanel extends DisplayObject{
             var nw = this.Ctx.measureText(optionNames[i].toUpperCase()).width;
             if (nw > mw) {
                 mw = nw;
-                console.log(nw);
             }
         }
         var marginWidth = mw + (15*units);
@@ -644,8 +742,8 @@ export class SettingsPanel extends DisplayObject{
         this._RollOvers[0] = Dimensions.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
 
         for (var i=1; i<4; i++) {
-            this._RollOvers[i] = Dimensions.HitRect(xs[i-1], thirdY + (30*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
-            this._RollOvers[i+3] = Dimensions.HitRect(xs[i-1], thirdY + (50*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
+            this._RollOvers[i] = Dimensions.HitRect(xs[i-1], thirdY + (25*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
+            this._RollOvers[i+3] = Dimensions.HitRect(xs[i-1], thirdY + (45*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
         }
 
         // CATEGORY HIT TEST //

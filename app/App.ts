@@ -7,6 +7,7 @@ import Point = minerva.Point;
 import {AnimationsLayer} from "./UI/AnimationsLayer";
 import {Audio} from './Core/Audio/Audio';
 import {BlockSprites} from "./Blocks/BlockSprites";
+import {ColorManager} from './Core/Visual/ColorManager';
 import {CommandHandlerFactory} from './Core/Resources/CommandHandlerFactory';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
@@ -47,8 +48,8 @@ import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
 import {Source} from './Blocks/Source';
 import {Stage} from "./Stage";
-import {ThemeChangeEventArgs} from "./UI/ThemeChangeEventArgs";
-import {ThemeManager} from './UI/ThemeManager';
+import {ThemeChangeEventArgs} from "./Core/Visual/ThemeChangeEventArgs";
+import {ThemeManager} from './Core/Visual/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 
@@ -62,6 +63,7 @@ export default class App implements IApp{
     public Blocks: IBlock[] = [];
     public BlockSprites: BlockSprites;
     public Canvas: Canvas;
+    public ColorManager: ColorManager;
     public CommandManager: CommandManager;
     public CommandsInputManager: CommandsInputManager;
     public CompositionId: string;
@@ -220,6 +222,7 @@ export default class App implements IApp{
         }
 
         // INITIALISE THEME //
+        this.ColorManager = new ColorManager();
         this.ThemeManager = new ThemeManager();
         this.ThemeManager.ThemeChanged.on((s: any, e: ThemeChangeEventArgs) => {
             this.Palette = e.Palette;
@@ -357,4 +360,10 @@ export default class App implements IApp{
         this.Metrics.Metrics();
         this.Stage.Resize();
     }
+
+    // SHORTHAND COLOR SET //
+    FillColor(ctx,col) { this.ColorManager.FillColor(ctx,col); }
+    FillRGBA(ctx,r,g,b,a) { this.ColorManager.FillRGBA(ctx,r,g,b,a); }
+    StrokeColor(ctx,col) { this.ColorManager.StrokeColor(ctx,col); }
+    StrokeRGBA(ctx,r,g,b,a) { this.ColorManager.StrokeRGBA(ctx,r,g,b,a); }
 }

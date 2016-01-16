@@ -282,7 +282,7 @@ export class MainScene extends DisplayObject{
         super.Draw();
 
         // BG //
-        this.Ctx.fillStyle = App.Palette[0].toString();
+        App.FillColor(this.Ctx,App.Palette[0]);
         this.Ctx.globalAlpha = 1;
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
@@ -301,7 +301,7 @@ export class MainScene extends DisplayObject{
             var sy = pos.y;
             var size = particle.Size * unit;
 
-            this.Ctx.fillStyle = App.Palette[8].toString();
+            App.FillColor(this.Ctx,App.Palette[8]);
             this.Ctx.globalAlpha = 1;
             this.Ctx.beginPath();
             this.Ctx.moveTo(sx-(size),sy); //l

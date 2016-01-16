@@ -26,15 +26,14 @@ export class OptionButton {
 
     Draw(ctx,panel,units,x,h,i,mode) {
 
-        var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
-
         x += this.Position.x;
         var y = this.Position.y;
         var w = this.Size.width;
 
         ctx.lineWidth = 2;
-        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
-        ctx.fillStyle = col.toString();
+        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+        var col = panel.SliderColours[i - (Math.floor(i/panel.SliderColours.length)*(panel.SliderColours.length))];
+        App.FillColor(ctx,col);
         if (this.Selected) {
             //ctx.fillRect(x,y + (h*0.15),w,h*0.7);
             /*ctx.beginPath();
@@ -67,7 +66,8 @@ export class OptionButton {
 
 
         // PARAM NAME //
-        ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
 
         if (mode=="string") {
             ctx.font = App.Metrics.TxtMid;
@@ -112,15 +112,11 @@ export class OptionButton {
 
 
             }
-
             ctx.stroke();
 
         }
 
-
-
         ctx.lineWidth = 1;
-
     }
 
 }

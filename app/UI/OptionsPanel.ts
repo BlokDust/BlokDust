@@ -590,17 +590,17 @@ export class OptionsPanel extends DisplayObject {
 
 
         // DRAW PANEL //
-        ctx.fillStyle = App.Palette[2].toString();// Shadow
+        App.FillColor(ctx,App.Palette[2]);
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        ctx.fillStyle = App.Palette[2].toString();// Black
+        App.FillColor(ctx,App.Palette[2]);
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;
 
 
         // CLOSE X //
-        ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
@@ -612,7 +612,7 @@ export class OptionsPanel extends DisplayObject {
 
 
         // TITLE //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
         ctx.textAlign = "left";
         ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
 
@@ -676,7 +676,7 @@ export class OptionsPanel extends DisplayObject {
         ctx.stroke();
     }
 
-    vertFill(x,y,w,h,s) {
+    /*vertFill(x,y,w,h,s) {
         var ctx = this.Ctx;
         var lineNo = Math.round(w / s);
         x = Math.round(x);
@@ -686,7 +686,7 @@ export class OptionsPanel extends DisplayObject {
             ctx.lineTo(x + (s*j), y + h);
         }
         ctx.stroke();
-    }
+    }*/
 
 
     NumberWithCommas(x) {

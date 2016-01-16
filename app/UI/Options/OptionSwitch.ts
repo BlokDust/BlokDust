@@ -41,13 +41,13 @@ export class OptionSwitch {
 
 
         if (style==0) {
-            ctx.fillStyle = App.Palette[1].toString();// GREY
+            App.FillColor(ctx,App.Palette[1]);
             ctx.fillRect(x,y + (h*0.16),w,h*0.43);
-            ctx.fillStyle = col.toString();
+            App.FillColor(ctx,col);
 
             if (this.Selected) {
                 if (this._Lit) {
-                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+                    App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
                 }
                 ctx.fillRect(x + (w*0.5),y + (h*0.16),w*0.5,h*0.42);
             } else {
@@ -57,7 +57,7 @@ export class OptionSwitch {
 
         else if (style==1) {
 
-            ctx.strokeStyle = App.Palette[1].toString();
+            App.StrokeColor(ctx,App.Palette[1]);
             ctx.beginPath();
             ctx.moveTo(Math.round(x + (w*0.5)), y + (h*0.15));
             ctx.lineTo(Math.round(x + (w*0.5)), y + (h*0.55));
@@ -68,17 +68,15 @@ export class OptionSwitch {
 
 
             if (this.Selected) {
-                ctx.strokeStyle = App.Palette[1].toString();
                 //panel.diagonalFill(x, y + (h*0.15), w * 0.5, h * 0.4,9);
-                ctx.fillStyle = col;
+                App.FillColor(ctx,col);
                 //ctx.fillRect(x + (w*0.65), y + (h*0.55), w * 0.2, h * 0.05);
                 //ctx.fillRect(x + (w*0.65), y + (h*0.1), w * 0.2, h * 0.05);
                 ctx.fillRect(x + (w*0.5), y + (h*0.55), w * 0.5, h * 0.05);
                 //ctx.fillRect(x + (w*0.5), y + (h*0.15), w * 0.5, h * 0.4);
             } else {
-                ctx.strokeStyle = App.Palette[1].toString();
                 //panel.diagonalFill(x + (w*0.5), y + (h*0.15), w * 0.5, h * 0.4,9);
-                ctx.fillStyle = col;
+                App.FillColor(ctx,col);
                 //ctx.fillRect(x + (w*0.15), y + (h*0.55), w * 0.2, h * 0.05);
                 //ctx.fillRect(x + (w*0.15), y + (h*0.1), w * 0.2, h * 0.05);
                 ctx.fillRect(x, y + (h*0.55), w * 0.5, h * 0.05);
@@ -86,7 +84,7 @@ export class OptionSwitch {
             }
 
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             var cx = x + (w*0.5);
             var cy = y + (h * 0.35);
             var lx = x + (w*0.25);
@@ -139,7 +137,7 @@ export class OptionSwitch {
 
 
         // PARAM NAME //
-        ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
         ctx.font = App.Metrics.TxtMid;
         ctx.textAlign = "center";
         ctx.fillText(this.Name.toUpperCase(), x + (w*0.5), y + (h*0.84));

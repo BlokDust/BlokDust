@@ -26,7 +26,7 @@ export class ConnectionLines extends DisplayObject {
 
         var grd = App.ScaledGridSize; // this.Grid.Width / this.Grid.Divisor;
 
-        this.Ctx.strokeStyle = App.Palette[15].toString();// BLUE
+        App.StrokeColor(this.Ctx,App.Palette[15]);
 
         this.Ctx.lineWidth = 1;
 

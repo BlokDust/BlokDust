@@ -27,7 +27,7 @@ export class SwitchArray extends Option {
 
 
         // DIVIDERS //
-        ctx.fillStyle = ctx.strokeStyle = App.Palette[1].toString();
+        App.StrokeColor(ctx,App.Palette[1]);
         if (i !== (panel.Options.length - 1)) {
             ctx.beginPath();
             ctx.moveTo(panel.Margin - units, y + height);

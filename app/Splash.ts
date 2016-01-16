@@ -49,12 +49,12 @@ export class Splash extends DisplayObject{
         if (App.IsLoadingComposition) {
             var dx = 0;
             var dy = (App.Height*(this.LoadOffset));
-            this.Ctx.fillStyle = App.Palette[0].toString();
+            App.FillColor(this.Ctx,App.Palette[0]);
             this.Ctx.fillRect(dx,dy,App.Width,App.Height);
 
             var dx = (App.Width*0.5);
             var dy = (App.Height*0.5) + (App.Height*this.LoadOffset);
-            this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// white
+            App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
             this.Ctx.textAlign = "center";
             this.Ctx.font = App.Metrics.TxtHeader;
             this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * units));
@@ -64,17 +64,17 @@ export class Splash extends DisplayObject{
 
         //TODO use blocksprites with multiplier argument
         this._Offset = new Point(0,1);
-        this.Ctx.fillStyle = "#111";
+        App.FillRGBA(this.Ctx,10,10,10,1);
         this.CenterRect();
 
         // Convolution
         this._Center = new Point(-0.5,-0.5);
         this._Offset = new Point(0,0);
-        this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[2].toString();}
+        App.FillColor(this.Ctx,App.Palette[3]);
+        if (!colorful) {App.FillColor(this.Ctx,App.Palette[2]);}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
+        App.FillColor(this.Ctx,App.Palette[8]);
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(2,0);
@@ -84,7 +84,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
+        App.FillColor(this.Ctx,App.Palette[4]);
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(0,0);
         this.DrawLineTo(0,2);
@@ -93,7 +93,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
+        App.FillColor(this.Ctx,App.Palette[6]);
         this.DrawMoveTo(0,0);
         this.DrawLineTo(1,0);
         this.DrawLineTo(0,1);
@@ -103,11 +103,11 @@ export class Splash extends DisplayObject{
         // gain
         this._Center = new Point(-0.5,0);
         this._Offset = new Point(-1,0);
-        this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[0].toString();}
+        App.FillColor(this.Ctx,App.Palette[4]);
+        if (!colorful) {App.FillColor(this.Ctx,App.Palette[0]);}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
+        App.FillColor(this.Ctx,App.Palette[5]);
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(2,1);
@@ -115,7 +115,7 @@ export class Splash extends DisplayObject{
         this.Ctx.closePath();
         this.Ctx.fill();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
+        App.FillColor(this.Ctx,App.Palette[3]);
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,0);
         this.DrawLineTo(1,1);
@@ -126,11 +126,11 @@ export class Splash extends DisplayObject{
         // noise
         this._Center = new Point(0,-0.5);
         this._Offset = new Point(-1,-1);
-        this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[2].toString();}
+        App.FillColor(this.Ctx,App.Palette[5]);
+        if (!colorful) {App.FillColor(this.Ctx,App.Palette[2]);}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
+        App.FillColor(this.Ctx,App.Palette[4]);
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,-1);
@@ -140,7 +140,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
+        App.FillColor(this.Ctx,App.Palette[8]);
         this.DrawMoveTo(-1,0);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(1,-1);
@@ -151,11 +151,11 @@ export class Splash extends DisplayObject{
         // distortion
         this._Center = new Point(0,-0.5);
         this._Offset = new Point(0,-1);
-        this.Ctx.fillStyle = App.Palette[6].toString();// PURPLE
-        if (!colorful) {this.Ctx.fillStyle = App.Palette[0].toString();}
+        App.FillColor(this.Ctx,App.Palette[6]);
+        if (!colorful) {App.FillColor(this.Ctx,App.Palette[0]);}
         this.CenterRect();
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[7].toString();// RED
+        App.FillColor(this.Ctx,App.Palette[7]);
         this.DrawMoveTo(-1,-1);
         this.DrawLineTo(1,-1);
         this.DrawLineTo(1,0);
@@ -164,7 +164,7 @@ export class Splash extends DisplayObject{
         this.Ctx.fill();
 
         this.Ctx.beginPath();
-        this.Ctx.fillStyle = App.Palette[9].toString();// PINK
+        App.FillColor(this.Ctx,App.Palette[9]);
         this.DrawLineTo(-1,-1);
         this.DrawLineTo(0,-1);
         this.DrawLineTo(0,0);
@@ -174,12 +174,12 @@ export class Splash extends DisplayObject{
 
         this._Center = new Point(0,0);
         this._Offset = new Point(1,-1);
-        this.Ctx.fillStyle = App.Palette[2].toString();// DARK
+        App.FillColor(this.Ctx,App.Palette[2]);
         this.CenterRect();
         var dx = (App.Width*0.5) + (this._Center.x*this._Scale) + (App.Width*(this._Offset.x+this.XOffset));
         var dy = (App.Height*0.5) + (this._Center.y*this._Scale) + (App.Height*(this._Offset.y+this.YOffset));
         var headerType = 100*units;
-        this.Ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// Grey
+        App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";
         this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));

@@ -43,7 +43,8 @@ export class MenuItem {
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
 
         // NAME //
-        this.Ctx.fillStyle = this.Ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// White
+        App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
+        App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
         var dataType = units*10;
         this.Ctx.textAlign = "center";
         this.Ctx.font = App.Metrics.TxtMid;
@@ -80,7 +81,7 @@ export class MenuItem {
             this.PrintAtWordWrap(this.Ctx, this.Description, x -(this.Size.width*0.5) + (10*units), y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
 
             // VERTICAL LINES //
-            this.Ctx.strokeStyle = App.Palette[1].toString();// Grey
+            App.StrokeColor(this.Ctx,App.Palette[1]);
             this.Ctx.beginPath();
             this.Ctx.moveTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*0.5) + (20*units));
             this.Ctx.lineTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*1.5) - (20*units));

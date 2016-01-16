@@ -1,4 +1,9 @@
 declare module Utils {
+    class Async {
+        static WaitFor(test: () => boolean, successCallback: () => void, failureCallback?: () => void, interval?: number, maxTries?: number, numTries?: number): void;
+    }
+}
+declare module Utils {
     class Bools {
         static GetBool(val: any, defaultVal: boolean): boolean;
     }
