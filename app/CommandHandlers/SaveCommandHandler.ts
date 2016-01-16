@@ -14,10 +14,14 @@ export class SaveCommandHandler implements ICommandHandler {
     Execute(): Promise<any>{
         var op:IOperation = new SaveOperation(App.Serialize(), App.CompositionId, App.SessionId);
         return App.OperationManager.Do(op).then((result) => {
-            App.CompositionId = result.Id;
-            App.MainScene.SharePanel.ReturnLink(result.Id);
-            App.SessionId = result.SessionId;
-            //console.log(result.Id, result.Message);
+            if (!result) {
+                App.MainScene.SharePanel.ClosePanel();
+                App.Message(App.Config.Errors.SaveError);
+            } else {
+                App.CompositionId = result.Id;
+                App.MainScene.SharePanel.ReturnLink(result.Id);
+                App.SessionId = result.SessionId;
+            }
         });
     }
 }

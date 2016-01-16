@@ -491,7 +491,6 @@ export class SharePanel extends DisplayObject {
     GenerateLink() {
         this._Saving = true;
         this._CommandManager.ExecuteCommand(Commands.SAVEAS);
-
     }
 
     UpdateLink() {
@@ -512,8 +511,6 @@ export class SharePanel extends DisplayObject {
         var shareUrl = document.getElementById("shareUrl");
         shareUrl.innerHTML = "" + this.SessionURL;
     }
-
-
 
     ShareFacebook(url) {
         FB.ui({
@@ -537,7 +534,6 @@ export class SharePanel extends DisplayObject {
         href = "" + href + encodeURIComponent(this.SessionURL);
         window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
     }
-
 
     MouseDown(point) {
         this.HitTests(point);
@@ -643,8 +639,6 @@ export class SharePanel extends DisplayObject {
 
         this._RollOvers[9] = Dimensions.HitRect(shareX + (appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
     }
-
-
 
     SelectText(element) {
         var doc = document

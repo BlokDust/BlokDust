@@ -20,6 +20,9 @@
         "thanks": "Thanks also to Yotam Mann and Brad Sickles.",
         "build": "Current Build: {0}"
     },
+    "Errors": {
+        "SaveError": "Save failed, please try again."
+    },
     "MaxOperations": "5",
     "PixelPaletteImagePath": [
         "img/palette6.gif",

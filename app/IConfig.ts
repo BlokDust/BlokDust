@@ -3,6 +3,7 @@ export interface IConfig {
     BaseNote: number;
     ConvolverDefaultTracks: string[];
     ConvolverMaxTrackLength: number;
+    Errors: any;
     GranularDefaultTracks: string[];
     GranularMaxTrackLength: number;
     MaxOperations: number;
