@@ -302,8 +302,10 @@ export class BlockCreator {
     // BACKWARDS COMPATIBILITY //
     // PATCH CHANGED BLOCK NAMES //
     public BackwardsCompatibilityCheck(type: string): string {
-        if (("" + type) === "Gain") { // todo: coerce to string using .toString() or <String>?
+        if (type === "Gain") {
             type = "Volume";
+        } if (type === "Pitch") {
+            type = "PitchShifter";
         }
         return type;
     }
