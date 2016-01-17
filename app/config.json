@@ -67,5 +67,6 @@
     "SoundCloudLoadTimeout": 20,
     "ResetPitchesOnInteractionDisconnect": true,
     "ScrollSpeed": 1.5,
-    "ScrollEasing": 25
+    "ScrollEasing": 25,
+    "SingleClickTime": 110
 }

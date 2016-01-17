@@ -44,7 +44,7 @@ export class SharePanel extends DisplayObject {
 
         this._CommandManager = App.CommandManager;
 
-
+        // todo: add to config
         this._CopyJson = {
             genUrl: "Generate share link",
             shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",

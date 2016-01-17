@@ -585,7 +585,7 @@ export class MainScene extends DisplayObject{
                 OptionTimeout = true;
                 setTimeout(function() {
                     OptionTimeout = false;
-                }, 200);
+                }, App.Config.SingleClickTime);
 
                 return true;
             }

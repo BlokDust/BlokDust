@@ -18,4 +18,5 @@ export interface IConfig {
     SoundCloudDefaultTracks: string[];
     SoundCloudLoadTimeout: number;
     SoundCloudMaxTrackLength: number;
+    SingleClickTime: number;
 }

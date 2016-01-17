@@ -29,7 +29,8 @@ export class SettingsPanel extends DisplayObject{
     public Height: number;
     private _OpenTab: number;
     private _VersionNumber: string;
-    private _ThemeSelector: ThemeSelector;
+    private _LinkWidth: number[];
+    private _LinksWidth: number;
     public Options: Option[];
     private _OptionsRoll: boolean[];
     public Range: number;
@@ -85,7 +86,20 @@ export class SettingsPanel extends DisplayObject{
             twitter: "share on twitter",
             google: "share on google +",
             bookmark: "bookmark creation",
-            tweetText: "Browser-based music making with @blokdust - "
+            tweetText: "Browser-based music making with @blokdust - ",
+            links: [
+                "FACEBOOK",
+                "TWITTER",
+                "YOUTUBE",
+                "GITHUB"
+            ],
+            urls: [
+                'guide.blokdust.com',
+                'facebook.com/blokdust',
+                'twitter.com/blokdust',
+                'youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ',
+                'github.com/BlokDust/BlokDust'
+            ]
         };
 
         this.Populate(this.MenuJson);
@@ -141,6 +155,16 @@ export class SettingsPanel extends DisplayObject{
         this.MenuItems = menuCats;
         this.MenuItems[this._OpenTab].Selected = 1;
 
+
+        // LINKS in CONNECT //
+        this._LinkWidth = [];
+        this._LinksWidth = 0;
+        for (var i=0; i<this._CopyJson.links.length; i++) {
+            this._LinkWidth[i] = ctx.measureText(this._CopyJson.links[i]).width;
+            this._LinksWidth += this._LinkWidth[i];
+        }
+
+
         this.PopulateOptions();
     }
 
@@ -167,6 +191,9 @@ export class SettingsPanel extends DisplayObject{
         var leftX = dx - halfWidth;
         var pageY = tabY + (120*units);
         var tab;
+
+
+        //TODO: Draw function needs big tidy up
 
         if (this.Open) {
 
@@ -217,7 +244,10 @@ export class SettingsPanel extends DisplayObject{
 
 
 
-            // TAB 1 //
+
+
+            //  TAB 1
+            //-------------------------------------------------------------------------------------------
             tab = this.MenuItems[0].YOffset;
 
             this.Options[0].Draw(ctx,units,0,this,pageY + tab);
@@ -225,12 +255,25 @@ export class SettingsPanel extends DisplayObject{
             this.Options[2].Draw(ctx,units,2,this,pageY + tab + (108*units));
             this.Options[3].Draw(ctx,units,3,this,pageY + tab + (156*units));
 
-            // TAB 2 //
+
+
+
+
+            //  TAB 2
+            //-------------------------------------------------------------------------------------------
             tab = this.MenuItems[1].YOffset;
 
+            // GUIDE BUTTON //
             App.FillColor(ctx,App.Palette[4]);
             ctx.fillRect(dx - (210*units),pageY + tab + (10*units),420*units,40*units);
-
+            if (this._RollOvers[7]) {
+                ctx.beginPath();
+                ctx.moveTo(dx, pageY + tab + (59*units));
+                ctx.lineTo(dx + (10*units), pageY + tab + (49*units));
+                ctx.lineTo(dx - (10*units), pageY + tab + (49*units));
+                ctx.closePath();
+                ctx.fill();
+            }
             ctx.font = urlType;
             ctx.textAlign = "center";
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
@@ -239,56 +282,103 @@ export class SettingsPanel extends DisplayObject{
 
 
 
-            var buttonY = pageY + tab + (100*units);
+            var shareY = pageY + tab + (155*units);
+            var elsewhereY = pageY + tab + (110*units);
 
             // SHARE BUTTONS //
             ctx.fillStyle = "#fc4742";// gp //TODO: Store these share colours somewhere
-            ctx.fillRect(dx + (80*units),buttonY,130*units,30*units);
-            if (this._RollOvers[8]) {
+            ctx.fillRect(dx + (80*units),shareY,130*units,30*units);
+            if (this._RollOvers[10]) {
                 ctx.beginPath();
-                ctx.moveTo(dx + (145*units), buttonY + (39*units));
-                ctx.lineTo(dx + (135*units), buttonY + (29*units));
-                ctx.lineTo(dx + (155*units), buttonY + (29*units));
+                ctx.moveTo(dx + (145*units), shareY + (39*units));
+                ctx.lineTo(dx + (135*units), shareY + (29*units));
+                ctx.lineTo(dx + (155*units), shareY + (29*units));
                 ctx.closePath();
                 ctx.fill();
             }
             ctx.fillStyle = "#2db0e7"; // tw
-            ctx.fillRect(dx - (65*units),buttonY,130*units,30*units);
-            if (this._RollOvers[7]) {
+            ctx.fillRect(dx - (65*units),shareY,130*units,30*units);
+            if (this._RollOvers[9]) {
                 ctx.beginPath();
-                ctx.moveTo(dx, buttonY + (39*units));
-                ctx.lineTo(dx - (10*units), buttonY + (29*units));
-                ctx.lineTo(dx + (10*units), buttonY + (29*units));
+                ctx.moveTo(dx, shareY + (39*units));
+                ctx.lineTo(dx - (10*units), shareY + (29*units));
+                ctx.lineTo(dx + (10*units), shareY + (29*units));
                 ctx.closePath();
                 ctx.fill();
             }
             ctx.fillStyle = "#2152ad"; // fb
-            ctx.fillRect(dx - (210*units),buttonY,130*units,30*units);
-            if (this._RollOvers[6]) {
+            ctx.fillRect(dx - (210*units),shareY,130*units,30*units);
+            if (this._RollOvers[8]) {
                 ctx.beginPath();
-                ctx.moveTo(dx - (145*units), buttonY + (39*units));
-                ctx.lineTo(dx - (135*units), buttonY + (29*units));
-                ctx.lineTo(dx - (155*units), buttonY + (29*units));
+                ctx.moveTo(dx - (145*units), shareY + (39*units));
+                ctx.lineTo(dx - (135*units), shareY + (29*units));
+                ctx.lineTo(dx - (155*units), shareY + (29*units));
                 ctx.closePath();
                 ctx.fill();
             }
 
+
             // SHARE COPY //
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
             App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
-            ctx.textAlign = "left";
+            ctx.textAlign = "center";
             ctx.font = italicType2;
-            ctx.fillText(this._CopyJson.copyLine, dx - (210*units), buttonY - (10*units) );
-            ctx.fillText(this._CopyJson.guideLine, dx - (210*units), pageY + tab );
+            ctx.fillText(this._CopyJson.copyLine, dx, shareY - (10*units) );
+            ctx.fillText(this._CopyJson.connectLine, dx, elsewhereY - (25*units) );
+            ctx.fillText(this._CopyJson.guideLine, dx, pageY + tab );
+
+            // BUTTON TEXT //
             ctx.textAlign = "center";
             ctx.font = midType;
-            ctx.fillText(this._CopyJson.facebook.toUpperCase(), dx - (145*units), buttonY + (18.5*units) );
-            ctx.fillText(this._CopyJson.twitter.toUpperCase(), dx, buttonY + (18.5*units) );
-            ctx.fillText(this._CopyJson.google.toUpperCase(), dx  + (145*units), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.facebook.toUpperCase(), dx - (145*units), shareY + (18.5*units) );
+            ctx.fillText(this._CopyJson.twitter.toUpperCase(), dx, shareY + (18.5*units) );
+            ctx.fillText(this._CopyJson.google.toUpperCase(), dx  + (145*units), shareY + (18.5*units) );
 
 
+            // TEXT LINKS //
+            var spacer = 30*units;
+            var linkWidth = this._LinkWidth;
+            var linksWidth = this._LinksWidth + (spacer*3);
+            ctx.textAlign = "left";
+            ctx.fillText(this._CopyJson.links[0], dx  - (linksWidth*0.5), elsewhereY );
+            ctx.fillText(this._CopyJson.links[1], dx  - (linksWidth*0.5) + linkWidth[0] + spacer, elsewhereY );
+            ctx.fillText(this._CopyJson.links[2], dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer*2), elsewhereY );
+            ctx.fillText(this._CopyJson.links[3], dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer*3), elsewhereY );
 
-            // TAB 3 //
+            App.StrokeColor(ctx,App.Palette[1]);
+            ctx.beginPath();
+            ctx.moveTo(dx  - (linksWidth*0.5) + linkWidth[0] + (spacer*0.5), elsewhereY - (15*units));
+            ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0] + (spacer*0.5), elsewhereY + (10*units));
+            ctx.moveTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer*1.5), elsewhereY - (15*units));
+            ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer*1.5), elsewhereY + (10*units));
+            ctx.moveTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer*2.5), elsewhereY - (15*units));
+            ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer*2.5), elsewhereY + (10*units));
+            ctx.stroke();
+
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            if (this._RollOvers[11]) {
+                ctx.moveTo(dx  - (linksWidth*0.5), elsewhereY + (2*units));
+                ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0],elsewhereY + (2*units));
+            }
+            if (this._RollOvers[12]) {
+                ctx.moveTo(dx  - (linksWidth*0.5) + linkWidth[0] + spacer, elsewhereY + (2*units));
+                ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + spacer,elsewhereY + (2*units));
+            }
+            if (this._RollOvers[13]) {
+                ctx.moveTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer*2), elsewhereY + (2*units));
+                ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer*2),elsewhereY + (2*units));
+            }
+            if (this._RollOvers[14]) {
+                ctx.moveTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer*3), elsewhereY + (2*units));
+                ctx.lineTo(dx  - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + linkWidth[3] + (spacer*3),elsewhereY + (2*units));
+            }
+            ctx.stroke();
+
+
+            //  TAB 3
+            //-------------------------------------------------------------------------------------------
             tab = this.MenuItems[2].YOffset;
 
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
@@ -313,28 +403,12 @@ export class SettingsPanel extends DisplayObject{
             ctx.lineWidth = 1;
             for (var i=1; i<4; i++) {
                 if (this._RollOvers[i]) {
-                    /*App.FillColor(ctx,App.Palette[3]);
-                    ctx.beginPath();
-                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (43*units) - (grid*0.5) + tab);
-                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (43*units) - (grid*0.5) + tab);
-                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (43*units) + tab);
-                    ctx.closePath();
-                    ctx.fill();*/
-
                     ctx.beginPath();
                     ctx.moveTo(xs[i-1], thirdY + (44*units) + tab);
                     ctx.lineTo(xs[i-1] + (widths[i-1]),thirdY + (44*units) + tab);
                     ctx.stroke();
                 }
                 if (this._RollOvers[i+3]) {
-                    /*App.FillColor(ctx,App.Palette[3]);
-                    ctx.beginPath();
-                    ctx.moveTo(xs[i-1] - (5*units), thirdY + (57*units) - (grid*0.5) + tab);
-                    ctx.lineTo(xs[i-1] - (5*units) - (grid*0.5),thirdY + (57*units) - (grid*0.5) + tab);
-                    ctx.lineTo(xs[i-1] - (5*units),thirdY + (57*units) + tab);
-                    ctx.closePath();
-                    ctx.fill();*/
-
                     ctx.beginPath();
                     ctx.moveTo(xs[i-1], thirdY + (58*units) + tab);
                     ctx.lineTo(xs[i-1] + (widths[i+2]),thirdY + (58*units) + tab);
@@ -692,8 +766,33 @@ export class SettingsPanel extends DisplayObject{
             }
         }
 
+        // CONNECT //
+        var bdUrls = this._CopyJson.urls;
+        if (this._RollOvers[7]) { // GUIDE //
+            window.open("http://"+bdUrls[0],"_blank");
+        }
+        if (this._RollOvers[8]) { // FB SHARE //
+            this.ShareFacebook();
+        }
+        if (this._RollOvers[9]) { // TW SHARE //
+            this.ShareTwitter();
+        }
+        if (this._RollOvers[10]) { // GP SHARE //
+            this.ShareGoogle();
+        }
 
-
+        if (this._RollOvers[11]) { // FB SHARE //
+            window.open("http://"+bdUrls[1],"_blank");
+        }
+        if (this._RollOvers[12]) { // TW SHARE //
+            window.open("http://"+bdUrls[2],"_blank");
+        }
+        if (this._RollOvers[13]) { // GP SHARE //
+            window.open("http://"+bdUrls[3],"_blank");
+        }
+        if (this._RollOvers[14]) { // GP SHARE //
+            window.open("http://"+bdUrls[4],"_blank");
+        }
 
         // EXTERNAL URLS //
         var urls = [this._Attribution.twyman.url,this._Attribution.phillips.url,this._Attribution.silverton.url,this._Attribution.twyman.twitter,this._Attribution.phillips.twitter,this._Attribution.silverton.twitter];
@@ -745,6 +844,21 @@ export class SettingsPanel extends DisplayObject{
             this._RollOvers[i] = Dimensions.HitRect(xs[i-1], thirdY + (25*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
             this._RollOvers[i+3] = Dimensions.HitRect(xs[i-1], thirdY + (45*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
         }
+        tab = this.MenuItems[1].YOffset;
+        this._RollOvers[7] = Dimensions.HitRect(dx - (210*units), pageY + tab + (10*units),420*units,40*units, point.x, point.y); // guide
+
+        this._RollOvers[8] = Dimensions.HitRect(dx - (210*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // fb
+        this._RollOvers[9] = Dimensions.HitRect(dx - (65*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // tw
+        this._RollOvers[10] = Dimensions.HitRect(dx + (80*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // gp
+
+        var spacer = 30*units;
+        var linkWidth = this._LinkWidth;
+        var linksWidth = this._LinksWidth + (spacer*3);
+        this._RollOvers[11] = Dimensions.HitRect(dx - (linksWidth*0.5) - (spacer * 0.5),pageY + tab + (90*units),linkWidth[0] + spacer,30*units, point.x, point.y); // fb
+        this._RollOvers[12] = Dimensions.HitRect(dx - (linksWidth*0.5) + linkWidth[0] + (spacer * 0.5),pageY + tab + (90*units),linkWidth[1] + spacer,30*units, point.x, point.y); // tw
+        this._RollOvers[13] = Dimensions.HitRect(dx - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer * 1.5),pageY + tab + (90*units),linkWidth[2] + spacer,30*units, point.x, point.y); // yt
+        this._RollOvers[14] = Dimensions.HitRect(dx - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer * 2.5),pageY + tab + (90*units),linkWidth[3] + spacer,30*units, point.x, point.y); // gh
+
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
@@ -829,6 +943,23 @@ export class SettingsPanel extends DisplayObject{
         }
     }
 
+    ShareFacebook() {
+        var href = "http://www.facebook.com/sharer.php?";
+        href = "" + href + "u=http://blokdust.com";
+        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
+    }
+    ShareTwitter() {
+        var href = "https://twitter.com/intent/tweet?text=";
+        href = "" + href + encodeURIComponent(this._CopyJson.tweetText);
+        href = "" + href + "&url=http://blokdust.com";
+        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
+    }
+
+    ShareGoogle() {
+        var href = "https://plus.google.com/share?url=";
+        href = "" + href + "http://blokdust.com";
+        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
+    }
 
 
     //-------------------------------------------------------------------------------------------
