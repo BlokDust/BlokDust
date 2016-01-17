@@ -18,7 +18,7 @@ export class Microphone extends Source {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Microphone";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Microphone.name;
 
         this.Defaults = {
             gain: 1,
@@ -30,7 +30,7 @@ export class Microphone extends Source {
 
         if (!(<any>navigator).getUserMedia) {
             App.Message(`Unfortunately the microphone will not work in this browser because it doesn't support 'getUserMedia'. Try using the latest Chrome`);
-        };
+        }
 
         this.CreateSource();
         this.Volume = App.Audio.ctx.createGain();
@@ -121,7 +121,7 @@ export class Microphone extends Source {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("microphone");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose() {

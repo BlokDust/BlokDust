@@ -17,13 +17,14 @@ export class LFO extends PreEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "LFO";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.LFO.name;
 
         this.Defaults = {
             rate: 2,
             depth: 20,
             waveform: 2
         };
+
         this.PopulateParams();
 
         this.OscLFO = new Tone.LFO();
@@ -51,7 +52,7 @@ export class LFO extends PreEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("lfo");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateConnections(chain: IAudioChain) {

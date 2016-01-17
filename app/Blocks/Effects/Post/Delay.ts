@@ -2,6 +2,9 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
 
 export class Delay extends PostEffect {
 
@@ -11,7 +14,7 @@ export class Delay extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Delay";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Delay.name;
 
         this.Defaults = {
             delayTime: 0.25,
@@ -32,7 +35,7 @@ export class Delay extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("delay");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

@@ -3,6 +3,10 @@ import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PostEffect} from '../PostEffect';
 
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
+
 export class AutoWah extends PostEffect {
 
     public Effect: Tone.AutoWah;
@@ -11,7 +15,7 @@ export class AutoWah extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Auto Wah";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.AutoWah.name;
 
         this.Defaults = {
             octaves: 5,
@@ -46,7 +50,7 @@ export class AutoWah extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("autowah");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose() {

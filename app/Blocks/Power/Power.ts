@@ -12,7 +12,7 @@ export class Power extends PowerEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Power";
+        this.BlockName = App.L10n.Blocks.Power.Blocks.Power.name;
 
         super.Init(drawTo);
 
@@ -41,7 +41,7 @@ export class Power extends PowerEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("power");
+        this.DrawSprite(this.BlockName);
     }
 
     Stop() {

@@ -15,7 +15,7 @@ export class Noise extends Source {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Noise";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Noise.name;
 
         //this.Waveform = 'brown'; // is this being updated from save if not brown?
 
@@ -62,7 +62,7 @@ export class Noise extends Source {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("noise");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateOptionsForm() {

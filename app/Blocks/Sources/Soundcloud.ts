@@ -23,7 +23,7 @@ export class Soundcloud extends SamplerBase {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "SoundCloud";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Soundcloud.name;
 
         if (this.Params) {
             this._LoadFromShare = true;
@@ -177,7 +177,7 @@ export class Soundcloud extends SamplerBase {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("soundcloud");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateOptionsForm() {

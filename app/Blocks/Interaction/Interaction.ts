@@ -8,7 +8,6 @@ import {VoiceCreator as Voice} from './VoiceObject';
 
 declare var App: IApp;
 
-
 export class Interaction extends PowerEffect {
 
     CreateVoices(source: ISource){

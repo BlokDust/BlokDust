@@ -3,6 +3,10 @@ import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PostEffect} from '../PostEffect';
 
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
+
 export class Chomp extends PostEffect {
 
     public Effect: Tone.Filter;
@@ -12,7 +16,7 @@ export class Chomp extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Chomp";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Chomp.name;
 
         if (!this.Params) {
         }
@@ -55,7 +59,7 @@ export class Chomp extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("chomp");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

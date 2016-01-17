@@ -17,7 +17,7 @@ export class Scuzz extends PreEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Scuzz";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Scuzz.name;
 
         this.Defaults = {
             depth: 1000,
@@ -52,7 +52,7 @@ export class Scuzz extends PreEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("scuzz");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateConnections(chain: IAudioChain) {

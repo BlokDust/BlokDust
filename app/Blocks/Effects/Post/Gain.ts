@@ -15,7 +15,7 @@ export class Gain extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Volume";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Volume.name;
 
         this.Defaults = {
             gain: 1.2
@@ -36,7 +36,7 @@ export class Gain extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("volume");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

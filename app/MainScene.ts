@@ -4,7 +4,6 @@ import IEventArgs = nullstone.IEventArgs;
 import Point = etch.primitives.Point;
 import Stage = etch.drawing.Stage;
 import {AnimationsLayer} from './UI/AnimationsLayer';
-import {BlockCreator} from './BlockCreator';
 import {BlockSprites} from './Blocks/BlockSprites';
 import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
 import {Commands} from './Commands';
@@ -44,28 +43,27 @@ declare var OptionTimeout: boolean; //TODO: better way than using global? Needs 
 
 export class MainScene extends DisplayObject{
 
-    private _SelectedBlock: IBlock;
+    private _Header: Header;
     private _IsPointerDown: boolean = false;
+    private _PointerPoint: Point;
+    private _RecorderPanel: RecorderPanel;
+    private _SelectedBlock: IBlock;
+    private _SelectedBlockPosition: Point;
+    private _ToolTip: ToolTip;
+    private _ToolTipTimeout;
+    private _TrashCan: TrashCan;
     public AnimationsLayer: AnimationsLayer;
     public BlocksContainer: DisplayObject;
+    public ConnectionLines: ConnectionLines;
+    public IsDraggingABlock: boolean = false;
+    public LaserBeams: LaserBeams;
+    public MainSceneDragger: MainSceneDragger;
+    public MessagePanel: MessagePanel;
     public OptionsPanel: OptionsPanel;
+    public SettingsPanel: SettingsPanel;
     public SharePanel: SharePanel;
     public SoundcloudPanel: SoundcloudPanel;
-    public SettingsPanel: SettingsPanel;
-    public MessagePanel: MessagePanel;
-    private _Header: Header;
-    private _ToolTip: ToolTip;
     public ZoomButtons: ZoomButtons;
-    public MainSceneDragger: MainSceneDragger;
-    private _TrashCan: TrashCan;
-    public ConnectionLines: ConnectionLines;
-    private _RecorderPanel: RecorderPanel;
-    public LaserBeams: LaserBeams;
-    private _ToolTipTimeout;
-    private _PointerPoint: Point;
-    private _SelectedBlockPosition: Point;
-    public IsDraggingABlock: boolean = false;
-    public BlockCreator: BlockCreator;
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -150,8 +148,6 @@ export class MainScene extends DisplayObject{
         // METRICS //
         this._PointerPoint = new Point();
         this._SelectedBlockPosition = new Point();
-
-        this.BlockCreator = new BlockCreator();
 
         // Display Objects //
 

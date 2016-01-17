@@ -3,6 +3,10 @@ import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PostEffect} from '../PostEffect';
 
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
+
 export class BitCrusher extends PostEffect {
 
     public Effect: Tone.BitCrusher;
@@ -11,7 +15,7 @@ export class BitCrusher extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Bit Crusher";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.BitCrusher.name;
 
         this.Defaults = {
             bits: 7,
@@ -30,7 +34,7 @@ export class BitCrusher extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("bit crusher");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose() {

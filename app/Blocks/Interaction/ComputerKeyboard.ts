@@ -24,7 +24,7 @@ export class ComputerKeyboard extends Keyboard {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Computer Keyboard";
+        this.BlockName = App.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.name;
 
         this.Defaults = {
             octave: 3,
@@ -45,7 +45,7 @@ export class ComputerKeyboard extends Keyboard {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("computer keyboard");
+        this.DrawSprite(this.BlockName);
     }
 
     //

@@ -26,7 +26,7 @@ export class WaveGen extends SamplerBase {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "WaveGen";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.WaveGen.name;
 
         if (this.Params) {
             this._LoadFromShare = true;
@@ -541,7 +541,7 @@ export class WaveGen extends SamplerBase {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("wavegen");
+        this.DrawSprite(this.BlockName);
     }
 
     MouseUp() {

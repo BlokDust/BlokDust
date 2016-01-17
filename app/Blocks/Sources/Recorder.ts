@@ -21,7 +21,7 @@ export class Recorder extends SamplerBase {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Recorder";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Recorder.name;
 
         this.Defaults = {
             playbackRate: 1,
@@ -69,7 +69,7 @@ export class Recorder extends SamplerBase {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("recorder");
+        this.DrawSprite(this.BlockName);
     }
 
     ToggleRecording(){

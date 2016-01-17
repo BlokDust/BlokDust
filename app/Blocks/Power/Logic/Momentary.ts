@@ -6,12 +6,15 @@ import {MainScene} from '../../../MainScene';
 import {ParticleEmitter} from './../ParticleEmitter';
 import {Particle} from '../../../Particle';
 import Point = etch.primitives.Point;
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
 
 export class Momentary extends Logic {
 
     Init(drawTo: IDisplayContext): void {
 		super.Init(drawTo);
-        this.BlockName = "Momentary Power";
+        this.BlockName = App.L10n.Blocks.Power.Blocks.MomentaryPower.name;
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
 
@@ -37,7 +40,7 @@ export class Momentary extends Logic {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("momentary power");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

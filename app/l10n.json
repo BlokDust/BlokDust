@@ -61,12 +61,12 @@
     "Effect": {
       "Label": "Effect",
       "Blocks": {
-        "Autowah": {
-          "name": "Autowah",
+        "AutoWah": {
+          "name": "AutoWah",
           "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
         },
-        "Bitcrusher": {
-          "name": "Bitcrusher",
+        "BitCrusher": {
+          "name": "Bit Crusher",
           "description": "Creates distortion by reducing the audio resolution when connected to any source block."
         },
         "Chomp": {
@@ -113,8 +113,8 @@
           "name": "Phaser",
           "description": "Creates a sweeping phase effect. Can connect to any source block."
         },
-        "Pitch": {
-          "name": "Pitch",
+        "PitchShifter": {
+          "name": "Pitch Shifter",
           "description": "Shift the pitch of any source block."
         },
         "Reverb": {

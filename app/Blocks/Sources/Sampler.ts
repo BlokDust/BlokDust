@@ -20,7 +20,7 @@ export class Sampler extends SamplerBase {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Sampler";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Sampler.name;
 
         if (this.Params) {
             this._LoadFromShare = true;
@@ -156,7 +156,7 @@ export class Sampler extends SamplerBase {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("sampler");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateOptionsForm() {

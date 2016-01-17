@@ -20,7 +20,7 @@ export class MIDIController extends Keyboard {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "MIDI Keyboard";
+        this.BlockName = App.L10n.Blocks.Interaction.Blocks.MIDIController.name;
 
         this.Defaults = {
             glide: 0.05,
@@ -98,7 +98,7 @@ export class MIDIController extends Keyboard {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("midi controller");
+        this.DrawSprite(this.BlockName);
     }
 
     KeyboardDown(keyDown:string, source:ISource): void {

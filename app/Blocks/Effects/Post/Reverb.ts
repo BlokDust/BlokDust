@@ -2,6 +2,9 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
 
 export class Reverb extends PostEffect {
 
@@ -11,13 +14,14 @@ export class Reverb extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Reverb";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Reverb.name;
 
         this.Defaults = {
             dampening: 0.7,
             roomSize: 0.5,
             mix: 0.5
         };
+
         this.PopulateParams();
 
         this.Effect = new Tone.Freeverb(this.Params.dampening, this.Params.roomSize);
@@ -31,7 +35,7 @@ export class Reverb extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("reverb");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

@@ -2,6 +2,9 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
 
 export class Phaser extends PostEffect {
 
@@ -11,7 +14,7 @@ export class Phaser extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Phaser";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Phaser.name;
 
         this.Defaults = {
             rate: 0.5,
@@ -19,6 +22,7 @@ export class Phaser extends PostEffect {
             baseFrequency: 500,
             mix: 0.75
         };
+
         this.PopulateParams();
 
         this.Effect = new Tone.Phaser({
@@ -37,7 +41,7 @@ export class Phaser extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("phaser");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

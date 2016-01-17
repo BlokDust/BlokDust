@@ -1,4 +1,3 @@
-import {BlockCreator} from './BlockCreator';
 import {Effect} from './Blocks/Effect';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
@@ -199,6 +198,6 @@ export class Serializer {
     }
 
     private static _GetBlockDeserializationType(b: any): IBlock {
-        return BlockCreator.GetBlock(b.Type);
+        return App.BlockCreator.GetBlock(b.Type);
     }
 }

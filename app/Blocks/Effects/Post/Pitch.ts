@@ -15,11 +15,12 @@ export class Pitch extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Pitch Shift";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.PitchShifter.name;
 
         this.Defaults = {
             pitchOffset: 0
         };
+
         this.PopulateParams();
 
         this.Effect = new PitchShifter(App.Audio.ctx);
@@ -33,7 +34,7 @@ export class Pitch extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("pitch");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

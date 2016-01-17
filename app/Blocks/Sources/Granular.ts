@@ -37,7 +37,7 @@ export class Granular extends Source {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Granular";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Granular.name;
 
         if (this.Params) {
             this._LoadFromShare = true;
@@ -221,7 +221,7 @@ export class Granular extends Source {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("granular");
+        this.DrawSprite(this.BlockName);
     }
 
     CreateSource(){

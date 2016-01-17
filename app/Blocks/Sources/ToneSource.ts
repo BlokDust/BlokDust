@@ -18,7 +18,7 @@ export class ToneSource extends Source {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Tone";
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Tone.name;
 
         this.Defaults = {
             frequency: App.Config.BaseNote,
@@ -95,7 +95,7 @@ export class ToneSource extends Source {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("tone");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateOptionsForm() {

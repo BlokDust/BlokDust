@@ -2,6 +2,7 @@ import Canvas = etch.drawing.Canvas;
 import IDisplayObject = etch.drawing.IDisplayObject;
 import Point = minerva.Point;
 import {AnimationsLayer} from './UI/AnimationsLayer';
+import {BlockCreator} from "./BlockCreator";
 import {BlockSprites} from "./Blocks/BlockSprites";
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
@@ -16,7 +17,7 @@ import {ISource} from './Blocks/ISource';
 import {MainScene} from './MainScene';
 import {Metrics} from './Metrics';
 import {OperationManager} from './Core/Operations/OperationManager';
-import {Particle} from './Particle'; // todo: should be IParticle
+import {Particle} from './Particle';
 import {PianoKeyboardManager} from './Core/Inputs/PianoKeyboardManager';
 import {PointerInputManager} from './Core/Inputs/PointerInputManager';
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
@@ -31,6 +32,7 @@ export interface IApp {
     AnimationsLayer: AnimationsLayer;
     Audio: IAudio;
     Blocks: IBlock[];
+    BlockCreator: BlockCreator;
     BlockSprites: BlockSprites;
     Canvas: Canvas;
     CommandManager: CommandManager;

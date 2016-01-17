@@ -26,7 +26,7 @@ export class Convolver extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Convolver";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Convolution.name;
 
         if (this.Params) { // TODO - must be better way, refresh function?
             var me = this;
@@ -147,7 +147,7 @@ export class Convolver extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("convolution");
+        this.DrawSprite(this.BlockName);
     }
 
     MouseUp() {

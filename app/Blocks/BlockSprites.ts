@@ -29,7 +29,7 @@ export class BlockSprites {
 
             // All block cases must be lower case
 
-            case "autowah":
+            case App.L10n.Blocks.Effect.Blocks.AutoWah.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = (grd*0.5);
@@ -57,7 +57,7 @@ export class BlockSprites {
 
                 break;
 
-            case "bit crusher":
+            case App.L10n.Blocks.Effect.Blocks.BitCrusher.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._YOffset =  grd;
@@ -86,7 +86,7 @@ export class BlockSprites {
 
                 break;
 
-            case "chomp":
+            case App.L10n.Blocks.Effect.Blocks.Chomp.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[7].toString();// RED
@@ -112,7 +112,7 @@ export class BlockSprites {
 
                 break;
 
-            case "chopper":
+            case App.L10n.Blocks.Effect.Blocks.Chopper.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
@@ -138,7 +138,7 @@ export class BlockSprites {
 
                 break;
 
-            case "chorus":
+            case App.L10n.Blocks.Effect.Blocks.Chorus.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._YOffset = (grd*0.5);
@@ -166,7 +166,7 @@ export class BlockSprites {
 
                 break;
 
-            case "convolution":
+            case App.L10n.Blocks.Effect.Blocks.Convolution.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -204,7 +204,7 @@ export class BlockSprites {
 
                 break;
 
-            case "delay":
+            case App.L10n.Blocks.Effect.Blocks.Delay.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[7].toString();// RED
@@ -232,7 +232,7 @@ export class BlockSprites {
 
                 break;
 
-            case "distortion":
+            case App.L10n.Blocks.Effect.Blocks.Distortion.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[7].toString();// RED
@@ -256,8 +256,7 @@ export class BlockSprites {
 
                 break;
 
-
-            case "envelope":
+            case App.L10n.Blocks.Effect.Blocks.Envelope.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
@@ -282,7 +281,7 @@ export class BlockSprites {
 
                 break;
 
-            case "eq":
+            case App.L10n.Blocks.Effect.Blocks.Eq.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -321,7 +320,7 @@ export class BlockSprites {
 
                 break;
 
-            case "filter":
+            case App.L10n.Blocks.Effect.Blocks.Filter.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
@@ -345,7 +344,7 @@ export class BlockSprites {
 
                 break;
 
-            case "volume":
+            case App.L10n.Blocks.Effect.Blocks.Volume.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -373,7 +372,7 @@ export class BlockSprites {
 
                 break;
 
-            case "lfo":
+            case App.L10n.Blocks.Effect.Blocks.LFO.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
@@ -397,30 +396,30 @@ export class BlockSprites {
 
                 break;
 
-            case "panner":
+            //case "panner":
+            //
+            //    this.Ctx.beginPath();
+            //    //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
+            //    App.FillColor(this.Ctx,App.Palette[9]);
+            //    this.DrawMoveTo(-1,0);
+            //    this.DrawLineTo(0,-1);
+            //    this.DrawLineTo(1,0);
+            //    this.DrawLineTo(0,1);
+            //    this.Ctx.closePath();
+            //    this.Ctx.fill();
+            //
+            //    this.Ctx.beginPath();
+            //    //this.Ctx.fillStyle = App.Palette[7].toString();// RED
+            //    App.FillColor(this.Ctx,App.Palette[7]);
+            //    this.DrawMoveTo(0,-1);
+            //    this.DrawLineTo(1,0);
+            //    this.DrawLineTo(0,1);
+            //    this.Ctx.closePath();
+            //    this.Ctx.fill();
+            //
+            //    break;
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
-                this.DrawMoveTo(-1,0);
-                this.DrawLineTo(0,-1);
-                this.DrawLineTo(1,0);
-                this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
-                this.DrawMoveTo(0,-1);
-                this.DrawLineTo(1,0);
-                this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-
-                break;
-
-            case "phaser":
+            case App.L10n.Blocks.Effect.Blocks.Phaser.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
@@ -444,7 +443,7 @@ export class BlockSprites {
 
                 break;
 
-            case "pitch":
+            case App.L10n.Blocks.Effect.Blocks.PitchShifter.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -472,7 +471,7 @@ export class BlockSprites {
 
                 break;
 
-            case "reverb":
+            case App.L10n.Blocks.Effect.Blocks.Reverb.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -510,7 +509,7 @@ export class BlockSprites {
 
                 break;
 
-            case "scuzz":
+            case App.L10n.Blocks.Effect.Blocks.Scuzz.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._YOffset = grd;
@@ -537,7 +536,7 @@ export class BlockSprites {
 
                 break;
 
-            case "tone":
+            case App.L10n.Blocks.Source.Blocks.Tone.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._YOffset = (grd*0.5);
@@ -575,7 +574,7 @@ export class BlockSprites {
 
                 break;
 
-            case "noise":
+            case App.L10n.Blocks.Source.Blocks.Noise.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
@@ -600,7 +599,7 @@ export class BlockSprites {
 
                 break;
 
-            case "microphone":
+            case App.L10n.Blocks.Source.Blocks.Microphone.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
@@ -625,7 +624,7 @@ export class BlockSprites {
 
                 break;
 
-            case "soundcloud":
+            case App.L10n.Blocks.Source.Blocks.Soundcloud.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -656,7 +655,7 @@ export class BlockSprites {
 
                 break;
 
-            case "sampler":
+            case App.L10n.Blocks.Source.Blocks.Sampler.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -687,7 +686,7 @@ export class BlockSprites {
 
                 break;
 
-            case "granular":
+            case App.L10n.Blocks.Source.Blocks.Granular.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -716,7 +715,7 @@ export class BlockSprites {
 
                 break;
 
-            case "recorder":
+            case App.L10n.Blocks.Source.Blocks.Recorder.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -752,7 +751,7 @@ export class BlockSprites {
 
                 break;
 
-            case "wavegen":
+            case App.L10n.Blocks.Source.Blocks.WaveGen.name.toLowerCase():
 
                 /*if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -782,7 +781,7 @@ export class BlockSprites {
 
                 break;
 
-            case "computer keyboard":
+            case App.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
@@ -807,7 +806,7 @@ export class BlockSprites {
 
                 break;
 
-            case "midi controller":
+            case App.L10n.Blocks.Interaction.Blocks.MIDIController.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
@@ -842,7 +841,7 @@ export class BlockSprites {
 
                 break;
 
-            case "particle emitter":
+            case App.L10n.Blocks.Power.Blocks.ParticleEmitter.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
@@ -865,7 +864,7 @@ export class BlockSprites {
 
                 break;
 
-            case "power":
+            case App.L10n.Blocks.Power.Blocks.Power.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
@@ -901,7 +900,7 @@ export class BlockSprites {
 
                 break;
 
-            case "toggle power":
+            case App.L10n.Blocks.Power.Blocks.TogglePower.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[3].toString(); // BLUE
@@ -930,7 +929,7 @@ export class BlockSprites {
 
                 break;
 
-            case "momentary power":
+            case App.L10n.Blocks.Power.Blocks.MomentaryPower.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[3].toString(); // BLUE
@@ -958,7 +957,7 @@ export class BlockSprites {
 
                 break;
 
-            case "laser":
+            case App.L10n.Blocks.Power.Blocks.Laser.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._YOffset = (grd*0.5);
@@ -995,7 +994,7 @@ export class BlockSprites {
 
                 break;
 
-            case "void":
+            case App.L10n.Blocks.Power.Blocks.Void.name.toLowerCase():
 
                 /*if (!this._Scaled) {
                     this._YOffset = (grd*0.5);
@@ -1027,6 +1026,9 @@ export class BlockSprites {
                 this.DrawPixel(-8,1,1);
                 this.DrawPixel(1,9,1);
                 break;
+
+            default:
+                console.log("block not found");
 
         }
     }

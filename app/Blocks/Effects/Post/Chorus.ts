@@ -3,6 +3,10 @@ import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
+
 export class Chorus extends PostEffect {
 
     public Defaults: ChorusParams;
@@ -11,7 +15,7 @@ export class Chorus extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Chorus";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Chorus.name;
 
         this.Defaults = {
             rate: 1.5,
@@ -38,7 +42,7 @@ export class Chorus extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("chorus");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose() {

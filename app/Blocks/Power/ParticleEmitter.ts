@@ -16,7 +16,7 @@ export class ParticleEmitter extends PowerSource {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Particle Emitter";
+        this.BlockName = App.L10n.Blocks.Power.Blocks.ParticleEmitter.name;
 
         this.Defaults = {
             angle: -90,
@@ -81,7 +81,7 @@ export class ParticleEmitter extends PowerSource {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("particle emitter");
+        this.DrawSprite(this.BlockName);
         //if (window.debug){
         //    this.Ctx.fillStyle = "#fff";
         //    var pos = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));

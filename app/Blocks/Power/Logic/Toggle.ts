@@ -13,7 +13,7 @@ export class Toggle extends Logic {
 
     Init(drawTo: IDisplayContext): void {
 		super.Init(drawTo);
-        this.BlockName = "Toggle Power";
+        this.BlockName = App.L10n.Blocks.Power.Blocks.TogglePower.name;
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
 
@@ -39,7 +39,7 @@ export class Toggle extends Logic {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("toggle power");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateOptionsForm() {

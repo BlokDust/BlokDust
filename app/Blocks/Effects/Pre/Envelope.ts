@@ -4,6 +4,9 @@ import {ISource} from '../../ISource';
 import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PreEffect} from '../PreEffect';
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
 
 export class Envelope extends PreEffect {
 
@@ -12,7 +15,7 @@ export class Envelope extends PreEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Envelope";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Envelope.name;
 
         this.Defaults = {
             attack: 1,
@@ -20,6 +23,7 @@ export class Envelope extends PreEffect {
             sustain: 0.7,
             release: 4
         };
+
         this.PopulateParams();
 
         super.Init(drawTo);
@@ -30,7 +34,7 @@ export class Envelope extends PreEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("envelope");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateConnections(chain: IAudioChain) {

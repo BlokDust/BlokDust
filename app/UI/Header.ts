@@ -3,7 +3,6 @@ import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import Size = minerva.Size;
-import {BlockCreator} from './../BlockCreator';
 import {Device} from '../Device';
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
@@ -14,22 +13,22 @@ declare var App: IApp;
 
 export class Header extends DisplayObject {
 
-    private _Units: number;
-    public Height: number;
+    private _LeftOver: boolean;
+    private _MenuCols: number[];
+    private _RightOver: boolean;
     private _Rows: number;
+    private _SelectedCategory: number;
+    private _SettingsOver: boolean;
+    private _ShareOver: boolean;
+    private _Units: number;
+    public DropDown: number;
+    public DropDownHeight: number;
+    public Height: number;
+    public Hover: number[];
+    public ItemsPerPage: number;
+    public Margin: number;
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
-    public ItemsPerPage: number;
-    public DropDownHeight: number;
-    public DropDown: number;
-    private _SelectedCategory: number;
-    private _MenuCols: number[];
-    public Hover: number[];
-    public Margin: number;
-    private _LeftOver: boolean;
-    private _RightOver: boolean;
-    private _ShareOver: boolean;
-    private _SettingsOver: boolean;
     public MenuOver: boolean;
     public Tweens: any[];
 
@@ -52,10 +51,9 @@ export class Header extends DisplayObject {
         this.MenuOver = false;
         this.Tweens = [];
 
-        this.MenuJson = BlockCreator.MenuJson;
+        this.MenuJson = App.BlockCreator.MenuJson;
 
         this.Populate(this.MenuJson);
-
     }
 
     //-------------------------------------------------------------------------------------------

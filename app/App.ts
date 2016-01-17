@@ -52,6 +52,7 @@ import {ThemeChangeEventArgs} from "./Core/Visual/ThemeChangeEventArgs";
 import {ThemeManager} from './Core/Visual/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
+import {BlockCreator} from "./BlockCreator";
 
 export default class App implements IApp{
 
@@ -61,6 +62,7 @@ export default class App implements IApp{
     private _SessionId: string;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
+    public BlockCreator: BlockCreator;
     public BlockSprites: BlockSprites;
     public Canvas: Canvas;
     public ColorManager: ColorManager;
@@ -153,6 +155,7 @@ export default class App implements IApp{
     public Setup(){
 
         this.Canvas = new Canvas();
+        this.BlockCreator = new BlockCreator();
 
         // METRICS //
         this.Metrics = new Metrics();

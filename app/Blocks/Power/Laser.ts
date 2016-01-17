@@ -2,6 +2,9 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
 import {PowerSource} from './PowerSource';
+import {IApp} from "../../IApp";
+
+declare var App: IApp;
 
 export class Laser extends PowerSource {
 
@@ -10,7 +13,7 @@ export class Laser extends PowerSource {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Laser";
+        this.BlockName = App.L10n.Blocks.Power.Blocks.Laser.name;
 
         this.Defaults = {
             angle: -90,
@@ -59,7 +62,7 @@ export class Laser extends PowerSource {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("laser");
+        this.DrawSprite(this.BlockName);
     }
 
     UpdateOptionsForm() {

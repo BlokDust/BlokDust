@@ -2,6 +2,9 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
+import {IApp} from "../../../IApp";
+
+declare var App: IApp;
 
 export class Distortion extends PostEffect {
 
@@ -11,7 +14,7 @@ export class Distortion extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Distortion";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Distortion.name;
 
         this.Defaults = {
             drive: 0.65,
@@ -30,7 +33,7 @@ export class Distortion extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("distortion");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){

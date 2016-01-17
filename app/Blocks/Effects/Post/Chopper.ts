@@ -14,7 +14,7 @@ export class Chopper extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = "Chopper";
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Chopper.name;
 
         this.Defaults = {
             rate: 8,
@@ -41,7 +41,7 @@ export class Chopper extends PostEffect {
 
     Draw() {
         super.Draw();
-        this.DrawSprite("chopper");
+        this.DrawSprite(this.BlockName);
     }
 
     Dispose(){
