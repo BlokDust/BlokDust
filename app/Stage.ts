@@ -36,8 +36,10 @@ export class Stage extends etch.drawing.Stage{
     }
 
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
-        this.Splash.TransitionOut();
-        this.MainScene.Show();
+        if (this.Splash.IsAnimationFinished) {
+            this.Splash.TransitionOut();
+            this.MainScene.Show();
+        }
     }
 
     OnTicked(lastTime: number, nowTime: number) {

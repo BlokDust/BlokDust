@@ -13,6 +13,7 @@ export class Splash extends DisplayObject{
     private _Scale: number;
     private _Center: Point;
     private _Offset: Point;
+    IsAnimationFinished: boolean = false;
     AnimationFinished = new nullstone.Event<{}>();
 
     Init(drawTo: IDisplayContext): void {
@@ -239,11 +240,13 @@ export class Splash extends DisplayObject{
 
         // when pre-roll is finished
         setTimeout(() => {
+            this.IsAnimationFinished = true;
             this.AnimationFinished.raise(this, null);
         },(viewLength*5) + (tweenLength*5) + initDelay + 200);
     }
 
     TransitionOut() {
+        console.log("transition out");
         this.DelayTo(this,1,450,300,'LoadOffset',0);
     }
 }
