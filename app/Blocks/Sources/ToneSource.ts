@@ -164,7 +164,9 @@ export class ToneSource extends Source {
             case 'baseFrequency':
                 this.SetPitch(this.GetFrequency(value, this.Params.fine), 0, 0);
                 const octave = Math.floor(value / 12) + 4;
-                const note = App.Audio.NoteIndex[Math.abs(value%12)];
+                value = value % 12;
+                if (value < 0) value += 12;
+                const note = App.Audio.NoteIndex[value];
                 console.log(`Note: ${note}${octave}`);
                 break;
             case 'fine':
@@ -182,7 +184,9 @@ export class ToneSource extends Source {
 
     DisplayNote(value: number) {
         const octave = Math.floor(value / 12) + 4;
-        const note = App.Audio.NoteIndex[Math.abs(value%12)];
+        value = value % 12;
+        if (value < 0) value += 12;
+        const note = App.Audio.NoteIndex[value];
         return "" + note + "" + octave;
     }
 
