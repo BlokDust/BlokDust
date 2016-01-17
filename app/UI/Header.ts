@@ -43,7 +43,7 @@ export class Header extends DisplayObject {
         this.DropDownHeight = (App.Width / (this.ItemsPerPage + 1)) / App.Unit;
         this.DropDown = 0;
         this._SelectedCategory = 0;
-        this._MenuCols = [9,5,7,4,3];
+        this._MenuCols = App.ThemeManager.MenuOrder;
         this.Margin = 0;
 
         this._LeftOver = false;

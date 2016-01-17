@@ -66,10 +66,10 @@ export class RecorderPanel extends DisplayObject {
         var h = grd*3;
 
         // DRAW PANEL //
-        App.FillColor(ctx,App.Palette[14]);
+        App.FillColor(ctx,App.Palette[2]);
         ctx.globalAlpha = 0.16;
         this.BGDraw(x, y + (5 * units), w, h, ctx);
-        App.FillColor(ctx,App.Palette[2]);
+        //App.FillColor(ctx,App.Palette[2]);
         ctx.globalAlpha = 0.9;
         this.BGDraw(x, y, w, h, ctx);
         ctx.globalAlpha = 1;
