@@ -1,8 +1,8 @@
-import {InputManager} from './InputManager';
+import {KeyboardInputManager} from './KeyboardInputManager';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 
-export class PianoKeyboardManager extends InputManager {
+export class PianoKeyboardManager extends KeyboardInputManager {
 
     public PianoKeyboardMap: any;
     public PianoKeyboardMapFallBack: any;

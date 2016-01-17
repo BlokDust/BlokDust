@@ -115,7 +115,7 @@ export class Block extends DisplayObject implements IBlock {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if ((<MainScene>this.DrawTo).AltDown && this._Duplicable) {
+            if (App.CommandsInputManager.IsKeyCodeDown(KeyCodes.KeyDown.Alt) && this._Duplicable) {
                 (<MainScene>this.DrawTo).CreateBlockFromType(this.Type); //TODO: TS5 reflection
                 this.MouseUp();
             }

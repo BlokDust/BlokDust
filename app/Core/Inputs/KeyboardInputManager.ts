@@ -3,9 +3,7 @@ import {CommandManager} from '../Commands/CommandManager';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 
-declare var HumanInput: any;
-
-export class InputManager {
+export class KeyboardInputManager {
 
     public KeysDown: any;
     public IsEnabled: boolean = true;
@@ -39,7 +37,7 @@ export class InputManager {
         // if it's undefined
         if (typeof k === 'undefined') return;
 
-        if (k === 8) { // backspace prevent default
+        if (k === KeyCodes.KeyDown.Backspace) { // backspace prevent default
             e.preventDefault();
         }
 

@@ -1,8 +1,7 @@
 import {Commands} from '../../Commands';
 import {CommandManager} from '../Commands/CommandManager';
-import {InputManager} from './InputManager';
 
-export class PointerInputManager extends InputManager {
+export class PointerInputManager {
 
     MouseDown = new nullstone.Event<MouseEvent>();
     MouseUp = new nullstone.Event<MouseEvent>();
@@ -13,7 +12,6 @@ export class PointerInputManager extends InputManager {
     TouchMove = new nullstone.Event<TouchEvent>();
 
     constructor() {
-        super();
 
         // https://typescript.codeplex.com/discussions/403082
 

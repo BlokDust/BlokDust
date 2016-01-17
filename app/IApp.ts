@@ -10,12 +10,11 @@ import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
 import {IConfig} from './IConfig';
 import {IEffect} from './Blocks/IEffect';
-import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {IPowerSource} from './Blocks/Power/IPowerSource';
 import {ISource} from './Blocks/ISource';
 import {MainScene} from './MainScene';
-import {Metrics} from './AppMetrics';
+import {Metrics} from './Metrics';
 import {OperationManager} from './Core/Operations/OperationManager';
 import {Particle} from './Particle'; // todo: should be IParticle
 import {PianoKeyboardManager} from './Core/Inputs/PianoKeyboardManager';
@@ -44,7 +43,6 @@ export interface IApp {
     Effects: IEffect[];
     GridSize: number;
     Height: number;
-    InputManager: InputManager;
     IsLoadingComposition: boolean;
     PianoKeyboardManager: PianoKeyboardManager;
     MainScene: MainScene;

@@ -1,6 +1,6 @@
-import {InputManager} from './InputManager';
+import {KeyboardInputManager} from './KeyboardInputManager';
 
-export class TypingManager extends InputManager {
+export class TypingManager extends KeyboardInputManager {
 
     private _CharLimit: number;
     private _String: string;

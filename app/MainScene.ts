@@ -66,7 +66,6 @@ export class MainScene extends DisplayObject{
     private _SelectedBlockPosition: Point;
     public IsDraggingABlock: boolean = false;
     public BlockCreator: BlockCreator;
-    public AltDown: boolean = false; // todo: shouldn't need this - use CommandsInputManager.IsKeyNameDown
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -218,19 +217,6 @@ export class MainScene extends DisplayObject{
         this.MessagePanel = new MessagePanel();
         this.DisplayList.Add(this.MessagePanel);
         this.MessagePanel.Init(this);
-
-
-
-        // todo: use input manager
-        document.addEventListener('keydown', (e) => {
-            if (e.keyCode === 18) {
-                this.AltDown = true;
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            this.AltDown = false;
-        });
 
         this._Invalidate();
     }

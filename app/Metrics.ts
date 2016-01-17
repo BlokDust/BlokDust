@@ -42,7 +42,7 @@ export class Metrics {
         this._DeviceZoom = 1;
     }
 
-    Metrics() {
+    Compute() {
 
         this._ScreenDivision = 850; // divisions of the screen width to make unit
         var gridSize = 15;  // unit width of a grid cell

@@ -24,13 +24,12 @@ import {IBlock} from './Blocks/IBlock';
 import {IConfig} from './IConfig';
 import {IEffect} from './Blocks/IEffect';
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
-import {InputManager} from './Core/Inputs/InputManager';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {IPowerSource} from "./Blocks/Power/IPowerSource";
 import {ISource} from './Blocks/ISource';
 import {LoadCommandHandler} from './CommandHandlers/LoadCommandHandler';
 import {MainScene} from './MainScene';
-import {Metrics} from './AppMetrics';
+import {Metrics} from './Metrics';
 import {MoveBlockCommandHandler} from './CommandHandlers/MoveBlockCommandHandler';
 import {OperationManager} from './Core/Operations/OperationManager';
 import {Particle} from './Particle';
@@ -72,7 +71,6 @@ export default class App implements IApp{
     public FocusManager: FocusManager;
     public GridSize: number;
     public Height: number;
-    public InputManager: InputManager;
     public IsLoadingComposition: boolean = false;
     public Metrics: Metrics;
     public OperationManager: OperationManager;
@@ -201,9 +199,12 @@ export default class App implements IApp{
         this.PianoKeyboardManager = new PianoKeyboardManager();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
+
         this.FocusManager = new FocusManager();
         this.FocusManager.FocusChanged.on((s: any, e: FocusManagerEventArgs) => {
             if (!e.HasFocus){
+                this.TypingManager.ClearKeysDown();
+                this.PianoKeyboardManager.ClearKeysDown();
                 this.CommandsInputManager.ClearKeysDown();
             }
         }, this);
@@ -251,8 +252,6 @@ export default class App implements IApp{
     LoadReady(): void {
         if (this._FontsLoaded === 3 && this.ThemeManager.Loaded) {
             this.LoadComposition();
-            //this.Scene = 1;
-            //this.Splash.StartTween();
         }
     }
 
@@ -354,7 +353,7 @@ export default class App implements IApp{
     }
 
     Resize(): void {
-        this.Metrics.Metrics();
+        this.Metrics.Compute();
         this.Stage.Resize();
     }
 }

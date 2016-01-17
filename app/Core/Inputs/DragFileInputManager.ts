@@ -1,6 +1,5 @@
-import {InputManager} from './InputManager';
 
-export class DragFileInputManager extends InputManager {
+export class DragFileInputManager {
 
     public DragEnter = new nullstone.Event<DragEvent>();
     public DragMove = new nullstone.Event<DragEvent>();
@@ -8,8 +7,6 @@ export class DragFileInputManager extends InputManager {
     public Dropped = new nullstone.Event<DragEvent>();
 
     constructor() {
-        super();
-
         var dropZone = document.getElementsByTagName('canvas')[0]; //TODo App.GetCanvas?
         dropZone.addEventListener('dragenter', this.OnDragEnter.bind(this));
         dropZone.addEventListener('dragover', this.OnDragMove.bind(this));

@@ -69,6 +69,7 @@ module.exports = function (grunt) {
         },
 
         clean: {
+            build : ['<%= dirs.build %>/*'],
             dist : ['<%= dirs.dist %>/*'],
             // remove every file that isn't needed in production
             minified: {
@@ -316,7 +317,7 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('default', ['typescript:build', 'copy:assets']);
+    grunt.registerTask('default', ['clean:build', 'typescript:build', 'copy:assets']);
     grunt.registerTask('bump:patch', ['version:bump', 'version:apply']);
     grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
     grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);

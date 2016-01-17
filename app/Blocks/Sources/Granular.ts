@@ -12,7 +12,6 @@ import {Grain} from './GranularComponents/Grain';
 
 declare var App: IApp;
 
-
 export class Granular extends Source {
 
     public Sources: Tone.Signal[];
