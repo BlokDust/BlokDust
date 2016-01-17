@@ -8,6 +8,7 @@ export class Logic extends PowerEffect {
 
     public Params: LogicParams;
     public Defaults: LogicParams;
+    public ScheduledLogic: boolean = false;
 
     Init(drawTo: IDisplayContext): void {
 
@@ -19,6 +20,15 @@ export class Logic extends PowerEffect {
 
         super.Init(drawTo);
 
+    }
+
+    Update() {
+        super.Update();
+
+        if (this.ScheduledLogic) {
+            this.ScheduledLogic = false;
+            this.PerformLogic();
+        }
     }
 
     /**
@@ -33,6 +43,10 @@ export class Logic extends PowerEffect {
 
     PerformLogic(){
 
+    }
+
+    ScheduleLogic() {
+        this.ScheduledLogic = true;
     }
 
 }

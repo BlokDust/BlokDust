@@ -26,6 +26,7 @@ export interface IBlock extends IDisplayObject {
     OptionsForm: any;
     Outline: Point[];
     Params: any;
+    Defaults: any;
     ParticleCollision(particle: Particle): void;
     Position: Point;
     Refresh(): void;

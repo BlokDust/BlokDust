@@ -85,15 +85,19 @@ export class Toggle extends Logic {
             connections.forEach((source: ISource) => {
                 source.RemovePower();
             });
-
+            /*setTimeout(function(){
+                App.MainScene.LaserBeams.UpdateAllLasers = true;
+            },20);*/
         } else {
             this.Params.logic = true;
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
                 source.AddPower();
             });
+            //App.MainScene.LaserBeams.UpdateAllLasers = true;
         }
-        App.MainScene.LaserBeams.UpdateAllLasers = true;
+
+
         this.RefreshOptionsPanel();
     }
 
