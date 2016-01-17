@@ -186,7 +186,7 @@ export class LaserBeams extends DisplayObject {
                                                     if (laser.Collisions.length == 0 || $.inArray(block, laser.Collisions) == -1) {
                                                         console.log("HIT " + block.Id);
                                                         if (block instanceof Logic) {
-                                                            block.PerformLogic();
+                                                            block.ScheduleLogic();
                                                         } else {
                                                             if (!block.IsPowered()) {
                                                                 block.TriggerAttack();

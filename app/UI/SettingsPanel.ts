@@ -954,7 +954,6 @@ export class SettingsPanel extends DisplayObject{
         href = "" + href + "&url=http://blokdust.com";
         window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
     }
-
     ShareGoogle() {
         var href = "https://plus.google.com/share?url=";
         href = "" + href + "http://blokdust.com";

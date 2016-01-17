@@ -19,6 +19,8 @@ export class ThemeManager  {
     // set color references
     // drawing might use: ctx.fillStyle = App.Palette[App.ThemeManager.Txt];
     public Txt: number;
+    public MenuOrder: number[];
+    public OptionsOrder: number[];
 
     ThemeChanged = new nullstone.Event<ThemeChangeEventArgs>();
 
@@ -90,14 +92,20 @@ export class ThemeManager  {
 
 
         this._Defaults = {
-            txt: 8
+            txt: 8,
+            menu: [9,5,7,4,3],
+            options: [3,4,9,7,5]
         };
 
         this._Value = {
-            txt: this._Defaults.txt
+            txt: this._Defaults.txt,
+            menu: this._Defaults.menu,
+            options: this._Defaults.options
         };
 
         this.Txt = 16;
+        this.MenuOrder = [9,5,7,4,3];
+        this.OptionsOrder = [3,4,9,7,5];
 
     }
 
