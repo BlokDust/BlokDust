@@ -156,8 +156,6 @@ export class Serializer {
         for (var i = 0; i < blocks.length; i++) {
             var b = blocks[i];
 
-            console.log(b);
-
             var block = this._DeserializeBlock(b);
 
             deserializedBlocks.push(block);
