@@ -1,0 +1,180 @@
+{
+  "Attribution": {
+    "title": "General",
+    "about": "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton. Developed in Brighton UK and released in 2016, BlokDust uses the Web Audio API and makes use of Tone.js as an audio framework.",
+    "twyman": {
+      "blurb": "Luke Twyman - project concept, design & UI.",
+      "url": "whitevinyldesign.com",
+      "twitter": "@whitevinylUK"
+    },
+    "phillips": {
+      "blurb": "Luke Phillips - audio development & musical interaction.",
+      "url": "femurdesign.com",
+      "twitter": "@lukephills"
+    },
+    "silverton": {
+      "blurb": "Edward Silverton - client & server architecture & core development.",
+      "url": "edsilv.com",
+      "twitter": "@edsilv"
+    },
+    "thanks": "Thanks also to Yotam Mann and Brad Sickles.",
+    "build": "Current Build: {0}"
+  },
+  "Blocks": {
+    "Source": {
+      "Label": "Source",
+      "Blocks": {
+        "Tone": {
+          "name": "Tone",
+          "description": "A single oscillator. Creates a waveform used as the basis of most synths."
+        },
+        "Noise": {
+          "name": "Noise",
+          "description": "A noise generator with 'White', 'Brown' and 'Pink' waveform types."
+        },
+        "Microphone": {
+          "name": "Microphone",
+          "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones."
+        },
+        "Soundcloud": {
+          "name": "Soundcloud",
+          "description": "A sampler player loaded with a SoundCloud track of your choice."
+        },
+        "Sampler": {
+          "name": "Sampler",
+          "description": "A sampler player loaded with an audio file from your device."
+        },
+        "Granular": {
+          "name": "Granular",
+          "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces and uses that as a sound source."
+        },
+        "Recorder": {
+          "name": "Recorder",
+          "description": "Records the master output and then works as a sample player like the SoundCloud Block."
+        },
+        "WaveGen": {
+          "name": "WaveGen",
+          "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
+        }
+      }
+    },
+    "Effect": {
+      "Label": "Effect",
+      "Blocks": {
+        "Autowah": {
+          "name": "Autowah",
+          "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
+        },
+        "Bitcrusher": {
+          "name": "Bitcrusher",
+          "description": "Creates distortion by reducing the audio resolution when connected to any source block."
+        },
+        "Chomp": {
+          "name": "Chomp",
+          "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
+        },
+        "Chopper": {
+          "name": "Chopper",
+          "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
+        },
+        "Chorus": {
+          "name": "Chorus",
+          "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
+        },
+        "Convolution": {
+          "name": "Convolution",
+          "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
+        },
+        "Delay": {
+          "name": "Delay",
+          "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
+        },
+        "Distortion": {
+          "name": "Distortion",
+          "description": "A digital clipping distortion. Can connect to any source block."
+        },
+        "Envelope": {
+          "name": "Envelope",
+          "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
+        },
+        "Eq": {
+          "name": "Eq",
+          "description": "A 'parametric' EQ with 4 filters. Can connect to any source blocks."
+        },
+        "Filter": {
+          "name": "Filter",
+          "description": "A 'peaking' filter used for boosting or suppressing frequencies. Can connect to any source block."
+        },
+        "LFO": {
+          "name": "LFO",
+          "description": "Modulates pitch, Can connect to Tone blocks."
+        },
+        "Phaser": {
+          "name": "Phaser",
+          "description": "Creates a sweeping phase effect. Can connect to any source block."
+        },
+        "Pitch": {
+          "name": "Pitch",
+          "description": "Shift the pitch of any source block."
+        },
+        "Reverb": {
+          "name": "Reverb",
+          "description": "A digital reverb based on the 'Freeverb'. Can connect to any source block."
+        },
+        "Scuzz": {
+          "name": "Scuzz",
+          "description": "No idea. Can connect to Tone Blocks."
+        },
+        "Volume": {
+          "name": "Volume",
+          "description": "Increase or decrease the volume. Can connect to any source block."
+        }
+      }
+    },
+    "Power": {
+      "Label": "Power",
+      "Blocks": {
+        "ParticleEmitter": {
+          "name": "Particle Emitter",
+          "description": "Fires energy particles across the screen. When a particle hits a source block, that source is momentarily triggered."
+        },
+        "Power": {
+          "name": "Power",
+          "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
+        },
+        "TogglePower": {
+          "name": "Toggle Power",
+          "description": "Toggles energy for source blocks, particle emitters & lasers."
+        },
+        "Void": {
+          "name": "Void",
+          "description": "Absorbs any laser beams or particles that touch it."
+        },
+        "MomentaryPower": {
+          "name": "Momentary Power",
+          "description": "Momentary energy for source blocks, particle emitters & lasers."
+        },
+        "Laser": {
+          "name": "Laser",
+          "description": "Fires a super cool laser beam that gives energy to anything it touches."
+        }
+      }
+    },
+    "Interaction": {
+      "Label": "Interaction",
+      "Blocks": {
+        "ComputerKeyboard": {
+          "name": "Computer Keyboard",
+          "description": "Control a source using your computer keys."
+        },
+        "MIDIController": {
+          "name": "MIDI Controller",
+          "description": "Control source blocks using a connected USB MIDI device."
+        }
+      }
+    }
+  },
+  "Errors": {
+    "SaveError": "Save failed, please try again."
+  }
+}

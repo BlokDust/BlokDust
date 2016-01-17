@@ -41,8 +41,9 @@ require.config({
 
 require([
     "text",
-    "text!Config.json",
     "App",
+    "text!config.json",
+    "text!l10n.json",
     "PixelPalette",
     "Tone/core/Tone",
     "jquery",
@@ -80,13 +81,13 @@ require([
     "Tone/component/Mono",
     "tween",
     "utils"
-], function (text, config, App, PixelPalette, Tone, jquery) {
+], function (text, App, config, l10n, PixelPalette, Tone, jquery) {
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;
     window.$ = jquery;
 
     $(document).ready(function() {
-        window.App = new App.default(config);
+        window.App = new App.default(config, l10n);
         window.App.Setup();
     });
 });

@@ -44,13 +44,14 @@ export interface IApp {
     GridSize: number;
     Height: number;
     IsLoadingComposition: boolean;
-    PianoKeyboardManager: PianoKeyboardManager;
+    L10n: any;
     MainScene: MainScene;
     Metrics: Metrics;
     OperationManager: OperationManager;
     Palette: string[];
     Particles: Particle[];
     ParticlesPool: PooledFactoryResource<Particle>;
+    PianoKeyboardManager: PianoKeyboardManager;
     PointerInputManager: PointerInputManager;
     PowerEffects: IPowerEffect[];
     PowerSources: IPowerSource[];
@@ -60,8 +61,8 @@ export interface IApp {
     ScaledUnit: number;
     SessionId: string;
     Sources: ISource[];
-    SubCanvas: HTMLCanvasElement[];
     Stage: Stage;
+    SubCanvas: HTMLCanvasElement[];
     ThemeManager: ThemeManager;
     TypingManager: TypingManager;
     Unit: number;

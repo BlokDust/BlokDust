@@ -52,6 +52,10 @@ import {Void} from './Blocks/Power/Void';
 import {ComputerKeyboard} from 'Blocks/Interaction/ComputerKeyboard';
 import {MIDIController} from 'Blocks/Interaction/MIDIController';
 
+import {IApp} from "./IApp";
+
+declare var TheApp: IApp;
+
 export class BlockCreator {
 
     // SOURCE BLOCKS //
@@ -84,7 +88,7 @@ export class BlockCreator {
     public static Scuzz = Scuzz;
     public static Volume = Volume;
 
-        // POWER BLOCKS //
+    // POWER BLOCKS //
     public static Laser = Laser;
     public static Momentary = Momentary;
     public static ParticleEmitter = ParticleEmitter;
@@ -92,7 +96,7 @@ export class BlockCreator {
     public static Toggle = Toggle;
     public static Void = Void;
 
-        // INTERACTION BLOCKS //
+    // INTERACTION BLOCKS //
     public static ComputerKeyboard = ComputerKeyboard;
     public static MIDIController = MIDIController;
 
@@ -100,187 +104,187 @@ export class BlockCreator {
     public static MenuJson: any = {
         "categories": [
             {
-                "name": "Source",
+                "name": TheApp.L10n.Blocks.Source.Blocks.Label,
                 "items": [
                     {
-                        "name": "Tone",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Tone.name,
                         "id": ToneSource,
-                        "description": "A single oscillator. Creates a waveform used as the basis of most synths."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Tone.description
                     },
                     {
-                        "name": "Noise",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Noise.name,
                         "id": Noise,
-                        "description": "A noise generator with 'White', 'Brown' and 'Pink' waveform types."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Noise.description
                     },
                     {
-                        "name": "Microphone",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Microphone.name,
                         "id": Microphone,
-                        "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Microphone.description
                     },
                     {
-                        "name": "SoundCloud",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Soundcloud.name,
                         "id": Soundcloud,
-                        "description": "A sampler player loaded with a SoundCloud track of your choice."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Soundcloud.description
                     },
                     {
-                        "name": "Sampler",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Sampler.name,
                         "id": Sampler,
-                        "description": "A sampler player loaded with an audio file from your device."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Sampler.description
                     },
                     {
-                        "name": "Granular",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Granular.name,
                         "id": Granular,
-                        "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces and uses that as a sound source."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Granular.description
                     },
                     {
-                        "name": "Recorder",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.Recorder.name,
                         "id": Recorder,
-                        "description": "Records the master output and then works as a sample player like the SoundCloud Block."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.Recorder.description
                     },
                     {
-                        "name": "WaveGen",
+                        "name": TheApp.L10n.Blocks.Source.Blocks.WaveGen.name,
                         "id": WaveGen,
-                        "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
+                        "description": TheApp.L10n.Blocks.Source.Blocks.WaveGen.description
                     }
                 ]
             },
             {
-                "name": "Effects",
+                "name": TheApp.L10n.Blocks.Effect.Label,
                 "items": [
                     {
-                        "name": "Autowah",
+                        "name": TheApp.L10n.Blocks.Effect.AutoWah.name,
                         "id": AutoWah,
-                        "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.AutoWah.description
                     },
                     {
-                        "name": "Bit Crusher",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.BitCrusher.name,
                         "id": BitCrusher,
-                        "description": "Creates distortion by reducing the audio resolution when connected to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Bitcrusher.description
                     },
                     {
-                        "name": "Chomp",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Chomp.name,
                         "id": Chomp,
-                        "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Chomp.description
                     },
                     {
-                        "name": "Chopper",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Chopper.name,
                         "id": Chopper,
-                        "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Chopper.description
                     },
                     {
-                        "name": "Chorus",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Chorus.name,
                         "id": Chorus,
-                        "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Chorus.description
                     },
                     {
-                        "name": "Convolution",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Convolution.name,
                         "id": Convolver,
-                        "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Convolution.description
                     },
                     {
-                        "name": "Delay",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Delay.name,
                         "id": Delay,
-                        "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Delay.description
                     },
                     {
-                        "name": "Distortion",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Distortion.name,
                         "id": Distortion,
-                        "description": "A digital clipping distortion. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Distortion.description
                     },
                     {
-                        "name": "Envelope",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Envelope.name,
                         "id": Envelope,
-                        "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Envelope.description
                     },
                     {
-                        "name": "EQ",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Eq.name,
                         "id": EQ,
-                        "description": "A 'parametric' EQ with 4 filters. Can connect to any source blocks."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Eq.description
                     },
                     {
-                        "name": "Filter",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Filter.name,
                         "id": Filter,
-                        "description": "A 'peaking' filter used for boosting or suppressing frequencies. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Filter.description
                     },
                     {
-                        "name": "LFO",
+                        "name":TheApp.L10n.Blocks.Effect.Blocks.LFO.name,
                         "id": LFO,
-                        "description": "Modulates pitch, Can connect to Tone blocks."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.LFO.description
                     },
                     {
-                        "name": "Phaser",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Phaser.name,
                         "id": Phaser,
-                        "description": "Creates a sweeping phase effect. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Phaser.description
                     },
                     {
-                        "name": "Pitch",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Pitch.name,
                         "id": Pitch,
-                        "description": "Shift the pitch of any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Pitch.description
                     },
                     {
-                        "name": "Reverb",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Reverb.name,
                         "id": Reverb,
-                        "description": "A digital reverb based on the 'Freeverb'. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Reverb.description
                     },
                     {
-                        "name": "Scuzz",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Scuzz.name,
                         "id": Scuzz,
-                        "description": "No idea. Can connect to Tone Blocks."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Scuzz.description
                     },
                     {
-                        "name": "Volume",
+                        "name": TheApp.L10n.Blocks.Effect.Blocks.Volume.name,
                         "id": Volume,
-                        "description": "Increase or decrease the volume. Can connect to any source block."
+                        "description": TheApp.L10n.Blocks.Effect.Blocks.Volume.description
                     }
                 ]
             },
             {
-                "name": "Power",
+                "name": TheApp.L10n.Blocks.Power.Blocks.Label,
                 "items": [
                     {
-                        "name": "Particle Emitter",
+                        "name": TheApp.L10n.Blocks.Power.Blocks.ParticleEmitter.name,
                         "id": ParticleEmitter,
-                        "description": "Fires energy particles across the screen. When a particle hits a source block, that source is momentarily triggered."
+                        "description": TheApp.L10n.Blocks.Power.Blocks.ParticleEmitter.description
                     },
                     {
-                        "name": "Power",
+                        "name": TheApp.L10n.Blocks.Power.Blocks.Power.name,
                         "id": Power,
-                        "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
+                        "description": TheApp.L10n.Blocks.Power.Blocks.Power.description
                     },
                     {
-                        "name": "Toggle Power",
+                        "name": TheApp.L10n.Blocks.Power.Blocks.TogglePower.name,
                         "id": Toggle,
-                        "description": "Toggles energy for source blocks, particle emitters & lasers."
+                        "description": TheApp.L10n.Blocks.Power.Blocks.TogglePower.description
                     },
                     {
-                        "name": "Void",
+                        "name": TheApp.L10n.Blocks.Power.Blocks.Void.name,
                         "id": Void,
-                        "description": "Absorbs any laser beams or particles that touch it."
+                        "description": TheApp.L10n.Blocks.Power.Blocks.Void.description
                     },
                     {
-                        "name": "Momentary Power",
+                        "name": TheApp.L10n.Blocks.Power.Blocks.MomentaryPower.name,
                         "id": Momentary,
-                        "description": "Momentary energy for source blocks, particle emitters & lasers."
+                        "description": TheApp.L10n.Blocks.Power.Blocks.MomentaryPower.description
                     },
                     {
-                        "name": "Laser",
+                        "name": TheApp.L10n.Blocks.Power.Blocks.Laser.name,
                         "id": Laser,
-                        "description": "Fires a super cool laser beam that gives energy to anything it touches."
+                        "description": TheApp.L10n.Blocks.Power.Blocks.Laser.description
                     }
                 ]
             },
             {
-                "name": "Interaction",
+                "name": TheApp.L10n.Blocks.Interaction.Label,
                 "items": [
                     {
-                        "name": "Computer Keyboard",
+                        "name": TheApp.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.name,
                         "id": ComputerKeyboard,
-                        "description": "Control a source using your computer keys."
+                        "description": TheApp.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.description
                     },
                     {
-                        "name": "MIDI Controller",
+                        "name": TheApp.L10n.Blocks.Interaction.Blocks.MIDIController.name,
                         "id": MIDIController,
-                        "description": "Control source blocks using a connected USB MIDI device."
+                        "description": TheApp.L10n.Blocks.Interaction.Blocks.MIDIController.description
                     }
                 ]
             }
@@ -288,7 +292,7 @@ export class BlockCreator {
     };
 
     public static GetBlock(type: string): IBlock {
-        type = this.LostBlockCheck(type);
+        type = this.BackwardsCompatibilityCheck(type);
         var b = eval("new BlockCreator." + type + "()");
         b.Type = eval('BlockCreator.'+type);
         return b;
@@ -296,7 +300,7 @@ export class BlockCreator {
 
     // BACKWARDS COMPATIBILITY //
     // PATCH CHANGED BLOCK NAMES //
-    public static LostBlockCheck(type: string): string {
+    public static BackwardsCompatibilityCheck(type: string): string {
         if (("" + type) === "Gain") { // todo: coerce to string using .toString() or <String>?
             type = "Volume";
         }

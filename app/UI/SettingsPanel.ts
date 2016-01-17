@@ -58,7 +58,7 @@ export class SettingsPanel extends DisplayObject{
         this.Options = [];
         this._OptionsRoll = [];
 
-        this._Attribution = App.Config.Attribution;
+        this._Attribution = App.L10n.Attribution;
         this._Attribution.build = String.format(this._Attribution.build, this._VersionNumber);
 
         this.MenuJson = {

@@ -24,6 +24,7 @@ import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IConfig} from './IConfig';
 import {IEffect} from './Blocks/IEffect';
+import {IL10n} from "./IL10n";
 import {IncrementNumberCommandHandler} from './CommandHandlers/IncrementNumberCommandHandler';
 import {IPowerEffect} from './Blocks/Power/IPowerEffect';
 import {IPowerSource} from "./Blocks/Power/IPowerSource";
@@ -74,6 +75,7 @@ export default class App implements IApp{
     public GridSize: number;
     public Height: number;
     public IsLoadingComposition: boolean = false;
+    public L10n: IL10n;
     public Metrics: Metrics;
     public OperationManager: OperationManager;
     public Palette: string[] = [];
@@ -143,8 +145,9 @@ export default class App implements IApp{
         Utils.Storage.set(this.CompositionId, this._SessionId, 315360000, Utils.StorageType.local);
     }
 
-    constructor(config: string) {
+    constructor(config: string, l10n: string) {
         this.Config = <IConfig>JSON.parse(config);
+        this.L10n = <IL10n>JSON.parse(l10n);
     }
 
     public Setup(){

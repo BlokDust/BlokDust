@@ -16,7 +16,7 @@ export class SaveCommandHandler implements ICommandHandler {
         return App.OperationManager.Do(op).then((result) => {
             if (!result) {
                 App.MainScene.SharePanel.ClosePanel();
-                App.Message(App.Config.Errors.SaveError);
+                App.Message(App.L10n.Errors.SaveError);
             } else {
                 App.CompositionId = result.Id;
                 App.MainScene.SharePanel.ReturnLink(result.Id);
