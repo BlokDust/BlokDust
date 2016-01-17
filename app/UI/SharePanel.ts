@@ -123,14 +123,14 @@ export class SharePanel extends DisplayObject {
 
 
             // BG //
-            ctx.fillStyle = App.Palette[2].toString();// Black
+            App.FillColor(ctx,App.Palette[2]);
             ctx.globalAlpha = 0.95;
             ctx.fillRect(0,this.OffsetY,appWidth,appHeight);
 
 
             // URL BOX //
             ctx.globalAlpha = 1;
-            ctx.fillStyle = App.Palette[1].toString();// Black
+            App.FillColor(ctx,App.Palette[1]);
             ctx.fillRect(shareX + (appWidth*0.5) - (210*units),centerY - (20*units),420*units,40*units); // solid
 
             if (this._FirstSession) {
@@ -138,9 +138,9 @@ export class SharePanel extends DisplayObject {
                 // GENERATE URL //
 
                 if (this._Saving) {
-                    ctx.fillStyle = App.Palette[1].toString();
+                    App.FillColor(ctx,App.Palette[1]);
                 } else {
-                    ctx.fillStyle = App.Palette[4].toString();
+                    App.FillColor(ctx,App.Palette[4]);
                 }
                 ctx.fillRect(this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (20 * units), 420 * units, 40 * units);
                 if (this._RollOvers[3] && !this._Saving) {
@@ -153,7 +153,7 @@ export class SharePanel extends DisplayObject {
                 }
                 ctx.font = urlType;
                 ctx.textAlign = "center";
-                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+                App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
                 ctx.fillText(this._CopyJson.genUrl.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (9 * units));
                 ctx.font = italicType;
                 ctx.textAlign = "left";
@@ -162,9 +162,9 @@ export class SharePanel extends DisplayObject {
 
                 // SAVE & SAVE AS //
                 if (this._Saving) {
-                    ctx.fillStyle = App.Palette[1].toString();
+                    App.FillColor(ctx,App.Palette[1]);
                 } else {
-                    ctx.fillStyle = App.Palette[4].toString();
+                    App.FillColor(ctx,App.Palette[4]);
                 }
                 ctx.fillRect(this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (20 * units), 202.5 * units, 40 * units);
                 if (this._RollOvers[4] && !this._Saving) {
@@ -176,9 +176,9 @@ export class SharePanel extends DisplayObject {
                     ctx.fill();
                 }
                 if (this._Saving) {
-                    ctx.fillStyle = App.Palette[1].toString();
+                    App.FillColor(ctx,App.Palette[1]);
                 } else {
-                    ctx.fillStyle = App.Palette[5].toString();
+                    App.FillColor(ctx,App.Palette[5]);
                 }
                 ctx.fillRect(this.OffsetX + (appWidth * 0.5) + (7.5 * units), centerY - (20 * units), 202.5 * units, 40 * units);
                 if (this._RollOvers[5] && !this._Saving) {
@@ -191,7 +191,7 @@ export class SharePanel extends DisplayObject {
                 }
                 ctx.font = urlType;
                 ctx.textAlign = "center";
-                ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+                App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
                 ctx.fillText(this._CopyJson.save.toUpperCase(), this.OffsetX + (appWidth * 0.5) - (108.75 * units), centerY + (9 * units));
                 ctx.fillText(this._CopyJson.saveAs.toUpperCase(), this.OffsetX + (appWidth * 0.5) + (108.75 * units), centerY + (9 * units));
                 ctx.font = italicType;
@@ -200,7 +200,7 @@ export class SharePanel extends DisplayObject {
 
                 // SKIP //
                 ctx.lineWidth = 2;
-                ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+                App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
                 ctx.beginPath();
                 ctx.moveTo( this.OffsetX + (appWidth*0.5) + (275 * units), centerY - (20*units));
                 ctx.lineTo( this.OffsetX + (appWidth*0.5) + (295 * units), centerY);
@@ -220,7 +220,7 @@ export class SharePanel extends DisplayObject {
 
             // BACK ARROW //
             ctx.lineWidth = 2;
-            ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.beginPath();
             ctx.moveTo(shareX + (appWidth*0.5) - (275 * units), centerY - (20*units));
             ctx.lineTo(shareX + (appWidth*0.5) - (295 * units), centerY);
@@ -229,7 +229,7 @@ export class SharePanel extends DisplayObject {
 
 
             // SHARE BUTTONS //
-            ctx.fillStyle = "#fc4742";// gp
+            ctx.fillStyle = "#fc4742";// gp //TODO: Store these share colours somewhere
             ctx.fillRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units);
             if (this._RollOvers[8]) {
                 ctx.beginPath();
@@ -261,7 +261,8 @@ export class SharePanel extends DisplayObject {
             }
 
             // SHARE COPY //
-            ctx.strokeStyle = ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString(); // White
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.textAlign = "left";
             ctx.font = midType;
             ctx.font = italicType;

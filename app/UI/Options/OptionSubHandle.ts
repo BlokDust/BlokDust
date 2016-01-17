@@ -47,7 +47,7 @@ export class OptionSubHandle {
         var w = this.Position.x;
         //console.log(w);
 
-        ctx.fillStyle = col.toString();
+        App.FillColor(ctx,col);
         ctx.beginPath();
         ctx.moveTo(x - w - size, y);
         ctx.lineTo(x - w, y - size);
@@ -58,7 +58,7 @@ export class OptionSubHandle {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = App.Palette[8].toString();
+        App.FillColor(ctx,App.Palette[8]);
         ctx.beginPath();
         ctx.moveTo(x - w - size, y);
         ctx.lineTo(x - w, y - size);

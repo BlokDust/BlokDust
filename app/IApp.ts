@@ -24,7 +24,7 @@ import {ResourceManager} from './Core/Resources/ResourceManager';
 import {Serializer} from './Serializer';
 import {Splash} from './Splash';
 import {Stage} from "./Stage";
-import {ThemeManager} from "./UI/ThemeManager";
+import {ThemeManager} from "./Core/Visual/ThemeManager";
 import {TypingManager} from './Core/Inputs/TypingManager';
 
 export interface IApp {
@@ -74,4 +74,9 @@ export interface IApp {
     Message(message?: string, options?: any): void;
     Serialize(): string;
     Setup(): void;
+
+    FillColor(ctx,col): void;
+    FillRGBA(ctx,r,g,b,a): void;
+    StrokeColor(ctx,col): void;
+    StrokeRGBA(ctx,r,g,b,a): void;
 }

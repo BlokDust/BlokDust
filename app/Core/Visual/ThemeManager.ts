@@ -1,7 +1,7 @@
 import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ColorTheme} from './ColorTheme';
-import {IApp} from '../IApp';
+import {IApp} from '../../IApp';
 import {ThemeChangeEventArgs} from './ThemeChangeEventArgs';
 
 declare var App: IApp;

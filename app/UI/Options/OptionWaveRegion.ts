@@ -50,7 +50,7 @@ export class WaveRegion extends WaveForm{
             ctx.lineWidth = 1;
             ctx.globalAlpha = 1;
             ctx.globalAlpha = 1;
-            ctx.fillStyle = ctx.strokeStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
 
             var x = xs[2];
             var sliderNo = 2;
@@ -70,19 +70,15 @@ export class WaveRegion extends WaveForm{
             }
 
 
-
-
             // SLIDEBAR //
-
             var offset = 0;
             if (origin == panel.Margin) {
                 offset = -units;
             }
 
             ctx.globalAlpha = 1;
-
             for (var j=0; j<sliderNo; j++) {
-                ctx.fillStyle = ctx.strokeStyle = col.toString();
+                App.FillColor(ctx,col);
 
 
                 x = xs[j];
@@ -98,7 +94,7 @@ export class WaveRegion extends WaveForm{
                 ctx.closePath();
                 ctx.fill();
 
-                ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(ctx,App.Palette[8]);
                 ctx.beginPath();
                 ctx.moveTo(x + panel.Margin - dragWidth, y + (height * 0.5));
                 ctx.lineTo(x + panel.Margin, y + (height * 0.5) - dragWidth);
@@ -108,10 +104,10 @@ export class WaveRegion extends WaveForm{
                 ctx.fill();
             }
 
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+
             if (this.Mode) {
                 for (var j=2; j<4; j++) {
-                    ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
-
                     x = xs[j];
 
                     // GRAB TRIANGLES //
@@ -127,11 +123,7 @@ export class WaveRegion extends WaveForm{
             }
 
 
-
-
-            ctx.fillStyle = App.Palette[App.ThemeManager.Txt].toString();// WHITE
             ctx.font = App.Metrics.TxtItalic;
-
             ctx.textAlign = "left";
             ctx.fillText("Start", xs[0] + panel.Margin + (5*units), y + (dataType*0.8));
             if (this.Mode) {

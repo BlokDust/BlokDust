@@ -244,7 +244,8 @@ export class LaserBeams extends DisplayObject {
     Draw() {
         var unit = App.ScaledUnit;
         var myPos,vector;
-        this.Ctx.strokeStyle = this.Ctx.fillStyle = App.Palette[8].toString();
+        App.FillColor(this.Ctx,App.Palette[8]);
+        App.StrokeColor(this.Ctx,App.Palette[8]);
         this.Ctx.globalAlpha = 1;
 
         this.Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
