@@ -15,7 +15,6 @@ export class BlockSprites {
     private _XOffset: number;
     private _YOffset: number;
 
-    // todo: pass a type for blocktype not a string
     DrawSprite(ctx: IDisplayContext, pos: Point, scaled: boolean, blockType: string, pos2?: Point) {
 
         this.Ctx = ctx.Ctx;

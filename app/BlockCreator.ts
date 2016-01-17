@@ -32,12 +32,12 @@ import {Distortion} from 'Blocks/Effects/Post/Distortion';
 import {Envelope} from 'Blocks/Effects/Pre/Envelope';
 import {EQ} from 'Blocks/Effects/Post/EQ';
 import {Filter} from 'Blocks/Effects/Post/Filter';
+import {Gain as Volume} from 'Blocks/Effects/Post/Gain';
 import {LFO} from 'Blocks/Effects/Pre/LFO';
 import {Phaser} from 'Blocks/Effects/Post/Phaser';
 import {Pitch as PitchShifter} from 'Blocks/Effects/Post/Pitch';
 import {Reverb} from 'Blocks/Effects/Post/Reverb';
 import {Scuzz} from 'Blocks/Effects/Pre/Scuzz';
-import {Gain as Volume} from 'Blocks/Effects/Post/Gain';
 
 // POWER BLOCKS //
 import {Laser} from './Blocks/Power/Laser';
@@ -60,6 +60,41 @@ export class BlockCreator {
     // SOURCE BLOCKS //
     public Granular = Granular;
     public Microphone = Microphone;
+    public Noise = Noise;
+    public Recorder = Recorder;
+    public Sampler = Sampler;
+    public Soundcloud = Soundcloud;
+    public ToneSource = ToneSource;
+    public WaveGen = WaveGen;
+
+    // EFFECTS BLOCKS //
+    public AutoWah = AutoWah;
+    public BitCrusher = BitCrusher;
+    public Chomp = Chomp;
+    public Chopper = Chopper;
+    public Chorus = Chorus;
+    public Convolver = Convolver;
+    public Delay = Delay;
+    public Distortion = Distortion;
+    public Envelope = Envelope;
+    public EQ = EQ;
+    public Filter = Filter;
+    public Volume = Volume;
+    public LFO = LFO;
+    public Phaser = Phaser;
+    public PitchShifter = PitchShifter;
+    public Reverb = Reverb;
+    public Scuzz = Scuzz;
+
+    // POWER BLOCKS //
+    public Laser = Laser;
+    public Momentary = Momentary;
+    public ParticleEmitter = ParticleEmitter;
+    public Power = Power;
+    public Toggle = Toggle;
+    public Void = Void;
+
+    // INTERACTION BLOCKS //
     public ComputerKeyboard = ComputerKeyboard;
     public MIDIController = MIDIController;
 
@@ -67,7 +102,6 @@ export class BlockCreator {
 
     }
 
-    // todo: store block names separately. use them in block.BlockName too
     public MenuJson: any = {
         "categories": [
             {
@@ -260,8 +294,8 @@ export class BlockCreator {
 
     public GetBlock(type: string): IBlock {
         type = this.BackwardsCompatibilityCheck(type);
-        var b = eval("new BlockCreator." + type + "()");
-        b.Type = eval('BlockCreator.'+type);
+        var b = eval("new this." + type + "()");
+        b.Type = eval('this.' + type);
         return b;
     }
 
