@@ -58,6 +58,13 @@ export class ComputerKeyboard extends Keyboard {
         super.Dispose();
         this.Params.octave = null;
         this.KeyboardCommands = null;
+    }
+
+    Stop() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
+            source.TriggerRelease('all');
+        });
         App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
         App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
     }

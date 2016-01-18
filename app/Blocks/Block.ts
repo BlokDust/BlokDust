@@ -108,7 +108,7 @@ export class Block extends DisplayObject implements IBlock {
 
     MouseUp() {
         this.IsPressed = false;
-        this._Duplicable = true;
+        this._Duplicable = true; //TODO:
     }
 
     MouseMove(point: Point) {

@@ -188,6 +188,13 @@ export class MIDIController extends Keyboard {
 
     Dispose(){
         super.Dispose();
+    }
+
+    Stop() {
+        const connections = this.Connections.ToArray();
+        connections.forEach((source: ISource) => {
+            source.TriggerRelease('all');
+        });
         App.Audio.MIDIManager.MIDIMessage.off(this._OnMIDIMessage, this);
     }
 
