@@ -248,19 +248,20 @@ module.exports = function (grunt) {
             }
         },
 
-        //watch: {
-        //    src: {
-        //        files: [
-        //            '<%= dirs.app %>/**/*.ts',
-        //            '!<%= dirs.lib %>/**/*.ts',
-        //            'config.json'
-        //        ],
-        //        tasks: ['typescript:build'],
-        //        options: {
-        //            livereload: ports.livereload
-        //        }
-        //    }
-        //},
+        // Please leave this in for Luke P. He uses watch:dev instead of serve:dev
+        watch: {
+            src: {
+                files: [
+                    '<%= dirs.app %>/**/*.ts',
+                    '!<%= dirs.lib %>/**/*.ts',
+                    'config.json'
+                ],
+                tasks: ['typescript:build'],
+                options: {
+                    livereload: ports.livereload
+                }
+            }
+        },
 
         exec: {
             minify: {
