@@ -55,23 +55,37 @@ export class ThemeManager  {
             )*/
             ,new ColorTheme(
                 "CONSOLE",
-                App.Config.PixelPaletteImagePath[10]
+                App.Config.PixelPaletteImagePath[10],
+                {
+                    menu: [3,5,7,4,6],
+                    options: [3,4,5,7,6]
+                }
 
             )
 
             ,new ColorTheme(
                 "FRIENDS",
-                App.Config.PixelPaletteImagePath[3]
+                App.Config.PixelPaletteImagePath[3],
+                {
+                    menu: [3,5,7,4,6]
+                }
             )
 
             ,new ColorTheme(
                 "KORAL",
-                App.Config.PixelPaletteImagePath[4]
+                App.Config.PixelPaletteImagePath[4],
+                {
+                    options: [7,6,9,4,3]
+                }
             )
 
             ,new ColorTheme(
                 "SEA CUCUMBER",
-                App.Config.PixelPaletteImagePath[9]
+                App.Config.PixelPaletteImagePath[9],
+                {
+                    menu: [3,9,10,4,6],
+                    options: [3,4,9,10,6]
+                }
             )
 
             /*,new ColorTheme(
@@ -86,7 +100,10 @@ export class ThemeManager  {
 
             ,new ColorTheme(
                 "ARROW MOUNTAIN",
-                App.Config.PixelPaletteImagePath[8]
+                App.Config.PixelPaletteImagePath[8],
+                {
+                    menu: [6,5,7,4,3]
+                }
             )
         ];
 
@@ -104,8 +121,8 @@ export class ThemeManager  {
         };
 
         this.Txt = 16;
-        this.MenuOrder = [9,5,7,4,3];
-        this.OptionsOrder = [3,4,9,7,5];
+        this.MenuOrder = [17,18,19,20,21];
+        this.OptionsOrder = [22,23,24,25,26];
 
     }
 
@@ -120,15 +137,33 @@ export class ThemeManager  {
         this.CurrentTheme = this.Themes[theme];
         var selectedtheme = this.Themes[theme];
         this._Value.txt = selectedtheme.Options.txt || this._Defaults.txt;
-
+        this._Value.menu = selectedtheme.Options.menu || this._Defaults.menu;
+        this._Value.options = selectedtheme.Options.options || this._Defaults.options;
 
         this.Loaded = false;
         var pixelPalette = new PixelPalette(selectedtheme.PaletteURL);
         pixelPalette.Load((palette: any[]) => {
 
+            var i,l;
+
+            // TEXT COL //
             this.Txt = palette.length;
             palette.push(palette[this._Value.txt].clone());
             this.NewPalette = palette;
+
+            // MENU COLS //
+            l = palette.length;
+            this.MenuOrder = [l,l+1,l+2,l+3,l+4];
+            for (i=0; i<this._Value.menu.length; i++) {
+                palette.push(palette[this._Value.menu[i]].clone());
+            }
+            // MENU COLS //
+            l = palette.length;
+            this.OptionsOrder = [l,l+1,l+2,l+3,l+4];
+            for (i=0; i<this._Value.options.length; i++) {
+                palette.push(palette[this._Value.options[i]].clone());
+            }
+
 
             var shareUrl = document.getElementById("shareUrl");
             shareUrl.style.color = this.NewPalette[this.Txt];
@@ -137,7 +172,7 @@ export class ThemeManager  {
             if (firstLoad) {
                 this.ThemeChanged.raise(this, new ThemeChangeEventArgs(palette));
             } else {
-                for (var i=0; i<palette.length; i++) {
+                for (i=0; i<palette.length; i++) {
                     this.ColorTo(App.Palette[i], this.NewPalette[i], 800);
                 }
             }

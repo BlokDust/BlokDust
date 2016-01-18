@@ -202,7 +202,8 @@ export class OptionsPanel extends DisplayObject {
         this.Range = panelR;
         this._Name = json.name;
         this._NameWidth = nameW;
-        this.SliderColours = [App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7],App.Palette[5]];
+        var order = App.ThemeManager.OptionsOrder;
+        this.SliderColours = [App.Palette[order[0]],App.Palette[order[1]],App.Palette[order[2]],App.Palette[order[3]],App.Palette[order[4]]];
 
 
         // DEFINE OUTLINE FOR HITTEST
@@ -593,7 +594,7 @@ export class OptionsPanel extends DisplayObject {
         App.FillColor(ctx,App.Palette[2]);
         ctx.globalAlpha = 0.16;
         this.panelDraw(sx, sy + (5 * units));
-        App.FillColor(ctx,App.Palette[2]);
+        //App.FillColor(ctx,App.Palette[2]);
         ctx.globalAlpha = 0.9;
         this.panelDraw(sx, sy);
         ctx.globalAlpha = 1;

@@ -47,7 +47,7 @@ export class SettingsPanel extends DisplayObject{
         this._RollOvers = [];
         this.Height = 60;
         this.MenuItems = [];
-        this._MenuCols = [9,5,7,4,3];
+        this._MenuCols = App.ThemeManager.MenuOrder;
         this._OpenTab = 0;
         this._VersionNumber = Version;
         //console.log(Version);
@@ -672,7 +672,8 @@ export class SettingsPanel extends DisplayObject{
 
         this.Margin = dx - halfWidth + marginWidth;
         this.Range = menuWidth - marginWidth;
-        this.SliderColours = [App.Palette[5],App.Palette[3],App.Palette[4],App.Palette[9],App.Palette[7]];
+        var order = App.ThemeManager.OptionsOrder;
+        this.SliderColours = [App.Palette[order[0]],App.Palette[order[1]],App.Palette[order[2]],App.Palette[order[3]],App.Palette[order[4]]];
 
 
         // COLOR THEME //
