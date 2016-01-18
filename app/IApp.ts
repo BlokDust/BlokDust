@@ -4,6 +4,7 @@ import Point = minerva.Point;
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {BlockCreator} from "./BlockCreator";
 import {BlockSprites} from "./Blocks/BlockSprites";
+import {ColorManager} from './Core/Visual/ColorManager';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
@@ -35,6 +36,7 @@ export interface IApp {
     BlockCreator: BlockCreator;
     BlockSprites: BlockSprites;
     Canvas: Canvas;
+    ColorManager: ColorManager;
     CommandManager: CommandManager;
     CommandsInputManager: CommandsInputManager;
     CompositionId: string;

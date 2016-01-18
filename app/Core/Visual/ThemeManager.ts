@@ -164,9 +164,14 @@ export class ThemeManager  {
                 palette.push(palette[this._Value.options[i]].clone());
             }
 
-
+            // CSS SHARE TEXT COL //
             var shareUrl = document.getElementById("shareUrl");
-            shareUrl.style.color = this.NewPalette[this.Txt];
+            shareUrl.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
+            // CSS SELECTED TEXT HIGHLIGHT COLOUR //
+            var styleElem = document.getElementById("selectStyle");
+            var highlightCol = App.ColorManager.DarkerColor(this.NewPalette[1],15);
+            var col = App.ColorManager.ColorString(highlightCol);
+            styleElem.innerHTML='::selection{ background-color: ' + col + '; background-blend-mode: normal; mix-blend-mode: normal;}';
 
             this.Loaded = true;
             if (firstLoad) {

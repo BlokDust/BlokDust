@@ -3,7 +3,7 @@ import {RGBA} from './RGBA';
 declare var App: IApp;
 
 
-export class ColorManager  {
+export class ColorManager {
 
     public Master: RGBA;
     public HighPass: RGBA;
@@ -37,6 +37,22 @@ export class ColorManager  {
     StrokeRGBA(ctx,r,g,b,a) {
         this.SetRGBA(ctx,r,g,b,a,"stroke");
     }
+    public ColorString(col) {
+        return this.BuildColour(col.R,col.G,col.B,col.A);
+    }
+    public DarkerColor(col,darkness) {
+        var r = this.ValueInRange(col.R - darkness,0,255);
+        var g = this.ValueInRange(col.G - darkness,0,255);
+        var b = this.ValueInRange(col.B - darkness,0,255);
+        return new RGBA(r,g,b,col.A);
+    }
+    public LighterColor(col,lightness) {
+        var r = this.ValueInRange(col.R + lightness,0,255);
+        var g = this.ValueInRange(col.G + lightness,0,255);
+        var b = this.ValueInRange(col.B + lightness,0,255);
+        return new RGBA(r,g,b,col.A);
+    }
+
 
     // PASS R G B A //
     SetRGBA(ctx,r,g,b,a,mode) {
