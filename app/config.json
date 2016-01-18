@@ -44,5 +44,5 @@
     "ResetPitchesOnInteractionDisconnect": true,
     "ScrollSpeed": 1.5,
     "ScrollEasing": 25,
-    "SingleClickTime": 110
+    "SingleClickTime": 140
 }
