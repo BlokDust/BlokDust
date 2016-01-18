@@ -125,7 +125,14 @@ export class Soundcloud extends SamplerBase {
             SoundCloudAudio.Search(query, App.Config.SoundCloudMaxTrackLength, (tracks) => {
                 //FIXME: we need an error parameter for this callback. If SC timesout there are no tracks returned
                 tracks.forEach((track) => {
-                    this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
+                    /**
+                     * NOTE: Even though we already search for streamable tracks, some tracks are
+                     * returned from SC.get with streamable value set to false.
+                     * This will throw a 404 when trying to load the buffer.
+                     */
+                    if (track.streamable){
+                        this.SearchResults.push(new SoundcloudTrack(track.title,track.user.username,track.uri));
+                    }
                 });
                 this.Searching = false;
                 App.MainScene.OptionsPanel.Animating = false;
