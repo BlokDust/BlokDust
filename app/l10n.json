@@ -38,19 +38,19 @@
         },
         "Soundcloud": {
           "name": "Soundcloud",
-          "description": "A sampler player loaded with a SoundCloud track of your choice."
+          "description": "A sample player loaded with a SoundCloud track of your choice."
         },
         "Sampler": {
           "name": "Sampler",
-          "description": "A sampler player loaded with an audio file from your device."
+          "description": "A sample player loaded with an audio file from your device."
         },
         "Granular": {
           "name": "Granular",
-          "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces and uses that as a sound source."
+          "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces which are used as a sound source."
         },
         "Recorder": {
           "name": "Recorder",
-          "description": "Records the master output and then works as a sample player like the SoundCloud Block."
+          "description": "It can record the master output and then be used as a sample player."
         },
         "WaveGen": {
           "name": "WaveGen",
@@ -63,71 +63,71 @@
       "Blocks": {
         "AutoWah": {
           "name": "AutoWah",
-          "description": "Creates a filter sweep in response to the volume of audio input when connected to any source block."
+          "description": "Creates a filter sweep in response to the volume of audio input."
         },
         "BitCrusher": {
           "name": "Bit Crusher",
-          "description": "Creates distortion by reducing the audio resolution when connected to any source block."
+          "description": "Creates distortion by reducing the audio resolution."
         },
         "Chomp": {
           "name": "Chomp",
-          "description": "A randomised filter with adjustable rate & width. Can connect to any source block."
+          "description": "A randomised filter with adjustable rate & width."
         },
         "Chopper": {
           "name": "Chopper",
-          "description": "Volume modulation with adjustable rate & depth. Can connect to any source block."
+          "description": "A tremolo effect that modulates the volume with an adjustable rate & depth."
         },
         "Chorus": {
           "name": "Chorus",
-          "description": "Stereo chorus/flange. Creates a delayed & modulated copy of the audio. Can connect to any source block."
+          "description": "Stereo chorus. Creates a delayed & modulated copy of the audio."
         },
         "Convolution": {
           "name": "Convolution",
-          "description": "A reverb which simulates a physical space by using a recorded sample. Can connect to any source block."
+          "description": "A convolution reverb which simulates a physical space by using a recorded sample."
         },
         "Delay": {
           "name": "Delay",
-          "description": "A 'ping-pong' delay with adjustable time & feedback. Can connect to any source block."
+          "description": "A 'ping-pong' delay/echo with adjustable time & feedback."
         },
         "Distortion": {
           "name": "Distortion",
-          "description": "A digital clipping distortion. Can connect to any source block."
+          "description": "A digital clipping distortion."
         },
         "Envelope": {
           "name": "Envelope",
-          "description": "An ADSR envelope. Alters the volume of sound over time. Can connect to Tone and Noise source blocks."
+          "description": "An ADSR envelope which alters the volume of sound over time."
         },
         "Eq": {
-          "name": "Eq",
-          "description": "A 'parametric' EQ with 4 filters. Can connect to any source blocks."
+          "name": "EQ",
+          "description": "A 'parametric' EQ with 4 filters."
         },
         "Filter": {
           "name": "Filter",
-          "description": "A 'peaking' filter used for boosting or suppressing frequencies. Can connect to any source block."
+          "description": "A 'peaking' filter used for boosting or suppressing frequencies."
         },
         "LFO": {
           "name": "LFO",
-          "description": "Modulates pitch, Can connect to Tone blocks."
+          "description": "An oscillation effect that modulates pitch and playback rate."
         },
         "Phaser": {
           "name": "Phaser",
-          "description": "Creates a sweeping phase effect. Can connect to any source block."
+          "description": "A modulating phaser effect that sweeps through a spectrum of sound frequencies."
         },
         "PitchShifter": {
           "name": "Pitch Shifter",
-          "description": "Shift the pitch of any source block."
+          "description": "Shifts the pitch of any sound."
         },
         "Reverb": {
           "name": "Reverb",
-          "description": "A digital reverb based on the 'Freeverb'. Can connect to any source block."
+          "description": "A digital reverb with adjustable room size and dampening."
         },
         "Scuzz": {
           "name": "Scuzz",
-          "description": "No idea. Can connect to Tone Blocks."
+          "description": "Frequency modulation (FM) synthesis style effect that can create harmonic and overtone signals."
         },
         "Volume": {
           "name": "Volume",
-          "description": "Increase or decrease the volume. Can connect to any source block."
+          "description": "Increase or decrease the volume."
         }
       }
     },
@@ -136,27 +136,27 @@
       "Blocks": {
         "ParticleEmitter": {
           "name": "Particle Emitter",
-          "description": "Fires energy particles across the screen. When a particle hits a source block, that source is momentarily triggered."
+          "description": "Fires energy particles. When a particle hits a source block, that source is momentarily triggered."
         },
         "Power": {
           "name": "Power",
-          "description": "Creates energy for source blocks, particle emitters & lasers. This allows them to be constantly on."
+          "description": "Provides energy for sources, particle emitters & lasers. This allows them to be constantly on."
         },
         "TogglePower": {
           "name": "Toggle Power",
-          "description": "Toggles energy for source blocks, particle emitters & lasers."
+          "description": "When 'on' provides energy for sources, particle emitters & lasers."
         },
         "Void": {
           "name": "Void",
-          "description": "Absorbs any laser beams or particles that touch it."
+          "description": "Absorbs any laser beams or particles that collide with it."
         },
         "MomentaryPower": {
           "name": "Momentary Power",
-          "description": "Momentary energy for source blocks, particle emitters & lasers."
+          "description": "Provides a short fire of energy for sources, particle emitters & lasers."
         },
         "Laser": {
           "name": "Laser",
-          "description": "Fires a super cool laser beam that gives energy to anything it touches."
+          "description": "A laser beam that gives energy to sources, particle emitters & other lasers in its path."
         }
       }
     },
@@ -165,11 +165,11 @@
       "Blocks": {
         "ComputerKeyboard": {
           "name": "Computer Keyboard",
-          "description": "Control a source using your computer keys."
+          "description": "Trigger sources using your computer keys arranged into a 2 1/2 octave piano."
         },
         "MIDIController": {
           "name": "MIDI Controller",
-          "description": "Control source blocks using a connected USB MIDI device."
+          "description": "Trigger sources using any connected USB MIDI device."
         }
       }
     }
