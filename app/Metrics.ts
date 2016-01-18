@@ -108,9 +108,10 @@ export class Metrics {
         this.TxtItalic2 = "300 italic " + italicType2 + "px Merriweather Sans";
         this.TxtData = "400 " + dataType + "px PT Sans";
 
-        // STYLE DOM SELECTED TEXT HIGHLIGHT COLOUR //
+        /*// STYLE DOM SELECTED TEXT HIGHLIGHT COLOUR //
         var styleElem = document.getElementById("selectStyle");
-        styleElem.innerHTML='::selection{ background-color: ' + App.Palette[1].toString() + '; background-blend-mode: normal; mix-blend-mode: normal;}';
+        var col = App.ColorManager.ColorString(App.Palette[1]);
+        styleElem.innerHTML='::selection{ background-color: ' + col + '; background-blend-mode: normal; mix-blend-mode: normal;}';*/
     }
 
     UpdateGridScale() {

@@ -23,6 +23,7 @@ import {Laser} from './Blocks/Power/Laser';
 import {MessagePanel} from './UI/MessagePanel';
 import {OptionsPanel} from './UI/OptionsPanel';
 import {Particle} from './Particle';
+import {ParticleLayer} from './ParticleLayer';
 import {PooledFactoryResource} from './Core/Resources/PooledFactoryResource';
 import {PowerEffect} from './Blocks/Power/PowerEffect';
 import {PowerSource} from './Blocks/Power/PowerSource';
@@ -60,6 +61,7 @@ export class MainScene extends DisplayObject{
     public MainSceneDragger: MainSceneDragger;
     public MessagePanel: MessagePanel;
     public OptionsPanel: OptionsPanel;
+    public Particles: ParticleLayer;
     public SettingsPanel: SettingsPanel;
     public SharePanel: SharePanel;
     public SoundcloudPanel: SoundcloudPanel;
@@ -186,6 +188,10 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.LaserBeams);
         this.LaserBeams.Init(this);
 
+        this.Particles = new ParticleLayer();
+        this.DisplayList.Add(this.Particles);
+        this.Particles.Init(this);
+
         this.AnimationsLayer = new AnimationsLayer();
         this.DisplayList.Add(this.AnimationsLayer);
         this.AnimationsLayer.Init(this);
@@ -227,15 +233,15 @@ export class MainScene extends DisplayObject{
 
         super.Update();
 
-        if (App.Particles.length) {
+        /*if (App.Particles.length) {
             this.UpdateParticles();
-        }
+        }*/
 
         this.OptionsPanel.Update();
     }
 
     // PARTICLES //
-    UpdateParticles() {
+    /*UpdateParticles() {
         var currentParticles = [];
         for (var i = 0; i < App.Particles.length; i++) {
             var particle: Particle = App.Particles[i];
@@ -253,7 +259,7 @@ export class MainScene extends DisplayObject{
         }
 
         App.Particles = currentParticles;
-    }
+    }*/
 
     //-------------------------------------------------------------------------------------------
     //  DRAW
@@ -269,10 +275,10 @@ export class MainScene extends DisplayObject{
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
 
         // PARTICLES //
-        this.DrawParticles();
+        //this.DrawParticles();
     }
 
-    DrawParticles() {
+    /*DrawParticles() {
         for (var i = 0; i < App.Particles.length; i++) {
 
             // todo: use etch drawFrom to cache
@@ -293,7 +299,7 @@ export class MainScene extends DisplayObject{
             this.Ctx.closePath();
             this.Ctx.fill();
         }
-    }
+    }*/
 
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
