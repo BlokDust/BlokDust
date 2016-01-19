@@ -49,10 +49,10 @@ export class Keyboard extends Interaction {
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
 
-        if (param == "glide") {
+        if (param === "glide") {
             value = value/100;
         }
-        else if (param == "octave") {
+        else if (param === "octave") {
             for (let i = 0, source: ISource; i < this.Connections.Count; i++) {
                 source = this.Connections.GetValueAt(i);
                 let diff:number = value - this.Params.octave;

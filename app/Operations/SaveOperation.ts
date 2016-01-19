@@ -44,7 +44,7 @@ export class SaveOperation<String> implements IOperation {
                 var data = JSON.stringify(that._JSON);
 
                 $.ajax(<JQueryAjaxSettings>{
-                    url: "http://blokdust.com/api/anonymousblobs",
+                    url: "https://blokdust.com/api/anonymousblobs",
                     type: 'POST',
                     crossDomain: true,
                     dataType: 'json',
