@@ -302,6 +302,11 @@ export default class App implements IApp{
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
         this.Deserialize(data);
 
+        // allow loaded blocks to be alt-duplicable from start
+        for (var i = 0; i < this.Blocks.length; i++) {
+            this.Blocks[i].Duplicable = true;
+        }
+
         // set initial zoom level/position
         if (this._SaveFile.ColorThemeNo) {
             this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);

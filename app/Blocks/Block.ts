@@ -34,7 +34,11 @@ export class Block extends DisplayObject implements IBlock {
     public OptionsForm;
     public Params: any;
     public Defaults: any;
-    private _Duplicable: boolean = false;
+    public Duplicable: boolean = false;
+    // This is set to false at first because, when a block is created via alt-drag,
+    // it's TouchDown() and MouseMove() are getting called straight away (because it's
+    // behaving with a click & drag). If it's set to true then it starts an infinite
+    // chain of block creation as each new block constantly creates new blocks.
 
     //-------------------------------------------------------------------------------------------
     //  SETUP
@@ -108,14 +112,14 @@ export class Block extends DisplayObject implements IBlock {
 
     MouseUp() {
         this.IsPressed = false;
-        this._Duplicable = true; //TODO:
+        this.Duplicable = true;
     }
 
     MouseMove(point: Point) {
         if (this.IsPressed){
 
             // ALT-DRAG COPY
-            if (App.CommandsInputManager.IsKeyCodeDown(KeyCodes.KeyDown.Alt) && this._Duplicable) {
+            if (App.CommandsInputManager.IsKeyCodeDown(KeyCodes.KeyDown.Alt) && this.Duplicable) {
                 (<MainScene>this.DrawTo).CreateBlockFromType(this.Type,this.Params); //TODO: TS5 reflection
                 this.MouseUp();
             }

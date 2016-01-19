@@ -13,6 +13,7 @@ export interface IBlock extends IDisplayObject {
     Dispose(): void;
     DistanceFrom(point: Point): number;
     Draw(): void;
+    Duplicable: boolean;
     HitTest(point: Point): boolean;
     Id: number;
     BlockName: string;

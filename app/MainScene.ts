@@ -703,8 +703,12 @@ export class MainScene extends DisplayObject{
             block.IsSelected = true;
             this._SelectedBlock = block;
 
-            this.BlocksContainer.DisplayList.ToFront(block);
+            this.BlockToFront(block);
         }
+    }
+
+    BlockToFront(block: IBlock){
+        this.BlocksContainer.DisplayList.ToFront(block);
     }
 
     private _Invalidate(){
@@ -752,6 +756,7 @@ export class MainScene extends DisplayObject{
 
         block.MouseDown();
         this.SelectedBlock = block;
+        this.BlockToFront(block);
         this.IsDraggingABlock = true;
         return block;
     }
