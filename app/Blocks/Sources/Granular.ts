@@ -3,9 +3,10 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import Point = etch.primitives.Point;
-import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
-import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
+import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
+import {SoundCloudAudio} from '../../Core/Audio/SoundCloud/SoundCloudAudio';
 import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {Source} from '../Source';
 import {GranularVoice} from './GranularComponents/GranularVoice';
 import {Grain} from './GranularComponents/Grain';
@@ -83,18 +84,17 @@ export class Granular extends Source {
 
     Search(query: string) {
         this.Searching = true;
-        App.MainScene.OptionsPanel.Animating = true;
+        App.MainScene.OptionsPanel.Animating = true; //TODO: make searching an event
         this.ResultsPage = 1;
         this.SearchResults = [];
-        if (window.SC) {
-            SoundCloudAudio.Search(query, App.Config.GranularMaxTrackLength, (tracks) => {
-                tracks.forEach((track) => {
-                    this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
-                });
-                this.Searching = false;
-                App.MainScene.OptionsPanel.Animating = false;
-            });
-        }
+        SoundCloudAudio.Search(query, App.Config.GranularMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
+            this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
+            this.Searching = false;
+            App.MainScene.OptionsPanel.Animating = false;
+        }, (error: SoundCloudAPIResponse.Error) => {
+            this.Searching = false;
+            App.MainScene.OptionsPanel.Animating = false;
+        });
     }
 
     LoadTrack(track,fullUrl?:boolean) {

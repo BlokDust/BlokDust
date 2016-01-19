@@ -175,6 +175,13 @@
     }
   },
   "Errors": {
-    "SaveError": "Save failed, please try again."
+    "SaveError": "Save failed, please try again.",
+    "SoundCloud": {
+      "TooManyRequests":"Error: Too many requests. SoundCloud's 15,000 limit has been reached. Try again tomorrow",
+      "InternalServerError": "Error: Something went wrong with SoundCloud's servers.",
+      "ServiceUnavailable": "SoundCloud's servers were too busy. Please try again.",
+      "Uninitialized": "SoundCloud Error: API isn't connected. Save & refresh the page.",
+      "Unknown": "Something went wrong with SoundCloud. Check console for errors."
+    }
   }
 }

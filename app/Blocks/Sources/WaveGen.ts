@@ -3,9 +3,6 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
 import {SamplerBase} from './SamplerBase';
-import {SoundCloudAudioType} from '../../Core/Audio/SoundCloudAudioType';
-import {SoundCloudAudio} from '../../Core/Audio/SoundCloudAudio';
-import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
 import {Source} from '../Source';
 import {WaveVoice} from '../../WaveVoice';
 

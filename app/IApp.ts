@@ -4,6 +4,7 @@ import Point = minerva.Point;
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {BlockCreator} from "./BlockCreator";
 import {BlockSprites} from "./Blocks/BlockSprites";
+import {ColorManager} from './Core/Visual/ColorManager';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
 import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
@@ -27,6 +28,7 @@ import {Splash} from './Splash';
 import {Stage} from "./Stage";
 import {ThemeManager} from "./Core/Visual/ThemeManager";
 import {TypingManager} from './Core/Inputs/TypingManager';
+import {IL10n} from "./IL10n";
 
 export interface IApp {
     AnimationsLayer: AnimationsLayer;
@@ -35,6 +37,7 @@ export interface IApp {
     BlockCreator: BlockCreator;
     BlockSprites: BlockSprites;
     Canvas: Canvas;
+    ColorManager: ColorManager;
     CommandManager: CommandManager;
     CommandsInputManager: CommandsInputManager;
     CompositionId: string;
@@ -46,7 +49,7 @@ export interface IApp {
     GridSize: number;
     Height: number;
     IsLoadingComposition: boolean;
-    L10n: any;
+    L10n: IL10n;
     MainScene: MainScene;
     Metrics: Metrics;
     OperationManager: OperationManager;
