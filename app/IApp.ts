@@ -28,6 +28,7 @@ import {Splash} from './Splash';
 import {Stage} from "./Stage";
 import {ThemeManager} from "./Core/Visual/ThemeManager";
 import {TypingManager} from './Core/Inputs/TypingManager';
+import {IL10n} from "./IL10n";
 
 export interface IApp {
     AnimationsLayer: AnimationsLayer;
@@ -48,7 +49,7 @@ export interface IApp {
     GridSize: number;
     Height: number;
     IsLoadingComposition: boolean;
-    L10n: any;
+    L10n: IL10n;
     MainScene: MainScene;
     Metrics: Metrics;
     OperationManager: OperationManager;
