@@ -35,7 +35,10 @@ export class ThemeManager  {
         this.Themes = [
             new ColorTheme(
                 "MODE STEREO",
-                App.Config.PixelPaletteImagePath[0]
+                App.Config.PixelPaletteImagePath[0],
+                {
+                    options: [3,4,7,5,9]
+                }
             )
 
             ,new ColorTheme(

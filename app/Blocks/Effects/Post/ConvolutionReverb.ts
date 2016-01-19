@@ -6,7 +6,7 @@ import {PostEffect} from '../PostEffect';
 import {SoundCloudAPIResponse} from '../../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAudio} from  '../../../Core/Audio/SoundCloud/SoundCloudAudio';
-import {SoundcloudTrack} from '../../../UI/SoundcloudTrack';
+import {SoundCloudTrack} from '../../../Core/Audio/SoundCloud/SoundcloudTrack';
 
 declare var App: IApp;
 
@@ -17,12 +17,12 @@ export class Convolver extends PostEffect {
     public LoadTimeout: any;
     public Params: ConvolutionParams;
     public ResultsPage: number;
-    public SearchResults: SoundcloudTrack[];
+    public SearchResults: SoundCloudTrack[];
     public Searching: boolean;
     public SearchString: string;
     private _FirstBuffer: any;
     private _FirstRelease: boolean = true;
-    private _FallBackTrack: SoundcloudTrack;
+    private _FallBackTrack: SoundCloudTrack;
     private _WaveForm: number[];
 
     Init(drawTo: IDisplayContext): void {
@@ -40,7 +40,8 @@ export class Convolver extends PostEffect {
             mix: 1,
             track: '../Assets/ImpulseResponses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
-            user: 'BGXA'
+            user: 'BGXA',
+            permalink: ''
         };
         this.PopulateParams();
 
@@ -48,7 +49,7 @@ export class Convolver extends PostEffect {
         this._WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;
-        this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
+        this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
         this.Effect = new Tone.Convolver();
         this.Effect.wet.value = this.Params.mix;
@@ -71,7 +72,7 @@ export class Convolver extends PostEffect {
             App.AnimationsLayer.RemoveFromList(this);
             //var duration = this.GetDuration();
 
-            this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
+            this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
             this.RefreshOptionsPanel();
 
             this.Effect.buffer = e;
@@ -97,7 +98,7 @@ export class Convolver extends PostEffect {
         this.ResultsPage = 1;
         this.SearchResults = [];
         SoundCloudAudio.Search(query, App.Config.ConvolverMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
-            this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
+            this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
         }, (error: SoundCloudAPIResponse.Error) => {
@@ -112,6 +113,7 @@ export class Convolver extends PostEffect {
             this.Params.track = track.URI;
         } else {
             this.Params.track = SoundCloudAudio.LoadTrack(track);
+            this.Params.permalink = track.Permalink;
         }
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
@@ -195,7 +197,8 @@ export class Convolver extends PostEffect {
                     "setting" :"sample",
                     "props" : {
                         "track" : this.Params.trackName,
-                        "user" : this.Params.user
+                        "user" : this.Params.user,
+                        "permalink" : this.Params.permalink
                     }
                 },
                 {

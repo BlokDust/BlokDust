@@ -5,7 +5,7 @@ import {Particle} from '../../Particle';
 import Point = etch.primitives.Point;
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloud/SoundCloudAudio';
-import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
 import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {Source} from '../Source';
 import {GranularVoice} from './GranularComponents/GranularVoice';
@@ -28,7 +28,7 @@ export class Granular extends Source {
     private _WaveForm: number[];
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
-    private _FallBackTrack: SoundcloudTrack;
+    private _FallBackTrack: SoundCloudTrack;
     public LoadTimeout: any;
     private _tempPlaybackRate: number;
     public ReleaseTimeout;
@@ -55,7 +55,8 @@ export class Granular extends Source {
             grainlength: 0.25,
             track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
             trackName: 'TEUFELSBERG',
-            user: 'BGXA'
+            user: 'BGXA',
+            permalink: ''
         };
         this.PopulateParams();
 
@@ -63,7 +64,7 @@ export class Granular extends Source {
         this._WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;
-        this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
+        this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
         super.Init(drawTo);
 
@@ -88,7 +89,7 @@ export class Granular extends Source {
         this.ResultsPage = 1;
         this.SearchResults = [];
         SoundCloudAudio.Search(query, App.Config.GranularMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
-            this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
+            this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
         }, (error: SoundCloudAPIResponse.Error) => {
@@ -97,12 +98,13 @@ export class Granular extends Source {
         });
     }
 
-    LoadTrack(track,fullUrl?:boolean) {
+    LoadTrack(track,fullUrl?:boolean) { // TODO: make this a generic function with a function argument (to pass SetupGrains or SetupBuffers etc)
         fullUrl = fullUrl || false;
         if (fullUrl) {
             this.Params.track = track.URI;
         } else {
             this.Params.track = SoundCloudAudio.LoadTrack(track);
+            this.Params.permalink = track.Permalink;
         }
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
@@ -170,7 +172,7 @@ export class Granular extends Source {
                 this.Params.region = duration / 2;
             }
             this._LoadFromShare = false;
-            this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
+            this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
             // UPDATE OPTIONS FORM //
             this.RefreshOptionsPanel();
@@ -408,7 +410,8 @@ export class Granular extends Source {
                     "setting" :"sample",
                     "props" : {
                         "track" : this.Params.trackName,
-                        "user" : this.Params.user
+                        "user" : this.Params.user,
+                        "permalink" : this.Params.permalink
                     }
                 },
                 {

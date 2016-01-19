@@ -41,6 +41,7 @@ export class Option implements IOption {
 
     public Track: string;
     public User: string;
+    public Permalink: string;
 
     public Waveform: number[];
     public Mode: boolean;

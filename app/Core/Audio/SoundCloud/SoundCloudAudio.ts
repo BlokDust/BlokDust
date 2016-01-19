@@ -106,8 +106,9 @@ export class SoundCloudAudio {
                         //TODO: This is untested.
                         App.Message(App.L10n.Errors.SoundCloud.Unknown);
                         console.error((<any>tracks).errors);
-                        App.L10n
+                        //App.L10n //TODO: ??
                     } else {
+                        var tracksRemainAfterElimination:boolean = false;
                         tracks.forEach((track) => {
                             // Check track is streamable and public
                             if (track.streamable && track.sharing === "public" && (
@@ -115,9 +116,15 @@ export class SoundCloudAudio {
                                 track.license.indexOf('all-rights-reserved') === -1 ||
                                 track.tag_list.toLowerCase().indexOf('blokdust') !== -1)
                             ) {
+                                tracksRemainAfterElimination = true;
                                 successResponse(track);
                             }
                         });
+                        if (!tracksRemainAfterElimination) {
+                            tracks.length = 0;
+                            console.log(tracks);
+                            //TODO: if all tracks have been eliminated, we need to give a response
+                        }
                     }
                 }
             }, (error:SoundCloudAPIResponse.Error) => {

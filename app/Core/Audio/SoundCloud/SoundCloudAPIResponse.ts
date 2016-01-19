@@ -10,6 +10,7 @@ export declare module SoundCloudAPIResponse {
         title: string;
         uri: string;
         user: ISoundCloudUser;
+        permalink_url: string;
     }
     interface Error {
         message: string;

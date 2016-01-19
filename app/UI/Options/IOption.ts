@@ -35,6 +35,7 @@ export interface IOption {
 
     Track: string;
     User: string;
+    Permalink: string;
 
     Waveform: number[];
     Mode: boolean;

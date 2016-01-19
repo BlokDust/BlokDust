@@ -1,14 +1,15 @@
-export class SoundcloudTrack {
+export class SoundCloudTrack {
 
     public Title: string;
     public TitleShort: string;
     public User: string;
     public UserShort: string;
     public URI: string;
+    public Permalink: string;
     private _Long: number = 65;
     private _Short: number = 30;
 
-    constructor(title, user, uri) {
+    constructor(title, user, uri, permalink) {
 
         // TODO - second pass of shortening, using measureText to account for esp wide characters (Chinese for example)
 
@@ -42,6 +43,7 @@ export class SoundcloudTrack {
 
         // URI //
         this.URI = uri;
+        this.Permalink = permalink;
 
     }
 

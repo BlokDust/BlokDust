@@ -320,7 +320,7 @@ export class OptionsPanel extends DisplayObject {
 
             // SAMPLE LOADER //
             else if (option.type == "sample") {
-                optionList.push(new Sample(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.props.user,option.setting));
+                optionList.push(new Sample(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.props.user,option.props.permalink,option.setting));
             }
 
             // ACTION BUTTON //
@@ -828,6 +828,10 @@ export class OptionsPanel extends DisplayObject {
                     this.Sketch.SoundcloudPanel.OpenPanel();
                     return;
                 }
+                if (this.Options[i].HandleRoll[1] && this.Options[i].Permalink!=="") {
+                    window.open("" + this.Options[i].Permalink, "_blank");
+                    return;
+                }
             }
             if (this.Options[i].Type=="actionbutton") {
                 if (this.Options[i].HandleRoll[0]) {
@@ -968,7 +972,8 @@ export class OptionsPanel extends DisplayObject {
                 }
             }
             else if (this.Options[i].Type == "sample") {
-                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.5), this.Position.y + this.Options[i].Position.y, (this.Range * 0.5), this.Options[i].Size.height, mx, my);
+                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.65), this.Position.y + this.Options[i].Position.y, (this.Range * 0.35), this.Options[i].Size.height, mx, my);
+                this.Options[i].HandleRoll[1] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.5), this.Position.y + this.Options[i].Position.y, (this.Range * 0.15), this.Options[i].Size.height, mx, my);
             }
             else if (this.Options[i].Type == "actionbutton") {
                 this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.25), this.Position.y + this.Options[i].Position.y, (this.Range * 0.5), this.Options[i].Size.height, mx, my);

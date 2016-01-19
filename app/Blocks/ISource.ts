@@ -1,7 +1,7 @@
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
 import ObservableCollection = etch.collections.ObservableCollection;
-import {SoundcloudTrack} from '../UI/SoundcloudTrack';
+import {SoundCloudTrack} from '../Core/Audio/SoundCloud/SoundcloudTrack';
 import {Source} from './Source';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
 
@@ -18,7 +18,7 @@ export interface ISource extends IBlock {
     UpdateCollision: boolean;
     Collisions: any[];
     CheckRange: number;
-    SearchResults: SoundcloudTrack[];
+    SearchResults: SoundCloudTrack[];
     Searching: Boolean;
     ResultsPage: number;
     SearchString: string;
