@@ -63,6 +63,7 @@ interface IErrors {
 }
 
 interface ISoundCloudErrors {
+    FailedTrackFiltering: string;
     InternalServerError: string;
     ServiceUnavailable: string;
     TooManyRequests: string;
