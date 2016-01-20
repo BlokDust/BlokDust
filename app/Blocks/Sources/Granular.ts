@@ -95,6 +95,9 @@ export class Granular extends Source {
         }, (error: SoundCloudAPIResponse.Error) => {
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
+            if (error.status === 452) {
+                // Tracks were found but they don't have a blokdust tag or aren't creative commons
+            }
         });
     }
 

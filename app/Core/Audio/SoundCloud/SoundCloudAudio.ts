@@ -102,29 +102,26 @@ export class SoundCloudAudio {
             }).then((tracks:SoundCloudAPIResponse.Success[]) => {
                 // Successful search
                 if (tracks) {
-                    if ((<any>tracks).errors) {
-                        //TODO: This is untested.
-                        App.Message(App.L10n.Errors.SoundCloud.Unknown);
-                        console.error((<any>tracks).errors);
-                        //App.L10n //TODO: ??
-                    } else {
-                        var tracksRemainAfterElimination:boolean = false;
-                        tracks.forEach((track) => {
-                            // Check track is streamable and public
-                            if (track.streamable && track.sharing === "public" && (
-                                    // Check track is not set to all rights reserved or has a blokdust tag
-                                track.license.indexOf('all-rights-reserved') === -1 ||
-                                track.tag_list.toLowerCase().indexOf('blokdust') !== -1)
-                            ) {
-                                tracksRemainAfterElimination = true;
-                                successResponse(track);
-                            }
-                        });
-                        if (!tracksRemainAfterElimination) {
-                            tracks.length = 0;
-                            console.log(tracks);
-                            //TODO: if all tracks have been eliminated, we need to give a response
+                    let tracksRemainAfterElimination: boolean = false;
+                    tracks.forEach((track) => {
+                        // Check track is streamable and public
+                        if (track.streamable && track.sharing === "public" && (
+                                // Check track is not set to all rights reserved or has a blokdust tag
+                            track.license.indexOf('all-rights-reserved') === -1 ||
+                            track.tag_list.toLowerCase().indexOf('blokdust') !== -1)
+                        ) {
+                            tracksRemainAfterElimination = true;
+                            successResponse(track);
                         }
+                    });
+                    // Tracks were found but failed the filtering process
+                    if (!tracksRemainAfterElimination) {
+                        const err = {
+                            "status": 452, // Blokdust specific code for unqualified tracks (ie. no blokdust tag OR cc license)
+                            "message": App.L10n.Errors.SoundCloud.FailedTrackFiltering
+                        };
+                        console.error(err);
+                        failedResponse(err);
                     }
                 }
             }, (error:SoundCloudAPIResponse.Error) => {
