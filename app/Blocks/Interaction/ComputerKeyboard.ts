@@ -48,12 +48,6 @@ export class ComputerKeyboard extends Keyboard {
         this.DrawSprite(this.BlockName);
     }
 
-    //
-    //Detach(source: ISource): void {
-    //    source.TriggerRelease('all');
-    //    super.Detach(source);
-    //}
-
     Dispose(){
         super.Dispose();
         this.Params.octave = null;
@@ -88,7 +82,6 @@ export class ComputerKeyboard extends Keyboard {
     }
 
     KeyUpCallback(e: any){
-
         // FOR ALL SOURCES TRIGGER KEYBOARD UP
         let connections: ISource[] = this.Connections.ToArray();
         connections.forEach((source: ISource) => {

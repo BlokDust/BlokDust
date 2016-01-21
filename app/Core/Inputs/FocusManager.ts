@@ -18,5 +18,10 @@ export class FocusManager {
             this.HasFocus = false;
             this.FocusChanged.raise(this, new FocusManagerEventArgs(this.HasFocus));
         };
+
+        document.addEventListener('visibilitychange', () => {
+            this.HasFocus = !document.hidden;
+            this.FocusChanged.raise(this, new FocusManagerEventArgs(this.HasFocus));
+        }, false);
     }
 }
