@@ -1,24 +1,26 @@
 export declare module SoundCloudAPIResponse {
 
-    interface Success {
+    export interface Success {
         duration: number;
         errors: any;
         license: string;
+        me: SoundCloudUser;
         sharing: string;
         streamable: boolean;
         tag_list: string;
         title: string;
         uri: string;
-        user: ISoundCloudUser;
+        user: SoundCloudUser;
+        permalink_url: string;
     }
     interface Error {
         message: string;
         status: number;
     }
-}
 
-interface ISoundCloudUser {
-    id: number;
-    uri: string;
-    username: string;
+    interface SoundCloudUser {
+        id: number;
+        uri: string;
+        username: string;
+    }
 }

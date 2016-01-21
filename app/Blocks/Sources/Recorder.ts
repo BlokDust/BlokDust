@@ -34,7 +34,8 @@ export class Recorder extends SamplerBase {
             retrigger: false, //Don't retrigger attack if already playing
             volume: 9,
             track: null,
-            trackName: ''
+            trackName: '',
+            permalink: ''
         };
         this.PopulateParams();
 

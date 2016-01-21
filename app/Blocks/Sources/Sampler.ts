@@ -40,7 +40,8 @@ export class Sampler extends SamplerBase {
             retrigger: false, //Don't retrigger attack if already playing
             volume: 11,
             track: '',
-            trackName: ''
+            trackName: '',
+            permalink: ''
         };
         this.PopulateParams();
 

@@ -705,44 +705,47 @@ export class SettingsPanel extends DisplayObject{
         }
 
         // OPTIONS //
-        for (var i=0;i<this.Options.length;i++) {
+        if (this._OpenTab===0) {
+            for (var i=0;i<this.Options.length;i++) {
 
-            if (this._OptionsRoll[i]) {
-                this.Options[i].Selected = true;
+                if (this._OptionsRoll[i]) {
+                    this.Options[i].Selected = true;
 
-                if (this.Options[i].Type=="themeSelector") {
-                    var option = this.Options[i];
-                    if (option.HandleRoll[0]) {
-                        App.ThemeManager.CurrentThemeNo -= 1;
-                        if (App.ThemeManager.CurrentThemeNo < 0) {
-                            App.ThemeManager.CurrentThemeNo = App.ThemeManager.Themes.length-1;
+                    if (this.Options[i].Type=="themeSelector") {
+                        var option = this.Options[i];
+                        if (option.HandleRoll[0]) {
+                            App.ThemeManager.CurrentThemeNo -= 1;
+                            if (App.ThemeManager.CurrentThemeNo < 0) {
+                                App.ThemeManager.CurrentThemeNo = App.ThemeManager.Themes.length-1;
+                            }
+                            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
                         }
-                        App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
-                    }
-                    if (option.HandleRoll[1]) {
-                        App.ThemeManager.CurrentThemeNo += 1;
-                        if (App.ThemeManager.CurrentThemeNo > (App.ThemeManager.Themes.length-1)) {
-                            App.ThemeManager.CurrentThemeNo = 0;
+                        if (option.HandleRoll[1]) {
+                            App.ThemeManager.CurrentThemeNo += 1;
+                            if (App.ThemeManager.CurrentThemeNo > (App.ThemeManager.Themes.length-1)) {
+                                App.ThemeManager.CurrentThemeNo = 0;
+                            }
+                            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
                         }
-                        App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
                     }
-                }
 
-                if (this.Options[i].Type=="slider") {
-                    this.SliderSet(i, point.x);
-                }
-
-                if (this.Options[i].Type=="meter") {
-                    this.Options[i].MonitorReset();
-                }
-                if (this.Options[i].Type == "actionbutton") {
-                    if (this.Options[i].HandleRoll[0]) {
-                        this.ActionButton(this.Options[i].Setting);
+                    if (this.Options[i].Type=="slider") {
+                        this.SliderSet(i, point.x);
                     }
-                }
 
+                    if (this.Options[i].Type=="meter") {
+                        this.Options[i].MonitorReset();
+                    }
+                    if (this.Options[i].Type == "actionbutton") {
+                        if (this.Options[i].HandleRoll[0]) {
+                            this.ActionButton(this.Options[i].Setting);
+                        }
+                    }
+
+                }
             }
         }
+
 
         // SELECT CATEGORY //
         for (var i=0; i<this.MenuItems.length; i++) {
@@ -768,43 +771,47 @@ export class SettingsPanel extends DisplayObject{
         }
 
         // CONNECT //
-        var bdUrls = this._CopyJson.urls;
-        if (this._RollOvers[7]) { // GUIDE //
-            window.open("http://"+bdUrls[0],"_blank");
-        }
-        if (this._RollOvers[8]) { // FB SHARE //
-            this.ShareFacebook();
-        }
-        if (this._RollOvers[9]) { // TW SHARE //
-            this.ShareTwitter();
-        }
-        if (this._RollOvers[10]) { // GP SHARE //
-            this.ShareGoogle();
-        }
+        if (this._OpenTab===1) {
+            var bdUrls = this._CopyJson.urls;
+            if (this._RollOvers[7]) { // GUIDE //
+                window.open("http://" + bdUrls[0], "_blank");
+            }
+            if (this._RollOvers[8]) { // FB SHARE //
+                this.ShareFacebook();
+            }
+            if (this._RollOvers[9]) { // TW SHARE //
+                this.ShareTwitter();
+            }
+            if (this._RollOvers[10]) { // GP SHARE //
+                this.ShareGoogle();
+            }
 
-        if (this._RollOvers[11]) { // FB SHARE //
-            window.open("http://"+bdUrls[1],"_blank");
-        }
-        if (this._RollOvers[12]) { // TW SHARE //
-            window.open("http://"+bdUrls[2],"_blank");
-        }
-        if (this._RollOvers[13]) { // GP SHARE //
-            window.open("http://"+bdUrls[3],"_blank");
-        }
-        if (this._RollOvers[14]) { // GP SHARE //
-            window.open("http://"+bdUrls[4],"_blank");
+            if (this._RollOvers[11]) { // FB SHARE //
+                window.open("http://" + bdUrls[1], "_blank");
+            }
+            if (this._RollOvers[12]) { // TW SHARE //
+                window.open("http://" + bdUrls[2], "_blank");
+            }
+            if (this._RollOvers[13]) { // GP SHARE //
+                window.open("http://" + bdUrls[3], "_blank");
+            }
+            if (this._RollOvers[14]) { // GP SHARE //
+                window.open("http://" + bdUrls[4], "_blank");
+            }
         }
 
         // EXTERNAL URLS //
-        var urls = [this._Attribution.twyman.url,this._Attribution.phillips.url,this._Attribution.silverton.url,this._Attribution.twyman.twitter,this._Attribution.phillips.twitter,this._Attribution.silverton.twitter];
-        for (var i=1; i<7; i++) {
-           if (this._RollOvers[i]) {
-               if (i>3) {
-                   window.open("http://twitter.com/"+urls[i-1],"_blank");
-               } else {
-                   window.open("http://"+urls[i-1],"_blank");
-               }
-           }
+        if (this._OpenTab===2) {
+            var urls = [this._Attribution.twyman.url, this._Attribution.phillips.url, this._Attribution.silverton.url, this._Attribution.twyman.twitter, this._Attribution.phillips.twitter, this._Attribution.silverton.twitter];
+            for (var i = 1; i < 7; i++) {
+                if (this._RollOvers[i]) {
+                    if (i > 3) {
+                        window.open("http://twitter.com/" + urls[i - 1], "_blank");
+                    } else {
+                        window.open("http://" + urls[i - 1], "_blank");
+                    }
+                }
+            }
         }
     }
 
@@ -918,7 +925,7 @@ export class SettingsPanel extends DisplayObject{
         }
     }
 
-    // UPDATE THE VALUE IN THE BLOCK //
+    // UPDATE OPTIONS VALUE //
     UpdateValue(object,value,min,max,rangemin,rangemax,setting,axis,log) {
 
         // CALCULATE VALUE //

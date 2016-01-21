@@ -214,6 +214,10 @@ export default class App implements IApp{
                 this.TypingManager.ClearKeysDown();
                 this.PianoKeyboardManager.ClearKeysDown();
                 this.CommandsInputManager.ClearKeysDown();
+
+                this.Sources.forEach((s: ISource) => {
+                    s.TriggerRelease('all');
+                })
             }
         }, this);
 

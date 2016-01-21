@@ -6,7 +6,7 @@ import {SamplerBase} from './SamplerBase';
 import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAudio} from '../../Core/Audio/SoundCloud/SoundCloudAudio';
-import {SoundcloudTrack} from '../../UI/SoundcloudTrack';
+import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
 import {Source} from '../Source';
 
 declare var App: IApp;
@@ -19,7 +19,7 @@ export class Soundcloud extends SamplerBase {
     private _FirstRelease: boolean = true;
     private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
-    private _FallBackTrack: SoundcloudTrack;
+    private _FallBackTrack: SoundCloudTrack;
     public LoadTimeout: any;
 
     Init(drawTo: IDisplayContext): void {
@@ -53,7 +53,7 @@ export class Soundcloud extends SamplerBase {
         this._WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;
-        this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
+        this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
         super.Init(drawTo);
 
@@ -86,7 +86,7 @@ export class Soundcloud extends SamplerBase {
                 this.Params.reverse = false;
             }
             this._LoadFromShare = false;
-            this._FallBackTrack = new SoundcloudTrack(this.Params.trackName,this.Params.user,this.Params.track);
+            this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
             this.Sources.forEach((s: Tone.Simpler)=> {
                 s.player.buffer = e;
@@ -123,12 +123,15 @@ export class Soundcloud extends SamplerBase {
         this.ResultsPage = 1;
         this.SearchResults = [];
         SoundCloudAudio.Search(query, App.Config.SoundCloudMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
-            this.SearchResults.push(new SoundcloudTrack(track.title, track.user.username, track.uri));
+            this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
         }, (error: SoundCloudAPIResponse.Error) => {
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
+            if (error.status === 452) {
+                // Tracks were found but they don't have a blokdust tag or aren't creative commons
+            }
         });
     }
 
@@ -139,6 +142,7 @@ export class Soundcloud extends SamplerBase {
             this.Params.track = track.URI;
         } else {
             this.Params.track = SoundCloudAudio.LoadTrack(track);
+            this.Params.permalink = track.Permalink;
         }
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
@@ -227,7 +231,8 @@ export class Soundcloud extends SamplerBase {
                     "setting" :"sample",
                     "props" : {
                         "track" : this.Params.trackName,
-                        "user" : this.Params.user
+                        "user" : this.Params.user,
+                        "permalink" : this.Params.permalink
                     }
                 },
                 {

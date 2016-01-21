@@ -18,6 +18,7 @@ interface GranularParams extends IParams {
     track: string|AudioBuffer;
     trackName: string;
     user: string;
+    permalink: string;
 }
 
 interface ToneSourceParams extends IParams {
@@ -44,6 +45,7 @@ interface SamplerParams extends IParams {
     volume: number;
     track: string;
     trackName: string;
+    permalink: string;
 }
 
 interface WaveGenParams extends IParams {
@@ -135,6 +137,7 @@ interface ConvolutionParams extends DryWetParams {
     track: string|AudioBuffer;
     trackName: string;
     user: string;
+    permalink: string;
 }
 
 interface DelayParams extends DryWetParams {

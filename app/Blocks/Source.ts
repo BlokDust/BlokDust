@@ -13,7 +13,7 @@ import {Particle} from '../Particle';
 import Point = etch.primitives.Point;
 import {PowerSource} from './Power/PowerSource';
 import {Power} from './Power/Power';
-import {SoundcloudTrack} from '../UI/SoundcloudTrack';
+import {SoundCloudTrack} from '../Core/Audio/SoundCloud/SoundcloudTrack';
 import {Soundcloud} from './Sources/Soundcloud';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
 
@@ -46,7 +46,7 @@ export class Source extends Block implements ISource {
     public UpdateCollision: boolean;
     public Collisions: any[];
     public CheckRange: number;
-    public SearchResults: SoundcloudTrack[];
+    public SearchResults: SoundCloudTrack[];
     public Searching: boolean;
     public ResultsPage: number;
     public SearchString: string;
