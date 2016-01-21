@@ -8,22 +8,6 @@ export class SoundCloudAudio {
 
     public SC: any;
 
-
-    //TODO: This constructor isn't being used
-    constructor(){
-        SC.initialize({
-            client_id: App.Config.SoundCloudClientId
-        }).then((result: SoundCloudAPIResponse.Success[]) => {
-            // SoundCloud initialized
-            console.log(`SoundCloud intialized successfully`, result)
-        }, (error: SoundCloudAPIResponse.Error) => {
-            // Error
-            App.Message(`SoundCloud couldn't initialize: ${error.message}`);
-            console.log(error.message, error.status);
-        });
-    }
-
-
     static PickRandomTrack(t:SoundCloudAudioType) {
 
         switch (t) {
@@ -155,4 +139,52 @@ export class SoundCloudAudio {
             console.error(App.L10n.Errors.SoundCloud.Uninitialized);
         }
     }
+
+    Initialize() {
+        SC.initialize({
+            client_id: App.Config.SoundCloudClientId,
+            redirect_uri: 'https://blokdust.com'
+        }).then((result: SoundCloudAPIResponse.Success) => {
+            // SoundCloud initialized
+            console.log(`SoundCloud intialized successfully`, result)
+        }, (error: SoundCloudAPIResponse.Error) => {
+            App.Message(`SoundCloud couldn't initialize: ${error.message}`);
+            console.log(error.message, error.status);
+        });
+    }
+
+    Connect() {
+        // initiate auth popup
+        SC.connect().then(() => {
+            return SC.get('/me');
+        }).then((me: SoundCloudAPIResponse.SoundCloudUser) => {
+            alert('Hello, ' + me.username);
+        }, (error: SoundCloudAPIResponse.Error) => {
+            App.Message(`SoundCloud couldn't connect: ${error.message}`);
+            console.log(error.message, error.status);
+        });
+    }
+
+    Upload(blob: Blob, title: string) {
+        // When you have recorded a song with the SDK or any Web Audio application,
+        // you can upload it if it's in a format that is accepted
+        SC.upload({
+            file: blob,
+            title: title,
+            tag_list: 'blokdust',
+            license: 'cc-by-nc',
+            sharing: 'public',
+            progress: (e: ProgressEvent) => {
+                const percentCompleted = (e.loaded / e.total) * 100;
+                console.log(`${percentCompleted}% completed`);
+            }
+        }).then((track: SoundCloudAPIResponse.Success) => {
+            alert('Upload is done! Check your sound at ' + track.permalink_url);
+        }, (error:SoundCloudAPIResponse.Error) => {
+            console.error(error);
+        });
+    }
+
+
+
 }
