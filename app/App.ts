@@ -366,6 +366,10 @@ export default class App implements IApp{
         window.trackVariable(slot, name, value, scope);
     }
 
+    IsLocalhost(): boolean {
+        return document.location.href.indexOf('localhost') != -1;
+    }
+
     Resize(): void {
         this.Metrics.Compute();
         this.Stage.Resize();

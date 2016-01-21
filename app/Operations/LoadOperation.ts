@@ -1,5 +1,8 @@
 import {IBlock} from '../Blocks/IBlock';
 import {IOperation} from '../Core/Operations/IOperation';
+import {IApp} from "../IApp";
+
+declare var App: IApp;
 
 export class LoadOperation<String> implements IOperation {
     private _Id: any;
@@ -32,8 +35,10 @@ export class LoadOperation<String> implements IOperation {
 
         return new Promise<string>((resolve, reject) => {
 
+            var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
+
             $.ajax(<JQueryAjaxSettings>{
-                url: 'https://blokdust.com/api/anonymousblobs/' + this._Id,
+                url: protocol + '://blokdust.com/api/anonymousblobs/' + this._Id,
                 type: 'GET',
                 crossDomain: true,
                 dataType: 'json',

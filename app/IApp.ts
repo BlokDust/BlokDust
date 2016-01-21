@@ -76,6 +76,7 @@ export interface IApp {
 
     Deserialize(json: string): any;
     GetBlockId(): number;
+    IsLocalhost(): boolean;
     LoadReady(): void;
     Message(message?: string, options?: any): void;
     Serialize(): string;
