@@ -6,6 +6,7 @@ import Stage = etch.drawing.Stage;
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {BlockSprites} from './Blocks/BlockSprites';
 import {ChangePropertyOperation} from './Core/Operations/ChangePropertyOperation';
+import {CreateNew} from './UI/CreateNew';
 import {Commands} from './Commands';
 import {CompositionLoadedEventArgs} from "./CompositionLoadedEventArgs";
 import {ConnectionLines} from './UI/ConnectionLines';
@@ -37,6 +38,7 @@ import {Source} from './Blocks/Source';
 import {StageDragger as MainSceneDragger} from './UI/StageDragger';
 import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
+import {Tutorial} from './UI/Tutorial';
 import {ZoomButtons} from './UI/ZoomButtons';
 
 declare var App: IApp;
@@ -56,6 +58,7 @@ export class MainScene extends DisplayObject{
     public AnimationsLayer: AnimationsLayer;
     public BlocksContainer: DisplayObject;
     public ConnectionLines: ConnectionLines;
+    public CreateNew: CreateNew;
     public IsDraggingABlock: boolean = false;
     public LaserBeams: LaserBeams;
     public MainSceneDragger: MainSceneDragger;
@@ -65,6 +68,7 @@ export class MainScene extends DisplayObject{
     public SettingsPanel: SettingsPanel;
     public SharePanel: SharePanel;
     public SoundcloudPanel: SoundcloudPanel;
+    public Tutorial: Tutorial;
     public ZoomButtons: ZoomButtons;
 
     //-------------------------------------------------------------------------------------------
@@ -161,9 +165,25 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.BlocksContainer);
         this.BlocksContainer.Init(this);
 
+        this.LaserBeams = new LaserBeams();
+        this.DisplayList.Add(this.LaserBeams);
+        this.LaserBeams.Init(this);
+
+        this.Particles = new ParticleLayer();
+        this.DisplayList.Add(this.Particles);
+        this.Particles.Init(this);
+
         this._ToolTip = new ToolTip();
         this.DisplayList.Add(this._ToolTip);
         this._ToolTip.Init(this);
+
+        this.AnimationsLayer = new AnimationsLayer();
+        this.DisplayList.Add(this.AnimationsLayer);
+        this.AnimationsLayer.Init(this);
+
+        this._RecorderPanel = new RecorderPanel();
+        this.DisplayList.Add(this._RecorderPanel);
+        this._RecorderPanel.Init(this);
 
         this.ZoomButtons = new ZoomButtons();
         this.DisplayList.Add(this.ZoomButtons);
@@ -177,24 +197,13 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this._TrashCan);
         this._TrashCan.Init(this);
 
-        this.ConnectionLines = new ConnectionLines();
-        this.ConnectionLines.Init(this);
+        this.CreateNew = new CreateNew();
+        this.DisplayList.Add(this.CreateNew);
+        this.CreateNew.Init(this);
 
-        this._RecorderPanel = new RecorderPanel();
-        this.DisplayList.Add(this._RecorderPanel);
-        this._RecorderPanel.Init(this);
-
-        this.LaserBeams = new LaserBeams();
-        this.DisplayList.Add(this.LaserBeams);
-        this.LaserBeams.Init(this);
-
-        this.Particles = new ParticleLayer();
-        this.DisplayList.Add(this.Particles);
-        this.Particles.Init(this);
-
-        this.AnimationsLayer = new AnimationsLayer();
-        this.DisplayList.Add(this.AnimationsLayer);
-        this.AnimationsLayer.Init(this);
+        this.Tutorial = new Tutorial();
+        this.DisplayList.Add(this.Tutorial);
+        this.Tutorial.Init(this);
 
         this.OptionsPanel = new OptionsPanel();
         this.DisplayList.Add(this.OptionsPanel);
@@ -228,78 +237,24 @@ export class MainScene extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
     Update() {
-
         if (this.IsPaused) return;
-
         super.Update();
-
-        /*if (App.Particles.length) {
-            this.UpdateParticles();
-        }*/
-
-        this.OptionsPanel.Update();
     }
 
-    // PARTICLES //
-    /*UpdateParticles() {
-        var currentParticles = [];
-        for (var i = 0; i < App.Particles.length; i++) {
-            var particle: Particle = App.Particles[i];
-            particle.Life -= 1;
-
-            if (particle.Life < 1) {
-                particle.Reset();
-                particle.ReturnToPool();
-                continue;
-            }
-
-            particle.ParticleCollision(App.Metrics.FloatOnGrid(particle.Position), particle);
-            particle.Move();
-            currentParticles.push(particle);
-        }
-
-        App.Particles = currentParticles;
-    }*/
 
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
     Draw(): void {
-
         super.Draw();
 
         // BG //
         App.FillColor(this.Ctx,App.Palette[0]);
         this.Ctx.globalAlpha = 1;
         this.Ctx.fillRect(0, 0, this.Width, this.Height);
-
-        // PARTICLES //
-        //this.DrawParticles();
     }
 
-    /*DrawParticles() {
-        for (var i = 0; i < App.Particles.length; i++) {
-
-            // todo: use etch drawFrom to cache
-            var particle = App.Particles[i];
-            var pos = App.Metrics.FloatOnGrid(particle.Position);
-            var unit = App.ScaledUnit;
-            var sx = pos.x;
-            var sy = pos.y;
-            var size = particle.Size * unit;
-
-            App.FillColor(this.Ctx,App.Palette[8]);
-            this.Ctx.globalAlpha = 1;
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(sx-(size),sy); //l
-            this.Ctx.lineTo(sx,sy-(size)); //t
-            this.Ctx.lineTo(sx+(size),sy); //r
-            this.Ctx.lineTo(sx,sy+(size)); //b
-            this.Ctx.closePath();
-            this.Ctx.fill();
-        }
-    }*/
 
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
