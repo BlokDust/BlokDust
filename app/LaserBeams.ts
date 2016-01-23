@@ -249,6 +249,7 @@ export class LaserBeams extends DisplayObject {
         this.Ctx.globalAlpha = 1;
 
         this.Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
+        //this.Ctx.lineWidth = unit*2;
         this.Ctx.beginPath();
 
         for (var j=0; j<App.Sources.length; j++) {

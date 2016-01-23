@@ -97,6 +97,7 @@ export default class App implements IApp{
     public Width: number;
     public ZoomLevel: number;
 
+
     get AnimationsLayer(): AnimationsLayer{
         return this.MainScene.AnimationsLayer;
     }
@@ -241,6 +242,7 @@ export default class App implements IApp{
         }, this);
 
         this.ThemeManager.LoadTheme(0, true);
+
     }
 
     // FONT LOAD CALLBACK //

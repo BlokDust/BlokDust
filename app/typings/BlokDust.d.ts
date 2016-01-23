@@ -13,6 +13,7 @@ interface Document{
     selection: any;
 }
 
+
 interface CanvasRenderingContext2D {
     divisor: number;
     webkitBackingStorePixelRatio: number;

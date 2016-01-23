@@ -120,7 +120,7 @@ export class Chorus extends PostEffect {
                     "props" : {
                         "value" : this.Params.feedback,
                         "min" : 0,
-                        "max" : 0.8,
+                        "max" : 0.496, // higher than 0.496 can easily cause the audio to die of feedback
                         "quantised" : false,
                         "centered" : false
                     }
