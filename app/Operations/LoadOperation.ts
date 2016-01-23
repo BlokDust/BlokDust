@@ -38,7 +38,7 @@ export class LoadOperation<String> implements IOperation {
             var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
 
             $.ajax(<JQueryAjaxSettings>{
-                url: protocol + '://blokdust.com/api/anonymousblobs/' + this._Id,
+                url: protocol + '://blokdust.io/api/anonymousblobs/' + this._Id,
                 type: 'GET',
                 crossDomain: true,
                 dataType: 'json',

@@ -279,7 +279,6 @@ export default class App implements IApp{
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
                 this.CompositionLoadComplete(data);
             }).catch((error: string) => {
-                // fail silently
                 this.CompositionId = null;
                 console.error(error);
             });
@@ -290,7 +289,7 @@ export default class App implements IApp{
 
     // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateStage() {
-
+        console.log("create stage");
         this.Stage = new Stage();
         this.Stage.Init(this.Canvas);
         this.Stage.Drawn.on((s: any, time: number) => {

@@ -49,7 +49,7 @@ export class SaveOperation<String> implements IOperation {
                 var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
 
                 $.ajax(<JQueryAjaxSettings>{
-                    url: protocol + '://blokdust.com/api/anonymousblobs',
+                    url: protocol + '://blokdust.io/api/anonymousblobs',
                     type: 'POST',
                     crossDomain: true,
                     dataType: 'json',

@@ -246,7 +246,6 @@ export class Splash extends DisplayObject{
     }
 
     TransitionOut() {
-        console.log("transition out");
         this.DelayTo(this,1,450,300,'LoadOffset',0);
     }
 }

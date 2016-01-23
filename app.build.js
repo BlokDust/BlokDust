@@ -5,7 +5,7 @@
     },
     mainConfigFile: "dist/require-config.js",
     name: "require-config",
-    out: "dist/App.min.js",
+    out: "dist/App.js",
     include: ["requireLib"],
     uglify: {
         no_mangle: true
