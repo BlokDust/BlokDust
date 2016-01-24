@@ -35,14 +35,11 @@ export class LoadOperation<String> implements IOperation {
 
         return new Promise<string>((resolve, reject) => {
 
-            var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
-
             $.ajax(<JQueryAjaxSettings>{
-                url: protocol + '://blokdust.io/api/anonymousblobs/' + this._Id,
+                url: 'http://static.blokdust.io/compositions/anonymous/' + this._Id,
                 type: 'GET',
                 crossDomain: true,
-                dataType: 'json',
-                contentType: 'application/json'
+                dataType: 'text'
             }).done((data) => {
                 that.Decompress(data).then((decompressed) => {
                     resolve(decompressed);

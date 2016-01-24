@@ -17,7 +17,8 @@ module.exports = function (grunt) {
     version(grunt);
 
     var ports = {
-        server: 8000,
+        serverDev: 8000,
+        serverDist: 8001,
         livereload: 35353
     };
 
@@ -242,7 +243,7 @@ module.exports = function (grunt) {
         connect: {
             dev: {
                 options: {
-                    port: ports.server,
+                    port: ports.serverDev,
                     base: dirs.app,
                     keepalive: true,
                     middleware: function (connect) {
@@ -256,7 +257,7 @@ module.exports = function (grunt) {
             },
             livereload: {
                 options: {
-                    port: ports.server,
+                    port: ports.serverDev,
                     base: dirs.app,
                     middleware: function (connect) {
                         return [
@@ -269,7 +270,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 options: {
-                    port: ports.server,
+                    port: ports.serverDist,
                     base: dirs.dist,
                     keepalive: true,
                     middleware: function (connect) {
