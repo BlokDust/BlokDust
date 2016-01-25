@@ -70,13 +70,10 @@ export abstract class LFObase extends PreEffect {
                     const s = source.Sources[j];
                     if ((<Tone.Oscillator>s).detune) {
                         this.OscLFO.connect((<Tone.Oscillator>s).detune);
-                        break;
                     } else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
                         this.SamplerLFO.connect((<Tone.Simpler>s).player.playbackRate);
-                        break;
                     }  else if ((<Tone.Noise>s).playbackRate) {
                         this.SamplerLFO.connect((<Tone.Noise>s).playbackRate);
-                        break;
                     }
                 }
             }
