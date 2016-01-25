@@ -1,5 +1,8 @@
 import {IBlock} from '../Blocks/IBlock';
 import {IOperation} from '../Core/Operations/IOperation';
+import {IApp} from "../IApp";
+
+declare var App: IApp;
 
 export class LoadOperation<String> implements IOperation {
     private _Id: any;
@@ -33,11 +36,10 @@ export class LoadOperation<String> implements IOperation {
         return new Promise<string>((resolve, reject) => {
 
             $.ajax(<JQueryAjaxSettings>{
-                url: 'http://blokdust.com/api/anonymousblobs/' + this._Id,
+                url: 'http://static.blokdust.io/compositions/anonymous/' + this._Id,
                 type: 'GET',
                 crossDomain: true,
-                dataType: 'json',
-                contentType: 'application/json'
+                dataType: 'text'
             }).done((data) => {
                 that.Decompress(data).then((decompressed) => {
                     resolve(decompressed);

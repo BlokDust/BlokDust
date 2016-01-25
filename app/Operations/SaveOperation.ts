@@ -1,4 +1,7 @@
 import {IOperation} from '../Core/Operations/IOperation';
+import {IApp} from "../IApp";
+
+declare var App: IApp;
 
 export class SaveOperation<String> implements IOperation {
     private _JSON: any;
@@ -43,8 +46,10 @@ export class SaveOperation<String> implements IOperation {
 
                 var data = JSON.stringify(that._JSON);
 
+                var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
+
                 $.ajax(<JQueryAjaxSettings>{
-                    url: "http://blokdust.com/api/anonymousblobs",
+                    url: protocol + '://blokdust.io/api/anonymousblobs',
                     type: 'POST',
                     crossDomain: true,
                     dataType: 'json',

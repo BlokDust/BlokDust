@@ -24,6 +24,6 @@ export class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implem
     }
 
     Dispose(): void {
-
+        this._Block = null;
     }
 }

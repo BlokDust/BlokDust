@@ -304,7 +304,7 @@ export class BlockCreator {
     public BackwardsCompatibilityCheck(type: string): string {
         if (type === "Gain") {
             type = "Volume";
-        } if (type === "Pitch") {
+        } else if (type === "Pitch") {
             type = "PitchShifter";
         }
         return type;

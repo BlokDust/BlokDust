@@ -17,7 +17,8 @@ module.exports = function (grunt) {
     version(grunt);
 
     var ports = {
-        server: 8000,
+        serverDev: 8000,
+        serverDist: 8001,
         livereload: 35353
     };
 
@@ -80,12 +81,15 @@ module.exports = function (grunt) {
                             '<%= dirs.dist %>/*',
                             '!<%= dirs.dist %>/lib',
                             '!<%= dirs.dist %>/Assets',
+                            '!<%= dirs.dist %>/favicon.ico',
                             '!<%= dirs.dist %>/fonts',
                             '!<%= dirs.dist %>/img',
-                            '!<%= dirs.dist %>/App.min.js',
+                            '!<%= dirs.dist %>/App.js',
                             '!<%= dirs.dist %>/config.json',
                             '!<%= dirs.dist %>/index.html',
-                            '!<%= dirs.dist %>/styles.css'
+                            '!<%= dirs.dist %>/l10n.json',
+                            '!<%= dirs.dist %>/styles.css',
+                            '!<%= dirs.dist %>/require-config.js'
                         ]
                     },
                     {
@@ -94,12 +98,24 @@ module.exports = function (grunt) {
                             '<%= dirs.dist %>/lib/**',
                             '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js',
                             '!<%= dirs.dist %>/lib/etch/dist/etch.js',
+                            '!<%= dirs.dist %>/lib/exjs/dist/ex.js',
+                            '!<%= dirs.dist %>/lib/extensions/dist/extensions.js',
+                            '!<%= dirs.dist %>/lib/intersection/intersection.js',
+                            '!<%= dirs.dist %>/lib/jquery/dist/jquery.js',
+                            '!<%= dirs.dist %>/lib/key-codes/dist/key-codes.js',
+                            '!<%= dirs.dist %>/lib/lzma/src/lzma.js',
                             '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
                             '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js',
                             '!<%= dirs.dist %>/lib/minerva/dist/minerva.min.js.map',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js.map',
-                            '!<%= dirs.dist %>/lib/pixelpalette/dist/PixelPalette.js'
+                            '!<%= dirs.dist %>/lib/pixelpalette/dist/PixelPalette.js',
+                            '!<%= dirs.dist %>/lib/r.js/require.js',
+                            '!<%= dirs.dist %>/lib/RecorderJS/recorder.js',
+                            '!<%= dirs.dist %>/lib/text/text.js',
+                            '!<%= dirs.dist %>/lib/tone/**',
+                            '!<%= dirs.dist %>/lib/tweenjs/src/Tween.js',
+                            '!<%= dirs.dist %>/lib/utils/dist/utils.js'
                         ],
                         filter: 'isFile'
                     },
@@ -108,10 +124,22 @@ module.exports = function (grunt) {
                         src: [
                             '<%= dirs.dist %>/lib/*',
                             '!<%= dirs.dist %>/lib/bower-webfontloader/**',
+                            '!<%= dirs.dist %>/lib/etch/**',
+                            '!<%= dirs.dist %>/lib/exjs/**',
+                            '!<%= dirs.dist %>/lib/extensions/**',
+                            '!<%= dirs.dist %>/lib/intersection/**',
+                            '!<%= dirs.dist %>/lib/jquery/**',
+                            '!<%= dirs.dist %>/lib/key-codes/**',
                             '!<%= dirs.dist %>/lib/lzma/**',
                             '!<%= dirs.dist %>/lib/minerva/**',
                             '!<%= dirs.dist %>/lib/nullstone/**',
-                            '!<%= dirs.dist %>/lib/pixelpalette/**'
+                            '!<%= dirs.dist %>/lib/pixelpalette/**',
+                            '!<%= dirs.dist %>/lib/r.js/**',
+                            '!<%= dirs.dist %>/lib/RecorderJS/**',
+                            '!<%= dirs.dist %>/lib/text/**',
+                            '!<%= dirs.dist %>/lib/tone/**',
+                            '!<%= dirs.dist %>/lib/tweenjs/**',
+                            '!<%= dirs.dist %>/lib/utils/**'
                         ]
                     }
                 ]
@@ -124,8 +152,8 @@ module.exports = function (grunt) {
                 overwrite: true,
                 replacements: [
                     {
-                        from: 'src="lib/requirejs/require.js"',
-                        to: 'src="App.min.js"'
+                        from: 'src="lib/r.js/require.js"',
+                        to: 'src="App.js"'
                     },
                     {
                         from: '<script src="//localhost:35353/livereload.js"></script>',
@@ -187,13 +215,25 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         cwd: '<%= dirs.app %>',
-                        src: ['default.html'],
+                        src: ['l10n.json'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['index.html'],
                         dest: '<%= dirs.dist %>/'
                     },
                     {
                         expand: true,
                         cwd: '<%= dirs.app %>',
                         src: ['styles.css'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['favicon.ico'],
                         dest: '<%= dirs.dist %>/'
                     }
                 ]
@@ -203,7 +243,7 @@ module.exports = function (grunt) {
         connect: {
             dev: {
                 options: {
-                    port: ports.server,
+                    port: ports.serverDev,
                     base: dirs.app,
                     keepalive: true,
                     middleware: function (connect) {
@@ -217,7 +257,7 @@ module.exports = function (grunt) {
             },
             livereload: {
                 options: {
-                    port: ports.server,
+                    port: ports.serverDev,
                     base: dirs.app,
                     middleware: function (connect) {
                         return [
@@ -230,7 +270,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 options: {
-                    port: ports.server,
+                    port: ports.serverDist,
                     base: dirs.dist,
                     keepalive: true,
                     middleware: function (connect) {
@@ -266,6 +306,8 @@ module.exports = function (grunt) {
         exec: {
             minify: {
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
+                // uncomment if you want to test an unminified dist build
+                //cmd: 'node app/lib/r.js/dist/r.js -o app.build.js optimize=none'
             }
         },
 

@@ -97,6 +97,7 @@ export default class App implements IApp{
     public Width: number;
     public ZoomLevel: number;
 
+
     get AnimationsLayer(): AnimationsLayer{
         return this.MainScene.AnimationsLayer;
     }
@@ -241,6 +242,7 @@ export default class App implements IApp{
         }, this);
 
         this.ThemeManager.LoadTheme(0, true);
+
     }
 
     // FONT LOAD CALLBACK //
@@ -279,7 +281,6 @@ export default class App implements IApp{
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
                 this.CompositionLoadComplete(data);
             }).catch((error: string) => {
-                // fail silently
                 this.CompositionId = null;
                 console.error(error);
             });
@@ -290,7 +291,7 @@ export default class App implements IApp{
 
     // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateStage() {
-
+        console.log("create stage");
         this.Stage = new Stage();
         this.Stage.Init(this.Canvas);
         this.Stage.Drawn.on((s: any, time: number) => {
@@ -368,6 +369,10 @@ export default class App implements IApp{
      */
     TrackVariable(slot: number, name: string, value: string, scope: GA.Scope): void{
         window.trackVariable(slot, name, value, scope);
+    }
+
+    IsLocalhost(): boolean {
+        return document.location.href.indexOf('localhost') != -1;
     }
 
     Resize(): void {
