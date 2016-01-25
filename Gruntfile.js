@@ -152,7 +152,7 @@ module.exports = function (grunt) {
                 overwrite: true,
                 replacements: [
                     {
-                        from: 'src="lib/requirejs/require.js"',
+                        from: 'src="lib/r.js/require.js"',
                         to: 'src="App.js"'
                     },
                     {
@@ -306,6 +306,8 @@ module.exports = function (grunt) {
         exec: {
             minify: {
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
+                // uncomment if you want to test an unminified dist build
+                //cmd: 'node app/lib/r.js/dist/r.js -o app.build.js optimize=none'
             }
         },
 
