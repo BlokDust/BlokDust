@@ -169,7 +169,7 @@
         },
         "MIDIController": {
           "name": "MIDI Controller",
-          "description": "Trigger sources using any connected USB MIDI device."
+          "description": "Trigger sources using any connected USB MIDI device. Chrome only"
         }
       }
     }
