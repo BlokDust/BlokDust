@@ -353,8 +353,6 @@ export class Source extends Block implements ISource {
      * @param pitch: number
      * @param sourceId: number - The index of the source in Sources[] (default: 0)
      * @param rampTime: Tone.Time (default: 0)
-     *  TODO: when playback rate becomes a signal, change to something like this:
-     *  this.Sources[id].player.playbackRate.rampTo(playbackRate, time);
      */
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         // If no sourceId or rampTime is given default to 0
@@ -367,11 +365,19 @@ export class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+            if ((<any>Tone).isSafari){
+                this.Sources[id].player.playbackRate = pitch / App.Config.BaseNote;
+            } else {
+                this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+            }
 
         } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+            if ((<any>Tone).isSafari){
+                this.Sources[id].playbackRate = pitch / App.Config.BaseNote;
+            } else {
+                this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+            }
         }
     }
 
@@ -387,11 +393,19 @@ export class Source extends Block implements ISource {
 
         } else if (this.Sources[id].player) {
             // Samplers
-            return this.Sources[id].player.playbackRate.value * App.Config.BaseNote;
+            if ((<any>Tone).isSafari){
+                return this.Sources[id].player.playbackRate * App.Config.BaseNote;
+            } else {
+                return this.Sources[id].player.playbackRate.value * App.Config.BaseNote;
+            }
 
         } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
             // Players
-            return this.Sources[id].playbackRate.value * App.Config.BaseNote;
+            if ((<any>Tone).isSafari){
+                return this.Sources[id].playbackRate * App.Config.BaseNote;
+            } else {
+                return this.Sources[id].playbackRate.value * App.Config.BaseNote;
+            }
 
         } else {
             return 0;
@@ -408,10 +422,18 @@ export class Source extends Block implements ISource {
                 this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.transpose));
             } else if (this.Sources[0].player) {
                 // Samplers
-                this.Sources[0].player.playbackRate.value = this.Params.playbackRate;
+                if ((<any>Tone).isSafari){
+                    this.Sources[0].player.playbackRate = this.Params.playbackRate;
+                } else {
+                    this.Sources[0].player.playbackRate.value = this.Params.playbackRate;
+                }
             } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
                 // Noise
-                this.Sources[0].playbackRate.value = this.Params.playbackRate;
+                if ((<any>Tone).isSafari){
+                    this.Sources[0].playbackRate = this.Params.playbackRate;
+                } else {
+                    this.Sources[0].playbackRate.value = this.Params.playbackRate;
+                }
             }
         }
     }

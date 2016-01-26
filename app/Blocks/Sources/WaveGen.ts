@@ -643,8 +643,11 @@ export class WaveGen extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                // TODO - not behaving correctly
-                this.Sources[0].player.playbackRate.value = value;
+                if ((<any>Tone).isSafari) {
+                    this.Sources[0].player.playbackRate = value;
+                } else {
+                    this.Sources[0].player.playbackRate.value = value;
+                }
                 break;
             case "generate":
                 this._WaveForm = [];

@@ -141,7 +141,11 @@ export class Granular extends Source {
                 // CONNECT //
                 this.Grains[i].connect(this._Envelopes[i]);
                 this._Envelopes[i].connect(this.Sources[0]);
-                this.Grains[i].playbackRate.value = this.Params.playbackRate;
+                if ((<any>Tone).isSafari){
+                    (<any>this.Grains[i]).playbackRate = this.Params.playbackRate;
+                } else {
+                    this.Grains[i].playbackRate.value = this.Params.playbackRate;
+                }
             }
             this.Sources[0].connect(this.AudioInput);
         }
@@ -344,7 +348,11 @@ export class Granular extends Source {
     SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
         pitch = pitch / App.Config.BaseNote;
         for (var i=0; i<this.GrainsAmount; i++) {
-            this.Grains[i].playbackRate.value = pitch;
+            if ((<any>Tone).isSafari) {
+                (<any>this.Grains[i]).playbackRate = pitch;
+            } else {
+                this.Grains[i].playbackRate.value = pitch;
+            }
         }
         this._tempPlaybackRate = pitch;
         console.log(this._tempPlaybackRate);
@@ -358,7 +366,11 @@ export class Granular extends Source {
         if (App.Config.ResetPitchesOnInteractionDisconnect) {
             this._tempPlaybackRate = this.Params.playbackRate;
             for (var i=0; i<this.GrainsAmount; i++) {
-                this.Grains[i].playbackRate.value = this.Params.playbackRate;
+                if ((<any>Tone).isSafari) {
+                    (<any>this.Grains[i]).playbackRate = this.Params.playbackRate;
+                } else {
+                    this.Grains[i].playbackRate.value = this.Params.playbackRate;
+                }
             }
         }
     }

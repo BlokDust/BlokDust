@@ -279,7 +279,13 @@ export class Soundcloud extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                this.Sources[0].player.playbackRate.value = value;
+
+                if ((<any>Tone).isSafari){
+                    this.Sources[0].player.playbackRate = value;
+                } else {
+                    this.Sources[0].player.playbackRate.value = value;
+                }
+
                 break;
             case "reverse":
                 value = value? true : false;
