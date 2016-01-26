@@ -72,6 +72,7 @@ require([
     "Tone/effect/Phaser",
     "Tone/effect/PingPongDelay",
     "Tone/effect/Tremolo",
+    "Tone/effect/PitchShift",
     "Tone/instrument/Simpler",
     "Tone/source/Microphone",
     "Tone/source/Noise",

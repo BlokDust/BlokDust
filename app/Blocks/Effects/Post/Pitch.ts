@@ -9,7 +9,7 @@ declare var App: IApp;
 
 export class Pitch extends PostEffect {
 
-    public Effect: PitchShifter;
+    public Effect: Tone.PitchShift;
     public Params: PitchShifterParams;
     public Defaults: PitchShifterParams;
 
@@ -18,13 +18,13 @@ export class Pitch extends PostEffect {
         this.BlockName = App.L10n.Blocks.Effect.Blocks.PitchShifter.name;
 
         this.Defaults = {
-            pitchOffset: 0
-        };
+            pitchOffset: 0,
+            windowSize: 0.07,
+        },
 
-        this.PopulateParams();
+            this.PopulateParams();
 
-        this.Effect = new PitchShifter(App.Audio.ctx);
-        this.Effect.PitchOffset = this.Params.pitchOffset;
+        this.Effect = new Tone.PitchShift(this.Params.pitchOffset);
 
         super.Init(drawTo);
 
@@ -38,26 +38,24 @@ export class Pitch extends PostEffect {
     }
 
     Dispose(){
-        //this.Effect.dispose();
+        this.Effect.dispose();
     }
 
     SetParam(param: string,value: number) {
-        super.SetParam(param,value);
-        var val = value;
 
         if (param=="pitchOffset") {
-            this.Effect.PitchOffset = value;
+            this.Effect.pitch = value;
+        } else if (param=="windowSize") {
+            this.Effect.windowSize = value;
         }
-        this.Params[param] = val;
     }
 
 
     UpdateOptionsForm() {
-        super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name" : "Pitch Shift",
+            "name" : "Pitch",
             "parameters" : [
 
                 {
@@ -66,12 +64,23 @@ export class Pitch extends PostEffect {
                     "setting" :"pitchOffset",
                     "props" : {
                         "value" : this.Params.pitchOffset,
-                        "min" : -1,
-                        "max" : 1,
+                        "min" : -12,
+                        "max" : 12,
                         "quantised" : false,
                         "centered" : true
                     }
-                }
+                },
+                //{
+                //    "type" : "slider",
+                //    "name" : "Pitchshift",
+                //    "setting" :"windowSize",
+                //    "props" : {
+                //        "value" : this.Params.windowSize,
+                //        "min" : 0.03,
+                //        "max" : 0.1,
+                //        "quantised" : false
+                //    }
+                //}
             ]
         };
     }

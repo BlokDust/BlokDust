@@ -210,4 +210,5 @@ interface ScuzzParams extends LFOParams {}
 
 interface PitchShifterParams extends IParams {
     pitchOffset: number;
+    windowSize: number;
 }
