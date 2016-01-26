@@ -1,7 +1,5 @@
 import {IApp} from '../../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
-import {PitchShifter} from '../Post/PitchShifter';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 
@@ -18,7 +16,8 @@ export class Pitch extends PostEffect {
         this.BlockName = App.L10n.Blocks.Effect.Blocks.PitchShifter.name;
 
         this.Defaults = {
-            pitchOffset: 0,
+            mix: 1,
+            pitchOffset: 3,
             windowSize: 0.07,
         },
 
@@ -42,12 +41,14 @@ export class Pitch extends PostEffect {
     }
 
     SetParam(param: string,value: number) {
-
         if (param=="pitchOffset") {
             this.Effect.pitch = value;
         } else if (param=="windowSize") {
             this.Effect.windowSize = value;
+        } else if (param === "mix") {
+            this.Effect.wet.value = value;
         }
+        this.Params[param] = value;
     }
 
 
@@ -68,6 +69,18 @@ export class Pitch extends PostEffect {
                         "max" : 12,
                         "quantised" : false,
                         "centered" : true
+                    }
+                },
+                {
+                    "type" : "slider",
+                    "name" : "Mix",
+                    "setting" :"mix",
+                    "props" : {
+                        "value" : this.Params.mix,
+                        "min" : 0,
+                        "max" : 1,
+                        "quantised" : false,
+                        "centered" : false
                     }
                 },
                 //{

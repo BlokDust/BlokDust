@@ -208,7 +208,7 @@ interface LFOParams extends RateDepthParams {
 }
 interface ScuzzParams extends LFOParams {}
 
-interface PitchShifterParams extends IParams {
+interface PitchShifterParams extends IParams, DryWetParams {
     pitchOffset: number;
     windowSize: number;
 }
