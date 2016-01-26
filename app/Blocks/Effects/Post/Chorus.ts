@@ -51,12 +51,11 @@ export class Chorus extends PostEffect {
 
 
     SetParam(param: string,value: number) {
-        super.SetParam(param,value);
         var val = value;
 
-        if (param=="rate") {
+        if (param === "rate") {
             this.Effect.frequency.value = val;
-        } else if (param=="feedback") {
+        } else if (param === "feedback") {
             this.Effect.feedback.value = val;
         } else {
             this.Effect[param] = val;

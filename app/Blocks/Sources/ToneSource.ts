@@ -161,7 +161,7 @@ export class ToneSource extends Source {
     SetParam(param: string,value: any) {
 
         switch(param) {
-            case 'baseFrequency':
+            case 'transpose':
                 this.Params.transpose = value;
                 this.SetPitch(this.GetFrequency(this.Params.transpose, this.Params.fine), 0, 0);
                 break;
