@@ -118,10 +118,11 @@ export class Keyboard extends Interaction {
      * @returns {number}
      * @constructor
      */
+    //TODO - keyboards and other controllers should be dumber than this, not needing to know about block specific frequency modifiers
     public GetFrequencyOfNote(note, source:ISource): number {
-        if (source.Params.baseFrequency || source.Params.fine) {
+        if (typeof source.Params.transpose === 'number' || typeof source.Params.fine === 'number') {
             return source.Sources[0].noteToFrequency(note) *
-                App.Audio.Tone.intervalToFrequencyRatio(source.Params.baseFrequency + source.Params.fine); //TODO - keyboards and other controllers should be dumber than this, not needing to know about block specific frequency modifiers
+                App.Audio.Tone.intervalToFrequencyRatio(source.Params.transpose + source.Params.fine);
         } else if (source instanceof SamplerBase) {
             return source.Sources[0].noteToFrequency(note) * source.Params.playbackRate;
         } else {

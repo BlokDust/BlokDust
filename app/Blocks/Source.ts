@@ -403,9 +403,9 @@ export class Source extends Block implements ISource {
      */
     ResetPitch() {
         if (App.Config.ResetPitchesOnInteractionDisconnect) {
-            if (typeof this.Params.baseFrequency === 'number') {
+            if (typeof this.Params.transpose === 'number') {
                 //Oscillators
-                this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.baseFrequency));
+                this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.transpose));
             } else if (this.Sources[0].player) {
                 // Samplers
                 this.Sources[0].player.playbackRate.value = this.Params.playbackRate;

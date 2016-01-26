@@ -22,9 +22,10 @@ interface GranularParams extends IParams {
 }
 
 interface ToneSourceParams extends IParams {
-    frequency: number;
+    //frequency: number; depreciated
+    //baseFrequency: number; depreciated
     waveform: number|string;
-    baseFrequency: number;
+    transpose: number;
     fine: number;
 }
 

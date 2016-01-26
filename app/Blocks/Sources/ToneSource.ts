@@ -21,12 +21,11 @@ export class ToneSource extends Source {
         this.BlockName = App.L10n.Blocks.Source.Blocks.Tone.name;
 
         this.Defaults = {
-            frequency: App.Config.BaseNote,
+            //frequency: App.Config.BaseNote,
             waveform: 2,
-            baseFrequency: 0,
-            fine: 0
+            transpose: 0, //TODO: check saves, baseFreqeuency was changed to transpose
+            fine: 0,
         };
-
         this.PopulateParams();
 
         // If it's an older save before we had baseFrequency
@@ -54,7 +53,8 @@ export class ToneSource extends Source {
     }
 
     BackwardsCompatibilityPatch() {
-        this.Params.frequency = this.GetFrequency();
+        (<any>this).Params.frequency = this.GetFrequency();
+        (<any>this).Params.baseFrequency = this.GetFrequency();
     }
 
     CreateSource(){
@@ -108,9 +108,9 @@ export class ToneSource extends Source {
                 {
                     "type" : "slider",
                     "name" : "Note",
-                    "setting" :"baseFrequency",
+                    "setting" :"transpose",
                     "props" : {
-                        "value" : this.Params.baseFrequency,
+                        "value" : this.Params.transpose,
                         "min" : -48,
                         "max" : 48,
                         "quantised" : true,
@@ -162,15 +162,11 @@ export class ToneSource extends Source {
 
         switch(param) {
             case 'baseFrequency':
-                this.SetPitch(this.GetFrequency(value, this.Params.fine), 0, 0);
-                const octave = Math.floor(value / 12) + 4;
-                value = value % 12;
-                if (value < 0) value += 12;
-                const note = App.Audio.NoteIndex[value];
-                console.log(`Note: ${note}${octave}`);
+                this.Params.transpose = value;
+                this.SetPitch(this.GetFrequency(this.Params.transpose, this.Params.fine), 0, 0);
                 break;
             case 'fine':
-                this.SetPitch(this.GetFrequency(value, this.Params.baseFrequency), 0, 0);
+                this.SetPitch(this.GetFrequency(value, this.Params.transpose), 0, 0);
                 break;
             case "waveform":
                 this.Sources.forEach((s: any)=> {
@@ -182,17 +178,25 @@ export class ToneSource extends Source {
         this.Params[param] = value;
     }
 
-    DisplayNote(value: number) {
-        const octave = Math.floor(value / 12) + 4;
-        value = value % 12;
-        if (value < 0) value += 12;
-        const note = App.Audio.NoteIndex[value];
+    DisplayNote(value: number): string {
+        const octave = ToneSource.GetOctaveFromTransposeValue(value);
+        const note = ToneSource.GetNoteFromTransposeValue(value);
         return "" + note + "" + octave;
     }
 
-    GetFrequency(baseFrequency?: number, fine?: number) {
-        baseFrequency = baseFrequency || this.Params.baseFrequency;
-        fine = fine || this.Params.fine;
-        return App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(baseFrequency + fine);
+    static GetOctaveFromTransposeValue(value: number): number {
+        return Math.floor(value / 12) + 4;
+    }
+
+    static GetNoteFromTransposeValue(value: number): string {
+        value = value % 12;
+        if (value < 0) value += 12;
+        return App.Audio.NoteIndex[value];
+    }
+
+    GetFrequency(transpose?: number, fine?: number): number {
+        transpose = (typeof transpose === 'number') ? transpose : this.Params.transpose ;
+        fine = (typeof fine === 'number') ? fine : this.Params.fine;
+        return App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(transpose + fine);
     }
 }
