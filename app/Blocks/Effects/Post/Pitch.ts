@@ -19,9 +19,9 @@ export class Pitch extends PostEffect {
             mix: 1,
             pitchOffset: 3,
             windowSize: 0.07,
-        },
+        };
 
-            this.PopulateParams();
+        this.PopulateParams();
 
         this.Effect = new Tone.PitchShift(this.Params.pitchOffset);
 

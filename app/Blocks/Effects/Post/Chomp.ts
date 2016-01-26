@@ -24,7 +24,7 @@ export class Chomp extends PostEffect {
         this.Defaults = {
             rate: 13,
             Q: 0.6,
-            gain: 25
+            gain: 15
         };
         this.PopulateParams();
 
@@ -123,7 +123,7 @@ export class Chomp extends PostEffect {
                     "props": {
                         "value": this.Params.gain,
                         "min": 0,
-                        "max": 50,
+                        "max": 20,
                         "quantised": false,
                         "centered": false
                     }
