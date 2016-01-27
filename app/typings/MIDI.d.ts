@@ -84,6 +84,7 @@ declare module WebMidi{
         id: string;
         manufacturer?: string;
         name?: string;
+        state: string;
         type: MIDIPortType;
         version?: string;
         ondisconnect: Function;
