@@ -3,10 +3,17 @@ import {SoundCloudAPIResponse} from './SoundCloudAPIResponse';
 import {SoundCloudAudioType} from './SoundCloudAudioType';
 
 declare var App: IApp;
+declare var SC: any;
 
-export class SoundCloudAudio {
+export class SoundCloudAPI {
 
-    public SC: any;
+    static Initialize() {
+        if (typeof(SC) !== "undefined") {
+            SC.initialize({
+                client_id: App.Config.SoundCloudClientId
+            });
+        }
+    }
 
     static PickRandomTrack(t:SoundCloudAudioType) {
 
@@ -140,20 +147,7 @@ export class SoundCloudAudio {
         }
     }
 
-    Initialize() {
-        SC.initialize({
-            client_id: App.Config.SoundCloudClientId,
-            redirect_uri: 'https://blokdust.com'
-        }).then((result: SoundCloudAPIResponse.Success) => {
-            // SoundCloud initialized
-            console.log(`SoundCloud intialized successfully`, result)
-        }, (error: SoundCloudAPIResponse.Error) => {
-            App.Message(`SoundCloud couldn't initialize: ${error.message}`);
-            console.log(error.message, error.status);
-        });
-    }
-
-    Connect() {
+    static Connect() {
         // initiate auth popup
         SC.connect().then(() => {
             return SC.get('/me');
@@ -165,7 +159,7 @@ export class SoundCloudAudio {
         });
     }
 
-    Upload(blob: Blob, title: string) {
+    static Upload(blob: Blob, title: string) {
         // When you have recorded a song with the SDK or any Web Audio application,
         // you can upload it if it's in a format that is accepted
         SC.upload({

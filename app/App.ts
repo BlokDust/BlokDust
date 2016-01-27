@@ -46,6 +46,7 @@ import {SaveAsCommandHandler} from './CommandHandlers/SaveAsCommandHandler';
 import {SaveCommandHandler} from './CommandHandlers/SaveCommandHandler';
 import {SaveFile} from './SaveFile';
 import {Serializer} from './Serializer';
+import {SoundCloudAPI} from './Core/Audio/SoundCloud/SoundCloudAPI'
 import {Source} from './Blocks/Source';
 import {Stage} from "./Stage";
 import {ThemeChangeEventArgs} from "./Core/Visual/ThemeChangeEventArgs";
@@ -226,12 +227,7 @@ export default class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // INITIALISE SOUNDCLOUD //
-        // todo: create server-side session
-        if (typeof(SC) !== "undefined"){
-            SC.initialize({
-                client_id: this.Config.SoundCloudClientId
-            });
-        }
+        SoundCloudAPI.Initialize();
 
         // INITIALISE THEME //
         this.ColorManager = new ColorManager();

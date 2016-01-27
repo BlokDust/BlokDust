@@ -4,7 +4,7 @@ import {MainScene} from '../../MainScene';
 import {Particle} from '../../Particle';
 import Point = etch.primitives.Point;
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
-import {SoundCloudAudio} from '../../Core/Audio/SoundCloud/SoundCloudAudio';
+import {SoundCloudAPI} from '../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
 import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {Source} from '../Source';
@@ -53,7 +53,7 @@ export class Granular extends Source {
             region: 0,
             spread: 1.5,
             grainlength: 0.25,
-            track: SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular),
+            track: SoundCloudAPI.PickRandomTrack(SoundCloudAudioType.Granular),
             trackName: 'TEUFELSBERG',
             user: 'BGXA',
             permalink: ''
@@ -88,7 +88,7 @@ export class Granular extends Source {
         App.MainScene.OptionsPanel.Animating = true; //TODO: make searching an event
         this.ResultsPage = 1;
         this.SearchResults = [];
-        SoundCloudAudio.Search(query, App.Config.GranularMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
+        SoundCloudAPI.Search(query, App.Config.GranularMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
             this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
@@ -106,7 +106,7 @@ export class Granular extends Source {
         if (fullUrl) {
             this.Params.track = track.URI;
         } else {
-            this.Params.track = SoundCloudAudio.LoadTrack(track);
+            this.Params.track = SoundCloudAPI.LoadTrack(track);
             this.Params.permalink = track.Permalink;
         }
         this.Params.trackName = track.TitleShort;

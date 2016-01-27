@@ -5,7 +5,7 @@ import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import {SoundCloudAPIResponse} from '../../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloud/SoundCloudAudioType';
-import {SoundCloudAudio} from  '../../../Core/Audio/SoundCloud/SoundCloudAudio';
+import {SoundCloudAPI} from  '../../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../../Core/Audio/SoundCloud/SoundcloudTrack';
 
 declare var App: IApp;
@@ -97,7 +97,7 @@ export class Convolver extends PostEffect {
         App.MainScene.OptionsPanel.Animating = true; //TODO: make searching an event
         this.ResultsPage = 1;
         this.SearchResults = [];
-        SoundCloudAudio.Search(query, App.Config.ConvolverMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
+        SoundCloudAPI.Search(query, App.Config.ConvolverMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
             this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
@@ -115,7 +115,7 @@ export class Convolver extends PostEffect {
         if (fullUrl) {
             this.Params.track = track.URI;
         } else {
-            this.Params.track = SoundCloudAudio.LoadTrack(track);
+            this.Params.track = SoundCloudAPI.LoadTrack(track);
             this.Params.permalink = track.Permalink;
         }
         this.Params.trackName = track.TitleShort;
