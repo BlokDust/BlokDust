@@ -706,14 +706,7 @@ export class WaveGen extends SamplerBase {
 
     Dispose(){
         super.Dispose();
-
-        this.Sources.forEach((s: Tone.Simpler) => {
-            s.dispose();
-        });
-
-        this.Envelopes.forEach((e: Tone.Envelope) => {
-            e.dispose();
-        });
+        //TODO: Set everything to null
     }
 
     ReverseBuffer(buffer) {

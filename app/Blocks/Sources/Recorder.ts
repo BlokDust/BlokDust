@@ -181,9 +181,6 @@ export class Recorder extends SamplerBase {
         this.Recorder.clear();
         this.Recorder = null;
         this.RecordedBlob = null;
-        this.Sources.forEach((s: any)=> {
-            s.dispose();
-        });
     }
 
     CreateSource(){
