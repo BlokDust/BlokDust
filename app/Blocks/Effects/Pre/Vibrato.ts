@@ -5,14 +5,11 @@ import {LFObase} from './LFObase';
 
 declare var App: IApp;
 
-export class LFO extends LFObase {
-
-    public OscLFO: Tone.LFO;
-    public SamplerLFO: Tone.LFO;
+export class Vibrato extends LFObase {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = App.L10n.Blocks.Effect.Blocks.LFO.name;
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.Vibrato.name;
 
         this.Defaults = {
             rate: 2,
@@ -38,7 +35,7 @@ export class LFO extends LFObase {
 
         this.OptionsForm =
         {
-            "name" : "LFO",
+            "name" : "Vibrato",
             "parameters" : [
 
                 {

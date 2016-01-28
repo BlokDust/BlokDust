@@ -371,7 +371,7 @@ export class BlockSprites {
 
                 break;
 
-            case App.L10n.Blocks.Effect.Blocks.LFO.name.toLowerCase():
+            case App.L10n.Blocks.Effect.Blocks.Vibrato.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[9].toString();// PINK

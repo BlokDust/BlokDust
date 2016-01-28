@@ -33,7 +33,7 @@ import {Envelope} from 'Blocks/Effects/Pre/Envelope';
 import {EQ} from 'Blocks/Effects/Post/EQ';
 import {Filter} from 'Blocks/Effects/Post/Filter';
 import {Gain as Volume} from 'Blocks/Effects/Post/Gain';
-import {LFO} from 'Blocks/Effects/Pre/LFO';
+import {Vibrato} from 'Blocks/Effects/Pre/Vibrato';
 import {Phaser} from 'Blocks/Effects/Post/Phaser';
 import {Pitch as PitchShifter} from 'Blocks/Effects/Post/Pitch';
 import {Reverb} from 'Blocks/Effects/Post/Reverb';
@@ -80,7 +80,7 @@ export class BlockCreator {
     public EQ = EQ;
     public Filter = Filter;
     public Volume = Volume;
-    public LFO = LFO;
+    public Vibrato = Vibrato;
     public Phaser = Phaser;
     public PitchShifter = PitchShifter;
     public Reverb = Reverb;
@@ -208,9 +208,9 @@ export class BlockCreator {
                         "description": App.L10n.Blocks.Effect.Blocks.Filter.description
                     },
                     {
-                        "name": App.L10n.Blocks.Effect.Blocks.LFO.name,
-                        "id": LFO,
-                        "description": App.L10n.Blocks.Effect.Blocks.LFO.description
+                        "name": App.L10n.Blocks.Effect.Blocks.Vibrato.name,
+                        "id": Vibrato,
+                        "description": App.L10n.Blocks.Effect.Blocks.Vibrato.description
                     },
                     {
                         "name": App.L10n.Blocks.Effect.Blocks.Phaser.name,
@@ -302,10 +302,17 @@ export class BlockCreator {
     // BACKWARDS COMPATIBILITY //
     // PATCH CHANGED BLOCK NAMES //
     public BackwardsCompatibilityCheck(type: string): string {
-        if (type === "Gain") {
-            type = "Volume";
-        } else if (type === "Pitch") {
-            type = "PitchShifter";
+        switch (type) {
+            case 'Gain':
+                type = 'Volume';
+                break;
+            case "Pitch":
+                type = 'PitchShifter';
+                break;
+            case "LFO":
+                //TODO: if we want to use LFO in the future we need to check version number also
+                type = 'Vibrato';
+                break;
         }
         return type;
     }

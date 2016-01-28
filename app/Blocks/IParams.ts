@@ -130,7 +130,7 @@ interface ChompParams extends IParams {
     gain: number;
 }
 
-interface ChopperParams extends LFOParams, DryWetParams {
+interface ChopperParams extends VibratoParams, DryWetParams {
     spread: number;
 }
 
@@ -203,10 +203,10 @@ interface EnvelopeParams extends IParams {
     release: number;
 }
 
-interface LFOParams extends RateDepthParams {
+interface VibratoParams extends RateDepthParams {
     waveform: number;
 }
-interface ScuzzParams extends LFOParams {}
+interface ScuzzParams extends VibratoParams {}
 
 interface PitchShifterParams extends IParams, DryWetParams {
     pitchOffset: number;

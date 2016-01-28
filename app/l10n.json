@@ -105,8 +105,8 @@
           "name": "Filter",
           "description": "A 'peaking' filter used for boosting or suppressing frequencies."
         },
-        "LFO": {
-          "name": "LFO",
+        "Vibrato": {
+          "name": "Vibrato",
           "description": "An oscillation effect that modulates pitch and playback rate."
         },
         "Phaser": {

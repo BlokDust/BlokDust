@@ -33,13 +33,6 @@ export class Scuzz extends LFObase {
         this.DrawSprite(this.BlockName);
     }
 
-    Dispose(){
-        this.OscLFO.stop();
-        this.SamplerLFO.stop();
-        this.OscLFO.dispose();
-        this.SamplerLFO.dispose();
-    }
-
     UpdateOptionsForm() {
 
         this.OptionsForm =

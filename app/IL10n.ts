@@ -31,7 +31,7 @@ interface IBlockList {
     Filter: IBlockInfo;
     Granular: IBlockInfo;
     Laser: IBlockInfo;
-    LFO: IBlockInfo;
+    Vibrato: IBlockInfo;
     Microphone: IBlockInfo;
     MIDIController: IBlockInfo;
     MomentaryPower: IBlockInfo;
