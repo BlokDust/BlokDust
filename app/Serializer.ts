@@ -40,12 +40,13 @@ export class Serializer {
             console.log("DICTIONARY", this._SerializationDictionary);
         }
 
-        var json = {
-            ZoomLevel: App.ZoomLevel,
-            DragOffset: App.DragOffset,
+        var json: SaveFile = <SaveFile>{
+            ColorThemeNo: App.ThemeManager.CurrentThemeNo,
             Composition: [],
-            Version: Version, //FIXME
-            ColorThemeNo: App.ThemeManager.CurrentThemeNo
+            DragOffset: App.DragOffset,
+            Parent: (App.CompositionId) ? App.CompositionId : "",
+            Version: Version,
+            ZoomLevel: App.ZoomLevel
         };
 
         this._SerializeBlocks(json.Composition, blocks);

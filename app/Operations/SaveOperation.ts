@@ -38,15 +38,13 @@ export class SaveOperation<String> implements IOperation {
 
         return new Promise((resolve, reject) => {
 
-            //console.log(data);
-
             that.Compress(that._JSON.Data).then((compressed) => {
 
                 that._JSON.Data = compressed;
 
                 var data = JSON.stringify(that._JSON);
 
-                var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
+                var protocol: string = 'http';// (App.IsLocalhost()) ? 'http' : 'https';
 
                 $.ajax(<JQueryAjaxSettings>{
                     url: protocol + '://blokdust.io/api/anonymousblobs',

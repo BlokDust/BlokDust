@@ -287,7 +287,6 @@ export default class App implements IApp{
 
     // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateStage() {
-        console.log("create stage");
         this.Stage = new Stage();
         this.Stage.Init(this.Canvas);
         this.Stage.Drawn.on((s: any, time: number) => {
