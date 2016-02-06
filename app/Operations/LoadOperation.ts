@@ -35,8 +35,11 @@ export class LoadOperation<String> implements IOperation {
 
         return new Promise<string>((resolve, reject) => {
 
+            // todo: use http://files.blokdust.com/compositions/
+            var url: string = 'http://files.blokdust.com.s3.amazonaws.com/compositions/' + this._Id;
+
             $.ajax(<JQueryAjaxSettings>{
-                url: 'http://static.blokdust.io/compositions/anonymous/' + this._Id,
+                url: url,
                 type: 'GET',
                 crossDomain: true,
                 dataType: 'text'

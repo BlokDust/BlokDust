@@ -22,7 +22,9 @@ export class SaveOperation<String> implements IOperation {
 
         return new Promise((resolve) => {
 
-            this._LZMA.compress(data, 5,
+            var compressionLevel: number = 5;
+
+            this._LZMA.compress(data, compressionLevel,
                 function(result) {
                     resolve(result.toString());
                 },
@@ -44,10 +46,10 @@ export class SaveOperation<String> implements IOperation {
 
                 var data = JSON.stringify(that._JSON);
 
-                var protocol: string = 'http';// (App.IsLocalhost()) ? 'http' : 'https';
+                var url: string = (App.IsLocalhost()) ? 'http://localhost:3000/save' : 'https://blokdust.com:3000/save';
 
                 $.ajax(<JQueryAjaxSettings>{
-                    url: protocol + '://blokdust.io/api/anonymousblobs',
+                    url: url,
                     type: 'POST',
                     crossDomain: true,
                     dataType: 'json',
