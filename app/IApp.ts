@@ -69,6 +69,8 @@ export interface IApp {
     Stage: Stage;
     SubCanvas: HTMLCanvasElement[];
     ThemeManager: ThemeManager;
+    TrackEvent(category: string, action: string, label?: string): void;
+    TrackVariable(name: string, value: string): void;
     TypingManager: TypingManager;
     Unit: number;
     Width: number;

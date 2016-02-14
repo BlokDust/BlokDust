@@ -54,6 +54,8 @@ import {ThemeManager} from './Core/Visual/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 import {BlockCreator} from "./BlockCreator";
+import {CommandCategories} from "./CommandCategories";
+import {Errors} from "./Errors";
 
 export default class App implements IApp{
 
@@ -198,7 +200,7 @@ export default class App implements IApp{
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.MOVE_BLOCK, MoveBlockCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE, SaveCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVEAS, SaveAsCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE_AS, SaveAsCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.LOAD, LoadCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.UNDO, UndoCommandHandler.prototype));
         this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.REDO, RedoCommandHandler.prototype));
@@ -277,8 +279,9 @@ export default class App implements IApp{
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
                 this.CompositionLoadComplete(data);
             }).catch((error: string) => {
+                this.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), this.CompositionId);
                 this.CompositionId = null;
-                console.error(error);
+                // todo: show load error message
             });
         }
 
@@ -348,22 +351,12 @@ export default class App implements IApp{
         document.body.appendChild(this.SubCanvas[i]);
     }
 
-    TrackEvent(category: string, action: string, label: string, value?: number): void{
-        if (isNaN(value)){
-            window.trackEvent(category, action, label);
-        } else {
-            window.trackEvent(category, action, label, value);
-        }
+    TrackEvent(category: string, action: string, label?: string): void{
+        window.trackEvent(category, action, label);
     }
 
-    /**
-     * @param {number} slot - 1-5 (5 slots per scope)
-     * @param {string} name - the name for the custom variable
-     * @param {number} value - the value of the custom variable
-     * @param {string} scope - visitor, session, page
-     */
-    TrackVariable(slot: number, name: string, value: string, scope: GA.Scope): void{
-        window.trackVariable(slot, name, value, scope);
+    TrackVariable(name: string, value: string): void{
+        window.trackVariable(name, value);
     }
 
     IsLocalhost(): boolean {

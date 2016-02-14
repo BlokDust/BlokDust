@@ -492,7 +492,7 @@ export class SharePanel extends DisplayObject {
 
     GenerateLink() {
         this._Saving = true;
-        this._CommandManager.ExecuteCommand(Commands.SAVEAS);
+        this._CommandManager.ExecuteCommand(Commands.SAVE_AS);
     }
 
     UpdateLink() {

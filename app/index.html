@@ -51,11 +51,11 @@
     ga('send', 'pageview');
 
     function trackEvent(category, action, label) {
-        _gaq.push(['_trackEvent', category, action, label]);
+        ga('send', 'event', category, action, label);
     }
 
-    function trackVariable(slot, name, value, scope) {
-        _gaq.push(['_setCustomVar', Number(slot), name, value, Number(scope)]);
+    function trackVariable(name, value) {
+        ga('set', name, value);
     }
 </script>
 

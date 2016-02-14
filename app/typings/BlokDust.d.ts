@@ -4,8 +4,8 @@ declare var PixelPalette;
 interface Window{
     debug: boolean;
     SC: any;
-    trackEvent(category: string, action: string, label: string, value?: number);
-    trackVariable(slot: number, name: string, value: string, scope: number);
+    trackEvent(category: string, action: string, label?: string);
+    trackVariable(name: string, value: string);
     TWEEN: any;
 }
 
