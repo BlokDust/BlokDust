@@ -40,7 +40,6 @@ import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {Tutorial} from './UI/Tutorial';
 import {ZoomButtons} from './UI/ZoomButtons';
-import Canvas = etch.drawing.Canvas;
 
 declare var App: IApp;
 declare var OptionTimeout: boolean; //TODO: better way than using global? Needs to stay in scope within a setTimeout though.
@@ -172,7 +171,7 @@ export class MainScene extends DisplayObject{
 
         this.Particles = new ParticleLayer();
         this.DisplayList.Add(this.Particles);
-        this.Particles.Init(this, new Canvas());
+        this.Particles.Init(this);
 
         this._ToolTip = new ToolTip();
         this.DisplayList.Add(this._ToolTip);
