@@ -718,14 +718,14 @@ export class SettingsPanel extends DisplayObject{
                             if (App.ThemeManager.CurrentThemeNo < 0) {
                                 App.ThemeManager.CurrentThemeNo = App.ThemeManager.Themes.length-1;
                             }
-                            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
+                            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo);
                         }
                         if (option.HandleRoll[1]) {
                             App.ThemeManager.CurrentThemeNo += 1;
                             if (App.ThemeManager.CurrentThemeNo > (App.ThemeManager.Themes.length-1)) {
                                 App.ThemeManager.CurrentThemeNo = 0;
                             }
-                            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo,false);
+                            App.ThemeManager.LoadTheme(App.ThemeManager.CurrentThemeNo);
                         }
                     }
 

@@ -8,17 +8,14 @@ declare var App: IApp;
 
 export class CreateNew extends DisplayObject{
 
-
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
-        console.log("Create New");
+        //console.log("Create New");
     }
-
 
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
-
 
     Draw() {
         var ctx = this.Ctx;
@@ -26,11 +23,9 @@ export class CreateNew extends DisplayObject{
         var midType = App.Metrics.TxtMid;
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  TWEEN
     //-------------------------------------------------------------------------------------------
-
 
     DelayTo(panel,destination,t,delay,v){
 
@@ -52,11 +47,9 @@ export class CreateNew extends DisplayObject{
         offsetTween.start(this.LastVisualTick);
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
-
 
     OpenPanel() {
     }

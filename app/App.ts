@@ -56,6 +56,7 @@ import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 import {BlockCreator} from "./BlockCreator";
 import {CommandCategories} from "./CommandCategories";
 import {Errors} from "./Errors";
+import {GAVariables} from "./GAVariables";
 
 export default class App implements IApp{
 
@@ -173,6 +174,9 @@ export default class App implements IApp{
             this.Resize();
         };
 
+        // INITIALISE AUDIO //
+        this.Audio.Init();
+
         // LOAD FONTS AND SETUP CALLBACK //
         this._FontsLoaded = 0;
 
@@ -186,33 +190,20 @@ export default class App implements IApp{
             this.FontsNotLoaded();
         }, 3020);
 
-        // CREATE OPERATIONS MANAGERS //
+        // CREATE MANAGERS //
         this.OperationManager = new OperationManager();
         this.OperationManager.MaxOperations = this.Config.MaxOperations;
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
-
-        // INITIALISE AUDIO //
-        this.Audio.Init();
-
-        // REGISTER COMMAND HANDLERS //
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.MOVE_BLOCK, MoveBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE, SaveCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE_AS, SaveAsCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.LOAD, LoadCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.UNDO, UndoCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.REDO, RedoCommandHandler.prototype));
-
-        // CREATE INPUT MANAGERS //
         this.TypingManager = new TypingManager();
         this.DragFileInputManager = new DragFileInputManager();
         this.PianoKeyboardManager = new PianoKeyboardManager();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
-
+        this.ColorManager = new ColorManager();
+        this.ThemeManager = new ThemeManager();
         this.FocusManager = new FocusManager();
+
         this.FocusManager.FocusChanged.on((s: any, e: FocusManagerEventArgs) => {
             if (!e.HasFocus){
                 this.TypingManager.ClearKeysDown();
@@ -225,6 +216,16 @@ export default class App implements IApp{
             }
         }, this);
 
+        // REGISTER COMMAND HANDLERS //
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.MOVE_BLOCK, MoveBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE, SaveCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE_AS, SaveAsCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.LOAD, LoadCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.UNDO, UndoCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.REDO, RedoCommandHandler.prototype));
+
         // POOLED OBJECTS //
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
@@ -232,15 +233,21 @@ export default class App implements IApp{
         SoundCloudAPI.Initialize();
 
         // INITIALISE THEME //
-        this.ColorManager = new ColorManager();
-        this.ThemeManager = new ThemeManager();
         this.ThemeManager.ThemeChanged.on((s: any, e: ThemeChangeEventArgs) => {
+            this.TrackVariable(GAVariables.THEME.toString(), e.Index.toString());
+            this.TrackEvent(CommandCategories.SETTINGS.toString(), Commands.CHANGE_THEME.toString());
+
+            // if first load
+            var firstLoad: boolean = this.Palette.length === 0;
+
             this.Palette = e.Palette;
-            this.LoadReady();
+
+            if (firstLoad) {
+                this.LoadReady();
+            }
         }, this);
 
-        this.ThemeManager.LoadTheme(0, true);
-
+        this.ThemeManager.LoadTheme(0);
     }
 
     // FONT LOAD CALLBACK //
@@ -263,6 +270,7 @@ export default class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady(): void {
+
         if (this._FontsLoaded === 3 && this.ThemeManager.Loaded) {
             this.LoadComposition();
         }
@@ -300,7 +308,7 @@ export default class App implements IApp{
     }
 
     CompositionLoadComplete(data) {
-        console.log(`Loaded "${this.CompositionName}"`);
+        //console.log(`Loaded "${this.CompositionName}"`);
 
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
         this.Deserialize(data);
@@ -312,7 +320,7 @@ export default class App implements IApp{
 
         // set initial zoom level/position
         if (this._SaveFile.ColorThemeNo) {
-            this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);
+            this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo);
         }
 
         this.ZoomLevel = this._SaveFile.ZoomLevel;

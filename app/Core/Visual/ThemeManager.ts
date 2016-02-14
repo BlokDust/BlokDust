@@ -134,7 +134,7 @@ export class ThemeManager  {
     //-------------------------------------------------------------------------------------------
 
 
-    LoadTheme(theme,firstLoad) {
+    LoadTheme(theme: number) {
 
         this.CurrentThemeNo = theme;
         this.CurrentTheme = this.Themes[theme];
@@ -177,10 +177,11 @@ export class ThemeManager  {
             styleElem.innerHTML='::selection{ background-color: ' + col + '; background-blend-mode: normal; mix-blend-mode: normal;}';
 
             this.Loaded = true;
-            if (firstLoad) {
-                this.ThemeChanged.raise(this, new ThemeChangeEventArgs(palette));
-            } else {
-                for (i=0; i<palette.length; i++) {
+
+            this.ThemeChanged.raise(this, new ThemeChangeEventArgs(theme, palette));
+
+            if (App.Stage){
+                for (i = 0; i < palette.length; i++) {
                     this.ColorTo(App.Palette[i], this.NewPalette[i], 800);
                 }
             }

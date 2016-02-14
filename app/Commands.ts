@@ -5,6 +5,7 @@ class Command extends StringValue {
 }
 
 export class Commands {
+    public static CHANGE_THEME = new Command("changeTheme");
     public static CREATE_BLOCK = new Command("createBlock");
     public static DELETE_BLOCK = new Command("deleteBlock");
     public static LOAD = new Command("load");
