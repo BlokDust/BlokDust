@@ -95,6 +95,10 @@ export class MainScene extends DisplayObject{
             this.MouseMove(e);
         }, this);
 
+        App.PointerInputManager.MouseWheel.on((s: any, e: MouseWheelEvent) => {
+            this.MouseWheel(e);
+        }, this);
+
         App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
             this.TouchStart(e);
         }, this);
@@ -241,7 +245,6 @@ export class MainScene extends DisplayObject{
         super.Update();
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
@@ -261,22 +264,26 @@ export class MainScene extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
     // FIRST TOUCHES //
-    MouseDown(e: MouseEvent){
+    MouseDown(e: MouseEvent): void {
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerDown(position);
     }
 
-    MouseUp(e: MouseEvent){
+    MouseUp(e: MouseEvent): void {
         var position: Point = new Point(e.clientX, e.clientY);
 
         this._PointerUp(position);
         this._CheckHover(position);
     }
 
-    MouseMove(e: MouseEvent){
+    MouseMove(e: MouseEvent): void {
         var position: Point = new Point(e.clientX, e.clientY);
         this._PointerMove(position);
+    }
+
+    MouseWheel(e: MouseWheelEvent): void {
+        this._MouseWheel(e);
     }
 
     TouchStart(e: any){
@@ -478,6 +485,10 @@ export class MainScene extends DisplayObject{
         this.ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
         this.MainSceneDragger.MouseMove(point);
+    }
+
+    private _MouseWheel(e: MouseWheelEvent): void {
+        this.ZoomButtons.MouseWheel(e);
     }
 
     // PROXIMITY CHECK //

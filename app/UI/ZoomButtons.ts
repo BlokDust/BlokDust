@@ -38,7 +38,6 @@ export class ZoomButtons extends DisplayObject {
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-
     Draw() {
         var units = App.Unit;
         var ctx = this.Ctx;
@@ -52,7 +51,6 @@ export class ZoomButtons extends DisplayObject {
         var zout = this._OutPos;
         var diamond = 11;
 
-
         // IN //
         ctx.beginPath();
         ctx.moveTo(zin.x, zin.y - (5*units));
@@ -61,13 +59,11 @@ export class ZoomButtons extends DisplayObject {
         ctx.lineTo(zin.x + (5*units), zin.y);
         ctx.stroke();
 
-
         // OUT //
         ctx.beginPath();
         ctx.moveTo(zout.x - (5*units), zout.y);
         ctx.lineTo(zout.x + (5*units), zout.y);
         ctx.stroke();
-
 
         ctx.lineWidth = 1;
 
@@ -107,16 +103,12 @@ export class ZoomButtons extends DisplayObject {
             ctx.fillText(string,50*units,App.Height - (50*units));
         }
 
-
-
         ctx.globalAlpha = 1;
-
     }
 
     //-------------------------------------------------------------------------------------------
     //  TWEEN
     //-------------------------------------------------------------------------------------------
-
 
     DelayTo(panel,destination,t,delay,v){
 
@@ -144,11 +136,9 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
-
 
     MouseMove(point) {
         this.HitTests(point);
@@ -164,7 +154,23 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-    HitTests(point) {
+    MouseWheel(e: MouseWheelEvent): void {
+        var delta = 0;
+
+        if (e.wheelDelta !== undefined) { // WebKit / Opera / Explorer 9
+            delta = e.wheelDelta;
+        } else if (e.detail !== undefined) { // Firefox
+            delta = -e.detail;
+        }
+
+        if (delta > 0) {
+            this.ZoomIn();
+        } else if (delta < 0) {
+            this.ZoomOut();
+        }
+    }
+
+    HitTests(point): void {
         var units = App.Unit;
         var zin = this._InPos;
         var zout = this._OutPos;
@@ -174,8 +180,8 @@ export class ZoomButtons extends DisplayObject {
         this.OutRoll = Dimensions.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
     }
 
-    ZoomIn() {
-        if (this.CurrentSlot<this._ZoomSlots.length-1) {
+    ZoomIn(): void {
+        if (this.CurrentSlot < this._ZoomSlots.length-1) {
             App.MainScene.OptionsPanel.Close(); // todo: use an event
             this.CurrentSlot +=1;
             this.StopAllTweens();
@@ -185,8 +191,8 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-    ZoomOut() {
-        if (this.CurrentSlot>0) {
+    ZoomOut(): void {
+        if (this.CurrentSlot > 0) {
             App.MainScene.OptionsPanel.Close(); // todo: use an event
             this.CurrentSlot -=1;
             this.StopAllTweens();
