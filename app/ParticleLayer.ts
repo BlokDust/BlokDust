@@ -50,8 +50,10 @@ export class ParticleLayer extends DisplayObject {
         }
 
         for (var i = 0; i < App.Particles.length; i++) {
-            var particle = App.Particles[i];
+            var particle: Particle = App.Particles[i];
             var pos = App.Metrics.FloatOnGrid(particle.Position);
+            //this.DrawFrom.Width = 10;
+            //this.DrawFrom.Height = 10;
             this.Ctx.drawImage((<Canvas>this.DrawFrom).HTMLElement, pos.x, pos.y);
         }
     }
