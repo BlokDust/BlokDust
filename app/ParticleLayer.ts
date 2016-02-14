@@ -2,13 +2,14 @@ import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {Particle} from './Particle';
+import Canvas = etch.drawing.Canvas;
 
 declare var App: IApp;
 
 export class ParticleLayer extends DisplayObject {
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    Init(drawTo: IDisplayContext, drawFrom?: IDisplayContext): void {
+        super.Init(drawTo, drawFrom);
     }
 
     Update() {
@@ -38,25 +39,36 @@ export class ParticleLayer extends DisplayObject {
     }
 
     Draw() {
-        for (var i = 0; i < App.Particles.length; i++) {
 
-            // todo: use etch drawFrom to cache
+        // if this is the first frame, and it has a display cache that hasn't been drawn to yet.
+        // draw to the display cache.
+        if (this.IsFirstFrame() && this.DrawFrom && !this.DrawFrom.IsCached){
+            this.DrawFrom.Width = 6;
+            this.DrawFrom.Height = 6;
+            this.DrawToCtx(this.DrawFrom.Ctx);
+            this.DrawFrom.IsCached = true;
+        }
+
+        for (var i = 0; i < App.Particles.length; i++) {
             var particle = App.Particles[i];
             var pos = App.Metrics.FloatOnGrid(particle.Position);
-            var unit = App.ScaledUnit;
-            var sx = pos.x;
-            var sy = pos.y;
-            var size = particle.Size * unit;
-
-            App.FillColor(this.Ctx,App.Palette[8]);
-            this.Ctx.globalAlpha = 1;
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(sx-(size),sy); //l
-            this.Ctx.lineTo(sx,sy-(size)); //t
-            this.Ctx.lineTo(sx+(size),sy); //r
-            this.Ctx.lineTo(sx,sy+(size)); //b
-            this.Ctx.closePath();
-            this.Ctx.fill();
+            this.Ctx.drawImage((<Canvas>this.DrawFrom).HTMLElement, pos.x, pos.y);
         }
+    }
+
+    DrawToCtx(ctx: CanvasRenderingContext2D) {
+        //var unit = App.ScaledUnit;
+        var width = 6;// particle.Size * unit;
+        var height = 6;
+
+        App.FillColor(ctx, App.Palette[8]);
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo(width, height / 2);
+        ctx.lineTo(width / 2, height);
+        ctx.lineTo(0, height / 2);
+        ctx.closePath();
+        ctx.fill();
     }
 }
