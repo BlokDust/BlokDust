@@ -308,6 +308,9 @@ module.exports = function (grunt) {
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
                 // uncomment if you want to test an unminified dist build
                 //cmd: 'node app/lib/r.js/dist/r.js -o app.build.js optimize=none'
+            },
+            dist: {
+                cmd: 'git subtree push --prefix dist origin dist'
             }
         },
 
@@ -379,7 +382,8 @@ module.exports = function (grunt) {
             'copy:dist',
             'exec:minify',
             'clean:minified',
-            'replace:minified'
+            'replace:minified',
+            'exec:dist'
         );
     });
 
