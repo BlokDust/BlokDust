@@ -308,23 +308,37 @@ module.exports = function (grunt) {
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
                 // uncomment if you want to test an unminified dist build
                 //cmd: 'node app/lib/r.js/dist/r.js -o app.build.js optimize=none'
-            },
-            dist: {
-                cmd: 'git subtree push --prefix dist origin dist'
-            }
+            }//,
+            //dist: {
+            //    cmd: 'git subtree push --prefix dist origin dist'
+            //}
         },
 
         compress: {
             zip: {
                 options: {
-                    mode: "zip",
-                    archive: "<%= files.zip %>",
+                    mode: 'zip',
+                    archive: '<%= dirs.dist %>.zip',
                     level: 9
                 },
                 files: [
                     {
                         expand: true,
-                        src: ["<%= dirs.dist %>/**"]
+                        cwd: '<%= dirs.dist %>/',
+                        src: ['**']
+                    }
+                ]
+            },
+            tar: {
+                options: {
+                    mode: 'tar',
+                    archive: '<%= dirs.dist %>.tar'
+                },
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.dist %>/',
+                        src: ['**']
                     }
                 ]
             }
@@ -382,16 +396,9 @@ module.exports = function (grunt) {
             'copy:dist',
             'exec:minify',
             'clean:minified',
-            'replace:minified'
-        );
-    });
-
-    grunt.registerTask('release', '', function() {
-
-        refresh();
-
-        grunt.task.run(
-            'compress:zip'
+            'replace:minified',
+            'compress:zip',
+            'compress:tar'
         );
     });
 

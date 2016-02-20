@@ -7,3 +7,5 @@ app/lib
 npm-debug.log
 #dist
 releases
+dist.zip
+dist.tar
