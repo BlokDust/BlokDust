@@ -328,19 +328,6 @@ module.exports = function (grunt) {
                         src: ['**']
                     }
                 ]
-            },
-            tar: {
-                options: {
-                    mode: 'tar',
-                    archive: '<%= dirs.dist %>.tar'
-                },
-                files: [
-                    {
-                        expand: true,
-                        cwd: '<%= dirs.dist %>/',
-                        src: ['**']
-                    }
-                ]
             }
         },
 
@@ -397,8 +384,7 @@ module.exports = function (grunt) {
             'exec:minify',
             'clean:minified',
             'replace:minified',
-            'compress:zip',
-            'compress:tar'
+            'compress:zip'
         );
     });
 

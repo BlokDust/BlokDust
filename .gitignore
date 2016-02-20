@@ -5,7 +5,5 @@ app/.build
 app/lib
 .DS_Store
 npm-debug.log
-#dist
-releases
+dist
 dist.zip
-dist.tar
