@@ -382,8 +382,7 @@ module.exports = function (grunt) {
             'copy:dist',
             'exec:minify',
             'clean:minified',
-            'replace:minified',
-            'exec:dist'
+            'replace:minified'
         );
     });
 
