@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BlokDust</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="description" content="Interactive music-making. Build synths & sounds all in the browser, and share your creations..." />
+    <meta name="robots" content="noodp,noydir" />
+    <meta name="keywords" content=""  />
+
+
+
+    <script type="text/javascript" src="lib/nullstone/dist/nullstone.min.js"></script>
+    <script type="text/javascript" src="lib/minerva/dist/minerva.min.js"></script>
+    <script type="text/javascript" src="lib/bower-webfontloader/webfont.js"></script>
+    <script type="text/javascript" src="https://connect.soundcloud.com/sdk/sdk-3.0.0.js"></script>
+    <script type="text/javascript" src="App.js" data-main="require-config"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <style id="selectStyle">::selection{ background-color: rgba(0,0,0,1); }</style>
+
+    <link rel="icon" type="image/png" href="favicon.ico">
+    <link rel="image_src" type="image/png" href="http://files.blokdust.com/images/thumb.jpg">
+
+    <meta property="og:url" content="http://blokdust.com/"/>
+    <meta property="og:title" content="BlokDust"/>
+    <meta property="og:description" content="Interactive music-making. Build synths & sounds all in the browser, and share your creations..."/>
+    <meta property="og:image" content="http://files.blokdust.com/images/thumb.jpg"/>
+
+</head>
+<body oncontextmenu="return false">
+<!--<script>
+    window.fbAsyncInit = function() { FB.init({ appId:'1025319237492174', xfbml:false, version:'v2.3'}); };
+    (function(d, s, id){ var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) {return;} js = d.createElement(s); js.id = id; js.src = "//connect.facebook.net/en_US/sdk.js"; fjs.parentNode.insertBefore(js, fjs);}(document, 'script', 'facebook-jssdk'));
+</script>-->
+
+<!---->
+
+<div id="shareUrl"></div>
+
+<div id="debug" style="color: #fff; height:20px; overflow: auto; position: absolute"></div>
+
+<input id="audioFileInput" type="file" accept=".wav, .mp3, .ogg" style="display: none;" />
+
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-47890586-3', 'auto');
+    ga('send', 'pageview');
+
+    function trackEvent(category, action, label) {
+        ga('send', 'event', category, action, label);
+    }
+
+    function trackVariable(name, value) {
+        ga('set', name, value);
+    }
+</script>
+
+</body>
+</html>
