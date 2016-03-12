@@ -14,7 +14,7 @@ export class Sampler extends SamplerBase {
     public Defaults: SamplerParams;
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
-    private _FirstBuffer: Tone.Buffer;
+    private _FirstBuffer: any;
     private _LoadFromShare: boolean = false;
     private _fileInput: HTMLElement = document.getElementById('audioFileInput');
 
@@ -70,7 +70,7 @@ export class Sampler extends SamplerBase {
             this.FileReaderInit();
 
             //TODO: this should be called when someone presses upload new audio file button
-            this.HandleFileUploadButtonClick();
+            //this.HandleFileUploadButtonClick();
 
             this._FirstRelease = false;
         }
@@ -97,8 +97,9 @@ export class Sampler extends SamplerBase {
         event.initEvent('click', true, false);
         this._fileInput.dispatchEvent(event);
     }
-
+    //TODO: this gets called twice after the click gets called once.
     HandleFileUploadButton(e) {
+        console.log("upload start");
         var files = e.target.files; // FileList object
         App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
             if (buffer) {
@@ -120,33 +121,34 @@ export class Sampler extends SamplerBase {
             this._FirstBuffer.dispose();
         }
 
-        this._FirstBuffer = new Tone.Buffer();
-        this._FirstBuffer.buffer = buffer;
+        this._FirstBuffer = new Tone.Buffer(buffer, (e) => {
 
-        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(buffer,200,5,95);
-        App.AnimationsLayer.RemoveFromList(this);
-        var duration = this.GetDuration(this._FirstBuffer);
-        if (!this._LoadFromShare) {
+            App.AnimationsLayer.RemoveFromList(this);
+            var duration = this.GetDuration(e._buffer);
             this.Params.startPosition = 0;
             this.Params.endPosition = duration;
             this.Params.loopStart = duration * 0.5;
             this.Params.loopEnd = duration;
-        }
-        this._LoadFromShare = false;
+            this.Params.reverse = false;
 
-        this.RefreshOptionsPanel();
 
-        this.Sources.forEach((s: Tone.Simpler)=> {
-            s.player.buffer = buffer;
-            s.player.loopStart = this.Params.loopStart;
-            s.player.loopEnd = this.Params.loopEnd;
-            s.player.reverse = this.Params.reverse;
+            this.Sources.forEach((s:Tone.Simpler)=> {
+                s.player.buffer = e;
+                s.player.loopStart = this.Params.loopStart;
+                s.player.loopEnd = this.Params.loopEnd;
+                s.player.reverse = this.Params.reverse;
+            });
+
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer, 200, 5, 95);
+            this.RefreshOptionsPanel();
+
+            // IF PLAYING, RE-TRIGGER //
+            if (this.IsPowered()) {
+                this.TriggerAttack();
+            }
+
+
         });
-
-        // IF PLAYING, RE-TRIGGER //
-        if (this.IsPowered()) {
-            this.TriggerAttack();
-        }
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = () => {
@@ -175,11 +177,12 @@ export class Sampler extends SamplerBase {
                     "props" : {
                         "value" : 5,
                         "min" : 0,
-                        "max" : this.GetDuration(this._FirstBuffer),
+                        "max" : this.Params.endPosition,
                         "quantised" : false,
                         "centered" : false,
                         "wavearray" : this._WaveForm,
-                        "mode" : this.Params.loop
+                        "mode" : this.Params.loop,
+                        "emptystring" : "No Sample"
                     },"nodes": [
                     {
                         "setting": "startPosition",
@@ -203,11 +206,11 @@ export class Sampler extends SamplerBase {
                 ]
                 },
                 {
-                    "type" : "sample",
+                    "type" : "samplelocal",
                     "name" : "Sample",
                     "setting" :"sample",
                     "props" : {
-                        "track" : this.Params.track
+                        "track" : this.Params.trackName
                     }
                 },
                 {
@@ -219,13 +222,15 @@ export class Sampler extends SamplerBase {
                             "name": "Reverse",
                             "setting": "reverse",
                             "value": this.Params.reverse,
-                            "lit" : true
+                            "lit" : true,
+                            "mode": "offOn"
                         },
                         {
                             "name": "Looping",
                             "setting": "loop",
                             "value": this.Params.loop,
-                            "lit" : true
+                            "lit" : true,
+                            "mode": "offOn"
                         }
                     ]
                 },
@@ -263,7 +268,7 @@ export class Sampler extends SamplerBase {
                 this.Sources[0].player.reverse = value;
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer.buffer,200,5,95);
+                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer._buffer,200,5,95);
 
                 this.RefreshOptionsPanel();
                 break;
@@ -291,6 +296,10 @@ export class Sampler extends SamplerBase {
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
+                break;
+            case "sample":
+                console.log("button called");
+                this.HandleFileUploadButtonClick();
                 break;
         }
 
