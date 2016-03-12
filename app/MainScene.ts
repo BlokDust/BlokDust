@@ -801,10 +801,11 @@ export class MainScene extends DisplayObject{
         App.Metrics.UpdateGridScale();
 
         // reset URL //
+        document.title = "BlokDust";
         var currentUrl = window.location.href;
         var newUrl = currentUrl.split('?');
         if (newUrl.length>1) {
-            window.history.pushState({html: "Reset"}, "Reset", ""+newUrl[0]);
+            window.history.pushState({html: "Reset"}, "BlokDust", ""+newUrl[0]);
             window.onpopstate = function(){
                 //if(window.history.state !== null){
                     window.location.reload();

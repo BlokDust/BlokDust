@@ -45,6 +45,7 @@ export interface IOption {
     Buttons: OptionButton[];
 
     ButtonMode: string;
+    Function: any;
 
     Draw(ctx,units,i,panel): void;
 

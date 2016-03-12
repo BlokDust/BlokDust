@@ -51,6 +51,7 @@ export class Option implements IOption {
     public Buttons: OptionButton[];
 
     public ButtonMode: string;
+    public Function: any;
 
     constructor() {
 

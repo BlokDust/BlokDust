@@ -13,6 +13,7 @@ import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
 import {OptionButton as Button} from './Options/OptionButton';
 import {OptionHandle} from './Options/OptionHandle';
 import {OptionSample as Sample} from './Options/OptionSample';
+import {OptionSampleLocal as SampleLocal} from './Options/OptionSampleLocal';
 import {OptionSubHandle} from './Options/OptionSubHandle';
 import {OptionSwitch as Switch} from './Options/OptionSwitch';
 import {Option} from './Options/Option';
@@ -123,6 +124,9 @@ export class OptionsPanel extends DisplayObject {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "sample") {
+                getHeight += 48;
+                optionHeight[i] = 48 * units;
+            } else if (json.parameters[i].type == "samplelocal") {
                 getHeight += 48;
                 optionHeight[i] = 48 * units;
             } else if (json.parameters[i].type == "actionbutton") {
@@ -321,6 +325,11 @@ export class OptionsPanel extends DisplayObject {
             // SAMPLE LOADER //
             else if (option.type == "sample") {
                 optionList.push(new Sample(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.props.user,option.props.permalink,option.setting));
+            }
+
+            // LOCAL SAMPLE LOADER //
+            else if (option.type == "samplelocal") {
+                optionList.push(new SampleLocal(new Point(sliderX,optionY),new Size(1,optionHeight[i]),option.name,option.props.track,option.setting));
             }
 
             // ACTION BUTTON //
@@ -833,6 +842,15 @@ export class OptionsPanel extends DisplayObject {
                     return;
                 }
             }
+            if (this.Options[i].Type=="samplelocal") {
+                if (this.Options[i].HandleRoll[0]) {
+                    var val = 0;
+                    console.log("" + this.Options[i].Setting +" | "+ val);
+                    // SET VALUE IN BLOCK //
+                    this.SelectedBlock.SetParam(this.Options[i].Setting, val);
+                    return;
+                }
+            }
             if (this.Options[i].Type=="actionbutton") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
@@ -974,6 +992,9 @@ export class OptionsPanel extends DisplayObject {
             else if (this.Options[i].Type == "sample") {
                 this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.65), this.Position.y + this.Options[i].Position.y, (this.Range * 0.35), this.Options[i].Size.height, mx, my);
                 this.Options[i].HandleRoll[1] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.5), this.Position.y + this.Options[i].Position.y, (this.Range * 0.15), this.Options[i].Size.height, mx, my);
+            }
+            else if (this.Options[i].Type == "samplelocal") {
+                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.65), this.Position.y + this.Options[i].Position.y, (this.Range * 0.35), this.Options[i].Size.height, mx, my);
             }
             else if (this.Options[i].Type == "actionbutton") {
                 this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Position.x + this.Margin + (this.Range * 0.25), this.Position.y + this.Options[i].Position.y, (this.Range * 0.5), this.Options[i].Size.height, mx, my);
