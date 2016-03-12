@@ -1,61 +1,20 @@
 declare module nullstone {
     var version: string;
 }
-interface IFulfilledFunc<T, TResult> {
-    (value: T): void | TResult | Promise<TResult>;
-}
-interface IRejectedFunc<TResult> {
-    (reason: any): void | TResult | Promise<TResult>;
-}
-interface IResolveFunc<T> {
-    (value?: T | Promise<T>): void;
-}
-interface IRejectFunc {
-    (reason?: any): void;
-}
-interface Promise<T> {
-    then<TResult>(onFulfilled?: IFulfilledFunc<T, TResult>, onRejected?: IRejectedFunc<TResult>): Promise<TResult>;
-    catch(onRejected?: (reason: any) => T | Promise<T>): Promise<T>;
-    tap(onFulfilled?: (value: T) => void, onRejected?: (err: any) => void): Promise<T>;
-}
-interface PromiseConstructor {
-    prototype: Promise<any>;
-    new <T>(init: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
-    <T>(init: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
-    all<T>(values: Promise<void>[]): Promise<void>;
-    all<T>(...values: Promise<void>[]): Promise<void>;
-    all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
-    all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
-    race<T>(values: Promise<T>[]): Promise<T>;
-    reject(reason: any): Promise<void>;
-    reject<T>(reason: any): Promise<T>;
-    resolve<T>(value: T | Promise<T>): Promise<T>;
-    resolve(): Promise<void>;
-}
-declare var Promise: PromiseConstructor;
 declare module nullstone {
-    class PromiseImpl<T> implements Promise<T> {
-        private $$state;
-        private $$value;
-        private $$deferreds;
-        constructor(init: (resolve: IResolveFunc<T>, reject: IRejectFunc) => void);
-        then<TResult>(onFulfilled?: IFulfilledFunc<T, TResult>, onRejected?: IRejectedFunc<TResult>): Promise<TResult>;
-        catch(onRejected?: (reason: any) => T | Promise<T>): Promise<T>;
-        tap(onFulfilled?: (value: T) => void, onRejected?: (err: any) => void): Promise<T>;
-        private _handle<TResult>(deferred);
-        static all<T>(values: Promise<void>[]): Promise<void>;
-        static all<T>(...values: Promise<void>[]): Promise<void>;
-        static all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
-        static all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
-        static race<T>(values: Promise<T>[]): Promise<T>;
-        static reject<T>(reason: any): Promise<void> | Promise<T>;
-        static resolve(): Promise<void>;
-        static resolve<T>(value: T | Promise<T>): Promise<T>;
-        private _resolve;
-        private _reject;
-        private _finale();
-        private _setImmediateFn(func);
+    function Annotation(type: Function, name: string, value: any, forbidMultiple?: boolean): void;
+    function GetAnnotations(type: Function, name: string): any[];
+    interface ITypedAnnotation<T> {
+        (type: Function, ...values: T[]): any;
+        Get(type: Function): T[];
     }
+    function CreateTypedAnnotation<T>(name: string): ITypedAnnotation<T>;
+}
+declare module nullstone {
+    function convertAnyToType(val: any, type: Function): any;
+    function convertStringToEnum<T>(val: string, en: any): T;
+    function registerTypeConverter(type: Function, converter: (val: any) => any): void;
+    function registerEnumConverter(e: any, converter: (val: any) => any): void;
 }
 declare module nullstone {
     class DirResolver implements ITypeResolver {
@@ -69,6 +28,9 @@ declare module nullstone {
         constructor(Object: any);
         static fromAny<T>(enuType: any, val: any, fallback?: number): number;
     }
+}
+declare module nullstone {
+    function equals(val1: any, val2: any): boolean;
 }
 declare module nullstone {
     interface IEventArgs {
@@ -141,6 +103,20 @@ declare module nullstone {
     var IEnumerator_: IEnumeratorDeclaration<any>;
 }
 declare module nullstone {
+    interface IIndexedPropertyInfo {
+        getValue(obj: any, index: number): any;
+        setValue(obj: any, index: number, value: any): any;
+    }
+    class IndexedPropertyInfo implements IIndexedPropertyInfo {
+        GetFunc: (index: number) => any;
+        SetFunc: (index: number, value: any) => any;
+        propertyType: Function;
+        getValue(ro: any, index: number): any;
+        setValue(ro: any, index: number, value: any): void;
+        static find(typeOrObj: any): IndexedPropertyInfo;
+    }
+}
+declare module nullstone {
     interface IDisposable {
         dispose(): any;
     }
@@ -161,20 +137,6 @@ declare module nullstone {
 declare module nullstone {
     interface ITypeResolver {
         resolveType(moduleName: string, name: string, oresolve: IOutType): boolean;
-    }
-}
-declare module nullstone {
-    interface IIndexedPropertyInfo {
-        getValue(obj: any, index: number): any;
-        setValue(obj: any, index: number, value: any): any;
-    }
-    class IndexedPropertyInfo implements IIndexedPropertyInfo {
-        GetFunc: (index: number) => any;
-        SetFunc: (index: number, value: any) => any;
-        propertyType: Function;
-        getValue(ro: any, index: number): any;
-        setValue(ro: any, index: number, value: any): void;
-        static find(typeOrObj: any): IndexedPropertyInfo;
     }
 }
 declare module nullstone {
@@ -273,12 +235,6 @@ declare module nullstone {
     function doesInheritFrom(t: Function, type: any): boolean;
 }
 declare module nullstone {
-    function convertAnyToType(val: any, type: Function): any;
-    function convertStringToEnum<T>(val: string, en: any): T;
-    function registerTypeConverter(type: Function, converter: (val: any) => any): void;
-    function registerEnumConverter(e: any, converter: (val: any) => any): void;
-}
-declare module nullstone {
     enum UriKind {
         RelativeOrAbsolute = 0,
         Absolute = 1,
@@ -336,18 +292,6 @@ declare module nullstone {
     }
 }
 declare module nullstone {
-    function Annotation(type: Function, name: string, value: any, forbidMultiple?: boolean): void;
-    function GetAnnotations(type: Function, name: string): any[];
-    interface ITypedAnnotation<T> {
-        (type: Function, ...values: T[]): any;
-        Get(type: Function): T[];
-    }
-    function CreateTypedAnnotation<T>(name: string): ITypedAnnotation<T>;
-}
-declare module nullstone {
-    function equals(val1: any, val2: any): boolean;
-}
-declare module nullstone {
     class AggregateError {
         errors: any[];
         constructor(errors: any[]);
@@ -366,6 +310,53 @@ declare module nullstone {
         library: Library;
         error: Error;
         constructor(library: Library, error: Error);
+    }
+}
+declare module nullstone.markup.events {
+    interface IResolveType {
+        (xmlns: string, name: string): IOutType;
+    }
+    interface IResolveObject {
+        (type: any): any;
+    }
+    interface IResolvePrimitive {
+        (type: any, text: string): any;
+    }
+    interface IResolveResources {
+        (owner: any, ownerType: any): any;
+    }
+    interface IBranchSkip<T> {
+        (root: T, obj: any): any;
+    }
+    interface IObject {
+        (obj: any, isContent: boolean): any;
+    }
+    interface IObjectEnd {
+        (obj: any, key: any, isContent: boolean, prev: any): any;
+    }
+    interface IText {
+        (text: string): any;
+    }
+    interface IName {
+        (name: string): any;
+    }
+    interface IPropertyStart {
+        (ownerType: any, propName: string): any;
+    }
+    interface IPropertyEnd {
+        (ownerType: any, propName: string): any;
+    }
+    interface IAttributeStart {
+        (ownerType: any, attrName: string): any;
+    }
+    interface IAttributeEnd {
+        (ownerType: any, attrName: string, obj: any): any;
+    }
+    interface IResumableError {
+        (e: Error): boolean;
+    }
+    interface IError {
+        (e: Error): any;
     }
 }
 declare module nullstone.markup {
@@ -457,53 +448,6 @@ declare module nullstone.markup {
         resolve(): Promise<any>;
     }
 }
-declare module nullstone.markup.events {
-    interface IResolveType {
-        (xmlns: string, name: string): IOutType;
-    }
-    interface IResolveObject {
-        (type: any): any;
-    }
-    interface IResolvePrimitive {
-        (type: any, text: string): any;
-    }
-    interface IResolveResources {
-        (owner: any, ownerType: any): any;
-    }
-    interface IBranchSkip<T> {
-        (root: T, obj: any): any;
-    }
-    interface IObject {
-        (obj: any, isContent: boolean): any;
-    }
-    interface IObjectEnd {
-        (obj: any, key: any, isContent: boolean, prev: any): any;
-    }
-    interface IText {
-        (text: string): any;
-    }
-    interface IName {
-        (name: string): any;
-    }
-    interface IPropertyStart {
-        (ownerType: any, propName: string): any;
-    }
-    interface IPropertyEnd {
-        (ownerType: any, propName: string): any;
-    }
-    interface IAttributeStart {
-        (ownerType: any, attrName: string): any;
-    }
-    interface IAttributeEnd {
-        (ownerType: any, attrName: string, obj: any): any;
-    }
-    interface IResumableError {
-        (e: Error): boolean;
-    }
-    interface IError {
-        (e: Error): any;
-    }
-}
 declare module nullstone.markup.xaml {
     class SkipBranchError extends Error {
         root: Element;
@@ -590,5 +534,61 @@ declare module nullstone.markup.xaml {
         private $$handleAttribute(uri, name, value, attr);
         private $$getAttrValue(val, attr);
         private $$destroy();
+    }
+}
+interface IFulfilledFunc<T, TResult> {
+    (value: T): void | TResult | Promise<TResult>;
+}
+interface IRejectedFunc<TResult> {
+    (reason: any): void | TResult | Promise<TResult>;
+}
+interface IResolveFunc<T> {
+    (value?: T | Promise<T>): void;
+}
+interface IRejectFunc {
+    (reason?: any): void;
+}
+interface Promise<T> {
+    then<TResult>(onFulfilled?: IFulfilledFunc<T, TResult>, onRejected?: IRejectedFunc<TResult>): Promise<TResult>;
+    catch(onRejected?: (reason: any) => T | Promise<T>): Promise<T>;
+    tap(onFulfilled?: (value: T) => void, onRejected?: (err: any) => void): Promise<T>;
+}
+interface PromiseConstructor {
+    prototype: Promise<any>;
+    new <T>(init: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
+    <T>(init: (resolve: (value?: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
+    all<T>(values: Promise<void>[]): Promise<void>;
+    all<T>(...values: Promise<void>[]): Promise<void>;
+    all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
+    all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
+    race<T>(values: Promise<T>[]): Promise<T>;
+    reject(reason: any): Promise<void>;
+    reject<T>(reason: any): Promise<T>;
+    resolve<T>(value: T | Promise<T>): Promise<T>;
+    resolve(): Promise<void>;
+}
+declare var Promise: PromiseConstructor;
+declare module nullstone {
+    class PromiseImpl<T> implements Promise<T> {
+        private $$state;
+        private $$value;
+        private $$deferreds;
+        constructor(init: (resolve: IResolveFunc<T>, reject: IRejectFunc) => void);
+        then<TResult>(onFulfilled?: IFulfilledFunc<T, TResult>, onRejected?: IRejectedFunc<TResult>): Promise<TResult>;
+        catch(onRejected?: (reason: any) => T | Promise<T>): Promise<T>;
+        tap(onFulfilled?: (value: T) => void, onRejected?: (err: any) => void): Promise<T>;
+        private _handle<TResult>(deferred);
+        static all<T>(values: Promise<void>[]): Promise<void>;
+        static all<T>(...values: Promise<void>[]): Promise<void>;
+        static all<T>(values: (T | Promise<T>)[]): Promise<T[]>;
+        static all<T>(...values: (T | Promise<T>)[]): Promise<T[]>;
+        static race<T>(values: Promise<T>[]): Promise<T>;
+        static reject<T>(reason: any): Promise<void> | Promise<T>;
+        static resolve(): Promise<void>;
+        static resolve<T>(value: T | Promise<T>): Promise<T>;
+        private _resolve;
+        private _reject;
+        private _finale();
+        private _setImmediateFn(func);
     }
 }

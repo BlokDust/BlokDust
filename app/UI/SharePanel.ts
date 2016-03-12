@@ -513,14 +513,17 @@ export class SharePanel extends DisplayObject {
         shareUrl.innerHTML = "" + this.SessionURL;
     }
 
-    ShareFacebook(url) {
-        FB.ui({
+    ShareFacebook() {
+        /*FB.ui({
             method: "share",
             href: url,
             title: this.SessionTitle,
             description: "Interactive music.",
             image: "http://localhost:8000/image.jpg"
-        }, function(response){});
+        }, function(response){});*/
+        var href = "http://www.facebook.com/sharer.php?u=";
+        href = "" + href + encodeURIComponent(this.SessionURL);
+        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
     }
 
     ShareTwitter() {
@@ -564,9 +567,9 @@ export class SharePanel extends DisplayObject {
                 return;
             }
             if (this._RollOvers[6]) { // fb
-                var url = "" + this.SessionURL;
+                //var url = "" + this.SessionURL;
                 //url = "http://blokdust.com/";
-                this.ShareFacebook(url);
+                this.ShareFacebook();
                 return;
             }
             if (this._RollOvers[7]) { // tw
@@ -663,6 +666,13 @@ export class SharePanel extends DisplayObject {
             window.getSelection().removeAllRanges();
         else if (document.selection)
             document.selection.empty();
+    }
+
+    Reset() {
+        this._FirstSession = true;
+        if (App.SessionId) {
+            this._FirstSession = false;
+        }
     }
 
     Resize() {

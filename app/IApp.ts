@@ -65,6 +65,7 @@ export interface IApp {
     ScaledGridSize: number;
     ScaledUnit: number;
     SessionId: string;
+    ShowTutorial: boolean;
     Sources: ISource[];
     Stage: Stage;
     SubCanvas: HTMLCanvasElement[];
@@ -72,6 +73,7 @@ export interface IApp {
     TrackEvent(category: string, action: string, label?: string): void;
     TrackVariable(name: string, value: string): void;
     TypingManager: TypingManager;
+    ThemeNo: number;
     Unit: number;
     Width: number;
     ZoomLevel: number;

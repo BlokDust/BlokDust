@@ -92,8 +92,8 @@ export class Chorus extends PostEffect {
                     "setting" :"delayTime",
                     "props" : {
                         "value" : this.Params.delayTime,
-                        "min" : 0,
-                        "max" : 5,
+                        "min" : 0.5,
+                        "max" : 8,
                         "quantised" : false,
                         "centered" : false
                     }

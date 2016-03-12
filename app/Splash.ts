@@ -45,6 +45,7 @@ export class Splash extends DisplayObject{
         var units = App.Unit;
 
         this._Scale = 100 * units;
+        this.Ctx.globalAlpha = 1;
 
         // LOADING //
         if (App.IsLoadingComposition) {

@@ -107,7 +107,7 @@ export default class App implements IApp{
     }
 
     get MainScene(): MainScene {
-        return this.Stage.MainScene;
+        return this.Stage.MainScene; //TODO: trying to reference Stage from one of it's children at init comes back undefined, which is impossible (eg in the init of CreateNew)
     }
 
     get Sources(): ISource[] {
@@ -142,14 +142,31 @@ export default class App implements IApp{
 
     get SessionId(): string {
         if (this._SessionId) return this._SessionId;
-        var sessionId: Utils.StorageItem = Utils.Storage.get(this.CompositionId, Utils.StorageType.local);
-        if (sessionId) return sessionId.value;
+        var storageItem: Utils.StorageItem = Utils.Storage.get(this.CompositionId, Utils.StorageType.local);
+        if (storageItem) return storageItem.value;
     }
 
     set SessionId(value: string) {
         this._SessionId = value;
-        // expires in 10 years.
-        Utils.Storage.set(this.CompositionId, this._SessionId, 315360000, Utils.StorageType.local);
+        Utils.Storage.set(this.CompositionId, this._SessionId, this.Config.StorageTime, Utils.StorageType.local);
+    }
+
+    get ThemeNo(): number {
+        var storageItem: Utils.StorageItem = Utils.Storage.get("ColorTheme", Utils.StorageType.local);
+        if (storageItem) return storageItem.value;
+    }
+
+    set ThemeNo(value: number) {
+        Utils.Storage.set("ColorTheme", value, this.Config.StorageTime, Utils.StorageType.local);
+    }
+
+    get ShowTutorial(): boolean {
+        var storageItem: Utils.StorageItem = Utils.Storage.get("ShowTutorial", Utils.StorageType.local);
+        if (storageItem) return storageItem.value;
+    }
+
+    set ShowTutorial(value: boolean) {
+        Utils.Storage.set("ShowTutorial", value, this.Config.StorageTime, Utils.StorageType.local);
     }
 
     constructor(config: string, l10n: string) {
@@ -246,8 +263,13 @@ export default class App implements IApp{
                 this.LoadReady();
             }
         }, this);
+        var themeNo = this.ThemeNo;
+        if (!this.ThemeNo) {
+            themeNo = 0;
+        }
 
-        this.ThemeManager.LoadTheme(0);
+        this.ThemeManager.LoadTheme(themeNo, true);
+
     }
 
     // FONT LOAD CALLBACK //
@@ -270,7 +292,6 @@ export default class App implements IApp{
 
     // PROCEED WHEN ALL SOCKETS LOADED //
     LoadReady(): void {
-
         if (this._FontsLoaded === 3 && this.ThemeManager.Loaded) {
             this.LoadComposition();
         }
@@ -289,7 +310,10 @@ export default class App implements IApp{
             }).catch((error: string) => {
                 this.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), this.CompositionId);
                 this.CompositionId = null;
-                // todo: show load error message
+                console.error(error);
+                if (this.Message){
+                    this.Message(`Save couldn't be found.`);
+                }
             });
         }
 
@@ -308,7 +332,7 @@ export default class App implements IApp{
     }
 
     CompositionLoadComplete(data) {
-        //console.log(`Loaded "${this.CompositionName}"`);
+        console.log(`Loaded "${this.CompositionName}"`);
 
         // get deserialized blocks tree, then "flatten" so that all blocks are in an array
         this.Deserialize(data);
@@ -318,11 +342,7 @@ export default class App implements IApp{
             this.Blocks[i].Duplicable = true;
         }
 
-        // set initial zoom level/position
-        if (this._SaveFile.ColorThemeNo) {
-            this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo);
-        }
-
+        this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false, true);
         this.ZoomLevel = this._SaveFile.ZoomLevel;
 
         // bring down volume and validate blocks //
@@ -332,6 +352,8 @@ export default class App implements IApp{
         this.Audio.ConnectionManager.Update();
 
         this.IsLoadingComposition = false;
+        //this.MainScene.CreateNew.ShowMessage = true;
+        this.MainScene.CreateNew.ShowMessage();
 
         this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }

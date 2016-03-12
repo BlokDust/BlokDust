@@ -1,5 +1,6 @@
 export interface IL10n {
     Attribution: any;
+    UI: any;
     Blocks: IBlockType;
     Errors: IErrors;
 }
@@ -69,4 +70,13 @@ interface ISoundCloudErrors {
     TooManyRequests: string;
     Uninitialized: string;
     Unknown: string;
+}
+
+interface UI {
+    CreateNew: ICreateNew;
+}
+
+interface ICreateNew {
+    Verify: string;
+    NewMessage: string;
 }
