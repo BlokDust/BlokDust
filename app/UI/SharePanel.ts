@@ -373,7 +373,7 @@ export class SharePanel extends DisplayObject {
                 s = this.UppercaseAt(s,i+1);
             }
         }
-        console.log(s);
+        //console.log(s);
         return s;
     }
 
