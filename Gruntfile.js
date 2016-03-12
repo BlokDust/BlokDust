@@ -160,6 +160,16 @@ module.exports = function (grunt) {
                         to: ''
                     }
                 ]
+            },
+            php: {
+                src: ['<%= dirs.dist %>/index.html'],
+                overwrite: true,
+                replacements: [
+                    {
+                        from: '$title',
+                        to: '<?php if(isset($_GET["t"])){ echo \': \' . htmlentities($_GET["t"], ENT_QUOTES, \'UTF-8\');} ?>'
+                    }
+                ]
             }
         },
 
@@ -384,6 +394,7 @@ module.exports = function (grunt) {
             'exec:minify',
             'clean:minified',
             'replace:minified',
+            'replace:php',
             'compress:zip'
         );
     });
