@@ -12,7 +12,7 @@ export class SaveOperation<String> implements IOperation {
         this._JSON = new PostData(
             (compositionId) ? compositionId : "",
             json,
-            sessionId
+            (sessionId) ? sessionId : ""
         );
 
         this._LZMA = new LZMA("/lib/lzma/src/lzma_worker.js");

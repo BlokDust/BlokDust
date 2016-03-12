@@ -11,6 +11,7 @@ export class Delay extends PostEffect {
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
     public Defaults: DelayParams;
+    private _SliderTime: number;
 
     Init(drawTo: IDisplayContext): void {
 
@@ -26,6 +27,9 @@ export class Delay extends PostEffect {
         this.Effect = new Tone.PingPongDelay(this.Params.delayTime);
         this.Effect.feedback.value = this.Params.feedback;
         this.Effect.wet.value = this.Params.mix;
+
+        // for us, until we settle delay clicking
+        this._SliderTime = 0.1; // 0.017 is also good
 
         super.Init(drawTo);
 
@@ -49,7 +53,10 @@ export class Delay extends PostEffect {
         if (param=="mix") {
             this.Effect.wet.value = val;
         } else if (param=="delayTime") {
-            this.Effect.delayTime.rampTo(val,0.1);
+            this.Effect.delayTime.rampTo(val,this._SliderTime);
+            //this.Effect.delayTime.value = val;
+        } else if (param=="sliderTime") {
+            this._SliderTime = val;
         } else {
             this.Effect[param].value = val;
         }
@@ -57,18 +64,6 @@ export class Delay extends PostEffect {
         this.Params[param] = val;
     }
 
-/*    GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="delayTime") {
-            val = this.Effect.delayTime.value;
-        } else if (param=="feedback") {
-            val = this.Effect.feedback.value;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        }
-        return val;
-    }*/
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();

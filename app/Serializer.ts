@@ -145,7 +145,11 @@ export class Serializer {
         }
 
         saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
-        saveFile.ColorThemeNo = parsed.ColorThemeNo;
+        if (parsed.ColorThemeNo) {
+            saveFile.ColorThemeNo = parsed.ColorThemeNo;
+        } else {
+            saveFile.ColorThemeNo = 0;
+        }
 
         return saveFile;
     }

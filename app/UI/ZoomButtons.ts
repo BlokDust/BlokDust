@@ -49,20 +49,28 @@ export class ZoomButtons extends DisplayObject {
 
         var zin = this._InPos;
         var zout = this._OutPos;
+        var im = 1;
+        var om = 1;
+        if (this.InRoll) {
+            im = 1.2;
+        }
+        if (this.OutRoll) {
+            om = 1.2;
+        }
         var diamond = 11;
 
         // IN //
         ctx.beginPath();
-        ctx.moveTo(zin.x, zin.y - (5*units));
-        ctx.lineTo(zin.x, zin.y + (5*units));
-        ctx.moveTo(zin.x - (5*units), zin.y);
-        ctx.lineTo(zin.x + (5*units), zin.y);
+        ctx.moveTo(zin.x, zin.y - ((5*im)*units));
+        ctx.lineTo(zin.x, zin.y + ((5*im)*units));
+        ctx.moveTo(zin.x - ((5*im)*units), zin.y);
+        ctx.lineTo(zin.x + ((5*im)*units), zin.y);
         ctx.stroke();
 
         // OUT //
         ctx.beginPath();
-        ctx.moveTo(zout.x - (5*units), zout.y);
-        ctx.lineTo(zout.x + (5*units), zout.y);
+        ctx.moveTo(zout.x - ((5*om)*units), zout.y);
+        ctx.lineTo(zout.x + ((5*om)*units), zout.y);
         ctx.stroke();
 
         ctx.lineWidth = 1;
@@ -75,7 +83,7 @@ export class ZoomButtons extends DisplayObject {
         ctx.closePath();
         ctx.stroke();
 
-        // ROLLOVERS //
+        /*// ROLLOVERS //
         if (this.InRoll) {
             ctx.beginPath();
             ctx.moveTo(zin.x - (diamond*units), zin.y);
@@ -93,7 +101,7 @@ export class ZoomButtons extends DisplayObject {
             ctx.lineTo(zout.x, zout.y + (diamond*units));
             ctx.closePath();
             ctx.stroke();
-        }
+        }*/
 
         if (this.ZoomAlpha>0) {
             ctx.globalAlpha = this.ZoomAlpha;
@@ -155,7 +163,10 @@ export class ZoomButtons extends DisplayObject {
     }
 
     MouseWheel(e: MouseWheelEvent): void {
-        var delta = 0;
+
+        // disabling this for now, is just annoying - experiment in future with it having a sensitivity threshold and zooming just one level per gesture
+
+        /*var delta = 0;
 
         if (e.wheelDelta !== undefined) { // WebKit / Opera / Explorer 9
             delta = e.wheelDelta;
@@ -167,7 +178,7 @@ export class ZoomButtons extends DisplayObject {
             this.ZoomIn();
         } else if (delta < 0) {
             this.ZoomOut();
-        }
+        }*/
     }
 
     HitTests(point): void {

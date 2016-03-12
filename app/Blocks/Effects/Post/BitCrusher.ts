@@ -45,7 +45,8 @@ export class BitCrusher extends PostEffect {
         super.SetParam(param,value);
 
         if (param === 'bits') {
-            this.Effect.bits = value;
+            this.Effect.bits = value; //TODO: make rampable, creates some ugly pops jumping extreme values
+            //this.Effect.bits.rampTo(value,0.01);
         } else if (param === 'mix') {
             this.Effect.wet.value = value;
         }
