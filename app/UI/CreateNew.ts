@@ -35,7 +35,7 @@ export class CreateNew extends DisplayObject{
         this.IconOffset = new Point(-1,0);
         this.Open = false;
         this.PanelOffset = new Point(0,-1);
-        this.PanelOffset2 = new Point(0,0);
+        this.PanelOffset2 = new Point(0,1);
         this.Selected = 0;
         this.Tweens = [];
         this.Verify = App.L10n.UI.CreateNew.Verify.toUpperCase();
