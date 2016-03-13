@@ -79,7 +79,7 @@ export class SharePanel extends DisplayObject {
         var getName = decoded.split("&t=");
         if (getName.length>1) {
             this.SessionTitle = getName[1].toUpperCase();
-            this._NameUrl = "&t=" + encodeURI(getName[1]);
+            this.SetNameUrl(getName[1]);
             this.UpdateUrlText();
         } else {
             this.SessionTitle = this.GenerateLabel();
@@ -92,12 +92,17 @@ export class SharePanel extends DisplayObject {
 
     UpdateString(string) {
         this.SessionTitle = string;
-        this._NameUrl = "&t=" + encodeURI(string.toLowerCase());
+        console.log(this.Capitalise(string));
+        this.SetNameUrl(string);
         this.UpdateUrlText();
     }
 
     StringReturn() {
 
+    }
+
+    SetNameUrl(string) {
+        this._NameUrl = "&t=" + encodeURI(this.Capitalise(string));
     }
 
     //-------------------------------------------------------------------------------------------
@@ -360,6 +365,24 @@ export class SharePanel extends DisplayObject {
             context.fillText( words.join(' '), x, y + (lineHeight*currentLine) );
     }
 
+    Capitalise(string) {
+        var s = string.toLowerCase();
+        s = this.UppercaseAt(s,0);
+        for (var i = 0; i < s.length; i++) {
+            if (s.charAt(i)===" ") {
+                s = this.UppercaseAt(s,i+1);
+            }
+        }
+        //console.log(s);
+        return s;
+    }
+
+    UppercaseAt(str,index) {
+        if(index > str.length-1) return str;
+        var chr = str.substr(index,1).toUpperCase();
+        return str.substr(0,index) + chr + str.substr(index+1);
+    }
+
     //-------------------------------------------------------------------------------------------
     //  TWEEN
     //-------------------------------------------------------------------------------------------
@@ -463,7 +486,7 @@ export class SharePanel extends DisplayObject {
         }
 
         // DONE //
-        this._NameUrl = "&t=" + encodeURI(label);
+        this.SetNameUrl(label);
         this.UpdateUrlText();
         return label.toUpperCase();
     }
@@ -492,7 +515,7 @@ export class SharePanel extends DisplayObject {
 
     GenerateLink() {
         this._Saving = true;
-        this._CommandManager.ExecuteCommand(Commands.SAVEAS);
+        this._CommandManager.ExecuteCommand(Commands.SAVE_AS);
     }
 
     UpdateLink() {
@@ -513,14 +536,17 @@ export class SharePanel extends DisplayObject {
         shareUrl.innerHTML = "" + this.SessionURL;
     }
 
-    ShareFacebook(url) {
-        FB.ui({
+    ShareFacebook() {
+        /*FB.ui({
             method: "share",
             href: url,
             title: this.SessionTitle,
             description: "Interactive music.",
             image: "http://localhost:8000/image.jpg"
-        }, function(response){});
+        }, function(response){});*/
+        var href = "http://www.facebook.com/sharer.php?u=";
+        href = "" + href + encodeURIComponent(this.SessionURL);
+        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
     }
 
     ShareTwitter() {
@@ -564,9 +590,9 @@ export class SharePanel extends DisplayObject {
                 return;
             }
             if (this._RollOvers[6]) { // fb
-                var url = "" + this.SessionURL;
+                //var url = "" + this.SessionURL;
                 //url = "http://blokdust.com/";
-                this.ShareFacebook(url);
+                this.ShareFacebook();
                 return;
             }
             if (this._RollOvers[7]) { // tw
@@ -663,6 +689,13 @@ export class SharePanel extends DisplayObject {
             window.getSelection().removeAllRanges();
         else if (document.selection)
             document.selection.empty();
+    }
+
+    Reset() {
+        this._FirstSession = true;
+        if (App.SessionId) {
+            this._FirstSession = false;
+        }
     }
 
     Resize() {

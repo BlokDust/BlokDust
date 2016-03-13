@@ -54,6 +54,9 @@ import {ThemeManager} from './Core/Visual/ThemeManager';
 import {TypingManager} from './Core/Inputs/TypingManager';
 import {UndoCommandHandler} from './CommandHandlers/UndoCommandHandler';
 import {BlockCreator} from "./BlockCreator";
+import {CommandCategories} from "./CommandCategories";
+import {Errors} from "./Errors";
+import {GAVariables} from "./GAVariables";
 
 export default class App implements IApp{
 
@@ -104,7 +107,7 @@ export default class App implements IApp{
     }
 
     get MainScene(): MainScene {
-        return this.Stage.MainScene;
+        return this.Stage.MainScene; //TODO: trying to reference Stage from one of it's children at init comes back undefined, which is impossible (eg in the init of CreateNew)
     }
 
     get Sources(): ISource[] {
@@ -139,14 +142,31 @@ export default class App implements IApp{
 
     get SessionId(): string {
         if (this._SessionId) return this._SessionId;
-        var sessionId: Utils.StorageItem = Utils.Storage.get(this.CompositionId, Utils.StorageType.local);
-        if (sessionId) return sessionId.value;
+        var storageItem: Utils.StorageItem = Utils.Storage.get(this.CompositionId, Utils.StorageType.local);
+        if (storageItem) return storageItem.value;
     }
 
     set SessionId(value: string) {
         this._SessionId = value;
-        // expires in 10 years.
-        Utils.Storage.set(this.CompositionId, this._SessionId, 315360000, Utils.StorageType.local);
+        Utils.Storage.set(this.CompositionId, this._SessionId, this.Config.StorageTime, Utils.StorageType.local);
+    }
+
+    get ThemeNo(): number {
+        var storageItem: Utils.StorageItem = Utils.Storage.get("ColorTheme", Utils.StorageType.local);
+        if (storageItem) return storageItem.value;
+    }
+
+    set ThemeNo(value: number) {
+        Utils.Storage.set("ColorTheme", value, this.Config.StorageTime, Utils.StorageType.local);
+    }
+
+    get ShowTutorial(): boolean {
+        var storageItem: Utils.StorageItem = Utils.Storage.get("ShowTutorial", Utils.StorageType.local);
+        if (storageItem) return storageItem.value;
+    }
+
+    set ShowTutorial(value: boolean) {
+        Utils.Storage.set("ShowTutorial", value, this.Config.StorageTime, Utils.StorageType.local);
     }
 
     constructor(config: string, l10n: string) {
@@ -171,6 +191,9 @@ export default class App implements IApp{
             this.Resize();
         };
 
+        // INITIALISE AUDIO //
+        this.Audio.Init();
+
         // LOAD FONTS AND SETUP CALLBACK //
         this._FontsLoaded = 0;
 
@@ -184,33 +207,20 @@ export default class App implements IApp{
             this.FontsNotLoaded();
         }, 3020);
 
-        // CREATE OPERATIONS MANAGERS //
+        // CREATE MANAGERS //
         this.OperationManager = new OperationManager();
         this.OperationManager.MaxOperations = this.Config.MaxOperations;
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
-
-        // INITIALISE AUDIO //
-        this.Audio.Init();
-
-        // REGISTER COMMAND HANDLERS //
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.MOVE_BLOCK, MoveBlockCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE, SaveCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVEAS, SaveAsCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.LOAD, LoadCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.UNDO, UndoCommandHandler.prototype));
-        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.REDO, RedoCommandHandler.prototype));
-
-        // CREATE INPUT MANAGERS //
         this.TypingManager = new TypingManager();
         this.DragFileInputManager = new DragFileInputManager();
         this.PianoKeyboardManager = new PianoKeyboardManager();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
-
+        this.ColorManager = new ColorManager();
+        this.ThemeManager = new ThemeManager();
         this.FocusManager = new FocusManager();
+
         this.FocusManager.FocusChanged.on((s: any, e: FocusManagerEventArgs) => {
             if (!e.HasFocus){
                 this.TypingManager.ClearKeysDown();
@@ -223,6 +233,16 @@ export default class App implements IApp{
             }
         }, this);
 
+        // REGISTER COMMAND HANDLERS //
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.CREATE_BLOCK, CreateBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.DELETE_BLOCK, DeleteBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.MOVE_BLOCK, MoveBlockCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE, SaveCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.SAVE_AS, SaveAsCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.LOAD, LoadCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.UNDO, UndoCommandHandler.prototype));
+        this.ResourceManager.AddResource(new CommandHandlerFactory(Commands.REDO, RedoCommandHandler.prototype));
+
         // POOLED OBJECTS //
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
@@ -230,14 +250,25 @@ export default class App implements IApp{
         SoundCloudAPI.Initialize();
 
         // INITIALISE THEME //
-        this.ColorManager = new ColorManager();
-        this.ThemeManager = new ThemeManager();
         this.ThemeManager.ThemeChanged.on((s: any, e: ThemeChangeEventArgs) => {
-            this.Palette = e.Palette;
-            this.LoadReady();
-        }, this);
+            this.TrackVariable(GAVariables.THEME.toString(), e.Index.toString());
+            this.TrackEvent(CommandCategories.SETTINGS.toString(), Commands.CHANGE_THEME.toString());
 
-        this.ThemeManager.LoadTheme(0, true);
+            // if first load
+            var firstLoad: boolean = this.Palette.length === 0;
+
+            this.Palette = e.Palette;
+
+            if (firstLoad) {
+                this.LoadReady();
+            }
+        }, this);
+        var themeNo = this.ThemeNo;
+        if (!this.ThemeNo) {
+            themeNo = 0;
+        }
+
+        this.ThemeManager.LoadTheme(themeNo, true);
 
     }
 
@@ -277,8 +308,12 @@ export default class App implements IApp{
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
                 this.CompositionLoadComplete(data);
             }).catch((error: string) => {
+                this.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), this.CompositionId);
                 this.CompositionId = null;
                 console.error(error);
+                if (this.Message){
+                    this.Message(`Save couldn't be found.`);
+                }
             });
         }
 
@@ -287,7 +322,6 @@ export default class App implements IApp{
 
     // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateStage() {
-        console.log("create stage");
         this.Stage = new Stage();
         this.Stage.Init(this.Canvas);
         this.Stage.Drawn.on((s: any, time: number) => {
@@ -308,11 +342,7 @@ export default class App implements IApp{
             this.Blocks[i].Duplicable = true;
         }
 
-        // set initial zoom level/position
-        if (this._SaveFile.ColorThemeNo) {
-            this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false);
-        }
-
+        this.ThemeManager.LoadTheme(this._SaveFile.ColorThemeNo, false, true);
         this.ZoomLevel = this._SaveFile.ZoomLevel;
 
         // bring down volume and validate blocks //
@@ -322,6 +352,8 @@ export default class App implements IApp{
         this.Audio.ConnectionManager.Update();
 
         this.IsLoadingComposition = false;
+        //this.MainScene.CreateNew.ShowMessage = true;
+        this.MainScene.CreateNew.ShowMessage();
 
         this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }
@@ -349,22 +381,12 @@ export default class App implements IApp{
         document.body.appendChild(this.SubCanvas[i]);
     }
 
-    TrackEvent(category: string, action: string, label: string, value?: number): void{
-        if (isNaN(value)){
-            window.trackEvent(category, action, label);
-        } else {
-            window.trackEvent(category, action, label, value);
-        }
+    TrackEvent(category: string, action: string, label?: string): void{
+        window.trackEvent(category, action, label);
     }
 
-    /**
-     * @param {number} slot - 1-5 (5 slots per scope)
-     * @param {string} name - the name for the custom variable
-     * @param {number} value - the value of the custom variable
-     * @param {string} scope - visitor, session, page
-     */
-    TrackVariable(slot: number, name: string, value: string, scope: GA.Scope): void{
-        window.trackVariable(slot, name, value, scope);
+    TrackVariable(name: string, value: string): void{
+        window.trackVariable(name, value);
     }
 
     IsLocalhost(): boolean {

@@ -134,8 +134,13 @@ export class ThemeManager  {
     //-------------------------------------------------------------------------------------------
 
 
-    LoadTheme(theme,firstLoad) {
+    LoadTheme(theme,firstLoad,disableThemeStorage?) {
 
+        if (!disableThemeStorage) {
+            App.ThemeNo = theme;
+        }
+        
+        
         this.CurrentThemeNo = theme;
         this.CurrentTheme = this.Themes[theme];
         var selectedtheme = this.Themes[theme];
@@ -178,12 +183,21 @@ export class ThemeManager  {
 
             this.Loaded = true;
             if (firstLoad) {
-                this.ThemeChanged.raise(this, new ThemeChangeEventArgs(palette));
+                this.ThemeChanged.raise(this, new ThemeChangeEventArgs(theme, palette));
             } else {
                 for (i=0; i<palette.length; i++) {
                     this.ColorTo(App.Palette[i], this.NewPalette[i], 800);
                 }
             }
+
+
+            /*this.ThemeChanged.raise(this, new ThemeChangeEventArgs(theme, palette));
+
+            if (App.Stage){
+                for (i = 0; i < palette.length; i++) {
+                    this.ColorTo(App.Palette[i], this.NewPalette[i], 800);
+                }
+            }*/
         });
     }
 

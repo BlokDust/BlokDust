@@ -38,7 +38,6 @@ export class ZoomButtons extends DisplayObject {
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-
     Draw() {
         var units = App.Unit;
         var ctx = this.Ctx;
@@ -50,24 +49,29 @@ export class ZoomButtons extends DisplayObject {
 
         var zin = this._InPos;
         var zout = this._OutPos;
+        var im = 1;
+        var om = 1;
+        if (this.InRoll) {
+            im = 1.2;
+        }
+        if (this.OutRoll) {
+            om = 1.2;
+        }
         var diamond = 11;
-
 
         // IN //
         ctx.beginPath();
-        ctx.moveTo(zin.x, zin.y - (5*units));
-        ctx.lineTo(zin.x, zin.y + (5*units));
-        ctx.moveTo(zin.x - (5*units), zin.y);
-        ctx.lineTo(zin.x + (5*units), zin.y);
+        ctx.moveTo(zin.x, zin.y - ((5*im)*units));
+        ctx.lineTo(zin.x, zin.y + ((5*im)*units));
+        ctx.moveTo(zin.x - ((5*im)*units), zin.y);
+        ctx.lineTo(zin.x + ((5*im)*units), zin.y);
         ctx.stroke();
-
 
         // OUT //
         ctx.beginPath();
-        ctx.moveTo(zout.x - (5*units), zout.y);
-        ctx.lineTo(zout.x + (5*units), zout.y);
+        ctx.moveTo(zout.x - ((5*om)*units), zout.y);
+        ctx.lineTo(zout.x + ((5*om)*units), zout.y);
         ctx.stroke();
-
 
         ctx.lineWidth = 1;
 
@@ -79,7 +83,7 @@ export class ZoomButtons extends DisplayObject {
         ctx.closePath();
         ctx.stroke();
 
-        // ROLLOVERS //
+        /*// ROLLOVERS //
         if (this.InRoll) {
             ctx.beginPath();
             ctx.moveTo(zin.x - (diamond*units), zin.y);
@@ -97,7 +101,7 @@ export class ZoomButtons extends DisplayObject {
             ctx.lineTo(zout.x, zout.y + (diamond*units));
             ctx.closePath();
             ctx.stroke();
-        }
+        }*/
 
         if (this.ZoomAlpha>0) {
             ctx.globalAlpha = this.ZoomAlpha;
@@ -107,16 +111,12 @@ export class ZoomButtons extends DisplayObject {
             ctx.fillText(string,50*units,App.Height - (50*units));
         }
 
-
-
         ctx.globalAlpha = 1;
-
     }
 
     //-------------------------------------------------------------------------------------------
     //  TWEEN
     //-------------------------------------------------------------------------------------------
-
 
     DelayTo(panel,destination,t,delay,v){
 
@@ -144,11 +144,9 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
-
 
     MouseMove(point) {
         this.HitTests(point);
@@ -164,7 +162,26 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-    HitTests(point) {
+    MouseWheel(e: MouseWheelEvent): void {
+
+        // disabling this for now, is just annoying - experiment in future with it having a sensitivity threshold and zooming just one level per gesture
+
+        /*var delta = 0;
+
+        if (e.wheelDelta !== undefined) { // WebKit / Opera / Explorer 9
+            delta = e.wheelDelta;
+        } else if (e.detail !== undefined) { // Firefox
+            delta = -e.detail;
+        }
+
+        if (delta > 0) {
+            this.ZoomIn();
+        } else if (delta < 0) {
+            this.ZoomOut();
+        }*/
+    }
+
+    HitTests(point): void {
         var units = App.Unit;
         var zin = this._InPos;
         var zout = this._OutPos;
@@ -174,8 +191,8 @@ export class ZoomButtons extends DisplayObject {
         this.OutRoll = Dimensions.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
     }
 
-    ZoomIn() {
-        if (this.CurrentSlot<this._ZoomSlots.length-1) {
+    ZoomIn(): void {
+        if (this.CurrentSlot < this._ZoomSlots.length-1) {
             App.MainScene.OptionsPanel.Close(); // todo: use an event
             this.CurrentSlot +=1;
             this.StopAllTweens();
@@ -185,8 +202,8 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-    ZoomOut() {
-        if (this.CurrentSlot>0) {
+    ZoomOut(): void {
+        if (this.CurrentSlot > 0) {
             App.MainScene.OptionsPanel.Close(); // todo: use an event
             this.CurrentSlot -=1;
             this.StopAllTweens();

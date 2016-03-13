@@ -12,7 +12,7 @@ export class SaveOperation<String> implements IOperation {
         this._JSON = new PostData(
             (compositionId) ? compositionId : "",
             json,
-            sessionId
+            (sessionId) ? sessionId : ""
         );
 
         this._LZMA = new LZMA("/lib/lzma/src/lzma_worker.js");
@@ -22,7 +22,9 @@ export class SaveOperation<String> implements IOperation {
 
         return new Promise((resolve) => {
 
-            this._LZMA.compress(data, 5,
+            var compressionLevel: number = 5;
+
+            this._LZMA.compress(data, compressionLevel,
                 function(result) {
                     resolve(result.toString());
                 },
@@ -38,18 +40,16 @@ export class SaveOperation<String> implements IOperation {
 
         return new Promise((resolve, reject) => {
 
-            //console.log(data);
-
             that.Compress(that._JSON.Data).then((compressed) => {
 
                 that._JSON.Data = compressed;
 
                 var data = JSON.stringify(that._JSON);
 
-                var protocol: string = (App.IsLocalhost()) ? 'http' : 'https';
+                var url: string = (App.IsLocalhost()) ? 'http://localhost:3000/api/save' : 'http://blokdust.com/api/save';
 
                 $.ajax(<JQueryAjaxSettings>{
-                    url: protocol + '://blokdust.io/api/anonymousblobs',
+                    url: url,
                     type: 'POST',
                     crossDomain: true,
                     dataType: 'json',

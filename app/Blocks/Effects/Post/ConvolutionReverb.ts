@@ -37,8 +37,8 @@ export class Convolver extends PostEffect {
         }
 
         this.Defaults = {
-            mix: 1,
-            track: '../Assets/ImpulseResponses/teufelsberg01.wav',
+            mix: 0.5,
+            track: 'http://files.blokdust.com/impulse-responses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
             user: 'BGXA',
             permalink: ''

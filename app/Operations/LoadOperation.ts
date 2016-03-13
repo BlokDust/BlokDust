@@ -35,8 +35,10 @@ export class LoadOperation<String> implements IOperation {
 
         return new Promise<string>((resolve, reject) => {
 
+            var url: string = 'http://files.blokdust.com/compositions/' + this._Id + '?t=' + Utils.Dates.GetTimeStamp();
+
             $.ajax(<JQueryAjaxSettings>{
-                url: 'http://static.blokdust.io/compositions/anonymous/' + this._Id,
+                url: url,
                 type: 'GET',
                 crossDomain: true,
                 dataType: 'text'

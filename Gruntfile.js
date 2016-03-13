@@ -87,6 +87,7 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/App.js',
                             '!<%= dirs.dist %>/config.json',
                             '!<%= dirs.dist %>/index.html',
+                            '!<%= dirs.dist %>/maintenance.html',
                             '!<%= dirs.dist %>/l10n.json',
                             '!<%= dirs.dist %>/styles.css',
                             '!<%= dirs.dist %>/require-config.js'
@@ -160,6 +161,16 @@ module.exports = function (grunt) {
                         to: ''
                     }
                 ]
+            },
+            php: {
+                src: ['<%= dirs.dist %>/index.html'],
+                overwrite: true,
+                replacements: [
+                    {
+                        from: '$title',
+                        to: '<?php if(isset($_GET["t"])){ echo \': \' . htmlentities($_GET["t"], ENT_QUOTES, \'UTF-8\');} ?>'
+                    }
+                ]
             }
         },
 
@@ -222,6 +233,12 @@ module.exports = function (grunt) {
                         expand: true,
                         cwd: '<%= dirs.app %>',
                         src: ['index.html'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['maintenance.html'],
                         dest: '<%= dirs.dist %>/'
                     },
                     {
@@ -308,20 +325,24 @@ module.exports = function (grunt) {
                 cmd: 'node app/lib/r.js/dist/r.js -o app.build.js'
                 // uncomment if you want to test an unminified dist build
                 //cmd: 'node app/lib/r.js/dist/r.js -o app.build.js optimize=none'
-            }
+            }//,
+            //dist: {
+            //    cmd: 'git subtree push --prefix dist origin dist'
+            //}
         },
 
         compress: {
             zip: {
                 options: {
-                    mode: "zip",
-                    archive: "<%= files.zip %>",
+                    mode: 'zip',
+                    archive: '<%= dirs.dist %>.zip',
                     level: 9
                 },
                 files: [
                     {
                         expand: true,
-                        src: ["<%= dirs.dist %>/**"]
+                        cwd: '<%= dirs.dist %>/',
+                        src: ['**']
                     }
                 ]
             }
@@ -379,15 +400,8 @@ module.exports = function (grunt) {
             'copy:dist',
             'exec:minify',
             'clean:minified',
-            'replace:minified'
-        );
-    });
-
-    grunt.registerTask('release', '', function() {
-
-        refresh();
-
-        grunt.task.run(
+            'replace:minified',
+            'replace:php',
             'compress:zip'
         );
     });

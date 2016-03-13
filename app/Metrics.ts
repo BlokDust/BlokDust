@@ -27,6 +27,7 @@ export class Metrics {
     public OptionsPoint: Point;
     public ItemsPerPage: number; // blocks per page in category display
     public Device: Device;
+    public HeaderHeight: number;
     private _DeviceZoom: number;
     private _ScreenDivision: number;
 
@@ -40,6 +41,7 @@ export class Metrics {
         this.ItemsPerPage = 6;
         this.Device = Device.desktop;
         this._DeviceZoom = 1;
+        this.HeaderHeight = 60;
     }
 
     Compute() {

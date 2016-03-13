@@ -184,5 +184,11 @@
       "Uninitialized": "SoundCloud API isn't connected. Check your internet connection, save & refresh the page.",
       "Unknown": "Something went wrong with SoundCloud. Check console for errors."
     }
+  },
+  "UI": {
+    "CreateNew": {
+      "Verify": "Clear the Stage?",
+      "NewMessage": "Begin your own BlokDust creation"
+    }
   }
 }

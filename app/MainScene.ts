@@ -46,7 +46,7 @@ declare var OptionTimeout: boolean; //TODO: better way than using global? Needs 
 
 export class MainScene extends DisplayObject{
 
-    private _Header: Header;
+    public Header: Header;
     private _IsPointerDown: boolean = false;
     private _PointerPoint: Point;
     private _RecorderPanel: RecorderPanel;
@@ -93,6 +93,10 @@ export class MainScene extends DisplayObject{
 
         App.PointerInputManager.MouseMove.on((s: any, e: MouseEvent) => {
             this.MouseMove(e);
+        }, this);
+
+        App.PointerInputManager.MouseWheel.on((s: any, e: MouseWheelEvent) => {
+            this.MouseWheel(e);
         }, this);
 
         App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
@@ -197,9 +201,7 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this._TrashCan);
         this._TrashCan.Init(this);
 
-        this.CreateNew = new CreateNew();
-        this.DisplayList.Add(this.CreateNew);
-        this.CreateNew.Init(this);
+
 
         this.Tutorial = new Tutorial();
         this.DisplayList.Add(this.Tutorial);
@@ -209,9 +211,13 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this.OptionsPanel);
         this.OptionsPanel.Init(this);
 
-        this._Header = new Header();
-        this.DisplayList.Add(this._Header);
-        this._Header.Init(this);
+        this.Header = new Header();
+        this.DisplayList.Add(this.Header);
+        this.Header.Init(this);
+
+        this.CreateNew = new CreateNew();
+        this.DisplayList.Add(this.CreateNew);
+        this.CreateNew.Init(this);
 
         this.SharePanel = new SharePanel();
         this.DisplayList.Add(this.SharePanel);
@@ -241,7 +247,6 @@ export class MainScene extends DisplayObject{
         super.Update();
     }
 
-
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
@@ -260,23 +265,26 @@ export class MainScene extends DisplayObject{
     //  INTERACTION
     //-------------------------------------------------------------------------------------------
 
-    // FIRST TOUCHES //
-    MouseDown(e: MouseEvent){
-        var position: Point = new Point(e.clientX, e.clientY);
 
+    // FIRST TOUCHES //
+    MouseDown(e: MouseEvent): void {
+        var position: Point = new Point(e.clientX, e.clientY);
         this._PointerDown(position);
     }
 
-    MouseUp(e: MouseEvent){
+    MouseUp(e: MouseEvent): void {
         var position: Point = new Point(e.clientX, e.clientY);
-
         this._PointerUp(position);
         this._CheckHover(position);
     }
 
-    MouseMove(e: MouseEvent){
+    MouseMove(e: MouseEvent): void {
         var position: Point = new Point(e.clientX, e.clientY);
         this._PointerMove(position);
+    }
+
+    MouseWheel(e: MouseWheelEvent): void {
+        this._MouseWheel(e);
     }
 
     TouchStart(e: any){
@@ -288,16 +296,15 @@ export class MainScene extends DisplayObject{
     TouchEnd(e: any){
         var touch = e.changedTouches[0]; // e.args.Device.GetTouchPoint(null);
         var point = new Point(touch.clientX, touch.clientY);
-
         this._PointerUp(point);
     }
 
     TouchMove(e: any){
         var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
         var point = new Point(touch.clientX, touch.clientY);
-
         this._PointerMove(point);
     }
+
 
     // AGNOSTIC EVENTS //
 
@@ -306,19 +313,19 @@ export class MainScene extends DisplayObject{
 
         this._IsPointerDown = true;
         this._PointerPoint = point;
-
         var UIInteraction: Boolean;
         var collision: Boolean;
 
         var tooltip = this._ToolTip;
         var zoom = this.ZoomButtons;
-        var header = this._Header;
+        var header = this.Header;
         var soundcloud = this.SoundcloudPanel;
         var share = this.SharePanel;
         var settings = this.SettingsPanel;
         var recorder = this._RecorderPanel;
         var options = this.OptionsPanel;
         var message = this.MessagePanel;
+        var create = this.CreateNew;
 
         // UI //
         UIInteraction = this._UIInteraction();
@@ -348,8 +355,13 @@ export class MainScene extends DisplayObject{
         }
 
         if (!share.Open && !settings.Open && !soundcloud.Open) {
-            header.MouseDown(point);
 
+            create.MouseDown(point);
+            if (create.Hover) {
+                return;
+            }
+
+            header.MouseDown(point);
             if (header.MenuOver) {
                 return;
             }
@@ -398,7 +410,6 @@ export class MainScene extends DisplayObject{
         if (this.IsDraggingABlock) {
             var blockDelete = this._TrashCan.MouseUp();
         }
-
         this.IsDraggingABlock = false;
 
         if (!blockDelete) {
@@ -427,7 +438,7 @@ export class MainScene extends DisplayObject{
          else if (this.SettingsPanel.Open) {
             this.SettingsPanel.MouseUp(point);
         } else {
-            this._Header.MouseUp();
+            this.Header.MouseUp();
 
             if (this.OptionsPanel.Scale === 1) {
                 this.OptionsPanel.MouseUp();
@@ -473,11 +484,16 @@ export class MainScene extends DisplayObject{
         if (this.MessagePanel.Open) {
             this.MessagePanel.MouseMove(point);
         }
-        this._Header.MouseMove(point);
+        this.Header.MouseMove(point);
         this._RecorderPanel.MouseMove(point);
+        this.CreateNew.MouseMove(point);
         this.ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
         this.MainSceneDragger.MouseMove(point);
+    }
+
+    private _MouseWheel(e: MouseWheelEvent): void {
+        this.ZoomButtons.MouseWheel(e);
     }
 
     // PROXIMITY CHECK //
@@ -550,7 +566,6 @@ export class MainScene extends DisplayObject{
 
         // CLOSE OPTIONS IF NO BLOCK CLICKED //
         this.OptionsPanel.Close();
-
         return false;
     }
 
@@ -620,15 +635,16 @@ export class MainScene extends DisplayObject{
     private _UIInteraction() {
 
         var zoom = this.ZoomButtons;
-        var header = this._Header;
+        var header = this.Header;
         var share = this.SharePanel;
         var settings = this.SettingsPanel;
         var soundcloud = this.SoundcloudPanel;
         var recorder = this._RecorderPanel;
         var options = this.OptionsPanel;
         var message = this.MessagePanel;
+        var create = this.CreateNew;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || message.Hover || (options.Scale===1 && options.Hover)) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || message.Hover || create.Hover || (options.Scale===1 && options.Hover)) {
             console.log("UI INTERACTION");
             return true;
         }
@@ -670,6 +686,7 @@ export class MainScene extends DisplayObject{
         this._ValidateBlocks();
         this._CheckProximity();
         this.ConnectionLines.UpdateList();
+        this.CreateNew.CheckState();
     }
 
     _ValidateBlocks() {
@@ -733,6 +750,7 @@ export class MainScene extends DisplayObject{
         }
 
         this.ZoomButtons.UpdateSlot(e.SaveFile.ZoomLevel);
+        this.SharePanel.Reset();
 
         App.Metrics.UpdateGridScale();
 
@@ -757,9 +775,55 @@ export class MainScene extends DisplayObject{
         this.SelectedBlock = null;
     }
 
+    ResetScene() {
+
+        // delete all blocks //
+        var blockList = [];
+        var i;
+        for (i=0; i<App.Blocks.length; i++) {
+            blockList.push(App.Blocks[i]);
+        }
+        for (i=0; i<blockList.length; i++) {
+            this.SelectedBlock = blockList[i];
+            this.BlocksContainer.DisplayList.Remove(this.SelectedBlock);
+            App.Blocks.remove(this.SelectedBlock); // TODO: DisplayList has capitalised Remove function, array has lowercase remove function - make both alike?
+            this.SelectedBlock.Stop();
+            this.SelectedBlock.Dispose();
+        }
+
+        // reset zoom & drag //
+        this.SelectedBlock = null;
+        App.DragOffset.x = 0;
+        App.DragOffset.y = 0;
+        this.ZoomButtons.CurrentSlot = 2;
+        this.MainSceneDragger.Destination = new Point(App.DragOffset.x,App.DragOffset.y);
+        App.ZoomLevel = 1;
+        App.Metrics.UpdateGridScale();
+
+        // reset URL //
+        document.title = "BlokDust";
+        var currentUrl = window.location.href;
+        var newUrl = currentUrl.split('?');
+        if (newUrl.length>1) {
+            window.history.pushState({html: "Reset"}, "BlokDust", ""+newUrl[0]);
+            window.onpopstate = function(){
+                //if(window.history.state !== null){
+                    window.location.reload();
+                //}
+            }
+        }
+
+        // reset session //
+        App.CompositionId = null;
+        App.SessionId = null;
+        this.SharePanel.Reset();
+
+        this._Invalidate();
+    }
+
     Resize(): void {
         this.OptionsPanel.Close();
-        this._Header.Populate(this._Header.MenuJson);
+        this.Header.Populate(this.Header.MenuJson);
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);
     }
 }

@@ -6,4 +6,4 @@ app/lib
 .DS_Store
 npm-debug.log
 dist
-releases
+dist.zip

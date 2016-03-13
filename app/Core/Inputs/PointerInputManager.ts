@@ -6,6 +6,7 @@ export class PointerInputManager {
     MouseDown = new nullstone.Event<MouseEvent>();
     MouseUp = new nullstone.Event<MouseEvent>();
     MouseMove = new nullstone.Event<MouseEvent>();
+    MouseWheel = new nullstone.Event<MouseEvent>();
 
     TouchStart = new nullstone.Event<TouchEvent>();
     TouchEnd = new nullstone.Event<TouchEvent>();
@@ -23,6 +24,10 @@ export class PointerInputManager {
 
         this.OnMouseMove = this.OnMouseMove.bind(this);
         document.addEventListener('mousemove', this.OnMouseMove);
+
+        this.OnMouseWheel = this.OnMouseWheel.bind(this);
+        document.addEventListener('mousewheel', this.OnMouseWheel);
+        document.addEventListener('DOMMouseScroll', this.OnMouseWheel);
 
         this.OnTouchStart = this.OnTouchStart.bind(this);
         document.addEventListener('touchstart', this.OnTouchStart);
@@ -65,5 +70,11 @@ export class PointerInputManager {
     OnTouchMove(e: TouchEvent){
         e.preventDefault();
         this.TouchMove.raise(this, e);
+    }
+
+    OnMouseWheel(e: MouseWheelEvent): void {
+        e.preventDefault();
+        e.stopPropagation();
+        this.MouseWheel.raise(this, e);
     }
 }

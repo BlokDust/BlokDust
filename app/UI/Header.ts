@@ -16,11 +16,11 @@ export class Header extends DisplayObject {
     private _LeftOver: boolean;
     private _MenuCols: number[];
     private _RightOver: boolean;
-    private _Rows: number;
     private _SelectedCategory: number;
     private _SettingsOver: boolean;
     private _ShareOver: boolean;
     private _Units: number;
+    public CreateNewMargin: number;
     public DropDown: number;
     public DropDownHeight: number;
     public Height: number;
@@ -30,14 +30,15 @@ export class Header extends DisplayObject {
     public MenuItems: MenuCategory[] = [];
     public MenuJson;
     public MenuOver: boolean;
+    public Rows: number;
     public Tweens: any[];
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
 
         this._Units = 1.7;
-        this.Height = 60;
-        this._Rows = 1;
+        this.Height = App.Metrics.HeaderHeight;
+        this.Rows = 1;
         this.MenuItems = [];
         this.ItemsPerPage = App.Metrics.ItemsPerPage;
         this.DropDownHeight = (App.Width / (this.ItemsPerPage + 1)) / App.Unit;
@@ -45,6 +46,7 @@ export class Header extends DisplayObject {
         this._SelectedCategory = 0;
         this._MenuCols = App.ThemeManager.MenuOrder;
         this.Margin = 0;
+        this.CreateNewMargin = 0;
 
         this._LeftOver = false;
         this._RightOver = false;
@@ -65,14 +67,15 @@ export class Header extends DisplayObject {
         var dataType = units*10;
         var gutter = 60;
         var menuCats = [];
-        this._Rows = 1;
+        this.Rows = 1;
 
         if (App.Metrics.Device === Device.tablet) {
             gutter = 40;
+            this.Rows = 2;
         }
 
         if (App.Metrics.Device === Device.mobile) {
-            this._Rows = 2;
+            this.Rows = 2;
         }
 
         this.ItemsPerPage = App.Metrics.ItemsPerPage;
@@ -95,7 +98,7 @@ export class Header extends DisplayObject {
 
         // start x for positioning //
         var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
-        var rowOffset = ((this._Rows-1)*this.Height)*units;
+        var rowOffset = ((this.Rows-1)*this.Height)*units;
 
         // POPULATE MENU //
         for (var i=0; i<n; i++) {
@@ -140,7 +143,7 @@ export class Header extends DisplayObject {
         var headerType = Math.round(units*28);
         var thisHeight = Math.round(this.Height*units);
         var dropDown = Math.round(this.DropDown*units);
-        var rowOffset = ((this._Rows-1)*this.Height)*units;
+        var rowOffset = ((this.Rows-1)*this.Height)*units;
 
         // BG //
         App.FillColor(this.Ctx,App.Palette[2]);
@@ -155,12 +158,12 @@ export class Header extends DisplayObject {
         App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
         this.Ctx.font = "200 " + headerType + "px Dosis";
 
-        if (App.Metrics.Device === Device.mobile) {
+        if (this.Rows>1) {
             this.Ctx.textAlign = "center";
             this.Ctx.fillText("BLOKDUST", App.Width*0.5, (thisHeight * 0.5) + (headerType * 0.38));
         } else {
             this.Ctx.textAlign = "left";
-            this.Ctx.fillText("BLOKDUST", 20 * units, (thisHeight * 0.5) + (headerType * 0.38));
+            this.Ctx.fillText("BLOKDUST", (20 + this.CreateNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38));
         }
 
         // DIVIDERS //
@@ -175,7 +178,7 @@ export class Header extends DisplayObject {
             this.Ctx.stroke();
         }
 
-        if (App.Metrics.Device === Device.mobile) {
+        if (this.Rows>1) {
             this.Ctx.beginPath();
             this.Ctx.moveTo(20*units,thisHeight);
             this.Ctx.lineTo(this.DrawTo.Width-(20*units),thisHeight);
@@ -522,7 +525,7 @@ export class Header extends DisplayObject {
     HitTests(point) {
         var units = App.Unit;
         var grd = App.GridSize;
-        var rowOffset = ((this._Rows-1)*this.Height)*units;
+        var rowOffset = ((this.Rows-1)*this.Height)*units;
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {

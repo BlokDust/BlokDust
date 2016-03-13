@@ -20,8 +20,8 @@ export class ParticleEmitter extends PowerSource {
 
         this.Defaults = {
             angle: -90,
-            speed: 5,
-            rate: 40,
+            speed: 3,
+            rate: 80,
             range: 600,
             selfPoweredMode: false
         };
