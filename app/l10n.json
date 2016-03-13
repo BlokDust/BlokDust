@@ -144,7 +144,7 @@
         },
         "TogglePower": {
           "name": "Toggle Power",
-          "description": "When 'on' provides energy for sources, particle emitters & lasers."
+          "description": "When 'on', provides energy for sources, particle emitters & lasers."
         },
         "Void": {
           "name": "Void",

@@ -15,7 +15,7 @@ import {Granular} from './Blocks/Sources/Granular';
 import {Microphone} from './Blocks/Sources/Microphone';
 import {Noise} from './Blocks/Sources/Noise';
 import {Recorder} from './Blocks/Sources/Recorder';
-import {Sampler} from './Blocks/Sources/Sampler';
+//import {Sampler} from './Blocks/Sources/Sampler';
 import {Soundcloud} from './Blocks/Sources/Soundcloud';
 import {ToneSource} from './Blocks/Sources/ToneSource';
 import {WaveGen} from './Blocks/Sources/WaveGen';
@@ -62,7 +62,7 @@ export class BlockCreator {
     public Microphone = Microphone;
     public Noise = Noise;
     public Recorder = Recorder;
-    public Sampler = Sampler;
+    //public Sampler = Sampler;
     public Soundcloud = Soundcloud;
     public ToneSource = ToneSource;
     public WaveGen = WaveGen;
@@ -127,11 +127,11 @@ export class BlockCreator {
                         "id": Soundcloud,
                         "description": App.L10n.Blocks.Source.Blocks.Soundcloud.description
                     },
-                    {
-                        "name": App.L10n.Blocks.Source.Blocks.Sampler.name,
-                        "id": Sampler,
-                        "description": App.L10n.Blocks.Source.Blocks.Sampler.description
-                    },
+                    //{
+                    //    "name": App.L10n.Blocks.Source.Blocks.Sampler.name,
+                    //    "id": Sampler,
+                    //    "description": App.L10n.Blocks.Source.Blocks.Sampler.description
+                    //},
                     {
                         "name": App.L10n.Blocks.Source.Blocks.Granular.name,
                         "id": Granular,
