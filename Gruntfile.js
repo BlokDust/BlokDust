@@ -87,6 +87,7 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/App.js',
                             '!<%= dirs.dist %>/config.json',
                             '!<%= dirs.dist %>/index.html',
+                            '!<%= dirs.dist %>/maintenance.html',
                             '!<%= dirs.dist %>/l10n.json',
                             '!<%= dirs.dist %>/styles.css',
                             '!<%= dirs.dist %>/require-config.js'
@@ -232,6 +233,12 @@ module.exports = function (grunt) {
                         expand: true,
                         cwd: '<%= dirs.app %>',
                         src: ['index.html'],
+                        dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>',
+                        src: ['maintenance.html'],
                         dest: '<%= dirs.dist %>/'
                     },
                     {
