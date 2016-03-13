@@ -15,7 +15,7 @@ import {Commands} from './Commands';
 import {CompositionLoadedEventArgs} from "./CompositionLoadedEventArgs";
 import {CreateBlockCommandHandler} from './CommandHandlers/CreateBlockCommandHandler';
 import {DeleteBlockCommandHandler} from './CommandHandlers/DeleteBlockCommandHandler';
-import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
+//import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {Effect} from './Blocks/Effect';
 import {FocusManagerEventArgs} from './Core/Inputs/FocusManagerEventArgs';
 import {FocusManager} from './Core/Inputs/FocusManager';
@@ -75,7 +75,7 @@ export default class App implements IApp{
     public CompositionId: string;
     public CompositionName: string;
     public Config: IConfig;
-    public DragFileInputManager: DragFileInputManager;
+    //public DragFileInputManager: DragFileInputManager;
     public DragOffset: Point = new Point(0, 0);
     public FocusManager: FocusManager;
     public GridSize: number;
@@ -213,7 +213,7 @@ export default class App implements IApp{
         this.ResourceManager = new ResourceManager();
         this.CommandManager = new CommandManager(this.ResourceManager);
         this.TypingManager = new TypingManager();
-        this.DragFileInputManager = new DragFileInputManager();
+        //this.DragFileInputManager = new DragFileInputManager();
         this.PianoKeyboardManager = new PianoKeyboardManager();
         this.CommandsInputManager = new CommandsInputManager(this.CommandManager);
         this.PointerInputManager = new PointerInputManager();
