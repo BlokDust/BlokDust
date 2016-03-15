@@ -4,6 +4,8 @@ BlokDust
 [![Build Status](https://travis-ci.org/BlokDust/BlokDust.svg)](https://travis-ci.org/BlokDust/BlokDust)
 
 
+This project is still currently in development but will be hosted [here](http://blokdust.com) in the near future.
+
 Clone the repository   
 `git clone https://github.com/BlokDust/BlokDust.git`
 
