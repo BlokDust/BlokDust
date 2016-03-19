@@ -311,9 +311,9 @@ export default class App implements IApp{
                 this.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), this.CompositionId);
                 this.CompositionId = null;
                 console.error(error);
-                if (this.Message){
+                /*if (this.Message){
                     this.Message(`Save couldn't be found.`);
-                }
+                }*/
             });
         }
 

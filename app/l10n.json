@@ -52,8 +52,8 @@
           "name": "Recorder",
           "description": "It can record the master output and then be used as a sample player."
         },
-        "WaveGen": {
-          "name": "WaveGen",
+        "SampleGen": {
+          "name": "SampleGen",
           "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
         }
       }

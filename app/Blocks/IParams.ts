@@ -49,7 +49,7 @@ interface SamplerParams extends IParams {
     permalink: string;
 }
 
-interface WaveGenParams extends IParams {
+interface SampleGenParams extends IParams {
     playbackRate: number;
     reverse: boolean;
     startPosition: number;

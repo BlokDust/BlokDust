@@ -620,10 +620,12 @@ export class SharePanel extends DisplayObject {
 
     }
 
-    MouseUp(point) {
+    MouseUp(point,isTouch?) {
         if (this._UrlSelecting) {
             //this.DeselectText();
-            this.SelectText("shareUrl");
+            if (!isTouch) {
+                this.SelectText("shareUrl");
+            }
         } else {
             this.DeselectText();
         }

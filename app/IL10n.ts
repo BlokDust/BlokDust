@@ -50,7 +50,7 @@ interface IBlockList {
     Tone: IBlockInfo;
     Void: IBlockInfo;
     Volume: IBlockInfo;
-    WaveGen: IBlockInfo;
+    SampleGen: IBlockInfo;
 }
 
 interface IBlockInfo {
