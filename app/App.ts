@@ -299,6 +299,8 @@ export default class App implements IApp{
 
     // IF LOADING A SHARE URL, GET THE DATA //
     LoadComposition() {
+        var that = this;
+
         this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
         this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
 
@@ -306,13 +308,13 @@ export default class App implements IApp{
             this.IsLoadingComposition = true;
 
             this.CommandManager.ExecuteCommand(Commands.LOAD, this.CompositionId).then((data) => {
-                this.CompositionLoadComplete(data);
+                that.CompositionLoadComplete(data);
             }).catch((error: string) => {
-                this.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), this.CompositionId);
-                this.CompositionId = null;
+                that.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), that.CompositionId);
+                that.CompositionId = null;
                 console.error(error);
-                if (this.Message){
-                    this.Message(`Save couldn't be found.`);
+                if (that.Message){
+                    that.Message(`Save couldn't be found.`);
                 }
             });
         }
