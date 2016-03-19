@@ -313,15 +313,10 @@ export default class App implements IApp{
                 that.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), that.CompositionId);
                 that.CompositionId = null;
                 console.error(error);
-<<<<<<< HEAD
-                if (that.Message){
-                    that.Message(`Save couldn't be found.`);
-                }
-=======
+
                 /*if (this.Message){
                     this.Message(`Save couldn't be found.`);
                 }*/
->>>>>>> f9117e54769b5f87f7d4eb9cb4012dfd18557b57
             });
         }
 

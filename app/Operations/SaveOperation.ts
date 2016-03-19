@@ -46,7 +46,7 @@ export class SaveOperation<String> implements IOperation {
 
                 var data = JSON.stringify(that._JSON);
 
-                var url: string = (App.IsLocalhost()) ? 'http://localhost:3000/api/save' : 'http://blokdust.com/api/save';
+                var url: string = (App.IsLocalhost()) ? 'http://37.139.17.172/api/save' : 'http://37.139.17.172/api/save';
 
                 $.ajax(<JQueryAjaxSettings>{
                     url: url,
