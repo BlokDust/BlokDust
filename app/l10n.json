@@ -52,8 +52,8 @@
           "name": "Recorder",
           "description": "It can record the master output and then be used as a sample player."
         },
-        "WaveGen": {
-          "name": "WaveGen",
+        "SampleGen": {
+          "name": "SampleGen",
           "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
         }
       }
@@ -144,7 +144,7 @@
         },
         "TogglePower": {
           "name": "Toggle Power",
-          "description": "When 'on' provides energy for sources, particle emitters & lasers."
+          "description": "When 'on', provides energy for sources, particle emitters & lasers."
         },
         "Void": {
           "name": "Void",
@@ -186,9 +186,14 @@
     }
   },
   "UI": {
+
     "CreateNew": {
       "Verify": "Clear the Stage?",
       "NewMessage": "Begin your own BlokDust creation"
+    },
+
+    "SharePanel": {
+      "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a SoundCloud block."
     }
   }
 }

@@ -123,35 +123,35 @@ export class MainScene extends DisplayObject{
 
         // FILE DRAGGING //
 
-        App.DragFileInputManager.Dropped.on((s: any, e: any) => {
-            e.stopPropagation();
-            e.preventDefault();
-            const b: Sampler = this.CreateBlockFromType(Sampler);
-
-            var files = e.dataTransfer.files; // FileList object.
-
-            App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
-                if (buffer) {
-                    //TODO: set the buffer of this newly created Sampler
-                    console.log(file.name + ' dropped');
-                }
-            });
-
-        }, this);
-
-        App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
-            console.log('file drag entered area');
-        }, this);
-
-        App.DragFileInputManager.DragMove.on((s: any, e: any) => {
-            e.stopPropagation();
-            e.preventDefault();
-            console.log('file drag over');
-        }, this);
-
-        App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
-            console.log('file left drag area');
-        }, this);
+        //App.DragFileInputManager.Dropped.on((s: any, e: any) => {
+        //    e.stopPropagation();
+        //    e.preventDefault();
+        //    const b: Sampler = this.CreateBlockFromType(Sampler);
+        //
+        //    var files = e.dataTransfer.files; // FileList object.
+        //
+        //    App.Audio.AudioFileManager.DecodeFileData(files, (file: any, buffer: AudioBuffer) => {
+        //        if (buffer) {
+        //            //TODO: set the buffer of this newly created Sampler
+        //            console.log(file.name + ' dropped');
+        //        }
+        //    });
+        //
+        //}, this);
+        //
+        //App.DragFileInputManager.DragEnter.on((s: any, e: any) => {
+        //    console.log('file drag entered area');
+        //}, this);
+        //
+        //App.DragFileInputManager.DragMove.on((s: any, e: any) => {
+        //    e.stopPropagation();
+        //    e.preventDefault();
+        //    console.log('file drag over');
+        //}, this);
+        //
+        //App.DragFileInputManager.DragLeave.on((s: any, e: any) => {
+        //    console.log('file left drag area');
+        //}, this);
 
         OptionTimeout = false; // todo: remove
 
@@ -296,7 +296,7 @@ export class MainScene extends DisplayObject{
     TouchEnd(e: any){
         var touch = e.changedTouches[0]; // e.args.Device.GetTouchPoint(null);
         var point = new Point(touch.clientX, touch.clientY);
-        this._PointerUp(point);
+        this._PointerUp(point,true);
     }
 
     TouchMove(e: any){
@@ -403,7 +403,7 @@ export class MainScene extends DisplayObject{
 
     }
 
-    private _PointerUp(point: Point) {
+    private _PointerUp(point: Point, isTouch?: boolean) {
         App.Metrics.ConvertToPixelRatioPoint(point);
         this._IsPointerDown = false;
 
@@ -433,7 +433,7 @@ export class MainScene extends DisplayObject{
 
         // UI //
         if (this.SharePanel.Open) {
-            this.SharePanel.MouseUp(point);
+            this.SharePanel.MouseUp(point,isTouch);
         }
          else if (this.SettingsPanel.Open) {
             this.SettingsPanel.MouseUp(point);

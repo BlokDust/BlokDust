@@ -7,7 +7,7 @@ import {BlockSprites} from "./Blocks/BlockSprites";
 import {ColorManager} from './Core/Visual/ColorManager';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
-import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
+//import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
 import {IConfig} from './IConfig';
@@ -43,7 +43,7 @@ export interface IApp {
     CompositionId: string;
     CompositionLoaded: nullstone.Event<nullstone.IEventArgs>;
     Config: IConfig;
-    DragFileInputManager: DragFileInputManager;
+    //DragFileInputManager: DragFileInputManager;
     DragOffset: Point;
     Effects: IEffect[];
     GridSize: number;
