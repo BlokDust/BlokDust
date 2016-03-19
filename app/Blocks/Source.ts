@@ -361,14 +361,18 @@ export class Source extends Block implements ISource {
 
         if (this.Sources[id].frequency) {
             // Oscillators
-            this.Sources[id].frequency.exponentialRampToValue(pitch, time);
+            //TODO: issue #249 setValueAtTime on Tone.js Param.js when using exponentialRampToValue
+            //this.Sources[id].frequency.exponentialRampToValue(pitch, time);
+            this.Sources[id].frequency.linearRampToValue(pitch, time);
 
         } else if (this.Sources[id].player) {
             // Samplers
             if ((<any>Tone).isSafari){
                 this.Sources[id].player.playbackRate = pitch / App.Config.BaseNote;
             } else {
-                this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+                //TODO: issue #249 setValueAtTime on Tone.js Param.js when using exponentialRampToValue
+                //this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+                this.Sources[id].player.playbackRate.linearRampToValue(pitch / App.Config.BaseNote, time);
             }
 
         } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
@@ -376,7 +380,9 @@ export class Source extends Block implements ISource {
             if ((<any>Tone).isSafari){
                 this.Sources[id].playbackRate = pitch / App.Config.BaseNote;
             } else {
-                this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+                //TODO: issue #249 setValueAtTime on Tone.js Param.js when using exponentialRampToValue
+                //this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
+                this.Sources[id].playbackRate.linearRampToValue(pitch / App.Config.BaseNote, time);
             }
         }
     }
