@@ -74,9 +74,14 @@ interface ISoundCloudErrors {
 
 interface UI {
     CreateNew: ICreateNew;
+    SharePanel: ISharePanel;
 }
 
 interface ICreateNew {
     Verify: string;
     NewMessage: string;
+}
+
+interface ISharePanel {
+    SaveWarning: string;
 }

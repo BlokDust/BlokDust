@@ -6,6 +6,7 @@ import {CommandManager} from '../Core/Commands/CommandManager';
 import {Commands} from './../Commands';
 import {IApp} from '../IApp';
 import {MainScene} from './../MainScene';
+import {Recorder} from './../Blocks/Sources/Recorder';
 
 declare var App: IApp;
 
@@ -25,6 +26,7 @@ export class SharePanel extends DisplayObject {
     private _Blink:number = 0;
     private _SessionId: string;
     private _Saving: boolean;
+    private _Warning: boolean;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -32,6 +34,7 @@ export class SharePanel extends DisplayObject {
         this.Open = false;
         this._FirstSession = true;
         this._Saving = false;
+        this._Warning = false;
         this._NameUrl = "";
         this.SessionURL = "";
         this._SessionId = "";
@@ -103,6 +106,18 @@ export class SharePanel extends DisplayObject {
 
     SetNameUrl(string) {
         this._NameUrl = "&t=" + encodeURI(this.Capitalise(string));
+    }
+
+    GetWarning() {
+        var warnBlocks = [];
+        for (var i = 0; i < App.Blocks.length; i++) {
+            var block:any = App.Blocks[i];
+
+            if (block instanceof Recorder) {
+                warnBlocks.push(block);
+            }
+        }
+        this._Warning = (warnBlocks.length > 0);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -215,12 +230,22 @@ export class SharePanel extends DisplayObject {
                 ctx.fillText("SKIP", this.OffsetX + (appWidth * 0.5) + (275 * units), centerY + (35 * units));
             }
 
+
             // SAVE MESSAGE //
             if (this._Saving) {
                 ctx.font = midType;
                 ctx.textAlign = "center";
                 ctx.fillText(this._CopyJson.saving.toUpperCase(), this.OffsetX + (appWidth * 0.5), centerY + (75 * units));
                 App.AnimationsLayer.DrawSprite(ctx,'loading',appWidth*0.5, centerY + (50 * units),16,true);
+            } else {
+
+                // WARNING MESSAGE //
+                if (this._Warning) {
+                    ctx.font = italicType;
+                    ctx.textAlign = "left";
+                    this.WordWrap(ctx, App.L10n.UI.SharePanel.SaveWarning, this.OffsetX + (appWidth * 0.5) - (210 * units), centerY + (75 * units), 14 * units, 420 * units);
+                }
+
             }
 
             // BACK ARROW //
@@ -500,6 +525,7 @@ export class SharePanel extends DisplayObject {
     OpenPanel() {
         this.Open = true;
         this.OffsetY = -App.Height;
+        this.GetWarning();
         var shareUrl = document.getElementById("shareUrl");
         shareUrl.style.display = "block";
         shareUrl.style.visibility = "true";
