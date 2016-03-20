@@ -787,7 +787,7 @@ export class MainScene extends DisplayObject{
             this.SelectedBlock = blockList[i];
             this.BlocksContainer.DisplayList.Remove(this.SelectedBlock);
             App.Blocks.remove(this.SelectedBlock); // TODO: DisplayList has capitalised Remove function, array has lowercase remove function - make both alike?
-            this.SelectedBlock.Stop();
+            //this.SelectedBlock.Stop(); //LP commented this out because if you have a keyboard and a source connected and call reset you get errors
             this.SelectedBlock.Dispose();
         }
 

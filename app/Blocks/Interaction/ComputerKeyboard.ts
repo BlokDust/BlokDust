@@ -50,6 +50,11 @@ export class ComputerKeyboard extends Keyboard {
 
     Dispose(){
         super.Dispose();
+        // This needs to disconnect first so that ResetScene can delete keyboard properly
+        App.Audio.ConnectionManager.Update();
+        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
+
         this.Params.octave = null;
         this.KeyboardCommands = null;
     }
