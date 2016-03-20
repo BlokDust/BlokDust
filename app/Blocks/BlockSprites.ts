@@ -750,7 +750,7 @@ export class BlockSprites {
 
                 break;
 
-            case App.L10n.Blocks.Source.Blocks.WaveGen.name.toLowerCase():
+            case App.L10n.Blocks.Source.Blocks.SampleGen.name.toLowerCase():
 
                 /*if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);

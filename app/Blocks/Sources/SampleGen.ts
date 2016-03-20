@@ -8,7 +8,7 @@ import {WaveVoice} from '../../WaveVoice';
 
 declare var App: IApp;
 
-export class WaveGen extends SamplerBase {
+export class SampleGen extends SamplerBase {
 
     private _WaveForm: number[];
     private _FirstRelease: boolean = true;
@@ -18,12 +18,12 @@ export class WaveGen extends SamplerBase {
     private _BufferData: Float32Array;
     private _WaveVoices: WaveVoice[];
     private _SeedLoad: boolean;
-    public Params: WaveGenParams;
-    public Defaults: WaveGenParams;
+    public Params: SampleGenParams;
+    public Defaults: SampleGenParams;
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = App.L10n.Blocks.Source.Blocks.WaveGen.name;
+        this.BlockName = App.L10n.Blocks.Source.Blocks.SampleGen.name;
 
         if (this.Params) {
             this._LoadFromShare = true;

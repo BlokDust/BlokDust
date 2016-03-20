@@ -18,7 +18,7 @@ import {Recorder} from './Blocks/Sources/Recorder';
 //import {Sampler} from './Blocks/Sources/Sampler';
 import {Soundcloud} from './Blocks/Sources/Soundcloud';
 import {ToneSource} from './Blocks/Sources/ToneSource';
-import {WaveGen} from './Blocks/Sources/WaveGen';
+import {SampleGen} from './Blocks/Sources/SampleGen';
 
 // EFFECTS BLOCKS //
 import {AutoWah} from 'Blocks/Effects/Post/AutoWah';
@@ -65,7 +65,7 @@ export class BlockCreator {
     //public Sampler = Sampler;
     public Soundcloud = Soundcloud;
     public ToneSource = ToneSource;
-    public WaveGen = WaveGen;
+    public WaveGen = SampleGen;
 
     // EFFECTS BLOCKS //
     public AutoWah = AutoWah;
@@ -143,9 +143,9 @@ export class BlockCreator {
                         "description": App.L10n.Blocks.Source.Blocks.Recorder.description
                     },
                     {
-                        "name": App.L10n.Blocks.Source.Blocks.WaveGen.name,
-                        "id": WaveGen,
-                        "description": App.L10n.Blocks.Source.Blocks.WaveGen.description
+                        "name": App.L10n.Blocks.Source.Blocks.SampleGen.name,
+                        "id": SampleGen,
+                        "description": App.L10n.Blocks.Source.Blocks.SampleGen.description
                     }
                 ]
             },

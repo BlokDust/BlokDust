@@ -353,14 +353,17 @@ export class CreateNew extends DisplayObject{
         var xOffset = this.IconOffset.x*((this.IconPos.x*units)*2);
         var yx = this.TickX*units;
         var nx = this.CrossX*units;
-        var panelOffset2 = this.PanelOffset2.y * (500*units);
-
         var header = App.MainScene.Header;
         var height = header.Height*units;
 
+        var panelOffset = this.PanelOffset.y * ((header.Height*2)*units);
+        var panelOffset2 = this.PanelOffset2.y * (500*units);
+
+
+
         this._RollOvers[0] = Dimensions.HitRect(((this.IconPos.x - 20)*units) + xOffset, (this.IconPos.y - 20)*units, 40*units, 40*units, point.x, point.y); // verify
-        this._RollOvers[1] = Dimensions.HitRect(yx - (20*units), height * (header.Rows+0.5) - (20*units), 40*units, 40*units, point.x, point.y); // y
-        this._RollOvers[2] = Dimensions.HitRect(nx - (20*units), height * (header.Rows+0.5) - (20*units), 40*units, 40*units, point.x, point.y); // n
+        this._RollOvers[1] = Dimensions.HitRect(yx - (20*units), (height * (header.Rows+0.5)) - (20*units) + panelOffset, 40*units, 40*units, point.x, point.y); // y
+        this._RollOvers[2] = Dimensions.HitRect(nx - (20*units), (height * (header.Rows+0.5)) - (20*units) + panelOffset, 40*units, 40*units, point.x, point.y); // n
         this._RollOvers[3] = Dimensions.HitRect((App.Width*0.5) - (this.MessagePos.x*units), (App.Height - ((this.MessagePos.y+20)*units)) + panelOffset2, (this.MessagePos.x*2)*units, 40*units, point.x, point.y); // message
         this._RollOvers[4] = Dimensions.HitRect((App.Width*0.5) + (this.MessagePos.x*units), (App.Height - ((this.MessagePos.y+31)*units)) + panelOffset2, 30*units, 30*units, point.x, point.y); // close
 

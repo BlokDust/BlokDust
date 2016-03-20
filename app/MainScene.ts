@@ -296,7 +296,7 @@ export class MainScene extends DisplayObject{
     TouchEnd(e: any){
         var touch = e.changedTouches[0]; // e.args.Device.GetTouchPoint(null);
         var point = new Point(touch.clientX, touch.clientY);
-        this._PointerUp(point);
+        this._PointerUp(point,true);
     }
 
     TouchMove(e: any){
@@ -403,7 +403,7 @@ export class MainScene extends DisplayObject{
 
     }
 
-    private _PointerUp(point: Point) {
+    private _PointerUp(point: Point, isTouch?: boolean) {
         App.Metrics.ConvertToPixelRatioPoint(point);
         this._IsPointerDown = false;
 
@@ -433,7 +433,7 @@ export class MainScene extends DisplayObject{
 
         // UI //
         if (this.SharePanel.Open) {
-            this.SharePanel.MouseUp(point);
+            this.SharePanel.MouseUp(point,isTouch);
         }
          else if (this.SettingsPanel.Open) {
             this.SettingsPanel.MouseUp(point);
