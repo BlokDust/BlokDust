@@ -1,4 +1,7 @@
+import {IApp} from '../../IApp';
 import {KeyboardInputManager} from './KeyboardInputManager';
+
+declare var App: IApp;
 
 export class TypingManager extends KeyboardInputManager {
 
@@ -59,9 +62,11 @@ export class TypingManager extends KeyboardInputManager {
         this.IsEnabled = true;
         this._Panel = panel;
         this._String = panel.GetString();
+        App.PianoKeyboardManager.IsEnabled = false;
     }
 
     Disable() {
         this.IsEnabled = false;
+        App.PianoKeyboardManager.IsEnabled = true;
     }
 }

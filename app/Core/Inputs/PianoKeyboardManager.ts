@@ -1,6 +1,9 @@
+import {IApp} from '../../IApp';
 import {KeyboardInputManager} from './KeyboardInputManager';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
+
+declare var App: IApp;
 
 export class PianoKeyboardManager extends KeyboardInputManager {
 
@@ -115,6 +118,19 @@ export class PianoKeyboardManager extends KeyboardInputManager {
             219: this.PianoKeyboardMap['BracketLeft'],
             221: this.PianoKeyboardMap['BracketRight'],
         };
+    }
+
+    set IsEnabled(val: boolean) {
+        if (val === false) {
+            App.Sources.forEach((s) => {
+                s.TriggerRelease('all');
+            })
+        }
+        this._isEnabled = val;
+    }
+
+    get IsEnabled(): boolean {
+        return this._isEnabled;
     }
 
     KeyboardDown(e) {

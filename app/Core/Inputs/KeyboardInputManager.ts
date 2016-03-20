@@ -1,12 +1,13 @@
-import {Commands} from '../../Commands';
 import {CommandManager} from '../Commands/CommandManager';
+import {Commands} from '../../Commands';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
+
 
 export class KeyboardInputManager {
 
     public KeysDown: any;
-    public IsEnabled: boolean = true;
+    protected _isEnabled: boolean = true;
 
     KeyDownChange = new nullstone.Event<KeyDownEventArgs>();
     KeyUpChange = new nullstone.Event<KeyUpEventArgs>();
@@ -24,6 +25,14 @@ export class KeyboardInputManager {
             if (!this.IsEnabled) return;
             this.KeyboardUp(e);
         });
+    }
+
+    set IsEnabled(val: boolean) {
+        this._isEnabled = val;
+    }
+
+    get IsEnabled(): boolean {
+        return this._isEnabled;
     }
 
     ClearKeysDown() {
