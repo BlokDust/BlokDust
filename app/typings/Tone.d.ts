@@ -1,8 +1,3 @@
-// Type definitions for TONE.JS
-// Project: https://github.com/TONEnoTONE/Tone.js
-// Definitions by: Luke Phillips <https://github.com/lukephills>
-// Definitions: https://github.com/borisyankov/DefinitelyTyped
-
 interface ToneFactory {
     new(inputs?: number, outputs?: number): Tone
 }

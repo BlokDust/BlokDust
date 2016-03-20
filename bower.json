@@ -13,7 +13,7 @@
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
     "r.js": "~2.1.16",
     "RecorderJS": "lukephills/Recorderjs#master",
-    "tone": "BlokDust/Tone.js#dev",
+    "tone": "BlokDust/Tone.js#master",
     "tweenjs": "~16.3.1",
     "utils": "edsilv/utils",
     "text": "requirejs-text#~2.0.14"
