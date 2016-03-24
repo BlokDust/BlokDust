@@ -195,7 +195,7 @@ export class Tutorial extends DisplayObject{
             this.UpdateHotspots();
         }
         if (this.SplashOpen) {
-            this.AnimateButton();
+            //this.AnimateButton();
         }
     }
 
@@ -287,7 +287,9 @@ export class Tutorial extends DisplayObject{
 
             // TOUR //
             ctx.beginPath();
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY);
+
+            // SINGLE //
+            /*ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY);
             ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((14*ym)*units), iconY + (((2*ym)*units)*this.AnimatePolarity));
 
             ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
@@ -296,7 +298,50 @@ export class Tutorial extends DisplayObject{
             ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((12*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
 
             ctx.moveTo((App.Width*0.5) - padding + splashOffset + ((14*ym)*units), iconY - (((2*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY);
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY);*/
+
+
+            // DOUBLE //
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((14*ym)*units), iconY + (((6*ym)*units)*this.AnimatePolarity));
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY + (((8*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((12*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((12*ym)*units), iconY);
+
+            /*ctx.moveTo((App.Width*0.5) - padding + splashOffset + ((14*ym)*units), iconY + (((2*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
+
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((14*ym)*units), iconY - (((2*ym)*units)*this.AnimatePolarity));*/
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY);
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((12*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((12*ym)*units), iconY - (((8*ym)*units)*this.AnimatePolarity));
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset + ((14*ym)*units), iconY - (((6*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
+
+
+            // MOUNTAIN //
+            /*ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY);
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY - (((8*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((4*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((20*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY + (((8*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY + (((8*ym)*units)*this.AnimatePolarity));
+
+            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((12*ym)*units)*this.AnimatePolarity));
+            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((20*ym)*units), iconY);
+*/
+
 
 
             // SKIP //
@@ -332,7 +377,9 @@ export class Tutorial extends DisplayObject{
             // TASK NUMBER //
             ctx.textAlign = "left";
             ctx.font = headerType;
-            ctx.fillText("0"+this.CurrentScene+"/0"+(this.TotalScenes), x, y - (20*units));
+            var numberText = "0"+this.CurrentScene+"/0"+(this.TotalScenes);
+            var numberWidth = ctx.measureText(numberText).width;
+            ctx.fillText(numberText, x, y - (20*units));
 
 
             // UNDERLINE //
@@ -351,6 +398,9 @@ export class Tutorial extends DisplayObject{
              ctx.moveTo(App.Width - (35*units), y - (20*units));
              ctx.lineTo(App.Width - (20*units), y - (35*units));
              ctx.stroke();*/
+
+
+
 
 
 
@@ -390,6 +440,17 @@ export class Tutorial extends DisplayObject{
                 ctx.lineTo(x + (20*units) + this._DoneBtnWidth + roll, y + btnY + (20*units) + introOffset + taskOffset + roll);
                 ctx.lineTo(x - roll, y + btnY + (20*units) + introOffset + taskOffset + roll);
                 ctx.closePath();
+                ctx.stroke();
+
+                // TOUR COMPLETE //
+                //ctx.fillText(this.Text.TourComplete, x + numberWidth + (10*units), y - (20*units));
+                // TICK //
+                var yx = x + numberWidth + (20*units);
+                var yy = y - (28*units);
+                ctx.beginPath();
+                ctx.moveTo(yx - (12*units), yy);
+                ctx.lineTo(yx - (4*units), yy + (8*units));
+                ctx.lineTo(yx + (12*units), yy - (8*units));
                 ctx.stroke();
             }
 

@@ -207,7 +207,7 @@
 
         {
           "Intro": "SOURCE blocks generate sound, and you can connect EFFECT & INTERACTION blocks to them.",
-          "Task": "From the INTERACTION category, create a COMPUTER KEYBOARD block. Connect it to your TONE block by simply dragging it close by - a connection line will appear."
+          "Task": "From the INTERACTION category, create a COMPUTER KEYBOARD block. Connect it to your TONE block by simply dragging it nearby until a connection line appears."
         },
 
         {
@@ -239,6 +239,7 @@
 
       "SkipButton": "Skip Tour",
       "DoneButton": "Okay Done",
+      "TourComplete": "Tour Complete",
       "Splash1": {
         "Message": "Welcome to BlokDust.",
         "Y": "Take the Tour",

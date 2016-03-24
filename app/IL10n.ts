@@ -91,6 +91,7 @@ interface ITutorial {
     Scenes: ISceneItem[];
     SkipButton: string;
     DoneButton: string;
+    TourComplete: string;
     Splash1: ISplash;
     Splash2: ISplash;
 }
