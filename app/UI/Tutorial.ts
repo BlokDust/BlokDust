@@ -657,7 +657,7 @@ export class Tutorial extends DisplayObject{
                 break;
 
             case 6:
-                if (!this.WatchedBlocks[7]) {
+                if (!this.WatchedBlocks[6]) {
                     if (header.DropDown && header.MenuItems[2].Selected) {
                         if (header.MenuItems[2].CurrentPage === 0) {
                             itemX = this.GutterCheck(1,itemWidth,header.MenuItems[2],units);

@@ -169,6 +169,7 @@ export class Header extends DisplayObject {
         // DIVIDERS //
         App.StrokeColor(this.Ctx,App.Palette[1]);
         this.Ctx.globalAlpha = 1;
+        this.Ctx.lineWidth = 1;
 
         // Horizontal //
         if (dropDown>0) {
