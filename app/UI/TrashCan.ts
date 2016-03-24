@@ -28,7 +28,7 @@ export class TrashCan extends DisplayObject {
 
         App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
 
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(tx - ((11*s)*units), ty - ((11*s)*units)); // tl
         ctx.lineTo(tx + ((11*s)*units), ty - ((11*s)*units)); // tr

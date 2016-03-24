@@ -535,6 +535,7 @@ export class SharePanel extends DisplayObject {
 
     ClosePanel() {
         this._Saving = false;
+        this.DeselectText();
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
         App.TypingManager.Disable();
     }

@@ -121,7 +121,8 @@ export class StageDragger extends DisplayObject {
         //console.log(this.Destination);
     }
 
-    Jump(point: Point, to: Point) {
+    Jump(point: Point, to: Point, time?: number) {
+        time = time || 400;
         this.StopAllTweens();
         var blockX = (-point.x * App.GridSize);
         var blockY = (-point.y * App.GridSize);
@@ -132,7 +133,7 @@ export class StageDragger extends DisplayObject {
         var x = (blockX + (screenX/App.ZoomLevel))/App.Unit;
         var y = (blockY + (screenY/App.ZoomLevel))/App.Unit;
 
-        this.DelayTo(App,new Point(x,y),400,0,"DragOffset");
+        this.DelayTo(App,new Point(x,y),time,0,"DragOffset");
         //this.Destination = new Point(x,y);
         App.MainScene.ToolTipClose();
     }

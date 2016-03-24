@@ -1,7 +1,7 @@
 {
     "MaxOperations": 1,
     "PixelPaletteImagePath": [
-        "img/palette6.gif",
+        "img/modestereo.gif",
         "img/palette9.gif",
         "img/palette10.gif",
         "img/palette14.gif",
@@ -10,7 +10,7 @@
         "img/palette27.gif",
         "img/palette24.gif",
         "img/palette28.gif",
-        "img/palette19.gif",
+        "img/seacucumber.gif",
         "img/palette29.gif",
         "img/palette.gif"
     ],

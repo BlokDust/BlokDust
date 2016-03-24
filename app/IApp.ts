@@ -65,7 +65,7 @@ export interface IApp {
     ScaledGridSize: number;
     ScaledUnit: number;
     SessionId: string;
-    ShowTutorial: boolean;
+    SkipTutorial: boolean;
     Sources: ISource[];
     Stage: Stage;
     SubCanvas: HTMLCanvasElement[];

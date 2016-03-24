@@ -213,6 +213,17 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
+    ZoomReset(display?:boolean) {
+        display = display || false;
+        this.CurrentSlot = 2;
+        this.StopAllTweens();
+        this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
+        if (display) {
+            this.ZoomAlpha = 1;
+            this.DelayTo(this,0,500,700,"ZoomAlpha");
+        }
+    }
+
     Resize(): void {
         var units = App.Unit;
         this._InPos = new Point(30*units,App.Height - (30*units));

@@ -884,9 +884,9 @@ export class OptionsPanel extends DisplayObject {
             }
         }
 
-        if (this.Hover) {
+        //if (this.Hover) {
             this._DrawReady = true;
-        }
+        //}
     }
 
 

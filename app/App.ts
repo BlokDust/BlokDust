@@ -160,13 +160,13 @@ export default class App implements IApp{
         Utils.Storage.set("ColorTheme", value, this.Config.StorageTime, Utils.StorageType.local);
     }
 
-    get ShowTutorial(): boolean {
-        var storageItem: Utils.StorageItem = Utils.Storage.get("ShowTutorial", Utils.StorageType.local);
+    get SkipTutorial(): boolean {
+        var storageItem: Utils.StorageItem = Utils.Storage.get("SkipTutorial", Utils.StorageType.local);
         if (storageItem) return storageItem.value;
     }
 
-    set ShowTutorial(value: boolean) {
-        Utils.Storage.set("ShowTutorial", value, this.Config.StorageTime, Utils.StorageType.local);
+    set SkipTutorial(value: boolean) {
+        Utils.Storage.set("SkipTutorial", value, this.Config.StorageTime, Utils.StorageType.local);
     }
 
     constructor(config: string, l10n: string) {
@@ -355,8 +355,10 @@ export default class App implements IApp{
         this.Audio.ConnectionManager.Update();
 
         this.IsLoadingComposition = false;
-        //this.MainScene.CreateNew.ShowMessage = true;
-        this.MainScene.CreateNew.ShowMessage();
+        if (!this.SkipTutorial) {
+            this.MainScene.CreateNew.ShowMessage();
+        }
+
 
         this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }

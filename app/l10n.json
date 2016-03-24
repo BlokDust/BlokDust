@@ -185,6 +185,7 @@
       "Unknown": "Something went wrong with SoundCloud. Check console for errors."
     }
   },
+
   "UI": {
 
     "CreateNew": {
@@ -194,6 +195,60 @@
 
     "SharePanel": {
       "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a SoundCloud block."
+    },
+
+    "Tutorial": {
+      "Scenes": [
+
+        {
+          "Intro": "Let's get started by adding some blocks. You can create blocks by dragging them from the top menu.",
+          "Task": "Open up the SOURCE category, and create a TONE block."
+        },
+
+        {
+          "Intro": "SOURCE blocks generate sound, and you can connect EFFECT & INTERACTION blocks to them.",
+          "Task": "From the INTERACTION category, create a COMPUTER KEYBOARD block. Connect it to your TONE block by simply dragging it close by - a connection line will appear."
+        },
+
+        {
+          "Intro": "You’ve just made a basic interactive synth! Now you can use your computer’s keyboard to play your TONE block - give it a go.",
+          "Task": "Let's make it a bit more interesting, add a CHOPPER block from the EFFECT category and connect it."
+        },
+
+        {
+          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking - have a play.",
+          "Task": "Finally let’s look at POWER. We won’t need that COMPUTER KEYBOARD block you made, so delete it by dragging it into the trashcan."
+        },
+
+        {
+          "Intro": "Blocks from the POWER category allow you to come up with different ways of triggering sounds.",
+          "Task": "From the POWER category, create a PARTICLE EMITTER block and place it on the marker below your TONE block."
+        },
+
+        {
+          "Intro": "When powered, the PARTICLE EMITTER will fire energy particles at the TONE block, triggering sound as they hit.",
+          "Task": "From the POWER category again, create a POWER block and connect it to your PARTICLE EMITTER block."
+        },
+
+        {
+          "Intro": "Explore and experiment for yourself, or visit the BlokDust Guide for an in-depth Wiki and more tutorials. When you’ve made something cool, click SHARE to generate a unique URL to let others see what you’ve made!",
+          "Task": ""
+        }
+
+      ],
+
+      "SkipButton": "Skip the Tour",
+      "DoneButton": "Okay Done",
+      "Splash1": {
+        "Message": "Welcome to BlokDust.",
+        "Y": "Take the Tour",
+        "N": "Skip for Now"
+      },
+      "Splash2": {
+        "Message": "Welcome to the Tour.",
+        "Y": "Clear the Stage",
+        "N": "Skip for Now"
+      }
     }
   }
 }

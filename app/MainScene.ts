@@ -39,6 +39,7 @@ import {StageDragger as MainSceneDragger} from './UI/StageDragger';
 import {ToolTip} from './UI/ToolTip';
 import {TrashCan} from './UI/TrashCan';
 import {Tutorial} from './UI/Tutorial';
+import {TutorialHotspots} from './UI/TutorialHotspots';
 import {ZoomButtons} from './UI/ZoomButtons';
 
 declare var App: IApp;
@@ -69,6 +70,7 @@ export class MainScene extends DisplayObject{
     public SharePanel: SharePanel;
     public SoundcloudPanel: SoundcloudPanel;
     public Tutorial: Tutorial;
+    public TutorialHotspots: TutorialHotspots;
     public ZoomButtons: ZoomButtons;
 
     //-------------------------------------------------------------------------------------------
@@ -201,8 +203,6 @@ export class MainScene extends DisplayObject{
         this.DisplayList.Add(this._TrashCan);
         this._TrashCan.Init(this);
 
-
-
         this.Tutorial = new Tutorial();
         this.DisplayList.Add(this.Tutorial);
         this.Tutorial.Init(this);
@@ -218,6 +218,10 @@ export class MainScene extends DisplayObject{
         this.CreateNew = new CreateNew();
         this.DisplayList.Add(this.CreateNew);
         this.CreateNew.Init(this);
+
+        this.TutorialHotspots = new TutorialHotspots();
+        this.DisplayList.Add(this.TutorialHotspots);
+        this.TutorialHotspots.Init(this);
 
         this.SharePanel = new SharePanel();
         this.DisplayList.Add(this.SharePanel);
@@ -236,6 +240,12 @@ export class MainScene extends DisplayObject{
         this.MessagePanel.Init(this);
 
         this._Invalidate();
+
+        //console.log(App.Stage);
+
+        if(!App.CompositionId) {
+            this.Tutorial.CheckLaunch();
+        }
     }
 
     //-------------------------------------------------------------------------------------------
@@ -326,6 +336,7 @@ export class MainScene extends DisplayObject{
         var options = this.OptionsPanel;
         var message = this.MessagePanel;
         var create = this.CreateNew;
+        var tutorial = this.Tutorial;
 
         // UI //
         UIInteraction = this._UIInteraction();
@@ -356,6 +367,12 @@ export class MainScene extends DisplayObject{
 
         if (!share.Open && !settings.Open && !soundcloud.Open) {
 
+
+            if (tutorial.SplashOpen) {
+                tutorial.SplashMouseDown(point);
+                //return;
+            }
+
             create.MouseDown(point);
             if (create.Hover) {
                 return;
@@ -374,6 +391,13 @@ export class MainScene extends DisplayObject{
             if (options.Scale === 1) {
                 options.MouseDown(point.x,point.y); // to do : unsplit point
                 if (options.Hover) {
+                    return;
+                }
+            }
+
+            if (tutorial.Open) {
+                tutorial.MouseDown(point);
+                if (tutorial.Hover) {
                     return;
                 }
             }
@@ -400,6 +424,7 @@ export class MainScene extends DisplayObject{
         }
 
         this.ConnectionLines.UpdateList();
+
 
     }
 
@@ -487,6 +512,9 @@ export class MainScene extends DisplayObject{
         this.Header.MouseMove(point);
         this._RecorderPanel.MouseMove(point);
         this.CreateNew.MouseMove(point);
+        if (this.Tutorial.Open || this.Tutorial.SplashOpen) {
+            this.Tutorial.MouseMove(point);
+        }
         this.ZoomButtons.MouseMove(point);
         this._TrashCan.MouseMove(point);
         this.MainSceneDragger.MouseMove(point);
@@ -643,8 +671,9 @@ export class MainScene extends DisplayObject{
         var options = this.OptionsPanel;
         var message = this.MessagePanel;
         var create = this.CreateNew;
+        var tutorial = this.Tutorial;
 
-        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || message.Hover || create.Hover || (options.Scale===1 && options.Hover)) {
+        if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || (message.Open && message.Hover) || create.Hover || ((tutorial.Open || tutorial.SplashOpen) && tutorial.Hover) || (options.Scale===1 && options.Hover)) {
             console.log("UI INTERACTION");
             return true;
         }
@@ -687,6 +716,7 @@ export class MainScene extends DisplayObject{
         this._CheckProximity();
         this.ConnectionLines.UpdateList();
         this.CreateNew.CheckState();
+        this.Tutorial.CheckTask();
     }
 
     _ValidateBlocks() {
@@ -790,6 +820,7 @@ export class MainScene extends DisplayObject{
             //this.SelectedBlock.Stop(); //LP commented this out because if you have a keyboard and a source connected and call reset you get errors
             this.SelectedBlock.Dispose();
         }
+        this.Tutorial.WatchedBlocks = [];
 
         // reset zoom & drag //
         this.SelectedBlock = null;
@@ -798,6 +829,7 @@ export class MainScene extends DisplayObject{
         this.ZoomButtons.CurrentSlot = 2;
         this.MainSceneDragger.Destination = new Point(App.DragOffset.x,App.DragOffset.y);
         App.ZoomLevel = 1;
+        App.Particles = [];
         App.Metrics.UpdateGridScale();
 
         // reset URL //

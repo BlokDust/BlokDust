@@ -73,7 +73,7 @@ export class OptionSampleLocal  extends Option {
 
         // LOAD NEW //
         ctx.textAlign = "center";
-        ctx.fillText("upload sample ", panel.Margin + (panel.Range*0.82), y + (height * 0.5) + (dataType*0.35));
+        /*ctx.fillText("upload sample ", panel.Margin + (panel.Range*0.82), y + (height * 0.5) + (dataType*0.35));
         App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
         ctx.lineWidth = 2;
         ix = panel.Margin + panel.Range - (diamond*units);
@@ -82,7 +82,24 @@ export class OptionSampleLocal  extends Option {
         ctx.moveTo(ix, iy - (diamond*units));
         ctx.lineTo(ix + (diamond*units), iy);
         ctx.lineTo(ix, iy + (diamond*units));
+        ctx.stroke();*/
+
+        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(panel.Margin + (panel.Range*0.65), y + (height*0.25));
+        ctx.lineTo(panel.Margin + (panel.Range*0.65), y + (height* 0.75));
+
+        ctx.lineTo(panel.Margin + (panel.Range), y + (height*0.75));
+        ctx.lineTo(panel.Margin + (panel.Range), y + (height* 0.25));
+        ctx.closePath();
         ctx.stroke();
+
+        ctx.font = App.Metrics.TxtMid;
+        ctx.fillText("UPLOAD SAMPLE", panel.Margin + (panel.Range*0.82), y + (height * 0.5) + (dataType*0.35));
+
+
+
         ctx.lineWidth = 1;
     }
 

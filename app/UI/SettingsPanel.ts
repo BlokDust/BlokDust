@@ -920,7 +920,8 @@ export class SettingsPanel extends DisplayObject{
     ActionButton(setting) {
         switch (setting) {
             case "tutorial" :
-                console.log("tutorial manually launched");
+                this.ClosePanel();
+                App.MainScene.Tutorial.OpenSplash();
                 break;
         }
     }

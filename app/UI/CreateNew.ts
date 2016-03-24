@@ -93,115 +93,119 @@ export class CreateNew extends DisplayObject{
         var panelOffset = this.PanelOffset.y * ((header.Height*2)*units);
         var panelOffset2 = this.PanelOffset2.y * (500*units);
 
+
+        if (this.PanelOffset.y > -1) { // draw if on screen
+
+
+            var ym = 1;
+            if (this._RollOvers[1]) {
+                ym = 1.2;
+            }
+            var nm = 1;
+            if (this._RollOvers[2]) {
+                nm = 1.2;
+            }
+
+
+            ctx.textAlign = "left";
+            ctx.font = midType;
+
+            // CLIPPING BOX //
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(0, Math.round((header.Height * header.Rows)*units));
+            ctx.lineTo((App.Width), Math.round((header.Height * header.Rows)*units));
+            ctx.lineTo((App.Width), App.Height*0.5);
+            ctx.lineTo(0, (App.Height*0.5));
+            ctx.closePath();
+            ctx.clip();
+
+            // BG //
+            App.FillColor(ctx,App.Palette[2]);
+            ctx.globalAlpha = 0.16;
+            ctx.fillRect(0,Math.round(((header.Height * header.Rows)*units) + panelOffset),nx + (30*units),height + (5*units));
+            ctx.globalAlpha = 0.9;
+            ctx.fillRect(0,Math.round(((header.Height * header.Rows)*units) + panelOffset),nx + (30*units),height);
+
+
+            // VERIFY //
+            var sy = Math.round(((header.Height * (header.Rows+0.5))*units) + panelOffset);
+            ctx.globalAlpha = 1;
+            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.fillText(this.Verify, x ,sy + ((10*units) * 0.38));
+
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.lineWidth = 2;
+
+            // TICK //
+            ctx.beginPath();
+            ctx.moveTo(yx - ((12*ym)*units), sy);
+            ctx.lineTo(yx - ((4*ym)*units), sy + ((8*ym)*units));
+            ctx.lineTo(yx + ((12*ym)*units), sy - ((8*ym)*units));
+
+
+            // CROSS //
+            ctx.moveTo(nx - ((8*nm)*units), sy - ((8*nm)*units));
+            ctx.lineTo(nx + ((8*nm)*units), sy + ((8*nm)*units));
+            ctx.moveTo(nx + ((8*nm)*units), sy - ((8*nm)*units));
+            ctx.lineTo(nx - ((8*nm)*units), sy + ((8*nm)*units));
+            ctx.stroke();
+
+            App.StrokeColor(ctx,App.Palette[1]);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(yx + (30*units), sy - (16*units));
+            ctx.lineTo(yx + (30*units), sy + (16*units));
+            ctx.stroke();
+
+            // END CLIPPING //
+            ctx.restore();
+
+
+            // DIVIDE //
+            App.StrokeColor(ctx,App.Palette[1]);
+            ctx.lineWidth = 1;
+            if (this.PanelOffset.y>-0.5) {
+                ctx.beginPath();
+                ctx.moveTo(20*units, Math.round(((header.Height * header.Rows)*units)));
+                ctx.lineTo(nx + (10*units), Math.round(((header.Height * header.Rows)*units)));
+                ctx.stroke();
+            }
+
+        }
+
+
+
+
+        // SELECTION COLOR //
+        if (this.Selected) { // draw if on screen
+            App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[1]]);
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.lineTo(width , 0);
+            ctx.lineTo(width,(height*this.Selected));
+            ctx.lineTo((width*0.5) + (10*units),(height*this.Selected));
+            ctx.lineTo((width*0.5),((height + (10*units))*this.Selected));
+            ctx.lineTo((width*0.5) - (10*units),(height*this.Selected));
+            ctx.lineTo(0,(height*this.Selected));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+
+        // ICON //
         var m = 1;
         if (this._RollOvers[0]) {
             m = 1.2;
         }
-        var ym = 1;
-        if (this._RollOvers[1]) {
-            ym = 1.2;
-        }
-        var nm = 1;
-        if (this._RollOvers[2]) {
-            nm = 1.2;
-        }
-        var mm = 1;
-        if (this._RollOvers[3]) {
-            mm = 1.01;
-        }
-
-        ctx.textAlign = "left";
-        ctx.font = midType;
-
-        // CLIPPING BOX //
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(0, Math.round((header.Height * header.Rows)*units));
-        ctx.lineTo((App.Width), Math.round((header.Height * header.Rows)*units));
-        ctx.lineTo((App.Width), App.Height*0.5);
-        ctx.lineTo(0, (App.Height*0.5));
-        ctx.closePath();
-        ctx.clip();
-
-        // BG //
-        App.FillColor(ctx,App.Palette[2]);
-        this.Ctx.globalAlpha = 0.16;
-        ctx.fillRect(0,Math.round(((header.Height * header.Rows)*units) + panelOffset),nx + (30*units),height + (5*units));
-        ctx.globalAlpha = 0.9;
-        ctx.fillRect(0,Math.round(((header.Height * header.Rows)*units) + panelOffset),nx + (30*units),height);
-
-
-        // VERIFY //
-        var sy = Math.round(((header.Height * (header.Rows+0.5))*units) + panelOffset);
         ctx.globalAlpha = 1;
-        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
-        ctx.fillText(this.Verify, x ,sy + ((10*units) * 0.38));
-
         App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
-        this.Ctx.lineWidth = 2;
-
-        // TICK //
-        ctx.beginPath();
-        ctx.moveTo(yx - ((12*ym)*units), sy);
-        ctx.lineTo(yx - ((4*ym)*units), sy + ((8*ym)*units));
-        ctx.lineTo(yx + ((12*ym)*units), sy - ((8*ym)*units));
-
-
-        // CROSS //
-        ctx.moveTo(nx - ((8*nm)*units), sy - ((8*nm)*units));
-        ctx.lineTo(nx + ((8*nm)*units), sy + ((8*nm)*units));
-        ctx.moveTo(nx + ((8*nm)*units), sy - ((8*nm)*units));
-        ctx.lineTo(nx - ((8*nm)*units), sy + ((8*nm)*units));
-        ctx.stroke();
-
-        App.StrokeColor(this.Ctx,App.Palette[1]);
-        this.Ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(yx + (30*units), sy - (16*units));
-        ctx.lineTo(yx + (30*units), sy + (16*units));
-        ctx.stroke();
-
-        // END CLIPPING //
-        ctx.restore();
-
-
-        // DIVIDE //
-        App.StrokeColor(this.Ctx,App.Palette[1]);
-        this.Ctx.lineWidth = 1;
-        if (this.PanelOffset.y>-0.5) {
-            ctx.beginPath();
-            ctx.moveTo(20*units, Math.round(((header.Height * header.Rows)*units)));
-            ctx.lineTo(nx + (10*units), Math.round(((header.Height * header.Rows)*units)));
-            ctx.stroke();
-        }
-
-
-        // SELECTION COLOR //
-        App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[1]]);
-        ctx.beginPath();
-        ctx.moveTo(0,0);
-        ctx.lineTo(width , 0);
-        ctx.lineTo(width,(height*this.Selected));
-        ctx.lineTo((width*0.5) + (10*units),(height*this.Selected));
-        ctx.lineTo((width*0.5),((height + (10*units))*this.Selected));
-        ctx.lineTo((width*0.5) - (10*units),(height*this.Selected));
-        ctx.lineTo(0,(height*this.Selected));
-        ctx.closePath();
-        ctx.fill();
-
-
-        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
-        this.Ctx.lineWidth = 2;
-
-        // ICON //
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(((x-(2*m))*units) + xOffset, (y-(2*m))*units);
         ctx.lineTo(((x+(8*m))*units) + xOffset, (y-(2*m))*units);
         ctx.moveTo(((x+(3*m))*units) + xOffset, (y-(7*m))*units);
         ctx.lineTo(((x+(3*m))*units) + xOffset, (y+(3*m))*units);
-        /*ctx.stroke();
-        ctx.lineWidth = 1;
-        ctx.beginPath();*/
         ctx.moveTo(((x-(5*m))*units) + xOffset, (y-(2*m))*units);
         ctx.lineTo(((x-(5*m))*units) + xOffset, (y+(6*m))*units);
         ctx.lineTo(((x+(3*m))*units) + xOffset, (y+(6*m))*units);
@@ -209,9 +213,13 @@ export class CreateNew extends DisplayObject{
 
 
         // MESSAGE BUTTON //
-        var w = this.MessagePos.x;
-        y = this.MessagePos.y;
-        if (this.PanelOffset2.y < 0.5) {
+        if (this.PanelOffset2.y < 0.5) { // draw if on screen
+            var mm = 1;
+            if (this._RollOvers[3]) {
+                mm = 1.01;
+            }
+            var w = this.MessagePos.x;
+            y = this.MessagePos.y;
             ctx.beginPath();
             ctx.moveTo((App.Width*0.5)-((w*mm)*units), (App.Height - (y*units)) - ((16*mm)*units) + panelOffset2);
             ctx.lineTo((App.Width*0.5)+((w*mm)*units), (App.Height - (y*units)) - ((16*mm)*units) + panelOffset2);
@@ -307,7 +315,6 @@ export class CreateNew extends DisplayObject{
 
         // ICON //
         if (this._RollOvers[0]) {
-            console.log("reset y/n");
             this.OpenPanel();
             return;
         }
@@ -315,11 +322,9 @@ export class CreateNew extends DisplayObject{
         // Y | N //
         if (this.Open) {
             if (this._RollOvers[1]) {
-                console.log("y");
                 this.CreateNewScene();
                 return;
             } else {
-                console.log("n");
                 this.ClosePanel();
                 return;
             }
@@ -327,14 +332,12 @@ export class CreateNew extends DisplayObject{
 
         // CREATE YOUR OWN //
         if (this._RollOvers[3]) {
-            console.log("create your own");
             this.CreateNewScene();
-            // launch tutorial //
+            App.MainScene.Tutorial.CheckLaunch();
             return;
         }
         // CLOSE MESSAGE //
         if (this._RollOvers[4]) {
-            console.log("close message");
             this.CloseMessage();
         }
     }

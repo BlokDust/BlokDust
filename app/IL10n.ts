@@ -75,6 +75,7 @@ interface ISoundCloudErrors {
 interface UI {
     CreateNew: ICreateNew;
     SharePanel: ISharePanel;
+    Tutorial: ITutorial;
 }
 
 interface ICreateNew {
@@ -84,4 +85,23 @@ interface ICreateNew {
 
 interface ISharePanel {
     SaveWarning: string;
+}
+
+interface ITutorial {
+    Scenes: ISceneItem[];
+    SkipButton: string;
+    DoneButton: string;
+    Splash1: ISplash;
+    Splash2: ISplash;
+}
+
+interface ISceneItem {
+    Intro: string;
+    Task: string;
+}
+
+interface ISplash {
+    Message: string;
+    Y: string;
+    N: string;
 }

@@ -147,7 +147,15 @@ export class Granular extends Source {
                     this.Grains[i].playbackRate.value = this.Params.playbackRate;
                 }
             }
-            this.Sources[0].connect(this.AudioInput);
+            //this.Sources[0].connect(this.AudioInput);
+
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+                e.connect(this.AudioInput);
+            });
+
+            this.Sources.forEach((s: Tone.Signal, i: number)=> {
+                s.connect(this.Envelopes[i]);
+            });
         }
     }
 
@@ -275,9 +283,10 @@ export class Granular extends Source {
         });*/
 
         //clearTimeout(this.EndTimeout);
+        var that = this;
         this.EndTimeout = setTimeout(() => {
-            this._NoteOn = false;
-        }, <number>this._Envelopes[0].release*1000);
+            that._NoteOn = false;
+        }, <number>this.Envelopes[0].release*1000);
     }
 
     TriggerAttackRelease(index: number|string = 0, duration: Tone.Time = App.Config.PulseLength){

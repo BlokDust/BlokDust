@@ -164,11 +164,9 @@ export class Source extends Block implements ISource {
      * If index is set to 'all', all envelopes will be triggered
      */
     TriggerAttack(index: number|string = 0) {
-
         //console.log('TriggerAttack: ',this);
         // Only if the source has envelopes
         if (this.Envelopes.length) {
-
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Envelopes.forEach((e: any)=> {
