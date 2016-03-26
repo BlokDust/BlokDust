@@ -17,46 +17,43 @@ html, body {
     font-family: 'Merriweather Sans';
     font-weight: 300;
     font-style: italic;
-    src: url('/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.eot');
-    src: url('/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.eot?#iefix') format('embedded-opentype'),
+    src: url('http://files.blokdust.com/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.eot');
+    src: url('http://files.blokdust.com/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.eot?#iefix') format('embedded-opentype'),
     local('Merriweather Sans Light Italic'),
     local('Merriweather-Sans-300italic'),
-    url('/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.woff2') format('woff2'),
-    url('/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.woff') format('woff'),
-    url('/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.ttf') format('truetype'),
-    url('/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.svg#MerriweatherSans') format('svg');
+    url('http://files.blokdust.com/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.woff2') format('woff2'),
+    url('http://files.blokdust.com/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.woff') format('woff'),
+    url('http://files.blokdust.com/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.ttf') format('truetype'),
+    url('http://files.blokdust.com/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.svg#MerriweatherSans') format('svg');
 }
-
-
 
 @font-face {
     font-family: 'Dosis';
     font-weight: 200;
     font-style: normal;
-    src: url('/fonts/Dosis-200/Dosis-200.eot');
-    src: url('/fonts/Dosis-200/Dosis-200.eot?#iefix') format('embedded-opentype'),
+    src: url('http://files.blokdust.com/fonts/Dosis-200/Dosis-200.eot');
+    src: url('http://files.blokdust.com/fonts/Dosis-200/Dosis-200.eot?#iefix') format('embedded-opentype'),
     local('Dosis ExtraLight'),
     local('Dosis-200'),
-    url('/fonts/Dosis-200/Dosis-200.woff2') format('woff2'),
-    url('/fonts/Dosis-200/Dosis-200.woff') format('woff'),
-    url('/fonts/Dosis-200/Dosis-200.ttf') format('truetype'),
-    url('/fonts/Dosis-200/Dosis-200.svg#Dosis') format('svg');
+    url('http://files.blokdust.com/fonts/Dosis-200/Dosis-200.woff2') format('woff2'),
+    url('http://files.blokdust.com/fonts/Dosis-200/Dosis-200.woff') format('woff'),
+    url('http://files.blokdust.com/fonts/Dosis-200/Dosis-200.ttf') format('truetype'),
+    url('http://files.blokdust.com/fonts/Dosis-200/Dosis-200.svg#Dosis') format('svg');
 }
 
 @font-face {
     font-family: 'Dosis';
     font-weight: 400;
     font-style: normal;
-    src: url('/fonts/Dosis-regular/Dosis-regular.eot');
-    src: url('/fonts/Dosis-regular/Dosis-regular.eot?#iefix') format('embedded-opentype'),
+    src: url('http://files.blokdust.com/fonts/Dosis-regular/Dosis-regular.eot');
+    src: url('http://files.blokdust.com/fonts/Dosis-regular/Dosis-regular.eot?#iefix') format('embedded-opentype'),
     local('Dosis Regular'),
     local('Dosis-regular'),
-    url('/fonts/Dosis-regular/Dosis-regular.woff2') format('woff2'),
-    url('/fonts/Dosis-regular/Dosis-regular.woff') format('woff'),
-    url('/fonts/Dosis-regular/Dosis-regular.ttf') format('truetype'),
-    url('/fonts/Dosis-regular/Dosis-regular.svg#Dosis') format('svg');
+    url('http://files.blokdust.com/fonts/Dosis-regular/Dosis-regular.woff2') format('woff2'),
+    url('http://files.blokdust.com/fonts/Dosis-regular/Dosis-regular.woff') format('woff'),
+    url('http://files.blokdust.com/fonts/Dosis-regular/Dosis-regular.ttf') format('truetype'),
+    url('http://files.blokdust.com/fonts/Dosis-regular/Dosis-regular.svg#Dosis') format('svg');
 }
-
 
 ::-webkit-scrollbar {
     display: none;

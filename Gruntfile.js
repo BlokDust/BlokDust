@@ -82,7 +82,6 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/lib',
                             '!<%= dirs.dist %>/Assets',
                             '!<%= dirs.dist %>/favicon.ico',
-                            '!<%= dirs.dist %>/fonts',
                             '!<%= dirs.dist %>/img',
                             '!<%= dirs.dist %>/App.js',
                             '!<%= dirs.dist %>/config.json',
@@ -204,12 +203,6 @@ module.exports = function (grunt) {
                         cwd: '<%= dirs.app %>/lib',
                         src: ['**'],
                         dest: '<%= dirs.dist %>/lib/'
-                    },
-                    {
-                        expand: true,
-                        cwd: '<%= dirs.app %>/fonts',
-                        src: ['**'],
-                        dest: '<%= dirs.dist %>/fonts/'
                     },
                     {
                         expand: true,
