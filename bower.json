@@ -1,6 +1,6 @@
 {
   "name": "BlokDust",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "dependencies": {
     "bower-webfontloader": "~1.5.16",
     "etch": "~0.0.15",
