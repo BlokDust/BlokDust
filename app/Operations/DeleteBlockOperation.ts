@@ -23,8 +23,8 @@ export class DeleteBlockOperation<IBlock> extends CompoundOperation<IBlock> impl
         this.Operations.push(new RemoveDisplayObjectOperation(<any>block, App.MainScene.BlocksContainer.DisplayList));
         this.Operations.push(new RemoveItemFromArrayOperation(<any>block, App.Blocks));
         (<any>this._Block).Stop(); // TODO: await Remove ItemFromArrayOperation to finish first?
-        console.log(App.Blocks);
-        setTimeout(function() {console.log(App.Blocks)}, 1000);
+        //console.log(App.Blocks);
+        //setTimeout(function() {console.log(App.Blocks)}, 1000);
     }
 
     Do(): Promise<void> {
