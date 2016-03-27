@@ -44,7 +44,7 @@ export class Soundcloud extends SamplerBase {
             loopEnd: 0,
             retrigger: false, //Don't retrigger attack if already playing
             volume: 11,
-            track: 'https://files.blokdust.com/impulse-responses/teufelsberg01.wav',
+            track: 'https://files.blokdust.io/impulse-responses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
             user: 'BGXA'
         };
