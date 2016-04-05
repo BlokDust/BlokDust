@@ -133,7 +133,7 @@ export class SoundcloudPanel extends DisplayObject{
                     if (p==(this._Page-1)) {
                         if (this._RollOvers[5+n]) {
                             var sy = centerY - (98*units) + ((40*n)*units);
-                            App.FillColor(ctx,App.Palette[4]);
+                            App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[3]]);
                             ctx.fillRect(margin - (5*units),sy,pageW + (10*units),40*units);
                             ctx.beginPath();
                             ctx.moveTo((appWidth*0.5), sy + (45*units));

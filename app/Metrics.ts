@@ -20,6 +20,7 @@ export class Metrics {
     public TxtBody: string;
     public TxtItalic: string;
     public TxtItalic2: string;
+    public TxtItalic3: string;
     public TxtData: string;
 
     public C: Point; // center screen
@@ -97,6 +98,7 @@ export class Metrics {
         var bodyType = Math.round(App.Unit * 8);
         var italicType = Math.round(App.Unit * 7.5);
         var italicType2 = Math.round(App.Unit * 8);
+        var italicType3 = Math.round(App.Unit * 9);
         var dataType = Math.round(App.Unit * 5);
 
         this.TxtHeader = "200 " + headerType + "px Dosis";
@@ -108,6 +110,7 @@ export class Metrics {
         this.TxtBody = "200 " + bodyType + "px Dosis";
         this.TxtItalic = "300 italic " + italicType + "px Merriweather Sans";
         this.TxtItalic2 = "300 italic " + italicType2 + "px Merriweather Sans";
+        this.TxtItalic3 = "300 italic " + italicType3 + "px Merriweather Sans";
         this.TxtData = "400 " + dataType + "px PT Sans";
 
         /*// STYLE DOM SELECTED TEXT HIGHLIGHT COLOUR //

@@ -38,6 +38,7 @@ export class Tutorial extends DisplayObject{
     public WatchedBlocks: Block[] = [];
     private _AnimateCount: number;
     public AnimatePolarity: number;
+    public OptionsInteract: boolean = false;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -45,8 +46,8 @@ export class Tutorial extends DisplayObject{
         this.HotSpots = [];
         this.IntroLines = 0;
         this.TaskLines = 0;
-        this.TextWidth = 180;
-        this._LineHeight = 13;
+        this.TextWidth = 190;
+        this._LineHeight = 14;
         this.Offset = new Point(-20,0);
         this.Offset2 = new Point(-1,0);
         this._AnimateCount = 0;
@@ -153,20 +154,28 @@ export class Tutorial extends DisplayObject{
                     }
 
                     break;
+
                 case 4:
+                    if (this.OptionsInteract && App.MainScene.SelectedBlock==effect) { // CHOPPER OPTIONS
+                        check = true;
+                    }
+
+                    break;
+
+                case 5:
                     if (!controller && !controllerUnplugged && !App.MainScene.IsDraggingABlock) { // KEYBOARD TRASHED (this one could be more rigid)
                         check = true;
                         App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(0.5,0.35),1000);
                     }
 
                     break;
-                case 5:
+                case 6:
                     if (particle && !App.MainScene.IsDraggingABlock) { // PARTICLE EMITTER CREATED
                         check = true;
                     }
 
                     break;
-                case 6:
+                case 7:
                     if (particleConnected && !App.MainScene.IsDraggingABlock) { // PARTICLE CONNECTED
                         check = true;
                     }
@@ -208,10 +217,10 @@ export class Tutorial extends DisplayObject{
         var ctx = this.Ctx;
         var units = App.Unit;
         var midType = App.Metrics.TxtMid;
-        var italicType = App.Metrics.TxtItalic2;
+        var italicType = App.Metrics.TxtItalic3;
         var headerType = App.Metrics.TxtHeader;
         var x = App.Width - (this.Offset.x*units);
-        var y = (App.Height *0.5) + (this.Offset.y*units);
+        var y = (App.Height *0.5) + (this.Offset.y*units) - (20*units);
         var lineHeight = this._LineHeight*units;
         var introOffset = (this.IntroLines+2) * lineHeight;
         var taskOffset = (this.TaskLines) * lineHeight;
@@ -608,7 +617,11 @@ export class Tutorial extends DisplayObject{
         if (App.Blocks.length) {
             App.Stage.MainScene.ResetScene();
         }
+        if (App.MainScene.Header.DropDown) {
+            App.MainScene.Header.ClosePanel();
+        }
         App.MainScene.ZoomButtons.ZoomReset(false);
+        this.OptionsInteract = false;
         this.CurrentScene = 1;
         this.Open = true;
         this.CountIntroLines();
@@ -647,7 +660,7 @@ export class Tutorial extends DisplayObject{
         var itemX;
 
         switch (this.CurrentScene) {
-            case 1:
+            case 1: // CREATE TONE
                 if (!this.WatchedBlocks[0]) {
                     if (header.DropDown && header.MenuItems[0].Selected) {
                         if (header.MenuItems[0].CurrentPage===0) {
@@ -660,7 +673,7 @@ export class Tutorial extends DisplayObject{
                 }
                 break;
 
-            case 2:
+            case 2: // CREATE KEYBOARD
                 if (!this.WatchedBlocks[1]) {
                     if (header.DropDown && header.MenuItems[3].Selected) {
                         if (header.MenuItems[3].CurrentPage === 0) {
@@ -673,7 +686,7 @@ export class Tutorial extends DisplayObject{
                 }
                 break;
 
-            case 3:
+            case 3: // CREATE CHOPPER
                 if (!this.WatchedBlocks[4]) {
                     if (header.DropDown && header.MenuItems[1].Selected) {
                         if (header.MenuItems[1].CurrentPage === 0) {
@@ -686,7 +699,17 @@ export class Tutorial extends DisplayObject{
                 }
                 break;
 
-            case 4:
+            case 4: // CHOPPER OPTIONS
+                if (this.WatchedBlocks[3]) {
+                    if (!App.MainScene.IsDraggingABlock) {
+                        var blockPos = new Point(this.WatchedBlocks[3].Position.x,this.WatchedBlocks[3].Position.y + 2);
+                        blockPos = App.Metrics.PointOnGrid(blockPos);
+                        hotspots.push(new Point(blockPos.x, blockPos.y + (6*units)));
+                    }
+                }
+                break;
+
+            case 5: // TRASH KEYBOARD
                 if (this.WatchedBlocks[1]) {
                     if (!App.MainScene.IsDraggingABlock) {
                         var blockPos = new Point(this.WatchedBlocks[1].Position.x,this.WatchedBlocks[1].Position.y + 2);
@@ -697,7 +720,7 @@ export class Tutorial extends DisplayObject{
                 }
                 break;
 
-            case 5:
+            case 6: // CREATE PARTICLE EMITTER
                 if (!this.WatchedBlocks[5]) {
                     if (header.DropDown && header.MenuItems[2].Selected) {
                         if (header.MenuItems[2].CurrentPage === 0) {
@@ -717,7 +740,7 @@ export class Tutorial extends DisplayObject{
                 }
                 break;
 
-            case 6:
+            case 7: // CREATE POWER
                 if (!this.WatchedBlocks[6]) {
                     if (header.DropDown && header.MenuItems[2].Selected) {
                         if (header.MenuItems[2].CurrentPage === 0) {
@@ -780,7 +803,7 @@ export class Tutorial extends DisplayObject{
         var ctx = this.Ctx;
         var units = App.Unit;
         var x = App.Width - (this.Offset.x*units);
-        var y = (App.Height *0.5) + (this.Offset.y*units);
+        var y = (App.Height *0.5) + (this.Offset.y*units) - (20*units);
         var btnY = 50*units;
         var lineHeight = this._LineHeight*units;
         var introOffset = (this.IntroLines+2) * lineHeight;
@@ -828,7 +851,7 @@ export class Tutorial extends DisplayObject{
         this._DoneBtnWidth = this.Ctx.measureText(this.Text.DoneButton.toUpperCase()).width;
 
         var scene = this.Text.Scenes[this.CurrentScene-1];
-        this.Ctx.font = App.Metrics.TxtItalic2;
+        this.Ctx.font = App.Metrics.TxtItalic3;
         this.IntroLines = this.LineCount(this.Ctx,scene.Intro,this.TextWidth*units);
         this.TaskLines = this.LineCount(this.Ctx,scene.Task,this.TextWidth*units);
     }

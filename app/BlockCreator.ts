@@ -65,7 +65,7 @@ export class BlockCreator {
     //public Sampler = Sampler;
     public Soundcloud = Soundcloud;
     public ToneSource = ToneSource;
-    public WaveGen = SampleGen;
+    public SampleGen = SampleGen;
 
     // EFFECTS BLOCKS //
     public AutoWah = AutoWah;

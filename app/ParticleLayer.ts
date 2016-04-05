@@ -48,7 +48,7 @@ export class ParticleLayer extends DisplayObject {
             var sy = pos.y;
             var size = particle.Size * unit;
 
-            App.FillColor(this.Ctx,App.Palette[8]);
+            App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Power]);
             this.Ctx.globalAlpha = 1;
             this.Ctx.beginPath();
             this.Ctx.moveTo(sx-(size),sy); //l

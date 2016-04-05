@@ -21,6 +21,7 @@ export class ThemeManager  {
     public Txt: number;
     public MenuOrder: number[];
     public OptionsOrder: number[];
+    public Power: number;
 
     ThemeChanged = new nullstone.Event<ThemeChangeEventArgs>();
 
@@ -108,24 +109,89 @@ export class ThemeManager  {
                     menu: [6,5,7,4,3]
                 }
             )
+
+            /*,new ColorTheme(
+             "CRYSTAL SWEETS",
+             App.Config.PixelPaletteImagePath[11]
+             )*/
+
+            ,new ColorTheme(
+                "ASH PEAK",
+                App.Config.PixelPaletteImagePath[12],
+                {
+                    menu: [6,5,8,4,3],
+                    options: [3,4,5,6,7],
+                    txt: 11
+                }
+            )
+
+            ,new ColorTheme(
+                "VOLCANOLOGIST",
+                App.Config.PixelPaletteImagePath[13],
+                {
+                    menu: [3,8,7,4,10],
+                    txt: 11
+                }
+            )
+
+            ,new ColorTheme(
+                "IKKO",
+                App.Config.PixelPaletteImagePath[14],
+                {
+                    //menu: [3,8,7,4,10],
+                    txt: 11
+                }
+            )
+
+            /*,new ColorTheme(
+                "IKKO2",
+                App.Config.PixelPaletteImagePath[15],
+                {
+                    //menu: [3,8,7,4,10],
+                    txt: 11
+                }
+            )*/
+
+            ,new ColorTheme(
+                "LUCKY SIGN",
+                App.Config.PixelPaletteImagePath[16],
+                {
+                    menu: [9,5,7,8,3],
+                    txt: 11,
+                    power: 4
+                }
+            )
+
+            /*,new ColorTheme(
+                "ERIC",
+                App.Config.PixelPaletteImagePath[17],
+                {
+                    menu: [9,6,7,4,3],
+                    txt: 11,
+                    power: 5
+                }
+            )*/
         ];
 
 
         this._Defaults = {
             txt: 8,
             menu: [9,5,7,4,3],
-            options: [3,4,9,7,5]
+            options: [3,4,9,7,5],
+            power: 8
         };
 
         this._Value = {
             txt: this._Defaults.txt,
             menu: this._Defaults.menu,
-            options: this._Defaults.options
+            options: this._Defaults.options,
+            power: this._Defaults.power
         };
 
         this.Txt = 16;
         this.MenuOrder = [17,18,19,20,21];
         this.OptionsOrder = [22,23,24,25,26];
+        this.Power = 27;
 
     }
 
@@ -136,6 +202,9 @@ export class ThemeManager  {
 
     LoadTheme(theme,firstLoad,disableThemeStorage?) {
 
+        if (!this.Themes[theme]) { // theme no longer exists safety
+            theme = 0;
+        }
         if (!disableThemeStorage) {
             App.ThemeNo = theme;
         }
@@ -147,6 +216,7 @@ export class ThemeManager  {
         this._Value.txt = selectedtheme.Options.txt || this._Defaults.txt;
         this._Value.menu = selectedtheme.Options.menu || this._Defaults.menu;
         this._Value.options = selectedtheme.Options.options || this._Defaults.options;
+        this._Value.power = selectedtheme.Options.power || this._Defaults.power;
 
         this.Loaded = false;
         var pixelPalette = new PixelPalette(selectedtheme.PaletteURL);
@@ -171,6 +241,10 @@ export class ThemeManager  {
             for (i=0; i<this._Value.options.length; i++) {
                 palette.push(palette[this._Value.options[i]].clone());
             }
+            // POWER COL //
+            this.Power = palette.length;
+            palette.push(palette[this._Value.power].clone());
+
 
             // CSS SHARE TEXT COL //
             var shareUrl = document.getElementById("shareUrl");
