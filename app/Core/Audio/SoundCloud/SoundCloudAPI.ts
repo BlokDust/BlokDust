@@ -81,8 +81,6 @@ export class SoundCloudAPI {
     //  SINGLE SEARCH
     //-------------------------------------------------------------------------------------------
 
-
-
     /**
      *
      * @param query String to search for
@@ -361,7 +359,5 @@ export class SoundCloudAPI {
             console.error(error);
         });
     }
-
-
 
 }
