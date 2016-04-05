@@ -603,6 +603,11 @@ export class Tutorial extends DisplayObject{
     OpenSplash() {
         this.SplashOpen = true;
         this.DelayTo(this.Offset2,0,1,0,"x");
+        if (App.Stage) {
+            if (App.MainScene.Header.DropDown) {
+                App.MainScene.Header.ClosePanel();
+            }
+        }
         if (this.Open) {
             this.ClosePanel();
         }
@@ -616,9 +621,6 @@ export class Tutorial extends DisplayObject{
     OpenPanel() {
         if (App.Blocks.length) {
             App.Stage.MainScene.ResetScene();
-        }
-        if (App.MainScene.Header.DropDown) {
-            App.MainScene.Header.ClosePanel();
         }
         App.MainScene.ZoomButtons.ZoomReset(false);
         this.OptionsInteract = false;

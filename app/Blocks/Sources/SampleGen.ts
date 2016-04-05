@@ -488,6 +488,8 @@ export class SampleGen extends SamplerBase {
 
 
     PopulateBuffer(sampleRate) {
+
+
         if (!this._FirstBuffer) {
             this._FirstBuffer = App.Audio.ctx.createBuffer(1, this._BufferData.length, sampleRate);
         }
@@ -514,7 +516,15 @@ export class SampleGen extends SamplerBase {
 
         // IF POWERED ON LOAD - TRIGGER //
         if (this.IsPowered() && this._LoadFromShare) {
-            this.TriggerAttack();
+            // STOP SOUND //
+            this.Sources.forEach((s: any)=> {
+                s.triggerRelease();
+            });
+            // RETRIGGER //
+            var that = this;
+            setTimeout(function(){
+                that.TriggerAttack();
+            },1000);
         }
         this._LoadFromShare = false;
     }

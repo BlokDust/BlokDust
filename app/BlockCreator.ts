@@ -313,6 +313,9 @@ export class BlockCreator {
                 //TODO: if we want to use LFO in the future we need to check version number also
                 type = 'Vibrato';
                 break;
+            case "WaveGen":
+                type = 'SampleGen';
+                break;
         }
         return type;
     }

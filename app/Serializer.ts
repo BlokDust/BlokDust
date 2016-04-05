@@ -187,6 +187,8 @@ export class Serializer {
             Serializer._DeserializationDictionary[b.Id] = block;
         }
 
+
+
         // if it's a source block
         if((<any>b).Effects){
             var effects = <IEffect[]>Serializer._DeserializeBlocks(b.Effects);
