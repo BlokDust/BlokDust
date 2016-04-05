@@ -37,4 +37,5 @@ export interface IBlock extends IDisplayObject {
     Update(): void;
     UpdateConnections(chain: IAudioChain)
     UpdateOptionsForm(): void;
+    SetSearchResults(results): any;
 }

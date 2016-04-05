@@ -7,6 +7,9 @@ declare var SC: any;
 
 export class SoundCloudAPI {
 
+    static _QueryReturns: number;
+    static QueryList: any[];
+
     static Initialize() {
         if (typeof(SC) !== "undefined") {
             SC.initialize({
@@ -14,6 +17,12 @@ export class SoundCloudAPI {
             });
         }
     }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  LOADING TRACKS
+    //-------------------------------------------------------------------------------------------
+
 
     static PickRandomTrack(t:SoundCloudAudioType) {
 
@@ -67,6 +76,13 @@ export class SoundCloudAPI {
         return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }
 
+
+    //-------------------------------------------------------------------------------------------
+    //  SINGLE SEARCH
+    //-------------------------------------------------------------------------------------------
+
+
+
     /**
      *
      * @param query String to search for
@@ -111,34 +127,13 @@ export class SoundCloudAPI {
                             "status": 452, // Blokdust specific code for unqualified tracks (ie. no blokdust tag OR cc license)
                             "message": App.L10n.Errors.SoundCloud.FailedTrackFiltering
                         };
-                        console.error(err);
+                        this.SearchError(err);
                         failedResponse(err);
                     }
                 }
             }, (error:SoundCloudAPIResponse.Error) => {
-                switch (error.status) {
-                    case 429:
-                        //Too many requests
-                        App.Message(App.L10n.Errors.SoundCloud.TooManyRequests);
-                        break;
-                    case 500:
-                        //Internal Server Error
-                        App.Message(App.L10n.Errors.SoundCloud.InternalServerError);
-                        break;
-                    case 503:
-                        // Service Unavailable
-                        App.Message(App.L10n.Errors.SoundCloud.ServiceUnavailable);
-                        break;
-                    default:
-                        if (error.message) {
-                            App.Message(`SoundCloud error: ${error.message}`);
-                        } else {
-                            App.Message(`SoundCloud error, check console`);
-                        }
-                }
-                console.error(error);
+                this.SearchError(error);
                 failedResponse(error);
-                //NOTE: More info on SoundCloud errors: https://developers.soundcloud.com/docs/api/guide#errors
             });
         } else {
             // No window.SC
@@ -146,6 +141,194 @@ export class SoundCloudAPI {
             console.error(App.L10n.Errors.SoundCloud.Uninitialized);
         }
     }
+
+
+
+
+    //-------------------------------------------------------------------------------------------
+    //  MULTI SEARCH
+    //-------------------------------------------------------------------------------------------
+
+
+    // PERFORMS MULTIPLE QUERIES AND COMBINES RESULTS //
+    static MultiSearch(query: string, seconds: number, block: any) {
+        if (window.SC) {
+            this._QueryReturns = 0;
+            this.QueryList = [];
+
+            // SEARCH 1 //
+            this.OptionSearch(query, seconds, {license:"cc-by"},(tracks) => {
+                this.MultiCallback(block, tracks,"cc-by");
+            }, (error: SoundCloudAPIResponse.Error) => {
+                this.MultiCallback(block, [],"error");
+            });
+
+            // SEARCH 2 //
+            this.OptionSearch(query, seconds, {license:"cc-by-nc-nd"},(tracks) => {
+                this.MultiCallback(block, tracks,"cc-by-nc-nd");
+            }, (error: SoundCloudAPIResponse.Error) => {
+                this.MultiCallback(block, [],"error");
+            });
+
+            // SEARCH 3 //
+            this.OptionSearch(query, seconds, {license:"cc-by-nc-sa"},(tracks) => {
+                this.MultiCallback(block, tracks,"cc-by-nc-sa");
+            }, (error: SoundCloudAPIResponse.Error) => {
+                this.MultiCallback(block, [],"error");
+            });
+
+            // SEARCH 4 //
+            this.OptionSearch(query, seconds, {license:"to_use_commercially"},(tracks) => {
+                this.MultiCallback(block, tracks,"to_use_commercially");
+            }, (error: SoundCloudAPIResponse.Error) => {
+                this.MultiCallback(block, [],"error");
+            });
+
+            // SEARCH 5 //
+            this.OptionSearch(query, seconds, {license:"to_share"},(tracks) => {
+                this.MultiCallback(block, tracks,"to_share");
+            }, (error: SoundCloudAPIResponse.Error) => {
+                this.MultiCallback(block, [],"error");
+            });
+
+            // SEARCH 6 //
+            this.OptionSearch(query, seconds, {tag:"blokdust"},(tracks) => {
+                this.MultiCallback(block, tracks,"blokdust");
+            }, (error: SoundCloudAPIResponse.Error) => {
+                this.MultiCallback(block, [],"error");
+            });
+
+        } else {
+            // No window.SC
+            App.Message(App.L10n.Errors.SoundCloud.Uninitialized);
+            console.error(App.L10n.Errors.SoundCloud.Uninitialized);
+        }
+    }
+
+
+    // A SEARCH QUERY WITH SUBMITTABLE LICENSE OR TAG //
+    static OptionSearch(query: string, seconds: number, options: any, successResponse: (tracks) => any, failedResponse: (error: SoundCloudAPIResponse.Error) => any) {
+
+        // ASSEMBLE THE QUERY //
+        options = options || {};
+        var searchOptions = {};
+        if (options.license) {
+            searchOptions = { q: query, license: options.license, duration: {to: seconds * 1000}, limit: 200 };
+        }
+        else if (options.tag) {
+            searchOptions = { q: query, tags: options.tag, duration: {to: seconds * 1000}, limit: 200 };
+        }
+        else {
+            searchOptions = { q: query, duration: {to: seconds * 1000}, limit: 200 };
+        }
+
+        // DO THE QUERY //
+        SC.get('/tracks', searchOptions).then((tracks:SoundCloudAPIResponse.Success[]) => {
+            if (tracks) {
+                var trackList = [];
+                tracks.forEach((track) => {
+                    if (track.streamable && track.sharing === "public") {
+                        trackList.push(track);
+                    }
+                });
+                successResponse(trackList);
+            }
+        }, (error:SoundCloudAPIResponse.Error) => {
+            this.SearchError(error);
+            failedResponse(error);
+        });
+    }
+
+
+    // GETS CALLED AFTER EACH QUERY AND ADDS TOGETHER RESULTS //
+    static MultiCallback(block,results,string) {
+        //console.log(""+string+": "+results.length);
+        var i;
+        var maxResults = 200;
+
+        // IF WE HAVE RESULTS //
+        if (results.length) {
+            var count = 0;
+
+            // IF FIRST RESULTS JUST ADD THEM ALL //
+            if (this.QueryList.length===0) {
+
+                for (i=0; i<results.length; i++) {
+                    this.QueryList.push(results[i]);
+                }
+
+            }
+            // ELSE CHECK FOR DUPLICATES //
+            else {
+                for (i=0; i<results.length; i++) {
+                    if (!this.Exists(this.QueryList,results[i].id) ) {
+                        // IF IT DOESN'T EXIST, PUSH IT //
+                        if (this.QueryList.length<maxResults) {
+                            this.QueryList.push(results[i]);
+                        }
+                    }
+                }
+            }
+        }
+
+        this._QueryReturns += 1;
+        if (this._QueryReturns===6) {
+            // ALL QUERIES ARE IN - CONTINUE //
+            block.SetSearchResults(this.QueryList);
+        }
+    }
+
+
+    // CHECK IF THIS IS A DUPLICATE TRACK //
+    static Exists(list,id) {
+        var len = list.length;
+        for (var h=0; h<len; h++) {
+            if (id===list[h].id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  ERRORS
+    //-------------------------------------------------------------------------------------------
+
+
+    static SearchError(error) {
+        switch (error.status) {
+            case 429:
+                //Too many requests
+                App.Message(App.L10n.Errors.SoundCloud.TooManyRequests);
+                break;
+            case 452:
+                //results filtered out
+                break;
+            case 500:
+                //Internal Server Error
+                App.Message(App.L10n.Errors.SoundCloud.InternalServerError);
+                break;
+            case 503:
+                // Service Unavailable
+                App.Message(App.L10n.Errors.SoundCloud.ServiceUnavailable);
+                break;
+            default:
+                if (error.message) {
+                    App.Message(`SoundCloud error: ${error.message}`);
+                } else {
+                    App.Message(`SoundCloud error, check console`);
+                }
+        }
+        console.error(error); //NOTE: More info on SoundCloud errors: https://developers.soundcloud.com/docs/api/guide#errors
+    }
+
+
+
+    //-------------------------------------------------------------------------------------------
+    //  AUTH CONNECTION
+    //-------------------------------------------------------------------------------------------
+
 
     static Connect() {
         // initiate auth popup
