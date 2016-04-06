@@ -379,7 +379,7 @@ module.exports = function (grunt) {
     grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
     grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);
     grunt.registerTask('serve:dev', ['default', 'connect:dev', 'open']);
-    grunt.registerTask('watch:dev', ['default', 'connect:livereload', 'open', 'watch']);
+    grunt.registerTask('watch:dev', ['default', 'connect:livereload', 'watch']);
     grunt.registerTask('serve:dist', ['connect:dist', 'open']);
 
     grunt.registerTask('dist', '', function() {
