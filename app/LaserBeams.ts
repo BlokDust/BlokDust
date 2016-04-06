@@ -240,8 +240,8 @@ export class LaserBeams extends DisplayObject {
     Draw() {
         var unit = App.ScaledUnit;
         var myPos,vector;
-        App.FillColor(this.Ctx,App.Palette[8]);
-        App.StrokeColor(this.Ctx,App.Palette[8]);
+        //App.FillColor(this.Ctx,App.Palette[8]);
+        App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Power]);
         this.Ctx.globalAlpha = 1;
 
         this.Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));

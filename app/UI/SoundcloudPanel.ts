@@ -39,10 +39,10 @@ export class SoundcloudPanel extends DisplayObject{
             noResults: "No results found"
         };
 
-        var colors = ['black','grey','white','red','yellow','pink','green','orange','purple','blue','turquoise','cream'];
-        var animals = ['cat','dog','horse','rat','deer','snake','bat','mouse','wolf','hound','fox'];
-        var places = ['home','house','shack','work','country','county','land','mountain','lake','sea','valley','desert','plains','ocean','space','sky','temple','church','shrine'];
-        var objects = ['train','car','plane','jet','rocket','satellite','hand','head','back','eyes','legs','mouth','paper','crystal','skull','bones','flag','dust','rock','metal','mineral','plant','flower','sun','moon','day','night','gun','blood','gang','sample','drum','clap','echo','sound','song'];
+        var colors = ['black','grey','white','red','yellow','pink','green','orange','purple','blue','cream'];
+        var animals = ['cat','dog','horse','rat','deer','snake','bat','mouse','wolf','hound','fox','bird'];
+        var places = ['home','house','work','country','county','land','mountain','lake','sea','valley','desert','plains','ocean','space','sky','temple','church','shrine'];
+        var objects = ['train','car','plane','jet','rocket','satellite','hand','head','back','eyes','legs','mouth','paper','crystal','skull','bones','flag','dust','rock','metal','plant','flower','sun','moon','day','night','gun','blood','gang','sample','drum','clap','echo','sound','song'];
         var descriptions = ['wet','dry','hot','cold','good','bad','evil','soft','hard','light','dark','heavy','clean','dirty','short','long','royal','magic','holy'];
         this._RandomWords = colors.concat(animals,places,objects,descriptions);
     }
@@ -133,7 +133,7 @@ export class SoundcloudPanel extends DisplayObject{
                     if (p==(this._Page-1)) {
                         if (this._RollOvers[5+n]) {
                             var sy = centerY - (98*units) + ((40*n)*units);
-                            App.FillColor(ctx,App.Palette[4]);
+                            App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[3]]);
                             ctx.fillRect(margin - (5*units),sy,pageW + (10*units),40*units);
                             ctx.beginPath();
                             ctx.moveTo((appWidth*0.5), sy + (45*units));

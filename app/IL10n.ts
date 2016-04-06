@@ -85,6 +85,7 @@ interface ICreateNew {
 
 interface ISharePanel {
     SaveWarning: string;
+    NoBlocks: string;
 }
 
 interface ITutorial {

@@ -65,7 +65,7 @@ export class BlockCreator {
     //public Sampler = Sampler;
     public Soundcloud = Soundcloud;
     public ToneSource = ToneSource;
-    public WaveGen = SampleGen;
+    public SampleGen = SampleGen;
 
     // EFFECTS BLOCKS //
     public AutoWah = AutoWah;
@@ -312,6 +312,9 @@ export class BlockCreator {
             case "LFO":
                 //TODO: if we want to use LFO in the future we need to check version number also
                 type = 'Vibrato';
+                break;
+            case "WaveGen":
+                type = 'SampleGen';
                 break;
         }
         return type;

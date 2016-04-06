@@ -97,7 +97,8 @@ export class Convolver extends PostEffect {
         App.MainScene.OptionsPanel.Animating = true; //TODO: make searching an event
         this.ResultsPage = 1;
         this.SearchResults = [];
-        SoundCloudAPI.Search(query, App.Config.ConvolverMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
+        SoundCloudAPI.MultiSearch(query, App.Config.ConvolverMaxTrackLength, this);
+        /*SoundCloudAPI.Search(query, App.Config.ConvolverMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
             this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
             this.Searching = false;
             App.MainScene.OptionsPanel.Animating = false;
@@ -107,7 +108,18 @@ export class Convolver extends PostEffect {
             if (error.status === 452) {
                 // Tracks were found but they don't have a blokdust tag or aren't creative commons
             }
-        });
+        });*/
+    }
+
+    SetSearchResults(results) {
+        super.SetSearchResults(results);
+        this.Searching = false;
+        App.MainScene.OptionsPanel.Animating = false;
+        var len = results.length;
+        for (var i=0; i<len; i++) {
+            var track = results[i];
+            this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
+        }
     }
 
     LoadTrack(track,fullUrl?:boolean) {

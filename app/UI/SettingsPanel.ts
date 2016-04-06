@@ -264,7 +264,7 @@ export class SettingsPanel extends DisplayObject{
             tab = this.MenuItems[1].YOffset;
 
             // GUIDE BUTTON //
-            App.FillColor(ctx,App.Palette[4]);
+            App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[3]]);
             ctx.fillRect(dx - (210*units),pageY + tab + (10*units),420*units,40*units);
             if (this._RollOvers[7]) {
                 ctx.beginPath();

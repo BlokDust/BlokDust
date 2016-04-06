@@ -765,11 +765,25 @@ export class OptionsPanel extends DisplayObject {
 
     Close() {
         this.PanelScale(this,0,200);
+
+        if (App.Stage) {
+            var tut = App.MainScene.Tutorial;
+            if (tut.Open) {
+                tut.CheckTask();
+            }
+        }
     }
 
     //TODO: move into interaction functions within option components, as with drawing
     MouseDown(mx,my) {
         this.RolloverCheck(mx,my);
+
+        var tut = App.MainScene.Tutorial;
+        if (tut.Open) {
+            tut.OptionsInteract = true;
+        }
+
+
         for (var i=0;i<this.Options.length;i++) {
 
             if (this._SliderRoll[i]) {

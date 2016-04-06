@@ -194,7 +194,8 @@
     },
 
     "SharePanel": {
-      "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a SoundCloud block."
+      "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a SoundCloud block.",
+      "NoBlocks": "Create some blocks before you can save & share!"
     },
 
     "Tutorial": {
@@ -202,7 +203,7 @@
 
         {
           "Intro": "Let's get started by adding some blocks. You can create blocks by dragging them from the top menu.",
-          "Task": "Open up the SOURCE category, and create a TONE block."
+          "Task": "Open up the SOURCE category, and drag a TONE block from it."
         },
 
         {
@@ -211,13 +212,18 @@
         },
 
         {
-          "Intro": "You’ve just made a basic interactive synth! Now you can use your computer’s keyboard to play your TONE block - give it a go.",
+          "Intro": "You’ve just made a basic interactive synth! Now you can play your TONE block using your computer keyboard  - give it a go.",
           "Task": "Let's make it a bit more interesting, add a CHOPPER block from the EFFECT category and connect it."
         },
 
         {
-          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking - have a play.",
-          "Task": "Finally let’s look at POWER. We won’t need that COMPUTER KEYBOARD block you made, so delete it by dragging it into the trashcan."
+          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking.",
+          "Task": "Click on the CHOPPER block and have a play with it's settings. Close the options panel when you're done."
+        },
+
+        {
+          "Intro": "Finally let’s look at POWER. We won’t need that COMPUTER KEYBOARD block you made for this.",
+          "Task": "Delete the COMPUTER KEYBOARD block by dragging it into the trashcan, bottom-right of the screen."
         },
 
         {

@@ -27,6 +27,7 @@ export class SharePanel extends DisplayObject {
     private _SessionId: string;
     private _Saving: boolean;
     private _Warning: boolean;
+    private _NoBlocks: boolean;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -35,6 +36,7 @@ export class SharePanel extends DisplayObject {
         this._FirstSession = true;
         this._Saving = false;
         this._Warning = false;
+        this._NoBlocks = true;
         this._NameUrl = "";
         this.SessionURL = "";
         this._SessionId = "";
@@ -118,6 +120,7 @@ export class SharePanel extends DisplayObject {
             }
         }
         this._Warning = (warnBlocks.length > 0);
+        this._NoBlocks = (!App.Blocks.length);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -157,10 +160,10 @@ export class SharePanel extends DisplayObject {
 
                 // GENERATE URL //
 
-                if (this._Saving) {
+                if (this._Saving || this._NoBlocks) {
                     App.FillColor(ctx,App.Palette[1]);
                 } else {
-                    App.FillColor(ctx,App.Palette[4]);
+                    App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[3]]);
                 }
                 ctx.fillRect(this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (20 * units), 420 * units, 40 * units);
                 if (this._RollOvers[3] && !this._Saving) {
@@ -181,10 +184,10 @@ export class SharePanel extends DisplayObject {
             } else {
 
                 // SAVE & SAVE AS //
-                if (this._Saving) {
+                if (this._Saving || this._NoBlocks) {
                     App.FillColor(ctx,App.Palette[1]);
                 } else {
-                    App.FillColor(ctx,App.Palette[4]);
+                    App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[3]]);
                 }
                 ctx.fillRect(this.OffsetX + (appWidth * 0.5) - (210 * units), centerY - (20 * units), 202.5 * units, 40 * units);
                 if (this._RollOvers[4] && !this._Saving) {
@@ -195,10 +198,10 @@ export class SharePanel extends DisplayObject {
                     ctx.closePath();
                     ctx.fill();
                 }
-                if (this._Saving) {
+                if (this._Saving || this._NoBlocks) {
                     App.FillColor(ctx,App.Palette[1]);
                 } else {
-                    App.FillColor(ctx,App.Palette[5]);
+                    App.FillColor(ctx,App.Palette[App.ThemeManager.MenuOrder[1]]);
                 }
                 ctx.fillRect(this.OffsetX + (appWidth * 0.5) + (7.5 * units), centerY - (20 * units), 202.5 * units, 40 * units);
                 if (this._RollOvers[5] && !this._Saving) {
@@ -244,6 +247,11 @@ export class SharePanel extends DisplayObject {
                     ctx.font = italicType;
                     ctx.textAlign = "left";
                     this.WordWrap(ctx, App.L10n.UI.SharePanel.SaveWarning, this.OffsetX + (appWidth * 0.5) - (210 * units), centerY + (75 * units), 14 * units, 420 * units);
+                }
+                if (this._NoBlocks) {
+                    ctx.font = italicType;
+                    ctx.textAlign = "left";
+                    this.WordWrap(ctx, App.L10n.UI.SharePanel.NoBlocks, this.OffsetX + (appWidth * 0.5) - (210 * units), centerY + (75 * units), 14 * units, 420 * units);
                 }
 
             }
@@ -541,13 +549,17 @@ export class SharePanel extends DisplayObject {
     }
 
     GenerateLink() {
-        this._Saving = true;
-        this._CommandManager.ExecuteCommand(Commands.SAVE_AS);
+        if (!this._NoBlocks) {
+            this._Saving = true;
+            this._CommandManager.ExecuteCommand(Commands.SAVE_AS);
+        }
     }
 
     UpdateLink() {
-        this._Saving = true;
-        this._CommandManager.ExecuteCommand(Commands.SAVE);
+        if (!this._NoBlocks) {
+            this._Saving = true;
+            this._CommandManager.ExecuteCommand(Commands.SAVE);
+        }
     }
 
     ReturnLink(id) {
