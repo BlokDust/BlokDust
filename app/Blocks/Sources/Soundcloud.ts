@@ -46,7 +46,7 @@ export class Soundcloud extends SamplerBase {
             volume: 11,
             track: 'https://files.blokdust.io/impulse-responses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
-            user: 'BGXA'
+            user: 'Balance Mastering'
         };
         this.PopulateParams();
 
@@ -167,7 +167,10 @@ export class Soundcloud extends SamplerBase {
     }
 
     TrackFallBack() {
-        //TODO what if it's the first track failing? fallback matches current
+        // IF CURRENT FAILING TRACK MATCHES FALLBACK, SET FALLBACK TO DEFAULT (to end perpetual load loops) //
+        if (this.Params.track === this._FallBackTrack.URI) {
+            this._FallBackTrack = new SoundCloudTrack(this.Defaults.trackName,this.Defaults.user,this.Defaults.track,this.Defaults.permalink);
+        }
         this.LoadTrack(this._FallBackTrack,true);
         App.Message("Load Failed: This Track Is Unavailable. Reloading last track.");
     }

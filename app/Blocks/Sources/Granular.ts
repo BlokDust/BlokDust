@@ -17,7 +17,7 @@ export class Granular extends Source {
 
     public Sources: Tone.Signal[];
     public Grains: Tone.Player[] = [];
-    private _Envelopes: Tone.AmplitudeEnvelope[] = [];
+    public GrainEnvelopes: Tone.AmplitudeEnvelope[] = [];
     public Timeout;
     public EndTimeout;
     private _FirstRelease: boolean = true;
@@ -54,8 +54,8 @@ export class Granular extends Source {
             spread: 1.5,
             grainlength: 0.25,
             track: SoundCloudAPI.PickRandomTrack(SoundCloudAudioType.Granular),
-            trackName: 'TEUFELSBERG',
-            user: 'BGXA',
+            trackName: 'TEUFELSBERG', // TODO: this doesn't match random track
+            user: 'Balance Mastering',
             permalink: ''
         };
         this.PopulateParams();
@@ -80,7 +80,7 @@ export class Granular extends Source {
 
     Reset(){
         this.Grains.length = 0;
-        this._Envelopes.length = 0;
+        this.GrainEnvelopes.length = 0;
     }
 
     Search(query: string) {
@@ -130,7 +130,10 @@ export class Granular extends Source {
     }
 
     TrackFallBack() {
-        //TODO what if it's the first track failing? fallback matches current
+        // IF CURRENT FAILING TRACK MATCHES FALLBACK, SET FALLBACK TO DEFAULT (to end perpetual load loops) //
+        if (this.Params.track === this._FallBackTrack.URI) {
+            this._FallBackTrack = new SoundCloudTrack(this.Defaults.trackName,this.Defaults.user,this.Defaults.track,this.Defaults.permalink);
+        }
         this.LoadTrack(this._FallBackTrack,true);
         App.Message("Load Failed: This Track Is Unavailable. Reloading last track.");
     }
@@ -143,7 +146,7 @@ export class Granular extends Source {
                 this.Grains[i] = new Tone.Player();
 
                 // CREATE ENVELOPE //
-                this._Envelopes[i] = new Tone.AmplitudeEnvelope(
+                this.GrainEnvelopes[i] = new Tone.AmplitudeEnvelope(
                     this.Params.grainlength/2,  // Attack
                     0.01,                       // Decay
                     0.9,                        // Sustain
@@ -151,8 +154,8 @@ export class Granular extends Source {
                 );
 
                 // CONNECT //
-                this.Grains[i].connect(this._Envelopes[i]);
-                this._Envelopes[i].connect(this.Sources[0]);
+                this.Grains[i].connect(this.GrainEnvelopes[i]);
+                this.GrainEnvelopes[i].connect(this.Sources[0]);
                 if ((<any>Tone).isSafari){
                     (<any>this.Grains[i]).playbackRate = this.Params.playbackRate;
                 } else {
@@ -316,7 +319,7 @@ export class Granular extends Source {
         this.ReleaseTimeout = setTimeout(() => {
             this.EndTimeout = setTimeout(() => {
                 this._NoteOn = false;
-            }, <number>this._Envelopes[0].release*1000);
+            }, <number>this.GrainEnvelopes[0].release*1000);
         }, duration);
 
     }
@@ -331,21 +334,21 @@ export class Granular extends Source {
     GrainLoop() {
 
         // CYCLES THROUGH GRAINS AND PLAYS THEM //
-        if (this._Envelopes[this._CurrentGrain] && (this.IsPowered() || this._NoteOn)) {
+        if (this.GrainEnvelopes[this._CurrentGrain] && (this.IsPowered() || this._NoteOn)) {
 
            var location = this.LocationRange(
                this.Params.region - (this.Params.spread * 0.5) + (Math.random() * this.Params.spread)
            );
 
             // MAKE SURE THESE ARE IN SYNC //
-            this._Envelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
+            this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
             this.Grains[this._CurrentGrain].stop();
             this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
             this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
                 this.GrainLoop();
-            }, Math.round(((this.Params.grainlength*2) / this.Params.density)*1500));
+            }, Math.round(((this.Params.grainlength*1) / this.Params.density)*1500));
 
             this._CurrentGrain += 1;
             if (this._CurrentGrain >= this.Params.density) {
@@ -357,7 +360,7 @@ export class Granular extends Source {
 
     // CAP POSITIONS OF GRAINS TO STAY WITHIN TRACK LENGTH //
     LocationRange(location: number) {
-        var locationCap = this.Grains[0].duration - this.Params.grainlength;
+        var locationCap = this.GetDuration() - this.Params.grainlength;
         if (location < 0) {
             location = 0;
         } else if (location > locationCap) {
@@ -405,8 +408,8 @@ export class Granular extends Source {
             case "grainlength":
                 this.Params.grainlength = value;
                 for (var i=0; i< this.GrainsAmount; i++) {
-                    this._Envelopes[i].attack = value/2;
-                    this._Envelopes[i].release = value/2;
+                    this.GrainEnvelopes[i].attack = value/2;
+                    this.GrainEnvelopes[i].release = value/2;
                 }
 
                 break;
@@ -469,7 +472,7 @@ export class Granular extends Source {
                     "props" : {
                         "value" : this.Params.grainlength,
                         "min" : 0.03,
-                        "max" : 0.5,
+                        "max" : 0.6,
                         "quantised" : false,
                         "centered" : false
                     }
@@ -499,7 +502,7 @@ export class Granular extends Source {
             g.dispose();
         });
 
-        this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
+        this.GrainEnvelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.dispose();
         });
 
@@ -512,6 +515,6 @@ export class Granular extends Source {
         });
 
         this.Grains.length = 0;
-        this._Envelopes.length = 0;
+        this.GrainEnvelopes.length = 0;
     }
 }

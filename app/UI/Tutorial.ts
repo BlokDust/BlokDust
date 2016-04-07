@@ -158,6 +158,7 @@ export class Tutorial extends DisplayObject{
                 case 4:
                     if (this.OptionsInteract && App.MainScene.SelectedBlock==effect) { // CHOPPER OPTIONS
                         check = true;
+                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(0.5,0.5),1000);
                     }
 
                     break;

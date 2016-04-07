@@ -40,7 +40,7 @@ export class Convolver extends PostEffect {
             mix: 0.5,
             track: 'https://files.blokdust.io/impulse-responses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
-            user: 'BGXA',
+            user: 'Balance Mastering',
             permalink: ''
         };
         this.PopulateParams();
@@ -140,7 +140,10 @@ export class Convolver extends PostEffect {
     }
 
     TrackFallBack() {
-        //TODO what if it's the first track failing? fallback matches current
+        // IF CURRENT FAILING TRACK MATCHES FALLBACK, SET FALLBACK TO DEFAULT (to end perpetual load loops) //
+        if (this.Params.track === this._FallBackTrack.URI) {
+            this._FallBackTrack = new SoundCloudTrack(this.Defaults.trackName,this.Defaults.user,this.Defaults.track,this.Defaults.permalink);
+        }
         this.LoadTrack(this._FallBackTrack,true);
         App.Message("Load Failed: This Track Is Unavailable. Reloading last track.");
     }

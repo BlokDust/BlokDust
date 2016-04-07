@@ -54,16 +54,21 @@ export class Momentary extends Logic {
         {
             "name" : "Momentary Power",
             "parameters" : [
+
+
                 {
-                    "type" : "slider", //TODO Change to switch UI when available
-                    "name" : "Off/On",
-                    "setting" :"logic",
-                    "props" : {
-                        "value" : 0,
-                        "min" : 0,
-                        "max" : 0,
-                        "quantised" : true
-                    }
+                    "type" : "switches",
+                    "name" : "Power",
+                    "setting" :"",
+                    "switches": [
+                        {
+                            "name": "Pulse On",
+                            "setting": "logic",
+                            "value": this.Params.logic,
+                            "lit" : true,
+                            "mode": "offOn"
+                        }
+                    ]
                 }
             ]
         };
@@ -84,10 +89,12 @@ export class Momentary extends Logic {
         // Momentarily Trigger Attack and then release
         this.Params.logic = true;
         let connections: ISource[] = this.Connections.ToArray();
+        var that = this;
         connections.forEach((source: ISource) => {
             source.AddPower();
             setTimeout(() => {
                 source.RemovePower();
+                that.RefreshOptionsPanel();
             }, 100); //TODO: use App.Config.PulseLength here instead
             if (source instanceof ParticleEmitter) {
                 (<ParticleEmitter>source).EmitParticle();
