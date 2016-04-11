@@ -33,6 +33,7 @@ export class Microphone extends Source {
         }
 
         this.CreateSource();
+        this.CreateFirstVoice();
         this.Volume = App.Audio.ctx.createGain();
 
         this.Sources.forEach((s: Tone.Microphone) => {

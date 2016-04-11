@@ -1,5 +1,4 @@
 import {Block} from './Block';
-import {Granular} from './Sources/Granular';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
@@ -16,14 +15,20 @@ import {Power} from './Power/Power';
 import {SoundCloudTrack} from '../Core/Audio/SoundCloud/SoundcloudTrack';
 import {Soundcloud} from './Sources/Soundcloud';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
+import {Controller} from './Interaction/Controller';
 
 declare var App: IApp;
 
 export class Source extends Block implements ISource {
 
-    public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
+    //-------------------------------------------------------------------------------------------
+    //  INIT
+    //-------------------------------------------------------------------------------------------
 
+
+    public Connections: ObservableCollection<IEffect> = new ObservableCollection<IEffect>();
     public Sources: any[];
+    public Grains: any[];
     public Envelopes: Tone.AmplitudeEnvelope[];
     public AudioInput: Tone.Mono;
     public Settings: ToneSettings = {
@@ -40,7 +45,7 @@ export class Source extends Block implements ISource {
 
     public ActiveVoices: Voice[];
     public FreeVoices: Voice[];
-    public PowerConnections: number;
+    public MonoVoice: Voice;
     public ParticlePowered: boolean;
     public LaserPowered: boolean;
     public UpdateCollision: boolean;
@@ -62,17 +67,20 @@ export class Source extends Block implements ISource {
 
         this.ParticlePowered = false;
         this.LaserPowered = false;
-        this.PowerConnections = 0;
 
-        if (!(this instanceof Power)) {
-
+        if (!(this instanceof Power)) { //TODO: Power is an Effect, did we mean this? Looks like non-sound sources are creating AudioInputs. Try the IsASoundSource() check.
             this.AudioInput = new Tone.Mono();
             this.AudioInput.connect(App.Audio.Master);
-
         }
 
         this.UpdateOptionsForm();
     }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  CONNECTIONS
+    //-------------------------------------------------------------------------------------------
+
 
     /**
      * Add effect to this Source's list of effects and call Effect.Attach()
@@ -111,13 +119,8 @@ export class Source extends Block implements ISource {
         // Reset Envelopes back to original setting
         this._EnvelopeReset();
 
-        // Release all the sources envelopes
-        if (!this.IsPowered()) {
-            this.TriggerRelease('all', true);
-        }
-
-        // Reset pitch back to original setting
-        this.ResetPitch();
+        // Release any disconnected voices
+        this.DeactivateDisconnectedVoices();
     }
 
     private _EnvelopeReset() {
@@ -151,10 +154,31 @@ export class Source extends Block implements ISource {
         }
     }
 
-    Stop() {
-        this.TriggerRelease('all', true);
+
+    //-------------------------------------------------------------------------------------------
+    //  INSTANCE CHECK
+    //-------------------------------------------------------------------------------------------
+
+    // RETURNS TRUE IF ENVELOPES ARE FOUND //
+    IsASoundSource() {
+        return (this.Envelopes.length || this.Sources.length );
     }
 
+    // RETURNS TRUE IF BLOKCKNAME MATCHES NAME //
+    // where name is a reference to App.L10n
+    IsMyName(name:string) {
+        return (name === this.BlockName);
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  TRIGGER ENVELOPES / SAMPLERS
+    //-------------------------------------------------------------------------------------------
+
+    Stop() {
+        //this.TriggerRelease('all', true);
+        this.DeactivateAllVoices();
+    }
 
     /**
      * Trigger a sources attack
@@ -203,9 +227,11 @@ export class Source extends Block implements ISource {
      * If index is set to 'all', all envelopes will be released
      */
     TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
+
+        // SAMPLERS HAVE THEIR OWN TRIGGERRELEASE
         forceRelease = (forceRelease === true) ? forceRelease : false;
         // Only if it's not powered or force is set to true
-        if (!this.IsPowered() || forceRelease) {
+        //if (!this.IsPowered() || forceRelease) {
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -236,7 +262,7 @@ export class Source extends Block implements ISource {
             } else if (this.UpdateCollision!==undefined) {
                 this.UpdateCollision = true;
             }
-        }
+        //}
     }
 
 
@@ -274,49 +300,438 @@ export class Source extends Block implements ISource {
     }
 
 
+    //-------------------------------------------------------------------------------------------
+    //  MESSAGES
+    //-------------------------------------------------------------------------------------------
+
+    // ON //
+    NoteOn(controller: string, note?:number, polyphonic?: boolean, glide?:number, velocity?:number) {
+        note = note || App.Config.DefaultNote;
+        polyphonic = polyphonic || false;
+        glide = glide || 0;
+        velocity = velocity || 0;
+
+        // What voice are we using //
+        var voiceData = this.GetVoice(note, controller, polyphonic);
+
+        // Should it glide //
+        if (voiceData.trigger || this.ActiveVoices.length > 1) {
+            glide = 0;
+        }
+
+        // Set the voice pitch //
+        this.SetPitch(note,voiceData.ID,glide);
+
+        // Trigger the voice envelope //
+        if (voiceData.trigger) {
+            this.TriggerAttack(voiceData.ID);
+        }
+
+    }
+
+
+    // OFF //
+    NoteOff(controller: string, note?:number) {
+        note = note || App.Config.DefaultNote;
+
+        // What voice are we using //
+        var voiceData = this.RemoveVoice(note, controller);
+
+        // Release the voice envelope //
+        if (voiceData.trigger) {
+            this.TriggerRelease(voiceData.ID);
+        }
+    }
+
+
+    // UPDATE //
+    NoteUpdate() {
+        this.ActiveVoices.forEach((voice) => {
+            // Set the voice pitch //
+            this.SetPitch(voice.Note,voice.ID);
+        });
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  VOICES
+    //-------------------------------------------------------------------------------------------
+
+    // GET A VOICE FOR NOTE ON //
+    GetVoice(note: number, controller: string, polyphonic: boolean) {
+        var voice: Voice;
+        var trigger: boolean = true;
+        var id: number = -1;
+
+        // MONOPHONIC //
+        if (!polyphonic) {
+
+            // Grab a fresh mono voice //
+            if (!this.MonoVoice) {
+                if (this.FreeVoices.length > 0){
+                    voice = this.FreeVoices.shift();
+                }
+                else {
+                    voice = this.ActiveVoices.shift();
+                    trigger = false;
+                }
+                this.MonoVoice = voice;
+            }
+            // We already have a mono voice in use, use that //
+            else {
+                voice = this.MonoVoice;
+                trigger = false;
+            }
+        }
+
+        // POLYPHONIC //
+        else {
+            if (this.FreeVoices.length > 0){
+                voice = this.FreeVoices.shift();
+            }
+            else {
+                voice = this.ActiveVoices.shift();
+                trigger = false;
+
+                // if this was the mono voice, free it //
+                if (voice === this.MonoVoice) {
+                    this.MonoVoice = null;
+                }
+            }
+        }
+
+        // Update Voice data //
+        if (voice) {
+            voice.Note = note;
+            voice.Controller = controller;
+            id = voice.ID;
+            if (this.ActiveVoices.indexOf(voice)==-1) {
+                this.ActiveVoices.push( voice );
+            }
+        }
+
+        // Give voice data to NoteOn() //
+        return {
+            ID: id,
+            trigger: trigger
+        };
+    }
+
+
+    // GET A VOICE FOR NOTE OFF //
+    RemoveVoice(note: number, controller: string) {
+        var voice: Voice;
+        var trigger: boolean = false;
+        var id: number = -1;
+
+        for (var i=0; i< this.ActiveVoices.length; i++) {
+            var activeVoice = this.ActiveVoices[i];
+
+            // if note is saved in the ActiveVoices & controlled by this controller, stop it //
+            if (activeVoice.Note === note && activeVoice.Controller === controller) {
+                voice = activeVoice;
+                trigger = true;
+                id = voice.ID;
+
+                // if this was the mono voice, free it //
+                if (voice === this.MonoVoice) {
+                    if (this.IsPowered()) {
+                        this.AssignMonoVoiceToPower();
+                        trigger = false;
+                        continue;
+                    }
+                    this.MonoVoice = null;
+                }
+
+                // Move from active to free //
+                this.ActiveVoices.splice(i, 1);
+                this.FreeVoices.push(activeVoice);
+            }
+        }
+
+        // Give voice data to NoteOn() //
+        return {
+            ID: id,
+            trigger: trigger
+        };
+    }
+
+
+    // KILL ALL VOICES //
+    DeactivateAllVoices() {
+        this.ActiveVoices.forEach((activeVoice: Voice, i: number) => {
+            // Move from active to free //
+            this.ActiveVoices.splice(i, 1);
+            this.FreeVoices.push(activeVoice);
+            this.TriggerRelease(i);
+        });
+    }
+
+
+    // KILL DISCONNECTED VOICES //
+    DeactivateDisconnectedVoices() {
+        var controllers = ["power"];
+        var voices = [];
+
+        // Get connected controllers //
+        let connections: IEffect[] = this.Connections.ToArray();
+        connections.forEach((connection: IEffect) => {
+            if (connection instanceof Controller) {
+                controllers.push(""+connection.Id);
+            }
+        });
+
+        // Get voices controlled by disconnected controllers, leave connected ones //
+        this.ActiveVoices.forEach((activeVoice: Voice) => {
+            var deactivate: boolean = true;
+            for(var h=0; h<controllers.length; h++) {
+                if (activeVoice.Controller === controllers[h]) {
+                    deactivate = false;
+                }
+            }
+            if (deactivate) {
+                voices.push(activeVoice);
+            }
+        });
+
+        // Deactivate these voices //
+        for (var i=0; i<voices.length; i++) {
+
+            if (voices[i] === this.MonoVoice) {
+                // If this is the Mono voice and we're powered, transfer the voice to power and skip deactivation
+                if (this.IsPowered()) {
+                    this.AssignMonoVoiceToPower();
+                    continue;
+                }
+                this.MonoVoice = null;
+            }
+
+            var n = this.ActiveVoices.indexOf(voices[i]);
+            this.ActiveVoices.splice(n, 1);
+            this.FreeVoices.push(voices[i]);
+            this.TriggerRelease(voices[i].ID);
+        }
+    }
+
+    AssignMonoVoiceToPower() {
+        this.MonoVoice.Controller = "power";
+        this.MonoVoice.Note = App.Config.DefaultNote;
+        this.SetPitch(this.MonoVoice.Note,this.MonoVoice.ID);
+    }
+
+
+    // CREATE OUR FIRST VOICE FOR MONO / POWER //
+    CreateFirstVoice() {
+        if (!this.IsASoundSource()) return;
+        if (this.FreeVoices.length < 1) {
+            this.FreeVoices.push( new Voice(0) );
+        }
+    }
+
+
+    // CREATE THE REST OF OUR VOICES FOR POLY //
+    CreateVoices() { // MOVED HERE FROM INTERACTION //
+
+        if (!this.IsASoundSource()) return;
+        if (this.IsMyName(App.L10n.Blocks.Source.Blocks.Granular.name)) return;
+
+        // Work out how many voices we actually need (we may already have some)
+        let diff: number = App.Config.PolyphonicVoices - this.Sources.length;
+
+        // If we haven't got enough sources, create however many we need.
+        if (diff > 0){
+
+            // Loop through and create the voices
+            for (let i = 1; i <= App.Config.PolyphonicVoices; i++) {
+
+                // Create a source
+                let s: Tone.Source = this.CreateSource();
+
+                let e: Tone.AmplitudeEnvelope;
+
+                // Create an envelope and save it to `var e`
+                e = this.CreateEnvelope();
+
+                if (e) {
+                    // Connect the source to the Envelope and start
+                    s.connect(e);
+                    s.start();
+
+                    // Connect Envelope to the Effects Chain
+                    e.connect(this.AudioInput);
+                } else {
+                    // No CreateEnvelope()
+                    // Check if it's a Sampler Source (they have their own envelopes built in)
+                    if (this.Sources[0] instanceof Tone.Simpler) {
+                        e = this.Sources[i].envelope;
+                        s.connect(this.AudioInput)
+                    }
+                }
+
+                // Add the source and envelope to our FreeVoices list
+                this.FreeVoices.push( new Voice(i) );
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  PITCH
+    //-------------------------------------------------------------------------------------------
+
+
+    MidiToFrequency(note: number) {
+        return App.Audio.Tone.midiToFrequency(note);
+    }
+
+    MidiToPlayback(note: number) {
+        return App.Audio.Tone.intervalToFrequencyRatio(note - App.Config.DefaultNote);
+    }
+
+    // ADD UP SOURCE PITCH MODS //
+    GetSourcePitchMods() {
+
+        var sourceMods = 0;
+        if (this.Params.transpose) {
+            sourceMods += this.Params.transpose;
+        }
+        if (this.Params.fine) {
+            sourceMods += this.Params.fine;
+        }
+        if (this.Params.playbackRate) {
+            sourceMods += this.Params.playbackRate;
+        }
+        return sourceMods;
+    }
+
+    // ADD UP CONNECTED PITCH MODS //
+    GetConnectedPitchMods() {
+        var controllerMods = 0;
+        let connections: IEffect[] = this.Connections.ToArray();
+        connections.forEach((connection: IEffect) => {
+            if (connection instanceof Controller) {
+                controllerMods += connection.GetPitchMods();
+            }
+        });
+        return controllerMods;
+    }
+
+    // SET A VOICE'S PITCH //
+    SetPitch(note: number, voiceNo?: number, glide?: Tone.Time) {
+        const voiceNumber: number = voiceNo ? voiceNo : 0;
+        const time: Tone.Time = glide ? glide : 0;
+
+        // CONVERT PITCH //
+        var pitch = note + this.GetConnectedPitchMods() + this.GetSourcePitchMods();
+        const frequency = this.MidiToFrequency(pitch);
+        const playback = this.MidiToPlayback(pitch);
+
+        // OSCILLATOR //
+        if (this.Sources[voiceNumber].frequency) {
+            this.Sources[voiceNumber].frequency.linearRampToValue(frequency, time);
+
+        }
+
+        // SAMPLER //
+        else if (this.Sources[voiceNumber].player) {
+            if ((<any>Tone).isSafari){
+                this.Sources[voiceNumber].player.playbackRate = playback;
+            } else {
+                this.Sources[voiceNumber].player.playbackRate.linearRampToValue(playback, time);
+            }
+        }
+
+        // PLAYER //
+        else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
+            if ((<any>Tone).isSafari){
+                this.Sources[voiceNumber].playbackRate = playback;
+            } else {
+                this.Sources[voiceNumber].playbackRate.linearRampToValue(playback, time);
+            }
+        }
+
+        // GRANULAR //
+        else if (this.Grains) {
+            for (var i=0; i<this.Grains.length; i++) {
+                if ((<any>Tone).isSafari) {
+                    (<any>this.Grains[i]).playbackRate = playback;
+                } else {
+                    this.Grains[i].playbackRate.linearRampToValue(playback, time);
+                }
+            }
+        }
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
+
+
+    MouseDown() {
+        super.MouseDown();
+        this.AddPower();
+    }
+
+    MouseUp() {
+        super.MouseUp();
+        this.RemovePower();
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  POWER
+    //-------------------------------------------------------------------------------------------
+
+
+    AddPower() {
+        this.PowerAmount++;
+        if (this.PowerAmount === 1) {
+            if (!this.IsASoundSource()) return;
+            this.NoteOn("power");
+        }
+    }
+
+    RemovePower() {
+        if (this.PowerAmount === 0) {
+            return;
+        }
+        this.PowerAmount--;
+        if (this.PowerAmount === 0) {
+            if (!this.IsASoundSource()) return;
+            this.NoteOff("power");
+        }
+    }
+
     /**
      * Checks whether the block is connected to a Power
      * @returns {boolean}
      */
     IsPowered(): boolean {
-        if (this.IsPressed || this.PowerConnections>0 || this.PowerAmount>0) {
+        if (this.PowerAmount>0) {
             return true;
         }
-        //let connections: IBlock[] = this.Chain.Connections;
-        //for (let i = 0; i < connections.length; i++) {
-        //    let blockConnections: IBlock[] = connections[i].Connections.ToArray();
-        //    for (let i = 0; i < blockConnections.length; i++) {
-        //        if (blockConnections[i] instanceof Power ||
-        //            blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
-        //            return true;
-        //        }
-        //    }
-        //}
-        this.Chain.Connections.forEach((block:IBlock) => {
-            let blockConnections: IBlock[] = block.Connections.ToArray();
-            for (let i = 0; i < blockConnections.length; i++) {
-                if (blockConnections[i] instanceof Power ||
-                    blockConnections[i] instanceof Logic && blockConnections[i].Params.logic) {
-                    return true;
-                }
-            }
-        });
         return false;
     }
 
     /**
      * When a particle hits a source it triggers the attack and release
-     * TODO: give this method a time parameter for duration of note
      * @param particle
      * @constructor
      */
     ParticleCollision(particle: Particle) {
         super.ParticleCollision(particle);
-        if (!this.IsPowered()) {
-            this.TriggerAttackRelease();
-        }
+        this.AddPower();
+        var that = this;
+        setTimeout(function(){
+            that.RemovePower();
+        }, App.Config.PulseLength);
         particle.Dispose();
     }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  DISPOSE
+    //-------------------------------------------------------------------------------------------
+
 
     /**
      * Disposes the audio nodes
@@ -344,151 +759,5 @@ export class Source extends Block implements ISource {
             this.FreeVoices = [];
         }
 
-    }
-
-    /**
-     * Sets a sources pitch regardless of whether it's a oscillator or a audio player
-     * @param pitch: number
-     * @param sourceId: number - The index of the source in Sources[] (default: 0)
-     * @param rampTime: Tone.Time (default: 0)
-     */
-    SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
-        // If no sourceId or rampTime is given default to 0
-        const id: number = sourceId ? sourceId : 0;
-        const time: Tone.Time = rampTime ? rampTime : 0;
-
-        if (this.Sources[id].frequency) {
-            // Oscillators
-            //TODO: issue #249 setValueAtTime on Tone.js Param.js when using exponentialRampToValue
-            //this.Sources[id].frequency.exponentialRampToValue(pitch, time);
-            this.Sources[id].frequency.linearRampToValue(pitch, time);
-
-        } else if (this.Sources[id].player) {
-            // Samplers
-            if ((<any>Tone).isSafari){
-                this.Sources[id].player.playbackRate = pitch / App.Config.BaseNote;
-            } else {
-                //TODO: issue #249 setValueAtTime on Tone.js Param.js when using exponentialRampToValue
-                //this.Sources[id].player.playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
-                this.Sources[id].player.playbackRate.linearRampToValue(pitch / App.Config.BaseNote, time);
-            }
-
-        } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
-            // Players
-            if ((<any>Tone).isSafari){
-                this.Sources[id].playbackRate = pitch / App.Config.BaseNote;
-            } else {
-                //TODO: issue #249 setValueAtTime on Tone.js Param.js when using exponentialRampToValue
-                //this.Sources[id].playbackRate.exponentialRampToValue(pitch / App.Config.BaseNote, time);
-                this.Sources[id].playbackRate.linearRampToValue(pitch / App.Config.BaseNote, time);
-            }
-        }
-    }
-
-    /**
-     * Get the current pitch from a specific source in Sources[]
-     * @param {number} id
-     * @returns {number} pitch
-     */
-    GetPitch(id: number = 0) {
-        if (this.Sources[id].frequency) {
-            // Oscillators
-            return this.Sources[id].frequency.value;
-
-        } else if (this.Sources[id].player) {
-            // Samplers
-            if ((<any>Tone).isSafari){
-                return this.Sources[id].player.playbackRate * App.Config.BaseNote;
-            } else {
-                return this.Sources[id].player.playbackRate.value * App.Config.BaseNote;
-            }
-
-        } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
-            // Players
-            if ((<any>Tone).isSafari){
-                return this.Sources[id].playbackRate * App.Config.BaseNote;
-            } else {
-                return this.Sources[id].playbackRate.value * App.Config.BaseNote;
-            }
-
-        } else {
-            return 0;
-        }
-    }
-
-    /**
-     * Reset a sources pitch back to its Params setting
-     */
-    ResetPitch() {
-        if (App.Config.ResetPitchesOnInteractionDisconnect) {
-            if (typeof this.Params.transpose === 'number') {
-                //Oscillators
-                this.SetPitch(App.Config.BaseNote * App.Audio.Tone.intervalToFrequencyRatio(this.Params.transpose));
-            } else if (this.Sources[0].player) {
-                // Samplers
-                if ((<any>Tone).isSafari){
-                    this.Sources[0].player.playbackRate = this.Params.playbackRate;
-                } else {
-                    this.Sources[0].player.playbackRate.value = this.Params.playbackRate;
-                }
-            } else if (this.Sources[0].playbackRate instanceof Tone.Signal) {
-                // Noise
-                if ((<any>Tone).isSafari){
-                    this.Sources[0].playbackRate = this.Params.playbackRate;
-                } else {
-                    this.Sources[0].playbackRate.value = this.Params.playbackRate;
-                }
-            }
-        }
-    }
-
-
-    /**
-     * Shifts a notes pitch up or down a number of octaves
-     * @example -2 would shift the note down by 2 octaves.
-     * @param {number} octaves
-     * @return this
-     */
-    OctaveShift(octaves: number) {
-        if (octaves) {
-            this.Sources.forEach((s: Tone.Source, i)=> {
-                const oldPitch = this.GetPitch(i);
-                const multiplier = Math.pow(2, Math.abs(octaves));
-
-                if (octaves > 0) {
-                    this.SetPitch(oldPitch * multiplier, i);
-                } else {
-                    this.SetPitch(oldPitch / multiplier, i);
-                }
-            });
-        }
-        return this;
-    }
-
-
-    MouseDown() {
-        super.MouseDown();
-        this.TriggerAttack();
-    }
-
-    MouseUp() {
-        super.MouseUp();
-        this.TriggerRelease('all');
-    }
-
-    AddPower() {
-        if (this.PowerAmount === 0) {
-            this.TriggerAttack();
-        }
-        this.PowerAmount++;
-    }
-
-    RemovePower() {
-        if (this.PowerAmount === 1) {
-            this.TriggerRelease('all', true);
-        } else if (this.PowerAmount === 0) {
-            return;
-        }
-        this.PowerAmount--;
     }
 }

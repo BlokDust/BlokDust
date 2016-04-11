@@ -133,7 +133,7 @@ declare module WebMidi{
         cmd: number,
         channel: number,
         type: number,
-        note: string,
+        note: number,
         velocity: number,
     }
 }

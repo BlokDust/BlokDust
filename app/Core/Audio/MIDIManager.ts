@@ -81,7 +81,8 @@ export class MIDIManager {
             cmd: e.data[0] >> 4,// this gives us our [command/channel, note, velocity] data.
             channel: e.data[0] & 0xf,
             type: e.data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
-            note: App.Audio.Tone.midiToNote(e.data[1]),
+            //note: App.Audio.Tone.midiToNote(e.data[1]),
+            note: e.data[1],
             velocity: e.data[2],
         };
 

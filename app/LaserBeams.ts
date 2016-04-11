@@ -187,10 +187,10 @@ export class LaserBeams extends DisplayObject {
                                                         if (block instanceof Logic) {
                                                             block.ScheduleLogic();
                                                         } else {
-                                                            if (!block.IsPowered()) {
+                                                            /*if (!block.IsPowered()) {
                                                                 block.TriggerAttack();
                                                                 //block.ScheduleAttack();
-                                                            }
+                                                            }*/
                                                             //console.log(block.PowerConnections);
                                                             //block.PowerConnections += 1;
                                                             block.AddPower();

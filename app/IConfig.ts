@@ -1,5 +1,6 @@
 export interface IConfig {
     BaseNote: number;
+    DefaultNote: number;
     ConvolverDefaultTracks: string[];
     ConvolverMaxTrackLength: number;
     GranularDefaultTracks: string[];
@@ -7,6 +8,8 @@ export interface IConfig {
     MaxOperations: number;
     PixelPaletteImagePath: string[];
     PolyphonicVoices: number;
+    PlaybackRange: number;
+    PitchBendRange: number;
     PulseLength: Tone.Time;
     RecorderWorkerPath: string;
     ResetPitchesOnInteractionDisconnect: boolean;

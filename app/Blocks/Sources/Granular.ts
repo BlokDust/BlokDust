@@ -23,7 +23,7 @@ export class Granular extends Source {
     private _FirstRelease: boolean = true;
     private _CurrentGrain: number = 0;
     private _IsLoaded: boolean;
-    public GrainsAmount: number = 16;
+    public GrainsAmount: number;
     private _NoteOn: boolean = false;
     private _WaveForm: number[];
     private _FirstBuffer: any;
@@ -31,6 +31,7 @@ export class Granular extends Source {
     private _FallBackTrack: SoundCloudTrack;
     public LoadTimeout: any;
     private _tempPlaybackRate: number;
+    private _RampLength: number;
     public ReleaseTimeout;
 
     public Params: GranularParams;
@@ -48,7 +49,7 @@ export class Granular extends Source {
         }
 
         this.Defaults = {
-            playbackRate: 1,
+            playbackRate: 0,
             density: 10,
             region: 0,
             spread: 1.5,
@@ -60,6 +61,8 @@ export class Granular extends Source {
         };
         this.PopulateParams();
 
+        this.GrainsAmount = 12;
+        this._RampLength = 0.4;
         this._tempPlaybackRate = this.Params.playbackRate;
         this._WaveForm = [];
         this.SearchResults = [];
@@ -73,6 +76,7 @@ export class Granular extends Source {
         this.CreateSource();
         this.CreateEnvelope();
         this.CreateGrains();
+        this.CreateFirstVoice();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
@@ -89,17 +93,6 @@ export class Granular extends Source {
         this.ResultsPage = 1;
         this.SearchResults = [];
         SoundCloudAPI.MultiSearch(query, App.Config.GranularMaxTrackLength, this);
-        /*SoundCloudAPI.Search(query, App.Config.GranularMaxTrackLength, (track: SoundCloudAPIResponse.Success ) => {
-            this.SearchResults.push(new SoundCloudTrack(track.title, track.user.username, track.uri, track.permalink_url));
-            this.Searching = false;
-            App.MainScene.OptionsPanel.Animating = false;
-        }, (error: SoundCloudAPIResponse.Error) => {
-            this.Searching = false;
-            App.MainScene.OptionsPanel.Animating = false;
-            if (error.status === 452) {
-                // Tracks were found but they don't have a blokdust tag or aren't creative commons
-            }
-        });*/
     }
 
     SetSearchResults(results) {
@@ -147,10 +140,10 @@ export class Granular extends Source {
 
                 // CREATE ENVELOPE //
                 this.GrainEnvelopes[i] = new Tone.AmplitudeEnvelope(
-                    this.Params.grainlength/2,  // Attack
+                    this.Params.grainlength * this._RampLength,  // Attack
                     0.01,                       // Decay
-                    0.9,                        // Sustain
-                    this.Params.grainlength/2   // Release
+                    1,                        // Sustain
+                    this.Params.grainlength * this._RampLength   // Release
                 );
 
                 // CONNECT //
@@ -273,25 +266,26 @@ export class Granular extends Source {
         return super.CreateEnvelope();
     }
 
-    TriggerAttack() {
-        super.TriggerAttack();
+    TriggerAttack(index) {
+        super.TriggerAttack(index);
         if (this._IsLoaded) {
+
+            //this._NoteOn = true;
 
             /*this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
                 e.triggerAttack();
             });*/
 
-            clearTimeout(this.EndTimeout);
+            //clearTimeout(this.EndTimeout);
             if (!this._NoteOn) {
-
                 this._NoteOn = true;
                 this.GrainLoop();
             }
         }
     }
 
-    TriggerRelease() {
-        super.TriggerRelease();
+    TriggerRelease(index) {
+        super.TriggerRelease(index);
 
         /*this._Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.triggerRelease();
@@ -300,7 +294,9 @@ export class Granular extends Source {
         //clearTimeout(this.EndTimeout);
         var that = this;
         this.EndTimeout = setTimeout(() => {
-            that._NoteOn = false;
+            if (that.ActiveVoices.length===0) {
+                that._NoteOn = false;
+            }
         }, <number>this.Envelopes[0].release*1000);
     }
 
@@ -341,14 +337,14 @@ export class Granular extends Source {
            );
 
             // MAKE SURE THESE ARE IN SYNC //
-            this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength/2,"+0.01");
+            this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength * (1 - this._RampLength),"+0.01");
             this.Grains[this._CurrentGrain].stop();
-            this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
+            //this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
             this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
                 this.GrainLoop();
-            }, Math.round(((this.Params.grainlength*1) / this.Params.density)*1500));
+            }, Math.round(((this.Params.grainlength*2) / this.Params.density)*1500));
 
             this._CurrentGrain += 1;
             if (this._CurrentGrain >= this.Params.density) {
@@ -369,34 +365,9 @@ export class Granular extends Source {
         return location;
     }
 
-    SetPitch(pitch: number, sourceId?: number, rampTime?: Tone.Time) {
-        pitch = pitch / App.Config.BaseNote;
-        for (var i=0; i<this.GrainsAmount; i++) {
-            if ((<any>Tone).isSafari) {
-                (<any>this.Grains[i]).playbackRate = pitch;
-            } else {
-                this.Grains[i].playbackRate.value = pitch;
-            }
-        }
-        this._tempPlaybackRate = pitch;
-        console.log(this._tempPlaybackRate);
-        console.log(this.Params.playbackRate);
-    }
-
-    /**
-     * Reset granular pitches back to their original Params setting
-     */
-    ResetPitch() {
-        if (App.Config.ResetPitchesOnInteractionDisconnect) {
-            this._tempPlaybackRate = this.Params.playbackRate;
-            for (var i=0; i<this.GrainsAmount; i++) {
-                if ((<any>Tone).isSafari) {
-                    (<any>this.Grains[i]).playbackRate = this.Params.playbackRate;
-                } else {
-                    this.Grains[i].playbackRate.value = this.Params.playbackRate;
-                }
-            }
-        }
+    SetPitch(note: number, voiceNo?: number, glide?: Tone.Time) {
+        super.SetPitch(note,voiceNo,glide);
+        this._tempPlaybackRate = this.MidiToPlayback(note);
     }
 
     SetParam(param: string,value: number) {
@@ -408,8 +379,8 @@ export class Granular extends Source {
             case "grainlength":
                 this.Params.grainlength = value;
                 for (var i=0; i< this.GrainsAmount; i++) {
-                    this.GrainEnvelopes[i].attack = value/2;
-                    this.GrainEnvelopes[i].release = value/2;
+                    this.GrainEnvelopes[i].attack = value * this._RampLength;
+                    this.GrainEnvelopes[i].release = value * this._RampLength;
                 }
 
                 break;

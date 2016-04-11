@@ -30,7 +30,7 @@ export class Sampler extends SamplerBase {
         }
 
         this.Defaults = {
-            playbackRate: 1,
+            playbackRate: 0,
             reverse: false,
             startPosition: 0,
             endPosition: null,
@@ -240,11 +240,10 @@ export class Sampler extends SamplerBase {
                     "setting" :"playbackRate",
                     "props" : {
                         "value" : this.Params.playbackRate,
-                        "min" : 0.125,
-                        "max" : 8,
+                        "min" : -36,
+                        "max" : 36,
                         "quantised" : false,
-                        "centered" : true,
-                        "logarithmic": true
+                        "centered" : true
                     }
                 }
             ]
@@ -257,11 +256,13 @@ export class Sampler extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                if ((<any>Tone).isSafari) {
+                /*if ((<any>Tone).isSafari) {
                     this.Sources[0].player.playbackRate = value;
                 } else {
                     this.Sources[0].player.playbackRate.value = value;
-                }
+                }*/
+                this.Params.playbackRate = value;
+                this.NoteUpdate();
                 break;
             case "reverse":
                 value = value? true : false;
