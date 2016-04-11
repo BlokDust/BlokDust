@@ -95,7 +95,7 @@ export class Momentary extends Logic {
             setTimeout(() => {
                 source.RemovePower();
                 that.RefreshOptionsPanel();
-            }, 100); //TODO: use App.Config.PulseLength here instead
+            }, App.Config.PulseLength);
             if (source instanceof ParticleEmitter) {
                 (<ParticleEmitter>source).EmitParticle();
             }

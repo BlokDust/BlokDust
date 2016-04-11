@@ -27,7 +27,7 @@ export class ComputerKeyboard extends Keyboard {
         this.BlockName = App.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.name;
 
         this.Defaults = {
-            octave: 3,
+            transpose: 0,
             glide: 0.05,
             isPolyphonic: false
         };
@@ -42,172 +42,47 @@ export class ComputerKeyboard extends Keyboard {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
+    //-------------------------------------------------------------------------------------------
+    //  MESSAGES
+    //-------------------------------------------------------------------------------------------
+
+    // KEY DOWN //
+    KeyDownCallback(e: any){
+        // IF A VALID MIDI NOTE //
+        if (e.KeyDown && e.KeyDown > 0 && e.KeyDown < 1000){
+            var note = e.KeyDown;
+            this.KeysDown[""+note] = true;
+            this.NoteOn(note);
+        }
+        // COMMANDS LIKE TRANSPOSE //
+        else {
+            this.ExecuteCodeCommand(e.KeyDown);
+        }
+    }
+
+    // KEY UP //
+    KeyUpCallback(e: any){
+        if (e.KeyUp && e.KeyUp > 0 && e.KeyUp < 1000){
+            var note = e.KeyUp;
+            delete this.KeysDown[""+note];
+            this.NoteOff(note);
+        }
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  DRAW
+    //-------------------------------------------------------------------------------------------
 
     Draw() {
         super.Draw();
         this.DrawSprite(this.BlockName);
     }
 
-    Dispose(){
-        super.Dispose();
-        // This needs to disconnect first so that ResetScene can delete keyboard properly
-        App.Audio.ConnectionManager.Update();
-        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
-        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
 
-        this.Params.octave = null;
-        this.KeyboardCommands = null;
-    }
-
-    Stop() {
-        const connections = this.Connections.ToArray();
-        connections.forEach((source: ISource) => {
-            source.TriggerRelease('all');
-        });
-        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
-        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
-    }
-
-    KeyDownCallback(e: any){
-
-        //if KeyDown is a keyboard note or an octave shifter
-        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_' || e.KeyDown === 'blank'){
-            this.KeysDown = e.KeysDown;
-
-            // ALL SOURCES TRIGGER KEYBOARD DOWN
-            let connections: ISource[] = this.Connections.ToArray();
-            connections.forEach((source: ISource) => {
-                this.KeyboardDown(e.KeyDown, source);
-            });
-
-
-        } else {
-            this._ExecuteKeyboardCommand(e.KeyDown, this.Connections.ToArray());
-        }
-    }
-
-    KeyUpCallback(e: any){
-        // FOR ALL SOURCES TRIGGER KEYBOARD UP
-        let connections: ISource[] = this.Connections.ToArray();
-        connections.forEach((source: ISource) => {
-            // If its an octave shift no need to call KeyboardUp
-            if (e.KeyUp && e.KeyUp.substring(0, 5) === 'note_' || e.KeyDown === 'blank') {
-                this.KeyboardUp(e.KeyUp, source);
-            }
-        });
-
-        //if KeyDown is a keyboard note or an octave shifter
-        if (e.KeyDown && e.KeyDown.substring(0, 5) === 'note_') {
-            this.KeysDown = e.KeysDown;
-        }
-    }
-
-    // OCTAVE SHIFT //
-    private _ExecuteKeyboardCommand(key: string, sources: ISource[]) {
-        if (key == 'octave-up' && this.Params.octave < 9) {
-            sources.forEach((source: ISource) => {
-                source.OctaveShift(1);
-            });
-            this.Params.octave++;
-            this.RefreshOptionsPanel();
-        } else if (key === 'octave-down' && this.Params.octave !== 0) {
-            sources.forEach((source: ISource) => {
-                source.OctaveShift(-1);
-            });
-            this.Params.octave--;
-            this.RefreshOptionsPanel();
-        }
-    }
-
-    KeyboardDown(keyDown:string, source:ISource): void {
-
-        if (keyDown === 'blank') source.TriggerRelease('all');
-        var keyPressed = this.GetKeyNoteOctaveString(keyDown);
-        var frequency = this.GetFrequencyOfNote(keyPressed, source);
-
-        if (this.Params.isPolyphonic && (source.ActiveVoices.length || source.FreeVoices.length) && (!(source instanceof Granular))) {
-            // POLYPHONIC MODE
-
-            // Are there any free voices?
-            if (source.FreeVoices.length > 0){
-
-                // Yes, get one of them and remove it from FreeVoices list
-                var voice = source.FreeVoices.shift();
-
-                // Store the keydown
-                voice.Key = keyDown;
-
-                // Add it to the ActiveVoices list
-                source.ActiveVoices.push( voice );
-
-                // set it to the right frequency
-                source.SetPitch(frequency, voice.ID);
-
-                // trigger it's envelope
-                source.TriggerAttack(voice.ID);
-
-            } else {
-
-                // No free voices available - steal the oldest one from active voices
-                var voice: Voice = source.ActiveVoices.shift();
-
-                // Store the keydown
-                voice.Key = keyDown;
-
-                // Set the new pitch
-                source.SetPitch(frequency, voice.ID);
-
-                // Add it back to the end of ActiveVoices
-                source.ActiveVoices.push( voice );
-            }
-
-        } else {
-            // MONOPHONIC MODE
-
-            // If no other keys already pressed trigger attack
-            if (Object.keys(this.KeysDown).length === 1) {
-                source.SetPitch(frequency);
-                source.TriggerAttack();
-
-                // Else ramp to new frequency over time (glide)
-            } else {
-                source.SetPitch(frequency, 0, this.Params.glide);
-            }
-        }
-    }
-
-    KeyboardUp(keyUp:string, source:ISource): void {
-        if (keyUp === 'blank') source.TriggerRelease('all');
-
-        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
-            // POLYPHONIC MODE
-
-            // Loop through all the active voices
-            source.ActiveVoices.forEach((voice: Voice, i: number) => {
-
-                // if key pressed is a saved in the ActiveVoices stop it
-                if (voice.Key === keyUp) {
-                    // stop it
-                    source.TriggerRelease(voice.ID);
-
-                    // Remove voice from Active Voices
-                    source.ActiveVoices.splice(i, 1);
-
-                    // Add it to FreeVoices
-                    source.FreeVoices.push(voice);
-                }
-            });
-
-        } else {
-           // MONOPHONIC MODE
-
-            if (Object.keys(this.KeysDown).length === 0) {
-                source.TriggerRelease();
-            }
-        }
-    }
-
-
+    //-------------------------------------------------------------------------------------------
+    //  OPTIONS
+    //-------------------------------------------------------------------------------------------
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -229,33 +104,16 @@ export class ComputerKeyboard extends Keyboard {
                         }
                     ]
                 },
-                /*{
-                    "type" : "buttons",
-                    "name" : "Mode",
-                    "setting" :"polyphonic",
-                    "props" : {
-                        "value" : this.Params.isPolyphonic,
-                        "mode" : "string"
-                    },
-                    "buttons": [
-                        {
-                            "name" : "Mono"
-                        },
-                        {
-                            "name" : "Poly"
-                        }
-                    ]
-                },*/
                 {
                     "type" : "slider",
                     "name" : "Octave",
-                    "setting" :"octave",
+                    "setting" :"transpose",
                     "props" : {
-                        "value" : this.Params.octave,
-                        "min" : 0,
-                        "max" : 9,
+                        "value" : this.Params.transpose,
+                        "min" : -this.TranspositionRange,
+                        "max" : this.TranspositionRange,
                         "quantised" : true,
-                        "centered" : false
+                        "centered" : true
                     }
                 },
                 {
@@ -275,4 +133,27 @@ export class ComputerKeyboard extends Keyboard {
             ]
         };
     }
+
+    //-------------------------------------------------------------------------------------------
+    //  DISPOSE
+    //-------------------------------------------------------------------------------------------
+
+
+    Dispose(){
+        super.Dispose();
+        // This needs to disconnect first so that ResetScene can delete keyboard properly
+        App.Audio.ConnectionManager.Update();
+        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
+
+        this.Params.transpose = null;
+        this.KeyboardCommands = null;
+    }
+
+    Stop() {
+        // maybe add source disconnect voices
+        App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
+        App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
+    }
+
 }

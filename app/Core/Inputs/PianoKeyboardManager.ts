@@ -9,8 +9,8 @@ export class PianoKeyboardManager extends KeyboardInputManager {
 
     public PianoKeyboardMap: any;
     public PianoKeyboardMapFallBack: any;
-    public KeyDown: string;
-    public KeyUp: string;
+    public KeyDown: number;
+    public KeyUp: number;
 
     KeyDownChange = new nullstone.Event<KeyDownEventArgs>();
     KeyUpChange = new nullstone.Event<KeyUpEventArgs>();
@@ -23,7 +23,7 @@ export class PianoKeyboardManager extends KeyboardInputManager {
          * Musical notes follow
          * note_ + (musical note letter) + _octave (A is lowest)
          */
-        this.PianoKeyboardMap = {
+        /*this.PianoKeyboardMap = {
             'ArrowUp': 'octave-up',
             'ArrowDown': 'octave-down',
             'Digit0': 'note_G#_b',
@@ -67,6 +67,56 @@ export class PianoKeyboardManager extends KeyboardInputManager {
             'BracketRight': 'note_C_c',
             'OSLeft': 'blank',
             'OSRight': 'blank',
+        };*/
+
+        // MIDI NOTE CODES //
+
+        // 1000 transpose down
+        // 1001 transpose up
+        this.PianoKeyboardMap = {
+            'ArrowUp': 1001,
+            'ArrowDown': 1000,
+            'Digit0': 68,
+            'Digit2': 54,
+            'Digit3': 56,
+            'Digit4': 58,
+            'Digit6': 61,
+            'Digit7': 63,
+            'Digit9': 66,
+            'KeyB': 79,
+            'KeyC': 76,
+            'KeyD': 75,
+            'KeyE': 57,
+            'KeyG': 78,
+            'KeyH': 80,
+            'KeyI': 65,
+            'KeyJ': 82,
+            'KeyL': 85,
+            'KeyM': 83,
+            'KeyN': 81,
+            'KeyO': 67,
+            'KeyP': 69,
+            'KeyQ': 53,
+            'KeyR': 59,
+            'KeyS': 73,
+            'KeyT': 60,
+            'KeyU': 64,
+            'KeyV': 77,
+            'KeyW': 55,
+            'KeyX': 74,
+            'KeyY': 62,
+            'KeyZ': 72,
+            'NumpadAdd': 1001,
+            'NumpadSubtract': 1000,
+            'Semicolon': 87,
+            'Comma': 84,
+            'Minus': 70,
+            'Period': 86,
+            'Slash': 88,
+            'BracketLeft': 71,
+            'BracketRight': 72,
+            'OSLeft': -1,
+            'OSRight': -1,
         };
 
         /**
@@ -122,9 +172,9 @@ export class PianoKeyboardManager extends KeyboardInputManager {
 
     set IsEnabled(val: boolean) {
         if (val === false) {
-            App.Sources.forEach((s) => {
+            /*App.Sources.forEach((s) => {
                 s.TriggerRelease('all');
-            })
+            })*/
         }
         this._isEnabled = val;
     }
@@ -134,6 +184,54 @@ export class PianoKeyboardManager extends KeyboardInputManager {
     }
 
     KeyboardDown(e) {
+        if (!this.IsEnabled) return;
+
+        var k: number;
+        if (e.code){
+            k = this.PianoKeyboardMap[e.code];
+        } else {
+            k = this.PianoKeyboardMapFallBack[e.keyCode];
+        }
+
+        //Check if this key released is in our key_map
+        if (typeof k !== undefined) {
+            //if it's already pressed (holding note)
+            if (k in this.KeysDown) {
+                return;
+            }
+            //pressed first time, add to object
+            this.KeysDown[k] = true;
+            this.KeyDown = k;
+            this.KeyDownChange.raise(this, new KeyDownEventArgs(this.KeyDown));
+        }
+    }
+
+    KeyboardUp(e) {
+        if (!this.IsEnabled) return;
+
+        var k: number;
+        if (e.code){
+            k = this.PianoKeyboardMap[e.code];
+        } else {
+            k = this.PianoKeyboardMapFallBack[e.keyCode];
+        }
+
+        //Check if this key released is in out key_map
+        if (typeof k !== undefined) {
+            if (k === -1){
+                // if it's a blank key remove all
+                this.KeysDown = {};
+            } else {
+                // remove this key from the keysDown object
+                delete this.KeysDown[k];
+            }
+            this.KeyUp = k;
+            this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
+        }
+
+    }
+
+    /*KeyboardDown(e) {
         if (!this.IsEnabled) return;
 
         var k: string;
@@ -179,5 +277,5 @@ export class PianoKeyboardManager extends KeyboardInputManager {
             this.KeyUpChange.raise(this, new KeyUpEventArgs(this.KeyUp));
         }
 
-    }
+    }*/
 }

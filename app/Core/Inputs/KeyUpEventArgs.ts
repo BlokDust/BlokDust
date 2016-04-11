@@ -1,8 +1,8 @@
 export class KeyUpEventArgs implements nullstone.IEventArgs {
 
-    public KeyUp: string;
+    public KeyUp: number;
 
-    constructor (keyUp: string) {
+    constructor (keyUp: number) {
         Object.defineProperty(this, 'KeyUp', { value: keyUp, writable: false });
     }
 }

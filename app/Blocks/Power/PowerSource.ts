@@ -9,7 +9,6 @@ import {Source} from '../Source';
 export class PowerSource extends Source implements IPowerSource {
 
     Init(drawTo: IDisplayContext): void {
-        this.PowerConnections = 0;
         super.Init(drawTo);
     }
 

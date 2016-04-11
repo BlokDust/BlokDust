@@ -29,6 +29,7 @@ export class Noise extends Source {
 
         this.CreateSource();
         this.CreateEnvelope();
+        this.CreateFirstVoice();
 
         this.Envelopes.forEach((e: any)=> {
             e.connect(this.AudioInput);

@@ -98,7 +98,7 @@ interface ParticleEmitterParams extends IParams {
  * Interaction Params
  */
 interface KeyboardParams extends IParams {
-    octave: number;
+    transpose: number;
     glide: number;
     isPolyphonic: boolean;
 }

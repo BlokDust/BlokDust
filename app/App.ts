@@ -226,9 +226,9 @@ export default class App implements IApp{
                 this.PianoKeyboardManager.ClearKeysDown();
                 this.CommandsInputManager.ClearKeysDown();
 
-                this.Sources.forEach((s: ISource) => {
-                    s.TriggerRelease('all');
-                })
+                //this.Sources.forEach((s: ISource) => {
+                    //s.TriggerRelease('all');
+                //})
             }
         }, this);
 
@@ -285,6 +285,7 @@ export default class App implements IApp{
         if (this._FontsLoaded !== 3) {
             console.log("FONTS ARE MISSING");
             // proceed anyway for now
+            this._FontsLoaded = 3;
             this.LoadReady();
         }
     }

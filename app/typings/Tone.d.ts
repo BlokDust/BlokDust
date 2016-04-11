@@ -28,6 +28,7 @@ declare class Tone {
     isFunction(arg: any): boolean;
     isUndef(arg: any): boolean;
     midiToNote(midiNumber: number): string;
+    midiToFrequency(midiNumber: number): number;
     noGC(): Tone;
     normalize(input: number, inputMin: number, inputMax: number): number;
     notationToSeconds(notation: string, bpm?: number, timeSignature?: number): number;

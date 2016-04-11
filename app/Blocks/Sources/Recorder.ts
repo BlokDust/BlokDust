@@ -24,7 +24,7 @@ export class Recorder extends SamplerBase {
         this.BlockName = App.L10n.Blocks.Source.Blocks.Recorder.name;
 
         this.Defaults = {
-            playbackRate: 1,
+            playbackRate: 0,
             reverse: false,
             startPosition: 0,
             endPosition: 0,
@@ -275,11 +275,10 @@ export class Recorder extends SamplerBase {
                     "setting" :"playbackRate",
                     "props" : {
                         "value" : this.Params.playbackRate,
-                        "min" : 0.125,
-                        "max" : 8,
+                        "min" : -App.Config.PlaybackRange,
+                        "max" : App.Config.PlaybackRange,
                         "quantised" : false,
-                        "centered" : true,
-                        "logarithmic": true
+                        "centered" : true
                     }
                 },
                 {
@@ -300,11 +299,13 @@ export class Recorder extends SamplerBase {
 
         switch(param) {
             case "playbackRate":
-                if ((<any>Tone).isSafari) {
+                /*if ((<any>Tone).isSafari) {
                     this.Sources[0].player.playbackRate = value;
                 } else {
                     this.Sources[0].player.playbackRate.value = value;
-                }
+                }*/
+                this.Params.playbackRate = value;
+                this.NoteUpdate();
                 break;
             case "reverse":
                 value = value? true : false;

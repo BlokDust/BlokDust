@@ -38,6 +38,7 @@ export class ToneSource extends Source {
 
         this.CreateSource();
         this.CreateEnvelope();
+        this.CreateFirstVoice();
 
         this.Envelopes.forEach((e: Tone.AmplitudeEnvelope)=> {
             e.connect(this.AudioInput);
@@ -47,6 +48,7 @@ export class ToneSource extends Source {
             s.connect(this.Envelopes[i]);
             s.start();
         });
+
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2, 0), new Point(0, -2), new Point(2, 0), new Point(1, 1), new Point(-1, 1));
@@ -163,10 +165,13 @@ export class ToneSource extends Source {
         switch(param) {
             case 'transpose':
                 this.Params.transpose = value;
-                this.SetPitch(this.GetFrequency(this.Params.transpose, this.Params.fine), 0, 0);
+                this.NoteUpdate();
+                //this.SetPitch(this.GetFrequency(this.Params.transpose, this.Params.fine), 0, 0);
                 break;
             case 'fine':
-                this.SetPitch(this.GetFrequency(value, this.Params.transpose), 0, 0);
+                this.Params.fine = value;
+                this.NoteUpdate();
+                //this.SetPitch(this.GetFrequency(value, this.Params.transpose), 0, 0);
                 break;
             case "waveform":
                 this.Sources.forEach((s: any)=> {

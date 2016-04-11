@@ -10,6 +10,7 @@ export class SamplerBase extends Source {
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
         this.CreateSource();
+        this.CreateFirstVoice();
     }
 
     CreateSource(){
@@ -78,7 +79,7 @@ export class SamplerBase extends Source {
      */
     TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
         // Only if it's not powered
-        if (!this.IsPowered() || forceRelease) {
+        //if (!this.IsPowered() || forceRelease) {
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Sources.forEach((s: any)=> {
@@ -88,7 +89,7 @@ export class SamplerBase extends Source {
                 // Trigger the specific one
                 this.Sources[index].triggerRelease();
             }
-        }
+        //}
     }
 
     MouseUp() {

@@ -23,9 +23,9 @@ export class MIDIController extends Keyboard {
         this.BlockName = App.L10n.Blocks.Interaction.Blocks.MIDIController.name;
 
         this.Defaults = {
+            transpose: 0,
             glide: 0.05,
             isPolyphonic: false, // Polyphonic mode: boolean, default: off
-            octave: 3
         };
         this.PopulateParams();
 
@@ -37,166 +37,57 @@ export class MIDIController extends Keyboard {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(1, 2),new Point(-1, 2));
     }
 
-    /**
-     * MIDI Message received callback
-     * @param MIDIManager {MIDIManager}
-     * @param e {WebMidi.MIDIMessageEvent}
-     */
+
+    //-------------------------------------------------------------------------------------------
+    //  MESSAGES
+    //-------------------------------------------------------------------------------------------
+
+
+    // ON MIDI MESSAGE //
     private _OnMIDIMessage(MIDIManager: MIDIManager, e: MIDIMessageArgs) {
         var cmd = e.MIDI.cmd,// this gives us our [command/channel, note, velocity] data.
             channel = e.MIDI.channel,
             type = e.MIDI.type, // channel agnostic message type. Thanks, Phil Burk.
             note = e.MIDI.note,
             velocity = e.MIDI.velocity;
-
         if (channel == 9) return;
 
+
+        // NOTE UP //
         if (cmd == 8 || ((cmd == 9) && (velocity == 0))) {
-            // with MIDI, note on with velocity zero is the same as note off
-            // Key up type
-
-            //Check if this key released is in out key_map
-            if (typeof note !== 'undefined' && note !== '') {
-                // remove this key from the keysDown object
-                delete this.KeysDown[note];
-            }
-
-            // ALL SOURCES TRIGGER KEYBOARD UP
-            let connections: ISource[] = this.Connections.ToArray();
-            connections.forEach((source: ISource) => {
-                this.KeyboardUp(note, source);
-            });
+            delete this.KeysDown[""+note];
+            this.NoteOff(note);
         }
 
+        // NOTE DOWN //
         else if (cmd === 9) {
-            // Key down command
-
-            this.KeysDown[note] = true;
-
-            // ALL SOURCES TRIGGER KEYBOARD DOWN
-            let connections: ISource[] = this.Connections.ToArray();
-            connections.forEach((source: ISource) => {
-                this.KeyboardDown(note, source);
-            });
-
-
+            this.KeysDown[""+note] = true;
+            this.NoteOn(note);
         }
-        // TODO: add controller, pitchwheel and polyaftertouch cases.
-        // https://github.com/cwilso/midi-synth/blob/master/js/midi.js line 7
-        //
-        //else if (cmd == 11) {
-        //    controller(note, velocity / 127.0);
-        //}
-        //else if (cmd == 14) {
-        //    // pitch wheel
-        //    pitchWheel(((velocity * 128.0 + note) - 8192) / 8192.0);
-        //}
-        //else if (cmd == 10) {  // poly aftertouch
-        //    polyPressure(note, velocity / 127)
-        //}
+
+        // PITCH BEND //
+        else if (cmd == 14) {
+            this.Bend = (((velocity * 128.0 + note) - 8192) / 8192.0) * (6*App.Config.PitchBendRange);
+            this.UpdateMods();
+        }
     }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  DRAW
+    //-------------------------------------------------------------------------------------------
+
 
     Draw() {
         super.Draw();
         this.DrawSprite(this.BlockName);
     }
 
-    KeyboardDown(keyDown:string, source:ISource): void {
 
-        var frequency = this.GetFrequencyOfNote(keyDown, source);
+    //-------------------------------------------------------------------------------------------
+    //  OPTIONS
+    //-------------------------------------------------------------------------------------------
 
-        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
-            // POLYPHONIC MODE
-
-            // Are there any free voices?
-            if (source.FreeVoices.length > 0){
-
-                // Yes, get one of them and remove it from FreeVoices list
-                var voice = source.FreeVoices.shift();
-
-                // Store the keydown
-                voice.Key = keyDown;
-
-                // Add it to the ActiveVoices list
-                source.ActiveVoices.push( voice );
-
-                // set it to the right frequency
-                source.SetPitch(frequency, voice.ID);
-
-                // trigger it's envelope
-                source.TriggerAttack(voice.ID);
-
-            } else {
-
-                // No free voices available - steal the oldest one from active voices
-                var voice: Voice = source.ActiveVoices.shift();
-
-                // Store the keydown
-                voice.Key = keyDown;
-
-                // Set the new pitch
-                source.SetPitch(frequency, voice.ID);
-
-                // Add it back to the end of ActiveVoices
-                source.ActiveVoices.push( voice );
-            }
-
-        } else {
-            // MONOPHONIC MODE
-
-            // If no other keys already pressed trigger attack
-            if (Object.keys(this.KeysDown).length === 1) {
-                source.SetPitch(frequency);
-                source.TriggerAttack();
-
-                // Else ramp to new frequency over time (glide)
-            } else {
-                source.SetPitch(frequency, 0, this.Params.glide);
-            }
-        }
-    }
-
-    KeyboardUp(keyUp:string, source:ISource): void {
-
-        if (this.Params.isPolyphonic && (!(source instanceof Granular))) {
-            // POLYPHONIC MODE
-
-            // Loop through all the active voices
-            source.ActiveVoices.forEach((voice: Voice, i: number) => {
-
-                // if key pressed is a saved in the ActiveVoices stop it
-                if (voice.Key === keyUp) {
-                    // stop it
-                    source.TriggerRelease(voice.ID);
-
-                    // Remove voice from Active Voices
-                    source.ActiveVoices.splice(i, 1);
-
-                    // Add it to FreeVoices
-                    source.FreeVoices.push(voice);
-                }
-            });
-
-        } else {
-            // MONOPHONIC MODE
-
-            if (Object.keys(this.KeysDown).length === 0) {
-                source.TriggerRelease();
-            }
-        }
-    }
-
-    Dispose(){
-        super.Dispose();
-    }
-
-    Stop() {
-        const connections = this.Connections.ToArray();
-        connections.forEach((source: ISource) => {
-            source.TriggerRelease('all');
-        });
-        App.Audio.MIDIManager.MIDIMessage.off(this._OnMIDIMessage, this);
-    }
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -227,6 +118,18 @@ export class MIDIController extends Keyboard {
                 },
                 {
                     "type" : "slider",
+                    "name" : "Octave",
+                    "setting" :"transpose",
+                    "props" : {
+                        "value" : this.Params.transpose,
+                        "min" : -this.TranspositionRange,
+                        "max" : this.TranspositionRange,
+                        "quantised" : true,
+                        "centered" : true
+                    }
+                },
+                {
+                    "type" : "slider",
                     "name" : "Glide",
                     "setting" :"glide",
                     "props" : {
@@ -243,4 +146,16 @@ export class MIDIController extends Keyboard {
         };
     }
 
+    //-------------------------------------------------------------------------------------------
+    //  DISPOSE
+    //-------------------------------------------------------------------------------------------
+
+    Dispose(){
+        super.Dispose();
+    }
+
+    Stop() {
+        // maybe add source disconnect voices
+        App.Audio.MIDIManager.MIDIMessage.off(this._OnMIDIMessage, this);
+    }
 }
