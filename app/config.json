@@ -43,7 +43,7 @@
     "ConvolverDefaultTracks": [],
     "ConvolverMaxTrackLength": 12,
     "RecorderWorkerPath": "Assets/Recorder/recorderWorker.js",
-    "PolyphonicVoices": 5,
+    "PolyphonicVoices": 8,
     "PulseLength": 150,
     "BaseNote": 261.6,
     "DefaultNote": 60,

@@ -10,7 +10,7 @@ export interface IConfig {
     PolyphonicVoices: number;
     PlaybackRange: number;
     PitchBendRange: number;
-    PulseLength: Tone.Time;
+    PulseLength: number;
     RecorderWorkerPath: string;
     ResetPitchesOnInteractionDisconnect: boolean;
     ScrollEasing: number;

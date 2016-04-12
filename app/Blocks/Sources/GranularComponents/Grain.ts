@@ -7,7 +7,7 @@ declare var App: IApp;
 export class Grain {
 
     public Player: Tone.Player;
-    public Envelope: Tone.Envelope;
+    public Envelope: Tone.AmplitudeEnvelope;
 
     constructor(a: number,d: number,s: number,r: number,voice) {
         this.Player = new Tone.Player();

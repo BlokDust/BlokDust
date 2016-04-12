@@ -43,7 +43,7 @@ export class Envelope extends PreEffect {
         chain.Sources.forEach((source: ISource) => {
 
             if (source.Envelopes.length) {
-                source.Envelopes.forEach((e: Tone.Envelope) => {
+                source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
                     e.attack = this.Params.attack;
                     e.decay = this.Params.decay;
                     e.sustain = this.Params.sustain;
@@ -69,7 +69,7 @@ export class Envelope extends PreEffect {
         if (this.Chain && this.Chain.Sources) {
             this.Chain.Sources.forEach((source: ISource) => {
                 if (source.Envelopes.length) {
-                    source.Envelopes.forEach((e: Tone.Envelope) => {
+                    source.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
                         e.attack = this.Params.attack;
                         e.decay = this.Params.decay;
                         e.sustain = this.Params.sustain;

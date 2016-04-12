@@ -51,11 +51,11 @@ export class SamplerBase extends Source {
         if (index === 'all'){
             // Trigger all the envelopes
             this.Sources.forEach((s: any)=> {
-                s.triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+                s.triggerAttack(this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
             });
         } else {
             // Trigger the specific one
-            this.Sources[index].triggerAttack('+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+            this.Sources[index].triggerAttack(this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
         }
     }
 
@@ -112,7 +112,7 @@ export class SamplerBase extends Source {
             s.dispose();
         });
 
-        this.Envelopes.forEach((e: Tone.Envelope) => {
+        this.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
             e.dispose();
         });
     }

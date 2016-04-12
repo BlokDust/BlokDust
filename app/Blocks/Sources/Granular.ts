@@ -337,7 +337,7 @@ export class Granular extends Source {
            );
 
             // MAKE SURE THESE ARE IN SYNC //
-            this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength * (1 - this._RampLength),"+0.01");
+            this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength * (1 - this._RampLength));
             this.Grains[this._CurrentGrain].stop();
             //this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
             this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
