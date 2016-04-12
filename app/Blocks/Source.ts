@@ -376,7 +376,7 @@ export class Source extends Block implements ISource {
                 }
                 this.MonoVoice = voice;
             }
-            // We already have a mono voice in use, use that //
+            // We already have a mono voice in use, update that //
             else {
                 voice = this.MonoVoice;
                 trigger = false;
@@ -391,15 +391,10 @@ export class Source extends Block implements ISource {
             else {
                 voice = this.ActiveVoices.shift();
                 trigger = false;
-
-                // if this was the mono voice, free it //
-                if (voice === this.MonoVoice) {
-                    this.MonoVoice = null;
-                }
             }
         }
 
-        // Update Voice data //
+        // Set/update Voice data and add to ActiveVoices //
         if (voice) {
             voice.Note = note;
             voice.Controller = controller;
@@ -417,7 +412,7 @@ export class Source extends Block implements ISource {
     }
 
 
-    // GET A VOICE FOR NOTE OFF //
+    // GET THE VOICE FOR NOTE OFF //
     RemoveVoice(note: number, controller: string) {
         var voice: Voice;
         var trigger: boolean = false;
@@ -456,7 +451,7 @@ export class Source extends Block implements ISource {
     }
 
 
-    // KILL ALL VOICES //
+    // KILL ALL VOICES //  probably shouldn't use this, unless disposing block
     DeactivateAllVoices() {
         this.ActiveVoices.forEach((activeVoice: Voice, i: number) => {
             // Move from active to free //

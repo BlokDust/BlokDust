@@ -14,10 +14,12 @@ declare var App: IApp;
  */
 export class Keyboard extends Controller {
 
-    public KeysDown: any = {};
+    public KeysDown: any;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
+
+        this.KeysDown = {};
     }
 
     //-------------------------------------------------------------------------------------------

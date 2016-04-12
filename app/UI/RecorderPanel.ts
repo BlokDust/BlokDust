@@ -76,16 +76,21 @@ export class RecorderPanel extends DisplayObject {
 
 
         // BUTTON //
+        var bw = grd;
+        if (hover) {
+            bw = (grd*1.1);
+        }
+
         if (rec) {
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
         } else {
             App.FillColor(ctx,App.Palette[13]);
         }
         ctx.beginPath();
-        ctx.moveTo(x - grd, y - (w*0.5) - (h*0.5)); // l
-        ctx.lineTo(x, y - (w*0.5) - (h*0.5) - grd); // t
-        ctx.lineTo(x + grd, y - (w*0.5) - (h*0.5));
-        ctx.lineTo(x, y - (w*0.5) - (h*0.5) + grd);
+        ctx.moveTo(x - bw, y - (w*0.5) - (h*0.5)); // l
+        ctx.lineTo(x, y - (w*0.5) - (h*0.5) - bw); // t
+        ctx.lineTo(x + bw, y - (w*0.5) - (h*0.5));
+        ctx.lineTo(x, y - (w*0.5) - (h*0.5) + bw);
         ctx.closePath();
         ctx.fill();
 
@@ -95,16 +100,11 @@ export class RecorderPanel extends DisplayObject {
             App.FillColor(ctx,App.Palette[12]);
         }
         ctx.beginPath();
-        ctx.moveTo(x - grd, y - (w*0.5) - (h*0.5)); // l
-        ctx.lineTo(x, y - (w*0.5) - (h*0.5) - grd); // t
-        ctx.lineTo(x, y - (w*0.5) - (h*0.5) + grd);
+        ctx.moveTo(x - bw, y - (w*0.5) - (h*0.5)); // l
+        ctx.lineTo(x, y - (w*0.5) - (h*0.5) - bw); // t
+        ctx.lineTo(x, y - (w*0.5) - (h*0.5) + bw);
         ctx.closePath();
         ctx.fill();
-
-        if (hover) {
-            App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
-            ctx.fillRect(x - grd,y - (w*0.5) - (h*0.5) - grd,4*units,4*units);
-        }
 
     }
 
@@ -154,7 +154,6 @@ export class RecorderPanel extends DisplayObject {
             var myPos = App.Metrics.PointOnGrid(block.Position);
             this._Roll[i] = Dimensions.HitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
             if (this._Roll[i]==true) {
-                console.log("ROLL " + i);
                 this.Hover = true;
             }
         }

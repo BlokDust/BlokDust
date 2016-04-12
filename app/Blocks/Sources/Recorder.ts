@@ -153,6 +153,7 @@ export class Recorder extends SamplerBase {
         // Update waveform
         this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
         var duration = this.GetDuration();
+        this.Params.startPosition = 0;
         this.Params.endPosition = duration;
         this.Params.loopStart = duration * 0.5;
         this.Params.loopEnd = duration;
