@@ -92,9 +92,9 @@ export class SamplerBase extends Source {
         //}
     }
 
-    MouseUp() {
+    MouseUp(point) {
         this.FirstSetup();
-        super.MouseUp();
+        super.MouseUp(point);
     }
 
     FirstSetup() {

@@ -551,10 +551,9 @@ export class SampleGen extends SamplerBase {
         this.DrawSprite(this.BlockName);
     }
 
-    MouseUp() {
+    MouseUp(point) {
         this.FirstSetup();
-
-        super.MouseUp();
+        super.MouseUp(point);
     }
 
 

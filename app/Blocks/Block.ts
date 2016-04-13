@@ -110,7 +110,8 @@ export class Block extends DisplayObject implements IBlock {
         this.IsPressed = true;
     }
 
-    MouseUp() {
+    MouseUp(point: Point) {
+        this.Position = App.Metrics.CursorToGrid(point);
         this.IsPressed = false;
         this.Duplicable = true;
     }
@@ -121,7 +122,7 @@ export class Block extends DisplayObject implements IBlock {
             // ALT-DRAG COPY
             if (App.CommandsInputManager.IsKeyCodeDown(KeyCodes.KeyDown.Alt) && this.Duplicable) {
                 (<MainScene>this.DrawTo).CreateBlockFromType(this.Type,this.Params); //TODO: TS5 reflection
-                this.MouseUp();
+                this.MouseUp(point);
             }
             // MOVE //
             else {

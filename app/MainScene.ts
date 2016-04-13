@@ -441,7 +441,7 @@ export class MainScene extends DisplayObject{
             // BLOCK //
             if (this.SelectedBlock){
                 if (this.SelectedBlock.IsPressed){
-                    this.SelectedBlock.MouseUp();
+                    this.SelectedBlock.MouseUp(point);
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
@@ -743,7 +743,7 @@ export class MainScene extends DisplayObject{
     CreateBlockFromType<T extends IBlock>(t: {new(): T; }, params?: any): T {
         var block: T = new t();
         block.Id = App.GetBlockId();
-        block.Position = this._PointerPoint;
+        block.Position = App.Metrics.CursorToGrid(this._PointerPoint);
         if (params) block.Params = this.DuplicateParams(params);
 
         //TODO:
@@ -799,7 +799,7 @@ export class MainScene extends DisplayObject{
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this.SelectedBlock.MouseUp();
+        this.SelectedBlock.IsPressed = false;
         this.OptionsPanel.Close();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;

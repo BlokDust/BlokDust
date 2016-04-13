@@ -666,8 +666,8 @@ export class Source extends Block implements ISource {
         this.AddPower();
     }
 
-    MouseUp() {
-        super.MouseUp();
+    MouseUp(point) {
+        super.MouseUp(point);
         this.RemovePower();
     }
 

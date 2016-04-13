@@ -23,7 +23,7 @@ export interface IBlock extends IDisplayObject {
     LastPosition: Point;
     MouseDown(): void;
     MouseMove(point: Point): void;
-    MouseUp(): void;
+    MouseUp(point: Point): void;
     OptionsForm: any;
     Outline: Point[];
     Params: any;
