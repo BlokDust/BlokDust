@@ -111,7 +111,7 @@ export class Block extends DisplayObject implements IBlock {
     }
 
     MouseUp(point: Point) {
-        this.Position = App.Metrics.CursorToGrid(point);
+        //this.Position = App.Metrics.CursorToGrid(point);
         this.IsPressed = false;
         this.Duplicable = true;
     }
