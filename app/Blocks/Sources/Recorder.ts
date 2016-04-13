@@ -25,6 +25,7 @@ export class Recorder extends SamplerBase {
 
         this.Defaults = {
             playbackRate: 0,
+            detune: 0,
             reverse: false,
             startPosition: 0,
             endPosition: 0,

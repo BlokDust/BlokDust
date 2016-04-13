@@ -28,7 +28,7 @@ export class Phaser extends PostEffect {
         this.Effect = new Tone.Phaser({
             "rate" : this.Params.rate,
             "octaves" : this.Params.depth,
-            "Q" : 0.1,
+            "Q" : 1,
             "baseFrequency" : this.Params.baseFrequency
         });
         this.Effect.wet.value = this.Params.mix;
@@ -103,7 +103,7 @@ export class Phaser extends PostEffect {
 
                 {
                     "type" : "slider",
-                    "name" : "Depth",
+                    "name" : "Width",
                     "setting" :"depth",
                     "props" : {
                         "value" : this.Params.depth,

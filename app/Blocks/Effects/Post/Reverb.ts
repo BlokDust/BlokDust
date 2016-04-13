@@ -80,6 +80,19 @@ export class Reverb extends PostEffect {
 
                 {
                     "type" : "slider",
+                    "name" : "Room Size",
+                    "setting" :"roomSize",
+                    "props" : {
+                        "value" : this.Params.roomSize,
+                        "min" : 0.1,
+                        "max" : 0.95,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
+
+                {
+                    "type" : "slider",
                     "name" : "Dampening",
                     "setting" :"dampening",
                     "props" : {
@@ -91,18 +104,6 @@ export class Reverb extends PostEffect {
                     }
                 },
 
-                {
-                    "type" : "slider",
-                    "name" : "Room Size",
-                    "setting" :"roomSize",
-                    "props" : {
-                        "value" : this.Params.roomSize,
-                        "min" : 0.1,
-                        "max" : 0.95,
-                        "quantised" : false,
-                        "centered" : false
-                    }
-                },
 
                 {
                     "type" : "slider",

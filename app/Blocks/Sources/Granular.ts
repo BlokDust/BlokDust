@@ -50,6 +50,7 @@ export class Granular extends Source {
 
         this.Defaults = {
             playbackRate: 0,
+            detune: 0,
             density: 10,
             region: 0,
             spread: 1.5,

@@ -11,6 +11,7 @@ interface IParams {
 
 interface GranularParams extends IParams {
     playbackRate: number;
+    detune: number;
     density: number;
     region: number;
     spread: number;
@@ -36,6 +37,7 @@ interface NoiseParams extends IParams {
 
 interface SamplerParams extends IParams {
     playbackRate: number;
+    detune: number;
     reverse: boolean;
     startPosition: number;
     endPosition: number;
@@ -51,6 +53,7 @@ interface SamplerParams extends IParams {
 
 interface SampleGenParams extends IParams {
     playbackRate: number;
+    detune: number;
     reverse: boolean;
     startPosition: number;
     endPosition: number;

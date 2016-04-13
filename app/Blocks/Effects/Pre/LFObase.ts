@@ -2,6 +2,7 @@ import {Granular} from '../../Sources/Granular';
 import {IApp} from '../../../IApp';
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
 import {PreEffect} from '../PreEffect';
+import {SamplerBase} from '../../Sources/SamplerBase';
 
 declare var App: IApp;
 
@@ -71,7 +72,8 @@ export abstract class LFObase extends PreEffect {
                     if ((<Tone.Oscillator>s).detune) {
                         this.OscLFO.connect((<Tone.Oscillator>s).detune);
                     } else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
-                        this.SamplerLFO.connect((<Tone.Simpler>s).player.playbackRate);
+                        //this.SamplerLFO.connect((<Tone.Simpler>s).player.playbackRate);
+                        this.SamplerLFO.connect(source.PlaybackSignal.Signal);
                     }  else if ((<Tone.Noise>s).playbackRate) {
                         this.SamplerLFO.connect((<Tone.Noise>s).playbackRate);
                     }
