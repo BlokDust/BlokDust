@@ -17,17 +17,17 @@ export class Phaser extends PostEffect {
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Phaser.name;
 
         this.Defaults = {
-            rate: 0.5,
-            depth: 9,
-            baseFrequency: 500,
-            mix: 0.75
+            rate: 1.8,
+            depth: 3.2,
+            baseFrequency: 400,
+            mix: 0.5
         };
 
         this.PopulateParams();
 
         this.Effect = new Tone.Phaser({
             "rate" : this.Params.rate,
-            "depth" : this.Params.depth,
+            "octaves" : this.Params.depth,
             "Q" : 0.1,
             "baseFrequency" : this.Params.baseFrequency
         });
@@ -56,6 +56,8 @@ export class Phaser extends PostEffect {
             this.Effect.wet.value = val;
         } else if (param=="rate") {
             this.Effect.frequency.value = val;
+        } else if (param=="depth") {
+            this.Effect.octaves = val;
         } else {
             this.Effect[param] = val;
         }
@@ -105,9 +107,9 @@ export class Phaser extends PostEffect {
                     "setting" :"depth",
                     "props" : {
                         "value" : this.Params.depth,
-                        "min" : 0,
+                        "min" : 1,
                         "max" : 10,
-                        "quantised" : true,
+                        "quantised" : false,
                         "centered" : false
                     }
                 },
