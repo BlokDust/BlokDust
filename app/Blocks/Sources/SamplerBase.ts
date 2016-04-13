@@ -51,7 +51,7 @@ export class SamplerBase extends Source {
         if (index === 'all'){
             // Trigger all the envelopes
             this.Sources.forEach((s: any)=> {
-                s.triggerAttack(this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+                s.triggerAttack( this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
             });
         } else {
             // Trigger the specific one
@@ -63,11 +63,11 @@ export class SamplerBase extends Source {
         if (index === 'all'){
             // Trigger all the envelopes
             this.Sources.forEach((s: any)=> {
-                s.triggerAttackRelease(duration, '+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+                s.triggerAttackRelease(duration, this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
             });
         } else {
             // Trigger the specific one
-            this.Sources[index].triggerAttackRelease(duration, '+0', this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
+            this.Sources[index].triggerAttackRelease(duration, this.Params.startPosition, this.Params.endPosition - this.Params.startPosition);
         }
     }
 

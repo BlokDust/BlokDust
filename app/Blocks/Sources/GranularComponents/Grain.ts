@@ -6,11 +6,11 @@ declare var App: IApp;
 
 export class Grain {
 
-    public Player: Tone.Player;
+    public Player: Tone.SimplePlayer;
     public Envelope: Tone.AmplitudeEnvelope;
 
     constructor(a: number,d: number,s: number,r: number,voice) {
-        this.Player = new Tone.Player();
+        this.Player = new Tone.SimplePlayer();
         this.Envelope = new Tone.AmplitudeEnvelope(
             a, // Attack
             d, // Decay

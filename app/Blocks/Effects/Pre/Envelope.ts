@@ -19,9 +19,9 @@ export class Envelope extends PreEffect {
 
         this.Defaults = {
             attack: 1,
-            decay: 5,
+            decay: 0.5,
             sustain: 0.7,
-            release: 4
+            release: 1
         };
 
         this.PopulateParams();
@@ -105,14 +105,14 @@ export class Envelope extends PreEffect {
                             "setting": "attack",
                             "value": this.Params.attack,
                             "min": 0.01,
-                            "max": 10
+                            "max": 5
                         },
 
                         {
                             "setting": "decay",
                             "value": this.Params.decay,
                             "min": 0.01,
-                            "max": 15
+                            "max": 5
                         },
 
                         {
@@ -126,7 +126,7 @@ export class Envelope extends PreEffect {
                             "setting": "release",
                             "value": this.Params.release,
                             "min": 0.01,
-                            "max": 15
+                            "max": 5
                         }
                     ]
                 }

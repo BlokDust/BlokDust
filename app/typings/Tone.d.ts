@@ -1,6 +1,7 @@
-interface ToneFactory {
+interface Tone {
     new(inputs?: number, outputs?: number): Tone
 }
+
 
 declare class Tone {
     context: AudioContext;
@@ -842,7 +843,7 @@ declare module Tone {
         new(url?: string | AudioBuffer, onload?: (e: any)=>any): Tone.SimplePlayer;
     };
 
-    interface SimplePlayer extends Tone.Source {
+    interface SimplePlayer extends Tone.SimpleSource {
         autostart: boolean;
         buffer: Tone.Buffer | AudioBuffer;
         duration: number;
@@ -853,7 +854,6 @@ declare module Tone {
         retrigger: boolean;
         reverse: boolean;
         startPosition: number;
-        dispose(): Tone.SimplePlayer;
         load(url:string | AudioBuffer, callback?:(e: any)=>any);
         setLoopPoints(loopStart:number, loopEnd:number);
         start(offset?: number, duration?: number);
@@ -957,9 +957,9 @@ declare module Tone {
         release: Tone.Time;
         sustain: number;
         dispose(): Tone.SimpleEnvelope;
-        triggerAttack(): void;
-        triggerRelease(): void;
-        triggerAttackRelease(duration: number): void;
+        triggerAttack(when?: number): void;
+        triggerRelease(when?: number): void;
+        triggerAttackRelease(duration: number, when?: number): void;
     }
 
     var Simpler: {
@@ -1064,6 +1064,17 @@ declare module Tone {
         stop(time?: Tone.Time): Tone.Source;
         sync(delay?: Tone.Time): Tone.Source;
         unsync(): Tone.Source;
+    }
+
+    var SimpleSource: {
+        new(): Tone.Source;
+    };
+
+    interface SimpleSource extends Tone {
+        volume: Tone.Signal;
+        dispose(): Tone.Source;
+        start(): Tone.Source;
+        stop(): Tone.Source;
     }
 
     module Source {

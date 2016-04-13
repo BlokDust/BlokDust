@@ -16,7 +16,7 @@ declare var App: IApp;
 export class Granular extends Source {
 
     public Sources: Tone.Signal[];
-    public Grains: Tone.Player[] = [];
+    public Grains: Tone.SimplePlayer[] = [];
     public GrainEnvelopes: Tone.AmplitudeEnvelope[] = [];
     public Timeout;
     public EndTimeout;
@@ -136,7 +136,7 @@ export class Granular extends Source {
             for (var i=0; i<this.GrainsAmount; i++) {
 
                 // CREATE PLAYER //
-                this.Grains[i] = new Tone.Player();
+                this.Grains[i] = new Tone.SimplePlayer();
 
                 // CREATE ENVELOPE //
                 this.GrainEnvelopes[i] = new Tone.AmplitudeEnvelope(
@@ -178,7 +178,7 @@ export class Granular extends Source {
         if (this._FirstBuffer) { // cancel previous loads
             this._FirstBuffer.dispose();
         }
-        this._FirstBuffer = new Tone.Player(this.Params.track, (e) => {
+        this._FirstBuffer = new Tone.SimplePlayer(this.Params.track, (e) => {
             clearTimeout(this.LoadTimeout);
             this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e.buffer._buffer,200,2,80);
             App.AnimationsLayer.RemoveFromList(this);
@@ -328,7 +328,6 @@ export class Granular extends Source {
     }
 
     GrainLoop() {
-
         // CYCLES THROUGH GRAINS AND PLAYS THEM //
         if (this.GrainEnvelopes[this._CurrentGrain] && (this.IsPowered() || this._NoteOn)) {
 
@@ -337,10 +336,23 @@ export class Granular extends Source {
            );
 
             // MAKE SURE THESE ARE IN SYNC //
-            this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength * (1 - this._RampLength));
+            // this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease(this.Params.grainlength * (1 - this._RampLength));
+
+
+            // const time = this.Params.grainlength * (1 - this._RampLength);
+            // let now = this.GrainEnvelopes[0].context.currentTime;
+            // console.log('trigger attack', now);
+            // this.GrainEnvelopes[this._CurrentGrain].triggerAttack();
+            // console.log('trigger release', now + time);
+            // this.GrainEnvelopes[this._CurrentGrain].triggerRelease(time + now);
+
+            this.GrainEnvelopes[this._CurrentGrain].triggerRelease();
             this.Grains[this._CurrentGrain].stop();
+
             //this.Grains[this._CurrentGrain].playbackRate.value = this._tempPlaybackRate;
-            this.Grains[this._CurrentGrain].start("+0.01", location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
+
+            this.Grains[this._CurrentGrain].start(location, (this.Params.grainlength*this._tempPlaybackRate)*1.9);
+            this.GrainEnvelopes[this._CurrentGrain].triggerAttack();
             clearTimeout(this.Timeout);
             this.Timeout = setTimeout(() => {
                 this.GrainLoop();
@@ -469,7 +481,7 @@ export class Granular extends Source {
         clearTimeout(this.Timeout);
         this._NoteOn = false;
 
-        this.Grains.forEach((g: Tone.Player)=> {
+        this.Grains.forEach((g: Tone.SimplePlayer)=> {
             g.dispose();
         });
 
