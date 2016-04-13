@@ -25,9 +25,6 @@ require.config({
             "exports": "TWEEN",
             "path": "lib/tween.ts/build/tween.min"
         },
-        "tone": {
-            "path": "lib/tone/build/Tone.js"
-        },
         "utils": {
             "exports": "Utils"
         },
@@ -77,7 +74,6 @@ require([
     "Tone/source/Microphone",
     "Tone/source/Noise",
     "Tone/source/Oscillator",
-    "Tone/source/Player",
     "Tone/component/Meter",
     "Tone/component/Mono",
     "tween",

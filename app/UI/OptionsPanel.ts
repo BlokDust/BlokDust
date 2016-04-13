@@ -3,7 +3,7 @@ import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import Size = minerva.Size;
-import {ADSR} from './Options/OptionADSR';
+import {OptionADSR} from './Options/OptionADSR';
 import {ButtonArray} from './Options/OptionButtonArray';
 import {Device} from '../Device';
 import {IApp} from '../IApp';
@@ -397,7 +397,7 @@ export class OptionsPanel extends DisplayObject {
                 handleX = ( (this.Range*0.4) / Xrange ) * (option.nodes[3].value-option.nodes[3].min);
                 handles[2] = new OptionHandle(new Point(handleX,handleY),option.nodes[3].value,option.nodes[3].min,option.nodes[3].max,this.Range*0.4,0,0,0,0,option.nodes[3].setting,"");
 
-                optionList.push(new ADSR(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2]));
+                optionList.push(new OptionADSR(new Point(0,optionY),new Size(this.Range,optionHeight[i]),option.name,handles[0],handles[1],handles[2]));
 
             }
 

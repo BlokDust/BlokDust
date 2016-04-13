@@ -125,7 +125,7 @@ export class Source extends Block implements ISource {
 
     private _EnvelopeReset() {
         if (this.Envelopes.length) {
-            this.Envelopes.forEach((e: Tone.Envelope) => {
+            this.Envelopes.forEach((e: Tone.AmplitudeEnvelope) => {
                 e.attack = this.Settings.envelope.attack;
                 e.decay = this.Settings.envelope.decay;
                 e.sustain = this.Settings.envelope.sustain;
@@ -194,11 +194,11 @@ export class Source extends Block implements ISource {
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Envelopes.forEach((e: any)=> {
-                    e.triggerAttack("+0.01");
+                    e.triggerAttack();
                 });
             } else {
                 // Trigger the specific one
-                this.Envelopes[index].triggerAttack("+0.01");
+                this.Envelopes[index].triggerAttack();
             }
 
         // Or Samplers have built in envelopes
@@ -206,11 +206,11 @@ export class Source extends Block implements ISource {
             if (index === 'all'){
                 // Trigger all the envelopes
                 this.Sources.forEach((s: any)=> {
-                    s.triggerAttack("+0.01");
+                    s.triggerAttack();
                 });
             } else {
                 // Trigger the specific one
-                this.Sources[index].triggerAttack("+0.01");
+                this.Sources[index].triggerAttack();
             }
 
         // Or this is a laser which needs to update it's collision check after being powered
@@ -226,12 +226,10 @@ export class Source extends Block implements ISource {
      * @param forceRelease {boolean} if set to true Envelopes will release regardless of power status
      * If index is set to 'all', all envelopes will be released
      */
-    TriggerRelease(index: number|string = 0, forceRelease?: boolean) {
+    TriggerRelease(index: number|string = 0, forceRelease: boolean = false) {
 
         // SAMPLERS HAVE THEIR OWN TRIGGERRELEASE
-        forceRelease = (forceRelease === true) ? forceRelease : false;
-        // Only if it's not powered or force is set to true
-        //if (!this.IsPowered() || forceRelease) {
+        
 
             // Only if the source has envelopes
             if (this.Envelopes.length) {
@@ -265,14 +263,14 @@ export class Source extends Block implements ISource {
         //}
     }
 
-
-    TriggerAttackRelease(duration: Tone.Time = App.Config.PulseLength, time: Tone.Time = '+0.01', velocity?: number) {
+    
+    TriggerAttackRelease(duration: number = App.Config.PulseLength, time: Tone.Time = '+0.01', velocity?: number) {
 
         // Oscillators & Noises & Players
         if (this.Envelopes.length){
             //TODO: add velocity to all trigger methods
             //TODO: add samplers and players
-            this.Envelopes[0].triggerAttackRelease(duration, time);
+            this.Envelopes[0].triggerAttackRelease(duration);
 
         //    Samplers
         } else if (this.Sources[0] && this.Sources[0].envelope) {
@@ -520,6 +518,8 @@ export class Source extends Block implements ISource {
         if (this.FreeVoices.length < 1) {
             this.FreeVoices.push( new Voice(0) );
         }
+
+        // this.CreateVoices();
     }
 
 

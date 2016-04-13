@@ -7,7 +7,7 @@ import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
-export class ADSR extends Option {
+export class OptionADSR extends Option {
 
     private _Node:any[];
 

@@ -60,7 +60,7 @@ export abstract class LFObase extends PreEffect {
         for (let i = 0; i < chain.Sources.length; i++) {
             const source = chain.Sources[i];
             if (source instanceof Granular) {
-                source.Grains.forEach((s: Tone.Player) => {
+                source.Grains.forEach((s: Tone.SimplePlayer) => {
                     if (s.playbackRate) {
                         this.SamplerLFO.connect(s.playbackRate);
                     }
