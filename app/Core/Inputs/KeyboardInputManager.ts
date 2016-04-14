@@ -1,5 +1,3 @@
-import {CommandManager} from '../Commands/CommandManager';
-import {Commands} from '../../Commands';
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
 

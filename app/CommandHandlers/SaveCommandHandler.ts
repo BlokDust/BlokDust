@@ -3,8 +3,8 @@ import {IApp} from '../IApp';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IOperation} from '../Core/Operations/IOperation';
 import {SaveOperation} from '../Operations/SaveOperation';
-import {CommandCategories} from "../CommandCategories";
-import {Errors} from "../Errors";
+import {CommandCategories} from '../CommandCategories';
+import {Errors} from '../Errors';
 
 declare var App: IApp;
 

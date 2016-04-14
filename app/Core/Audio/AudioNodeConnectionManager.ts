@@ -1,7 +1,5 @@
 import {IEffect} from '../../Blocks/IEffect';
-import {ISource} from '../../Blocks/ISource';
 import {PostEffect} from '../../Blocks/Effects/PostEffect';
-import {Source} from '../../Blocks/Source';
 
 export class AudioNodeConnectionManager {
 

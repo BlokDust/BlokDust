@@ -1,5 +1,4 @@
 import {IApp} from '../../IApp';
-import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
 import {SignalToValue} from '../../Core/Audio/Components/SignalToValue';
 import IDisplayContext = etch.drawing.IDisplayContext;
@@ -23,7 +22,6 @@ export class SamplerBase extends Source {
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
-            s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
 
             if (i > 0){

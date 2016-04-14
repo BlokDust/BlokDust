@@ -1,10 +1,8 @@
-import {AccumulativeConnectionMethod} from './Connections/ConnectionMethods/AccumulativeConnectionMethod';
 import {AudioFileManager} from './AudioFileManager';
 import {AudioNodeConnectionManager} from './AudioNodeConnectionManager';
 import {ConnectionManager} from './Connections/ConnectionManager';
 import {ConnectionMethodType} from './Connections/ConnectionMethodType';
 import {MIDIManager} from './MIDIManager';
-import {SimpleConnectionMethod} from './Connections/ConnectionMethods/SimpleConnectionMethod';
 import {Waveform} from './Waveform';
 
 export interface IAudio {

@@ -10,9 +10,7 @@ import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
 import {IBlock} from './IBlock';
 import {MainScene} from '../MainScene';
-import {OptionsPanel as ParametersPanel} from '../UI/OptionsPanel';
 import {Particle} from '../Particle';
-import {PreEffect} from './Effects/PreEffect';
 
 declare var App: IApp;
 

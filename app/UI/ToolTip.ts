@@ -3,8 +3,6 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import Size = minerva.Size;
 import {IApp} from '../IApp';
-import {IBlock} from './../Blocks/IBlock';
-import {MainScene} from './../MainScene';
 
 declare var App: IApp;
 

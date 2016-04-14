@@ -1,9 +1,5 @@
-import {Block} from '../Block';
-import {Effect} from '../Effect';
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../MainScene';
-import {Particle} from '../../Particle';
 import Point = etch.primitives.Point;
 import {Source} from '../Source';
 

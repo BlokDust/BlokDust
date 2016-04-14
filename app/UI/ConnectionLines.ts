@@ -2,10 +2,8 @@ import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import {IApp} from '../IApp';
-import {IBlock} from '../Blocks/IBlock';
 import {IEffect} from '../Blocks/IEffect';
 import {ISource} from '../Blocks/ISource';
-import {LineList} from '../MathObjects/LineList';
 import {Line} from '../MathObjects/Line';
 
 declare var App: IApp;

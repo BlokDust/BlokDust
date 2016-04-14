@@ -3,11 +3,11 @@ import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IEffect} from './Blocks/IEffect';
 import {ISource} from './Blocks/ISource';
-import ObservableCollection = etch.collections.ObservableCollection;
-import Point = etch.primitives.Point;
 import {SaveFile} from './SaveFile';
 import {Source} from './Blocks/Source';
 import {Version as Version} from './_Version';
+import ObservableCollection = etch.collections.ObservableCollection;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

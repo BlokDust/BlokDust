@@ -1,8 +1,8 @@
 import Canvas = etch.drawing.Canvas;
-import {IApp} from "./IApp";
-import {MainScene} from "./MainScene";
-import {Splash} from "./Splash";
-import {CompositionLoadedEventArgs} from "./CompositionLoadedEventArgs";
+import {IApp} from './IApp';
+import {MainScene} from './MainScene';
+import {Splash} from './Splash';
+import {CompositionLoadedEventArgs} from './CompositionLoadedEventArgs';
 
 declare var App: IApp;
 

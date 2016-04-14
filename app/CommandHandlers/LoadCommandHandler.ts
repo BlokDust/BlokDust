@@ -2,9 +2,8 @@ import {IApp} from '../IApp';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IOperation} from '../Core/Operations/IOperation';
 import {LoadOperation} from '../Operations/LoadOperation';
-import {Commands} from "../Commands";
-import {CommandCategories} from "../CommandCategories";
-import {Errors} from "../Errors";
+import {Commands} from '../Commands';
+import {CommandCategories} from '../CommandCategories';
 
 declare var App: IApp;
 

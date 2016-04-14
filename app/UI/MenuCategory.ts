@@ -1,4 +1,3 @@
-import {Header} from './Header';
 import {IApp} from '../IApp';
 import {MenuItem} from './MenuItem';
 import Point = etch.primitives.Point;

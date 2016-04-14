@@ -1,8 +1,6 @@
 import {IApp} from '../../IApp';
 import {IAudioChain} from '../../Core/Audio/Connections/IAudioChain';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../MainScene';
-import {Particle} from '../../Particle';
 import Point = etch.primitives.Point;
 import {Source} from '../Source';
 

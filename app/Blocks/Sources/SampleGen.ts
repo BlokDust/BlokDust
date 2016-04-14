@@ -1,9 +1,7 @@
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
 import {SamplerBase} from './SamplerBase';
-import {Source} from '../Source';
 import {WaveVoice} from '../../WaveVoice';
 
 declare var App: IApp;
@@ -42,7 +40,6 @@ export class SampleGen extends SamplerBase {
             loop: true,
             loopStart: 0,
             loopEnd: 0,
-            retrigger: false, //Don't retrigger attack if already playing
             volume: 11,
             generate: null,
             seed: {}

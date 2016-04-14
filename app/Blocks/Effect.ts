@@ -2,7 +2,6 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = minerva.Point;
 import {Block} from './Block';
 import {IApp} from '../IApp';
-import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
 import {ISource} from './ISource';
 import ObservableCollection = etch.collections.ObservableCollection;

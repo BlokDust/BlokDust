@@ -1,7 +1,7 @@
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IApp} from '../IApp';
-import {Commands} from "../Commands";
-import {CommandCategories} from "../CommandCategories";
+import {Commands} from '../Commands';
+import {CommandCategories} from '../CommandCategories';
 
 declare var App: IApp;
 

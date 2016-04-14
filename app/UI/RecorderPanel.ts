@@ -3,9 +3,6 @@ import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
-import {IEffect} from '../Blocks/IEffect';
-import {ISource} from '../Blocks/ISource';
-import {MainScene} from './../MainScene';
 import {Recorder} from '../Blocks/Sources/Recorder';
 
 declare var App: IApp;

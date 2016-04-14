@@ -1,9 +1,7 @@
 import {Commands} from '../../Commands';
-import {CommandManager}from '../Commands/CommandManager';
+import {CommandManager} from '../Commands/CommandManager';
 import {IApp} from '../../IApp';
 import {KeyboardInputManager} from './KeyboardInputManager';
-import {KeyDownEventArgs} from './KeyDownEventArgs';
-import {KeyUpEventArgs} from './KeyUpEventArgs';
 
 declare var App: IApp;
 

@@ -8,7 +8,6 @@ import {ButtonArray} from './Options/OptionButtonArray';
 import {Device} from '../Device';
 import {IApp} from '../IApp';
 import {IBlock} from './../Blocks/IBlock';
-import {MainScene} from './../MainScene';
 import {OptionActionButton as ActionButton} from './Options/OptionActionButton';
 import {OptionButton as Button} from './Options/OptionButton';
 import {OptionHandle} from './Options/OptionHandle';

@@ -1,8 +1,6 @@
 import {IApp} from '../IApp';
-import {IBlock} from '../Blocks/IBlock';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IncrementNumberCompoundOperation} from '../Operations/IncrementNumberCompoundOperation';
-import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 
 declare var App: IApp;
 

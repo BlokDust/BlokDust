@@ -2,16 +2,14 @@ import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
 import Size = minerva.Size;
 import {IApp} from '../IApp';
-import {MainScene} from './../MainScene';
-//import Point = minerva.Point;
-import Point = etch.primitives.Point;
-
 import {Block} from './../Blocks/Block';
 import {ToneSource} from './../Blocks/Sources/ToneSource';
 import {ComputerKeyboard} from './../Blocks/Interaction/ComputerKeyboard';
 import {Chopper} from './../Blocks/Effects/Post/Chopper';
 import {Power} from './../Blocks/Power/Power';
 import {ParticleEmitter} from './../Blocks/Power/ParticleEmitter';
+//import Point = minerva.Point;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

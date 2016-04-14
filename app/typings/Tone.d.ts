@@ -852,7 +852,6 @@ declare module Tone {
         loopEnd: number;
         loopStart: number;
         playbackRate: Tone.Signal;
-        retrigger: boolean;
         reverse: boolean;
         startPosition: number;
         load(url:string | AudioBuffer, callback?:(e: any)=>any);

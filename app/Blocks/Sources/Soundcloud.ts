@@ -1,13 +1,9 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import {IApp} from '../../IApp';
-import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
-import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
-import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAPI} from '../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
-import {Source} from '../Source';
 
 declare var App: IApp;
 
@@ -43,7 +39,6 @@ export class Soundcloud extends SamplerBase {
             loop: true,
             loopStart: 0,
             loopEnd: 0,
-            retrigger: false, //Don't retrigger attack if already playing
             volume: 11,
             track: 'https://files.blokdust.io/impulse-responses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
@@ -75,17 +70,19 @@ export class Soundcloud extends SamplerBase {
             this._FirstBuffer.dispose();
         }
         this._FirstBuffer = new Tone.Buffer(this.Params.track, (e) => {
+            e.reverse = this.Params.reverse;
             clearTimeout(this.LoadTimeout);
 
             App.AnimationsLayer.RemoveFromList(this);
             var duration = this.GetDuration(this._FirstBuffer);
             if (!this._LoadFromShare) {
+                console.log('not load from share');
                 this.Params.startPosition = 0;
                 this.Params.endPosition = duration;
                 this.Params.loopStart = duration * 0.5;
                 this.Params.loopEnd = duration;
-                this.Params.reverse = false;
             }
+
             this._LoadFromShare = false;
             this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
@@ -93,8 +90,9 @@ export class Soundcloud extends SamplerBase {
                 s.player.buffer = e;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
-                s.player.reverse = this.Params.reverse;
             });
+            console.log(this._FirstBuffer.reverse)
+            console.log(this.Sources[0].player.reverse)
 
             this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
             this.RefreshOptionsPanel();
@@ -305,6 +303,7 @@ export class Soundcloud extends SamplerBase {
 
                 break;
             case "reverse":
+                console.log('setting reverse ', value)
                 value = value? true : false;
 
                 this._FirstBuffer.reverse = value;

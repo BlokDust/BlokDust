@@ -1,6 +1,5 @@
 import {ICommandHandler} from '../Commands/ICommandHandler';
 import {CommandHandlerFactory} from '../Resources/CommandHandlerFactory';
-import {IFactoryResource} from '../Resources/IFactoryResource';
 import {IResource} from '../Resources/IResource';
 import {ResourceManager} from '../Resources/ResourceManager';
 import {Commands} from '../../Commands';

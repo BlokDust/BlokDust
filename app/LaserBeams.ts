@@ -1,17 +1,14 @@
 import Vector = Utils.Maths.Vector;
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
-import {IBlock} from './Blocks/IBlock';
-import {IEffect} from './Blocks/IEffect';
-import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from './Blocks/ISource';
 import {Laser} from './Blocks/Power/Laser';
 import {Logic} from './Blocks/Power/Logic/Logic';
 import {MainScene} from './MainScene';
-import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
-import Point = etch.primitives.Point;
 import {Source} from './Blocks/Source';
 import {Void} from './Blocks/Power/Void';
+import IDisplayContext = etch.drawing.IDisplayContext;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

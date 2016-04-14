@@ -1,7 +1,3 @@
-/**
- * Created by luketwyman on 25/10/2015.
- */
-
 import {IApp} from '../IApp';
 import {Line} from './Line';
 

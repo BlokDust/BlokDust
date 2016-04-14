@@ -3,7 +3,6 @@ import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Size = minerva.Size;
 import {IApp} from '../IApp';
-import {MainScene} from './../MainScene';
 
 declare var App: IApp;
 

@@ -1,6 +1,5 @@
-import {IBlock} from '../Blocks/IBlock';
 import {IOperation} from '../Core/Operations/IOperation';
-import {IApp} from "../IApp";
+import {IApp} from '../IApp';
 
 declare var App: IApp;
 

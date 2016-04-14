@@ -1,4 +1,4 @@
-import {IApp} from '../IApp';
+import {IApp} from '../../IApp';
 import {Option} from './Option';
 
 declare var App: IApp;

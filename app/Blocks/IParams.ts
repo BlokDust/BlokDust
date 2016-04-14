@@ -44,7 +44,6 @@ interface SamplerParams extends IParams {
     loop: boolean;
     loopStart: number;
     loopEnd: number;
-    retrigger: boolean;
     volume: number;
     track: string;
     trackName: string;
@@ -60,7 +59,6 @@ interface SampleGenParams extends IParams {
     loop: boolean;
     loopStart: number;
     loopEnd: number;
-    retrigger: boolean;
     volume: number;
     generate: any;
     seed: any;
