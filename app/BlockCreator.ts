@@ -15,7 +15,6 @@ import {Granular} from './Blocks/Sources/Granular';
 import {Microphone} from './Blocks/Sources/Microphone';
 import {Noise} from './Blocks/Sources/Noise';
 import {Recorder} from './Blocks/Sources/Recorder';
-//import {Sampler} from './Blocks/Sources/Sampler';
 import {Soundcloud} from './Blocks/Sources/Soundcloud';
 import {ToneSource} from './Blocks/Sources/ToneSource';
 import {SampleGen} from './Blocks/Sources/SampleGen';

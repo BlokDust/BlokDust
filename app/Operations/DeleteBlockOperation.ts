@@ -1,7 +1,6 @@
 import IDisplayObject = etch.drawing.IDisplayObject;
 import {CompoundOperation} from '../Core/Operations/CompoundOperation';
 import {IApp} from '../IApp';
-import {IBlock} from '../Blocks/IBlock';
 import {ICompoundOperation} from '../Core/Operations/ICompoundOperation';
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 import {MoveBlockOperation} from './MoveBlockOperation';

@@ -1,7 +1,6 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import {IApp} from '../../IApp';
-import {MainScene} from '../../MainScene';
 import {Source} from '../Source';
 
 declare var App: IApp;

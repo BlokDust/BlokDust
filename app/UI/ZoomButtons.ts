@@ -4,7 +4,6 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = minerva.Point;
 import Size = minerva.Size;
 import {IApp} from '../IApp';
-import {MainScene} from './../MainScene';
 
 declare var App: IApp;
 

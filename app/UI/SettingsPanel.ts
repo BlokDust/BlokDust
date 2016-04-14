@@ -5,7 +5,6 @@ import Point = etch.primitives.Point;
 import Size = minerva.Size;
 import {Device} from '../Device';
 import {IApp} from '../IApp';
-import {MainScene} from './../MainScene';
 import {MenuCategory} from './MenuCategory';
 import {ThemeSelector} from './Options/OptionColorTheme';
 import {Version} from './../_Version';

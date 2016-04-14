@@ -1,9 +1,8 @@
 import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import ObservableCollection = etch.collections.ObservableCollection;
 import {SoundCloudTrack} from '../Core/Audio/SoundCloud/SoundcloudTrack';
-import {Source} from './Source';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
+import ObservableCollection = etch.collections.ObservableCollection;
 
 export interface ISource extends IBlock {
     Connections: ObservableCollection<IEffect>;

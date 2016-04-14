@@ -4,8 +4,8 @@ import {OptionButton} from './OptionButton';
 import {OptionHandle} from './OptionHandle';
 import {OptionSubHandle} from './OptionSubHandle';
 import {OptionSwitch} from './OptionSwitch';
-import Point = etch.primitives.Point;
 import {IApp} from '../../IApp';
+import Point = etch.primitives.Point;
 declare var App: IApp;
 
 export class Option implements IOption {

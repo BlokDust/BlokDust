@@ -1,21 +1,16 @@
 import {Block} from './Block';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';
-import {IBlock} from './IBlock';
 import {IEffect} from './IEffect';
-import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from './ISource';
-import {Logic} from './Power/Logic/Logic';
-import {MainScene} from '../MainScene';
-import ObservableCollection = etch.collections.ObservableCollection;
 import {Particle} from '../Particle';
-import Point = etch.primitives.Point;
-import {PowerSource} from './Power/PowerSource';
 import {Power} from './Power/Power';
 import {SoundCloudTrack} from '../Core/Audio/SoundCloud/SoundcloudTrack';
-import {Soundcloud} from './Sources/Soundcloud';
 import {VoiceCreator as Voice} from './Interaction/VoiceObject';
 import {Controller} from './Interaction/Controller';
+import IDisplayContext = etch.drawing.IDisplayContext;
+import ObservableCollection = etch.collections.ObservableCollection;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

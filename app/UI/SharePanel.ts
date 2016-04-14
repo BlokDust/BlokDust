@@ -2,10 +2,8 @@ import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Size = minerva.Size;
-import {CommandManager} from '../Core/Commands/CommandManager';
 import {Commands} from './../Commands';
 import {IApp} from '../IApp';
-import {MainScene} from './../MainScene';
 import {Recorder} from './../Blocks/Sources/Recorder';
 
 declare var App: IApp;

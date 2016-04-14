@@ -1,9 +1,7 @@
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
 import {SamplerBase} from './SamplerBase';
-import {Source} from '../Source';
 import {WaveVoice} from '../../WaveVoice';
 
 declare var App: IApp;

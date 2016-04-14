@@ -1,4 +1,4 @@
-import {SaveFile} from "./SaveFile";
+import {SaveFile} from './SaveFile';
 
 export class CompositionLoadedEventArgs implements nullstone.IEventArgs {
 

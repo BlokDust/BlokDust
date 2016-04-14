@@ -1,4 +1,4 @@
-import {StringValue} from "./StringValue";
+import {StringValue} from './StringValue';
 
 class Command extends StringValue {
 

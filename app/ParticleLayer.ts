@@ -1,7 +1,7 @@
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
-import IDisplayContext = etch.drawing.IDisplayContext;
 import {Particle} from './Particle';
+import IDisplayContext = etch.drawing.IDisplayContext;
 
 declare var App: IApp;
 

@@ -1,6 +1,3 @@
-import {Commands} from '../../Commands';
-import {CommandManager} from '../Commands/CommandManager';
-
 export class PointerInputManager {
 
     MouseDown = new nullstone.Event<MouseEvent>();

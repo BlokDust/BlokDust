@@ -1,7 +1,5 @@
-import {Audio} from '../../Core/Audio/Audio';
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../MainScene';
 import Point = etch.primitives.Point;
 import {SamplerBase} from './SamplerBase';
 

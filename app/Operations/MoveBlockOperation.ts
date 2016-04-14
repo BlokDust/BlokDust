@@ -1,6 +1,5 @@
 import {ChangePropertyOperation} from '../Core/Operations/ChangePropertyOperation';
 import {CompoundOperation} from '../Core/Operations/CompoundOperation';
-import {IBlock} from '../Blocks/IBlock';
 import {ICompoundOperation} from '../Core/Operations/ICompoundOperation';
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
 

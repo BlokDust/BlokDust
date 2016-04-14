@@ -2,7 +2,7 @@ import {IAudioChain} from './IAudioChain';
 import {IBlock} from '../../../Blocks/IBlock';
 import {IPostEffect} from '../../../Blocks/Effects/IPostEffect';
 import {IPowerEffect} from '../../../Blocks/Power/IPowerEffect';
-import {IPowerSource} from "../../../Blocks/Power/IPowerSource";
+import {IPowerSource} from '../../../Blocks/Power/IPowerSource';
 import {IPreEffect} from '../../../Blocks/Effects/IPreEffect';
 import {ISource} from '../../../Blocks/ISource';
 

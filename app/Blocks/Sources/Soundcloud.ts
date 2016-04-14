@@ -1,13 +1,9 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import {IApp} from '../../IApp';
-import {MainScene} from '../../MainScene';
 import {SamplerBase} from './SamplerBase';
-import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
-import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAPI} from '../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
-import {Source} from '../Source';
 
 declare var App: IApp;
 

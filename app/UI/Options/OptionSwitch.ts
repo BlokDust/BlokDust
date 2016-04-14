@@ -1,6 +1,4 @@
 import {IApp} from '../../IApp';
-import {Option} from './Option';
-import {OptionsPanel as ParametersPanel} from './../OptionsPanel';
 import Size = minerva.Size;
 import Point = minerva.Point;
 

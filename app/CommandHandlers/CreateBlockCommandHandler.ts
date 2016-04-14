@@ -3,8 +3,8 @@ import {IApp} from '../IApp';
 import {IBlock} from '../Blocks/IBlock';
 import {ICommandHandler} from '../Core/Commands/ICommandHandler';
 import {IUndoableOperation} from '../Core/Operations/IUndoableOperation';
-import {Commands} from "../Commands";
-import {CommandCategories} from "../CommandCategories";
+import {Commands} from '../Commands';
+import {CommandCategories} from '../CommandCategories';
 
 declare var App: IApp;
 
