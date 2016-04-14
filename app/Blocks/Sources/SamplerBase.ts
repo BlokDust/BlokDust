@@ -8,7 +8,6 @@ declare var App: IApp;
 
 export class SamplerBase extends Source {
 
-    public PlaybackSignal: SignalToValue;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);

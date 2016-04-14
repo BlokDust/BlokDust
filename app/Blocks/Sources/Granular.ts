@@ -8,6 +8,7 @@ import {SoundCloudAPI} from '../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
 import {SoundCloudAPIResponse} from '../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
 import {Source} from '../Source';
+import {SignalToValue} from '../../Core/Audio/Components/SignalToValue';
 import {GranularVoice} from './GranularComponents/GranularVoice';
 import {Grain} from './GranularComponents/Grain';
 
@@ -78,6 +79,8 @@ export class Granular extends Source {
         this.CreateEnvelope();
         this.CreateGrains();
         this.CreateFirstVoice();
+
+        this.PlaybackSignal = new SignalToValue();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
@@ -242,6 +245,20 @@ export class Granular extends Source {
             return this._FirstBuffer.buffer.duration;
         } else {
             return 0;
+        }
+    }
+
+    Update() {
+        super.Update();
+
+        if (this.PlaybackSignal) {
+            var value = this.PlaybackSignal.UpdateValue();
+            if (value!==0) {
+                this.Params.detune = value;
+                this.NoteUpdate();
+            } else {
+                this.Params.detune = 0;
+            }
         }
     }
 

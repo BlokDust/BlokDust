@@ -37,12 +37,12 @@ export class SignalToValue {
     }
 
     ValueInRange(value,floor,ceiling) {
-        if (value < floor) {
+        /*if (value < floor) {
             value = floor;
         }
         if (value> ceiling) {
             value = ceiling;
-        }
+        }*/
         return value;
     }
 
