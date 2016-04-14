@@ -1,15 +1,19 @@
 import {IApp} from '../../IApp';
 import {Source} from '../Source';
+import {SignalToValue} from '../../Core/Audio/Components/SignalToValue';
 import IDisplayContext = etch.drawing.IDisplayContext;
 
 declare var App: IApp;
 
 export class SamplerBase extends Source {
 
+
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
         this.CreateSource();
         this.CreateFirstVoice();
+
+        this.PlaybackSignal = new SignalToValue();
     }
 
     CreateSource(){
@@ -35,6 +39,20 @@ export class SamplerBase extends Source {
             return buffer.duration;
         } else {
             return 0;
+        }
+    }
+
+    Update() {
+        super.Update();
+
+        if (this.PlaybackSignal) {
+            var value = this.PlaybackSignal.UpdateValue();
+            if (value!==0) {
+                this.Params.detune = value;
+                this.NoteUpdate();
+            } else {
+                this.Params.detune = 0;
+            }
         }
     }
 
@@ -90,9 +108,9 @@ export class SamplerBase extends Source {
         //}
     }
 
-    MouseUp() {
+    MouseUp(point) {
         this.FirstSetup();
-        super.MouseUp();
+        super.MouseUp(point);
     }
 
     FirstSetup() {

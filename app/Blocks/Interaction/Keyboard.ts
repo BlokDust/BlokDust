@@ -1,6 +1,5 @@
 import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
-import {Interaction} from './Interaction';
 import {Controller} from './Controller';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';

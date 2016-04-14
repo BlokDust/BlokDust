@@ -796,6 +796,7 @@ declare module Tone {
     interface Phaser extends Tone.StereoEffect {
         baseFrequency: number;
         depth: number;
+        octaves: number;
         frequency: Tone.Signal;
         dispose(): Tone.Phaser;
     }
@@ -811,7 +812,7 @@ declare module Tone {
 
     var PitchShift: {
         new(pitch?: any): Tone.PitchShift;
-    }
+    };
 
     interface PitchShift extends Tone.FeedbackEffect {
         pitch: number;

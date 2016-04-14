@@ -1,10 +1,12 @@
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
+import {SignalToValue} from '../../Core/Audio/Components/SignalToValue';
 import {SoundCloudAudioType} from '../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAPI} from '../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
 import {Source} from '../Source';
+
 declare var App: IApp;
 
 export class Granular extends Source {
@@ -44,6 +46,7 @@ export class Granular extends Source {
 
         this.Defaults = {
             playbackRate: 0,
+            detune: 0,
             density: 10,
             region: 0,
             spread: 1.5,
@@ -71,6 +74,8 @@ export class Granular extends Source {
         this.CreateEnvelope();
         this.CreateGrains();
         this.CreateFirstVoice();
+
+        this.PlaybackSignal = new SignalToValue();
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
@@ -238,6 +243,20 @@ export class Granular extends Source {
         }
     }
 
+    Update() {
+        super.Update();
+
+        if (this.PlaybackSignal) {
+            var value = this.PlaybackSignal.UpdateValue();
+            if (value!==0) {
+                this.Params.detune = value;
+                this.NoteUpdate();
+            } else {
+                this.Params.detune = 0;
+            }
+        }
+    }
+
     Draw() {
         super.Draw();
         this.DrawSprite(this.BlockName);
@@ -315,10 +334,9 @@ export class Granular extends Source {
     }
 
 
-    MouseUp() {
+    MouseUp(point) {
         this.FirstSetup();
-
-        super.MouseUp();
+        super.MouseUp(point);
     }
 
     GrainLoop() {

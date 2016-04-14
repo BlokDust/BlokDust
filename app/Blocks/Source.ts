@@ -50,6 +50,7 @@ export class Source extends Block implements ISource {
     public Searching: boolean;
     public ResultsPage: number;
     public SearchString: string;
+    public PlaybackSignal: any;
     public PowerAmount: number = 0;
 
     Init(drawTo: IDisplayContext): void {
@@ -589,6 +590,9 @@ export class Source extends Block implements ISource {
         if (this.Params.playbackRate) {
             sourceMods += this.Params.playbackRate;
         }
+        if (this.Params.detune) {
+            sourceMods += this.Params.detune;
+        }
         return sourceMods;
     }
 
@@ -661,8 +665,8 @@ export class Source extends Block implements ISource {
         this.AddPower();
     }
 
-    MouseUp() {
-        super.MouseUp();
+    MouseUp(point) {
+        super.MouseUp(point);
         this.RemovePower();
     }
 

@@ -21,6 +21,7 @@ export interface ISource extends IBlock {
     Searching: Boolean;
     ResultsPage: number;
     SearchString: string;
+    PlaybackSignal: any;
     MaxDensity?: number;
     RecordedAudio?: any;
     LoopStartPosition?: number;
