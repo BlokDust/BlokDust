@@ -339,9 +339,9 @@ export class Granular extends Source {
     }
 
 
-    MouseUp(point) {
+    MouseUp() {
         this.FirstSetup();
-        super.MouseUp(point);
+        super.MouseUp();
     }
 
     GrainLoop() {

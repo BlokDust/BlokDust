@@ -670,8 +670,8 @@ export class Source extends Block implements ISource {
         this.AddPower();
     }
 
-    MouseUp(point) {
-        super.MouseUp(point);
+    MouseUp() {
+        super.MouseUp();
         this.RemovePower();
     }
 
@@ -743,6 +743,7 @@ export class Source extends Block implements ISource {
         if (this.AudioInput) this.AudioInput.dispose();
         //if (this.EffectsChainOutput) this.EffectsChainOutput.dispose();
 
+        this.DeactivateAllVoices();
 
         if (this.ActiveVoices.length) {
             this.ActiveVoices.forEach((s: Voice)=> {

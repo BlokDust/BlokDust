@@ -170,10 +170,10 @@ export class Convolver extends PostEffect {
         this.DrawSprite(this.BlockName);
     }
 
-    MouseUp(point) {
+    MouseUp() {
         this.FirstSetup();
 
-        super.MouseUp(point);
+        super.MouseUp();
     }
 
     Dispose(){

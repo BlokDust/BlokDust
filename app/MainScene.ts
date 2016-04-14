@@ -441,7 +441,7 @@ export class MainScene extends DisplayObject{
             // BLOCK //
             if (this.SelectedBlock){
                 if (this.SelectedBlock.IsPressed){
-                    this.SelectedBlock.MouseUp(point);
+                    this.SelectedBlock.MouseUp();
 
                     // if the block has moved, create an undoable operation.
                     if (!Point.isEqual(this.SelectedBlock.Position, this.SelectedBlock.LastPosition)){
@@ -799,7 +799,9 @@ export class MainScene extends DisplayObject{
 
     DeleteSelectedBlock(){
         if (!this.SelectedBlock) return;
-        this.SelectedBlock.IsPressed = false;
+        if (this.SelectedBlock.IsPressed) {
+            this.SelectedBlock.MouseUp();
+        }
         this.OptionsPanel.Close();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
         this.SelectedBlock = null;
@@ -839,9 +841,7 @@ export class MainScene extends DisplayObject{
         if (newUrl.length>1) {
             window.history.pushState({html: "Reset"}, "BlokDust", ""+newUrl[0]);
             window.onpopstate = function(){
-                //if(window.history.state !== null){
-                    window.location.reload();
-                //}
+                window.location.reload();
             }
         }
 

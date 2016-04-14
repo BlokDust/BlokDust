@@ -60,6 +60,8 @@ export abstract class LFObase extends PreEffect {
         // Connect the right LFO type in the right place depending on the source
         for (let i = 0; i < chain.Sources.length; i++) {
             const source = chain.Sources[i];
+
+            // GRANULAR //
             if (source instanceof Granular) {
                 /*source.Grains.forEach((s: Tone.SimplePlayer) => {
                     if (s.playbackRate) {
@@ -70,12 +72,20 @@ export abstract class LFObase extends PreEffect {
             } else {
                 for (let j = 0; j < source.Sources.length; j++) {
                     const s = source.Sources[j];
+
+                    // OSCILLATOR //
                     if ((<Tone.Oscillator>s).detune) {
                         this.OscLFO.connect((<Tone.Oscillator>s).detune);
-                    } else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
+                    }
+
+                    // SAMPLER //
+                    else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
                         //this.SamplerLFO.connect((<Tone.Simpler>s).player.playbackRate);
                         this.SamplerLFO.connect(source.PlaybackSignal.Signal);
-                    }  else if ((<Tone.Noise>s).playbackRate) {
+                    }
+
+                    // NOISE //
+                    else if ((<Tone.Noise>s).playbackRate) {
                         this.SamplerLFO.connect((<Tone.Noise>s).playbackRate);
                     }
                 }
