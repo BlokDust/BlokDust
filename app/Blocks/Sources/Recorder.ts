@@ -31,7 +31,6 @@ export class Recorder extends SamplerBase {
             loop: true,
             loopStart: 0,
             loopEnd: 0,
-            retrigger: false, //Don't retrigger attack if already playing
             volume: 9,
             track: null,
             trackName: '',
@@ -191,7 +190,6 @@ export class Recorder extends SamplerBase {
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
-            s.player.retrigger = this.Params.retrigger;
             s.player.reverse = this.Params.reverse;
             s.volume.value = this.Params.volume;
 

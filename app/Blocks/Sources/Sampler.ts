@@ -37,7 +37,6 @@ export class Sampler extends SamplerBase {
             loop: true,
             loopStart: 0,
             loopEnd: 0,
-            retrigger: false, //Don't retrigger attack if already playing
             volume: 11,
             track: '',
             trackName: '',
