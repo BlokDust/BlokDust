@@ -812,7 +812,7 @@ declare module Tone {
 
     var PitchShift: {
         new(pitch?: any): Tone.PitchShift;
-    };
+    }
 
     interface PitchShift extends Tone.FeedbackEffect {
         pitch: number;
@@ -852,6 +852,7 @@ declare module Tone {
         loopEnd: number;
         loopStart: number;
         playbackRate: Tone.Signal;
+        retrigger: boolean;
         reverse: boolean;
         startPosition: number;
         load(url:string | AudioBuffer, callback?:(e: any)=>any);
