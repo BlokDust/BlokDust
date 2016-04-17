@@ -571,6 +571,9 @@ export class SharePanel extends DisplayObject {
         this.SessionURL = "" + this._CopyJson.domain + this._SessionId + this._NameUrl;
         var shareUrl = document.getElementById("shareUrl");
         shareUrl.innerHTML = "" + this.SessionURL;
+        if (this._SessionId) {
+            App.AddressBarManager.UpdateURL(this.SessionURL);
+        }
     }
 
     ShareFacebook() {

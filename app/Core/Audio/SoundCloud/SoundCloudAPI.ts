@@ -8,6 +8,7 @@ declare var SC: any;
 export class SoundCloudAPI {
 
     static _QueryReturns: number;
+    static QueryTotal: number;
     static QueryList: any[];
 
     static Initialize() {
@@ -16,6 +17,7 @@ export class SoundCloudAPI {
                 client_id: App.Config.SoundCloudClientId
             });
         }
+        this.QueryTotal = 5;
     }
 
 
@@ -162,11 +164,11 @@ export class SoundCloudAPI {
             });
 
             // SEARCH 2 //
-            this.OptionSearch(query, seconds, {license:"cc-by-nc-nd"},(tracks) => {
+            /*this.OptionSearch(query, seconds, {license:"cc-by-nc-nd"},(tracks) => {
                 this.MultiCallback(block, tracks,"cc-by-nc-nd");
             }, (error: SoundCloudAPIResponse.Error) => {
                 this.MultiCallback(block, [],"error");
-            });
+            });*/
 
             // SEARCH 3 //
             this.OptionSearch(query, seconds, {license:"cc-by-nc-sa"},(tracks) => {
@@ -270,7 +272,7 @@ export class SoundCloudAPI {
         }
 
         this._QueryReturns += 1;
-        if (this._QueryReturns===6) {
+        if (this._QueryReturns===this.QueryTotal) {
             // ALL QUERIES ARE IN - CONTINUE //
             block.SetSearchResults(this.QueryList);
         }

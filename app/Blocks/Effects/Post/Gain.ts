@@ -8,7 +8,8 @@ declare var App: IApp;
 
 export class Gain extends PostEffect {
 
-    public Effect: GainNode;
+    //public Effect: GainNode;
+    public Effect: Tone.Volume;
     //public Effect: Tone.Signal;
     public Params: GainParams;
     public Defaults: GainParams;
@@ -18,12 +19,14 @@ export class Gain extends PostEffect {
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Volume.name;
 
         this.Defaults = {
-            gain: 1.2
+            gain: 0
         };
         this.PopulateParams();
 
-        this.Effect = App.Audio.ctx.createGain();
-        this.Effect.gain.value = (this.Params.gain/10)+1;
+        /*this.Effect = App.Audio.ctx.createGain();
+        this.Effect.gain.value = (this.Params.gain/10);*/
+
+        this.Effect = new Tone.Volume(this.Params.gain);
 
         //this.Effect = new Tone.Signal(1, 'db');
 
@@ -40,13 +43,14 @@ export class Gain extends PostEffect {
     }
 
     Dispose(){
-        this.Effect.disconnect();
+        //this.Effect.disconnect();
+        this.Effect.dispose();
         this.Effect = null;
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        this.Effect.gain.value = (value/10)+1;
+        this.Effect.volume.value = (value);
         this.Params[param] = value;
     }
 
@@ -59,11 +63,11 @@ export class Gain extends PostEffect {
             "parameters": [
                 {
                     "type" : "slider",
-                    "name": "Gain",
+                    "name": "Level",
                     "setting": "gain",
                     "props": {
                         "value": this.Params.gain,
-                        "min": -10,
+                        "min": -20,
                         "max": 20,
                         "quantised": false,
                         "centered": true,

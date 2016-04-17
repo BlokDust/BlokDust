@@ -1194,6 +1194,15 @@ declare module Tone {
         unsync(): Tone.Tremolo;
     }
 
+    var Volume: {
+        new(volume?: number): Tone.Volume;
+    };
+
+    interface Volume {
+        volume: Tone.Signal;
+        dispose(): Tone.Volume;
+    }
+
     var WaveShaper: {
         new(mapping?: any, bufferLen?: number): Tone.WaveShaper;
     };

@@ -4,6 +4,7 @@ import DisplayObject = etch.drawing.DisplayObject;
 import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
 import IDisplayObject = etch.drawing.IDisplayObject;
 import Point = minerva.Point;
+import {AddressBarManager} from './Core/Visual/AddressBarManager';
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';
 import {BlockSprites} from './Blocks/BlockSprites';
@@ -62,6 +63,7 @@ export default class App implements IApp{
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
     private _SessionId: string;
+    public AddressBarManager: AddressBarManager;
     public Audio: Audio = new Audio();
     public Blocks: IBlock[] = [];
     public BlockCreator: BlockCreator;
@@ -217,6 +219,7 @@ export default class App implements IApp{
         this.ColorManager = new ColorManager();
         this.ThemeManager = new ThemeManager();
         this.FocusManager = new FocusManager();
+        this.AddressBarManager = new AddressBarManager();
 
         this.FocusManager.FocusChanged.on((s: any, e: FocusManagerEventArgs) => {
             if (!e.HasFocus){

@@ -1,6 +1,7 @@
 import Canvas = etch.drawing.Canvas;
 import IDisplayObject = etch.drawing.IDisplayObject;
 import Point = minerva.Point;
+import {AddressBarManager} from './Core/Visual/AddressBarManager';
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {BlockCreator} from './BlockCreator';
 import {BlockSprites} from './Blocks/BlockSprites';
@@ -28,6 +29,7 @@ import {TypingManager} from './Core/Inputs/TypingManager';
 import {IL10n} from './IL10n';
 
 export interface IApp {
+    AddressBarManager: AddressBarManager;
     AnimationsLayer: AnimationsLayer;
     Audio: IAudio;
     Blocks: IBlock[];

@@ -823,18 +823,8 @@ export class MainScene extends DisplayObject{
         App.Particles = [];
         App.Metrics.UpdateGridScale();
 
-        // reset URL //
-        document.title = "BlokDust";
-        var currentUrl = window.location.href;
-        var newUrl = currentUrl.split('?');
-        if (newUrl.length>1) {
-            window.history.pushState({html: "Reset"}, "BlokDust", ""+newUrl[0]);
-            window.onpopstate = function(){
-                window.location.reload();
-            }
-        }
-
         // reset session //
+        App.AddressBarManager.StripURL();
         App.CompositionId = null;
         App.SessionId = null;
         this.SharePanel.Reset();
