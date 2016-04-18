@@ -2,21 +2,16 @@
   "name": "BlokDust",
   "version": "0.2.7",
   "dependencies": {
-    "bower-webfontloader": "~1.5.16",
-    "etch": "~0.0.15",
-    "exjs": "~0.2.10",
+    "etch": "edsilv/etch",
+    "exjs": "BSick7/exjs",
     "extensions": "edsilv/extensions",
     "intersection": "BlokDust/intersection",
-    "jquery": "~2.1.3",
     "key-codes": "edsilv/key-codes",
     "lzma": "nmrugg/LZMA-JS",
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
-    "r.js": "~2.1.16",
     "RecorderJS": "lukephills/Recorderjs#master",
     "tone": "BlokDust/Tone.js#master",
-    "tweenjs": "~16.3.1",
-    "utils": "edsilv/utils",
-    "text": "requirejs-text#~2.0.14"
+    "utils": "edsilv/utils"
   },
   "resolutions": {
     "nullstone": "~0.4.5",

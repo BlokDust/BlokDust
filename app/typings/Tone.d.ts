@@ -796,7 +796,6 @@ declare module Tone {
     interface Phaser extends Tone.StereoEffect {
         baseFrequency: number;
         depth: number;
-        octaves: number;
         frequency: Tone.Signal;
         dispose(): Tone.Phaser;
     }
@@ -812,7 +811,7 @@ declare module Tone {
 
     var PitchShift: {
         new(pitch?: any): Tone.PitchShift;
-    };
+    }
 
     interface PitchShift extends Tone.FeedbackEffect {
         pitch: number;
@@ -852,6 +851,7 @@ declare module Tone {
         loopEnd: number;
         loopStart: number;
         playbackRate: Tone.Signal;
+        retrigger: boolean;
         reverse: boolean;
         startPosition: number;
         load(url:string | AudioBuffer, callback?:(e: any)=>any);
@@ -1192,15 +1192,6 @@ declare module Tone {
         stop(): Tone.Tremolo;
         sync(): Tone.Tremolo;
         unsync(): Tone.Tremolo;
-    }
-
-    var Volume: {
-        new(volume?: number): Tone.Volume;
-    };
-
-    interface Volume {
-        volume: Tone.Signal;
-        dispose(): Tone.Volume;
     }
 
     var WaveShaper: {
