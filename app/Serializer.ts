@@ -105,7 +105,6 @@ export class Serializer {
 
         // if it's a source block
         if (block instanceof Source && (<ISource>block).Connections.Count){
-        //if ((<ISource>block).Effects && (<ISource>block).Effects.Count){
             b.Effects = [];
 
             if (parentBlock){
@@ -137,6 +136,7 @@ export class Serializer {
 
         var saveFile = new SaveFile();
         saveFile.ZoomLevel = parsed.ZoomLevel;
+
         if (parsed.DragOffset) {
             saveFile.DragOffset = new Point(parsed.DragOffset.x, parsed.DragOffset.y);
         } else {
@@ -145,6 +145,7 @@ export class Serializer {
         }
 
         saveFile.Composition = this._DeserializeBlocks(parsed.Composition);
+
         if (parsed.ColorThemeNo) {
             saveFile.ColorThemeNo = parsed.ColorThemeNo;
         } else {
@@ -186,8 +187,6 @@ export class Serializer {
 
             Serializer._DeserializationDictionary[b.Id] = block;
         }
-
-
 
         // if it's a source block
         if((<any>b).Effects){
