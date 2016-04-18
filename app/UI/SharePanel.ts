@@ -134,8 +134,8 @@ export class SharePanel extends DisplayObject {
         // [^A-Za-z0-9_] alpha-numeric
         // 	[][!"#$%&'()*+,./:;<=>?@\^_`{|}~-] punctuation
         // [.,\/#!$%\^&\*;:{}=\-_`~()] punctuation 2
-        if (/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`~()]/.test(element.value)) {
-            element.value = element.value.replace(/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`~()]/g, '');
+        if (/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`\+~()]/.test(element.value)) {
+            element.value = element.value.replace(/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`\+~()]/g, '');
             element.selectionStart = caretPos;
             element.selectionEnd = caretPos;
         }

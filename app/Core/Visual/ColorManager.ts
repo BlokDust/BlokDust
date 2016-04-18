@@ -104,4 +104,8 @@ export class ColorManager {
         return value;
     }
 
+    public GetLuminosity(col) {
+        return ((0.299*col.R + 0.587*col.G + 0.114*col.B));
+    }
+
 }
