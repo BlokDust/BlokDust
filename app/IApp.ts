@@ -8,6 +8,7 @@ import {BlockSprites} from './Blocks/BlockSprites';
 import {ColorManager} from './Core/Visual/ColorManager';
 import {CommandManager} from './Core/Commands/CommandManager';
 import {CommandsInputManager} from './Core/Inputs/CommandsInputManager';
+import {FocusManager} from './Core/Inputs/FocusManager';
 import {IAudio} from './Core/Audio/IAudio';
 import {IBlock} from './Blocks/IBlock';
 import {IConfig} from './IConfig';
@@ -45,6 +46,7 @@ export interface IApp {
     //DragFileInputManager: DragFileInputManager;
     DragOffset: Point;
     Effects: IEffect[];
+    FocusManager: FocusManager;
     GridSize: number;
     Height: number;
     IsLoadingComposition: boolean;

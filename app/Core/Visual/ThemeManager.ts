@@ -249,6 +249,8 @@ export class ThemeManager  {
             // CSS SHARE TEXT COL //
             var shareUrl = document.getElementById("shareUrl");
             shareUrl.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
+            var shareTitle = document.getElementById("shareTitle");
+            shareTitle.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
             // CSS SELECTED TEXT HIGHLIGHT COLOUR //
             var styleElem = document.getElementById("selectStyle");
             var highlightCol = App.ColorManager.DarkerColor(this.NewPalette[1],15);
