@@ -51,6 +51,10 @@ export class KeyboardInputManager {
             e.preventDefault();
         }
 
+        if (k === KeyCodes.KeyDown.Enter && !App.FocusManager.IsActive()) { // enter prevent default
+            e.preventDefault();
+        }
+
         // add to dictionary
         this.KeysDown[k] = true;
     }
