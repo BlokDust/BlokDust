@@ -95,7 +95,6 @@ export class SharePanel extends DisplayObject {
 
     UpdateString(string) {
         this.SessionTitle = string;
-        console.log(this.Capitalise(string));
         this.SetNameUrl(string);
         this.UpdateUrlText();
     }
