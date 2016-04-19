@@ -59,21 +59,21 @@ export class PointerInputManager {
     }
 
     OnTouchStart(e: TouchEvent){
-        if (App.FocusManager.IsActive()) {
+        if (App.FocusManager.IsTouchTarget(e)) {
             e.preventDefault();
         }
         this.TouchStart.raise(this, e);
     }
 
     OnTouchEnd(e: TouchEvent){
-        if (App.FocusManager.IsActive()) {
+        if (App.FocusManager.IsTouchTarget(e)) {
             e.preventDefault();
         }
         this.TouchEnd.raise(this, e);
     }
 
     OnTouchMove(e: TouchEvent){
-        if (App.FocusManager.IsActive()) {
+        if (App.FocusManager.IsTouchTarget(e)) {
             e.preventDefault();
         }
         this.TouchMove.raise(this, e);

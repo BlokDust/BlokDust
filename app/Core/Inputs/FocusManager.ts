@@ -32,9 +32,13 @@ export class FocusManager {
         }, false);
     }
 
-    // IS CANVAS FOCUSSED WITHIN PAGE //
-    //TODO make event based (on active element change)
+    // IS CANVAS FOCUSED ELEMENT WITHIN PAGE //
     IsActive() {
         return ((<HTMLElement>document.activeElement) !== this._TitleInput);
+    }
+
+    // IS CANVAS THE TARGET OF A TOUCH EVENT //
+    IsTouchTarget(e: TouchEvent) {
+        return (e.target === App.Canvas.HTMLElement);
     }
 }
