@@ -1,3 +1,7 @@
+import {IApp} from '../IApp';
+
+declare var App: IApp;
+
 export class PointerInputManager {
 
     MouseDown = new nullstone.Event<MouseEvent>();
@@ -55,17 +59,23 @@ export class PointerInputManager {
     }
 
     OnTouchStart(e: TouchEvent){
-        e.preventDefault();
+        if (App.FocusManager.IsActive()) {
+            e.preventDefault();
+        }
         this.TouchStart.raise(this, e);
     }
 
     OnTouchEnd(e: TouchEvent){
-        e.preventDefault();
+        if (App.FocusManager.IsActive()) {
+            e.preventDefault();
+        }
         this.TouchEnd.raise(this, e);
     }
 
     OnTouchMove(e: TouchEvent){
-        e.preventDefault();
+        if (App.FocusManager.IsActive()) {
+            e.preventDefault();
+        }
         this.TouchMove.raise(this, e);
     }
 

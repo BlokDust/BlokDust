@@ -598,6 +598,7 @@ export class SharePanel extends DisplayObject {
     OpenPanel() {
         this.Open = true;
         this.OffsetY = -App.Height;
+        //this.TitleInput.focus();
         this.GetWarning();
         this.ShowDom();
         this.DelayTo(this,0,500,0,"OffsetY");
@@ -766,7 +767,7 @@ export class SharePanel extends DisplayObject {
         }
         if (this.URLInput) {
             this.StyleDom(this.URLInputContainer, 400, 40, 200, 20, this.OffsetX + App.Width, App.Metrics.TxtUrl);
-            this.StyleDom(this.TitleInputContainer, 300, 42, 210, 132, 0, App.Metrics.TxtHeader);
+            this.StyleDom(this.TitleInputContainer, 300, 42, 210, 132, 0, App.Metrics.TxtHeaderPR);
         }
 
     }
