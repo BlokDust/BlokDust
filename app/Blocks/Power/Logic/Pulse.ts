@@ -13,15 +13,14 @@ export class Pulse extends Logic {
     public Defaults: PulseParams;
 
     Init(drawTo: IDisplayContext): void {
-		super.Init(drawTo);
-        
         this.BlockName = App.L10n.Blocks.Power.Blocks.PulsePower.name;
-
         this.Defaults = {
             logic: false,
             pulseLength: App.Config.PulseLength/1000,
         };
-        this.PopulateParams();
+        this.PopulateParams(true);
+
+        super.Init(drawTo);
 
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
@@ -121,8 +120,9 @@ export class Pulse extends Logic {
                 (<ParticleEmitter>source).EmitParticle();
             }
         });
+        this.RefreshOption(1);
         setTimeout(() => {
-            this.RefreshOptionsPanel();
+            this.RefreshOption(1);
         }, pulseLength);
 
         this.Params.logic = false;

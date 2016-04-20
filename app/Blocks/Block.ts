@@ -189,6 +189,13 @@ export class Block extends DisplayObject implements IBlock {
         }
     }
 
+    RefreshOption(optionNo: number) {
+        if (App.MainScene.OptionsPanel.Scale>0 && App.MainScene.OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            App.MainScene.OptionsPanel.RefreshOption(optionNo, this.OptionsForm);
+        }
+    }
+
     //-------------------------------------------------------------------------------------------
     //  CONNECTIONS
     //-------------------------------------------------------------------------------------------
