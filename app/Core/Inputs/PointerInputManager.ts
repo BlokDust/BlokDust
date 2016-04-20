@@ -83,8 +83,10 @@ export class PointerInputManager {
     }
 
     OnMouseWheel(e: MouseWheelEvent): void {
-        e.preventDefault();
-        e.stopPropagation();
+        if (App.FocusManager.IsTouchTarget(e)) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         this.MouseWheel.raise(this, e);
     }
 }
