@@ -122,6 +122,7 @@ export class Granular extends Source {
     }
 
     TrackFallBack() {
+        this._LoadFromShare = false;
         // IF CURRENT FAILING TRACK MATCHES FALLBACK, SET FALLBACK TO DEFAULT (to end perpetual load loops) //
         if (this.Params.track === this._FallBackTrack.URI) {
             this._FallBackTrack = new SoundCloudTrack(this.Defaults.trackName,this.Defaults.user,this.Defaults.track,this.Defaults.permalink);

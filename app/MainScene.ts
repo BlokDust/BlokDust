@@ -776,10 +776,11 @@ export class MainScene extends DisplayObject{
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
 
+        // Fade In Audio //
         setTimeout(() => {
             this.Play();
-            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
-        }, 200);
+            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,5);
+        }, 400);
     }
 
     //-------------------------------------------------------------------------------------------
