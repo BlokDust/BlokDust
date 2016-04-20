@@ -1,20 +1,28 @@
-import {Effect} from '../../Effect';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../../ISource';
 import {Logic} from './Logic';
-import {MainScene} from '../../../MainScene';
 import {ParticleEmitter} from './../ParticleEmitter';
-import {Particle} from '../../../Particle';
 import Point = etch.primitives.Point;
 import {IApp} from "../../../IApp";
 
 declare var App: IApp;
 
-export class Momentary extends Logic {
+export class Pulse extends Logic {
+
+    public Params: PulseParams;
+    public Defaults: PulseParams;
 
     Init(drawTo: IDisplayContext): void {
 		super.Init(drawTo);
-        this.BlockName = App.L10n.Blocks.Power.Blocks.MomentaryPower.name;
+
+        this.BlockName = App.L10n.Blocks.Power.Blocks.PulsePower.name;
+
+        this.Defaults = {
+            logic: false,
+            pulseLength: App.Config.PulseLength/1000,
+        };
+        this.PopulateParams();
+
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
 
@@ -22,14 +30,14 @@ export class Momentary extends Logic {
         //const newConnections: ISource[] = this.Connections.ToArray();
         //
         //this.OldConnections.forEach((source: ISource) => {
-        //    //if momentary is on and is no longer connected to a source, remove power.
+        //    //if pulse is on and is no longer connected to a source, remove power.
         //    if (this.Params.logic && (newConnections.indexOf(source) === -1)) {
         //        source.RemovePower();
         //    }
         //});
         //
         //newConnections.forEach((source: ISource) => {
-        //    //if momentary is on and source isn't already connected, add power
+        //    //if pulse is on and source isn't already connected, add power
         //    if (this.Params.logic && (this.OldConnections.indexOf(source) === -1)) {
         //        source.AddPower();
         //    }
@@ -52,10 +60,20 @@ export class Momentary extends Logic {
 
         this.OptionsForm =
         {
-            "name" : "Momentary Power",
+            "name" : "Pulse Power",
             "parameters" : [
-
-
+                {
+                    "type" : "slider",
+                    "name" : "Pulse length",
+                    "setting" : "pulseLength",
+                    "props" : {
+                        "value" : this.Params.pulseLength,
+                        "min" : 0.01,
+                        "max" : 2,
+                        "quantised" : false,
+                        "centered" : false
+                    }
+                },
                 {
                     "type" : "switches",
                     "name" : "Power",
@@ -77,8 +95,13 @@ export class Momentary extends Logic {
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
 
-        if (param=="logic") {
-            this.PerformLogic();
+        switch (param) {
+            case 'logic':
+                this.PerformLogic();
+                break;
+            case 'pulseLength':
+                this.Params.pulseLength = value;
+                break;
         }
 
         //this.Params[""+param] = value;
@@ -95,7 +118,7 @@ export class Momentary extends Logic {
             setTimeout(() => {
                 source.RemovePower();
                 that.RefreshOptionsPanel();
-            }, App.Config.PulseLength);
+            }, this.Params.pulseLength*1000);
             if (source instanceof ParticleEmitter) {
                 (<ParticleEmitter>source).EmitParticle();
             }

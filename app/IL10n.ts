@@ -35,7 +35,7 @@ interface IBlockList {
     Vibrato: IBlockInfo;
     Microphone: IBlockInfo;
     MIDIController: IBlockInfo;
-    MomentaryPower: IBlockInfo;
+    PulsePower: IBlockInfo;
     Noise: IBlockInfo;
     ParticleEmitter: IBlockInfo;
     Phaser: IBlockInfo;

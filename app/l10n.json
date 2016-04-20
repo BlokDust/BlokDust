@@ -150,8 +150,8 @@
           "name": "Void",
           "description": "Absorbs any laser beams or particles that collide with it."
         },
-        "MomentaryPower": {
-          "name": "Momentary Power",
+        "PulsePower": {
+          "name": "Pulse Power",
           "description": "Provides a short fire of energy for sources, particle emitters & lasers."
         },
         "Laser": {

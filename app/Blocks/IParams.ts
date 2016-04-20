@@ -95,6 +95,10 @@ interface ParticleEmitterParams extends IParams {
     selfPoweredMode: boolean;
 }
 
+interface PulseParams extends LogicParams {
+    pulseLength: number;
+}
+
 /**
  * Interaction Params
  */

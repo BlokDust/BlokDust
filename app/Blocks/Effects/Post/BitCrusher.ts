@@ -1,5 +1,4 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PostEffect} from '../PostEffect';
 
