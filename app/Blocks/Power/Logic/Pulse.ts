@@ -103,8 +103,7 @@ export class Pulse extends Logic {
                 this.Params.pulseLength = value;
                 break;
         }
-
-        //this.Params[""+param] = value;
+        
     }
 
 
