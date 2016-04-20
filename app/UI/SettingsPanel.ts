@@ -943,7 +943,6 @@ export class SettingsPanel extends DisplayObject{
         console.log("" + object[""+setting] +" | "+ val);
         switch (object[""+setting]) {
             case "volume":
-                console.log(App.Audio.Master.volume.value);
                 App.Audio.Master.volume.value = val - 70;
                 if (val===0) {
                     App.Audio.Master.volume.value = val - 200;
