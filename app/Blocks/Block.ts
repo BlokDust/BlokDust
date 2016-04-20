@@ -50,11 +50,15 @@ export class Block extends DisplayObject implements IBlock {
         this.Update();
     }
 
-    PopulateParams() {
+    PopulateParams(log?: boolean) {
 
         // duplicate Params //
         var paramsCopy = {};
         if (this.Params) {
+            if (log) {
+                console.log(this.Params);
+                console.log(this.Defaults);
+            }
             this.BackwardsCompatibilityPatch();
             for (var key in this.Params) {
                 paramsCopy[""+key] = this.Params[""+key];
