@@ -91,7 +91,9 @@ export class ConnectionManager {
                 if (this._Debug) console.log(block);
             });
             chain.PreEffects.forEach((block: IPreEffect) => {
-                block.UpdateConnections(chain);
+                setTimeout(() => {
+                    block.UpdateConnections(chain);
+                },0)
                 block.Chain = chain;
                 if (this._Debug) console.log(block);
             });
