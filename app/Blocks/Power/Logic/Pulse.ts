@@ -14,7 +14,7 @@ export class Pulse extends Logic {
 
     Init(drawTo: IDisplayContext): void {
 		super.Init(drawTo);
-
+        
         this.BlockName = App.L10n.Blocks.Power.Blocks.PulsePower.name;
 
         this.Defaults = {
@@ -108,20 +108,23 @@ export class Pulse extends Logic {
 
 
     PerformLogic() {
+        const pulseLength = this.Params.pulseLength*1000;
         // Momentarily Trigger Attack and then release
         this.Params.logic = true;
         let connections: ISource[] = this.Connections.ToArray();
-        var that = this;
         connections.forEach((source: ISource) => {
             source.AddPower();
             setTimeout(() => {
                 source.RemovePower();
-                that.RefreshOptionsPanel();
-            }, this.Params.pulseLength*1000);
+            }, pulseLength);
             if (source instanceof ParticleEmitter) {
                 (<ParticleEmitter>source).EmitParticle();
             }
         });
+        setTimeout(() => {
+            this.RefreshOptionsPanel();
+        }, pulseLength);
+
         this.Params.logic = false;
     }
 }
