@@ -37,6 +37,15 @@ export class FocusManager {
         return ((<HTMLElement>document.activeElement) !== this._TitleInput);
     }
 
+    // THE ACTIVE ELEMENT ISN'T THE PAGE BODY //
+    ActiveIsNotBody() {
+        return ((<HTMLElement>document.activeElement) !== document.body);
+    }
+
+    BlurActive() {
+        (<HTMLElement>document.activeElement).blur();
+    }
+
     // IS CANVAS THE TARGET OF A TOUCH EVENT //
     IsTouchTarget(e: TouchEvent) {
         return (e.target === App.Canvas.HTMLElement);

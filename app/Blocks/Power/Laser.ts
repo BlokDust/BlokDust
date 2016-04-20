@@ -65,6 +65,16 @@ export class Laser extends PowerSource {
         this.DrawSprite(this.BlockName);
     }
 
+    AddPower() {
+        super.AddPower();
+        this.UpdateCollision = true;
+    }
+
+    RemovePower() {
+        super.RemovePower();
+        this.UpdateCollision = true;
+    }
+
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 

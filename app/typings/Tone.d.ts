@@ -1194,7 +1194,7 @@ declare module Tone {
         sync(): Tone.Tremolo;
         unsync(): Tone.Tremolo;
     }
-
+    
     var Volume: {
         new(volume?: number): Tone.Volume;
     };

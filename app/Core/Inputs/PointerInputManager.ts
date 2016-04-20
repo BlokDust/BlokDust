@@ -62,6 +62,9 @@ export class PointerInputManager {
         if (App.FocusManager.IsTouchTarget(e)) {
             e.preventDefault();
         }
+        if (App.FocusManager.ActiveIsNotBody() && !App.FocusManager.IsActive()) {
+            App.FocusManager.BlurActive()
+        }
         this.TouchStart.raise(this, e);
     }
 
