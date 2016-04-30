@@ -783,9 +783,21 @@ export class MainScene extends DisplayObject{
         // Fade In Audio //
         setTimeout(() => {
             this.Play();
-            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,5);
-        }, 400);
-    }
+            // App.Audio.Master.volume.linearRampToValue(App.Audio.MasterVolume,5); //This breaks audio volume slider
+        }, 2400);
+
+        //TODO: THIS IS SHIT - For some reason fading in the volume using the above method breaks the volume slider
+        // Come back to this once useful functions have been abstracted from Tone into a simplified version
+        var volume = -30
+        var volumeFade = setInterval(() => {
+            if (volume < App.Audio.MasterVolume) {
+                App.Audio.Master.volume.value = volume;
+                volume += 2;
+            } else {
+                clearInterval(volumeFade);
+            }
+        }, 70)
+     }
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS
