@@ -115,7 +115,7 @@ export class PooledFactoryResource<T extends IPooledObject> implements IPooledFa
 
         obj.ReturnToPool = () => {
             this._ReturnObjectToPool(obj);
-        }
+        };
 
         return obj;
     }

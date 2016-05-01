@@ -7,6 +7,7 @@ import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
 import {Source} from './Blocks/Source';
 import {Void} from './Blocks/Power/Void';
 import Point = etch.primitives.Point;
+import Vector = etch.primitives.Vector;
 
 declare var App: IApp;
 
@@ -14,20 +15,28 @@ export class Particle implements IPooledObject {
 
     public Disposed: boolean = false;
     public Life: number;
-    public Vector: Vector;
+    public Velocity: Vector;
     public Position: Point;
     public Size: number;
 
-    constructor(position: Point, vector: Vector, size: number, life: number) {
+    constructor(position: Point, velocity: Vector, size: number, life: number) {
         this.Position = position;
-        this.Vector = vector;
+        this.Velocity = velocity;
         this.Size = size;
         this.Life = life;
     }
 
     Move() {
-        this.Position.x += (this.Vector.X * App.Unit);
-        this.Position.y += (this.Vector.Y * App.Unit);
+        var p: Vector = this.Position.ToVector();
+
+        var deltaVelocity: Vector = new Vector(this.Velocity.x * App.Stage.DeltaTime, this.Velocity.y * App.Stage.DeltaTime);
+
+        p.Add(deltaVelocity);
+
+        this.Position = p.ToPoint();
+
+        //this.Position.x += (this.Vector.X * App.Unit);
+        //this.Position.y += (this.Vector.Y * App.Unit);
     }
 
     Reset(): boolean {
