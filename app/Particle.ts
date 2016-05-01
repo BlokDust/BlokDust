@@ -1,4 +1,3 @@
-import Vector = Utils.Maths.Vector;
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
 import {IPooledObject} from './Core/Resources/IPooledObject';
@@ -41,7 +40,7 @@ export class Particle implements IPooledObject {
 
     Reset(): boolean {
         this.Position = null;
-        this.Vector = null;
+        this.Velocity = null;
         this.Size = null;
         this.Life = null;
         return true;
