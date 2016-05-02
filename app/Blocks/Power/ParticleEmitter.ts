@@ -66,7 +66,7 @@ export class ParticleEmitter extends PowerSource {
             if (!this._LastEmission){
                 this.EmitParticle();
             } else {
-                var particlesPerSecond: number = 1000 / this.Params.rate;
+                var particlesPerSecond: number = 600000 / (510 - this.Params.rate);
                 var msSinceLastEmission: number = this.LastVisualTick - this._LastEmission;
                 if (msSinceLastEmission >= particlesPerSecond){
                     this.EmitParticle();
@@ -78,29 +78,6 @@ export class ParticleEmitter extends PowerSource {
                 this.Params.angle = 1;
             }
         }
-
-        /*
-        // If we're in self powered mode, or if this is powered
-        if (this.Params.selfPoweredMode || this.IsPowered()) {
-
-            if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
-
-                this._rateCounter += 1; // POSSIBLY MOVE TO A SET TIMEOUT, IF IT WOULD PERFORM BETTER
-                if (this._rateCounter>=this.Params.rate) {
-                    this.EmitParticle();
-                    this._rateCounter = 0;
-                }
-
-                // ROTATE //
-                if (this.Params.angle>360) {
-                    this.Params.angle = 1;
-                }
-
-            }
-        } else {
-            this._rateCounter = this.Params.rate;
-        }
-        */
     }
 
     Draw() {
