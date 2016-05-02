@@ -238,8 +238,6 @@ declare module etch.drawing {
 import ClockTimer = etch.engine.ClockTimer;
 import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayObject = etch.drawing.IDisplayObject;
-declare var MAX_FPS: number;
-declare var MAX_MSPF: number;
 declare module etch.drawing {
     class Stage extends DisplayObject implements ITimerListener {
         DeltaTime: number;

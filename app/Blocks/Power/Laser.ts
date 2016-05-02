@@ -55,7 +55,7 @@ export class Laser extends PowerSource {
             var normalisedRate: number = this.Params.rotate / 500;
             var rotationsPerMS: number = ms / normalisedRate;
 
-            this.Params.angle += (360 / rotationsPerMS) * App.Stage.DeltaTime;// (this.Params.rotate/100);
+            this.Params.angle += (360 / rotationsPerMS) * App.Stage.DeltaTime;
 
             if (this.Params.angle > 90) {
                 this.Params.angle -= 360;
