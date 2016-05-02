@@ -66,9 +66,11 @@ export class ParticleEmitter extends PowerSource {
             if (!this._LastEmission){
                 this.EmitParticle();
             } else {
-                var particlesPerSecond: number = 600000 / (510 - this.Params.rate);
+                var ms: number = 600000; // 10 minutes
+                var normalisedRate: number = (510 - this.Params.rate);
+                var particlesPerMS: number = ms / normalisedRate;
                 var msSinceLastEmission: number = this.LastVisualTick - this._LastEmission;
-                if (msSinceLastEmission >= particlesPerSecond){
+                if (msSinceLastEmission >= particlesPerMS){
                     this.EmitParticle();
                 }
             }

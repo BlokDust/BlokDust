@@ -46,13 +46,22 @@ export class Laser extends PowerSource {
         //this.Params.angle = Math.random()*360;
 
         // ROTATE //
-        if (this.IsPowered() && Math.round(this.Params.rotate)!==0) {
+        if (this.IsPowered() && Math.round(this.Params.rotate) !== 0) {
             this.UpdateCollision = true;
-            this.Params.angle += (this.Params.rotate/100);
-            if (this.Params.angle>90) {
+
+            var ms: number = 1000; // 1 second
+
+            // -500 to 500 = -1 to 1
+            var normalisedRate: number = this.Params.rotate / 500;
+            var rotationsPerMS: number = ms / normalisedRate;
+
+            this.Params.angle += (360 / rotationsPerMS) * App.Stage.DeltaTime;// (this.Params.rotate/100);
+
+            if (this.Params.angle > 90) {
                 this.Params.angle -= 360;
             }
-            if (this.Params.angle<-270) {
+
+            if (this.Params.angle < -270) {
                 this.Params.angle += 360;
             }
         }
