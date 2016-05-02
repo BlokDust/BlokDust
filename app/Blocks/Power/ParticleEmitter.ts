@@ -10,7 +10,8 @@ declare var App: IApp;
 
 export class ParticleEmitter extends PowerSource {
 
-    private _rateCounter: number;
+    //private _rateCounter: number;
+    private _LastEmission: number;
     public Params: ParticleEmitterParams;
     public Defaults: ParticleEmitterParams;
 
@@ -27,7 +28,7 @@ export class ParticleEmitter extends PowerSource {
         };
         this.PopulateParams();
 
-        this._rateCounter = 0;
+        //this._rateCounter = 0;
 
         super.Init(drawTo);
 
@@ -52,12 +53,33 @@ export class ParticleEmitter extends PowerSource {
         p.Size = size;
 
         App.Particles.push(p);
+
+        this._LastEmission = this.LastVisualTick;
     }
 
 
     Update() {
         super.Update();
+        
+        if (this.Params.selfPoweredMode || this.IsPowered()) {
 
+            if (!this._LastEmission){
+                this.EmitParticle();
+            } else {
+                var particlesPerSecond: number = 1000 / this.Params.rate;
+                var msSinceLastEmission: number = this.LastVisualTick - this._LastEmission;
+                if (msSinceLastEmission >= particlesPerSecond){
+                    this.EmitParticle();
+                }
+            }
+
+            // ROTATE //
+            if (this.Params.angle > 360) {
+                this.Params.angle = 1;
+            }
+        }
+
+        /*
         // If we're in self powered mode, or if this is powered
         if (this.Params.selfPoweredMode || this.IsPowered()) {
 
@@ -78,6 +100,7 @@ export class ParticleEmitter extends PowerSource {
         } else {
             this._rateCounter = this.Params.rate;
         }
+        */
     }
 
     Draw() {
