@@ -59,7 +59,7 @@ export class Splash extends DisplayObject{
             App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
             this.Ctx.textAlign = "center";
             this.Ctx.font = App.Metrics.TxtHeader;
-            this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * units));
+            this.Ctx.fillText("LOADING SCENE",dx,dy + (26 * units)); // todo: use l10n
             //App.AnimationsLayer.Spin();
             App.AnimationsLayer.DrawSprite(this.Ctx,'loading',dx, dy - (16 * units),16,true);
         }

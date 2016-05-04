@@ -313,11 +313,12 @@ export default class App implements IApp{
             }).catch((error: string) => {
                 that.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), that.CompositionId);
                 that.CompositionId = null;
-                console.error(error);
+                this.IsLoadingComposition = false;
+                //console.error(error);
 
-                /*if (this.Message){
-                    this.Message(`Save couldn't be found.`);
-                }*/
+                //if (that.Message){
+                    that.Message(`Save couldn't be found.`);
+                //}
             });
         }
 
@@ -360,7 +361,6 @@ export default class App implements IApp{
             this.MainScene.CreateNew.ShowMessage();
         }
 
-
         this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }
 
@@ -378,6 +378,7 @@ export default class App implements IApp{
 
     Message(message?: string, options?: any) {
         if (this.MainScene) {
+            this.MainScene.MessagePanel.Show();
             this.MainScene.MessagePanel.NewMessage(message, options);
         }
     }
