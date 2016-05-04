@@ -55,11 +55,13 @@ import {BlockCreator} from './BlockCreator';
 import {CommandCategories} from './CommandCategories';
 import {Errors} from './Errors';
 import {GAVariables} from './GAVariables';
+import {CompositionLoadFailedEventArgs} from "./CompositionLoadFailedEventArgs";
 //import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 
 export default class App implements IApp{
 
     CompositionLoaded = new nullstone.Event<CompositionLoadedEventArgs>();
+    CompositionLoadFailed = new nullstone.Event<CompositionLoadFailedEventArgs>();
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
     private _SessionId: string;
@@ -314,11 +316,7 @@ export default class App implements IApp{
                 that.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), that.CompositionId);
                 that.CompositionId = null;
                 this.IsLoadingComposition = false;
-                //console.error(error);
-
-                //if (that.Message){
-                    that.Message(`Save couldn't be found.`);
-                //}
+                this.CompositionLoadFailed.raise(this, new CompositionLoadFailedEventArgs(that.CompositionId));
             });
         }
 

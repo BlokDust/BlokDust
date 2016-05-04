@@ -175,6 +175,7 @@
     }
   },
   "Errors": {
+    "LoadError": "Composition failed to load.",
     "SaveError": "Save failed, please try again.",
     "SoundCloud": {
       "FailedTrackFiltering": "Tracks were found, but cannot be used. Make sure the track you're searching for is streamable for public use and is either tagged 'blokdust' or has a creative commons license.",

@@ -59,6 +59,7 @@ interface IBlockInfo {
 }
 
 interface IErrors {
+    LoadError: string;
     SaveError: string;
     SoundCloud: ISoundCloudErrors;
 }
