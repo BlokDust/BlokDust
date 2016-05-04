@@ -863,7 +863,7 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="samplelocal") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
-                    console.log("" + this.Options[i].Setting +" | "+ val);
+                    //console.log("" + this.Options[i].Setting +" | "+ val);
                     // SET VALUE IN BLOCK //
                     this.SelectedBlock.SetParam(this.Options[i].Setting, val);
                     return;
@@ -872,7 +872,7 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="actionbutton") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
-                    console.log("" + this.Options[i].Setting +" | "+ val);
+                    //console.log("" + this.Options[i].Setting +" | "+ val);
                     // SET VALUE IN BLOCK //
                     this.SelectedBlock.SetParam(this.Options[i].Setting, val);
                     return;
