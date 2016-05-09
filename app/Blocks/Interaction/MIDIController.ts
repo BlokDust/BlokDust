@@ -151,6 +151,7 @@ export class MIDIController extends Keyboard {
     //-------------------------------------------------------------------------------------------
 
     Dispose(){
+        App.Audio.MIDIManager.MIDIMessage.off(this._OnMIDIMessage, this);
         super.Dispose();
     }
 

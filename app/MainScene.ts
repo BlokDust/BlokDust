@@ -415,9 +415,7 @@ export class MainScene extends DisplayObject{
             this.MainSceneDragger.MouseDown(point);
         }
 
-        this.ConnectionLines.UpdateList();
-
-
+        //this.ConnectionLines.UpdateList();
     }
 
     private _PointerUp(point: Point, isTouch?: boolean) {
@@ -463,7 +461,7 @@ export class MainScene extends DisplayObject{
 
             this.MainSceneDragger.MouseUp();
         }
-        this.ConnectionLines.UpdateList();
+        //this.ConnectionLines.UpdateList();
     }
 
     private _PointerMove(point: Point){
@@ -689,14 +687,19 @@ export class MainScene extends DisplayObject{
         if (!block && this._SelectedBlock){
             this._SelectedBlock.IsSelected = false;
             this._SelectedBlock = null;
-        } else {
+        }
+
+        else {
             if (this._SelectedBlock){
                 this._SelectedBlock.IsSelected = false;
             }
-            block.IsSelected = true;
-            this._SelectedBlock = block;
 
-            this.BlockToFront(block);
+            
+            if (block) {
+                block.IsSelected = true;
+                this._SelectedBlock = block;
+                this.BlockToFront(block);
+            }
         }
     }
 
@@ -707,7 +710,6 @@ export class MainScene extends DisplayObject{
     private _Invalidate(){
         this._ValidateBlocks();
         this._CheckProximity();
-        this.ConnectionLines.UpdateList();
         this.CreateNew.CheckState();
         this.Tutorial.CheckTask();
     }
@@ -783,6 +785,7 @@ export class MainScene extends DisplayObject{
         // Fade In Audio //
         setTimeout(() => {
             this.Play();
+            this.ConnectionLines.UpdateList();
             // App.Audio.Master.volume.linearRampToValue(App.Audio.MasterVolume,5); //This breaks audio volume slider
         }, 2400);
 
@@ -810,28 +813,44 @@ export class MainScene extends DisplayObject{
         }
         this.OptionsPanel.Close();
         App.CommandManager.ExecuteCommand(Commands.DELETE_BLOCK, this.SelectedBlock);
+        //this.DeleteBlock(this.SelectedBlock);
         this.SelectedBlock = null;
+
+        // Update drawing of connection lines //
+        setTimeout(() => {
+            this.ConnectionLines.UpdateList();
+        }, 1);
     }
 
-    ResetScene() {
 
-        // delete all blocks //
+    DeleteBlock(block) {
+        this.BlocksContainer.DisplayList.Remove(block);
+        App.Blocks.remove(block);
+        //this.SelectedBlock.Stop(); //LP commented this out because if you have a keyboard and a source connected and call reset you get errors
+        block.Dispose();
+        block = null;
+    }
+
+    DeleteAllBlocks() {
         var blockList = [];
-        var i;
-        for (i=0; i<App.Blocks.length; i++) {
+        for (var i=0; i<App.Blocks.length; i++) {
             blockList.push(App.Blocks[i]);
         }
         for (i=0; i<blockList.length; i++) {
-            this.SelectedBlock = blockList[i];
-            this.BlocksContainer.DisplayList.Remove(this.SelectedBlock);
-            App.Blocks.remove(this.SelectedBlock); // TODO: DisplayList has capitalised Remove function, array has lowercase remove function - make both alike?
-            //this.SelectedBlock.Stop(); //LP commented this out because if you have a keyboard and a source connected and call reset you get errors
-            this.SelectedBlock.Dispose();
+            this.DeleteBlock(blockList[i]);
         }
+    }
+
+    // CLEAR SCENE OF ALL BLOCKS, RESET SESSION //
+    ResetScene() {
+
+        // delete all blocks //
+        this.DeleteAllBlocks();
         this.Tutorial.WatchedBlocks = [];
+        this.ConnectionLines.UpdateList();
+        this.SelectedBlock = null;
 
         // reset zoom & drag //
-        this.SelectedBlock = null;
         App.DragOffset.x = 0;
         App.DragOffset.y = 0;
         this.ZoomButtons.CurrentSlot = 2;
@@ -839,6 +858,7 @@ export class MainScene extends DisplayObject{
         App.ZoomLevel = 1;
         App.Particles = [];
         App.Metrics.UpdateGridScale();
+        this.OptionsPanel.Close();
 
         // reset session //
         App.AddressBarManager.StripURL();
@@ -846,6 +866,7 @@ export class MainScene extends DisplayObject{
         App.SessionId = null;
         this.SharePanel.Reset();
 
+        // invalidate //
         this._Invalidate();
     }
 

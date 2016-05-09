@@ -30,6 +30,8 @@ export interface IAudio {
 
     Monitor(): void;
     MonitorReset(): void;
+    ReverseBuffer(blockId: number, buffer: any): void;
+    DigestBuffer(blockId: number, buffer: any): void;
 
     Level: number;
     Peak: number;

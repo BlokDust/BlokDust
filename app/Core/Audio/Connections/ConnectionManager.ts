@@ -34,6 +34,7 @@ export class ConnectionManager {
 
         this.IsConnected = false;
 
+
         //First mute everything
         App.Audio.Master.mute = true;
 
@@ -93,7 +94,7 @@ export class ConnectionManager {
             chain.PreEffects.forEach((block: IPreEffect) => {
                 setTimeout(() => {
                     block.UpdateConnections(chain);
-                },0)
+                },0);
                 block.Chain = chain;
                 if (this._Debug) console.log(block);
             });
@@ -151,6 +152,10 @@ export class ConnectionManager {
             App.Audio.Master.mute = false;
         }, this._MuteBufferTime);
 
+        // Update drawing of connection lines //
+        if (App.MainScene) {
+            App.MainScene.ConnectionLines.UpdateList();
+        }
     }
 
     /**

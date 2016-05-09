@@ -7,6 +7,8 @@ declare var App: IApp;
 
 export class SamplerBase extends Source {
 
+    public PrimaryBuffer: any;
+    public ReverseBuffer: any;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -22,7 +24,7 @@ export class SamplerBase extends Source {
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
-            s.player.reverse = this.Params.reverse;
+            //s.player.reverse = this.Params.reverse;
 
             if (i > 0){
                 s.player.buffer = this.Sources[0].player.buffer;
