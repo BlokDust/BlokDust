@@ -42,7 +42,8 @@ export class Soundcloud extends SamplerBase {
             volume: 11,
             track: 'https://files.blokdust.io/impulse-responses/teufelsberg01.wav',
             trackName: 'TEUFELSBERG',
-            user: 'Balance Mastering'
+            user: 'Balance Mastering',
+            permalink: ''
         };
         this.PopulateParams();
 
@@ -91,8 +92,8 @@ export class Soundcloud extends SamplerBase {
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
             });
-            console.log(this._FirstBuffer.reverse)
-            console.log(this.Sources[0].player.reverse)
+            console.log(this._FirstBuffer.reverse);
+            console.log(this.Sources[0].player.reverse);
 
             this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
             this.RefreshOptionsPanel();
@@ -153,8 +154,8 @@ export class Soundcloud extends SamplerBase {
             this.Params.track = track.URI;
         } else {
             this.Params.track = SoundCloudAPI.LoadTrack(track);
-            this.Params.permalink = track.Permalink;
         }
+        this.Params.permalink = track.Permalink;
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
         this.Params.reverse = false;
@@ -166,6 +167,7 @@ export class Soundcloud extends SamplerBase {
     }
 
     TrackFallBack() {
+        this._LoadFromShare = false;
         // IF CURRENT FAILING TRACK MATCHES FALLBACK, SET FALLBACK TO DEFAULT (to end perpetual load loops) //
         if (this.Params.track === this._FallBackTrack.URI) {
             this._FallBackTrack = new SoundCloudTrack(this.Defaults.trackName,this.Defaults.user,this.Defaults.track,this.Defaults.permalink);
@@ -303,7 +305,7 @@ export class Soundcloud extends SamplerBase {
 
                 break;
             case "reverse":
-                console.log('setting reverse ', value)
+                console.log('setting reverse ', value);
                 value = value? true : false;
 
                 this._FirstBuffer.reverse = value;

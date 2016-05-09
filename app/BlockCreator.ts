@@ -40,7 +40,7 @@ import {Scuzz} from 'Blocks/Effects/Pre/Scuzz';
 
 // POWER BLOCKS //
 import {Laser} from './Blocks/Power/Laser';
-import {Momentary} from './Blocks/Power/Logic/Momentary';
+import {Pulse} from './Blocks/Power/Logic/Pulse';
 import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
 import {Power} from './Blocks/Power/Power';
 import {Toggle} from './Blocks/Power/Logic/Toggle';
@@ -87,7 +87,7 @@ export class BlockCreator {
 
     // POWER BLOCKS //
     public Laser = Laser;
-    public Momentary = Momentary;
+    public Pulse = Pulse;
     public ParticleEmitter = ParticleEmitter;
     public Power = Power;
     public Toggle = Toggle;
@@ -262,9 +262,9 @@ export class BlockCreator {
                         "description": App.L10n.Blocks.Power.Blocks.Void.description
                     },
                     {
-                        "name": App.L10n.Blocks.Power.Blocks.MomentaryPower.name,
-                        "id": Momentary,
-                        "description": App.L10n.Blocks.Power.Blocks.MomentaryPower.description
+                        "name": App.L10n.Blocks.Power.Blocks.PulsePower.name,
+                        "id": Pulse,
+                        "description": App.L10n.Blocks.Power.Blocks.PulsePower.description
                     },
                     {
                         "name": App.L10n.Blocks.Power.Blocks.Laser.name,
@@ -315,6 +315,8 @@ export class BlockCreator {
             case "WaveGen":
                 type = 'SampleGen';
                 break;
+            case "Momentary":
+                type = 'Pulse';
         }
         return type;
     }

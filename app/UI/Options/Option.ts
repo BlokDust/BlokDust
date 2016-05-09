@@ -69,6 +69,10 @@ export class Option implements IOption {
 
     }
 
+    Refresh(i, json) {
+
+    }
+
     DiagonalFill(ctx,x,y,w,h,s) {
         var pr = App.Metrics.PixelRatio;
         s = s *pr;

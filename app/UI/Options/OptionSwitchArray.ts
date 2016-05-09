@@ -18,6 +18,13 @@ export class SwitchArray extends Option {
         this.HandleRoll = [];
     }
 
+    Refresh(i, json) {
+        var switches = json.parameters[i].switches;
+        for (var j=0; j<this.Switches.length; j++) {
+            this.Switches[j].Selected = switches[j].value;
+        }
+    }
+
     Draw(ctx,units,i,panel) {
 
         var x = this.Position.x;

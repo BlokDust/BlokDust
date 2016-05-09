@@ -128,8 +128,8 @@ export class Convolver extends PostEffect {
             this.Params.track = track.URI;
         } else {
             this.Params.track = SoundCloudAPI.LoadTrack(track);
-            this.Params.permalink = track.Permalink;
         }
+        this.Params.permalink = track.Permalink;
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
         this._WaveForm = [];

@@ -9,8 +9,11 @@
     "key-codes": "edsilv/key-codes",
     "lzma": "nmrugg/LZMA-JS",
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
+    "r.js": "~2.1.16",
     "RecorderJS": "lukephills/Recorderjs#master",
     "tone": "BlokDust/Tone.js#master",
+    "text": "requirejs-text#~2.0.14",
+    "tweenjs": "~16.3.1",
     "utils": "edsilv/utils"
   },
   "resolutions": {

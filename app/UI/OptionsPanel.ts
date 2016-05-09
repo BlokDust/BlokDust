@@ -455,6 +455,11 @@ export class OptionsPanel extends DisplayObject {
         this._DrawReady = true;
     }
 
+    RefreshOption(i, json) {
+        this.Options[i].Refresh(i, json);
+        this._DrawReady = true;
+    }
+
     UpdateOptions() {
         this.SelectedBlock.UpdateOptionsForm();
         var json = this.SelectedBlock.OptionsForm;

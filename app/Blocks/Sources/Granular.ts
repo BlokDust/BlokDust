@@ -111,8 +111,8 @@ export class Granular extends Source {
             this.Params.track = track.URI;
         } else {
             this.Params.track = SoundCloudAPI.LoadTrack(track);
-            this.Params.permalink = track.Permalink;
         }
+        this.Params.permalink = track.Permalink;
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
         this._WaveForm = [];
@@ -122,6 +122,7 @@ export class Granular extends Source {
     }
 
     TrackFallBack() {
+        this._LoadFromShare = false;
         // IF CURRENT FAILING TRACK MATCHES FALLBACK, SET FALLBACK TO DEFAULT (to end perpetual load loops) //
         if (this.Params.track === this._FallBackTrack.URI) {
             this._FallBackTrack = new SoundCloudTrack(this.Defaults.trackName,this.Defaults.user,this.Defaults.track,this.Defaults.permalink);

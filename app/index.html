@@ -12,7 +12,7 @@
     <script type="text/javascript" src="lib/nullstone/dist/nullstone.min.js"></script>
     <script type="text/javascript" src="lib/minerva/dist/minerva.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.24/webfontloader.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tweenjs/0.6.1/tweenjs.min.js"></script>
+    <script type="text/javascript" src="lib/tweenjs/src/Tween.js"></script>
     <script type="text/javascript" src="https://connect.soundcloud.com/sdk/sdk-3.0.0.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="require-config"></script>
 
@@ -33,11 +33,23 @@
 
 <!--<script src="//localhost:35353/livereload.js"></script>-->
 
-<div id="shareUrl"></div>
+<div id="shareUrl">
+    <form action="">
+        <textarea name="text_area" id="shareUrlText" rows="1000" cols="1" onClick="javascript:this.form.text_area.focus();this.form.text_area.select();"  readonly>
+        </textarea>
+    </form>
+</div>
+
+<div id="shareTitle">
+    <form action="">
+        <input type="text" id="shareTitleInput" name="title" autocomplete="off" spellcheck="false" maxlength="24" value="">
+    </form>
+</div>
 
 <div id="debug" style="color: #fff; height:20px; overflow: auto; position: absolute"></div>
 
 <input id="audioFileInput" type="file" accept=".wav, .mp3, .ogg" style="display: none;" />
+
 
 <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

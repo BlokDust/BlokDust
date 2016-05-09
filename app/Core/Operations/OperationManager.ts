@@ -1,3 +1,4 @@
+///<amd-dependency path="etch"/>.
 import {IOperation} from './IOperation';
 import {IUndoableOperation} from './IUndoableOperation';
 import Exception = etch.exceptions.Exception;

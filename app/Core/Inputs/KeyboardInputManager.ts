@@ -1,6 +1,8 @@
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
+import {IApp} from '../IApp';
 
+declare var App: IApp;
 
 export class KeyboardInputManager {
 
@@ -44,7 +46,12 @@ export class KeyboardInputManager {
         // if it's undefined
         if (typeof k === 'undefined') return;
 
-        if (k === KeyCodes.KeyDown.Backspace) { // backspace prevent default
+
+        if (k === KeyCodes.KeyDown.Backspace && App.FocusManager.IsActive()) { // backspace prevent default
+            e.preventDefault();
+        }
+
+        if (k === KeyCodes.KeyDown.Enter && !App.FocusManager.IsActive()) { // enter prevent default
             e.preventDefault();
         }
 

@@ -796,6 +796,7 @@ declare module Tone {
     interface Phaser extends Tone.StereoEffect {
         baseFrequency: number;
         depth: number;
+        octaves: number;
         frequency: Tone.Signal;
         dispose(): Tone.Phaser;
     }
@@ -1192,6 +1193,15 @@ declare module Tone {
         stop(): Tone.Tremolo;
         sync(): Tone.Tremolo;
         unsync(): Tone.Tremolo;
+    }
+    
+    var Volume: {
+        new(volume?: number): Tone.Volume;
+    };
+
+    interface Volume {
+        volume: Tone.Signal;
+        dispose(): Tone.Volume;
     }
 
     var WaveShaper: {

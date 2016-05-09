@@ -10,7 +10,7 @@ require.config({
         "lzma": "lib/lzma/src/lzma",
         "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
         "Recorderjs": "lib/RecorderJS",
-        "text": "https://cdnjs.cloudflare.com/ajax/libs/require-text/2.0.12/text.min.js",
+        "text": "lib/text/text",
         "Tone": "lib/tone/Tone",
         "utils": "lib/utils/dist/utils"
     },
@@ -68,7 +68,6 @@ require([
     "Tone/source/Oscillator",
     "Tone/component/Meter",
     "Tone/component/Mono",
-    "tween",
     "utils"
 ], function (text, App, config, l10n, PixelPalette, Tone) {
     window.PixelPalette = PixelPalette;

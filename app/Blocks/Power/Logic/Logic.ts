@@ -11,15 +11,7 @@ export class Logic extends PowerEffect {
     public ScheduledLogic: boolean = false;
 
     Init(drawTo: IDisplayContext): void {
-
-
-        this.Defaults = {
-            logic: false
-        };
-        this.PopulateParams();
-
         super.Init(drawTo);
-
     }
 
     Update() {

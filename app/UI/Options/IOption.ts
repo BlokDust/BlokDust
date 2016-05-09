@@ -49,4 +49,6 @@ export interface IOption {
 
     Draw(ctx,units,i,panel): void;
 
+    Refresh(i,json): void;
+
 }

@@ -1,3 +1,4 @@
+///<amd-dependency path="etch"/>.
 declare var App: IApp;
 import Point = etch.primitives.Point;
 import {IApp} from './IApp';
@@ -12,6 +13,7 @@ export class Metrics {
     */
 
     public TxtHeader: string;
+    public TxtHeaderPR: string;
     public TxtSlider: string;
     public TxtUrl: string;
     public TxtUrl2: string;
@@ -90,6 +92,7 @@ export class Metrics {
 
         // SET GLOBAL TYPE STYLES //
         var headerType = Math.round(App.Unit * 28);
+        var headerTypePR = Math.round(App.Unit * (28/this.PixelRatio));
         var sliderType = Math.round(App.Unit * 33);
         var urlType = Math.round(App.Unit * (24/this.PixelRatio));
         var urlType2 = Math.round(App.Unit * 24);
@@ -102,6 +105,7 @@ export class Metrics {
         var dataType = Math.round(App.Unit * 5);
 
         this.TxtHeader = "200 " + headerType + "px Dosis";
+        this.TxtHeaderPR = "200 " + headerTypePR + "px Dosis";
         this.TxtSlider = "200 " + sliderType + "px Dosis";
         this.TxtUrl = "200 " + urlType + "px Dosis";
         this.TxtUrl2 = "200 " + urlType2 + "px Dosis";

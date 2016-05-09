@@ -50,11 +50,15 @@ export class Block extends DisplayObject implements IBlock {
         this.Update();
     }
 
-    PopulateParams() {
+    PopulateParams(log?: boolean) {
 
         // duplicate Params //
         var paramsCopy = {};
         if (this.Params) {
+            if (log) {
+                console.log(this.Params);
+                console.log(this.Defaults);
+            }
             this.BackwardsCompatibilityPatch();
             for (var key in this.Params) {
                 paramsCopy[""+key] = this.Params[""+key];
@@ -182,6 +186,13 @@ export class Block extends DisplayObject implements IBlock {
             }
         } else {
             App.MainScene.OptionsPanel.Animating = false;
+        }
+    }
+
+    RefreshOption(optionNo: number) {
+        if (App.MainScene.OptionsPanel.Scale>0 && App.MainScene.OptionsPanel.SelectedBlock==this) {
+            this.UpdateOptionsForm();
+            App.MainScene.OptionsPanel.RefreshOption(optionNo, this.OptionsForm);
         }
     }
 

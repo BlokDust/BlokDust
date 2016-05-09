@@ -370,7 +370,7 @@ export class CreateNew extends DisplayObject{
         this._RollOvers[4] = Dimensions.HitRect((App.Width*0.5) + (this.MessagePos.x*units), (App.Height - ((this.MessagePos.y+31)*units)) + panelOffset2, 30*units, 30*units, point.x, point.y); // close
 
 
-        if (this._RollOvers[0]||this._RollOvers[1]||this._RollOvers[3]||this._RollOvers[4]) {
+        if (this._RollOvers[0]||this._RollOvers[1]||this._RollOvers[2]||this._RollOvers[3]||this._RollOvers[4]) {
             this.Hover = true;
         }
     }

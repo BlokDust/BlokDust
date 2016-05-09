@@ -228,7 +228,6 @@ export class ThemeManager  {
             this.Txt = palette.length;
             palette.push(palette[this._Value.txt].clone());
             this.NewPalette = palette;
-
             // MENU COLS //
             l = palette.length;
             this.MenuOrder = [l,l+1,l+2,l+3,l+4];
@@ -249,11 +248,24 @@ export class ThemeManager  {
             // CSS SHARE TEXT COL //
             var shareUrl = document.getElementById("shareUrl");
             shareUrl.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
+            var shareTitle = document.getElementById("shareTitle");
+            shareTitle.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
+
+
             // CSS SELECTED TEXT HIGHLIGHT COLOUR //
-            var styleElem = document.getElementById("selectStyle");
-            var highlightCol = App.ColorManager.DarkerColor(this.NewPalette[1],15);
+            var bgLuminosity = App.ColorManager.GetLuminosity(this.NewPalette[1]);
+            var highlightCol;
+            if (bgLuminosity>127) {
+                // BRIGHT BG //
+                highlightCol = App.ColorManager.DarkerColor(this.NewPalette[1],40);
+            } else {
+                // DARK BG //
+                highlightCol = App.ColorManager.LighterColor(this.NewPalette[1],95);
+            }
             var col = App.ColorManager.ColorString(highlightCol);
+            var styleElem = document.getElementById("selectStyle");
             styleElem.innerHTML='::selection{ background-color: ' + col + '; background-blend-mode: normal; mix-blend-mode: normal;}';
+
 
             this.Loaded = true;
             if (firstLoad) {

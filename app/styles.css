@@ -69,19 +69,59 @@ canvas {
     display: block;
 }
 
-#shareUrl {
+#shareUrl, #shareTitle, #soundCloudSearch {
     font-family: "Dosis", Arial, Helvetica, sans;
     font-weight: 200;
     font-size: 56px;
-    overflow: scroll;
-    white-space: nowrap;
     mix-blend-mode: normal;
     background-blend-mode: normal;
 
+    width: 200px;
+    height: 100px;
+}
+
+#shareUrl {
     position: absolute;
     left: 1000%;
     top: -100%;
+}
 
-    width: 200px;
-    height: 100px;
+#shareTitle {
+    position: absolute;
+    left: 1000%;
+    top: -100%;
+}
+
+#soundCloudSearch {
+    position: absolute;
+    left: 1000%;
+    top: -100%;
+}
+
+form {
+    width: inherit;
+    height: inherit;
+}
+
+input, textarea {
+    overflow: scroll;
+    white-space: nowrap;
+    width: inherit;
+    height: inherit;
+    font: inherit;
+    line-height: inherit;
+    color: inherit;
+    outline: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+}
+
+input:focus, textarea:focus {
+    outline:0;
+}
+
+#shareTitle input {
+    text-transform: uppercase;
 }

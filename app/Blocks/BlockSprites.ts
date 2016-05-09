@@ -1,3 +1,4 @@
+///<amd-dependency path="etch"/>.
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from '../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext
@@ -926,7 +927,7 @@ export class BlockSprites {
 
                 break;
 
-            case App.L10n.Blocks.Power.Blocks.MomentaryPower.name.toLowerCase():
+            case App.L10n.Blocks.Power.Blocks.PulsePower.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[3].toString(); // BLUE

@@ -328,13 +328,13 @@ export class MainScene extends DisplayObject{
         var tutorial = this.Tutorial;
 
         // UI //
-        UIInteraction = this._UIInteraction();
+        //UIInteraction = this._UIInteraction();
 
         if (tooltip.Open) {
             this.ToolTipClose();
         }
 
-        if (message.Hover) {
+        if (message.Open && message.Hover) {
             message.MouseDown(point);
             return;
         }
@@ -359,7 +359,9 @@ export class MainScene extends DisplayObject{
 
             if (tutorial.SplashOpen) {
                 tutorial.SplashMouseDown(point);
-                //return;
+                if (tutorial.Hover) {
+                    return;
+                }
             }
 
             create.MouseDown(point);
@@ -398,9 +400,9 @@ export class MainScene extends DisplayObject{
         }
 
         // BLOCK CLICK //
-        if (!UIInteraction) {
+        //if (!UIInteraction) {
             collision = this._CheckCollision(point);
-        }
+        //}
 
         if (collision) {
             this.IsDraggingABlock = true; // for trashcan to know
@@ -408,7 +410,8 @@ export class MainScene extends DisplayObject{
         }
 
         // MainScene DRAGGING //
-        if (!collision && !UIInteraction){
+        if (!collision){
+        //if (!collision && !UIInteraction){
             this.MainSceneDragger.MouseDown(point);
         }
 
@@ -663,6 +666,7 @@ export class MainScene extends DisplayObject{
         var tutorial = this.Tutorial;
 
         if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || (message.Open && message.Hover) || create.Hover || ((tutorial.Open || tutorial.SplashOpen) && tutorial.Hover) || (options.Scale===1 && options.Hover)) {
+            console.log(zoom.InRoll);
             console.log("UI INTERACTION");
             return true;
         }
@@ -776,11 +780,24 @@ export class MainScene extends DisplayObject{
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
 
+        // Fade In Audio //
         setTimeout(() => {
             this.Play();
-            App.Audio.Master.volume.rampTo(App.Audio.MasterVolume,1);
-        }, 200);
-    }
+            // App.Audio.Master.volume.linearRampToValue(App.Audio.MasterVolume,5); //This breaks audio volume slider
+        }, 2400);
+
+        //TODO: THIS IS SHIT - For some reason fading in the volume using the above method breaks the volume slider
+        // Come back to this once useful functions have been abstracted from Tone into a simplified version
+        var volume = -30
+        var volumeFade = setInterval(() => {
+            if (volume < App.Audio.MasterVolume) {
+                App.Audio.Master.volume.value = volume;
+                volume += 2;
+            } else {
+                clearInterval(volumeFade);
+            }
+        }, 70)
+     }
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS

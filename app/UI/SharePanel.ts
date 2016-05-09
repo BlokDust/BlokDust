@@ -26,6 +26,10 @@ export class SharePanel extends DisplayObject {
     private _Saving: boolean;
     private _Warning: boolean;
     private _NoBlocks: boolean;
+    public TitleInputContainer: HTMLElement;
+    public URLInputContainer: HTMLElement;
+    public TitleInput: HTMLInputElement;
+    public URLInput: HTMLInputElement;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -44,6 +48,20 @@ export class SharePanel extends DisplayObject {
 
         this._UrlSelecting = false;
         this._RollOvers = [];
+
+        // DOM ELEMENTS //
+        this.TitleInputContainer = <HTMLElement>document.getElementById("shareTitle");
+        this.URLInputContainer = <HTMLElement>document.getElementById("shareUrl");
+        this.TitleInput = <HTMLInputElement>document.getElementById("shareTitleInput");
+        this.URLInput = <HTMLInputElement>document.getElementById("shareUrlText");
+
+        this.TitleInput.addEventListener(
+            'input',
+            (event):void => {
+                this.TestString(this.TitleInput);
+                this.UpdateString(this.TitleInput);
+            }
+        );
 
         this._CommandManager = App.CommandManager;
 
@@ -65,48 +83,97 @@ export class SharePanel extends DisplayObject {
             tweetText: "I made this @blokdust creation: "
         };
 
+
         if (App.SessionId) {
             this._FirstSession = false;
+
+        }
+        if (App.CompositionId) {
+            this._SessionId = App.CompositionId;
         }
 
         this.GetTitleFromUrl();
         this.Resize();
     }
 
+    // GET OUR START DOMAIN (localhost / blokdust.com) //
     GetUrl() {
         return [location.protocol, '//', location.host, location.pathname].join('');
     }
 
+    //-------------------------------------------------------------------------------------------
+    //  INPUT
+    //-------------------------------------------------------------------------------------------
+
+
+    // IF WE'VE LOADED A NEW COMP, SET THE TITLE FROM THE URL STRING //
     GetTitleFromUrl() {
         var decoded = decodeURI(window.location.href);
         var getName = decoded.split("&t=");
+
+        // Set title from Url //
         if (getName.length>1) {
-            this.SessionTitle = getName[1].toUpperCase();
-            this.SetNameUrl(getName[1]);
-            this.UpdateUrlText();
-        } else {
+            this.UpdateFormText(this.TitleInput, getName[1]);
+            this.TestString(this.TitleInput);
+            this.UpdateString(this.TitleInput);
+
+        }
+        // Generate random title //
+        else {
             this.SessionTitle = this.GenerateLabel();
         }
     }
 
-    GetString() {
-        return this.SessionTitle;
+    // DOES INPUT STRING NEED CHARS REMOVED //
+    TestString(element: HTMLInputElement) {
+
+        var caretPos = element.selectionStart;
+        if (caretPos > 0) {
+            caretPos -= 1;
+        }
+        // [^A-Za-z0-9_] alpha-numeric
+        // 	[][!"#$%&'()*+,./:;<=>?@\^_`{|}~-] punctuation
+        // [.,\/#!$%\^&\*;:{}=\-_`~()] punctuation 2
+        if (/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`\+~()]/.test(element.value)) {
+            element.value = element.value.replace(/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`\+~()]/g, '');
+            element.selectionStart = caretPos;
+            element.selectionEnd = caretPos;
+        }
     }
 
-    UpdateString(string) {
+    // TITLE INPUT HAS CHANGED, USE UPDATED INPUT VALUE //
+    UpdateString(element: HTMLInputElement) {
+        var string: string = element.value;
         this.SessionTitle = string;
         this.SetNameUrl(string);
         this.UpdateUrlText();
     }
 
-    StringReturn() {
-
+    // COMBINE DOMAIN, COMP ID & TITLE, AND UPDATE URL INPUT & ADDRESS BAR //
+    UpdateUrlText() {
+        this.SessionURL = "" + this._CopyJson.domain + this._SessionId + this._NameUrl;
+        this.UpdateFormText(this.URLInput,this.SessionURL);
+        if (this._SessionId) {
+            App.AddressBarManager.UpdateURL(this.SessionURL);
+        }
     }
 
-    SetNameUrl(string) {
+    // FORMAT THE TITLE FOR USE IN THE URL //
+    SetNameUrl(string: string) {
         this._NameUrl = "&t=" + encodeURI(this.Capitalise(string));
     }
 
+    // SET A PROVIDED DOM ELEMENT'S STRING //
+    UpdateFormText(element: HTMLInputElement, str: string) {
+        element.value = str;
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  SAVE CHECK
+    //-------------------------------------------------------------------------------------------
+
+
+    // CHECK IF BLOCKS EXIST BEFORE ALLOWING SAVE/SHARE //
     GetWarning() {
         var warnBlocks = [];
         for (var i = 0; i < App.Blocks.length; i++) {
@@ -126,7 +193,6 @@ export class SharePanel extends DisplayObject {
 
 
     Draw() {
-
         var ctx = this.Ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
@@ -318,21 +384,24 @@ export class SharePanel extends DisplayObject {
             ctx.stroke();
             ctx.textAlign = "left";
             ctx.font = headType;
-            ctx.fillText(this.SessionTitle, (appWidth*0.5) - (210*units), centerY - (100*units) );
-            var titleW = ctx.measureText(this.SessionTitle).width;
+            //ctx.fillText(this.SessionTitle, (appWidth*0.5) - (210*units), centerY - (100*units) );
+            var titleW = ctx.measureText(this.SessionTitle.toUpperCase()).width;
 
 
             // TYPE BAR //
-            if (this._Blink > 50) {
-                ctx.fillRect((appWidth*0.5) - (210*units) + titleW + (5*units),centerY - (123*units),2*units,26*units);
-            }
-            this._Blink += 1;
-            if (this._Blink == 100) {
-                this._Blink = 0;
-            }
+            /*if (App.FocusManager.IsActive()) {
+                if (this._Blink > 50) {
+                    ctx.fillRect((appWidth*0.5) - (210*units) + titleW + (5*units),centerY - (123*units),2*units,26*units);
+                }
+                this._Blink += 1;
+                if (this._Blink == 100) {
+                    this._Blink = 0;
+                }
+            }*/
 
 
 
+            // PANEL TITLE //
             ctx.font = headType;
             ctx.fillText("SHARE",20*units,this.OffsetY + (30*units) + (11*units));
 
@@ -361,6 +430,11 @@ export class SharePanel extends DisplayObject {
             ctx.stroke();
         }
     }
+
+    //-------------------------------------------------------------------------------------------
+    //  STRING FUNCTIONS
+    //-------------------------------------------------------------------------------------------
+
 
     WordWrap( context , text, x, y, lineHeight, fitWidth) {
         fitWidth = fitWidth || 0;
@@ -395,7 +469,7 @@ export class SharePanel extends DisplayObject {
             context.fillText( words.join(' '), x, y + (lineHeight*currentLine) );
     }
 
-    Capitalise(string) {
+    Capitalise(string: string) {
         var s = string.toLowerCase();
         s = this.UppercaseAt(s,0);
         for (var i = 0; i < s.length; i++) {
@@ -403,7 +477,6 @@ export class SharePanel extends DisplayObject {
                 s = this.UppercaseAt(s,i+1);
             }
         }
-        //console.log(s);
         return s;
     }
 
@@ -425,15 +498,12 @@ export class SharePanel extends DisplayObject {
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
 
-            var units = App.Unit;
-            var shareUrl = document.getElementById("shareUrl");
-            var pr = App.Metrics.PixelRatio;
-
             if (v=="OffsetX") {
-                shareUrl.style.left = "" + ((this.x + (App.Width*1.5) - (units*200))/pr) + "px";
+                panel.TweenDom(panel.URLInputContainer, this.x, "x", 200, 1);
             }
             if (v=="OffsetY") {
-                shareUrl.style.top = "" + ((this.x + (App.Height*0.5) - (units*20))/pr) + "px";
+                panel.TweenDom(panel.URLInputContainer, this.x, "y", 20, 0);
+                panel.TweenDom(panel.TitleInputContainer, this.x, "y", 132, 0);
             }
         });
 
@@ -441,9 +511,7 @@ export class SharePanel extends DisplayObject {
             if (v=="OffsetY") {
                 if (destination!==0) {
                     panel.Open = false;
-                    var shareUrl = document.getElementById("shareUrl");
-                    shareUrl.style.display = "none";
-                    shareUrl.style.visibility = "false";
+                    panel.HideDom();
                 }
                 panel.OffsetX = 0;
                 var shareUrl = document.getElementById("shareUrl");
@@ -462,7 +530,6 @@ export class SharePanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
     //  TITLE GENERATOR
     //-------------------------------------------------------------------------------------------
-
 
 
     GenerateLabel() {
@@ -517,8 +584,9 @@ export class SharePanel extends DisplayObject {
 
         // DONE //
         this.SetNameUrl(label);
+        this.UpdateFormText(this.TitleInput, label);
         this.UpdateUrlText();
-        return label.toUpperCase();
+        return label;
     }
 
 
@@ -530,19 +598,15 @@ export class SharePanel extends DisplayObject {
     OpenPanel() {
         this.Open = true;
         this.OffsetY = -App.Height;
+        //this.TitleInput.focus();
         this.GetWarning();
-        var shareUrl = document.getElementById("shareUrl");
-        shareUrl.style.display = "block";
-        shareUrl.style.visibility = "true";
+        this.ShowDom();
         this.DelayTo(this,0,500,0,"OffsetY");
-        App.TypingManager.Enable(this);
     }
 
     ClosePanel() {
         this._Saving = false;
-        this.DeselectText();
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
-        App.TypingManager.Disable();
     }
 
     GenerateLink() {
@@ -566,23 +630,8 @@ export class SharePanel extends DisplayObject {
         this.DelayTo(this,-App.Width,500,0,"OffsetX");
     }
 
-    UpdateUrlText() {
-        this.SessionURL = "" + this._CopyJson.domain + this._SessionId + this._NameUrl;
-        var shareUrl = document.getElementById("shareUrl");
-        shareUrl.innerHTML = "" + this.SessionURL;
-        if (this._SessionId) {
-            App.AddressBarManager.UpdateURL(this.SessionURL);
-        }
-    }
 
     ShareFacebook() {
-        /*FB.ui({
-            method: "share",
-            href: url,
-            title: this.SessionTitle,
-            description: "Interactive music.",
-            image: "http://localhost:8000/image.jpg"
-        }, function(response){});*/
         var href = "http://www.facebook.com/sharer.php?u=";
         href = "" + href + encodeURIComponent(this.SessionURL);
         window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
@@ -603,7 +652,6 @@ export class SharePanel extends DisplayObject {
 
     MouseDown(point) {
         this.HitTests(point);
-        //var units = (<MainScene>this.DrawTo).Unit.width;
 
         if (!this._RollOvers[0]) { // url
 
@@ -613,7 +661,6 @@ export class SharePanel extends DisplayObject {
             }
             if (this._RollOvers[2]) { // gen title
                 this.SessionTitle = this.GenerateLabel();
-                App.TypingManager.Enable(this);
                 return;
             }
             if (this._RollOvers[3]) { // gen URL
@@ -629,8 +676,6 @@ export class SharePanel extends DisplayObject {
                 return;
             }
             if (this._RollOvers[6]) { // fb
-                //var url = "" + this.SessionURL;
-                //url = "http://blokdust.com/";
                 this.ShareFacebook();
                 return;
             }
@@ -639,7 +684,6 @@ export class SharePanel extends DisplayObject {
                 return;
             }
             if (this._RollOvers[8]) { // google
-                //this.AddBookmark(this.SessionURL);
                 this.ShareGoogle();
                 return;
             }
@@ -660,14 +704,6 @@ export class SharePanel extends DisplayObject {
     }
 
     MouseUp(point,isTouch?) {
-        if (this._UrlSelecting) {
-            //this.DeselectText();
-            if (!isTouch) {
-                this.SelectText("shareUrl");
-            }
-        } else {
-            this.DeselectText();
-        }
     }
 
     MouseMove(point) {
@@ -708,66 +744,92 @@ export class SharePanel extends DisplayObject {
         this._RollOvers[9] = Dimensions.HitRect(shareX + (appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
     }
 
-    SelectText(element) {
-        var doc = document
-            , text = doc.getElementById(element)
-            , range, selection;
-        if (window.getSelection) {
-            selection = window.getSelection();
 
-            // if not already selected //
-            if (selection.toString()!==this.SessionURL) {
-                range = document.createRange();
-                range.selectNodeContents(text);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
-        }
-    }
+    //-------------------------------------------------------------------------------------------
+    //  GENERAL
+    //-------------------------------------------------------------------------------------------
 
-    DeselectText() {
-        if (window.getSelection)
-            window.getSelection().removeAllRanges();
-        else if (document.selection)
-            document.selection.empty();
-    }
 
     Reset() {
         this._FirstSession = true;
         if (App.SessionId) {
             this._FirstSession = false;
         }
+        this._SessionId=App.CompositionId;
+        if (!this._SessionId) {
+            this.SessionTitle = this.GenerateLabel();
+        }
     }
 
     Resize() {
-        var units = (App.Unit);
-
-        //TODO: Move to AppMetrics
-        var pr = App.Metrics.PixelRatio;
-        var shareUrl = document.getElementById("shareUrl");
-        shareUrl.style.font = App.Metrics.TxtUrl;
-        shareUrl.style.width = "" + (units*(400/pr)) + "px";
-        shareUrl.style.height = "" + (units*(40/pr)) + "px";
-        shareUrl.style.lineHeight = "" + (units*(40/pr)) + "px";
-        //shareUrl.style.color = App.Palette[App.ThemeManager.Txt].toString();
-        shareUrl.style.display = "block";
-
-        if (!this.Open) {
-            this.OffsetY = -App.Height;
-            shareUrl.style.display = "none";
-            shareUrl.style.visibility = "false";
-        }
         if (this.OffsetX!==0) {
             this.OffsetX = -App.Width;
         }
+        if (this.URLInput) {
+            this.StyleDom(this.URLInputContainer, 400, 40, 200, 20, this.OffsetX + App.Width, App.Metrics.TxtUrl);
+            this.StyleDom(this.TitleInputContainer, 300, 42, 210, 132, 0, App.Metrics.TxtHeaderPR);
+        }
 
-        var offsetX = this.OffsetX/pr;
+    }
+
+    //-------------------------------------------------------------------------------------------
+    //  CSS / DOM
+    //-------------------------------------------------------------------------------------------
+
+
+    TweenDom(element: HTMLElement, value: number, mode: string, position: number, offset: number) {
+        var units = (App.Unit);
+        var pr = App.Metrics.PixelRatio;
+        switch (mode) {
+            case "x":
+                element.style.left = "" + ((value + (App.Width*(0.5 + offset)) - (units*position))/pr) + "px";
+                break;
+            case "y":
+                element.style.top = "" + ((value + (App.Height*0.5) - (units*position))/pr) + "px";
+                break;
+        }
+    }
+
+    StyleDom(element: HTMLElement, width: number, height: number, x: number, y: number, xOffset: number, font: string) {
+        var units = (App.Unit);
+        var pr = App.Metrics.PixelRatio;
+
+        element.style.font = font;
+        element.style.width = "" + (units*(width/pr)) + "px";
+        element.style.height = "" + (units*(height/pr)) + "px";
+        element.style.lineHeight = "" + (units*(height/pr)) + "px";
+        element.style.display = "block";
+
+        if (!this.Open) {
+            this.OffsetY = -App.Height;
+            element.style.display = "none";
+            element.style.visibility = "false";
+        }
+
+        var offsetX = xOffset/pr;
         var offsetY = this.OffsetY/pr;
         var width = App.Width/pr;
         var height = App.Height/pr;
 
-        shareUrl.style.left = "" + (offsetX + (width*1.5) - (units*(200/pr))) + "px";
-        shareUrl.style.top = "" + (offsetY + (height*0.5) - (units*(20/pr))) + "px";
+        element.style.left = "" + (offsetX + (width*0.5) - (units*(x/pr))) + "px";
+        element.style.top = "" + (offsetY + (height*0.5) - (units*(y/pr))) + "px";
+    }
 
+    ShowDom() {
+        var shareUrl = this.URLInputContainer;
+        var shareTitle = this.TitleInputContainer;
+        shareUrl.style.display = "block";
+        shareUrl.style.visibility = "true";
+        shareTitle.style.display = "block";
+        shareTitle.style.visibility = "true";
+    }
+
+    HideDom() {
+        var shareUrl = this.URLInputContainer;
+        var shareTitle = this.TitleInputContainer;
+        shareUrl.style.display = "none";
+        shareUrl.style.visibility = "false";
+        shareTitle.style.display = "none";
+        shareTitle.style.visibility = "false";
     }
 }

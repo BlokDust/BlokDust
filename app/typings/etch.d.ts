@@ -149,6 +149,7 @@ declare module etch.drawing {
 declare module etch.drawing {
     class DisplayObject implements IDisplayObject {
         private _DisplayList;
+        DeltaTime: number;
         FrameCount: number;
         Height: number;
         IsCached: boolean;
@@ -209,6 +210,7 @@ declare module etch.drawing {
         CanvasHeight: number;
         CanvasWidth: number;
         Ctx: CanvasRenderingContext2D;
+        DeltaTime: number;
         DisplayList: DisplayObjectCollection<IDisplayObject>;
         Draw(): void;
         DrawFrom: IDisplayContext;
@@ -236,10 +238,9 @@ declare module etch.drawing {
 import ClockTimer = etch.engine.ClockTimer;
 import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayObject = etch.drawing.IDisplayObject;
-declare var MAX_FPS: number;
-declare var MAX_MSPF: number;
 declare module etch.drawing {
     class Stage extends DisplayObject implements ITimerListener {
+        DeltaTime: number;
         LastVisualTick: number;
         Timer: ClockTimer;
         Updated: nullstone.Event<number>;
