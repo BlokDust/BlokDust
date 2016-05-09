@@ -444,6 +444,13 @@ export class Source extends Block implements ISource {
         };
     }
 
+    // RETRIGGER ALL ACTIVE VOICES //
+    RetriggerActiveVoices() {
+        this.ActiveVoices.forEach((activeVoice: Voice, i: number) => {
+            this.TriggerRelease(i);
+            this.TriggerAttack(i);
+        });
+    }
 
     // KILL ALL VOICES //  probably shouldn't use this, unless disposing block
     DeactivateAllVoices() {
@@ -679,6 +686,9 @@ export class Source extends Block implements ISource {
     AddPower() {
         this.PowerAmount++;
         if (this.PowerAmount === 1) {
+            if (App.MainScene) {
+                App.MainScene.ConnectionLines.UpdateList();
+            }
             if (!this.IsASoundSource()) return;
             this.NoteOn("power");
         }
@@ -690,6 +700,9 @@ export class Source extends Block implements ISource {
         }
         this.PowerAmount--;
         if (this.PowerAmount === 0) {
+            if (App.MainScene) {
+                App.MainScene.ConnectionLines.UpdateList();
+            }
             if (!this.IsASoundSource()) return;
             this.NoteOff("power");
         }

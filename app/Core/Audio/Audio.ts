@@ -5,6 +5,7 @@ import {ConnectionManager} from './Connections/ConnectionManager';
 import {ConnectionMethodType} from './Connections/ConnectionMethodType';
 import {IApp} from '../../IApp';
 import {IAudio} from './IAudio';
+import {IBlock} from '../../Blocks/IBlock';
 import {MIDIManager} from './MIDIManager';
 import {SimpleConnectionMethod} from './Connections/ConnectionMethods/SimpleConnectionMethod';
 import {Waveform} from './Waveform';
@@ -29,6 +30,7 @@ export class Audio implements IAudio {
     public ConnectionMethodType: ConnectionMethodType;
     public ConnectionManager: ConnectionManager;
     public Waveform: Waveform;
+    public WaveWorker: Worker;
 
     public Level: number;
     public Peak: number;
@@ -83,6 +85,23 @@ export class Audio implements IAudio {
         // Waveform Class
         this.Waveform = new Waveform();
 
+        // Wave Web Worker //
+        this.WaveWorker = new Worker("Workers/waveworker.js");
+
+        this.WaveWorker.onmessage = function(e) {
+
+            // get block //
+            var block: IBlock = null;
+            for (var i=0; i<App.Blocks.length; i++) {
+                if (e.data.blockId === App.Blocks[i].Id) {
+                    block = App.Blocks[i];
+                }
+            }
+            if (block) {
+                block.SetReversedBuffer(e.data.buffer);
+            }
+        }
+
     }
 
     get MeterVolumeDb(): number {
@@ -112,4 +131,32 @@ export class Audio implements IAudio {
         this.Peak = 0;
         this.Clip = false;
     }
+
+    ReverseBuffer(blockId: number, buffer: any) {
+        if (this.WaveWorker) {
+
+            var channelNo = buffer.numberOfChannels;
+
+            // TURN OUR BUFFER DATA INTO ARRAYS //
+            var channels = [];
+            for (var i=0;i<channelNo; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            // SEND TO WORKER //
+            this.WaveWorker.postMessage({
+                "blockId": blockId,
+                "channels": channels
+            });
+            console.log('Message posted to worker');
+        }
+    }
+
+    DigestBuffer(blockId: number, buffer: any) {
+
+        var master = [];
+
+    }
+
+
 }

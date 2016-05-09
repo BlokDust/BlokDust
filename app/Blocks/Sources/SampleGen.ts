@@ -670,7 +670,7 @@ export class SampleGen extends SamplerBase {
             case "reverse":
                 value = value? true : false;
 
-                this._BufferData = this.ReverseBuffer(this._BufferData);
+                this._BufferData = this.ReverseTheBuffer(this._BufferData);
                 this._FirstBuffer.copyToChannel(this._BufferData,0,0);
                 this.Sources.forEach((s: Tone.Simpler)=> {
                     s.player.buffer = this._FirstBuffer;
@@ -717,7 +717,7 @@ export class SampleGen extends SamplerBase {
         //TODO: Set everything to null
     }
 
-    ReverseBuffer(buffer) {
+    ReverseTheBuffer(buffer) {
         var newBuffer = new Float32Array(buffer.length);
         for (var i=0; i<buffer.length; i++) {
             newBuffer[i] = buffer[(buffer.length-1)-i];

@@ -202,6 +202,29 @@ export class Recorder extends SamplerBase {
         }
     }
 
+    ReverseTrack(value: boolean) {
+
+        this._WaveForm = [];
+        this.RefreshOptionsPanel();
+        //App.AnimationsLayer.AddToList(this); // load animations
+
+        setTimeout(() => {
+            // BUFFER //
+            this.Sources[0].player.reverse = value;
+
+            /*this._FirstBuffer.reverse = value;
+             this.Sources.forEach((s:Tone.Simpler)=> {
+             s.player.buffer = this._FirstBuffer;
+             });*/
+
+            // Update waveform
+            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer, 200, 5, 95);
+            //App.AnimationsLayer.RemoveFromList(this);
+            this.RefreshOptionsPanel();
+        },1);
+
+    }
+
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
@@ -307,12 +330,8 @@ export class Recorder extends SamplerBase {
                 break;
             case "reverse":
                 value = value? true : false;
-                console.log("out: "+ value);
-                this.Sources[0].player.reverse = value;
-                // Update waveform
+                this.ReverseTrack(value);
                 this.Params[param] = val;
-                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
-                this.RefreshOptionsPanel();
                 break;
             case "loop":
                 value = value? true : false;
