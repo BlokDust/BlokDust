@@ -36,13 +36,9 @@
           "name": "Microphone",
           "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones."
         },
-        "Soundcloud": {
-          "name": "Soundcloud",
-          "description": "A sample player loaded with a SoundCloud track of your choice."
-        },
-        "Sampler": {
-          "name": "Sampler",
-          "description": "A sample player loaded with an audio file from your device."
+        "Sample": {
+          "name": "Sample",
+          "description": "A sample player loaded with a Soundcloud track. The track must be creative commons or tagged #blokdust."
         },
         "Granular": {
           "name": "Granular",

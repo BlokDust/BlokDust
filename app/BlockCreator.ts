@@ -15,7 +15,7 @@ import {Granular} from './Blocks/Sources/Granular';
 import {Microphone} from './Blocks/Sources/Microphone';
 import {Noise} from './Blocks/Sources/Noise';
 import {Recorder} from './Blocks/Sources/Recorder';
-import {Soundcloud} from './Blocks/Sources/Soundcloud';
+import {Sample} from './Blocks/Sources/Sample';
 import {ToneSource} from './Blocks/Sources/ToneSource';
 import {SampleGen} from './Blocks/Sources/SampleGen';
 
@@ -61,8 +61,7 @@ export class BlockCreator {
     public Microphone = Microphone;
     public Noise = Noise;
     public Recorder = Recorder;
-    //public Sampler = Sampler;
-    public Soundcloud = Soundcloud;
+    public Sample = Sample;
     public ToneSource = ToneSource;
     public SampleGen = SampleGen;
 
@@ -122,15 +121,10 @@ export class BlockCreator {
                         "description": App.L10n.Blocks.Source.Blocks.Microphone.description
                     },
                     {
-                        "name": App.L10n.Blocks.Source.Blocks.Soundcloud.name,
-                        "id": Soundcloud,
-                        "description": App.L10n.Blocks.Source.Blocks.Soundcloud.description
+                        "name": App.L10n.Blocks.Source.Blocks.Sample.name,
+                        "id": Sample,
+                        "description": App.L10n.Blocks.Source.Blocks.Sample.description
                     },
-                    //{
-                    //    "name": App.L10n.Blocks.Source.Blocks.Sampler.name,
-                    //    "id": Sampler,
-                    //    "description": App.L10n.Blocks.Source.Blocks.Sampler.description
-                    //},
                     {
                         "name": App.L10n.Blocks.Source.Blocks.Granular.name,
                         "id": Granular,
@@ -317,6 +311,10 @@ export class BlockCreator {
                 break;
             case "Momentary":
                 type = 'Pulse';
+                break;
+            case 'Soundcloud':
+                type = 'Sample';
+                break;
         }
         return type;
     }

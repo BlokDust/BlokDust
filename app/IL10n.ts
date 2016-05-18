@@ -43,9 +43,8 @@ interface IBlockList {
     Power: IBlockInfo;
     Recorder: IBlockInfo;
     Reverb: IBlockInfo;
-    Sampler: IBlockInfo;
+    Sample: IBlockInfo;
     Scuzz: IBlockInfo;
-    Soundcloud: IBlockInfo;
     TogglePower: IBlockInfo;
     Tone: IBlockInfo;
     Void: IBlockInfo;

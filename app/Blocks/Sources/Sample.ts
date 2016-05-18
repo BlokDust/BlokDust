@@ -7,7 +7,7 @@ import {SoundCloudTrack} from '../../Core/Audio/SoundCloud/SoundcloudTrack';
 
 declare var App: IApp;
 
-export class Soundcloud extends SamplerBase {
+export class Sample extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SoundcloudParams;
@@ -21,7 +21,7 @@ export class Soundcloud extends SamplerBase {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = App.L10n.Blocks.Source.Blocks.Soundcloud.name;
+        this.BlockName = App.L10n.Blocks.Source.Blocks.Sample.name;
 
         if (this.Params) {
             this._LoadFromShare = true;
@@ -329,7 +329,7 @@ export class Soundcloud extends SamplerBase {
 
         this.OptionsForm =
         {
-            "name" : "Soundcloud",
+            "name" : App.L10n.Blocks.Source.Blocks.Sample.name,
             "parameters" : [
 
                 {
