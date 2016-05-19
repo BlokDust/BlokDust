@@ -202,7 +202,7 @@ export class BlockSprites {
 
                 break;
 
-            case App.L10n.Blocks.Effect.Blocks.Delay.name.toLowerCase():
+            case App.L10n.Blocks.Effect.Blocks.StereoDelay.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[7].toString();// RED

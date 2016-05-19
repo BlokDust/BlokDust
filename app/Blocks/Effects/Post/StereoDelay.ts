@@ -1,12 +1,11 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 import {IApp} from "../../../IApp";
 
 declare var App: IApp;
 
-export class Delay extends PostEffect {
+export class StereoDelay extends PostEffect {
 
     public Effect: Tone.PingPongDelay;
     public Params: DelayParams;
@@ -15,7 +14,7 @@ export class Delay extends PostEffect {
 
     Init(drawTo: IDisplayContext): void {
 
-        this.BlockName = App.L10n.Blocks.Effect.Blocks.Delay.name;
+        this.BlockName = App.L10n.Blocks.Effect.Blocks.StereoDelay.name;
 
         this.Defaults = {
             delayTime: 0.25,
@@ -70,7 +69,7 @@ export class Delay extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : App.L10n.Blocks.Effect.Blocks.Delay.name,
+            "name" : App.L10n.Blocks.Effect.Blocks.StereoDelay.name,
             "parameters" : [
 
                 {

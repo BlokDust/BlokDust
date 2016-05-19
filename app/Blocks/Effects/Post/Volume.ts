@@ -5,7 +5,7 @@ import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
-export class Gain extends PostEffect {
+export class Volume extends PostEffect {
 
     public Effect: Tone.Volume;
     public Params: GainParams;

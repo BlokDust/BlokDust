@@ -26,17 +26,17 @@ import {Chomp} from 'Blocks/Effects/Post/Chomp';
 import {Chopper} from 'Blocks/Effects/Post/Chopper';
 import {Chorus} from 'Blocks/Effects/Post/Chorus';
 import {Convolver} from 'Blocks/Effects/Post/ConvolutionReverb';
-import {Delay} from 'Blocks/Effects/Post/Delay';
 import {Distortion} from 'Blocks/Effects/Post/Distortion';
 import {Envelope} from 'Blocks/Effects/Pre/Envelope';
 import {EQ} from 'Blocks/Effects/Post/EQ';
 import {Filter} from 'Blocks/Effects/Post/Filter';
-import {Gain as Volume} from 'Blocks/Effects/Post/Gain';
-import {Vibrato} from 'Blocks/Effects/Pre/Vibrato';
+import {Volume} from 'Blocks/Effects/Post/Volume';
 import {Phaser} from 'Blocks/Effects/Post/Phaser';
-import {Pitch as PitchShifter} from 'Blocks/Effects/Post/Pitch';
+import {PitchShifter} from 'Blocks/Effects/Post/PitchShifter';
 import {Reverb} from 'Blocks/Effects/Post/Reverb';
 import {Scuzz} from 'Blocks/Effects/Pre/Scuzz';
+import {StereoDelay} from 'Blocks/Effects/Post/StereoDelay';
+import {Vibrato} from 'Blocks/Effects/Pre/Vibrato';
 
 // POWER BLOCKS //
 import {Laser} from './Blocks/Power/Laser';
@@ -72,23 +72,23 @@ export class BlockCreator {
     public Chopper = Chopper;
     public Chorus = Chorus;
     public Convolver = Convolver;
-    public Delay = Delay;
     public Distortion = Distortion;
     public Envelope = Envelope;
     public EQ = EQ;
     public Filter = Filter;
-    public Volume = Volume;
-    public Vibrato = Vibrato;
     public Phaser = Phaser;
     public PitchShifter = PitchShifter;
     public Reverb = Reverb;
     public Scuzz = Scuzz;
+    public StereoDelay = StereoDelay;
+    public Vibrato = Vibrato;
+    public Volume = Volume;
 
     // POWER BLOCKS //
     public Laser = Laser;
-    public Pulse = Pulse;
     public ParticleEmitter = ParticleEmitter;
     public Power = Power;
+    public Pulse = Pulse;
     public Toggle = Toggle;
     public Void = Void;
 
@@ -176,11 +176,6 @@ export class BlockCreator {
                         "description": App.L10n.Blocks.Effect.Blocks.Convolution.description
                     },
                     {
-                        "name": App.L10n.Blocks.Effect.Blocks.Delay.name,
-                        "id": Delay,
-                        "description": App.L10n.Blocks.Effect.Blocks.Delay.description
-                    },
-                    {
                         "name": App.L10n.Blocks.Effect.Blocks.Distortion.name,
                         "id": Distortion,
                         "description": App.L10n.Blocks.Effect.Blocks.Distortion.description
@@ -201,11 +196,6 @@ export class BlockCreator {
                         "description": App.L10n.Blocks.Effect.Blocks.Filter.description
                     },
                     {
-                        "name": App.L10n.Blocks.Effect.Blocks.Vibrato.name,
-                        "id": Vibrato,
-                        "description": App.L10n.Blocks.Effect.Blocks.Vibrato.description
-                    },
-                    {
                         "name": App.L10n.Blocks.Effect.Blocks.Phaser.name,
                         "id": Phaser,
                         "description": App.L10n.Blocks.Effect.Blocks.Phaser.description
@@ -224,6 +214,16 @@ export class BlockCreator {
                         "name": App.L10n.Blocks.Effect.Blocks.Scuzz.name,
                         "id": Scuzz,
                         "description": App.L10n.Blocks.Effect.Blocks.Scuzz.description
+                    },
+                    {
+                        "name": App.L10n.Blocks.Effect.Blocks.StereoDelay.name,
+                        "id": StereoDelay,
+                        "description": App.L10n.Blocks.Effect.Blocks.StereoDelay.description
+                    },
+                    {
+                        "name": App.L10n.Blocks.Effect.Blocks.Vibrato.name,
+                        "id": Vibrato,
+                        "description": App.L10n.Blocks.Effect.Blocks.Vibrato.description
                     },
                     {
                         "name": App.L10n.Blocks.Effect.Blocks.Volume.name,
@@ -307,13 +307,19 @@ export class BlockCreator {
                 type = 'Vibrato';
                 break;
             case "WaveGen":
+                //TODO: if we want to use Wavegen in the future we need to check version number also
                 type = 'SampleGen';
                 break;
             case "Momentary":
+                //TODO: if we want to use Momentary in the future we need to check version number also
                 type = 'Pulse';
                 break;
             case 'Soundcloud':
                 type = 'Sample';
+                break;
+            case 'Delay':
+                //TODO: if we want to use Delay in the future we need to check version number also
+                type = 'StereoDelay';
                 break;
         }
         return type;

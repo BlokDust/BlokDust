@@ -5,7 +5,7 @@ import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
-export class Pitch extends PostEffect {
+export class PitchShifter extends PostEffect {
 
     public Effect: Tone.PitchShift;
     public Params: PitchShifterParams;

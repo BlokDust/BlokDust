@@ -25,31 +25,31 @@ interface IBlockList {
     Chorus: IBlockInfo;
     ComputerKeyboard: IBlockInfo;
     Convolution: IBlockInfo;
-    Delay: IBlockInfo;
     Distortion: IBlockInfo;
     Envelope: IBlockInfo;
     Eq: IBlockInfo;
     Filter: IBlockInfo;
     Granular: IBlockInfo;
     Laser: IBlockInfo;
-    Vibrato: IBlockInfo;
     Microphone: IBlockInfo;
     MIDIController: IBlockInfo;
-    PulsePower: IBlockInfo;
     Noise: IBlockInfo;
     ParticleEmitter: IBlockInfo;
     Phaser: IBlockInfo;
     PitchShifter: IBlockInfo;
     Power: IBlockInfo;
+    PulsePower: IBlockInfo;
     Recorder: IBlockInfo;
     Reverb: IBlockInfo;
     Sample: IBlockInfo;
+    SampleGen: IBlockInfo;
     Scuzz: IBlockInfo;
+    StereoDelay: IBlockInfo;
     TogglePower: IBlockInfo;
     Tone: IBlockInfo;
+    Vibrato: IBlockInfo;
     Void: IBlockInfo;
     Volume: IBlockInfo;
-    SampleGen: IBlockInfo;
 }
 
 interface IBlockInfo {

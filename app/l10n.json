@@ -81,9 +81,9 @@
           "name": "Convolution",
           "description": "A convolution reverb which simulates a physical space by using a recorded sample."
         },
-        "Delay": {
-          "name": "Delay",
-          "description": "A 'ping-pong' delay/echo with adjustable time & feedback."
+        "StereoDelay": {
+          "name": "Stereo Delay",
+          "description": "A stereo delay/echo with adjustable time & feedback."
         },
         "Distortion": {
           "name": "Distortion",
