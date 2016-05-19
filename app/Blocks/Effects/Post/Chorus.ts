@@ -27,7 +27,7 @@ export class Chorus extends PostEffect {
 
 
         this.Effect = new Tone.Chorus({
-            "rate" : this.Params.rate,
+            "frequency" : this.Params.rate,
             "delayTime" : this.Params.delayTime,
             "type" : 'sine',
             "depth" : this.Params.depth,
@@ -70,7 +70,7 @@ export class Chorus extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Chorus",
+            "name" : App.L10n.Blocks.Effect.Blocks.Chorus.name,
             "parameters" : [
 
                 {

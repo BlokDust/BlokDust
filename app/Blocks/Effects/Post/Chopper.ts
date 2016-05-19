@@ -26,11 +26,11 @@ export class Chopper extends PostEffect {
         this.PopulateParams();
 
         this.Effect = new Tone.Tremolo({
-            'frequency': this.Defaults.rate,
-            'depth': this.Defaults.depth,
-            'spread': this.Defaults.spread,
-            'type': App.Audio.WaveformTypeIndex[this.Defaults.waveform],
-            'wet': this.Defaults.mix,
+            'frequency': this.Params.rate,
+            'depth': this.Params.depth,
+            'spread': this.Params.spread,
+            'type': App.Audio.WaveformTypeIndex[this.Params.waveform],
+            'wet': this.Params.mix,
         }).start();
 
         super.Init(drawTo);
@@ -54,7 +54,7 @@ export class Chopper extends PostEffect {
 
         this.OptionsForm =
         {
-            "name": "Chopper",
+            "name": App.L10n.Blocks.Effect.Blocks.Chopper.name,
             "parameters": [
 
                 {

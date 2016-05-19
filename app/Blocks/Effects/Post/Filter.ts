@@ -1,5 +1,4 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 import {IApp} from "../../../IApp";
@@ -55,23 +54,12 @@ export class Filter extends PostEffect {
         this.Params[param] = val;
     }
 
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="frequency") {
-            val = this.Effect.frequency.value;
-        } else if (param=="gain") {
-            val = this.Effect.gain.value;
-        }
-        return val;
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name": "Filter",
+            "name": App.L10n.Blocks.Effect.Blocks.Filter.name,
             "parameters": [
 
                 {

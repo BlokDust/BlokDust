@@ -70,7 +70,7 @@ export class Delay extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Delay",
+            "name" : App.L10n.Blocks.Effect.Blocks.Delay.name,
             "parameters" : [
 
                 {

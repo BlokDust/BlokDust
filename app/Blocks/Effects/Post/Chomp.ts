@@ -1,8 +1,6 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PostEffect} from '../PostEffect';
-
 import {IApp} from "../../../IApp";
 
 declare var App: IApp;
@@ -18,9 +16,6 @@ export class Chomp extends PostEffect {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Chomp.name;
 
-        if (!this.Params) {
-        }
-
         this.Defaults = {
             rate: 13,
             Q: 0.6,
@@ -30,7 +25,7 @@ export class Chomp extends PostEffect {
 
         this.Effect = new Tone.Filter({
             "type" : "peaking",
-            "frequency" : 440,
+            "frequency" : Math.round(101-this.Params.rate),
             "rolloff" : -12,
             "Q" : this.Params.Q,
             "gain" : this.Params.gain
@@ -87,7 +82,7 @@ export class Chomp extends PostEffect {
 
         this.OptionsForm =
         {
-            "name": "Chomp",
+            "name": App.L10n.Blocks.Effect.Blocks.Chomp.name,
             "parameters": [
 
                 {

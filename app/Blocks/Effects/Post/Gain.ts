@@ -1,6 +1,5 @@
 import {IApp} from '../../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 
@@ -8,9 +7,7 @@ declare var App: IApp;
 
 export class Gain extends PostEffect {
 
-    //public Effect: GainNode;
     public Effect: Tone.Volume;
-    //public Effect: Tone.Signal;
     public Params: GainParams;
     public Defaults: GainParams;
 
@@ -23,13 +20,7 @@ export class Gain extends PostEffect {
         };
         this.PopulateParams();
 
-        /*this.Effect = App.Audio.ctx.createGain();
-        this.Effect.gain.value = (this.Params.gain/10);*/
-
         this.Effect = new Tone.Volume(this.Params.gain);
-
-        //this.Effect = new Tone.Signal(1, 'db');
-
 
         super.Init(drawTo);
 
@@ -43,14 +34,13 @@ export class Gain extends PostEffect {
     }
 
     Dispose(){
-        //this.Effect.disconnect();
         this.Effect.dispose();
         this.Effect = null;
     }
 
     SetParam(param: string,value: number) {
         super.SetParam(param,value);
-        this.Effect.volume.value = (value);
+        this.Effect.volume.value = value;
         this.Params[param] = value;
     }
 
@@ -59,7 +49,7 @@ export class Gain extends PostEffect {
 
         this.OptionsForm =
         {
-            "name": "Volume",
+            "name": App.L10n.Blocks.Effect.Blocks.Volume.name,
             "parameters": [
                 {
                     "type" : "slider",

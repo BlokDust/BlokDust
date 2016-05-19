@@ -130,6 +130,8 @@ export class Serializer {
 
     public static Deserialize(json: string): SaveFile{
 
+        if (this._Debug) console.log("START DESERIALIZATION", json);
+
         this._DeserializationDictionary = {};
 
         var parsed: any = JSON.parse(json);
