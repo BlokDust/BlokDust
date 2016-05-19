@@ -1,7 +1,6 @@
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
-import {Power} from '../Power/Power';
 import {PowerEffect} from '../Power/PowerEffect';
 
 declare var App: IApp;

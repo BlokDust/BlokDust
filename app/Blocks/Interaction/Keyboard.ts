@@ -1,10 +1,7 @@
-import {Granular} from '../Sources/Granular';
 import {IApp} from '../../IApp';
 import {Controller} from './Controller';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {ISource} from '../ISource';
-import {Recorder} from '../Sources/Recorder';
-import {SamplerBase} from '../Sources/SamplerBase';
 
 declare var App: IApp;
 
@@ -61,11 +58,17 @@ export class Keyboard extends Controller {
             this.UpdateMods();
         }
         else if (param === 'polyphonic') {
+            console.log('polyphonic change')
             this.Params.isPolyphonic = value;
             // ALL SOURCES
             let connections: ISource[] = this.Connections.ToArray();
             connections.forEach((source: ISource) => {
-                source.CreateVoices();
+                if (this.Params.isPolyphonic){
+                    source.CreateVoices();
+                } else {
+                    source.RemoveExtraVoices();
+                }
+                
             });
             App.Audio.ConnectionManager.Update();
         }
