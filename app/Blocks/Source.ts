@@ -521,8 +521,6 @@ export class Source extends Block implements ISource {
         if (this.FreeVoices.length < 1) {
             this.FreeVoices.push( new Voice(0) );
         }
-
-        // this.CreateVoices();
     }
 
 
@@ -533,7 +531,7 @@ export class Source extends Block implements ISource {
         if (this.IsMyName(App.L10n.Blocks.Source.Blocks.Granular.name)) return;
 
         // Work out how many voices we actually need (we may already have some)
-        let diff: number = App.Config.PolyphonicVoices - this.Sources.length;
+        let diff: number = App.Config.PolyphonicVoices - this.FreeVoices.length;
 
         // If we haven't got enough sources, create however many we need.
         if (diff > 0){
@@ -541,13 +539,9 @@ export class Source extends Block implements ISource {
             // Loop through and create the voices
             for (let i = 1; i <= App.Config.PolyphonicVoices; i++) {
 
-                // Create a source
+                // Create a source and an envelope
                 let s: Tone.Source = this.CreateSource();
-
-                let e: Tone.AmplitudeEnvelope;
-
-                // Create an envelope and save it to `var e`
-                e = this.CreateEnvelope();
+                let e: Tone.AmplitudeEnvelope = this.CreateEnvelope();
 
                 if (e) {
                     // Connect the source to the Envelope and start
@@ -569,6 +563,17 @@ export class Source extends Block implements ISource {
                 this.FreeVoices.push( new Voice(i) );
             }
         }
+    }
+
+    // RESET VOICES BACK TO 1 (This is a temporary fix due to issue #289) //
+    // TODO: temp fix until we properly look at voices, could we maybe make switching back from poly remove the extra voices and just call the CreateVoices function every time we switch to poly?
+    RemoveExtraVoices() {
+        if (!this.IsASoundSource()) return;
+        if (this.IsMyName(App.L10n.Blocks.Source.Blocks.Granular.name)) return;
+        this.DeactivateAllVoices();
+        this.TriggerRelease('all');
+        this.FreeVoices.length = 1;
+        this.ActiveVoices.length = 0;
     }
 
     //-------------------------------------------------------------------------------------------

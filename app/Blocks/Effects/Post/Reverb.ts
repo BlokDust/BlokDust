@@ -1,5 +1,4 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 import {IApp} from "../../../IApp";
@@ -57,25 +56,12 @@ export class Reverb extends PostEffect {
         this.Params[param] = val;
     }
 
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        } else if (param=="dampening") {
-            val = this.Effect.dampening.value;
-        } else if (param=="roomSize") {
-            val = this.Effect.roomSize.value;
-        }
-        return val;
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name" : "Reverb",
+            "name" : App.L10n.Blocks.Effect.Blocks.Reverb.name,
             "parameters" : [
 
                 {

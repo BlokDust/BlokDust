@@ -1,10 +1,7 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 import {IApp} from '../../../IApp';
-import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
-import {SoundCloudAPIResponse} from '../../../Core/Audio/SoundCloud/SoundCloudAPIResponse';
-import {SoundCloudAudioType} from '../../../Core/Audio/SoundCloud/SoundCloudAudioType';
 import {SoundCloudAPI} from  '../../../Core/Audio/SoundCloud/SoundCloudAPI';
 import {SoundCloudTrack} from '../../../Core/Audio/SoundCloud/SoundcloudTrack';
 
@@ -198,7 +195,7 @@ export class Convolver extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Convolver",
+            "name" : App.L10n.Blocks.Effect.Blocks.Convolution.name,
             "parameters" : [
 
                 {

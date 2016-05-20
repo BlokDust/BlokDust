@@ -44,5 +44,6 @@ export interface ISource extends IBlock {
     NoteOn(controller: string, note?:number, polyphonic?: boolean, glide?:number, velocity?: number): void;
     NoteOff(controller: string, note?:number): void;
     NoteUpdate(): void;
-    CreateVoices();
+    CreateVoices(): void;
+    RemoveExtraVoices(): void;
 }

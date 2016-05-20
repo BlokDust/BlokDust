@@ -1,5 +1,4 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import {PostEffect} from '../PostEffect';
 import Point = etch.primitives.Point;
 import {IApp} from "../../../IApp";
@@ -106,7 +105,7 @@ export class EQ extends PostEffect {
 
         this.OptionsForm =
         {
-            "name": "EQ",
+            "name": App.L10n.Blocks.Effect.Blocks.Eq.name,
             "parameters": [
 
                 {

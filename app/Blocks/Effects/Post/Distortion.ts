@@ -53,23 +53,12 @@ export class Distortion extends PostEffect {
         this.Params[param] = val;
     }
 
-/*    GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="drive") {
-            val = this.Effect.distortion;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        }
-        return val;
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name" : "Distortion",
+            "name" : App.L10n.Blocks.Effect.Blocks.Distortion.name,
             "parameters" : [
 
                 {

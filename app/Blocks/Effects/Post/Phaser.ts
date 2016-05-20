@@ -26,7 +26,7 @@ export class Phaser extends PostEffect {
         this.PopulateParams();
 
         this.Effect = new Tone.Phaser({
-            "rate" : this.Params.rate,
+            "frequency" : this.Params.rate,
             "octaves" : this.Params.depth,
             "Q" : 1,
             "baseFrequency" : this.Params.baseFrequency
@@ -65,27 +65,12 @@ export class Phaser extends PostEffect {
         this.Params[param] = val;
     }
 
-    /*GetParam(param: string) {
-        super.GetParam(param);
-        var val;
-        if (param=="rate") {
-            val = this.Effect.frequency.value;
-        } else if (param=="depth") {
-            val = this.Effect.depth;
-        } else if (param=="baseFrequency") {
-            val = this.Effect.baseFrequency;
-        } else if (param=="dryWet") {
-            val = this.Effect.wet.value;
-        }
-        return val;
-    }*/
-
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
 
         this.OptionsForm =
         {
-            "name" : "Phaser",
+            "name" : App.L10n.Blocks.Effect.Blocks.Phaser.name,
             "parameters" : [
 
                 {

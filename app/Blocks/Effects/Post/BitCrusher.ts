@@ -23,6 +23,7 @@ export class BitCrusher extends PostEffect {
         this.PopulateParams();
 
         this.Effect = new Tone.BitCrusher(this.Params.bits);
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(drawTo);
 
@@ -58,7 +59,7 @@ export class BitCrusher extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Bit Crusher",
+            "name" : App.L10n.Blocks.Effect.Blocks.BitCrusher.name,
             "parameters" : [
 
                 {

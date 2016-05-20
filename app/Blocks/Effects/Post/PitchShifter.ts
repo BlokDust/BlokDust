@@ -5,7 +5,7 @@ import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
-export class Pitch extends PostEffect {
+export class PitchShifter extends PostEffect {
 
     public Effect: Tone.PitchShift;
     public Params: PitchShifterParams;
@@ -24,6 +24,7 @@ export class Pitch extends PostEffect {
         this.PopulateParams();
 
         this.Effect = new Tone.PitchShift(this.Params.pitchOffset);
+        this.Effect.wet.value = this.Params.mix;
 
         super.Init(drawTo);
 
@@ -56,7 +57,7 @@ export class Pitch extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Pitch",
+            "name" : App.L10n.Blocks.Effect.Blocks.PitchShifter.name,
             "parameters" : [
 
                 {
