@@ -1425,6 +1425,8 @@ declare module Utils {
     class Documents {
         static IsInIFrame(): boolean;
         static SupportsFullscreen(): boolean;
+        static IsHidden(): boolean;
+        static GetHiddenProp(): string;
     }
 }
 declare module Utils {

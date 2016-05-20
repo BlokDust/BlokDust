@@ -39,6 +39,7 @@ interface String {
     contains(str: string): boolean;
     endsWith(text: string): boolean;
     hashCode(): string;
+    isAlphanumeric(): boolean;
     ltrim(): string;
     rtrim(): string;
     startsWith(text: string): boolean;
