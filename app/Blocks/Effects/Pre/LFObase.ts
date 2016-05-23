@@ -2,7 +2,6 @@ import {Granular} from '../../Sources/Granular';
 import {IApp} from '../../../IApp';
 import {IAudioChain} from '../../../Core/Audio/Connections/IAudioChain';
 import {PreEffect} from '../PreEffect';
-import {SamplerBase} from '../../Sources/SamplerBase';
 
 declare var App: IApp;
 
@@ -78,7 +77,13 @@ export abstract class LFObase extends PreEffect {
                         this.OscLFO.connect((<Tone.Oscillator>s).detune);
                     }
 
-                    // SAMPLER //
+                    // SAMPLER WITH DETUNE //
+                    else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.detune){ //TODO
+                        this.SamplerLFO.connect(s.player.detune);
+                        console.log('using detune');
+                    }
+
+                    // SAMPLER WITHOUT DETUNE //
                     else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.playbackRate) {
                         //this.SamplerLFO.connect((<Tone.Simpler>s).player.playbackRate);
                         this.SamplerLFO.connect(source.PlaybackSignal.Signal);
@@ -94,6 +99,11 @@ export abstract class LFObase extends PreEffect {
     }
 
     static ConvertLFODepthToPlaybackDepth(val): number {
-        return (val/400) + 1;
+        if (App.Audio.HasBufferSourceDetuneCapability) {
+            return val;
+        } else {
+            // Currently Safari doesn't support AudioBufferSource.detune so this is a work around
+            return (val/400) + 1;
+        }
     }
 }

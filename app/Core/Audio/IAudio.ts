@@ -12,6 +12,7 @@ export interface IAudio {
     ConnectionManager: ConnectionManager;
     ConnectionMethodType: ConnectionMethodType;
     ctx: AudioContext;
+    HasBufferSourceDetuneCapability: boolean;
     HasClipped: boolean;
     Master: Tone.Master;
     MasterVolume: number;
