@@ -9,12 +9,12 @@ This project is still currently in development but will be hosted at  [blokdust.
 ----
 
 ### Guide
-For tutorials and other related features please visit our wiki/user companion site guide.blokdust.com
+For tutorials and other related features please visit our wiki/user companion site [guide.blokdust.com](https://guide.blokdust.com)
 
 ------
 
 ### Frequently Asked Questions
-https://guide.blokdust.com/frequently-asked-questions/
+[guide.blokdust.com/frequently-asked-questions/](https://guide.blokdust.com/frequently-asked-questions/)
 
 ------
 
@@ -26,6 +26,8 @@ Chrome browser recommended, desktop or tablet and an internet connection. If you
 ### Contributing
 
 We’ll hopefully be publishing some developer notes when we have time. There’s a lot of things we’ve explored for the first time with this project and plenty that can be improved so we welcome any extra insight.
+
+#### Local Installation
 
 Clone the repository   
 `git clone https://github.com/BlokDust/BlokDust.git`
