@@ -24,11 +24,12 @@ export class Audio implements IAudio {
     public WaveformTypeIndex: string[] = ['sine', 'square', 'triangle', 'sawtooth'];
     public WaveformTypeIndexNoise: string[] = ['white', 'pink', 'brown'];
 
-    public AudioNodeConnectionManager: AudioNodeConnectionManager;
     public AudioFileManager: AudioFileManager;
-    public MIDIManager: MIDIManager;
-    public ConnectionMethodType: ConnectionMethodType;
+    public AudioNodeConnectionManager: AudioNodeConnectionManager;
     public ConnectionManager: ConnectionManager;
+    public ConnectionMethodType: ConnectionMethodType;
+    public HasBufferSourceDetuneCapability: boolean
+    public MIDIManager: MIDIManager;
     public Waveform: Waveform;
     public WaveWorker: Worker;
 
@@ -102,6 +103,8 @@ export class Audio implements IAudio {
             }
         }
 
+        // Save a check to see if browser supports BufferSource.detune
+        this.HasBufferSourceDetuneCapability = !!this.ctx.createBufferSource().detune;
     }
 
     get MeterVolumeDb(): number {

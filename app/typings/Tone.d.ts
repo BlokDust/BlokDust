@@ -826,6 +826,7 @@ declare module Tone {
     interface Player extends Tone.Source {
         autostart: boolean;
         buffer: Tone.Buffer | AudioBuffer;
+        detune: Tone.Signal;
         duration: number;
         loop: boolean;
         loopEnd: Tone.Time;
@@ -847,6 +848,7 @@ declare module Tone {
     interface SimplePlayer extends Tone.SimpleSource {
         autostart: boolean;
         buffer: Tone.Buffer | AudioBuffer;
+        detune: Tone.Signal;
         duration: number;
         loop: boolean;
         loopEnd: number;
@@ -969,7 +971,7 @@ declare module Tone {
 
     interface Simpler extends Tone.Instrument {
         envelope: Tone.AmplitudeEnvelope;
-        player: Tone.Player;
+        player: Tone.SimplePlayer;
         dispose(): Tone.Simpler;
         triggerAttack(offset?: Tone.Time, duration?: Tone.Time): Tone.Simpler;
         triggerRelease(): Tone.Simpler;
@@ -1194,7 +1196,7 @@ declare module Tone {
         sync(): Tone.Tremolo;
         unsync(): Tone.Tremolo;
     }
-    
+
     var Volume: {
         new(volume?: number): Tone.Volume;
     };
