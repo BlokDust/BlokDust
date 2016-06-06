@@ -122,8 +122,8 @@ export class LaserBeams extends DisplayObject {
                     if (laser.Params.selfPoweredMode || laser.IsPowered()) {
 
 
-                        vector = Vector.MultN(Vector.FromAngle(Math.degreesToRadians(laser.Params.angle)), App.ScaledUnit);
-                        line = Vector.MultN(vector, laser.CheckRange);
+                        vector = Vector.multN(Vector.fromAngle(Math.degreesToRadians(laser.Params.angle)), App.ScaledUnit);
+                        line = Vector.multN(vector, laser.CheckRange);
 
                         // FOR EACH LASER LOOK FOR SOURCE COLLISIONS //
                         for (var j = 0; j < checklist.length; j++) {
@@ -236,7 +236,8 @@ export class LaserBeams extends DisplayObject {
 
     Draw() {
         var unit = App.ScaledUnit;
-        var myPos,vector;
+        var myPos: Point;
+        var vector: Vector;
         //App.FillColor(this.Ctx,App.Palette[8]);
         App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Power]);
         this.Ctx.globalAlpha = 1;
@@ -254,8 +255,8 @@ export class LaserBeams extends DisplayObject {
 
                     myPos = App.Metrics.PointOnGrid(laser.Position);
 
-                    vector = Vector.FromAngle(Math.degreesToRadians(laser.Params.angle));
-                    vector.Mult(laser.CheckRange * unit);
+                    vector = Vector.fromAngle(Math.degreesToRadians(laser.Params.angle));
+                    vector.mult(laser.CheckRange * unit);
 
                     this.Ctx.moveTo(myPos.x, myPos.y);
                     this.Ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);

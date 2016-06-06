@@ -1,3 +1,4 @@
+///<amd-dependency path="etch"/>.
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from '../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext
@@ -201,7 +202,7 @@ export class BlockSprites {
 
                 break;
 
-            case App.L10n.Blocks.Effect.Blocks.Delay.name.toLowerCase():
+            case App.L10n.Blocks.Effect.Blocks.StereoDelay.name.toLowerCase():
 
                 this.Ctx.beginPath();
                 //this.Ctx.fillStyle = App.Palette[7].toString();// RED
@@ -621,7 +622,7 @@ export class BlockSprites {
 
                 break;
 
-            case App.L10n.Blocks.Source.Blocks.Soundcloud.name.toLowerCase():
+            case App.L10n.Blocks.Source.Blocks.Sample.name.toLowerCase():
 
                 if (!this._Scaled) {
                     this._XOffset = -(grd*0.5);
@@ -651,37 +652,6 @@ export class BlockSprites {
                 this.Ctx.fill();
 
                 break;
-
-            //case App.L10n.Blocks.Source.Blocks.Sampler.name.toLowerCase():
-            //
-            //    if (!this._Scaled) {
-            //        this._XOffset = -(grd*0.5);
-            //        this._YOffset = (grd*0.5);
-            //    }
-            //
-            //    this.Ctx.beginPath();
-            //    //this.Ctx.fillStyle = App.Palette[1].toString();// RED
-            //    App.FillColor(this.Ctx,App.Palette[4]);
-            //    this.DrawMoveTo(-1,0);
-            //    this.DrawLineTo(0,-1);
-            //    this.DrawLineTo(1,-1);
-            //    this.DrawLineTo(2,0);
-            //    this.DrawLineTo(1,1);
-            //    this.DrawLineTo(0,1);
-            //    this.Ctx.closePath();
-            //    this.Ctx.fill();
-            //
-            //    this.Ctx.beginPath();
-            //    //this.Ctx.fillStyle = App.Palette[9].toString();// ORANGE
-            //    App.FillColor(this.Ctx,App.Palette[9]);
-            //    this.DrawMoveTo(1,0);
-            //    this.DrawLineTo(2,0);
-            //    this.DrawLineTo(1,1);
-            //    this.DrawLineTo(0,1);
-            //    this.Ctx.closePath();
-            //    this.Ctx.fill();
-            //
-            //    break;
 
             case App.L10n.Blocks.Source.Blocks.Granular.name.toLowerCase():
 

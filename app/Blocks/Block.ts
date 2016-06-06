@@ -135,6 +135,9 @@ export class Block extends DisplayObject implements IBlock {
     SetSearchResults(results) {
     }
 
+    SetReversedBuffer(buffer: any) {
+    }
+
     //-------------------------------------------------------------------------------------------
     //  COLLISIONS
     //-------------------------------------------------------------------------------------------

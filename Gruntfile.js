@@ -96,12 +96,10 @@ module.exports = function (grunt) {
                         // every file in dist/lib/ except these
                         src: [
                             '<%= dirs.dist %>/lib/**',
-                            '!<%= dirs.dist %>/lib/bower-webfontloader/webfont.js',
                             '!<%= dirs.dist %>/lib/etch/dist/etch.js',
                             '!<%= dirs.dist %>/lib/exjs/dist/ex.js',
                             '!<%= dirs.dist %>/lib/extensions/dist/extensions.js',
                             '!<%= dirs.dist %>/lib/intersection/intersection.js',
-                            '!<%= dirs.dist %>/lib/jquery/dist/jquery.js',
                             '!<%= dirs.dist %>/lib/key-codes/dist/key-codes.js',
                             '!<%= dirs.dist %>/lib/lzma/src/lzma.js',
                             '!<%= dirs.dist %>/lib/lzma/src/lzma_worker.js',
@@ -110,10 +108,9 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js',
                             '!<%= dirs.dist %>/lib/nullstone/dist/nullstone.min.js.map',
                             '!<%= dirs.dist %>/lib/pixelpalette/dist/PixelPalette.js',
-                            '!<%= dirs.dist %>/lib/r.js/require.js',
                             '!<%= dirs.dist %>/lib/RecorderJS/recorder.js',
-                            '!<%= dirs.dist %>/lib/text/text.js',
                             '!<%= dirs.dist %>/lib/tone/**',
+                            '!<%= dirs.dist %>/lib/text/text.js',
                             '!<%= dirs.dist %>/lib/tweenjs/src/Tween.js',
                             '!<%= dirs.dist %>/lib/utils/dist/utils.js'
                         ],
@@ -123,18 +120,15 @@ module.exports = function (grunt) {
                         // every folder in dist/lib/ except these
                         src: [
                             '<%= dirs.dist %>/lib/*',
-                            '!<%= dirs.dist %>/lib/bower-webfontloader/**',
                             '!<%= dirs.dist %>/lib/etch/**',
                             '!<%= dirs.dist %>/lib/exjs/**',
                             '!<%= dirs.dist %>/lib/extensions/**',
                             '!<%= dirs.dist %>/lib/intersection/**',
-                            '!<%= dirs.dist %>/lib/jquery/**',
                             '!<%= dirs.dist %>/lib/key-codes/**',
                             '!<%= dirs.dist %>/lib/lzma/**',
                             '!<%= dirs.dist %>/lib/minerva/**',
                             '!<%= dirs.dist %>/lib/nullstone/**',
                             '!<%= dirs.dist %>/lib/pixelpalette/**',
-                            '!<%= dirs.dist %>/lib/r.js/**',
                             '!<%= dirs.dist %>/lib/RecorderJS/**',
                             '!<%= dirs.dist %>/lib/text/**',
                             '!<%= dirs.dist %>/lib/tone/**',
@@ -152,7 +146,7 @@ module.exports = function (grunt) {
                 overwrite: true,
                 replacements: [
                     {
-                        from: 'src="lib/r.js/require.js"',
+                        from: /src=".*require.min.js"/g,
                         to: 'src="App.js"'
                     },
                     {

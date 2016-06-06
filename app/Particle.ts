@@ -1,10 +1,10 @@
 import {IApp} from './IApp';
-import {IBlock} from './Blocks/IBlock';
+//import {IBlock} from './Blocks/IBlock';
 import {IPooledObject} from './Core/Resources/IPooledObject';
-import {Logic} from './Blocks/Power/Logic/Logic';
-import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
-import {Source} from './Blocks/Source';
-import {Void} from './Blocks/Power/Void';
+//import {Logic} from './Blocks/Power/Logic/Logic';
+//import {ParticleEmitter} from './Blocks/Power/ParticleEmitter';
+//import {Source} from './Blocks/Source';
+//import {Void} from './Blocks/Power/Void';
 import Point = etch.primitives.Point;
 import Vector = etch.primitives.Vector;
 
@@ -55,7 +55,7 @@ export class Particle implements IPooledObject {
 
     }
 
-    ParticleCollision(point: Point, particle: Particle) {
+    /*ParticleCollision(point: Point, particle: Particle) {
         for (var i = App.Blocks.length - 1; i >= 0 ; i--){
 
             var block: IBlock = App.Blocks[i];
@@ -75,5 +75,5 @@ export class Particle implements IPooledObject {
                 }
             }
         }
-    }
+    }*/
 }

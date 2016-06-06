@@ -55,11 +55,13 @@ import {BlockCreator} from './BlockCreator';
 import {CommandCategories} from './CommandCategories';
 import {Errors} from './Errors';
 import {GAVariables} from './GAVariables';
+import {CompositionLoadFailedEventArgs} from "./CompositionLoadFailedEventArgs";
 //import {DragFileInputManager} from './Core/Inputs/DragFileInputManager';
 
 export default class App implements IApp{
 
     CompositionLoaded = new nullstone.Event<CompositionLoadedEventArgs>();
+    CompositionLoadFailed = new nullstone.Event<CompositionLoadFailedEventArgs>();
     private _FontsLoaded: number;
     private _SaveFile: SaveFile;
     private _SessionId: string;
@@ -302,8 +304,8 @@ export default class App implements IApp{
     LoadComposition() {
         var that = this;
 
-        this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
-        this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
+        this.CompositionId = Utils.Urls.getQuerystringParameter('c');
+        this.CompositionName = Utils.Urls.getQuerystringParameter('t');
 
         if(this.CompositionId) {
             this.IsLoadingComposition = true;
@@ -313,11 +315,8 @@ export default class App implements IApp{
             }).catch((error: string) => {
                 that.TrackEvent(CommandCategories.COMPOSITIONS.toString(), Errors.LOAD_FAILED.toString(), that.CompositionId);
                 that.CompositionId = null;
-                console.error(error);
-
-                /*if (this.Message){
-                    this.Message(`Save couldn't be found.`);
-                }*/
+                this.IsLoadingComposition = false;
+                this.CompositionLoadFailed.raise(this, new CompositionLoadFailedEventArgs(that.CompositionId));
             });
         }
 
@@ -360,7 +359,6 @@ export default class App implements IApp{
             this.MainScene.CreateNew.ShowMessage();
         }
 
-
         this.CompositionLoaded.raise(this, new CompositionLoadedEventArgs(this._SaveFile));
     }
 
@@ -378,6 +376,7 @@ export default class App implements IApp{
 
     Message(message?: string, options?: any) {
         if (this.MainScene) {
+            this.MainScene.MessagePanel.Show();
             this.MainScene.MessagePanel.NewMessage(message, options);
         }
     }

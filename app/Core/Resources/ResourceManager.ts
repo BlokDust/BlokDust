@@ -1,3 +1,4 @@
+///<amd-dependency path="etch"/>.
 import {IResource} from './IResource';
 import ObservableCollection = etch.collections.ObservableCollection;
 import RoutedEvent = etch.events.RoutedEvent;

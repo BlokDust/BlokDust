@@ -1,3 +1,4 @@
+///<amd-dependency path="etch"/>.
 declare var App: IApp;
 import Point = etch.primitives.Point;
 import {IApp} from './IApp';
@@ -130,7 +131,7 @@ export class Metrics {
     }
 
     get PixelRatio(): number {
-        return Utils.Device.GetPixelRatio(App.Canvas.Ctx)
+        return Utils.Device.getPixelRatio(App.Canvas.Ctx)
     }
 
     //-------------------------------------------------------------------------------------------

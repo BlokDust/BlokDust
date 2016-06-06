@@ -6,14 +6,12 @@ require.config({
         "exjs": "lib/exjs/dist/ex",
         "extensions": "lib/extensions/dist/extensions",
         "intersection": "lib/intersection/intersection",
-        "jquery": "lib/jquery/dist/jquery",
         "keycodes": "lib/key-codes/dist/key-codes",
         "lzma": "lib/lzma/src/lzma",
         "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
         "Recorderjs": "lib/RecorderJS",
         "text": "lib/text/text",
         "Tone": "lib/tone/Tone",
-        "tween": "lib/tweenjs/src/Tween",
         "utils": "lib/utils/dist/utils"
     },
     shim: {
@@ -21,18 +19,13 @@ require.config({
             "exports": "exjs",
             "path": "lib/exjs/dist/ex.min"
         },
-        "tween": {
-            "exports": "TWEEN",
-            "path": "lib/tween.ts/build/tween.min"
-        },
         "utils": {
             "exports": "Utils"
         },
         "pixelpalette": {},
         "RecorderJS": {
             "path": "lib/RecorderJS/recorder.js"
-        },
-        "jquery": {}
+        }
     }
 });
 
@@ -43,7 +36,6 @@ require([
     "text!l10n.json",
     "PixelPalette",
     "Tone/core/Tone",
-    "jquery",
     "etch",
     "exjs",
     "extensions",
@@ -76,12 +68,10 @@ require([
     "Tone/source/Oscillator",
     "Tone/component/Meter",
     "Tone/component/Mono",
-    "tween",
     "utils"
-], function (text, App, config, l10n, PixelPalette, Tone, jquery) {
+], function (text, App, config, l10n, PixelPalette, Tone) {
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;
-    window.$ = jquery;
 
     $(document).ready(function() {
         window.App = new App.default(config, l10n);

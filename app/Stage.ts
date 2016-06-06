@@ -3,6 +3,7 @@ import {IApp} from './IApp';
 import {MainScene} from './MainScene';
 import {Splash} from './Splash';
 import {CompositionLoadedEventArgs} from './CompositionLoadedEventArgs';
+import {CompositionLoadFailedEventArgs} from "./CompositionLoadFailedEventArgs";
 
 declare var App: IApp;
 
@@ -12,6 +13,7 @@ export class Stage extends etch.drawing.Stage{
     public MainScene: MainScene;
 
     constructor() {
+
         super();
 
         this.MainScene = new MainScene();
@@ -33,6 +35,10 @@ export class Stage extends etch.drawing.Stage{
         App.CompositionLoaded.on((s: any, e: CompositionLoadedEventArgs) => {
             this.CompositionLoaded(e);
         }, this);
+
+        App.CompositionLoadFailed.on((s: any, e: CompositionLoadFailedEventArgs) => {
+            this.CompositionLoadFailed(e);
+        }, this);
     }
 
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
@@ -42,23 +48,29 @@ export class Stage extends etch.drawing.Stage{
         }
     }
 
-    OnTicked(lastTime: number, nowTime: number) {
-        super.OnTicked(lastTime, nowTime);
+    CompositionLoadFailed(e: CompositionLoadFailedEventArgs): void {
+        this.Splash.Hide();
+        this.MainScene.Show();
+        this.MainScene.MessagePanel.NewMessage(App.L10n.Errors.LoadError);
     }
 
-    UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
-        super.UpdateDisplayList(displayList);
-    }
-
-    DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
-        super.DrawDisplayList(displayList);
-    }
-
-    ResizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
-        super.ResizeDisplayList(displayList);
-    }
-
-    Resize(): void {
-        super.Resize();
-    }
+    //OnTicked(lastTime: number, nowTime: number) {
+    //    super.OnTicked(lastTime, nowTime);
+    //}
+    //
+    //UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
+    //    super.UpdateDisplayList(displayList);
+    //}
+    //
+    //DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
+    //    super.DrawDisplayList(displayList);
+    //}
+    //
+    //ResizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void {
+    //    super.ResizeDisplayList(displayList);
+    //}
+    //
+    //Resize(): void {
+    //    super.Resize();
+    //}
 }

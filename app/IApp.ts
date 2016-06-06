@@ -42,6 +42,7 @@ export interface IApp {
     CommandsInputManager: CommandsInputManager;
     CompositionId: string;
     CompositionLoaded: nullstone.Event<nullstone.IEventArgs>;
+    CompositionLoadFailed: nullstone.Event<nullstone.IEventArgs>;
     Config: IConfig;
     //DragFileInputManager: DragFileInputManager;
     DragOffset: Point;

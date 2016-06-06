@@ -186,8 +186,8 @@ export class ZoomButtons extends DisplayObject {
         var zout = this._OutPos;
         var area = (30*units);
 
-        this.InRoll = Dimensions.HitRect(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
-        this.OutRoll = Dimensions.HitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
+        this.InRoll = Dimensions.hitRect(zin.x - (area*0.5),zin.y - (area*0.5),area, area,point.x,point.y);
+        this.OutRoll = Dimensions.hitRect(zout.x - (area*0.5),zout.y - (area*0.5),area, area,point.x,point.y);
     }
 
     ZoomIn(): void {

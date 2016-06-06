@@ -51,7 +51,7 @@ export class TrashCan extends DisplayObject {
 
     MouseMove(point) {
         var units = App.Unit;
-        this._RollOver = Dimensions.HitRect((<MainScene>this.DrawTo).Width - (60*units),(<MainScene>this.DrawTo).Height - (60*units),(60*units), (60*units), point.x, point.y);
+        this._RollOver = Dimensions.hitRect((<MainScene>this.DrawTo).Width - (60*units),(<MainScene>this.DrawTo).Height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 
     MouseUp() {

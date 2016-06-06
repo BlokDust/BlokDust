@@ -1,5 +1,4 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import {MainScene} from '../../../MainScene';
 import Point = etch.primitives.Point;
 import {PostEffect} from '../PostEffect';
 
@@ -32,11 +31,9 @@ export class AutoWah extends PostEffect {
             "sensitivity": -10,
             "gain" : 30,
             "rolloff" : -18,
-
             "follower" : {
-
-                "attack": 0.1,
-                "release": 1
+                "attack": this.Params.attack,
+                "release": this.Params.release
             }
         });
 
@@ -81,7 +78,7 @@ export class AutoWah extends PostEffect {
 
         this.OptionsForm =
         {
-            "name" : "Auto Wah",
+            "name" : App.L10n.Blocks.Effect.Blocks.AutoWah.name,
             "parameters" : [
 
                 {

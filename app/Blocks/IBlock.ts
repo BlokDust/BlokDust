@@ -38,4 +38,5 @@ export interface IBlock extends IDisplayObject {
     UpdateConnections(chain: IAudioChain)
     UpdateOptionsForm(): void;
     SetSearchResults(results): any;
+    SetReversedBuffer(buffer: any): void;
 }

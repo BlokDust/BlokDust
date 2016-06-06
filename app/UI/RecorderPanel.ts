@@ -149,7 +149,7 @@ export class RecorderPanel extends DisplayObject {
         for (var i = 0; i < this._Blocks.length; i++) {
             var block = this._Blocks[i];
             var myPos = App.Metrics.PointOnGrid(block.Position);
-            this._Roll[i] = Dimensions.HitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
+            this._Roll[i] = Dimensions.hitRect(myPos.x  - (w*0.5), myPos.y - (w*0.5) - (h), w, h, point.x, point.y);
             if (this._Roll[i]==true) {
                 this.Hover = true;
             }

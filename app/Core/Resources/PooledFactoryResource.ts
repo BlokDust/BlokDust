@@ -1,4 +1,5 @@
 ///<amd-dependency path="utils"/>.
+///<amd-dependency path="etch"/>.
 import {IPooledFactoryResource} from './IPooledFactoryResource';
 import {IPooledObject} from './IPooledObject';
 import ArgumentException = etch.exceptions.ArgumentException;
