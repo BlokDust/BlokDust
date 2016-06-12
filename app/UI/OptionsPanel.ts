@@ -93,7 +93,7 @@ export class OptionsPanel extends DisplayObject {
         document.body.appendChild(this.Canvas);
     }*/
 
-    get Ctx(): CanvasRenderingContext2D{
+    get ctx(): CanvasRenderingContext2D{
         return this.Canvas.getContext("2d");
     }
 
