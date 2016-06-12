@@ -20,7 +20,7 @@ export class MenuItem {
     private _MainScene: MainScene;
     public MouseIsDown: boolean;
     public MousePoint: Point;
-    public Ctx: CanvasRenderingContext2D;
+    public ctx: CanvasRenderingContext2D;
 
     constructor (position: Point, size: Size, name: string, id, description: string, sketch: MainScene) {
         this.Position = position;
@@ -38,56 +38,56 @@ export class MenuItem {
     }
 
     Draw(displayContext: IDisplayContext, units, x: number, y: number) {
-        this.Ctx = displayContext.Ctx;
-        this.Ctx.globalAlpha = 1;
+        this.ctx = displayContext.ctx;
+        this.ctx.globalAlpha = 1;
         var y = this.Position.y - (y*units) - (this.InfoOffset*units);
 
         // NAME //
-        App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
-        App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
+        App.FillColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
+        App.StrokeColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
         var dataType = units*10;
-        this.Ctx.textAlign = "center";
-        this.Ctx.font = App.Metrics.TxtMid;
-        this.Ctx.fillText(this.Name,x,y + (40*units));
+        this.ctx.textAlign = "center";
+        this.ctx.font = App.Metrics.TxtMid;
+        this.ctx.fillText(this.Name,x,y + (40*units));
 
         // INFO BUTTON //
-        this.Ctx.lineWidth = 1;
+        this.ctx.lineWidth = 1;
         var ix = x - (40*units);
         var iy = y - (30*units);
         var diamond = 11;
-        this.Ctx.beginPath();
-        this.Ctx.moveTo(ix - (diamond*units), iy);
-        this.Ctx.lineTo(ix, iy - (diamond*units));
-        this.Ctx.lineTo(ix + (diamond*units), iy);
-        this.Ctx.lineTo(ix, iy + (diamond*units));
-        this.Ctx.closePath();
-        this.Ctx.stroke();
-        this.Ctx.fillText("?",ix,iy + (dataType*0.38));
+        this.ctx.beginPath();
+        this.ctx.moveTo(ix - (diamond*units), iy);
+        this.ctx.lineTo(ix, iy - (diamond*units));
+        this.ctx.lineTo(ix + (diamond*units), iy);
+        this.ctx.lineTo(ix, iy + (diamond*units));
+        this.ctx.closePath();
+        this.ctx.stroke();
+        this.ctx.fillText("?",ix,iy + (dataType*0.38));
 
         if (this.InfoOffset!==0) {
             // INFO ARROW //
-            this.Ctx.lineWidth = 2;
+            this.ctx.lineWidth = 2;
             var ay = y + (this.Size.height*1.5) - (30*units);
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(x - (diamond*units), ay);
-            this.Ctx.lineTo(x, ay + (diamond*units));
-            this.Ctx.lineTo(x + (diamond*units), ay);
-            this.Ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(x - (diamond*units), ay);
+            this.ctx.lineTo(x, ay + (diamond*units));
+            this.ctx.lineTo(x + (diamond*units), ay);
+            this.ctx.stroke();
 
             // INFO TEXT //
-            this.Ctx.textAlign = "left";
+            this.ctx.textAlign = "left";
             var bodyType = units*7.5;
-            this.Ctx.font = App.Metrics.TxtItalic;
-            this.PrintAtWordWrap(this.Ctx, this.Description, x -(this.Size.width*0.5) + (10*units), y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
+            this.ctx.font = App.Metrics.TxtItalic;
+            this.PrintAtWordWrap(this.ctx, this.Description, x -(this.Size.width*0.5) + (10*units), y + this.Size.height - (30*units), bodyType*1.5, (this.Size.width) - (20*units));
 
             // VERTICAL LINES //
-            App.StrokeColor(this.Ctx,App.Palette[1]);
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*0.5) + (20*units));
-            this.Ctx.lineTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*1.5) - (20*units));
-            this.Ctx.moveTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*0.5) + (20*units));
-            this.Ctx.lineTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*1.5) - (20*units));
-            this.Ctx.stroke();
+            App.StrokeColor(this.ctx,App.Palette[1]);
+            this.ctx.beginPath();
+            this.ctx.moveTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*0.5) + (20*units));
+            this.ctx.lineTo(Math.round(x - (this.Size.width*0.5))+1,y + (this.Size.height*1.5) - (20*units));
+            this.ctx.moveTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*0.5) + (20*units));
+            this.ctx.lineTo(Math.round(x + (this.Size.width*0.5))-1,y + (this.Size.height*1.5) - (20*units));
+            this.ctx.stroke();
         }
 
         // ICON //

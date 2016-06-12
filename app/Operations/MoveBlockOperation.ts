@@ -11,7 +11,7 @@ export class MoveBlockOperation<IBlock> extends CompoundOperation<IBlock> implem
     constructor(block: IBlock) {
         super();
         this._Block = block;
-        this.Operations.push(new ChangePropertyOperation<IBlock>(block, "Position", (<any>this._Block).LastPosition.Clone(), (<any>this._Block).Position.Clone()));
+        this.Operations.push(new ChangePropertyOperation<IBlock>(block, "Position", (<any>this._Block).LastPosition.clone(), (<any>this._Block).Position.clone()));
     }
 
     Do(): Promise<void> {

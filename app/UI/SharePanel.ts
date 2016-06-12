@@ -31,8 +31,8 @@ export class SharePanel extends DisplayObject {
     public TitleInput: HTMLInputElement;
     public URLInput: HTMLInputElement;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Open = false;
         this._FirstSession = true;
@@ -44,7 +44,7 @@ export class SharePanel extends DisplayObject {
         this._SessionId = "";
 
         this.OffsetX = 0;
-        this.OffsetY = -this.DrawTo.Height;
+        this.OffsetY = -this.drawTo.height;
 
         this._UrlSelecting = false;
         this._RollOvers = [];
@@ -93,7 +93,7 @@ export class SharePanel extends DisplayObject {
         }
 
         this.GetTitleFromUrl();
-        this.Resize();
+        this.resize();
     }
 
     // GET OUR START DOMAIN (localhost / blokdust.com) //
@@ -192,8 +192,8 @@ export class SharePanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
-        var ctx = this.Ctx;
+    draw() {
+        var ctx = this.ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
         var urlType = App.Metrics.TxtUrl2;
@@ -523,7 +523,7 @@ export class SharePanel extends DisplayObject {
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
     }
 
 
@@ -715,7 +715,7 @@ export class SharePanel extends DisplayObject {
         var shareX = this.OffsetX + App.Width;
         var centerY = this.OffsetY + (App.Height * 0.5);
         var buttonY = centerY + (35*units);
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var midType = App.Metrics.TxtMid;
         var appWidth = App.Width;
 
@@ -761,7 +761,7 @@ export class SharePanel extends DisplayObject {
         }
     }
 
-    Resize() {
+    resize() {
         if (this.OffsetX!==0) {
             this.OffsetX = -App.Width;
         }

@@ -18,8 +18,8 @@ export class ZoomButtons extends DisplayObject {
     public CurrentSlot: number;
     public ZoomAlpha: number;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.InRoll = this.OutRoll = false;
         this.Tweens = [];
@@ -37,9 +37,9 @@ export class ZoomButtons extends DisplayObject {
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-    Draw() {
+    draw() {
         var units = App.Unit;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
 
         ctx.globalAlpha = 1;
         ctx.lineWidth = 2;
@@ -129,7 +129,7 @@ export class ZoomButtons extends DisplayObject {
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
 
         this.Tweens.push(offsetTween);
     }
@@ -223,7 +223,7 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-    Resize(): void {
+    resize(): void {
         var units = App.Unit;
         this._InPos = new Point(30*units,App.Height - (30*units));
         this._OutPos = new Point(70*units,App.Height - (30*units));

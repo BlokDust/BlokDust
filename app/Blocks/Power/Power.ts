@@ -10,11 +10,11 @@ declare var App: IApp;
 
 export class Power extends PowerEffect {
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Power.Blocks.Power.name;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         this.Outline.push(new Point(-1,0), new Point(1,-2), new Point(2,-1), new Point(2,0), new Point(0,2), new Point(-1,1));
     }
@@ -39,8 +39,8 @@ export class Power extends PowerEffect {
         this.OldConnections = newConnections;
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

@@ -7,7 +7,7 @@ declare var App: IApp;
 
 export class Vibrato extends LFObase {
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Vibrato.name;
 
@@ -20,14 +20,14 @@ export class Vibrato extends LFObase {
         this.PopulateParams();
         this.InitializeLFOs();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

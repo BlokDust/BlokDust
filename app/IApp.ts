@@ -86,7 +86,7 @@ export interface IApp {
     LoadReady(): void;
     Message(message?: string, options?: any): void;
     Serialize(): string;
-    Setup(): void;
+    setup(): void;
 
     FillColor(ctx,col): void;
     FillRGBA(ctx,r,g,b,a): void;

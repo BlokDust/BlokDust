@@ -14,7 +14,7 @@ export class Microphone extends Source {
     public Muted: boolean = false;
     private _unmutedVolume: number = 1;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.Microphone.name;
 
@@ -24,7 +24,7 @@ export class Microphone extends Source {
         };
         this.PopulateParams();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         if (!(<any>navigator).getUserMedia) {
             App.Message(`Unfortunately the microphone will not work in this browser because it doesn't support 'getUserMedia'. Try using the latest Chrome`);
@@ -114,12 +114,12 @@ export class Microphone extends Source {
         super.SetParam(param,value);
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

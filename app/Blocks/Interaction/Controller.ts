@@ -19,8 +19,8 @@ export class Controller extends PowerEffect {
     public Glide: number;
     public KeysDown: any = {};
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Transposition = 0;
         this.TranspositionAmount = 12;

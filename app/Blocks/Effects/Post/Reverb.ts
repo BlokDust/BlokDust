@@ -11,7 +11,7 @@ export class Reverb extends PostEffect {
     public Params: ReverbParams;
     public Defaults: ReverbParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Reverb.name;
 
@@ -26,14 +26,14 @@ export class Reverb extends PostEffect {
         this.Effect = new Tone.Freeverb(this.Params.dampening, this.Params.roomSize);
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

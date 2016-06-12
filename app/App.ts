@@ -175,7 +175,7 @@ export default class App implements IApp{
         this.L10n = <IL10n>JSON.parse(l10n);
     }
 
-    public Setup(){
+    public setup(){
 
         this.Canvas = new Canvas();
         this.BlockCreator = new BlockCreator();
@@ -189,7 +189,7 @@ export default class App implements IApp{
         this.CreateSubCanvas(0); // optionsPanel
 
         window.onresize = () => {
-            this.Resize();
+            this.resize();
         };
 
         // INITIALISE AUDIO //
@@ -326,12 +326,12 @@ export default class App implements IApp{
     // CREATE Stage & BEGIN DRAWING/ANIMATING //
     CreateStage() {
         this.Stage = new Stage();
-        this.Stage.Init(this.Canvas);
-        this.Stage.Drawn.on((s: any, time: number) => {
+        this.Stage.init(this.Canvas);
+        this.Stage.drawn.on((s: any, time: number) => {
             window.TWEEN.update(time);
         }, this);
 
-        this.Resize();
+        this.resize();
     }
 
     CompositionLoadComplete(data) {
@@ -352,7 +352,7 @@ export default class App implements IApp{
         this.Audio.Master.volume.value = -100;
 
         // Connect the effects chain
-        this.Audio.ConnectionManager.Update();
+        this.Audio.ConnectionManager.update();
 
         this.IsLoadingComposition = false;
         if (!this.SkipTutorial) {
@@ -370,13 +370,13 @@ export default class App implements IApp{
         this._SaveFile = Serializer.Deserialize(json);
         this.Blocks = this._SaveFile.Composition.en().traverseUnique(block => (<IBlock>block).Connections).toArray();
         this.Blocks.sort((a: IBlock, b: IBlock) => {
-            return a.ZIndex - b.ZIndex;
+            return a.zIndex - b.zIndex;
         });
     }
 
     Message(message?: string, options?: any) {
         if (this.MainScene) {
-            this.MainScene.MessagePanel.Show();
+            this.MainScene.MessagePanel.show();
             this.MainScene.MessagePanel.NewMessage(message, options);
         }
     }
@@ -398,9 +398,9 @@ export default class App implements IApp{
         return document.location.href.indexOf('localhost') != -1;
     }
 
-    Resize(): void {
+    resize(): void {
         this.Metrics.Compute();
-        this.Stage.Resize();
+        this.Stage.resize();
     }
 
     // SHORTHAND COLOR SET //

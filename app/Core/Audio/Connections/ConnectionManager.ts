@@ -29,7 +29,7 @@ export class ConnectionManager {
 
     }
 
-    public Update(){
+    public update(){
         if (this._Debug) console.clear();
 
         this.IsConnected = false;

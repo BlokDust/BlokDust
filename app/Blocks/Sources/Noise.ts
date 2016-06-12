@@ -12,7 +12,7 @@ export class Noise extends Source {
     public Params: NoiseParams;
     public Defaults: NoiseParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.Noise.name;
 
@@ -24,7 +24,7 @@ export class Noise extends Source {
         };
         this.PopulateParams();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         this.CreateSource();
         this.CreateEnvelope();
@@ -60,8 +60,8 @@ export class Noise extends Source {
         return super.CreateEnvelope();
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

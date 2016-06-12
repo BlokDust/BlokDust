@@ -38,8 +38,8 @@ export class Tutorial extends DisplayObject{
     public AnimatePolarity: number;
     public OptionsInteract: boolean = false;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
         this.Open = false;
         this.HotSpots = [];
         this.IntroLines = 0;
@@ -198,7 +198,7 @@ export class Tutorial extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Update() {
+    update() {
         if (this.Open) {
             this.UpdateHotspots();
         }
@@ -212,8 +212,8 @@ export class Tutorial extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
-        var ctx = this.Ctx;
+    draw() {
+        var ctx = this.ctx;
         var units = App.Unit;
         var midType = App.Metrics.TxtMid;
         var italicType = App.Metrics.TxtItalic3;
@@ -591,7 +591,7 @@ export class Tutorial extends DisplayObject{
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
     }
 
 
@@ -652,7 +652,7 @@ export class Tutorial extends DisplayObject{
     }
 
     UpdateHotspots() {
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var units = App.Unit;
         var header = App.MainScene.Header;
         var menuH = (header.Height * header.Rows)*units;
@@ -801,7 +801,7 @@ export class Tutorial extends DisplayObject{
     }
 
     HitTests(point) {
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var units = App.Unit;
         var x = App.Width - (this.Offset.x*units);
         var y = (App.Height *0.5) + (this.Offset.y*units) - (20*units);
@@ -836,7 +836,7 @@ export class Tutorial extends DisplayObject{
     //  RESIZE
     //-------------------------------------------------------------------------------------------
 
-    Resize() {
+    resize() {
         if (this.Text) {
             if (this.Open) {
                 this.CountIntroLines();
@@ -847,13 +847,13 @@ export class Tutorial extends DisplayObject{
     CountIntroLines() {
         var units = App.Unit;
 
-        this.Ctx.font = App.Metrics.TxtMid;
-        this._SkipBtnWidth = this.Ctx.measureText(this.Text.SkipButton.toUpperCase()).width;
-        this._DoneBtnWidth = this.Ctx.measureText(this.Text.DoneButton.toUpperCase()).width;
+        this.ctx.font = App.Metrics.TxtMid;
+        this._SkipBtnWidth = this.ctx.measureText(this.Text.SkipButton.toUpperCase()).width;
+        this._DoneBtnWidth = this.ctx.measureText(this.Text.DoneButton.toUpperCase()).width;
 
         var scene = this.Text.Scenes[this.CurrentScene-1];
-        this.Ctx.font = App.Metrics.TxtItalic3;
-        this.IntroLines = this.LineCount(this.Ctx,scene.Intro,this.TextWidth*units);
-        this.TaskLines = this.LineCount(this.Ctx,scene.Task,this.TextWidth*units);
+        this.ctx.font = App.Metrics.TxtItalic3;
+        this.IntroLines = this.LineCount(this.ctx,scene.Intro,this.TextWidth*units);
+        this.TaskLines = this.LineCount(this.ctx,scene.Task,this.TextWidth*units);
     }
 }

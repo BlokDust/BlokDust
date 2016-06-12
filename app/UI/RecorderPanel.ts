@@ -13,8 +13,8 @@ export class RecorderPanel extends DisplayObject {
     private _Roll: boolean[];
     public Hover: boolean;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this._Blocks = [];
         this._Roll = [];
@@ -27,7 +27,7 @@ export class RecorderPanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Update() {
+    update() {
         // POPULATE LIST OF ACTIVE RECORDER BLOCKS //
         // TODO: THIS IS SHIT - ideal: subscribe to 'blocks changed' event to 'lazy populate' this list
         var blocks = [];
@@ -45,7 +45,7 @@ export class RecorderPanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
+    draw() {
 
         for (var i = 0; i < this._Blocks.length; i++) {
             var block = this._Blocks[i];
@@ -57,7 +57,7 @@ export class RecorderPanel extends DisplayObject {
     DrawPanel(x,y,rec,hover) {
         var units = App.Unit;
         var grd = App.GridSize;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
 
         var w = grd*3;
         var h = grd*3;

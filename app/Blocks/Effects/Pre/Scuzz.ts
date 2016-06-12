@@ -10,7 +10,7 @@ export class Scuzz extends LFObase {
     public Params: ScuzzParams;
     public Defaults: ScuzzParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Scuzz.name;
 
@@ -22,14 +22,14 @@ export class Scuzz extends LFObase {
         this.PopulateParams();
         this.InitializeLFOs();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(2, -1),new Point(0, 1),new Point(-1, 0));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

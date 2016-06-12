@@ -18,8 +18,8 @@ export class MessagePanel extends DisplayObject {
     private _CloseX: number;
     private _ButtonWidth: number;
 
-    Init(drawTo: IDisplayContext):void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext):void {
+        super.init(drawTo);
 
         this._Roll = [];
         this.Hover = false;
@@ -51,13 +51,13 @@ export class MessagePanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
+    draw() {
         var units = App.Unit;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var midType = App.Metrics.TxtMid;
-        var y = (<MainScene>this.DrawTo).Height*0.75;
-        var cx = (<MainScene>this.DrawTo).Width*0.5;
-        var w = (<MainScene>this.DrawTo).Width;
+        var y = (<MainScene>this.drawTo).height*0.75;
+        var cx = (<MainScene>this.drawTo).width*0.5;
+        var w = (<MainScene>this.drawTo).width;
 
         if (this._Alpha>0) {
             ctx.textAlign = "center";
@@ -145,9 +145,9 @@ export class MessagePanel extends DisplayObject {
         // CLOSE POSITION //
         if (this._Value.confirmation) {
             var units = App.Unit;
-            var ctx = this.Ctx;
+            var ctx = this.ctx;
             var midType = App.Metrics.TxtMid;
-            var cx = (<MainScene>this.DrawTo).Width*0.5;
+            var cx = (<MainScene>this.drawTo).width*0.5;
             ctx.font = midType;
             this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
             this._ButtonWidth = (20*units) + ctx.measureText(this._Value.buttonText.toUpperCase()).width;
@@ -195,7 +195,7 @@ export class MessagePanel extends DisplayObject {
             panel[""+value] = this.x;
         });
         pTween.delay(delay);
-        pTween.start(this.LastVisualTick);
+        pTween.start(this.lastVisualTick);
         pTween.easing( window.TWEEN.Easing.Quintic.InOut );
     }
 
@@ -225,12 +225,12 @@ export class MessagePanel extends DisplayObject {
         var units = App.Unit;
 
         if (this._Value.confirmation) {
-            this._Roll[0] = Dimensions.hitRect(this._CloseX  - (20*units), ((<MainScene>this.DrawTo).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+            this._Roll[0] = Dimensions.hitRect(this._CloseX  - (20*units), ((<MainScene>this.drawTo).height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
         } else {
             this._Roll[0] = false;
         }
         if (this._Value.buttonText!=="") {
-            this._Roll[1] = Dimensions.hitRect(this._CloseX, ((<MainScene>this.DrawTo).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
+            this._Roll[1] = Dimensions.hitRect(this._CloseX, ((<MainScene>this.drawTo).height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
         } else {
             this._Roll[1] = false;
         }

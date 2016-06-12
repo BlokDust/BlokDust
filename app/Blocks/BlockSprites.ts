@@ -8,7 +8,7 @@ declare var App: IApp;
 
 export class BlockSprites {
 
-    public Ctx: CanvasRenderingContext2D;
+    public ctx: CanvasRenderingContext2D;
     private _Scaled: boolean;
     private _Position: Point;
     private _XOffset: number;
@@ -16,7 +16,7 @@ export class BlockSprites {
 
     DrawSprite(ctx: IDisplayContext, pos: Point, scaled: boolean, blockType: string, pos2?: Point) {
 
-        this.Ctx = ctx.Ctx;
+        this.ctx = ctx.ctx;
         this._Scaled = scaled;
         this._Position = pos;
         this._XOffset = 0;
@@ -34,24 +34,24 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(-2,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -61,78 +61,78 @@ export class BlockSprites {
                     this._YOffset =  grd;
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.Chomp.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.Chopper.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -142,25 +142,25 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[10].toString();// ORANGE
-                App.FillColor(this.Ctx,App.Palette[10]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[10].toString();// ORANGE
+                App.FillColor(this.ctx,App.Palette[10]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
-                App.FillColor(this.Ctx,App.Palette[6]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[6].toString();// YELLOW
+                App.FillColor(this.ctx,App.Palette[6]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -170,112 +170,112 @@ export class BlockSprites {
                     this._XOffset = -(grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
-                App.FillColor(this.Ctx,App.Palette[6]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[6].toString();// YELLOW
+                App.FillColor(this.ctx,App.Palette[6]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.StereoDelay.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.Distortion.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[9].toString();// PINK
+                App.FillColor(this.ctx,App.Palette[9]);
                 this.DrawLineTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.Envelope.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
-                App.FillColor(this.Ctx,App.Palette[6]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[6].toString();// YELLOW
+                App.FillColor(this.ctx,App.Palette[6]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -286,59 +286,59 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(2,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.Filter.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(-1,-2);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(-1,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
-                App.FillColor(this.Ctx,App.Palette[6]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[6].toString();// YELLOW
+                App.FillColor(this.ctx,App.Palette[6]);
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -349,95 +349,95 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString();// PURPLE
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,1);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Effect.Blocks.Vibrato.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[9].toString();// PINK
+                App.FillColor(this.ctx,App.Palette[9]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
-                App.FillColor(this.Ctx,App.Palette[6]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[6].toString();// YELLOW
+                App.FillColor(this.ctx,App.Palette[6]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             //case "panner":
             //
-            //    this.Ctx.beginPath();
-            //    //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-            //    App.FillColor(this.Ctx,App.Palette[9]);
+            //    this.ctx.beginPath();
+            //    //this.ctx.fillStyle = App.Palette[9].toString();// PINK
+            //    App.FillColor(this.ctx,App.Palette[9]);
             //    this.DrawMoveTo(-1,0);
             //    this.DrawLineTo(0,-1);
             //    this.DrawLineTo(1,0);
             //    this.DrawLineTo(0,1);
-            //    this.Ctx.closePath();
-            //    this.Ctx.fill();
+            //    this.ctx.closePath();
+            //    this.ctx.fill();
             //
-            //    this.Ctx.beginPath();
-            //    //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-            //    App.FillColor(this.Ctx,App.Palette[7]);
+            //    this.ctx.beginPath();
+            //    //this.ctx.fillStyle = App.Palette[7].toString();// RED
+            //    App.FillColor(this.ctx,App.Palette[7]);
             //    this.DrawMoveTo(0,-1);
             //    this.DrawLineTo(1,0);
             //    this.DrawLineTo(0,1);
-            //    this.Ctx.closePath();
-            //    this.Ctx.fill();
+            //    this.ctx.closePath();
+            //    this.ctx.fill();
             //
             //    break;
 
             case App.L10n.Blocks.Effect.Blocks.Phaser.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[9].toString();// PINK
+                App.FillColor(this.ctx,App.Palette[9]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(-1,-2);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(-1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -448,24 +448,24 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,-1);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString();// PURPLE
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -475,35 +475,35 @@ export class BlockSprites {
                     this._XOffset = -(grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[6].toString();// YELLOW
-                App.FillColor(this.Ctx,App.Palette[6]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[6].toString();// YELLOW
+                App.FillColor(this.ctx,App.Palette[6]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -513,24 +513,24 @@ export class BlockSprites {
                     this._YOffset = grd;
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[10].toString();// ORANGE
-                App.FillColor(this.Ctx,App.Palette[10]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[10].toString();// ORANGE
+                App.FillColor(this.ctx,App.Palette[10]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(2,-1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -540,85 +540,85 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString();// PURPLE
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(0,-2);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(0,-2);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(0,-2);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Source.Blocks.Noise.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Source.Blocks.Microphone.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[9].toString();// PINK
+                App.FillColor(this.ctx,App.Palette[9]);
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -629,27 +629,27 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[10].toString();// ORANGE
-                App.FillColor(this.Ctx,App.Palette[10]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[10].toString();// ORANGE
+                App.FillColor(this.ctx,App.Palette[10]);
                 this.DrawMoveTo(1,0);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -659,26 +659,26 @@ export class BlockSprites {
                     this._XOffset = -(grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString();// PURPLE
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(2,1);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -688,32 +688,32 @@ export class BlockSprites {
                     this._XOffset = -(grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[9].toString();// PINK
+                App.FillColor(this.ctx,App.Palette[9]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(2,1);
                 this.DrawLineTo(1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
 
                 break;
@@ -724,203 +724,203 @@ export class BlockSprites {
                     this._XOffset = -(grd*0.5);
                 }*/
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString();// PINK
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString();// PINK
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[10].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[10]);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[10].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[10]);
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
 
                 break;
 
             case App.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,1);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(1,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Interaction.Blocks.MIDIController.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(2,1);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString(); //GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString(); //GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(-1,1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(1,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[9].toString(); //PINK
-                App.FillColor(this.Ctx,App.Palette[9]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[9].toString(); //PINK
+                App.FillColor(this.ctx,App.Palette[9]);
                 this.DrawLineTo(-1,-1);
                 this.DrawLineTo(-1,1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(0,-1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Power.Blocks.ParticleEmitter.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString();// PURPLE
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString();// PURPLE
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(-2,0);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Power.Blocks.Power.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(2,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(2,0);
                 this.DrawLineTo(0,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(1,-2);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
             case App.L10n.Blocks.Power.Blocks.TogglePower.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString(); // BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString(); // BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString(); // RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString(); // RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(1,2);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
 
                 break;
 
             case App.L10n.Blocks.Power.Blocks.PulsePower.name.toLowerCase():
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString(); // BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString(); // BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[5].toString(); // PURPLE
-                App.FillColor(this.Ctx,App.Palette[5]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[5].toString(); // PURPLE
+                App.FillColor(this.ctx,App.Palette[5]);
                 this.DrawMoveTo(0,1);
                 this.DrawLineTo(0,0);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,1);
                 this.DrawLineTo(0,2);
                 this.DrawLineTo(-1,2);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -930,34 +930,34 @@ export class BlockSprites {
                     this._YOffset = (grd*0.5);
                 }
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[3].toString();// BLUE
-                App.FillColor(this.Ctx,App.Palette[3]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[3].toString();// BLUE
+                App.FillColor(this.ctx,App.Palette[3]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(0,1);
                 this.DrawLineTo(-1,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[4].toString();// GREEN
-                App.FillColor(this.Ctx,App.Palette[4]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[4].toString();// GREEN
+                App.FillColor(this.ctx,App.Palette[4]);
                 this.DrawMoveTo(0,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                this.Ctx.beginPath();
-                //this.Ctx.fillStyle = App.Palette[7].toString();// RED
-                App.FillColor(this.Ctx,App.Palette[7]);
+                this.ctx.beginPath();
+                //this.ctx.fillStyle = App.Palette[7].toString();// RED
+                App.FillColor(this.ctx,App.Palette[7]);
                 this.DrawMoveTo(-1,-1);
                 this.DrawLineTo(1,-1);
                 this.DrawLineTo(0,0);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
                 break;
 
@@ -966,21 +966,21 @@ export class BlockSprites {
                 /*if (!this._Scaled) {
                     this._YOffset = (grd*0.5);
                 }*/
-                //this.Ctx.fillStyle = App.Palette[14].toString();// DARK
-                App.FillColor(this.Ctx,App.Palette[14]);
+                //this.ctx.fillStyle = App.Palette[14].toString();// DARK
+                App.FillColor(this.ctx,App.Palette[14]);
                 /*if (!this._Scaled) {
-                    this.Ctx.fillStyle = App.Palette[14].toString();// DARK
+                    this.ctx.fillStyle = App.Palette[14].toString();// DARK
                 }*/
-                this.Ctx.beginPath();
+                this.ctx.beginPath();
                 this.DrawMoveTo(-1,0);
                 this.DrawLineTo(0,-1);
                 this.DrawLineTo(1,0);
                 this.DrawLineTo(0,1);
-                this.Ctx.closePath();
-                this.Ctx.fill();
+                this.ctx.closePath();
+                this.ctx.fill();
 
-                //this.Ctx.fillStyle = App.Palette[8].toString();// WHITE
-                App.FillColor(this.Ctx,App.Palette[8]);
+                //this.ctx.fillStyle = App.Palette[8].toString();// WHITE
+                App.FillColor(this.ctx,App.Palette[8]);
                 if (!this._Scaled) {
                     this.DrawPixel(-1,2,2);
                 } else {
@@ -1002,13 +1002,13 @@ export class BlockSprites {
 
     DrawPixel(x,y,size) {
         var s = size * 0.5;
-        this.Ctx.beginPath();
+        this.ctx.beginPath();
         this.DrawFloatMoveTo(x,y);
         this.DrawFloatLineTo(x+s,y);
         this.DrawFloatLineTo(x+s,y+s);
         this.DrawFloatLineTo(x,y+s);
-        this.Ctx.closePath();
-        this.Ctx.fill();
+        this.ctx.closePath();
+        this.ctx.fill();
     }
 
     DrawMoveTo(x, y) {
@@ -1021,7 +1021,7 @@ export class BlockSprites {
         } else {
             p = new Point(pos.x + (x*grd),pos.y + (y*grd));
         }
-        this.Ctx.moveTo(p.x, p.y);
+        this.ctx.moveTo(p.x, p.y);
     }
 
     DrawLineTo(x, y) {
@@ -1034,7 +1034,7 @@ export class BlockSprites {
         } else {
             p = new Point(pos.x + (x*grd),pos.y + (y*grd));
         }
-        this.Ctx.lineTo(p.x, p.y);
+        this.ctx.lineTo(p.x, p.y);
     }
 
     DrawFloatMoveTo(x, y) {
@@ -1045,7 +1045,7 @@ export class BlockSprites {
         } else {
             p = new Point(pos.x + (x*App.Unit),pos.y + (y*App.Unit));
         }
-        this.Ctx.moveTo(p.x, p.y);
+        this.ctx.moveTo(p.x, p.y);
     }
 
     DrawFloatLineTo(x, y) {
@@ -1056,6 +1056,6 @@ export class BlockSprites {
         } else {
             p = new Point(pos.x + (x*App.Unit),pos.y + (y*App.Unit));
         }
-        this.Ctx.lineTo(p.x, p.y);
+        this.ctx.lineTo(p.x, p.y);
     }
 }

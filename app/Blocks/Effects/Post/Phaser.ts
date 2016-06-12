@@ -12,7 +12,7 @@ export class Phaser extends PostEffect {
     public Params: PhaserParams;
     public Defaults: PhaserParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Phaser.name;
 
@@ -33,14 +33,14 @@ export class Phaser extends PostEffect {
         });
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(-1, -2),new Point(1, 0),new Point(1, 2));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

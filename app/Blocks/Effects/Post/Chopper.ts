@@ -12,7 +12,7 @@ export class Chopper extends PostEffect {
     public Params: ChopperParams;
     public Defaults: ChopperParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Chopper.name;
 
@@ -33,14 +33,14 @@ export class Chopper extends PostEffect {
             'wet': this.Params.mix,
         }).start();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

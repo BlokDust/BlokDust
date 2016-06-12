@@ -13,52 +13,52 @@ export class ConnectionLines extends DisplayObject {
     private _Unpowered: Line[];
     private _Powered: Line[];
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
         this.UpdateList();
     }
 
-    Draw() {
+    draw() {
 
         //this.UpdateList(); //FIXME: Luke P put this here to fix the line drawing in etch branch although I'm sure its not right.
 
         var grd = App.ScaledGridSize; // this.Grid.Width / this.Grid.Divisor;
 
-        App.StrokeColor(this.Ctx,App.Palette[15]);
+        App.StrokeColor(this.ctx,App.Palette[15]);
 
-        this.Ctx.lineWidth = 1;
+        this.ctx.lineWidth = 1;
 
-        this.Ctx.beginPath();
+        this.ctx.beginPath();
         for (var j = 0; j < this._Unpowered.length; j++) {
             var myPos = App.Metrics.PointOnGrid(this._Unpowered[j].Points[0]);
-            this.Ctx.moveTo(myPos.x, myPos.y);
+            this.ctx.moveTo(myPos.x, myPos.y);
             for(var i = 1; i < this._Unpowered[j].Points.length; i++){
                 var myPos = App.Metrics.PointOnGrid(this._Unpowered[j].Points[i]);
-                this.Ctx.lineTo(myPos.x, myPos.y);
+                this.ctx.lineTo(myPos.x, myPos.y);
             }
         }
-        this.Ctx.stroke();
+        this.ctx.stroke();
 
-        this.Ctx.lineWidth = 2;
+        this.ctx.lineWidth = 2;
 
-        this.Ctx.beginPath();
+        this.ctx.beginPath();
         for (var j = 0; j < this._Powered.length; j++) {
             var myPos = App.Metrics.PointOnGrid(this._Powered[j].Points[0]);
-            this.Ctx.moveTo(myPos.x, myPos.y);
+            this.ctx.moveTo(myPos.x, myPos.y);
             for(var i = 1; i < this._Powered[j].Points.length; i++){
                 var myPos = App.Metrics.PointOnGrid(this._Powered[j].Points[i]);
-                this.Ctx.lineTo(myPos.x, myPos.y);
+                this.ctx.lineTo(myPos.x, myPos.y);
             }
         }
-        this.Ctx.stroke();
+        this.ctx.stroke();
 
     }
 
     /*OldDraw() {
 
-        this.Ctx.strokeStyle = App.Palette[15];// BLUE
-        this.Ctx.lineWidth = 1;
-        this.Ctx.beginPath();
+        this.ctx.strokeStyle = App.Palette[15];// BLUE
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
 
         for (var j = 0; j < App.Sources.length; j++) {
             var block: IBlock = App.Sources[j];
@@ -78,18 +78,18 @@ export class ConnectionLines extends DisplayObject {
                     var xDif = (targetPos.x - myPos.x) / grd;
                     var yDif = (targetPos.y - myPos.y) / grd;
 
-                    this.Ctx.moveTo(myPos.x, myPos.y);
+                    this.ctx.moveTo(myPos.x, myPos.y);
 
                     if (xDif > 0) { // RIGHT HALF
 
                         if (yDif < 0) { // UPPER
 
                             if (-yDif < xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x + ((xDif - (-yDif))*grd)), Math.round(myPos.y));
+                                this.ctx.lineTo(Math.round(myPos.x + ((xDif - (-yDif))*grd)), Math.round(myPos.y));
                             }
 
                             if (-yDif > xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - (((-yDif) - xDif)*grd)));
+                                this.ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - (((-yDif) - xDif)*grd)));
                             }
 
                         }
@@ -97,11 +97,11 @@ export class ConnectionLines extends DisplayObject {
                         if (yDif > 0) { // LOWER
 
                             if (yDif < xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x + ((xDif - yDif)*grd)), Math.round(myPos.y));
+                                this.ctx.lineTo(Math.round(myPos.x + ((xDif - yDif)*grd)), Math.round(myPos.y));
                             }
 
                             if (yDif > xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - xDif)*grd)));
+                                this.ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - xDif)*grd)));
                             }
                         }
                     }
@@ -111,11 +111,11 @@ export class ConnectionLines extends DisplayObject {
                         if (yDif < 0) { // UPPER
 
                             if (yDif > xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x - ((yDif - xDif)*grd)), Math.round(myPos.y));
+                                this.ctx.lineTo(Math.round(myPos.x - ((yDif - xDif)*grd)), Math.round(myPos.y));
                             }
 
                             if (yDif < xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - ((xDif - yDif)*grd)));
+                                this.ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y - ((xDif - yDif)*grd)));
                             }
 
                         }
@@ -123,25 +123,25 @@ export class ConnectionLines extends DisplayObject {
                         if (yDif > 0) { // LOWER
 
                             if (yDif < -xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x - (((-xDif) - yDif)*grd)), Math.round(myPos.y));
+                                this.ctx.lineTo(Math.round(myPos.x - (((-xDif) - yDif)*grd)), Math.round(myPos.y));
                             }
 
                             if (yDif > -xDif) {
-                                this.Ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - (-xDif))*grd)));
+                                this.ctx.lineTo(Math.round(myPos.x), Math.round(myPos.y + ((yDif - (-xDif))*grd)));
                             }
 
                         }
 
                     }
 
-                    this.Ctx.lineTo(targetPos.x, targetPos.y);
+                    this.ctx.lineTo(targetPos.x, targetPos.y);
                 }
 
 
             }
         } // end loop
 
-        this.Ctx.stroke();
+        this.ctx.stroke();
     }*/
 
     UpdateList() {

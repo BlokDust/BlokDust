@@ -1,13 +1,14 @@
+// etch v0.1.1 https://github.com/edsilv/etch#readme
 import ITimerListener = etch.engine.ITimerListener;
 declare var requestAnimFrame: any;
 declare module etch.engine {
     class ClockTimer {
-        private _Listeners;
-        private _LastTime;
-        RegisterTimer(listener: ITimerListener): void;
-        UnregisterTimer(listener: ITimerListener): void;
-        private _DoTick();
-        private _RequestAnimationTick();
+        private _listeners;
+        private _lastTime;
+        registerTimer(listener: ITimerListener): void;
+        unregisterTimer(listener: ITimerListener): void;
+        private _doTick();
+        private _requestAnimationTick();
     }
 }
 
@@ -16,28 +17,28 @@ declare module etch.primitives {
         x: number;
         y: number;
         constructor(x: number, y: number);
-        Get(): Vector;
-        Set(x: number, y: number): void;
-        Add(v: Vector): void;
-        static Add(v1: Vector, v2: Vector): Vector;
-        Clone(): Vector;
+        get(): Vector;
+        set(x: number, y: number): void;
+        add(v: Vector): void;
+        static add(v1: Vector, v2: Vector): Vector;
+        clone(): Vector;
         static LERP(start: Vector, end: Vector, p: number): Vector;
-        Sub(v: Vector): void;
-        static Sub(v1: Vector, v2: Vector): Vector;
-        Mult(n: number): void;
-        static Mult(v1: Vector, v2: Vector): Vector;
-        static MultN(v1: Vector, n: number): Vector;
-        Div(n: number): void;
-        static Div(v1: Vector, v2: Vector): Vector;
-        static DivN(v1: Vector, n: number): Vector;
-        Mag(): number;
-        MagSq(): number;
-        Normalize(): void;
-        Limit(max: number): void;
-        Heading(): number;
-        static Random2D(): Vector;
-        static FromAngle(angle: number): Vector;
-        ToPoint(): Point;
+        sub(v: Vector): void;
+        static sub(v1: Vector, v2: Vector): Vector;
+        mult(n: number): void;
+        static mult(v1: Vector, v2: Vector): Vector;
+        static multN(v1: Vector, n: number): Vector;
+        div(n: number): void;
+        static div(v1: Vector, v2: Vector): Vector;
+        static divN(v1: Vector, n: number): Vector;
+        mag(): number;
+        magSq(): number;
+        normalize(): void;
+        limit(max: number): void;
+        heading(): number;
+        static random2D(): Vector;
+        static fromAngle(angle: number): Vector;
+        toPoint(): Point;
     }
 }
 
@@ -110,10 +111,10 @@ declare module etch.collections {
     }
 }
 
-/// <reference path="Engine/ClockTimer.d.ts" />
-/// <reference path="Primitives/Vector.d.ts" />
-/// <reference path="Exceptions/Exceptions.d.ts" />
-/// <reference path="Collections/ObservableCollection.d.ts" />
+/// <reference path="engine/ClockTimer.d.ts" />
+/// <reference path="primitives/Vector.d.ts" />
+/// <reference path="exceptions/Exceptions.d.ts" />
+/// <reference path="collections/ObservableCollection.d.ts" />
 
 declare module etch.collections {
     class PropertyChangedEventArgs implements nullstone.IEventArgs {
@@ -129,48 +130,48 @@ declare module etch.collections {
 import Size = minerva.Size;
 declare module etch.drawing {
     class Canvas implements IDisplayContext {
-        HTMLElement: HTMLCanvasElement;
-        IsCached: boolean;
+        htmlElement: HTMLCanvasElement;
+        isCached: boolean;
         constructor();
-        Ctx: CanvasRenderingContext2D;
-        Width: number;
-        Height: number;
-        Size: Size;
-        Style: any;
+        ctx: CanvasRenderingContext2D;
+        width: number;
+        height: number;
+        size: Size;
+        style: any;
     }
 }
 
 declare module etch.drawing {
     class DisplayObject implements IDisplayObject {
-        private _DisplayList;
-        DeltaTime: number;
-        FrameCount: number;
-        Height: number;
-        IsCached: boolean;
-        IsInitialised: boolean;
-        IsPaused: boolean;
-        IsVisible: boolean;
-        LastVisualTick: number;
-        Position: Point;
-        DrawFrom: IDisplayContext;
-        DrawTo: IDisplayContext;
-        Width: number;
-        ZIndex: number;
-        Init(drawTo: IDisplayContext, drawFrom?: IDisplayContext): void;
-        Ctx: CanvasRenderingContext2D;
-        CanvasWidth: number;
-        CanvasHeight: number;
-        DisplayList: DisplayObjectCollection<IDisplayObject>;
-        Setup(): void;
-        Update(): void;
-        Draw(): void;
-        IsFirstFrame(): boolean;
-        Dispose(): void;
-        Play(): void;
-        Pause(): void;
-        Resize(): void;
-        Show(): void;
-        Hide(): void;
+        private _displayList;
+        deltaTime: number;
+        frameCount: number;
+        height: number;
+        isCached: boolean;
+        isInitialised: boolean;
+        isPaused: boolean;
+        isVisible: boolean;
+        lastVisualTick: number;
+        position: Point;
+        drawFrom: IDisplayContext;
+        drawTo: IDisplayContext;
+        width: number;
+        zIndex: number;
+        init(drawTo: IDisplayContext, drawFrom?: IDisplayContext): void;
+        ctx: CanvasRenderingContext2D;
+        canvasWidth: number;
+        canvasHeight: number;
+        displayList: DisplayObjectCollection<IDisplayObject>;
+        setup(): void;
+        update(): void;
+        draw(): void;
+        isFirstFrame(): boolean;
+        dispose(): void;
+        play(): void;
+        pause(): void;
+        resize(): void;
+        show(): void;
+        hide(): void;
     }
 }
 
@@ -178,21 +179,24 @@ import ObservableCollection = etch.collections.ObservableCollection;
 declare module etch.drawing {
     class DisplayObjectCollection<T extends IDisplayObject> extends ObservableCollection<T> {
         constructor();
-        Swap(obj1: T, obj2: T): void;
-        ToFront(obj: T): void;
-        ToBack(obj: T): void;
-        SetIndex(obj: T, index: number): void;
-        Bottom: T;
-        Top: T;
+        add(value: T): void;
+        addRange(values: T[]): void;
+        remove(value: T): boolean;
+        swap(obj1: T, obj2: T): void;
+        toFront(obj: T): void;
+        toBack(obj: T): void;
+        setIndex(obj: T, index: number): void;
+        bottom: T;
+        top: T;
     }
 }
 
 declare module etch.drawing {
     interface IDisplayContext {
-        Ctx: CanvasRenderingContext2D;
-        Width: number;
-        Height: number;
-        IsCached: boolean;
+        ctx: CanvasRenderingContext2D;
+        width: number;
+        height: number;
+        isCached: boolean;
     }
 }
 
@@ -201,31 +205,30 @@ import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
 declare module etch.drawing {
     interface IDisplayObject extends IDisplayContext {
-        CanvasHeight: number;
-        CanvasWidth: number;
-        Ctx: CanvasRenderingContext2D;
-        DeltaTime: number;
-        DisplayList: DisplayObjectCollection<IDisplayObject>;
-        Draw(): void;
-        DrawFrom: IDisplayContext;
-        DrawTo: IDisplayContext;
-        FrameCount: number;
-        Height: number;
-        Hide(): void;
-        Init(drawTo: IDisplayContext, drawFrom?: IDisplayContext): void;
-        IsInitialised: boolean;
-        IsPaused: boolean;
-        IsVisible: boolean;
-        LastVisualTick: number;
-        Pause(): void;
-        Play(): void;
-        Position: Point;
-        Resize(): void;
-        Setup(): void;
-        Show(): void;
-        Update(): void;
-        Width: number;
-        ZIndex: number;
+        canvasHeight: number;
+        canvasWidth: number;
+        deltaTime: number;
+        displayList: DisplayObjectCollection<IDisplayObject>;
+        draw(): void;
+        drawFrom: IDisplayContext;
+        drawTo: IDisplayContext;
+        frameCount: number;
+        height: number;
+        hide(): void;
+        init(drawTo: IDisplayContext, drawFrom?: IDisplayContext): void;
+        isInitialised: boolean;
+        isPaused: boolean;
+        isVisible: boolean;
+        lastVisualTick: number;
+        pause(): void;
+        play(): void;
+        position: Point;
+        resize(): void;
+        setup(): void;
+        show(): void;
+        update(): void;
+        width: number;
+        zIndex: number;
     }
 }
 
@@ -234,25 +237,25 @@ import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayObject = etch.drawing.IDisplayObject;
 declare module etch.drawing {
     class Stage extends DisplayObject implements ITimerListener {
-        private _MaxDelta;
-        DeltaTime: number;
-        LastVisualTick: number;
-        Timer: ClockTimer;
-        Updated: nullstone.Event<number>;
-        Drawn: nullstone.Event<number>;
+        private _maxDelta;
+        deltaTime: number;
+        lastVisualTick: number;
+        timer: ClockTimer;
+        updated: nullstone.Event<number>;
+        drawn: nullstone.Event<number>;
         constructor(maxDelta?: number);
-        Init(drawTo: IDisplayContext): void;
-        OnTicked(lastTime: number, nowTime: number): void;
-        UpdateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
-        DrawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
-        ResizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
-        Resize(): void;
+        init(drawTo: IDisplayContext): void;
+        onTicked(lastTime: number, nowTime: number): void;
+        updateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
+        drawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
+        resizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
+        resize(): void;
     }
 }
 
 declare module etch.engine {
     interface ITimerListener {
-        OnTicked(lastTime: number, nowTime: number): any;
+        onTicked(lastTime: number, nowTime: number): any;
     }
 }
 
@@ -312,7 +315,7 @@ declare module etch.events {
 
 declare module etch.primitives {
     class Point extends minerva.Point {
-        Clone(): Point;
-        ToVector(): Vector;
+        clone(): Point;
+        toVector(): Vector;
     }
 }

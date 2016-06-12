@@ -48,6 +48,6 @@ export class FocusManager {
 
     // IS CANVAS THE TARGET OF A TOUCH EVENT //
     IsTouchTarget(e: TouchEvent|MouseWheelEvent) {
-        return (e.target === App.Canvas.HTMLElement);
+        return (e.target === App.Canvas.htmlElement);
     }
 }

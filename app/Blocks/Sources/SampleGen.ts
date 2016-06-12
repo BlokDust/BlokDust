@@ -19,7 +19,7 @@ export class SampleGen extends SamplerBase {
     public Params: SampleGenParams;
     public Defaults: SampleGenParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.SampleGen.name;
 
@@ -51,7 +51,7 @@ export class SampleGen extends SamplerBase {
         this._SeedLoad = true;
 
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 2),new Point(-1, 1));
@@ -544,8 +544,8 @@ export class SampleGen extends SamplerBase {
         }
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

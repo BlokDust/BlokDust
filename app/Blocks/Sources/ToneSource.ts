@@ -12,7 +12,7 @@ export class ToneSource extends Source {
     public Params: ToneSourceParams;
     public Defaults: ToneSourceParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.Tone.name;
 
@@ -30,7 +30,7 @@ export class ToneSource extends Source {
             console.log("IF");
         }*/
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         this.CreateSource();
         this.CreateEnvelope();
@@ -87,12 +87,12 @@ export class ToneSource extends Source {
 
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

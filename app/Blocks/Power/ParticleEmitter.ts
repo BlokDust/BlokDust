@@ -15,7 +15,7 @@ export class ParticleEmitter extends PowerSource {
     public Params: ParticleEmitterParams;
     public Defaults: ParticleEmitterParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Power.Blocks.ParticleEmitter.name;
 
@@ -30,7 +30,7 @@ export class ParticleEmitter extends PowerSource {
 
         //this._rateCounter = 0;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-2,0), new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(2,0), new Point(0,2));
@@ -41,7 +41,7 @@ export class ParticleEmitter extends PowerSource {
         var position = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
         var v: Utils.Maths.Vector = Vector.fromAngle(Math.degreesToRadians(this.Params.angle));
         var velocity: etch.primitives.Vector = new etch.primitives.Vector(v.X, v.Y);
-        velocity.Mult(this.Params.speed * 0.1);
+        velocity.mult(this.Params.speed * 0.1);
         var size = 2 + (Math.random());
         var life = Math.round(this.Params.range/this.Params.speed);
 
@@ -54,12 +54,12 @@ export class ParticleEmitter extends PowerSource {
 
         App.Particles.push(p);
 
-        this._LastEmission = this.LastVisualTick;
+        this._LastEmission = this.lastVisualTick;
     }
 
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
         
         if (this.Params.selfPoweredMode || this.IsPowered()) {
 
@@ -69,7 +69,7 @@ export class ParticleEmitter extends PowerSource {
                 var ms: number = 1000; // 1 second
                 var normalisedRate: number = Math.normalise((510 - this.Params.rate), 0, 500);
                 var particlesPerMS: number = ms / normalisedRate;
-                var msSinceLastEmission: number = this.LastVisualTick - this._LastEmission;
+                var msSinceLastEmission: number = this.lastVisualTick - this._LastEmission;
                 if (msSinceLastEmission >= particlesPerMS){
                     this.EmitParticle();
                 }
@@ -82,14 +82,14 @@ export class ParticleEmitter extends PowerSource {
         }
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
         //if (window.debug){
-        //    this.Ctx.fillStyle = "#fff";
+        //    this.ctx.fillStyle = "#fff";
         //    var pos = (<Grid>this.Sketch).ConvertGridUnitsToAbsolute(new Point(this.Position.x+2, this.Position.y-2));
         //    pos = (<Grid>this.Sketch).ConvertBaseToTransformed(pos);
-        //    //this.Ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
+        //    //this.ctx.fillText(""+(Math.round(this.Params.range/this.Params.speed)/this.Params.rate), pos.x, pos.y);
         //}
 
     }

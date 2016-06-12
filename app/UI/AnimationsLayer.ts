@@ -11,12 +11,12 @@ export class AnimationsLayer extends DisplayObject {
     private Loop: number = 0;
     private Spinning: boolean = false;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
         if (this.Spinning) {
             this.Loop += 1;
         }
@@ -51,13 +51,13 @@ export class AnimationsLayer extends DisplayObject {
     //  DRAWING
     //-------------------------------------------------------------------------------------------
 
-    public Draw() {
+    public draw() {
         if (this.ActiveBlocks.length>0) {
             for (var i=0; i<this.ActiveBlocks.length; i++) {
                 var block: IBlock = this.ActiveBlocks[i];
                 var blockPos = App.Metrics.PointOnGrid(block.Position);
                 this.DrawBubble(blockPos.x,blockPos.y);
-                this.DrawSprite(this.Ctx,"loading",blockPos.x,blockPos.y,6,false);
+                this.DrawSprite(this.ctx,"loading",blockPos.x,blockPos.y,6,false);
             }
             this.Spinning = true;
         }
@@ -66,15 +66,15 @@ export class AnimationsLayer extends DisplayObject {
     DrawBubble(x,y) {
         var grd = App.GridSize;
 
-        App.FillColor(this.Ctx,App.Palette[2]);
-        this.Ctx.globalAlpha = 0.95;
-        this.Ctx.beginPath();
-        this.Ctx.moveTo(x - (grd),y - (2*grd));
-        this.Ctx.lineTo(x,y - (2*grd));
-        this.Ctx.lineTo(x,y);
-        this.Ctx.lineTo(x - (grd),y - (grd));
-        this.Ctx.fill();
-        this.Ctx.globalAlpha = 1;
+        App.FillColor(this.ctx,App.Palette[2]);
+        this.ctx.globalAlpha = 0.95;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - (grd),y - (2*grd));
+        this.ctx.lineTo(x,y - (2*grd));
+        this.ctx.lineTo(x,y);
+        this.ctx.lineTo(x - (grd),y - (grd));
+        this.ctx.fill();
+        this.ctx.globalAlpha = 1;
     }
 
     DrawSprite(ctx, index: string, x: number, y: number, w: number, c:boolean) {

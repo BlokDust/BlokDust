@@ -13,8 +13,8 @@ export class StageDragger extends DisplayObject {
     public Tweens: any[];
     public Destination: Point;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Tweens = [];
         this.Destination = new Point(App.DragOffset.x,App.DragOffset.y);
@@ -25,7 +25,7 @@ export class StageDragger extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Update() {
+    update() {
 
         if ( Math.round(App.DragOffset.x)!==Math.round(this.Destination.x) || Math.round(App.DragOffset.y)!==Math.round(this.Destination.y) ) {
             var speed = App.Config.ScrollEasing;
@@ -36,12 +36,12 @@ export class StageDragger extends DisplayObject {
         }
     }
 
-    Draw() {
+    draw() {
         if (this._Dragging && ((App.DragOffset.x!==this._OffsetStart.x) || (App.DragOffset.y!==this._OffsetStart.y))) {
             var cx = App.Metrics.C.x;
             var cy = App.Metrics.C.y;
             var units = App.Unit;
-            var ctx = App.MainScene.Ctx;
+            var ctx = App.MainScene.ctx;
 
             App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.lineWidth = 2;
@@ -73,7 +73,7 @@ export class StageDragger extends DisplayObject {
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
 
         this.Tweens.push(offsetTween);
     }

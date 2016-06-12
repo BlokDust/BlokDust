@@ -25,8 +25,8 @@ export class CreateNew extends DisplayObject{
     public TickX: number;
     public CrossX: number;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.BlockCount = 0;
         this.Hover = false;
@@ -75,8 +75,8 @@ export class CreateNew extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
-        var ctx = this.Ctx;
+    draw() {
+        var ctx = this.ctx;
         var units = App.Unit;
         var midType = App.Metrics.TxtMid;
         var italicType = App.Metrics.TxtItalic2;
@@ -266,7 +266,7 @@ export class CreateNew extends DisplayObject{
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
 
         this.Tweens.push(offsetTween);
     }
@@ -350,7 +350,7 @@ export class CreateNew extends DisplayObject{
 
     HitTests(point) {
         this.Hover = false;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var units = App.Unit;
         var xOffset = this.IconOffset.x*((this.IconPos.x*units)*2);
         var yx = this.TickX*units;

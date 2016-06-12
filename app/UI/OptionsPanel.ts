@@ -54,8 +54,8 @@ export class OptionsPanel extends DisplayObject {
         super();
     }
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this._Units = 1.7;
         this.Position = new Point(0,0);
@@ -105,7 +105,7 @@ export class OptionsPanel extends DisplayObject {
 
         this._JsonMemory = json;
         var units = App.Unit;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var dataType = units*10;
         this._PanelCloseRoll = false;
 
@@ -499,7 +499,7 @@ export class OptionsPanel extends DisplayObject {
     }
 
 
-    Update() {
+    update() {
         if (this._JsonMemory.updateeveryframe==true) {
             //this.UpdateOptions();
         }
@@ -515,15 +515,14 @@ export class OptionsPanel extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
+    draw() {
         var units = App.Unit;
-        var ctxOuter = App.Canvas.Ctx;
-        var ctx = this.Ctx;
+        var ctxOuter = App.Canvas.ctx;
 
         // DRAW OFFSCREEN //
         if (this._DrawReady) {
 
-            this.DrawToOffscreenCanvas(ctx);
+            this.DrawToOffscreenCanvas(this.ctx);
             this._DrawReady = false;
         }
 
@@ -642,7 +641,7 @@ export class OptionsPanel extends DisplayObject {
     // PANEL BLACK BG //
     panelDraw(x,y) {
         var units = App.Unit;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
 
         ctx.beginPath();
         ctx.moveTo(x + (44*units), y - (this.Size.height*0.5)); // tl
@@ -666,7 +665,7 @@ export class OptionsPanel extends DisplayObject {
     diagonalFill(x,y,w,h,s) {
         var pr = App.Metrics.PixelRatio;
         s = s *pr;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var lineNo = Math.round((w+h) / (s));
         var pos1 = new Point(0,0);
         var pos2 = new Point(0,0);
@@ -691,7 +690,7 @@ export class OptionsPanel extends DisplayObject {
     }
 
     /*vertFill(x,y,w,h,s) {
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var lineNo = Math.round(w / s);
         x = Math.round(x);
         ctx.beginPath();
@@ -719,7 +718,7 @@ export class OptionsPanel extends DisplayObject {
         psTween.onUpdate(function() {
             panel.Scale = this.x;
         });
-        psTween.start(this.LastVisualTick);
+        psTween.start(this.lastVisualTick);
         psTween.easing( window.TWEEN.Easing.Quintic.InOut );
     }
 
@@ -755,7 +754,7 @@ export class OptionsPanel extends DisplayObject {
         }
     }
 
-    Resize() {
+    resize() {
         if (!App.Width) return;
 
         if (App.Metrics.Device !== Device.mobile) {
@@ -1030,16 +1029,16 @@ export class OptionsPanel extends DisplayObject {
 
     OutlineTest(point: Point): boolean {
 
-        this.Ctx.beginPath();
-        this.Ctx.moveTo(this.Position.x + this.Outline[0].x, this.Position.y + this.Outline[0].y);
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.Position.x + this.Outline[0].x, this.Position.y + this.Outline[0].y);
 
         for (var i = 1; i < this.Outline.length; i++) {
-            this.Ctx.lineTo(this.Position.x + this.Outline[i].x, this.Position.y + this.Outline[i].y);
+            this.ctx.lineTo(this.Position.x + this.Outline[i].x, this.Position.y + this.Outline[i].y);
         }
 
-        this.Ctx.closePath();
+        this.ctx.closePath();
 
-        return this.Ctx.isPointInPath(point.x, point.y);
+        return this.ctx.isPointInPath(point.x, point.y);
     }
 
 

@@ -12,7 +12,7 @@ export class BitCrusher extends PostEffect {
     public Params: BitCrusherParams;
     public Defaults: BitCrusherParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.BitCrusher.name;
 
@@ -25,15 +25,15 @@ export class BitCrusher extends PostEffect {
         this.Effect = new Tone.BitCrusher(this.Params.bits);
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(1, -2),new Point(1, 0),new Point(0, 1),new Point(-1, 1));
 
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

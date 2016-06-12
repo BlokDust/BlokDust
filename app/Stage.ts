@@ -17,17 +17,17 @@ export class Stage extends etch.drawing.Stage{
         super();
 
         this.MainScene = new MainScene();
-        this.DisplayList.Add(this.MainScene);
-        this.MainScene.Init(App.Canvas);
-        this.MainScene.Hide();
+        this.displayList.add(this.MainScene);
+        this.MainScene.init(App.Canvas);
+        this.MainScene.hide();
 
         this.Splash = new Splash();
-        this.DisplayList.Add(this.Splash);
-        this.Splash.Init(App.Canvas);
+        this.displayList.add(this.Splash);
+        this.Splash.init(App.Canvas);
 
         this.Splash.AnimationFinished.on((s: any) => {
             if (!App.IsLoadingComposition){
-                this.MainScene.Show();
+                this.MainScene.show();
                 this.Splash.TransitionOut();
             }
         }, this);
@@ -44,13 +44,13 @@ export class Stage extends etch.drawing.Stage{
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
         if (this.Splash.IsAnimationFinished) {
             this.Splash.TransitionOut();
-            this.MainScene.Show();
+            this.MainScene.show();
         }
     }
 
     CompositionLoadFailed(e: CompositionLoadFailedEventArgs): void {
-        this.Splash.Hide();
-        this.MainScene.Show();
+        this.Splash.hide();
+        this.MainScene.show();
         this.MainScene.MessagePanel.NewMessage(App.L10n.Errors.LoadError);
     }
 
@@ -70,7 +70,7 @@ export class Stage extends etch.drawing.Stage{
     //    super.ResizeDisplayList(displayList);
     //}
     //
-    //Resize(): void {
-    //    super.Resize();
+    //resize(): void {
+    //    super.resize();
     //}
 }

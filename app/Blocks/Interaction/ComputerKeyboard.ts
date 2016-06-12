@@ -22,7 +22,7 @@ export class ComputerKeyboard extends Keyboard {
     public Params: KeyboardParams;
     public Defaults: KeyboardParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Interaction.Blocks.ComputerKeyboard.name;
 
@@ -33,7 +33,7 @@ export class ComputerKeyboard extends Keyboard {
         };
         this.PopulateParams();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         App.PianoKeyboardManager.KeyDownChange.on(this.KeyDownCallback, this);
         App.PianoKeyboardManager.KeyUpChange.on(this.KeyUpCallback, this);
@@ -74,8 +74,8 @@ export class ComputerKeyboard extends Keyboard {
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 
@@ -142,7 +142,7 @@ export class ComputerKeyboard extends Keyboard {
     Dispose(){
         super.Dispose();
         // This needs to disconnect first so that ResetScene can delete keyboard properly
-        App.Audio.ConnectionManager.Update();
+        App.Audio.ConnectionManager.update();
         App.PianoKeyboardManager.KeyDownChange.off(this.KeyDownCallback, this);
         App.PianoKeyboardManager.KeyUpChange.off(this.KeyUpCallback, this);
 

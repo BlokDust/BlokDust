@@ -18,7 +18,7 @@ export class MIDIController extends Keyboard {
     public Params: KeyboardParams;
     public Defaults: KeyboardParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Interaction.Blocks.MIDIController.name;
 
@@ -29,7 +29,7 @@ export class MIDIController extends Keyboard {
         };
         this.PopulateParams();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         App.Audio.MIDIManager.MIDIMessage.on(this._OnMIDIMessage, this);
 
@@ -78,8 +78,8 @@ export class MIDIController extends Keyboard {
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

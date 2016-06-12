@@ -11,7 +11,7 @@ export class Volume extends PostEffect {
     public Params: GainParams;
     public Defaults: GainParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Volume.name;
 
@@ -22,14 +22,14 @@ export class Volume extends PostEffect {
 
         this.Effect = new Tone.Volume(this.Params.gain);
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(2, 1),new Point(0, 1));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

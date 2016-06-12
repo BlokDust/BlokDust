@@ -13,11 +13,11 @@ declare var App: IApp;
 
 export class ParticleLayer extends DisplayObject {
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
     }
 
-    Update() {
+    update() {
         if (App.Particles.length) {
             this.UpdateParticles();
         }
@@ -64,7 +64,7 @@ export class ParticleLayer extends DisplayObject {
             // If we hit a Void block //
             if (block instanceof Void) {
                 if (block.HitTest(point)){
-                    this.Dispose();
+                    this.dispose();
                     return;
                 }
             }
@@ -102,7 +102,7 @@ export class ParticleLayer extends DisplayObject {
         return true;
     }
 
-    Draw() {
+    draw() {
         for (var i = 0; i < App.Particles.length; i++) {
 
             // todo: use etch drawFrom to cache
@@ -113,15 +113,15 @@ export class ParticleLayer extends DisplayObject {
             var sy = pos.y;
             var size = particle.Size * unit;
 
-            App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Power]);
-            this.Ctx.globalAlpha = 1;
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(sx-(size),sy); //l
-            this.Ctx.lineTo(sx,sy-(size)); //t
-            this.Ctx.lineTo(sx+(size),sy); //r
-            this.Ctx.lineTo(sx,sy+(size)); //b
-            this.Ctx.closePath();
-            this.Ctx.fill();
+            App.FillColor(this.ctx,App.Palette[App.ThemeManager.Power]);
+            this.ctx.globalAlpha = 1;
+            this.ctx.beginPath();
+            this.ctx.moveTo(sx-(size),sy); //l
+            this.ctx.lineTo(sx,sy-(size)); //t
+            this.ctx.lineTo(sx+(size),sy); //r
+            this.ctx.lineTo(sx,sy+(size)); //b
+            this.ctx.closePath();
+            this.ctx.fill();
         }
     }
 }

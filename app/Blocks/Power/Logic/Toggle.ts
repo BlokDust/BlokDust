@@ -11,14 +11,14 @@ declare var App: IApp;
 
 export class Toggle extends Logic {
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
         this.BlockName = App.L10n.Blocks.Power.Blocks.TogglePower.name;
         this.Defaults = {
             logic: false
         };
         this.PopulateParams();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         this.Outline.push(new Point(0,-1), new Point(1,0), new Point(1,2), new Point(0,2), new Point(-1,1), new Point(-1,-1));
     }
@@ -43,8 +43,8 @@ export class Toggle extends Logic {
         this.OldConnections = newConnections;
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

@@ -16,14 +16,14 @@ export class Effect extends Block implements IEffect {
     Source: ISource;
     public Connections: ObservableCollection<ISource> = new ObservableCollection<ISource>();
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.UpdateOptionsForm();
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
     }
 
     //Attach(source: ISource): void {

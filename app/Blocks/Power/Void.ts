@@ -10,8 +10,8 @@ export class Void extends Block {
 
     public StarPos: Point;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
         this.BlockName = App.L10n.Blocks.Power.Blocks.Void.name;
         this.Outline.push(new Point(-1,0), new Point(0,-1), new Point(1,0), new Point(0,1));
         this.StarPos = this.RandomStarPos();
@@ -27,8 +27,8 @@ export class Void extends Block {
         return new Point(x,y);
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName, this.StarPos);
     }
 

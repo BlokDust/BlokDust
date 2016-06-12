@@ -22,7 +22,7 @@ export class Convolver extends PostEffect {
     private _FallBackTrack: SoundCloudTrack;
     private _WaveForm: number[];
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Convolution.name;
 
@@ -51,7 +51,7 @@ export class Convolver extends PostEffect {
         this.Effect = new Tone.Convolver();
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(2, 0),new Point(0, 2),new Point(-1, 1));
@@ -162,8 +162,8 @@ export class Convolver extends PostEffect {
     }
 
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

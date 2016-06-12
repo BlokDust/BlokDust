@@ -11,7 +11,7 @@ export class Laser extends PowerSource {
     public Params: LaserParams;
     public Defaults: LaserParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Power.Blocks.Laser.name;
 
@@ -27,7 +27,7 @@ export class Laser extends PowerSource {
         this.Collisions = [];
         this.CheckRange = this.Params.range;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1,-1), new Point(1,-1), new Point(1,0), new Point(0,1), new Point(-1,0));
@@ -38,8 +38,8 @@ export class Laser extends PowerSource {
     }
 
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
 
         // TEMP //
         // RANDOM //
@@ -55,7 +55,7 @@ export class Laser extends PowerSource {
             var normalisedRate: number = this.Params.rotate / 500;
             var rotationsPerMS: number = ms / normalisedRate;
 
-            this.Params.angle += (360 / rotationsPerMS) * App.Stage.DeltaTime;
+            this.Params.angle += (360 / rotationsPerMS) * App.Stage.deltaTime;
 
             if (this.Params.angle > 90) {
                 this.Params.angle -= 360;
@@ -69,8 +69,8 @@ export class Laser extends PowerSource {
 
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

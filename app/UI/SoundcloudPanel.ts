@@ -20,12 +20,12 @@ export class SoundcloudPanel extends DisplayObject{
     private _SelectedBlock: any;
     private _RandomWords: string[];
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Open = false;
         this.OffsetX = 0;
-        this.OffsetY = -this.DrawTo.Height;
+        this.OffsetY = -this.drawTo.height;
 
         this._RollOvers = [];
         this.SearchString = "Hello";
@@ -66,8 +66,8 @@ export class SoundcloudPanel extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
-        var ctx = this.Ctx;
+    draw() {
+        var ctx = this.ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
         var units = App.Unit;
@@ -341,7 +341,7 @@ export class SoundcloudPanel extends DisplayObject{
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -427,7 +427,7 @@ export class SoundcloudPanel extends DisplayObject{
         var units = App.Unit;
         var shareX = this.OffsetX + App.Width;
         var centerY = this.OffsetY + (App.Height * 0.5);
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var midType = App.Metrics.TxtMid;
         var appWidth = App.Width;
 
@@ -450,7 +450,7 @@ export class SoundcloudPanel extends DisplayObject{
         this._RollOvers[10] = Dimensions.hitRect((appWidth*0.5) + (205*units) - randomW, centerY + (136*units),randomW + (10*units),40*units, point.x, point.y); // random
     }
 
-    Resize() {
+    resize() {
         this.OffsetX = - ((this._Page-1) * (430*App.Unit));
     }
 

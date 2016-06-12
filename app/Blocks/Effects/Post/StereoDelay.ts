@@ -12,7 +12,7 @@ export class StereoDelay extends PostEffect {
     public Defaults: DelayParams;
     private _SliderTime: number;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.StereoDelay.name;
 
@@ -30,14 +30,14 @@ export class StereoDelay extends PostEffect {
         // for us, until we settle delay clicking
         this._SliderTime = 0.1; // 0.017 is also good
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, 0),new Point(1, 2),new Point(0, 1),new Point(-1, 2));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

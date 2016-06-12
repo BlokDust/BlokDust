@@ -12,7 +12,7 @@ export class Distortion extends PostEffect {
     public Params: DistortionParams;
     public Defaults: DistortionParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Distortion.name;
 
@@ -25,14 +25,14 @@ export class Distortion extends PostEffect {
         this.Effect = new Tone.Distortion(this.Params.drive);
         this.Effect.wet.value = this.Params.mix;
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 0),new Point(-1, 2));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

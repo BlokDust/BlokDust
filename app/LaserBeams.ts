@@ -17,13 +17,13 @@ export class LaserBeams extends DisplayObject {
     public UpdateAllLasers: boolean;
     //private _TestPoints: Point[];
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
         this.UpdateAllLasers = false;
         //this._TestPoints = [];
     }
 
-    Update() {
+    update() {
         //console.log("BEAMS");
         this.UpdateCollisions();
     }
@@ -191,7 +191,7 @@ export class LaserBeams extends DisplayObject {
                                                             //console.log(block.PowerConnections);
                                                             //block.PowerConnections += 1;
                                                             block.AddPower();
-                                                            (<MainScene>this.DrawTo).ConnectionLines.UpdateList();
+                                                            (<MainScene>this.drawTo).ConnectionLines.UpdateList();
                                                         }
                                                     }
                                                 }
@@ -216,7 +216,7 @@ export class LaserBeams extends DisplayObject {
                             if (collisions.length == 0 || $.inArray(block, collisions) == -1) {
                                 if (!(block instanceof Logic)) {
                                     block.RemovePower();
-                                    (<MainScene>this.DrawTo).ConnectionLines.UpdateList();
+                                    (<MainScene>this.drawTo).ConnectionLines.UpdateList();
                                 }
                             }
                         }
@@ -234,17 +234,17 @@ export class LaserBeams extends DisplayObject {
         } // end audiomanager is connected
     }
 
-    Draw() {
+    draw() {
         var unit = App.ScaledUnit;
         var myPos: Point;
         var vector: Vector;
-        //App.FillColor(this.Ctx,App.Palette[8]);
-        App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Power]);
-        this.Ctx.globalAlpha = 1;
+        //App.FillColor(this.ctx,App.Palette[8]);
+        App.StrokeColor(this.ctx,App.Palette[App.ThemeManager.Power]);
+        this.ctx.globalAlpha = 1;
 
-        this.Ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
-        //this.Ctx.lineWidth = unit*2;
-        this.Ctx.beginPath();
+        this.ctx.lineWidth = (unit*2) * (0.8 + (Math.random()*0.5));
+        //this.ctx.lineWidth = unit*2;
+        this.ctx.beginPath();
 
         for (var j=0; j<App.Sources.length; j++) {
             var laser: ISource  = App.Sources[j];
@@ -258,21 +258,21 @@ export class LaserBeams extends DisplayObject {
                     vector = Vector.fromAngle(Math.degreesToRadians(laser.Params.angle));
                     vector.mult(laser.CheckRange * unit);
 
-                    this.Ctx.moveTo(myPos.x, myPos.y);
-                    this.Ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
+                    this.ctx.moveTo(myPos.x, myPos.y);
+                    this.ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
                 }
             }
         }
-        this.Ctx.stroke();
-        this.Ctx.lineWidth = 1;
+        this.ctx.stroke();
+        this.ctx.lineWidth = 1;
 
         // TEST //
-        /*this.Ctx.beginPath();
-        this.Ctx.moveTo(0,0);
+        /*this.ctx.beginPath();
+        this.ctx.moveTo(0,0);
         for (var i=0; i<this._TestPoints.length; i++) {
-            //this.Ctx.fillRect(this._TestPoints[i].x - (30*unit),this._TestPoints[i].y - (30*unit),60*unit,60*unit);
-            this.Ctx.lineTo(this._TestPoints[i].x,this._TestPoints[i].y);
+            //this.ctx.fillRect(this._TestPoints[i].x - (30*unit),this._TestPoints[i].y - (30*unit),60*unit,60*unit);
+            this.ctx.lineTo(this._TestPoints[i].x,this._TestPoints[i].y);
         }
-        this.Ctx.stroke();*/
+        this.ctx.stroke();*/
     }
 }

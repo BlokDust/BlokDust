@@ -42,12 +42,12 @@ export class Block extends DisplayObject implements IBlock {
     //  SETUP
     //-------------------------------------------------------------------------------------------
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Chain = new AudioChain();
 
-        this.Update();
+        this.update();
     }
 
     PopulateParams(log?: boolean) {
@@ -85,17 +85,17 @@ export class Block extends DisplayObject implements IBlock {
     //  LOOPS
     //-------------------------------------------------------------------------------------------
 
-    Update() {
+    update() {
     }
 
-    Draw() {
-        super.Draw();
-        this.Ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
+    draw() {
+        super.draw();
+        this.ctx.globalAlpha = this.IsPressed && this.IsSelected ? 0.5 : 1;
     }
 
     // todo: use types instead of strings!
     DrawSprite(type: string, option?: any) {
-        App.BlockSprites.DrawSprite((<MainScene>this.DrawTo).BlocksContainer, this.Position, true, type.toLowerCase(), option);
+        App.BlockSprites.DrawSprite((<MainScene>this.drawTo).BlocksContainer, this.Position, true, type.toLowerCase(), option);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ export class Block extends DisplayObject implements IBlock {
 
     MouseDown() {
         this.IsPressed = true;
-        this.LastPosition = this.Position.Clone();
+        this.LastPosition = this.Position.clone();
         this.Click.raise(this, new RoutedEventArgs());
     }
 
@@ -122,7 +122,7 @@ export class Block extends DisplayObject implements IBlock {
 
             // ALT-DRAG COPY
             if (App.CommandsInputManager.IsKeyCodeDown(KeyCodes.KeyDown.Alt) && this.Duplicable) {
-                (<MainScene>this.DrawTo).CreateBlockFromType(this.Type,this.Params); //TODO: TS5 reflection
+                (<MainScene>this.drawTo).CreateBlockFromType(this.Type,this.Params); //TODO: TS5 reflection
                 this.MouseUp();
             }
             // MOVE //
@@ -143,25 +143,25 @@ export class Block extends DisplayObject implements IBlock {
     //-------------------------------------------------------------------------------------------
 
     HitTest(point: Point): boolean {
-        this.Ctx.beginPath();
+        this.ctx.beginPath();
         this.DrawMoveTo(this.Outline[0].x, this.Outline[0].y);
         for (var i = 1; i < this.Outline.length; i++) {
             this.DrawLineTo(this.Outline[i].x, this.Outline[i].y);
         }
-        this.Ctx.closePath();
-        return this.Ctx.isPointInPath(point.x, point.y);
+        this.ctx.closePath();
+        return this.ctx.isPointInPath(point.x, point.y);
     }
 
     DrawMoveTo(x, y) {
         var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
         p = App.Metrics.PointOnGrid(p);
-        this.Ctx.moveTo(p.x, p.y);
+        this.ctx.moveTo(p.x, p.y);
     }
 
     DrawLineTo(x, y) {
         var p = App.Metrics.GetRelativePoint(this.Position, new Point(x, y));
         p = App.Metrics.PointOnGrid(p);
-        this.Ctx.lineTo(p.x, p.y);
+        this.ctx.lineTo(p.x, p.y);
     }
 
     ParticleCollision(particle: Particle) {
@@ -224,6 +224,6 @@ export class Block extends DisplayObject implements IBlock {
     //-------------------------------------------------------------------------------------------
 
     Dispose() {
-        super.Dispose();
+        super.dispose();
     }
 }

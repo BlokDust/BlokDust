@@ -8,8 +8,8 @@ import {Source} from '../Source';
 
 export class PowerSource extends Source implements IPowerSource {
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
     }
 
     UpdateConnections() {}

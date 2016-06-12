@@ -19,7 +19,7 @@ export class Sample extends SamplerBase {
     private _FallBackTrack: SoundCloudTrack;
     public LoadTimeout: any;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.Sample.name;
 
@@ -53,7 +53,7 @@ export class Sample extends SamplerBase {
         this.Searching = false;
         this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
@@ -313,8 +313,8 @@ export class Sample extends SamplerBase {
 
 
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

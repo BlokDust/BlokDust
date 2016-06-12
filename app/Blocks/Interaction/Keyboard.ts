@@ -12,8 +12,8 @@ export class Keyboard extends Controller {
 
     public KeysDown: any;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.KeysDown = {};
     }
@@ -22,8 +22,8 @@ export class Keyboard extends Controller {
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -70,7 +70,7 @@ export class Keyboard extends Controller {
                 }
                 
             });
-            App.Audio.ConnectionManager.Update();
+            App.Audio.ConnectionManager.update();
         }
 
         this.Params[param] = value;

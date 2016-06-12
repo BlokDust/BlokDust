@@ -1,7 +1,7 @@
 require.config({
     baseUrl: "./",
     paths: {
-        "App": "App",
+        "app": "App",
         "etch": "lib/etch/dist/etch",
         "exjs": "lib/exjs/dist/ex",
         "extensions": "lib/extensions/dist/extensions",
@@ -31,7 +31,7 @@ require.config({
 
 require([
     "text",
-    "App",
+    "app",
     "text!config.json",
     "text!l10n.json",
     "PixelPalette",
@@ -69,12 +69,12 @@ require([
     "Tone/component/Meter",
     "Tone/component/Mono",
     "utils"
-], function (text, App, config, l10n, PixelPalette, Tone) {
+], function (text, app, config, l10n, PixelPalette, Tone) {
     window.PixelPalette = PixelPalette;
     window.Tone = Tone;
 
     $(document).ready(function() {
-        window.App = new App.default(config, l10n);
-        window.App.Setup();
+        window.App = new app.default(config, l10n);
+        window.App.setup();
     });
 });

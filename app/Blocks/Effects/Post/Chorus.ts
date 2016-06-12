@@ -13,7 +13,7 @@ export class Chorus extends PostEffect {
     public Effect: Tone.Chorus;
     public Params: ChorusParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Chorus.name;
 
@@ -34,14 +34,14 @@ export class Chorus extends PostEffect {
             "feedback" : this.Params.feedback
         });
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(0, -1),new Point(1, 0),new Point(0, 1),new Point(-1, 1));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

@@ -10,19 +10,19 @@ export class TrashCan extends DisplayObject {
 
     private _RollOver: boolean;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this._RollOver = false;
     }
 
-    Draw() {
+    draw() {
         var units = App.Unit;
-        var ctx = this.Ctx;
-        var tx = (<MainScene>this.DrawTo).Width - (30*units);
-        var ty = (<MainScene>this.DrawTo).Height - (30*units);
+        var ctx = this.ctx;
+        var tx = (<MainScene>this.drawTo).width - (30*units);
+        var ty = (<MainScene>this.drawTo).height - (30*units);
         var s = 1;
-        if (this._RollOver && (<MainScene>this.DrawTo).IsDraggingABlock) {
+        if (this._RollOver && (<MainScene>this.drawTo).IsDraggingABlock) {
             s = 1.2;
         }
 
@@ -51,12 +51,12 @@ export class TrashCan extends DisplayObject {
 
     MouseMove(point) {
         var units = App.Unit;
-        this._RollOver = Dimensions.hitRect((<MainScene>this.DrawTo).Width - (60*units),(<MainScene>this.DrawTo).Height - (60*units),(60*units), (60*units), point.x, point.y);
+        this._RollOver = Dimensions.hitRect((<MainScene>this.drawTo).width - (60*units),(<MainScene>this.drawTo).height - (60*units),(60*units), (60*units), point.x, point.y);
     }
 
     MouseUp() {
         if (this._RollOver) {
-            (<MainScene>this.DrawTo).DeleteSelectedBlock();
+            (<MainScene>this.drawTo).DeleteSelectedBlock();
             return true;
         }
         return false;

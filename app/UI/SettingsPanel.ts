@@ -37,11 +37,11 @@ export class SettingsPanel extends DisplayObject{
     public SliderColours: string[];
     private _CopyJson: any;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Open = false;
-        this.OffsetY = -this.DrawTo.Height;
+        this.OffsetY = -this.drawTo.height;
 
         this._RollOvers = [];
         this.Height = 60;
@@ -111,7 +111,7 @@ export class SettingsPanel extends DisplayObject{
 
     Populate(json) {
         var units = App.Unit;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var dataType = units*10;
         var gutter = 60;
         var menuCats = [];
@@ -127,7 +127,7 @@ export class SettingsPanel extends DisplayObject{
         ctx.font = "400 " + dataType + "px Dosis";
         ctx.textAlign = "left";
         var catWidth = [];
-        var menuWidth = (this.DrawTo.Width/7)*4;
+        var menuWidth = (this.drawTo.width/7)*4;
 
         // total text width //
         for (var i=0; i<n; i++) {
@@ -135,7 +135,7 @@ export class SettingsPanel extends DisplayObject{
         }
 
         // start x for positioning //
-        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
+        var catX = ((this.drawTo.width*0.5) - (menuWidth*0.5));
 
 
         // POPULATE MENU //
@@ -143,7 +143,7 @@ export class SettingsPanel extends DisplayObject{
             var name = json.categories[i].name.toUpperCase();
             var point = new Point(catX + (catWidth[i]*0.5),0);
             var size = new Size(catWidth[i],16);
-            var offset = -this.DrawTo.Height;
+            var offset = -this.drawTo.height;
             if (this._OpenTab===i) {
                 offset = 0;
             }
@@ -172,9 +172,9 @@ export class SettingsPanel extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
+    draw() {
 
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var midType = App.Metrics.TxtMid;
         var headType = App.Metrics.TxtHeader;
         var largeType = App.Metrics.TxtLarge;
@@ -522,7 +522,7 @@ export class SettingsPanel extends DisplayObject{
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.font = italicType2;
             ctx.textAlign = "right";
-            ctx.fillText(this._Attribution.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
+            ctx.fillText(this._Attribution.build, this.drawTo.width - (20*units), this.OffsetY + this.drawTo.height - (20 * units));
 
 
             // DIVIDERS //
@@ -625,7 +625,7 @@ export class SettingsPanel extends DisplayObject{
 
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -635,14 +635,14 @@ export class SettingsPanel extends DisplayObject{
 
     OpenPanel() {
         this.Open = true;
-        this.OffsetY = -this.DrawTo.Height;
+        this.OffsetY = -this.drawTo.height;
         this.DelayTo(this,0,500,0,"OffsetY");
         this.MenuItems[this._OpenTab].YOffset = 0;
         //this.Populate();
     }
 
     ClosePanel() {
-        this.DelayTo(this,-this.DrawTo.Height,500,0,"OffsetY");
+        this.DelayTo(this,-this.drawTo.height,500,0,"OffsetY");
     }
 
     PopulateOptions() {
@@ -651,18 +651,18 @@ export class SettingsPanel extends DisplayObject{
         var optionNames = ["Color Theme","Master Volume","DB Meter","Tour"];
 
         var units = App.Unit;
-        var centerY = this.OffsetY + (this.DrawTo.Height * 0.5);
+        var centerY = this.OffsetY + (this.drawTo.height * 0.5);
         var tabY = this.OffsetY;
         var pageY = tabY + (120*units);
-        var dx = (this.DrawTo.Width*0.5);
-        var menuWidth = (this.DrawTo.Width/7)*4;
+        var dx = (this.drawTo.width*0.5);
+        var menuWidth = (this.drawTo.width/7)*4;
         var halfWidth = menuWidth*0.5;
 
         // MARGIN WIDTH //
         var mw = 0;
-        this.Ctx.font = App.Metrics.TxtMid;
+        this.ctx.font = App.Metrics.TxtMid;
         for (var i=0;i<optionNames.length;i++) {
-            var nw = this.Ctx.measureText(optionNames[i].toUpperCase()).width;
+            var nw = this.ctx.measureText(optionNames[i].toUpperCase()).width;
             if (nw > mw) {
                 mw = nw;
             }
@@ -762,7 +762,7 @@ export class SettingsPanel extends DisplayObject{
                     if (j!==i) {
                         var cat = this.MenuItems[j];
                         this.DelayTo(cat,0,250,0,"Selected");
-                        this.DelayTo(cat,-this.DrawTo.Height,250,0,"YOffset");
+                        this.DelayTo(cat,-this.drawTo.height,250,0,"YOffset");
                     }
                 }
                 return;
@@ -829,12 +829,12 @@ export class SettingsPanel extends DisplayObject{
 
     HitTests(point) {
         var units = App.Unit;
-        var centerY = this.OffsetY + (this.DrawTo.Height * 0.5);
+        var centerY = this.OffsetY + (this.drawTo.height * 0.5);
         var tabY = this.OffsetY;
         var pageY = tabY + (120*units);
         var closeY = tabY + (30*units);
-        var dx = (this.DrawTo.Width*0.5);
-        var menuWidth = (this.DrawTo.Width/7)*4;
+        var dx = (this.drawTo.width*0.5);
+        var menuWidth = (this.drawTo.width/7)*4;
         var halfWidth = menuWidth*0.5;
         var gutter = (40*units);
         var thirdWidth = (menuWidth - (gutter*2))/3;
@@ -903,11 +903,11 @@ export class SettingsPanel extends DisplayObject{
     // DRAGGING A SLIDER //
     SliderSet(n,mx) {
         var units = App.Unit;
-        var centerY = this.OffsetY + (this.DrawTo.Height * 0.5);
+        var centerY = this.OffsetY + (this.drawTo.height * 0.5);
         var tabY = this.OffsetY;
         var pageY = tabY + (120*units);
-        var dx = (this.DrawTo.Width*0.5);
-        var menuWidth = (this.DrawTo.Width/7)*4;
+        var dx = (this.drawTo.width*0.5);
+        var menuWidth = (this.drawTo.width/7)*4;
         var halfWidth = menuWidth*0.5;
 
         this.Options[n].Position.x = mx - this.Margin;
@@ -998,7 +998,7 @@ export class SettingsPanel extends DisplayObject{
     }
 
 
-    Resize() {
+    resize() {
     }
 
 }

@@ -6,8 +6,8 @@ export class PowerEffect extends Effect implements IPowerEffect {
 
     protected OldConnections: ISource[] = [];
 
-    Init(sketch?: any): void {
-        super.Init(sketch);
+    init(drawTo?: any): void {
+        super.init(drawTo);
     }
 
     UpdateConnections() {}

@@ -13,7 +13,7 @@ export class Envelope extends PreEffect {
     public Params: EnvelopeParams;
     public Defaults: EnvelopeParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Effect.Blocks.Envelope.name;
 
@@ -26,14 +26,14 @@ export class Envelope extends PreEffect {
 
         this.PopulateParams();
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, -1),new Point(1, -1),new Point(1, 1),new Point(0, 2),new Point(-1, 1));
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

@@ -70,9 +70,9 @@ export class MainScene extends DisplayObject{
         super();
     }
 
-    Setup(){
+    setup(){
 
-        super.Setup();
+        super.setup();
 
         App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
             this.MouseDown(e);
@@ -153,80 +153,80 @@ export class MainScene extends DisplayObject{
         // Display Objects //
 
         this.ConnectionLines = new ConnectionLines();
-        this.DisplayList.Add(this.ConnectionLines);
-        this.ConnectionLines.Init(this);
+        this.displayList.add(this.ConnectionLines);
+        this.ConnectionLines.init(this);
 
         this.BlocksContainer = new DisplayObject();
-        this.DisplayList.Add(this.BlocksContainer);
-        this.BlocksContainer.Init(this);
+        this.displayList.add(this.BlocksContainer);
+        this.BlocksContainer.init(this);
 
         this.LaserBeams = new LaserBeams();
-        this.DisplayList.Add(this.LaserBeams);
-        this.LaserBeams.Init(this);
+        this.displayList.add(this.LaserBeams);
+        this.LaserBeams.init(this);
 
         this.Particles = new ParticleLayer();
-        this.DisplayList.Add(this.Particles);
-        this.Particles.Init(this);
+        this.displayList.add(this.Particles);
+        this.Particles.init(this);
 
         this._ToolTip = new ToolTip();
-        this.DisplayList.Add(this._ToolTip);
-        this._ToolTip.Init(this);
+        this.displayList.add(this._ToolTip);
+        this._ToolTip.init(this);
 
         this.AnimationsLayer = new AnimationsLayer();
-        this.DisplayList.Add(this.AnimationsLayer);
-        this.AnimationsLayer.Init(this);
+        this.displayList.add(this.AnimationsLayer);
+        this.AnimationsLayer.init(this);
 
         this._RecorderPanel = new RecorderPanel();
-        this.DisplayList.Add(this._RecorderPanel);
-        this._RecorderPanel.Init(this);
+        this.displayList.add(this._RecorderPanel);
+        this._RecorderPanel.init(this);
 
         this.ZoomButtons = new ZoomButtons();
-        this.DisplayList.Add(this.ZoomButtons);
-        this.ZoomButtons.Init(this);
+        this.displayList.add(this.ZoomButtons);
+        this.ZoomButtons.init(this);
 
         this.MainSceneDragger = new MainSceneDragger();
-        this.DisplayList.Add(this.MainSceneDragger);
-        this.MainSceneDragger.Init(this);
+        this.displayList.add(this.MainSceneDragger);
+        this.MainSceneDragger.init(this);
 
         this._TrashCan = new TrashCan();
-        this.DisplayList.Add(this._TrashCan);
-        this._TrashCan.Init(this);
+        this.displayList.add(this._TrashCan);
+        this._TrashCan.init(this);
 
         this.Tutorial = new Tutorial();
-        this.DisplayList.Add(this.Tutorial);
-        this.Tutorial.Init(this);
+        this.displayList.add(this.Tutorial);
+        this.Tutorial.init(this);
 
         this.OptionsPanel = new OptionsPanel();
-        this.DisplayList.Add(this.OptionsPanel);
-        this.OptionsPanel.Init(this);
+        this.displayList.add(this.OptionsPanel);
+        this.OptionsPanel.init(this);
 
         this.Header = new Header();
-        this.DisplayList.Add(this.Header);
-        this.Header.Init(this);
+        this.displayList.add(this.Header);
+        this.Header.init(this);
 
         this.CreateNew = new CreateNew();
-        this.DisplayList.Add(this.CreateNew);
-        this.CreateNew.Init(this);
+        this.displayList.add(this.CreateNew);
+        this.CreateNew.init(this);
 
         this.TutorialHotspots = new TutorialHotspots();
-        this.DisplayList.Add(this.TutorialHotspots);
-        this.TutorialHotspots.Init(this);
+        this.displayList.add(this.TutorialHotspots);
+        this.TutorialHotspots.init(this);
 
         this.SharePanel = new SharePanel();
-        this.DisplayList.Add(this.SharePanel);
-        this.SharePanel.Init(this);
+        this.displayList.add(this.SharePanel);
+        this.SharePanel.init(this);
 
         this.SettingsPanel = new SettingsPanel();
-        this.DisplayList.Add(this.SettingsPanel);
-        this.SettingsPanel.Init(this);
+        this.displayList.add(this.SettingsPanel);
+        this.SettingsPanel.init(this);
 
         this.SoundcloudPanel = new SoundcloudPanel();
-        this.DisplayList.Add(this.SoundcloudPanel);
-        this.SoundcloudPanel.Init(this);
+        this.displayList.add(this.SoundcloudPanel);
+        this.SoundcloudPanel.init(this);
 
         this.MessagePanel = new MessagePanel();
-        this.DisplayList.Add(this.MessagePanel);
-        this.MessagePanel.Init(this);
+        this.displayList.add(this.MessagePanel);
+        this.MessagePanel.init(this);
 
         this._Invalidate();
 
@@ -241,22 +241,22 @@ export class MainScene extends DisplayObject{
     //  UPDATE
     //-------------------------------------------------------------------------------------------
 
-    Update() {
-        if (this.IsPaused) return;
-        super.Update();
+    update() {
+        if (this.isPaused) return;
+        super.update();
     }
 
     //-------------------------------------------------------------------------------------------
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-    Draw(): void {
-        super.Draw();
+    draw(): void {
+        super.draw();
 
         // BG //
-        App.FillColor(this.Ctx,App.Palette[0]);
-        this.Ctx.globalAlpha = 1;
-        this.Ctx.fillRect(0, 0, this.Width, this.Height);
+        App.FillColor(this.ctx,App.Palette[0]);
+        this.ctx.globalAlpha = 1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
 
@@ -466,7 +466,7 @@ export class MainScene extends DisplayObject{
 
     private _PointerMove(point: Point){
         App.Metrics.ConvertToPixelRatioPoint(point);
-        App.Canvas.Style.cursor = "default";
+        App.Canvas.style.cursor = "default";
 
         this._CheckHover(point);
 
@@ -541,7 +541,7 @@ export class MainScene extends DisplayObject{
                             source.AddEffect(effect);
 
                             this._Invalidate();
-                            App.Audio.ConnectionManager.Update();
+                            App.Audio.ConnectionManager.update();
                         }
                     }
                 } else {
@@ -556,7 +556,7 @@ export class MainScene extends DisplayObject{
                         source.RemoveEffect(effect);
 
                         this._Invalidate();
-                        App.Audio.ConnectionManager.Update();
+                        App.Audio.ConnectionManager.update();
                     }
                 }
             }
@@ -704,7 +704,7 @@ export class MainScene extends DisplayObject{
     }
 
     BlockToFront(block: IBlock){
-        this.BlocksContainer.DisplayList.ToFront(block);
+        this.BlocksContainer.displayList.toFront(block);
     }
 
     private _Invalidate(){
@@ -746,7 +746,7 @@ export class MainScene extends DisplayObject{
         //    (<any>block).Duplicate((<any>block).BufferSource.buffer);
         //}
 
-        block.Init(this);
+        block.init(this);
         block.Type = t;
 
         App.CommandManager.ExecuteCommand(Commands.CREATE_BLOCK, block);
@@ -762,12 +762,12 @@ export class MainScene extends DisplayObject{
     CompositionLoaded(e: CompositionLoadedEventArgs): void {
 
         // add blocks to display list
-        this.BlocksContainer.DisplayList.AddRange(App.Blocks);
+        this.BlocksContainer.displayList.addRange(App.Blocks);
 
         // initialise blocks (give them a ctx to draw to)
-        for (var i = 0; i < this.BlocksContainer.DisplayList.Count; i++){
-            var block: IBlock = <IBlock>this.BlocksContainer.DisplayList.GetValueAt(i);
-            block.Init(this);
+        for (var i = 0; i < this.BlocksContainer.displayList.Count; i++){
+            var block: IBlock = <IBlock>this.BlocksContainer.displayList.GetValueAt(i);
+            block.init(this);
         }
 
         if (this.MainSceneDragger) {
@@ -784,7 +784,7 @@ export class MainScene extends DisplayObject{
 
         // Fade In Audio //
         setTimeout(() => {
-            this.Play();
+            this.play();
             this.ConnectionLines.UpdateList();
             // App.Audio.Master.volume.linearRampToValue(App.Audio.MasterVolume,5); //This breaks audio volume slider
         }, 2400);
@@ -824,7 +824,7 @@ export class MainScene extends DisplayObject{
 
 
     DeleteBlock(block) {
-        this.BlocksContainer.DisplayList.Remove(block);
+        this.BlocksContainer.displayList.Remove(block);
         App.Blocks.remove(block);
         //this.SelectedBlock.Stop(); //LP commented this out because if you have a keyboard and a source connected and call reset you get errors
         block.Dispose();
@@ -870,7 +870,7 @@ export class MainScene extends DisplayObject{
         this._Invalidate();
     }
 
-    Resize(): void {
+    resize(): void {
         this.OptionsPanel.Close();
         this.Header.Populate(this.Header.MenuJson);
         this.SettingsPanel.Populate(this.SettingsPanel.MenuJson);

@@ -33,7 +33,7 @@ export class Granular extends Source {
     public Params: GranularParams;
     public Defaults: GranularParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.Granular.name;
 
@@ -66,7 +66,7 @@ export class Granular extends Source {
         this.Searching = false;
         this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         //this.Params.track = SoundCloudAudio.PickRandomTrack(SoundCloudAudioType.Granular);
 
@@ -244,8 +244,8 @@ export class Granular extends Source {
         }
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
 
         if (this.PlaybackSignal) {
             var value = this.PlaybackSignal.UpdateValue();
@@ -258,8 +258,8 @@ export class Granular extends Source {
         }
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

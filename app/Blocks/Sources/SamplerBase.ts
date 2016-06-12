@@ -10,8 +10,8 @@ export class SamplerBase extends Source {
     public PrimaryBuffer: any;
     public ReverseBuffer: any;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
         this.CreateSource();
         this.CreateFirstVoice();
 
@@ -44,8 +44,8 @@ export class SamplerBase extends Source {
         }
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
 
         if (this.PlaybackSignal) {
             var value = this.PlaybackSignal.UpdateValue();

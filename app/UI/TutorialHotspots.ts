@@ -12,8 +12,8 @@ export class TutorialHotspots extends DisplayObject{
     private _Pulse: number;
     private _Polarity: number;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this._Pulse = 0;
         this._Polarity = 1;
@@ -25,7 +25,7 @@ export class TutorialHotspots extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Update() {
+    update() {
         if (this.Points.length) {
 
             if (this._Polarity===1) {
@@ -48,11 +48,11 @@ export class TutorialHotspots extends DisplayObject{
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
-        var ctx = this.Ctx;
+    draw() {
+        var ctx = this.ctx;
         var units = App.Unit;
 
-        this.Ctx.globalAlpha = 1;
+        this.ctx.globalAlpha = 1;
         App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
         App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
 
@@ -77,7 +77,7 @@ export class TutorialHotspots extends DisplayObject{
                 ctx.fill();
 
                 // LINE //
-                this.Ctx.lineWidth = 2;
+                this.ctx.lineWidth = 2;
                 var size = 4 + (this._Pulse*0.06) + (Math.random());
                 ctx.beginPath();
                 ctx.moveTo(x, y - (size*units));

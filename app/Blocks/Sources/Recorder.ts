@@ -17,7 +17,7 @@ export class Recorder extends SamplerBase {
     public Params: SamplerParams;
     public Defaults: SamplerParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
 
         this.BlockName = App.L10n.Blocks.Source.Blocks.Recorder.name;
 
@@ -39,7 +39,7 @@ export class Recorder extends SamplerBase {
 
         this._WaveForm = [];
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         this.BufferSource = App.Audio.ctx.createBufferSource();
 
@@ -62,12 +62,12 @@ export class Recorder extends SamplerBase {
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(2, 1),new Point(1, 2));
     }
 
-    Update() {
-        super.Update();
+    update() {
+        super.update();
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

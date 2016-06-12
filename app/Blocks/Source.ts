@@ -53,8 +53,8 @@ export class Source extends Block implements ISource {
     public PlaybackSignal: any;
     public PowerAmount: number = 0;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Sources = [];
         this.Envelopes = [];

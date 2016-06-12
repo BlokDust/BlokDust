@@ -33,8 +33,8 @@ export class Header extends DisplayObject {
     public Rows: number;
     public Tweens: any[];
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this._Units = 1.7;
         this.Height = App.Metrics.HeaderHeight;
@@ -79,25 +79,25 @@ export class Header extends DisplayObject {
         }
 
         this.ItemsPerPage = App.Metrics.ItemsPerPage;
-        this.DropDownHeight = (this.DrawTo.Width / (this.ItemsPerPage + 1)) / units;
+        this.DropDownHeight = (this.drawTo.width / (this.ItemsPerPage + 1)) / units;
 
         // GET NUMBER OF CATEGORIES //
         var n = json.categories.length;
 
         // GET MENU & CATEGORY WIDTHS //
-        this.Ctx.font = "400 " + dataType + "px Dosis";
-        this.Ctx.textAlign = "left";
+        this.ctx.font = "400 " + dataType + "px Dosis";
+        this.ctx.textAlign = "left";
         var catWidth = [];
         var menuWidth = 0;
 
         // total text width //
         for (var i=0; i<n; i++) {
-            catWidth[i] = this.Ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);
+            catWidth[i] = this.ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);
             menuWidth += catWidth[i];
         }
 
         // start x for positioning //
-        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));
+        var catX = ((this.drawTo.width*0.5) - (menuWidth*0.5));
         var rowOffset = ((this.Rows-1)*this.Height)*units;
 
         // POPULATE MENU //
@@ -122,7 +122,7 @@ export class Header extends DisplayObject {
                 var point = new Point(0,((this.Height + (this.DropDownHeight*0.5))*units) + rowOffset);
                 var size = new Size(this.DropDownHeight*units,this.DropDownHeight*units);
 
-                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.DrawTo));
+                menuCats[i].Items.push(new MenuItem(point,size,name,id,description, <MainScene>this.drawTo));
             }
 
         }
@@ -135,8 +135,8 @@ export class Header extends DisplayObject {
     //  DRAW
     //-------------------------------------------------------------------------------------------
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
 
         var units = App.Unit;
         var dataType = units*10;
@@ -146,83 +146,83 @@ export class Header extends DisplayObject {
         var rowOffset = ((this.Rows-1)*this.Height)*units;
 
         // BG //
-        App.FillColor(this.Ctx,App.Palette[2]);
+        App.FillColor(this.ctx,App.Palette[2]);
 
-        this.Ctx.globalAlpha = 0.16;
-        this.Ctx.fillRect(0,0,this.DrawTo.Width,thisHeight + (5*units) + dropDown + rowOffset); // shadow
-        this.Ctx.globalAlpha = 0.9; //0.9
-        this.Ctx.fillRect(0,0,this.DrawTo.Width,thisHeight  + dropDown + rowOffset); // solid
+        this.ctx.globalAlpha = 0.16;
+        this.ctx.fillRect(0,0,this.drawTo.width,thisHeight + (5*units) + dropDown + rowOffset); // shadow
+        this.ctx.globalAlpha = 0.9; //0.9
+        this.ctx.fillRect(0,0,this.drawTo.width,thisHeight  + dropDown + rowOffset); // solid
 
         // TT //
-        this.Ctx.globalAlpha = 1;
-        App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
-        this.Ctx.font = "200 " + headerType + "px Dosis";
+        this.ctx.globalAlpha = 1;
+        App.FillColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
+        this.ctx.font = "200 " + headerType + "px Dosis";
 
         if (this.Rows>1) {
-            this.Ctx.textAlign = "center";
-            this.Ctx.fillText("BLOKDUST", App.Width*0.5, (thisHeight * 0.5) + (headerType * 0.38));
+            this.ctx.textAlign = "center";
+            this.ctx.fillText("BLOKDUST", App.Width*0.5, (thisHeight * 0.5) + (headerType * 0.38));
         } else {
-            this.Ctx.textAlign = "left";
-            this.Ctx.fillText("BLOKDUST", (20 + this.CreateNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38));
+            this.ctx.textAlign = "left";
+            this.ctx.fillText("BLOKDUST", (20 + this.CreateNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38));
         }
 
         // DIVIDERS //
-        App.StrokeColor(this.Ctx,App.Palette[1]);
-        this.Ctx.globalAlpha = 1;
-        this.Ctx.lineWidth = 1;
+        App.StrokeColor(this.ctx,App.Palette[1]);
+        this.ctx.globalAlpha = 1;
+        this.ctx.lineWidth = 1;
 
         // Horizontal //
         if (dropDown>0) {
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(20*units,thisHeight + rowOffset);
-            this.Ctx.lineTo(this.DrawTo.Width-(20*units),thisHeight + rowOffset);
-            this.Ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(20*units,thisHeight + rowOffset);
+            this.ctx.lineTo(this.drawTo.width-(20*units),thisHeight + rowOffset);
+            this.ctx.stroke();
         }
 
         if (this.Rows>1) {
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(20*units,thisHeight);
-            this.Ctx.lineTo(this.DrawTo.Width-(20*units),thisHeight);
-            this.Ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(20*units,thisHeight);
+            this.ctx.lineTo(this.drawTo.width-(20*units),thisHeight);
+            this.ctx.stroke();
         }
 
         // Vertical //
         var margin = this.DropDownHeight*0.5;
-        this.Ctx.beginPath();
+        this.ctx.beginPath();
         for (var i=0;i<this.MenuItems.length;i++) {
             var cat = this.MenuItems[i];
             var menuX = cat.Position.x;
             if (i > 0) {
-                this.Ctx.moveTo(Math.round(menuX - (cat.Size.width*0.5)), rowOffset + (thisHeight * 0.5) - (16 * units));
-                this.Ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), rowOffset + (thisHeight * 0.5) + (16 * units));
+                this.ctx.moveTo(Math.round(menuX - (cat.Size.width*0.5)), rowOffset + (thisHeight * 0.5) - (16 * units));
+                this.ctx.lineTo(Math.round(menuX - (cat.Size.width*0.5)), rowOffset + (thisHeight * 0.5) + (16 * units));
             }
         }
 
         // between share & settings //
-        this.Ctx.moveTo(Math.round(this.DrawTo.Width - (margin * units)), (thisHeight * 0.5) - (16 * units));
-        this.Ctx.lineTo(Math.round(this.DrawTo.Width - (margin * units)), (thisHeight * 0.5) + (16 * units));
-        this.Ctx.stroke();
+        this.ctx.moveTo(Math.round(this.drawTo.width - (margin * units)), (thisHeight * 0.5) - (16 * units));
+        this.ctx.lineTo(Math.round(this.drawTo.width - (margin * units)), (thisHeight * 0.5) + (16 * units));
+        this.ctx.stroke();
 
         // CATEGORIES //
-        this.Ctx.textAlign = "center";
-        this.Ctx.font = "400 " + dataType + "px Dosis";
+        this.ctx.textAlign = "center";
+        this.ctx.font = "400 " + dataType + "px Dosis";
 
         for (var i=0;i<this.MenuItems.length;i++) {
-             this.Ctx.globalAlpha = 1;
+             this.ctx.globalAlpha = 1;
              cat = this.MenuItems[i];
 
             // SELECTION COLOUR //
             var col = this._MenuCols[i - (Math.floor(i/this._MenuCols.length)*(this._MenuCols.length))];
-            App.FillColor(this.Ctx,App.Palette[col]);
+            App.FillColor(this.ctx,App.Palette[col]);
 
             // DRAW CAT HEADER //
-            cat.Draw(this.Ctx, units, this,rowOffset);
+            cat.Draw(this.ctx, units, this,rowOffset);
 
             // ITEMS //
             if (this.DropDown > 0 && cat.YOffset<this.DropDownHeight) {
                 var itemN = cat.Items.length;
                 margin = 20 + (this.Margin*0.666);
-                this.Ctx.lineWidth = 1;
+                this.ctx.lineWidth = 1;
 
                 // CLIPPING RECTANGLE //
 
@@ -231,33 +231,33 @@ export class Header extends DisplayObject {
                     clipHeight = 0;
                 }
 
-                this.Ctx.save();
-                this.Ctx.beginPath();
-                this.Ctx.moveTo(Math.floor(margin*units),(this.Height*units) + rowOffset);
-                this.Ctx.lineTo(Math.ceil(this.DrawTo.Width - (margin*units)),(this.Height*units) + rowOffset);
-                this.Ctx.lineTo(Math.ceil(this.DrawTo.Width - (margin*units)),((this.Height + clipHeight)*units) + rowOffset);
-                this.Ctx.lineTo(Math.floor(margin*units),((this.Height + clipHeight)*units) + rowOffset);
-                this.Ctx.closePath();
-                this.Ctx.clip();
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.moveTo(Math.floor(margin*units),(this.Height*units) + rowOffset);
+                this.ctx.lineTo(Math.ceil(this.drawTo.width - (margin*units)),(this.Height*units) + rowOffset);
+                this.ctx.lineTo(Math.ceil(this.drawTo.width - (margin*units)),((this.Height + clipHeight)*units) + rowOffset);
+                this.ctx.lineTo(Math.floor(margin*units),((this.Height + clipHeight)*units) + rowOffset);
+                this.ctx.closePath();
+                this.ctx.clip();
 
                 // DRAW ITEMS //
                 for (var j=0; j<itemN; j++) {
                     var xPos = (margin + (this.DropDownHeight*0.5) + (this.DropDownHeight*j) + cat.XOffset)*units;
                     var yPos = cat.YOffset;
                     cat.Items[j].Position.x = xPos; // TODO: shouldn't really be setting position in Draw, but worth setting up update?
-                    if (xPos > 0 && xPos < this.DrawTo.Width) {
+                    if (xPos > 0 && xPos < this.drawTo.width) {
                         cat.Items[j].Draw(this, units, xPos, yPos);
                     }
                 }
 
                 // END CLIP //
-                this.Ctx.restore();
+                this.ctx.restore();
 
                 // DRAW GHOST ITEM //
                 for (var j=0; j<itemN; j++) {
 
                     if (cat.Items[j].MouseIsDown && cat.Items[j].InfoOffset==0) {
-                        this.Ctx.globalAlpha = 0.5;
+                        this.ctx.globalAlpha = 0.5;
                         App.BlockSprites.DrawSprite(this, cat.Items[j].MousePoint, false, cat.Items[j].Name.toLowerCase());
                     }
                 }
@@ -271,101 +271,101 @@ export class Header extends DisplayObject {
             margin = this.Margin;
 
             // PAGINATION //
-            App.StrokeColor(this.Ctx,App.Palette[1]);
-            this.Ctx.lineWidth = 2;
+            App.StrokeColor(this.ctx,App.Palette[1]);
+            this.ctx.lineWidth = 2;
 
             // CLIPPING RECTANGLE //
-            this.Ctx.save();
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(0, (this.Height * units) + rowOffset);
-            this.Ctx.lineTo(this.DrawTo.Width, (this.Height * units) + rowOffset);
-            this.Ctx.lineTo(this.DrawTo.Width, ((this.Height + this.DropDown) * units) + rowOffset);
-            this.Ctx.lineTo(0, ((this.Height + this.DropDown) * units) + rowOffset);
-            this.Ctx.closePath();
-            this.Ctx.clip();
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, (this.Height * units) + rowOffset);
+            this.ctx.lineTo(this.drawTo.width, (this.Height * units) + rowOffset);
+            this.ctx.lineTo(this.drawTo.width, ((this.Height + this.DropDown) * units) + rowOffset);
+            this.ctx.lineTo(0, ((this.Height + this.DropDown) * units) + rowOffset);
+            this.ctx.closePath();
+            this.ctx.clip();
 
-            App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
+            App.StrokeColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
             if (cat.CurrentPage == 0) {
-                App.StrokeColor(this.Ctx,App.Palette[1]);
+                App.StrokeColor(this.ctx,App.Palette[1]);
             }
 
             // LEFT ARROW //
-            this.Ctx.beginPath();
-            this.Ctx.moveTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
-            this.Ctx.lineTo((margin * units) - (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
-            this.Ctx.lineTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
-            this.Ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
+            this.ctx.lineTo((margin * units) - (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
+            this.ctx.lineTo((margin * units) - (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
+            this.ctx.stroke();
 
-            App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
+            App.StrokeColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
             if (cat.CurrentPage == cat.Pages) {
-                App.StrokeColor(this.Ctx,App.Palette[1]);
+                App.StrokeColor(this.ctx,App.Palette[1]);
             }
 
             // RIGHT ARROW //
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
-            this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
-            this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
-            this.Ctx.stroke();
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.drawTo.width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) - 20) * units) + rowOffset);
+            this.ctx.lineTo(this.drawTo.width - (margin * units) + (40 * units), ((this.Height + (this.DropDown * 0.5)) * units) + rowOffset);
+            this.ctx.lineTo(this.drawTo.width - (margin * units) + (20 * units), ((this.Height + (this.DropDown * 0.5) + 20) * units) + rowOffset);
+            this.ctx.stroke();
 
-            this.Ctx.restore();
+            this.ctx.restore();
         }
 
         // SETTINGS & SHARE HOVER //
-        var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
+        var btnWidth = this.ctx.measureText("SHARE").width + (40*units);
 
-        App.FillColor(this.Ctx,App.Palette[2]);
-        this.Ctx.globalAlpha = 0.9;
+        App.FillColor(this.ctx,App.Palette[2]);
+        this.ctx.globalAlpha = 0.9;
 
         if (this._ShareOver) {
-            var shx = this.DrawTo.Width - (margin * units) - (btnWidth*0.5);
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(shx - (10*units),this.Height*units);
-            this.Ctx.lineTo(shx,(this.Height + 10)*units);
-            this.Ctx.lineTo(shx + (10*units),this.Height*units);
-            this.Ctx.closePath();
-            this.Ctx.fill();
+            var shx = this.drawTo.width - (margin * units) - (btnWidth*0.5);
+            this.ctx.beginPath();
+            this.ctx.moveTo(shx - (10*units),this.Height*units);
+            this.ctx.lineTo(shx,(this.Height + 10)*units);
+            this.ctx.lineTo(shx + (10*units),this.Height*units);
+            this.ctx.closePath();
+            this.ctx.fill();
         }
 
         if (this._SettingsOver) {
-            var shx = this.DrawTo.Width - (margin * units) + (30*units);
-            this.Ctx.beginPath();
-            this.Ctx.moveTo(shx - (10*units),this.Height*units);
-            this.Ctx.lineTo(shx,(this.Height + 10)*units);
-            this.Ctx.lineTo(shx + (10*units),this.Height*units);
-            this.Ctx.closePath();
-            this.Ctx.fill();
+            var shx = this.drawTo.width - (margin * units) + (30*units);
+            this.ctx.beginPath();
+            this.ctx.moveTo(shx - (10*units),this.Height*units);
+            this.ctx.lineTo(shx,(this.Height + 10)*units);
+            this.ctx.lineTo(shx + (10*units),this.Height*units);
+            this.ctx.closePath();
+            this.ctx.fill();
         }
 
 
         // SETTINGS BTN //
-        this.Ctx.globalAlpha = 1;
+        this.ctx.globalAlpha = 1;
         margin = this.DropDownHeight*0.5;
-        App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
-        App.StrokeColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
-        this.Ctx.lineWidth = 2;
-        this.Ctx.beginPath();
-        this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) - 7) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) - 1) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (40 * units), ((this.Height*0.5) - 7) * units);
+        App.FillColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
+        App.StrokeColor(this.ctx,App.Palette[App.ThemeManager.Txt]);
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.drawTo.width - (margin * units) + (20 * units), ((this.Height*0.5) - 1) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) + (26.6 * units), ((this.Height*0.5) - 7) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) + (33.2 * units), ((this.Height*0.5) - 1) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) + (40 * units), ((this.Height*0.5) - 7) * units);
 
-        this.Ctx.moveTo(this.DrawTo.Width - (margin * units) + (20 * units), ((this.Height*0.5) + 7) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (26.6 * units), ((this.Height*0.5) + 1) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (33.2 * units), ((this.Height*0.5) + 7) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) + (40 * units), ((this.Height*0.5) + 1) * units);
+        this.ctx.moveTo(this.drawTo.width - (margin * units) + (20 * units), ((this.Height*0.5) + 7) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) + (26.6 * units), ((this.Height*0.5) + 1) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) + (33.2 * units), ((this.Height*0.5) + 7) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) + (40 * units), ((this.Height*0.5) + 1) * units);
 
         // SHARE BTN //
 
-        this.Ctx.moveTo(this.DrawTo.Width - (margin * units) - (btnWidth*0.5) - (5 * units), ((this.Height*0.75) - 6) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) - (btnWidth*0.5), ((this.Height*0.75) - 1) * units);
-        this.Ctx.lineTo(this.DrawTo.Width - (margin * units) - (btnWidth*0.5) + (5 * units), ((this.Height*0.75) - 6) * units);
+        this.ctx.moveTo(this.drawTo.width - (margin * units) - (btnWidth*0.5) - (5 * units), ((this.Height*0.75) - 6) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) - (btnWidth*0.5), ((this.Height*0.75) - 1) * units);
+        this.ctx.lineTo(this.drawTo.width - (margin * units) - (btnWidth*0.5) + (5 * units), ((this.Height*0.75) - 6) * units);
 
-        this.Ctx.stroke();
+        this.ctx.stroke();
 
-        this.Ctx.textAlign = "right";
-        this.Ctx.fillText("SHARE", this.DrawTo.Width - (margin * units) - (20 * units) ,((this.Height * 0.5)*units) + (dataType * 0.38));
-        this.Ctx.textAlign = "center";
+        this.ctx.textAlign = "right";
+        this.ctx.fillText("SHARE", this.drawTo.width - (margin * units) - (20 * units) ,((this.Height * 0.5)*units) + (dataType * 0.38));
+        this.ctx.textAlign = "center";
     }
 
     IsPaginated(cat,units) {
@@ -386,7 +386,7 @@ export class Header extends DisplayObject {
         });
         offsetTween.easing(window.TWEEN.Easing.Exponential.InOut);
         offsetTween.delay(delay);
-        offsetTween.start(this.LastVisualTick);
+        offsetTween.start(this.lastVisualTick);
 
         this.Tweens.push(offsetTween);
     }
@@ -550,13 +550,13 @@ export class Header extends DisplayObject {
 
         // SCROLL HIT TEST //
         this._LeftOver = Dimensions.hitRect(0, ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
-        this._RightOver = Dimensions.hitRect(this.DrawTo.Width - (this.Margin*units), ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
+        this._RightOver = Dimensions.hitRect(this.drawTo.width - (this.Margin*units), ((this.Height + 20)*units) + rowOffset, this.Margin*units, (this.DropDown - 40)*units, point.x, point.y);
 
         // SHARE & SETTINGS HIT TESTS //
-        this.Ctx.font = "400 " + (units*10) + "px Dosis";
-        var btnWidth = this.Ctx.measureText("SHARE").width + (40*units);
-        this._ShareOver = Dimensions.hitRect(this.DrawTo.Width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
-        this._SettingsOver = Dimensions.hitRect(this.DrawTo.Width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
+        this.ctx.font = "400 " + (units*10) + "px Dosis";
+        var btnWidth = this.ctx.measureText("SHARE").width + (40*units);
+        this._ShareOver = Dimensions.hitRect(this.drawTo.width - ((this.DropDownHeight*0.5)*units) - btnWidth, 5*units, btnWidth, (this.Height*units) - (10*units), point.x, point.y);
+        this._SettingsOver = Dimensions.hitRect(this.drawTo.width - ((this.DropDownHeight*0.5)*units), 5*units, ((this.DropDownHeight*0.5)*units), (this.Height*units) - (10*units), point.x, point.y);
 
         // WHOLE MENU //
         this.MenuOver = (point.y < (((this.Height + this.DropDown)*units) + rowOffset));

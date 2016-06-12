@@ -14,8 +14,8 @@ export class ToolTip extends DisplayObject {
     public Position: Point;
     private _AlphaTween: createjs.Tween;
 
-    Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+    init(drawTo: IDisplayContext): void {
+        super.init(drawTo);
 
         this.Name = "";
         this.Alpha = 0;
@@ -28,10 +28,10 @@ export class ToolTip extends DisplayObject {
     //-------------------------------------------------------------------------------------------
 
 
-    Draw() {
+    draw() {
 
         var units = App.Unit;
-        var ctx = this.Ctx;
+        var ctx = this.ctx;
         var dataType = Math.round(units*10);
         var thisAlpha = this.Alpha/100;
 
@@ -76,7 +76,7 @@ export class ToolTip extends DisplayObject {
             panel.Alpha = this.x;
         });
         this._AlphaTween.easing(window.TWEEN.Easing.Quintic.InOut);
-        this._AlphaTween.start(this.LastVisualTick);
+        this._AlphaTween.start(this.lastVisualTick);
     }
 
     StopTween() {

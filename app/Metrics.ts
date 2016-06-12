@@ -69,10 +69,10 @@ export class Metrics {
         this.UpdateGridScale();
 
         // USE PIXEL RATIO FOR RETINA DISPLAYS //
-        canvas.Width = width * this.PixelRatio;
-        canvas.Height = height * this.PixelRatio;
-        canvas.Style.width = width + "px";
-        canvas.Style.height = height + "px";
+        canvas.width = width * this.PixelRatio;
+        canvas.height = height * this.PixelRatio;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
 
         for (var i=0; i<App.SubCanvas.length; i++) {
             var c = App.SubCanvas[i];
@@ -84,8 +84,8 @@ export class Metrics {
 
         App.Width = width * this.PixelRatio;
         App.Height = height * this.PixelRatio;
-        App.MainScene.Width = App.Width;
-        App.MainScene.Height = App.Height;
+        App.MainScene.width = App.Width;
+        App.MainScene.height = App.Height;
 
         this.C.x = App.Width * 0.5;
         this.C.y = App.Height * 0.5;
@@ -131,7 +131,7 @@ export class Metrics {
     }
 
     get PixelRatio(): number {
-        return Utils.Device.getPixelRatio(App.Canvas.Ctx)
+        return Utils.Device.getPixelRatio(App.Canvas.ctx)
     }
 
     //-------------------------------------------------------------------------------------------

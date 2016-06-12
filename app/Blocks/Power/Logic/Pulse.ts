@@ -12,7 +12,7 @@ export class Pulse extends Logic {
     public Params: PulseParams;
     public Defaults: PulseParams;
 
-    Init(drawTo: IDisplayContext): void {
+    init(drawTo: IDisplayContext): void {
         this.BlockName = App.L10n.Blocks.Power.Blocks.PulsePower.name;
         this.Defaults = {
             logic: false,
@@ -20,7 +20,7 @@ export class Pulse extends Logic {
         };
         this.PopulateParams(true);
 
-        super.Init(drawTo);
+        super.init(drawTo);
 
         this.Outline.push(new Point(0,-1), new Point(1,-1), new Point(1,1), new Point(0,2), new Point(-1,2), new Point(-1,0));
     }
@@ -45,8 +45,8 @@ export class Pulse extends Logic {
         //this.OldConnections = newConnections;
     }
 
-    Draw() {
-        super.Draw();
+    draw() {
+        super.draw();
         this.DrawSprite(this.BlockName);
     }
 

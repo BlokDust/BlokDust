@@ -12,7 +12,7 @@ export interface IBlock extends IDisplayObject {
     Connections: ObservableCollection<IBlock>
     Dispose(): void;
     DistanceFrom(point: Point): number;
-    Draw(): void;
+    draw(): void;
     Duplicable: boolean;
     HitTest(point: Point): boolean;
     Id: number;
@@ -34,7 +34,7 @@ export interface IBlock extends IDisplayObject {
     SetParam(param: string, value: number): void;
     Stop(): void;
     Type: any;
-    Update(): void;
+    update(): void;
     UpdateConnections(chain: IAudioChain)
     UpdateOptionsForm(): void;
     SetSearchResults(results): any;
