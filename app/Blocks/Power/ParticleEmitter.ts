@@ -1,4 +1,4 @@
-import Vector = Utils.Maths.Vector;
+import Vector = etch.primitives.Vector;
 import {IApp} from '../../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import {MainScene} from '../../MainScene';
@@ -39,8 +39,8 @@ export class ParticleEmitter extends PowerSource {
 
     EmitParticle() {
         var position = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
-        var v: Utils.Maths.Vector = Vector.fromAngle(Math.degreesToRadians(this.Params.angle));
-        var velocity: etch.primitives.Vector = new etch.primitives.Vector(v.X, v.Y);
+        var v: Vector = Vector.fromAngle(Math.degreesToRadians(this.Params.angle));
+        var velocity: Vector = new Vector(v.x, v.y);
         velocity.mult(this.Params.speed * 0.1);
         var size = 2 + (Math.random());
         var life = Math.round(this.Params.range/this.Params.speed);

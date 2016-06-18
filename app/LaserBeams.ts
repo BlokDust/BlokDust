@@ -1,4 +1,4 @@
-import Vector = Utils.Maths.Vector;
+import Vector = etch.primitives.Vector;// Utils.Maths.Vector;
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
 import {ISource} from './Blocks/ISource';
@@ -76,9 +76,13 @@ export class LaserBeams extends DisplayObject {
 
         if (App.Audio.ConnectionManager.IsConnected) {
 
-            var p1, p2, vector, line, outline;
-            var rectSize = 1.7; // size of rectangle for rough check (in grid cells)
-            var grd = App.ScaledGridSize * rectSize;
+            var p1: Point;
+            var p2: Point;
+            var vector: Vector;
+            var line: Vector;
+            var outline: Point[];
+            var rectSize: number = 1.7; // size of rectangle for rough check (in grid cells)
+            var grd: number = App.ScaledGridSize * rectSize;
 
             // SETUP LISTS //
             // TODO: do this once when Blocks[] changes
@@ -143,13 +147,13 @@ export class LaserBeams extends DisplayObject {
                                     if (this.QuadPartition(p1, p2, laser.Params.angle)) {
 
                                         //IF CLOSE TO LINE //
-                                        if (this.PointFromLine(p2.x, p2.y, p1.x, p1.y, p1.x + line.X, p1.y + line.Y, false) < grd) {
+                                        if (this.PointFromLine(p2.x, p2.y, p1.x, p1.y, p1.x + line.x, p1.y + line.y, false) < grd) {
 
                                             // INTERSECT CHECK //
                                             for (var k = 0; k < block.Outline.length; k++) {
                                                 outline.push(App.Metrics.PointOnGrid(App.Metrics.GetRelativePoint(block.Outline[k], block.Position)));
                                             }
-                                            p2 = new Point(p1.x + line.X, p1.y + line.Y);
+                                            p2 = new Point(p1.x + line.x, p1.y + line.y);
                                             var intersection = Intersection.intersectLinePolygon(p1, p2, outline);
                                             if (intersection.status == "Intersection") {
 
@@ -259,7 +263,7 @@ export class LaserBeams extends DisplayObject {
                     vector.mult(laser.CheckRange * unit);
 
                     this.ctx.moveTo(myPos.x, myPos.y);
-                    this.ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
+                    this.ctx.lineTo(myPos.x + vector.x, myPos.y + vector.y);
                 }
             }
         }
