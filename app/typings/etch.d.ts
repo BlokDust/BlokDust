@@ -19,22 +19,22 @@ declare module etch.primitives {
         constructor(x: number, y: number);
         get(): Vector;
         set(x: number, y: number): void;
-        add(v: Vector): void;
+        add(v: Vector): Vector;
         static add(v1: Vector, v2: Vector): Vector;
         clone(): Vector;
         static LERP(start: Vector, end: Vector, p: number): Vector;
-        sub(v: Vector): void;
+        sub(v: Vector): Vector;
         static sub(v1: Vector, v2: Vector): Vector;
-        mult(n: number): void;
+        mult(n: number): Vector;
         static mult(v1: Vector, v2: Vector): Vector;
         static multN(v1: Vector, n: number): Vector;
-        div(n: number): void;
+        div(n: number): Vector;
         static div(v1: Vector, v2: Vector): Vector;
         static divN(v1: Vector, n: number): Vector;
         mag(): number;
         magSq(): number;
-        normalize(): void;
-        limit(max: number): void;
+        normalize(): Vector;
+        limit(max: number): Vector;
         heading(): number;
         static random2D(): Vector;
         static fromAngle(angle: number): Vector;
@@ -132,12 +132,14 @@ declare module etch.drawing {
     class Canvas implements IDisplayContext {
         htmlElement: HTMLCanvasElement;
         isCached: boolean;
-        constructor();
+        constructor(parentElement?: HTMLElement);
         ctx: CanvasRenderingContext2D;
         width: number;
         height: number;
         size: Size;
         style: any;
+        hide(): void;
+        show(): void;
     }
 }
 
@@ -233,6 +235,7 @@ declare module etch.drawing {
 }
 
 import ClockTimer = etch.engine.ClockTimer;
+import Canvas = etch.drawing.Canvas;
 import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayObject = etch.drawing.IDisplayObject;
 declare module etch.drawing {
@@ -240,13 +243,17 @@ declare module etch.drawing {
         private _maxDelta;
         deltaTime: number;
         lastVisualTick: number;
+        mousePos: etch.primitives.Point;
         timer: ClockTimer;
         updated: nullstone.Event<number>;
         drawn: nullstone.Event<number>;
         constructor(maxDelta?: number);
         init(drawTo: IDisplayContext): void;
+        private _getMousePos(canvas, e);
         onTicked(lastTime: number, nowTime: number): void;
+        update(): void;
         updateDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
+        draw(): void;
         drawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         resizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         resize(): void;
