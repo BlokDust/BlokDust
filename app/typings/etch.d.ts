@@ -132,6 +132,7 @@ declare module etch.drawing {
     class Canvas implements IDisplayContext {
         htmlElement: HTMLCanvasElement;
         isCached: boolean;
+        stage: etch.drawing.Stage;
         constructor(parentElement?: HTMLElement);
         ctx: CanvasRenderingContext2D;
         width: number;
@@ -163,6 +164,7 @@ declare module etch.drawing {
         ctx: CanvasRenderingContext2D;
         canvasWidth: number;
         canvasHeight: number;
+        stage: etch.drawing.Stage;
         displayList: DisplayObjectCollection<IDisplayObject>;
         setup(): void;
         update(): void;
@@ -205,10 +207,11 @@ declare module etch.drawing {
 import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = etch.primitives.Point;
+import Stage = etch.drawing.Stage;
 declare module etch.drawing {
     interface IDisplayObject extends IDisplayContext {
-        canvasHeight: number;
         canvasWidth: number;
+        canvasHeight: number;
         deltaTime: number;
         displayList: DisplayObjectCollection<IDisplayObject>;
         draw(): void;
@@ -249,6 +252,9 @@ declare module etch.drawing {
         drawn: nullstone.Event<number>;
         constructor(maxDelta?: number);
         init(drawTo: IDisplayContext): void;
+        canvas: Canvas;
+        width: number;
+        height: number;
         private _getMousePos(canvas, e);
         onTicked(lastTime: number, nowTime: number): void;
         update(): void;
