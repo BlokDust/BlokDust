@@ -88,6 +88,10 @@ export class OptionsPanel extends DisplayObject {
         this.Populate(this.InitJson,false);
     }
 
+    setup(): void {
+        this.SetPosition();
+    }
+
     /*CreateCanvas() {
         this.Canvas = document.createElement("canvas");
         document.body.appendChild(this.Canvas);
@@ -754,7 +758,7 @@ export class OptionsPanel extends DisplayObject {
         }
     }
 
-    resize() {
+    SetPosition(): void {
         if (!App.Width) return;
 
         if (App.Metrics.Device !== Device.mobile) {
@@ -764,6 +768,10 @@ export class OptionsPanel extends DisplayObject {
             this.Position.x = -44 * App.Unit;
             this.Position.y = Math.round(App.Height*0.65);
         }
+    }
+
+    resize() {
+        this.SetPosition();
     }
 
     Close() {

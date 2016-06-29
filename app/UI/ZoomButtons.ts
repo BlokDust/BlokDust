@@ -29,6 +29,10 @@ export class ZoomButtons extends DisplayObject {
         this.ZoomAlpha = 0;
     }
 
+    setup(): void {
+        this.SetPosition();
+    }
+
     UpdateSlot(zoom) {
         this.CurrentSlot = this._ZoomSlots.indexOf(zoom);
     }
@@ -223,9 +227,13 @@ export class ZoomButtons extends DisplayObject {
         }
     }
 
-    resize(): void {
+    SetPosition(): void {
         var units = App.Unit;
-        this._InPos = new Point(30*units,App.Height - (30*units));
-        this._OutPos = new Point(70*units,App.Height - (30*units));
+        this._InPos = new Point(30 * units, App.Height - (30*units));
+        this._OutPos = new Point(70 * units, App.Height - (30*units));
+    }
+
+    resize(): void {
+        this.SetPosition();
     }
 }

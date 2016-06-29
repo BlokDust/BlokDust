@@ -327,7 +327,7 @@ export default class App implements IApp{
     CreateStage() {
         this.Stage = new Stage();
         this.Stage.init(this.Canvas);
-        this.Stage.drawn.on((s: any, time: number) => {
+        this.Stage.ticked.on((s: any, time: number) => {
             window.TWEEN.update(time);
         }, this);
 
