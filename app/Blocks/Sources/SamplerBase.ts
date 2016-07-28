@@ -9,6 +9,7 @@ export class SamplerBase extends Source {
 
     public PrimaryBuffer: any;
     public ReverseBuffer: any;
+    public WaveForm: number[];
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -122,6 +123,97 @@ export class SamplerBase extends Source {
     LoadTrack(track,fullUrl?:boolean) {
 
     }
+
+    //-------------------------------------------------------------------------------------------
+    //  TRACK REVERSING
+    //-------------------------------------------------------------------------------------------
+
+    // REVERSE THE TRACK //
+    ReverseTrack() {
+
+        // Set visuals //
+        this.WaveForm = [];
+        this.RefreshOptionsPanel("animate");
+        App.AnimationsLayer.AddToList(this); // load animations
+
+
+        // If we already have a reversed track //
+        if (this.ReverseBuffer) {
+            this.SwitchBuffer();
+            return;
+        }
+
+        // Else generate it via the worker //
+        var sourceBuffer;
+        if (this.PrimaryBuffer.buffer) {
+            sourceBuffer = this.PrimaryBuffer.buffer; // TODO: in future make sure all sampler blocks use same type of buffer
+        } else if (this.PrimaryBuffer._buffer){
+            sourceBuffer = this.PrimaryBuffer._buffer;
+        } else {
+            sourceBuffer = this.PrimaryBuffer;
+        }
+        setTimeout(() => {
+            App.Audio.ReverseBuffer(this.Id,sourceBuffer);
+        },20);
+    }
+
+
+    // SWITCH BETWEEN PRIMARY BUFFER AND REVERSE BUFFER //
+    SwitchBuffer() {
+
+        // Get target buffer //
+        var sourceBuffer;
+        if (this.Params.reverse) {
+            sourceBuffer = this.ReverseBuffer.buffer;
+        } else {
+            if (this.PrimaryBuffer.buffer) {
+                sourceBuffer = this.PrimaryBuffer.buffer;
+            } else if (this.PrimaryBuffer._buffer){
+                sourceBuffer = this.PrimaryBuffer._buffer;
+            } else {
+                sourceBuffer = this.PrimaryBuffer;
+            }
+        }
+
+        // Set the buffer //
+        this.Sources.forEach((s:Tone.Simpler)=> {
+            s.player.buffer = sourceBuffer;
+        });
+
+        // Retrigger any active voices //
+        this.RetriggerActiveVoices();
+
+        // Update visuals //
+        App.AnimationsLayer.RemoveFromList(this);
+        this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(sourceBuffer, 200, 5, 95);
+        this.RefreshOptionsPanel();
+    }
+
+
+    // RETURN FROM WORKER, STORE & SET REVERSE BUFFER //
+    SetReversedBuffer(buffer: any) {
+
+        // Store data as ReverseBuffer //
+        this.ReverseBuffer = App.Audio.ctx.createBufferSource();
+        this.ReverseBuffer.buffer = App.Audio.ctx.createBuffer(buffer.length, buffer[0].length, 44100);
+        for (var i=0; i< buffer.length; i++) {
+            this.ReverseBuffer.buffer.copyToChannel (buffer[i],i,0);
+        }
+
+        // Set source buffers //
+        this.Sources.forEach((s:Tone.Simpler)=> {
+            s.player.buffer = this.ReverseBuffer.buffer;
+        });
+
+        // Retrigger any active voices //
+        this.RetriggerActiveVoices();
+
+        // Update visuals //
+        App.AnimationsLayer.RemoveFromList(this);
+        this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.ReverseBuffer.buffer, 200, 5, 95);
+        this.RefreshOptionsPanel();
+    }
+
 
     Dispose(){
         super.Dispose();

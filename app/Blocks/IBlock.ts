@@ -16,6 +16,7 @@ export interface IBlock extends IDisplayObject {
     Duplicable: boolean;
     HitTest(point: Point): boolean;
     Id: number;
+    Version: number;
     BlockName: string;
     IsChained: boolean;
     IsPressed: boolean;

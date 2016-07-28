@@ -527,59 +527,21 @@ export class OptionsPanel extends DisplayObject {
             this._DrawReady = false;
         }
 
+
         if (this.Scale > 0) {
 
             ctxOuter.globalAlpha = 1;
-            //ctxOuter.drawImage(this._Img,0,0);
+
+            var xOff = 0;
+            if (App.Metrics.Device === Device.mobile) {
+                xOff = 44 * units;
+            }
 
             // START A TRANSFORM HERE //
-            ctxOuter.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x, this.Position.y);
+            ctxOuter.setTransform(this.Scale, 0, 0, this.Scale, this.Position.x + xOff, this.Position.y);
 
             ctxOuter.drawImage(this.Canvas,0,-Math.round(App.Metrics.C.y));
 
-
-            //this.DrawToOffscreenCanvas(ctx);
-            /*var sx = 0;
-             var sy = 0;
-
-
-             // PANEL //
-             ctx.font = App.Metrics.TxtMid;
-             ctx.textAlign = "right";
-
-
-             // DRAW PANEL //
-             ctx.fillStyle = App.Palette[2];// Shadow
-             ctx.globalAlpha = 0.16;
-             this.panelDraw(sx, sy + (5 * units));
-             ctx.fillStyle = App.Palette[2];// Black
-             ctx.globalAlpha = 0.9;
-             this.panelDraw(sx, sy);
-             ctx.globalAlpha = 1;
-
-
-             // CLOSE X //
-             ctx.strokeStyle = App.Palette[App.ThemeManager.Txt];// WHITE
-             ctx.lineWidth = 2;
-             ctx.beginPath();
-             ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) + (4 * units));
-             ctx.lineTo(sx + this.Size.width - (16 * units), sy - (this.Size.height * 0.5) - (4 * units));
-             ctx.moveTo(sx + this.Size.width - (24 * units), sy - (this.Size.height * 0.5) - (4 * units));
-             ctx.lineTo(sx + this.Size.width - (16 * units), sy - (this.Size.height * 0.5) + (4 * units));
-             ctx.stroke();
-             ctx.lineWidth = 1;
-
-
-             // TITLE //
-             ctx.fillStyle = App.Palette[App.ThemeManager.Txt];// WHITE
-             ctx.textAlign = "left";
-             ctx.fillText(this._Name.toUpperCase(), this.Margin, (-this.Size.height * 0.5));
-
-
-             // DRAW OPTIONS //
-             for (var i = 0; i < this.Options.length; i++) {
-             this.Options[i].Draw(ctx,units,i,this);
-             }*/
             ctxOuter.setTransform(1, 0, 0, 1, 0, 0);
 
         }
@@ -591,11 +553,22 @@ export class OptionsPanel extends DisplayObject {
 
         ctx.clearRect(0,0,App.Width,App.Height);
 
-        ctx.setTransform(1, 0, 0, 1, 0, Math.round(App.Metrics.C.y));
-
         var units = App.Unit;
+
+        var xOff = 0;
+        if (App.Metrics.Device === Device.mobile) {
+            xOff = -44 * units;
+        }
+
+        ctx.setTransform(1, 0, 0, 1, xOff, Math.round(App.Metrics.C.y));
+
+
+
+
         var sx = 0;
         var sy = 0;
+
+
 
 
         // PANEL //

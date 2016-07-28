@@ -76,10 +76,10 @@ export class Metrics {
 
         for (var i=0; i<App.SubCanvas.length; i++) {
             var c = App.SubCanvas[i];
-            c.width = width * this.PixelRatio;
-            c.height = height * this.PixelRatio;
-            c.style.width = width + "px";
-            c.style.height = height + "px";
+            c.width = (width+1.5) * this.PixelRatio;
+            c.height = (height) * this.PixelRatio;
+            c.style.width = (width*1.5) + "px";
+            c.style.height = (height) + "px";
         }
 
         App.Width = width * this.PixelRatio;

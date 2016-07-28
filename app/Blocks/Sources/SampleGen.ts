@@ -8,10 +8,10 @@ declare var App: IApp;
 
 export class SampleGen extends SamplerBase {
 
-    private _WaveForm: number[];
+    //private WaveForm: number[];
     private _FirstRelease: boolean = true;
     public Sources: Tone.Simpler[];
-    private _FirstBuffer: any;
+    //private PrimaryBuffer: any;
     private _LoadFromShare: boolean = false;
     private _BufferData: Float32Array;
     private _WaveVoices: WaveVoice[];
@@ -46,7 +46,7 @@ export class SampleGen extends SamplerBase {
         };
         this.PopulateParams();
 
-        this._WaveForm = [];
+        this.WaveForm = [];
         this._WaveVoices = [];
         this._SeedLoad = true;
 
@@ -488,12 +488,12 @@ export class SampleGen extends SamplerBase {
     PopulateBuffer(sampleRate) {
 
 
-        if (!this._FirstBuffer) {
-            this._FirstBuffer = App.Audio.ctx.createBuffer(1, this._BufferData.length, sampleRate);
+        if (!this.PrimaryBuffer) {
+            this.PrimaryBuffer = App.Audio.ctx.createBuffer(1, this._BufferData.length, sampleRate);
         }
-        this._FirstBuffer.copyToChannel(this._BufferData,0,0);
-        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
-        var duration = this.GetDuration(this._FirstBuffer);
+        this.PrimaryBuffer.copyToChannel(this._BufferData,0,0);
+        this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.PrimaryBuffer,200,5,95);
+        var duration = this.GetDuration(this.PrimaryBuffer);
         if (!this._LoadFromShare) {
             this.Params.startPosition = 0;
             this.Params.loopStart = 0;
@@ -506,11 +506,21 @@ export class SampleGen extends SamplerBase {
 
         // update sources //
         this.Sources.forEach((s: Tone.Simpler)=> {
-            s.player.buffer = this._FirstBuffer;
+            s.player.buffer = this.PrimaryBuffer;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
-            s.player.reverse = this.Params.reverse;
+            //s.player.reverse = this.Params.reverse;
         });
+
+        // Reset reverse buffer //
+        if (this.ReverseBuffer) {
+            this.ReverseBuffer = null;
+        }
+
+        // if loaded from save & reverse //
+        if (this._LoadFromShare && this.Params.reverse) {
+            this.ReverseTrack();
+        }
 
         // IF POWERED ON LOAD - TRIGGER //
         if (this.IsPowered() && this._LoadFromShare) {
@@ -570,10 +580,10 @@ export class SampleGen extends SamplerBase {
                     "props" : {
                         "value" : 5,
                         "min" : 0,
-                        "max" : this.GetDuration(this._FirstBuffer),
+                        "max" : this.GetDuration(this.PrimaryBuffer),
                         "quantised" : false,
                         "centered" : false,
-                        "wavearray" : this._WaveForm,
+                        "wavearray" : this.WaveForm,
                         "mode" : this.Params.loop,
                         "emptystring" : "Generating Wave"
                     },"nodes": [
@@ -658,7 +668,7 @@ export class SampleGen extends SamplerBase {
                 this.NoteUpdate();
                 break;
             case "generate":
-                this._WaveForm = [];
+                this.WaveForm = [];
                 this.RefreshOptionsPanel();
 
                 // TODO - look into web workers for performance heavy executions like DataToBuffer
@@ -668,17 +678,21 @@ export class SampleGen extends SamplerBase {
                 },16);
                 break;
             case "reverse":
+                console.log('setting reverse ', value);
                 value = value? true : false;
+                this.Params[param] = val;
+                this.ReverseTrack();
+                /*value = value? true : false;
 
                 this._BufferData = this.ReverseTheBuffer(this._BufferData);
-                this._FirstBuffer.copyToChannel(this._BufferData,0,0);
+                this.PrimaryBuffer.copyToChannel(this._BufferData,0,0);
                 this.Sources.forEach((s: Tone.Simpler)=> {
-                    s.player.buffer = this._FirstBuffer;
+                    s.player.buffer = this.PrimaryBuffer;
                 });
                 this.Params[param] = val;
                 // Update waveform
-                this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this._FirstBuffer,200,5,95);
-                this.RefreshOptionsPanel();
+                this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.PrimaryBuffer,200,5,95);
+                this.RefreshOptionsPanel();*/
                 break;
             case "loop":
                 value = value? true : false;
