@@ -11,10 +11,8 @@ export class Sample extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Params: SoundcloudParams;
-    private _WaveForm: number[];
+    //private WaveForm: number[];
     private _FirstRelease: boolean = true;
-    //private PrimaryBuffer: any;
-    //private ReverseBuffer: any;
     private _LoadFromShare: boolean = false;
     private _FallBackTrack: SoundCloudTrack;
     public LoadTimeout: any;
@@ -48,7 +46,7 @@ export class Sample extends SamplerBase {
         };
         this.PopulateParams();
 
-        this._WaveForm = [];
+        this.WaveForm = [];
         this.SearchResults = [];
         this.Searching = false;
         this._FallBackTrack = new SoundCloudTrack(this.Params.trackName,this.Params.user,this.Params.track,this.Params.permalink);
@@ -128,7 +126,7 @@ export class Sample extends SamplerBase {
         this.Params.trackName = track.TitleShort;
         this.Params.user = track.UserShort;
         this.Params.reverse = false;
-        this._WaveForm = [];
+        this.WaveForm = [];
 
         // decode track & load up the buffers //
         this.SetBuffers();
@@ -206,7 +204,7 @@ export class Sample extends SamplerBase {
 
             // Update visuals //
             App.AnimationsLayer.RemoveFromList(this);
-            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
+            this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(e._buffer,200,5,95);
             this.RefreshOptionsPanel();
 
             // If playing, retrigger //
@@ -234,77 +232,6 @@ export class Sample extends SamplerBase {
     //  TRACK REVERSING
     //-------------------------------------------------------------------------------------------
 
-    // REVERSE THE TRACK //
-    ReverseTrack() {
-
-        // Set visuals //
-        this._WaveForm = [];
-        this.RefreshOptionsPanel("animate");
-        App.AnimationsLayer.AddToList(this); // load animations
-
-
-        // If we already have a reversed track //
-        if (this.ReverseBuffer) {
-            this.SwitchBuffer();
-            return;
-        }
-
-        // Else generate it via the worker //
-        setTimeout(() => {
-            App.Audio.ReverseBuffer(this.Id,this.PrimaryBuffer._buffer);
-        },20);
-    }
-
-
-    // SWITCH BETWEEN PRIMARY BUFFER AND REVERSE BUFFER //
-    SwitchBuffer() {
-
-        // Get target buffer //
-        var sourceBuffer;
-        if (this.Params.reverse) {
-            sourceBuffer = this.ReverseBuffer.buffer;
-        } else {
-            sourceBuffer = this.PrimaryBuffer._buffer;
-        }
-
-        // Set the buffer //
-        this.Sources.forEach((s:Tone.Simpler)=> {
-            s.player.buffer = sourceBuffer;
-        });
-
-        // Retrigger any active voices //
-        this.RetriggerActiveVoices();
-
-        // Update visuals //
-        App.AnimationsLayer.RemoveFromList(this);
-        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(sourceBuffer, 200, 5, 95);
-        this.RefreshOptionsPanel();
-    }
-
-
-    // RETURN FROM WORKER, STORE & SET REVERSE BUFFER //
-    SetReversedBuffer(buffer: any) {
-
-        // Store data as ReverseBuffer //
-        this.ReverseBuffer = App.Audio.ctx.createBufferSource();
-        this.ReverseBuffer.buffer = App.Audio.ctx.createBuffer(buffer.length, buffer[0].length, 44100);
-        for (var i=0; i< buffer.length; i++) {
-            this.ReverseBuffer.buffer.copyToChannel (buffer[i],i,0);
-        }
-
-        // Set source buffers //
-        this.Sources.forEach((s:Tone.Simpler)=> {
-            s.player.buffer = this.ReverseBuffer.buffer;
-        });
-
-        // Retrigger any active voices //
-        this.RetriggerActiveVoices();
-
-        // Update visuals //
-        App.AnimationsLayer.RemoveFromList(this);
-        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.ReverseBuffer.buffer, 200, 5, 95);
-        this.RefreshOptionsPanel();
-    }
 
 
     //-------------------------------------------------------------------------------------------
@@ -342,7 +269,7 @@ export class Sample extends SamplerBase {
                         "max" : this.GetDuration(this.PrimaryBuffer),
                         "quantised" : false,
                         "centered" : false,
-                        "wavearray" : this._WaveForm,
+                        "wavearray" : this.WaveForm,
                         "mode" : this.Params.loop
                     },"nodes": [
                     {

@@ -9,11 +9,11 @@ export class Recorder extends SamplerBase {
 
     public Sources : Tone.Simpler[];
     public Recorder: any;
-    public BufferSource;
+    //public PrimaryBuffer;
     public Filename: string;
     public IsRecording: boolean = false;
     public RecordedBlob;
-    private _WaveForm: number[];
+    //private WaveForm: number[];
     public Params: SamplerParams;
     public Defaults: SamplerParams;
 
@@ -37,11 +37,11 @@ export class Recorder extends SamplerBase {
         };
         this.PopulateParams();
 
-        this._WaveForm = [];
+        this.WaveForm = [];
 
         super.init(drawTo);
 
-        this.BufferSource = App.Audio.ctx.createBufferSource();
+        this.PrimaryBuffer = App.Audio.ctx.createBufferSource();
 
         this.Recorder = new RecorderJS(App.Audio.Master, {
             workerPath: App.Config.RecorderWorkerPath
@@ -86,6 +86,9 @@ export class Recorder extends SamplerBase {
         });
         this.IsRecording = true;
         this.Recorder.record();
+
+        this.ReverseBuffer = null;
+        this.Params.reverse = false;
     }
 
     StopRecording() {
@@ -102,30 +105,30 @@ export class Recorder extends SamplerBase {
         this.Recorder.getBuffers((buffers) => {
 
             // if BufferSource doesn't exist create it
-            if (!this.BufferSource) {
-                this.BufferSource = App.Audio.ctx.createBufferSource();
+            if (!this.PrimaryBuffer) {
+                this.PrimaryBuffer = App.Audio.ctx.createBufferSource();
             }
             // If we already have a BufferSource and the buffer is set, reset it to null and create a new one
-            else if (this.BufferSource && this.BufferSource.buffer !== null){
-                this.BufferSource = null;
-                this.BufferSource = App.Audio.ctx.createBufferSource();
+            else if (this.PrimaryBuffer && this.PrimaryBuffer.buffer !== null){
+                this.PrimaryBuffer = null;
+                this.PrimaryBuffer = App.Audio.ctx.createBufferSource();
             }
 
             // TODO: add an overlay function which would merge new buffers with old buffers
 
             // Create a new buffer and set the buffers to the recorded data
-            this.BufferSource.buffer = App.Audio.ctx.createBuffer(1, buffers[0].length, 44100);
-            this.BufferSource.buffer.getChannelData(0).set(buffers[0]);
-            this.BufferSource.buffer.getChannelData(0).set(buffers[1]);
+            this.PrimaryBuffer.buffer = App.Audio.ctx.createBuffer(1, buffers[0].length, 44100);
+            this.PrimaryBuffer.buffer.getChannelData(0).set(buffers[0]);
+            this.PrimaryBuffer.buffer.getChannelData(0).set(buffers[1]);
 
             this.UpdateWaveform();
 
             // Set the buffers for each source
             this.Sources.forEach((s: Tone.Simpler)=> {
-                s.player.buffer = this.BufferSource.buffer;
+                s.player.buffer = this.PrimaryBuffer.buffer;
                 s.player.loopStart = this.Params.loopStart;
                 s.player.loopEnd = this.Params.loopEnd;
-                s.player.reverse = this.Params.reverse;
+                //s.player.reverse = this.Params.reverse;
             });
 
 
@@ -149,7 +152,7 @@ export class Recorder extends SamplerBase {
 
     UpdateWaveform(){
         // Update waveform
-        this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer,200,2,95);
+        this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.PrimaryBuffer.buffer,200,2,95);
         var duration = this.GetDuration();
         this.Params.startPosition = 0;
         this.Params.endPosition = duration;
@@ -160,8 +163,8 @@ export class Recorder extends SamplerBase {
     }
 
     GetDuration(): number {
-        if (this.BufferSource && this.BufferSource.buffer !== null){
-            return this.BufferSource.buffer.duration;
+        if (this.PrimaryBuffer && this.PrimaryBuffer.buffer !== null){
+            return this.PrimaryBuffer.buffer.duration;
         }  else {
             return 10;
         }
@@ -176,20 +179,20 @@ export class Recorder extends SamplerBase {
 
     Dispose(){
         super.Dispose();
-        this.BufferSource = null;
+        this.PrimaryBuffer = null;
         this.Recorder.clear();
         this.Recorder = null;
         this.RecordedBlob = null;
     }
 
     CreateSource(){
-        this.Sources.push( new Tone.Simpler(this.BufferSource) );
+        this.Sources.push( new Tone.Simpler(this.PrimaryBuffer) );
 
         this.Sources.forEach((s: Tone.Simpler, i: number)=> {
             s.player.loop = this.Params.loop;
             s.player.loopStart = this.Params.loopStart;
             s.player.loopEnd = this.Params.loopEnd;
-            s.player.reverse = this.Params.reverse;
+            //s.player.reverse = this.Params.reverse;
             s.volume.value = this.Params.volume;
 
             if (i > 0){
@@ -202,9 +205,9 @@ export class Recorder extends SamplerBase {
         }
     }
 
-    ReverseTrack(value: boolean) {
+    /*ReverseTrack(value: boolean) {
 
-        this._WaveForm = [];
+        this.WaveForm = [];
         this.RefreshOptionsPanel();
         //App.AnimationsLayer.AddToList(this); // load animations
 
@@ -212,18 +215,20 @@ export class Recorder extends SamplerBase {
             // BUFFER //
             this.Sources[0].player.reverse = value;
 
-            /*this._FirstBuffer.reverse = value;
+            /!*this._FirstBuffer.reverse = value;
              this.Sources.forEach((s:Tone.Simpler)=> {
              s.player.buffer = this._FirstBuffer;
-             });*/
+             });*!/
 
             // Update waveform
-            this._WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer, 200, 5, 95);
+            this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer, 200, 5, 95);
             //App.AnimationsLayer.RemoveFromList(this);
             this.RefreshOptionsPanel();
         },1);
 
-    }
+    }*/
+
+
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
@@ -243,7 +248,7 @@ export class Recorder extends SamplerBase {
                         "max" : this.GetDuration(),
                         "quantised" : false,
                         "centered" : false,
-                        "wavearray" : this._WaveForm,
+                        "wavearray" : this.WaveForm,
                         "mode" : this.Params.loop,
                         "emptystring" : "No Sample"
                     },
@@ -330,8 +335,8 @@ export class Recorder extends SamplerBase {
                 break;
             case "reverse":
                 value = value? true : false;
-                this.ReverseTrack(value);
                 this.Params[param] = val;
+                this.ReverseTrack();
                 break;
             case "loop":
                 value = value? true : false;
@@ -359,7 +364,7 @@ export class Recorder extends SamplerBase {
                 });
                 break;
             case "download":
-                if (this.BufferSource.buffer===null) {
+                if (this.PrimaryBuffer.buffer===null) {
                     App.Message("This block doesn't have a recording to download yet.");
                 } else {
                     this.DownloadRecording();

@@ -127,7 +127,11 @@ export class SettingsPanel extends DisplayObject{
         ctx.font = "400 " + dataType + "px Dosis";
         ctx.textAlign = "left";
         var catWidth = [];
-        var menuWidth = (this.drawTo.width/7)*4;
+        if (App.Metrics.Device === Device.mobile) {
+            var menuWidth = (this.drawTo.width/7)*5;
+        } else {
+            var menuWidth = (this.drawTo.width/7)*4;
+        }
 
         // total text width //
         for (var i=0; i<n; i++) {
@@ -184,7 +188,11 @@ export class SettingsPanel extends DisplayObject{
         var grid = App.GridSize;
         var centerY = this.OffsetY + (App.Height * 0.5);
         var tabY = this.OffsetY;
-        var menuWidth = (App.Width/7)*4;
+        if (App.Metrics.Device === Device.mobile) {
+            var menuWidth = (this.drawTo.width/7)*5;
+        } else {
+            var menuWidth = (this.drawTo.width/7)*4;
+        }
         var halfWidth = menuWidth * 0.5;
         var dx = (App.Width*0.5);
         var leftX = dx - halfWidth;
@@ -225,10 +233,11 @@ export class SettingsPanel extends DisplayObject{
             var x2 = dx - halfWidth + thirdWidth + gutter;
             var x3 = dx - halfWidth + (thirdWidth*2) + (gutter*2);
 
-            ctx.textAlign = "left";
-            ctx.font = headType;
-            ctx.fillText(this._Attribution.title.toUpperCase(),20*units,this.OffsetY + (30*units) + (11*units));
-
+            if (App.Metrics.Device == Device.desktop) {
+                ctx.textAlign = "left";
+                ctx.font = headType;
+                ctx.fillText(this._Attribution.title.toUpperCase(),20*units,this.OffsetY + (30*units) + (11*units));
+            }
 
 
             // CLIPPING BOX //
@@ -655,7 +664,11 @@ export class SettingsPanel extends DisplayObject{
         var tabY = this.OffsetY;
         var pageY = tabY + (120*units);
         var dx = (this.drawTo.width*0.5);
-        var menuWidth = (this.drawTo.width/7)*4;
+        if (App.Metrics.Device === Device.mobile) {
+            var menuWidth = (this.drawTo.width/7)*5;
+        } else {
+            var menuWidth = (this.drawTo.width/7)*4;
+        }
         var halfWidth = menuWidth*0.5;
 
         // MARGIN WIDTH //
@@ -834,7 +847,11 @@ export class SettingsPanel extends DisplayObject{
         var pageY = tabY + (120*units);
         var closeY = tabY + (30*units);
         var dx = (this.drawTo.width*0.5);
-        var menuWidth = (this.drawTo.width/7)*4;
+        if (App.Metrics.Device === Device.mobile) {
+            var menuWidth = (this.drawTo.width/7)*5;
+        } else {
+            var menuWidth = (this.drawTo.width/7)*4;
+        }
         var halfWidth = menuWidth*0.5;
         var gutter = (40*units);
         var thirdWidth = (menuWidth - (gutter*2))/3;

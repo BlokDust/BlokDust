@@ -1,5 +1,6 @@
 import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
+import {Device} from '../Device';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Size = minerva.Size;
 import {IApp} from '../IApp';
@@ -191,14 +192,31 @@ export class SoundcloudPanel extends DisplayObject{
                 }
 
             }
+
+            var pageX = margin - (75*units);
+            var pageY = -68;
+            var arrowX = 275;
+            var arrowY = 0;
+            if (App.Metrics.Device === Device.tablet) {
+                pageX = margin - (45*units);
+                arrowX = 245;
+            }
+            if (App.Metrics.Device === Device.mobile) {
+                pageX = appWidth*0.5;
+                pageY = 170;
+                arrowX = 60;
+                arrowY = 160;
+            }
+
+            // PAGE NO //
             if (results > itemNo) {
-                // PAGE NO //
                 ctx.font = App.Metrics.TxtHeader;
                 var pNo = ""+this._Page;
                 var pTotal = ""+Math.ceil(results/itemNo);
                 ctx.textAlign = "center";
-                ctx.fillText(pNo + "/" + pTotal, margin - (75*units), centerY - (68*units));
+                ctx.fillText(pNo + "/" + pTotal, pageX, centerY + (pageY*units));
             }
+
 
 
             // BACK ARROW //
@@ -207,9 +225,9 @@ export class SoundcloudPanel extends DisplayObject{
                 App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             }
             ctx.beginPath();
-            ctx.moveTo((appWidth*0.5) - (275 * units), centerY - (20*units));
-            ctx.lineTo((appWidth*0.5) - (295 * units), centerY);
-            ctx.lineTo((appWidth*0.5) - (275 * units), centerY + (20*units));
+            ctx.moveTo((appWidth*0.5) - (arrowX * units), centerY + ((arrowY-20)*units));
+            ctx.lineTo((appWidth*0.5) - ((arrowX+20) * units), centerY + ((arrowY)*units));
+            ctx.lineTo((appWidth*0.5) - (arrowX * units), centerY + ((arrowY+20)*units));
             ctx.stroke();
 
 
@@ -219,9 +237,9 @@ export class SoundcloudPanel extends DisplayObject{
                 App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             }
             ctx.beginPath();
-            ctx.moveTo((appWidth*0.5) + (275 * units), centerY - (20*units));
-            ctx.lineTo((appWidth*0.5) + (295 * units), centerY);
-            ctx.lineTo((appWidth*0.5) + (275 * units), centerY + (20*units));
+            ctx.moveTo((appWidth*0.5) + (arrowX * units), centerY + ((arrowY-20)*units));
+            ctx.lineTo((appWidth*0.5) + ((arrowX+20) * units), centerY + ((arrowY)*units));
+            ctx.lineTo((appWidth*0.5) + (arrowX * units), centerY + ((arrowY+20)*units));
             ctx.stroke();
 
 
@@ -273,14 +291,19 @@ export class SoundcloudPanel extends DisplayObject{
             ctx.lineTo(rx + (7.5*units), centerY + (170*units));
             ctx.stroke();
 
-
+            var clx = 230;
+            var cly = 150;
+            if (App.Metrics.Device === Device.mobile) {
+                clx = 202.5;
+                cly = 170;
+            }
 
             // CLOSE BUTTON //
             ctx.beginPath();
-            ctx.moveTo((appWidth*0.5) + (222.5*units), centerY - (142.5*units));
-            ctx.lineTo((appWidth*0.5) + (237.5*units), centerY - (157.5*units));
-            ctx.moveTo((appWidth*0.5) + (237.5*units), centerY - (142.5*units));
-            ctx.lineTo((appWidth*0.5) + (222.5*units), centerY - (157.5*units));
+            ctx.moveTo((appWidth*0.5) + ((clx-7.5)*units), centerY - ((cly-7.5)*units));
+            ctx.lineTo((appWidth*0.5) + ((clx+7.5)*units), centerY - ((cly+7.5)*units));
+            ctx.moveTo((appWidth*0.5) + ((clx+7.5)*units), centerY - ((cly-7.5)*units));
+            ctx.lineTo((appWidth*0.5) + ((clx-7.5)*units), centerY - ((cly+7.5)*units));
             ctx.stroke();
         }
     }
@@ -435,11 +458,25 @@ export class SoundcloudPanel extends DisplayObject{
         var searchW = ctx.measureText(this._CopyJson.searchLine.toUpperCase()).width;
         var randomW = ctx.measureText(this._CopyJson.randomLine.toUpperCase()).width;
 
+        var clx = 230;
+        var cly = 150;
+        var arrowX = 285;
+        var arrowY = 0;
+        if (App.Metrics.Device === Device.tablet) {
+            arrowX = 255;
+        }
+        if (App.Metrics.Device === Device.mobile) {
+            clx = 202.5;
+            cly = 170;
+            arrowX = 70;
+            arrowY = 160;
+        }
+
         this._RollOvers[0] = Dimensions.hitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = Dimensions.hitRect((appWidth*0.5) + (210*units), centerY - (170*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[1] = Dimensions.hitRect((appWidth*0.5) + ((clx-20)*units), centerY - ((cly+20)*units),40*units,40*units, point.x, point.y); // close
         this._RollOvers[2] = Dimensions.hitRect((appWidth*0.5) + (200*units) - searchW, centerY - (150*units),searchW + (10*units),40*units, point.x, point.y); // search
-        this._RollOvers[3] = Dimensions.hitRect((appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
-        this._RollOvers[4] = Dimensions.hitRect((appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // next
+        this._RollOvers[3] = Dimensions.hitRect((appWidth*0.5) - ((arrowX+15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[4] = Dimensions.hitRect((appWidth*0.5) + ((arrowX-15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // next
 
         this._RollOvers[5] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY - (units*98),420*units,40*units, point.x, point.y); // 1
         this._RollOvers[6] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY - (units*58),420*units,40*units, point.x, point.y); // 2

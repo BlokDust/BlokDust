@@ -1,3 +1,4 @@
+import {Device} from '../Device';
 import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
 import Size = minerva.Size;
@@ -131,12 +132,16 @@ export class Tutorial extends DisplayObject{
                 }
             }
 
+            var cx = 0.5;
+            if (App.Metrics.Device === Device.mobile) {
+                cx = 0.35;
+            }
 
             switch (this.CurrentScene) {
                 case 1:
                     if (tone && !App.MainScene.IsDraggingABlock) { // TONE CREATED
                         check = true;
-                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(0.5,0.5),1000);
+                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
                     }
 
                     break;
@@ -156,7 +161,7 @@ export class Tutorial extends DisplayObject{
                 case 4:
                     if (this.OptionsInteract && App.MainScene.SelectedBlock==effect) { // CHOPPER OPTIONS
                         check = true;
-                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(0.5,0.5),1000);
+                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
                     }
 
                     break;
@@ -164,7 +169,7 @@ export class Tutorial extends DisplayObject{
                 case 5:
                     if (!controller && !controllerUnplugged && !App.MainScene.IsDraggingABlock) { // KEYBOARD TRASHED (this one could be more rigid)
                         check = true;
-                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(0.5,0.35),1000);
+                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.35),1000);
                     }
 
                     break;
@@ -279,34 +284,10 @@ export class Tutorial extends DisplayObject{
             App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.lineWidth = 2;
 
-            /*// TICK //
-             ctx.beginPath();
-             ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY);
-             ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((4*ym)*units), iconY + ((8*ym)*units));
-             ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((12*ym)*units), iconY - ((8*ym)*units));
-
-
-             // CROSS //
-             ctx.moveTo((App.Width*0.5) + padding + splashOffset - ((8*nm)*units), iconY - ((8*nm)*units));
-             ctx.lineTo((App.Width*0.5) + padding + splashOffset + ((8*nm)*units), iconY + ((8*nm)*units));
-             ctx.moveTo((App.Width*0.5) + padding + splashOffset + ((8*nm)*units), iconY - ((8*nm)*units));
-             ctx.lineTo((App.Width*0.5) + padding + splashOffset - ((8*nm)*units), iconY + ((8*nm)*units));
-             ctx.stroke();*/
 
             // TOUR //
             ctx.beginPath();
 
-            // SINGLE //
-            /*ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY);
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((14*ym)*units), iconY + (((2*ym)*units)*this.AnimatePolarity));
-
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((8*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((8*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((12*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
-
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset + ((14*ym)*units), iconY - (((2*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY);*/
 
 
             // DOUBLE //
@@ -317,14 +298,7 @@ export class Tutorial extends DisplayObject{
             ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((12*ym)*units)*this.AnimatePolarity));
             ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
             ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((12*ym)*units), iconY);
-
-            /*ctx.moveTo((App.Width*0.5) - padding + splashOffset + ((14*ym)*units), iconY + (((2*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
-
-
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((14*ym)*units), iconY - (((2*ym)*units)*this.AnimatePolarity));*/
-
+            //
             ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY);
             ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
             ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((12*ym)*units)*this.AnimatePolarity));
@@ -334,21 +308,6 @@ export class Tutorial extends DisplayObject{
             ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((16*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
 
 
-            // MOUNTAIN //
-            /*ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY);
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY - (((8*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((4*ym)*units), iconY - (((4*ym)*units)*this.AnimatePolarity));
-
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((20*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset - ((12*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
-
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((16*ym)*units), iconY + (((8*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY + (((8*ym)*units)*this.AnimatePolarity));
-
-            ctx.moveTo((App.Width*0.5) - padding + splashOffset - ((8*ym)*units), iconY + (((4*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((8*ym)*units), iconY - (((12*ym)*units)*this.AnimatePolarity));
-            ctx.lineTo((App.Width*0.5) - padding + splashOffset + ((20*ym)*units), iconY);
-*/
 
 
 
@@ -397,17 +356,6 @@ export class Tutorial extends DisplayObject{
             ctx.moveTo(x, y);
             ctx.lineTo(x + (this.TextWidth*units), y);
             ctx.stroke();
-
-
-            // CLOSE //
-            /*ctx.beginPath();
-             ctx.moveTo(App.Width - (20*units), y - (20*units));
-             ctx.lineTo(App.Width - (35*units), y - (35*units));
-             ctx.moveTo(App.Width - (35*units), y - (20*units));
-             ctx.lineTo(App.Width - (20*units), y - (35*units));
-             ctx.stroke();*/
-
-
 
 
 

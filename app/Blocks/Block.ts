@@ -17,6 +17,7 @@ declare var App: IApp;
 export class Block extends DisplayObject implements IBlock {
 
     public Id: number;
+    public Version: number;
     public BlockName: string;
     public Type: any;
     public Click: RoutedEvent<RoutedEventArgs> = new RoutedEvent<RoutedEventArgs>();
@@ -45,6 +46,7 @@ export class Block extends DisplayObject implements IBlock {
     init(drawTo: IDisplayContext): void {
         super.init(drawTo);
 
+        this.Version = 0;
         this.Chain = new AudioChain();
 
         this.update();

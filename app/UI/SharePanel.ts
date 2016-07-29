@@ -2,6 +2,7 @@ import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Size = minerva.Size;
+import {Device} from '../Device';
 import {Commands} from './../Commands';
 import {IApp} from '../IApp';
 import {Recorder} from './../Blocks/Sources/Recorder';
@@ -200,7 +201,7 @@ export class SharePanel extends DisplayObject {
         var italicType = App.Metrics.TxtItalic2;
         var units = App.Unit;
         var centerY = this.OffsetY + (App.Height * 0.5);
-        var shareX = this.OffsetX + App.Width;
+        var shareX = this.OffsetX + (App.Width*1.5);
         var buttonY = centerY + (35*units);
         var appWidth = App.Width;
         var appHeight = App.Height;
@@ -218,6 +219,18 @@ export class SharePanel extends DisplayObject {
             ctx.globalAlpha = 1;
             App.FillColor(ctx,App.Palette[1]);
             ctx.fillRect(shareX + (appWidth*0.5) - (210*units),centerY - (20*units),420*units,40*units); // solid
+
+
+
+            var arrowX = 275;
+            var arrowY = 0;
+            if (App.Metrics.Device === Device.tablet) {
+                arrowX = 245;
+            }
+            if (App.Metrics.Device === Device.mobile) {
+                arrowX = 190;
+                arrowY = 110;
+            }
 
             if (this._FirstSession) {
 
@@ -288,12 +301,12 @@ export class SharePanel extends DisplayObject {
                 ctx.lineWidth = 2;
                 App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
                 ctx.beginPath();
-                ctx.moveTo( this.OffsetX + (appWidth*0.5) + (275 * units), centerY - (20*units));
-                ctx.lineTo( this.OffsetX + (appWidth*0.5) + (295 * units), centerY);
-                ctx.lineTo( this.OffsetX + (appWidth*0.5) + (275 * units), centerY + (20*units));
+                ctx.moveTo( this.OffsetX + (appWidth*0.5) + (arrowX * units), centerY + ((arrowY-20)*units));
+                ctx.lineTo( this.OffsetX + (appWidth*0.5) + ((arrowX+20) * units), centerY + (arrowY*units));
+                ctx.lineTo( this.OffsetX + (appWidth*0.5) + (arrowX * units), centerY + ((arrowY+20)*units));
                 ctx.stroke();
                 ctx.font = midType;
-                ctx.fillText("SKIP", this.OffsetX + (appWidth * 0.5) + (275 * units), centerY + (35 * units));
+                ctx.fillText("SKIP", this.OffsetX + (appWidth*0.5) + (arrowX * units), centerY + ((arrowY+35)*units));
             }
 
 
@@ -323,9 +336,9 @@ export class SharePanel extends DisplayObject {
             ctx.lineWidth = 2;
             App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
             ctx.beginPath();
-            ctx.moveTo(shareX + (appWidth*0.5) - (275 * units), centerY - (20*units));
-            ctx.lineTo(shareX + (appWidth*0.5) - (295 * units), centerY);
-            ctx.lineTo(shareX + (appWidth*0.5) - (275 * units), centerY + (20*units));
+            ctx.moveTo(shareX + (appWidth*0.5) - (arrowX * units), centerY + ((arrowY-20)*units));
+            ctx.lineTo(shareX + (appWidth*0.5) - ((arrowX+20) * units), centerY + (arrowY*units));
+            ctx.lineTo(shareX + (appWidth*0.5) - (arrowX * units), centerY + ((arrowY+20)*units));
             ctx.stroke();
 
 
@@ -376,8 +389,15 @@ export class SharePanel extends DisplayObject {
 
 
             // TITLE //
-            ctx.textAlign = "right";
-            ctx.fillText(this._CopyJson.titleLine.toUpperCase(), (appWidth*0.5) - (225*units), centerY - (106*units) );
+
+            if (App.Metrics.Device === Device.mobile) {
+                ctx.textAlign = "left";
+                ctx.fillText(this._CopyJson.titleLine.toUpperCase(), (appWidth*0.5) - (210*units), centerY - (150*units) );
+            } else {
+                ctx.textAlign = "right";
+                ctx.fillText(this._CopyJson.titleLine.toUpperCase(), (appWidth*0.5) - (225*units), centerY - (106*units) );
+            }
+
             ctx.beginPath();
             ctx.moveTo((appWidth*0.5) - (210*units), centerY - (90*units));
             ctx.lineTo((appWidth*0.5) + (210*units), centerY - (90*units));
@@ -421,12 +441,20 @@ export class SharePanel extends DisplayObject {
             ctx.stroke();
 
 
+
+            var clx = 230;
+            var cly = 130;
+            if (App.Metrics.Device === Device.mobile) {
+                clx = 202.5;
+                cly = 150;
+            }
+
             // CLOSE BUTTON //
             ctx.beginPath();
-            ctx.moveTo((appWidth*0.5) + (222.5*units), centerY - (122.5*units));
-            ctx.lineTo((appWidth*0.5) + (237.5*units), centerY - (137.5*units));
-            ctx.moveTo((appWidth*0.5) + (237.5*units), centerY - (122.5*units));
-            ctx.lineTo((appWidth*0.5) + (222.5*units), centerY - (137.5*units));
+            ctx.moveTo((appWidth*0.5) + ((clx-7.5)*units), centerY - ((cly-7.5)*units));
+            ctx.lineTo((appWidth*0.5) + ((clx+7.5)*units), centerY - ((cly+7.5)*units));
+            ctx.moveTo((appWidth*0.5) + ((clx+7.5)*units), centerY - ((cly-7.5)*units));
+            ctx.lineTo((appWidth*0.5) + ((clx-7.5)*units), centerY - ((cly+7.5)*units));
             ctx.stroke();
         }
     }
@@ -499,7 +527,7 @@ export class SharePanel extends DisplayObject {
             panel[""+v] = this.x;
 
             if (v=="OffsetX") {
-                panel.TweenDom(panel.URLInputContainer, this.x, "x", 200, 1);
+                panel.TweenDom(panel.URLInputContainer, this.x, "x", 200, 1.5);
             }
             if (v=="OffsetY") {
                 panel.TweenDom(panel.URLInputContainer, this.x, "y", 20, 0);
@@ -627,7 +655,7 @@ export class SharePanel extends DisplayObject {
         this._Saving = false;
         this._SessionId = id;
         this.UpdateUrlText();
-        this.DelayTo(this,-App.Width,500,0,"OffsetX");
+        this.DelayTo(this,-(App.Width*1.5),500,0,"OffsetX");
     }
 
 
@@ -692,7 +720,7 @@ export class SharePanel extends DisplayObject {
                 return;
             }
             if (this._RollOvers[10]) { // skip
-                this.DelayTo(this,-App.Width,500,0,"OffsetX");
+                this.DelayTo(this,-(App.Width*1.5),500,0,"OffsetX");
                 return;
             }
 
@@ -712,7 +740,7 @@ export class SharePanel extends DisplayObject {
 
     HitTests(point) {
         var units = App.Unit;
-        var shareX = this.OffsetX + App.Width;
+        var shareX = this.OffsetX + (App.Width*1.5);
         var centerY = this.OffsetY + (App.Height * 0.5);
         var buttonY = centerY + (35*units);
         var ctx = this.ctx;
@@ -723,8 +751,22 @@ export class SharePanel extends DisplayObject {
         ctx.font = midType;
         var genW = ctx.measureText(this._CopyJson.generateLine.toUpperCase()).width;
 
+        var clx = 230;
+        var cly = 130;
+        var arrowX = 285;
+        var arrowY = 0;
+        if (App.Metrics.Device === Device.tablet) {
+            arrowX = 255;
+        }
+        if (App.Metrics.Device === Device.mobile) {
+            clx = 202.5;
+            cly = 150;
+            arrowX = 200;
+            arrowY = 110;
+        }
+
         this._RollOvers[0] = Dimensions.hitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = Dimensions.hitRect((appWidth*0.5) + (210*units), centerY - (150*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[1] = Dimensions.hitRect((appWidth*0.5) + ((clx-20)*units), centerY - ((cly+20)*units),40*units,40*units, point.x, point.y); // close
         this._RollOvers[2] = Dimensions.hitRect((appWidth*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
         if (this._FirstSession) {
             this._RollOvers[3] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
@@ -735,13 +777,13 @@ export class SharePanel extends DisplayObject {
             this._RollOvers[3] = false;
             this._RollOvers[4] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
             this._RollOvers[5] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
-            this._RollOvers[10] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) + (270*units),centerY - (units*20),30*units,40*units, point.x, point.y); // skip
+            this._RollOvers[10] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) + ((arrowX-15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // skip
         }
         this._RollOvers[6] = Dimensions.hitRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
         this._RollOvers[7] = Dimensions.hitRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
         this._RollOvers[8] = Dimensions.hitRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
 
-        this._RollOvers[9] = Dimensions.hitRect(shareX + (appWidth*0.5) - (300*units),centerY - (units*20),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[9] = Dimensions.hitRect(shareX + (appWidth*0.5) - ((arrowX+15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // back
     }
 
 
@@ -763,10 +805,10 @@ export class SharePanel extends DisplayObject {
 
     resize() {
         if (this.OffsetX!==0) {
-            this.OffsetX = -App.Width;
+            this.OffsetX = -(App.Width*1.5);
         }
         if (this.URLInput) {
-            this.StyleDom(this.URLInputContainer, 400, 40, 200, 20, this.OffsetX + App.Width, App.Metrics.TxtUrl);
+            this.StyleDom(this.URLInputContainer, 400, 40, 200, 20, this.OffsetX + (App.Width*1.5), App.Metrics.TxtUrl);
             this.StyleDom(this.TitleInputContainer, 300, 42, 210, 132, 0, App.Metrics.TxtHeaderPR);
         }
 
