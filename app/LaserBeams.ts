@@ -133,25 +133,29 @@ export class LaserBeams extends DisplayObject {
 
 
                                 outline = [];
-                                p1 = App.Metrics.PointOnGrid(laser.Position);
-                                p2 = App.Metrics.PointOnGrid(block.Position);
+                                p1 = App.Metrics.UndraggedPointOnGrid(laser.Position);
+                                p2 = App.Metrics.UndraggedPointOnGrid(block.Position);
 
                                 // IF IN RANGE //
                                 if (this.PointFromPoint(p1.x, p1.y, p2.x, p2.y) < ((laser.CheckRange * App.ScaledUnit) + grd)) {
 
+
                                     // IF IN QUADRANT //
                                     if (this.QuadPartition(p1, p2, laser.Params.angle)) {
+
 
                                         //IF CLOSE TO LINE //
                                         if (this.PointFromLine(p2.x, p2.y, p1.x, p1.y, p1.x + line.X, p1.y + line.Y, false) < grd) {
 
+
                                             // INTERSECT CHECK //
                                             for (var k = 0; k < block.Outline.length; k++) {
-                                                outline.push(App.Metrics.PointOnGrid(App.Metrics.GetRelativePoint(block.Outline[k], block.Position)));
+                                                outline.push(App.Metrics.UndraggedPointOnGrid(App.Metrics.GetRelativePoint(block.Outline[k], block.Position)));
                                             }
                                             p2 = new Point(p1.x + line.X, p1.y + line.Y);
                                             var intersection = Intersection.intersectLinePolygon(p1, p2, outline);
                                             if (intersection.status == "Intersection") {
+                                                console.log("intersect");
 
                                                 // THERE IS A COLLISION //
 
@@ -159,15 +163,6 @@ export class LaserBeams extends DisplayObject {
                                                 // VOID BLOCKS //
                                                 if (block instanceof Void) {
                                                     var intersect = intersection.points;
-                                                    /*var dist1 = this.PointFromPoint(p1.x, p1.y, intersect[0].x, intersect[0].y) / App.ScaledUnit;
-                                                     var dist2 = this.PointFromPoint(p1.x, p1.y, intersect[1].x, intersect[1].y) / App.ScaledUnit;
-
-                                                     if (dist1 < laser.CheckRange) {
-                                                     laser.CheckRange = dist1;
-                                                     }
-                                                     if (dist2 < laser.CheckRange) {
-                                                     laser.CheckRange = dist2;
-                                                     }*/
 
                                                     for (var h = 0; h < intersect.length; h++) {
                                                         var dist = this.PointFromPoint(p1.x, p1.y, intersect[h].x, intersect[h].y) / App.ScaledUnit;
