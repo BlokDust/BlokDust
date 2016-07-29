@@ -844,6 +844,10 @@ export class MainScene extends DisplayObject{
     // CLEAR SCENE OF ALL BLOCKS, RESET SESSION //
     ResetScene() {
 
+        if (this.Tutorial.Open) {
+            this.Tutorial.ClosePanel();
+        }
+
         // delete all blocks //
         this.DeleteAllBlocks();
         this.Tutorial.WatchedBlocks = [];
