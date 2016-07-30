@@ -1,4 +1,4 @@
-// etch v0.1.1 https://github.com/edsilv/etch#readme
+// etch v1.0.0 https://github.com/edsilv/etch#readme
 import ITimerListener = etch.engine.ITimerListener;
 declare var requestAnimFrame: any;
 declare module etch.engine {
@@ -111,10 +111,10 @@ declare module etch.collections {
     }
 }
 
-/// <reference path="engine/ClockTimer.d.ts" />
-/// <reference path="primitives/Vector.d.ts" />
-/// <reference path="exceptions/Exceptions.d.ts" />
-/// <reference path="collections/ObservableCollection.d.ts" />
+/// <reference path="Engine/ClockTimer.d.ts" />
+/// <reference path="Primitives/Vector.d.ts" />
+/// <reference path="Exceptions/Exceptions.d.ts" />
+/// <reference path="Collections/ObservableCollection.d.ts" />
 
 declare module etch.collections {
     class PropertyChangedEventArgs implements nullstone.IEventArgs {
@@ -125,6 +125,12 @@ declare module etch.collections {
         PropertyChanged: nullstone.Event<PropertyChangedEventArgs>;
     }
     var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
+}
+
+declare module etch.engine {
+    interface ITimerListener {
+        onTicked(lastTime: number, nowTime: number): any;
+    }
 }
 
 import Size = minerva.Size;
@@ -265,12 +271,6 @@ declare module etch.drawing {
         drawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         resizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         resize(): void;
-    }
-}
-
-declare module etch.engine {
-    interface ITimerListener {
-        onTicked(lastTime: number, nowTime: number): any;
     }
 }
 

@@ -2,7 +2,7 @@
   "name": "BlokDust",
   "version": "0.2.7",
   "dependencies": {
-    "etch": "edsilv/etch#dev",
+    "etch": "edsilv/etch#1.0.0",
     "exjs": "BSick7/exjs",
     "extensions": "edsilv/extensions",
     "intersection": "BlokDust/intersection",
