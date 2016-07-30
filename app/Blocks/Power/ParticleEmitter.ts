@@ -10,7 +10,8 @@ declare var App: IApp;
 
 export class ParticleEmitter extends PowerSource {
 
-    //private _rateCounter: number;
+    private _rateCounter: number; // todo: not needed for delta time
+
     private _LastEmission: number;
     public Params: ParticleEmitterParams;
     public Defaults: ParticleEmitterParams;
@@ -28,7 +29,7 @@ export class ParticleEmitter extends PowerSource {
         };
         this.PopulateParams();
 
-        //this._rateCounter = 0;
+        this._rateCounter = 0; // todo: not needed for delta time
 
         super.init(drawTo);
 
@@ -57,30 +58,55 @@ export class ParticleEmitter extends PowerSource {
         this._LastEmission = this.lastVisualTick;
     }
 
-
     update() {
         super.update();
-        
+
+        // If we're in self powered mode, or if this is powered
         if (this.Params.selfPoweredMode || this.IsPowered()) {
 
-            if (!this._LastEmission){
-                this.EmitParticle();
-            } else {
-                var ms: number = 1000; // 1 second
-                var normalisedRate: number = Math.normalise((510 - this.Params.rate), 0, 500);
-                var particlesPerMS: number = ms / normalisedRate;
-                var msSinceLastEmission: number = this.lastVisualTick - this._LastEmission;
-                if (msSinceLastEmission >= particlesPerMS){
-                    this.EmitParticle();
-                }
-            }
+            if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
 
-            // ROTATE //
-            if (this.Params.angle > 360) {
-                this.Params.angle = 1;
+                this._rateCounter += 1; // POSSIBLY MOVE TO A SET TIMEOUT, IF IT WOULD PERFORM BETTER
+                if (this._rateCounter>=this.Params.rate) {
+                    this.EmitParticle();
+                    this._rateCounter = 0;
+                }
+
+                // ROTATE //
+                if (this.Params.angle>360) {
+                    this.Params.angle = 1;
+                }
+
             }
+        } else {
+            this._rateCounter = this.Params.rate;
         }
     }
+
+    // todo: emit based on time
+    // update() {
+    //     super.update();
+        
+    //     if (this.Params.selfPoweredMode || this.IsPowered()) {
+
+    //         if (!this._LastEmission){
+    //             this.EmitParticle();
+    //         } else {
+    //             var ms: number = 1000; // 1 second
+    //             var normalisedRate: number = Math.normalise((510 - this.Params.rate), 0, 500);
+    //             var particlesPerMS: number = ms / normalisedRate;
+    //             var msSinceLastEmission: number = this.lastVisualTick - this._LastEmission;
+    //             if (msSinceLastEmission >= particlesPerMS){
+    //                 this.EmitParticle();
+    //             }
+    //         }
+
+    //         // ROTATE //
+    //         if (this.Params.angle > 360) {
+    //             this.Params.angle = 1;
+    //         }
+    //     }
+    // }
 
     draw() {
         super.draw();
