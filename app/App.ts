@@ -304,8 +304,8 @@ export default class App implements IApp{
     LoadComposition() {
         var that = this;
 
-        this.CompositionId = Utils.Urls.GetQuerystringParameter('c');
-        this.CompositionName = Utils.Urls.GetQuerystringParameter('t');
+        this.CompositionId = Utils.Urls.getQuerystringParameter('c');
+        this.CompositionName = Utils.Urls.getQuerystringParameter('t');
 
         if(this.CompositionId) {
             this.IsLoadingComposition = true;

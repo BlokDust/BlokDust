@@ -38,8 +38,8 @@ export class ParticleEmitter extends PowerSource {
 
     EmitParticle() {
         var position = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
-        var vector = Vector.FromAngle(Math.degreesToRadians(this.Params.angle));
-        vector.Mult(this.Params.speed);
+        var vector = Vector.fromAngle(Math.degreesToRadians(this.Params.angle));
+        vector.mult(this.Params.speed);
         var size = 2 + (Math.random());
         var life = Math.round(this.Params.range/this.Params.speed);
 

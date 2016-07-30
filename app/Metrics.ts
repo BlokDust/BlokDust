@@ -131,7 +131,7 @@ export class Metrics {
     }
 
     get PixelRatio(): number {
-        return Utils.Device.GetPixelRatio(App.Canvas.Ctx)
+        return Utils.Device.getPixelRatio(App.Canvas.Ctx)
     }
 
     //-------------------------------------------------------------------------------------------

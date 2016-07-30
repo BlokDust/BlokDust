@@ -862,51 +862,51 @@ export class SettingsPanel extends DisplayObject{
         var xs = [x1,x2,x3];
         var tab;
 
-        this._RollOvers[0] = Dimensions.HitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[0] = Dimensions.hitRect(dx + halfWidth, closeY - (20*units),40*units,40*units, point.x, point.y); // close
 
         for (var i=1; i<4; i++) {
-            this._RollOvers[i] = Dimensions.HitRect(xs[i-1], thirdY + (25*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
-            this._RollOvers[i+3] = Dimensions.HitRect(xs[i-1], thirdY + (45*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
+            this._RollOvers[i] = Dimensions.hitRect(xs[i-1], thirdY + (25*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // url
+            this._RollOvers[i+3] = Dimensions.hitRect(xs[i-1], thirdY + (45*units) + this.MenuItems[2].YOffset,thirdWidth,20*units, point.x, point.y); // twitter
         }
         tab = this.MenuItems[1].YOffset;
-        this._RollOvers[7] = Dimensions.HitRect(dx - (210*units), pageY + tab + (10*units),420*units,40*units, point.x, point.y); // guide
+        this._RollOvers[7] = Dimensions.hitRect(dx - (210*units), pageY + tab + (10*units),420*units,40*units, point.x, point.y); // guide
 
-        this._RollOvers[8] = Dimensions.HitRect(dx - (210*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // fb
-        this._RollOvers[9] = Dimensions.HitRect(dx - (65*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // tw
-        this._RollOvers[10] = Dimensions.HitRect(dx + (80*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // gp
+        this._RollOvers[8] = Dimensions.hitRect(dx - (210*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // fb
+        this._RollOvers[9] = Dimensions.hitRect(dx - (65*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // tw
+        this._RollOvers[10] = Dimensions.hitRect(dx + (80*units),pageY + tab + (155*units),130*units,30*units, point.x, point.y); // gp
 
         var spacer = 30*units;
         var linkWidth = this._LinkWidth;
         var linksWidth = this._LinksWidth + (spacer*3);
-        this._RollOvers[11] = Dimensions.HitRect(dx - (linksWidth*0.5) - (spacer * 0.5),pageY + tab + (90*units),linkWidth[0] + spacer,30*units, point.x, point.y); // fb
-        this._RollOvers[12] = Dimensions.HitRect(dx - (linksWidth*0.5) + linkWidth[0] + (spacer * 0.5),pageY + tab + (90*units),linkWidth[1] + spacer,30*units, point.x, point.y); // tw
-        this._RollOvers[13] = Dimensions.HitRect(dx - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer * 1.5),pageY + tab + (90*units),linkWidth[2] + spacer,30*units, point.x, point.y); // yt
-        this._RollOvers[14] = Dimensions.HitRect(dx - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer * 2.5),pageY + tab + (90*units),linkWidth[3] + spacer,30*units, point.x, point.y); // gh
+        this._RollOvers[11] = Dimensions.hitRect(dx - (linksWidth*0.5) - (spacer * 0.5),pageY + tab + (90*units),linkWidth[0] + spacer,30*units, point.x, point.y); // fb
+        this._RollOvers[12] = Dimensions.hitRect(dx - (linksWidth*0.5) + linkWidth[0] + (spacer * 0.5),pageY + tab + (90*units),linkWidth[1] + spacer,30*units, point.x, point.y); // tw
+        this._RollOvers[13] = Dimensions.hitRect(dx - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + (spacer * 1.5),pageY + tab + (90*units),linkWidth[2] + spacer,30*units, point.x, point.y); // yt
+        this._RollOvers[14] = Dimensions.hitRect(dx - (linksWidth*0.5) + linkWidth[0] + linkWidth[1] + linkWidth[2] + (spacer * 2.5),pageY + tab + (90*units),linkWidth[3] + spacer,30*units, point.x, point.y); // gh
 
 
         // CATEGORY HIT TEST //
         for (var i=0; i<this.MenuItems.length; i++) {
             var cat = this.MenuItems[i];
-            cat.Hover = Dimensions.HitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
+            cat.Hover = Dimensions.hitRect(cat.Position.x - (cat.Size.width*0.5) + (2*units), tabY + (5*units), cat.Size.width - (4*units), (this.Height*units) - (10*units), point.x, point.y );
         }
 
         // OPTIONS HIT TESTS //
         tab = this.MenuItems[0].YOffset;
         for (var i=0;i<this.Options.length;i++) {
             if (this.Options[i].Type == "slider") {
-                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab + (60*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (60*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
             }
             if (this.Options[i].Type == "meter") {
-                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab + (108*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (108*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
             }
             if (this.Options[i].Type == "themeSelector") {
-                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab, this.Range + (20*units), 60*App.Unit, point.x, point.y);
-                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab, 40*units, 60*units, point.x, point.y);
-                this.Options[i].HandleRoll[1] = Dimensions.HitRect(this.Margin + this.Range - (30*units), pageY + tab, 40*units, 60*units, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab, this.Range + (20*units), 60*App.Unit, point.x, point.y);
+                this.Options[i].HandleRoll[0] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab, 40*units, 60*units, point.x, point.y);
+                this.Options[i].HandleRoll[1] = Dimensions.hitRect(this.Margin + this.Range - (30*units), pageY + tab, 40*units, 60*units, point.x, point.y);
             }
             if (this.Options[i].Type == "actionbutton") {
-                this._OptionsRoll[i] = Dimensions.HitRect(this.Margin - (10*units), pageY + tab + (156*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
-                this.Options[i].HandleRoll[0] = Dimensions.HitRect(this.Margin + (this.Range * 0.25), pageY + tab + (156*units), (this.Range * 0.5), this.Options[i].Size.height, point.x, point.y);
+                this._OptionsRoll[i] = Dimensions.hitRect(this.Margin - (10*units), pageY + tab + (156*units), this.Range + (20*units), 48*App.Unit, point.x, point.y);
+                this.Options[i].HandleRoll[0] = Dimensions.hitRect(this.Margin + (this.Range * 0.25), pageY + tab + (156*units), (this.Range * 0.5), this.Options[i].Size.height, point.x, point.y);
             }
         }
     }

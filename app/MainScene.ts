@@ -595,7 +595,7 @@ export class MainScene extends DisplayObject{
 
         // CHECK BLOCKS FOR HOVER //
         if (this.OptionsPanel.Scale === 1) {
-            panelCheck = Dimensions.HitRect(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
+            panelCheck = Dimensions.hitRect(this.OptionsPanel.Position.x,this.OptionsPanel.Position.y - (this.OptionsPanel.Size.height*0.5), this.OptionsPanel.Size.width,this.OptionsPanel.Size.height,point.x,point.y);
         }
 
         if (!panelCheck && !this._IsPointerDown) {

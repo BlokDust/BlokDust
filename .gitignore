@@ -1,5 +1,6 @@
 .idea
 .tscache
+.vscode
 node_modules
 app/.build
 app/lib

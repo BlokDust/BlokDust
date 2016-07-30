@@ -225,12 +225,12 @@ export class MessagePanel extends DisplayObject {
         var units = App.Unit;
 
         if (this._Value.confirmation) {
-            this._Roll[0] = Dimensions.HitRect(this._CloseX  - (20*units), ((<MainScene>this.DrawTo).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
+            this._Roll[0] = Dimensions.hitRect(this._CloseX  - (20*units), ((<MainScene>this.DrawTo).Height*0.75) - (50*units), (40*units), (40*units), point.x, point.y);
         } else {
             this._Roll[0] = false;
         }
         if (this._Value.buttonText!=="") {
-            this._Roll[1] = Dimensions.HitRect(this._CloseX, ((<MainScene>this.DrawTo).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
+            this._Roll[1] = Dimensions.hitRect(this._CloseX, ((<MainScene>this.DrawTo).Height*0.75) - (15*units), this._ButtonWidth, (30*units), point.x, point.y);
         } else {
             this._Roll[1] = false;
         }

@@ -766,25 +766,25 @@ export class SharePanel extends DisplayObject {
         }
 
 
-        this._RollOvers[0] = Dimensions.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = Dimensions.HitRect((appWidth*0.5) + ((clx-20)*units), centerY - ((cly+20)*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = Dimensions.HitRect((appWidth*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
+        this._RollOvers[0] = Dimensions.hitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
+        this._RollOvers[1] = Dimensions.hitRect((appWidth*0.5) + ((clx-20)*units), centerY - ((cly+20)*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[2] = Dimensions.hitRect((appWidth*0.5) + (200*units) - genW, centerY - (130*units),genW + (10*units),40*units, point.x, point.y); // gen title
         if (this._FirstSession) {
-            this._RollOvers[3] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
+            this._RollOvers[3] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // gen URL
             this._RollOvers[4] = false;
             this._RollOvers[5] = false;
             this._RollOvers[10] = false;
         } else {
             this._RollOvers[3] = false;
-            this._RollOvers[4] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
-            this._RollOvers[5] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
-            this._RollOvers[10] = Dimensions.HitRect(this.OffsetX + (appWidth*0.5) + ((arrowX-15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // skip
+            this._RollOvers[4] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) - (210*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save
+            this._RollOvers[5] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) + (7.5*units), centerY - (20*units),202.5*units,40*units, point.x, point.y); // save as
+            this._RollOvers[10] = Dimensions.hitRect(this.OffsetX + (appWidth*0.5) + ((arrowX-15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // skip
         }
-        this._RollOvers[6] = Dimensions.HitRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
-        this._RollOvers[7] = Dimensions.HitRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
-        this._RollOvers[8] = Dimensions.HitRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
+        this._RollOvers[6] = Dimensions.hitRect(shareX + (appWidth*0.5) - (210*units),buttonY,130*units,30*units, point.x, point.y); // fb
+        this._RollOvers[7] = Dimensions.hitRect(shareX + (appWidth*0.5) - (65*units),buttonY,130*units,30*units, point.x, point.y); // tw
+        this._RollOvers[8] = Dimensions.hitRect(shareX + (appWidth*0.5) + (80*units),buttonY,130*units,30*units, point.x, point.y); // gp
 
-        this._RollOvers[9] = Dimensions.HitRect(shareX + (appWidth*0.5) - ((arrowX+15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[9] = Dimensions.hitRect(shareX + (appWidth*0.5) - ((arrowX+15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // back
     }
 
 

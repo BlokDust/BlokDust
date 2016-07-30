@@ -474,19 +474,19 @@ export class SoundcloudPanel extends DisplayObject{
             arrowY = 160;
         }
 
-        this._RollOvers[0] = Dimensions.HitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
-        this._RollOvers[1] = Dimensions.HitRect((appWidth*0.5) + ((clx-20)*units), centerY - ((cly+20)*units),40*units,40*units, point.x, point.y); // close
-        this._RollOvers[2] = Dimensions.HitRect((appWidth*0.5) + (200*units) - searchW, centerY - (150*units),searchW + (10*units),40*units, point.x, point.y); // search
-        this._RollOvers[3] = Dimensions.HitRect((appWidth*0.5) - ((arrowX+15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // back
-        this._RollOvers[4] = Dimensions.HitRect((appWidth*0.5) + ((arrowX-15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // next
+        this._RollOvers[0] = Dimensions.hitRect(shareX + (appWidth*0.5) - (210*units), centerY - (20*units),420*units,40*units, point.x, point.y); // url
+        this._RollOvers[1] = Dimensions.hitRect((appWidth*0.5) + ((clx-20)*units), centerY - ((cly+20)*units),40*units,40*units, point.x, point.y); // close
+        this._RollOvers[2] = Dimensions.hitRect((appWidth*0.5) + (200*units) - searchW, centerY - (150*units),searchW + (10*units),40*units, point.x, point.y); // search
+        this._RollOvers[3] = Dimensions.hitRect((appWidth*0.5) - ((arrowX+15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // back
+        this._RollOvers[4] = Dimensions.hitRect((appWidth*0.5) + ((arrowX-15)*units),centerY + (units*(arrowY-20)),30*units,40*units, point.x, point.y); // next
 
-        this._RollOvers[5] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY - (units*98),420*units,40*units, point.x, point.y); // 1
-        this._RollOvers[6] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY - (units*58),420*units,40*units, point.x, point.y); // 2
-        this._RollOvers[7] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY - (units*18),420*units,40*units, point.x, point.y); // 3
-        this._RollOvers[8] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY + (units*22),420*units,40*units, point.x, point.y); // 4
-        this._RollOvers[9] = Dimensions.HitRect((appWidth*0.5) - (210*units),centerY + (units*62),420*units,40*units, point.x, point.y); // 5
+        this._RollOvers[5] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY - (units*98),420*units,40*units, point.x, point.y); // 1
+        this._RollOvers[6] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY - (units*58),420*units,40*units, point.x, point.y); // 2
+        this._RollOvers[7] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY - (units*18),420*units,40*units, point.x, point.y); // 3
+        this._RollOvers[8] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY + (units*22),420*units,40*units, point.x, point.y); // 4
+        this._RollOvers[9] = Dimensions.hitRect((appWidth*0.5) - (210*units),centerY + (units*62),420*units,40*units, point.x, point.y); // 5
 
-        this._RollOvers[10] = Dimensions.HitRect((appWidth*0.5) + (205*units) - randomW, centerY + (136*units),randomW + (10*units),40*units, point.x, point.y); // random
+        this._RollOvers[10] = Dimensions.hitRect((appWidth*0.5) + (205*units) - randomW, centerY + (136*units),randomW + (10*units),40*units, point.x, point.y); // random
     }
 
     Resize() {

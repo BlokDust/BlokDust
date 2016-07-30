@@ -760,14 +760,14 @@ export class Tutorial extends DisplayObject{
         var padding = 60*units;
         var iconY = (App.Height*0.5) + (20*units);
 
-        this._RollOvers[0] = Dimensions.HitRect((App.Width*0.5) - (padding*2), iconY - (20*units),(padding*2),60*units, point.x, point.y); // tour
-        this._RollOvers[1] = Dimensions.HitRect((App.Width*0.5), iconY - (20*units),(padding*2),60*units, point.x, point.y); // skip
+        this._RollOvers[0] = Dimensions.hitRect((App.Width*0.5) - (padding*2), iconY - (20*units),(padding*2),60*units, point.x, point.y); // tour
+        this._RollOvers[1] = Dimensions.hitRect((App.Width*0.5), iconY - (20*units),(padding*2),60*units, point.x, point.y); // skip
 
         if (this.CurrentScene < this.TotalScenes) {
-            this._RollOvers[2] = Dimensions.HitRect(x - (10*units), y + btnY + introOffset + taskOffset - (10*units),(40*units) + this._SkipBtnWidth,40*units, point.x, point.y); // skip
+            this._RollOvers[2] = Dimensions.hitRect(x - (10*units), y + btnY + introOffset + taskOffset - (10*units),(40*units) + this._SkipBtnWidth,40*units, point.x, point.y); // skip
         } else {
             taskOffset = (this.TaskLines-2) * lineHeight;
-            this._RollOvers[2] = Dimensions.HitRect(x - (10*units), y + btnY + introOffset + taskOffset - (10*units),(40*units) + this._DoneBtnWidth,40*units, point.x, point.y); // done
+            this._RollOvers[2] = Dimensions.hitRect(x - (10*units), y + btnY + introOffset + taskOffset - (10*units),(40*units) + this._DoneBtnWidth,40*units, point.x, point.y); // done
 
         }
 
