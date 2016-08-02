@@ -76,6 +76,7 @@ interface UI {
     CreateNew: ICreateNew;
     SharePanel: ISharePanel;
     Tutorial: ITutorial;
+    TutorialTouch: ITutorial;
 }
 
 interface ICreateNew {

@@ -30,6 +30,7 @@ export class Tutorial extends DisplayObject{
     private _LineHeight: number;
     private _SkipBtnWidth: number;
     private _DoneBtnWidth: number;
+    private _TutKeys: boolean = false;
     public Text: any;
     public Offset: Point;
     public Offset2: Point;
@@ -137,59 +138,113 @@ export class Tutorial extends DisplayObject{
                 cx = 0.35;
             }
 
-            switch (this.CurrentScene) {
-                case 1:
-                    if (tone && !App.MainScene.IsDraggingABlock) { // TONE CREATED
-                        check = true;
-                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
-                    }
 
-                    break;
-                case 2:
-                    if (controller && !App.MainScene.IsDraggingABlock) { // KEYBOARD CONNECTED TO TONE
-                        check = true;
-                    }
+            // IF KEYBOARD TUTORIAL //
+            if (this._TutKeys) {
 
-                    break;
-                case 3:
-                    if (effect && !App.MainScene.IsDraggingABlock) { // CHOPPER CONNECTED TO TONE
-                        check = true;
-                    }
+                switch (this.CurrentScene) {
+                    case 1:
+                        if (tone && !App.MainScene.IsDraggingABlock) { // TONE CREATED
+                            check = true;
+                            App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
+                        }
 
-                    break;
+                        break;
+                    case 2:
+                        if (controller && !App.MainScene.IsDraggingABlock) { // KEYBOARD CONNECTED TO TONE
+                            check = true;
+                        }
 
-                case 4:
-                    if (this.OptionsInteract && App.MainScene.SelectedBlock==effect) { // CHOPPER OPTIONS
-                        check = true;
-                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
-                    }
+                        break;
+                    case 3:
+                        if (effect && !App.MainScene.IsDraggingABlock) { // CHOPPER CONNECTED TO TONE
+                            check = true;
+                        }
 
-                    break;
+                        break;
 
-                case 5:
-                    if (!controller && !controllerUnplugged && !App.MainScene.IsDraggingABlock) { // KEYBOARD TRASHED (this one could be more rigid)
-                        check = true;
-                        App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.35),1000);
-                    }
+                    case 4:
+                        if (this.OptionsInteract && App.MainScene.SelectedBlock==effect) { // CHOPPER OPTIONS
+                            check = true;
+                            App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
+                        }
 
-                    break;
-                case 6:
-                    if (particle && !App.MainScene.IsDraggingABlock) { // PARTICLE EMITTER CREATED
-                        check = true;
-                    }
+                        break;
 
-                    break;
-                case 7:
-                    if (particleConnected && !App.MainScene.IsDraggingABlock) { // PARTICLE CONNECTED
-                        check = true;
-                    }
+                    case 5:
+                        if (!controller && !controllerUnplugged && !App.MainScene.IsDraggingABlock) { // KEYBOARD TRASHED (this one could be more rigid)
+                            check = true;
+                            App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.35),1000);
+                        }
 
-                    break;
+                        break;
+                    case 6:
+                        if (particle && !App.MainScene.IsDraggingABlock) { // PARTICLE EMITTER CREATED
+                            check = true;
+                        }
 
-                default:
-                    break;
+                        break;
+                    case 7:
+                        if (particleConnected && !App.MainScene.IsDraggingABlock) { // PARTICLE CONNECTED
+                            check = true;
+                        }
+
+                        break;
+
+                    default:
+                        break;
+
+                }
 
             }
+
+            // IF TOUCHSCREEN TUTORIAL //
+            else {
+
+                switch (this.CurrentScene) {
+                    case 1:
+                        if (tone && !App.MainScene.IsDraggingABlock) { // TONE CREATED
+                            check = true;
+                            App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
+                        }
+
+                        break;
+                    case 2:
+                        if (particle && !App.MainScene.IsDraggingABlock) { // PARTICLE EMITTER CREATED
+                            check = true;
+                        }
+
+                        break;
+                    case 3:
+                        if (particleConnected && !App.MainScene.IsDraggingABlock) { // PARTICLE CONNECTED
+                            check = true;
+                        }
+
+                        break;
+                    case 4:
+                        if (effect && !App.MainScene.IsDraggingABlock) { // CHOPPER CONNECTED TO TONE
+                            check = true;
+                        }
+
+                        break;
+
+                    case 5:
+                        if (this.OptionsInteract && App.MainScene.SelectedBlock==effect) { // CHOPPER OPTIONS
+                            check = true;
+                            App.MainScene.MainSceneDragger.Jump(tone.Position,new Point(cx,0.5),1000);
+                        }
+
+                        break;
+
+
+                    default:
+                        break;
+
+                }
+
+            }
+
+
 
             if (check) {
                 this.NextScene();
@@ -571,7 +626,19 @@ export class Tutorial extends DisplayObject{
         }
         App.MainScene.ZoomButtons.ZoomReset(false);
         this.OptionsInteract = false;
+
+        // WHICH TUTORIAL //
+        if (!App.PointerInputManager.TouchAssumed) {
+            this.Text = App.L10n.UI.Tutorial;
+            this._TutKeys = true;
+        } else {
+            this.Text = App.L10n.UI.TutorialTouch;
+            this._TutKeys = false;
+        }
+
         this.CurrentScene = 1;
+        this.TotalScenes = this.Text.Scenes.length;
+
         this.Open = true;
         this.CountIntroLines();
         this.DelayTo(this.Offset,this.TextWidth + 20,1,0,"x");
@@ -589,9 +656,12 @@ export class Tutorial extends DisplayObject{
         this.DelayTo(this.Offset,-20,t,0,"x");
         var that = this;
         setTimeout(function(){
-            that.CurrentScene += 1;
-            that.CountIntroLines();
-            that.DelayTo(that.Offset,that.TextWidth + 20,t,0,"x");
+            if ((that.CurrentScene<that.TotalScenes)) {
+                that.CurrentScene += 1;
+                that.CountIntroLines();
+                that.DelayTo(that.Offset,that.TextWidth + 20,t,0,"x");
+            }
+
         },(t*1000));
     }
 
@@ -608,103 +678,190 @@ export class Tutorial extends DisplayObject{
         var hotspots = [];
         var itemX;
 
-        switch (this.CurrentScene) {
-            case 1: // CREATE TONE
-                if (!this.WatchedBlocks[0]) {
-                    if (header.DropDown && header.MenuItems[0].Selected) {
-                        if (header.MenuItems[0].CurrentPage===0) {
-                            itemX = this.GutterCheck(0,itemWidth,header.MenuItems[0],units);
-                            hotspots.push(new Point(itemX,menuH + (header.DropDown*units)));
-                        }
-                    } else {
-                        hotspots.push(new Point(header.MenuItems[0].Position.x,menuH));
-                    }
-                }
-                break;
+        // IF KEYBOARD TUTORIAL //
+        if (this._TutKeys) {
 
-            case 2: // CREATE KEYBOARD
-                if (!this.WatchedBlocks[1]) {
-                    if (header.DropDown && header.MenuItems[3].Selected) {
-                        if (header.MenuItems[3].CurrentPage === 0) {
-                            itemX = this.GutterCheck(0,itemWidth,header.MenuItems[3],units);
-                            hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+            switch (this.CurrentScene) {
+                case 1: // CREATE TONE
+                    if (!this.WatchedBlocks[0]) {
+                        if (header.DropDown && header.MenuItems[0].Selected) {
+                            if (header.MenuItems[0].CurrentPage===0) {
+                                itemX = this.GutterCheck(0,itemWidth,header.MenuItems[0],units);
+                                hotspots.push(new Point(itemX,menuH + (header.DropDown*units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[0].Position.x,menuH));
                         }
-                    } else {
-                        hotspots.push(new Point(header.MenuItems[3].Position.x, menuH));
                     }
-                }
-                break;
+                    break;
 
-            case 3: // CREATE CHOPPER
-                if (!this.WatchedBlocks[4]) {
-                    if (header.DropDown && header.MenuItems[1].Selected) {
-                        if (header.MenuItems[1].CurrentPage === 0) {
-                            itemX = this.GutterCheck(3,itemWidth,header.MenuItems[1],units);
-                            hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                case 2: // CREATE KEYBOARD
+                    if (!this.WatchedBlocks[1]) {
+                        if (header.DropDown && header.MenuItems[3].Selected) {
+                            if (header.MenuItems[3].CurrentPage === 0) {
+                                itemX = this.GutterCheck(0,itemWidth,header.MenuItems[3],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[3].Position.x, menuH));
                         }
-                    } else {
-                        hotspots.push(new Point(header.MenuItems[1].Position.x, menuH));
                     }
-                }
-                break;
+                    break;
 
-            case 4: // CHOPPER OPTIONS
-                if (this.WatchedBlocks[3]) {
-                    if (!App.MainScene.IsDraggingABlock) {
-                        var blockPos = new Point(this.WatchedBlocks[3].Position.x,this.WatchedBlocks[3].Position.y + 2);
+                case 3: // CREATE CHOPPER
+                    if (!this.WatchedBlocks[4]) {
+                        if (header.DropDown && header.MenuItems[1].Selected) {
+                            if (header.MenuItems[1].CurrentPage === 0) {
+                                itemX = this.GutterCheck(3,itemWidth,header.MenuItems[1],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[1].Position.x, menuH));
+                        }
+                    }
+                    break;
+
+                case 4: // CHOPPER OPTIONS
+                    if (this.WatchedBlocks[3]) {
+                        if (!App.MainScene.IsDraggingABlock) {
+                            var blockPos = new Point(this.WatchedBlocks[3].Position.x,this.WatchedBlocks[3].Position.y + 2);
+                            blockPos = App.Metrics.PointOnGrid(blockPos);
+                            hotspots.push(new Point(blockPos.x, blockPos.y + (6*units)));
+                        }
+                    }
+                    break;
+
+                case 5: // TRASH KEYBOARD
+                    if (this.WatchedBlocks[1]) {
+                        if (!App.MainScene.IsDraggingABlock) {
+                            var blockPos = new Point(this.WatchedBlocks[1].Position.x,this.WatchedBlocks[1].Position.y + 2);
+                            blockPos = App.Metrics.PointOnGrid(blockPos);
+                            hotspots.push(new Point(blockPos.x, blockPos.y + (6*units)));
+                        }
+                        hotspots.push(new Point(App.Width - (46*units),App.Height - (30*units)));
+                    }
+                    break;
+
+                case 6: // CREATE PARTICLE EMITTER
+                    if (!this.WatchedBlocks[5]) {
+                        if (header.DropDown && header.MenuItems[2].Selected) {
+                            if (header.MenuItems[2].CurrentPage === 0) {
+                                itemX = this.GutterCheck(0,itemWidth,header.MenuItems[2],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[2].Position.x, menuH));
+                        }
+
+
+                    }
+                    if (!this.WatchedBlocks[5] || App.MainScene.IsDraggingABlock) {
+                        var blockPos = new Point(this.WatchedBlocks[0].Position.x,this.WatchedBlocks[0].Position.y + 12);
                         blockPos = App.Metrics.PointOnGrid(blockPos);
-                        hotspots.push(new Point(blockPos.x, blockPos.y + (6*units)));
+                        hotspots.push(new Point(blockPos.x, blockPos.y));
                     }
-                }
-                break;
+                    break;
 
-            case 5: // TRASH KEYBOARD
-                if (this.WatchedBlocks[1]) {
-                    if (!App.MainScene.IsDraggingABlock) {
-                        var blockPos = new Point(this.WatchedBlocks[1].Position.x,this.WatchedBlocks[1].Position.y + 2);
-                        blockPos = App.Metrics.PointOnGrid(blockPos);
-                        hotspots.push(new Point(blockPos.x, blockPos.y + (6*units)));
-                    }
-                    hotspots.push(new Point(App.Width - (46*units),App.Height - (30*units)));
-                }
-                break;
-
-            case 6: // CREATE PARTICLE EMITTER
-                if (!this.WatchedBlocks[5]) {
-                    if (header.DropDown && header.MenuItems[2].Selected) {
-                        if (header.MenuItems[2].CurrentPage === 0) {
-                            itemX = this.GutterCheck(0,itemWidth,header.MenuItems[2],units);
-                            hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                case 7: // CREATE POWER
+                    if (!this.WatchedBlocks[6]) {
+                        if (header.DropDown && header.MenuItems[2].Selected) {
+                            if (header.MenuItems[2].CurrentPage === 0) {
+                                itemX = this.GutterCheck(1,itemWidth,header.MenuItems[2],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[2].Position.x, menuH));
                         }
-                    } else {
-                        hotspots.push(new Point(header.MenuItems[2].Position.x, menuH));
                     }
+                    break;
 
+                default:
+                    break;
+            }
 
-                }
-                if (!this.WatchedBlocks[5] || App.MainScene.IsDraggingABlock) {
-                    var blockPos = new Point(this.WatchedBlocks[0].Position.x,this.WatchedBlocks[0].Position.y + 12);
-                    blockPos = App.Metrics.PointOnGrid(blockPos);
-                    hotspots.push(new Point(blockPos.x, blockPos.y));
-                }
-                break;
-
-            case 7: // CREATE POWER
-                if (!this.WatchedBlocks[6]) {
-                    if (header.DropDown && header.MenuItems[2].Selected) {
-                        if (header.MenuItems[2].CurrentPage === 0) {
-                            itemX = this.GutterCheck(1,itemWidth,header.MenuItems[2],units);
-                            hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
-                        }
-                    } else {
-                        hotspots.push(new Point(header.MenuItems[2].Position.x, menuH));
-                    }
-                }
-                break;
-
-            default:
-                break;
         }
+
+        // IF TOUCHSCREEN TUTORIAL //
+        else {
+
+            switch (this.CurrentScene) {
+                case 1: // CREATE TONE
+                    if (!this.WatchedBlocks[0]) {
+                        if (header.DropDown && header.MenuItems[0].Selected) {
+                            if (header.MenuItems[0].CurrentPage===0) {
+                                itemX = this.GutterCheck(0,itemWidth,header.MenuItems[0],units);
+                                hotspots.push(new Point(itemX,menuH + (header.DropDown*units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[0].Position.x,menuH));
+                        }
+                    }
+                    break;
+
+                case 2: // CREATE PARTICLE EMITTER
+                    if (!this.WatchedBlocks[5]) {
+                        if (header.DropDown && header.MenuItems[2].Selected) {
+                            if (header.MenuItems[2].CurrentPage === 0) {
+                                itemX = this.GutterCheck(0,itemWidth,header.MenuItems[2],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[2].Position.x, menuH));
+                        }
+
+
+                    }
+                    if (!this.WatchedBlocks[5] || App.MainScene.IsDraggingABlock) {
+                        var blockPos = new Point(this.WatchedBlocks[0].Position.x,this.WatchedBlocks[0].Position.y + 12);
+                        blockPos = App.Metrics.PointOnGrid(blockPos);
+                        hotspots.push(new Point(blockPos.x, blockPos.y));
+                    }
+                    break;
+
+                case 3: // CREATE POWER
+                    if (!this.WatchedBlocks[6]) {
+                        if (header.DropDown && header.MenuItems[2].Selected) {
+                            if (header.MenuItems[2].CurrentPage === 0) {
+                                itemX = this.GutterCheck(1,itemWidth,header.MenuItems[2],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[2].Position.x, menuH));
+                        }
+                    }
+                    break;
+
+                case 4: // CREATE CHOPPER
+                    if (!this.WatchedBlocks[4]) {
+                        if (header.DropDown && header.MenuItems[1].Selected) {
+                            if (header.MenuItems[1].CurrentPage === 0) {
+                                itemX = this.GutterCheck(3,itemWidth,header.MenuItems[1],units);
+                                hotspots.push(new Point(itemX, menuH + (header.DropDown * units)));
+                            }
+                        } else {
+                            hotspots.push(new Point(header.MenuItems[1].Position.x, menuH));
+                        }
+                    }
+                    break;
+
+                case 5: // CHOPPER OPTIONS
+                    if (this.WatchedBlocks[3]) {
+                        if (!App.MainScene.IsDraggingABlock) {
+                            var blockPos = new Point(this.WatchedBlocks[3].Position.x,this.WatchedBlocks[3].Position.y + 2);
+                            blockPos = App.Metrics.PointOnGrid(blockPos);
+                            hotspots.push(new Point(blockPos.x, blockPos.y + (6*units)));
+                        }
+                    }
+                    break;
+
+
+                default:
+                    break;
+            }
+
+        }
+
+
 
         App.MainScene.TutorialHotspots.Points = hotspots;
     }

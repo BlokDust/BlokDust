@@ -13,6 +13,8 @@ export class PointerInputManager {
     TouchEnd = new nullstone.Event<TouchEvent>();
     TouchMove = new nullstone.Event<TouchEvent>();
 
+    public TouchAssumed: boolean = false;
+
     constructor() {
 
         // https://typescript.codeplex.com/discussions/403082
@@ -65,6 +67,7 @@ export class PointerInputManager {
         if (App.FocusManager.ActiveIsNotBody() && !App.FocusManager.IsActive()) {
             App.FocusManager.BlurActive()
         }
+        this.TouchAssumed = true;
         this.TouchStart.raise(this, e);
     }
 

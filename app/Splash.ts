@@ -27,7 +27,7 @@ export class Splash extends DisplayObject{
         this._Offset = new Point(0,0);
         this.XOffset = 0;
         this.YOffset = -1;
-        this.LoadOffset = 0;
+        this.LoadOffset = -1;
     }
 
     //-------------------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ export class Splash extends DisplayObject{
 
         var colorful = false;
         var units = App.Unit;
+        var ctx = this.Ctx;
 
         this._Scale = 100 * units;
         this.Ctx.globalAlpha = 1;
@@ -186,6 +187,23 @@ export class Splash extends DisplayObject{
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";
         this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
+
+        // CHROME RECOMMENDED //
+        var chY = (this.LoadOffset * App.Height);
+
+        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+        App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+        ctx.font = App.Metrics.TxtLarge;
+        ctx.textAlign = "center";
+        ctx.fillText('Chrome Recommended', App.Width*0.5, chY + this.DrawTo.Height - (20 * units));
+
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo((App.Width*0.5) - (60*units), chY + this.DrawTo.Height - (27 * units));
+        ctx.lineTo((App.Width*0.5) - (63.89*units), chY + this.DrawTo.Height - (20 * units));
+        ctx.lineTo((App.Width*0.5) - (56.11*units), chY + this.DrawTo.Height - (20 * units));
+        ctx.closePath();
+        ctx.stroke();
     }
 
     DrawMoveTo(x, y) {
@@ -233,6 +251,7 @@ export class Splash extends DisplayObject{
         var tweenLength = 250;
         var viewLength = 350;
 
+        this.DelayTo(this,0,tweenLength,initDelay,'LoadOffset',-1);
         this.DelayTo(this,0,tweenLength,initDelay,'YOffset',-1);
         this.DelayTo(this,1,tweenLength,viewLength + tweenLength + initDelay,'XOffset',0);
         this.DelayTo(this,1,tweenLength,(viewLength*2) + (tweenLength*2) + initDelay,'YOffset',0);

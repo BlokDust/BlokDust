@@ -528,14 +528,29 @@ export class SettingsPanel extends DisplayObject{
 
             // END TAB 3 //
             ctx.restore();
+
+            // CHROME RECOMMENDED //
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
+            ctx.font = largeType;
+            ctx.textAlign = "center";
+            ctx.fillText('Chrome Recommended', App.Width*0.5, this.OffsetY + this.DrawTo.Height - (20 * units));
+
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo((App.Width*0.5) - (60*units), this.OffsetY + this.DrawTo.Height - (27 * units));
+            ctx.lineTo((App.Width*0.5) - (63.89*units), this.OffsetY + this.DrawTo.Height - (20 * units));
+            ctx.lineTo((App.Width*0.5) - (56.11*units), this.OffsetY + this.DrawTo.Height - (20 * units));
+            ctx.closePath();
+            ctx.stroke();
+
+            // BUILD VERSION //
             ctx.font = italicType2;
             ctx.textAlign = "right";
             ctx.fillText(this._Attribution.build, this.DrawTo.Width - (20*units), this.OffsetY + this.DrawTo.Height - (20 * units));
 
 
             // DIVIDERS //
-            ctx.lineWidth = 2;
             App.StrokeColor(ctx,App.Palette[1]);
 
             // Horizontal //

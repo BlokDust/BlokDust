@@ -961,7 +961,7 @@ declare module Tone {
         sustain: number;
         dispose(): Tone.SimpleEnvelope;
         triggerAttack(when?: number): void;
-        triggerRelease(when?: any): void;
+        triggerRelease(when?: number): void;
         triggerAttackRelease(duration: number, when?: number): void;
     }
 
