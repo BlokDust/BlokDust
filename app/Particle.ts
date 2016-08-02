@@ -26,17 +26,17 @@ export class Particle implements IPooledObject {
     }
 
     Move() {
-        var p: Vector = this.Position.toVector();
-
-        var deltaVelocity: Vector = new Vector((this.Velocity.x * App.Unit) * App.Stage.deltaTime, (this.Velocity.y * App.Unit) * App.Stage.deltaTime);
-
-        p.add(deltaVelocity);
-
-        this.Position = p.toPoint();
-
-        //this.Position.x += (this.Vector.X * App.Unit);
-        //this.Position.y += (this.Vector.Y * App.Unit);
+        this.Position.x += (this.Velocity.x * App.Unit);
+        this.Position.y += (this.Velocity.y * App.Unit);
     }
+
+    // todo: enable delta time
+    // Move() {
+    //     var p: Vector = this.Position.toVector();
+    //     var deltaVelocity: Vector = new Vector((this.Velocity.x * App.Unit) * App.Stage.deltaTime, (this.Velocity.y * App.Unit) * App.Stage.deltaTime);
+    //     p.add(deltaVelocity);
+    //     this.Position = p.toPoint();
+    // }
 
     Reset(): boolean {
         this.Position = null;
