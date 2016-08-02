@@ -570,7 +570,7 @@ export class SampleGen extends SamplerBase {
 
         this.OptionsForm =
         {
-            "name" : "WaveGen",
+            "name" : App.L10n.Blocks.Source.Blocks.SampleGen.name,
             "parameters" : [
 
                 {

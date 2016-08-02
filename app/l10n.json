@@ -253,6 +253,56 @@
         "Y": "Clear the Stage",
         "N": "Skip for Now"
       }
+    },
+
+    "TutorialTouch": {
+      "Scenes": [
+
+        {
+          "Intro": "Let's get started by adding some blocks. You can create blocks by dragging them from the top menu.",
+          "Task": "Open up the SOURCE category, and drag a TONE block from it."
+        },
+
+        {
+          "Intro": "SOURCE blocks generate sound, and you can trigger them using POWER & INTERACTION blocks.",
+          "Task": "From the POWER category, create a PARTICLE EMITTER block and place it on the marker below your TONE block."
+        },
+
+        {
+          "Intro": "When powered, the PARTICLE EMITTER will fire energy particles at the TONE block, triggering sound as they hit.",
+          "Task": "From the POWER category again, create a POWER block and connect it to your PARTICLE EMITTER block by simply dragging it nearby until a connection line appears."
+        },
+
+        {
+          "Intro": "Great, now we're making some sound, but let's make it a bit more interesting.",
+          "Task": "From the EFFECT category, create a CHOPPER block and connect it to your TONE block."
+        },
+
+        {
+          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking.",
+          "Task": "Click on the CHOPPER block and have a play with it's settings. Close the options panel when you're done."
+        },
+
+        {
+          "Intro": "Explore and experiment for yourself, or visit the BlokDust Guide for an in-depth Wiki and more tutorials. When you’ve made something cool, click SHARE to generate a unique URL to let others see what you’ve made!",
+          "Task": ""
+        }
+
+      ],
+
+      "SkipButton": "Skip Tour",
+      "DoneButton": "Okay Done",
+      "TourComplete": "Tour Complete",
+      "Splash1": {
+        "Message": "Welcome to BlokDust.",
+        "Y": "Take the Tour",
+        "N": "Skip for Now"
+      },
+      "Splash2": {
+        "Message": "Welcome to the Tour.",
+        "Y": "Clear the Stage",
+        "N": "Skip for Now"
+      }
     }
   }
 }
