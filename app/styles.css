@@ -122,6 +122,6 @@ input:focus, textarea:focus {
     outline:0;
 }
 
-#shareTitle input {
+#shareTitle input, #soundCloudSearch input {
     text-transform: uppercase;
 }

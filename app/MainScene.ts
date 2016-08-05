@@ -267,18 +267,18 @@ export class MainScene extends DisplayObject{
 
     // FIRST TOUCHES //
     MouseDown(e: MouseEvent): void {
-        var position: Point = new Point(e.clientX, e.clientY);
+        var position: Point = new Point(e.clientX, e.clientY + window.pageYOffset);
         this._PointerDown(position);
     }
 
     MouseUp(e: MouseEvent): void {
-        var position: Point = new Point(e.clientX, e.clientY);
+        var position: Point = new Point(e.clientX, e.clientY + window.pageYOffset);
         this._PointerUp(position);
         this._CheckHover(position);
     }
 
     MouseMove(e: MouseEvent): void {
-        var position: Point = new Point(e.clientX, e.clientY);
+        var position: Point = new Point(e.clientX, e.clientY + window.pageYOffset);
         this._PointerMove(position);
     }
 
@@ -288,19 +288,19 @@ export class MainScene extends DisplayObject{
 
     TouchStart(e: any){
         var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
-        var point = new Point(touch.clientX, touch.clientY);
+        var point = new Point(touch.clientX, touch.clientY + window.pageYOffset);
         this._PointerDown(point);
     }
 
     TouchEnd(e: any){
         var touch = e.changedTouches[0]; // e.args.Device.GetTouchPoint(null);
-        var point = new Point(touch.clientX, touch.clientY);
+        var point = new Point(touch.clientX, touch.clientY + window.pageYOffset);
         this._PointerUp(point,true);
     }
 
     TouchMove(e: any){
         var touch = e.touches[0]; // e.args.Device.GetTouchPoint(null);
-        var point = new Point(touch.clientX, touch.clientY);
+        var point = new Point(touch.clientX, touch.clientY + window.pageYOffset);
         this._PointerMove(point);
     }
 

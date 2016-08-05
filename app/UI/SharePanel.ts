@@ -64,6 +64,13 @@ export class SharePanel extends DisplayObject {
             }
         );
 
+        this.TitleInput.addEventListener(
+            'keydown',
+            (event):void => {
+                this.EnterCheck(event);
+            }
+        );
+
         this._CommandManager = App.CommandManager;
 
         // todo: add to config
@@ -167,6 +174,19 @@ export class SharePanel extends DisplayObject {
     // SET A PROVIDED DOM ELEMENT'S STRING //
     UpdateFormText(element: HTMLInputElement, str: string) {
         element.value = str;
+    }
+
+    // ENTER PRESSED ON INPUT //
+    EnterCheck(e: any) {
+        var key = e.which || e.keyCode;
+        if (key === 13) {
+            this.Submit();
+        }
+    }
+
+    Submit() {
+        this.TitleInput.blur();
+        this.ClearScroll();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -808,11 +828,12 @@ export class SharePanel extends DisplayObject {
         if (this.OffsetX!==0) {
             this.OffsetX = -(App.Width*1.5);
         }
+
+        this.ClearScroll();
         if (this.URLInput) {
             this.StyleDom(this.URLInputContainer, 400, 40, 200, 20, this.OffsetX + (App.Width*1.5), App.Metrics.TxtUrl);
             this.StyleDom(this.TitleInputContainer, 300, 42, 210, 132, 0, App.Metrics.TxtHeaderPR);
         }
-
     }
 
     //-------------------------------------------------------------------------------------------
@@ -874,5 +895,9 @@ export class SharePanel extends DisplayObject {
         shareUrl.style.visibility = "false";
         shareTitle.style.display = "none";
         shareTitle.style.visibility = "false";
+    }
+
+    ClearScroll() {
+        window.scrollTo(0,0);
     }
 }

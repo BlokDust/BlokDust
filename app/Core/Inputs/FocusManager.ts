@@ -13,6 +13,7 @@ export class FocusManager {
     constructor() {
 
         this._TitleInput = document.getElementById("shareTitleInput");
+        this._SearchInput = document.getElementById("soundCloudSearchInput");
 
         window.onfocus = () => {
             //$('#debug').html('focus');
@@ -30,11 +31,15 @@ export class FocusManager {
             this.HasFocus = !document.hidden;
             this.FocusChanged.raise(this, new FocusManagerEventArgs(this.HasFocus));
         }, false);
+
+        document.addEventListener('focusout', () => {
+            window.scrollTo(0,0);
+        });
     }
 
     // IS CANVAS FOCUSED ELEMENT WITHIN PAGE //
     IsActive() {
-        return ((<HTMLElement>document.activeElement) !== this._TitleInput);
+        return ((<HTMLElement>document.activeElement) !== this._TitleInput && (<HTMLElement>document.activeElement) !== this._SearchInput);
     }
 
     // THE ACTIVE ELEMENT ISN'T THE PAGE BODY //

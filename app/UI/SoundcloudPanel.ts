@@ -20,6 +20,8 @@ export class SoundcloudPanel extends DisplayObject{
     private _Blink:number = 0;
     private _SelectedBlock: any;
     private _RandomWords: string[];
+    public SearchInputContainer: HTMLElement;
+    public SearchInput: HTMLInputElement;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -30,6 +32,25 @@ export class SoundcloudPanel extends DisplayObject{
 
         this._RollOvers = [];
         this.SearchString = "Hello";
+
+        // DOM ELEMENTS //
+        this.SearchInputContainer = <HTMLElement>document.getElementById("soundCloudSearch");
+        this.SearchInput = <HTMLInputElement>document.getElementById("soundCloudSearchInput");
+
+        this.SearchInput.addEventListener(
+            'input',
+            (event):void => {
+                this.TestString(this.SearchInput);
+                this.UpdateString(this.SearchInput);
+            }
+        );
+
+        this.SearchInput.addEventListener(
+            'keydown',
+            (event):void => {
+                this.EnterCheck(event);
+            }
+        );
 
         this._CopyJson = {
             titleLine: "Title",
@@ -47,7 +68,61 @@ export class SoundcloudPanel extends DisplayObject{
         this._RandomWords = colors.concat(animals,places,objects,descriptions);
     }
 
-    GetString() {
+
+    //-------------------------------------------------------------------------------------------
+    //  INPUT
+    //-------------------------------------------------------------------------------------------
+
+
+
+    // DOES INPUT STRING NEED CHARS REMOVED //
+    TestString(element: HTMLInputElement) {
+
+        var caretPos = element.selectionStart;
+        if (caretPos > 0) {
+            caretPos -= 1;
+        }
+        // [^A-Za-z0-9_] alpha-numeric
+        // 	[][!"#$%&'()*+,./:;<=>?@\^_`{|}~-] punctuation
+        // [.,\/#!$%\^&\*;:{}=\-_`~()] punctuation 2
+        if (/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`\+~()]/.test(element.value)) {
+            element.value = element.value.replace(/[.,\/#\?\"\'$£%\^&\*;:{|}<=>\\@\`\+~()]/g, '');
+            element.selectionStart = caretPos;
+            element.selectionEnd = caretPos;
+        }
+    }
+
+    // TITLE INPUT HAS CHANGED, USE UPDATED INPUT VALUE //
+    UpdateString(element: HTMLInputElement) {
+        var string: string = element.value;
+        this.SearchString = string;
+    }
+
+
+    // SET A PROVIDED DOM ELEMENT'S STRING //
+    UpdateFormText(element: HTMLInputElement, str: string) {
+        element.value = str;
+    }
+
+    // ENTER PRESSED ON INPUT //
+    EnterCheck(e: any) {
+        var key = e.which || e.keyCode;
+        if (key === 13) {
+            this.Submit();
+        }
+    }
+
+    Submit() {
+        this.SearchInput.blur();
+        this._SelectedBlock.SearchString = this.SearchString;
+        this._SelectedBlock.Search(this.SearchString);
+        this._Page = 1;
+        this.OffsetX = 0;
+
+        this.ClearScroll();
+    }
+
+    /*GetString() {
         return this.SearchString;
     }
 
@@ -60,7 +135,7 @@ export class SoundcloudPanel extends DisplayObject{
         this._SelectedBlock.Search(this.SearchString);
         this._Page = 1;
         this.OffsetX = 0;
-    }
+    }*/
 
     //-------------------------------------------------------------------------------------------
     //  DRAW
@@ -250,7 +325,7 @@ export class SoundcloudPanel extends DisplayObject{
             ctx.lineTo(margin + pageW, centerY - (110*units));
             ctx.stroke();
             ctx.textAlign = "left";
-            ctx.font = headType;
+            /*ctx.font = headType;
             ctx.fillText(this.SearchString.toUpperCase(), margin, centerY - (120*units) );
             var titleW = ctx.measureText(this.SearchString.toUpperCase()).width;
 
@@ -262,7 +337,7 @@ export class SoundcloudPanel extends DisplayObject{
             this._Blink += 1;
             if (this._Blink == 100) {
                 this._Blink = 0;
-            }
+            }*/
 
 
             // SEARCH BUTTON //
@@ -342,6 +417,7 @@ export class SoundcloudPanel extends DisplayObject{
     }
 
 
+
     //-------------------------------------------------------------------------------------------
     //  TWEEN
     //-------------------------------------------------------------------------------------------
@@ -353,12 +429,17 @@ export class SoundcloudPanel extends DisplayObject{
         offsetTween.to({x: destination}, t);
         offsetTween.onUpdate(function () {
             panel[""+v] = this.x;
+
+            if (v=="OffsetY") {
+                panel.TweenDom(panel.SearchInputContainer, this.x, "y", 152, 0);
+            }
         });
 
         offsetTween.onComplete(function() {
             if (v=="OffsetY") {
                 if (destination!==0) {
                     panel.Open = false;
+                    panel.HideDom();
                 }
             }
         });
@@ -376,17 +457,19 @@ export class SoundcloudPanel extends DisplayObject{
         this._SelectedBlock = App.MainScene.OptionsPanel.SelectedBlock;
         this._Page = this._SelectedBlock.ResultsPage;
         this.SearchString = this._SelectedBlock.SearchString;
+        this.UpdateFormText(this.SearchInput, this.SearchString);
         this.Open = true;
         this.OffsetY = -App.Height;
         this.OffsetX = - ((this._Page-1) * (430*App.Unit));
         this.DelayTo(this,0,500,0,"OffsetY");
-        App.TypingManager.Enable(this);
+        this.ShowDom();
+        //App.TypingManager.Enable(this);
     }
 
     ClosePanel() {
         this._SelectedBlock.ResultsPage = this._Page;
         this.DelayTo(this,-App.Height,500,0,"OffsetY");
-        App.TypingManager.Disable();
+        //App.TypingManager.Disable();
     }
 
 
@@ -400,12 +483,12 @@ export class SoundcloudPanel extends DisplayObject{
             return;
         }
         if (this._RollOvers[2]) { // search
-            this.StringReturn();
+            this.Submit();
             return;
         }
         if (this._RollOvers[10]) { // random
             block.Search(this.RandomSearch(this._SelectedBlock));
-            App.TypingManager.Enable(this);
+            //App.TypingManager.Enable(this);
             this._Page = 1;
             this.OffsetX = 0;
             return;
@@ -491,6 +574,11 @@ export class SoundcloudPanel extends DisplayObject{
 
     Resize() {
         this.OffsetX = - ((this._Page-1) * (430*App.Unit));
+
+        this.ClearScroll();
+        if (this.SearchInput) {
+            this.StyleDom(this.SearchInputContainer, 300, 42, 210, 152, 0, App.Metrics.TxtHeaderPR);
+        }
     }
 
     RandomSearch(block) {
@@ -499,6 +587,67 @@ export class SoundcloudPanel extends DisplayObject{
 
         this.SearchString = q;
         block.SearchString = q;
+        this.UpdateFormText(this.SearchInput, q);
         return q;
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  CSS / DOM
+    //-------------------------------------------------------------------------------------------
+
+
+    TweenDom(element: HTMLElement, value: number, mode: string, position: number, offset: number) {
+        var units = (App.Unit);
+        var pr = App.Metrics.PixelRatio;
+        switch (mode) {
+            case "x":
+                element.style.left = "" + ((value + (App.Width*(0.5 + offset)) - (units*position))/pr) + "px";
+                break;
+            case "y":
+                element.style.top = "" + ((value + (App.Height*0.5) - (units*position))/pr) + "px";
+                break;
+        }
+    }
+
+    StyleDom(element: HTMLElement, width: number, height: number, x: number, y: number, xOffset: number, font: string) {
+        var units = (App.Unit);
+        var pr = App.Metrics.PixelRatio;
+
+        element.style.font = font;
+        element.style.width = "" + (units*(width/pr)) + "px";
+        element.style.height = "" + (units*(height/pr)) + "px";
+        element.style.lineHeight = "" + (units*(height/pr)) + "px";
+        element.style.display = "block";
+
+        if (!this.Open) {
+            this.OffsetY = -App.Height;
+            element.style.display = "none";
+            element.style.visibility = "false";
+        }
+
+        var offsetX = xOffset/pr;
+        var offsetY = this.OffsetY/pr;
+        var width = App.Width/pr;
+        var height = App.Height/pr;
+
+        element.style.left = "" + (offsetX + (width*0.5) - (units*(x/pr))) + "px";
+        element.style.top = "" + (offsetY + (height*0.5) - (units*(y/pr))) + "px";
+    }
+
+    ShowDom() {
+        var search = this.SearchInputContainer;
+        search.style.display = "block";
+        search.style.visibility = "true";
+    }
+
+    HideDom() {
+        var search = this.SearchInputContainer;
+        search.style.display = "none";
+        search.style.visibility = "false";
+    }
+
+    ClearScroll() {
+        window.scrollTo(0,0);
     }
 }
