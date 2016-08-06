@@ -36,7 +36,7 @@
 
 <div id="shareUrl">
     <form action="">
-        <textarea name="text_area" id="shareUrlText" rows="1000" cols="1" onClick="javascript:this.form.text_area.focus();this.form.text_area.select();"  readonly>
+        <textarea name="text_area" id="shareUrlText" rows="1000" cols="1" onClick="this.form.text_area.focus();this.selectionStart=0; this.selectionEnd=this.value.length;"  readonly>
         </textarea>
     </form>
 </div>
@@ -44,6 +44,12 @@
 <div id="shareTitle">
     <form action="">
         <input type="text" id="shareTitleInput" name="title" autocomplete="off" spellcheck="false" maxlength="24" value="">
+    </form>
+</div>
+
+<div id="soundCloudSearch">
+    <form action="">
+        <input type="text" id="soundCloudSearchInput" name="title" autocomplete="off" spellcheck="false" maxlength="24" value="">
     </form>
 </div>
 

@@ -1,5 +1,6 @@
 import {IApp} from '../../IApp';
 import {KeyboardInputManager} from './KeyboardInputManager';
+import {KeyDownEventArgs} from './KeyDownEventArgs';
 
 declare var App: IApp;
 
@@ -8,6 +9,8 @@ export class TypingManager extends KeyboardInputManager {
     private _CharLimit: number;
     private _String: string;
     private _Panel: any;
+
+    KeyDownChange = new nullstone.Event<KeyDownEventArgs>();
 
     constructor() {
         super();
@@ -19,12 +22,14 @@ export class TypingManager extends KeyboardInputManager {
 
     KeyboardDown(e) {
         super.KeyboardDown(e);
-        if (!this.IsEnabled) return;
+        //if (!this.IsEnabled) return;
 
         var code = e.keyCode;
-        this.AddToString(code);
-        this.RemoveFromString();
-        this.StringReturn();
+        //this.AddToString(code);
+        //this.RemoveFromString();
+        //this.StringReturn();
+        console.log(code);
+        this.KeyDownChange.raise(this, new KeyDownEventArgs(code));
     }
 
     KeyboardUp(e) {

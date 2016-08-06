@@ -250,7 +250,8 @@ export class ThemeManager  {
             shareUrl.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
             var shareTitle = document.getElementById("shareTitle");
             shareTitle.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
-
+            var scSearch = document.getElementById("soundCloudSearch");
+            scSearch.style.color = App.ColorManager.ColorString(this.NewPalette[this.Txt]);
 
             // CSS SELECTED TEXT HIGHLIGHT COLOUR //
             var bgLuminosity = App.ColorManager.GetLuminosity(this.NewPalette[1]);

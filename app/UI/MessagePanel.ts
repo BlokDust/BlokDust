@@ -16,6 +16,7 @@ export class MessagePanel extends DisplayObject {
     public Open: boolean;
     private _Timeout: any;
     private _CloseX: number;
+    private _Lines: number;
     private _ButtonWidth: number;
 
     init(drawTo: IDisplayContext):void {
@@ -25,6 +26,7 @@ export class MessagePanel extends DisplayObject {
         this.Hover = false;
         this.Open = false;
         this._CloseX = 0;
+        this._Lines = 0;
 
         // DEFAULT MESSAGING ARGUMENTS //
         this._Defaults = {
@@ -67,18 +69,18 @@ export class MessagePanel extends DisplayObject {
             // DRAW PANEL //
             App.FillColor(ctx,App.Palette[2]);
             ctx.globalAlpha = this._Alpha * 0.16;
-            ctx.fillRect(0,y - (25*units),w,60*units);
+            ctx.fillRect(0, y - (25*units), w, (60*units) + (this._Lines * (16*units)));
 
             ctx.globalAlpha = this._Alpha * 0.9;
-            ctx.fillRect(0,y - (30*units),w,60*units);
+            ctx.fillRect(0, y - (30*units), w, (60*units) + (this._Lines * (16*units)));
 
 
             // MESSAGE TEXT //
             ctx.globalAlpha = this._Alpha;
             App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);
             App.StrokeColor(ctx,App.Palette[App.ThemeManager.Txt]);
-            ctx.fillText(this._Value.string.toUpperCase(), cx, y + (5 * units));
-
+            //ctx.fillText(this._Value.string.toUpperCase(), cx, y + (5 * units));
+            this.WordWrap(ctx,this._Value.string.toUpperCase(), cx, y + (5 * units), 16*units, w - (30*units));
 
             // CLOSE //
             if (this._Value.confirmation) {
@@ -127,6 +129,70 @@ export class MessagePanel extends DisplayObject {
 
 
     //-------------------------------------------------------------------------------------------
+    //  STRING FUNCTIONS
+    //-------------------------------------------------------------------------------------------
+
+
+    WordWrap( context , text, x, y, lineHeight, fitWidth) {
+        fitWidth = fitWidth || 0;
+
+        if (fitWidth <= 0) {
+            context.fillText( text, x, y );
+            return;
+        }
+        var words = text.split(' ');
+        var currentLine = 0;
+        var idx = 1;
+        while (words.length > 0 && idx <= words.length) {
+            var str = words.slice(0,idx).join(' ');
+            var w = context.measureText(str).width;
+            if ( w > fitWidth ) {
+                if (idx==1)
+                {
+                    idx=2;
+                }
+                context.fillText( words.slice(0,idx-1).join(' '), x, y + (lineHeight*currentLine) );
+                currentLine++;
+                words = words.splice(idx-1);
+                idx = 1;
+            }
+            else
+            {idx++;}
+        }
+        if  (idx > 0)
+            context.fillText( words.join(' '), x, y + (lineHeight*currentLine) );
+    }
+
+
+    LineCount( context , text, fitWidth) {
+        fitWidth = fitWidth || 0;
+
+        this._Lines = 0;
+        if (fitWidth <= 0) {
+            return;
+        }
+        var words = text.split(' ');
+        var currentLine = 0;
+        var idx = 1;
+        while (words.length > 0 && idx <= words.length) {
+            var str = words.slice(0,idx).join(' ');
+            var w = context.measureText(str).width;
+            if ( w > fitWidth ) {
+                if (idx==1)
+                {
+                    idx=2;
+                }
+                this._Lines += 1;
+                currentLine++;
+                words = words.splice(idx-1);
+                idx = 1;
+            }
+            else
+            {idx++;}
+        }
+    }
+
+    //-------------------------------------------------------------------------------------------
     //  MESSAGING
     //-------------------------------------------------------------------------------------------
     NewMessage(string?: string, options?: any) {
@@ -142,13 +208,15 @@ export class MessagePanel extends DisplayObject {
             this._Value.confirmation = true;
         }
 
+        // LINE COUNT //
+        var units = App.Unit;
+        var ctx = this.ctx;
+        ctx.font = App.Metrics.TxtMid;
+        this.LineCount(ctx,this._Value.string.toUpperCase(), App.Width - (30*units));
+
         // CLOSE POSITION //
         if (this._Value.confirmation) {
-            var units = App.Unit;
-            var ctx = this.ctx;
-            var midType = App.Metrics.TxtMid;
             var cx = (<MainScene>this.drawTo).width*0.5;
-            ctx.font = midType;
             this._CloseX = cx + (20*units) + (ctx.measureText(this._Value.string.toUpperCase()).width * 0.5);
             this._ButtonWidth = (20*units) + ctx.measureText(this._Value.buttonText.toUpperCase()).width;
         }

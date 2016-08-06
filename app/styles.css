@@ -70,7 +70,7 @@ canvas {
 }
 
 #shareUrl, #shareTitle, #soundCloudSearch {
-    font-family: "Dosis", Arial, Helvetica, sans;
+    font-family: "Dosis", Arial, Helvetica, sans-serif;
     font-weight: 200;
     font-size: 56px;
     mix-blend-mode: normal;
@@ -122,6 +122,6 @@ input:focus, textarea:focus {
     outline:0;
 }
 
-#shareTitle input {
+#shareTitle input, #soundCloudSearch input {
     text-transform: uppercase;
 }
