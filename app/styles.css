@@ -70,7 +70,7 @@ canvas {
 }
 
 #shareUrl, #shareTitle, #soundCloudSearch {
-    font-family: "Dosis", Arial, Helvetica, sans;
+    font-family: "Dosis", Arial, Helvetica, sans-serif;
     font-weight: 200;
     font-size: 56px;
     mix-blend-mode: normal;

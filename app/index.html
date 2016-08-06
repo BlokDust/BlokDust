@@ -36,7 +36,7 @@
 
 <div id="shareUrl">
     <form action="">
-        <textarea name="text_area" id="shareUrlText" rows="1000" cols="1" onClick="javascript:this.form.text_area.focus();this.form.text_area.select();"  readonly>
+        <textarea name="text_area" id="shareUrlText" rows="1000" cols="1" onClick="this.form.text_area.focus();this.selectionStart=0; this.selectionEnd=this.value.length;"  readonly>
         </textarea>
     </form>
 </div>
