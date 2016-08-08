@@ -786,6 +786,15 @@ export class MainScene extends DisplayObject{
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
 
+        // Dont start yet if splash paused //
+        if (App.Stage.Splash.IOSPause) {
+            return;
+        }
+        this.Begin();
+
+     }
+
+    Begin() {
         // Fade In Audio //
         setTimeout(() => {
             this.Play();
@@ -795,7 +804,7 @@ export class MainScene extends DisplayObject{
 
         //TODO: THIS IS SHIT - For some reason fading in the volume using the above method breaks the volume slider
         // Come back to this once useful functions have been abstracted from Tone into a simplified version
-        var volume = -30
+        var volume = -30;
         var volumeFade = setInterval(() => {
             if (volume < App.Audio.MasterVolume) {
                 App.Audio.Master.volume.value = volume;
@@ -803,8 +812,8 @@ export class MainScene extends DisplayObject{
             } else {
                 clearInterval(volumeFade);
             }
-        }, 70)
-     }
+        }, 70);
+    }
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS

@@ -15,7 +15,7 @@ export class Splash extends DisplayObject{
     private _Scale: number;
     private _Center: Point;
     private _Offset: Point;
-    private _IOSPause: boolean = false;
+    public IOSPause: boolean = false;
     IsAnimationFinished: boolean = false;
     IsTransitionFinished: boolean = false;
     AnimationFinished = new nullstone.Event<{}>();
@@ -284,11 +284,11 @@ export class Splash extends DisplayObject{
 
 
         // SHOW BUTTON //
-        var ios = false;
+        var ios = true;
         // check for device here //
         if (ios) {
             this.DelayTo(this,0,tweenLength,initDelay,'ButtonOffset',-1);
-            this._IOSPause = true;
+            this.IOSPause = true;
         }
 
         // DONT SHOW BUTTON //
@@ -328,7 +328,7 @@ export class Splash extends DisplayObject{
 
 
     MouseDown(e: MouseEvent): void {
-        if (this._IOSPause) {
+        if (this.IOSPause) {
             this.StartButton();
         }
     }
@@ -336,7 +336,7 @@ export class Splash extends DisplayObject{
 
 
     TouchStart(e: any){
-        if (this._IOSPause) {
+        if (this.IOSPause) {
             this.StartButton();
         }
     }
@@ -348,11 +348,14 @@ export class Splash extends DisplayObject{
 
 
         // ANIM //
-        this._IOSPause = false;
+        this.IOSPause = false;
         var initDelay = 300;
         var tweenLength = 250;
         var viewLength = 350;
         this.DelayTo(this,1,tweenLength,initDelay,'ButtonOffset',0);
         this.Animate(initDelay,tweenLength,viewLength);
+        if (!App.IsLoadingComposition) {
+            App.MainScene.Begin();
+        }
     }
 }
