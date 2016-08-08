@@ -310,6 +310,10 @@ export class MainScene extends DisplayObject{
     private _PointerDown(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
 
+        if (!App.Stage.Splash.IsAnimationFinished) {
+            return;
+        }
+
         this._IsPointerDown = true;
         this._PointerPoint = point;
         var UIInteraction: Boolean;

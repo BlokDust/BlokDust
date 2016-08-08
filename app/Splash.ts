@@ -11,10 +11,13 @@ export class Splash extends DisplayObject{
     public XOffset: number;
     public YOffset: number;
     public LoadOffset: number;
+    public ButtonOffset: number;
     private _Scale: number;
     private _Center: Point;
     private _Offset: Point;
+    private _IOSPause: boolean = false;
     IsAnimationFinished: boolean = false;
+    IsTransitionFinished: boolean = false;
     AnimationFinished = new nullstone.Event<{}>();
 
     Init(drawTo: IDisplayContext): void {
@@ -28,6 +31,15 @@ export class Splash extends DisplayObject{
         this.XOffset = 0;
         this.YOffset = -1;
         this.LoadOffset = -1;
+        this.ButtonOffset = -1;
+
+        App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
+            this.MouseDown(e);
+        }, this);
+
+        App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
+            this.TouchStart(e);
+        }, this);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -37,6 +49,10 @@ export class Splash extends DisplayObject{
     public Draw() {
 
         super.Draw();
+
+        if (this.IsTransitionFinished) {
+            return;
+        }
 
         if (this.IsFirstFrame()){
             this.TransitionIn();
@@ -188,6 +204,20 @@ export class Splash extends DisplayObject{
         this.Ctx.font = "200 " + headerType + "px Dosis";
         this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
 
+
+        // IOS BUTTON //
+        var by = App.Height*this.ButtonOffset;
+        App.FillColor(this.Ctx,App.Palette[0]);
+        this.Ctx.fillRect(0,by,App.Width,App.Height);
+
+        App.FillColor(this.Ctx,App.Palette[7]);
+        ctx.beginPath();
+        ctx.moveTo((App.Width*0.5) - (this._Scale*0.5),by + (App.Height*0.5) - (this._Scale));
+        ctx.lineTo((App.Width*0.5) - (this._Scale*0.5),by + (App.Height*0.5) + (this._Scale));
+        ctx.lineTo((App.Width*0.5) + (this._Scale*0.5),by + (App.Height*0.5));
+        ctx.fill();
+
+
         // CHROME RECOMMENDED //
         var chY = (this.LoadOffset * App.Height);
 
@@ -250,8 +280,25 @@ export class Splash extends DisplayObject{
         var initDelay = 300;
         var tweenLength = 250;
         var viewLength = 350;
-
         this.DelayTo(this,0,tweenLength,initDelay,'LoadOffset',-1);
+
+
+        // SHOW BUTTON //
+        var ios = false;
+        // check for device here //
+        if (ios) {
+            this.DelayTo(this,0,tweenLength,initDelay,'ButtonOffset',-1);
+            this._IOSPause = true;
+        }
+
+        // DONT SHOW BUTTON //
+        else {
+            this.Animate(initDelay,tweenLength,viewLength);
+        }
+
+    }
+
+    Animate(initDelay, tweenLength, viewLength) {
         this.DelayTo(this,0,tweenLength,initDelay,'YOffset',-1);
         this.DelayTo(this,1,tweenLength,viewLength + tweenLength + initDelay,'XOffset',0);
         this.DelayTo(this,1,tweenLength,(viewLength*2) + (tweenLength*2) + initDelay,'YOffset',0);
@@ -268,5 +315,44 @@ export class Splash extends DisplayObject{
 
     TransitionOut() {
         this.DelayTo(this,1,450,300,'LoadOffset',0);
+        // when pre-roll is finished
+        setTimeout(() => {
+            this.IsTransitionFinished = true;
+        },800);
+    }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
+
+
+    MouseDown(e: MouseEvent): void {
+        if (this._IOSPause) {
+            this.StartButton();
+        }
+    }
+
+
+
+    TouchStart(e: any){
+        if (this._IOSPause) {
+            this.StartButton();
+        }
+    }
+
+    StartButton() {
+
+        // AUDIO //
+        // initiate audio context here //
+
+
+        // ANIM //
+        this._IOSPause = false;
+        var initDelay = 300;
+        var tweenLength = 250;
+        var viewLength = 350;
+        this.DelayTo(this,1,tweenLength,initDelay,'ButtonOffset',0);
+        this.Animate(initDelay,tweenLength,viewLength);
     }
 }
