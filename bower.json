@@ -17,5 +17,9 @@
     "tone": "BlokDust/Tone.js#master",
     "tweenjs": "~16.3.1",
     "utils": "edsilv/utils"
+  },
+  "resolutions": {
+    "nullstone": "~0.4.5",
+    "minerva": "~0.7.3"
   }
 }

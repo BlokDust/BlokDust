@@ -3,6 +3,7 @@ import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = minerva.Point;
+import {unlockAudioContext, isIOS, hasAudioContextStarted} from './Core/Audio/Utils/Utils';
 
 declare var App: IApp;
 
@@ -19,6 +20,8 @@ export class Splash extends DisplayObject{
     IsAnimationFinished: boolean = false;
     IsTransitionFinished: boolean = false;
     AnimationFinished = new nullstone.Event<{}>();
+
+    _hasTouchMoved: boolean = false;
 
     Init(drawTo: IDisplayContext): void {
         super.Init(drawTo);
@@ -37,8 +40,12 @@ export class Splash extends DisplayObject{
             this.MouseDown(e);
         }, this);
 
-        App.PointerInputManager.TouchStart.on((s: any, e: TouchEvent) => {
-            this.TouchStart(e);
+        App.PointerInputManager.TouchEnd.on((s: any, e: TouchEvent) => {
+            this.TouchEnd(e);
+        }, this);
+
+        App.PointerInputManager.TouchMove.on((s: any, e: TouchEvent) => {
+            this._hasTouchMoved = true;
         }, this);
     }
 
@@ -282,17 +289,15 @@ export class Splash extends DisplayObject{
         var viewLength = 350;
         this.DelayTo(this,0,tweenLength,initDelay,'LoadOffset',-1);
 
-
-        // SHOW BUTTON //
-        var ios = true;
-        // check for device here //
-        if (ios) {
+        // iOS needs a start button //
+        if (isIOS()) {
+            // SHOW BUTTON //
             this.DelayTo(this,0,tweenLength,initDelay,'ButtonOffset',-1);
             this.IOSPause = true;
         }
 
-        // DONT SHOW BUTTON //
         else {
+            // DONT SHOW BUTTON //
             this.Animate(initDelay,tweenLength,viewLength);
         }
 
@@ -329,24 +334,35 @@ export class Splash extends DisplayObject{
 
     MouseDown(e: MouseEvent): void {
         if (this.IOSPause) {
-            this.StartButton();
+            this.StartButtonPressed();
         }
     }
 
 
 
-    TouchStart(e: any){
-        if (this.IOSPause) {
-            this.StartButton();
+    TouchEnd(e: any){
+        // iOS audio wont initialize if there's a touchMove event
+        if (this.IOSPause && !this._hasTouchMoved) {
+            this.StartButtonPressed();
+        }
+        this._hasTouchMoved = false;
+    }
+
+    StartButtonPressed() {
+        // Check to see if audio context has started
+        if (hasAudioContextStarted(App.Audio.ctx)){
+            // START APP //
+            this.StartAppAfterPause();
+        } else {
+            // UNLOCK AUDIO CONTEXT //
+            unlockAudioContext(App.Audio.ctx, () => {
+                // START APP //
+                this.StartAppAfterPause();
+            });
         }
     }
 
-    StartButton() {
-
-        // AUDIO //
-        // initiate audio context here //
-
-
+    StartAppAfterPause() {
         // ANIM //
         this.IOSPause = false;
         var initDelay = 300;
@@ -358,4 +374,5 @@ export class Splash extends DisplayObject{
             App.MainScene.Begin();
         }
     }
+
 }
