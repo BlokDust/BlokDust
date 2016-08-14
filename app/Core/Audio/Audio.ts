@@ -87,7 +87,7 @@ export class Audio implements IAudio {
         this.Waveform = new Waveform();
 
         // Wave Web Worker //
-        this.WaveWorker = new Worker("Workers/waveworker.js");
+        this.WaveWorker = new Worker("Workers/WaveWorker.js");
 
         this.WaveWorker.onmessage = function(e) {
 

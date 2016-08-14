@@ -99,6 +99,7 @@ module.exports = function (grunt) {
                             '<%= dirs.dist %>/lib/**',
                             '!<%= dirs.dist %>/lib/etch/dist/etch.js',
                             '!<%= dirs.dist %>/lib/exjs/dist/ex.js',
+                            '!<%= dirs.dist %>/lib/exjs/dist/ex.js.map',
                             '!<%= dirs.dist %>/lib/extensions/dist/extensions.js',
                             '!<%= dirs.dist %>/lib/intersection/intersection.js',
                             '!<%= dirs.dist %>/lib/key-codes/dist/key-codes.js',
