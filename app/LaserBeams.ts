@@ -250,7 +250,7 @@ export class LaserBeams extends DisplayObject {
                     myPos = App.Metrics.PointOnGrid(laser.Position);
 
                     vector = Vector.fromAngle(Math.degreesToRadians(laser.Params.angle));
-                    vector.Mult(laser.CheckRange * unit);
+                    vector.mult(laser.CheckRange * unit);
 
                     this.Ctx.moveTo(myPos.x, myPos.y);
                     this.Ctx.lineTo(myPos.x + vector.X, myPos.y + vector.Y);
