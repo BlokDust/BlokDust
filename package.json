@@ -1,6 +1,6 @@
 {
   "name": "BlokDust",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "Gruntfile.js",
   "devDependencies": {
     "connect-livereload": "^0.4.0",
