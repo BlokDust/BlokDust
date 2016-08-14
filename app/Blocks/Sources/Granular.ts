@@ -51,9 +51,9 @@ export class Granular extends Source {
             region: 0,
             spread: 1.5,
             grainlength: 0.25,
-            track: SoundCloudAPI.PickRandomTrack(SoundCloudAudioType.Granular),
-            trackName: 'TEUFELSBERG', // TODO: this doesn't match random track
-            user: 'Balance Mastering',
+            track: SoundCloudAPI.PickTrack(SoundCloudAudioType.Granular,0),
+            trackName: 'Fuzz Pad 2',
+            user: 'BlokDust',
             permalink: ''
         };
         this.PopulateParams();
