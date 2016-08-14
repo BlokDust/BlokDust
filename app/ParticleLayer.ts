@@ -64,7 +64,7 @@ export class ParticleLayer extends DisplayObject {
             // If we hit a Void block //
             if (block instanceof Void) {
                 if (block.HitTest(point)){
-                    this.Dispose();
+                    particle.Dispose();
                     return;
                 }
             }
