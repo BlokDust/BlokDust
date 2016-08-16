@@ -368,7 +368,7 @@ export class Granular extends Source {
             //this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease((this.Params.grainlength * (1 - this._RampLength))*1000);
             this.GrainEnvelopes[this._CurrentGrain].triggerAttack();
             var rel = ((this.Params.grainlength * (1 - this._RampLength))*1000);
-            console.log(rel);
+            //console.log(rel);
             //this.GrainEnvelopes[this._CurrentGrain].triggerAttackRelease((this.Params.grainlength * (1 - this._RampLength))*1000);
             var grain = this.GrainEnvelopes[this._CurrentGrain];
             setTimeout(() => {
