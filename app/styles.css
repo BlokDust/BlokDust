@@ -69,6 +69,11 @@ canvas {
     display: block;
 }
 
+#mainCanvas {
+    position: absolute;
+    background-color: #111;
+}
+
 #shareUrl, #shareTitle, #soundCloudSearch {
     font-family: "Dosis", Arial, Helvetica, sans-serif;
     font-weight: 200;
@@ -125,3 +130,25 @@ input:focus, textarea:focus {
 #shareTitle input, #soundCloudSearch input {
     text-transform: uppercase;
 }
+
+.loading-spinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    animation: 0.2s linear infinite spin;
+}
+.app-active .loading-spinner {
+    display: none;
+    animation: none;
+}
+
+@-webkit-keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(90deg); }  }
+@-moz-keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(90deg); }  }
+@-o-keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(90deg); }  }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(90deg); }  }
