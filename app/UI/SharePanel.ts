@@ -76,7 +76,7 @@ export class SharePanel extends DisplayObject {
         // todo: add to config
         this._CopyJson = {
             genUrl: "Generate share link",
-            shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",
+            shareLine: "Made something cool? Generate your own unique link to share it with the world (we'd love to see):",
             copyLine: "Share your creation with this unique URL:",
             titleLine: "Title",
             generateLine: "Randomise Title",
