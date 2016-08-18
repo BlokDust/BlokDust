@@ -137,8 +137,8 @@ input:focus, textarea:focus {
     bottom: 0;
     right: 0;
     margin: auto;
-    width: 10px;
-    height: 10px;
+    width: 25px;
+    height: 25px;
     background-color: white;
     -webkit-animation: 0.2s linear infinite spin;
     animation: 0.2s linear infinite spin;
