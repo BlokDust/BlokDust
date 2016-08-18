@@ -70,7 +70,6 @@ canvas {
 }
 
 #mainCanvas {
-    position: absolute;
     background-color: #111;
 }
 
