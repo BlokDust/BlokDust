@@ -50,6 +50,16 @@ export class Audio implements IAudio {
         // Master Output
         this.Master = Tone.Master;
 
+        //some overall compression to keep the levels in check
+        var masterCompressor: DynamicsCompressorNode = this.ctx.createDynamicsCompressor();
+        masterCompressor.threshold.value = -10;
+        masterCompressor.knee.value = 10;
+        masterCompressor.ratio.value = 12;
+        masterCompressor.attack.value = 0;
+        masterCompressor.release.value = 0.05;
+        // route everything through the compressor before going to the speakers
+        this.Master.chain(masterCompressor);
+
         //Meter
         this.Meter = new Tone.Meter();
         this.Master.connect(this.Meter);
