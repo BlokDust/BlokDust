@@ -19,7 +19,6 @@
      * Uncomment no_mangle to stop mangling var names
      */
     uglify: {
-        // no_mangle: true
-        dead_code: true
+        no_mangle: true
     }
 })
