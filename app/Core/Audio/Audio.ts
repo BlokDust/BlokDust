@@ -52,9 +52,9 @@ export class Audio implements IAudio {
 
         //some overall compression to keep the levels in check
         var masterCompressor: DynamicsCompressorNode = this.ctx.createDynamicsCompressor();
-        masterCompressor.threshold.value = -10;
+        masterCompressor.threshold.value = -8;
         masterCompressor.knee.value = 10;
-        masterCompressor.ratio.value = 12;
+        masterCompressor.ratio.value = 8;
         masterCompressor.attack.value = 0;
         masterCompressor.release.value = 0.05;
         // route everything through the compressor before going to the speakers
