@@ -455,6 +455,10 @@ export class SoundcloudPanel extends DisplayObject{
 
     OpenPanel() {
         this._SelectedBlock = App.MainScene.OptionsPanel.SelectedBlock;
+        if (!this._SelectedBlock.SearchString) {
+            this._SelectedBlock.Search(this.RandomSearch(this._SelectedBlock));
+        }
+
         this._Page = this._SelectedBlock.ResultsPage;
         this.SearchString = this._SelectedBlock.SearchString;
         this.UpdateFormText(this.SearchInput, this.SearchString);

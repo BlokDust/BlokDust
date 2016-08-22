@@ -55,6 +55,8 @@ export class Sample extends SamplerBase {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
+
+        //SoundCloudAPI.Monitor();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -64,7 +66,7 @@ export class Sample extends SamplerBase {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
+            //this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetBuffers();
             //this.DataToBuffer();
 
