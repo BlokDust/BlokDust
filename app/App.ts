@@ -252,6 +252,8 @@ export default class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // INITIALISE SOUNDCLOUD //
+        var tempClientIDs = ['7258ff07f16ddd167b55b8f9b9a3ed33', '33ebf0c1ffa4e462157606a432bd7b5f', 'ce852127c5413fe70816d488694d7921']
+        this.Config.SoundCloudClientId = tempClientIDs[Math.floor(Math.random()*tempClientIDs.length)]
         SoundCloudAPI.Initialize();
 
         // INITIALISE THEME //
