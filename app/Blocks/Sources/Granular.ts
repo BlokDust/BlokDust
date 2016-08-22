@@ -228,7 +228,7 @@ export class Granular extends Source {
                 e.connect(this.AudioInput);
             });
 
-            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
+            //this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetupGrains();
 
             this._FirstRelease = false;

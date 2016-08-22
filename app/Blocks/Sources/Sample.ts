@@ -66,7 +66,7 @@ export class Sample extends SamplerBase {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
+            //this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetBuffers();
             //this.DataToBuffer();
 

@@ -146,7 +146,7 @@ export class Convolver extends PostEffect {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
+            //this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetBuffer();
             this._FirstRelease = false;
         }
