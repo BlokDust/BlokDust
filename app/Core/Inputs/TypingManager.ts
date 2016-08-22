@@ -28,7 +28,6 @@ export class TypingManager extends KeyboardInputManager {
         //this.AddToString(code);
         //this.RemoveFromString();
         //this.StringReturn();
-        console.log(code);
         this.KeyDownChange.raise(this, new KeyDownEventArgs(code));
     }
 

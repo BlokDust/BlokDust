@@ -212,7 +212,6 @@ export class Granular extends Source {
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = function() {
-            console.log("error");
             me.TrackFallBack();
         };
 

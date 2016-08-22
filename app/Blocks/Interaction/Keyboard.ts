@@ -58,7 +58,6 @@ export class Keyboard extends Controller {
             this.UpdateMods();
         }
         else if (param === 'polyphonic') {
-            console.log('polyphonic change');
             this.Params.isPolyphonic = value;
             // ALL SOURCES
             let connections: ISource[] = this.Connections.ToArray();

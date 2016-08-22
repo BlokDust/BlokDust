@@ -83,7 +83,6 @@ export class Convolver extends PostEffect {
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = function() {
-            console.log("error");
             me.TrackFallBack();
         };
 

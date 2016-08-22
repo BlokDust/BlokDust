@@ -150,7 +150,6 @@ export class Metrics {
             this.ItemsPerPage = 3;
             this._DeviceZoom = 1;
             this.Device = Device.mobile;
-            console.log("MOBILE");
         }
 
         // TABLET PORTRAIT //
@@ -160,7 +159,6 @@ export class Metrics {
             this.ItemsPerPage = 4;
             this._DeviceZoom = 1;
             this.Device = Device.tablet;
-            console.log("TABLET");
         }
 
         /*// MOBILE LANDSCAPE //
@@ -187,7 +185,6 @@ export class Metrics {
             this.ItemsPerPage = 6;
             this._DeviceZoom = 1;
             this.Device = Device.desktop;
-            console.log("DESKTOP");
         }
     }
 

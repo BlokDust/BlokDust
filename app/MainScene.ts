@@ -668,8 +668,6 @@ export class MainScene extends DisplayObject{
         var tutorial = this.Tutorial;
 
         if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || (message.Open && message.Hover) || create.Hover || ((tutorial.Open || tutorial.SplashOpen) && tutorial.Hover) || (options.Scale===1 && options.Hover)) {
-            console.log(zoom.InRoll);
-            console.log("UI INTERACTION");
             return true;
         }
 

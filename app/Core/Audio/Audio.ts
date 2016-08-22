@@ -161,7 +161,6 @@ export class Audio implements IAudio {
                 "blockId": blockId,
                 "channels": channels
             });
-            console.log('Message posted to worker');
         }
     }
 

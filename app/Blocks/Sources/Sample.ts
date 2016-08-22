@@ -223,7 +223,6 @@ export class Sample extends SamplerBase {
 
         //TODO - onerror doesn't seem to work
         this.PrimaryBuffer.onerror = () => {
-            console.log("error");
             this.TrackFallBack();
         };
     }
@@ -351,7 +350,6 @@ export class Sample extends SamplerBase {
                 break;
 
             case "reverse":
-                console.log('setting reverse ', value);
                 value = value? true : false;
                 this.Params[param] = val;
                 this.ReverseTrack();

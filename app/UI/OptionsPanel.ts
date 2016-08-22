@@ -836,7 +836,7 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="samplelocal") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
-                    console.log("" + this.Options[i].Setting +" | "+ val);
+                    // console.log("" + this.Options[i].Setting +" | "+ val);
                     // SET VALUE IN BLOCK //
                     this.SelectedBlock.SetParam(this.Options[i].Setting, val);
                     return;
@@ -845,7 +845,7 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="actionbutton") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
-                    console.log("" + this.Options[i].Setting +" | "+ val);
+                    // console.log("" + this.Options[i].Setting +" | "+ val);
                     // SET VALUE IN BLOCK //
                     this.SelectedBlock.SetParam(this.Options[i].Setting, val);
                     return;
@@ -1095,7 +1095,7 @@ export class OptionsPanel extends DisplayObject {
             }
         }
 
-        console.log("" + object[""+setting] +" | "+ object[""+value]);
+        // console.log("" + object[""+setting] +" | "+ object[""+value]);
         // SET VALUE IN BLOCK //
         //Utils.Events.Debounce(function() {
             //console.log("debounce");
@@ -1111,7 +1111,7 @@ export class OptionsPanel extends DisplayObject {
 
     SwitchValue(object,value,setting) {
         this._DrawReady = true;
-        console.log("from " + object[""+setting] +" | "+ object[""+value]);
+        // console.log("from " + object[""+setting] +" | "+ object[""+value]);
         object[""+value] = ! object[""+value];
 
         var val = 0;
@@ -1119,7 +1119,7 @@ export class OptionsPanel extends DisplayObject {
             val = 1;
         }
 
-        console.log("to " + object[""+setting] +" | "+ val);
+        // console.log("to " + object[""+setting] +" | "+ val);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], val);
 
@@ -1127,7 +1127,7 @@ export class OptionsPanel extends DisplayObject {
 
     PushValue(object,value,setting) {
         this._DrawReady = true;
-        console.log("" + object[""+setting] +" | "+ value);
+        // console.log("" + object[""+setting] +" | "+ value);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], value);
 
