@@ -252,14 +252,14 @@ export default class App implements IApp{
         this.ParticlesPool = new PooledFactoryResource<Particle>(10, 100, Particle.prototype);
 
         // INITIALISE SOUNDCLOUD //
-        var tempClientIDs = ['7258ff07f16ddd167b55b8f9b9a3ed33', '33ebf0c1ffa4e462157606a432bd7b5f', 'ce852127c5413fe70816d488694d7921']
-        this.Config.SoundCloudClientId = tempClientIDs[Math.floor(Math.random()*tempClientIDs.length)]
+        var tempClientIDs = ['7258ff07f16ddd167b55b8f9b9a3ed33', '33ebf0c1ffa4e462157606a432bd7b5f', 'ce852127c5413fe70816d488694d7921'];
+        this.Config.SoundCloudClientId = tempClientIDs[Math.floor(Math.random()*tempClientIDs.length)];
         SoundCloudAPI.Initialize();
 
         // INITIALISE THEME //
         this.ThemeManager.ThemeChanged.on((s: any, e: ThemeChangeEventArgs) => {
             this.TrackVariable(GAVariables.THEME.toString(), e.Index.toString());
-            this.TrackEvent(CommandCategories.SETTINGS.toString(), Commands.CHANGE_THEME.toString());
+            this.TrackEvent(CommandCategories.SETTINGS.toString(), Commands.CHANGE_THEME.toString(), ''+this.ThemeManager.Themes[e.Index].Name);
 
             // if first load
             var firstLoad: boolean = this.Palette.length === 0;
