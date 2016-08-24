@@ -1,6 +1,6 @@
 {
   "name": "BlokDust",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "dependencies": {
     "etch": "edsilv/etch#old",
     "exjs": "BSick7/exjs",
