@@ -3,9 +3,11 @@ BlokDust
 
 [![Build Status](https://travis-ci.org/BlokDust/BlokDust.svg)](https://travis-ci.org/BlokDust/BlokDust)
 
-BlokDust is a web-based music making app. By joining blocks together, you can build synthesizers, put effects on your voice, remix & manipulate samples and arrange self-playing musical environments.
+[BlokDust](https://blokdust.com) is a web-based music making app. By joining blocks together, you can build synthesizers, put effects on your voice, remix & manipulate samples and arrange self-playing musical environments.
 
 You can share what you make and if you want, you can expand on other people's creations. You can also contribute by tagging your tracks in SoundCloud with #blokdust so that your music is available for people to play with in the app.
+
+Play the app at [blokdust.com](https://blokdust.com)
 
 ![BlokDust](https://guide.blokdust.com/wp-content/uploads/2016/03/synth01_4b.jpg "Creating a synth in BlokDust")
 
@@ -13,22 +15,22 @@ You can share what you make and if you want, you can expand on other people's cr
 Visit our [Youtube channel](https://www.youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ) to view some examples of the app in action and follow us on [Facebook](https://www.facebook.com/blokdust) and [Twitter](https://twitter.com/blokdust) for updates.
 
 
-------
+
 # Guide
 For tutorials, examples and other related features please visit our wiki/user companion site [guide.blokdust.com](https://guide.blokdust.com)
 
 
-------
+
 # Frequently Asked Questions
 [guide.blokdust.com/frequently-asked-questions/](https://guide.blokdust.com/frequently-asked-questions/)
 
 
-------
+
 # Requirements 
 Chrome browser recommended, desktop or tablet and an internet connection. If you have one, use a MIDI key controller for the best experience!
 
 
-------
+
 # Contributing
 
 We’ll hopefully be publishing some developer notes when we have time. There’s a lot of things we’ve explored for the first time with this project and plenty that can be improved so we welcome any extra insight.
@@ -56,6 +58,6 @@ Once you have the prerequisites installed and you've cloned the project, run the
 ##### Build & compile project to dist folder: 
 `grunt serve:dist`
 
-------
+
 # Contact
 Get in touch with us at [blokdust@gmail.com](mailto:blokdust@gmail.com)
