@@ -253,7 +253,9 @@ export default class App implements IApp{
 
         // INITIALISE SOUNDCLOUD //
         var tempClientIDs = ['7258ff07f16ddd167b55b8f9b9a3ed33', '33ebf0c1ffa4e462157606a432bd7b5f', 'ce852127c5413fe70816d488694d7921'];
-        this.Config.SoundCloudClientId = tempClientIDs[Math.floor(Math.random()*tempClientIDs.length)];
+        //buffer to deal with initial traffic, will revert to true id after //
+        var tempClientIDs2 = ['3291559d547bd9c545cbf393f522ea68', '3833cf666207c249e9767699a4d22a79', 'cb6c82fd11c903be63bdc4df4c5c7e09', '6c5bafb2050dc09d8f5d738030aa9fed'];
+        this.Config.SoundCloudClientId = tempClientIDs2[Math.floor(Math.random()*tempClientIDs2.length)];
         SoundCloudAPI.Initialize();
 
         // INITIALISE THEME //
