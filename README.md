@@ -2,7 +2,7 @@ BlokDust
 ========
 
 [![Build Status](https://travis-ci.org/BlokDust/BlokDust.svg)](https://travis-ci.org/BlokDust/BlokDust)
-<a href="https://blokdust.herokuapp.com"><img src="https://worldvectorlogo.com/logos/slack.svg" width="50" /></a>
+<a href="https://blokdust.herokuapp.com"><img src="https://worldvectorlogo.com/logos/slack.svg" width="60" /></a>
 
 [BlokDust](https://blokdust.com) is a web-based music making app. By joining blocks together, you can build synthesizers, put effects on your voice, remix & manipulate samples and arrange self-playing musical environments.
 
