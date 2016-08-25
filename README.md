@@ -3,47 +3,59 @@ BlokDust
 
 [![Build Status](https://travis-ci.org/BlokDust/BlokDust.svg)](https://travis-ci.org/BlokDust/BlokDust)
 
+BlokDust is a web-based music making app. By joining blocks together, you can build synthesizers, put effects on your voice, remix & manipulate samples and arrange self-playing musical environments.
 
-This project is still currently in development but will be hosted at  [blokdust.com](https://blokdust.com) in the near future. In the meantime, visit our [Youtube channel](https://www.youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ) to view some previews of the app in action and follow us on [Facebook](https://www.facebook.com/blokdust) and [Twitter](https://twitter.com/blokdust) for updates.
+You can share what you make and if you want, you can expand on other people's creations. You can also contribute by tagging your tracks in SoundCloud with #blokdust so that your music is available for people to play with in the app.
+
+![BlokDust](https://guide.blokdust.com/wp-content/uploads/2016/03/synth01_4b.jpg "Creating a synth in BlokDust")
 
 
+Visit our [Youtube channel](https://www.youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ) to view some examples of the app in action and follow us on [Facebook](https://www.facebook.com/blokdust) and [Twitter](https://twitter.com/blokdust) for updates.
 
+
+------
 # Guide
-For tutorials and other related features please visit our wiki/user companion site [guide.blokdust.com](https://guide.blokdust.com)
+For tutorials, examples and other related features please visit our wiki/user companion site [guide.blokdust.com](https://guide.blokdust.com)
 
 
-
+------
 # Frequently Asked Questions
 [guide.blokdust.com/frequently-asked-questions/](https://guide.blokdust.com/frequently-asked-questions/)
 
 
-
+------
 # Requirements 
 Chrome browser recommended, desktop or tablet and an internet connection. If you have one, use a MIDI key controller for the best experience!
 
 
-
+------
 # Contributing
 
 We’ll hopefully be publishing some developer notes when we have time. There’s a lot of things we’ve explored for the first time with this project and plenty that can be improved so we welcome any extra insight.
 
-### Local Installation
-
-Clone the repository   
+#### Clone the repository   
 `git clone https://github.com/BlokDust/BlokDust.git`
 
-Make sure you have node and npm installed first and then run these commands.  
+#### Prerequisites 
+Blokdust needs these things to work:
+- [Node](https://nodejs.org)
+- [Grunt](http://gruntjs.com/getting-started)
+- [Bower](https://bower.io/)
 
-`npm install -g grunt-cli`      
-`npm install -g bower`
-
+#### Workflow
+Once you have the prerequisites installed and you've cloned the project, run these commands to install the dependencies:    
 `npm install`     
 `bower install`
 
-`grunt serve:dev` will run the project locally     
-`grunt serve:dist` will build and minify the project  
+##### Serve Blokdust on localhost:8000:
+`grunt serve:dev`  
 
+##### Serve Blokdust on localhost:8000 and update on changes:
+`grunt watch:dev`  
 
+##### Build & compile project to dist folder: 
+`grunt serve:dist`
 
+------
 # Contact
-Send suggestions or hello's to: blokdust@gmail.com
+Get in touch with us at [blokdust@gmail.com](mailto:blokdust@gmail.com)
