@@ -51,7 +51,7 @@ export class Granular extends Source {
             region: 0,
             spread: 1.5,
             grainlength: 0.25,
-            track: 'http://files.blokdust.io/samples/sequence_fuzz_pad2.wav',
+            track: 'https://files.blokdust.io/samples/sequence_fuzz_pad2.wav',
             trackName: 'Fuzz Pad 2',
             user: 'BlokDust',
             permalink: ''
