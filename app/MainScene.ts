@@ -8,6 +8,7 @@ import {CreateNew} from './UI/CreateNew';
 import {Commands} from './Commands';
 import {CompositionLoadedEventArgs} from './CompositionLoadedEventArgs';
 import {ConnectionLines} from './UI/ConnectionLines';
+import {Controller} from './Blocks/Interaction/Controller';
 import {Header} from './UI/Header';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
@@ -535,9 +536,11 @@ export class MainScene extends DisplayObject{
                 var distanceFromEffect = source.DistanceFrom(App.Metrics.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
+                    // if the effect isn't already in the sources connections list
                     if (!source.Connections.Contains(effect)){
 
-                        if (source instanceof PowerSource && effect instanceof PowerEffect || !(source instanceof PowerSource)) {
+
+                        if ( !(source instanceof PowerSource && effect instanceof Controller) && ((source instanceof PowerSource && effect instanceof PowerEffect) || !(source instanceof PowerSource)) ) {
                             //Add sources to effect
                             effect.AddSource(source);
 
