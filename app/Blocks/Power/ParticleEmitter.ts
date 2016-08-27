@@ -11,6 +11,7 @@ declare var App: IApp;
 export class ParticleEmitter extends PowerSource {
 
     private _rateCounter: number;
+    private _emittable: boolean = true;
     public Params: ParticleEmitterParams;
     public Defaults: ParticleEmitterParams;
 
@@ -37,20 +38,24 @@ export class ParticleEmitter extends PowerSource {
 
 
     EmitParticle() {
-        var position = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
-        var vector = Vector.fromAngle(Math.degreesToRadians(this.Params.angle));
-        vector.mult(this.Params.speed);
-        var size = 2 + (Math.random());
-        var life = Math.round(this.Params.range/this.Params.speed);
+        if (this._emittable) {
+            var position = App.Metrics.ConvertGridUnitsToAbsolute(this.Position);
+            var vector = Vector.fromAngle(Math.degreesToRadians(this.Params.angle));
+            vector.mult(this.Params.speed);
+            var size = 2 + (Math.random());
+            var life = Math.round(this.Params.range/this.Params.speed);
 
-        var p: Particle = App.ParticlesPool.GetObject();
+            var p: Particle = App.ParticlesPool.GetObject();
 
-        p.Position = position;
-        p.Vector = vector;
-        p.Life = life;
-        p.Size = size;
+            p.Position = position;
+            p.Vector = vector;
+            p.Life = life;
+            p.Size = size;
 
-        App.Particles.push(p);
+            App.Particles.push(p);
+
+            this._emittable = false;
+        }
     }
 
 
@@ -77,6 +82,7 @@ export class ParticleEmitter extends PowerSource {
         } else {
             this._rateCounter = this.Params.rate;
         }
+        this._emittable = true;
     }
 
     Draw() {
