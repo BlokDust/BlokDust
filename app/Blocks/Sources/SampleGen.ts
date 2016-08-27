@@ -712,7 +712,7 @@ export class SampleGen extends SamplerBase {
                 });
                 break;
             case "loopEnd":
-                this.Sources.forEach((s: Tone.Simpler)=> {
+                this.Sources.forEach((s:Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
                 break;

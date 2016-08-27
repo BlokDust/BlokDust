@@ -779,8 +779,20 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="waveregion") {
                 for (var j=this.Options[i].Handles.length-1;j>-1;j--) {
                     if (this.Options[i].HandleRoll[j]) {
-                        this.Options[i].Handles[j].Selected = true;
+
+                        var handles = this.Options[i].Handles;
+                        handles[j].Selected = true;
                         this.HandleSet(i, j, 0,this.Options[i].Size.height,mx, my);
+
+                        if (handles[3].Position.x < (handles[2].Position.x+1)) { // loopend before loopstart
+                            this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
+                        }
+                        if (handles[3].Position.x < (handles[0].Position.x)) { // loopend before start
+                            this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[0].Position.x) + this.Position.x + this.Margin, my);
+                        }
+                        if (handles[1].Position.x < (handles[0].Position.x+1)) { // end before start
+                            this.HandleSet(i, 1, 0, this.Options[i].Size.height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);
+                        }
                         return;
                     }
                 }
