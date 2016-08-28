@@ -55,6 +55,8 @@ export class Sample extends SamplerBase {
 
         // Define Outline for HitTest
         this.Outline.push(new Point(-1, 0),new Point(0, -1),new Point(1, -1),new Point(2, 0),new Point(1, 1),new Point(0, 1));
+
+        //SoundCloudAPI.Monitor();
     }
 
     //-------------------------------------------------------------------------------------------
@@ -64,7 +66,7 @@ export class Sample extends SamplerBase {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
+            //this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetBuffers();
             //this.DataToBuffer();
 
@@ -223,7 +225,6 @@ export class Sample extends SamplerBase {
 
         //TODO - onerror doesn't seem to work
         this.PrimaryBuffer.onerror = () => {
-            console.log("error");
             this.TrackFallBack();
         };
     }
@@ -351,7 +352,6 @@ export class Sample extends SamplerBase {
                 break;
 
             case "reverse":
-                console.log('setting reverse ', value);
                 value = value? true : false;
                 this.Params[param] = val;
                 this.ReverseTrack();

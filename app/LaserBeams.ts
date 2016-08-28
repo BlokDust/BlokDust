@@ -159,11 +159,9 @@ export class LaserBeams extends DisplayObject {
                                             p2 = new Point(p1.x + line.x, p1.y + line.y);
                                             var intersection = Intersection.intersectLinePolygon(p1, p2, outline);
                                             if (intersection.status == "Intersection") {
-                                                console.log("intersect");
 
                                                 // THERE IS A COLLISION //
-
-
+                                                
                                                 // VOID BLOCKS //
                                                 if (block instanceof Void) {
                                                     var intersect = intersection.points;

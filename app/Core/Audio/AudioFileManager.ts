@@ -54,9 +54,9 @@ export class AudioFileManager {
             var percentLoaded = Math.round((event.loaded / event.total) * 100);
             // Increase the progress bar length.
             if (percentLoaded < 100) {
-                console.log(percentLoaded + '%');
+                // console.log(percentLoaded + '%');
             }
-            console.log(percentLoaded + '%');
+            // console.log(percentLoaded + '%');
         }
     }
 }

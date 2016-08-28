@@ -14,33 +14,25 @@ export class Particle implements IPooledObject {
 
     public Disposed: boolean = false;
     public Life: number;
-    public Velocity: Vector;
+    public Vector: Vector;
     public Position: Point;
     public Size: number;
 
-    constructor(position: Point, velocity: Vector, size: number, life: number) {
+    constructor(position: Point, vector: Vector, size: number, life: number) {
         this.Position = position;
-        this.Velocity = velocity;
+        this.Vector = vector;
         this.Size = size;
         this.Life = life;
     }
 
     Move() {
-        this.Position.x += (this.Velocity.x * App.Unit);
-        this.Position.y += (this.Velocity.y * App.Unit);
+        this.Position.x += (this.Vector.x * App.Unit);
+        this.Position.y += (this.Vector.y * App.Unit);
     }
-
-    // todo: enable delta time
-    // Move() {
-    //     var p: Vector = this.Position.toVector();
-    //     var deltaVelocity: Vector = new Vector((this.Velocity.x * App.Unit) * App.Stage.deltaTime, (this.Velocity.y * App.Unit) * App.Stage.deltaTime);
-    //     p.add(deltaVelocity);
-    //     this.Position = p.toPoint();
-    // }
 
     Reset(): boolean {
         this.Position = null;
-        this.Velocity = null;
+        this.Vector = null;
         this.Size = null;
         this.Life = null;
         return true;

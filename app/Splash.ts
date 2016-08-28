@@ -3,6 +3,7 @@ import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
 import Point = minerva.Point;
+import {unlockAudioContext, isIOS, hasAudioContextStarted} from './Core/Audio/Utils/Utils';
 
 declare var App: IApp;
 
@@ -11,13 +12,17 @@ export class Splash extends DisplayObject{
     public XOffset: number;
     public YOffset: number;
     public LoadOffset: number;
+    public ButtonOffset: number;
     private _Scale: number;
     private _Center: Point;
     private _Offset: Point;
+    public IOSPause: boolean = false;
     IsAnimationFinished: boolean = false;
+    IsTransitionFinished: boolean = false;
     AnimationFinished = new nullstone.Event<{}>();
+    _hasTouchMoved: boolean = false;
 
-    init(drawTo: IDisplayContext): void {
+    Init(drawTo: IDisplayContext): void {
         super.init(drawTo);
     }
 
@@ -28,6 +33,19 @@ export class Splash extends DisplayObject{
         this.XOffset = 0;
         this.YOffset = -1;
         this.LoadOffset = -1;
+        this.ButtonOffset = -1;
+
+        App.PointerInputManager.MouseDown.on((s: any, e: MouseEvent) => {
+            this.MouseDown(e);
+        }, this);
+
+        App.PointerInputManager.TouchEnd.on((s: any, e: TouchEvent) => {
+            this.TouchEnd(e);
+        }, this);
+
+        App.PointerInputManager.TouchMove.on((s: any, e: TouchEvent) => {
+            this._hasTouchMoved = true;
+        }, this);
     }
 
     //-------------------------------------------------------------------------------------------
@@ -37,6 +55,10 @@ export class Splash extends DisplayObject{
     public draw() {
 
         super.draw();
+
+        if (this.IsTransitionFinished) {
+            return;
+        }
 
         if (this.isFirstFrame()){
             this.TransitionIn();
@@ -188,6 +210,20 @@ export class Splash extends DisplayObject{
         this.ctx.font = "200 " + headerType + "px Dosis";
         this.ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
 
+
+        // IOS BUTTON //
+        var by = App.Height*this.ButtonOffset;
+        App.FillColor(this.ctx,App.Palette[0]);
+        this.ctx.fillRect(0,by,App.Width,App.Height);
+
+        App.FillColor(this.ctx,App.Palette[7]);
+        ctx.beginPath();
+        ctx.moveTo((App.Width*0.5) - (this._Scale*0.5),by + (App.Height*0.5) - (this._Scale));
+        ctx.lineTo((App.Width*0.5) - (this._Scale*0.5),by + (App.Height*0.5) + (this._Scale));
+        ctx.lineTo((App.Width*0.5) + (this._Scale*0.5),by + (App.Height*0.5));
+        ctx.fill();
+
+
         // CHROME RECOMMENDED //
         var chY = (this.LoadOffset * App.Height);
 
@@ -250,8 +286,23 @@ export class Splash extends DisplayObject{
         var initDelay = 300;
         var tweenLength = 250;
         var viewLength = 350;
-
         this.DelayTo(this,0,tweenLength,initDelay,'LoadOffset',-1);
+
+        // iOS needs a start button //
+        if (isIOS()) {
+            // SHOW BUTTON //
+            this.DelayTo(this,0,tweenLength,initDelay,'ButtonOffset',-1);
+            this.IOSPause = true;
+        }
+
+        else {
+            // DONT SHOW BUTTON //
+            this.Animate(initDelay,tweenLength,viewLength);
+        }
+
+    }
+
+    Animate(initDelay, tweenLength, viewLength) {
         this.DelayTo(this,0,tweenLength,initDelay,'YOffset',-1);
         this.DelayTo(this,1,tweenLength,viewLength + tweenLength + initDelay,'XOffset',0);
         this.DelayTo(this,1,tweenLength,(viewLength*2) + (tweenLength*2) + initDelay,'YOffset',0);
@@ -268,5 +319,59 @@ export class Splash extends DisplayObject{
 
     TransitionOut() {
         this.DelayTo(this,1,450,300,'LoadOffset',0);
+        // when pre-roll is finished
+        setTimeout(() => {
+            this.IsTransitionFinished = true;
+        },800);
     }
+
+
+    //-------------------------------------------------------------------------------------------
+    //  INTERACTION
+    //-------------------------------------------------------------------------------------------
+
+
+    MouseDown(e: MouseEvent): void {
+        if (this.IOSPause) {
+            this.StartButtonPressed();
+        }
+    }
+
+
+
+    TouchEnd(e: any){
+        // iOS audio wont initialize if there's a touchMove event
+        if (this.IOSPause && !this._hasTouchMoved) {
+            this.StartButtonPressed();
+        }
+        this._hasTouchMoved = false;
+    }
+
+    StartButtonPressed() {
+        // Check to see if audio context has started
+        if (hasAudioContextStarted(App.Audio.ctx)){
+            // START APP //
+            this.StartAppAfterPause();
+        } else {
+            // UNLOCK AUDIO CONTEXT //
+            unlockAudioContext(App.Audio.ctx, () => {
+                // START APP //
+                this.StartAppAfterPause();
+            });
+        }
+    }
+
+    StartAppAfterPause() {
+        // ANIM //
+        this.IOSPause = false;
+        var initDelay = 300;
+        var tweenLength = 250;
+        var viewLength = 350;
+        this.DelayTo(this,1,tweenLength,initDelay,'ButtonOffset',0);
+        this.Animate(initDelay,tweenLength,viewLength);
+        if (!App.IsLoadingComposition) {
+            App.MainScene.Begin();
+        }
+    }
+
 }

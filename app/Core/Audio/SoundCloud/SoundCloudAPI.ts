@@ -77,10 +77,23 @@ export class SoundCloudAPI {
         var trackUrl = track.URI;
 
         //TODO: loading track's in safari throw errors
-        console.log(''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId)
         return ''+ trackUrl +'/stream?client_id='+ App.Config.SoundCloudClientId;
     }
 
+    //-------------------------------------------------------------------------------------------
+    //  APP DATA
+    //-------------------------------------------------------------------------------------------
+
+
+    static Monitor() {
+        if (window.SC) {
+            SC.get('/apps', {
+
+            }).then((app) => {
+                console.log(app);
+            });
+        }
+    }
 
     //-------------------------------------------------------------------------------------------
     //  SINGLE SEARCH

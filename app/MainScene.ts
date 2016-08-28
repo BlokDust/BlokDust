@@ -8,6 +8,7 @@ import {CreateNew} from './UI/CreateNew';
 import {Commands} from './Commands';
 import {CompositionLoadedEventArgs} from './CompositionLoadedEventArgs';
 import {ConnectionLines} from './UI/ConnectionLines';
+import {Controller} from './Blocks/Interaction/Controller';
 import {Header} from './UI/Header';
 import {IApp} from './IApp';
 import {IBlock} from './Blocks/IBlock';
@@ -310,6 +311,10 @@ export class MainScene extends DisplayObject{
     private _PointerDown(point: Point) {
         App.Metrics.ConvertToPixelRatioPoint(point);
 
+        if (!App.Stage.Splash.IsAnimationFinished) {
+            return;
+        }
+
         this._IsPointerDown = true;
         this._PointerPoint = point;
         var UIInteraction: Boolean;
@@ -531,9 +536,11 @@ export class MainScene extends DisplayObject{
                 var distanceFromEffect = source.DistanceFrom(App.Metrics.ConvertGridUnitsToAbsolute(effect.Position));
 
                 if (distanceFromEffect <= catchmentArea.x) {
+                    // if the effect isn't already in the sources connections list
                     if (!source.Connections.Contains(effect)){
 
-                        if (source instanceof PowerSource && effect instanceof PowerEffect || !(source instanceof PowerSource)) {
+
+                        if ( !(source instanceof PowerSource && effect instanceof Controller) && ((source instanceof PowerSource && effect instanceof PowerEffect) || !(source instanceof PowerSource)) ) {
                             //Add sources to effect
                             effect.AddSource(source);
 
@@ -664,8 +671,6 @@ export class MainScene extends DisplayObject{
         var tutorial = this.Tutorial;
 
         if (zoom.InRoll || zoom.OutRoll || header.MenuOver || share.Open || settings.Open || soundcloud.Open  || recorder.Hover || (message.Open && message.Hover) || create.Hover || ((tutorial.Open || tutorial.SplashOpen) && tutorial.Hover) || (options.Scale===1 && options.Hover)) {
-            console.log(zoom.InRoll);
-            console.log("UI INTERACTION");
             return true;
         }
 
@@ -782,6 +787,15 @@ export class MainScene extends DisplayObject{
         // validate blocks and give us a little time to stabilise / bring in volume etc
         this._Invalidate();
 
+        // Dont start yet if splash paused //
+        if (App.Stage.Splash.IOSPause) {
+            return;
+        }
+        this.Begin();
+
+     }
+
+    Begin() {
         // Fade In Audio //
         setTimeout(() => {
             this.play();
@@ -791,7 +805,7 @@ export class MainScene extends DisplayObject{
 
         //TODO: THIS IS SHIT - For some reason fading in the volume using the above method breaks the volume slider
         // Come back to this once useful functions have been abstracted from Tone into a simplified version
-        var volume = -30
+        var volume = -30;
         var volumeFade = setInterval(() => {
             if (volume < App.Audio.MasterVolume) {
                 App.Audio.Master.volume.value = volume;
@@ -799,8 +813,8 @@ export class MainScene extends DisplayObject{
             } else {
                 clearInterval(volumeFade);
             }
-        }, 70)
-     }
+        }, 70);
+    }
 
     //-------------------------------------------------------------------------------------------
     //  OPERATIONS

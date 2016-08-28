@@ -82,8 +82,8 @@ export class Filter extends PostEffect {
                     "setting": "gain",
                     "props": {
                         "value": this.Params.gain,
-                        "min": -50,
-                        "max": 50,
+                        "min": -35,
+                        "max": 35,
                         "quantised": false,
                         "centered": true
                     }

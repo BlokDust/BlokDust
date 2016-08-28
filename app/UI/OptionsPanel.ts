@@ -786,8 +786,20 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="waveregion") {
                 for (var j=this.Options[i].Handles.length-1;j>-1;j--) {
                     if (this.Options[i].HandleRoll[j]) {
-                        this.Options[i].Handles[j].Selected = true;
+
+                        var handles = this.Options[i].Handles;
+                        handles[j].Selected = true;
                         this.HandleSet(i, j, 0,this.Options[i].Size.height,mx, my);
+
+                        if (handles[3].Position.x < (handles[2].Position.x+1)) { // loopend before loopstart
+                            this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[2].Position.x+1) + this.Position.x + this.Margin, my);
+                        }
+                        if (handles[3].Position.x < (handles[0].Position.x)) { // loopend before start
+                            this.HandleSet(i, 3, 0, this.Options[i].Size.height, (handles[0].Position.x) + this.Position.x + this.Margin, my);
+                        }
+                        if (handles[1].Position.x < (handles[0].Position.x+1)) { // end before start
+                            this.HandleSet(i, 1, 0, this.Options[i].Size.height, (handles[0].Position.x+1) + this.Position.x + this.Margin, my);
+                        }
                         return;
                     }
                 }
@@ -843,7 +855,7 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="samplelocal") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
-                    //console.log("" + this.Options[i].Setting +" | "+ val);
+                    
                     // SET VALUE IN BLOCK //
                     this.SelectedBlock.SetParam(this.Options[i].Setting, val);
                     return;
@@ -852,7 +864,7 @@ export class OptionsPanel extends DisplayObject {
             if (this.Options[i].Type=="actionbutton") {
                 if (this.Options[i].HandleRoll[0]) {
                     var val = 0;
-                    //console.log("" + this.Options[i].Setting +" | "+ val);
+                    
                     // SET VALUE IN BLOCK //
                     this.SelectedBlock.SetParam(this.Options[i].Setting, val);
                     return;
@@ -1102,7 +1114,7 @@ export class OptionsPanel extends DisplayObject {
             }
         }
 
-        console.log("" + object[""+setting] +" | "+ object[""+value]);
+        // console.log("" + object[""+setting] +" | "+ object[""+value]);
         // SET VALUE IN BLOCK //
         //Utils.Events.Debounce(function() {
             //console.log("debounce");
@@ -1118,7 +1130,7 @@ export class OptionsPanel extends DisplayObject {
 
     SwitchValue(object,value,setting) {
         this._DrawReady = true;
-        console.log("from " + object[""+setting] +" | "+ object[""+value]);
+        // console.log("from " + object[""+setting] +" | "+ object[""+value]);
         object[""+value] = ! object[""+value];
 
         var val = 0;
@@ -1126,7 +1138,7 @@ export class OptionsPanel extends DisplayObject {
             val = 1;
         }
 
-        console.log("to " + object[""+setting] +" | "+ val);
+        // console.log("to " + object[""+setting] +" | "+ val);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], val);
 
@@ -1134,7 +1146,7 @@ export class OptionsPanel extends DisplayObject {
 
     PushValue(object,value,setting) {
         this._DrawReady = true;
-        console.log("" + object[""+setting] +" | "+ value);
+        // console.log("" + object[""+setting] +" | "+ value);
         // SET VALUE IN BLOCK //
         this.SelectedBlock.SetParam(object[""+setting], value);
 

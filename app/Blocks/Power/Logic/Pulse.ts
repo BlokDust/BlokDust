@@ -18,7 +18,7 @@ export class Pulse extends Logic {
             logic: false,
             pulseLength: App.Config.PulseLength/1000,
         };
-        this.PopulateParams(true);
+        this.PopulateParams();
 
         super.init(drawTo);
 

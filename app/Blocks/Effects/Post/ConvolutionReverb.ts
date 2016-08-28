@@ -83,7 +83,6 @@ export class Convolver extends PostEffect {
 
         //TODO - onerror doesn't seem to work
         this._FirstBuffer.onerror = function() {
-            console.log("error");
             me.TrackFallBack();
         };
 
@@ -147,7 +146,7 @@ export class Convolver extends PostEffect {
 
     FirstSetup() {
         if (this._FirstRelease) {
-            this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
+            //this.Search(App.MainScene.SoundcloudPanel.RandomSearch(this));
             this.SetBuffer();
             this._FirstRelease = false;
         }

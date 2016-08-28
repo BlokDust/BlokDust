@@ -246,7 +246,7 @@ export class MessagePanel extends DisplayObject {
     }
 
     DefaultFunction() {
-        console.log("default function");
+        // console.log("default function");
     }
 
 
