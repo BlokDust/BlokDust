@@ -13,7 +13,7 @@ Play the app at [blokdust.com](https://blokdust.com)
 ![BlokDust](https://guide.blokdust.com/wp-content/uploads/2016/03/synth01_4b.jpg "Creating a synth in BlokDust")
 
 
-Visit our [Youtube channel](https://www.youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ) to view some examples of the app in action and follow us on [Facebook](https://www.facebook.com/blokdust) and [Twitter](https://twitter.com/blokdust) for updates.
+Visit our [Youtube channel](https://www.youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ) to view some examples of the app in action and follow us on [Facebook](https://www.facebook.com/blokdust) and [Twitter](https://twitter.com/blokdust) for updates. Also, share your creations with each other on the [BlokDust Subreddit](https://www.reddit.com/r/blokdust).
 
 
 
