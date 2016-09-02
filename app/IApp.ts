@@ -41,6 +41,7 @@ export interface IApp {
     CommandManager: CommandManager;
     CommandsInputManager: CommandsInputManager;
     CompositionId: string;
+    CompositionName: string;
     CompositionLoaded: nullstone.Event<nullstone.IEventArgs>;
     CompositionLoadFailed: nullstone.Event<nullstone.IEventArgs>;
     Config: IConfig;

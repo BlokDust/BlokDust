@@ -83,7 +83,7 @@ export class SharePanel extends DisplayObject {
             domain: this.GetUrl() + "?c=",
             facebook: "post to facebook",
             twitter: "post to twitter",
-            google: "post to google +",
+            subreddit: "post to BD subreddit",
             bookmark: "bookmark creation",
             save: "overwrite",
             saveAs: "create new",
@@ -405,7 +405,7 @@ export class SharePanel extends DisplayObject {
             ctx.font = midType;
             ctx.fillText(this._CopyJson.facebook.toUpperCase(), shareX + (appWidth*0.5) - (145*units), buttonY + (18.5*units) );
             ctx.fillText(this._CopyJson.twitter.toUpperCase(), shareX + (appWidth*0.5), buttonY + (18.5*units) );
-            ctx.fillText(this._CopyJson.google.toUpperCase(), shareX + (appWidth*0.5)  + (145*units), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.subreddit.toUpperCase(), shareX + (appWidth*0.5)  + (145*units), buttonY + (18.5*units) );
 
 
             // TITLE //
@@ -692,10 +692,10 @@ export class SharePanel extends DisplayObject {
         window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
     }
 
-    ShareGoogle() {
-        var href = "https://plus.google.com/share?url=";
-        href = "" + href + encodeURIComponent(this.SessionURL);
-        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
+    ShareSubreddit() {
+        var href = "https://www.reddit.com/r/blokdust/submit";
+        href = href + "?title=" + App.CompositionName + "&url=" + encodeURIComponent(this.SessionURL);
+        window.open(href,'');
     }
 
     MouseDown(point) {
@@ -731,8 +731,8 @@ export class SharePanel extends DisplayObject {
                 this.ShareTwitter();
                 return;
             }
-            if (this._RollOvers[8]) { // google
-                this.ShareGoogle();
+            if (this._RollOvers[8]) { // subreddit
+                this.ShareSubreddit();
                 return;
             }
             if (this._RollOvers[9]) { // back arrow
