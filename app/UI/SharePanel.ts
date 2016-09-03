@@ -693,9 +693,10 @@ export class SharePanel extends DisplayObject {
     }
 
     ShareSubreddit() {
-        var href = "https://www.reddit.com/r/blokdust/submit";
-        href = href + "?title=" + App.CompositionName + "&url=" + encodeURIComponent(this.SessionURL);
-        window.open(href,'');
+        const title = encodeURIComponent(Utils.Urls.getQuerystringParameterFromString('t', this.SessionURL));
+        const url = encodeURIComponent(this.SessionURL);
+        const href = `https://www.reddit.com/r/blokdust/submit?title=${title}&url=${url}`;
+        window.open(href,'ShareToBlokDustSubreddit');
     }
 
     MouseDown(point) {
