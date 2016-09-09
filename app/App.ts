@@ -3,7 +3,7 @@ import Canvas = etch.drawing.Canvas;
 import DisplayObject = etch.drawing.DisplayObject;
 import DisplayObjectCollection = etch.drawing.DisplayObjectCollection;
 import IDisplayObject = etch.drawing.IDisplayObject;
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 import {AddressBarManager} from './Core/Visual/AddressBarManager';
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {Audio} from './Core/Audio/Audio';

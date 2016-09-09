@@ -1,7 +1,7 @@
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from '../IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

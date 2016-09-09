@@ -1,5 +1,5 @@
 import {IApp} from '../../IApp';
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

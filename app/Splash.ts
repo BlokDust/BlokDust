@@ -2,7 +2,7 @@
 import DisplayObject = etch.drawing.DisplayObject;
 import {IApp} from './IApp';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 import {unlockAudioContext, isIOS, hasAudioContextStarted} from './Core/Audio/Utils/Utils';
 
 declare var App: IApp;

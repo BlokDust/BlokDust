@@ -1,5 +1,5 @@
 import IDisplayContext = etch.drawing.IDisplayContext;
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 import {Block} from './Block';
 import {IApp} from '../IApp';
 import {IEffect} from './IEffect';

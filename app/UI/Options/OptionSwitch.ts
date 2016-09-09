@@ -1,6 +1,6 @@
 import {IApp} from '../../IApp';
-import Size = minerva.Size;
-import Point = minerva.Point;
+import Size = etch.primitives.Size;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 

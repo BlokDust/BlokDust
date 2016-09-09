@@ -1,5 +1,5 @@
 import {IBlock} from './Blocks/IBlock';
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 
 export class SaveFile {
     public ColorThemeNo: number;

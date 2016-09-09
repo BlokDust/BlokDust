@@ -8,7 +8,6 @@
     "intersection": "BlokDust/intersection",
     "key-codes": "edsilv/key-codes",
     "lzma": "nmrugg/LZMA-JS",
-    "minerva": "~0.7.3",
     "nullstone": "~0.4.5",
     "pixelpalette": "whitevinyl/pixelpalette#blokdust",
     "r.js": "~2.1.16",
@@ -19,7 +18,6 @@
     "utils": "edsilv/utils"
   },
   "resolutions": {
-    "nullstone": "~0.4.5",
-    "minerva": "~0.7.3"
+    "nullstone": "~0.4.5"
   }
 }

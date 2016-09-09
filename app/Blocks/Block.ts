@@ -4,7 +4,7 @@ import ObservableCollection = etch.collections.ObservableCollection;
 import Point = etch.primitives.Point;
 import RoutedEvent = etch.events.RoutedEvent;
 import RoutedEventArgs = etch.events.RoutedEventArgs;
-import Size = minerva.Size;
+import Size = etch.primitives.Size;
 import {AudioChain} from '../Core/Audio/Connections/AudioChain';
 import {IApp} from '../IApp';
 import {IAudioChain} from '../Core/Audio/Connections/IAudioChain';

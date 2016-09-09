@@ -1,13 +1,14 @@
 import {IApp} from '../IApp';
 import {MenuItem} from './MenuItem';
 import Point = etch.primitives.Point;
+import Size = etch.primitives.Size;
 
 declare var App: IApp;
 
 export class MenuCategory {
 
     public Position: Point;
-    public Size: minerva.Size;
+    public Size: Size;
     public Name: string;
     public Items: MenuItem[] = [];
     public Selected: number;
@@ -17,7 +18,7 @@ export class MenuCategory {
     public Pages: number;
     public CurrentPage: number;
 
-    constructor (position: Point, size: minerva.Size, name: string, offset: number) {
+    constructor (position: Point, size: Size, name: string, offset: number) {
         this.Position = position;
         this.Size = size;
         this.Name = name;

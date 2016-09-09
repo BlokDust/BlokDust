@@ -1,4 +1,4 @@
-import Size = minerva.Size;
+import Size = etch.primitives.Size;
 import {IOption} from './IOption';
 import {OptionButton} from './OptionButton';
 import {OptionHandle} from './OptionHandle';

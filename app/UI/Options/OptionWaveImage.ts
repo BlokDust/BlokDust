@@ -1,4 +1,4 @@
-import Size = minerva.Size;
+import Size = etch.primitives.Size;
 import {WaveForm} from './OptionWave';
 import Point = etch.primitives.Point;
 

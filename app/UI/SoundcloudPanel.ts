@@ -2,7 +2,7 @@ import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
 import {Device} from '../Device';
 import IDisplayContext = etch.drawing.IDisplayContext;
-import Size = minerva.Size;
+import Size = etch.primitives.Size;
 import {IApp} from '../IApp';
 
 declare var App: IApp;

@@ -1,6 +1,6 @@
 import {IApp} from '../../IApp';
 import {Option} from './Option';
-import Size = minerva.Size; //TODO: es6 modules
+import Size = etch.primitives.Size; //TODO: es6 modules
 
 declare var App: IApp;
 

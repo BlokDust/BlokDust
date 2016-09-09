@@ -1,6 +1,6 @@
 import Canvas = etch.drawing.Canvas;
 import IDisplayObject = etch.drawing.IDisplayObject;
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 import {AddressBarManager} from './Core/Visual/AddressBarManager';
 import {AnimationsLayer} from './UI/AnimationsLayer';
 import {BlockCreator} from './BlockCreator';

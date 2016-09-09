@@ -1,8 +1,8 @@
 import Dimensions = Utils.Measurements.Dimensions;
 import DisplayObject = etch.drawing.DisplayObject;
-import Size = minerva.Size;
+import Size = etch.primitives.Size;
 import {IApp} from '../IApp';
-import Point = minerva.Point;
+import Point = etch.primitives.Point;
 
 declare var App: IApp;
 
