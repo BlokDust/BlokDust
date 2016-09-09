@@ -178,7 +178,7 @@ export default class App implements IApp{
     public setup(){
 
         this.Canvas = new Canvas();
-        this.Canvas.HTMLElement.id = 'mainCanvas';
+        this.Canvas.htmlElement.id = 'mainCanvas';
         document.body.classList.add('app-active');
 
         this.BlockCreator = new BlockCreator();

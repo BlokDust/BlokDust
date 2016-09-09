@@ -1,4 +1,4 @@
-// etch v1.0.0 https://github.com/edsilv/etch#readme
+// etch v1.0.1 https://github.com/edsilv/etch#readme
 import ITimerListener = etch.engine.ITimerListener;
 declare var requestAnimFrame: any;
 declare module etch.engine {
@@ -13,7 +13,11 @@ declare module etch.engine {
 }
 
 declare module etch.primitives {
-    class Vector {
+    interface IVector {
+        x: number;
+        y: number;
+    }
+    class Vector implements IVector {
         x: number;
         y: number;
         constructor(x: number, y: number);
@@ -127,13 +131,7 @@ declare module etch.collections {
     var INotifyPropertyChanged_: nullstone.Interface<INotifyPropertyChanged>;
 }
 
-declare module etch.engine {
-    interface ITimerListener {
-        onTicked(lastTime: number, nowTime: number): any;
-    }
-}
-
-import Size = minerva.Size;
+import Size = etch.primitives.Size;
 declare module etch.drawing {
     class Canvas implements IDisplayContext {
         htmlElement: HTMLCanvasElement;
@@ -220,6 +218,7 @@ declare module etch.drawing {
         canvasHeight: number;
         deltaTime: number;
         displayList: DisplayObjectCollection<IDisplayObject>;
+        dispose(): void;
         draw(): void;
         drawFrom: IDisplayContext;
         drawTo: IDisplayContext;
@@ -270,7 +269,15 @@ declare module etch.drawing {
         draw(): void;
         drawDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         resizeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
+        dispose(): void;
+        disposeDisplayList(displayList: DisplayObjectCollection<IDisplayObject>): void;
         resize(): void;
+    }
+}
+
+declare module etch.engine {
+    interface ITimerListener {
+        onTicked(lastTime: number, nowTime: number): any;
     }
 }
 
@@ -329,8 +336,35 @@ declare module etch.events {
 }
 
 declare module etch.primitives {
-    class Point extends minerva.Point {
+    interface IPoint {
+        x: number;
+        y: number;
+    }
+    class Point implements IPoint {
+        x: number;
+        y: number;
+        constructor(x?: number, y?: number);
+        static isEqual(p1: IPoint, p2: IPoint): boolean;
+        static copyTo(src: IPoint, dest: IPoint): void;
         clone(): Point;
         toVector(): Vector;
+    }
+}
+
+declare module etch.primitives {
+    interface ISize {
+        width: number;
+        height: number;
+    }
+    class Size implements ISize {
+        width: number;
+        height: number;
+        constructor(width?: number, height?: number);
+        static copyTo(src: ISize, dest: ISize): void;
+        static isEqual(size1: ISize, size2: ISize): boolean;
+        static isEmpty(size: Size): boolean;
+        static min(dest: ISize, size2: ISize): void;
+        static isUndef(size: ISize): boolean;
+        static undef(size: ISize): void;
     }
 }

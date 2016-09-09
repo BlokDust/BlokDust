@@ -24,7 +24,7 @@ export class Splash extends DisplayObject{
     _hasTouchMoved: boolean = false;
 
     Init(drawTo: IDisplayContext): void {
-        super.Init(drawTo);
+        super.init(drawTo);
     }
 
     public setup() {
@@ -57,15 +57,11 @@ export class Splash extends DisplayObject{
 
         super.draw();
 
-<<<<<<< HEAD
-        if (this.isFirstFrame()){
-=======
         if (this.IsTransitionFinished) {
             return;
         }
 
-        if (this.IsFirstFrame()){
->>>>>>> master
+        if (this.isFirstFrame()){
             this.TransitionIn();
         }
 
@@ -218,10 +214,10 @@ export class Splash extends DisplayObject{
 
         // IOS BUTTON //
         var by = App.Height*this.ButtonOffset;
-        App.FillColor(this.Ctx,App.Palette[0]);
-        this.Ctx.fillRect(0,by,App.Width,App.Height);
+        App.FillColor(this.ctx,App.Palette[0]);
+        this.ctx.fillRect(0,by,App.Width,App.Height);
 
-        App.FillColor(this.Ctx,App.Palette[7]);
+        App.FillColor(this.ctx,App.Palette[7]);
         ctx.beginPath();
         ctx.moveTo((App.Width*0.5) - (this._Scale*0.5),by + (App.Height*0.5) - (this._Scale));
         ctx.lineTo((App.Width*0.5) - (this._Scale*0.5),by + (App.Height*0.5) + (this._Scale));

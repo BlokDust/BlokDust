@@ -48,27 +48,17 @@ export class ParticleEmitter extends PowerSource {
 
             var p: Particle = App.ParticlesPool.GetObject();
 
-<<<<<<< HEAD
-        p.Position = position;
-        p.Velocity = vector;
-        p.Life = life;
-        p.Size = size;
-
-        App.Particles.push(p);
-=======
             p.Position = position;
-            p.Vector = vector;
+            p.Velocity = vector;
             p.Life = life;
             p.Size = size;
 
             App.Particles.push(p);
 
+            this._LastEmission = this.lastVisualTick;
+            
             this._emittable = false;
         }
-    }
->>>>>>> master
-
-        this._LastEmission = this.lastVisualTick;
     }
 
     update() {
