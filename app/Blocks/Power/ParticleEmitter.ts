@@ -49,7 +49,7 @@ export class ParticleEmitter extends PowerSource {
             var p: Particle = App.ParticlesPool.GetObject();
 
             p.Position = position;
-            p.Velocity = vector;
+            p.Vector = vector;
             p.Life = life;
             p.Size = size;
 
@@ -60,10 +60,6 @@ export class ParticleEmitter extends PowerSource {
             this._emittable = false;
         }
     }
-
-
-    //     this._LastEmission = this.lastVisualTick;
-    // }
 
     update() {
         super.update();
@@ -91,7 +87,7 @@ export class ParticleEmitter extends PowerSource {
         this._emittable = true;
     }
 
-    // todo: emit based on time
+    // todo: emit based on delta time
     // update() {
     //     super.update();
         
