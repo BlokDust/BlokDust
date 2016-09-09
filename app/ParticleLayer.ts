@@ -55,7 +55,7 @@ export class ParticleLayer extends DisplayObject {
             }
 
             // Skip if block isn't in the right quadrant //
-            var quadCheck = this.QuadPartition(particle.Position, App.Metrics.ConvertGridUnitsToAbsolute(block.Position), particle.Velocity);
+            var quadCheck = this.QuadPartition(particle.Position, App.Metrics.ConvertGridUnitsToAbsolute(block.Position), particle.Vector);
             //console.log(quadCheck);
             if (!quadCheck) {
                 continue;

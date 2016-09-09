@@ -56,10 +56,14 @@ export class ParticleEmitter extends PowerSource {
             App.Particles.push(p);
 
             this._LastEmission = this.lastVisualTick;
-            
+
             this._emittable = false;
         }
     }
+
+
+    //     this._LastEmission = this.lastVisualTick;
+    // }
 
     update() {
         super.update();

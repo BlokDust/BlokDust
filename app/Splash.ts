@@ -20,7 +20,6 @@ export class Splash extends DisplayObject{
     IsAnimationFinished: boolean = false;
     IsTransitionFinished: boolean = false;
     AnimationFinished = new nullstone.Event<{}>();
-
     _hasTouchMoved: boolean = false;
 
     Init(drawTo: IDisplayContext): void {
@@ -337,8 +336,6 @@ export class Splash extends DisplayObject{
             this.StartButtonPressed();
         }
     }
-
-
 
     TouchEnd(e: any){
         // iOS audio wont initialize if there's a touchMove event
