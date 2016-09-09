@@ -1,11 +1,9 @@
 onmessage = function(e) {
-    console.log('Message received from main script');
     var channels = [];
     for (var i=0; i< e.data.channels.length; i++) {
         channels.push(ReverseArray(e.data.channels[i]));
     }
 
-    console.log('Posting message back to main script');
     postMessage({
         "blockId": e.data.blockId,
         "buffer": channels

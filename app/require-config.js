@@ -8,7 +8,7 @@ require.config({
         "intersection": "lib/intersection/intersection",
         "keycodes": "lib/key-codes/dist/key-codes",
         "lzma": "lib/lzma/src/lzma",
-        "PixelPalette": "lib/PixelPalette/dist/PixelPalette",
+        "PixelPalette": "lib/pixelpalette/dist/PixelPalette",
         "Recorderjs": "lib/RecorderJS",
         "text": "lib/text/text",
         "Tone": "lib/tone/Tone",

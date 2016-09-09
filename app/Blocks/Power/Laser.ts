@@ -17,7 +17,7 @@ export class Laser extends PowerSource {
 
         this.Defaults = {
             angle: -90,
-            range: 400,
+            range: 275,
             rotate: 0,
             selfPoweredMode: false
         };

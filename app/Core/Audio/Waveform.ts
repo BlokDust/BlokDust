@@ -2,9 +2,6 @@ export class Waveform {
 
     GetWaveformFromBuffer(buffer: AudioBuffer, points: number, stepsPerPoint: number, normal: number) {
 
-        console.log(buffer);
-        console.log("minutes: "+ (buffer.duration/60));
-
         // defaults //
         stepsPerPoint = 10; // checks per division
         var leftOnly = false; // don't perform channel merge

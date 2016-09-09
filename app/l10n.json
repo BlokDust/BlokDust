@@ -191,7 +191,7 @@
     },
 
     "SharePanel": {
-      "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a SoundCloud block.",
+      "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a Sample block.",
       "NoBlocks": "Create some blocks before you can save & share!"
     },
 
@@ -215,7 +215,7 @@
 
         {
           "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking.",
-          "Task": "Click on the CHOPPER block and have a play with it's settings. Close the options panel when you're done."
+          "Task": "Click on the CHOPPER block and have a play with its settings. Close the options panel when you're done."
         },
 
         {
@@ -279,8 +279,8 @@
         },
 
         {
-          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking.",
-          "Task": "Click on the CHOPPER block and have a play with it's settings. Close the options panel when you're done."
+          "Intro": "You can single-click a block to open up the options panel and adjust its settings to your liking.",
+          "Task": "Click on the CHOPPER block and have a play with its settings. Close the options panel when you're done."
         },
 
         {

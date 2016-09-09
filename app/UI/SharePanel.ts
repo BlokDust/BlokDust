@@ -76,14 +76,14 @@ export class SharePanel extends DisplayObject {
         // todo: add to config
         this._CopyJson = {
             genUrl: "Generate share link",
-            shareLine: "Made something cool? Generate your own unique link to share it with the world (We'd love to see):",
+            shareLine: "Made something cool? Generate your own unique link to share it with the world (we'd love to see):",
             copyLine: "Share your creation with this unique URL:",
             titleLine: "Title",
             generateLine: "Randomise Title",
             domain: this.GetUrl() + "?c=",
             facebook: "post to facebook",
             twitter: "post to twitter",
-            google: "post to google +",
+            subreddit: "post to BD subreddit",
             bookmark: "bookmark creation",
             save: "overwrite",
             saveAs: "create new",
@@ -405,7 +405,7 @@ export class SharePanel extends DisplayObject {
             ctx.font = midType;
             ctx.fillText(this._CopyJson.facebook.toUpperCase(), shareX + (appWidth*0.5) - (145*units), buttonY + (18.5*units) );
             ctx.fillText(this._CopyJson.twitter.toUpperCase(), shareX + (appWidth*0.5), buttonY + (18.5*units) );
-            ctx.fillText(this._CopyJson.google.toUpperCase(), shareX + (appWidth*0.5)  + (145*units), buttonY + (18.5*units) );
+            ctx.fillText(this._CopyJson.subreddit.toUpperCase(), shareX + (appWidth*0.5)  + (145*units), buttonY + (18.5*units) );
 
 
             // TITLE //
@@ -692,10 +692,11 @@ export class SharePanel extends DisplayObject {
         window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
     }
 
-    ShareGoogle() {
-        var href = "https://plus.google.com/share?url=";
-        href = "" + href + encodeURIComponent(this.SessionURL);
-        window.open(href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
+    ShareSubreddit() {
+        const title = encodeURIComponent(Utils.Urls.getQuerystringParameterFromString('t', this.SessionURL));
+        const url = encodeURIComponent(this.SessionURL);
+        const href = `https://www.reddit.com/r/blokdust/submit?title=${title}&url=${url}`;
+        window.open(href,'ShareToBlokDustSubreddit');
     }
 
     MouseDown(point) {
@@ -731,8 +732,8 @@ export class SharePanel extends DisplayObject {
                 this.ShareTwitter();
                 return;
             }
-            if (this._RollOvers[8]) { // google
-                this.ShareGoogle();
+            if (this._RollOvers[8]) { // subreddit
+                this.ShareSubreddit();
                 return;
             }
             if (this._RollOvers[9]) { // back arrow

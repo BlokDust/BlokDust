@@ -515,7 +515,7 @@ declare module Tone {
     interface Master extends Tone {
         mute: Boolean;
         volume: Tone.Signal;
-        chain(): Tone.Master;
+        chain(...nodes: any[]): Tone.Master;
     }
 
     var Max: {

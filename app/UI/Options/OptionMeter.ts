@@ -88,6 +88,7 @@ export class OptionMeter  extends Option {
         if (this.Level > this.Peak) {
             this.Peak = this.Level;
         }
+
     }
 
     MonitorReset() {

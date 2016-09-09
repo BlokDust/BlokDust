@@ -16,8 +16,8 @@ export class PitchShifter extends PostEffect {
         this.BlockName = App.L10n.Blocks.Effect.Blocks.PitchShifter.name;
 
         this.Defaults = {
-            mix: 1,
-            pitchOffset: 3,
+            mix: 0.5,
+            pitchOffset: 6.9,
             windowSize: 0.07,
         };
 

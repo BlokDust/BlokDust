@@ -320,7 +320,6 @@ export class SampleGen extends SamplerBase {
         if (this.Params.seed.waveVoices && this._SeedLoad && this._LoadFromShare) {
 
             var seed = this.Params.seed;
-            console.log(this.Params.seed);
             sequenceLength = seed.sequenceLength;
             seconds = seed.seconds;
             gain = seed.gain;
@@ -474,7 +473,6 @@ export class SampleGen extends SamplerBase {
                 data[ni] = (totalTotal*gainA) + (data[ni]*gainB);
             }
         }
-        console.log("WAVETYPE: "+ waveType);
 
         // POPULATE BUFFER //
         this.PopulateBuffer(sampleRate);
@@ -678,7 +676,6 @@ export class SampleGen extends SamplerBase {
                 },16);
                 break;
             case "reverse":
-                console.log('setting reverse ', value);
                 value = value? true : false;
                 this.Params[param] = val;
                 this.ReverseTrack();
@@ -715,7 +712,7 @@ export class SampleGen extends SamplerBase {
                 });
                 break;
             case "loopEnd":
-                this.Sources.forEach((s: Tone.Simpler)=> {
+                this.Sources.forEach((s:Tone.Simpler)=> {
                     s.player.loopEnd = value;
                 });
                 break;

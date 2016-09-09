@@ -89,7 +89,8 @@ module.exports = function (grunt) {
                             '!<%= dirs.dist %>/maintenance.html',
                             '!<%= dirs.dist %>/l10n.json',
                             '!<%= dirs.dist %>/styles.css',
-                            '!<%= dirs.dist %>/require-config.js'
+                            '!<%= dirs.dist %>/require-config.js',
+                            '!<%= dirs.dist %>/Workers'
                         ]
                     },
                     {
@@ -98,6 +99,7 @@ module.exports = function (grunt) {
                             '<%= dirs.dist %>/lib/**',
                             '!<%= dirs.dist %>/lib/etch/dist/etch.js',
                             '!<%= dirs.dist %>/lib/exjs/dist/ex.js',
+                            '!<%= dirs.dist %>/lib/exjs/dist/ex.js.map',
                             '!<%= dirs.dist %>/lib/extensions/dist/extensions.js',
                             '!<%= dirs.dist %>/lib/intersection/intersection.js',
                             '!<%= dirs.dist %>/lib/key-codes/dist/key-codes.js',
@@ -239,6 +241,12 @@ module.exports = function (grunt) {
                         cwd: '<%= dirs.app %>',
                         src: ['favicon.ico'],
                         dest: '<%= dirs.dist %>/'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.app %>/Workers',
+                        src: ['**'],
+                        dest: '<%= dirs.dist %>/Workers/'
                     }
                 ]
             }

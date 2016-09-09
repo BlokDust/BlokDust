@@ -972,7 +972,7 @@ export class SettingsPanel extends DisplayObject{
 
         // SET VALUE //
         var val = object[""+value];
-        console.log("" + object[""+setting] +" | "+ val);
+        // console.log("" + object[""+setting] +" | "+ val); 
         switch (object[""+setting]) {
             case "volume":
                 App.Audio.Master.volume.value = val - 70;

@@ -78,9 +78,8 @@ export abstract class LFObase extends PreEffect {
                     }
 
                     // SAMPLER WITH DETUNE //
-                    else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.detune){ //TODO
+                    else if ((<Tone.Simpler>s).player && (<Tone.Simpler>s).player.detune){ 
                         this.SamplerLFO.connect(s.player.detune);
-                        console.log('using detune');
                     }
 
                     // SAMPLER WITHOUT DETUNE //

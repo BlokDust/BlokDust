@@ -50,6 +50,16 @@ export class Audio implements IAudio {
         // Master Output
         this.Master = Tone.Master;
 
+        //some overall compression to keep the levels in check
+        var masterCompressor: DynamicsCompressorNode = this.ctx.createDynamicsCompressor();
+        masterCompressor.threshold.value = -8;
+        masterCompressor.knee.value = 10;
+        masterCompressor.ratio.value = 8;
+        masterCompressor.attack.value = 0;
+        masterCompressor.release.value = 0.05;
+        // route everything through the compressor before going to the speakers
+        this.Master.chain(masterCompressor);
+
         //Meter
         this.Meter = new Tone.Meter();
         this.Master.connect(this.Meter);
@@ -87,7 +97,7 @@ export class Audio implements IAudio {
         this.Waveform = new Waveform();
 
         // Wave Web Worker //
-        this.WaveWorker = new Worker("Workers/waveworker.js");
+        this.WaveWorker = new Worker("Workers/WaveWorker.js");
 
         this.WaveWorker.onmessage = function(e) {
 
@@ -151,7 +161,6 @@ export class Audio implements IAudio {
                 "blockId": blockId,
                 "channels": channels
             });
-            console.log('Message posted to worker');
         }
     }
 

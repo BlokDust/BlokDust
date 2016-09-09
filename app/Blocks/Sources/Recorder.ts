@@ -30,7 +30,7 @@ export class Recorder extends SamplerBase {
             loop: true,
             loopStart: 0,
             loopEnd: 0,
-            volume: 9,
+            volume: 20,
             track: null,
             trackName: '',
             permalink: ''
@@ -130,25 +130,11 @@ export class Recorder extends SamplerBase {
                 s.player.loopEnd = this.Params.loopEnd;
                 //s.player.reverse = this.Params.reverse;
             });
-
-
+            
+            // start immediately if powered
+            this.RetriggerActiveVoices();
         });
     }
-
-    //Duplicate(buffer) {
-    //    if (buffer) {
-    //        this.BufferSource.buffer = buffer;
-    //
-    //        this.UpdateWaveform();
-    //
-    //        // Set the buffers for each source
-    //        this.Sources.forEach((s: Tone.Simpler)=> {
-    //            s.player.buffer = this.BufferSource.buffer;
-    //            s.player.loopStart = this.Params.loopStart;
-    //            s.player.loopEnd = this.Params.loopEnd;
-    //        });
-    //    }
-    //}
 
     UpdateWaveform(){
         // Update waveform
@@ -204,31 +190,6 @@ export class Recorder extends SamplerBase {
             return this.Sources[this.Sources.length-1];
         }
     }
-
-    /*ReverseTrack(value: boolean) {
-
-        this.WaveForm = [];
-        this.RefreshOptionsPanel();
-        //App.AnimationsLayer.AddToList(this); // load animations
-
-        setTimeout(() => {
-            // BUFFER //
-            this.Sources[0].player.reverse = value;
-
-            /!*this._FirstBuffer.reverse = value;
-             this.Sources.forEach((s:Tone.Simpler)=> {
-             s.player.buffer = this._FirstBuffer;
-             });*!/
-
-            // Update waveform
-            this.WaveForm = App.Audio.Waveform.GetWaveformFromBuffer(this.BufferSource.buffer, 200, 5, 95);
-            //App.AnimationsLayer.RemoveFromList(this);
-            this.RefreshOptionsPanel();
-        },1);
-
-    }*/
-
-
 
     UpdateOptionsForm() {
         super.UpdateOptionsForm();
