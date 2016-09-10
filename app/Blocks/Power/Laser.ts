@@ -40,47 +40,45 @@ export class Laser extends PowerSource {
     update() {
         super.update();
 
-        // TEMP //
-        // RANDOM //
-        //this.Params.angle = Math.random()*360;
+        if (App.Config.DeltaEnabled){
+            // ROTATE //
+            if (this.IsPowered() && Math.round(this.Params.rotate) !== 0) {
+                this.UpdateCollision = true;
 
-        // ROTATE //
-        if (this.IsPowered() && Math.round(this.Params.rotate)!==0) {
-            this.UpdateCollision = true;
-            this.Params.angle += (this.Params.rotate/100);
-            if (this.Params.angle>90) {
-                this.Params.angle -= 360;
+                var ms: number = 1000; // 1 second
+
+                // -500 to 500 = -1 to 1
+                var normalisedRate: number = this.Params.rotate / 500;
+                var rotationsPerMS: number = ms / normalisedRate;
+
+                this.Params.angle += (360 / rotationsPerMS) * App.Stage.deltaTime;
+
+                if (this.Params.angle > 90) {
+                    this.Params.angle -= 360;
+                }
+
+                if (this.Params.angle < -270) {
+                    this.Params.angle += 360;
+                }
             }
-            if (this.Params.angle<-270) {
-                this.Params.angle += 360;
+        } else {
+            // TEMP //
+            // RANDOM //
+            //this.Params.angle = Math.random()*360;
+
+            // ROTATE //
+            if (this.IsPowered() && Math.round(this.Params.rotate)!==0) {
+                this.UpdateCollision = true;
+                this.Params.angle += (this.Params.rotate/100);
+                if (this.Params.angle>90) {
+                    this.Params.angle -= 360;
+                }
+                if (this.Params.angle<-270) {
+                    this.Params.angle += 360;
+                }
             }
         }
     }
-
-    // todo: rotate based on delta time
-    // update() {
-    //     super.update();
-    //     // ROTATE //
-    //     if (this.IsPowered() && Math.round(this.Params.rotate) !== 0) {
-    //         this.UpdateCollision = true;
-
-    //         var ms: number = 1000; // 1 second
-
-    //         // -500 to 500 = -1 to 1
-    //         var normalisedRate: number = this.Params.rotate / 500;
-    //         var rotationsPerMS: number = ms / normalisedRate;
-
-    //         this.Params.angle += (360 / rotationsPerMS) * App.Stage.deltaTime;
-
-    //         if (this.Params.angle > 90) {
-    //             this.Params.angle -= 360;
-    //         }
-
-    //         if (this.Params.angle < -270) {
-    //             this.Params.angle += 360;
-    //         }
-    //     }
-    // }
 
     draw() {
         super.draw();

@@ -1,5 +1,6 @@
 {
     "MaxOperations": 1,
+    "DeltaEnabled": false,
     "PixelPaletteImagePath": [
         "img/modestereo.gif",
         "img/palette9.gif",

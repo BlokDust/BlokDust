@@ -1,6 +1,7 @@
 export interface IConfig {
     BaseNote: number;
     DefaultNote: number;
+    DeltaEnabled: boolean;
     ConvolverDefaultTracks: string[];
     ConvolverMaxTrackLength: number;
     GranularDefaultTracks: string[];

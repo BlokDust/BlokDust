@@ -64,53 +64,51 @@ export class ParticleEmitter extends PowerSource {
     update() {
         super.update();
 
-        // If we're in self powered mode, or if this is powered
-        if (this.Params.selfPoweredMode || this.IsPowered()) {
-
-            if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
-
-                this._rateCounter += 1; // POSSIBLY MOVE TO A SET TIMEOUT, IF IT WOULD PERFORM BETTER
-                if (this._rateCounter>=this.Params.rate) {
+        if (App.Config.DeltaEnabled){
+            if (this.Params.selfPoweredMode || this.IsPowered()) {
+                if (!this._LastEmission){
                     this.EmitParticle();
-                    this._rateCounter = 0;
+                } else {
+                    var ms: number = 1000; // 1 second
+                    var normalisedRate: number = Math.normalise((510 - this.Params.rate), 0, 500);
+                    var particlesPerMS: number = ms / normalisedRate;
+                    var msSinceLastEmission: number = this.lastVisualTick - this._LastEmission;
+                    if (msSinceLastEmission >= particlesPerMS){
+                        this._emittable = true;
+                        this.EmitParticle();
+                    }
                 }
 
                 // ROTATE //
-                if (this.Params.angle>360) {
+                if (this.Params.angle > 360) {
                     this.Params.angle = 1;
                 }
-
             }
         } else {
-            this._rateCounter = this.Params.rate;
+
+            // If we're in self powered mode, or if this is powered
+            if (this.Params.selfPoweredMode || this.IsPowered()) {
+
+                if (this._rateCounter!==undefined) { //TODO.  < THIS IS SHIT.
+
+                    this._rateCounter += 1; // POSSIBLY MOVE TO A SET TIMEOUT, IF IT WOULD PERFORM BETTER
+                    if (this._rateCounter>=this.Params.rate) {
+                        this.EmitParticle();
+                        this._rateCounter = 0;
+                    }
+
+                    // ROTATE //
+                    if (this.Params.angle>360) {
+                        this.Params.angle = 1;
+                    }
+
+                }
+            } else {
+                this._rateCounter = this.Params.rate;
+            }
+            this._emittable = true;
         }
-        this._emittable = true;
     }
-
-    // todo: emit based on delta time
-    // update() {
-    //     super.update();
-        
-    //     if (this.Params.selfPoweredMode || this.IsPowered()) {
-
-    //         if (!this._LastEmission){
-    //             this.EmitParticle();
-    //         } else {
-    //             var ms: number = 1000; // 1 second
-    //             var normalisedRate: number = Math.normalise((510 - this.Params.rate), 0, 500);
-    //             var particlesPerMS: number = ms / normalisedRate;
-    //             var msSinceLastEmission: number = this.lastVisualTick - this._LastEmission;
-    //             if (msSinceLastEmission >= particlesPerMS){
-    //                 this.EmitParticle();
-    //             }
-    //         }
-
-    //         // ROTATE //
-    //         if (this.Params.angle > 360) {
-    //             this.Params.angle = 1;
-    //         }
-    //     }
-    // }
 
     draw() {
         super.draw();
