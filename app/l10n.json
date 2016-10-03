@@ -177,7 +177,7 @@
       "FailedTrackFiltering": "Tracks were found, but cannot be used. Make sure the track you're searching for is streamable for public use and is either tagged 'blokdust' or has a creative commons license.",
       "InternalServerError": "Error: Something went wrong with SoundCloud's servers.",
       "ServiceUnavailable": "SoundCloud's servers were too busy. Please try again.",
-      "TooManyRequests":"Error: Too many requests. SoundCloud's 15,000 limit has been reached. Try again tomorrow",
+      "TooManyRequests":"Error: Too many requests. SoundCloud's 15,000 limit has been reached. Try again tomorrow.",
       "Uninitialized": "SoundCloud API isn't connected. Check your internet connection, save & refresh the page.",
       "Unknown": "Something went wrong with SoundCloud. Check console for errors."
     }
@@ -214,13 +214,13 @@
         },
 
         {
-          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking.",
+          "Intro": "You can single-click a block to open up the options panel and adjust its settings to your liking.",
           "Task": "Click on the CHOPPER block and have a play with its settings. Close the options panel when you're done."
         },
 
         {
           "Intro": "Finally let’s look at POWER. We won’t need that COMPUTER KEYBOARD block you made for this.",
-          "Task": "Delete the COMPUTER KEYBOARD block by dragging it into the trashcan, bottom-right of the screen."
+          "Task": "Delete the COMPUTER KEYBOARD block by dragging it into the trash can on the bottom-right of the screen."
         },
 
         {
