@@ -11,5 +11,5 @@ interface Window {
     File: any;
     FileReader: any;
     FileList: any;
-    Blob: any;
+    //Blob: any;
 }

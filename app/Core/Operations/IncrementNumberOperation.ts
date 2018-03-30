@@ -14,7 +14,7 @@ export class IncrementNumberOperation<Number> implements IUndoableOperation {
 
             that._Number = that._Number + 1;
 
-            resolve(that._Number);
+            resolve(<any>that._Number);
         });
     }
 
@@ -25,7 +25,7 @@ export class IncrementNumberOperation<Number> implements IUndoableOperation {
 
             that._Number = that._Number - 1;
 
-            resolve(that._Number);
+            resolve(<any>that._Number);
         });
     }
 

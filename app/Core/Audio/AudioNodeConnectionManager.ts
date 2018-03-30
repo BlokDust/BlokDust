@@ -14,7 +14,7 @@ export class AudioNodeConnectionManager {
 
         // Extend AudioNode.connect to include PostEffects
         (<any>AudioNode).prototype._toneConnect = AudioNode.prototype.connect;
-        AudioNode.prototype.connect = function (destination: any, outNum, inNum) {
+        (<any>AudioNode.prototype.connect) = function (destination: any, outNum, inNum) {
             if (destination instanceof PostEffect) {
                 destination = (<IEffect>destination).Effect;
             }

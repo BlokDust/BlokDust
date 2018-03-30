@@ -11,7 +11,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-exec');
     grunt.loadNpmTasks('grunt-open');
     grunt.loadNpmTasks('grunt-text-replace');
-    grunt.loadNpmTasks('grunt-typescript');
+    grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks('grunt-sync');
 
     version(grunt);
@@ -52,19 +52,11 @@ module.exports = function (grunt) {
         ports: ports,
         dirs: dirs,
 
-        typescript: {
+        ts: {
             build: {
-                src: [
-                    '<%= dirs.app %>/**/*.ts',
-                    '!<%= dirs.lib %>/**/*.ts',
-                    '<%= dirs.typings %>/*.ts'
-                ],
-                dest: dirs.build,
+                tsconfig: './tsconfig.json',
                 options: {
-                    rootDir: dirs.app,
-                    module: 'amd',
-                    target: 'es5',
-                    sourceMap: true
+                    additionalFlags: '--sourceMap'
                 }
             }
         },
@@ -308,7 +300,7 @@ module.exports = function (grunt) {
                     '!<%= dirs.lib %>/**/*.ts',
                     'config.json'
                 ],
-                tasks: ['typescript:build'],
+                tasks: ['ts:build'],
                 options: {
                     livereload: ports.livereload
                 }
@@ -376,7 +368,7 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('default', ['clean:build', 'typescript:build', 'copy:assets']);
+    grunt.registerTask('default', ['clean:build', 'ts:build', 'copy:assets']);
     grunt.registerTask('bump:patch', ['version:bump', 'version:apply']);
     grunt.registerTask('bump:minor', ['version:bump:minor', 'version:apply']);
     grunt.registerTask('bump:major', ['version:bump:major', 'version:apply']);

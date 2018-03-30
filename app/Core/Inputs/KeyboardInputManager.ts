@@ -1,6 +1,6 @@
 import {KeyDownEventArgs} from './KeyDownEventArgs';
 import {KeyUpEventArgs} from './KeyUpEventArgs';
-import {IApp} from '../IApp';
+import {IApp} from '../../IApp';
 
 declare var App: IApp;
 

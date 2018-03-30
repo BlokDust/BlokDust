@@ -16,7 +16,7 @@
     "text": "requirejs-text#~2.0.14",
     "tone": "BlokDust/Tone.js#master",
     "tweenjs": "~16.3.1",
-    "utils": "edsilv/utils"
+    "utils": "edsilv/utils#0.0.38"
   },
   "resolutions": {
     "nullstone": "~0.4.5",

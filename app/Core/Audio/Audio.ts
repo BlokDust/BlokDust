@@ -75,16 +75,19 @@ export class Audio implements IAudio {
 
         // Set the connection method type
         this.ConnectionMethodType = ConnectionMethodType.Accumulative;
-        switch (this.ConnectionMethodType) {
-            case ConnectionMethodType.Simple:
-                this.ConnectionManager = new SimpleConnectionMethod();
-                break;
-            case ConnectionMethodType.Accumulative:
-                this.ConnectionManager = new AccumulativeConnectionMethod();
-                break;
-            default:
-                console.error('No connection method set');
-        }
+        this.ConnectionManager = new AccumulativeConnectionMethod();
+
+        // commented as switch statement is redundant
+        // switch (this.ConnectionMethodType) {
+        //     case ConnectionMethodType.Simple:
+        //         this.ConnectionManager = new SimpleConnectionMethod();
+        //         break;
+        //     case ConnectionMethodType.Accumulative:
+        //         this.ConnectionManager = new AccumulativeConnectionMethod();
+        //         break;
+        //     default:
+        //         console.error('No connection method set');
+        // }
 
         // Audio File manager
         this.AudioFileManager = new AudioFileManager();

@@ -37,6 +37,6 @@ interface Float32Array {
  * Temporary AudioBufferSourceNode extention to add detune. 
  * Can delete this once lib.d.ts includes it.
  */
-interface AudioBufferSourceNode extends AudioNode {
-    detune: AudioParam;
-}
+// interface AudioBufferSourceNode extends AudioNode {
+//     detune: AudioParam;
+// }

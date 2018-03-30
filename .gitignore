@@ -2,9 +2,15 @@
 .tscache
 .vscode
 node_modules
+app/*.js
+app/**/*.js
+app/*.js.map
+app/**/*.js.map
 app/.build
 app/lib
 .DS_Store
 npm-debug.log
 dist
 dist.zip
+VersionTemplate.js
+VersionTemplate.js.map

@@ -14,7 +14,8 @@
     "grunt-open": "^0.2.3",
     "grunt-sync": "^0.2.4",
     "grunt-text-replace": "^0.4.0",
-    "grunt-typescript": "^0.8.0",
-    "requirejs": "2.2.0"
+    "grunt-ts": "^6.0.0-beta.19",
+    "requirejs": "2.2.0",
+    "typescript": "^2.8.1"
   }
 }

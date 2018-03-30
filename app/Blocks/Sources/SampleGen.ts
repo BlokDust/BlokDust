@@ -67,13 +67,11 @@ export class SampleGen extends SamplerBase {
                     seq.push( this.Sources[0].noteToFrequency("" + notes[0] + (octave + Math.floor(Math.random()*range))) );
                 }
                 return seq;
-                break;
             case 2:
                 for (var j=0; j<length; j++) {
                     seq.push( this.Sources[0].noteToFrequency("" + notes[Math.floor(Math.random()*notes.length)] + (octave + Math.floor(Math.random()*range))) );
                 }
                 return seq;
-                break;
             case 3:
                 var dir = 1;
                 if (this.Dice(2)) {dir = -1;}
@@ -107,8 +105,6 @@ export class SampleGen extends SamplerBase {
                 }
 
                 return seq;
-                break;
-
         }
     }
 

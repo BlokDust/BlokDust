@@ -1,0 +1,24 @@
+{
+  "include": [
+    "app/**/*.ts",
+    "typings/*.ts"
+  ],
+  "exclude": [
+    "app/lib/**/*.ts"
+  ],
+  "outDir": "app/.build",
+  "compilerOptions": {
+    "module": "amd",
+    "sourceMap": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "noLib": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "removeComments": false,
+    "strictNullChecks": false,
+    "suppressImplicitAnyIndexErrors": false,
+    "target": "es5"
+  }
+}

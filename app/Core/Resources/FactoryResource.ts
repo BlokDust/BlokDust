@@ -14,7 +14,7 @@ export class FactoryResource<T> implements IFactoryResource<T> {
     }
 
     GetInstance(): T  {
-        return Object.create(this._Type, this._PropertyDescriptor);
+        return Object.create(<any>this._Type, this._PropertyDescriptor);
     }
 
     GetType(): T {
