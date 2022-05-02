@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<ResourceDictionary
-        xmlns="http://schemas.wsick.com/fayde"
-        xmlns:x="http://schemas.wsick.com/fayde/x"
-        xmlns:vsm="http://schemas.wsick.com/fayde"
-        xmlns:controls="lib://fayde.drawing">
-</ResourceDictionary>

@@ -1,3 +1,0 @@
-require(['c'], function (c) {
-});
-

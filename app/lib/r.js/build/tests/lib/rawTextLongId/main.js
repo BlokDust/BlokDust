@@ -1,2 +1,0 @@
-require(['something-js/core']);
-

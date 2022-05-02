@@ -1,4 +1,0 @@
-
-define('z',{
-	name: 'zzz'
-});
