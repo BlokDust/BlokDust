@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="initial-scale=1, user-scalable=no">
+    <title>Pixel Palette</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link href="paletteStyle.css" rel="stylesheet" type="text/css" />
+</head>
+<body bgcolor="#242b2b" onload="init()" onresize="resize_canvas()">
+
+    <canvas id="canvas" class="unselectable"></canvas>
+
+    <script type="text/javascript" src="PixelPalette.js"></script>
+
+    <script type="text/javascript">
+
+        // INIT //
+        var canvasA, context, palette;
+        var FPS = 1;
+        var scene = 0;
+        var bgCol = 0;
+
+        // MEASUREMENT //
+        var halfX = 0;
+        var halfY = 0;
+        var fullX = 0;
+        var fullY = 0;
+        var units = 0;
+        var dx = 0;
+        var dy = 0;
+
+        //-------------------------------------------------------------------------------------------
+        //  INITIALISE
+        //-------------------------------------------------------------------------------------------
+
+        function init() {
+
+            // SETUP CANVAS //
+            canvasA = document.getElementById("canvas");
+            context = canvasA.getContext("2d");
+            resize_canvas();
+
+            // LOAD OUR PALETTE //
+            var pixelPalette = new PixelPalette("img/palette1.gif");
+
+            pixelPalette.Load(function(p) {
+                palette = p;
+
+                // EVERY FRAME //
+                setInterval(function() {
+                    drawBG();
+                    drawScene();
+                }, Math.round(1000/FPS));
+            });
+        }
+
+        //-------------------------------------------------------------------------------------------
+        //  BACKGROUND
+        //-------------------------------------------------------------------------------------------
+
+        function drawBG() {
+
+            // Now we have the palette loaded, let's cycle through the colours in our background
+
+            context.globalAlpha = 1;
+            context.fillStyle = palette[bgCol];
+            context.fillRect(0,0,fullX,fullY);
+
+            // cycle
+            bgCol += 1;
+
+            if (bgCol === palette.length) {
+                bgCol = 0;
+            }
+        }
+
+        //-------------------------------------------------------------------------------------------
+        //  FOREGROUND
+        //-------------------------------------------------------------------------------------------
+
+        function drawScene() {
+
+            // Now we have the palette loaded, let's just draw the colours onscreen as a test
+
+            thisSize = 16;
+            //shadow
+            context.globalAlpha = 0.1;
+            context.fillStyle = "#002";
+            context.fillRect(dx-((palette.length*0.5)*(thisSize*units))+(2*units),dy-(0.5*(thisSize*units))+(2*units),palette.length*(thisSize*units),thisSize*units);
+
+            // colours
+            context.globalAlpha = 1;
+            for (var i = 0; i < palette.length; i++) {
+                context.fillStyle = palette[i];
+                context.fillRect(dx-((palette.length*0.5)*(thisSize*units))+(i*(thisSize*units)),dy-(0.5*(thisSize*units)),thisSize*units,thisSize*units);
+            }
+        }
+
+        //-------------------------------------------------------------------------------------------
+        //  MEASUREMENT
+        //-------------------------------------------------------------------------------------------
+
+        // this is just to scale the drawing //
+        function resize_canvas() {
+
+            canvasA.width  = window.innerWidth;
+            canvasA.height = window.innerHeight;
+
+            // UNIT SIZES //
+            halfX = Math.round(canvasA.width/2);
+            halfY = Math.round(canvasA.height/2);
+            fullX = canvasA.width;
+            fullY = canvasA.height;
+            dx = halfX;
+            dy = halfY;
+
+            units = fullX*0.0025; // SCALED UNITS FOR DRAWING
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "exjs",
+  "version": "0.4.0",
+  "homepage": "https://github.com/BSick7/exjs",
+  "authors": [
+    "BSick7 <brad.sickles@gmail.com>"
+  ],
+  "description": "Extension library",
+  "main": "dist/ex.min.js",
+  "keywords": [
+    "array",
+    "linq",
+    "typescript"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "build",
+    "node_modules",
+    "lib",
+    "nuget",
+    "src",
+    "test",
+    "Gruntfile.js"
+  ],
+  "devDependencies": {
+    "qunit": "~1.16.0"
+  }
+}

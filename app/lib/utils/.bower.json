@@ -1,0 +1,34 @@
+{
+  "name": "utils",
+  "version": "0.0.38",
+  "homepage": "https://github.com/edsilv/utils",
+  "authors": [
+    "edsilv <e.silverton@gmail.com>"
+  ],
+  "description": "utilities",
+  "main": "/dist/utils.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "extensions": "edsilv/extensions#~0.1.3"
+  },
+  "_release": "0.0.38",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.0.38",
+    "commit": "912e5c7990c0496e7bbbc21dad7ee9d25d242b9a"
+  },
+  "_source": "git://github.com/edsilv/utils.git",
+  "_target": "*",
+  "_originalSource": "edsilv/utils"
+}

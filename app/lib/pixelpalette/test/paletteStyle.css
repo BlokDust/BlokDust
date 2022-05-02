@@ -1,0 +1,42 @@
+@charset "UTF-8";
+/* CSS Document */
+
+
+html {
+	height: 100%;
+}
+
+
+body {
+	margin: 0px;
+	padding: 0px;
+	background-color: #242b2b;
+	height: 100%;
+	width: 100%;
+	
+	-webkit-font-smoothing: antialiased;
+    -moz-font-smoothing: antialiased;
+    -o-font-smoothing: antialiased;
+	
+	color: #fff;
+	overflow: hidden;
+}
+
+
+#canvas {
+	min-width: 480px;
+	background-color: #242b2b;
+}
+
+*.unselectable {
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+
+   /*
+     Introduced in IE 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+   -ms-user-select: none;
+   user-select: none;
+}

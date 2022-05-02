@@ -1,0 +1,4 @@
+.idea/
+lib/
+node_modules/
+test/.build/

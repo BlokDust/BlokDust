@@ -1,0 +1,23 @@
+{
+  "name": "startaudiocontext",
+  "version": "1.1.0",
+  "description": "Start the AudioContext on an explicit user action.",
+  "main": "StartAudioContext.js",
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tambien/StartAudioContext.git"
+  },
+  "keywords": [
+    "Web",
+    "Audio",
+    "API"
+  ],
+  "author": "Yotam Mann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tambien/StartAudioContext/issues"
+  }
+}

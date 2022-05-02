@@ -1,0 +1,11 @@
+[Bb]in
+[Dd]ebug*/
+obj/
+*.suo
+*.user
+src/packages
+node_modules/**/*
+.idea*
+src/_Version.ts
+lib/
+test/.build/

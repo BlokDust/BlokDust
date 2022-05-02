@@ -1,0 +1,183 @@
+﻿// Work-in-progress - Looks slower than current
+
+// Path Markup Syntax: http://msdn.microsoft.com/en-us/library/cc189041(v=vs.95).aspx
+
+//FigureDescription Syntax
+// MoveCommand DrawCommands [CloseCommand]
+
+//Double Syntax
+// digits
+// digits.digits
+// 'Infinity'
+// '-Infinity'
+// 'NaN'
+
+//Point Syntax
+// x,y
+// x y
+
+//Loop until exhausted
+//  Parse FigureDescription
+//      Find "M" or "m"? - Parse MoveCommand (start point)
+//          <point>
+//
+//      Find "L" or "l"? - Parse LineCommand (end point)
+//          <point>
+//      Find "H" or "h"? - Parse HorizontalLineCommand (x)
+//          <double>
+//      Find "V" or "v"? - Parse VerticalLineCommand (y)
+//          <double>
+//      Find "C" or "c"? - Parse CubicBezierCurveCommand (control point 1, control point 2, end point)
+//          <point> <point> <point>
+//      Find "Q" or "q"? - Parse QuadraticBezierCurveCommand (control point, end point)
+//          <point> <point>
+//      Find "S" or "s"? - Parse SmoothCubicBezierCurveCommand (control point 2, end point)
+//          <point> <point>
+//      Find "T" or "t"? - Parse SmoothQuadraticBezierCurveCommand (control point, end point)
+//          <point> <point>
+//      Find "A" or "a"? - Parse EllipticalArcCommand (size, rotationAngle, isLargeArcFlag, sweepDirectionFlag, endPoint)
+//          <point> <double> <1,0> <1,0> <point>
+//
+//      Find "Z" or "z"? - CloseCommand
+
+{
+  var path = new RawPath();
+  var cpx = 0;
+  var cpy = 0;
+  var fillRule = FillRule.EvenOdd;
+}
+
+start
+  = action* { 
+    var pg = new PathGeometry();
+    pg.OverridePath(path);
+    pg.FillRule = fillRule;
+    return pg;
+  }
+
+action
+  = move / relmove
+  / line / relline
+  / hline / relhline
+  / vline / relvline
+  / cubic / relcubic
+  / smoothcubic
+  / quadratic
+  / smoothquadratic
+  / ellipticalarc
+  / close
+  / fillrule
+
+move
+  = "M" sp:point {
+    path.Move(cpx = sp[0], cpy = sp[1])
+  }
+relmove
+  = "m" sp:point {
+    path.Move(cpx += sp[0], cpy += sp[1])
+  }
+
+line
+  = "L" ep:point {
+    path.Line(cpx = ep[0], cpy = ep[1])
+  }
+relline
+  = "l" ep:point {
+    path.Line(cpx += ep[0], cpy += ep[1])
+  }
+
+hline
+  = "H" n:number {
+    path.Line(cpx = n, cpy)
+  }
+relhline
+  = "h" n:number {
+    path.Line(cpx += n, cpy)
+  }
+
+vline
+  = "V" n:number {
+    path.Line(cpx, cpy = n)
+  }
+relvline
+  = "v" n:number {
+    path.Line(cpx, cpy += n)
+  }
+
+cubic
+  = "C" cp1:point " " cp2:point " " ep:point {
+    path.CubicBezier(cp1[0], cp1[1], cp2[0], cp2[1], cpx = ep[0], cpy = ep[1]);
+  }
+
+relcubic
+  = "c" cp1:point " " cp2:point " " ep:point {
+    path.CubicBezier(cpx += cp1[0], cpy += cp1[1], cpx += cp2[0], cpy += cp2[1], cpx += ep[0], cpy += ep[1]);
+  }
+
+smoothcubic
+  = "S" cp2:point " " ep:point {
+    //TODO
+  }
+
+relsmoothcubic
+  = "s" cp2:point " " ep:point {
+    //TODO
+  }
+
+quadratic
+  = type:[Qq] cp1:point " " ep:point {
+    return {
+	  type: type,
+	  data: [cp1, ep]
+	}
+  }
+
+smoothquadratic
+  = type:[Tt] cp:point " " ep:point {
+    return {
+	  type: type,
+	  data: [cp, ep]
+	}
+  }
+
+ellipticalarc
+  = type:[Aa] p:point " " n:number " " largearc:flag " " sweep:flag " " ep:point {
+    return {
+	  type: type,
+	  data: [p, n, largearc, sweep, ep]
+	}
+  }
+
+close
+  = [Zz] {
+    path.Close()
+  }
+
+fillrule
+  = type:[Ff] f:flag {
+    fillRule = f ? FillRule.NonZero : FillRule.EvenOdd;
+  }
+
+point "point"
+  = first:number [," "] second:number {
+    return [first, second]
+  }
+
+flag
+  = [01] {
+    return text() === '1'
+  }
+
+number "number"
+  = digits:("-"? [0-9]+ ("." [0-9]+)?) {
+    return parseFloat(text(), 10);
+  }
+  / infinity:"Infinity" {
+    return parseFloat(text(), 10);
+  }
+  / negativeInfinity:"-Infinity" {
+    return parseFloat(text(), 10);
+  }
+  / nan:"NaN" {
+    return parseFloat(text(), 10);
+  }

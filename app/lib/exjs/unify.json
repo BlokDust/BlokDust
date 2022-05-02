@@ -1,0 +1,18 @@
+{
+  "name": "exjs",
+  "client": {
+    "files": [
+      "fayde.json"
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/ex.min",
+  "library": {
+    "type": "export",
+    "exports": "exjs"
+  },
+  "themes": "none",
+  "typings": [
+    "dist/ex.d.ts"
+  ]
+}

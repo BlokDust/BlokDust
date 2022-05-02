@@ -1,0 +1,39 @@
+{
+  "name": "utils",
+  "version": "0.0.38",
+  "description": "utilities",
+  "main": "dist/extensions.js",
+  "scripts": {
+    "test": "test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edsilv/utils.git"
+  },
+  "keywords": [],
+  "author": "Edward Silverton <e.silverton@gmail.com> (http://edsilv.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/edsilv/utils/issues"
+  },
+  "homepage": "https://github.com/edsilv/utils",
+  "devDependencies": {
+    "chai": "^2.3.0",
+    "deamdify": "^0.1.1",
+    "del": "^1.1.1",
+    "event-stream": "^3.3.1",
+    "gulp": "^3.8.11",
+    "gulp-browserify": "^0.5.1",
+    "gulp-bump": "^0.3.1",
+    "gulp-mocha": "^2.0.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-typescript": "^2.7.4",
+    "gulp-utils": "git://github.com/edsilv/gulp-utils.git",
+    "merge2": "^0.3.5",
+    "mocha": "^2.2.4",
+    "require-dir": "^0.3.0",
+    "run-sequence": "^1.1.0",
+    "yargs": "^3.10.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>StartAudioContext</title>
+	<script type="text/javascript" src="../StartAudioContext.js"></script>
+</head>
+<body>
+
+	<style type="text/css">
+	.starterButton {
+		width: 300px;
+		height: 80px;
+		line-height: 80px;
+		margin-left: auto;
+		margin-right: auto;
+		text-align: center;
+		background-color: rgb(204, 204, 204);
+		margin-top: 100px;
+		cursor: pointer;
+		font-family: sans-serif;
+		position: relative;
+		font-family: monospace;
+	}
+
+	.starterButton:active {
+		background-color: #FFB729;
+		color: white;
+	}
+
+	span {
+		font-size: 16px;
+		margin-right: 5px;
+		font-family: monospace;
+	}
+
+	</style>
+
+	<span>STATUS:</span><span id="isStarted">NOT Started</span>
+
+	<div class="starterButton">Tap to start the AudioContext</div>
+
+	<script type="text/javascript">
+
+	//create an audio context
+	window.AudioContext = window.AudioContext || window.webkitAudioContext;
+	var audioContext = new AudioContext();
+
+	//set the context
+	StartAudioContext.setContext(audioContext);
+
+	//listen for events on the matching elements
+	StartAudioContext.on(".starterButton");
+
+	//indicate when the audio context has been started
+	var startedElement = document.querySelector("#isStarted");
+	function loop(){
+		if (StartAudioContext.isStarted()){
+			startedElement.textContent = "Started";
+		} else {
+			requestAnimationFrame(loop);
+		}
+	}
+	loop();
+	</script>
+</body>
+</html>

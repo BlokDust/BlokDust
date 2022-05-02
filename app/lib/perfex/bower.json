@@ -1,0 +1,14 @@
+{
+  "name": "perfex",
+  "main": "dist/perfex.js",
+  "version": "0.1.4",
+  "ignore": [
+    "build",
+    "test",
+    "typings",
+    "Gruntfile.js"
+  ],
+  "devDependencies": {
+    "qunit": "~1.16.0"
+  }
+}

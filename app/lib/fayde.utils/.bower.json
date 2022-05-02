@@ -1,0 +1,27 @@
+{
+  "name": "fayde.utils",
+  "version": "0.5.0",
+  "ignore": [
+    "build",
+    "test",
+    "testsite",
+    "typings",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "fayde": "~0.16.11"
+  },
+  "devDependencies": {
+    "qunit": "~1.16.0"
+  },
+  "homepage": "https://github.com/bsick7/Fayde.Utils",
+  "_release": "0.5.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.5.0",
+    "commit": "be6389cbcbdabfb926ebd8796829ce98b92b9249"
+  },
+  "_source": "git://github.com/bsick7/Fayde.Utils.git",
+  "_target": "~0.5.0",
+  "_originalSource": "git://github.com/bsick7/Fayde.Utils"
+}

@@ -1,0 +1,40 @@
+{
+  "name": "fayde",
+  "version": "0.16.58",
+  "main": "dist/fayde.js",
+  "homepage": "http://fayde.wsick.com",
+  "authors": [
+    "BSick7 <brad.sickles@gmail.com>"
+  ],
+  "ignore": [
+    "build",
+    "litmus",
+    "proto",
+    "stress",
+    "test",
+    "testsite",
+    "Tools",
+    "bower.json",
+    "package.json",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "minerva": "~0.4.25",
+    "nullstone": "~0.3.16",
+    "requirejs": "~2.1.15",
+    "requirejs-text": "~2.0.12",
+    "perfex": "~0.1.0"
+  },
+  "devDependencies": {
+    "qunit": "~1.18.0"
+  },
+  "_release": "0.16.58",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.16.58",
+    "commit": "c2d360daecda704639bb10c5ab76672ed8cefc02"
+  },
+  "_source": "git://github.com/wsick/Fayde.git",
+  "_target": "~0.16.11",
+  "_originalSource": "fayde"
+}

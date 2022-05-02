@@ -1,0 +1,20 @@
+{
+  "name": "intersection",
+  "main": "intersection.js",
+  "version": "0.0.0",
+  "homepage": "https://github.com/BlokDust/intersection",
+  "authors": [
+    "edsilv <e.silverton@gmail.com>"
+  ],
+  "moduleType": [
+    "globals"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

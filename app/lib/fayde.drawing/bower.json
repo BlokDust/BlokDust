@@ -1,0 +1,25 @@
+{
+  "name": "fayde.drawing",
+  "version": "0.4.3",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/edsilv/fayde.drawing"
+  },
+  "authors": [
+    "edsilv <e.silverton@gmail.com>",
+    "BSick7 <brad.sickles@gmail.com>"
+  ],
+  "ignore": [
+    "build",
+    "test",
+    "testsite",
+    "typings",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "fayde": "~0.16.11"
+  },
+  "devDependencies": {
+    "qunit": "~1.16.0"
+  }
+}

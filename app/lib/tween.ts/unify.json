@@ -1,0 +1,13 @@
+{
+  "name": "tween",
+  "type": "lib",
+  "dist": "build/tween.min",
+  "library": {
+    "type": "export",
+    "exports": "TWEEN"
+  },
+  "themes": "none",
+  "typings": [
+    "src/Tween.d.ts"
+  ]
+}

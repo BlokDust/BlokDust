@@ -1,0 +1,25 @@
+{
+  "name": "fayde.utils",
+  "client": {
+    "tests": [
+      {
+        "file": "test/fayde.json",
+        "lib": "test/lib"
+      },
+      {
+        "file": "testsite/fayde.json",
+        "lib": "testsite/lib"
+      }
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/fayde.utils",
+  "library": {
+    "type": "export",
+    "exports": "Fayde.Utils"
+  },
+  "themes": "none",
+  "typings": [
+    "dist/fayde.utils.d.ts"
+  ]
+}

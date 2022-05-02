@@ -1,0 +1,22 @@
+{
+    "name": "extensions",
+    "version": "0.1.10",
+    "homepage": "https://github.com/edsilv/extensions",
+    "authors": [
+        "edsilv <e.silverton@gmail.com>"
+    ],
+    "description": "extends global objects with utility functions",
+    "main": "/dist/extensions.js",
+    "moduleType": [
+        "globals"
+    ],
+    "keywords": [],
+    "license": "MIT",
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ]
+}

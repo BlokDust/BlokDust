@@ -1,0 +1,26 @@
+{
+  "name": "fayde.drawing",
+  "client": {
+    "tests": [
+      {
+        "file": "test/fayde.json",
+        "lib": "test/lib"
+      },
+      {
+        "file": "testsite/fayde.json",
+        "lib": "testsite/lib",
+        "exclude": ["qunit"]
+      }
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/fayde.drawing",
+  "library": {
+    "type": "export",
+    "exports": "Fayde.Drawing"
+  },
+  "themes": {},
+  "typings": [
+    "dist/fayde.drawing.d.ts"
+  ]
+}

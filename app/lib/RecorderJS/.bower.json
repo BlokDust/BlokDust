@@ -1,0 +1,32 @@
+{
+  "name": "RecorderJS",
+  "homepage": "https://github.com/lukephills/Recorderjs",
+  "authors": [
+    "Luke Phillips <luke@femurdesign.com>"
+  ],
+  "description": "Recording from web audio API and exporting to wav",
+  "main": "recorder.js",
+  "keywords": [
+    "Audio",
+    "Wav",
+    "Sound",
+    "Record",
+    "Recording"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "_release": "1edf02ae47",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "1edf02ae47cd93d060adda2176f99b5afc39cdc8"
+  },
+  "_source": "git://github.com/lukephills/Recorderjs.git",
+  "_target": "master",
+  "_originalSource": "lukephills/Recorderjs"
+}

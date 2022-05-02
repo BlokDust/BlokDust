@@ -1,0 +1,37 @@
+{
+  "name": "tween.ts",
+  "version": "0.1.2",
+  "description": "Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equations.",
+  "main": "src/Tween.ts",
+  "homepage": "https://github.com/edsilv/tween.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/edsilv/tween.ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/edsilv/tween.ts/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/edsilv/tween.ts/blob/master/LICENSE"
+    }
+  ],
+  "keywords": [
+    "tween",
+    "interpolation"
+  ],
+  "dependencies": {
+    "gulp": "^3.8.7",
+    "gulp-insert": "^0.4.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-uglify": "^0.3.1",
+    "nodeunit": "^0.9.0",
+    "gulp-typescript-compiler": "*",
+    "gulp-browserify": "*",
+    "deamdify": "*"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/nodeunit $(pwd)/test/unit/nodeunitheadless.js"
+  }
+}

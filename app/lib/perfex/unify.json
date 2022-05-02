@@ -1,0 +1,20 @@
+{
+  "name": "perfex",
+  "client": {
+    "tests": [
+      {
+        "file": "test/fayde.json",
+        "lib": "test/lib"
+      }
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/perfex",
+  "library": {
+    "type": "export",
+    "exports": "perfex"
+  },
+  "typings": [
+    "dist/perfex.d.ts"
+  ]
+}

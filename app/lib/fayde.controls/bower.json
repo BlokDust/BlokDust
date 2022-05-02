@@ -1,0 +1,17 @@
+{
+  "name": "fayde.controls",
+  "version": "0.17.5",
+  "ignore": [
+    "build",
+    "test",
+    "testsite",
+    "typings",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "fayde": "~0.16.34"
+  },
+  "devDependencies": {
+    "qunit": "~1.18.0"
+  }
+}

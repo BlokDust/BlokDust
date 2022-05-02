@@ -1,0 +1,13 @@
+[Oo]bj
+[Bb]in
+*.suo
+*.user
+*.dll
+*.xap
+.idea
+node_modules
+testsite/lib
+test/lib
+lib/
+testsite/.build/
+test/.build/

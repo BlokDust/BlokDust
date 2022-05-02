@@ -1,0 +1,30 @@
+{
+  "name": "fayde.transformer",
+  "version": "0.6.1",
+  "ignore": [
+    "build",
+    "test",
+    "testsite",
+    "typings",
+    "Gruntfile.js"
+  ],
+  "dependencies": {
+    "fayde": "~0.16.11",
+    "fayde.utils": "git://github.com/bsick7/Fayde.Utils#~0.5.0",
+    "tween.ts": "git://github.com/bsick7/tween.ts#~0.1.2"
+  },
+  "devDependencies": {
+    "fayde.controls": "~0.17.0",
+    "qunit": "~1.16.0"
+  },
+  "homepage": "https://github.com/edsilv/fayde.transformer",
+  "_release": "0.6.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.6.1",
+    "commit": "3e3bdf8fd97f8daee1eb53b03eeaef8ecb1a3192"
+  },
+  "_source": "git://github.com/edsilv/fayde.transformer.git",
+  "_target": "~0.6.0",
+  "_originalSource": "git://github.com/edsilv/fayde.transformer"
+}

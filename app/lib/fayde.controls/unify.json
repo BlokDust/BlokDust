@@ -1,0 +1,27 @@
+{
+  "name": "fayde.controls",
+  "client": {
+    "tests": [
+      {
+        "file": "test/fayde.json",
+        "lib": "test/lib",
+        "exclude": ["qunit"]
+      },
+      {
+        "file": "testsite/fayde.json",
+        "lib": "testsite/lib",
+        "exclude": ["qunit"]
+      }
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/fayde.controls",
+  "library": {
+    "type": "export",
+    "exports": "Fayde.Controls"
+  },
+  "themes": {},
+  "typings": [
+    "dist/fayde.controls.d.ts"
+  ]
+}

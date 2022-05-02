@@ -1,0 +1,18 @@
+{
+  "name": "minerva",
+  "client": {
+    "exclude": [
+      "self"
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/minerva.js",
+  "library": {
+    "type": "export",
+    "exports": "minerva"
+  },
+  "themes": "none",
+  "typings": [
+    "dist/minerva.d.ts"
+  ]
+}

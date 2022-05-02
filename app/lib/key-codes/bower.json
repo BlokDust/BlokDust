@@ -1,0 +1,25 @@
+{
+    "name": "key-codes",
+    "version": "0.0.4",
+    "homepage": "https://github.com/edsilv/key-codes",
+    "authors": [
+        "edsilv <e.silverton@gmail.com>"
+    ],
+    "description": "key codes",
+    "main": "/dist/key-codes.js",
+    "moduleType": [
+        "globals"
+    ],
+    "license": "MIT",
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests",
+        "src",
+        "tasks",
+        "typings"
+    ],
+    "dependencies": {}
+}

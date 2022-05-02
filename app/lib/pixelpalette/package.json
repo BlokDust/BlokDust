@@ -1,0 +1,38 @@
+{
+  "name": "PixelPalette",
+  "version": "0.1.25",
+  "description": "Imports a gif palette to use in javascript projects.",
+  "main": "src/PixelPalette.ts",
+  "homepage": "https://github.com/Whitevinyl/PixelPalette",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Whitevinyl/PixelPalette.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Whitevinyl/PixelPalette/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/Whitevinyl/PixelPalette/blob/master/LICENSE"
+    }
+  ],
+  "devDependencies": {
+    "deamdify": "^0.1.1",
+    "del": "^1.2.0",
+    "event-stream": "^3.1.7",
+    "gulp": "^3.8.7",
+    "gulp-browserify": "^0.5.0",
+    "gulp-bump": "^0.3.1",
+    "gulp-concat": "^2.4.1",
+    "gulp-connect": "^2.2.0",
+    "gulp-insert": "^0.4.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-typescript": "^2.2.1",
+    "gulp-uglify": "^0.3.1",
+    "path": "^0.11.14",
+    "require-dir": "^0.3.0",
+    "run-sequence": "^1.0.1",
+    "yargs": "^3.12.0"
+  }
+}

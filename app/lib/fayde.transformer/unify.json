@@ -1,0 +1,27 @@
+{
+  "name": "fayde.transformer",
+  "client": {
+    "tests": [
+      {
+        "file": "test/fayde.json",
+        "lib": "test/lib",
+        "exclude": ["fayde.controls"]
+      },
+      {
+        "file": "testsite/fayde.json",
+        "lib": "testsite/lib",
+        "exclude": ["qunit"]
+      }
+    ]
+  },
+  "type": "lib",
+  "dist": "dist/fayde.transformer",
+  "library": {
+    "type": "export",
+    "exports": "Fayde.Transformer"
+  },
+  "themes": {},
+  "typings": [
+    "dist/fayde.transformer.d.ts"
+  ]
+}
