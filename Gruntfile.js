@@ -397,7 +397,7 @@ module.exports = function (grunt) {
             'exec:minify',
             'clean:minified',
             'replace:minified',
-            'replace:php',
+            // 'replace:php',
             'compress:zip'
         );
     });
