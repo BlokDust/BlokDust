@@ -1,0 +1,308 @@
+{
+  "Attribution": {
+    "title": "General",
+    "about": "BlokDust is a collaboration between Luke Twyman, Luke Phillips and Edward Silverton. Developed in Brighton UK and released in 2016, BlokDust uses the Web Audio API and makes use of Tone.js as an audio framework.",
+    "twyman": {
+      "blurb": "Luke Twyman - project concept, design & UI.",
+      "url": "whitevinyldesign.com",
+      "twitter": "@whitevinylUK"
+    },
+    "phillips": {
+      "blurb": "Luke Phillips - audio development & musical interaction.",
+      "url": "femurdesign.com",
+      "twitter": "@lukephills"
+    },
+    "silverton": {
+      "blurb": "Edward Silverton - client & server architecture & core development.",
+      "url": "edsilv.com",
+      "twitter": "@edsilv"
+    },
+    "thanks": "Thanks also to Yotam Mann and Brad Sickles.",
+    "build": "Current Build: {0}"
+  },
+  "Blocks": {
+    "Source": {
+      "Label": "Source",
+      "Blocks": {
+        "Tone": {
+          "name": "Tone",
+          "description": "A single oscillator. Creates a waveform used as the basis of most synths."
+        },
+        "Noise": {
+          "name": "Noise",
+          "description": "A noise generator with 'White', 'Brown' and 'Pink' waveform types."
+        },
+        "Microphone": {
+          "name": "Microphone",
+          "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones."
+        },
+        "Sample": {
+          "name": "Sample",
+          "description": "A sample player loaded with a Soundcloud track. The track must be creative commons or tagged #blokdust."
+        },
+        "Granular": {
+          "name": "Granular",
+          "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces which are used as a sound source."
+        },
+        "Recorder": {
+          "name": "Recorder",
+          "description": "It can record the master output and then be used as a sample player."
+        },
+        "SampleGen": {
+          "name": "SampleGen",
+          "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
+        }
+      }
+    },
+    "Effect": {
+      "Label": "Effect",
+      "Blocks": {
+        "AutoWah": {
+          "name": "AutoWah",
+          "description": "Creates a filter sweep in response to the volume of audio input."
+        },
+        "BitCrusher": {
+          "name": "Bit Crusher",
+          "description": "Creates distortion by reducing the audio resolution."
+        },
+        "Chomp": {
+          "name": "Chomp",
+          "description": "A randomised filter with adjustable rate & width."
+        },
+        "Chopper": {
+          "name": "Chopper",
+          "description": "A tremolo effect that modulates the volume with an adjustable rate & depth."
+        },
+        "Chorus": {
+          "name": "Chorus",
+          "description": "Stereo chorus. Creates a delayed & modulated copy of the audio."
+        },
+        "Convolution": {
+          "name": "Convolution",
+          "description": "A convolution reverb which simulates a physical space by using a recorded sample."
+        },
+        "StereoDelay": {
+          "name": "Stereo Delay",
+          "description": "A stereo delay/echo with adjustable time & feedback."
+        },
+        "Distortion": {
+          "name": "Distortion",
+          "description": "A digital clipping distortion."
+        },
+        "Envelope": {
+          "name": "Envelope",
+          "description": "An ADSR envelope which alters the volume of sound over time."
+        },
+        "Eq": {
+          "name": "EQ",
+          "description": "A 'parametric' EQ with 4 filters."
+        },
+        "Filter": {
+          "name": "Filter",
+          "description": "A 'peaking' filter used for boosting or suppressing frequencies."
+        },
+        "Vibrato": {
+          "name": "Vibrato",
+          "description": "An oscillation effect that modulates pitch and playback rate."
+        },
+        "Phaser": {
+          "name": "Phaser",
+          "description": "A modulating phaser effect that sweeps through a spectrum of sound frequencies."
+        },
+        "PitchShifter": {
+          "name": "Pitch Shifter",
+          "description": "Shifts the pitch of any sound."
+        },
+        "Reverb": {
+          "name": "Reverb",
+          "description": "A digital reverb with adjustable room size and dampening."
+        },
+        "Scuzz": {
+          "name": "Scuzz",
+          "description": "Frequency modulation (FM) synthesis style effect that can create harmonic and overtone signals."
+        },
+        "Volume": {
+          "name": "Volume",
+          "description": "Increase or decrease the volume."
+        }
+      }
+    },
+    "Power": {
+      "Label": "Power",
+      "Blocks": {
+        "ParticleEmitter": {
+          "name": "Particle Emitter",
+          "description": "Fires energy particles. When a particle hits a source block, that source is momentarily triggered."
+        },
+        "Power": {
+          "name": "Power",
+          "description": "Provides energy for sources, particle emitters & lasers. This allows them to be constantly on."
+        },
+        "TogglePower": {
+          "name": "Toggle Power",
+          "description": "When 'on', provides energy for sources, particle emitters & lasers."
+        },
+        "Void": {
+          "name": "Void",
+          "description": "Absorbs any laser beams or particles that collide with it."
+        },
+        "PulsePower": {
+          "name": "Pulse Power",
+          "description": "Provides a short fire of energy for sources, particle emitters & lasers."
+        },
+        "Laser": {
+          "name": "Laser",
+          "description": "A laser beam that gives energy to sources, particle emitters & other lasers in its path."
+        }
+      }
+    },
+    "Interaction": {
+      "Label": "Interaction",
+      "Blocks": {
+        "ComputerKeyboard": {
+          "name": "Computer Keyboard",
+          "description": "Trigger sources using your computer keys arranged into a 2 1/2 octave piano."
+        },
+        "MIDIController": {
+          "name": "MIDI Controller",
+          "description": "Trigger sources using any connected USB MIDI device. Chrome only"
+        }
+      }
+    }
+  },
+  "Errors": {
+    "LoadError": "Composition failed to load.",
+    "SaveError": "Save failed, please try again.",
+    "SoundCloud": {
+      "FailedTrackFiltering": "Tracks were found, but cannot be used. Make sure the track you're searching for is streamable for public use and is either tagged 'blokdust' or has a creative commons license.",
+      "InternalServerError": "Error: Something went wrong with SoundCloud's servers.",
+      "ServiceUnavailable": "SoundCloud's servers were too busy. Please try again.",
+      "TooManyRequests":"Error: Too many requests. SoundCloud's 15,000 limit has been reached. Try again tomorrow",
+      "Uninitialized": "SoundCloud API isn't connected. Check your internet connection, save & refresh the page.",
+      "Unknown": "Something went wrong with SoundCloud. Check console for errors."
+    }
+  },
+
+  "UI": {
+
+    "CreateNew": {
+      "Verify": "Clear the Stage?",
+      "NewMessage": "Begin your own BlokDust creation"
+    },
+
+    "SharePanel": {
+      "SaveWarning": "Note: Recorder block samples will not be saved. If you want to share what you've recorded, download the recording from the block's options panel, upload it to SoundCloud, and load it back into BlokDust using a Sample block.",
+      "NoBlocks": "Create some blocks before you can save & share!"
+    },
+
+    "Tutorial": {
+      "Scenes": [
+
+        {
+          "Intro": "Let's get started by adding some blocks. You can create blocks by dragging them from the top menu.",
+          "Task": "Open up the SOURCE category, and drag a TONE block from it."
+        },
+
+        {
+          "Intro": "SOURCE blocks generate sound, and you can connect EFFECT & INTERACTION blocks to them.",
+          "Task": "From the INTERACTION category, create a COMPUTER KEYBOARD block. Connect it to your TONE block by simply dragging it nearby until a connection line appears."
+        },
+
+        {
+          "Intro": "You’ve just made a basic interactive synth! Now you can play your TONE block using your computer keyboard  - give it a go.",
+          "Task": "Let's make it a bit more interesting, add a CHOPPER block from the EFFECT category and connect it."
+        },
+
+        {
+          "Intro": "You can single-click a block to open up the options panel and adjust it’s settings to your liking.",
+          "Task": "Click on the CHOPPER block and have a play with its settings. Close the options panel when you're done."
+        },
+
+        {
+          "Intro": "Finally let’s look at POWER. We won’t need that COMPUTER KEYBOARD block you made for this.",
+          "Task": "Delete the COMPUTER KEYBOARD block by dragging it into the trashcan, bottom-right of the screen."
+        },
+
+        {
+          "Intro": "Blocks from the POWER category allow you to come up with different ways of triggering sounds.",
+          "Task": "From the POWER category, create a PARTICLE EMITTER block and place it on the marker below your TONE block."
+        },
+
+        {
+          "Intro": "When powered, the PARTICLE EMITTER will fire energy particles at the TONE block, triggering sound as they hit.",
+          "Task": "From the POWER category again, create a POWER block and connect it to your PARTICLE EMITTER block."
+        },
+
+        {
+          "Intro": "Explore and experiment for yourself, or visit the BlokDust Guide for an in-depth Wiki and more tutorials. When you’ve made something cool, click SHARE to generate a unique URL to let others see what you’ve made!",
+          "Task": ""
+        }
+
+      ],
+
+      "SkipButton": "Skip Tour",
+      "DoneButton": "Okay Done",
+      "TourComplete": "Tour Complete",
+      "Splash1": {
+        "Message": "Welcome to BlokDust.",
+        "Y": "Take the Tour",
+        "N": "Skip for Now"
+      },
+      "Splash2": {
+        "Message": "Welcome to the Tour.",
+        "Y": "Clear the Stage",
+        "N": "Skip for Now"
+      }
+    },
+
+    "TutorialTouch": {
+      "Scenes": [
+
+        {
+          "Intro": "Let's get started by adding some blocks. You can create blocks by dragging them from the top menu.",
+          "Task": "Open up the SOURCE category, and drag a TONE block from it."
+        },
+
+        {
+          "Intro": "SOURCE blocks generate sound, and you can trigger them using POWER & INTERACTION blocks.",
+          "Task": "From the POWER category, create a PARTICLE EMITTER block and place it on the marker below your TONE block."
+        },
+
+        {
+          "Intro": "When powered, the PARTICLE EMITTER will fire energy particles at the TONE block, triggering sound as they hit.",
+          "Task": "From the POWER category again, create a POWER block and connect it to your PARTICLE EMITTER block by simply dragging it nearby until a connection line appears."
+        },
+
+        {
+          "Intro": "Great, now we're making some sound, but let's make it a bit more interesting.",
+          "Task": "From the EFFECT category, create a CHOPPER block and connect it to your TONE block."
+        },
+
+        {
+          "Intro": "You can single-click a block to open up the options panel and adjust its settings to your liking.",
+          "Task": "Click on the CHOPPER block and have a play with its settings. Close the options panel when you're done."
+        },
+
+        {
+          "Intro": "Explore and experiment for yourself, or visit the BlokDust Guide for an in-depth Wiki and more tutorials. When you’ve made something cool, click SHARE to generate a unique URL to let others see what you’ve made!",
+          "Task": ""
+        }
+
+      ],
+
+      "SkipButton": "Skip Tour",
+      "DoneButton": "Okay Done",
+      "TourComplete": "Tour Complete",
+      "Splash1": {
+        "Message": "Welcome to BlokDust.",
+        "Y": "Take the Tour",
+        "N": "Skip for Now"
+      },
+      "Splash2": {
+        "Message": "Welcome to the Tour.",
+        "Y": "Clear the Stage",
+        "N": "Skip for Now"
+      }
+    }
+  }
+}

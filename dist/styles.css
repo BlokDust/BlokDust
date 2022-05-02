@@ -1,0 +1,153 @@
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-font-smoothing: antialiased !important;
+    -o-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+@font-face {
+    font-family: 'Merriweather Sans';
+    font-weight: 300;
+    font-style: italic;
+    src: url('https://files.blokdust.io/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.eot');
+    src: url('https://files.blokdust.io/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.eot?#iefix') format('embedded-opentype'),
+    local('Merriweather Sans Light Italic'),
+    local('Merriweather-Sans-300italic'),
+    url('https://files.blokdust.io/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.woff2') format('woff2'),
+    url('https://files.blokdust.io/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.woff') format('woff'),
+    url('https://files.blokdust.io/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.ttf') format('truetype'),
+    url('https://files.blokdust.io/fonts/Merriweather-Sans-300italic/Merriweather-Sans-300italic.svg#MerriweatherSans') format('svg');
+}
+
+@font-face {
+    font-family: 'Dosis';
+    font-weight: 200;
+    font-style: normal;
+    src: url('https://files.blokdust.io/fonts/Dosis-200/Dosis-200.eot');
+    src: url('https://files.blokdust.io/fonts/Dosis-200/Dosis-200.eot?#iefix') format('embedded-opentype'),
+    local('Dosis ExtraLight'),
+    local('Dosis-200'),
+    url('https://files.blokdust.io/fonts/Dosis-200/Dosis-200.woff2') format('woff2'),
+    url('https://files.blokdust.io/fonts/Dosis-200/Dosis-200.woff') format('woff'),
+    url('https://files.blokdust.io/fonts/Dosis-200/Dosis-200.ttf') format('truetype'),
+    url('https://files.blokdust.io/fonts/Dosis-200/Dosis-200.svg#Dosis') format('svg');
+}
+
+@font-face {
+    font-family: 'Dosis';
+    font-weight: 400;
+    font-style: normal;
+    src: url('https://files.blokdust.io/fonts/Dosis-regular/Dosis-regular.eot');
+    src: url('https://files.blokdust.io/fonts/Dosis-regular/Dosis-regular.eot?#iefix') format('embedded-opentype'),
+    local('Dosis Regular'),
+    local('Dosis-regular'),
+    url('https://files.blokdust.io/fonts/Dosis-regular/Dosis-regular.woff2') format('woff2'),
+    url('https://files.blokdust.io/fonts/Dosis-regular/Dosis-regular.woff') format('woff'),
+    url('https://files.blokdust.io/fonts/Dosis-regular/Dosis-regular.ttf') format('truetype'),
+    url('https://files.blokdust.io/fonts/Dosis-regular/Dosis-regular.svg#Dosis') format('svg');
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    background-color: #111;
+    color: #fff;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+
+#mainCanvas {
+    background-color: #111;
+}
+
+#shareUrl, #shareTitle, #soundCloudSearch {
+    font-family: "Dosis", Arial, Helvetica, sans-serif;
+    font-weight: 200;
+    font-size: 56px;
+    mix-blend-mode: normal;
+    background-blend-mode: normal;
+
+    width: 200px;
+    height: 100px;
+}
+
+#shareUrl {
+    position: absolute;
+    left: 1000%;
+    top: -100%;
+}
+
+#shareTitle {
+    position: absolute;
+    left: 1000%;
+    top: -100%;
+}
+
+#soundCloudSearch {
+    position: absolute;
+    left: 1000%;
+    top: -100%;
+}
+
+form {
+    width: inherit;
+    height: inherit;
+}
+
+input, textarea {
+    overflow: scroll;
+    white-space: nowrap;
+    width: inherit;
+    height: inherit;
+    font: inherit;
+    line-height: inherit;
+    color: inherit;
+    outline: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+}
+
+input:focus, textarea:focus {
+    outline:0;
+}
+
+#shareTitle input, #soundCloudSearch input {
+    text-transform: uppercase;
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    width: 25px;
+    height: 25px;
+    background-color: white;
+    -webkit-animation: 0.2s linear infinite spin;
+    animation: 0.2s linear infinite spin;
+}
+.app-active .loading-spinner {
+    display: none;
+    -webkit-animation: none;
+    animation: none;
+}
+
+@-webkit-keyframes spin { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(90deg); }  }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(90deg); }  }
