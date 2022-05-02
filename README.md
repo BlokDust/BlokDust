@@ -41,14 +41,11 @@ We’ll hopefully be publishing some developer notes when we have time. There’
 
 #### Prerequisites 
 Blokdust needs these things to work:
-- [Node](https://nodejs.org)
-- [Grunt](http://gruntjs.com/getting-started)
-- [Bower](https://bower.io/)
+- [Node](https://nodejs.org) `v12.22.0`
+- [Grunt](http://gruntjs.com/getting-started) `npm install -g grunt@v0.4.5`
 
 #### Workflow
-Once you have the prerequisites installed and you've cloned the project, run these commands to install the dependencies:    
-`npm install`     
-`bower install`
+`npm install` to install the dependencies.  
 
 ##### Serve Blokdust on localhost:8000:
 `grunt serve:dev`  
@@ -57,7 +54,7 @@ Once you have the prerequisites installed and you've cloned the project, run the
 `grunt watch:dev`  
 
 ##### Build & compile project to dist folder: 
-`grunt serve:dist`
+`grunt dist`
 
 
 # Contact
