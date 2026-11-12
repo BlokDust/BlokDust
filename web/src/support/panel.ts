@@ -5,6 +5,8 @@ import { SUPPORT } from '../../../shared/support.ts';
 import type { SupportClient } from './client.ts';
 import './support.css';
 
+const INTRO = 'Suggest a feature, report a bug, or tell us if something isn’t right.';
+
 /** Connect uses v1's own metrics, OptionSwitch and filled GUIDE button. DOM is only for accessible input. */
 export class FeedbackPanel {
   private form = document.createElement('form');
@@ -16,10 +18,11 @@ export class FeedbackPanel {
     this.form.id = 'feedback-panel';
     this.form.hidden = true;
     this.form.setAttribute('aria-label', 'Feedback & support');
-    this.form.innerHTML = `<textarea id="feedback-message" name="message" aria-label="Your message" required maxlength="${SUPPORT.messageChars}" placeholder="Suggestion, question or issue"></textarea>
+    this.form.setAttribute('aria-describedby', 'feedback-intro');
+    this.form.innerHTML = `<span id="feedback-intro">${INTRO}</span><textarea id="feedback-message" name="message" aria-label="Your message" required maxlength="${SUPPORT.messageChars}" placeholder="Suggestion, question or issue"></textarea>
       <input id="feedback-email" name="email" aria-label="Email (optional)" type="email" maxlength="254" autocomplete="email">
       <div class="feedback-honey" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
-      <button type="button" id="feedback-include" role="switch" aria-checked="true" aria-label="Include current patch and diagnostics"></button>
+      <button type="button" id="feedback-include" role="switch" aria-checked="true" aria-label="Share patch and diagnostics"></button>
       <button id="feedback-send" type="submit" aria-label="Send"></button>
       <span id="feedback-status" role="status" aria-live="polite"></span>`;
     document.body.appendChild(this.form);
@@ -63,21 +66,23 @@ export class FeedbackPanel {
       Object.assign(el.style, { left: `${px / pr}px`, top: `${py / pr}px`, width: `${width / pr}px`, height: `${height / pr}px`, color: txt,
         font: font.replace(/([\d.]+)px/, (_: string, n: string) => `${Number(n) / pr}px`) });
     };
-    place('feedback-message', x, y + 14 * u, w, 80 * u);
-    place('feedback-email', x, y + 142 * u, w, 35 * u, App.Metrics.TxtHeader);
-    place('feedback-include', x, y + 202 * u, w, 48 * u);
+    place('feedback-message', x, y + 46 * u, w, 80 * u);
+    place('feedback-email', x, y + 174 * u, w, 18 * u);
+    place('feedback-include', x, y + 215 * u, w, 42 * u);
     place('feedback-send', x, y + 270 * u, w, 40 * u);
     ctx.save(); ctx.fillStyle = txt; ctx.strokeStyle = App.Palette[1]; ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtMid;
-    ctx.fillText('YOUR MESSAGE', x, y);
-    ctx.fillText('EMAIL', x, y + 128 * u);
+    ctx.font = App.Metrics.TxtItalic2; panel.WordWrap(ctx, INTRO, x, y, 16 * u, w);
+    ctx.font = App.Metrics.TxtMid; ctx.fillText('YOUR MESSAGE', x, y + 32 * u);
+    ctx.fillText('EMAIL', x, y + 160 * u);
     const emailWidth = ctx.measureText('EMAIL').width;
-    ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + emailWidth + 8 * u, y + 128 * u);
+    ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + emailWidth + 8 * u, y + 160 * u);
     // SharePanel/Patches title fields: transparent text with a single rule, never a textbox outline.
-    ctx.beginPath(); ctx.moveTo(x, y + 106 * u); ctx.lineTo(x + w, y + 106 * u);
-    ctx.moveTo(x, y + 184 * u); ctx.lineTo(x + w, y + 184 * u); ctx.stroke();
-    ctx.font = App.Metrics.TxtMid; ctx.fillText('INCLUDE CURRENT PATCH AND DIAGNOSTICS', x, y + 224 * u);
-    const toggle = new OptionSwitch(new Point(w - 80 * u, y + 202 * u), '', 'includeContext', this.include, new Size(80 * u, 48 * u), false, 'offOn');
-    toggle.Draw(ctx, { SliderColours: App.ThemeManager.OptionsOrder.map((i: number) => App.Palette[i]) }, u, x, 48 * u, 0);
+    ctx.beginPath(); ctx.moveTo(x, y + 138 * u); ctx.lineTo(x + w, y + 138 * u);
+    ctx.moveTo(x, y + 202 * u); ctx.lineTo(x + w, y + 202 * u); ctx.stroke();
+    ctx.font = App.Metrics.TxtMid; ctx.fillText('SHARE PATCH AND DIAGNOSTICS', x, y + 240 * u);
+    // OptionsPanel switch rows are 60u high. A 48u pair gives each half the same 24u square as its separator.
+    const toggle = new OptionSwitch(new Point(w - 48 * u, y + 215 * u), '', 'includeContext', this.include, new Size(48 * u, 60 * u * .43), false, 'offOn');
+    toggle.Draw(ctx, { SliderColours: App.ThemeManager.OptionsOrder.map((i: number) => App.Palette[i]) }, u, x, 60 * u, 0);
     ctx.fillStyle = App.Palette[this.sending ? 1 : menu[3]]; ctx.fillRect(x, y + 270 * u, w, 40 * u);
     if (this.hover && !this.sending) { const cx = x + w / 2; ctx.beginPath(); ctx.moveTo(cx, y + 319 * u); ctx.lineTo(cx + 10 * u, y + 309 * u); ctx.lineTo(cx - 10 * u, y + 309 * u); ctx.fill(); }
     ctx.fillStyle = txt; ctx.font = App.Metrics.TxtUrl2; ctx.textAlign = 'center'; ctx.fillText(this.sending ? 'SENDING…' : 'SEND', x + w / 2, y + 299 * u);

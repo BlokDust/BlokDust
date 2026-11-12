@@ -104,7 +104,7 @@ try {
   await page.click('#feedback-send');
   await page.getByRole('status').filter({ hasText: 'Thank you' }).waitFor();
   check('manual feedback captures actual patch/build/system/diagnostics without storage secrets', submissions.length === 1 && submissions[0].patch.blocks.length > 0 && submissions[0].version === JSON.parse(readFileSync('package.json', 'utf8')).version && submissions[0].build && submissions[0].system.surface === 'web' && submissions[0].diagnostics.length > 0 && !JSON.stringify(submissions).includes('SECRET'));
-  await page.getByRole('switch', { name: 'Include current patch and diagnostics' }).click();
+  await page.getByRole('switch', { name: 'Share patch and diagnostics' }).click();
   await page.locator('#feedback-message').fill('Text only feedback');
   await page.click('#feedback-send');
   await page.getByRole('status').filter({ hasText: 'Thank you' }).waitFor();

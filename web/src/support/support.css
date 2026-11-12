@@ -7,4 +7,4 @@
 #feedback-panel button { cursor:pointer; }
 #feedback-panel button:disabled { cursor:wait; }
 #feedback-panel button:focus-visible { outline:1px solid currentColor; }
-#feedback-panel .feedback-honey, #feedback-status { position:fixed; left:-10000px; width:1px; height:1px; overflow:hidden; }
+#feedback-panel .feedback-honey, #feedback-status, #feedback-intro { position:fixed; left:-10000px; width:1px; height:1px; overflow:hidden; }

@@ -77,3 +77,20 @@ preserves valid effect-order pairs using remapped IDs, covered in both root and 
 Final native Connect submission and staging database verification pass; the smoke report is removed afterward.
 The last test-host copy initially failed sealed-resource verification. Deployment now compares rsync checksums;
 the subsequent copy passes signature verification for all four VST3/AU bundles.
+
+## Connect spacing review
+
+- [x] Add the purpose sentence above YOUR MESSAGE using the existing italic copy metric.
+- [x] Match email to message text size, reduce its height and rebalance the attachment row.
+- [x] Rename the switch to SHARE PATCH AND DIAGNOSTICS; use the standard 60-unit switch row with square 24-unit halves.
+- [x] Verify focused regressions, integration and plugin build/submission, then refresh staging and test plugins.
+
+`support-connect-spacing` initially failed on the reviewed build: email font mismatch, rectangular switch halves,
+4.6-unit glyph clearance, a high row centre and missing introductory sentence. The regression measures actual
+canvas strokes/fills and input fonts, rather than reimplementing the control.
+
+Spacing review verification: both Connect regressions pass (matching fonts, square halves, 7-unit glyph clearance,
+centred row and introductory copy); all 36 support integration checks pass, including mobile bounds. Web typecheck,
+index/codegen and current-file privacy checks pass. Native plugin validation/host checks and actual staging submission
+pass; staging and all four signed test-host bundles are refreshed. The history scan still reports the same three
+pre-existing merge-metadata email findings recorded above.

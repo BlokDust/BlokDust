@@ -16,8 +16,11 @@ private queue for staff review within a week; the dashboard, email integration a
 - **R1.** The General panel MUST restore the CONNECT tab beside SETTINGS, ABOUT and (web) DOWNLOAD. Connect MUST
   replace its obsolete guide/social contents with the support form, without a second modal or page takeover.
   Use the existing canvas typography metrics, transparent DOM text layers with title-field rules, v1 OptionSwitch
-  and the filled coloured Connect GUIDE-button style. Provide message, EMAIL (optional), an initially enabled
-  “Include current patch and diagnostics” switch and SEND. Success MUST say only “Thank you”; the API reference
+  and the filled coloured Connect GUIDE-button style. Start with “Suggest a feature, report a bug, or tell us if
+  something isn’t right.” Message and email inputs MUST use the same text size; email MUST be a compact single line.
+  Switch halves MUST be square with the same glyph clearance as a 60-unit OptionsPanel switch row, centred between
+  the email rule and SEND. Provide message, EMAIL (optional), an initially enabled
+  “Share patch and diagnostics” switch and SEND. Success MUST say only “Thank you”; the API reference
   MUST NOT be displayed. No attachment disclosure paragraph or automatic-reporting checkbox is shown.
 - **R2.** Every report MUST include version/build and the message. When the inclusion switch is on, include the
   sanitised current patch (including unsaved changes), available system details and recent diagnostics. When off,
