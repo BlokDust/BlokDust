@@ -43,7 +43,7 @@ Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` befo
 - `pnpm bd v1 audio` / `pnpm bd audio compare|selftest`: v1 audio references and the sounds-like-v1 check (SPEC-AUDIO-V1-PARITY)
 - `pnpm bd wasm test` / `pnpm test:worklet`: WASM and browser AudioWorklet ≡ native golden hashes (`pnpm bd wasm setup` once)
 - `pnpm bd plugin test` / `pnpm bd plugin au`: JUCE plugin build, pluginval/auval, built VST3/AU ≡ native golden, editor bridge
-- `pnpm bd plugin deploy [--no-build]`: ship the plugins to the externally configured test host. **Shared with release testing: obtain explicit owner approval before deploying while testing is in progress. Never bypass the busy-DAW guard with `--force` without explicit approval.** Verify plugin-reaching changes locally meanwhile.
+- `pnpm bd plugin deploy [--no-build]`: ship the plugins to the externally configured test host. **Run after every change that reaches the plugins** (plugin/, engine/, web/)
 - `pnpm bd win engine|plugin`: the same on the Windows 11 VM (tools/win-vm/README.md)
 - `pnpm bd perf`: performance baselines → docs/engineering/perf-baselines.md (not a gate)
 - `pnpm bd ci`: run all of the above locally (GitHub Actions is manual-only)
