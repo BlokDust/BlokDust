@@ -12,7 +12,8 @@ export class SupportClient {
   private automaticPending = false;
   private enabled = false;
   constructor(private context: SupportContext) {
-    try { this.enabled = localStorage.getItem(CONSENT_KEY) === 'yes'; } catch { /* consent defaults off */ }
+    // Connect's attachment switch is independent of automatic-error consent; never reinterpret the old preference.
+    this.enabled = false;
     diagnostics.onError = e => { void this.automatic(e); };
   }
   get consent(): boolean { return this.enabled; }
@@ -20,12 +21,12 @@ export class SupportClient {
     this.enabled = value;
     try { localStorage.setItem(CONSENT_KEY, value ? 'yes' : 'no'); } catch { /* session-only in private modes */ }
   }
-  report(message: string, email: string, kind: 'feedback' | 'automatic' = 'feedback'): SupportReport {
+  report(message: string, email: string, kind: 'feedback' | 'automatic' = 'feedback', includeContext = true): SupportReport {
     return { schema: 1, kind, message, email, version: __BD_VERSION__, build: __BD_BUILD__,
-      patch: supportPatch(this.context.patch()), diagnostics: diagnostics.recent(),
-      system: supportSystem({ surface: this.context.plugin ? 'plugin' : 'web', os: navigator.platform,
+      includeContext, patch: includeContext ? supportPatch(this.context.patch()) : null, diagnostics: includeContext ? diagnostics.recent() : [],
+      system: includeContext ? supportSystem({ surface: this.context.plugin ? 'plugin' : 'web', os: navigator.platform,
         browser: navigator.userAgent, cores: navigator.hardwareConcurrency,
-        width: innerWidth, height: innerHeight, pixelRatio: devicePixelRatio, ...this.context.system() }) };
+        width: innerWidth, height: innerHeight, pixelRatio: devicePixelRatio, ...this.context.system() }) : {} };
   }
   async send(report: SupportReport, website = ''): Promise<string> {
     if (!navigator.onLine) throw new Error('You need to be connected to the internet to send this support query.');

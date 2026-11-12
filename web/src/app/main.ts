@@ -153,7 +153,7 @@ async function main() {
   juce?.addEventListener<Record<string, unknown>>('bd_supportSystem', value => { Object.assign(hostSystem, value); });
   const supportClient = !embedId ? new SupportClient({ patch: toPatch, plugin: !!juce,
     system: () => ({ sampleRate: App.Audio.sampleRate, ...hostSystem }) }) : null;
-  const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => theme) : null;
+  const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => stage.redraw()) : null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   const changed = () => {
     if (embedId) return;  // the embed player never autosaves
@@ -162,7 +162,7 @@ async function main() {
   };
 
   const scene = new V1Scene({
-    feedback: () => feedbackPanel?.open(),
+    feedback: feedbackPanel ?? undefined,
     createBlock: (v1Type, gx, gy) => {
       const def = DEF_BY_V1.get(v1Type);
       if (!def) return null;

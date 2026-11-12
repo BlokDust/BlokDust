@@ -44,3 +44,36 @@ covered by browser regression. The macOS native plugin submission is exercised a
 
 Staging deployment and the configured macOS test-host installation completed successfully; all four instrument/FX
 VST3/AU bundles passed signature verification. The review plugins target the staging support API.
+
+## Connect panel review (release/2.0.1)
+
+- [x] Rebase the feedback commit onto release/2.0.1, preserving Tempo, Patches, licence assets and root deployment.
+- [x] Restore CONNECT and replace its retired social contents with the form; remove the separate modal and Settings action.
+- [x] Draw labels/inputs with existing typography metrics, the real OptionSwitch and the coloured Connect button.
+- [x] Remove disclosure copy, shorten email text and success copy, keep API identifiers internal.
+- [x] Make the inclusion switch control optional patch/system/diagnostic context on client and server, without background consent.
+- [x] Verify the rebased integration, panel/mobile regressions, sharing and plugin submission; update staging/test plugins.
+
+The `support-connect` regression failed on the previous build (missing switch/form in Connect) before the replacement.
+Earlier verification above records the original full-screen implementation; current review results follow below.
+
+### Current review verification
+
+- Rebased onto release/2.0.1 at c6cfe9a; release ancestry verified.
+- Web/Worker typechecks, `pnpm check`, current-file privacy check and privacy self-tests pass.
+- `pnpm test:support` and `pnpm test:support:base`: 36 checks pass each, including selected context omission,
+  “Thank you” without an identifier, input hiding on tab changes and mobile bounds. Based-path bindings/migrations
+  remain compatible with the release branch's root/base routing tests.
+- Sharing: 65/65 pass. Web library smoke passes. Settings/theme-next v1 UI comparisons both pass.
+- Targeted Connect, Tempo, About and Download regressions pass; the full rebased UI suite passes all 72 checks.
+- Native plugin validation/host cases pass on the rebased engine, including support metadata. Staging and all four
+  macOS test-host plugin bundles updated, with signatures verified.
+- `pnpm bd privacy history` reports three pre-existing merge-commit metadata email findings (cf8376f4e92b,
+  b6f8408a95ed, cb433b228d9a). Current files have zero findings. Shared release history is not rewritten by this change.
+
+The rebased snapshot initially dropped connectionOrder (failing remapped-order assertion); support sanitisation now
+preserves valid effect-order pairs using remapped IDs, covered in both root and base-path support integration runs.
+
+Final native Connect submission and staging database verification pass; the smoke report is removed afterward.
+The last test-host copy initially failed sealed-resource verification. Deployment now compares rsync checksums;
+the subsequent copy passes signature verification for all four VST3/AU bundles.

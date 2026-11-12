@@ -13,8 +13,8 @@ Users need to report problems and suggestions from within BlokDust. Reports need
 context to investigate without sending sample audio, save credentials or unrelated browser storage.
 
 ## What changes
-Settings feedback action and accessible themed panel (R1); bounded, sanitised patch/system/diagnostic capture (R2–R3);
-explicit automatic-reporting consent, deduplication and caps (R4); manual offline/failure handling without a queue
+Restored Connect tab and embedded form using existing canvas controls (R1); bounded, sanitised patch/system/diagnostic capture (R2–R3);
+per-submission attachment choice, independent of automatic-reporting consent (R4); manual offline/failure handling without a queue
 (R5); write-only support API, separate D1 binding/migrations and validation/rate guards (R6); daily retention cleanup
 (R7); triage fields and history for future staff tools (R8). Extend local/remote database tooling and verification.
 

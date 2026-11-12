@@ -52,18 +52,29 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1") {
                    // Explicit test-host mode: exercise the actual WebView form and its cross-origin HTTP submission.
                    web_.evaluateJavascript(R"JS((() => {
-                     const panel = document.getElementById('feedback-panel'); panel.showModal();
+                     let reportId = '';
+                     const originalFetch = window.fetch.bind(window);
+                     window.fetch = async (...args) => {
+                       const response = await originalFetch(...args);
+                       if (String(args[0]).includes('/api/support') && response.ok) reportId = (await response.clone().json()).id;
+                       return response;
+                     };
+                     const initialise = () => {
+                     const settings = window.__bd_probe.scene.SettingsPanel;
+                     if (!settings.MenuItems[1]) { setTimeout(initialise, 50); return; }
+                     settings._OpenTab = 1; settings.OpenPanel();
                      document.getElementById('feedback-message').value = 'CHG-0009 native plugin support smoke test';
-                     document.getElementById('feedback-form').requestSubmit();
+                     document.getElementById('feedback-panel').requestSubmit();
                      let tries = 0;
                      const timer = setInterval(() => {
                        const status = document.getElementById('feedback-status').textContent;
-                       const success = status.includes('Your support reference is');
+                       const success = status === 'Thank you';
                        if (success || ++tries >= 120) {
                          clearInterval(timer);
-                         window.__JUCE__.backend.emitEvent('bd_supportSmoke', { success, status });
+                         window.__JUCE__.backend.emitEvent('bd_supportSmoke', { success, status, id: reportId });
                        }
                      }, 100);
+                     }; initialise();
                    })())JS");
                  } else if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
                    juce::File(path).replaceWithText(juce::JSON::toString(v, true));

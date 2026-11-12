@@ -31,7 +31,8 @@
     "server:typecheck": "pnpm -C server typecheck",
     "test:mpe": "node tests/mpe/run.ts",
     "test:support": "node tests/e2e/support.ts",
-    "test:support:plugin": "node tests/e2e/support-plugin.ts"
+    "test:support:plugin": "node tests/e2e/support-plugin.ts",
+    "test:support:base": "node tests/e2e/support.ts --based"
   },
   "devDependencies": {
     "ajv": "8.20.0",

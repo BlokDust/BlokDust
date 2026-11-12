@@ -32,3 +32,9 @@ retention is separate from live-row cleanup. Browser/JS error capture does not c
 - **Shared patch tables:** public serving paths, different access and retention requirements.
 - **Third-party reporting SDK:** adds collection/configuration and external routing beyond the requested simple flow.
 - **Persistent delivery queue:** explicitly declined by the owner; manual retry is sufficient.
+
+## Owner review, 2026-11-12
+
+The form now lives in the restored Connect tab. The owner replaced the automatic-reporting checkbox with an
+“Include current patch and diagnostics” switch. This is an attachment choice, initially on, enforced by the API;
+it does not confer automatic-reporting consent. The form displays only “Thank you”, keeping identifiers internal.

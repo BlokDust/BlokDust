@@ -1,7 +1,7 @@
 # Support reports
 
 CHG-0009 implements [the support spec](../specs/domains/support/in-app-feedback-and-diagnostic-reports.md).
-Users open Settings → Feedback & support. Email replies are manual; no email is sent by the Worker.
+Users open General → Connect. Email replies are manual; no email is sent by the Worker.
 
 ## Local review
 Run `pnpm web:build`, then `pnpm bd server dev`. Both the sharing and support migrations are applied automatically.
@@ -36,7 +36,7 @@ WHERE status = 'new'
 ORDER BY priority DESC, created ASC;
 ```
 
-`support_context` contains detailed system, patch and diagnostics for 90 days. `support_reports` retains message,
+`support_context` contains optional detailed system, patch and diagnostics for 90 days. `support_reports` retains message,
 optional contact email, build, broad surface and triage fields for 365 days. `support_triage_events` records future
 staff actions and AI suggestions, with `source` distinguishing them. A dashboard must update triage fields and append
 an audit event in one transaction, authenticate staff, use parameterised queries, and render strings as plain text.
@@ -51,3 +51,6 @@ Daily cleanup removes expired context first and cascades report deletion into re
 independent of user traffic. Cron configuration follows the [Cloudflare Cron Trigger documentation](https://developers.cloudflare.com/workers/configuration/cron-triggers/).
 Cloudflare recovery/backups have a separate provider retention period; deleting live rows does not purge exports
 or historical backups. Submission bodies and email addresses must not be added to request logs.
+
+The Connect inclusion switch defaults on and controls attachments for the current submission. It never enables
+background reporting. Replies show only “Thank you”; report identifiers remain internal to the API and staff tooling.

@@ -1,93 +1,88 @@
-import type { Theme } from '../generated/palettes.gen.ts';
+import { App, Point, Size } from '../v1ui/shim.ts';
+import { Device } from '../v1ui/ported/Device';
+import { OptionSwitch } from '../v1ui/ported/UI/Options/OptionSwitch';
 import { SUPPORT } from '../../../shared/support.ts';
 import type { SupportClient } from './client.ts';
 import './support.css';
 
-/** New surface, using v1's full-frame panel, Dosis type, palette, square controls and outlined actions. */
+/** Connect uses v1's own metrics, OptionSwitch and filled GUIDE button. DOM is only for accessible input. */
 export class FeedbackPanel {
-  private dialog = document.createElement('dialog');
-  private previousFocus: HTMLElement | null = null;
-  constructor(private client: SupportClient, private theme: () => Theme) {
-    this.dialog.id = 'feedback-panel';
-    this.dialog.setAttribute('aria-labelledby', 'feedback-title');
-    this.dialog.setAttribute('role', 'dialog');
-    this.dialog.setAttribute('aria-modal', 'true');
-    // Static markup only; submitted content is never interpreted as HTML.
-    this.dialog.innerHTML = `<form id="feedback-form">
-      <header><h1 id="feedback-title">FEEDBACK & SUPPORT</h1><button type="button" id="feedback-close" aria-label="Close feedback">×</button></header>
-      <div class="feedback-content">
-        <p class="feedback-intro">A suggestion, a question, or something that didn’t work?</p>
-        <label for="feedback-message">YOUR MESSAGE</label>
-        <textarea id="feedback-message" name="message" required maxlength="${SUPPORT.messageChars}" rows="5" placeholder="Tell us what happened, or what you’d like to see…"></textarea>
-        <label for="feedback-email">EMAIL <span>(optional, if you’d like a reply)</span></label>
-        <input id="feedback-email" name="email" type="email" maxlength="254" autocomplete="email">
-        <div class="feedback-honey" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
-        <p class="feedback-disclosure">Includes your current patch and technical diagnostics. Audio is never included.</p>
-        <label class="feedback-consent"><input id="feedback-automatic" type="checkbox"> Automatically report unexpected errors</label>
-        <p class="feedback-detail">When enabled, error reports include your current patch and diagnostics. You can turn this off here at any time.</p>
-        <div class="feedback-actions"><button id="feedback-send" type="submit">SEND</button><p id="feedback-status" role="status" aria-live="polite"></p></div>
-      </div>
-    </form>`;
-    document.body.appendChild(this.dialog);
-    const get = <T extends HTMLElement>(id: string) => this.dialog.querySelector<T>(`#${id}`)!;
-    const close = () => { if (!get<HTMLButtonElement>('feedback-send').disabled) this.close(); };
-    get('feedback-close').onclick = close;
-    this.dialog.addEventListener('cancel', e => { if (get<HTMLButtonElement>('feedback-send').disabled) e.preventDefault(); });
-    this.dialog.addEventListener('close', () => this.previousFocus?.focus());
-    // The canvas opens Settings actions on pointerdown; its default focus can occur after open().
-    // Native modals make the stage inert, while legacy WebViews need this explicit focus guard.
-    document.addEventListener('focusin', e => {
-      if (this.dialog.hasAttribute('open') && !this.dialog.contains(e.target as Node)) get<HTMLTextAreaElement>('feedback-message').focus();
-    });
-    // Keep music shortcuts out of the entire modal, including focused buttons. Native dialog supplies focus trapping.
-    this.dialog.addEventListener('keydown', e => {
-      e.stopPropagation();
-      if (e.key === 'Escape' && typeof this.dialog.showModal !== 'function') { e.preventDefault(); close(); }
-      if (e.key === 'Tab') {
-        const fields = [...this.dialog.querySelectorAll<HTMLElement>('button:not(:disabled), input:not([tabindex="-1"]), textarea')];
-        const first = fields[0], last = fields.at(-1);
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
-      }
-    });
-    this.dialog.addEventListener('keyup', e => e.stopPropagation());
-    const consent = get<HTMLInputElement>('feedback-automatic');
-    consent.onchange = () => { this.client.consent = consent.checked; };
-    get<HTMLFormElement>('feedback-form').onsubmit = async e => {
-      e.preventDefault();
-      const send = get<HTMLButtonElement>('feedback-send'), status = get('feedback-status');
-      if (send.disabled) return;
+  private form = document.createElement('form');
+  private include = true;
+  private sending = false;
+  private status = '';
+  private hover = false;
+  constructor(private client: SupportClient, private redraw: () => void) {
+    this.form.id = 'feedback-panel';
+    this.form.hidden = true;
+    this.form.setAttribute('aria-label', 'Feedback & support');
+    this.form.innerHTML = `<textarea id="feedback-message" name="message" aria-label="Your message" required maxlength="${SUPPORT.messageChars}" placeholder="Suggestion, question or issue"></textarea>
+      <input id="feedback-email" name="email" aria-label="Email (optional)" type="email" maxlength="254" autocomplete="email">
+      <div class="feedback-honey" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
+      <button type="button" id="feedback-include" role="switch" aria-checked="true" aria-label="Include current patch and diagnostics"></button>
+      <button id="feedback-send" type="submit" aria-label="Send"></button>
+      <span id="feedback-status" role="status" aria-live="polite"></span>`;
+    document.body.appendChild(this.form);
+    const get = <T extends HTMLElement>(id: string) => this.form.querySelector<T>(`#${id}`)!;
+    get('feedback-include').onclick = () => {
+      this.include = !this.include;
+      get('feedback-include').setAttribute('aria-checked', String(this.include)); this.redraw();
+    };
+    const send = get<HTMLButtonElement>('feedback-send');
+    send.onmouseenter = () => { this.hover = true; this.redraw(); };
+    send.onmouseleave = () => { this.hover = false; this.redraw(); };
+    this.form.addEventListener('keydown', e => e.stopPropagation());
+    this.form.addEventListener('keyup', e => e.stopPropagation());
+    this.form.onsubmit = async e => {
+      e.preventDefault(); if (this.sending) return;
       const message = get<HTMLTextAreaElement>('feedback-message'), email = get<HTMLInputElement>('feedback-email');
       if (!message.value.trim()) { message.setCustomValidity('Please enter a message.'); message.reportValidity(); return; }
-      send.disabled = true; status.textContent = 'Sending…';
+      this.sending = true; send.disabled = true; this.setStatus('Sending…');
       try {
-        const id = await this.client.send(this.client.report(message.value.trim(), email.value.trim()), this.dialog.querySelector<HTMLInputElement>('[name="website"]')!.value);
-        status.textContent = `Thank you. Your support reference is ${id}.`;
-        message.value = ''; email.value = '';
-      } catch (error) { status.textContent = error instanceof Error ? error.message : 'Your support query couldn’t be sent. Please try again.'; }
-      finally { send.disabled = false; }
+        await this.client.send(this.client.report(message.value.trim(), email.value.trim(), 'feedback', this.include), this.form.querySelector<HTMLInputElement>('[name="website"]')!.value);
+        this.setStatus('Thank you'); message.value = ''; email.value = '';
+      } catch (error) { this.setStatus(error instanceof Error ? error.message : 'Your support query couldn’t be sent. Please try again.'); }
+      finally { this.sending = false; send.disabled = false; this.redraw(); }
     };
-    get('feedback-message').oninput = () => { get<HTMLTextAreaElement>('feedback-message').setCustomValidity(''); get('feedback-status').textContent = ''; };
+    get('feedback-message').oninput = () => { get<HTMLTextAreaElement>('feedback-message').setCustomValidity(''); this.setStatus(''); };
   }
-  private close(): void {
-    if (typeof this.dialog.close === 'function') this.dialog.close();
-    else { this.dialog.removeAttribute('open'); this.previousFocus?.focus(); }
+  private setStatus(value: string): void {
+    this.status = value; this.form.querySelector('#feedback-status')!.textContent = value; this.redraw();
   }
-  open(): void {
-    if (this.dialog.hasAttribute('open')) return;
-    const t = this.theme();
-    this.dialog.style.setProperty('--support-bg', t.colors[2]);
-    this.dialog.style.setProperty('--support-text', t.colors[t.roles.txt]);
-    this.dialog.style.setProperty('--support-line', t.colors[1]);
-    this.dialog.style.setProperty('--support-accent', t.colors[t.roles.menu[0]]);
-    this.dialog.querySelector<HTMLInputElement>('#feedback-automatic')!.checked = this.client.consent;
-    this.previousFocus = document.activeElement as HTMLElement;
-    if (typeof this.dialog.showModal === 'function') this.dialog.showModal();
-    else this.dialog.setAttribute('open', ''); // Older system WebViews (macOS 11) lack native dialog support.
-    // Release keys held before opening, as on a normal focus loss.
-    window.dispatchEvent(new Event('blur'));
-    const focus = () => { if (this.dialog.hasAttribute('open')) this.dialog.querySelector<HTMLTextAreaElement>('textarea')!.focus(); };
-    focus();
-    if (typeof this.dialog.showModal !== 'function') setTimeout(focus, 0);
+  /** Called with the Settings canvas; inputs follow the actual Connect tab's slide/resize/theme. */
+  draw(panel: any): void {
+    const tab = panel.MenuItems[1], shown = panel.Open && panel._OpenTab === 1 && tab?.YOffset > -1;
+    this.form.hidden = !shown;
+    if (!shown) return;
+    const ctx = panel.Ctx as CanvasRenderingContext2D, u = App.Unit, pr = App.Metrics.PixelRatio;
+    const w = Math.min(420 * u, App.Width * (App.Metrics.Device === Device.mobile ? 5 : 4) / 7);
+    const x = (App.Width - w) / 2, y = panel.OffsetY + 120 * u + tab.YOffset;
+    const txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const place = (id: string, px: number, py: number, width: number, height: number, font = App.Metrics.TxtMid) => {
+      const el = this.form.querySelector<HTMLElement>(`#${id}`)!;
+      Object.assign(el.style, { left: `${px / pr}px`, top: `${py / pr}px`, width: `${width / pr}px`, height: `${height / pr}px`, color: txt,
+        font: font.replace(/([\d.]+)px/, (_: string, n: string) => `${Number(n) / pr}px`) });
+    };
+    place('feedback-message', x, y + 14 * u, w, 80 * u);
+    place('feedback-email', x, y + 142 * u, w, 35 * u, App.Metrics.TxtHeader);
+    place('feedback-include', x, y + 202 * u, w, 48 * u);
+    place('feedback-send', x, y + 270 * u, w, 40 * u);
+    ctx.save(); ctx.fillStyle = txt; ctx.strokeStyle = App.Palette[1]; ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtMid;
+    ctx.fillText('YOUR MESSAGE', x, y);
+    ctx.fillText('EMAIL', x, y + 128 * u);
+    const emailWidth = ctx.measureText('EMAIL').width;
+    ctx.font = App.Metrics.TxtItalic2; ctx.fillText('(optional)', x + emailWidth + 8 * u, y + 128 * u);
+    // SharePanel/Patches title fields: transparent text with a single rule, never a textbox outline.
+    ctx.beginPath(); ctx.moveTo(x, y + 106 * u); ctx.lineTo(x + w, y + 106 * u);
+    ctx.moveTo(x, y + 184 * u); ctx.lineTo(x + w, y + 184 * u); ctx.stroke();
+    ctx.font = App.Metrics.TxtMid; ctx.fillText('INCLUDE CURRENT PATCH AND DIAGNOSTICS', x, y + 224 * u);
+    const toggle = new OptionSwitch(new Point(w - 80 * u, y + 202 * u), '', 'includeContext', this.include, new Size(80 * u, 48 * u), false, 'offOn');
+    toggle.Draw(ctx, { SliderColours: App.ThemeManager.OptionsOrder.map((i: number) => App.Palette[i]) }, u, x, 48 * u, 0);
+    ctx.fillStyle = App.Palette[this.sending ? 1 : menu[3]]; ctx.fillRect(x, y + 270 * u, w, 40 * u);
+    if (this.hover && !this.sending) { const cx = x + w / 2; ctx.beginPath(); ctx.moveTo(cx, y + 319 * u); ctx.lineTo(cx + 10 * u, y + 309 * u); ctx.lineTo(cx - 10 * u, y + 309 * u); ctx.fill(); }
+    ctx.fillStyle = txt; ctx.font = App.Metrics.TxtUrl2; ctx.textAlign = 'center'; ctx.fillText(this.sending ? 'SENDING…' : 'SEND', x + w / 2, y + 299 * u);
+    ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+    panel.WordWrap(ctx, this.status, x, y + 348 * u, 16 * u, w);
+    ctx.restore();
   }
 }

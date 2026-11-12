@@ -43,10 +43,12 @@
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "SUPPORT_LIMIT", "namespace_id": "1003", "simple": { "limit": 5, "period": 60 } }
       ],
       "d1_databases": [
-        { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" },
+        { "binding": "SUPPORT_DB", "database_name": "blokdust-support-dev", "database_id": "00000000-0000-0000-0000-000000000001", "migrations_dir": "support-migrations" }
       ],
       "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB" }
     },

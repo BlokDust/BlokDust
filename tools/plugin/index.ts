@@ -62,7 +62,8 @@ function deploy(noBuild: boolean): void {
   const shipped: string[] = [];
   for (const b of BUNDLES()) {
     const dest = b.endsWith('.vst3') ? 'Library/Audio/Plug-Ins/VST3/' : 'Library/Audio/Plug-Ins/Components/';
-    const r = run('rsync', ['-a', '--delete', b, `${host}:${dest}`], true);
+    // Compare contents so rewritten signature/resource files cannot be skipped on matching size/mtime.
+    const r = run('rsync', ['-a', '--checksum', '--delete', b, `${host}:${dest}`], true);
     if (r.status !== 0) throw new Error(`rsync failed for ${b}: ${r.stderr}`);
     shipped.push(dest + b.split('/').pop());
   }

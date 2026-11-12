@@ -28,7 +28,7 @@ import type { FreesoundSound } from '../patch/samples.ts';
 import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
 
 export interface SceneHost extends PatchesHost {
-  feedback?(): void;
+  feedback?: { draw(panel: SettingsPanel): void };
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
   createBlock(v1Type: string, gx: number, gy: number): number | null;
   deleteBlock(id: number): void;
@@ -660,9 +660,7 @@ export const FOOTER_LINKS = [SOURCE_LINK];
 
 /**
  * Release 1 changes to v1's Settings panel (CHG-0005), made around the ported code:
- *  - Connect is gone (owner, 2026-11-10: its Facebook / Twitter / Google+ buttons are dated and the guide site is lost).
- *    v1 addresses its tabs by index (0 Settings, 1 Connect, 2 About), so SETTINGS and ABOUT are laid out as a two-tab
- *    bar and index 1 becomes an inert, zero-width stand-in that is never drawn, hit or opened.
+ *  - Connect is restored for the support form (CHG-0009); the retired guide/social body is suppressed.
  *  - The About text is the owner's; the footer links the code on GitHub in v1's footer type, underlined on hover like
  *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts).
  *  - Tour (owner, 2026-11-08) is hidden until v1's tutorial is ported; on the web its row (the last) is the patch Tempo
@@ -676,14 +674,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   // DOWNLOAD (web only) is tab 3: v1 draws nothing for it, so its page is drawn here, following its tab's YOffset.
   const withDownload = !App.IsPlugin;
   p.Populate = () => {
-    const open = p._OpenTab;
-    p._OpenTab = open === 2 ? 1 : open === 3 ? 2 : 0;
-    populate({ categories: [{ name: 'settings' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : [])] });
-    p._OpenTab = open;
-    const [settings, about, download] = p.MenuItems;
-    const gone = { Position: new Point(about.Position.x - about.Size.width * 0.5, 0), Size: new Size(0, 16), Name: '', Items: [], Selected: 0,
-      Hover: false, XOffset: 0, YOffset: -p.DrawTo.Height, CurrentPage: 0, Draw() {} };
-    p.MenuItems = [settings, gone, about, ...(download ? [download] : [])];
+    populate({ categories: [{ name: 'settings' }, { name: 'connect' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : [])] });
   };
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
   const downloads = () => {
@@ -767,6 +758,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const hitTests = p.HitTests.bind(p);
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
+    for (let i = 7; i <= 14; i++) p._RollOvers[i] = false; // Removed Connect social/guide targets.
     const f = footer();
     linkHover = f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
@@ -797,7 +789,11 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   const draw = p.Draw.bind(p);
   p.Draw = () => {
-    draw();
+    const connectY = p.MenuItems[1]?.YOffset;
+    // Hide only the retired Connect body; its real tab remains drawn and hit by v1.
+    if (p.MenuItems[1]) p.MenuItems[1].YOffset = -p.DrawTo.Height * 2;
+    try { draw(); } finally { if (p.MenuItems[1]) p.MenuItems[1].YOffset = connectY; }
+    host.feedback?.draw(p);
     if (!p.Open) return;
     drawDownload();
     const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];

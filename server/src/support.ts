@@ -37,9 +37,11 @@ export async function submitSupport(env: Env, req: Request): Promise<Response> {
   const email = b.email ?? '';
   if (typeof email !== 'string' || email.length > 254 || (email && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email))) throw new HttpError(400, 'invalid email');
   if (typeof b.version !== 'string' || !/^[\w.+-]{1,64}$/.test(b.version) || typeof b.build !== 'string' || !/^[\w.+-]{1,80}$/.test(b.build)) throw new HttpError(400, 'invalid build');
-  let patch;
-  try { patch = supportPatch(b.patch); } catch { throw new HttpError(400, 'invalid support patch'); }
-  const now = Date.now(), diagnostics = supportDiagnostics(b.diagnostics, now), system = supportSystem(b.system);
+  if (b.includeContext !== undefined && typeof b.includeContext !== 'boolean') throw new HttpError(400, 'invalid context preference');
+  const includeContext = b.includeContext !== false;
+  let patch = null;
+  try { if (includeContext) patch = supportPatch(b.patch); } catch { throw new HttpError(400, 'invalid support patch'); }
+  const now = Date.now(), diagnostics = includeContext ? supportDiagnostics(b.diagnostics, now) : [], system = includeContext ? supportSystem(b.system) : {};
   const message = automatic ? diagnosticText(b.message) : b.message.replace(/\u0000/g, '').trim();
   const fingerprint = await sha256Hex(`${b.version}:${system.surface ?? ''}:${diagnostics.at(-1)?.kind ?? ''}:${diagnostics.at(-1)?.message ?? message}`);
   const id = crypto.randomUUID();

@@ -829,6 +829,23 @@ Object.assign(tests, {
   /** Owner (2026-11-08, CHG-0005): the Tour is hidden for Release 1 (v1's tutorial is not ported; built-in presets
    * may replace it). Owner (2026-11-10): its row is now the patch Tempo (web), set once for every synced block:
    * pressing where "Launch Tutorial" was sets the tempo, and the panel stays open. */
+  /** CHG-0009 owner review: Connect holds the form; existing canvas controls and typography supply its chrome. */
+  async 'support-connect'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
+    const point = await p.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel, t = s.MenuItems[1]; return [t.Position.x / devicePixelRatio, (s.OffsetY + 30 * (window as any).__bd_probe.v1App.Unit) / devicePixelRatio]; });
+    await p.mouse.click(point[0], point[1]); await p.waitForTimeout(1200);
+    const visible = await p.locator('#feedback-message').isVisible();
+    const copy = await p.locator('#feedback-panel').textContent();
+    const style = await p.locator('#feedback-message').evaluate(el => ({ border: getComputedStyle(el).borderTopWidth, font: getComputedStyle(el).fontFamily }));
+    const toggle = p.getByRole('switch', { name: 'Include current patch and diagnostics' });
+    const on = await toggle.getAttribute('aria-checked'); await toggle.click();
+    const off = await toggle.getAttribute('aria-checked');
+    const tabs = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map((m: any) => m.Name));
+    await p.close();
+    return [visible && !copy?.includes('technical diagnostics') && on === 'true' && off === 'false' && style.border === '0px' && style.font.includes('Dosis') && tabs[1] === 'CONNECT', { visible, style, on, off, tabs }];
+  },
+
   async 'tour-hidden'(errors: string[]) {
     const p = await open(browser, [], errors);
     for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
@@ -882,7 +899,7 @@ Object.assign(tests, {
     const r = await p.evaluate(() => { const t: string[] = (window as any).__texts, s = (window as any).__bd_probe.scene.SettingsPanel; return { chrome: t.includes('Chrome Recommended'), connect: t.includes('CONNECT'), connectAway: s.MenuItems[1].YOffset === -s.DrawTo.Height,
       about: t.some(x => /This rebuild was released in 2026/.test(x)), toneJs: t.some(x => /Tone\.js/.test(x)), source: t.includes('View the code on GitHub'), opened: (window as any).__opened }; });
     await p.close();
-    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD']) && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
+    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', 'CONNECT', 'ABOUT', 'DOWNLOAD']) && aboutTab === 2 && !r.chrome && r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
       && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
       && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2']);
@@ -928,7 +945,7 @@ Object.assign(tests, {
     for (const b of buttons) { await p.mouse.move(b.x, b.y); await p.mouse.click(b.x, b.y); await p.waitForTimeout(200); }
     const opened = await p.evaluate(() => (window as any).__opened);
     await p.close();
-    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD']) && openTab === 3
+    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', 'CONNECT', 'ABOUT', 'DOWNLOAD']) && openTab === 3
       && before.includes('Coming soon.') && openedBefore === 0
       && before.includes('Download the standalone app or VST3/AU plugins to use in your DAW.')
       && before.includes('BlokDust can be used as both an instrument and an effect.')

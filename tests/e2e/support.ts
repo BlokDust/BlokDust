@@ -1,14 +1,16 @@
 // CHG-0009 / SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS R1–R8.
 // Real Worker + dedicated local D1 + actual Settings pointer actions. No external services or audio uploads.
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { readFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { startLocal, run, WRANGLER } from '../../tools/server/lib.ts';
 import { diagnosticText, supportDiagnostics, supportPatch } from '../../shared/support.ts';
 
 const state = resolve('.cache/server/support-test');
-const service = await startLocal({ name: 'support-test', vars: {}, fresh: true });
+const based = process.argv.includes('--based');
+const local = await startLocal({ name: 'support-test', vars: {}, fresh: true, ...(based ? { env: 'based' } : {}) });
+const service = { ...local, url: local.url + (based ? '/blokdust' : '') };
 const browser = await chromium.launch({ headless: true });
 let count = 0;
 function check(name: string, ok: unknown) { assert.ok(ok, name); count++; console.error(`PASS ${name}`); }
@@ -30,6 +32,8 @@ try {
   // R2/R3: privacy allowlist, event count/age and hostile strings. User text is data, never executable content.
   const clean = JSON.stringify(supportPatch(patch));
   check('patch allowlist preserves configuration but drops audio, credentials, filenames and custom identifiers', !/PRIVATE|SECRET|private-name|private-recording|refs|audio/.test(clean) && clean.includes('file:redacted') && clean.includes('"volume":-8'));
+  const ordered = supportPatch({ ...patch, blocks: [...patch.blocks, { id: 'control-private', type: 'power.power' }], connectionOrder: [['control-private', 'private-name'], ['missing', 'private-name']] });
+  check('release effect order survives private ID remapping', JSON.stringify(ordered.connectionOrder) === JSON.stringify([['b2', 'b1']]));
   check('diagnostic redaction', !/SECRET|example.invalid|private|test.wav/.test(diagnosticText('token=SECRET https://example.invalid/x /private/test.wav')));
   check('events bounded to 100 and 15 minutes', supportDiagnostics(Array.from({ length: 150 }, () => ({ at: Date.now(), kind: 'error', message: 'test' }))).length === 100 && supportDiagnostics([{ at: Date.now() - 900001, kind: 'error', message: 'old' }]).length === 0);
   for (const [name, value, status] of [
@@ -47,6 +51,10 @@ try {
   check('triage fields ready; original text safely stored with parameterised SQL', stored.message === hostile && stored.status === 'new' && stored.category === 'unclassified' && stored.severity === 'unknown' && stored.priority === 0 && stored.fingerprint.length === 64 && stored.review_due - stored.created === 7 * 86400000);
   const context = (await sql(`SELECT * FROM support_context WHERE report_id = '${id}'`))[0];
   check('server repeats privacy filtering and enforces 90-day context retention', !/PRIVATE|SECRET|private-recording|example.invalid|private-name/.test(JSON.stringify(context)) && context.expires - stored.created === 90 * 86400000);
+  const without = await post({ ...report(), includeContext: false });
+  const withoutId = (await without.json() as { id: string }).id;
+  const withoutContext = (await sql(`SELECT * FROM support_context WHERE report_id='${withoutId}'`))[0];
+  check('backend strips context when disabled', withoutContext.patch_json === 'null' && withoutContext.diagnostics_json === '[]' && withoutContext.system_json === '{}');
   check('support tables isolated from sharing database', (await sql("SELECT name FROM sqlite_master WHERE name LIKE 'support_%'", 'blokdust-dev')).length === 0);
   check('no public read endpoint', (await fetch(`${service.url}/api/support/${id}`)).status === 404 && (await fetch(`${service.url}/api/support`)).status === 404);
   check('plugin preflight', (await fetch(`${service.url}/api/support`, { method: 'OPTIONS', headers: { origin: 'null', 'access-control-request-method': 'POST' } })).status === 204);
@@ -68,12 +76,12 @@ try {
   await page.waitForTimeout(900);
   const point = await page.evaluate(() => {
     const { scene: s, v1App: a } = (window as any).__bd_probe, p = s.SettingsPanel;
-    return [(p.Margin + p.Range / 2) / devicePixelRatio, (p.OffsetY + 300 * a.Unit + p.MenuItems[0].YOffset) / devicePixelRatio];
+    return [p.MenuItems[1].Position.x / devicePixelRatio, (p.OffsetY + 30 * a.Unit) / devicePixelRatio];
   });
   await page.mouse.click(point[0], point[1]);
-  await page.waitForSelector('#feedback-panel[open]');
-  check('Settings feedback action opens accessible panel', await page.getByRole('dialog', { name: 'FEEDBACK & SUPPORT' }).isVisible());
-  check('automatic reports off by default', !(await page.locator('#feedback-automatic').isChecked()));
+  await page.waitForSelector('#feedback-message');
+  check('Connect shows the embedded support form', await page.getByRole('form', { name: 'Feedback & support' }).isVisible());
+  check('context included by default', await page.getByRole('switch').getAttribute('aria-checked') === 'true');
   let submissions: any[] = [];
   await page.route('**/api/support', async route => {
     const value = route.request().postDataJSON(); submissions.push(value);
@@ -94,44 +102,41 @@ try {
   await page.getByRole('status').filter({ hasText: 'couldn’t be sent' }).waitFor();
   check('server failure retains draft', await page.locator('#feedback-message').inputValue() === 'A suggestion from the panel');
   await page.click('#feedback-send');
-  await page.getByRole('status').filter({ hasText: 'Your support reference is' }).waitFor();
-  check('manual feedback captures actual patch/build/system/diagnostics without storage secrets', submissions.length === 1 && submissions[0].patch.blocks.length > 0 && submissions[0].version === '2.0.0-dev' && submissions[0].build && submissions[0].system.surface === 'web' && submissions[0].diagnostics.length > 0 && !JSON.stringify(submissions).includes('SECRET'));
-  await page.locator('#feedback-automatic').check();
+  await page.getByRole('status').filter({ hasText: 'Thank you' }).waitFor();
+  check('manual feedback captures actual patch/build/system/diagnostics without storage secrets', submissions.length === 1 && submissions[0].patch.blocks.length > 0 && submissions[0].version === JSON.parse(readFileSync('package.json', 'utf8')).version && submissions[0].build && submissions[0].system.surface === 'web' && submissions[0].diagnostics.length > 0 && !JSON.stringify(submissions).includes('SECRET'));
+  await page.getByRole('switch', { name: 'Include current patch and diagnostics' }).click();
+  await page.locator('#feedback-message').fill('Text only feedback');
+  await page.click('#feedback-send');
+  await page.getByRole('status').filter({ hasText: 'Thank you' }).waitFor();
+  check('context switch excludes patch, diagnostics and system from the request', submissions.length === 2 && submissions[1].includeContext === false && submissions[1].patch === null && submissions[1].diagnostics.length === 0 && Object.keys(submissions[1].system).length === 0);
   await page.evaluate(() => { console.error('Unexpected test error'); });
-  await page.waitForFunction(() => false, null, { timeout: 400 }).catch(() => {});
-  check('opt-in automatic report includes patch and consent', submissions.length === 2 && submissions[1].kind === 'automatic' && submissions[1].consent && submissions[1].patch.blocks.length > 0 && submissions[1].email === '');
-  await page.evaluate(() => { console.error('Unexpected test error'); });
-  await page.waitForTimeout(200);
-  check('automatic reports deduplicated', submissions.length === 2);
-  await page.evaluate(() => window.dispatchEvent(new ErrorEvent('error', { message: 'Unexpected runtime failure' })));
   await page.waitForTimeout(300);
-  await page.evaluate(() => window.dispatchEvent(new PromiseRejectionEvent('unhandledrejection', { promise: Promise.resolve(), reason: new Error('Unexpected rejected promise') })));
-  await page.waitForTimeout(300);
-  check('runtime and unhandled-rejection errors reported', submissions.length === 4 && submissions[2].diagnostics.at(-1).kind === 'error' && submissions[3].diagnostics.at(-1).kind === 'unhandledrejection');
-  await page.evaluate(() => { console.error('A fourth unique automatic error'); });
-  await page.waitForTimeout(200);
-  check('automatic reports capped at three attempts per hour per session', submissions.length === 4);
-  await page.locator('#feedback-automatic').uncheck();
-  await page.evaluate(() => { console.error('Different error after opt-out'); });
-  await page.waitForTimeout(200);
-  check('opt-out stops automatic reports', submissions.length === 4);
+  check('attachment switch does not enable automatic reports', submissions.length === 2);
+  check('success copy contains no reference', await page.getByRole('status').textContent() === 'Thank you');
   await page.locator('#feedback-message').fill('z');
   await page.keyboard.press('q');
   check('typing does not trigger stage shortcuts', await page.locator('#feedback-message').inputValue() === 'zq');
   mkdirSync('tests/e2e/output/support', { recursive: true });
   await page.screenshot({ path: 'tests/e2e/output/support/panel.png' });
   await page.setViewportSize({ width: 390, height: 740 });
-  check('panel works at mobile width without horizontal overflow', await page.evaluate(() => document.querySelector('dialog')!.scrollWidth <= innerWidth));
-  await page.click('#feedback-close');
-  check('close dismisses modal', !(await page.locator('#feedback-panel').isVisible()));
+  await page.waitForTimeout(300);
+  const mobile = await page.locator('#feedback-send').boundingBox();
+  check('Connect form stays inside mobile viewport', mobile && mobile.x >= 0 && mobile.x + mobile.width <= 390 && mobile.y + mobile.height <= 740);
+  await page.screenshot({ path: 'tests/e2e/output/support/mobile.png' });
+  check('panel works at mobile width without horizontal overflow', await page.evaluate(() => document.querySelector('#feedback-panel')!.scrollWidth <= innerWidth));
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.waitForTimeout(300);
+  const settingsPoint = await page.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return [s.MenuItems[0].Position.x / devicePixelRatio, 30]; });
+  await page.mouse.click(settingsPoint[0], settingsPoint[1]); await page.waitForTimeout(800);
+  check('switching tabs hides embedded inputs', !(await page.locator('#feedback-message').isVisible()));
   await browserContext.close();
 
   // R7: actual scheduled handler deletes context first and report + triage history after one year.
   await sql(`INSERT INTO support_triage_events(report_id,created,actor,source,details_json) VALUES ('${id}',0,'test','human','{}'); UPDATE support_context SET expires=0 WHERE report_id='${id}';`);
-  check('local cron invokes scheduled handler', (await fetch(`${service.url}/__scheduled?cron=17+3+*+*+*`)).ok);
+  check('local cron invokes scheduled handler', (await fetch(`${local.url}/__scheduled?cron=17+3+*+*+*`)).ok);
   check('90-day cleanup keeps feedback text', (await sql(`SELECT * FROM support_context WHERE report_id='${id}'`)).length === 0 && (await sql(`SELECT * FROM support_reports WHERE id='${id}'`)).length === 1);
   await sql(`UPDATE support_reports SET expires=0 WHERE id='${id}'`);
-  await fetch(`${service.url}/__scheduled?cron=17+3+*+*+*`);
+  await fetch(`${local.url}/__scheduled?cron=17+3+*+*+*`);
   check('one-year cleanup cascades triage history', (await sql(`SELECT * FROM support_reports WHERE id='${id}'`)).length === 0 && (await sql(`SELECT * FROM support_triage_events WHERE report_id='${id}'`)).length === 0);
   console.log(JSON.stringify({ passed: count, failed: 0 }));
 } finally { await browser.close(); await service.stop(); }

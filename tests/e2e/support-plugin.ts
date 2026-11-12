@@ -23,8 +23,8 @@ const result = await new Promise<string>((resolve, reject) => {
 });
 const data = JSON.parse(result.trim().split('\n').at(-1)!);
 assert.equal(data.editor?.success, true, `native panel failed: ${data.editor?.status ?? 'timeout'}`);
-const id = data.editor.status.match(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/)?.[0];
-assert.ok(id, 'panel must return a reference');
+const id = typeof data.editor.id === 'string' ? data.editor.id.match(/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/)?.[0] : null;
+assert.ok(id, 'test transport must capture the private API reference');
 const config = remoteConfig('staging');
 async function sql(command: string): Promise<any[]> {
   const r = await run([WRANGLER, 'd1', 'execute', 'blokdust-support-staging', '--remote', '--env', 'staging', '--config', config, '--command', command, '--json'], { quiet: true });

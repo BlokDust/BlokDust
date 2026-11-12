@@ -5,11 +5,12 @@ export const SUPPORT = { bodyBytes: 128 * 1024, patchBytes: 64 * 1024, messageCh
 export type DiagnosticKind = 'error' | 'unhandledrejection' | 'console';
 export interface Diagnostic { at: number; kind: DiagnosticKind; message: string }
 export interface SupportPatch { format: 'blokdust.patch'; version: 2; seed?: number; tempo?: number;
+  connectionOrder?: [string, string][];
   blocks: { id: string; type: string; x: number; y: number; params: Record<string, number | boolean | string> }[] }
 export interface SupportReport {
   schema: 1; kind: 'feedback' | 'automatic'; message: string; email: string;
   version: string; build: string; system: Record<string, string | number>;
-  patch: SupportPatch; diagnostics: Diagnostic[];
+  includeContext?: boolean; patch: SupportPatch | null; diagnostics: Diagnostic[];
 }
 export function record(v: unknown): Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {};
@@ -46,6 +47,17 @@ export function supportPatch(value: unknown): SupportPatch {
     return { id: `b${i + 1}`, type: def.id, x: finite(b.x) ? b.x : 0, y: finite(b.y) ? b.y : 0, params };
   });
   const out: SupportPatch = { format: 'blokdust.patch', version: 2, blocks };
+  // Release 2.0.1 saves effect connection order. Retain it using only remapped, known block IDs.
+  const ids = new Map(p.blocks.map((value, i) => [record(value).id, `b${i + 1}`]));
+  if (Array.isArray(p.connectionOrder)) {
+    const order: [string, string][] = [];
+    for (const pair of p.connectionOrder.slice(0, 4096)) {
+      if (!Array.isArray(pair) || pair.length !== 2 || typeof pair[0] !== 'string' || typeof pair[1] !== 'string') continue;
+      const a = ids.get(pair[0]), b = ids.get(pair[1]);
+      if (a && b && a !== b) order.push([a, b]);
+    }
+    if (order.length) out.connectionOrder = order;
+  }
   if (finite(p.seed)) out.seed = p.seed;
   if (finite(p.tempo)) out.tempo = p.tempo;
   if (new TextEncoder().encode(JSON.stringify(out)).length > SUPPORT.patchBytes) throw new Error('Support patch exceeds 64 KB');
