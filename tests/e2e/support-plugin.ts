@@ -1,4 +1,4 @@
-// CHG-0009 R1/R2/R6: actual native plugin WebView -> deployed staging support API -> dedicated D1.
+// CHG-0013 R1/R2/R6: actual native plugin WebView -> deployed staging support API -> dedicated D1.
 // Requires a plugin built with BLOKDUST_SUPPORT_PUBLIC_URL pointing to staging. Removes its own report afterward.
 import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
@@ -35,7 +35,7 @@ try {
   const rows = await sql(`SELECT r.kind, r.message, r.version, r.surface, c.system_json, c.patch_json FROM support_reports r JOIN support_context c ON c.report_id=r.id WHERE r.id='${id}'`);
   assert.equal(rows.length, 1);
   const row = rows[0], system = JSON.parse(row.system_json), patch = JSON.parse(row.patch_json);
-  assert.equal(row.message, 'CHG-0009 native plugin support smoke test');
+  assert.equal(row.message, 'CHG-0013 native plugin support smoke test');
   assert.equal(row.surface, 'plugin'); assert.equal(system.format, 'VST3');
   assert.ok(system.sampleRate > 0 && system.bufferSize > 0);
   assert.equal(patch.blocks.length, 2);

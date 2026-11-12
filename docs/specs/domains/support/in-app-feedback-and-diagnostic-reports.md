@@ -76,4 +76,4 @@ shim, without editing ported code. Feedback is a deliberate new v2 feature; the 
 offline and server failures, capture, attachment selection, mobile layout and real scheduled cleanup.
 `pnpm web:typecheck`, `pnpm server:typecheck`, `pnpm test:web`, `pnpm test:sharing`, `pnpm test:ui-regressions`,
 `pnpm bd ui diff`, `pnpm bd visual diff --full`, `pnpm bd plugin test`, `pnpm test:support:plugin`.
-The `support-connect` UI regression verifies the restored tab, existing text styling and attachment switch. No native dialog API is used. See CHG-0009 tasks for recorded results.
+The `support-connect` UI regression verifies the restored tab, existing text styling and attachment switch. No native dialog API is used. See CHG-0013 tasks for recorded results.

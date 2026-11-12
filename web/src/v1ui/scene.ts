@@ -660,7 +660,7 @@ export const FOOTER_LINKS = [SOURCE_LINK];
 
 /**
  * Release 1 changes to v1's Settings panel (CHG-0005), made around the ported code:
- *  - Connect is restored for the support form (CHG-0009); the retired guide/social body is suppressed.
+ *  - Connect is restored for the support form (CHG-0013); the retired guide/social body is suppressed.
  *  - The About text is the owner's; the footer links the code on GitHub in v1's footer type, underlined on hover like
  *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts).
  *  - Tour (owner, 2026-11-08) is hidden until v1's tutorial is ported; on the web its row (the last) is the patch Tempo

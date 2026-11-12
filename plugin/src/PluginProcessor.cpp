@@ -22,15 +22,15 @@ juce::AudioProcessor::BusesProperties BlokDustProcessor::buses() {
   // FX: the track's audio. Instrument: an optional side-chain (off until the host enables it), which also feeds the
   // Audio Input block (CHG-0004 3.3/3.4).
   if (kFx) b = b.withInput("Input", juce::AudioChannelSet::stereo(), true);
-  // Not in the Audio Unit (owner, Logic, 2026-11-12): AUs have no disabled buses, so JUCE then reports only channel
-  // configurations with an input ([1,1] [1,2] [2,1] [2,2]) and Logic leaves the instrument out of AU Instruments. In
-  // Logic, audio goes in through BlokDust FX instead.
-  else if (juce::PluginHostType::getPluginLoadedAs() != juce::AudioProcessor::wrapperType_AudioUnit)
-    b = b.withInput("Side Chain", juce::AudioChannelSet::stereo(), false);
+  // Every format, the AU too (owner, Logic, 2026-11-12): without this input Logic 11 lists the instrument but never opens
+  // its editor. (It went missing from AU Instruments because of an old 2.0.0 copy in /Library, not this bus.)
+  else b = b.withInput("Side Chain", juce::AudioChannelSet::stereo(), false);
   return b.withOutput("Output", juce::AudioChannelSet::stereo(), true);
 }
 
 BlokDustProcessor::BlokDustProcessor() : AudioProcessor(buses()) {
+  systemLog(juce::String(kFx ? "fx" : "instrument") + ": processor created (" + getWrapperTypeDescription(wrapperType) + ", "
+            + juce::String(getTotalNumInputChannels()) + " in / " + juce::String(getTotalNumOutputChannels()) + " out)");
   recDrain_.f = [this] { drainRecording(); };
   patch_ = kFx ? nlohmann::json::parse(BinaryData::fx_patch_json, BinaryData::fx_patch_json + BinaryData::fx_patch_jsonSize)
                : nlohmann::json::parse(BinaryData::pluginstart_patch_json, BinaryData::pluginstart_patch_json + BinaryData::pluginstart_patch_jsonSize);
@@ -51,6 +51,8 @@ bool BlokDustProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 }
 
 void BlokDustProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+  systemLog(juce::String(kFx ? "fx" : "instrument") + ": prepareToPlay " + juce::String(sampleRate) + " Hz, " + juce::String(samplesPerBlock)
+            + " frames, " + juce::String(getTotalNumInputChannels()) + " in / " + juce::String(getTotalNumOutputChannels()) + " out");
   sampleRate_ = sampleRate;
   scratch_.assign(static_cast<std::size_t>(std::max(samplesPerBlock, 4096)), 0.0f);
   blocksPerSnapshot_ = std::max(1, static_cast<int>(sampleRate / std::max(1, samplesPerBlock) / 30.0));  // ~30 Hz UI
@@ -577,7 +579,10 @@ nlohmann::json BlokDustProcessor::sampleInfos() const {
   return all;
 }
 
-juce::AudioProcessorEditor* BlokDustProcessor::createEditor() { return new BlokDustEditor(*this); }
+juce::AudioProcessorEditor* BlokDustProcessor::createEditor() {
+  systemLog(juce::String(kFx ? "fx" : "instrument") + ": createEditor");
+  return new BlokDustEditor(*this);
+}
 
 }  // namespace blokdust::plugin
 

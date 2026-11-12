@@ -1,4 +1,4 @@
-# CHG-0009 tasks: Add in-app feedback and private support reports
+# CHG-0013 tasks: Add in-app feedback and private support reports
 
 - [x] 1. Record owner choices, support spec and storage ADR.
 - [x] 2. Dedicated support schema/API, size/type/rate guards, independent migrations and scheduled retention.
@@ -94,3 +94,16 @@ centred row and introductory copy); all 36 support integration checks pass, incl
 index/codegen and current-file privacy checks pass. Native plugin validation/host checks and actual staging submission
 pass; staging and all four signed test-host bundles are refreshed. The history scan still reports the same three
 pre-existing merge-metadata email findings recorded above.
+
+## Release coordination correction
+
+- [x] Merge release/2.0.1 through 87f1b64 before further builds, bringing back the AU instrument side-chain,
+  removing the stale-patch flash and retaining the busy-DAW deployment guard (plus checksum-based copying).
+- [x] Allocate feedback CHG-0013 and update its folder, references, test messages and generated index. Preserve
+  release-owned CHG-0009 (keyboard/Emitter), CHG-0010 (2.0.1), CHG-0011 and CHG-0012 references.
+- [x] Replace the automatic-deploy instruction with explicit owner approval during shared release testing.
+- [ ] Verify the merge and renumbering locally. No test-host deployment, DAW interruption or registry reset.
+
+Earlier test-host deployments overwrote the release build during owner testing. Those historical deployment
+entries above are a record, not standing authorization to deploy this feature branch again. The owner plans to
+merge feedback after 2.0.1. Any necessary future test-host deployment must be approved by the owner first.

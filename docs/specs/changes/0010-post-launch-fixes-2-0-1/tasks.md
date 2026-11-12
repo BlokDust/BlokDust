@@ -9,6 +9,7 @@
 - [x] 7. CHG-0009 merged
 - [x] 8. Download intro on two lines
 - [x] 9. README GIF, status, CHANGELOG.md
-- [x] 11. Instrument AU in Logic's AU Instruments: no input bus in the AU (`bd plugin au` checks [0, 2])
+- [x] 11. BlokDust in Logic: the stale /Library 2.0.0 copy, not the side-chain bus (kept); plugin lifecycle in the system log
+- [x] 12. Plugin page starts empty and never autosaves (test `plugin-no-stale-patch`)
 - [x] 12. START starts on the press, at once: the AudioContext, worklet and WASM are prepared while the start screen shows (test `start-on-press`)
 - [ ] 10. Owner review on staging and the MacBook Pro; then PR, production deploy, 2.0.1 installers

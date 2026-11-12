@@ -44,9 +44,10 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withNativeIntegrationEnabled()
                .withKeepPageLoadedWhenBrowserIsHidden()
                .withResourceProvider([](const juce::String& url) { return resource(url); })
-               .withEventListener("bd_hello", [this](const juce::var&) { reloadPatch(); })
+               .withEventListener("bd_hello", [this](const juce::var&) { systemLog("page: hello"); reloadPatch(); })
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
+                 systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
                  if (auto* o = v.getDynamicObject()) o->setProperty("snapshotSeq", static_cast<juce::int64>(proc_.snapshotSeq()));
                  // Test hook: report the UI round-trip to a file when BLOKDUST_DIAG_FILE is set (host tests only).
                  if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1") {
@@ -63,7 +64,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                      const settings = window.__bd_probe.scene.SettingsPanel;
                      if (!settings.MenuItems[1]) { setTimeout(initialise, 50); return; }
                      settings._OpenTab = 1; settings.OpenPanel();
-                     document.getElementById('feedback-message').value = 'CHG-0009 native plugin support smoke test';
+                     document.getElementById('feedback-message').value = 'CHG-0013 native plugin support smoke test';
                      document.getElementById('feedback-panel').requestSubmit();
                      let tries = 0;
                      const timer = setInterval(() => {
@@ -172,6 +173,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
   setResizable(true, true);
   setResizeLimits(640, 400, 4096, 4096);
   setSize(1280, 800);
+  systemLog(juce::String(proc_.isFx() ? "fx" : "instrument") + " editor: loading " + juce::WebBrowserComponent::getResourceProviderRoot() + " (host " + juce::PluginHostType().getHostDescription() + ")");
   web_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
   startTimerHz(30);
 }

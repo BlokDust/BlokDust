@@ -1,4 +1,4 @@
-// CHG-0009 / SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS R1–R8.
+// CHG-0013 / SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS R1–R8.
 // Real Worker + dedicated local D1 + actual Settings pointer actions. No external services or audio uploads.
 import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync } from 'node:fs';

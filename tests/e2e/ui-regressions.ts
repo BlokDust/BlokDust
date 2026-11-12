@@ -826,11 +826,43 @@ Object.assign(tests, {
     return [ok, { before, live, filter, saved }];
   },
 
+  /** Owner (Logic, 2026-11-12): opening the plugin briefly showed an old patch before its own. The web view keeps
+   * localStorage between sessions, and the page drew its autosave until the processor's patch arrived. In the plugin
+   * the patch comes only from the processor: nothing is drawn before it, and the page never autosaves. */
+  async 'plugin-no-stale-patch'(errors: string[]) {
+    const stale = { format: 'blokdust.patch', version: 2, seed: 1, blocks: [{ id: 'old', type: 'source.tone', x: 0, y: 0, params: {} },
+      { id: 'old2', type: 'fx.reverb', x: 3, y: 0, params: {} }] };
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+    await ctx.addInitScript(([old]) => {
+      try { localStorage.setItem('blokdust2.autosave', JSON.stringify(old)); } catch { /* */ }
+      const listeners: Record<string, ((x: unknown) => void)[]> = {};
+      const w = window as any;
+      w.__seenBeforePatch = 0; w.__patched = false;
+      const watch = () => { if (w.__patched) return; w.__seenBeforePatch = Math.max(w.__seenBeforePatch, w.__bd_probe?.state.blocks.length ?? 0); requestAnimationFrame(watch); };
+      requestAnimationFrame(watch);
+      w.__JUCE__ = { backend: {
+        addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
+        emitEvent: (id: string) => {
+          if (id === 'bd_hello') setTimeout(() => { w.__patched = true; listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify({ format: 'blokdust.patch', version: 2, seed: 1, blocks: [] }) })); }, 700);
+        },
+      } };
+    }, [stale] as const);
+    const pg = await ctx.newPage();
+    pg.on('pageerror', e => errors.push(e.message));
+    await pg.goto(`${url}/index.html`);
+    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, { timeout: 15000 });
+    await pg.waitForTimeout(800);
+    const r = await pg.evaluate(() => ({ seenBeforePatch: (window as any).__seenBeforePatch, blocksAfter: (window as any).__bd_probe.state.blocks.length,
+      autosave: JSON.parse(localStorage.getItem('blokdust2.autosave') ?? 'null')?.blocks?.length ?? null }));
+    await ctx.close();
+    return [r.seenBeforePatch === 0 && r.blocksAfter === 0 && r.autosave === 2, r];
+  },
+
   /** Owner (2026-11-08, CHG-0005): the Tour is hidden for Release 1 (v1's tutorial is not ported; built-in presets
    * may replace it). Owner (2026-11-10): its row is now the patch Tempo (web), set once for every synced block:
    * pressing where "Launch Tutorial" was sets the tempo, and the panel stays open. */
-  /** CHG-0009 owner review: Connect holds the form; existing canvas controls and typography supply its chrome. */
-  /** CHG-0009 review: intro, matching input type, square switch cells and a vertically centred attachment row. */
+  /** CHG-0013 owner review: Connect holds the form; existing canvas controls and typography supply its chrome. */
+  /** CHG-0013 review: intro, matching input type, square switch cells and a vertically centred attachment row. */
   async 'support-connect-spacing'(errors: string[]) {
     const p = await open(browser, [], errors);
     for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }

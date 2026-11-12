@@ -1,6 +1,6 @@
 # Support reports
 
-CHG-0009 implements [the support spec](../specs/domains/support/in-app-feedback-and-diagnostic-reports.md).
+CHG-0013 implements [the support spec](../specs/domains/support/in-app-feedback-and-diagnostic-reports.md).
 Users open General → Connect. Email replies are manual; no email is sent by the Worker.
 
 ## Local review

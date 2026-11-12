@@ -5,7 +5,8 @@
     "pnpm bd plugin build",
     "pnpm bd plugin validate",
     "pnpm bd plugin test",
-    "pnpm bd plugin package"
+    "pnpm bd plugin package",
+    "pnpm bd plugin deploy [--no-build] [--force]"
   ],
   "outputs": "build/plugin/plugin/BlokDust_artefacts/Release/{VST3,AU,Standalone}; JSON {pluginval, renders}",
   "deterministic": true

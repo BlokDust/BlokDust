@@ -67,7 +67,10 @@ function embedIdFromPage(): string | null {
 interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
-async function initialPatch(params: URLSearchParams, embedId: string | null): Promise<Start> {
+async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
+  // The plugin's patch comes only from the processor (bd_patch, with the DAW project). The web view keeps
+  // localStorage between sessions, so its autosave would flash up first (owner, Logic, 2026-11-12).
+  if (plugin) return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null };
   const c = embedId ?? params.get('c');
   if (c && isServerId(c)) {
     const session = loadSession(), local = loadLocal();
@@ -101,7 +104,7 @@ async function main() {
     return { ctx, module };
   })() : null;
   if (!juce && embedId) engineModule().catch(() => { /* reported when PLAY needs it */ });
-  const start = await initialPatch(params, embedId);
+  const start = await initialPatch(params, embedId, !!juce);
   // v1 App.CompositionId / App.SessionId: the open composition and (if this browser made it) the right to overwrite it.
   App.CompositionId = start.id; App.SessionId = editToken(start.id);
   let session = { id: start.id, dirty: false };
@@ -156,7 +159,7 @@ async function main() {
   const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => stage.redraw()) : null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   const changed = () => {
-    if (embedId) return;  // the embed player never autosaves
+    if (embedId || juce) return;  // the embed player never autosaves; in the plugin the DAW project keeps the patch
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => { saveLocal(toPatch()); if (session.id && !session.dirty) { session.dirty = true; saveSession(session); } }, 300);
   };

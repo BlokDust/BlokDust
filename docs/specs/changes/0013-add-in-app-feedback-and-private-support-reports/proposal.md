@@ -1,12 +1,12 @@
 ---
-id: CHG-0009
+id: CHG-0013
 title: Add in-app feedback and private support reports
 status: done
 date: 2026-11-12
 specs: [SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS]
 adrs: [SUPPORT-0001]
 ---
-# CHG-0009: Add in-app feedback and private support reports
+# CHG-0013: Add in-app feedback and private support reports
 
 ## Why
 Users need to report problems and suggestions from within BlokDust. Reports need enough configuration and runtime

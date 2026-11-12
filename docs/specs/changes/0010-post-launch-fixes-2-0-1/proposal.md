@@ -27,13 +27,14 @@ the README, plus the keyboard → Emitter fix from CHG-0009. Released together a
 6. **Windows download is a zip** with the installer and `README.txt` (SmartScreen steps); the note leaves the site.
 7. **CHG-0009** (keyboard notes fire Emitters) merged in.
 8. **Download page:** the intro's second sentence starts its own line (desktop and phone).
-10. **The instrument shows in Logic's AU Instruments** (owner, 2026-11-12): JUCE's AU wrapper enables every bus, so
-   the instrument's side-chain input made it report only input configurations ([1,1] [1,2] [2,1] [2,2]), and Logic left
-   it out of AU Instruments. The Audio Unit has no input bus now (it reports [0,1] [0,2]); the VST3 and Standalone
-   keep the side-chain. In Logic, audio goes in through BlokDust FX. `bd plugin au` requires [0, 2] for the instrument.
-12. **START feels instant** (owner, 2026-11-12: seconds between the press and the intro). The intro starts on the press
-   (v1 Splash.MouseDown), not the release. The AudioContext (suspended until the press), the worklet and the WASM are
-   made while the start screen shows, so START only builds the node. A touch starts the audio when it lifts.
+10. **BlokDust in Logic** (owner, 2026-11-12): missing from AU Instruments because Logic loaded the 2.0.0 copy in
+   `/Library` instead of the deployed 2.0.1 build. Removing the instrument's side-chain input from the AU (tried
+   first) made Logic 11 list it but never open its editor (Logic 12 coped), so the input stays in every format.
+   The plugin logs its lifecycle to the system log (`subsystem == "com.blokdust.plugin"`: processor created, prepared,
+   editor requested, page ready), which found this in a host we cannot attach to.
+11. **No stale patch in the plugin** (owner, Logic): the page showed its old autosave (the web view keeps localStorage)
+   before the processor's patch arrived. In the plugin the page starts empty and never autosaves (test
+   `plugin-no-stale-patch`).
 9. **README:** a GIF of BlokDust in place of the "BV" icon, no MCP/AI-chat mentions, an accurate status, and
    `CHANGELOG.md` listing what v2 adds over v1.
 

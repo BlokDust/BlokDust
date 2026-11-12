@@ -1,8 +1,14 @@
 #include "WebViewDrops.h"
 
 #import <AppKit/AppKit.h>
+#include <os/log.h>
 
 namespace blokdust::plugin {
+void systemLog(const juce::String& message) {
+  static os_log_t log = os_log_create("com.blokdust.plugin", "editor");
+  os_log(log, "%{public}s", message.toRawUTF8());
+}
+
 namespace {
 bool isWebView(NSView* v) { return [NSStringFromClass([v class]) containsString:@"WKWebView"]; }
 int unregisterWebViews(NSView* v) {

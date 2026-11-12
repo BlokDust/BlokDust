@@ -12,6 +12,7 @@
 
 #include "Samples.h"
 #include "SnapshotBuffer.h"
+#include "WebViewDrops.h"
 #include "blokdust/engine.hpp"
 #include "blokdust/mpe.hpp"
 
@@ -56,6 +57,14 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
 
   juce::AudioProcessorEditor* createEditor() override;
   bool hasEditor() const override { return true; }
+  /// BlokDust FX (an effect with Audio In) rather than the instrument (PLUGIN-0002).
+  static constexpr bool isFx() noexcept {
+#if BLOKDUST_FX
+    return true;
+#else
+    return false;
+#endif
+  }
   const juce::String getName() const override { return JucePlugin_Name; }
   bool acceptsMidi() const override { return true; }
   bool producesMidi() const override { return false; }
