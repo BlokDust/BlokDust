@@ -1,0 +1,36 @@
+{
+  "format": "blokdust.patch",
+  "version": 2,
+  "meta": {
+    "title": "MIDI Keys + Tone + Envelope"
+  },
+  "blocks": [
+    {
+      "id": "keys",
+      "type": "input.midi-controller",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "tone",
+      "type": "source.tone",
+      "x": 3,
+      "y": 0,
+      "params": {
+        "waveform": 1
+      }
+    },
+    {
+      "id": "env",
+      "type": "fx.envelope",
+      "x": 6,
+      "y": 1,
+      "params": {
+        "attack": 0.05,
+        "decay": 0.4,
+        "sustain": 0.6,
+        "release": 0.8
+      }
+    }
+  ]
+}

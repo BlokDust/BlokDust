@@ -4,7 +4,6 @@
 //   blocks    Canvas2D-baked sprites at v1's exact sub-pixel origin
 //   particles Pixi Graphics diamonds (palette power role), every frame; renderer 'canvas' draws them into the static
 //             layer instead, in v1's display-list order (under the UI: menus and panels cover them)
-import { selectionRing } from './ring.ts';
 import { Container, Graphics, RenderTexture, Sprite, Texture, type Application } from 'pixi.js';
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
@@ -318,7 +317,7 @@ export class Stage {
       ctx.beginPath();
       for (const id of this.selected) {
         const e = this.blocks.get(id); if (!e) continue;
-        offsetPolygon(selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)), 4 * m.scaledUnit)
+        offsetPolygon(e.def.geometry.outline.map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)), 4 * m.scaledUnit)
           .forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
         ctx.closePath();
       }

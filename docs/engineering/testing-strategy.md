@@ -40,6 +40,11 @@ Create new and remixes, previews, oEmbed, the embed in a third-party page, and s
 Chrome over CDP without automation flags, because Turnstile refuses automated browsers but passes a normal one. That
 proves the real bot check and real Freesound end to end.
 
+### In-app support (CHG-0009)
+
+`pnpm test:support` exercises the real Worker with a dedicated local support D1, actual Settings pointer actions,
+privacy/size/type/rate guards, offline/manual retry, opt-in automatic reports and scheduled 90/365-day cleanup.
+
 ## 5. Plugin
 pluginval (strictness ≥ 5) on VST3/AU; a headless host harness (JUCE `AudioPluginHost`-style CLI) loads the plugin, restores a patch, renders 10 s without the editor, and compares to the golden render.
 

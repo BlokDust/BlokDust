@@ -4,25 +4,18 @@
   "meta": {
     "title": "Step Sequencer"
   },
-  "seed": 3,
-  "tempo": 110,
-  "view": {
-    "x": -0.5,
-    "y": -0.5,
-    "zoom": 0.6
-  },
   "blocks": [
     {
       "id": "p_kick",
       "type": "power.power",
-      "x": -20,
+      "x": -11,
       "y": -10,
       "params": {}
     },
     {
       "id": "e_kick",
       "type": "power.emitter",
-      "x": -15,
+      "x": -6,
       "y": -10,
       "params": {
         "angle": 0,
@@ -35,17 +28,17 @@
     {
       "id": "kick",
       "type": "source.tone",
-      "x": 18,
+      "x": 0,
       "y": -10,
       "params": {
         "waveform": 0,
-        "transpose": -12
+        "transpose": -24
       }
     },
     {
       "id": "env_kick",
       "type": "fx.envelope",
-      "x": 21,
+      "x": 3,
       "y": -10,
       "params": {
         "attack": 0.01,
@@ -57,14 +50,14 @@
     {
       "id": "p_hat",
       "type": "power.power",
-      "x": -20,
+      "x": -11,
       "y": -3,
       "params": {}
     },
     {
       "id": "e_hat",
       "type": "power.emitter",
-      "x": -15,
+      "x": -6,
       "y": -3,
       "params": {
         "angle": 0,
@@ -77,7 +70,7 @@
     {
       "id": "hat",
       "type": "source.noise",
-      "x": 17,
+      "x": 0,
       "y": -3,
       "params": {
         "waveform": 0
@@ -86,7 +79,7 @@
     {
       "id": "env_hat",
       "type": "fx.envelope",
-      "x": 19,
+      "x": 3,
       "y": -3,
       "params": {
         "attack": 0.01,
@@ -98,14 +91,14 @@
     {
       "id": "p_snare",
       "type": "power.power",
-      "x": -20,
+      "x": -11,
       "y": 4,
       "params": {}
     },
     {
       "id": "e_snare",
       "type": "power.emitter",
-      "x": -15,
+      "x": -6,
       "y": 4,
       "params": {
         "angle": 0,
@@ -118,7 +111,7 @@
     {
       "id": "snare",
       "type": "source.noise",
-      "x": 17,
+      "x": 0,
       "y": 4,
       "params": {
         "waveform": 1
@@ -127,7 +120,7 @@
     {
       "id": "env_snare",
       "type": "fx.envelope",
-      "x": 19,
+      "x": 3,
       "y": 4,
       "params": {
         "attack": 0.01,
@@ -139,14 +132,14 @@
     {
       "id": "p_bell",
       "type": "power.power",
-      "x": -20,
+      "x": -11,
       "y": 11,
       "params": {}
     },
     {
       "id": "e_bell",
       "type": "power.emitter",
-      "x": -15,
+      "x": -6,
       "y": 11,
       "params": {
         "angle": 0,
@@ -159,7 +152,7 @@
     {
       "id": "bell",
       "type": "source.tone",
-      "x": 18,
+      "x": 0,
       "y": 11,
       "params": {
         "waveform": 0,
@@ -169,7 +162,7 @@
     {
       "id": "env_bell",
       "type": "fx.envelope",
-      "x": 21,
+      "x": 3,
       "y": 11,
       "params": {
         "attack": 0.01,
@@ -177,107 +170,7 @@
         "sustain": 0,
         "release": 0.1
       }
-    },
-    {
-      "id": "b42",
-      "type": "fx.filter",
-      "x": 18,
-      "y": -13,
-      "params": {
-        "type": 1,
-        "frequency": 1592.1742782403735,
-        "gain": 8.304721030042913
-      }
-    },
-    {
-      "id": "b43",
-      "type": "fx.filter",
-      "x": 21,
-      "y": -2,
-      "params": {
-        "type": 2,
-        "frequency": 4602.234703301438,
-        "gain": 2.5107296137338935
-      }
-    },
-    {
-      "id": "b44",
-      "type": "fx.filter",
-      "x": 21,
-      "y": 5,
-      "params": {
-        "type": 0,
-        "frequency": 942.5672943411912,
-        "gain": 34.055793991416294
-      }
-    },
-    {
-      "id": "b45",
-      "type": "fx.scuzz",
-      "x": 21,
-      "y": -13,
-      "params": {}
-    },
-    {
-      "id": "b47",
-      "type": "fx.reverb",
-      "x": 19,
-      "y": 14,
-      "params": {}
     }
   ],
-  "connectionOrder": [
-    [
-      "p_kick",
-      "e_kick"
-    ],
-    [
-      "kick",
-      "env_kick"
-    ],
-    [
-      "p_hat",
-      "e_hat"
-    ],
-    [
-      "hat",
-      "env_hat"
-    ],
-    [
-      "p_snare",
-      "e_snare"
-    ],
-    [
-      "snare",
-      "env_snare"
-    ],
-    [
-      "p_bell",
-      "e_bell"
-    ],
-    [
-      "bell",
-      "env_bell"
-    ],
-    [
-      "kick",
-      "b42"
-    ],
-    [
-      "kick",
-      "b45"
-    ],
-    [
-      "bell",
-      "b47"
-    ],
-    [
-      "hat",
-      "b43"
-    ],
-    [
-      "snare",
-      "b44"
-    ]
-  ]
+  "tempo": 110
 }

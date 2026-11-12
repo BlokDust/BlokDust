@@ -27,27 +27,13 @@ the README, plus the keyboard → Emitter fix from CHG-0009. Released together a
 6. **Windows download is a zip** with the installer and `README.txt` (SmartScreen steps); the note leaves the site.
 7. **CHG-0009** (keyboard notes fire Emitters) merged in.
 8. **Download page:** the intro's second sentence starts its own line (desktop and phone).
-10. **BlokDust in Logic** (owner, 2026-11-12): missing from AU Instruments because Logic loaded the 2.0.0 copy in
-   `/Library` instead of the deployed 2.0.1 build. Removing the instrument's side-chain input from the AU (tried
-   first) made Logic 11 list it but never open its editor (Logic 12 coped), so the input stays in every format.
-   The plugin logs its lifecycle to the system log (`subsystem == "com.blokdust.plugin"`: processor created, prepared,
-   editor requested, page ready), which found this in a host we cannot attach to.
-11. **No stale patch in the plugin** (owner, Logic): the page showed its old autosave (the web view keeps localStorage)
-   before the processor's patch arrived. In the plugin the page starts empty and never autosaves (test
-   `plugin-no-stale-patch`).
-12. **MIDI Keyboard panel** (owner, 2026-11-12): Device is a selector (arrows either side of the name, as Settings'
-   colour theme; `web/src/v1ui/selectorOption.ts`) instead of a slider whose text ran off the panel; with MPE on,
-   Channel hides (MPE uses its zone's channels) and there is no Bend row (always ±48, MPE's standard); Poly hides
-   Glide on both keyboards (glide is mono-only). Tests `midi-device-selector`, `midi-input-options`.
-13. **Multi-select ring** (owner): followed v1's hit outline, which leaves out a corner the MIDI Keyboard draws; the ring
-   now follows the drawn shape where the outline misses it (`web/src/stage/ring.ts`, test `select-ring-encloses-block`).
-14. **Undo/redo** (owner): adding (menu, Insert, Cmd/Ctrl+D, Alt-drag), moving and deleting blocks undo with
-   Cmd/Ctrl+Z and redo with Cmd/Ctrl+Shift+Z (or Ctrl+Y); steps name blocks by patch id. Param changes are not steps
-   yet. Test `undo-redo`.
-15. **Presets and patch views** (owner, 2026-11-12): the built-in presets are the owner's patches (Computer Keys + 2
-   Tones, MIDI Keys + 2 Tones, Microphone + Recorder, Rotating Sequencer, Step Sequencer). Patches save their view
-   (SPEC-PATCH-FORMAT-V2 R2a) and opening one shows it; the sequencer presets open zoomed out. In the plugin the editor
-   reports the view to the processor (`bd_view`). Test `patch-view`.
+10. **The instrument shows in Logic's AU Instruments** (owner, 2026-11-12): JUCE's AU wrapper enables every bus, so
+   the instrument's side-chain input made it report only input configurations ([1,1] [1,2] [2,1] [2,2]), and Logic left
+   it out of AU Instruments. The Audio Unit has no input bus now (it reports [0,1] [0,2]); the VST3 and Standalone
+   keep the side-chain. In Logic, audio goes in through BlokDust FX. `bd plugin au` requires [0, 2] for the instrument.
+12. **START feels instant** (owner, 2026-11-12: seconds between the press and the intro). The intro starts on the press
+   (v1 Splash.MouseDown), not the release. The AudioContext (suspended until the press), the worklet and the WASM are
+   made while the start screen shows, so START only builds the node. A touch starts the audio when it lifts.
 9. **README:** a GIF of BlokDust in place of the "BV" icon, no MCP/AI-chat mentions, an accurate status, and
    `CHANGELOG.md` listing what v2 adds over v1.
 

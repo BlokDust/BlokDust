@@ -5,8 +5,6 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
-import { BLOCKS } from '../../web/src/generated/blocks.gen.ts';
-import { drawnPoints, insidePolygon, selectionRing } from '../../web/src/stage/ring.ts';
 
 const OUT = 'tests/visual/output/ui-regressions';
 mkdirSync(OUT, { recursive: true });
@@ -526,10 +524,8 @@ Object.assign(tests, {
   },
 
   /** CHG-0004 / PLUGIN-0004: the MIDI Input panel's own options (v1 option styles): MPE switch beside Mono/Poly,
-   * Channel (OMNI/1–16) and, on the web, Device (ALL or an input by name); MPE on adds Pressure and Slide. A Web
-   * MIDI message from the chosen device reaches the engine through the block's MPE parser; another device's does not.
-   * Owner (2026-11-12, CHG-0010): a quieter panel. MPE on hides Channel (MPE uses every channel of its zone) and there
-   * is no Bend row (always ±48, MPE's standard); Poly hides Glide (glide is mono-only). */
+   * Channel (OMNI/1–16) and, on the web, Device (ALL or an input by name); MPE on adds Pressure, Slide and Bend. A Web
+   * MIDI message from the chosen device reaches the engine through the block's MPE parser; another device's does not. */
   async 'midi-input-options'(errors: string[]) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     await ctx.addInitScript(() => {
@@ -560,58 +556,10 @@ Object.assign(tests, {
     await send('a', [0x91, 64, 100]); await p.waitForTimeout(300);
     const fromChosen = (await state(p)).gateOns - gate0 - fromOther;
     await p.screenshot({ path: `${OUT}/midi-input-options.png` });
-    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('polyphonic', true));
-    await p.waitForTimeout(300);
-    const poly = await names();
     await ctx.close();
-    const ok = JSON.stringify(before).includes('MPE') && before.includes('Channel') && before.includes('Device') && before.includes('Glide')
-      && !after.includes('Bend') && !after.includes('Channel') && after.includes('Device') && JSON.stringify(after).includes('Pressure+Slide')
-      && !poly.includes('Glide') && poly.includes('Octave')
-      && params.device === 'Funputs MPE' && !!params.mpe && fromOther === 0 && fromChosen === 1;
-    return [ok, { before, after, poly, device: params.device, mpe: params.mpe, gateOnsFromOtherDevice: fromOther, fromChosenDevice: fromChosen }];
-  },
-
-  /** Owner (2026-11-12, CHG-0010): the MIDI Keyboard's Device is a selector like Settings' colour theme (arrows either
-   * side, the name between), not a slider whose text ran off the panel. The arrows step through ALL and the inputs,
-   * wrapping round; a long name is cut to fit between them. */
-  async 'midi-device-selector'(errors: string[]) {
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript(() => {
-      const mk = (id: string, name: string) => ({ id, name, onmidimessage: null as any });
-      const inputs = new Map([['a', mk('a', 'Funputs MPE')], ['b', mk('b', 'A Very Long MIDI Interface Name That Would Never Fit Port 1')]]);
-      (navigator as any).requestMIDIAccess = () => Promise.resolve({ inputs, onstatechange: null });
-    });
-    const p = await ctx.newPage();
-    p.on('pageerror', e => errors.push(e.message));
-    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'MIDIController', 0, 0)])}`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start'); await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10); await p.waitForTimeout(800);
-    const id = (await state(p)).blocks[0].id;
-    const pt = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), id);
-    await p.mouse.click(pt[0], pt[1]); await p.waitForTimeout(1000);
-    const row = () => p.evaluate(() => {
-      const o = (window as any).__bd_probe.scene.OptionsPanel, pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio, u = (window as any).__bd_probe.v1App.Unit;
-      const d = o.Options.find((q: any) => q.Setting === 'deviceIndex'), y = (o.Position.y + d.Position.y + d.Size.height / 2) / pr;
-      return { type: d.Type, device: o.SelectedBlock.Params.device || 'ALL', left: [(o.Position.x + o.Margin + 10 * u) / pr, y], right: [(o.Position.x + o.Margin + o.Range - 10 * u) / pr, y],
-        textWidth: d.TextWidth, room: o.Range - 80 * u };
-    });
-    const seen: string[] = [];
-    const first = await row();
-    seen.push(first.device);
-    for (let i = 0; i < 3; i++) { const r = await row(); await p.mouse.click(r.right[0], r.right[1]); await p.waitForTimeout(250); seen.push((await row()).device); }
-    const r = await row(); await p.mouse.click(r.left[0], r.left[1]); await p.waitForTimeout(250);
-    const back = await row();
-    // The long name, drawn: it fits between the arrows.
-    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('deviceIndex', 2));
-    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.RefreshOptionsPanel());
-    const lr = await row(); await p.mouse.move(lr.right[0] - 60, lr.right[1]); await p.mouse.move(lr.right[0] - 80, lr.right[1]);  // a redraw
-    await p.waitForTimeout(300);
-    const long = await row();
-    await p.screenshot({ path: `${OUT}/midi-device-selector.png` });
-    await ctx.close();
-    const ok = first.type === 'selector' && JSON.stringify(seen) === JSON.stringify(['ALL', 'Funputs MPE', 'A Very Long MIDI Interface Name That Would Never Fit Port 1', 'ALL'])
-      && back.device === 'A Very Long MIDI Interface Name That Would Never Fit Port 1' && long.textWidth > 0 && long.textWidth <= long.room;
-    return [ok, { type: first.type, seen, back: back.device, textWidth: long.textWidth, room: long.room }];
+    const ok = JSON.stringify(before).includes('MPE') && before.includes('Channel') && before.includes('Device') && after.includes('Bend') &&
+      JSON.stringify(after).includes('Pressure+Slide') && params.device === 'Funputs MPE' && !!params.mpe && fromOther === 0 && fromChosen === 1;
+    return [ok, { before, after, device: params.device, mpe: params.mpe, gateOnsFromOtherDevice: fromOther, fromChosenDevice: fromChosen }];
   },
 
   /** CHG-0004 3.3 (owner): inside the plugin, Microphone shows as "Audio Input" and MIDI Controller as "MIDI Input"
@@ -878,45 +826,6 @@ Object.assign(tests, {
     return [ok, { before, live, filter, saved }];
   },
 
-  /** Owner (Logic, 2026-11-12): opening the plugin briefly showed an old patch before its own. The web view keeps
-   * localStorage between sessions, and the page drew its autosave until the processor's patch arrived. In the plugin
-   * the patch comes only from the processor: nothing is drawn before it, and the page never autosaves. */
-  async 'plugin-no-stale-patch'(errors: string[]) {
-    const stale = { format: 'blokdust.patch', version: 2, seed: 1, blocks: [{ id: 'old', type: 'source.tone', x: 0, y: 0, params: {} },
-      { id: 'old2', type: 'fx.reverb', x: 3, y: 0, params: {} }] };
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-    await ctx.addInitScript(([old]) => {
-      try { localStorage.setItem('blokdust2.autosave', JSON.stringify(old)); } catch { /* */ }
-      const listeners: Record<string, ((x: unknown) => void)[]> = {};
-      const w = window as any;
-      w.__seenBeforePatch = 0; w.__patched = false;
-      const watch = () => { if (w.__patched) return; w.__seenBeforePatch = Math.max(w.__seenBeforePatch, w.__bd_probe?.state.blocks.length ?? 0); requestAnimationFrame(watch); };
-      requestAnimationFrame(watch);
-      w.__JUCE__ = { backend: {
-        addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
-        emitEvent: (id: string) => {
-          if (id === 'bd_hello') setTimeout(() => { w.__patched = true; listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify({ format: 'blokdust.patch', version: 2, seed: 1, blocks: [] }) })); }, 700);
-        },
-      } };
-    }, [stale] as const);
-    const pg = await ctx.newPage();
-    pg.on('pageerror', e => errors.push(e.message));
-    await pg.goto(`${url}/index.html`);
-    await pg.waitForFunction(() => (window as any).__bd_probe?.state.started, null, { timeout: 15000 });
-    await pg.waitForTimeout(800);
-    const r = await pg.evaluate(() => ({ seenBeforePatch: (window as any).__seenBeforePatch, blocksAfter: (window as any).__bd_probe.state.blocks.length,
-      autosave: JSON.parse(localStorage.getItem('blokdust2.autosave') ?? 'null')?.blocks?.length ?? null }));
-    await ctx.close();
-    return [r.seenBeforePatch === 0 && r.blocksAfter === 0 && r.autosave === 2, r];
-  },
-
-  /** Owner (2026-11-12): the multi-select ring cut through the MIDI Keyboard (v1's hit outline leaves out a corner it
-   * draws). Every block's ring encloses everything it draws as a polygon. */
-  async 'select-ring-encloses-block'() {
-    const misses = BLOCKS.flatMap(def => drawnPoints(def).filter(p => !insidePolygon(p, selectionRing(def))).map(p => `${def.id} (${p})`));
-    return [misses.length === 0, { misses }];
-  },
-
   /** Owner (2026-11-08, CHG-0005): the Tour is hidden for Release 1 (v1's tutorial is not ported; built-in presets
    * may replace it). Owner (2026-11-10): its row is now the patch Tempo (web), set once for every synced block:
    * pressing where "Launch Tutorial" was sets the tempo, and the panel stays open. */
@@ -1030,18 +939,18 @@ Object.assign(tests, {
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
 /** The plugin page with a fake JUCE backend: the processor sends `patch`; what the page sends is recorded (__sent). */
-async function openPlugin(patch: unknown, errors: string[], ids?: Record<string, number>, standalone = false): Promise<{ pg: Page; close: () => Promise<void> }> {
+async function openPlugin(patch: unknown, errors: string[], ids?: Record<string, number>): Promise<{ pg: Page; close: () => Promise<void> }> {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-  await ctx.addInitScript(([p, ids, standalone]) => {
+  await ctx.addInitScript(([p, ids]) => {
     const listeners: Record<string, ((x: unknown) => void)[]> = {};
     const sent: { id: string; v: any }[] = [];
     (window as any).__sent = sent;
     (window as any).__fire = (id: string, v: unknown) => listeners[id]?.forEach(f => f(v));
     (window as any).__JUCE__ = { backend: {
       addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
-      emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify(p), ...(ids ? { ids } : {}), ...(standalone ? { standalone } : {}) })), 50); },
+      emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify(p), ...(ids ? { ids } : {}) })), 50); },
     } };
-  }, [patch, ids, standalone] as const);
+  }, [patch, ids] as const);
   const pg = await ctx.newPage();
   pg.on('pageerror', e => errors.push(e.message));
   await pg.goto(`${url}/index.html`);
@@ -1183,7 +1092,7 @@ Object.assign(tests, {
     const ok = label.patches && !label.share && panel.patches && !panel.share && tab === 0
       && panel.items[0] === 'My Keys | Saved 8 Nov 2026' && panel.items.some((i: string) => i.endsWith('| Preset'))
       && !!save?.v.title && flash === true
-      && apply[0]?.v.mode === 'insert' && ins.blocks.length === 6 && !ins.blocks.some((b: any) => b.id === 't')
+      && apply[0]?.v.mode === 'insert' && ins.blocks.length === 3 && !ins.blocks.some((b: any) => b.id === 't')
       && asked === 'confirm'
       && log.some((e: any) => e.id === 'bd_patchRead' && e.v.path === '/m/My Keys.blokdust')
       && apply[1]?.v.mode === 'open' && open.blocks.map((b: any) => b.id).join() === 'k,o'
@@ -1224,29 +1133,25 @@ Object.assign(tests, {
     return [r.texts.includes('LOCATE FILE') && !r.texts.includes('LOAD NEW SAMPLE') && r.picked.length === 1 && !r.search, r];
   },
 
-  /** CHG-0005: every built-in preset opens with all its blocks, and the self-playing ones (Rotating Sequencer, Step
+  /** CHG-0005: every built-in preset opens with all its blocks, and the self-playing ones (Laser Sequence, Step
    * Sequencer: Power blocks run their laser and emitters) are heard without touching anything. Keys and Microphone presets wait for the player. */
   async 'presets-load'(errors: string[]) {
     const p = await open(browser, [], errors);
     await openList(p);
     const items: string[] = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name));
-    const want: Record<string, number> = { 'Computer Keys + 2 Tones': 6, 'MIDI Keys + 2 Tones': 6, 'Microphone + Recorder': 5, 'Rotating Sequencer': 10, 'Step Sequencer': 21, 'Self Playing Scene': 29 };
-    const selfPlaying = new Set(['Rotating Sequencer', 'Step Sequencer', 'Self Playing Scene']);
+    const want: Record<string, number> = { 'Computer Keys + Tone + Envelope': 3, 'MIDI Keys + Tone + Envelope': 3, 'Microphone + Reverb + Recorder': 3, 'Laser Sequence': 10, 'Step Sequencer': 16 };
     const got: Record<string, unknown> = {};
     for (let i = 0; i < items.length; i++) {
       if (i) await openList(p);
-      await rowButton(p, 'open', items[i], 400);  // a preset just opened is saved: no confirm
+      await patchesClick(p, `open${i}`, 400);  // a preset just opened is saved: no confirm
       const pb = (await state(p)).patch.blocks, blocks = pb.length;
       // Owner (PR #1 review, 2026-11-12): lasers and emitters are never self-powered; a Power block next to each runs it.
       if (pb.some((b: any) => /laser|emitter/.test(b.type) && b.params?.selfPoweredMode)) got[`${items[i]}: self-powered`] = true;
-      // CHG-0013: the owner's Self Playing Scene opens with its two Toggles opposite (they flip together: the chords take turns).
-      const toggles = pb.filter((b: any) => b.type === 'power.toggle').map((b: any) => !!b.params?.logic);
-      const plays = selfPlaying.has(items[i]) ? await maxOver(p, 'rms', 3000) : null;
-      got[items[i]] = { blocks, ...(plays !== null ? { rms: plays } : {}), ...(toggles.length ? { toggles } : {}) };
+      const plays = items[i] === 'Laser Sequence' || items[i] === 'Step Sequencer' ? await maxOver(p, 'rms', 3000) : null;
+      got[items[i]] = { blocks, ...(plays !== null ? { rms: plays } : {}) };
     }
     await p.close();
-    const ok = Object.entries(want).every(([n, k]) => (got[n] as any)?.blocks === k) && !Object.keys(got).some(k => k.endsWith('self-powered'))
-      && [...selfPlaying].every(n => (got[n] as any)?.rms > 0.001) && (got['Self Playing Scene'] as any)?.toggles?.length === 2 && (got['Self Playing Scene'] as any).toggles[0] !== (got['Self Playing Scene'] as any).toggles[1];
+    const ok = Object.entries(want).every(([n, k]) => (got[n] as any)?.blocks === k) && !Object.keys(got).some(k => k.endsWith('self-powered')) && (got['Laser Sequence'] as any).rms > 0.001 && (got['Step Sequencer'] as any).rms > 0.001;
     return [ok, got];
   },
 
@@ -1289,11 +1194,11 @@ Object.assign(tests, {
     // The saved patch is listed first, above the presets (this browser only); OPEN a preset: just saved, so no question.
     await openList(p);
     const mine = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items[0]);
-    await rowButton(p, 'open', 'Computer Keys + 2 Tones');
+    await rowButton(p, 'open', 'Computer Keys + Tone + Envelope');
     const afterOpen = await count();
     await openList(p); await rowButton(p, 'open', title);  // the saved one (nothing changed since the preset opened: no question)
     const reopened = { blocks: await count(), title: await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title) };
-    await openList(p); await rowButton(p, 'open', 'Computer Keys + 2 Tones');
+    await openList(p); await rowButton(p, 'open', 'Computer Keys + Tone + Envelope');
     const openTitle = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
     // FROM YOUR COMPUTER → Insert
     await openList(p);
@@ -1317,13 +1222,13 @@ Object.assign(tests, {
     const afterDrop = await count();
     await p.screenshot({ path: `${OUT}/patches-web-after.png` });
     await p.close();
-    const ok = tab === 0 && items.includes('MIDI Keys + 2 Tones') && items.length === 6 && !!title
+    const ok = tab === 0 && items.includes('MIDI Keys + Tone + Envelope') && items.length === 5 && !!title
       && mine?.name === title && /^Saved \d/.test(mine?.detail) && reopened.blocks === 1 && reopened.title === title
-      && placing?.ids.length === 6 && placed.count === 7 && !placed.placing && Math.hypot(cx - 400, cy - 600) < 40
+      && placing?.ids.length === 3 && placed.count === 4 && !placed.placing && Math.hypot(cx - 400, cy - 600) < 40
       && undone === 1 && escaped === 1
       && saved.name === `${title}.blokdust` && saved.title === title && saved.blocks === 1 && saved.format === 'blokdust.patch'
-      && afterOpen === 6 && openTitle === 'Computer Keys + 2 Tones'
-      && choice.view === 'file' && choice.picked?.title === 'Two' && afterFile === 8 && dropView === 'file' && afterDrop === 9;
+      && afterOpen === 3 && openTitle === 'Computer Keys + Tone + Envelope'
+      && choice.view === 'file' && choice.picked?.title === 'Two' && afterFile === 5 && dropView === 'file' && afterDrop === 6;
     return [ok, { tab, items, title, mine, reopened, placing, placed, droppedAt: [cx, cy], undone, escaped, saved, afterOpen, openTitle, choice, afterFile, dropView, afterDrop }];
   },
 
@@ -1340,20 +1245,20 @@ Object.assign(tests, {
     };
     const view = () => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return pp.Open ? pp.View : 'closed'; });
     // Unchanged (opened from a link): no question.
-    await openList(p); await rowButton(p, 'open', 'Rotating Sequencer');
+    await openList(p); await rowButton(p, 'open', 'Laser Sequence');
     const unchanged = { view: await view(), blocks: await count() };
     // Changed: asked; CANCEL keeps the work.
     await change();
-    await openList(p); await rowButton(p, 'open', 'Computer Keys + 2 Tones');
+    await openList(p); await rowButton(p, 'open', 'Computer Keys + Tone + Envelope');
     const asked = await view();
     await p.screenshot({ path: `${OUT}/open-confirms-unsaved.png` });
     await patchesClick(p, 'cancel');
     const cancelled = { view: await view(), blocks: await count() };
     // INSERT never asks.
-    await rowButton(p, 'ins', 'Microphone + Recorder', 100); await p.mouse.click(300, 600); await p.waitForTimeout(300);
+    await rowButton(p, 'ins', 'Microphone + Reverb + Recorder', 100); await p.mouse.click(300, 600); await p.waitForTimeout(300);
     const inserted = { view: await view(), blocks: await count() };
     // SAVE FIRST: the file is saved, then the patch opens.
-    await openList(p); await rowButton(p, 'open', 'Computer Keys + 2 Tones', 300);
+    await openList(p); await rowButton(p, 'open', 'Computer Keys + Tone + Envelope', 300);
     const dl = p.waitForEvent('download');
     await patchesClick(p, 'saveFirst', 0);
     const d = await dl, savedBlocks = JSON.parse(readFileSync(await d.path(), 'utf8')).blocks.length;
@@ -1366,10 +1271,10 @@ Object.assign(tests, {
     await patchesClick(p, 'openAnyway', 600);
     const anyway = { view: await view(), blocks: await count() };
     await p.close();
-    // Rotating Sequencer has 10 blocks, Step Sequencer 21 (the owner's presets, 2026-11-12).
+    // Laser Sequence has 10 blocks, Step Sequencer 16 (both with their Power blocks, PR #1 review 2026-11-12).
     const ok = unchanged.view === 'closed' && unchanged.blocks === 10 && asked === 'confirm' && cancelled.view === 'list' && cancelled.blocks === 10
-      && inserted.view === 'closed' && inserted.blocks === 15 && savedBlocks === 15 && afterSaveFirst.view === 'closed' && afterSaveFirst.blocks === 6
-      && asked2 === 'confirm' && anyway.view === 'closed' && anyway.blocks === 21;
+      && inserted.view === 'closed' && inserted.blocks === 13 && savedBlocks === 13 && afterSaveFirst.view === 'closed' && afterSaveFirst.blocks === 3
+      && asked2 === 'confirm' && anyway.view === 'closed' && anyway.blocks === 16;
     return [ok, { unchanged, asked, cancelled, inserted, savedBlocks, afterSaveFirst, asked2, anyway }];
   },
 
@@ -1404,37 +1309,29 @@ Object.assign(tests, {
     const presetView = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
     await p.close();
     const ok = listed[0] === 'Bass + Bells [bin]' && listed.slice(1).every((n: string) => !n.endsWith('[bin]')) && asked === 'remove' && kept === 'Bass + Bells' && words.title && words.line
-      && after.items.length === 6 && !after.items.includes('Bass + Bells') && after.stored === 0 && presetView === 'list';
+      && after.items.length === 5 && !after.items.includes('Bass + Bells') && after.stored === 0 && presetView === 'list';
     return [ok, { listed, asked, kept, words, after, presetView }];
   },
 
-  /** The plugin's CREATE SHARE LINK opens the patch on the site (`?c=p…&t=…&share=1`). Owner (2026-11-13, CHG-0013):
-   * it opened the Patches panel at once, whose title showed over the start screen, and after START the panel was
-   * still in the way, one more click from the link. Now the site makes the link as it loads (the user asked for it in
-   * the app) and the address bar shows it (here, with no backend, the self-contained link); the start screen is the
-   * start screen alone, START shows the scene, and Patches › SAVE has the link and the name. */
+  /** Owner (2026-11-10): the plugin's CREATE SHARE LINK opens the patch on the site (`?c=p…&t=…&share=1`); the page
+   * opens Patches on SAVE with the name filled in, one click from the link, and drops the flag from the address. */
   async 'share-from-plugin'(errors: string[]) {
     const { deflateRawSync } = await import('node:zlib');
     const patch = { format: 'blokdust.patch', version: 2, blocks: [{ id: 'a', type: 'source.tone', x: 0, y: 0, params: {} }, { id: 'b', type: 'power.emitter', x: -60, y: 0, params: {} }] };
     const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(patch))).toString('base64url');
     const p = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
     p.on('pageerror', e => errors.push(e.message));
-    await p.goto(`${url}/index.html?splash=1&c=${token}&t=${encodeURIComponent('Bass + Bells')}&share=1`);
-    await p.waitForFunction(() => (window as any).__bd_probe); await p.waitForTimeout(1500);
-    const before = await p.evaluate(() => ({ panel: (window as any).__bd_probe.scene.PatchesPanel.Open, link: !!(window as any).__bd_probe.scene.host.links.current() }));
-    await p.screenshot({ path: `${OUT}/share-from-plugin-start.png` });
-    await p.mouse.click(640, 400);
-    await p.waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 }).catch(() => {});
-    await p.waitForTimeout(1000);
+    await p.goto(`${url}/index.html?c=${token}&t=${encodeURIComponent('Bass + Bells')}&share=1`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.click('#start'); await p.waitForTimeout(1500);
     const r = await p.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel, link = (window as any).__bd_probe.scene.host.links.current();
-      return { open: pp.Open, title: pp.Title, blocks: (window as any).__bd_probe.state.blocks.length, search: location.search, link: link?.url ?? null, stale: link?.stale, state: pp.shareState() };
+      const pp = (window as any).__bd_probe.scene.PatchesPanel;
+      return { open: pp.Open, tab: pp.Tab, title: pp.Title, blocks: (window as any).__bd_probe.state.blocks.length, search: location.search, state: pp.shareState() };
     });
     await p.screenshot({ path: `${OUT}/share-from-plugin.png` });
     await p.close();
-    const ok = !before.panel && !r.open && r.title === 'Bass + Bells' && r.blocks === 2 && !/share=/.test(r.search) && r.search.includes('c=p')
-      && !!r.link && r.link.endsWith(r.search) && r.stale === false && r.state.save !== 'make';
-    return [ok, { before, ...r, link: r.link?.slice(0, 60) }];
+    const ok = r.open && r.tab === 0 && r.title === 'Bass + Bells' && r.blocks === 2 && !/share=/.test(r.search) && r.search.includes('c=p') && r.state.save === 'make';
+    return [ok, r];
   },
 
   /** Owner (2026-11-10): Patches opens on the tab last chosen, also after a reload; OPEN FROM YOUR DEVICE is the OPEN
@@ -1613,7 +1510,7 @@ Object.assign(tests, {
     await p.screenshot({ path: `${OUT}/insert-touch.png` });
     await ctx.close();
     const [gx0, gy0] = atStart[0] ?? [0, 0], [gx1, gy1] = after[0] ?? [0, 0];
-    const ok = placing?.touch === true && atStart.length === 6 && moving && !done && after.length === 6 && gx1 < gx0 && gy1 < gy0
+    const ok = placing?.touch === true && atStart.length === 3 && moving && !done && after.length === 3 && gx1 < gx0 && gy1 < gy0
       && selected.length === 0;
     return [ok, { placing, atStart, after, selected }];
   },
@@ -1835,86 +1732,6 @@ Object.assign(tests, {
     return [ok, r];
   },
 
-  /** Owner (2026-11-12, CHG-0010): undo and redo for moving, duplicating (Cmd/Ctrl+D and Alt-drag) and deleting
-   * blocks. Cmd/Ctrl+Z undoes, Cmd/Ctrl+Shift+Z redoes; a new action clears what could be redone. */
-  async 'undo-redo'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', -6, 2)], errors);
-    const tones = () => p.evaluate(() => (window as any).__bd_probe.state.patch.blocks.filter((b: any) => b.type === 'source.tone').map((b: any) => [b.x, b.y]).sort()) as Promise<number[][]>;
-    const firstId = () => p.evaluate(() => (window as any).__bd_probe.state.blocks.find((b: any) => b.type === 'source.tone').id) as Promise<number>;
-    const at = (id: number) => p.evaluate(i => (window as any).__bd_probe.blockPoint(i), id) as Promise<[number, number]>;
-    const key = async (k: string) => { await p.mouse.move(640, 120); await p.keyboard.press(k); await p.waitForTimeout(300); };
-    const r: Record<string, unknown> = {};
-    // Move: drag the tone 6 cells right.
-    { const [x, y] = await at(await firstId()), [x2] = await p.evaluate(() => (window as any).__bd_probe.toCss(0, 2));
-      await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x2, y, { steps: 10 }); await p.mouse.up(); await p.waitForTimeout(300); }
-    r.moved = await tones();
-    await key('ControlOrMeta+z'); r.moveUndo = await tones();
-    await key('ControlOrMeta+Shift+z'); r.moveRedo = await tones();
-    // Duplicate with Cmd/Ctrl+D (select it first).
-    await p.keyboard.down('Shift'); { const [x, y] = await at(await firstId()); await p.mouse.click(x, y); } await p.keyboard.up('Shift');
-    await p.waitForTimeout(200);
-    await key('ControlOrMeta+d'); r.dup = (await tones()).length;
-    await key('ControlOrMeta+z'); r.dupUndo = (await tones()).length;
-    await key('ControlOrMeta+Shift+z'); r.dupRedo = (await tones()).length;
-    await key('Escape');
-    // Alt-drag a copy of the first tone.
-    { const [x, y] = await at(await firstId());
-      await p.keyboard.down('Alt'); await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x, y + 150, { steps: 10 }); await p.mouse.up(); await p.keyboard.up('Alt'); await p.waitForTimeout(300); }
-    r.alt = (await tones()).length;
-    await key('ControlOrMeta+z'); r.altUndo = (await tones()).length;
-    // Delete, undo, redo.
-    { const [x, y] = await at(await firstId()); await p.mouse.click(x, y); await p.waitForTimeout(200); }
-    await key('Backspace'); r.del = (await tones()).length;
-    await key('ControlOrMeta+z'); r.delUndo = (await tones()).length;
-    await key('ControlOrMeta+Shift+z'); r.delRedo = (await tones()).length;
-    // A new action clears redo: undo the delete, move something, then redo does nothing.
-    await key('ControlOrMeta+z');
-    const before = await tones();
-    { const [x, y] = await at(await firstId()); await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x + 60, y, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(300); }
-    const afterMove = await tones();
-    await key('ControlOrMeta+Shift+z'); r.redoCleared = JSON.stringify(await tones()) === JSON.stringify(afterMove) && JSON.stringify(afterMove) !== JSON.stringify(before);
-    await p.close();
-    const ok = JSON.stringify(r.moved) === '[[0,2]]' && JSON.stringify(r.moveUndo) === '[[-6,2]]' && JSON.stringify(r.moveRedo) === '[[0,2]]'
-      && r.dup === 2 && r.dupUndo === 1 && r.dupRedo === 2 && r.alt === 3 && r.altUndo === 2
-      && r.del === 1 && r.delUndo === 2 && r.delRedo === 1 && r.redoCleared === true;
-    return [ok, r];
-  },
-
-  /** Owner (2026-11-12, CHG-0010): a patch keeps the view it was saved at (zoom and position, SPEC-PATCH-FORMAT-V2
-   * R2 `view`), and opening it shows that view: links, files, the autosave and presets (the sequencers open zoomed
-   * out). In the plugin the processor keeps the view with the DAW project. */
-  async 'patch-view'(errors: string[]) {
-    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
-    const view = () => p.evaluate(() => { const a = (window as any).__bd_probe.v1App; return { zoom: +a.ZoomLevel.toFixed(3), x: +a.DragOffset.x.toFixed(3), y: +a.DragOffset.y.toFixed(3) }; });
-    await p.evaluate(() => { const s = (window as any).__bd_probe.scene; s.pinchView(0.5, { x: 3, y: -2 }); s.host.setZoom(0.5); s.host.setDrag({ x: 3, y: -2 }); s.pinchEnd(); });
-    await p.waitForTimeout(300);
-    const saved = await p.evaluate(() => (window as any).__bd_probe.state.patch);
-    // Reopened (as the autosave, a link or a file would be).
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript(pt => { localStorage.setItem('blokdust2.autosave', pt); }, JSON.stringify(saved));
-    const q = await ctx.newPage(); q.on('pageerror', e => errors.push(e.message));
-    await q.goto(`${url}/index.html`); await q.waitForFunction(() => (window as any).__bd_probe); await q.click('#start'); await q.waitForTimeout(1500);
-    const reopened = await q.evaluate(() => { const a = (window as any).__bd_probe.v1App; return { zoom: +a.ZoomLevel.toFixed(3), x: +a.DragOffset.x.toFixed(3), y: +a.DragOffset.y.toFixed(3) }; });
-    await ctx.close();
-    // A preset with a view: Step Sequencer opens zoomed out.
-    await openList(p); await rowButton(p, 'open', 'Step Sequencer', 300);
-    if (await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View) === 'confirm') await patchesClick(p, 'openAnyway', 600);
-    await p.waitForTimeout(800);
-    const preset = await view();
-    await p.close();
-    // Plugin: the processor's patch carries a view; the page shows it, and reports a new view back (bd_view).
-    const { pg, close } = await openPlugin({ format: 'blokdust.patch', version: 2, seed: 1, view: { x: -4, y: 1, zoom: 0.75 }, blocks: [{ id: 't', type: 'source.tone', x: 0, y: 0, params: {} }] }, errors);
-    const plugin = await pg.evaluate(() => { const a = (window as any).__bd_probe.v1App; return { zoom: +a.ZoomLevel.toFixed(3), x: +a.DragOffset.x.toFixed(3), y: +a.DragOffset.y.toFixed(3) }; });
-    await pg.evaluate(() => { const s = (window as any).__bd_probe.scene; s.pinchView(2, { x: 1, y: 1 }); s.host.setZoom(2); s.host.setDrag({ x: 1, y: 1 }); s.pinchEnd(); });
-    await pg.waitForTimeout(1500);
-    const reported = await pg.evaluate(() => (window as any).__sent.filter((x: any) => x.id === 'bd_view').pop()?.v);
-    await close();
-    const ok = JSON.stringify(saved.view) === JSON.stringify({ x: 3, y: -2, zoom: 0.5 }) && JSON.stringify(reopened) === JSON.stringify({ zoom: 0.5, x: 3, y: -2 })
-      && preset.zoom === 0.6 && JSON.stringify(plugin) === JSON.stringify({ zoom: 0.75, x: -4, y: 1 })
-      && JSON.stringify(reported) === JSON.stringify({ x: 1, y: 1, zoom: 2 });
-    return [ok, { saved: saved.view, reopened, preset, plugin, reported }];
-  },
-
   /** Owner (2026-11-11): the power switch, bottom centre (v1's off/on switch). Off: nothing in the world powers
    * anything (a Power block's tone stops, particles vanish) and it reads POWER OFF on red; a held block still plays;
    * Space switches it back (web). */
@@ -1941,76 +1758,6 @@ Object.assign(tests, {
     await p.close();
     const ok = before > 0.01 && off < 0.001 && particles === 0 && label && held > 0.01 && back > 0.01 && on === true;
     return [ok, { before, off, particles, label, held, back, on }];
-  },
-
-  /** Owner (2026-11-13, CHG-0013): POWER OFF sat high in its red box. The letters are centred in it: the red above
-   * and below them differs by at most one device pixel (at 1× and 2×). */
-  async 'power-off-label-centred'(errors: string[]) {
-    const { PNG } = await import('pngjs');
-    const measure = async (dpr: number) => {
-      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: dpr });
-      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
-      await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', -3, 3)])}`);
-      await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
-      await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
-      const want = await p.evaluate(() => { const a = (window as any).__bd_probe.v1App, w = document.createElement('canvas').getContext('2d')!; w.fillStyle = a.Palette[a.ThemeManager.MenuOrder[3]]; w.fillRect(0, 0, 1, 1); return [...w.getImageData(0, 0, 1, 1).data.slice(0, 3)]; });
-      await p.mouse.move(640, 300); await p.waitForTimeout(500);
-      const png = PNG.sync.read(await p.screenshot({ clip: { x: 560, y: 690, width: 160, height: 60 } }));
-      await p.screenshot({ path: `${OUT}/power-off-label-${dpr}x.png`, clip: { x: 560, y: 690, width: 160, height: 60 } });
-      await ctx.close();
-      // The red box: rows whose middle column is the box's red; the text: non-red pixels inside the box's columns.
-      const px = (x: number, y: number) => { const i = (y * png.width + x) * 4; return [png.data[i], png.data[i + 1], png.data[i + 2]]; };
-      const isRed = (c: number[]) => c.every((v, i) => Math.abs(v - want[i]) < 4);
-      let left = -1, right = -1, top = -1, bottom = -1;
-      for (let y = 0; y < png.height && top < 0; y++) for (let x = 0; x < png.width; x++) if (isRed(px(x, y))) { top = y; break; }
-      if (top < 0) return null;
-      for (let x = 0; x < png.width; x++) if (isRed(px(x, top))) { if (left < 0) left = x; right = x; }
-      bottom = top; while (bottom + 1 < png.height && isRed(px(left, bottom + 1))) bottom++;
-      let tTop = -1, tBottom = -1;
-      // Text: the letters' solid pixels (cream: high green), not their anti-aliased edges.
-      for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) if (px(x, y)[1] > 150) { if (tTop < 0) tTop = y; tBottom = y; break; }
-      return { box: [top, bottom], text: [tTop, tBottom], above: tTop - top, below: bottom - tBottom };
-    };
-    const r1 = await measure(1), r2 = await measure(2);
-    const ok = !!r1 && !!r2 && Math.abs(r1.above - r1.below) <= 1 && Math.abs(r2.above - r2.below) <= 1;
-    return [ok, { '1x': r1, '2x': r2 }];
-  },
-
-  /** Owner (2026-11-13, CHG-0013): a scene with two Toggles set opposite (one on, one off), saved as a share link,
-   * reopened with both the same. The engine flips a Toggle when a particle hits it, but the page's patch never heard,
-   * so it saved whatever was set by hand. Now the patch follows the engine (as v1's Toggle kept Params.logic): it
-   * changes with each hit, the autosave keeps it, and it doesn't count as an unsaved change. */
-  async 'toggle-state-saved'(errors: string[]) {
-    const patch = { format: 'blokdust.patch', version: 2, seed: 7, blocks: [
-      { id: 'e1', type: 'power.emitter', x: -10, y: 0, params: { angle: 0, selfPoweredMode: true, rate: 60 } },
-      { id: 'on', type: 'power.toggle', x: 0, y: 0, params: { logic: true } },
-      { id: 'pad', type: 'source.tone', x: 0, y: 5, params: { waveform: 3, transpose: -12 } },
-      { id: 'off', type: 'power.toggle', x: 0, y: -12, params: {} } ] };
-    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    await ctx.addInitScript(pt => { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('blokdust2.autosave', pt); } }, JSON.stringify(patch));
-    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
-    await p.goto(`${url}/index.html`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start');
-    const logic = (id: string) => p.evaluate(i => (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.id === i).params.logic, id);
-    const seen = new Set<string>();
-    for (let t = 0; t < 6000 && seen.size < 2; t += 100) { seen.add(String(!!(await logic('on')))); await p.waitForTimeout(100); }
-    // Freeze the world, then the patch, the panel's switch, the autosave and a reload all agree.
-    await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
-    await p.waitForTimeout(1600);
-    const now = !!(await logic('on')), other = !!(await logic('off'));
-    const saved = await p.evaluate(() => JSON.parse(localStorage.getItem('blokdust2.autosave')!).blocks.find((b: any) => b.id === 'on').params.logic);
-    await p.reload(); await p.waitForFunction(() => (window as any).__bd_probe?.state.patch);
-    const reopened = !!(await logic('on'));  // before START: as saved
-    await ctx.close();
-    // Opened from a link (counted as saved), the flips are not unsaved changes.
-    const { deflateRawSync } = await import('node:zlib');
-    const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(patch))).toString('base64url');
-    const q = await browser.newPage({ viewport: { width: 1280, height: 800 } }); q.on('pageerror', e => errors.push(e.message));
-    await q.goto(`${url}/index.html?c=${token}`); await q.waitForFunction(() => (window as any).__bd_probe); await q.click('#start');
-    await q.waitForFunction(() => !(window as any).__bd_probe.state.patch.blocks.find((b: any) => b.id === 'on').params.logic, null, { timeout: 6000 }).catch(() => {});
-    const dirty = await q.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.host.isDirty());
-    await q.close();
-    const r = { seen: [...seen], now, other, saved, reopened, dirty };
-    return [seen.size === 2 && !!saved === now && reopened === now && other === false && dirty === false, r];
   },
 
   /** Owner (2026-11-11): a trackpad pinch zooms smoothly about the pointer, as a pinch on a touch screen does. Chrome
@@ -2253,32 +2000,6 @@ Object.assign(tests, {
     const without = await probe(b.pg);
     await b.close();
     return [withKeyboard && !without, { preventedWithKeyboard: withKeyboard, preventedWithout: without }];
-  },
-
-  /** Owner (2026-11-13, CHG-0013): holding a key in the standalone app made macOS's "no one took that key" sound over
-   * and over. The web view passes on every key the page doesn't cancel, and the page let key repeats through. Now a
-   * note key's repeats are the page's too, and in the standalone app (no DAW to pass keys to) every plain key outside
-   * a text field is; Cmd/Ctrl shortcuts still reach the menus. In a DAW, keys BlokDust doesn't use still reach it. */
-  async 'plugin-key-repeat-no-beep'(errors: string[]) {
-    const press = (pg: Page, code: string, key: string, more: KeyboardEventInit = {}) => pg.evaluate(([c, k, m]) => {
-      const e = new KeyboardEvent('keydown', { code: c, key: k, bubbles: true, cancelable: true, ...m });
-      document.body.dispatchEvent(e);
-      document.body.dispatchEvent(new KeyboardEvent('keyup', { code: c, key: k, bubbles: true, cancelable: true }));
-      return e.defaultPrevented;
-    }, [code, key, more] as const);
-    const kb = [{ id: 'k', type: 'input.computer-keyboard', x: -3, y: 0 }, { id: 't', type: 'source.tone', x: 0, y: 0 }];
-    const daw = await openPlugin(plugPatch(kb), errors);
-    const dawRepeat = await press(daw.pg, 'KeyZ', 'z', { repeat: true });
-    await daw.close();
-    const dawBare = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors);
-    const dawOther = await press(dawBare.pg, 'KeyA', 'a');
-    await dawBare.close();
-    const app = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors, undefined, true);
-    const appLetter = await press(app.pg, 'KeyA', 'a'), appRepeat = await press(app.pg, 'KeyA', 'a', { repeat: true });
-    const appArrow = await press(app.pg, 'ArrowUp', 'ArrowUp', { repeat: true }), appCmd = await press(app.pg, 'KeyQ', 'q', { metaKey: true });
-    await app.close();
-    const r = { dawRepeat, dawOther, appLetter, appRepeat, appArrow, appCmd };
-    return [dawRepeat && !dawOther && appLetter && appRepeat && appArrow && !appCmd, r];
   },
 
   /** Plugin (Logic): the Convolver's panel waveform shows the spinning square while the processor loads its sound. */

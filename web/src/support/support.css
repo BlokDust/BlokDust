@@ -1,0 +1,25 @@
+#feedback-panel:not([open]) { display:none; }
+#feedback-panel { box-sizing:border-box; position:fixed; z-index:30; inset:0; top:0; left:0; margin:0; width:100%; max-width:none; height:100%; max-height:none; border:0; padding:0; overflow:auto; background:var(--support-bg); color:var(--support-text); font:400 16px Dosis,Arial,sans-serif; }
+#feedback-panel::backdrop { background:transparent; }
+#feedback-panel * { box-sizing:border-box; }
+#feedback-panel header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--support-line); }
+#feedback-panel h1 { margin:0; font-size:24px; font-weight:300; letter-spacing:.06em; }
+#feedback-panel button { border:2px solid currentColor; border-radius:0; background:transparent; color:inherit; font:400 14px Dosis,Arial,sans-serif; letter-spacing:.08em; padding:9px 28px; cursor:pointer; }
+#feedback-panel button:hover { background:var(--support-accent); }
+#feedback-panel button:disabled { opacity:.5; cursor:wait; }
+#feedback-panel #feedback-close { border:0; font:200 36px Dosis,Arial,sans-serif; line-height:1; padding:0 8px; }
+#feedback-panel .feedback-content { width:min(680px,calc(100% - 48px)); margin:36px auto; }
+#feedback-panel .feedback-intro { font-size:26px; font-weight:200; margin:0 0 28px; }
+#feedback-panel label { display:block; letter-spacing:.06em; font-size:13px; }
+#feedback-panel label span { letter-spacing:normal; opacity:.7; }
+#feedback-panel textarea,#feedback-panel input[type=email] { display:block; width:100%; margin:10px 0 24px; padding:12px; border:1px solid currentColor; border-radius:0; color:inherit; background:transparent; font:300 20px Dosis,Arial,sans-serif; resize:vertical; }
+#feedback-panel textarea::placeholder { color:inherit; opacity:.5; }
+#feedback-panel :focus-visible { outline:2px solid var(--support-accent); outline-offset:4px; }
+#feedback-panel .feedback-disclosure,#feedback-panel .feedback-detail { font-size:14px; line-height:1.5; opacity:.75; }
+#feedback-panel .feedback-consent { display:flex; align-items:center; gap:10px; margin-top:24px; font-size:16px; letter-spacing:normal; cursor:pointer; }
+#feedback-panel input[type=checkbox] { width:18px; height:18px; accent-color:var(--support-accent); }
+#feedback-panel .feedback-detail { margin-left:28px; }
+#feedback-panel .feedback-actions { display:flex; align-items:flex-start; gap:20px; margin-top:28px; }
+#feedback-panel #feedback-status { margin:0; line-height:1.5; overflow-wrap:anywhere; user-select:text; -webkit-user-select:text; }
+#feedback-panel .feedback-honey { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
+@media(max-width:600px) { #feedback-panel header { padding:14px 16px; } #feedback-panel h1 { font-size:20px; } #feedback-panel .feedback-content { width:calc(100% - 32px); margin:24px auto; } #feedback-panel .feedback-actions { flex-direction:column; } }

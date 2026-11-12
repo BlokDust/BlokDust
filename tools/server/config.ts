@@ -22,6 +22,7 @@ export function remoteConfig(env: EnvName): string {
   }
   const target = config.env[env];
   target.d1_databases[0].database_id = requiredSetting(envKey(env, 'DATABASE_ID'));
+  target.d1_databases[1].database_id = requiredSetting(envKey(env, 'SUPPORT_DATABASE_ID'));
   target.vars.PUBLIC_BASE_URL = publicUrl(env);
   target.vars.TURNSTILE_SITE_KEY = requiredSetting(envKey(env, 'TURNSTILE_SITE_KEY'));
   // Avoid validating unrelated remote placeholders in the other environment.

@@ -12,7 +12,6 @@
 
 #include "Samples.h"
 #include "SnapshotBuffer.h"
-#include "WebViewDrops.h"
 #include "blokdust/engine.hpp"
 #include "blokdust/mpe.hpp"
 
@@ -57,14 +56,6 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
 
   juce::AudioProcessorEditor* createEditor() override;
   bool hasEditor() const override { return true; }
-  /// BlokDust FX (an effect with Audio In) rather than the instrument (PLUGIN-0002).
-  static constexpr bool isFx() noexcept {
-#if BLOKDUST_FX
-    return true;
-#else
-    return false;
-#endif
-  }
   const juce::String getName() const override { return JucePlugin_Name; }
   bool acceptsMidi() const override { return true; }
   bool producesMidi() const override { return false; }
@@ -87,10 +78,6 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void flushDust();
   /// Message thread: the Dust moves the editor has not shown yet (flushDust first).
   std::vector<ParamUpdate> takeParamUpdates() { return std::exchange(paramUpdates_, {}); }
-  /// Message thread: Toggles the engine switched (particle and laser hits) since the last snapshot go into the patch,
-  /// so the host's project, a saved file and a share link keep them as they are, as v1's Toggle did; and they are
-  /// queued for the editor like Dust moves (CHG-0013).
-  void syncToggles(const Snapshot& s);
   /// Engine id → patch block id (message thread).
   const std::map<BlockId, std::string>& blockIds() const noexcept { return idToKey_; }
   /// Apply UI commands ([{type,id,blockType,x,y,param,value}]) to the engine and the patch model.
@@ -104,8 +91,6 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   /// R4a: the order the connected pairs connected in ([[patch id, patch id]...], oldest first), from the editor, which
   /// reads it from the engine. Saved in the patch as "connectionOrder" so a reopened project keeps its effect order.
   void setConnectionOrder(const nlohmann::json& order) { if (order.is_array()) patch_["connectionOrder"] = order; }
-  /// The editor's view (zoom, offset; owner 2026-11-12): saved with the patch, so a reopened project shows it.
-  void setView(const nlohmann::json& view) { if (view.is_object() && view.contains("zoom")) patch_["view"] = view; }
   /// MIDI learn (CHG-0004 3.9): the next CC received drives Dust `slot` (saved in its automation entry as "cc").
   void learnCc(int slot) noexcept { learnSlot_.store(slot); }
   std::function<void(int slot, int cc)> onCcLearned;  // set by the editor (message thread)
@@ -161,7 +146,6 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   std::array<std::atomic<double>, kDustSlots> dustValue_{};
   std::array<std::atomic<bool>, kDustSlots> dustMoved_{};
   std::vector<ParamUpdate> paramUpdates_;
-  std::map<BlockId, bool> togglesSeen_;  // each Toggle's state in the last snapshot (syncToggles)
   std::array<DustParameter*, kDustSlots> dustParams_{};
 
   nlohmann::json patch_;

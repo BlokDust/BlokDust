@@ -2,14 +2,7 @@
   "format": "blokdust.patch",
   "version": 2,
   "meta": {
-    "title": "Rotating Sequencer"
-  },
-  "seed": 3,
-  "tempo": 100,
-  "view": {
-    "x": 0,
-    "y": 0,
-    "zoom": 0.75
+    "title": "Laser Sequence"
   },
   "blocks": [
     {
@@ -27,8 +20,8 @@
     {
       "id": "power",
       "type": "power.power",
-      "x": 2,
-      "y": -1,
+      "x": 4,
+      "y": -2,
       "params": {}
     },
     {
@@ -112,10 +105,5 @@
       }
     }
   ],
-  "connectionOrder": [
-    [
-      "laser",
-      "power"
-    ]
-  ]
+  "tempo": 100
 }

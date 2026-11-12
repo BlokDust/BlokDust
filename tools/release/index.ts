@@ -45,32 +45,21 @@ function check() {
 async function publish(dryRun: boolean) {
   const { files, problems } = check();
   if (problems.length) { console.log(JSON.stringify({ version: VERSION, problems })); process.exit(1); }
-  // Immutable: a published URL never changes. Publish a corrected build as a new version. A file already published with
-  // exactly these bytes is done (an interrupted publish resumes); different bytes are refused.
-  const done = new Set<string>();
+  // Immutable: a published URL never changes. Publish a corrected build as a new version.
   for (const f of files) {
-    const r = await fetch(`${BASE_URL}/${key(f.file)}?source=release-check`);
-    if (r.status === 404) continue;
-    const same = r.ok && sha256(Buffer.from(await r.arrayBuffer())) === f.sha;
-    if (!same) { console.log(JSON.stringify({ version: VERSION, problems: [`${key(f.file)} already exists (HTTP ${r.status}) with other bytes: bump the version`] })); process.exit(1); }
-    done.add(f.file);
+    const r = await fetch(`${BASE_URL}/${key(f.file)}`, { method: 'HEAD' });
+    if (r.status !== 404) { console.log(JSON.stringify({ version: VERSION, problems: [`${key(f.file)} already exists (HTTP ${r.status}): bump the version`] })); process.exit(1); }
   }
   const plan = files.map(f => ({ file: f.file, key: `${BUCKET}/${key(f.file)}`, url: `${BASE_URL}/${key(f.file)}`, sha256: f.sha, bytes: f.bytes }));
   if (dryRun) { console.log(JSON.stringify({ version: VERSION, dryRun: true, plan })); return; }
-  for (const f of files.filter(x => !done.has(x.file))) for (const [path, name, type] of [[f.path, f.file, f.type], [`${f.path}.sha256`, `${f.file}.sha256`, 'text/plain']]) {
+  for (const f of files) for (const [path, name, type] of [[f.path, f.file, f.type], [`${f.path}.sha256`, `${f.file}.sha256`, 'text/plain']]) {
     const r = spawnSync(WRANGLER, ['r2', 'object', 'put', `${BUCKET}/${key(name)}`, '--file', path, '--content-type', type, '--remote'], { encoding: 'utf8', cwd: process.cwd() });
     if (r.status !== 0) throw new Error(`upload ${name}: ${r.stderr}`);
   }
   // What people will download is what was built.
-  // A just-uploaded file can briefly answer 404 from the CDN: retry for up to a minute.
   for (const p of plan) {
-    let ok = false;
-    for (let i = 0; i < 12 && !ok; i++) {
-      const r = await fetch(`${p.url}?source=release-check&try=${i}`);
-      ok = r.ok && sha256(Buffer.from(await r.arrayBuffer())) === p.sha256;
-      if (!ok) await new Promise(res => setTimeout(res, 5000));
-    }
-    if (!ok) throw new Error(`${p.url} does not serve the built bytes`);
+    const got = Buffer.from(await (await fetch(`${p.url}?source=release-check`)).arrayBuffer());
+    if (sha256(got) !== p.sha256) throw new Error(`${p.url} serves different bytes`);
   }
   const manifest = { version: VERSION, published: new Date().toISOString().slice(0, 10),
     ...Object.fromEntries(files.map(f => [f.os, { file: f.file, url: `${BASE_URL}/${key(f.file)}`, sha256: f.sha, bytes: f.bytes }])) };

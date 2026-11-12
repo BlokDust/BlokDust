@@ -1,5 +1,6 @@
 // BlokDust 2 Worker (SHARING-0001/0002/0004, SPEC-SHARING-BACKEND): serves the web build from static assets and the
 // sharing API. Routes are relative to BASE_PATH so the app can live at `/` or under a prefix such as `/blokdust`.
+import { submitSupport, expireSupport, supportHeaders } from './support.ts';
 import type { Env } from './env.ts';
 import { HttpError, assetBase, basePath, errorResponse, json, limit, prefix } from './http.ts';
 import { createPatch, deletePatch, getPatch, getThumb, savePatch } from './patches.ts';
@@ -46,6 +47,9 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (embed && m === 'GET') return page(env, req, url, embed[1]);
   if (path === '/oembed' && m === 'GET') return oembed(env, req, url);
 
+  if (path === '/api/support' && m === 'OPTIONS') return new Response(null, { status: 204, headers: { ...supportHeaders, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', 'access-control-max-age': '86400' } });
+  if (path === '/api/support' && m === 'POST') return submitSupport(env, req);
+
   if (path === '/api/config' && m === 'GET')
     return json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY ?? '', saving: !!env.TURNSTILE_SECRET, freesound: !!env.FREESOUND_TOKEN }, 200, { 'cache-control': 'no-cache' });
   if (path === '/api/patches' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'save'); return createPatch(env, req); }
@@ -72,6 +76,11 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    try { return await route(req, env, ctx); } catch (e) { return errorResponse(e); }
+    try { return await route(req, env, ctx); } catch (e) {
+      const response = errorResponse(e);
+      if (new URL(req.url).pathname.endsWith('/api/support')) for (const [k, v] of Object.entries(supportHeaders)) response.headers.set(k, v);
+      return response;
+    }
   },
+  async scheduled(_controller: ScheduledController, env: Env): Promise<void> { await expireSupport(env); },
 } satisfies ExportedHandler<Env>;

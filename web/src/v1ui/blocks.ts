@@ -41,9 +41,6 @@ export class V1Block {
     f?.call(this);
     if (this.def.id === 'source.microphone' || this.def.id === 'source.audio-in') gainForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
-    // Glide is mono-only (the engine starts each poly note without it): Poly hides it (owner, 2026-11-12, CHG-0010).
-    if (this.def.category === 'interaction' && this.OptionsForm && this.Params.isPolyphonic)
-      this.OptionsForm.parameters = (this.OptionsForm.parameters as any[]).filter(p => p.setting !== 'glide');
     if (this.def.id === 'fx.filter') filterForm(this);  // CHG-0010: types and a response graph (filterPanel.ts)
     if (SYNCED.has(this.def.id) && this.OptionsForm) extendSyncForm(this);
     const label = App.IsPlugin && this.def.v1Type ? PLUGIN_LABELS[this.def.v1Type] : undefined;
@@ -131,7 +128,7 @@ export class V1Block {
     // MPE switches (PLUGIN-0004): the panel shows the mapping rows only while MPE is on.
     if (key === 'mpe') { const p = this.def.params.find(q => q.key === 'mpe'); if (p) { this.Params.mpe = !!value; App.MainScene.setParam(this, 'mpe', value ? 1 : 0); this.RefreshOptionsPanel(); } return; }
     // v1 Keyboard.SetParam('polyphonic') also sets isPolyphonic, which the Mono/Poly switch displays.
-    if (key === 'polyphonic') { this.Params.isPolyphonic = !!value; App.MainScene.setParam(this, 'isPolyphonic', value ? 1 : 0); queueMicrotask(() => this.RefreshOptionsPanel()); }
+    if (key === 'polyphonic') { this.Params.isPolyphonic = !!value; App.MainScene.setParam(this, 'isPolyphonic', value ? 1 : 0); }
     const p = this.def.params.find(q => q.key === key);
     if (!p) return;
     let v = typeof value === 'boolean' ? (value ? 1 : 0) : Number(value);
@@ -180,12 +177,10 @@ function extendMidiForm(b: V1Block): void {
   const params = b.OptionsForm.parameters as any[];
   const sw = params.find(p => p.type === 'switches');
   sw?.switches.push({ name: 'MPE', setting: 'mpe', value: !!b.Params.mpe, lit: true, mode: 'offOn' });
-  // Owner (2026-11-12, CHG-0010): with MPE on, Channel is hidden: MPE uses every channel of its zone (the engine ignores
-  // the channel then).
-  if (!b.Params.mpe) params.push({ type: 'slider', name: 'Channel', setting: 'channel',
+  params.push({ type: 'slider', name: 'Channel', setting: 'channel',
     props: { value: Number(b.Params.channel ?? 0), min: 0, max: 16, quantised: true, centered: false,
       convertDisplay: (v: number) => (Math.round(v) === 0 ? 'OMNI' : String(Math.round(v))) } });
-  if (!App.IsPlugin) {  // a selector, not a slider (selectorOption.ts): arrows either side of the name
+  if (!App.IsPlugin) {
     const list = (App.MainScene?.midiDevices ?? []) as { name: string }[];
     const at = list.findIndex(d => d.name === b.Params.device);
     params.push({ type: 'slider', name: 'Device', setting: 'deviceIndex',
@@ -198,7 +193,9 @@ function extendMidiForm(b: V1Block): void {
         { name: 'Pressure', setting: 'pressureTo', value: Number(b.Params.pressureTo ?? 1) >= 0.5, lit: true, mode: 'offOn' },
         { name: 'Slide', setting: 'slideTo', value: Number(b.Params.slideTo ?? 1) >= 0.5, lit: true, mode: 'offOn' },
       ] });
-    // No Bend row (owner, 2026-11-12): pitch bend is ±48 semitones, MPE's standard (the `bendRange` param's default).
+    params.push({ type: 'slider', name: 'Bend', setting: 'bendRange',
+      props: { value: Number(b.Params.bendRange ?? 48), min: 1, max: 96, quantised: true, centered: false,
+        convertDisplay: (v: number) => `±${Math.round(v)} ST` } });  // semitones
   }
 }
 

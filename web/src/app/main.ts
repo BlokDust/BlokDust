@@ -1,3 +1,5 @@
+import { SupportClient } from '../support/client.ts';
+import { FeedbackPanel } from '../support/panel.ts';
 // BlokDust 2 web app (CHG-0002): engine in an AudioWorklet, the v1-faithful stage, and v1's own UI (web/src/v1ui:
 // header menus, options panel, zoom, bin, settings, share) driving it. The engine owns behaviour (ARCHITECTURE-0002);
 // this file keeps the patch model (for autosave and share links) and mirrors it to the engine, stage and v1 UI.
@@ -65,10 +67,7 @@ function embedIdFromPage(): string | null {
 interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
-async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
-  // The plugin's patch comes only from the processor (bd_patch, with the DAW project). The web view keeps
-  // localStorage between sessions, so its autosave would flash up first (owner, Logic, 2026-11-12).
-  if (plugin) return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null };
+async function initialPatch(params: URLSearchParams, embedId: string | null): Promise<Start> {
   const c = embedId ?? params.get('c');
   if (c && isServerId(c)) {
     const session = loadSession(), local = loadLocal();
@@ -102,7 +101,7 @@ async function main() {
     return { ctx, module };
   })() : null;
   if (!juce && embedId) engineModule().catch(() => { /* reported when PLAY needs it */ });
-  const start = await initialPatch(params, embedId, !!juce);
+  const start = await initialPatch(params, embedId);
   // v1 App.CompositionId / App.SessionId: the open composition and (if this browser made it) the right to overwrite it.
   App.CompositionId = start.id; App.SessionId = editToken(start.id);
   let session = { id: start.id, dirty: false };
@@ -134,8 +133,6 @@ async function main() {
   /** The patch tempo (SIMULATION-0003): saved only once set, so older patches stay byte-identical. */
   let tempo: number | undefined;
   let engine: EngineNode | null = null;
-  /** The plugin runs as the standalone app (the processor says so with its patch): no DAW to pass keys on to. */
-  let standalone = false;
   let send = (cmds: Command[]) => engine?.send(cmds);
   /** Sample references by `track` key (DATA-0005): the patch keeps the ones its blocks use. */
   const refs = new Map<string, SampleRef>();
@@ -150,59 +147,29 @@ async function main() {
     const uids = uidToId(), order = connectionOrder.filter(([a, b]) => uids.has(a) && uids.has(b));
     return { format: 'blokdust.patch', version: 2, seed, ...(tempo !== undefined ? { tempo } : {}),
       blocks: [...model.values()].map(b => ({ id: b.uid, type: b.type, x: b.x, y: b.y, params: b.params })),
-      ...(Object.keys(r).length ? { refs: r } : {}), ...(order.length ? { connectionOrder: order } : {}),
-      view: currentView() };
+      ...(Object.keys(r).length ? { refs: r } : {}), ...(order.length ? { connectionOrder: order } : {}) };
   };
-  const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
-  const round3 = (v: number) => Math.round(v * 1000) / 1000;
-  // The view settles (owner, 2026-11-12): the plugin's processor keeps it with the DAW project (bd_view); the website's
-  // autosave keeps it (not an unsaved change). Checked twice a second, sent once it stops changing.
-  // The autosave is only rewritten while it holds this patch (restored from it, or edited since): opening a link must
-  // not replace the user's own unsaved work.
-  let viewSent = '', viewSeen = '';
-  setInterval(() => {
-    try {
-      if (embedId || !probe.started) return;
-      const v = JSON.stringify(currentView());
-      if (v !== viewSeen) { viewSeen = v; return; }  // still moving
-      if (v === viewSent) return;
-      viewSent = v;
-      if (juce) juce.emitEvent('bd_view', JSON.parse(v));
-      else if (autosaveIsThis) saveLocal(toPatch());
-    } catch { /* main() still starting */ }
-  }, 500);
-  /** The view a patch is saved with (owner, 2026-11-12): zoom and the stage offset, in grid units. */
-  const currentView = () => ({ x: round3(stage.drag.x), y: round3(stage.drag.y), zoom: round3(stage.zoom) });
-  /** Show a patch's saved view (opening it, or the plugin's patch arriving). */
-  function applyView(v: Patch['view']): void {
-    if (!v || !Number.isFinite(v.zoom) || !Number.isFinite(v.x) || !Number.isFinite(v.y)) return;
-    const zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v.zoom)), drag = { x: v.x, y: v.y };
-    stage.setView(zoom, drag);
-    scene.setView(zoom, drag);
-    const dragger = (scene as unknown as { MainSceneDragger?: { Destination: { x: number; y: number } } }).MainSceneDragger;
-    if (dragger) { dragger.Destination.x = drag.x; dragger.Destination.y = drag.y; }
-    scene.pinchEnd();  // the zoom buttons step on from the nearest of v1's levels
-    uiSync = true;
-  }
+  const hostSystem: Record<string, unknown> = {};
+  juce?.addEventListener<Record<string, unknown>>('bd_supportSystem', value => { Object.assign(hostSystem, value); });
+  const supportClient = !embedId ? new SupportClient({ patch: toPatch, plugin: !!juce,
+    system: () => ({ sampleRate: App.Audio.sampleRate, ...hostSystem }) }) : null;
+  const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => theme) : null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
-  /** The autosave holds the patch on screen (it was restored from it, or edited since). */
-  let autosaveIsThis = !params.has('c') && !params.has('v1') && !params.has('demo') && !embedId;
   const changed = () => {
-    if (embedId || juce) return;  // the embed player never autosaves; in the plugin the DAW project keeps the patch
+    if (embedId) return;  // the embed player never autosaves
     clearTimeout(saveTimer);
-    autosaveIsThis = true;
     saveTimer = setTimeout(() => { saveLocal(toPatch()); if (session.id && !session.dirty) { session.dirty = true; saveSession(session); } }, 300);
   };
 
   const scene = new V1Scene({
+    feedback: () => feedbackPanel?.open(),
     createBlock: (v1Type, gx, gy) => {
       const def = DEF_BY_V1.get(v1Type);
       if (!def) return null;
       // A new Emitter, Pulse or Stereo Delay starts in tempo sync (owner, CHG-0004; the delay's 1/8 at 120 BPM is v1's
       // 0.25 s); saved patches without it keep v1 timing.
       const id = addBlock(def.id, gx, gy, def.id === 'power.emitter' || def.id === 'power.pulse' || def.id === 'fx.stereo-delay' ? { sync: true } : {});
-      pushUndo({ kind: 'add', uids: uidsOf([id]) });
-      startDrag(id, 0, 0, true);
+      startDrag(id, 0, 0);
       return id;
     },
     // A drop on the trash (v1 TrashCan.MouseUp → DeleteSelectedBlock) is deleted by pointerup, with its group, as one step.
@@ -240,7 +207,7 @@ async function main() {
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
-      shareLink = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
+      shareLink = null; undoStack.length = 0; endPlacing(true);
       setBaseline();
     },
     share: async (mode, title) => {
@@ -470,14 +437,13 @@ async function main() {
       if (mode === 'open') { scene.ResetScene(); pluginAfterLoad = { open: true }; }
       else pluginAfterLoad = { place: new Set(part.blocks.map(b => b.id).filter((id): id is string => !!id)), touch, at };
       juce.emitEvent('bd_patchApply', { mode, patch: JSON.stringify({ ...part, ...(mode === 'open' && p.tempo !== undefined ? { tempo: p.tempo } : {}),
-        ...(mode === 'open' && p.connectionOrder ? { connectionOrder: p.connectionOrder } : {}),
-        ...(mode === 'open' && p.view ? { view: p.view } : {}) }) });
+        ...(mode === 'open' && p.connectionOrder ? { connectionOrder: p.connectionOrder } : {}) }) });
       return;
     }
     if (mode === 'open') { scene.ResetScene(); if (typeof p.tempo === 'number') { tempo = p.tempo; send([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]); } }
     for (const [k, r] of Object.entries(part.refs)) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
     const ids = part.blocks.map(b => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
-    if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); }
+    if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); }
     if (mode === 'open') setBaseline(); else startPlacing(ids, touch, at);
     stage.redraw();
   }
@@ -486,9 +452,7 @@ async function main() {
 
   // ---- unsaved changes (owner, 2026-11-10): the patch as last saved, shared or opened ----
   /** What Open would lose: blocks, their params and the tempo (not the view). */
-  /** What counts as a change: blocks and tempo, but not a Toggle's on/off, which a running scene flips by itself. */
-  const contentOf = (p: Patch) => JSON.stringify([p.blocks.map(b => (b.type === 'power.toggle' && b.params && 'logic' in b.params
-    ? { ...b, params: Object.fromEntries(Object.entries(b.params).filter(([k]) => k !== 'logic')) } : b)), p.tempo ?? null]);
+  const contentOf = (p: Patch) => JSON.stringify([p.blocks, p.tempo ?? null]);
   const BASELINE_KEY = 'blokdust.savedPatch';
   let baseline = '';
   function setBaseline(): void {
@@ -500,22 +464,11 @@ async function main() {
 
   // ---- Insert: the new blocks follow the pointer until a click (or, on a touch screen, a drag) puts them down ----
   let placing: { ids: number[]; at: { x: number; y: number }; touch: boolean; grabbed?: boolean } | null = null;
-  /** Undo and redo (owner, 2026-11-10/11, and 2026-11-12 CHG-0010): adding blocks (from the menu, Insert, Cmd/Ctrl+D,
-   * Alt-drag copies), moving and deleting them, each one step however many blocks it took. Steps name blocks by
-   * their patch id, which a block keeps when undo or redo brings it back; a removed block is kept whole (settings,
-   * place, its sound). A new action clears what could be redone. Param changes are not steps. */
-  type XY = { x: number; y: number };
-  type Snap = { b: ModelBlock; buf?: AudioBuffer };
-  type UndoStep = { kind: 'add'; uids: string[]; snaps?: Snap[] } | { kind: 'remove'; snaps: Snap[] } | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[] };
-  const undoStack: UndoStep[] = [], redoStack: UndoStep[] = [];
-  const pushUndo = (u: UndoStep) => { undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; };
-  const idOfUid = (uid: string) => { for (const [id, b] of model) if (b.uid === uid) return id; return undefined; };
-  const uidsOf = (ids: Iterable<number>) => [...ids].flatMap(id => { const b = model.get(id); return b ? [b.uid] : []; });
-  const snapOf = (uid: string): Snap | null => { const id = idOfUid(uid), b = id === undefined ? undefined : model.get(id); return b ? { b: structuredClone(b), buf: samples.get(id!) } : null; };
-  function restore(s: Snap): void {
-    const id = addBlock(s.b.type, s.b.x, s.b.y, structuredClone(s.b.params), idOfUid(s.b.uid) === undefined ? s.b.uid : undefined);
-    if (s.buf && s.b.type !== 'source.sample-gen') useBuffer(id, s.buf, 'keep');
-  }
+  /** Cmd/Ctrl+Z (owner, 2026-11-10/11): takes the last Insert out again, as one step, or brings deleted blocks back
+   * (dragged to the trash, or Delete/Backspace: one block or a whole selection), with their sounds. */
+  type UndoStep = { kind: 'insert'; ids: number[] } | { kind: 'delete'; blocks: { id: number; b: ModelBlock; buf?: AudioBuffer }[] };
+  const undoStack: UndoStep[] = [];
+  const pushUndo = (u: UndoStep) => { undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); };
   let lastPointer: { x: number; y: number } | null = null;
   let lastPointerType = 'mouse';
   function startPlacing(ids: number[], touch: boolean, at: { x: number; y: number }): void {
@@ -523,7 +476,7 @@ async function main() {
     placing = { ids, at: { x: Math.round(at.x), y: Math.round(at.y) }, touch };
     stage.placing = new Set(ids);
     for (const id of ids) stage.toFront(id);
-    pushUndo({ kind: 'add', uids: uidsOf(ids) });
+    pushUndo({ kind: 'insert', ids });
     stage.redraw();
   }
   /** Move the placed blocks with the pointer, a whole grid cell at a time (as a dragged block moves). */
@@ -537,9 +490,8 @@ async function main() {
   function endPlacing(cancel: boolean): void {
     if (!placing) return;
     if (cancel) {
-      const uids = new Set(placing.ids.map(id => model.get(id)?.uid));
       for (const id of placing.ids) removeBlock(id);
-      const top = undoStack.at(-1); if (top?.kind === 'add' && top.uids.every(u => uids.has(u))) undoStack.pop();
+      const top = undoStack.at(-1); if (top?.kind === 'insert' && top.ids === placing.ids) undoStack.pop();
     }
     placing = null;
     stage.placing = new Set();
@@ -776,46 +728,27 @@ async function main() {
   }
   /** Delete blocks as one undoable step. */
   function deleteBlocks(ids: number[], from?: Map<number, { x: number; y: number }>): void {
-    // Kept where they were before the drag that took them to the trash.
-    const snaps = ids.flatMap(id => { const b = model.get(id); return b ? [{ b: { ...structuredClone(b), ...from?.get(id) }, buf: samples.get(id) }] : []; });
-    if (!snaps.length) return;
+    const blocks = ids.flatMap(id => { const b = model.get(id); return b ? [{ id, b: { ...structuredClone(b), ...from?.get(id) }, buf: samples.get(id) }] : []; });
+    if (!blocks.length) return;
     for (const id of ids) removeBlock(id);
-    pushUndo({ kind: 'remove', snaps });
+    pushUndo({ kind: 'delete', blocks });
   }
-  /** A drag that ended: one move step for the blocks it moved. */
-  function recordMove(ids: number[], from: Map<number, XY>): void {
-    const moves = ids.flatMap(id => { const b = model.get(id), f = from.get(id); return b && f && (b.x !== f.x || b.y !== f.y) ? [{ uid: b.uid, from: f, to: { x: b.x, y: b.y } }] : []; });
-    if (moves.length) pushUndo({ kind: 'move', moves });
-  }
-  const removeUids = (uids: string[]) => { for (const u of uids) { const id = idOfUid(u); if (id !== undefined) removeBlock(id); } };
-  const moveUids = (moves: { uid: string; from: XY; to: XY }[], to: boolean) => {
-    for (const m of moves) { const id = idOfUid(m.uid), at = to ? m.to : m.from; if (id !== undefined) moveBlock(id, at.x, at.y); }
-  };
   /** Undo the last step; false when there is none. */
   function undo(): boolean {
     const u = undoStack.pop();
     if (!u) return false;
-    if (u.kind === 'add') {
-      const snaps = u.uids.flatMap(uid => { const s = snapOf(uid); return s ? [s] : []; });
-      removeUids(u.uids);
-      redoStack.push({ kind: 'add', uids: u.uids, snaps });
-    } else if (u.kind === 'remove') { for (const s of u.snaps) restore(s); redoStack.push(u); }
-    else { moveUids(u.moves, false); redoStack.push(u); }
-    setSelection([]);
-    stage.redraw();
-    return true;
-  }
-  /** Redo the last undone step; false when there is none. */
-  function redo(): boolean {
-    const u = redoStack.pop();
-    if (!u) return false;
-    if (u.kind === 'add') { for (const s of u.snaps ?? []) restore(s); undoStack.push({ kind: 'add', uids: u.uids }); }
-    else if (u.kind === 'remove') {
-      const snaps = u.snaps.flatMap(s => { const now = snapOf(s.b.uid); return now ? [now] : []; });
-      removeUids(u.snaps.map(s => s.b.uid));
-      undoStack.push({ kind: 'remove', snaps });
-    } else { moveUids(u.moves, true); undoStack.push(u); }
-    setSelection([]);
+    if (u.kind === 'insert') for (const id of u.ids) removeBlock(id);
+    else {
+      // Restored blocks get new ids: an older Insert step that held them follows them.
+      const remap = new Map<number, number>();
+      for (const { id: was, b, buf } of u.blocks) {
+        const taken = [...model.values()].some(m => m.uid === b.uid);
+        const id = addBlock(b.type, b.x, b.y, structuredClone(b.params), taken ? undefined : b.uid);
+        if (buf && b.type !== 'source.sample-gen') useBuffer(id, buf, 'keep');
+        remap.set(was, id);
+      }
+      for (const s of undoStack) if (s.kind === 'insert') s.ids = s.ids.map(i => remap.get(i) ?? i);
+    }
     stage.redraw();
     return true;
   }
@@ -832,7 +765,7 @@ async function main() {
    * keeps running when the editor reopens, and its ids are not 1..N once blocks were deleted). */
   function showPatch(p: Patch, ids?: Record<string, number>): void {
     for (const id of [...model.keys()]) { model.delete(id); v1Blocks.delete(id); stage.removeBlock(id); samples.delete(id); missing.delete(id); }
-    undoStack.length = 0; redoStack.length = 0;
+    undoStack.length = 0;
     seed = p.seed ?? 1; nextId = 1;
     tempo = typeof p.tempo === 'number' ? p.tempo : undefined;
     if (tempo !== undefined) send([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]);
@@ -844,14 +777,11 @@ async function main() {
     }
     if (ids) nextId = Math.max(nextId, ...Object.values(ids).map(i => i + 1));
     connectionOrder = Array.isArray(p.connectionOrder) ? [...p.connectionOrder] : [];
-    if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
     for (const id of model.keys()) void resolveSample(id);
     scene.setBlocks([...v1Blocks.values()]);
     uiSync = true;
     stage.redraw();
   }
-  // A link, file or autosave shows the view it was saved at (owner, 2026-11-12); a v1 composition's own view wins.
-  if (start.view.zoom === undefined && !start.view.drag && start.patch.view) start.view = { ...start.view, zoom: start.patch.view.zoom, drag: { x: start.patch.view.x, y: start.patch.view.y } };
   if (start.view.zoom !== undefined || start.view.drag) stage.setView(start.view.zoom ?? 1, start.view.drag ?? { x: 0, y: 0 });
   showPatch(start.patch);
   // Unsaved changes are counted from what was opened: a link, a v1 composition or the demo. Work restored from the last
@@ -863,15 +793,12 @@ async function main() {
     if (title) scene.PatchesPanel.setTitle(title);
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
     if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
-    // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`). The link is made here at
-    // once, as SAVE makes it (the user asked for it in the app), and the address bar shows it, short, to copy; START
-    // shows the scene (owner, 2026-11-13: the Patches panel opened instead, its title over the start screen). The flag
-    // is dropped first, so a reload doesn't make another.
+    // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`) and Patches opens on SAVE,
+    // one click from its link. The flag is dropped so a reload doesn't open it again.
     if (params.has('share') && !juce && !embedId) {
       params.delete('share');
       history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
-      requestAnimationFrame(() => void scene.host.links?.make('saveAs', title || 'Untitled')
-        .catch(e => console.warn('BlokDust: making the share link failed', e)));
+      requestAnimationFrame(() => scene.PatchesPanel.OpenPanel(0));
     }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });
@@ -959,24 +886,11 @@ async function main() {
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
   };
   const overlay = document.getElementById('start')!;
-  /** A Toggle the engine switched (a particle or laser hit): the patch keeps its state, as v1's Toggle did (its
-   * Params.logic), so a save, a share link or the autosave reopens with the Toggles as they were (owner, 2026-11-13). */
-  function logicFlipped(id: number, on: boolean): void {
-    const b = model.get(id), v = v1Blocks.get(id);
-    if (b?.type !== 'power.toggle' || !!b.params.logic === on) return;
-    b.params.logic = on;
-    if (v) { v.Params.logic = on; if (scene.OptionsPanel.Scale > 0 && scene.OptionsPanel.SelectedBlock === v) v.RefreshOptionsPanel(); }
-    // Not an edit: the autosave (when it holds this patch) catches up within a second, without marking it unsaved or
-    // putting off the save of a real edit (a running scene may flip Toggles faster than the edit debounce).
-    if (embedId || juce || !autosaveIsThis || logicSave) return;
-    logicSave = setTimeout(() => { logicSave = undefined; saveLocal(toPatch()); }, 1000);
-  }
-  let logicSave: ReturnType<typeof setTimeout> | undefined;
   const onSnapshot = (s: Snapshot) => {
     probe.snapshots++; probe.rms = s.rms; probe.particles = s.particles.length / 3;
     // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the snapshot RMS.
     scene.setLevelDb(20 * Math.log10(Math.max(s.rms, 1e-5)));
-    for (const e of s.events) { if (e.type === 4) probe.gateOns++; if (e.type === 1) probe.hits++; if (e.type === 8 && e.value !== undefined) logicFlipped(e.block, e.value !== 0); }
+    for (const e of s.events) { if (e.type === 4) probe.gateOns++; if (e.type === 1) probe.hits++; }
     if (s.connections) {
       stage.setConnections(s.connections); probe.connections = Array.from(s.connections);
       const order: [string, string][] = [];
@@ -1000,8 +914,7 @@ async function main() {
   if (juce) {
     overlay.remove();
     send = cmds => juce.emitEvent('bd_commands', { commands: cmds });
-    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean }) => {
-      standalone = !!e.standalone;
+    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number> }) => {
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
       const after = pluginAfterLoad; pluginAfterLoad = null;
@@ -1014,7 +927,7 @@ async function main() {
         if (typeof a.cc === 'number') ccBySlot.set(a.slot, a.cc);
       }
       probe.started = true;
-      juce.emitEvent('bd_ready', { blocks: stage.allBlocks().length });
+      juce.emitEvent('bd_ready', { blocks: stage.allBlocks().length, supportSystem: hostSystem });
     });
     // Plugin samples (CHG-0004 3.6): the processor loads them natively and reports what to show.
     // Dust moves (host automation, MIDI CC; owner, Ableton, 2026-11-12): the block takes the value, and its options
@@ -1092,16 +1005,15 @@ async function main() {
 
   // ---- input: v1 MainScene order (UI first, then blocks, then stage drag) ----
   const dpr = () => stage.metrics.dpr;
-  let drag: { id: number; grabX: number; grabY: number; moved: boolean; fresh?: boolean } | null = null;
+  let drag: { id: number; grabX: number; grabY: number; moved: boolean } | null = null;
   /** Where every block was when the drag began: Undo puts blocks dragged to the trash back there. */
   let dragFrom = new Map<number, { x: number; y: number }>();
   let pointerIsDown = false;
   /** The press that ended (or is) a placement: its release goes nowhere else. */
   let swallowUp = false;
   const v1At = (cssX: number, cssY: number) => { const hit = stage.hitTest(cssX, cssY); return hit ? v1Blocks.get(hit.id) ?? null : null; };
-  /** `fresh`: the block was just made (menu, Alt-copy): its add step covers where it is put, so no move step. */
-  function startDrag(id: number, grabX: number, grabY: number, fresh = false): void {
-    drag = { id, grabX, grabY, moved: false, fresh };
+  function startDrag(id: number, grabX: number, grabY: number): void {
+    drag = { id, grabX, grabY, moved: false };
     dragFrom = new Map([...model].map(([i, b]) => [i, { x: b.x, y: b.y }]));
     stage.pressed = id; stage.toFront(id);
     send([{ type: CommandType.Press, id, value: 1 }]);  // v1 Block.MouseDown: a held source powers itself
@@ -1159,13 +1071,14 @@ async function main() {
   // the stage). Each further finger takes what it lands on: a block (dragged by that finger, powered while held, as
   // v1's pressed block), or a slider of the open options panel. A second finger while the first drags the stage
   // turns it into a pinch: zoom about the fingers' midpoint, which stays put, and pan with it. ----
-  type Extra = { kind: 'block'; id: number; grabX: number; grabY: number; from: XY } | { kind: 'slider'; index: number } | { kind: 'pinch' } | { kind: 'idle' };
+  type Extra = { kind: 'block'; id: number; grabX: number; grabY: number } | { kind: 'slider'; index: number } | { kind: 'pinch' } | { kind: 'idle' };
   let primaryId: number | null = null;
   /** What the first finger is doing; 'gone': it was in a pinch that ended, so it does nothing until it lifts. */
   let primaryRole: 'ui' | 'block' | 'stage' | 'placing' | 'gone' | 'box' | 'select' | null = null;
   const extras = new Map<number, Extra>();
   const touchAt = new Map<number, { x: number; y: number }>();  // css px of every finger down
   let pinch: { a: number; b: number; z0: number; d0: number; w: { x: number; y: number } } | null = null;
+  const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
   function pinchState() {
     const a = touchAt.get(pinch!.a)!, b = touchAt.get(pinch!.b)!;
     return { mid: { x: (a.x + b.x) / 2 * dpr(), y: (a.y + b.y) / 2 * dpr() }, dist: Math.hypot(a.x - b.x, a.y - b.y) };
@@ -1206,7 +1119,7 @@ async function main() {
     const taken = (id: number) => drag?.id === id || [...extras.values()].some(t => t.kind === 'block' && t.id === id);
     if (hit && !taken(hit.id) && !scene.uiAt(x * dpr(), y * dpr())) {
       const [gx, gy] = stage.cssToGrid(x, y);
-      extras.set(e.pointerId, { kind: 'block', id: hit.id, grabX: gx - hit.x, grabY: gy - hit.y, from: { x: hit.x, y: hit.y } });
+      extras.set(e.pointerId, { kind: 'block', id: hit.id, grabX: gx - hit.x, grabY: gy - hit.y });
       stage.held.add(hit.id); stage.toFront(hit.id);
       send([{ type: CommandType.Press, id: hit.id, value: 1 }]);
       stage.redraw();
@@ -1228,10 +1141,7 @@ async function main() {
     extras.delete(id);
     if (!t) return;
     if (t.kind === 'pinch') endPinch();
-    if (t.kind === 'block') {
-      stage.held.delete(t.id);
-      if (model.has(t.id)) { send([{ type: CommandType.Press, id: t.id, value: 0 }]); recordMove([t.id], new Map([[t.id, t.from]])); }
-    }
+    if (t.kind === 'block') { stage.held.delete(t.id); if (model.has(t.id)) send([{ type: CommandType.Press, id: t.id, value: 0 }]); }
     stage.redraw();
   }
   /** Tests: what each finger is doing. */
@@ -1313,14 +1223,13 @@ async function main() {
     if (drag && e.altKey && !drag.moved && grouped()) {
       // Alt + drag on a selection copies all of it (v1's Alt-copy, for the group): the copies are dragged and selected.
       const ids = [...selection], made = copyBlocks(ids, 0, 0), first = made.get(drag.id);
-      pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);
       const v = v1Blocks.get(drag.id); if (v) v.IsPressed = false;
       stage.held.clear();
       if (first !== undefined) {
         const grab = { x: drag.grabX, y: drag.grabY };
         setSelection(made.values());
-        startDrag(first, grab.x, grab.y, true);
+        startDrag(first, grab.x, grab.y);
         drag!.moved = true;  // copied once per drag
         for (const id of selection) if (id !== first) stage.held.add(id);
         const cv = v1Blocks.get(first);
@@ -1338,8 +1247,7 @@ async function main() {
         const copy = addBlock(b.type, Math.round(gx), Math.round(gy), structuredClone(b.params));
         const buf = samples.get(drag.id);
         if (buf && b.type !== 'source.sample-gen') useBuffer(copy, buf, 'keep');
-        pushUndo({ kind: 'add', uids: uidsOf([copy]) });
-        startDrag(copy, 0, 0, true);
+        startDrag(copy, 0, 0);
         drag.moved = true;
         const cv = v1Blocks.get(copy);
         if (cv) { scene.select(cv); cv.IsPressed = true; scene.IsDraggingABlock = true; }
@@ -1391,10 +1299,7 @@ async function main() {
     const result = scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), moved);
     stage.held.clear();
     if (result === 'delete' && drag) deleteBlocks(wasGroup ? [...selection] : [drag.id], dragFrom);
-    else if (drag) {
-      send([{ type: CommandType.Press, id: drag.id, value: 0 }]);  // v1 MouseUp → RemovePower
-      if (moved && !drag.fresh) recordMove(wasGroup ? [...selection] : [drag.id], dragFrom);
-    }
+    else if (drag) send([{ type: CommandType.Press, id: drag.id, value: 0 }]);  // v1 MouseUp → RemovePower
     // A click on a selected block (no move) is v1's click: its options panel, and the group is let go.
     if (drag && !moved && wasGroup && !e.shiftKey) setSelection([]);
     if (role === 'stage' && still) setSelection([]);  // a tap on the stage clears the selection
@@ -1526,7 +1431,6 @@ async function main() {
     // Plugin: with a Computer Keyboard in the patch its keys are BlokDust's while the editor has the keys (the DAW's
     // shortcuts would fire too); without one they go on to the DAW (Logic's Musical Typing → MIDI Input).
     captureKeys: () => !!juce && [...model.values()].some(b => b.type === 'input.computer-keyboard'),
-    captureAll: () => standalone,
     // Plugin: the editor says when its window loses the keys (clicking into the DAW); the web view may not blur (Ableton).
     onReleaseAll: release => { juce?.addEventListener('bd_keysLost', () => release()); },
     midi: (status, d1, d2, device) => {
@@ -1558,12 +1462,6 @@ async function main() {
         else undo();
         return;
       }
-      // Redo: Cmd/Ctrl+Shift+Z, or Ctrl+Y (Windows).
-      if ((e.metaKey || e.ctrlKey) && ((e.shiftKey && e.key.toLowerCase() === 'z') || (!e.shiftKey && e.key.toLowerCase() === 'y')) && !placing && redoStack.length) {
-        e.preventDefault();
-        redo();
-        return;
-      }
     }
     if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !scene.PatchesPanel.Open && !scene.SettingsPanel.Open && !scene.SoundcloudPanel.Open) {
       const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
@@ -1573,9 +1471,7 @@ async function main() {
       if (mod && !e.shiftKey && k === 'a') { e.preventDefault(); setSelection(model.keys()); scene.OptionsPanel.Close(); return; }
       if (mod && !e.shiftKey && k === 'd' && selection.size) {
         e.preventDefault();
-        const made = copyBlocks([...selection], 2, 2);
-        pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
-        setSelection(made.values());
+        setSelection(copyBlocks([...selection], 2, 2).values());
         return;
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selection.size) {

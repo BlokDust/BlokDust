@@ -6,7 +6,6 @@ import type { Theme } from '../generated/palettes.gen.ts';
 import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
-import { installSelectors } from './selectorOption.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -29,6 +28,7 @@ import type { FreesoundSound } from '../patch/samples.ts';
 import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
 
 export interface SceneHost extends PatchesHost {
+  feedback?(): void;
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
   createBlock(v1Type: string, gx: number, gy: number): number | null;
   deleteBlock(id: number): void;
@@ -164,7 +164,6 @@ export class V1Scene {
       (this.SharePanel as any).OpenPanel = () => this.PatchesPanel.OpenPanel();
       release1Settings(this.SettingsPanel, this.host);
       installFilterPanel(this.OptionsPanel);
-      installSelectors(this.OptionsPanel);
       locateMissingFiles(this);
     }
     this.Metrics.Compute();
@@ -360,14 +359,11 @@ export class V1Scene {
     ctx.moveTo(rx + 5 * u, cy); ctx.lineTo(rx, cy - 5 * u); ctx.lineTo(rx - 5 * u, cy); ctx.lineTo(rx, cy + 5 * u); ctx.lineTo(rx + 5 * u, cy);
     ctx.stroke(); ctx.lineWidth = 1;
     ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-    const label = on ? 'POWER' : 'POWER OFF';
-    let base = App.Height - 50 * u;
+    const label = on ? 'POWER' : 'POWER OFF', base = App.Height - 50 * u;
     if (!on) {
-      const m = ctx.measureText(label), boxY = base - 11 * u, boxH = 15 * u;
+      const tw = ctx.measureText(label).width;
       App.FillColor(ctx, App.Palette[menu[3]]);
-      ctx.fillRect(x + w * 0.5 - m.width * 0.5 - 6 * u, boxY, m.width + 12 * u, boxH);
-      // The letters sit in the middle of the red (owner, 2026-11-13: they sat a pixel or two high).
-      base = boxY + boxH * 0.5 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) * 0.5;
+      ctx.fillRect(x + w * 0.5 - tw * 0.5 - 6 * u, base - 11 * u, tw + 12 * u, 15 * u);
     }
     App.FillColor(ctx, txt);
     ctx.fillText(label, x + w * 0.5, base);

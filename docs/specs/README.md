@@ -15,6 +15,7 @@
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
 | [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003 |
+| [SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS](domains/support/in-app-feedback-and-diagnostic-reports.md) | In-app feedback and diagnostic reports | support | **draft** | SUPPORT-0001, DATA-0005 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
 
 ## Changes
@@ -27,8 +28,8 @@
 | [CHG-0004](changes/0004-phase-3-plugin/proposal.md) | Phase 3 plugin | **done** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
 | [CHG-0005](changes/0005-release-1/proposal.md) | Release 1 | **approved** | SPEC-PATCH-FORMAT-V2, SPEC-VISUAL-V1-PARITY |
 | [CHG-0008](changes/0008-keep-operational-configuration-private/proposal.md) | Keep operational configuration private | **proposed** | SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION |
+| [CHG-0009](changes/0009-add-in-app-feedback-and-private-support-reports/proposal.md) | Add in-app feedback and private support reports | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
 | [CHG-0009](changes/0009-keyboard-notes-fire-emitters/proposal.md) | Keyboard notes fire Emitters | **proposed** | SPEC-CONNECTIONS-PROXIMITY |
 | [CHG-0010](changes/0010-post-launch-fixes-2-0-1/proposal.md) | Post-launch fixes (2.0.1) | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-CONNECTIONS-PROXIMITY |
 | [CHG-0011](changes/0011-effects-run-in-the-order-they-connected/proposal.md) | Effects run in the order they connected | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0012](changes/0012-dust-automation-moves-the-sliders/proposal.md) | Dust automation moves the sliders | **proposed** | SPEC-PATCH-FORMAT-V2 |
-| [CHG-0013](changes/0013-post-launch-fixes-2-0-2/proposal.md) | Post-launch fixes (2.0.2) | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES |

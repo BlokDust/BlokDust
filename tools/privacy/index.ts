@@ -24,6 +24,7 @@ function scan(file: string, text: string) {
   // Compare sensitive identifiers without committing a denylist of real values.
   for (const key of ['CLOUDFLARE_ACCOUNT_ID', 'BLOKDUST_APPLE_TEAM_ID', 'BLOKDUST_WORKERS_SUBDOMAIN',
     'BLOKDUST_STAGING_DATABASE_ID', 'BLOKDUST_PRODUCTION_DATABASE_ID',
+    'BLOKDUST_STAGING_SUPPORT_DATABASE_ID', 'BLOKDUST_PRODUCTION_SUPPORT_DATABASE_ID',
     'BLOKDUST_STAGING_TURNSTILE_SITE_KEY', 'BLOKDUST_PRODUCTION_TURNSTILE_SITE_KEY']) {
     let value: string; try { value = requiredSetting(key); } catch { continue; }
     if (value.length < 8) continue;

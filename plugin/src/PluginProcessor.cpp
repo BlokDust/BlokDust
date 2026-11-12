@@ -22,27 +22,18 @@ juce::AudioProcessor::BusesProperties BlokDustProcessor::buses() {
   // FX: the track's audio. Instrument: an optional side-chain (off until the host enables it), which also feeds the
   // Audio Input block (CHG-0004 3.3/3.4).
   if (kFx) b = b.withInput("Input", juce::AudioChannelSet::stereo(), true);
-  // Every format, the AU too (owner, Logic, 2026-11-12): without this input Logic 11 lists the instrument but never opens
-  // its editor. (It went missing from AU Instruments because of an old 2.0.0 copy in /Library, not this bus.)
-  else b = b.withInput("Side Chain", juce::AudioChannelSet::stereo(), false);
+  // Not in the Audio Unit (owner, Logic, 2026-11-12): AUs have no disabled buses, so JUCE then reports only channel
+  // configurations with an input ([1,1] [1,2] [2,1] [2,2]) and Logic leaves the instrument out of AU Instruments. In
+  // Logic, audio goes in through BlokDust FX instead.
+  else if (juce::PluginHostType::getPluginLoadedAs() != juce::AudioProcessor::wrapperType_AudioUnit)
+    b = b.withInput("Side Chain", juce::AudioChannelSet::stereo(), false);
   return b.withOutput("Output", juce::AudioChannelSet::stereo(), true);
 }
 
 BlokDustProcessor::BlokDustProcessor() : AudioProcessor(buses()) {
-  systemLog(juce::String(kFx ? "fx" : "instrument") + ": processor created (" + getWrapperTypeDescription(wrapperType) + ", "
-            + juce::String(getTotalNumInputChannels()) + " in / " + juce::String(getTotalNumOutputChannels()) + " out)");
   recDrain_.f = [this] { drainRecording(); };
   patch_ = kFx ? nlohmann::json::parse(BinaryData::fx_patch_json, BinaryData::fx_patch_json + BinaryData::fx_patch_jsonSize)
                : nlohmann::json::parse(BinaryData::pluginstart_patch_json, BinaryData::pluginstart_patch_json + BinaryData::pluginstart_patch_jsonSize);
-  // The standalone app's first launch (owner, 2026-11-13, CHG-0013): the Rotating Sequencer, a simple patch to start
-  // from. JUCE's standalone wrapper restores the last session over it on every later launch (setStateInformation).
-  if (!kFx && wrapperType == wrapperType_Standalone) {
-    int size = 0;
-    for (int i = 0; i < BinaryData::namedResourceListSize; ++i)
-      if (juce::String(BinaryData::originalFilenames[i]) == "04-rotating-sequencer.blokdust")
-        if (const char* d = BinaryData::getNamedResource(BinaryData::namedResourceList[i], size); d && size > 0)
-          patch_ = nlohmann::json::parse(d, d + size);
-  }
   // Dust 1–8 (PLUGIN-0003): fixed generic host parameters, mapped onto block params by the patch's "automation" list.
   for (int i = 0; i < kDustSlots; ++i) {
     auto p = std::make_unique<DustParameter>(i + 1);
@@ -60,8 +51,6 @@ bool BlokDustProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 }
 
 void BlokDustProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-  systemLog(juce::String(kFx ? "fx" : "instrument") + ": prepareToPlay " + juce::String(sampleRate) + " Hz, " + juce::String(samplesPerBlock)
-            + " frames, " + juce::String(getTotalNumInputChannels()) + " in / " + juce::String(getTotalNumOutputChannels()) + " out");
   sampleRate_ = sampleRate;
   scratch_.assign(static_cast<std::size_t>(std::max(samplesPerBlock, 4096)), 0.0f);
   blocksPerSnapshot_ = std::max(1, static_cast<int>(sampleRate / std::max(1, samplesPerBlock) / 30.0));  // ~30 Hz UI
@@ -163,24 +152,6 @@ void BlokDustProcessor::flushDust() {
     auto it = std::find_if(paramUpdates_.begin(), paramUpdates_.end(), [&](const ParamUpdate& u) { return u.id == s.block && u.param == key; });
     if (it != paramUpdates_.end()) it->value = v; else paramUpdates_.push_back({s.block, key, v});
   }
-}
-
-void BlokDustProcessor::syncToggles(const Snapshot& s) {
-  // Edge-triggered: only a change the engine made since the last snapshot is written, so a switch the user just set
-  // (already in the patch, not yet in the engine) is never undone by a snapshot from before it applied.
-  std::map<BlockId, bool> now;
-  for (int i = 0; i < s.toggleCount; ++i) now[s.toggles[static_cast<std::size_t>(i)]] = s.toggleOn[static_cast<std::size_t>(i)] != 0;
-  for (const auto& [id, on] : now) {
-    const auto was = togglesSeen_.find(id);
-    if (was == togglesSeen_.end() || was->second == on) continue;
-    const auto k = idToKey_.find(id);
-    auto* b = k == idToKey_.end() ? nullptr : blockJson(k->second);
-    if (!b) continue;
-    (*b)["params"]["logic"] = on;
-    auto it = std::find_if(paramUpdates_.begin(), paramUpdates_.end(), [&](const ParamUpdate& u) { return u.id == id && u.param == "logic"; });
-    if (it != paramUpdates_.end()) it->value = on ? 1.0 : 0.0; else paramUpdates_.push_back({id, "logic", on ? 1.0 : 0.0});
-  }
-  togglesSeen_ = std::move(now);
 }
 
 void BlokDustProcessor::handleAsyncUpdate() {
@@ -300,12 +271,6 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   for (int i = 0; i < kMaxBlocks; ++i) {
     if (!blocks[static_cast<std::size_t>(i)].alive) continue;
     if (blocks[static_cast<std::size_t>(i)].power() > 0) s.powered[static_cast<std::size_t>(s.poweredCount++)] = blocks[static_cast<std::size_t>(i)].id;
-  }
-  s.toggleCount = 0;
-  for (const auto& b : blocks) {
-    if (!b.alive || b.type != BlockType::PowerToggle) continue;
-    s.toggles[static_cast<std::size_t>(s.toggleCount)] = b.id;
-    s.toggleOn[static_cast<std::size_t>(s.toggleCount++)] = b.params[gen::param::PowerToggle::logic] != 0.0 ? 1 : 0;
   }
   s.beamCount = 0;
   for (const auto& b : engine_->beams()) {
@@ -612,10 +577,7 @@ nlohmann::json BlokDustProcessor::sampleInfos() const {
   return all;
 }
 
-juce::AudioProcessorEditor* BlokDustProcessor::createEditor() {
-  systemLog(juce::String(kFx ? "fx" : "instrument") + ": createEditor");
-  return new BlokDustEditor(*this);
-}
+juce::AudioProcessorEditor* BlokDustProcessor::createEditor() { return new BlokDustEditor(*this); }
 
 }  // namespace blokdust::plugin
 

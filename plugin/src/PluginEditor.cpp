@@ -44,21 +44,38 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withNativeIntegrationEnabled()
                .withKeepPageLoadedWhenBrowserIsHidden()
                .withResourceProvider([](const juce::String& url) { return resource(url); })
-               .withEventListener("bd_hello", [this](const juce::var&) { systemLog("page: hello"); reloadPatch(); })
+               .withEventListener("bd_hello", [this](const juce::var&) { reloadPatch(); })
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
-                 systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
                  if (auto* o = v.getDynamicObject()) o->setProperty("snapshotSeq", static_cast<juce::int64>(proc_.snapshotSeq()));
                  // Test hook: report the UI round-trip to a file when BLOKDUST_DIAG_FILE is set (host tests only).
-                 if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
+                 if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1") {
+                   // Explicit test-host mode: exercise the actual WebView form and its cross-origin HTTP submission.
+                   web_.evaluateJavascript(R"JS((() => {
+                     const panel = document.getElementById('feedback-panel'); panel.showModal();
+                     document.getElementById('feedback-message').value = 'CHG-0009 native plugin support smoke test';
+                     document.getElementById('feedback-form').requestSubmit();
+                     let tries = 0;
+                     const timer = setInterval(() => {
+                       const status = document.getElementById('feedback-status').textContent;
+                       const success = status.includes('Your support reference is');
+                       if (success || ++tries >= 120) {
+                         clearInterval(timer);
+                         window.__JUCE__.backend.emitEvent('bd_supportSmoke', { success, status });
+                       }
+                     }, 100);
+                   })())JS");
+                 } else if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
                    juce::File(path).replaceWithText(juce::JSON::toString(v, true));
+               })
+               .withEventListener("bd_supportSmoke", [](const juce::var& v) {
+                 if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1")
+                   if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
+                     juce::File(path).replaceWithText(juce::JSON::toString(v, true));
                })
                .withEventListener("bd_automation", [this](const juce::var& v) {
                  proc_.setAutomation(static_cast<int>(v.getProperty("slot", 0)), static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))),
                                      v.getProperty("param", "").toString().toStdString());
-               })
-               .withEventListener("bd_view", [this](const juce::var& v) {
-                 proc_.setView(nlohmann::json::parse(juce::JSON::toString(v, true).toStdString()));
                })
                .withEventListener("bd_connectionOrder", [this](const juce::var& v) {
                  proc_.setConnectionOrder(nlohmann::json::parse(juce::JSON::toString(v.getProperty("order", juce::var()), true).toStdString()));
@@ -144,7 +161,6 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
   setResizable(true, true);
   setResizeLimits(640, 400, 4096, 4096);
   setSize(1280, 800);
-  systemLog(juce::String(proc_.isFx() ? "fx" : "instrument") + " editor: loading " + juce::WebBrowserComponent::getResourceProviderRoot() + " (host " + juce::PluginHostType().getHostDescription() + ")");
   web_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
   startTimerHz(30);
 }
@@ -172,9 +188,14 @@ void BlokDustEditor::reloadPatch() {
   auto* ids = new juce::DynamicObject();
   for (const auto& [id, key] : proc_.blockIds()) ids->setProperty(juce::Identifier(juce::String(key)), static_cast<int>(id));
   obj->setProperty("ids", juce::var(ids));
-  // The standalone app has no DAW to pass keys on to: the page keeps every plain key, or macOS sounds its alert for
-  // each one nobody takes (owner, 2026-11-13, CHG-0013).
-  obj->setProperty("standalone", proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
+  auto* system = new juce::DynamicObject();
+  system->setProperty("surface", juce::JUCEApplicationBase::isStandaloneApp() ? "standalone" : "plugin");
+  system->setProperty("os", juce::SystemStats::getOperatingSystemName());
+  system->setProperty("host", juce::PluginHostType().getHostDescription());
+  system->setProperty("format", juce::AudioProcessor::getWrapperTypeDescription(proc_.wrapperType));
+  system->setProperty("sampleRate", proc_.getSampleRate());
+  system->setProperty("bufferSize", proc_.getBlockSize());
+  web_.emitEventIfBrowserIsVisible("bd_supportSystem", juce::var(system));
   web_.emitEventIfBrowserIsVisible("bd_patch", juce::var(obj));
 }
 
@@ -201,8 +222,6 @@ void BlokDustEditor::timerCallback() {
     hadKeys_ = keys;
     if (!keys) { web_.emitEventIfBrowserIsVisible("bd_keysLost", juce::var(new juce::DynamicObject())); proc_.releasePageKeys(); }
   }
-  const Snapshot* s = proc_.snapshots().read();
-  if (s) proc_.syncToggles(*s);  // Toggles hits switched: into the patch, and onto the page below (CHG-0013)
   // Dust moves (host automation, MIDI CC) show on the page's sliders, live (owner, Ableton, 2026-11-12).
   proc_.flushDust();
   if (auto ups = proc_.takeParamUpdates(); !ups.empty()) {
@@ -216,6 +235,7 @@ void BlokDustEditor::timerCallback() {
     obj->setProperty("values", values);
     web_.emitEventIfBrowserIsVisible("bd_paramValues", juce::var(obj));
   }
+  const Snapshot* s = proc_.snapshots().read();
   if (!s) return;
   juce::Array<juce::var> particles, pairs, powered, beams, playheads;
   for (int i = 0; i < s->playheadCount * 2; ++i) playheads.add(s->playheads[static_cast<std::size_t>(i)]);

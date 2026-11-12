@@ -1,0 +1,30 @@
+{
+  "format": "blokdust.patch",
+  "version": 2,
+  "meta": {
+    "title": "Microphone + Reverb + Recorder"
+  },
+  "blocks": [
+    {
+      "id": "mic",
+      "type": "source.microphone",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "verb",
+      "type": "fx.convolver",
+      "x": 2,
+      "y": 2,
+      "params": {
+        "mix": 0.5
+      }
+    },
+    {
+      "id": "rec",
+      "type": "source.recorder",
+      "x": -7,
+      "y": 0
+    }
+  ]
+}

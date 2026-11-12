@@ -1,6 +1,8 @@
 // Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN (`pnpm bd server secret`).
 export interface Env {
   DB: D1Database;
+  SUPPORT_DB?: D1Database;
+  SUPPORT_LIMIT?: RateLimit;
   ASSETS: Fetcher;
   /** Per-IP limits (Workers rate limiting binding): saves, and Freesound lookups (one shared key, 2000/day). */
   SAVE_LIMIT?: RateLimit;

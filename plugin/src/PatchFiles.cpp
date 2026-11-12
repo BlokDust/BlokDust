@@ -55,7 +55,6 @@ nlohmann::json merge(const nlohmann::json& current, const nlohmann::json& part, 
     // R4a: the opened patch's effect order. (Insert keeps the scene's; the inserted blocks' pairs, unlisted, connect
     // in block order when the engine is rebuilt, and the editor then reports the whole order back.)
     if (part.contains("connectionOrder")) out["connectionOrder"] = part["connectionOrder"]; else out.erase("connectionOrder");
-    if (part.contains("view")) out["view"] = part["view"]; else out.erase("view");  // the opened patch's view
   } else {
     if (!out.contains("blocks") || !out["blocks"].is_array()) out["blocks"] = nlohmann::json::array();
     for (const auto& b : blocks) out["blocks"].push_back(b);

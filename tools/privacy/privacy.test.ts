@@ -43,7 +43,7 @@ test('R1–R4: dotenv stays outside checkout; environment wins; values are not s
     assert.equal(r.stdout.trim(), 'public-default');
     const config = {
       CLOUDFLARE_ACCOUNT_ID: 'account-for-test', BLOKDUST_STAGING_PUBLIC_URL: 'https://staging.example.com/blokdust',
-      BLOKDUST_STAGING_DATABASE_ID: '11111111-1111-4111-8111-111111111111', BLOKDUST_STAGING_TURNSTILE_SITE_KEY: 'test-site-key',
+      BLOKDUST_STAGING_DATABASE_ID: '11111111-1111-4111-8111-111111111111', BLOKDUST_STAGING_SUPPORT_DATABASE_ID: '22222222-2222-4222-8222-222222222222', BLOKDUST_STAGING_TURNSTILE_SITE_KEY: 'test-site-key',
     };
     r = run("import { remoteConfig } from './tools/server/config.ts'; console.log(remoteConfig('staging'));", config);
     assert.equal(r.status, 0, r.stderr);

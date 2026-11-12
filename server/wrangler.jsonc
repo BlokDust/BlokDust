@@ -13,12 +13,15 @@
     "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*"]
   },
   // Per-IP limits (SPEC-SHARING-BACKEND R5a); bindings are per environment.
+  "triggers": { "crons": ["17 3 * * *"] },
   "ratelimits": [
     { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
-    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "SUPPORT_LIMIT", "namespace_id": "1003", "simple": { "limit": 5, "period": 60 } }
   ],
   "d1_databases": [
-    { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" },
+    { "binding": "SUPPORT_DB", "database_name": "blokdust-support-dev", "database_id": "00000000-0000-0000-0000-000000000001", "migrations_dir": "support-migrations" }
   ],
   "vars": {
     "PUBLIC_BASE_URL": "",
@@ -48,6 +51,7 @@
       "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB" }
     },
     "staging": {
+      "triggers": { "crons": ["17 3 * * *"] },
       "name": "blokdust-staging",
       "workers_dev": true,
       // At the root, as production (SHARING-0006); review links from before, under /blokdust/, redirect there.
@@ -58,10 +62,12 @@
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "2001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "SUPPORT_LIMIT", "namespace_id": "2003", "simple": { "limit": 5, "period": 60 } }
       ],
       "d1_databases": [
-        { "binding": "DB", "database_name": "blokdust-staging", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "blokdust-staging", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" },
+        { "binding": "SUPPORT_DB", "database_name": "blokdust-support-staging", "database_id": "REMOTE_SUPPORT_DATABASE_ID", "migrations_dir": "support-migrations" }
       ],
       "vars": {
         "PUBLIC_BASE_URL": "https://staging.example.invalid",
@@ -71,6 +77,7 @@
       }
     },
     "production": {
+      "triggers": { "crons": ["17 3 * * *"] },
       "name": "blokdust",
       // workers.dev stays on: its page links redirect to blokdust.funputs.com and its API keeps answering.
       "workers_dev": true,
@@ -88,10 +95,12 @@
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "3001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "SUPPORT_LIMIT", "namespace_id": "3003", "simple": { "limit": 5, "period": 60 } }
       ],
       "d1_databases": [
-        { "binding": "DB", "database_name": "blokdust", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
+        { "binding": "DB", "database_name": "blokdust", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" },
+        { "binding": "SUPPORT_DB", "database_name": "blokdust-support-production", "database_id": "REMOTE_SUPPORT_DATABASE_ID", "migrations_dir": "support-migrations" }
       ],
       "vars": {
         "PUBLIC_BASE_URL": "https://blokdust.funputs.com",

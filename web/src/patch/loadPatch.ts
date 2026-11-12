@@ -8,9 +8,7 @@ export interface Patch { format?: string; version?: number; seed?: number; tempo
   refs?: Record<string, unknown>;
   /** The order the connected pairs connected in, oldest first, as [block id, block id] (R4a: a source's effects run in
    * the order they connected, as in v1). Ordering only: connections still come from positions. */
-  connectionOrder?: [string, string][];
-  /** The view it was saved at (owner, 2026-11-12, SPEC-PATCH-FORMAT-V2 R2): opening shows it. The engine ignores it. */
-  view?: { x: number; y: number; zoom: number } }
+  connectionOrder?: [string, string][] }
 export type ScriptOp =
   | { op: 'add'; atSample?: number; block: PatchBlock }
   | { op: 'move'; atSample?: number; block: string; x: number; y: number }

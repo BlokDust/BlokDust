@@ -52,17 +52,12 @@ function resignAdHoc(): void {
 }
 
 /** Deploy to the externally configured SSH test host. See docs/engineering/local-configuration.md. */
-function deploy(noBuild: boolean, force = false): void {
+function deploy(noBuild: boolean): void {
   const host = requiredSetting('BLOKDUST_TEST_HOST');
   if (!noBuild) build(); else resignAdHoc();
   for (const b of BUNDLES()) if (!existsSync(b)) throw new Error(`no ${b}: build first (pnpm bd plugin build)`);
   const ssh = (cmd: string) => run('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', host, cmd], true);
   if (ssh('true').status !== 0) throw new Error(`cannot reach ${host} over SSH (Remote Login on, this machine's key in its authorized_keys?)`);
-  // Owner (Logic, 2026-11-12): replacing a plugin a DAW has loaded (and resetting the AU registry under it) leaves that
-  // session broken in ways that look like plugin bugs. Refuse while any process there has a BlokDust binary mapped.
-  const busy = ssh(`for p in $(pgrep -f "Logic Pro|Ableton Live|REAPER|GarageBand|AUHostingService|Bitwig"); do lsof -p "$p" 2>/dev/null | grep -q "/BlokDust" && ps -o comm= -p "$p" | xargs basename; done | sort -u`);
-  const users = busy.stdout.trim().split('\n').filter(Boolean);
-  if (users.length && !force) throw new Error(`BlokDust is loaded on ${host} by: ${users.join(', ')}. Quit it there first (or --force)`);
   ssh('mkdir -p ~/Library/Audio/Plug-Ins/VST3 ~/Library/Audio/Plug-Ins/Components');
   const shipped: string[] = [];
   for (const b of BUNDLES()) {
@@ -155,7 +150,7 @@ function test() {
     const got = hostRender(c.plugin, c.fixture, c.extra, { BLOKDUST_DIAG_FILE: diag });
     const exp = c.native ? nativeRender(c.fixture) : expected(c.fixture);
     const nameOk = !c.paramName || got.params?.[c.paramName[0]] === c.paramName[1];
-    const ok = nameOk && got.audioHash === exp.audioHash && (c.noRoundTripCheck || got.stateRoundTrips === true) && (c.editorBlocks === undefined || got.editor?.blocks === c.editorBlocks);
+    const ok = nameOk && got.audioHash === exp.audioHash && (c.noRoundTripCheck || got.stateRoundTrips === true) && (c.editorBlocks === undefined || (got.editor?.blocks === c.editorBlocks && got.editor?.supportSystem?.format === 'VST3' && got.editor?.supportSystem?.sampleRate > 0 && got.editor?.supportSystem?.bufferSize > 0));
     return { case: c.name, ok, audioHash: got.audioHash ?? got.error, expected: exp.audioHash, ...(got.editor ? { editor: got.editor } : {}) };
   });
   // CHG-0004 3.10 (found by the REAPER save/reopen check): Dust values are part of the plugin's saved state.
@@ -240,6 +235,11 @@ function au(keep = false) {
       const auval = run('auval', ['-v', ...p.auval], true);
       r.auval = /AU VALIDATION SUCCEEDED/.test(auval.stdout) ? 'pass' : 'fail';
       if (r.auval !== 'pass') console.error(auval.stdout.split('\n').slice(-30).join('\n'));
+      // Owner (Logic, 2026-11-12): Logic's AU Instruments menu lists only instruments that can run without audio input;
+      // the instrument must report [0, 2] (an input bus made it [1,1] [1,2] [2,1] [2,2] only, and it went missing).
+      const caps = /Reported Channel Capabilities[^\n]*\n\s*([^\n]*)/.exec(auval.stdout)?.[1]?.trim() ?? '';
+      r.channels = caps;
+      if (p.auval[0] === 'aumu' && !/\[0, 2\]/.test(caps)) r.auval = `fail: no [0, 2] channel configuration (${caps})`;
       const pv = run(PLUGINVAL, ['--strictness-level', '5', '--skip-gui-tests', '--validate', p.dest], true);
       r.pluginval = pv.status === 0 ? 'pass' : `fail (exit ${pv.status})`;
       if (pv.status !== 0) console.error(`${pv.stdout}${pv.stderr}`.split('\n').slice(-25).join('\n'));
@@ -485,7 +485,7 @@ async function reaperMac() {
 const cmd = process.argv[2];
 if (cmd === 'build') build();
 else if (cmd === 'reaper') await reaperMac();
-else if (cmd === 'deploy') deploy(process.argv.includes('--no-build'), process.argv.includes('--force'));
+else if (cmd === 'deploy') deploy(process.argv.includes('--no-build'));
 else if (cmd === 'validate') { const v = validate(); console.log(JSON.stringify(v)); if (v.vst3 !== 'pass') process.exit(1); }
 else if (cmd === 'test') test();
 else if (cmd === 'au') au(process.argv.includes('--keep'));

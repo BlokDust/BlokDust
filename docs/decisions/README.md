@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**44 decisions** · proposed: 0 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**45 decisions** · proposed: 0 · accepted: 39 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -86,6 +86,12 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0002](simulation/SIMULATION-0002-preserve-v1-proximity-connections-exactly.md) | Preserve v1 proximity connections exactly, computed in the engine | **accepted** | 2026-11-05 | simulation, connections, parity |
 | [SIMULATION-0003](simulation/SIMULATION-0003-time-is-musical-and-tempo-aware-v1-frame-timing.md) | Time is musical and tempo-aware; v1 frame timing is not reproduced exactly | **accepted** | 2026-11-05 | simulation, tempo, parity |
 | [SIMULATION-0004](simulation/SIMULATION-0004-a-particle-that-enters-another-emitter-fires-it.md) | A particle that enters another emitter fires it | **accepted** | 2026-11-11 | particles, release-1, v1-deviation |
+
+## [support](support/README.md)
+
+| ID | Decision | Status | Date | Tags |
+|---|---|---|---|---|
+| [SUPPORT-0001](support/SUPPORT-0001-isolate-support-reports-from-shared-patches.md) | Isolate support reports from shared patches | **accepted** | 2026-11-12 | support, privacy, storage |
 
 ## [ui](ui/README.md)
 
