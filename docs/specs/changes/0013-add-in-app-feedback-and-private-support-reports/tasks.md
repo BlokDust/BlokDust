@@ -102,8 +102,14 @@ pre-existing merge-metadata email findings recorded above.
 - [x] Allocate feedback CHG-0013 and update its folder, references, test messages and generated index. Preserve
   release-owned CHG-0009 (keyboard/Emitter), CHG-0010 (2.0.1), CHG-0011 and CHG-0012 references.
 - [x] Replace the automatic-deploy instruction with explicit owner approval during shared release testing.
-- [ ] Verify the merge and renumbering locally. No test-host deployment, DAW interruption or registry reset.
+- [x] Verify the merge and renumbering locally. No test-host deployment, DAW interruption or registry reset.
 
 Earlier test-host deployments overwrote the release build during owner testing. Those historical deployment
 entries above are a record, not standing authorization to deploy this feature branch again. The owner plans to
 merge feedback after 2.0.1. Any necessary future test-host deployment must be approved by the owner first.
+
+Merge verification: web/Worker typechecks, web build, index/codegen checks and privacy check/self-tests pass.
+The local plugin-no-stale-patch, support-connect and support-connect-spacing regressions pass, as do all 36 local
+support integration checks. Local plugin builds, both VST3 pluginval validations and all 18 native host/editor
+cases pass. Proposal IDs are unique; feedback is CHG-0013. No staging or test-host deployment was performed for
+this coordination correction, and Logic 11 on the owner’s machine was not exercised.
