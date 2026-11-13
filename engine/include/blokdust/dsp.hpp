@@ -118,9 +118,16 @@ class Envelope {
 /// on buffer segmentation. Parameters are fixed to v1's values (stereo-linked detection, max of |L| and |R|).
 class MasterCompressor {
  public:
+  /// The master bus: v1's settings.
   void configure(double sampleRate) noexcept {
     sr_ = sampleRate;
-    const double kThresholdDb = -8.0, kKneeDb = 10.0, kRatio = 8.0, kAttack = 0.0, kRelease = 0.05;
+    preDelay_ = std::min(static_cast<int>(0.006 * sampleRate), kMaxPreDelay - 1);
+    setParams(-8.0, 10.0, 8.0, 0.0, 0.05);
+    reset();
+  }
+  /// The Compressor block (CHG-0014) sets these while running: nothing is reset, the gain envelope carries on.
+  void setParams(double kThresholdDb, double kKneeDb, double kRatio, double kAttack, double kRelease) noexcept {
+    const double sampleRate = sr_;
     linearThreshold_ = dbToLinear(kThresholdDb);
     slope_ = 1.0 / kRatio;
     k_ = kAtSlope(kThresholdDb, kKneeDb, 1.0 / kRatio);
@@ -137,9 +144,9 @@ class MasterCompressor {
     rd_ = releaseFrames * (0.08783463138207234 * z1 - 0.1694162967925622 * z2 + 0.08588057951595272 * z3 - 0.00429891410546283 * z4);
     re_ = releaseFrames * (-0.042416883008123074 * z1 + 0.1115693827987602 * z2 - 0.09764676325265872 * z3 + 0.028494263462021576 * z4);
     satReleaseFrames_ = 0.0025 * sampleRate;
-    preDelay_ = std::min(static_cast<int>(0.006 * sampleRate), kMaxPreDelay - 1);
-    reset();
   }
+  /// How far the gain is turned down right now, in dB (≤ 0): Web Audio's `reduction`, for the block's meter.
+  double reductionDb() const noexcept { return linearToDb(dmath::sin(dmath::kPi / 2.0 * compressorGain_)); }
   void reset() noexcept {
     detectorAverage_ = 0.0; compressorGain_ = 1.0; maxAttackDiffDb_ = -1.0; division_ = 0;
     delayL_.fill(0.0f); delayR_.fill(0.0f); read_ = 0; write_ = preDelay_;

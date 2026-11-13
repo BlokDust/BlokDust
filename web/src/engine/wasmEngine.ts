@@ -55,6 +55,8 @@ interface Exports {
   bd_beams(h: number): number;
   bd_pack_playheads(h: number): number;
   bd_playheads(h: number): number;
+  bd_pack_monitors(h: number): number;
+  bd_monitors(h: number): number;
 }
 
 /** fx.convolver's built-in impulse response (engine makeDefaultImpulse), for its options-panel waveform. */
@@ -132,6 +134,11 @@ export class WasmEngine {
   }
 
   /** Where samplers are playing, packed [blockId, seconds]* (one per sounding voice / grain). */
+  /** Live readouts for open panels, packed [blockId, v0, v1, v2, v3]* (Engine::monitors). */
+  monitors(): Float32Array {
+    const n = this.x.bd_pack_monitors(this.h);
+    return new Float32Array(this.x.memory.buffer, this.x.bd_monitors(this.h), n * 5).slice();
+  }
   playheads(): Float32Array {
     const n = this.x.bd_pack_playheads(this.h);
     return new Float32Array(this.x.memory.buffer, this.x.bd_playheads(this.h), n * 2).slice();

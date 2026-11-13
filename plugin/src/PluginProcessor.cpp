@@ -287,6 +287,14 @@ void BlokDustProcessor::publishSnapshot() noexcept {
       s.playheads[static_cast<std::size_t>(i * 2 + 1)] = ph[static_cast<std::size_t>(i)].seconds;
     }
   }
+  {
+    std::array<Engine::Monitor, 64> mon{};
+    s.monitorCount = engine_->monitors(mon.data(), 64);
+    for (int i = 0; i < s.monitorCount; ++i) {
+      s.monitors[static_cast<std::size_t>(i * 5)] = static_cast<float>(mon[static_cast<std::size_t>(i)].block);
+      for (int k = 0; k < 4; ++k) s.monitors[static_cast<std::size_t>(i * 5 + 1 + k)] = mon[static_cast<std::size_t>(i)].v[k];
+    }
+  }
   s.pairCount = engine_->connections(s.pairs.data(), static_cast<int>(s.pairs.size() / 2));  // oldest first (R4a)
   snapshots_.publish();
 }

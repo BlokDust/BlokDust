@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 33;
+inline constexpr std::size_t kBlockTypeCount = 34;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -25,6 +25,7 @@ enum class BlockType : std::uint16_t {
   FxChomp,  // fx.chomp
   FxChopper,  // fx.chopper
   FxChorus,  // fx.chorus
+  FxCompressor,  // fx.compressor
   FxConvolver,  // fx.convolver
   FxDistortion,  // fx.distortion
   FxEnvelope,  // fx.envelope
@@ -56,6 +57,9 @@ enum class BlockKind : std::uint8_t {
   Logic,
   Void,
   Controller,
+  Gate,
+  Listener,
+  Modulator,
 };
 
 struct GridPoint { float x; float y; };
@@ -234,6 +238,18 @@ inline constexpr ParamInfo kParamsFxChorus[] = {
 };
 namespace param::FxChorus { enum : std::uint8_t { rate, delayTime, depth, feedback, Count }; }
 
+// ---- fx.compressor (Compressor)
+inline constexpr GridPoint kOutlineFxCompressor[] = {{1.0f, -1.0f}, {2.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsFxCompressor[] = {
+  {"threshold", -24.0, true, UiTransform::Identity, -60.0, 0.0, 0.0},
+  {"ratio", 4.0, true, UiTransform::Identity, 1.0, 20.0, 0.0},
+  {"knee", 10.0, true, UiTransform::Identity, 0.0, 40.0, 0.0},
+  {"attack", 0.003, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"release", 0.25, true, UiTransform::Identity, 0.01, 1.0, 0.0},
+  {"makeup", 0.0, true, UiTransform::Identity, -24.0, 24.0, 0.0},
+};
+namespace param::FxCompressor { enum : std::uint8_t { threshold, ratio, knee, attack, release, makeup, Count }; }
+
 // ---- fx.convolver (Convolution)
 inline constexpr GridPoint kOutlineFxConvolver[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
 inline constexpr ParamInfo kParamsFxConvolver[] = {
@@ -366,8 +382,9 @@ inline constexpr ParamInfo kParamsPowerEmitter[] = {
   {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"division", 1.0, true, UiTransform::Identity, 0.0625, 16.0, 0.0},
   {"swing", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"offset", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
 };
-namespace param::PowerEmitter { enum : std::uint8_t { angle, speed, rate, range, selfPoweredMode, sync, division, swing, Count }; }
+namespace param::PowerEmitter { enum : std::uint8_t { angle, speed, rate, range, selfPoweredMode, sync, division, swing, offset, Count }; }
 
 // ---- power.laser (Laser)
 inline constexpr GridPoint kOutlinePowerLaser[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
@@ -446,6 +463,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxChomp, "fx.chomp", "Chomp", BlockKind::PostEffect, 6.0f, kOutlineFxChomp, 6, kParamsFxChomp, 3, true},
   {BlockType::FxChopper, "fx.chopper", "Chopper", BlockKind::PostEffect, 6.0f, kOutlineFxChopper, 6, kParamsFxChopper, 5, true},
   {BlockType::FxChorus, "fx.chorus", "Chorus", BlockKind::PostEffect, 6.0f, kOutlineFxChorus, 5, kParamsFxChorus, 4, true},
+  {BlockType::FxCompressor, "fx.compressor", "", BlockKind::PostEffect, 6.0f, kOutlineFxCompressor, 5, kParamsFxCompressor, 6, false},
   {BlockType::FxConvolver, "fx.convolver", "Convolver", BlockKind::PostEffect, 6.0f, kOutlineFxConvolver, 5, kParamsFxConvolver, 5, true},
   {BlockType::FxDistortion, "fx.distortion", "Distortion", BlockKind::PostEffect, 6.0f, kOutlineFxDistortion, 4, kParamsFxDistortion, 2, true},
   {BlockType::FxEnvelope, "fx.envelope", "Envelope", BlockKind::PreEffect, 6.0f, kOutlineFxEnvelope, 5, kParamsFxEnvelope, 4, true},
@@ -458,7 +476,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxStereoDelay, "fx.stereo-delay", "StereoDelay", BlockKind::PostEffect, 6.0f, kOutlineFxStereoDelay, 6, kParamsFxStereoDelay, 5, true},
   {BlockType::FxVibrato, "fx.vibrato", "Vibrato", BlockKind::PreEffect, 6.0f, kOutlineFxVibrato, 4, kParamsFxVibrato, 3, true},
   {BlockType::FxVolume, "fx.volume", "Volume", BlockKind::PostEffect, 6.0f, kOutlineFxVolume, 4, kParamsFxVolume, 1, true},
-  {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 8, true},
+  {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
   {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, nullptr, 0, true},
   {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 4, true},

@@ -205,6 +205,16 @@
         1
       ],
       "description": "Synced: every second emission is late by swing x division / 3 (0 straight, 1 = triplet shuffle) (owner)"
+    },
+    {
+      "key": "offset",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Nudge (CHG-0014): fires late by this fraction of its interval (the Division when synced, the Fire Rate when not). 0 = v1 timing"
     }
   ],
   "review": [

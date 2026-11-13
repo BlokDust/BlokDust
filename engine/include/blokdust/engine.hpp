@@ -140,6 +140,10 @@ class Engine {
   /// panel's waveform is) and per sounding Granular grain, in seconds of the file. Returns the count (≤ max).
   struct Playhead { BlockId block; float seconds; };
   int playheads(Playhead* out, int max) const noexcept;
+  /// Live readouts for open options panels, one entry per block that has any (visual only; returns the count ≤ max).
+  /// fx.compressor (CHG-0014): v[0] input level in dB (peak, falling slowly), v[1] gain reduction in dB (≤ 0).
+  struct Monitor { BlockId block; float v[4]; };
+  int monitors(Monitor* out, int max) const noexcept;
 
  private:
   void applyDueCommands() noexcept;
@@ -249,6 +253,8 @@ class Engine {
   std::vector<dsp::ConvolutionKernel> userImpulses_;
   std::vector<std::int16_t> convolverOwner_;
   dsp::ConvolutionKernel defaultImpulse_;
+  std::vector<dsp::MasterCompressor> compressors_;  // fx.compressor instances (pooled like the convolvers)
+  std::vector<std::int16_t> compressorOwner_;
 
   // Rewiring fade (SPEC-CONNECTIONS-PROXIMITY R5): audio follows `audioChains_`; when the topology changes, only the
   // chains that changed fade out on the old routing, the routing switches, and the new chains fade in.

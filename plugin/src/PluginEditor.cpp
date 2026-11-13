@@ -213,7 +213,8 @@ void BlokDustEditor::timerCallback() {
   }
   const Snapshot* s = proc_.snapshots().read();
   if (!s) return;
-  juce::Array<juce::var> particles, pairs, powered, beams, playheads;
+  juce::Array<juce::var> particles, pairs, powered, beams, playheads, monitors;
+  for (int i = 0; i < s->monitorCount * 5; ++i) monitors.add(s->monitors[static_cast<std::size_t>(i)]);
   for (int i = 0; i < s->playheadCount * 2; ++i) playheads.add(s->playheads[static_cast<std::size_t>(i)]);
   for (int i = 0; i < s->beamCount * 4; ++i) beams.add(s->beams[static_cast<std::size_t>(i)]);
   for (int i = 0; i < s->particleCount * 3; ++i) particles.add(s->particles[static_cast<std::size_t>(i)]);
@@ -225,6 +226,7 @@ void BlokDustEditor::timerCallback() {
   obj->setProperty("powered", powered);
   obj->setProperty("beams", beams);
   obj->setProperty("playheads", playheads);
+  obj->setProperty("monitors", monitors);
   web_.emitEventIfBrowserIsVisible("bd_snapshot", juce::var(obj));
 }
 

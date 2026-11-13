@@ -26,6 +26,7 @@
     "test:stage": "node tests/e2e/stage-e2e.ts",
     "test:e2e": "node tests/e2e/build-and-hear.ts",
     "test:ui-regressions": "node tests/e2e/ui-regressions.ts",
+    "test:new-blocks": "node tests/e2e/new-blocks.ts",
     "test:sharing": "node tests/e2e/sharing.ts",
     "test:sharing:base": "node tests/e2e/sharing.ts --base",
     "server:typecheck": "pnpm -C server typecheck",

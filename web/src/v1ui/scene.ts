@@ -7,6 +7,7 @@ import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
+import { drawNewSprite, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -157,6 +158,7 @@ export class V1Scene {
       // v1 order: panels are created before Metrics.Compute (App.Width is 0, so their Resize() bails out), then the
       // first resize lays them out.
       this.initialised = true;
+      installNewBlockMenu();  // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
       App.Width = 0; App.Height = 0;
       for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Init(this);
       relabelShareButton(this.Header);
@@ -165,6 +167,7 @@ export class V1Scene {
       release1Settings(this.SettingsPanel, this.host);
       installFilterPanel(this.OptionsPanel);
       installSelectors(this.OptionsPanel);
+      installLiveRows(this.OptionsPanel);
       locateMissingFiles(this);
     }
     this.Metrics.Compute();
@@ -192,7 +195,10 @@ export class V1Scene {
     const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating);
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
     const playing = this.playheadsShown || !!this.playheadLines();
-    return animating || easing || spinning || playing || this.splashDrawing;
+    // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
+    const live = hasLiveRows(this.OptionsPanel);
+    if (live) (this.OptionsPanel as any)._DrawReady = true;
+    return animating || easing || spinning || playing || live || this.splashDrawing;
   }
   private lastZoom = 1;
   private lastDrag = { x: 0, y: 0 };
@@ -581,6 +587,7 @@ export class V1Scene {
   /** v1 BlockSprites (ported): menu icons and dragged items use v1's own sprite code, with its per-type offsets. */
   private readonly sprites = new BlockSprites();
   private drawSprite(ctx: CanvasRenderingContext2D, pos: Point, scaled: boolean, name: string): void {
+    if (!scaled && drawNewSprite(ctx, pos, name)) return;  // the post-2.0 blocks: from their manifests
     this.sprites.DrawSprite({ Ctx: ctx }, pos, scaled, name);
   }
 

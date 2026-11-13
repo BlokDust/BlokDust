@@ -112,6 +112,8 @@ struct Block {
   dsp::ChopperFx chopper;
   dsp::PitchShiftFx pitchshift;   // ... pitch-shifter pool
   bool userImpulse = false;       // fx.convolver: a loaded impulse response (else the built-in one)
+  /// Live readouts for the block's open panel (Engine::monitors): what each holds depends on the type. Visual only.
+  std::array<float, 4> mon{};
   dsp::Lfo lfo;                   // fx.vibrato / fx.scuzz: detune in cents (Tone.LFO → oscillator.detune)
   std::int16_t poolIndex = -1;    // instance in the engine pool for this type (−1: none, or pool exhausted → bypass)
   std::int64_t addedAt = 0;       // sample of the AddBlock: SetParam at that sample is load-time initialisation

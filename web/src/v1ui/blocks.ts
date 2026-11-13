@@ -7,6 +7,7 @@ import { FORMS } from './ported/BlockForms';
 import { SoundCloudTrack } from './ported/Core/Audio/SoundCloud/SoundcloudTrack';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { filterForm } from './filterPanel.ts';
+import { convertSetting, newBlockForm } from './newBlocks.ts';
 
 /** v1 Config keys for each sampler's longest searchable track (seconds). */
 const MAX_TRACK: Record<string, string> = { Sample: 'SoundCloudMaxTrackLength', Granular: 'GranularMaxTrackLength', ConvolutionReverb: 'ConvolverMaxTrackLength' };
@@ -39,6 +40,7 @@ export class V1Block {
     const f = this.def.v1Type ? FORMS[this.def.v1Type] : undefined;
     this.OptionsForm = null;
     f?.call(this);
+    newBlockForm(this);  // the post-2.0 blocks (SCOPE-0005)
     if (this.def.id === 'source.microphone' || this.def.id === 'source.audio-in') gainForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
     // Glide is mono-only (the engine starts each poly note without it): Poly hides it (owner, 2026-11-12, CHG-0010).
@@ -127,6 +129,8 @@ export class V1Block {
       App.MainScene.setParam(this, 'gain', g);
       return;
     }
+    const conv = convertSetting(key, value);  // a new block's slider in other units (ms → s, …)
+    if (conv) { this.Params[conv.param] = conv.value; App.MainScene.setParam(this, conv.param, conv.value); return; }
     if (key === 'sync') { this.Params.sync = !!value; App.MainScene.setParam(this, 'sync', value ? 1 : 0); this.RefreshOptionsPanel(); return; }
     // MPE switches (PLUGIN-0004): the panel shows the mapping rows only while MPE is on.
     if (key === 'mpe') { const p = this.def.params.find(q => q.key === 'mpe'); if (p) { this.Params.mpe = !!value; App.MainScene.setParam(this, 'mpe', value ? 1 : 0); this.RefreshOptionsPanel(); } return; }
@@ -264,6 +268,13 @@ function extendSyncForm(b: V1Block): void {
   }
   const free = new Set(b.Params.sync ? ({ emitter: ['rate', 'speed'], pulse: ['pulseLength'], delay: ['delayTime'], laser: ['rotate'] })[kind] : []);
   const kept = params.filter(p => !free.has(p.setting));
+  if (kind === 'emitter') {
+    // Offset (CHG-0014): a nudge, as a share of the interval: after Swing when synced, after Fire Rate when not.
+    const offset = { type: 'slider', name: 'Offset', setting: 'offset', props: { value: Number(b.Params.offset ?? 0), min: 0, max: 1, quantised: false, centered: false,
+      convertDisplay: (v: number) => `${Math.round(v * 100)}%` } };
+    if (b.Params.sync) synced.push(offset);
+    else kept.splice(kept.findIndex(p => p.setting === 'rate') + 1, 0, offset);
+  }
   // Pulse and Stereo Delay: their first row (Pulse length, Delay Time) is hidden when synced, so the sync rows go first.
   const at = kind === 'pulse' || kind === 'delay' ? 0 : 1;
   b.OptionsForm.parameters = [...kept.slice(0, at), sync, ...synced, ...kept.slice(at)];

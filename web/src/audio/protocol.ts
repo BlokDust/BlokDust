@@ -28,6 +28,9 @@ export interface Snapshot {
   powered: Uint32Array;
   /** Sampler playheads, packed [blockId, seconds]* (the open panel's playback lines). */
   playheads?: Float32Array;
+  /** Live readouts for open panels, packed [blockId, v0, v1, v2, v3]* (Engine::monitors: a Compressor's level and gain
+   * reduction, …). */
+  monitors?: Float32Array;
   /** UI-relevant events since the previous snapshot. */
   events: EngineEvent[];
   /** Output RMS since the previous snapshot (meters / tests). */

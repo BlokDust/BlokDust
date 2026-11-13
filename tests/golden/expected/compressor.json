@@ -1,0 +1,15 @@
+{
+  "audioHash": "1b65114625adba75",
+  "eventHash": "d16dfb02abb5bc2c",
+  "eventCount": 23,
+  "events": {
+    "connect": 4,
+    "emit": 9,
+    "gateOn": 2,
+    "hit": 8
+  },
+  "frames": 264600,
+  "sampleRate": 44100,
+  "rms": 0.056763,
+  "peak": 0.112794
+}

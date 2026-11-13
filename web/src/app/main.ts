@@ -25,6 +25,7 @@ import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
+import { setMonitors } from '../v1ui/newBlocks.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
@@ -45,7 +46,7 @@ function starPos(id: number): { x: number; y: number } {
 }
 const typeIndex = (type: string) => BLOCKS.findIndex(b => b.id === type);
 const DEF_BY_V1 = new Map<string, BlockDef>();
-for (const d of BLOCKS) if (d.v1Type) DEF_BY_V1.set(d.v1Type, d);
+for (const d of BLOCKS) DEF_BY_V1.set(d.menuId, d);  // v1's type names, plus the post-2.0 blocks' menu ids
 
 /** Tone r6 noteToFrequency ("c#4" → Hz), as v1's SampleGen calls it. */
 const NOTE_INDEX: Record<string, number> = { cbb: -2, cb: -1, c: 0, 'c#': 1, cx: 2, dbb: 0, db: 1, d: 2, 'd#': 3, dx: 4, ebb: 2, eb: 3, e: 4, 'e#': 5, ex: 6,
@@ -976,6 +977,7 @@ async function main() {
     stage.setBeams(s.beams);
     stage.setParticles(s.particles);
     scene.setPlayheads(s.playheads ?? new Float32Array(0));
+    setMonitors(s.monitors ?? new Float32Array(0));
   };
   if (juce) {
     overlay.remove();
@@ -1021,9 +1023,9 @@ async function main() {
       if (id === null) { const [gx, gy] = stage.cssToGrid(x, y); id = addBlock('source.sample', Math.round(gx), Math.round(gy), {}); }
       juce.emitEvent('bd_dropTarget', { token: d.token, id });
     });
-    juce.addEventListener('bd_snapshot', (e: { particles: number[]; connections: number[]; powered: number[]; beams: number[]; playheads?: number[] }) =>
+    juce.addEventListener('bd_snapshot', (e: { particles: number[]; connections: number[]; powered: number[]; beams: number[]; playheads?: number[]; monitors?: number[] }) =>
       onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
-        connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []) }));
+        connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []), monitors: new Float32Array(e.monitors ?? []) }));
     juce.emitEvent('bd_hello', {});
     juce.emitEvent('bd_samplesHello', {});
     send([{ type: CommandType.WorldPower, id: 0, value: 1 }]);  // a reopened editor shows the switch on: so is the world

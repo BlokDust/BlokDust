@@ -70,6 +70,7 @@ if(BLOKDUST_BUILD_TESTS)
     tests/test_world_power.cpp
     tests/test_emitter_hit.cpp
     tests/test_granular.cpp
+    tests/test_compressor.cpp
   )
   target_link_libraries(blokdust_engine_tests PRIVATE blokdust_engine Catch2::Catch2WithMain)
   # Shared MIDI/MPE streams (tests/mpe/*.json), also run by the web parser (PLUGIN-0004).

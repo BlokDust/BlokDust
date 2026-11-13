@@ -49,6 +49,9 @@ Engine::Engine(const EngineConfig& cfg)
   for (auto& c : convolvers_) c.reserve(defaultImpulse_.maxTailParts());
   for (auto& k : userImpulses_) k.reserve(maxTaps);
   convolverOwner_.assign(kMaxConvolvers, -1);
+  compressors_.resize(kMaxCompressors);
+  for (auto& c : compressors_) c.configure(cfg.sampleRate);
+  compressorOwner_.assign(kMaxCompressors, -1);
 }
 
 bool Engine::attachSample(BlockId id, const SampleBuffer& sb) noexcept {
@@ -112,6 +115,15 @@ void Engine::acquireDsp(Block& b, int slot) noexcept {
     }
     return;
   }
+  if (b.type == BlockType::FxCompressor) {
+    for (int i = 0; i < kMaxCompressors; ++i) if (compressorOwner_[static_cast<std::size_t>(i)] < 0) {
+      compressorOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
+      compressors_[static_cast<std::size_t>(i)].reset();
+      b.poolIndex = static_cast<std::int16_t>(i); b.mon[0] = -100.0f;
+      break;
+    }
+    return;
+  }
   if (b.type == BlockType::FxPitchShifter) pool = &pitchPool_;
   if (!pool) return;
   b.poolIndex = static_cast<std::int16_t>(pool->acquire(slot));
@@ -135,6 +147,7 @@ void Engine::releaseDsp(Block& b) noexcept {
   if (b.type == BlockType::FxChorus) chorusPool_.release(b.poolIndex);
   if (b.type == BlockType::FxPitchShifter) pitchPool_.release(b.poolIndex);
   if (b.type == BlockType::FxConvolver && b.poolIndex >= 0) convolverOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
+  if (b.type == BlockType::FxCompressor && b.poolIndex >= 0) compressorOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
   b.poolIndex = -1;
 }
 
@@ -259,6 +272,11 @@ void Engine::configureDsp(Block& b) noexcept {
       b.chopper.configure(p[P::FxChopper::rate], p[P::FxChopper::depth], p[P::FxChopper::spread], static_cast<int>(p[P::FxChopper::waveform]), p[P::FxChopper::mix], sr, first);
       break;
     case BlockType::FxPitchShifter: b.pitchshift.configure(p[P::FxPitchShifter::pitchOffset], p[P::FxPitchShifter::mix], sr, first); break;
+    case BlockType::FxCompressor:
+      if (b.poolIndex >= 0)
+        compressors_[static_cast<std::size_t>(b.poolIndex)].setParams(std::clamp(p[P::FxCompressor::threshold], -100.0, 0.0), std::clamp(p[P::FxCompressor::knee], 0.0, 40.0),
+          std::clamp(p[P::FxCompressor::ratio], 1.0, 20.0), std::clamp(p[P::FxCompressor::attack], 0.0, 1.0), std::clamp(p[P::FxCompressor::release], 0.01, 1.0));
+      break;
     case BlockType::FxVibrato: case BlockType::FxScuzz: {
       const bool vib = b.type == BlockType::FxVibrato;
       const double rate = vib ? p[P::FxVibrato::rate] : p[P::FxScuzz::rate], depth = vib ? p[P::FxVibrato::depth] : p[P::FxScuzz::depth];
@@ -879,6 +897,8 @@ void Engine::runLasers() noexcept {
 /// A synced emitter's slot on the beat grid at `beat`: it emits when this changes (CHG-0004 3.5).
 std::int64_t Engine::beatSlotAt(const Block& e, double beat) noexcept {
   const double div = std::max(1.0 / 64.0, e.params[P::PowerEmitter::division]);
+  // Offset (CHG-0014): the whole grid is late by a fraction of a division. 0 leaves the beat untouched (v1 timing).
+  if (const double offset = std::clamp(e.params[P::PowerEmitter::offset], 0.0, 1.0); offset > 0.0) beat -= offset * div;
   auto slot = static_cast<std::int64_t>(std::floor(beat / div + 1e-9));
   // Swing (owner): the second of each pair of slots fires late, by up to a third of a division (triplet shuffle).
   if (const double swing = std::clamp(e.params[P::PowerEmitter::swing], 0.0, 1.0); swing > 0.0) {
@@ -956,7 +976,9 @@ void Engine::runTick() noexcept {
       continue;
     }
     const int rateTicks = std::max(1, static_cast<int>(std::lround(e.params[P::PowerEmitter::rate]))) * kTicksPerV1Frame;
-    if (!running) { e.emitCounter = rateTicks; continue; }
+    // Unpowered, the counter is primed so it fires at once when powered; Offset (CHG-0014) makes it wait that fraction
+    // of the interval first.
+    if (!running) { e.emitCounter = rateTicks - static_cast<int>(std::lround(std::clamp(e.params[P::PowerEmitter::offset], 0.0, 1.0) * rateTicks)); continue; }
     if (++e.emitCounter >= rateTicks) { fire(e); e.emitCounter = 0; }
   }
   // 2b. lasers (v1 LaserBeams.UpdateCollisions)
@@ -1196,6 +1218,22 @@ void Engine::renderChain(int c, int n) noexcept {
       case BlockType::FxChomp: b.chomp.process(L, R, n); break;
       case BlockType::FxChopper: b.chopper.process(L, R, n, *wavetables_); break;
       case BlockType::FxPitchShifter: b.pitchshift.process(L, R, n, *wavetables_); break;
+      case BlockType::FxCompressor:
+        if (b.poolIndex >= 0) {  // CHG-0014: Chromium's DynamicsCompressor (as the master bus), then the Makeup gain
+          auto& comp = compressors_[static_cast<std::size_t>(b.poolIndex)];
+          const auto makeup = static_cast<float>(dmath::exp10(std::clamp(b.params[P::FxCompressor::makeup], -24.0, 24.0) / 20.0));
+          float peak = 0.0f;
+          for (int i = 0; i < n; ++i) {
+            peak = std::max(peak, std::max(std::abs(L[i]), std::abs(R[i])));
+            comp.process(L[i], R[i]);
+            L[i] *= makeup; R[i] *= makeup;
+          }
+          // The panel's meter: the input's peak in dB, falling 20 dB/s between peaks, and the gain reduction now.
+          const float db = peak > 1e-5f ? static_cast<float>(20.0 * dmath::log10(peak)) : -100.0f;
+          b.mon[0] = std::max(db, b.mon[0] - 20.0f * static_cast<float>(n) / static_cast<float>(sampleRate_));
+          b.mon[1] = static_cast<float>(comp.reductionDb());
+        }
+        break;
       case BlockType::FxConvolver:
         if (b.poolIndex >= 0) {
           dsp::EqualPower mix; mix.set(b.params[P::FxConvolver::mix]);
@@ -1323,6 +1361,15 @@ void Engine::renderGranular(Block& b, int n) noexcept {
     const double env = lead->env.next();
     chainL_[i] += static_cast<float>(sum * env * kSourceGain * glideGain(*lead));
   }
+}
+int Engine::monitors(Monitor* out, int max) const noexcept {
+  int n = 0;
+  for (int k = 0; k < orderCount_ && n < max; ++k) {
+    const Block& b = blocks_[order_[k]];
+    if (b.type != BlockType::FxCompressor) continue;
+    out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
+  }
+  return n;
 }
 int Engine::playheads(Playhead* out, int max) const noexcept {
   int n = 0;

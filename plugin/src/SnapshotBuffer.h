@@ -21,6 +21,8 @@ struct Snapshot {
   std::array<float, kMaxBlocks * 4> beams{};
   int playheadCount = 0;                     // sampler playheads [blockId, seconds]* (the open panel's playback lines)
   std::array<float, 64 * 2> playheads{};
+  int monitorCount = 0;                      // live panel readouts [blockId, v0, v1, v2, v3]* (Engine::monitors)
+  std::array<float, 64 * 5> monitors{};
 };
 
 class SnapshotBuffer {

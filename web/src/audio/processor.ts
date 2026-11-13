@@ -69,8 +69,9 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     const powered = this.engine.powered();
     const beams = this.engine.beams();
     const playheads = this.engine.playheads();
-    const snap: Snapshot = { type: 'snapshot', frame: this.frame, particles, beams, powered, playheads, events: this.pending, rms: Math.sqrt(this.sumSq / Math.max(1, this.count)) };
-    const transfer: Transferable[] = [particles.buffer, powered.buffer, beams.buffer, playheads.buffer];
+    const monitors = this.engine.monitors();
+    const snap: Snapshot = { type: 'snapshot', frame: this.frame, particles, beams, powered, playheads, monitors, events: this.pending, rms: Math.sqrt(this.sumSq / Math.max(1, this.count)) };
+    const transfer: Transferable[] = [particles.buffer, powered.buffer, beams.buffer, playheads.buffer, monitors.buffer];
     if (this.topologyDirty) { snap.connections = this.engine.connections(); transfer.push(snap.connections.buffer); this.topologyDirty = false; }
     this.port.postMessage(snap, transfer);
     this.pending = []; this.sumSq = 0; this.count = 0;

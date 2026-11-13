@@ -27,6 +27,8 @@ struct Host {
   std::uint32_t beamIds[kMaxBlocks]{};
   Engine::Playhead playheads[64]{};
   float playheadsOut[128]{};
+  Engine::Monitor monitors[64]{};
+  float monitorsOut[64 * 5]{};
 };
 }  // namespace
 
@@ -116,6 +118,16 @@ BD_EXPORT(bd_pack_playheads) int bd_pack_playheads(Host* h) {
   return n;
 }
 BD_EXPORT(bd_playheads) float* bd_playheads(Host* h) { return h->playheadsOut; }
+/// Packs live readouts for open panels [blockId, v0, v1, v2, v3]* (Engine::monitors) and returns the count.
+BD_EXPORT(bd_pack_monitors) int bd_pack_monitors(Host* h) {
+  const int n = h->engine.monitors(h->monitors, 64);
+  for (int i = 0; i < n; ++i) {
+    h->monitorsOut[i * 5] = static_cast<float>(h->monitors[i].block);
+    for (int k = 0; k < 4; ++k) h->monitorsOut[i * 5 + 1 + k] = h->monitors[i].v[k];
+  }
+  return n;
+}
+BD_EXPORT(bd_monitors) float* bd_monitors(Host* h) { return h->monitorsOut; }
 /// 1 if an audio source is currently gated on (powered).
 BD_EXPORT(bd_block_gate) int bd_block_gate(Host* h, std::uint32_t id) { const Block* b = h->engine.block(id); return b && b->gated() ? 1 : 0; }
 

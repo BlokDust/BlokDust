@@ -2,8 +2,8 @@
 
 Check items off as they land. Each task should be independently verifiable.
 
-- [ ] 1. Compressor manifest + engine DSP (Chromium port) + unit tests
-- [ ] 2. Compressor panel: meter, threshold line, gain reduction
-- [ ] 3. Emitter `offset` (free and synced) + R4 spec + golden; laser/pulse phase
-- [ ] 4. Codegen, goldens, wasm/worklet, plugin test
+- [x] 1. Compressor manifest + engine DSP (Chromium port) + unit tests
+- [x] 2. Compressor panel: meter, threshold line, gain reduction
+- [x] 3. Emitter `offset` (free and synced) + R4 spec + golden (laser/pulse phase: out of scope, see proposal)
+- [x] 4. Codegen, goldens, wasm/worklet, plugin test
 - [ ] 5. Owner check on staging

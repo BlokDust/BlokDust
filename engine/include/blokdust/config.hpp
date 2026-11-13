@@ -27,6 +27,7 @@ inline constexpr int kMaxDelays = 16;
 inline constexpr double kMaxDelaySeconds = 1.0;  // a synced Stereo Delay's longest time (v1's own is ≤ 0.5 s)
 inline constexpr int kMaxChoruses = 32;
 inline constexpr int kMaxPitchShifters = 16;
+inline constexpr int kMaxCompressors = 16;     // fx.compressor: 6 ms look-ahead memory each (CHG-0014)
 inline constexpr int kMaxConvolvers = 4;       // FFT convolution: memory and CPU heavy
 inline constexpr double kMaxImpulseSeconds = 2.5;  // longer impulse responses are truncated        // max samples rendered between tick boundaries in one pass
 
