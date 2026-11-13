@@ -1,0 +1,264 @@
+{
+  "$comment": "Proposed new blocks (owner designs, 2026-11-13). Not manifests: copy a design into blocks/<category>/<id>.block.json when the block is built.",
+  "designed": [
+    {
+      "name": "Sound Laser",
+      "category": "power",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 7,
+            "points": [[-1, 0], [0, -1], [1, -1], [1, 0], [0, 1]]
+          },
+          {
+            "palette": 3,
+            "points": [[-1, 0], [0, 0], [0, 1]]
+          },
+          {
+            "palette": 4,
+            "points": [[0, 0], [-1, 0], [0, -1], [1, -1]]
+          }
+        ],
+        "outline": [[-1, 0], [0, -1], [1, -1], [1, 0], [0, 1]]
+      }
+    },
+    {
+      "name": "Compressor",
+      "category": "effect",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 5,
+            "points": [[1, -1], [2, -1], [2, 0], [1, 1], [-1, 1]]
+          },
+          {
+            "palette": 6,
+            "points": [[2, -1], [2, 0], [1, 1], [0, 1]]
+          }
+        ],
+        "outline": [[1, -1], [2, -1], [2, 0], [1, 1], [-1, 1]]
+      }
+    },
+    {
+      "name": "Prism",
+      "category": "power",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 7,
+            "points": [[-1, 0], [-1, -1], [0, -1], [1, 0], [0, 1]]
+          },
+          {
+            "palette": 8,
+            "points": [[0, -1], [-1, 0], [-1, -1]]
+          }
+        ],
+        "outline": [[-1, 0], [-1, -1], [0, -1], [1, 0], [0, 1]]
+      }
+    },
+    {
+      "name": "Chord",
+      "category": "effect",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 4,
+            "points": [[-1, 0], [1, -2], [1, 2]]
+          },
+          {
+            "palette": 8,
+            "points": [[1, 1], [0, 0], [1, -1]]
+          }
+        ],
+        "outline": [[-1, 0], [1, -2], [1, 2]]
+      }
+    },
+    {
+      "name": "Random Note",
+      "category": "effect",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 5,
+            "points": [[-1, -1], [1, -1], [1, 1], [0, 1], [-1, 0]]
+          },
+          {
+            "palette": 8,
+            "points": [[-1, -1], [1, -1], [1, 1]]
+          }
+        ],
+        "outline": [[-1, -1], [1, -1], [1, 1], [0, 1], [-1, 0]]
+      }
+    },
+    {
+      "name": "Stage",
+      "category": "source",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 3,
+            "points": [[-1, -2], [0, -2], [1, -1], [1, 0], [-1, 2]]
+          },
+          {
+            "palette": 9,
+            "points": [[-1, 1], [-1, -2], [0, -2], [1, -1]]
+          },
+          {
+            "palette": 8,
+            "points": [[-1, 1], [1, -1], [1, 0], [-1, 2]]
+          }
+        ],
+        "outline": [[-1, -2], [0, -2], [1, -1], [1, 0], [-1, 2]]
+      }
+    },
+    {
+      "name": "Arpeggiator",
+      "category": "effect",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 6,
+            "points": [[-1, -1], [1, -1], [1, 1]]
+          },
+          {
+            "palette": 4,
+            "points": [[0, 0], [2, 0], [1, -1], [-1, -1]]
+          }
+        ],
+        "outline": [[-1, -1], [1, -1], [2, 0], [1, 0], [1, 1]]
+      }
+    },
+    {
+      "name": "Counter",
+      "category": "power",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 3,
+            "points": [[0, 2], [0, 1], [1, 0], [2, 0]]
+          },
+          {
+            "palette": 8,
+            "points": [[0, -1], [1, 0], [0, 1]]
+          }
+        ],
+        "outline": [[0, -1], [1, 0], [2, 0], [0, 2]]
+      }
+    },
+    {
+      "name": "Chance",
+      "category": "power",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 3,
+            "points": [[-1, 0], [1, -2], [1, 1], [0, 2], [-1, 1]]
+          },
+          {
+            "palette": 9,
+            "points": [[0, 0], [1, -1], [1, 1], [0, 2]]
+          },
+          {
+            "palette": 8,
+            "points": [[-1, 0], [1, -2], [1, -1], [0, 0]]
+          }
+        ],
+        "outline": [[-1, 0], [1, -2], [1, 1], [0, 2], [-1, 1]]
+      }
+    },
+    {
+      "name": "Touch Keys",
+      "category": "interaction",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 9,
+            "points": [[-1, 0], [0, -1], [1, 0], [1, 1], [0, 2], [-1, 2]]
+          },
+          {
+            "palette": 7,
+            "points": [[-1, 0], [0, 1], [0, 2], [-1, 2]]
+          }
+        ],
+        "outline": [[-1, 0], [0, -1], [1, 0], [1, 1], [0, 2], [-1, 2]]
+      }
+    },
+    {
+      "name": "LFO",
+      "category": "effect",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 3,
+            "points": [[-1, 0], [0, 0], [1, -1], [2, 0], [1, 1], [0, 1]]
+          },
+          {
+            "palette": 10,
+            "points": [[0, 0], [1, -1], [2, 0], [1, 1]]
+          }
+        ],
+        "outline": [[-1, 0], [0, 0], [1, -1], [2, 0], [1, 1], [0, 1]]
+      }
+    },
+    {
+      "name": "Grid",
+      "category": "interaction",
+      "geometry": {
+        "units": "grid",
+        "unitsPerGrid": 14.999999999999998,
+        "layers": [
+          {
+            "palette": 9,
+            "points": [[-1, -1], [1, -1], [2, 0], [2, 1], [0, 1], [-1, 0]]
+          },
+          {
+            "palette": 8,
+            "points": [[-1, -1], [0, -1], [0, 0], [1, 1], [0, 1], [-1, 0]]
+          },
+          {
+            "palette": 3,
+            "points": [[1, 0], [2, 1], [1, 1], [0, 0]]
+          }
+        ],
+        "outline": [[-1, -1], [1, -1], [2, 0], [2, 1], [0, 1], [-1, 0]]
+      }
+    }
+  ],
+  "todo": [
+    ["Sound Laser", "Power", "Laser that switches on when a sound crosses a threshold"],
+    ["Counter", "Power", "Euclidean step counter: each hit moves one step"],
+    ["Chance", "Power", "Lets each particle or beam through at random"],
+    ["Prism", "Power", "Sends particles and beams off at an angle, split into 1\u20134 streams"],
+    ["Compressor", "Effects", "Dynamics compressor with a threshold meter"],
+    ["Chord", "Effects", "Note effect: adds intervals to every note"],
+    ["Arpeggiator", "Effects", "Note effect: steps through held notes"],
+    ["Random Note", "Effects", "Note effect: picks a note from a scale pool"],
+    ["LFO", "Effects", "Modulates one param on one connected block"],
+    ["Stage", "Sources", "A whole patch inside one block"],
+    ["Touch Keys", "Interaction", "On-screen piano keys"],
+    ["Grid", "Interaction", "Push-style grid in a key and scale"],
+    ["Label", "Interaction", "No block: text on the stage with a small dot to drag it"]
+  ]
+}

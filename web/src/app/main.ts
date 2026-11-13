@@ -134,8 +134,6 @@ async function main() {
   /** The patch tempo (SIMULATION-0003): saved only once set, so older patches stay byte-identical. */
   let tempo: number | undefined;
   let engine: EngineNode | null = null;
-  /** The plugin runs as the standalone app (the processor says so with its patch): no DAW to pass keys on to. */
-  let standalone = false;
   let send = (cmds: Command[]) => engine?.send(cmds);
   /** Sample references by `track` key (DATA-0005): the patch keeps the ones its blocks use. */
   const refs = new Map<string, SampleRef>();
@@ -486,9 +484,7 @@ async function main() {
 
   // ---- unsaved changes (owner, 2026-11-10): the patch as last saved, shared or opened ----
   /** What Open would lose: blocks, their params and the tempo (not the view). */
-  /** What counts as a change: blocks and tempo, but not a Toggle's on/off, which a running scene flips by itself. */
-  const contentOf = (p: Patch) => JSON.stringify([p.blocks.map(b => (b.type === 'power.toggle' && b.params && 'logic' in b.params
-    ? { ...b, params: Object.fromEntries(Object.entries(b.params).filter(([k]) => k !== 'logic')) } : b)), p.tempo ?? null]);
+  const contentOf = (p: Patch) => JSON.stringify([p.blocks, p.tempo ?? null]);
   const BASELINE_KEY = 'blokdust.savedPatch';
   let baseline = '';
   function setBaseline(): void {
@@ -863,15 +859,12 @@ async function main() {
     if (title) scene.PatchesPanel.setTitle(title);
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
     if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
-    // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`). The link is made here at
-    // once, as SAVE makes it (the user asked for it in the app), and the address bar shows it, short, to copy; START
-    // shows the scene (owner, 2026-11-13: the Patches panel opened instead, its title over the start screen). The flag
-    // is dropped first, so a reload doesn't make another.
+    // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`) and Patches opens on SAVE,
+    // one click from its link. The flag is dropped so a reload doesn't open it again.
     if (params.has('share') && !juce && !embedId) {
       params.delete('share');
       history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
-      requestAnimationFrame(() => void scene.host.links?.make('saveAs', title || 'Untitled')
-        .catch(e => console.warn('BlokDust: making the share link failed', e)));
+      requestAnimationFrame(() => scene.PatchesPanel.OpenPanel(0));
     }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });
@@ -959,24 +952,11 @@ async function main() {
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
   };
   const overlay = document.getElementById('start')!;
-  /** A Toggle the engine switched (a particle or laser hit): the patch keeps its state, as v1's Toggle did (its
-   * Params.logic), so a save, a share link or the autosave reopens with the Toggles as they were (owner, 2026-11-13). */
-  function logicFlipped(id: number, on: boolean): void {
-    const b = model.get(id), v = v1Blocks.get(id);
-    if (b?.type !== 'power.toggle' || !!b.params.logic === on) return;
-    b.params.logic = on;
-    if (v) { v.Params.logic = on; if (scene.OptionsPanel.Scale > 0 && scene.OptionsPanel.SelectedBlock === v) v.RefreshOptionsPanel(); }
-    // Not an edit: the autosave (when it holds this patch) catches up within a second, without marking it unsaved or
-    // putting off the save of a real edit (a running scene may flip Toggles faster than the edit debounce).
-    if (embedId || juce || !autosaveIsThis || logicSave) return;
-    logicSave = setTimeout(() => { logicSave = undefined; saveLocal(toPatch()); }, 1000);
-  }
-  let logicSave: ReturnType<typeof setTimeout> | undefined;
   const onSnapshot = (s: Snapshot) => {
     probe.snapshots++; probe.rms = s.rms; probe.particles = s.particles.length / 3;
     // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the snapshot RMS.
     scene.setLevelDb(20 * Math.log10(Math.max(s.rms, 1e-5)));
-    for (const e of s.events) { if (e.type === 4) probe.gateOns++; if (e.type === 1) probe.hits++; if (e.type === 8 && e.value !== undefined) logicFlipped(e.block, e.value !== 0); }
+    for (const e of s.events) { if (e.type === 4) probe.gateOns++; if (e.type === 1) probe.hits++; }
     if (s.connections) {
       stage.setConnections(s.connections); probe.connections = Array.from(s.connections);
       const order: [string, string][] = [];
@@ -1000,8 +980,7 @@ async function main() {
   if (juce) {
     overlay.remove();
     send = cmds => juce.emitEvent('bd_commands', { commands: cmds });
-    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean }) => {
-      standalone = !!e.standalone;
+    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number> }) => {
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
       const after = pluginAfterLoad; pluginAfterLoad = null;
@@ -1526,7 +1505,6 @@ async function main() {
     // Plugin: with a Computer Keyboard in the patch its keys are BlokDust's while the editor has the keys (the DAW's
     // shortcuts would fire too); without one they go on to the DAW (Logic's Musical Typing → MIDI Input).
     captureKeys: () => !!juce && [...model.values()].some(b => b.type === 'input.computer-keyboard'),
-    captureAll: () => standalone,
     // Plugin: the editor says when its window loses the keys (clicking into the DAW); the web view may not blur (Ableton).
     onReleaseAll: release => { juce?.addEventListener('bd_keysLost', () => release()); },
     midi: (status, d1, d2, device) => {

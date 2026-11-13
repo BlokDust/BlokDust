@@ -21,9 +21,6 @@ struct Snapshot {
   std::array<float, kMaxBlocks * 4> beams{};
   int playheadCount = 0;                     // sampler playheads [blockId, seconds]* (the open panel's playback lines)
   std::array<float, 64 * 2> playheads{};
-  int toggleCount = 0;                       // every Toggle and whether it is on: hits flip them (CHG-0013)
-  std::array<std::uint32_t, kMaxBlocks> toggles{};
-  std::array<std::uint8_t, kMaxBlocks> toggleOn{};
 };
 
 class SnapshotBuffer {

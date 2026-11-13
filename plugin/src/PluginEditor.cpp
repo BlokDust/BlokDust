@@ -172,9 +172,6 @@ void BlokDustEditor::reloadPatch() {
   auto* ids = new juce::DynamicObject();
   for (const auto& [id, key] : proc_.blockIds()) ids->setProperty(juce::Identifier(juce::String(key)), static_cast<int>(id));
   obj->setProperty("ids", juce::var(ids));
-  // The standalone app has no DAW to pass keys on to: the page keeps every plain key, or macOS sounds its alert for
-  // each one nobody takes (owner, 2026-11-13, CHG-0013).
-  obj->setProperty("standalone", proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
   web_.emitEventIfBrowserIsVisible("bd_patch", juce::var(obj));
 }
 
@@ -201,8 +198,6 @@ void BlokDustEditor::timerCallback() {
     hadKeys_ = keys;
     if (!keys) { web_.emitEventIfBrowserIsVisible("bd_keysLost", juce::var(new juce::DynamicObject())); proc_.releasePageKeys(); }
   }
-  const Snapshot* s = proc_.snapshots().read();
-  if (s) proc_.syncToggles(*s);  // Toggles hits switched: into the patch, and onto the page below (CHG-0013)
   // Dust moves (host automation, MIDI CC) show on the page's sliders, live (owner, Ableton, 2026-11-12).
   proc_.flushDust();
   if (auto ups = proc_.takeParamUpdates(); !ups.empty()) {
@@ -216,6 +211,7 @@ void BlokDustEditor::timerCallback() {
     obj->setProperty("values", values);
     web_.emitEventIfBrowserIsVisible("bd_paramValues", juce::var(obj));
   }
+  const Snapshot* s = proc_.snapshots().read();
   if (!s) return;
   juce::Array<juce::var> particles, pairs, powered, beams, playheads;
   for (int i = 0; i < s->playheadCount * 2; ++i) playheads.add(s->playheads[static_cast<std::size_t>(i)]);

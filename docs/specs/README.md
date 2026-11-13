@@ -31,4 +31,3 @@
 | [CHG-0010](changes/0010-post-launch-fixes-2-0-1/proposal.md) | Post-launch fixes (2.0.1) | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-CONNECTIONS-PROXIMITY |
 | [CHG-0011](changes/0011-effects-run-in-the-order-they-connected/proposal.md) | Effects run in the order they connected | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0012](changes/0012-dust-automation-moves-the-sliders/proposal.md) | Dust automation moves the sliders | **proposed** | SPEC-PATCH-FORMAT-V2 |
-| [CHG-0013](changes/0013-post-launch-fixes-2-0-2/proposal.md) | Post-launch fixes (2.0.2) | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES |

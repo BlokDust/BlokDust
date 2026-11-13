@@ -21,9 +21,7 @@ export interface Command {
   key?: string;
 }
 
-export interface EngineEvent { sample: number; tick: number; type: EventType; block: number; other: number;
-  /** Logic events, from the worklet: the block's first param after the quantum (a Toggle's on/off; CHG-0013). */
-  value?: number }
+export interface EngineEvent { sample: number; tick: number; type: EventType; block: number; other: number }
 
 interface Exports {
   memory: WebAssembly.Memory;
@@ -47,7 +45,6 @@ interface Exports {
   bd_pack_connections(h: number): number;
   bd_pairs(h: number): number;
   bd_block_gate(h: number, id: number): number;
-  bd_block_param(h: number, id: number, param: number): number;
   bd_pack_powered(h: number): number;
   bd_powered(h: number): number;
   bd_process_input(h: number, frames: number): void;
@@ -165,8 +162,6 @@ export class WasmEngine {
   }
 
   gate(id: number): boolean { return this.x.bd_block_gate(this.h, id) === 1; }
-  /** A block's current param value (state the engine changes itself, e.g. a Toggle's on/off). */
-  param(id: number, param: number): number { return this.x.bd_block_param(this.h, id, param); }
 
   /** Ids of blocks currently receiving power (copy). */
   powered(): Uint32Array {

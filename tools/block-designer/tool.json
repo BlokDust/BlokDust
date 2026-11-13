@@ -1,0 +1,7 @@
+{
+  "name": "block-designer",
+  "summary": "Internal design page for new block shapes (not part of the app): randomise and hand-edit shapes, fills and colours on v1's grid, preview them in all 13 themes beside every existing block, warn on look-alikes and colours that vanish, and copy manifest-ready geometry. Proposed designs live in tools/block-designer/proposed.json.",
+  "usage": ["pnpm bd block-designer", "pnpm bd block-designer --open"],
+  "outputs": ".cache/block-designer/index.html (a single offline page; loads polygon-clipping from jsDelivr for exact outlines); JSON {path, blocks, designed, themes} on stdout",
+  "deterministic": true
+}

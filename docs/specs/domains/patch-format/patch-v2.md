@@ -32,10 +32,6 @@ The single, portable representation of a BlokDust creation, used by the web app,
 - **R2a.** `view` is the view the patch was saved at (`x`, `y`: the stage offset in grid units; `zoom`). Saving
   (files, share links, the autosave, the plugin's DAW state) records it; opening shows it; Insert ignores it; the engine
   never reads it (owner, 2026-11-12, CHG-0010).
-- **R2b.** Params hold a block's state as it is now, including state the engine changes by itself: a Toggle's `logic`
-  (on/off) follows its particle and laser hits, so a file, share link, autosave or DAW project reopens with each Toggle
-  as it was (v1's Toggle kept `Params.logic`). That change alone is not an unsaved edit (owner, 2026-11-13, CHG-0013;
-  test `toggle-state-saved`).
 - **R3.** Block `type` MUST be a stable namespaced id from the manifests (`source.*`, `fx.*`, `power.*`, `input.*`). Params MUST be in real units declared by the manifest; unknown params are dropped with a warning; missing params take defaults.
 - **R4.** Connections MUST NOT be stored (SPEC-CONNECTIONS-PROXIMITY R7). Their order is: optional
   `connectionOrder`, `[[blockId, blockId], …]`, the connected pairs oldest first (SPEC-CONNECTIONS-PROXIMITY R4a). Loaders
@@ -70,8 +66,7 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - OPEN lists the user's own patches above the built-in presets: in the plugin, the patches folder; on the web, the
     patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only.
   - The plugin's SAVE tab has SAVE TO COMPUTER, then CREATE SHARE LINK, which opens the public site with the patch in
-    the address (`?c=p…&t=<title>&share=1`); the site makes the link as it loads (as SAVE would) and the address bar
-    shows it, short, to copy; START shows the scene (owner, 2026-11-13, CHG-0013; it used to open Patches on SAVE).
+    the address (`?c=p…&t=<title>&share=1`); the site opens Patches on SAVE, ready to make the link there.
   - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is the OPEN tab's main (filled) button.
   - The web's SAVE tab is three buttons, no help lines (owner, 2026-11-11): SAVE · SAVE AS · DOWNLOAD PATCH.
     Share links (SPEC-SHARING-BACKEND): SAVE makes the link the first time; once the patch changes it puts the changes
