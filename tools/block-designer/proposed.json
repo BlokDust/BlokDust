@@ -1,5 +1,5 @@
 {
-  "$comment": "Proposed new blocks (owner designs, 2026-11-13). Not manifests: copy a design into blocks/<category>/<id>.block.json when the block is built.",
+  "$comment": "Proposed new blocks (owner designs, 2026-11-13). Not manifests: copy a design into blocks/<category>/<id>.block.json when the block is built. Touch Keys dropped 2026-11-13 (SCOPE-0005).",
   "designed": [
     {
       "name": "Sound Laser",
@@ -185,25 +185,6 @@
       }
     },
     {
-      "name": "Touch Keys",
-      "category": "interaction",
-      "geometry": {
-        "units": "grid",
-        "unitsPerGrid": 14.999999999999998,
-        "layers": [
-          {
-            "palette": 9,
-            "points": [[-1, 0], [0, -1], [1, 0], [1, 1], [0, 2], [-1, 2]]
-          },
-          {
-            "palette": 7,
-            "points": [[-1, 0], [0, 1], [0, 2], [-1, 2]]
-          }
-        ],
-        "outline": [[-1, 0], [0, -1], [1, 0], [1, 1], [0, 2], [-1, 2]]
-      }
-    },
-    {
       "name": "LFO",
       "category": "effect",
       "geometry": {
@@ -257,8 +238,7 @@
     ["Random Note", "Effects", "Note effect: picks a note from a scale pool"],
     ["LFO", "Effects", "Modulates one param on one connected block"],
     ["Stage", "Sources", "A whole patch inside one block"],
-    ["Touch Keys", "Interaction", "On-screen piano keys"],
-    ["Grid", "Interaction", "Push-style grid in a key and scale"],
+    ["Grid", "Interaction", "Push-style pads in key, played in its panel (UI-0010)"],
     ["Label", "Interaction", "No block: text on the stage with a small dot to drag it"]
   ]
 }

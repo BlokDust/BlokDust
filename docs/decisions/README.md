@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**44 decisions** · proposed: 0 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**54 decisions** · proposed: 10 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -20,6 +20,8 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | ID | Decision | Status | Date | Tags |
 |---|---|---|---|---|
 | [AUDIO-0001](audio/AUDIO-0001-match-v1-sound-by-porting-chromium-web-audio.md) | Match v1 sound by porting Chromium Web Audio algorithms | **accepted** | 2026-11-06 | audio, parity, dsp, chromium |
+| [AUDIO-0002](audio/AUDIO-0002-note-effects-act-before-a-source-plays.md) | Note effects act before a source plays | **proposed** | 2026-11-13 | audio, notes, post-2-0 |
+| [AUDIO-0003](audio/AUDIO-0003-lfos-modulate-one-param-and-add-up.md) | LFOs modulate one param and add up | **proposed** | 2026-11-13 | audio, modulation, post-2-0 |
 
 ## [data](data/README.md)
 
@@ -66,6 +68,8 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SCOPE-0002](scope/SCOPE-0002-macros-grouped-blocks.md) | Macros (grouped blocks) | **deferred** | 2026-11-05 | scope, macros |
 | [SCOPE-0003](scope/SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **deferred** | 2026-11-05 | scope, backend |
 | [SCOPE-0004](scope/SCOPE-0004-faithful-v1-parity-same-blocks-same-look-same-feel.md) | Faithful v1 parity: same blocks, same look, same feel | **accepted** | 2026-11-05 | scope, parity |
+| [SCOPE-0005](scope/SCOPE-0005-the-post-2-0-block-set.md) | The post-2.0 block set | **proposed** | 2026-11-13 | scope, blocks, post-2-0 |
+| [SCOPE-0006](scope/SCOPE-0006-stage-block-nested-patches.md) | Stage block: a patch inside a block (macros, depth 2) | **proposed** | 2026-11-13 | scope, macros, stage |
 
 ## [sharing](sharing/README.md)
 
@@ -86,6 +90,9 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0002](simulation/SIMULATION-0002-preserve-v1-proximity-connections-exactly.md) | Preserve v1 proximity connections exactly, computed in the engine | **accepted** | 2026-11-05 | simulation, connections, parity |
 | [SIMULATION-0003](simulation/SIMULATION-0003-time-is-musical-and-tempo-aware-v1-frame-timing.md) | Time is musical and tempo-aware; v1 frame timing is not reproduced exactly | **accepted** | 2026-11-05 | simulation, tempo, parity |
 | [SIMULATION-0004](simulation/SIMULATION-0004-a-particle-that-enters-another-emitter-fires-it.md) | A particle that enters another emitter fires it | **accepted** | 2026-11-11 | particles, release-1, v1-deviation |
+| [SIMULATION-0005](simulation/SIMULATION-0005-counter-and-chance-gate-hits-in-place.md) | Counter and Chance gate hits in place | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
+| [SIMULATION-0006](simulation/SIMULATION-0006-prism-redirects-and-splits-hits.md) | Prism redirects and splits hits | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
+| [SIMULATION-0007](simulation/SIMULATION-0007-sound-can-drive-the-simulation.md) | Sound can drive the simulation (Sound Laser) | **proposed** | 2026-11-13 | simulation, audio, determinism, post-2-0 |
 
 ## [ui](ui/README.md)
 
@@ -99,3 +106,6 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0006](ui/UI-0006-multi-touch-the-first-finger-is-v1-s-pointer-more.md) | Multi-touch: the first finger is v1's pointer; more fingers take blocks, sliders or a pinch | **accepted** | 2026-11-11 | touch, input, release-1 |
 | [UI-0007](ui/UI-0007-multi-select-a-set-beside-v1-s-one-selected-block.md) | Multi-select: a set beside v1's one selected block, ringed by its outline | **accepted** | 2026-11-11 | selection, input, release-1 |
 | [UI-0008](ui/UI-0008-a-power-switch-for-the-whole-world-on-the-stage.md) | A power switch for the whole world, on the stage | **accepted** | 2026-11-11 | power, release-1 |
+| [UI-0009](ui/UI-0009-stage-inside-view-is-a-window-that-points-at-its-block.md) | Stage inside view is a window that points at its block | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0010](ui/UI-0010-grid-plays-in-its-options-panel.md) | Grid plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
+| [UI-0011](ui/UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |

@@ -1,0 +1,9 @@
+# CHG-0014 tasks: Compressor block and emitter Offset
+
+Check items off as they land. Each task should be independently verifiable.
+
+- [ ] 1. Compressor manifest + engine DSP (Chromium port) + unit tests
+- [ ] 2. Compressor panel: meter, threshold line, gain reduction
+- [ ] 3. Emitter `offset` (free and synced) + R4 spec + golden; laser/pulse phase
+- [ ] 4. Codegen, goldens, wasm/worklet, plugin test
+- [ ] 5. Owner check on staging

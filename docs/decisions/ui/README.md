@@ -13,3 +13,6 @@
 | [UI-0006](UI-0006-multi-touch-the-first-finger-is-v1-s-pointer-more.md) | Multi-touch: the first finger is v1's pointer; more fingers take blocks, sliders or a pinch | **accepted** | 2026-11-11 | touch, input, release-1 |
 | [UI-0007](UI-0007-multi-select-a-set-beside-v1-s-one-selected-block.md) | Multi-select: a set beside v1's one selected block, ringed by its outline | **accepted** | 2026-11-11 | selection, input, release-1 |
 | [UI-0008](UI-0008-a-power-switch-for-the-whole-world-on-the-stage.md) | A power switch for the whole world, on the stage | **accepted** | 2026-11-11 | power, release-1 |
+| [UI-0009](UI-0009-stage-inside-view-is-a-window-that-points-at-its-block.md) | Stage inside view is a window that points at its block | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0010](UI-0010-grid-plays-in-its-options-panel.md) | Grid plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
+| [UI-0011](UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |

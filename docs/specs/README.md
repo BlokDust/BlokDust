@@ -31,3 +31,11 @@
 | [CHG-0010](changes/0010-post-launch-fixes-2-0-1/proposal.md) | Post-launch fixes (2.0.1) | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-CONNECTIONS-PROXIMITY |
 | [CHG-0011](changes/0011-effects-run-in-the-order-they-connected/proposal.md) | Effects run in the order they connected | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0012](changes/0012-dust-automation-moves-the-sliders/proposal.md) | Dust automation moves the sliders | **proposed** | SPEC-PATCH-FORMAT-V2 |
+| [CHG-0014](changes/0014-compressor-and-emitter-offset/proposal.md) | Compressor block and emitter Offset | **proposed** | SPEC-AUDIO-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0015](changes/0015-counter-chance-and-prism/proposal.md) | Counter, Chance and Prism | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0016](changes/0016-sound-laser/proposal.md) | Sound Laser | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
+| [CHG-0017](changes/0017-keys-set-pitch-and-note-effects/proposal.md) | Keys set pitch, and note effects (Chord, Arpeggiator, Random Note) | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
+| [CHG-0018](changes/0018-lfo/proposal.md) | LFO | **proposed** | SPEC-AUDIO-V1-PARITY, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0019](changes/0019-grid/proposal.md) | Grid | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0020](changes/0020-labels/proposal.md) | Labels on the stage | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-VISUAL-V1-PARITY |
+| [CHG-0021](changes/0021-stage-block/proposal.md) | Stage block | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |

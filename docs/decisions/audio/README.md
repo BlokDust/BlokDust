@@ -6,3 +6,5 @@
 | ID | Decision | Status | Date | Tags |
 |---|---|---|---|---|
 | [AUDIO-0001](AUDIO-0001-match-v1-sound-by-porting-chromium-web-audio.md) | Match v1 sound by porting Chromium Web Audio algorithms | **accepted** | 2026-11-06 | audio, parity, dsp, chromium |
+| [AUDIO-0002](AUDIO-0002-note-effects-act-before-a-source-plays.md) | Note effects act before a source plays | **proposed** | 2026-11-13 | audio, notes, post-2-0 |
+| [AUDIO-0003](AUDIO-0003-lfos-modulate-one-param-and-add-up.md) | LFOs modulate one param and add up | **proposed** | 2026-11-13 | audio, modulation, post-2-0 |
