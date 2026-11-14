@@ -74,7 +74,9 @@ bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
   Block& b = blocks_[static_cast<std::size_t>(slot)];
   if (b.type != BlockType::SourceStage || b.poolIndex < 0 || (inner && !inner->child_)) return false;
   stages_[static_cast<std::size_t>(b.poolIndex)] = inner;
+  stageNoteCount_[static_cast<std::size_t>(b.poolIndex)] = 0;
   if (!inner) return true;
+  inner->hostInput_ = hostInput_;  // the plugins' Microphone is the host input, inside a Stage too
   inner->sample_ = sample_; inner->tick_ = tick_; inner->tickOrigin_ = tickOrigin_; inner->tickBase_ = tickBase_;
   inner->tempo_ = tempo_; inner->beat_ = beat_;
   inner->worldPower_ = true;
@@ -154,6 +156,7 @@ void Engine::acquireDsp(Block& b, int slot) noexcept {
     if (!child_) for (int i = 0; i < kMaxStages; ++i) if (stageOwner_[static_cast<std::size_t>(i)] < 0) {
       stageOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
       stages_[static_cast<std::size_t>(i)] = nullptr;
+      stageNoteCount_[static_cast<std::size_t>(i)] = 0;
       b.poolIndex = static_cast<std::int16_t>(i);
       break;
     }
@@ -504,6 +507,9 @@ void Engine::apply(const Command& c) noexcept {
 static_assert(P::InputTouchpad::transpose == P::InputComputerKeyboard::transpose && P::InputTouchpad::glide == P::InputComputerKeyboard::glide &&
               P::InputTouchpad::isPolyphonic == P::InputComputerKeyboard::isPolyphonic && P::InputTouchpad::polyphonic == P::InputComputerKeyboard::polyphonic,
               "controller params must line up");
+static_assert(P::InputStageIn::transpose == P::InputComputerKeyboard::transpose && P::InputStageIn::glide == P::InputComputerKeyboard::glide &&
+              P::InputStageIn::isPolyphonic == P::InputComputerKeyboard::isPolyphonic && P::InputStageIn::polyphonic == P::InputComputerKeyboard::polyphonic &&
+              P::InputStageIn::keysSetPitch == P::InputComputerKeyboard::keysSetPitch, "Stage In is a keyboard to the engine");
 namespace {
 bool polyOf(const Block& c) noexcept { return c.params[P::InputComputerKeyboard::isPolyphonic] != 0.0 || c.params[P::InputComputerKeyboard::polyphonic] != 0.0; }
 }  // namespace
@@ -553,15 +559,83 @@ void Engine::keyAim(Block& b, int note, bool down, bool poly) noexcept {
   else if (b.type == BlockType::PowerEmitter) b.params[P::PowerEmitter::angle] = a;
 }
 
+/// Does controller `ctrl` take note command `c`? The block it names; or every controller of its type (the computer's
+/// keys, MIDI in); or, sent in from outside this Stage, every controller but the type that heard it already.
+bool Engine::controllerHears(const Block& ctrl, const Command& c) const noexcept {
+  if (ctrl.kind() != BlockKind::Controller) return false;
+  if (c.outside) return ctrl.type != c.blockType;
+  return c.id != kInvalidBlock ? ctrl.id == c.id : ctrl.type == c.blockType;
+}
+
+/// A note played on a controller touching Stage block `stage` goes in (CHG-0021, UI-0012): to the inner world's
+/// controllers, a semitone for a semitone, moved by the outer controller's octave. Keys held are remembered, so the
+/// note ends on the key it started on whatever the octave does meanwhile.
+void Engine::forwardToStage(const Block& stage, const Block& ctrl, const Command& c) noexcept {
+  if (stage.poolIndex < 0) return;
+  const auto pi = static_cast<std::size_t>(stage.poolIndex);
+  Engine* inner = stages_[pi];
+  if (!inner) return;
+  auto& held = stageNotes_[pi];
+  int& count = stageNoteCount_[pi];
+  const auto ch = static_cast<std::uint8_t>(std::clamp(static_cast<int>(c.x), 0, 15));
+  int at = -1;
+  for (int i = 0; i < count; ++i) if (held[static_cast<std::size_t>(i)].ctrl == ctrl.id && held[static_cast<std::size_t>(i)].key == c.param && held[static_cast<std::size_t>(i)].channel == ch) at = i;
+  Command f = c;
+  f.outside = true;
+  f.id = kInvalidBlock;
+  f.blockType = c.id == kInvalidBlock && !c.outside ? c.blockType : BlockType::SourceStage;  // no controller is a Stage
+  f.atSample = -1;
+  if (c.type == Command::Type::NoteOn) {
+    const int sent = std::clamp(static_cast<int>(c.param) + 12 * static_cast<int>(std::lround(ctrl.params[0])), 0, 127);  // param 0 = transpose
+    if (at < 0) {
+      if (count == kStageNotes) return;  // full: the note stays out
+      at = count++;
+    }
+    held[static_cast<std::size_t>(at)] = {ctrl.id, c.param, ch, static_cast<std::uint8_t>(sent)};
+    f.param = static_cast<std::uint8_t>(sent);
+    inner->applyNow(f);
+    return;
+  }
+  if (at < 0) return;
+  f.param = held[static_cast<std::size_t>(at)].sent;
+  if (c.type == Command::Type::NoteOff) held[static_cast<std::size_t>(at)] = held[static_cast<std::size_t>(--count)];
+  inner->applyNow(f);
+}
+
+/// Notes held into a Stage by a controller that no longer touches it (moved away, removed) end there.
+void Engine::releaseStageNotes() noexcept {
+  for (int k = 0; k < orderCount_; ++k) {
+    const Block& st = blocks_[order_[k]];
+    if (st.type != BlockType::SourceStage || st.poolIndex < 0) continue;
+    const auto pi = static_cast<std::size_t>(st.poolIndex);
+    auto& held = stageNotes_[pi];
+    int& count = stageNoteCount_[pi];
+    for (int i = 0; i < count;) {
+      const StageNote h = held[static_cast<std::size_t>(i)];
+      const int cs = slotOf(h.ctrl);
+      if (cs >= 0 && graph_.row(order_[k])[static_cast<std::size_t>(cs)]) { ++i; continue; }
+      held[static_cast<std::size_t>(i)] = held[static_cast<std::size_t>(--count)];
+      if (Engine* inner = stages_[pi]) {
+        Command off = Command::noteOff(BlockType::SourceStage, h.sent, -1, h.channel);
+        off.outside = true;
+        inner->applyNow(off);
+      }
+    }
+  }
+}
+
 void Engine::applyNote(const Command& c) noexcept {
   const int ch = std::clamp(static_cast<int>(c.x), 0, 15);
+  // The computer's keys and MIDI in reach every world: a Keyboard inside a Stage plays from outside it (owner, 2026-11-14).
+  if (c.id == kInvalidBlock && !c.outside) for (Engine* inner : stages_) if (inner) inner->applyNow(c);
   for (int k = 0; k < orderCount_; ++k) {
     const Block& ctrl = blocks_[order_[k]];
-    if (ctrl.kind() != BlockKind::Controller || (c.id != kInvalidBlock ? ctrl.id != c.id : ctrl.type != c.blockType)) continue;
+    if (!controllerHears(ctrl, c)) continue;
     if (!acceptsChannel(ctrl, ch)) continue;
     const auto row = graph_.row(order_[k]);
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
+      if (row[s] && blocks_[s].type == BlockType::SourceStage) { forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, c); continue; }
       if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) { keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn, polyOf(ctrl)); continue; }
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource || blocks_[s].type == BlockType::SourceStage) continue;
       if (blocks_[s].arranged) {  // CHG-0017: the key joins or leaves the notes this source is given
@@ -590,9 +664,10 @@ void Engine::applyNote(const Command& c) noexcept {
 void Engine::applyExpression(const Command& c) noexcept {
   const int ch = std::clamp(static_cast<int>(c.x), 0, 15);
   const auto dim = static_cast<Command::Expression>(std::clamp(static_cast<int>(c.y), 0, 2));
+  if (c.id == kInvalidBlock && !c.outside) for (Engine* inner : stages_) if (inner) inner->applyNow(c);  // as applyNote
   for (int k = 0; k < orderCount_; ++k) {
     const Block& ctrl = blocks_[order_[k]];
-    if (ctrl.kind() != BlockKind::Controller || (c.id != kInvalidBlock ? ctrl.id != c.id : ctrl.type != c.blockType)) continue;
+    if (!controllerHears(ctrl, c)) continue;
     if (!acceptsChannel(ctrl, ch)) continue;
     const bool midi = ctrl.type == BlockType::InputMidiController;
     const bool pressureOn = !midi || ctrl.params[P::InputMidiController::pressureTo] >= 0.5;
@@ -600,6 +675,7 @@ void Engine::applyExpression(const Command& c) noexcept {
     const auto row = graph_.row(order_[k]);
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
+      if (row[s] && blocks_[s].type == BlockType::SourceStage) { forwardToStage(blocks_[static_cast<std::size_t>(s)], ctrl, c); continue; }
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource) continue;
       Block& b = blocks_[static_cast<std::size_t>(s)];
       if (b.arranged && dim == Command::Expression::Bend) {
@@ -1187,6 +1263,7 @@ void Engine::onTopologyChanged(int slot, const ConnectionGraph::Row& before) noe
   routingDirty_ = true;
   recomputeStaticPower();
   for (int k = 0; k < orderCount_; ++k) refreshVoices(order_[k]);
+  releaseStageNotes();
 }
 
 void Engine::recomputeStaticPower() noexcept {
@@ -1888,7 +1965,8 @@ void Engine::render(float* left, float* right, int n) noexcept {
   // never drift from this one.
   if (!child_) for (int i = 0; i < kMaxStages; ++i) if (Engine* inner = stages_[static_cast<std::size_t>(i)]) {
     float* buf = stageBuf_.data() + static_cast<std::ptrdiff_t>(i) * 2 * kMaxSegment;
-    inner->process(buf, buf + kMaxSegment, static_cast<std::uint32_t>(n));
+    // The host input (the Microphone, Audio In) reaches blocks inside a Stage too.
+    inner->process(inLeft_ ? inLeft_ + inOffset_ : nullptr, inRight_ ? inRight_ + inOffset_ : nullptr, buf, buf + kMaxSegment, static_cast<std::uint32_t>(n));
     inner->clearEvents();
   }
   // Sound Lasers (CHG-0016): which chains each one hears (those of the sources connected to it).

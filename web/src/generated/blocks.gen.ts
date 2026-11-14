@@ -6793,6 +6793,169 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "input.stage-in",
+    "category": "interaction",
+    "kind": "controller",
+    "name": "Stage In",
+    "description": "Inside a Stage: plays the sources it touches with the notes played on the Stage block outside.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "StageIn",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 9,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              0,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 3,
+          "points": [
+            [
+              0,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "transpose",
+        "default": 0,
+        "unit": "octaves",
+        "ui": {
+          "transform": "Identity",
+          "min": -3,
+          "max": 3,
+          "k": 0
+        }
+      },
+      {
+        "key": "glide",
+        "default": 0.05,
+        "unit": "s",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "isPolyphonic",
+        "default": true,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "polyphonic",
+        "default": null,
+        "unit": null,
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "keysSetPitch",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "input.touchpad",
     "category": "interaction",
     "kind": "controller",
@@ -7010,6 +7173,6 @@ export const BLOCKS: readonly BlockDef[] = [
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller' | 'input.touchpad';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller' | 'input.stage-in' | 'input.touchpad';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

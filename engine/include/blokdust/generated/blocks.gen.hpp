@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 44;
+inline constexpr std::size_t kBlockTypeCount = 45;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -55,6 +55,7 @@ enum class BlockType : std::uint16_t {
   PowerVoid,  // power.void
   InputComputerKeyboard,  // input.computer-keyboard
   InputMidiController,  // input.midi-controller
+  InputStageIn,  // input.stage-in
   InputTouchpad,  // input.touchpad
 };
 
@@ -557,6 +558,17 @@ inline constexpr ParamInfo kParamsInputMidiController[] = {
 };
 namespace param::InputMidiController { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, channel, mpe, pressureTo, slideTo, bendRange, device, keysSetPitch, Count }; }
 
+// ---- input.stage-in (Stage In)
+inline constexpr GridPoint kOutlineInputStageIn[] = {{-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsInputStageIn[] = {
+  {"transpose", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
+  {"glide", 0.05, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"isPolyphonic", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+};
+namespace param::InputStageIn { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, Count }; }
+
 // ---- input.touchpad (Touchpad)
 inline constexpr GridPoint kOutlineInputTouchpad[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {2.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
 inline constexpr ParamInfo kParamsInputTouchpad[] = {
@@ -615,6 +627,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},
   {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 5, true},
   {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 11, true},
+  {BlockType::InputStageIn, "input.stage-in", "", BlockKind::Controller, 6.0f, kOutlineInputStageIn, 5, kParamsInputStageIn, 5, false},
   {BlockType::InputTouchpad, "input.touchpad", "", BlockKind::Controller, 6.0f, kOutlineInputTouchpad, 6, kParamsInputTouchpad, 8, false},
 }};
 

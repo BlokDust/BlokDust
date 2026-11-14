@@ -12,7 +12,7 @@ const MENU: Record<string, string[]> = {
   Source: ['source.stage'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
-  Interaction: ['input.touchpad'],
+  Interaction: ['input.touchpad', 'input.stage-in'],
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
 const BY_NAME = new Map(NEW_DEFS.map(d => [d.name.toLowerCase(), d]));
@@ -25,18 +25,21 @@ export function installNewBlockMenu(): void {
   for (const cat of (App.BlockCreator.MenuJson as { categories: { name: string; items: { name: string; id: string; description: string }[] }[] }).categories) {
     for (const id of MENU[cat.name] ?? []) {
       const def = BLOCKS_BY_ID.get(id);
-      if (id === 'source.stage' && App.IsPlugin) continue;  // the plugin plays Stage blocks; making and opening them is the website's for now
+      if ((id === 'source.stage' || id === 'input.stage-in') && App.IsPlugin) continue;  // the plugin plays Stage blocks; making and opening them is the website's for now
       if (def && !cat.items.some(i => i.id === def.menuId)) cat.items.push({ name: def.name, id: def.menuId, description: def.description });
     }
     // Label (CHG-0020): not a block, but it is made from the Interaction menu like one.
     if (cat.name === 'Interaction' && !cat.items.some(i => i.id === LABEL_MENU_ID))
       cat.items.push({ name: 'Label', id: LABEL_MENU_ID, description: 'A note on the stage. Drag it by its dot; click it to change the words.' });
   }
+  setMenuHidden(ONLY_INSIDE);  // the outer stage's menu
 }
 
-/** Hide these menu ids (inside a Stage block: no Stage, no samplers; CHG-0021), or none. The header is populated
+/** Hide these menu ids (inside a Stage block: no Stage; outside: no Stage In; CHG-0021). The header is populated
  * again by the scene's next sync. */
 let fullMenu: Map<string, { name: string; id: string; description: string }[]> | null = null;
+/** Menu ids offered only inside a Stage block. */
+export const ONLY_INSIDE = new Set(['StageIn']);
 export function setMenuHidden(hidden: Set<string>): void {
   const cats = (App.BlockCreator.MenuJson as { categories: { name: string; items: { name: string; id: string; description: string }[] }[] }).categories;
   fullMenu ??= new Map(cats.map(c => [c.name, c.items.slice()]));
@@ -116,6 +119,7 @@ const CONVERT: Record<string, { param: string; to: (v: number) => number; from?:
   attackMs: { param: 'attack', to: v => v / 1000, from: v => v * 1000 },
   releaseMs: { param: 'release', to: v => v / 1000, from: v => v * 1000 },
   gapMs: { param: 'gap', to: v => v / 1000, from: v => v * 1000 },
+  glidePct: { param: 'glide', to: v => v / 100, from: v => v * 100 },  // v1 Keyboard's Glide slider shows glide × 100
   compMeter: { param: 'threshold', to: v => v, from: v => v },   // the Level meter's line (owner, 2026-11-14)
   soundMeter: { param: 'threshold', to: v => v, from: v => v },
   angle90: { param: 'angle', to: v => v - 90, from: v => wrapAngle(v + 90) },  // v1's Angle sliders show angle + 90 (0 = up)
@@ -139,6 +143,13 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Attack', 'attackMs', Math.max(1, Number(b.Params.attack) * 1000), 1, 1000, { log: true, display: ms }),
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
+  ],
+  // UI-0012: a keyboard without keys (v1 ComputerKeyboard's form): it plays the notes played on its Stage outside.
+  'input.stage-in': b => [
+    { type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
+      switches: [{ name: 'Mono/Poly', setting: 'polyphonic', value: !!b.Params.isPolyphonic, mode: 'fewMany' }] },
+    slider('Octave', 'transpose', Number(b.Params.transpose ?? 0), -3, 3, { quantised: true, centered: true }),
+    slider('Glide', 'glidePct', Number(b.Params.glide ?? 0.05) * 100, 0, 100),
   ],
   // CHG-0021: its level, then the two things to do with it. (In the plugin a Stage plays; opening is the website's.)
   'source.stage': b => {

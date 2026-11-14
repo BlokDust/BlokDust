@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**56 decisions** · proposed: 10 · accepted: 40 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**57 decisions** · proposed: 10 · accepted: 41 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -111,3 +111,4 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0009](ui/UI-0009-stage-inside-view-is-a-window-that-points-at-its-block.md) | Stage inside view is a window that points at its block | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
 | [UI-0010](ui/UI-0010-grid-plays-in-its-options-panel.md) | Touchpad plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
 | [UI-0011](ui/UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
+| [UI-0012](ui/UI-0012-a-stage-is-played-from-outside-through-its.md) | A Stage is played from outside through its controllers and Stage In | **accepted** | 2026-11-14 | stage, controllers, selection |

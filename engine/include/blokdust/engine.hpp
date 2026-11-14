@@ -39,6 +39,10 @@ struct Command {
   /// Apply at the first tick boundary at or after this sample (-1 = as soon as possible). Lets offline renders and
   /// tests schedule edits sample-exactly, independent of audio buffer size.
   std::int64_t atSample = -1;
+  /// NoteOn/NoteOff/NoteExpression from outside a Stage block (CHG-0021, UI-0012): the note reaches every controller
+  /// of this inner world (its Keyboards, MIDI Inputs, Touchpads and Stage Ins) except those of type `blockType`, which
+  /// heard it already (the computer's keys and MIDI reach every world). Made by the engine only, never by a host.
+  bool outside = false;
 
   static Command add(BlockId id, BlockType t, double x, double y, std::int64_t at = -1) { Command c; c.type = Type::AddBlock; c.id = id; c.blockType = t; c.x = x; c.y = y; c.atSample = at; return c; }
   static Command remove(BlockId id, std::int64_t at = -1) { Command c; c.type = Type::RemoveBlock; c.id = id; c.atSample = at; return c; }
@@ -188,6 +192,9 @@ class Engine {
   void logicHit(Block& b) noexcept;
   void applyNote(const Command& c) noexcept;
   void applyExpression(const Command& c) noexcept;
+  bool controllerHears(const Block& ctrl, const Command& c) const noexcept;
+  void forwardToStage(const Block& stage, const Block& ctrl, const Command& c) noexcept;
+  void releaseStageNotes() noexcept;
   void renderGranular(Block& b, int n) noexcept;
   static bool acceptsChannel(const Block& ctrl, int channel) noexcept;
   // v1 Source voices (Source.NoteOn/NoteOff/GetVoice/RemoveVoice/SetPitch)
@@ -312,6 +319,12 @@ class Engine {
   // source.stage (CHG-0021): inner worlds by pool index, and what each rendered this segment (stereo).
   std::array<Engine*, kMaxStages> stages_{};
   std::array<std::int16_t, kMaxStages> stageOwner_{};
+  // Notes an outer controller is holding inside each Stage (CHG-0021, UI-0012): the key as played and as sent in (with
+  // the outer controller's octave), so its NoteOff and expression reach the same inner key.
+  struct StageNote { BlockId ctrl; std::uint8_t key, channel, sent; };
+  static constexpr int kStageNotes = 32;
+  std::array<std::array<StageNote, kStageNotes>, kMaxStages> stageNotes_{};
+  std::array<int, kMaxStages> stageNoteCount_{};
   std::vector<float> stageBuf_;
   std::array<float, kMaxSegment> stageL_{}, stageR_{};
   bool chainStage_ = false;

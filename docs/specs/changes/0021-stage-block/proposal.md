@@ -4,7 +4,7 @@ title: Stage block
 status: proposed
 date: 2026-11-13
 specs: [SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY]
-adrs: [SCOPE-0006, UI-0009]
+adrs: [SCOPE-0006, UI-0009, UI-0012]
 ---
 # CHG-0021: Stage block
 
@@ -47,3 +47,11 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 
 ## Owner review 1 (2026-11-14)
 - Blocks dragged onto a Stage block go inside it (it is ringed while they would), to the right of what is there, with their connections. Not undoable.
+
+## Owner review 2 (2026-11-14)
+- MAKE STAGE button while blocks are selected (UI-0012). Everything selected goes in: samplers keep their audio, the
+  Microphone and Audio In hear the input inside. A selection holding a Stage cannot go in.
+- Notes reach inside: the computer's keys and MIDI play Keyboards and MIDI Inputs inside Stages; a controller touching a
+  Stage plays the controllers inside it, and the new **Stage In** block (inside a Stage only) (R13a).
+- The title is BLOKDUST 2 (header and splash).
+

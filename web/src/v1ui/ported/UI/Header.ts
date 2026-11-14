@@ -158,10 +158,10 @@ export class Header extends DisplayObject {
 
         if (this.Rows>1) {
             this.Ctx.textAlign = "center";
-            this.Ctx.fillText("BLOKDUST", App.Width*0.5, (thisHeight * 0.5) + (headerType * 0.38));
+            this.Ctx.fillText("BLOKDUST 2", App.Width*0.5, (thisHeight * 0.5) + (headerType * 0.38));
         } else {
             this.Ctx.textAlign = "left";
-            this.Ctx.fillText("BLOKDUST", (20 + this.CreateNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38));
+            this.Ctx.fillText("BLOKDUST 2", (20 + this.CreateNewMargin) * units, (thisHeight * 0.5) + (headerType * 0.38));
         }
 
         // DIVIDERS //

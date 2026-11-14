@@ -1,0 +1,150 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "input.stage-in",
+  "draft": false,
+  "category": "interaction",
+  "kind": "controller",
+  "name": "Stage In",
+  "description": "Inside a Stage: plays the sources it touches with the notes played on the Stage block outside.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 9,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 3,
+        "points": [
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -1
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        1
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "transpose",
+      "default": 0,
+      "unit": "octaves",
+      "range": [
+        -3,
+        3
+      ],
+      "description": "Octave shift (as the keyboards)"
+    },
+    {
+      "key": "glide",
+      "default": 0.05,
+      "unit": "s",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Mono: glide time between notes (as the keyboards)"
+    },
+    {
+      "key": "isPolyphonic",
+      "default": true,
+      "unit": "enum",
+      "description": "Poly (the default: chords played outside stay chords) or mono"
+    },
+    {
+      "key": "polyphonic",
+      "default": null,
+      "unit": null,
+      "description": "v1's switch name for isPolyphonic (as the keyboards)"
+    },
+    {
+      "key": "keysSetPitch",
+      "default": false,
+      "unit": "enum",
+      "description": "Keys set pitch (CHG-0017): notes make no sound; they are the notes power plays"
+    }
+  ]
+}

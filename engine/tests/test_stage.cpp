@@ -138,3 +138,102 @@ TEST_CASE("R13 Stage: one level only; removing the block lets its world go; at m
   CHECK(outer->block(static_cast<BlockId>(10 + kMaxStages))->poolIndex < 0);
   CHECK_FALSE(outer->attachStage(static_cast<BlockId>(10 + kMaxStages), inner.get()));
 }
+
+// ---- Playing a Stage from outside (owner, 2026-11-14; UI-0012) ----
+namespace {
+/// A Stage (1) at the origin with an inner Tone (1) and an inner controller (2) of `inside` beside it; nothing powers it.
+struct Played {
+  std::unique_ptr<Engine> outer = makeEngine(48000, 1, false);
+  std::unique_ptr<Engine> inner;
+  explicit Played(BlockType inside) {
+    outer->push(Command::add(1, BlockType::SourceStage, 0, 0));
+    outer->prime();
+    inner = makeChild(*outer);
+    inner->push(Command::add(1, BlockType::SourceTone, 0, 0));
+    inner->push(Command::add(2, inside, 3, 0));
+    REQUIRE(outer->attachStage(1, inner.get()));
+  }
+  int sounding(int key = -2) const {
+    int n = 0;
+    for (const auto& v : inner->block(1)->voices) if (v.active && (key == -2 || v.key == key)) ++n;
+    return n;
+  }
+};
+Command on(BlockType t, int note, BlockId id = kInvalidBlock) { auto c = Command::noteOn(t, static_cast<std::uint8_t>(note)); c.id = id; return c; }
+Command off(BlockType t, int note, BlockId id = kInvalidBlock) { auto c = Command::noteOff(t, static_cast<std::uint8_t>(note)); c.id = id; return c; }
+}  // namespace
+
+TEST_CASE("UI-0012 Stage: the computer's keys play a Keyboard inside a Stage from outside it") {
+  Played p(BlockType::InputComputerKeyboard);
+  CHECK(rms(render(*p.outer, 4800)) == 0.0);
+  p.outer->push(on(BlockType::InputComputerKeyboard, 60));
+  CHECK(rms(render(*p.outer, 24000), 4800) > 0.01);
+  CHECK(p.sounding(60) == 1);
+  p.outer->push(off(BlockType::InputComputerKeyboard, 60));
+  render(*p.outer, 48000);
+  CHECK(p.sounding() == 0);
+}
+
+TEST_CASE("UI-0012 Stage: a controller touching the Stage plays its Stage In, an octave moved by the outer one") {
+  Played p(BlockType::InputStageIn);
+  p.outer->push(Command::add(2, BlockType::InputTouchpad, 3, 0));   // touching the Stage
+  p.outer->push(Command::setParam(2, P::InputTouchpad::transpose, 1));
+  p.outer->push(on(BlockType::InputTouchpad, 60, 2));
+  CHECK(rms(render(*p.outer, 24000), 4800) > 0.01);
+  CHECK(p.sounding(72) == 1);                                        // C4 played an octave up outside
+  p.outer->push(Command::setParam(2, P::InputTouchpad::transpose, 0));  // the octave moves while it is held:
+  p.outer->push(off(BlockType::InputTouchpad, 60, 2));              // the note still ends where it started
+  render(*p.outer, 48000);
+  CHECK(p.sounding() == 0);
+  // Chords stay chords (Stage In is polyphonic by default).
+  p.outer->push(on(BlockType::InputTouchpad, 60, 2));
+  p.outer->push(on(BlockType::InputTouchpad, 64, 2));
+  p.outer->push(on(BlockType::InputTouchpad, 67, 2));
+  render(*p.outer, 4800);
+  CHECK(p.sounding() == 3);
+  // The Touchpad moves away with its notes held: they end inside.
+  p.outer->push(Command::move(2, 40, 0));
+  render(*p.outer, 48000);
+  CHECK(p.sounding() == 0);
+}
+
+TEST_CASE("UI-0012 Stage: an outer controller reaches the Keyboards inside too, and a key heard twice plays once") {
+  Played p(BlockType::InputComputerKeyboard);
+  p.outer->push(Command::add(2, BlockType::InputTouchpad, 3, 0));
+  p.outer->push(on(BlockType::InputTouchpad, 62, 2));
+  render(*p.outer, 4800);
+  CHECK(p.sounding(62) == 1);
+  p.outer->push(off(BlockType::InputTouchpad, 62, 2));
+  render(*p.outer, 48000);
+  CHECK(p.sounding() == 0);
+  // An outer Computer Keyboard touching the Stage: the inner Keyboard hears the computer's key itself, not again via it.
+  p.outer->push(Command::add(3, BlockType::InputComputerKeyboard, -3, 0));
+  p.inner->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
+  p.outer->push(on(BlockType::InputComputerKeyboard, 64));
+  render(*p.outer, 4800);
+  CHECK(p.sounding(64) == 1);
+}
+
+TEST_CASE("UI-0012 Stage: notes from outside reach the power sources a Stage In touches") {
+  Played p(BlockType::InputStageIn);
+  p.inner->push(Command::add(3, BlockType::PowerEmitter, 3, 3));     // the Stage In aims and powers it, as a Keyboard does
+  p.outer->push(Command::add(2, BlockType::InputTouchpad, 3, 0));
+  p.outer->push(on(BlockType::InputTouchpad, 64, 2));
+  render(*p.outer, 4800);
+  CHECK(p.inner->block(3)->keyPower == 1);
+}
+
+TEST_CASE("Stage: the Microphone and Audio In inside a Stage hear the host input") {
+  std::vector<float> inL(48000), inR(48000), outL(48000), outR(48000);
+  for (std::size_t i = 0; i < inL.size(); ++i) inL[i] = inR[i] = static_cast<float>(0.25 * dmath::sin(dmath::kTwoPi * 440.0 * double(i) / 48000.0));
+  for (const auto t : {BlockType::SourceMicrophone, BlockType::SourceAudioIn}) {
+    auto outer = makeEngine(48000, 1, false);
+    outer->push(Command::add(1, BlockType::SourceStage, 0, 0));
+    outer->prime();
+    auto inner = makeChild(*outer);
+    inner->push(Command::add(1, t, 0, 0));
+    REQUIRE(outer->attachStage(1, inner.get()));
+    for (std::uint32_t d = 0; d < 48000; d += 128) outer->process(inL.data() + d, inR.data() + d, outL.data() + d, outR.data() + d, 128);
+    CHECK(rms(outL, 24000) > 0.01);
+  }
+}

@@ -188,3 +188,10 @@ BD_EXPORT(bd_free) void bd_free(float* p) { delete[] p; }
 BD_EXPORT(bd_attach_sample) int bd_attach_sample(Host* h, std::uint32_t id, float* left, float* right, std::uint32_t frames, double sampleRate) {
   return h->engine.attachSample(id, blokdust::SampleBuffer{left, right, frames, sampleRate}) ? 1 : 0;
 }
+/// The same for a block inside Stage block `stage` (CHG-0021): its inner world's blocks exist once its commands apply.
+BD_EXPORT(bd_attach_sample_stage) int bd_attach_sample_stage(Host* h, std::uint32_t stage, std::uint32_t id, float* left, float* right, std::uint32_t frames, double sampleRate) {
+  Engine* e = child(h, stage);
+  if (!e) return 0;
+  e->prime();
+  return e->attachSample(id, blokdust::SampleBuffer{left, right, frames, sampleRate}) ? 1 : 0;
+}

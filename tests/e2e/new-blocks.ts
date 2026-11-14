@@ -17,6 +17,14 @@ const results: Record<string, unknown> = {};
 let ok = true;
 
 const blk = (id: string, type: string, x: number, y: number, params: Record<string, unknown> = {}): PatchBlock => ({ id, type, x, y, params });
+/** A second of a 220 Hz sine as a 16-bit WAV file's bytes. */
+const sineWav = () => {
+  const n = 44100, b = Buffer.alloc(44 + n * 2);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(44100, 24); b.writeUInt32LE(88200, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
+  for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(Math.sin((2 * Math.PI * 220 * i) / 44100) * 20000), 44 + i * 2);
+  return [...b];
+};
 const state = (p: Page) => p.evaluate(() => (window as any).__bd_probe.state);
 /** Open the app on `blocks` (a v2 patch in a share link), press START and wait for the engine. */
 async function open(b: Browser, blocks: PatchBlock[], errors: string[], extra: Partial<Patch> = {}, viewport = { width: 1280, height: 800 }): Promise<Page> {
@@ -105,7 +113,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.waitForTimeout(900);
     const inner = (await state(p)).blocks.map((b: any) => b.type).sort();
     const win = await p.evaluate(() => (window as any).__bd_probe.inside);
-    const insideMenu = await menuItems(p, 'Source');
+    const insideMenu = await menuItems(p, 'Source'), insideInteraction = await menuItems(p, 'Interaction');
     const linked = (await state(p)).connections.length / 2;               // the inner world's own connections
     await p.screenshot({ path: `${OUT}/stage-inside.png` });
     // edit inside: move the inner Filter away (it disconnects)
@@ -117,6 +125,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.mouse.click(win.closeX, win.closeY); await p.waitForTimeout(500);
     const out1 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
     const outerBlocks = (await state(p)).blocks.map((b: any) => b.type).sort();
+    const outerInteraction = await menuItems(p, 'Interaction');
     const saved = (await state(p)).patch.macros?.[0];
     const movedFilter = saved?.blocks.find((b: any) => b.id === 'f');
     // in again by double click; out by Esc; in again; out by a press in the margin
@@ -135,10 +144,11 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.mouse.up();
     await p.close();
     const pass = menu.includes('Stage') && silent && held && names.includes('Volume') && names.filter((n: string) => n === 'actionbutton').length === 2 &&
-      inner.join() === 'fx.filter,power.power,source.tone' && !insideMenu.includes('Stage') && !insideMenu.includes('Sample') && insideMenu.includes('Tone') &&
+      inner.join() === 'fx.filter,power.power,source.tone' && !insideMenu.includes('Stage') && insideMenu.includes('Sample') && insideMenu.includes('Microphone') && insideMenu.includes('Tone') &&
+      insideInteraction.includes('Stage In') && !outerInteraction.includes('Stage In') &&
       linked === 2 && unlinked === 1 && out1 && outerBlocks.join() === 'fx.volume,source.stage' && !!movedFilter && movedFilter.x !== 3 && again === 3 && out2 && out3 && stillPlays &&
       win.w > 900 && win.h > 500;
-    return [pass, { menu, silent, held, names, inner, insideMenu, linked, unlinked, out1, outerBlocks, movedFilter, again, out2, out3, stillPlays, win }];
+    return [pass, { menu, silent, held, names, inner, insideMenu, insideInteraction, outerInteraction, linked, unlinked, out1, outerBlocks, movedFilter, again, out2, out3, stillPlays, win }];
   },
   // CHG-0021: selected blocks become what is inside a new Stage (Cmd/Ctrl+G); a copy of a Stage has its own inside.
   async 'stage-from-selection'(errors) {
@@ -186,6 +196,48 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const pass = ringed !== null && outer === 'power.power,source.stage' && inner === 'fx.filter,power.power,source.tone,source.tone' &&
       added.length === 2 && added.every((b: any) => b.x > 0) && (macro?.connectionOrder ?? []).some((c: string[]) => c.join() === 't2,f2') && sounds;
     return [pass, { ringed, outer, inner, added, order: macro?.connectionOrder, sounds }];
+  },
+  // Owner review 2 (2026-11-14, UI-0012): with blocks selected a MAKE STAGE button puts them all in a new Stage block,
+  // samplers with their audio (nothing is left out), and they carry on playing inside.
+  async 'make-stage-button'(errors) {
+    const p = await open(browser, [blk('sm', 'source.sample', 0, 0), blk('pw', 'power.power', -3, 0), blk('po', 'power.power', 2, 0)], errors);
+    const none = await p.evaluate(() => (window as any).__bd_probe.makeStage);
+    await p.evaluate(([i, bytes]) => (window as any).__bd_loadSample(i, 'sine.wav', new Uint8Array(bytes).buffer), [await idOf(p, 'sm'), sineWav()] as const);
+    await p.waitForTimeout(300);
+    await p.evaluate(list => (window as any).__bd_probe.select(list), await Promise.all(['sm', 'pw'].map(u => idOf(p, u))));
+    await p.waitForTimeout(200);
+    const btn = await p.evaluate(() => (window as any).__bd_probe.makeStage) as { x: number; y: number } | null;
+    await p.screenshot({ path: `${OUT}/make-stage-button.png` });
+    if (btn) await p.mouse.click(btn.x, btn.y);
+    await p.waitForTimeout(1200);
+    const s = await state(p), outer = s.blocks.map((b: any) => b.type).sort().join();
+    const inner = s.patch.macros?.[0]?.blocks.map((b: any) => b.type).sort().join();
+    const sounds = s.rms > 0.005;   // the outer Power powers the Stage; inside, its Power plays the Sample
+    await p.evaluate(i => (window as any).__bd_stage.enter(i), s.blocks.find((b: any) => b.type === 'source.stage').id);
+    await p.waitForTimeout(700);
+    const shown = await p.evaluate(() => (window as any).__bd_probe.samples);
+    await p.close();
+    const pass = none === null && !!btn && outer === 'power.power,source.stage' && inner === 'power.power,source.sample' && sounds &&
+      shown.length === 1 && shown[0].loaded && shown[0].frames > 0;
+    return [pass, { none, btn, outer, inner, sounds, shown }];
+  },
+  // Owner review 2 (UI-0012): the computer's keys play a Keyboard inside a Stage from outside it; a Keyboard touching a
+  // Stage plays its Stage In.
+  async 'stage-keys'(errors) {
+    const p1 = await open(browser, [blk('s', 'source.stage', 0, 0)], errors, { macros: [{ block: 's', blocks: [blk('t', 'source.tone', 0, 0), blk('k', 'input.computer-keyboard', 3, 0)] }] } as any);
+    const quiet1 = (await state(p1)).rms < 0.0005;
+    await p1.keyboard.down('KeyQ'); await p1.waitForTimeout(500);
+    const keyPlays = (await state(p1)).rms > 0.005;
+    await p1.keyboard.up('KeyQ');
+    await p1.close();
+    const p2 = await open(browser, [blk('s', 'source.stage', 0, 0), blk('k', 'input.computer-keyboard', -3, 0)], errors,
+      { macros: [{ block: 's', blocks: [blk('t', 'source.tone', 0, 0), blk('in', 'input.stage-in', 3, 0)] }] } as any);
+    const quiet2 = (await state(p2)).rms < 0.0005;
+    await p2.keyboard.down('KeyE'); await p2.waitForTimeout(500);
+    const stageInPlays = (await state(p2)).rms > 0.005;
+    await p2.keyboard.up('KeyE');
+    await p2.close();
+    return [quiet1 && keyPlays && quiet2 && stageInPlays, { quiet1, keyPlays, quiet2, stageInPlays }];
   },
   // Owner review 2026-11-14: the Power block's panel (Gap On Hit, then Gap); a Laser's Rotate sticks at 0; an emitter's
   // panel draws the way it fires.

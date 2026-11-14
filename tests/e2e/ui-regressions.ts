@@ -1713,7 +1713,7 @@ Object.assign(tests, {
     const worstFrameMs = await p.evaluate(() => Math.round(Math.max(...(window as any).__gaps)));
     const worstMovingMs = await p.evaluate(() => Math.round(Math.max(...(window as any).__gaps.slice((window as any).__moved ?? 0))));
     const gapsAt = await p.evaluate(() => { let t = 0; return (window as any).__gaps.map((g: number) => [Math.round(t += g), Math.round(g)]).filter((x: number[]) => x[1] > 25); });
-    const during = await p.evaluate(() => ({ held: !!document.getElementById('start'), title: (window as any).__texts.includes('BLOKDUST') }));
+    const during = await p.evaluate(() => ({ held: !!document.getElementById('start'), title: (window as any).__texts.includes('BLOKDUST 2') }));  // the app's name (owner, 2026-11-14)
     await p.screenshot({ path: `${OUT}/start-intro.png` });
     await p.waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 });
     await p.waitForTimeout(1000);

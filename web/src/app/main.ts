@@ -21,6 +21,7 @@ import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
 import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../stage/labels.ts';
 import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
+import { drawMakeStage, inBox, makeStageBox, type ButtonBox } from '../stage/makeStageButton.ts';
 import { gridToPx } from '../stage/metrics.ts';
 import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
@@ -150,6 +151,11 @@ async function main() {
    */
   const macros = new Map<string, Macro>();
   const innerIds = new Map<string, { ids: Record<string, number>; nextId: number }>();
+  /** The audio of samplers inside each Stage (by the Stage's and the block's patch ids): sent to its inner world when it
+   * is built, and shown when it is looked into (owner, 2026-11-14: every block can go inside). */
+  const innerSamples = new Map<string, Map<string, AudioBuffer>>();
+  /** How many times each Stage's inner world has been built: audio that arrives for an older one is dropped. */
+  const stageBuilds = new Map<string, number>();
   interface Outer { model: Map<number, ModelBlock>; v1Blocks: Map<number, V1Block>; samples: Map<number, AudioBuffer>; missing: Set<number>; labels: Label[];
     connectionOrder: [string, string][]; nextId: number; view: { x: number; y: number; zoom: number }; undo: unknown[]; redo: unknown[] }
   let inside: { stageId: number; stageUid: string; outer: Outer; image: HTMLCanvasElement; blockX: number; blockY: number; grid: number } | null = null;
@@ -201,6 +207,54 @@ async function main() {
       return loaded.commands.map(c => ({ ...c, stage: id }));
     } catch (e) { console.warn('BlokDust: a Stage block could not be filled', e); return []; }
   }
+  /** Build Stage block `id`'s inner world from its macro, then give its samplers their audio (and the Microphone its input). */
+  function buildStage(id: number, uid: string): void {
+    sendRaw(stageCommands(id, uid));
+    void fillStageSamples(id, uid);
+  }
+  /** Audio for the samplers inside Stage block `id`: what was loaded already, else from their references (a sound, a
+   * remembered file, a SampleGen's recipe). Runs from outside; looking in shows the same audio (enterStage). */
+  async function fillStageSamples(id: number, uid: string): Promise<void> {
+    const m = macros.get(uid), ids = innerIds.get(uid)?.ids;
+    if (juce || !engine || !m || !ids) return;
+    const build = (stageBuilds.get(uid) ?? 0) + 1;
+    stageBuilds.set(uid, build);
+    const audio = innerSamples.get(uid) ?? new Map<string, AudioBuffer>();
+    innerSamples.set(uid, audio);
+    if (m.blocks.some(b => needsInput(b.type))) void engine.connectMicrophone();
+    await Promise.all(m.blocks.map(async blk => {
+      const iid = blk.id === undefined ? undefined : ids[blk.id];
+      if (iid === undefined || blk.id === undefined) return;
+      const buf = audio.get(blk.id) ?? await innerBuffer(blk).catch(e => { console.warn('BlokDust: a sampler inside a Stage has no audio', e); return null; });
+      if (!buf || stageBuilds.get(uid) !== build) return;  // the Stage was built again meanwhile
+      audio.set(blk.id, buf);
+      engine?.sendSample(iid, buf, id);
+    }));
+  }
+  /** A sampler's audio from what the patch says of it, without it being on show. */
+  async function innerBuffer(blk: PatchBlock): Promise<AudioBuffer | null> {
+    const p = (blk.params ??= {});
+    if (blk.type === 'source.sample-gen') return generateBuffer(p);
+    if (!SAMPLERS.has(blk.type)) return null;
+    const t = p.track ?? BLOCKS_BY_ID.get(blk.type)?.params.find(q => q.key === 'track')?.default;
+    let bytes: ArrayBuffer | null = null;
+    if (isDeadDefault(t)) {
+      const d = DEFAULT_SOUNDS[blk.type];
+      if (!d) return null;
+      const ref = { ...d };
+      bytes = await fetchFreesound(ref, blk.type === 'fx.convolver' ? 2.5 : undefined);
+      const key = refKey(ref);
+      refs.set(key, ref);
+      Object.assign(p, { track: key, trackName: ref.name.toUpperCase().slice(0, 30), user: ref.username, permalink: ref.url });
+    } else if (typeof t === 'string') {
+      const ref = refs.get(t);
+      if (t.startsWith('freesound:') && ref?.provider === 'freesound') bytes = await fetchFreesound(ref, blk.type === 'fx.convolver' ? 2.5 : undefined);
+      else if (t.startsWith('file:') && ref?.provider === 'file' && ref.hash) bytes = await (await openRemembered(ref.hash, false))?.arrayBuffer() ?? null;
+    }
+    return bytes ? new OfflineAudioContext(1, 1, 48000).decodeAudioData(bytes) : null;
+  }
+  /** Audio to block `id` in the world on show. */
+  const sendSample = (id: number, buffer: AudioBuffer) => engine?.sendSample(id, buffer, inside?.stageId ?? 0);
   const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
   const round3 = (v: number) => Math.round(v * 1000) / 1000;
   // The view settles (owner, 2026-11-12): the plugin's processor keeps it with the DAW project (bd_view); the website's
@@ -292,7 +346,7 @@ async function main() {
       for (const id of [...model.keys()]) removeBlock(id);
       if (inside) leaveStage(false);
       labels.length = 0; endLabelEdit(false);
-      macros.clear(); innerIds.clear();
+      macros.clear(); innerIds.clear(); innerSamples.clear();
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
@@ -385,7 +439,27 @@ async function main() {
     if (uiSync) { uiSync = false; scene.sync(ctx, theme, stage.zoom, stage.drag, [...v1Blocks.values()]); }
     scene.setView(stage.zoom, stage.drag);
     scene.draw();
+    makeStageAt = null;
+    if (offerMakeStage()) {
+      const m = stage.metrics, h = scene.Header as unknown as { Height: number; Rows?: number }, font = App.Metrics.TxtMid;
+      makeStageAt = makeStageBox(ctx, m.width, m.unit, h.Height * (h.Rows ?? 1) * m.unit, font, MAKE_STAGE);
+      drawMakeStage(ctx, makeStageAt, m.unit, font, MAKE_STAGE, theme.colors[4], theme.colors[theme.roles.txt], makeStageHover);
+    }
   };
+  // ---- MAKE STAGE (owner, 2026-11-14; UI-0012): with blocks selected, a button puts them inside a new Stage block ----
+  const MAKE_STAGE = 'MAKE STAGE';
+  let makeStageAt: ButtonBox | null = null, makeStageHover = false;
+  // (stage.selected is the selection; tested first, as this runs from draws made before the pointer state below exists)
+  const offerMakeStage = () => stage.selected.size > 0 && !inside && !juce && !placing && !drag && canGoInside(stage.selected);
+  /** The selected blocks go inside a new Stage block where they were (as Cmd/Ctrl+G); it is then the one selected. */
+  function makeStage(): void {
+    const bs = [...selection].map(id => model.get(id)!).filter(Boolean);
+    if (!bs.length) return;
+    const id = wrapInStage([...selection], Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length));
+    makeStageHover = false;
+    if (id !== null) setSelection([id]);
+    stage.redraw();
+  }
 
   // ---- labels (CHG-0020, UI-0011): text on the stage with a drag dot. Press and drag moves one (onto the bin deletes
   // it); a press without a drag edits its words in place. They are not blocks: the engine never hears of them. ----
@@ -436,9 +510,8 @@ async function main() {
     stage.redraw();
   }
   // ---- inside a Stage block (CHG-0021, UI-0009) ----
-  /** Menu items not offered inside a Stage: Stage itself (one level, SCOPE-0006) and the blocks that need audio files
-   * or the microphone, which an inner world cannot take yet. */
-  const INSIDE_HIDDEN = new Set(['Stage', 'Sample', 'Granular', 'Recorder', 'SampleGen', 'Microphone']);
+  /** Menu items not offered inside a Stage: Stage itself (one level, SCOPE-0006). Stage In is offered only there. */
+  const INSIDE_HIDDEN = new Set(['Stage']), OUTSIDE_HIDDEN = new Set(['StageIn']);
   const insideFrame = () => {
     const m = stage.metrics, h = scene.Header as unknown as { Height: number; Rows?: number };
     return frameFor(m.width, m.height, m.unit, h.Height * (h.Rows ?? 1) * m.unit, { x: inside!.blockX, y: inside!.blockY });
@@ -469,6 +542,8 @@ async function main() {
       addBlock(blk.type, blk.x ?? 0, blk.y ?? 0, structuredClone(blk.params ?? {}), blk.id, true);
     }
     nextId = Math.max(nextId, known?.nextId ?? 1, ...[...model.keys()].map(k => k + 1));
+    const audio = innerSamples.get(b.uid);  // the inner world has it already: shown, not sent again
+    for (const [iid, blk] of model) { const buf = audio?.get(blk.uid); if (buf) showBuffer(iid, buf); else void resolveSample(iid); }
     connectionOrder = [...(macro.connectionOrder ?? [])];
     addLabels(readLabels(macro.labels));
     engine?.setView(id);
@@ -488,6 +563,7 @@ async function main() {
     if (keep) {
       macros.set(i.stageUid, innerMacro());
       innerIds.set(i.stageUid, { ids: Object.fromEntries([...model].map(([id, b]) => [b.uid, id])), nextId });
+      innerSamples.set(i.stageUid, new Map([...samples].flatMap(([id, buf]) => { const b = model.get(id); return b ? [[b.uid, buf] as [string, AudioBuffer]] : []; })));
     }
     clearWorld();
     inside = null;
@@ -502,38 +578,44 @@ async function main() {
     undoStack.length = 0; redoStack.length = 0;
     undoStack.push(...(o.undo as typeof undoStack)); redoStack.push(...(o.redo as typeof redoStack));
     applyView(o.view);
-    setMenuHidden(new Set());
+    setMenuHidden(OUTSIDE_HIDDEN);
     scene.setBlocks([...v1Blocks.values()]);
     uiSync = true;
     stage.redraw();
   }
   function exitStage(): void { if (!inside) return; leaveStage(true); changed(); }
-  /** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and carry on in there.
-   * A Stage in the selection stays out (one level). Not undoable. */
+  /** Can blocks `ids` go inside a Stage? All of them or none: not with a Stage among them (one level, SCOPE-0006), so
+   * no block is left behind with its connections cut (owner, 2026-11-14). */
+  const canGoInside = (ids: Iterable<number>, except?: number) => !inside && !juce && [...ids].every(id => id === except || model.get(id)?.type !== 'source.stage');
+  /** The audio of blocks going inside a Stage, by the patch id each has in there. */
+  const audioOf = (ids: number[], uidOf: (b: ModelBlock) => string) =>
+    new Map(ids.flatMap(id => { const b = model.get(id), buf = samples.get(id); return b && buf ? [[uidOf(b), buf] as [string, AudioBuffer]] : []; }));
+  /** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and carry on in there,
+   * with their audio. Not undoable. */
   function wrapInStage(ids: number[], x: number, y: number): number | null {
-    const picked = ids.filter(id => model.has(id) && model.get(id)!.type !== 'source.stage');
-    if (inside || juce || !picked.length) return null;
+    const picked = ids.filter(id => model.has(id));
+    if (!canGoInside(picked) || !picked.length) return null;
     const bs = picked.map(id => model.get(id)!), uids = new Set(bs.map(b => b.uid));
     const cx = Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), cy = Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length);
     const order = connectionOrder.filter(([a, b]) => uids.has(a) && uids.has(b));
     const blocks = bs.map(b => ({ id: b.uid, type: b.type, x: b.x - cx, y: b.y - cy,
       params: Object.fromEntries(Object.entries(structuredClone(b.params)).filter(([k]) => !SESSION_PARAMS.has(k))) }));
+    const audio = audioOf(picked, b => b.uid);
     for (const id of picked) removeBlock(id);
     undoStack.length = 0; redoStack.length = 0;
     const taken = new Set([...model.values()].map(b => b.uid));
     let uid = `stage${nextId}`; for (let k = 2; taken.has(uid); k++) uid = `stage${nextId}_${k}`;
     macros.set(uid, { block: uid, blocks, ...(order.length ? { connectionOrder: order } : {}) });
+    innerSamples.set(uid, audio);
     setSelection([]);
     return addBlock('source.stage', x, y, {}, uid);
   }
-  /** Blocks that cannot go inside a Stage yet (they need audio files or the input; one level). */
-  const NOT_INSIDE = new Set(['source.stage', 'source.sample', 'source.granular', 'source.recorder', 'source.sample-gen', 'source.microphone', 'source.audio-in']);
   /** Blocks dropped onto Stage block `stageId` go inside it (owner, 2026-11-14), to the right of what is there, keeping
    * their layout and their connections. Its inner world starts again. Not undoable (as wrapping). */
   function addToStage(stageId: number, ids: number[]): void {
     const s = model.get(stageId);
-    const picked = ids.filter(id => id !== stageId && model.has(id) && !NOT_INSIDE.has(model.get(id)!.type));
-    if (!s || s.type !== 'source.stage' || inside || juce || !picked.length) return;
+    const picked = ids.filter(id => id !== stageId && model.has(id));
+    if (!s || s.type !== 'source.stage' || !canGoInside(picked) || !picked.length) return;
     const was = macros.get(s.uid) ?? { block: s.uid, blocks: [] };
     const bs = picked.map(id => model.get(id)!), taken = new Set(was.blocks.map(b => b.id)), rename = new Map<string, string>();
     for (const b of bs) { let u = b.uid; for (let k = 2; taken.has(u); k++) u = `${b.uid}_${k}`; taken.add(u); rename.set(b.uid, u); }
@@ -548,12 +630,14 @@ async function main() {
       return { id: rename.get(b.uid)!, type: b.type, x: b.x + ox, y: b.y + oy, params };
     });
     const order = [...(was.connectionOrder ?? []), ...connectionOrder.filter(([a, b]) => rename.has(a) && rename.has(b)).map(([a, b]) => [rename.get(a)!, rename.get(b)!] as [string, string])];
+    const audio = new Map([...(innerSamples.get(s.uid) ?? []), ...audioOf(picked, b => rename.get(b.uid)!)]);
     for (const id of picked) removeBlock(id);
     const { uid, x, y, params } = s;
     scene.OptionsPanel.Close();
     removeBlock(stageId);
     macros.set(uid, { ...was, blocks: [...was.blocks, ...moved], ...(order.length ? { connectionOrder: order } : {}) });
     innerIds.delete(uid);
+    innerSamples.set(uid, audio);
     undoStack.length = 0; redoStack.length = 0;
     setSelection([]);
     addBlock('source.stage', x, y, params, uid);
@@ -561,7 +645,7 @@ async function main() {
   }
   /** The Stage block under css (x, y) that the blocks `moving` would go into, or null. */
   function dropStageAt(x: number, y: number, moving: Set<number>): number | null {
-    if (inside || juce || ![...moving].some(id => !NOT_INSIDE.has(model.get(id)?.type ?? ''))) return null;
+    if (!canGoInside(moving)) return null;
     const t = stage.hitTest(x, y, id => moving.has(id));
     return t && model.get(t.id)?.type === 'source.stage' ? t.id : null;
   }
@@ -586,7 +670,7 @@ async function main() {
     removeBlock(id);
     macros.set(uid, { block: uid, blocks: patch.blocks.filter(q => BLOCKS_BY_ID.has(q.type) && q.type !== 'source.stage').map(q => structuredClone(q)),
       ...(patch.connectionOrder?.length ? { connectionOrder: patch.connectionOrder } : {}), ...(patch.labels?.length ? { labels: patch.labels } : {}) });
-    innerIds.delete(uid);
+    innerIds.delete(uid); innerSamples.delete(uid);
     addBlock('source.stage', x, y, params, uid);
     stage.redraw();
   }
@@ -613,13 +697,14 @@ async function main() {
     if (needsInput(type)) void engine?.connectMicrophone();
     // Plugin: a SampleGen whose sound was saved as a file is played by the processor; it is not generated again.
     const savedFile = !!juce && typeof p.track === 'string' && p.track.startsWith('file:');
-    if (type === 'source.sample-gen' && !savedFile) generateSample(id, !!(p.seed as { waveVoices?: unknown } | undefined)?.waveVoices);
+    const known = quiet && inside && innerSamples.get(inside.stageUid)?.has(uid);  // looking into a Stage: shown from what it has
+    if (type === 'source.sample-gen' && !savedFile && !known) generateSample(id, !!(p.seed as { waveVoices?: unknown } | undefined)?.waveVoices);
     if (type === 'fx.convolver') void showBuiltInImpulse(id);
     if (!quiet) {
       void resolveSample(id, true);
       send([{ type: CommandType.AddBlock, id, blockType: typeIndex(type), x, y, key: uid },
         ...def.params.flatMap((q, i) => !SESSION_PARAMS.has(q.key) && (typeof p[q.key] === 'number' || typeof p[q.key] === 'boolean') ? [{ type: CommandType.SetParam, id, param: i, value: Number(p[q.key]) }] : [])]);
-      if (type === 'source.stage' && !inside) sendRaw(stageCommands(id, uid));  // what is inside it (CHG-0021)
+      if (type === 'source.stage' && !inside) buildStage(id, uid);  // what is inside it (CHG-0021)
       syncTargets();
       scene.setBlocks([...v1Blocks.values()]);
       changed();
@@ -951,7 +1036,7 @@ async function main() {
     if (region === 'reset') setParams(id, { startPosition: 0, endPosition: dur, loopStart: 0, loopEnd: dur, reverse: false });
     if (region === 'half') setParams(id, { startPosition: 0, endPosition: dur, loopStart: dur * 0.5, loopEnd: dur });
     if (v) { v.PrimaryBuffer = buffer; v.WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, waveDetail, 95); v.RefreshOptionsPanel(); }
-    if (!inside) engine?.sendSample(id, buffer);  // samplers inside a Stage have no audio yet (CHG-0021)
+    sendSample(id, buffer);
     stage.redraw();
   }
   // ---- v1 Recorder (RecorderPanel button): record the master output into the block ----
@@ -999,6 +1084,35 @@ async function main() {
     });
     setTimeout(() => ctx.DataToBuffer(), 16);  // v1 runs it on a timeout too
   }
+  /** v1 SampleGen for a block that is not on show (inside a Stage): its saved recipe, or a new one kept in `params`. */
+  function generateBuffer(params: Record<string, unknown>): Promise<AudioBuffer> {
+    const def = BLOCKS_BY_ID.get('source.sample-gen')!;
+    const Params = { ...Object.fromEntries(def.params.map(q => [q.key, q.default])), ...params };
+    return new Promise(res => {
+      const ctx = Object.assign(Object.create(SAMPLE_GEN), {
+        Params, _LoadFromShare: !!(params.seed as { waveVoices?: unknown } | undefined)?.waveVoices, _SeedLoad: true, _WaveVoices: [] as unknown[],
+        Sources: [{ noteToFrequency: (note: string) => noteToFrequency(note) }],
+        PopulateBuffer(this: { _BufferData: Float32Array<ArrayBuffer> }, sr: number) {
+          const buf = new AudioBuffer({ numberOfChannels: 1, length: this._BufferData.length, sampleRate: sr });
+          buf.copyToChannel(this._BufferData, 0);
+          params.seed = Params.seed;
+          res(buf);
+        },
+      });
+      setTimeout(() => ctx.DataToBuffer(), 16);
+    });
+  }
+  /** A block's audio as it was (looking into a Stage): shown in its panel, not sent (the engine has it). */
+  function showBuffer(id: number, buffer: AudioBuffer): void {
+    const b = model.get(id), v = v1Blocks.get(id);
+    if (!b) return;
+    samples.set(id, buffer);
+    if (!v) return;
+    const wave = new Waveform().GetWaveformFromBuffer(buffer, 200, b.type === 'source.recorder' ? 2 : 5, 95);
+    v.PrimaryBuffer = buffer;
+    if (b.type === 'source.granular' || b.type === 'fx.convolver') v._WaveForm = wave;
+    else v.WaveForm = b.params.reverse ? wave.reverse() : wave;
+  }
   // ---- fx.convolver: the built-in impulse response's waveform (v1 showed its loaded response) ----
   async function showBuiltInImpulse(id: number): Promise<void> {
     const v = v1Blocks.get(id);
@@ -1036,7 +1150,7 @@ async function main() {
       // the file (v1 GetDuration of its first buffer), so the spawn and spread lines and dragging work.
       if (b.type === 'source.granular' && (fresh || typeof b.params.region !== 'number')) setParams(id, { region: buffer.duration * 0.5 });
       if (v) { v.PrimaryBuffer = buffer; v._WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95); v.RefreshOptionsPanel(); }
-      if (!inside) engine?.sendSample(id, buffer);  // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
+      sendSample(id, buffer);  // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
       stage.redraw();
       return;
     }
@@ -1053,7 +1167,7 @@ async function main() {
       v.WaveForm = b.params.reverse ? wave.reverse() : wave;  // v1 shows the reversed buffer's waveform
       v.RefreshOptionsPanel();
     }
-    if (!inside) engine?.sendSample(id, buffer);  // samplers inside a Stage have no audio yet (CHG-0021)
+    sendSample(id, buffer);
     stage.redraw();
   }
   // Tests: attach a file without a picker.
@@ -1165,7 +1279,7 @@ async function main() {
     if (ids) nextId = Math.max(nextId, ...Object.values(ids).map(i => i + 1));
     connectionOrder = Array.isArray(p.connectionOrder) ? [...p.connectionOrder] : [];
     labels.length = 0; addLabels(readLabels(p.labels));
-    macros.clear(); innerIds.clear();
+    macros.clear(); innerIds.clear(); innerSamples.clear();
     for (const m of readMacros(p.macros)) macros.set(m.block, m);
     if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
     for (const id of model.keys()) void resolveSample(id);
@@ -1253,6 +1367,8 @@ async function main() {
     get beams() { return probe.beams; },
     /** The Stage block a drag would go into now (tests). */
     get dropTarget() { return stage.dropTarget; },
+    /** The MAKE STAGE button's centre in css px, or null when it is not offered (tests). */
+    get makeStage() { if (!makeStageAt) return null; const d = stage.metrics.dpr; return { x: (makeStageAt.x + makeStageAt.w / 2) / d, y: (makeStageAt.y + makeStageAt.h / 2) / d }; },
     /** Select blocks by engine id, as shift-clicks would (tests). */
     select(ids: number[]) { setSelection(ids); stage.redraw(); },
     /** css px of a point on block `id` that the stage's own hit test maps to it (black-box tests click there). */
@@ -1285,6 +1401,11 @@ async function main() {
           // live worklet where they arrive after start. Fixed point → same hash everywhere.
           if (at === 0) for (const [id, buf] of samples) if (model.has(id))
             e.attachSample(id, buf.getChannelData(0), buf.numberOfChannels > 1 ? buf.getChannelData(1) : undefined, buf.sampleRate);
+          if (at === 0) for (const [id, b] of model) if (b.type === 'source.stage')  // and inside its Stage blocks
+            for (const [uid, buf] of innerSamples.get(b.uid) ?? []) {
+              const iid = innerIds.get(b.uid)?.ids[uid];
+              if (iid !== undefined) e.attachSample(iid, buf.getChannelData(0), buf.numberOfChannels > 1 ? buf.getChannelData(1) : undefined, buf.sampleRate, id);
+            }
         }
         let peak = 0; for (let i = 0; i < frames; i++) peak = Math.max(peak, Math.abs(l[i]), Math.abs(r[i]));
         return { hash: hex(hashStereo(hashAudio(l), hashAudio(r))), peak };
@@ -1407,6 +1528,7 @@ async function main() {
     engine.onSnapshot(onSnapshot);
     for (const [id, buf] of samples) if (model.has(id)) engine.sendSample(id, buf);
     if ([...model.values()].some(b => needsInput(b.type))) void engine.connectMicrophone();
+    for (const [id, b] of model) if (b.type === 'source.stage') void fillStageSamples(id, b.uid);  // its inner world was built with the engine
     await running;
     probe.started = true;
     ready = true; reveal();
@@ -1473,7 +1595,8 @@ async function main() {
       if (b.type === 'source.stage' && macros.has(b.uid)) {  // a copy of a Stage has a copy of what is inside
         const uid = model.get(copy)!.uid;
         macros.set(uid, { ...structuredClone(macros.get(b.uid)!), block: uid });
-        sendRaw(stageCommands(copy, uid));
+        if (innerSamples.has(b.uid)) innerSamples.set(uid, new Map(innerSamples.get(b.uid)));
+        buildStage(copy, uid);
       }
       const buf = samples.get(id);
       if (buf && b.type !== 'source.sample-gen') useBuffer(copy, buf, 'keep');
@@ -1575,6 +1698,7 @@ async function main() {
   (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
     app.canvas.setPointerCapture(e.pointerId);
+    if (makeStageAt && primaryId === null && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr())) { makeStage(); primaryId = e.pointerId; primaryRole = 'gone'; return; }
     if (!placing && padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     // Inside a Stage (UI-0009): the × or a press outside its window (not on the header, a panel or the bottom
     // controls) goes back out.
@@ -1649,6 +1773,8 @@ async function main() {
     stage.redraw();
   });
   if (!embedId) app.canvas.addEventListener('pointermove', e => {
+    const overMake = !!makeStageAt && e.pointerType === 'mouse' && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr());
+    if (overMake !== makeStageHover) { makeStageHover = overMake; stage.redraw(); }
     if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
       moveLabel(e);
@@ -1908,11 +2034,12 @@ async function main() {
 
   // ---- notes: computer keyboard → input.computer-keyboard blocks, Web MIDI → input.midi-controller blocks ----
   const keyboardType = typeIndex('input.computer-keyboard'), midiType = typeIndex('input.midi-controller');
+  // To the outer world, which passes them into every Stage: a Keyboard inside one plays from outside it (owner, 2026-11-14).
   const note = (blockType: number, n: number, down: boolean, velocity = 1) =>
-    send([{ type: down ? CommandType.NoteOn : CommandType.NoteOff, id: 0, blockType, param: n, value: velocity }]);
+    sendRaw([{ type: down ? CommandType.NoteOn : CommandType.NoteOff, id: 0, blockType, param: n, value: velocity }]);
   // Web MIDI → each MIDI Input block through its own MPE/MIDI parser (PLUGIN-0004): its device choice here, its
   // channel filter and expression mapping in the engine.
-  const parsers = new Map<number, MpeParser>();
+  const parsers = new Map<string, MpeParser>();  // by "<stage>:<block id>" (0: the outer world)
   let midiDevices: MidiDevice[] = [];
   attachNoteInputs({
     key: (n, down) => note(keyboardType, n, down),
@@ -1922,18 +2049,32 @@ async function main() {
     // Plugin: the editor says when its window loses the keys (clicking into the DAW); the web view may not blur (Ableton).
     onReleaseAll: release => { juce?.addEventListener('bd_keysLost', () => release()); },
     midi: (status, d1, d2, device) => {
-      const cmds: Command[] = [];
-      for (const [id, b] of model) {
-        if (b.type !== 'input.midi-controller') continue;
-        const want = typeof b.params.device === 'string' ? b.params.device : '';
-        if (want && want !== device.name) continue;
-        let p = parsers.get(id);
-        if (!p) { p = new MpeParser(id, midiType); parsers.set(id, p); }
-        p.setSettings({ mpe: !!b.params.mpe, memberBendRange: typeof b.params.bendRange === 'number' ? b.params.bendRange : 48 });
-        p.message(status, d1, d2, -1, cmds);
+      // Every MIDI Input: those on show, and those inside the outer world's Stage blocks (they play from outside too).
+      const inputs: { key: string; id: number; params: Record<string, unknown>; stage: number }[] = [];
+      for (const [id, b] of model) if (b.type === 'input.midi-controller') inputs.push({ key: `${inside?.stageId ?? 0}:${id}`, id, params: b.params, stage: inside?.stageId ?? 0 });
+      if (inside) for (const [id, b] of inside.outer.model) if (b.type === 'input.midi-controller') inputs.push({ key: `0:${id}`, id, params: b.params, stage: 0 });
+      for (const [sid, st] of inside ? inside.outer.model : model) {
+        if (st.type !== 'source.stage' || sid === inside?.stageId) continue;
+        const ids = innerIds.get(st.uid)?.ids ?? {};
+        for (const b of macros.get(st.uid)?.blocks ?? []) {
+          const id = b.id === undefined ? undefined : ids[b.id];
+          if (b.type === 'input.midi-controller' && id !== undefined) inputs.push({ key: `${sid}:${id}`, id, params: b.params ?? {}, stage: sid });
+        }
       }
-      for (const id of parsers.keys()) if (!model.has(id)) parsers.delete(id);
-      if (cmds.length) send(cmds);
+      const cmds: Command[] = [];
+      for (const { key, id, params: q, stage: sid } of inputs) {
+        const want = typeof q.device === 'string' ? q.device : '';
+        if (want && want !== device.name) continue;
+        let p = parsers.get(key);
+        if (!p) { p = new MpeParser(id, midiType); parsers.set(key, p); }
+        p.setSettings({ mpe: !!q.mpe, memberBendRange: typeof q.bendRange === 'number' ? q.bendRange : 48 });
+        const out: Command[] = [];
+        p.message(status, d1, d2, -1, out);
+        cmds.push(...(sid ? out.map(c => ({ ...c, stage: sid })) : out));
+      }
+      const live = new Set(inputs.map(i => i.key));
+      for (const key of parsers.keys()) if (!live.has(key)) parsers.delete(key);
+      if (cmds.length) sendRaw(cmds);
     },
     devices: list => { midiDevices = list; scene.setMidiDevices?.(list); },
   });
@@ -1946,11 +2087,9 @@ async function main() {
       if (e.key === 'Escape' && placing) { e.preventDefault(); endPlacing(true); return; }
       if (e.key === 'Escape' && inside && !scene.PatchesPanel.Open && !scene.SettingsPanel.Open) { e.preventDefault(); exitStage(); return; }
       // Cmd/Ctrl+G: the selected blocks go inside a new Stage block where they were (CHG-0021).
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g' && selection.size > 1 && !inside && !juce) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g' && selection.size > 0 && !inside && !juce) {
         e.preventDefault();
-        const bs = [...selection].map(id => model.get(id)!).filter(Boolean);
-        wrapInStage([...selection], Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length));
-        stage.redraw();
+        makeStage();
         return;
       }
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && (placing || undoStack.length)) {

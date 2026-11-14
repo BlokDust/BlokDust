@@ -39,9 +39,10 @@ export class EngineNode {
   /** Look inside Stage block `stage` (CHG-0021): snapshots come from its inner world; 0: back to the outer one. */
   setView(stage: number): void { this.node.port.postMessage({ type: 'view', stage } satisfies ToWorklet); }
   send(commands: Command[]): void { this.node.port.postMessage({ type: 'commands', commands } satisfies ToWorklet); }
-  sendSample(id: number, buffer: AudioBuffer): void {
+  /** `stage`: the block is inside that Stage block (CHG-0021); 0: the outer world. */
+  sendSample(id: number, buffer: AudioBuffer, stage = 0): void {
     const left = buffer.getChannelData(0).slice(), right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1).slice() : undefined;
-    this.node.port.postMessage({ type: 'sample', id, left, right, sampleRate: buffer.sampleRate } satisfies ToWorklet, [left.buffer, ...(right ? [right.buffer] : [])]);
+    this.node.port.postMessage({ type: 'sample', id, left, right, sampleRate: buffer.sampleRate, ...(stage ? { stage } : {}) } satisfies ToWorklet, [left.buffer, ...(right ? [right.buffer] : [])]);
   }
   /** Live input for Microphone / Audio In blocks: ask for the microphone once and feed the worklet's input. */
   private input: Promise<void> | null = null;

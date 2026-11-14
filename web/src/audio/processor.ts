@@ -29,7 +29,7 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (e: MessageEvent<ToWorklet>) => {
       const m = e.data;
       if (m.type === 'commands') for (const c of m.commands) this.engine.push(c);
-      else if (m.type === 'sample') this.engine.attachSample(m.id, m.left, m.right, m.sampleRate);
+      else if (m.type === 'sample') this.engine.attachSample(m.id, m.left, m.right, m.sampleRate, m.stage ?? 0);
       else if (m.type === 'view') { this.engine.setView(m.stage); this.viewing = m.stage; this.topologyDirty = true; }
       else if (m.type === 'record') {
         if (m.on) this.recorded = [];

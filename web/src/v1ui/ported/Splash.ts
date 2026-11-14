@@ -209,7 +209,7 @@ export class Splash extends DisplayObject{
         App.FillColor(this.Ctx,App.Palette[App.ThemeManager.Txt]);
         this.Ctx.textAlign = "center";
         this.Ctx.font = "200 " + headerType + "px Dosis";
-        this.Ctx.fillText("BLOKDUST",dx,dy + (headerType * 0.38));
+        this.Ctx.fillText("BLOKDUST 2",dx,dy + (headerType * 0.38));
 
 
         // IOS BUTTON //

@@ -43,7 +43,12 @@ const REWRITES: Record<string, [string, string, string][]> = {
   'UI/SettingsPanel.ts': [[CHROME_FOOTER, '', 'Chrome Recommended footer']],
   'Splash.ts': [[SPLASH_CHROME, '', 'Chrome Recommended footer'],
     // Owner (2026-11-11): START under the play triangle (v1's button had no word).
-    [SPLASH_TRIANGLE, SPLASH_TRIANGLE_START, 'START under the button']],
+    [SPLASH_TRIANGLE, SPLASH_TRIANGLE_START, 'START under the button'],
+    // Owner (2026-11-14): the app is called BLOKDUST 2.
+    ['this.Ctx.fillText("BLOKDUST",dx,', 'this.Ctx.fillText("BLOKDUST 2",dx,', 'title']],
+  'UI/Header.ts': [
+    ['this.Ctx.fillText("BLOKDUST", App.Width*0.5,', 'this.Ctx.fillText("BLOKDUST 2", App.Width*0.5,', 'title (phone)'],
+    ['this.Ctx.fillText("BLOKDUST", (20 +', 'this.Ctx.fillText("BLOKDUST 2", (20 +', 'title']],
 };
 // Global framework aliases v1 declares per file (`import X = ns.X;`) → named imports from the shim.
 const ALIASES: Record<string, string> = {
