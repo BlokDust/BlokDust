@@ -28,10 +28,31 @@ bool addBlock(const nlohmann::json& b, Loaded& out, std::int64_t at, std::string
     for (const auto& [pk, pv] : b["params"].items()) {
       std::uint8_t idx; double v;
       if (!paramIndex(t, pk, idx)) { err = "unknown param " + pk + " on " + key; return false; }
+      // An LFO's target (AUDIO-0003) is saved as "<block id>:<param key>"; the engine ids it becomes are this
+      // session's, so saved ones are never read. Resolved once every block is known (resolveTargets).
+      if (pk == "targetBlock" || pk == "targetParam") continue;
+      if (pk == "target") { if (pv.is_string()) out.targets.emplace_back(id, pv.get<std::string>()); continue; }
       if (toNumber(pv, v)) out.commands.push_back(Command::setParam(id, idx, v, at));
     }
   }
   return true;
+}
+/// "<block id>:<param key>" → SetParam targetBlock / targetParam on the block that names it. Unknown blocks or
+/// params are skipped (the LFO idles).
+void resolveTargets(Loaded& out) {
+  for (const auto& [id, text] : out.targets) {
+    const auto colon = text.rfind(':');
+    if (colon == std::string::npos) continue;
+    const auto it = out.ids.find(text.substr(0, colon));
+    if (it == out.ids.end()) continue;
+    BlockType own{}, theirs{};
+    for (const auto& c : out.commands) if (c.type == Command::Type::AddBlock) { if (c.id == id) own = c.blockType; if (c.id == it->second) theirs = c.blockType; }
+    std::uint8_t tb, tp, idx;
+    if (!paramIndex(own, "targetBlock", tb) || !paramIndex(own, "targetParam", tp) || !paramIndex(theirs, text.substr(colon + 1), idx)) continue;
+    out.commands.push_back(Command::setParam(id, tb, static_cast<double>(it->second)));
+    out.commands.push_back(Command::setParam(id, tp, static_cast<double>(idx)));
+  }
+  out.targets.clear();
 }
 }  // namespace
 
@@ -43,6 +64,7 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
   // exactly their command list.
   if (patch.contains("tempo") && patch["tempo"].is_number()) out.commands.push_back(Command::tempo(patch["tempo"].get<double>()));
   for (const auto& b : patch["blocks"]) if (!addBlock(b, out, -1, err)) return false;
+  resolveTargets(out);
   // R4a: the order the pairs connected in, oldest first (SPEC-PATCH-FORMAT-V2 R4). Unknown or unconnected pairs are
   // skipped (the engine ignores them); without the list, pairs connect in block order.
   if (patch.contains("connectionOrder") && patch["connectionOrder"].is_array())

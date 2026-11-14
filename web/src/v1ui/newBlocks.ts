@@ -4,12 +4,12 @@
 // show (a level meter, …), which read the engine's monitors.
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { App, Point } from './shim.ts';
-import { addSelector } from './selectorOption.ts';
+import { addSelector, isSelector } from './selectorOption.ts';
 
 /** Menu order within each v1 category (appended after v1's items). */
 const MENU: Record<string, string[]> = {
   Source: [],
-  Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note'],
+  Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
   Interaction: [],
 };
@@ -73,6 +73,12 @@ const ARP_STEPS = [
   { beats: 4, label: '1 BAR' }, { beats: 2, label: '1/2' }, { beats: 1, label: '1/4' }, { beats: 2 / 3, label: '1/4T' }, { beats: 0.5, label: '1/8' },
   { beats: 1 / 3, label: '1/8T' }, { beats: 0.25, label: '1/16' }, { beats: 1 / 6, label: '1/16T' }, { beats: 0.125, label: '1/32' }, { beats: 0.0625, label: '1/64' },
 ];
+/** A synced LFO's cycle lengths (beats per cycle). */
+const LFO_STEPS = [
+  { beats: 64, label: '16 BARS' }, { beats: 32, label: '8 BARS' }, { beats: 16, label: '4 BARS' }, { beats: 8, label: '2 BARS' }, { beats: 4, label: '1 BAR' },
+  { beats: 2, label: '1/2' }, { beats: 1, label: '1/4' }, { beats: 0.5, label: '1/8' }, { beats: 0.25, label: '1/16' },
+];
+const nearestOf = (steps: { beats: number }[], beats: number) => { let best = 0; steps.forEach((s, i) => { if (Math.abs(s.beats - beats) < Math.abs(steps[best].beats - beats)) best = i; }); return best; };
 const nearestStep = (beats: number) => { let best = 0; ARP_STEPS.forEach((s, i) => { if (Math.abs(s.beats - beats) < Math.abs(ARP_STEPS[best].beats - beats)) best = i; }); return best; };
 const switches = (...list: { name: string; setting: string; value: boolean }[]) => ({ type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
   switches: list.map(s => ({ ...s, lit: true, mode: 'offOn' })) });
@@ -80,10 +86,11 @@ const switches = (...list: { name: string; setting: string; value: boolean }[]) 
 export const settingRefreshes = (key: string): boolean => key === 'perHit';
 
 /** Slider settings that are not the param itself: the slider's value → the param's. */
-const CONVERT: Record<string, { param: string; to: (v: number) => number }> = {
-  attackMs: { param: 'attack', to: v => v / 1000 },
-  releaseMs: { param: 'release', to: v => v / 1000 },
-  angle90: { param: 'angle', to: v => v - 90 },  // v1's Angle sliders show angle + 90 (0 = up)
+const CONVERT: Record<string, { param: string; to: (v: number) => number; from?: (v: number) => number }> = {
+  attackMs: { param: 'attack', to: v => v / 1000, from: v => v * 1000 },
+  releaseMs: { param: 'release', to: v => v / 1000, from: v => v * 1000 },
+  angle90: { param: 'angle', to: v => v - 90, from: v => wrapAngle(v + 90) },  // v1's Angle sliders show angle + 90 (0 = up)
+  lfoDivisionIndex: { param: 'division', to: v => LFO_STEPS[Math.max(0, Math.min(LFO_STEPS.length - 1, Math.round(v)))].beats },
   whenQuieter: { param: 'invert', to: v => (v >= 0.5 ? 1 : 0) },
   arpDivisionIndex: { param: 'division', to: v => ARP_STEPS[Math.max(0, Math.min(ARP_STEPS.length - 1, Math.round(v)))].beats },
 };
@@ -104,6 +111,27 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
   ],
+  // CHG-0018 (AUDIO-0003): what it moves (a carousel of "Block · Param" over the blocks connected to it), then how.
+  'fx.lfo': b => {
+    const list = lfoTargets(b), now = App.MainScene?.host?.targetOf?.(b.Id) ?? null;
+    let at = now ? list.findIndex(t => t.id === now.id && t.param === now.param) : -1;
+    if (now && at < 0) {  // set, but its block is out of reach: kept, idle (AUDIO-0003)
+      const far = (App.Blocks as any[]).find(x => x.Id === now.id);
+      list.unshift({ id: now.id, param: now.param, label: `${(far?.BlockName ?? '?').toUpperCase()} · ${now.param.toUpperCase()} (OUT OF REACH)` });
+      at = 0;
+    }
+    (b as any).LfoTargets = list;
+    return [
+      choice('Target', 'lfoTarget', at + 1, ['NONE', ...list.map(t => t.label)]),
+      { type: 'buttons', name: 'Shape', setting: 'shape', props: { value: Number(b.Params.shape), mode: 'wave' }, buttons: [{ name: 'Sine' }, { name: 'Square' }, { name: 'Triangle' }, { name: 'Saw' }] },
+      switches({ name: 'Tempo Sync', setting: 'sync', value: !!b.Params.sync }),
+      b.Params.sync
+        ? slider('Rate', 'lfoDivisionIndex', nearestOf(LFO_STEPS, Number(b.Params.division)), 0, LFO_STEPS.length - 1, { quantised: true, display: v => LFO_STEPS[Math.max(0, Math.min(LFO_STEPS.length - 1, Math.round(v)))].label })
+        : slider('Rate', 'rate', Number(b.Params.rate), 0.02, 20, { log: true, display: v => `${v < 1 ? v.toFixed(2) : v.toFixed(1)} HZ` }),
+      slider('Depth', 'depth', Number(b.Params.depth), 0, 1, { display: v => `${Math.round(v * 100)}%` }),
+      slider('Phase', 'phase', Number(b.Params.phase), 0, 1, { display: v => `${Math.round(v * 360)}°` }),
+    ];
+  },
   // CHG-0017 (AUDIO-0002): the note effects.
   'fx.chord': b => [
     choice('Chord', 'chord', Number(b.Params.chord), CHORDS),
@@ -152,6 +180,69 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Spread', 'spread', Number(b.Params.spread), 0, 180, { quantised: true, display: v => `${Math.round(v)}°` }),
   ],
 };
+// ---- LFO targets (AUDIO-0003) ----
+interface LfoTarget { id: number; param: string; label: string }
+/** The params of `block` an LFO can move: the sliders its own panel shows (so they carry v1's names), not its
+ * carousels or switches; plus the Filter's three, which its panel shows as a graph. */
+function modulatable(block: any): { param: string; label: string }[] {
+  const def = block.def as BlockDef, out: { param: string; label: string }[] = [];
+  if (def.id === 'fx.filter') return [{ param: 'frequency', label: 'Frequency' }, { param: 'gain', label: 'Gain' }, { param: 'Q', label: 'Width' }];
+  block.UpdateOptionsForm();
+  for (const row of (block.OptionsForm?.parameters ?? []) as any[]) {
+    if (row.type !== 'slider' || isSelector(row.setting) || LIVE_ROWS[row.setting]) continue;
+    const param = CONVERT[row.setting]?.param ?? row.setting, p = def.params.find(q => q.key === param);
+    if (p && p.ui.transform !== 'None' && !out.some(o => o.param === param)) out.push({ param, label: row.name });
+  }
+  return out;
+}
+function lfoTargets(b: FormBlock): LfoTarget[] {
+  const host = App.MainScene?.host, out: LfoTarget[] = [];
+  for (const id of (host?.connectedIds?.(b.Id) ?? []) as number[]) {
+    const block = (App.Blocks as any[]).find(x => x.Id === id);
+    if (!block) continue;
+    for (const m of modulatable(block)) out.push({ id, param: m.param, label: `${block.BlockName} · ${m.label}`.toUpperCase() });
+  }
+  return out;
+}
+/** The LFO's Target carousel moved to entry `index` (0 = none). */
+export function setLfoTarget(b: any, index: number): void {
+  const t = ((b.LfoTargets ?? []) as LfoTarget[])[Math.round(index) - 1];
+  App.MainScene.host.setTarget(b.Id, t ? { id: t.id, param: t.param } : null);
+}
+/**
+ * While an LFO moves a param of the block whose panel is open, that param's slider follows it (the engine's monitors:
+ * the value now). What the slider is set to, and what a patch saves, is not touched; the slider shows that again once
+ * the LFO lets go. Not while the user drags it. Returns true while anything follows.
+ */
+let following = false;
+export function followLfos(panel: any): boolean {
+  const block = panel.SelectedBlock;
+  let any = false;
+  if (block && panel.Scale === 1) {
+    for (const [id, m] of monitors) {
+      if (m[0] !== block.Id || (App.Blocks as any[]).find(x => x.Id === id)?.def?.id !== 'fx.lfo') continue;
+      const p = block.def.params[Math.round(m[1])];
+      if (!p) continue;
+      for (const o of (panel.Options ?? []) as any[]) {
+        if (o.Type !== 'slider' || o.Selected || (CONVERT[o.Setting]?.param ?? o.Setting) !== p.key) continue;
+        const conv = CONVERT[o.Setting], t = p.ui;
+        let ui = m[2];
+        if (conv) { if (!conv.from) continue; ui = conv.from(ui); }
+        else if (t.transform === 'SubtractFrom') ui = t.k - ui; else if (t.transform === 'Minus') ui = ui + t.k; else if (t.transform === 'Divide') ui = ui * t.k;
+        ui = Math.max(o.Min, Math.min(o.Max, ui));
+        o.Value = ui;
+        o.Position.x = o.Log ? panel.logPosition(0, panel.Range, o.Min, o.Max, ui) : panel.linPosition(0, panel.Range, o.Min, o.Max, ui);
+        o.Followed = ui;  // tests
+        any = true;
+      }
+    }
+    if (any) panel._DrawReady = true;
+    else if (following) block.RefreshOptionsPanel();  // back to where it is set
+  }
+  following = any;
+  return any;
+}
+
 /** An angle in (−180, 180]. */
 const wrapAngle = (a: number) => { let v = a % 360; if (v > 180) v -= 360; if (v <= -180) v += 360; return v; };
 /** The Counter's pattern (engine gateDecide): which of its steps let a hit through, from the first one counted. */

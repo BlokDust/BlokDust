@@ -13,7 +13,7 @@ import { SAMPLE_GEN } from '../v1ui/ported/SampleGenData';
 import { encodeWav } from '../audio/wav.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
-import { relinks, type Patch } from '../patch/loadPatch.ts';
+import { relinks, targetCommands, type Patch } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
 import { editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
@@ -45,6 +45,8 @@ function starPos(id: number): { x: number; y: number } {
   return { x: r() < 0.5 ? -x : x, y: r() < 0.5 ? -y : y };
 }
 const typeIndex = (type: string) => BLOCKS.findIndex(b => b.id === type);
+/** Params that hold engine ids of this session (an LFO's resolved target, AUDIO-0003): never taken from a patch. */
+const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
 const DEF_BY_V1 = new Map<string, BlockDef>();
 for (const d of BLOCKS) DEF_BY_V1.set(d.menuId, d);  // v1's type names, plus the post-2.0 blocks' menu ids
 
@@ -259,6 +261,21 @@ async function main() {
     downloadRecording: id => downloadRecording(id),
     generateSample: id => generateSample(id, false),
     themes: () => THEMES,
+    connectedIds: id => { const out: number[] = [], c = probe.connections; for (let i = 0; i + 1 < c.length; i += 2) { if (c[i] === id) out.push(c[i + 1]); else if (c[i + 1] === id) out.push(c[i]); } return out; },
+    targetOf: id => {
+      const t = model.get(id)?.params.target, colon = typeof t === 'string' ? t.lastIndexOf(':') : -1;
+      if (typeof t !== 'string' || colon < 0) return null;
+      const target = idOfUid(t.slice(0, colon));
+      return target === undefined ? null : { id: target, param: t.slice(colon + 1) };
+    },
+    setTarget: (id, target) => {
+      const b = model.get(id), text = target && model.get(target.id) ? `${model.get(target.id)!.uid}:${target.param}` : '';
+      if (!b) return;
+      b.params.target = text;
+      const v = v1Blocks.get(id); if (v) v.Params.target = text;
+      syncTargets();
+      changed();
+    },
     // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files and built-in presets ----
     listPatches: async () => [...(juce ? await nativePatches() : myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))),
       ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))],
@@ -327,7 +344,8 @@ async function main() {
     if (!quiet) {
       void resolveSample(id, true);
       send([{ type: CommandType.AddBlock, id, blockType: typeIndex(type), x, y, key: uid },
-        ...def.params.flatMap((q, i) => typeof p[q.key] === 'number' || typeof p[q.key] === 'boolean' ? [{ type: CommandType.SetParam, id, param: i, value: Number(p[q.key]) }] : [])]);
+        ...def.params.flatMap((q, i) => !SESSION_PARAMS.has(q.key) && (typeof p[q.key] === 'number' || typeof p[q.key] === 'boolean') ? [{ type: CommandType.SetParam, id, param: i, value: Number(p[q.key]) }] : [])]);
+      syncTargets();
       scene.setBlocks([...v1Blocks.values()]);
       changed();
     }
@@ -762,12 +780,32 @@ async function main() {
     useSample(id, { provider: 'file', name, bytes: bytes.byteLength, durationSec: 0, hash: '' }, bytes, true);
   const needsInput = (type: string) => type === 'source.microphone' || type === 'source.audio-in';
 
+  /**
+   * LFO targets (AUDIO-0003): the patch names a target as "<block id>:<param key>"; the engine is told this session's
+   * ids. Sent again whenever blocks come or go (a target not there idles the LFO).
+   */
+  let targetsQueued = false;
+  function syncTargets(): void {
+    if (targetsQueued) return;
+    targetsQueued = true;
+    queueMicrotask(() => { targetsQueued = false; send(targetSetParams()); });
+  }
+  function targetSetParams(): Command[] {
+    const blocks = [...model.values()].map(b => ({ id: b.uid, type: b.type, params: b.params })), ids = uidToId();
+    const set = targetCommands(blocks, ids), aimed = new Set(set.map(c => c.id));
+    for (const [id, b] of model) {  // an LFO whose target is gone (or was never set) aims at nothing
+      const p = BLOCKS_BY_ID.get(b.type)!.params.findIndex(q => q.key === 'targetBlock');
+      if (p >= 0 && !aimed.has(id)) set.push({ type: CommandType.SetParam, id, param: p, value: 0 });
+    }
+    return set;
+  }
   function removeBlock(id: number): void {
     if (!model.has(id)) return;
     model.delete(id); v1Blocks.delete(id);
     stage.selected.delete(id); stage.held.delete(id);
     stage.removeBlock(id);
     send([{ type: CommandType.RemoveBlock, id }]);
+    syncTargets();
     scene.setBlocks([...v1Blocks.values()]);
     changed();
   }
@@ -907,9 +945,9 @@ async function main() {
     for (const [id, b] of model) {
       const def = BLOCKS_BY_ID.get(b.type)!;
       commands.push({ type: CommandType.AddBlock, id, blockType: typeIndex(b.type), x: b.x, y: b.y });
-      def.params.forEach((q, i) => { const v = b.params[q.key]; if (typeof v === 'number' || typeof v === 'boolean') commands.push({ type: CommandType.SetParam, id, param: i, value: Number(v) }); });
+      def.params.forEach((q, i) => { const v = b.params[q.key]; if (!SESSION_PARAMS.has(q.key) && (typeof v === 'number' || typeof v === 'boolean')) commands.push({ type: CommandType.SetParam, id, param: i, value: Number(v) }); });
     }
-    return [...commands, ...relinks({ connectionOrder }, uidToId())];
+    return [...commands, ...targetSetParams(), ...relinks({ connectionOrder }, uidToId())];
   }
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {

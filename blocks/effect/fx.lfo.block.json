@@ -1,0 +1,178 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.lfo",
+  "draft": false,
+  "category": "effect",
+  "kind": "modulator",
+  "name": "LFO",
+  "description": "Moves one setting of a block it is connected to, back and forth: any block, power blocks too.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 10,
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "menuOffset": [
+      -0.5,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "target",
+      "default": "",
+      "unit": null,
+      "description": "What it moves, as \"<block id>:<param key>\" (patch ids; AUDIO-0003). Loaders turn it into targetBlock and targetParam"
+    },
+    {
+      "key": "targetBlock",
+      "default": 0,
+      "unit": null,
+      "description": "Engine id of the target block (session-only: never read from a patch)"
+    },
+    {
+      "key": "targetParam",
+      "default": 0,
+      "unit": null,
+      "description": "Index of the target's param (session-only: never read from a patch)"
+    },
+    {
+      "key": "shape",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        3
+      ],
+      "description": "0 sine, 1 square, 2 triangle, 3 saw (the Tone's waveform order)"
+    },
+    {
+      "key": "sync",
+      "default": false,
+      "unit": "enum",
+      "description": "Tempo sync: one cycle every `division` beats instead of `rate` times a second"
+    },
+    {
+      "key": "rate",
+      "default": 1,
+      "unit": "Hz",
+      "range": [
+        0.02,
+        20
+      ],
+      "curve": "log",
+      "description": "Not synced: cycles per second"
+    },
+    {
+      "key": "division",
+      "default": 4,
+      "unit": "beats",
+      "range": [
+        0.25,
+        64
+      ],
+      "description": "Synced: beats per cycle (1/16 note \u2026 16 bars)"
+    },
+    {
+      "key": "depth",
+      "default": 0.5,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "How far it moves the setting: 1 swings across the slider's whole range, centred on where the slider is set"
+    },
+    {
+      "key": "phase",
+      "default": 0,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Where in its cycle it starts"
+    }
+  ]
+}

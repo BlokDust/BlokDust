@@ -17,9 +17,10 @@ carousel of the connected blocks' parameters.
 ## Decision
 We will add an LFO effect block that targets **one block and one param**, chosen from a carousel labelled
 "Block · Param" listing the params of the blocks connected to it. Modulation is applied in the engine at tick rate in
-the param's slider space (its curve), so depth means the same on every param. Several LFOs on one param **add**; the
-sum is clamped to the param's range (angles wrap). Shapes: sine, triangle, square, saw; rate free or synced; depth;
-phase.
+the param's slider space (its curve), so depth means the same on every param: depth 1 swings across the slider's
+whole range, centred on where the slider is set. Several LFOs on one param **add**; the sum is clamped to the
+slider's ends (angles wrap). Shapes: sine, square, triangle, saw; rate free or synced; depth; phase. The patch names
+the target by block id and param key (SPEC-PATCH-FORMAT-V2 R3a). It moves only while connected to its target.
 
 ## Consequences
 - The open panel's slider shows the moving value (as Dust automation, CHG-0012).

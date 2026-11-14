@@ -33,6 +33,7 @@ The single, portable representation of a BlokDust creation, used by the web app,
   (files, share links, the autosave, the plugin's DAW state) records it; opening shows it; Insert ignores it; the engine
   never reads it (owner, 2026-11-12, CHG-0010).
 - **R3.** Block `type` MUST be a stable namespaced id from the manifests (`source.*`, `fx.*`, `power.*`, `input.*`). Params MUST be in real units declared by the manifest; unknown params are dropped with a warning; missing params take defaults.
+- **R3a.** *(CHG-0018, AUDIO-0003)* An LFO names what it moves in its `target` param, a string `"<block id>:<param key>"` (patch ids, so it survives renumbering; Insert rewrites it when a block's id changes). Loaders turn it into the engine's `targetBlock`/`targetParam` once every block is known; those two are session-only and MUST NOT be read from a patch. A target that cannot be resolved leaves the LFO idle.
 - **R4.** Connections MUST NOT be stored (SPEC-CONNECTIONS-PROXIMITY R7). Their order is: optional
   `connectionOrder`, `[[blockId, blockId], …]`, the connected pairs oldest first (SPEC-CONNECTIONS-PROXIMITY R4a). Loaders
   replay it after adding the blocks; pairs that are unknown or not connected are ignored, and without it pairs connect in

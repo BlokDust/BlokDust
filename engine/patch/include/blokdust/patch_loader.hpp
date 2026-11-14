@@ -17,6 +17,8 @@ struct Loaded {
   std::vector<Command> commands;
   std::map<std::string, BlockId> ids;  // patch block id → engine BlockId (1.., in patch order)
   BlockId nextId = 1;
+  /// LFO targets still to resolve (block → "<block id>:<param key>"; AUDIO-0003).
+  std::vector<std::pair<BlockId, std::string>> targets;
 };
 
 /// Append commands that build `patch` (an object with "blocks"). Returns false and sets `err` on invalid input.

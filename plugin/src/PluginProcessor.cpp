@@ -380,8 +380,24 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
       case Command::Type::SetParam:
         if (auto* b = find(c.id)) {
           BlockType t{};
-          if (gen::findBlockType((*b)["type"].get<std::string>(), t) && c.param < gen::info(t).paramCount)
-            (*b)["params"][std::string(gen::info(t).params[c.param].key)] = c.value;
+          if (gen::findBlockType((*b)["type"].get<std::string>(), t) && c.param < gen::info(t).paramCount) {
+            const std::string pkey(gen::info(t).params[c.param].key);
+            (*b)["params"][pkey] = c.value;
+            // An LFO's target (AUDIO-0003): the patch keeps it as "<block id>:<param key>"; engine ids are per session.
+            if (pkey == "targetBlock" || pkey == "targetParam") {
+              auto& ps = (*b)["params"];
+              std::string target;
+              const auto it = idToKey_.find(static_cast<BlockId>(ps.value("targetBlock", 0.0)));
+              if (it != idToKey_.end())
+                for (const auto& tbk : blocks) if (tbk["id"] == it->second) {
+                  BlockType tt{};
+                  const auto idx = static_cast<std::size_t>(ps.value("targetParam", 0.0));
+                  if (gen::findBlockType(tbk["type"].get<std::string>(), tt) && idx < gen::info(tt).paramCount)
+                    target = it->second + ":" + std::string(gen::info(tt).params[idx].key);
+                }
+              ps["target"] = target;
+            }
+          }
         }
         break;
     }

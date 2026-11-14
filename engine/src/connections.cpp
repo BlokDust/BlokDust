@@ -4,6 +4,12 @@ namespace blokdust {
 
 bool ConnectionGraph::shouldConnect(const Block& a, const Block& b) noexcept {
   if (!a.alive || !b.alive || &a == &b) return false;
+  // A modulator (LFO, CHG-0018) connects to any block within its catchment, whatever its kind.
+  if (a.kind() == BlockKind::Modulator || b.kind() == BlockKind::Modulator) {
+    const double c = (a.kind() == BlockKind::Modulator ? a : b).info().catchment;
+    const double dx = a.x - b.x, dy = a.y - b.y;
+    return dx * dx + dy * dy <= c * c;
+  }
   const Block* src = nullptr;
   const Block* eff = nullptr;
   if (kindsMayConnect(a.kind(), b.kind())) { src = &a; eff = &b; }

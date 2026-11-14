@@ -3580,6 +3580,204 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "fx.lfo",
+    "category": "effect",
+    "kind": "modulator",
+    "name": "LFO",
+    "description": "Moves one setting of a block it is connected to, back and forth: any block, power blocks too.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "LFO",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 3,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 10,
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "menuOffset": [
+        -0.5,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "target",
+        "default": "",
+        "unit": null,
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "targetBlock",
+        "default": 0,
+        "unit": null,
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "targetParam",
+        "default": 0,
+        "unit": null,
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "shape",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 3,
+          "k": 0
+        }
+      },
+      {
+        "key": "sync",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "rate",
+        "default": 1,
+        "unit": "Hz",
+        "ui": {
+          "transform": "Identity",
+          "min": 0.02,
+          "max": 20,
+          "k": 0
+        }
+      },
+      {
+        "key": "division",
+        "default": 4,
+        "unit": "beats",
+        "ui": {
+          "transform": "Identity",
+          "min": 0.25,
+          "max": 64,
+          "k": 0
+        }
+      },
+      {
+        "key": "depth",
+        "default": 0.5,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "phase",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "fx.phaser",
     "category": "effect",
     "kind": "post-effect",
@@ -6450,6 +6648,6 @@ export const BLOCKS: readonly BlockDef[] = [
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

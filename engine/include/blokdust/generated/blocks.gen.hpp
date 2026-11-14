@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 41;
+inline constexpr std::size_t kBlockTypeCount = 42;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -33,6 +33,7 @@ enum class BlockType : std::uint16_t {
   FxEnvelope,  // fx.envelope
   FxEq,  // fx.eq
   FxFilter,  // fx.filter
+  FxLfo,  // fx.lfo
   FxPhaser,  // fx.phaser
   FxPitchShifter,  // fx.pitch-shifter
   FxRandomNote,  // fx.random-note
@@ -76,7 +77,8 @@ struct GridPoint { float x; float y; };
 enum class UiTransform : std::uint8_t { None, Identity, SubtractFrom /* k − ui */, Minus /* ui − k */, Divide /* ui ÷ k */ };
 
 /// Param default. numeric=false marks v1 params with non-numeric defaults (strings/objects), stored as 0.
-struct ParamInfo { std::string_view key; double defaultValue; bool numeric; UiTransform transform; double uiMin; double uiMax; double k; };
+/// log: the slider is logarithmic (an LFO moves the param in octaves, AUDIO-0003).
+struct ParamInfo { std::string_view key; double defaultValue; bool numeric; UiTransform transform; double uiMin; double uiMax; double k; bool log = false; };
 
 struct BlockInfo {
   BlockType type;
@@ -327,12 +329,27 @@ namespace param::FxEq { enum : std::uint8_t { frequency_1, Q_1, gain_1, frequenc
 // ---- fx.filter (Filter)
 inline constexpr GridPoint kOutlineFxFilter[] = {{-1.0f, -2.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}, {-1.0f, 0.0f}};
 inline constexpr ParamInfo kParamsFxFilter[] = {
-  {"frequency", 440.0, true, UiTransform::Identity, 20.0, 20000.0, 0.0},
+  {"frequency", 440.0, true, UiTransform::Identity, 20.0, 20000.0, 0.0, true},
   {"gain", 0.0, true, UiTransform::Identity, -35.0, 35.0, 0.0},
   {"type", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
   {"Q", 1.0, true, UiTransform::Identity, 0.5, 14.0, 0.0},
 };
 namespace param::FxFilter { enum : std::uint8_t { frequency, gain, type, Q, Count }; }
+
+// ---- fx.lfo (LFO)
+inline constexpr GridPoint kOutlineFxLfo[] = {{-1.0f, 0.0f}, {0.0f, 0.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
+inline constexpr ParamInfo kParamsFxLfo[] = {
+  {"target", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"targetBlock", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"targetParam", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"shape", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+  {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"rate", 1.0, true, UiTransform::Identity, 0.02, 20.0, 0.0, true},
+  {"division", 4.0, true, UiTransform::Identity, 0.25, 64.0, 0.0},
+  {"depth", 0.5, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"phase", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::FxLfo { enum : std::uint8_t { target, targetBlock, targetParam, shape, sync, rate, division, depth, phase, Count }; }
 
 // ---- fx.phaser (Phaser)
 inline constexpr GridPoint kOutlineFxPhaser[] = {{-1.0f, 0.0f}, {-1.0f, -2.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}};
@@ -549,6 +566,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxEnvelope, "fx.envelope", "Envelope", BlockKind::PreEffect, 6.0f, kOutlineFxEnvelope, 5, kParamsFxEnvelope, 4, true},
   {BlockType::FxEq, "fx.eq", "EQ", BlockKind::PostEffect, 6.0f, kOutlineFxEq, 6, kParamsFxEq, 12, true},
   {BlockType::FxFilter, "fx.filter", "Filter", BlockKind::PostEffect, 6.0f, kOutlineFxFilter, 4, kParamsFxFilter, 4, true},
+  {BlockType::FxLfo, "fx.lfo", "", BlockKind::Modulator, 6.0f, kOutlineFxLfo, 6, kParamsFxLfo, 9, false},
   {BlockType::FxPhaser, "fx.phaser", "Phaser", BlockKind::PostEffect, 6.0f, kOutlineFxPhaser, 4, kParamsFxPhaser, 4, true},
   {BlockType::FxPitchShifter, "fx.pitch-shifter", "PitchShifter", BlockKind::PostEffect, 6.0f, kOutlineFxPitchShifter, 4, kParamsFxPitchShifter, 3, true},
   {BlockType::FxRandomNote, "fx.random-note", "", BlockKind::PreEffect, 6.0f, kOutlineFxRandomNote, 5, kParamsFxRandomNote, 4, false},

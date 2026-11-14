@@ -58,6 +58,7 @@
       "key": "frequency",
       "default": 440,
       "unit": null,
+      "curve": "log",
       "v1": {
         "ui": {
           "type": "slider",

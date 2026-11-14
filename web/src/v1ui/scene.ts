@@ -7,7 +7,7 @@ import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
-import { drawNewSprite, drawPrismExits, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
+import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -67,6 +67,11 @@ export interface SceneHost extends PatchesHost {
   downloadRecording(id: number): void;
   generateSample(id: number): void;
   themes(): readonly Theme[];
+  /** Ids of the blocks connected to block `id` (the engine's proximity connections). */
+  connectedIds(id: number): number[];
+  /** An LFO's target (AUDIO-0003): which block and param it moves, or null. */
+  targetOf(id: number): { id: number; param: string } | null;
+  setTarget(id: number, target: { id: number; param: string } | null): void;
 }
 
 
@@ -196,7 +201,7 @@ export class V1Scene {
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
     const playing = this.playheadsShown || !!this.playheadLines();
     // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
-    const live = hasLiveRows(this.OptionsPanel);
+    const live = followLfos(this.OptionsPanel) || hasLiveRows(this.OptionsPanel);
     if (live) (this.OptionsPanel as any)._DrawReady = true;
     return animating || easing || spinning || playing || live || this.splashDrawing;
   }

@@ -39,9 +39,29 @@ function addBlock(b: PatchBlock, out: Loaded, at: number) {
   for (const [k, v] of Object.entries(b.params ?? {})) {
     const p = paramIndex(t, k);
     if (p < 0) throw new Error(`unknown param ${k} on ${b.id}`);
+    // An LFO's target (AUDIO-0003): saved as "<block id>:<param key>"; engine ids are this session's (targetCommands).
+    if (k === 'targetBlock' || k === 'targetParam' || k === 'target') continue;
     const n = numeric(v);
     if (n !== null) out.commands.push({ type: CommandType.SetParam, id, param: p, value: n, atSample: at });
   }
+}
+
+/** LFO targets (AUDIO-0003, the C++ loader's resolveTargets): each block's `target`, "<block id>:<param key>", as
+ * SetParam targetBlock / targetParam. Unknown blocks or params are skipped (the LFO idles). */
+export function targetCommands(blocks: PatchBlock[], ids: Map<string, number>): Command[] {
+  const out: Command[] = [], types = new Map(blocks.map(b => [b.id, typeIndex.get(b.type)]));
+  for (const b of blocks) {
+    const text = b.params?.target, own = types.get(b.id), id = ids.get(b.id);
+    if (typeof text !== 'string' || own === undefined || id === undefined) continue;
+    const colon = text.lastIndexOf(':');
+    if (colon < 0) continue;
+    const uid = text.slice(0, colon), target = ids.get(uid), theirs = types.get(uid);
+    if (target === undefined || theirs === undefined) continue;
+    const tb = paramIndex(own, 'targetBlock'), tp = paramIndex(own, 'targetParam'), idx = paramIndex(theirs, text.slice(colon + 1));
+    if (tb < 0 || tp < 0 || idx < 0) continue;
+    out.push({ type: CommandType.SetParam, id, param: tb, value: target }, { type: CommandType.SetParam, id, param: tp, value: idx });
+  }
+  return out;
 }
 
 /** Relink commands replaying a patch's `connectionOrder` (the C++ loader does the same). */
@@ -62,6 +82,7 @@ export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   // The patch's tempo (SIMULATION-0003), only when set (older patches keep exactly their command list).
   if (typeof patch.tempo === 'number') out.commands.push({ type: CommandType.Tempo, id: 0, value: patch.tempo, x: -1, atSample: -1 });
   for (const b of patch.blocks) addBlock(b, out, -1);
+  for (const c of targetCommands(patch.blocks, out.ids)) out.commands.push({ ...c, atSample: -1 });
   for (const r of relinks(patch, out.ids)) out.commands.push({ ...r, atSample: -1 });
   for (const s of script) {
     const at = s.atSample ?? -1;

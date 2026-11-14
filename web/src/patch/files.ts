@@ -46,5 +46,11 @@ export function insertBlocks(incoming: Patch, taken: Set<string>, at: { x: numbe
     used.add(id);
     return { ...b, id, x: (b.x ?? 0) + dx, y: (b.y ?? 0) + dy, params: structuredClone(b.params ?? {}) };
   });
+  // LFO targets ("<block id>:<param key>", AUDIO-0003) follow blocks whose id changed.
+  const renamed = new Map(src.map((b, i) => [b.id, blocks[i].id]));
+  for (const b of blocks) {
+    const t = b.params.target, colon = typeof t === 'string' ? t.lastIndexOf(':') : -1;
+    if (typeof t === 'string' && colon > 0 && renamed.has(t.slice(0, colon))) b.params.target = `${renamed.get(t.slice(0, colon))}${t.slice(colon)}`;
+  }
   return { blocks, refs: { ...(incoming.refs ?? {}) } };
 }

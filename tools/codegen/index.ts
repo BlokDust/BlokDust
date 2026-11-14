@@ -92,7 +92,8 @@ function genCpp(manifests: any[]): string {
     '/// ui = uiMin + v·(uiMax − uiMin) on the v1 slider, then param = transform(ui). None = not automatable.',
     'enum class UiTransform : std::uint8_t { None, Identity, SubtractFrom /* k − ui */, Minus /* ui − k */, Divide /* ui ÷ k */ };', '',
     '/// Param default. numeric=false marks v1 params with non-numeric defaults (strings/objects), stored as 0.',
-    'struct ParamInfo { std::string_view key; double defaultValue; bool numeric; UiTransform transform; double uiMin; double uiMax; double k; };', '',
+    '/// log: the slider is logarithmic (an LFO moves the param in octaves, AUDIO-0003).',
+    'struct ParamInfo { std::string_view key; double defaultValue; bool numeric; UiTransform transform; double uiMin; double uiMax; double k; bool log = false; };', '',
     'struct BlockInfo {',
     '  BlockType type;',
     '  std::string_view id;',
@@ -116,7 +117,7 @@ function genCpp(manifests: any[]): string {
         const numeric = typeof d === 'number' || typeof d === 'boolean';
         const v = typeof d === 'number' ? d : typeof d === 'boolean' ? (d ? 1 : 0) : 0;
         const a = automation(p);
-        L.push(`  {"${p.key}", ${num(v)}, ${numeric}, UiTransform::${a.transform}, ${num(a.min)}, ${num(a.max)}, ${num(a.k)}},`);
+        L.push(`  {"${p.key}", ${num(v)}, ${numeric}, UiTransform::${a.transform}, ${num(a.min)}, ${num(a.max)}, ${num(a.k)}${p.curve === 'log' ? ', true' : ''}},`);
       }
       L.push('};');
     }

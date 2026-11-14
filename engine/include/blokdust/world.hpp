@@ -77,6 +77,10 @@ struct Block {
   // Gates in its beams' paths (CHG-0015): the ones reached on the last tick, and whether each let the beam through
   // (a Counter or Chance decides once, when a beam arrives, SIMULATION-0005).
   std::bitset<kMaxBlocks> gateHits, gateOpen;
+  // ---- modulation (CHG-0018, AUDIO-0003): params an LFO is moving (a bit each) and the values they are set to ----
+  std::uint32_t modMask = 0;
+  std::array<double, gen::kMaxParams> modBase{};
+  double lfoPhase = 0.0;            // fx.lfo, not synced: its place in the cycle (0–1)
   // ---- power.sound-laser (CHG-0016): the level it hears (linear, peak with a 50 ms fall) and its gate ----
   double listenEnv = 0.0;
   std::uint32_t holdUntil = 0;
@@ -169,11 +173,12 @@ constexpr bool isSourceSide(BlockKind k) noexcept { return k == BlockKind::Audio
 /// Is `kind` on the effect side (has a catchment)?
 constexpr bool isEffectSide(BlockKind k) noexcept {
   return k == BlockKind::PreEffect || k == BlockKind::PostEffect || k == BlockKind::PowerEffect || k == BlockKind::Logic ||
-         k == BlockKind::Controller || k == BlockKind::Listener;
+         k == BlockKind::Controller || k == BlockKind::Listener || k == BlockKind::Modulator;
 }
 /// v1 classes deriving from PowerEffect (Power, Toggle, Pulse, controllers) are excluded from audio chains.
 constexpr bool isPowerEffectLike(BlockKind k) noexcept {
-  return k == BlockKind::PowerEffect || k == BlockKind::Logic || k == BlockKind::Controller || k == BlockKind::Listener;
+  return k == BlockKind::PowerEffect || k == BlockKind::Logic || k == BlockKind::Controller || k == BlockKind::Listener ||
+         k == BlockKind::Modulator;
 }
 /// SPEC-CONNECTIONS-PROXIMITY R2/R3: which source/effect kind pairs may connect.
 constexpr bool kindsMayConnect(BlockKind source, BlockKind effect) noexcept {

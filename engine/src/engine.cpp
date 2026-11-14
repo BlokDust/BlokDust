@@ -382,6 +382,7 @@ void Engine::apply(const Command& c) noexcept {
       // region start (owner review 2026-11-07).
       const bool reversed = isSampler(b.type) && c.param == P::SourceSample::reverse && (b.params[c.param] != 0.0) != (c.value != 0.0);
       b.params[c.param] = c.value;
+      if (b.modMask & (1u << c.param)) b.modBase[c.param] = c.value;  // an LFO is moving it: this is where it is set (CHG-0018)
       if (b.type == BlockType::PowerLaser && c.param == P::PowerLaser::angle) b.laserAngle0 = c.value;
       if (reversed) for (auto& v : b.voices) if (v.active && b.sampleFrames) {
         v.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate; v.samplePlaying = true; v.env.gateOn();
@@ -854,6 +855,117 @@ void Engine::arrange(int slot, bool trigger) noexcept {
   updateNotePower(b);
 }
 
+namespace {
+/// A param's value on its slider (0–1 along it) and back, by the manifest's v1 slider mapping (as mapAutomation).
+bool toSlider(const gen::ParamInfo& p, double value, double& out) noexcept {
+  double ui = 0.0;
+  switch (p.transform) {
+    case gen::UiTransform::Identity: ui = value; break;
+    case gen::UiTransform::SubtractFrom: ui = p.k - value; break;
+    case gen::UiTransform::Minus: ui = value + p.k; break;
+    case gen::UiTransform::Divide: ui = value * p.k; break;
+    case gen::UiTransform::None: return false;
+  }
+  if (!(p.uiMax > p.uiMin)) return false;
+  if (p.log && p.uiMin > 0.0) out = dmath::log2(std::max(ui, p.uiMin) / p.uiMin) / dmath::log2(p.uiMax / p.uiMin);
+  else out = (ui - p.uiMin) / (p.uiMax - p.uiMin);
+  return true;
+}
+double fromSlider(const gen::ParamInfo& p, double t) noexcept {
+  const double ui = p.log && p.uiMin > 0.0 ? p.uiMin * dmath::exp2(t * dmath::log2(p.uiMax / p.uiMin)) : p.uiMin + t * (p.uiMax - p.uiMin);
+  switch (p.transform) {
+    case gen::UiTransform::SubtractFrom: return p.k - ui;
+    case gen::UiTransform::Minus: return ui - p.k;
+    case gen::UiTransform::Divide: return ui / p.k;
+    default: return ui;
+  }
+}
+/// One cycle of an LFO shape at phase x (0–1), in −1…1: sine, square, triangle, saw (the Tone's waveform order).
+double lfoShape(int shape, double x) noexcept {
+  x -= std::floor(x);
+  switch (shape) {
+    case 1: return x < 0.5 ? 1.0 : -1.0;
+    case 2: return x < 0.25 ? 4.0 * x : x < 0.75 ? 2.0 - 4.0 * x : 4.0 * x - 4.0;
+    case 3: return 2.0 * x - 1.0;
+    default: return dmath::sin(2.0 * dmath::kPi * x);
+  }
+}
+}  // namespace
+
+/// A param changed under the engine's own hand (an LFO): what SetParam does after storing the value.
+void Engine::paramChanged(int slot, std::uint8_t param) noexcept {
+  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  if (b.type == BlockType::PowerLaser && param == P::PowerLaser::angle) b.laserAngle0 = b.params[param];
+  b.lastParam = param;
+  configureDsp(b);
+  b.lastParam = 255;
+  if (b.type == BlockType::PowerToggle) recomputeStaticPower();
+}
+
+/// LFOs (CHG-0018, AUDIO-0003). Each moves one param of one block connected to it, on that param's slider: the
+/// value the slider is set to (the base) plus depth × shape × half the slider's range. Several on one param add;
+/// the sum stops at the slider's ends, except angles, which wrap. A param no LFO moves any more goes back to its base.
+void Engine::runModulators() noexcept {
+  struct Target { int slot; std::uint8_t param; double sum; };
+  std::array<Target, 64> targets;
+  int n = 0;
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& l = blocks_[order_[k]];
+    if (l.type != BlockType::FxLfo) continue;
+    const auto& p = l.params;
+    // Its place in the cycle: the beat when synced, its own clock when not.
+    const double phase = p[P::FxLfo::sync] != 0.0 ? beat_ / std::max(1.0 / 16.0, p[P::FxLfo::division]) : l.lfoPhase;
+    if (p[P::FxLfo::sync] == 0.0) { l.lfoPhase += std::clamp(p[P::FxLfo::rate], 0.001, 100.0) / kTickRate; l.lfoPhase -= std::floor(l.lfoPhase); }
+    const double value = lfoShape(std::clamp(static_cast<int>(std::lround(p[P::FxLfo::shape])), 0, 3), phase + p[P::FxLfo::phase]) * std::clamp(p[P::FxLfo::depth], 0.0, 1.0);
+    l.mon[0] = 0.0f;
+    const int ts = slotOf(static_cast<BlockId>(std::max(0.0, p[P::FxLfo::targetBlock])));
+    if (ts < 0 || ts == order_[k] || !graph_.connected(order_[k], ts)) continue;  // idle until its target is connected
+    const Block& t = blocks_[static_cast<std::size_t>(ts)];
+    const int param = static_cast<int>(std::lround(p[P::FxLfo::targetParam]));
+    double unused;
+    if (param < 0 || param >= t.info().paramCount || param >= 32 || !toSlider(t.info().params[param], 0.0, unused)) continue;
+    l.mon[0] = static_cast<float>(t.id); l.mon[1] = static_cast<float>(param);
+    int at = 0;
+    while (at < n && (targets[static_cast<std::size_t>(at)].slot != ts || targets[static_cast<std::size_t>(at)].param != param)) ++at;
+    if (at == n) { if (n == static_cast<int>(targets.size())) continue; targets[static_cast<std::size_t>(n++)] = {ts, static_cast<std::uint8_t>(param), 0.0}; }
+    targets[static_cast<std::size_t>(at)].sum += value * 0.5;  // depth 1 swings across the whole slider
+  }
+  // Params no longer moved go back to where they are set.
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& b = blocks_[order_[k]];
+    if (!b.modMask) continue;
+    for (std::uint8_t q = 0; q < b.info().paramCount && q < 32; ++q) {
+      if (!(b.modMask & (1u << q))) continue;
+      bool still = false;
+      for (int i = 0; i < n && !still; ++i) still = targets[static_cast<std::size_t>(i)].slot == order_[k] && targets[static_cast<std::size_t>(i)].param == q;
+      if (still) continue;
+      b.modMask &= ~(1u << q);
+      b.params[q] = b.modBase[q];
+      paramChanged(order_[k], q);
+    }
+  }
+  for (int i = 0; i < n; ++i) {
+    const Target& tg = targets[static_cast<std::size_t>(i)];
+    Block& b = blocks_[static_cast<std::size_t>(tg.slot)];
+    const auto& info = b.info().params[tg.param];
+    if (!(b.modMask & (1u << tg.param))) { b.modMask |= 1u << tg.param; b.modBase[tg.param] = b.params[tg.param]; }
+    double base = 0.0;
+    toSlider(info, b.modBase[tg.param], base);
+    double x = base + tg.sum;
+    if (info.key == "angle") x -= std::floor(x);  // angles go round
+    else x = std::clamp(x, 0.0, 1.0);
+    const double v = fromSlider(info, x);
+    if (v != b.params[tg.param]) { b.params[tg.param] = v; paramChanged(tg.slot, tg.param); }
+  }
+  // Each LFO reports its target's value now (the open panel's slider follows it).
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& l = blocks_[order_[k]];
+    if (l.type != BlockType::FxLfo || l.mon[0] == 0.0f) continue;
+    const int ts = slotOf(static_cast<BlockId>(l.mon[0]));
+    if (ts >= 0) l.mon[2] = static_cast<float>(blocks_[static_cast<std::size_t>(ts)].params[static_cast<std::size_t>(l.mon[1])]);
+  }
+}
+
 /// Timed Arpeggiators move on: every `division` beats when synced, `speed` times a second when not.
 void Engine::stepArps() noexcept {
   for (int k = 0; k < orderCount_; ++k) {
@@ -1265,6 +1377,8 @@ void Engine::resyncToTransport(double beat) noexcept {
 void Engine::runTick() noexcept {
   // 0. musical time (SIMULATION-0003): beat_ is the position at this tick; the next tick is 1/kTickRate s later.
   struct Advance { double& beat; double bpm; ~Advance() { beat += bpm / 60.0 / kTickRate; } } advance{beat_, tempo_};
+  // 0a. LFOs move their targets (CHG-0018), before anything reads them this tick
+  runModulators();
   // 0b. keys held on an Emitter/Laser whose keyboard moved away power it no more
   for (int k = 0; k < orderCount_; ++k) {
     Block& b = blocks_[order_[k]];
@@ -1802,6 +1916,7 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
   for (int k = 0; k < orderCount_ && n < max; ++k) {
     const Block& b = blocks_[order_[k]];
     if (b.type == BlockType::FxCompressor) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
+    else if (b.type == BlockType::FxLfo) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], 0.0f}};
     else if (b.type == BlockType::PowerSoundLaser) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.gateStep), b.gatePassed ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};

@@ -144,6 +144,7 @@ class Engine {
   int playheads(Playhead* out, int max) const noexcept;
   /// Live readouts for open options panels, one entry per block that has any (visual only; returns the count ≤ max).
   /// fx.compressor (CHG-0014): v[0] input level in dB (peak, falling slowly), v[1] gain reduction in dB (≤ 0).
+  /// fx.lfo (CHG-0018): v[0] the target block's id (0: none), v[1] the target param's index, v[2] its value now.
   /// power.sound-laser (CHG-0016): v[0] the level it hears in dB, v[1] 1 while its beam is on.
   /// power.counter (CHG-0015): v[0] the step the next hit lands on, v[1] 1 if the last hit passed.
   /// power.prism: v[0] its exit angle now (it may be rotating).
@@ -182,6 +183,8 @@ class Engine {
   void arrange(int slot, bool trigger) noexcept;
   void arrangedKey(int slot, const Block& ctrl, int key, int channel, bool on) noexcept;
   void stepArps() noexcept;
+  void runModulators() noexcept;
+  void paramChanged(int slot, std::uint8_t param) noexcept;
   bool arpTick_ = false;  // set while stepArps re-arranges a source: its Arpeggiator moves on
   static bool keysSetPitch(const Block& ctrl) noexcept;
   void voiceOff(int slot, BlockId controller, int key, int channel = 0) noexcept;

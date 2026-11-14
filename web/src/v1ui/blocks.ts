@@ -7,7 +7,7 @@ import { FORMS } from './ported/BlockForms';
 import { SoundCloudTrack } from './ported/Core/Audio/SoundCloud/SoundcloudTrack';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { filterForm } from './filterPanel.ts';
-import { convertSetting, newBlockForm, settingRefreshes } from './newBlocks.ts';
+import { convertSetting, newBlockForm, setLfoTarget, settingRefreshes } from './newBlocks.ts';
 
 /** v1 Config keys for each sampler's longest searchable track (seconds). */
 const MAX_TRACK: Record<string, string> = { Sample: 'SoundCloudMaxTrackLength', Granular: 'GranularMaxTrackLength', ConvolutionReverb: 'ConvolverMaxTrackLength' };
@@ -132,6 +132,7 @@ export class V1Block {
       App.MainScene.setParam(this, 'gain', g);
       return;
     }
+    if (key === 'lfoTarget') { setLfoTarget(this, Number(value)); this.RefreshOptionsPanel(); return; }  // an LFO's Target carousel (AUDIO-0003)
     const conv = convertSetting(key, value);  // a new block's slider in other units (ms → s, …)
     if (conv) { this.Params[conv.param] = conv.value; App.MainScene.setParam(this, conv.param, conv.value); return; }
     if (key === 'sync') { this.Params.sync = !!value; App.MainScene.setParam(this, 'sync', value ? 1 : 0); this.RefreshOptionsPanel(); return; }
