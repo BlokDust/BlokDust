@@ -9,7 +9,7 @@ import { addSelector } from './selectorOption.ts';
 /** Menu order within each v1 category (appended after v1's items). */
 const MENU: Record<string, string[]> = {
   Source: [],
-  Effect: ['fx.compressor'],
+  Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
   Interaction: [],
 };
@@ -64,12 +64,28 @@ const choice = (name: string, setting: string, value: number, labels: string[]) 
 const dB = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)} dB`;
 const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`);
 
+/** Scales shared by Random Note and the Grid (engine kScales), and the twelve keys. */
+export const SCALES = ['MAJOR', 'MINOR', 'DORIAN', 'LYDIAN', 'MIXOLYDIAN', 'PENTATONIC'];
+export const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const CHORDS = ['OCTAVE', 'FIFTH', 'MAJOR', 'MINOR', 'SUS 2', 'SUS 4', 'SEVENTH', 'MAJOR 7TH', 'MINOR 7TH'];
+/** A synced Arpeggiator's speeds (beats per note), with triplets. */
+const ARP_STEPS = [
+  { beats: 4, label: '1 BAR' }, { beats: 2, label: '1/2' }, { beats: 1, label: '1/4' }, { beats: 2 / 3, label: '1/4T' }, { beats: 0.5, label: '1/8' },
+  { beats: 1 / 3, label: '1/8T' }, { beats: 0.25, label: '1/16' }, { beats: 1 / 6, label: '1/16T' }, { beats: 0.125, label: '1/32' }, { beats: 0.0625, label: '1/64' },
+];
+const nearestStep = (beats: number) => { let best = 0; ARP_STEPS.forEach((s, i) => { if (Math.abs(s.beats - beats) < Math.abs(ARP_STEPS[best].beats - beats)) best = i; }); return best; };
+const switches = (...list: { name: string; setting: string; value: boolean }[]) => ({ type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
+  switches: list.map(s => ({ ...s, lit: true, mode: 'offOn' })) });
+/** Switches whose change shows or hides other rows: the panel is laid out again. */
+export const settingRefreshes = (key: string): boolean => key === 'perHit';
+
 /** Slider settings that are not the param itself: the slider's value → the param's. */
 const CONVERT: Record<string, { param: string; to: (v: number) => number }> = {
   attackMs: { param: 'attack', to: v => v / 1000 },
   releaseMs: { param: 'release', to: v => v / 1000 },
   angle90: { param: 'angle', to: v => v - 90 },  // v1's Angle sliders show angle + 90 (0 = up)
   whenQuieter: { param: 'invert', to: v => (v >= 0.5 ? 1 : 0) },
+  arpDivisionIndex: { param: 'division', to: v => ARP_STEPS[Math.max(0, Math.min(ARP_STEPS.length - 1, Math.round(v)))].beats },
 };
 /** v1 SetParam for the settings above. Returns the param and value to send, or null when `key` is an ordinary param. */
 export function convertSetting(key: string, value: number): { param: string; value: number } | null {
@@ -87,6 +103,27 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Attack', 'attackMs', Math.max(1, Number(b.Params.attack) * 1000), 1, 1000, { log: true, display: ms }),
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
+  ],
+  // CHG-0017 (AUDIO-0002): the note effects.
+  'fx.chord': b => [
+    choice('Chord', 'chord', Number(b.Params.chord), CHORDS),
+    slider('Inversion', 'inversion', Number(b.Params.inversion), 0, 3, { quantised: true }),
+  ],
+  // Speed is how fast it moves between the held notes: musical lengths when synced, notes a second when not. Per Hit
+  // hands the stepping to the hits instead, so Speed and Tempo Sync go.
+  'fx.arpeggiator': b => [
+    choice('Pattern', 'pattern', Number(b.Params.pattern), ['UP', 'DOWN', 'UP & DOWN', 'RANDOM']),
+    switches({ name: 'Per Hit', setting: 'perHit', value: !!b.Params.perHit }, ...(b.Params.perHit ? [] : [{ name: 'Tempo Sync', setting: 'sync', value: !!b.Params.sync }])),
+    ...(b.Params.perHit ? [] : [b.Params.sync
+      ? slider('Speed', 'arpDivisionIndex', nearestStep(Number(b.Params.division)), 0, ARP_STEPS.length - 1, { quantised: true, display: v => ARP_STEPS[Math.max(0, Math.min(ARP_STEPS.length - 1, Math.round(v)))].label })
+      : slider('Speed', 'speed', Number(b.Params.speed), 1, 30, { display: v => `${v.toFixed(1)} / S` })]),
+    slider('Octaves', 'octaves', Number(b.Params.octaves), 1, 3, { quantised: true }),
+  ],
+  'fx.random-note': b => [
+    choice('Key', 'key', Number(b.Params.key), KEYS),
+    choice('Scale', 'scale', Number(b.Params.scale), SCALES),
+    slider('Low', 'low', Number(b.Params.low), -3, 3, { quantised: true, centered: true, display: v => `OCTAVE ${Math.round(v) >= 0 ? '+' : ''}${Math.round(v)}` }),
+    slider('High', 'high', Number(b.Params.high), -3, 3, { quantised: true, centered: true, display: v => `OCTAVE ${Math.round(v) >= 0 ? '+' : ''}${Math.round(v)}` }),
   ],
   // CHG-0016: what it hears against its threshold, then when the beam comes on, then the Laser's own rows.
   'power.sound-laser': b => [

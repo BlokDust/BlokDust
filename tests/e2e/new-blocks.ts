@@ -38,8 +38,8 @@ async function openPanel(p: Page, uid: string): Promise<void> {
   const at = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), id) as [number, number] | null;
   if (!at) throw new Error(`no point on block ${uid}`);
   await p.mouse.move(at[0], at[1]); await p.mouse.click(at[0], at[1]);
-  await p.waitForFunction(() => (window as any).__bd_probe.scene.OptionsPanel.Scale === 1, null, { timeout: 5000 });
-  await p.waitForTimeout(300);
+  await p.waitForFunction(i => { const o = (window as any).__bd_probe.scene.OptionsPanel; return o.Scale === 1 && !o.Opening && o.SelectedBlock?.Id === i; }, id, { timeout: 5000 });
+  await p.waitForTimeout(500);
 }
 /** The open panel's rows: type, name and whatever a live row says it drew. */
 const rows = (p: Page) => p.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).map(o => ({ type: o.Type, name: o.Name, setting: o.Setting, value: o.Value, shown: o.Shown })));
@@ -75,6 +75,57 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.close();
     const pass = synced.indexOf('Offset') === synced.indexOf('Swing') + 1 && free.indexOf('Offset') === free.indexOf('Fire Rate') + 1 && saved === 0.25;
     return [pass, { synced, free, saved }];
+  },
+  // CHG-0017: Keys set pitch is a switch on the keyboards, off by default; on, held keys are silent and a press
+  // (power) on the Tone plays them.
+  async 'keys-set-pitch'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('k', 'input.computer-keyboard', 0, -3)], errors);
+    await openPanel(p, 'k');
+    const sw = await p.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).find(o => o.Type === 'switches').Switches.map((s: any) => ({ name: s.Name, on: !!s.Selected })));
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('keysSetPitch', true));
+    await p.mouse.click(200, 650);  // close the panel
+    await p.waitForTimeout(500);
+    const before = (await state(p)).gateOns;
+    await p.keyboard.down('KeyZ'); await p.keyboard.down('KeyC'); await p.keyboard.down('KeyB');  // C E G
+    await p.waitForTimeout(400);
+    const held = (await state(p)).gateOns - before, quiet = (await state(p)).rms < 0.0005;
+    const at = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 't')) as [number, number];
+    await p.mouse.move(at[0], at[1]); await p.mouse.down();
+    await p.waitForTimeout(400);
+    const struck = (await state(p)).gateOns - before, loud = (await state(p)).rms > 0.005;
+    await p.mouse.up();
+    for (const k of ['KeyZ', 'KeyC', 'KeyB']) await p.keyboard.up(k);
+    const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 'k').params.keysSetPitch;
+    await p.close();
+    const pass = sw.some((s: any) => s.name === 'Set Pitch' && !s.on) && held === 0 && quiet && struck === 3 && loud && !!saved;
+    return [pass, { sw, held, quiet, struck, loud, saved }];
+  },
+  // CHG-0017: Chord, Arpeggiator and Random Note are in the Effect menu; a Chord by a powered Tone sounds three voices;
+  // the Arpeggiator's panel has Speed, and Per Hit hides it.
+  async 'note-effects'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0), blk('ch', 'fx.chord', 3, 0),
+      blk('t2', 'source.tone', -14, -8), blk('pw2', 'power.power', -17, -8), blk('arp', 'fx.arpeggiator', -11, -8, { sync: false, speed: 10 }), blk('ch2', 'fx.chord', -11, -5)], errors);
+    const menu = await menuItems(p, 'Effect');
+    const s0 = await state(p);
+    await p.waitForTimeout(1000);
+    const s1 = await state(p);
+    await openPanel(p, 'arp');
+    const timed = (await rows(p)).map(x => x.name);
+    await p.screenshot({ path: `${OUT}/arpeggiator.png` });
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('perHit', true));
+    await p.waitForTimeout(300);
+    const perHit = (await rows(p)).map(x => x.name);
+    await p.close();
+    const q = await open(browser, [blk('rn', 'fx.random-note', 0, 0)], errors);
+    await openPanel(q, 'rn');
+    const random = (await rows(q)).map(x => ({ name: x.name, type: x.type }));
+    await q.screenshot({ path: `${OUT}/random-note.png` });
+    await q.close();
+    const steps = s1.gateOns - s0.gateOns;  // the arpeggiated Tone strikes about 10 notes a second
+    const pass = ['Chord', 'Arpeggiator', 'Random Note'].every(n => menu.includes(n)) && steps >= 8 && steps <= 12 &&
+      timed.includes('Speed') && timed.includes('Pattern') && timed.includes('Octaves') && !perHit.includes('Speed') &&
+      random.filter(r => r.type === 'selector').map(r => r.name).join() === 'Key,Scale';
+    return [pass, { menu, steps, timed, perHit, random }];
   },
   // CHG-0016: a Sound Laser hears the Tone beside it; its beam powers a second Tone; a higher threshold turns it off.
   async 'sound-laser'(errors) {

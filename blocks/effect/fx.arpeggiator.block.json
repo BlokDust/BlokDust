@@ -1,0 +1,139 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.arpeggiator",
+  "draft": false,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Arpeggiator",
+  "description": "Plays the notes its sources are given one after another, at its speed or one for each hit.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 6,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            -1,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -1
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "menuOffset": [
+      -0.5,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "pattern",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        3
+      ],
+      "description": "0 up, 1 down, 2 up and down, 3 random"
+    },
+    {
+      "key": "perHit",
+      "default": false,
+      "unit": "enum",
+      "description": "On: each hit (or key) plays the next note. Off: it steps on its own while the source is held"
+    },
+    {
+      "key": "sync",
+      "default": true,
+      "unit": "enum",
+      "description": "Tempo sync: step every `division` beats instead of `speed` times a second"
+    },
+    {
+      "key": "speed",
+      "default": 8,
+      "unit": "Hz",
+      "range": [
+        1,
+        30
+      ],
+      "description": "Not synced: notes per second"
+    },
+    {
+      "key": "division",
+      "default": 0.25,
+      "unit": "beats",
+      "range": [
+        0.0625,
+        4
+      ],
+      "description": "Synced: beats per note (1/64 note \u2026 1 bar)"
+    },
+    {
+      "key": "octaves",
+      "default": 1,
+      "unit": "count",
+      "range": [
+        1,
+        3
+      ],
+      "description": "How many octaves the notes are repeated up through"
+    }
+  ]
+}

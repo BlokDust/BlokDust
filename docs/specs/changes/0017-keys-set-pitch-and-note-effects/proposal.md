@@ -15,12 +15,15 @@ keys to decide what hits play, and Chord, Arpeggiator and Random Note blocks tha
 ## What changes
 - **Keys set pitch** on Computer Keyboard and MIDI Controller (`keysSetPitch`, default off): keys stop sounding and set
   the notes that power and hits play; with no keys held a source plays its own note. SPEC R10d gains R10e.
-- **Chord** (`fx.chord`): intervals as a carousel of chord types (octave, fifth, major, minor, sus2, sus4, 7th) plus
-  Inversion.
-- **Arpeggiator** (`fx.arpeggiator`): Pattern (up, down, up-down, random), Rate (synced or free) or Step per hit,
-  Octaves 1–3.
+- **Chord** (`fx.chord`): a carousel of chord types (octave, fifth, major, minor, sus2, sus4, seventh, major 7th,
+  minor 7th) plus Inversion.
+- **Arpeggiator** (`fx.arpeggiator`): Pattern (up, down, up and down, random), **Speed** (owner: how fast it moves
+  between the held notes; musical lengths with Tempo Sync, notes a second without), or Per Hit (each hit plays the
+  next note), Octaves 1–3.
 - **Random Note** (`fx.random-note`): Key, Scale (shared table with Grid), Low and High octave.
-- Note effects act before a source's voices, in the order Random Note → Chord → Arpeggiator (AUDIO-0002).
+- Note effects act before a source's voices, in the order Random Note → Chord → Arpeggiator (AUDIO-0002, owner
+  confirmed). A source with one in its chain, or with a Keys-set-pitch keyboard, is "arranged" (SPEC R10e–R10h);
+  every other source keeps v1's voice rules exactly.
 - Designs: `tools/block-designer/proposed.json` (owner, 2026-11-13); copy each into its manifest unchanged.
 
 ## Out of scope
@@ -29,8 +32,10 @@ keys to decide what hits play, and Chord, Arpeggiator and Random Note blocks tha
 ## Acceptance
 - `pnpm test:engine`: held chord + particle hit plays the chord; arpeggiator steps per hit; random note stays in the
   pool and is seed-stable; keys-set-pitch off keeps every existing behaviour (all existing goldens unchanged).
-- `pnpm test:mpe`: per-note expression still reaches the right voices through a Chord.
+- Per-note bend through a Chord: `test_note_effects.cpp` ("per-note bend reaches every note of that key's chord").
+- `pnpm test:new-blocks --only keys-set-pitch,note-effects`.
 - New goldens `keys-strum`, `arp-hits`, `random-note`; wasm/worklet/plugin agree.
 
 ## Risks and unknowns
-- Voice count: a 4-note chord on a 9-voice source steals sooner.
+- Voice count: an arranged source has 9 voices; more notes than that are dropped (the lowest-numbered win).
+- An arranged source has no glide, and a keyboard's key held while a note effect is moved in or out is dropped.

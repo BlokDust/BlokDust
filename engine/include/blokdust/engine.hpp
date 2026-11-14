@@ -174,7 +174,16 @@ class Engine {
   void renderGranular(Block& b, int n) noexcept;
   static bool acceptsChannel(const Block& ctrl, int channel) noexcept;
   // v1 Source voices (Source.NoteOn/NoteOff/GetVoice/RemoveVoice/SetPitch)
-  void voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel = 0) noexcept;
+  void voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel = 0, double offset = 0.0) noexcept;
+  // Arranged sources (CHG-0017, AUDIO-0002): see Block::arranged.
+  struct NoteFx { int random = -1, chord = -1, arp = -1; };
+  NoteFx noteFxFor(int slot) const noexcept;
+  bool wantsArranged(int slot) const noexcept;
+  void arrange(int slot, bool trigger) noexcept;
+  void arrangedKey(int slot, const Block& ctrl, int key, int channel, bool on) noexcept;
+  void stepArps() noexcept;
+  bool arpTick_ = false;  // set while stepArps re-arranges a source: its Arpeggiator moves on
+  static bool keysSetPitch(const Block& ctrl) noexcept;
   void voiceOff(int slot, BlockId controller, int key, int channel = 0) noexcept;
   void releaseVoice(int slot, int v) noexcept;
   void setPitch(int slot, int v, double glide) noexcept;

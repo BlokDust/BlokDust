@@ -7,7 +7,7 @@ import { FORMS } from './ported/BlockForms';
 import { SoundCloudTrack } from './ported/Core/Audio/SoundCloud/SoundcloudTrack';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { filterForm } from './filterPanel.ts';
-import { convertSetting, newBlockForm } from './newBlocks.ts';
+import { convertSetting, newBlockForm, settingRefreshes } from './newBlocks.ts';
 
 /** v1 Config keys for each sampler's longest searchable track (seconds). */
 const MAX_TRACK: Record<string, string> = { Sample: 'SoundCloudMaxTrackLength', Granular: 'GranularMaxTrackLength', ConvolutionReverb: 'ConvolverMaxTrackLength' };
@@ -43,6 +43,9 @@ export class V1Block {
     newBlockForm(this);  // the post-2.0 blocks (SCOPE-0005)
     if (this.def.id === 'source.microphone' || this.def.id === 'source.audio-in') gainForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
+    // Keys set pitch (CHG-0017): a switch beside Mono/Poly, off by default.
+    if (this.OptionsForm && this.def.params.some(p => p.key === 'keysSetPitch'))
+      (this.OptionsForm.parameters as any[]).find(p => p.type === 'switches')?.switches.push({ name: 'Set Pitch', setting: 'keysSetPitch', value: !!this.Params.keysSetPitch, lit: true, mode: 'offOn' });
     // Glide is mono-only (the engine starts each poly note without it): Poly hides it (owner, 2026-11-12, CHG-0010).
     if (this.def.category === 'interaction' && this.OptionsForm && this.Params.isPolyphonic)
       this.OptionsForm.parameters = (this.OptionsForm.parameters as any[]).filter(p => p.setting !== 'glide');
@@ -145,6 +148,7 @@ export class V1Block {
     else if (t.transform === 'Divide') v = v / t.k;
     this.Params[key] = typeof value === 'boolean' ? value : v;
     if (Number.isFinite(v)) App.MainScene.setParam(this, key, v);
+    if (settingRefreshes(key)) this.RefreshOptionsPanel();
   }
 
   /** ToneSource.DisplayNote: transpose value → note name + octave. */

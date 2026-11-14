@@ -237,6 +237,12 @@
       "default": "",
       "unit": null,
       "description": "Web only: the MIDI input device by name; \"\" = all devices (in a DAW the track picks the device). Host-side, never reaches the engine."
+    },
+    {
+      "key": "keysSetPitch",
+      "default": false,
+      "unit": "enum",
+      "description": "Keys set pitch (CHG-0017, AUDIO-0002): held keys make no sound; they are the notes that power, particles and lasers play on the connected sources"
     }
   ],
   "review": [

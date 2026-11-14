@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 38;
+inline constexpr std::size_t kBlockTypeCount = 41;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -20,10 +20,12 @@ enum class BlockType : std::uint16_t {
   SourceSample,  // source.sample
   SourceSampleGen,  // source.sample-gen
   SourceTone,  // source.tone
+  FxArpeggiator,  // fx.arpeggiator
   FxAutoWah,  // fx.auto-wah
   FxBitCrusher,  // fx.bit-crusher
   FxChomp,  // fx.chomp
   FxChopper,  // fx.chopper
+  FxChord,  // fx.chord
   FxChorus,  // fx.chorus
   FxCompressor,  // fx.compressor
   FxConvolver,  // fx.convolver
@@ -33,6 +35,7 @@ enum class BlockType : std::uint16_t {
   FxFilter,  // fx.filter
   FxPhaser,  // fx.phaser
   FxPitchShifter,  // fx.pitch-shifter
+  FxRandomNote,  // fx.random-note
   FxReverb,  // fx.reverb
   FxScuzz,  // fx.scuzz
   FxStereoDelay,  // fx.stereo-delay
@@ -193,6 +196,18 @@ inline constexpr ParamInfo kParamsSourceTone[] = {
 };
 namespace param::SourceTone { enum : std::uint8_t { waveform, transpose, fine, Count }; }
 
+// ---- fx.arpeggiator (Arpeggiator)
+inline constexpr GridPoint kOutlineFxArpeggiator[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsFxArpeggiator[] = {
+  {"pattern", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+  {"perHit", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"sync", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"speed", 8.0, true, UiTransform::Identity, 1.0, 30.0, 0.0},
+  {"division", 0.25, true, UiTransform::Identity, 0.0625, 4.0, 0.0},
+  {"octaves", 1.0, true, UiTransform::Identity, 1.0, 3.0, 0.0},
+};
+namespace param::FxArpeggiator { enum : std::uint8_t { pattern, perHit, sync, speed, division, octaves, Count }; }
+
 // ---- fx.auto-wah (AutoWah)
 inline constexpr GridPoint kOutlineFxAutoWah[] = {{0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {-2.0f, 1.0f}};
 inline constexpr ParamInfo kParamsFxAutoWah[] = {
@@ -231,6 +246,14 @@ inline constexpr ParamInfo kParamsFxChopper[] = {
   {"mix", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
 namespace param::FxChopper { enum : std::uint8_t { rate, depth, spread, waveform, mix, Count }; }
+
+// ---- fx.chord (Chord)
+inline constexpr GridPoint kOutlineFxChord[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {1.0f, 2.0f}};
+inline constexpr ParamInfo kParamsFxChord[] = {
+  {"chord", 2.0, true, UiTransform::Identity, 0.0, 8.0, 0.0},
+  {"inversion", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+};
+namespace param::FxChord { enum : std::uint8_t { chord, inversion, Count }; }
 
 // ---- fx.chorus (Chorus)
 inline constexpr GridPoint kOutlineFxChorus[] = {{-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 1.0f}};
@@ -329,6 +352,16 @@ inline constexpr ParamInfo kParamsFxPitchShifter[] = {
   {"windowSize", 0.07, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
 namespace param::FxPitchShifter { enum : std::uint8_t { mix, pitchOffset, windowSize, Count }; }
+
+// ---- fx.random-note (Random Note)
+inline constexpr GridPoint kOutlineFxRandomNote[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
+inline constexpr ParamInfo kParamsFxRandomNote[] = {
+  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
+  {"scale", 0.0, true, UiTransform::Identity, 0.0, 5.0, 0.0},
+  {"low", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
+  {"high", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
+};
+namespace param::FxRandomNote { enum : std::uint8_t { key, scale, low, high, Count }; }
 
 // ---- fx.reverb (Reverb)
 inline constexpr GridPoint kOutlineFxReverb[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
@@ -473,8 +506,9 @@ inline constexpr ParamInfo kParamsInputComputerKeyboard[] = {
   {"glide", 0.05, true, UiTransform::Divide, 0.001, 100.0, 100.0},
   {"isPolyphonic", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
-namespace param::InputComputerKeyboard { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, Count }; }
+namespace param::InputComputerKeyboard { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, Count }; }
 
 // ---- input.midi-controller (MIDI Controller)
 inline constexpr GridPoint kOutlineInputMidiController[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {2.0f, 1.0f}, {1.0f, 2.0f}, {-1.0f, 2.0f}};
@@ -489,8 +523,9 @@ inline constexpr ParamInfo kParamsInputMidiController[] = {
   {"slideTo", 1.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
   {"bendRange", 48.0, true, UiTransform::Identity, 1.0, 96.0, 0.0},
   {"device", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
-namespace param::InputMidiController { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, channel, mpe, pressureTo, slideTo, bendRange, device, Count }; }
+namespace param::InputMidiController { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, channel, mpe, pressureTo, slideTo, bendRange, device, keysSetPitch, Count }; }
 
 inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceAudioIn, "source.audio-in", "", BlockKind::AudioSource, 0.0f, kOutlineSourceAudioIn, 6, kParamsSourceAudioIn, 1, true},
@@ -501,10 +536,12 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceSample, "source.sample", "Sample", BlockKind::AudioSource, 0.0f, kOutlineSourceSample, 6, kParamsSourceSample, 14, true},
   {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 12, true},
   {BlockType::SourceTone, "source.tone", "ToneSource", BlockKind::AudioSource, 0.0f, kOutlineSourceTone, 5, kParamsSourceTone, 3, true},
+  {BlockType::FxArpeggiator, "fx.arpeggiator", "", BlockKind::PreEffect, 6.0f, kOutlineFxArpeggiator, 5, kParamsFxArpeggiator, 6, false},
   {BlockType::FxAutoWah, "fx.auto-wah", "AutoWah", BlockKind::PostEffect, 6.0f, kOutlineFxAutoWah, 4, kParamsFxAutoWah, 5, true},
   {BlockType::FxBitCrusher, "fx.bit-crusher", "BitCrusher", BlockKind::PostEffect, 6.0f, kOutlineFxBitCrusher, 5, kParamsFxBitCrusher, 2, true},
   {BlockType::FxChomp, "fx.chomp", "Chomp", BlockKind::PostEffect, 6.0f, kOutlineFxChomp, 6, kParamsFxChomp, 3, true},
   {BlockType::FxChopper, "fx.chopper", "Chopper", BlockKind::PostEffect, 6.0f, kOutlineFxChopper, 6, kParamsFxChopper, 5, true},
+  {BlockType::FxChord, "fx.chord", "", BlockKind::PreEffect, 6.0f, kOutlineFxChord, 3, kParamsFxChord, 2, false},
   {BlockType::FxChorus, "fx.chorus", "Chorus", BlockKind::PostEffect, 6.0f, kOutlineFxChorus, 5, kParamsFxChorus, 4, true},
   {BlockType::FxCompressor, "fx.compressor", "", BlockKind::PostEffect, 6.0f, kOutlineFxCompressor, 5, kParamsFxCompressor, 6, false},
   {BlockType::FxConvolver, "fx.convolver", "Convolver", BlockKind::PostEffect, 6.0f, kOutlineFxConvolver, 5, kParamsFxConvolver, 5, true},
@@ -514,6 +551,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxFilter, "fx.filter", "Filter", BlockKind::PostEffect, 6.0f, kOutlineFxFilter, 4, kParamsFxFilter, 4, true},
   {BlockType::FxPhaser, "fx.phaser", "Phaser", BlockKind::PostEffect, 6.0f, kOutlineFxPhaser, 4, kParamsFxPhaser, 4, true},
   {BlockType::FxPitchShifter, "fx.pitch-shifter", "PitchShifter", BlockKind::PostEffect, 6.0f, kOutlineFxPitchShifter, 4, kParamsFxPitchShifter, 3, true},
+  {BlockType::FxRandomNote, "fx.random-note", "", BlockKind::PreEffect, 6.0f, kOutlineFxRandomNote, 5, kParamsFxRandomNote, 4, false},
   {BlockType::FxReverb, "fx.reverb", "Reverb", BlockKind::PostEffect, 6.0f, kOutlineFxReverb, 5, kParamsFxReverb, 3, true},
   {BlockType::FxScuzz, "fx.scuzz", "Scuzz", BlockKind::PreEffect, 6.0f, kOutlineFxScuzz, 4, kParamsFxScuzz, 3, true},
   {BlockType::FxStereoDelay, "fx.stereo-delay", "StereoDelay", BlockKind::PostEffect, 6.0f, kOutlineFxStereoDelay, 6, kParamsFxStereoDelay, 5, true},
@@ -529,8 +567,8 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 7, false},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},
-  {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 4, true},
-  {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 10, true},
+  {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 5, true},
+  {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 11, true},
 }};
 
 constexpr const BlockInfo& info(BlockType t) { return kBlocks[static_cast<std::size_t>(t)]; }

@@ -1,0 +1,118 @@
+{
+  "description": "CHG-0017 (R10h): particles hit a Tone with a Random Note (D pentatonic, two octaves) and a fifth Chord; a second Tone picks among keys held with Keys set pitch.",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 44100
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 3,
+    "blocks": [
+      {
+        "id": "e",
+        "type": "power.emitter",
+        "x": -10,
+        "y": 0,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 18,
+          "speed": 10
+        }
+      },
+      {
+        "id": "t",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 0
+        }
+      },
+      {
+        "id": "rn",
+        "type": "fx.random-note",
+        "x": 3,
+        "y": 0,
+        "params": {
+          "key": 2,
+          "scale": 5,
+          "low": -1,
+          "high": 0
+        }
+      },
+      {
+        "id": "ch",
+        "type": "fx.chord",
+        "x": 3,
+        "y": 3,
+        "params": {
+          "chord": 1
+        }
+      },
+      {
+        "id": "e2",
+        "type": "power.emitter",
+        "x": -10,
+        "y": 12,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 27,
+          "speed": 10
+        }
+      },
+      {
+        "id": "t2",
+        "type": "source.tone",
+        "x": 0,
+        "y": 12,
+        "params": {
+          "waveform": 2
+        }
+      },
+      {
+        "id": "rn2",
+        "type": "fx.random-note",
+        "x": 3,
+        "y": 12
+      },
+      {
+        "id": "k",
+        "type": "input.computer-keyboard",
+        "x": 0,
+        "y": 16,
+        "params": {
+          "keysSetPitch": true
+        }
+      }
+    ]
+  },
+  "script": [
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 57,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 60,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 64,
+      "controller": "input.computer-keyboard"
+    },
+    {
+      "atSample": 0,
+      "op": "noteOn",
+      "note": 69,
+      "controller": "input.computer-keyboard"
+    }
+  ]
+}

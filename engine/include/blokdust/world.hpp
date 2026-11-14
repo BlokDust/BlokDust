@@ -31,6 +31,7 @@ struct Voice {
   double playhead = 0.0;        // source.sample: buffer frames
   bool samplePlaying = false;
   double pitch = 0.0;           // tone: Hz; sample: playback rate (v1 SetPitch ramps either linearly)
+  double offset = 0.0;          // semitones on top of the note (a Chord's intervals, an Arpeggiator's octaves; CHG-0017)
   double glideTo = 0.0, glideStep = 0.0;
   int glideLeft = 0;            // samples left in the glide (Tone linearRampToValue)
   // Per-note expression (PLUGIN-0004, MPE): the note's MIDI channel (0–15) and what its controller maps onto the voice.
@@ -96,6 +97,21 @@ struct Block {
   std::array<HeldKey, 16> monoHeld{};
   int monoHeldCount = 0;
   std::uint64_t voiceClock = 0;
+  // ---- arranged sources (CHG-0017, AUDIO-0002): a source with a note effect in its chain, or a keyboard with Keys
+  // set pitch connected, takes its notes from here instead of v1's voice rules. Keys held by its controllers, oldest
+  // first; the note Random Note picked for the current trigger; where its Arpeggiator is. ----
+  struct ArrKey { std::int16_t key; std::int16_t channel; BlockId controller; bool pitchOnly; bool poly; };
+  struct ArrNote { BlockId controller = 0; std::int16_t key = -1; std::int16_t channel = 0; double offset = 0.0; };
+  bool arranged = false;
+  bool arrGate = false;             // sounding (power or a sounding key) at the last arrange
+  std::array<ArrKey, 16> arrKeys{};
+  int arrKeyCount = 0;
+  ArrNote randomNote{};
+  bool randomValid = false;
+  int arpStep = -1;                 // which of its notes the Arpeggiator is on (−1: none yet)
+  std::uint32_t arpRand = 0;        // its pick for the random pattern
+  int arpTicks = 0;                 // not synced: ticks since the last step
+  std::int64_t arpSlot = 0;         // synced: the beat-grid slot of the last step
   // source.sample (Tone.Simpler): decoded audio, playing until the region ends
   const float* sampleL = nullptr;
   const float* sampleR = nullptr;

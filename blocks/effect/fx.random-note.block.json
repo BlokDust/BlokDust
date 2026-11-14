@@ -1,0 +1,131 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.random-note",
+  "draft": false,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Random Note",
+  "description": "Gives each hit a note picked at random from a key and scale (or from the keys held, with Keys set pitch).",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -1
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "key",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        11
+      ],
+      "description": "Root note: 0 = C \u2026 11 = B"
+    },
+    {
+      "key": "scale",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        5
+      ],
+      "description": "0 major, 1 minor, 2 dorian, 3 lydian, 4 mixolydian, 5 pentatonic"
+    },
+    {
+      "key": "low",
+      "default": 0,
+      "unit": "octaves",
+      "range": [
+        -3,
+        3
+      ],
+      "description": "Lowest octave of the pool (0 = the octave from middle C)"
+    },
+    {
+      "key": "high",
+      "default": 0,
+      "unit": "octaves",
+      "range": [
+        -3,
+        3
+      ],
+      "description": "Highest octave of the pool"
+    }
+  ]
+}

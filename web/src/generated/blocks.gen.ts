@@ -1743,6 +1743,155 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "fx.arpeggiator",
+    "category": "effect",
+    "kind": "pre-effect",
+    "name": "Arpeggiator",
+    "description": "Plays the notes its sources are given one after another, at its speed or one for each hit.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Arpeggiator",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 6,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 4,
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              -1,
+              -1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "menuOffset": [
+        -0.5,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "pattern",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 3,
+          "k": 0
+        }
+      },
+      {
+        "key": "perHit",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "sync",
+        "default": true,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "speed",
+        "default": 8,
+        "unit": "Hz",
+        "ui": {
+          "transform": "Identity",
+          "min": 1,
+          "max": 30,
+          "k": 0
+        }
+      },
+      {
+        "key": "division",
+        "default": 0.25,
+        "unit": "beats",
+        "ui": {
+          "transform": "Identity",
+          "min": 0.0625,
+          "max": 4,
+          "k": 0
+        }
+      },
+      {
+        "key": "octaves",
+        "default": 1,
+        "unit": "count",
+        "ui": {
+          "transform": "Identity",
+          "min": 1,
+          "max": 3,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "fx.auto-wah",
     "category": "effect",
     "kind": "post-effect",
@@ -2270,6 +2419,99 @@ export const BLOCKS: readonly BlockDef[] = [
           "transform": "None",
           "min": 0,
           "max": 0,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "fx.chord",
+    "category": "effect",
+    "kind": "pre-effect",
+    "name": "Chord",
+    "description": "Turns every note its sources play into a chord.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Chord",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 4,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              1,
+              -2
+            ],
+            [
+              1,
+              2
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          0
+        ],
+        [
+          1,
+          -2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "chord",
+        "default": 2,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 8,
+          "k": 0
+        }
+      },
+      {
+        "key": "inversion",
+        "default": 0,
+        "unit": "count",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 3,
           "k": 0
         }
       }
@@ -3571,6 +3813,137 @@ export const BLOCKS: readonly BlockDef[] = [
           "transform": "None",
           "min": 0,
           "max": 0,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "fx.random-note",
+    "category": "effect",
+    "kind": "pre-effect",
+    "name": "Random Note",
+    "description": "Gives each hit a note picked at random from a key and scale (or from the keys held, with Keys set pitch).",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "RandomNote",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 5,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              0
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          0
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "key",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 11,
+          "k": 0
+        }
+      },
+      {
+        "key": "scale",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 5,
+          "k": 0
+        }
+      },
+      {
+        "key": "low",
+        "default": 0,
+        "unit": "octaves",
+        "ui": {
+          "transform": "Identity",
+          "min": -3,
+          "max": 3,
+          "k": 0
+        }
+      },
+      {
+        "key": "high",
+        "default": 0,
+        "unit": "octaves",
+        "ui": {
+          "transform": "Identity",
+          "min": -3,
+          "max": 3,
           "k": 0
         }
       }
@@ -5828,6 +6201,17 @@ export const BLOCKS: readonly BlockDef[] = [
           "max": 0,
           "k": 0
         }
+      },
+      {
+        "key": "keysSetPitch",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
       }
     ]
   },
@@ -6050,11 +6434,22 @@ export const BLOCKS: readonly BlockDef[] = [
           "max": 0,
           "k": 0
         }
+      },
+      {
+        "key": "keysSetPitch",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
       }
     ]
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

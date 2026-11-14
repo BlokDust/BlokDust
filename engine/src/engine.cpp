@@ -390,6 +390,17 @@ void Engine::apply(const Command& c) noexcept {
       configureDsp(b);
       b.lastParam = 255;
       if (b.type == BlockType::PowerToggle) recomputeStaticPower();
+      if (b.type == BlockType::FxChord || b.type == BlockType::FxArpeggiator || b.type == BlockType::FxRandomNote) {
+        // CHG-0017: the notes its sources are playing follow the new setting (no new trigger).
+        const int ch = chains_.chainOf[static_cast<std::size_t>(slot)];
+        if (ch >= 0) {
+          const auto r = chains_.chains[static_cast<std::size_t>(ch)];
+          for (int m = 0; m < r.count; ++m) {
+            const int sslot = chains_.members[r.start + m];
+            if (blocks_[static_cast<std::size_t>(sslot)].arranged) arrange(sslot, false);
+          }
+        }
+      }
       if (b.kind() == BlockKind::Controller)  // transpose re-pitches, Mono/Poly re-voices (v1 Keyboard.SetParam)
         for (int k = 0; k < orderCount_; ++k) if (graph_.row(slot)[order_[k]] && blocks_[order_[k]].kind() == BlockKind::AudioSource) refreshVoices(order_[k]);
       break;
@@ -505,8 +516,13 @@ void Engine::applyNote(const Command& c) noexcept {
       const int s = order_[i];
       if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) { keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn, polyOf(ctrl)); continue; }
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource) continue;
+      if (blocks_[s].arranged) {  // CHG-0017: the key joins or leaves the notes this source is given
+        arrangedKey(s, ctrl, c.param, ch, c.type == Command::Type::NoteOn);
+        if (c.type != Command::Type::NoteOn) continue;
+      } else {
       if (c.type != Command::Type::NoteOn) { voiceOff(s, ctrl.id, c.param, ch); continue; }
       voiceOn(s, ctrl.id, c.param, polyOf(ctrl), std::max(0.0, ctrl.params[P::InputComputerKeyboard::glide]), true, ch);
+      }
       // MIDI Input velocity (owner review 3): the note sounds at 0.2 + 0.8 × velocity² (1 at full velocity, never
       // silent), MPE or not. MPE pressure → volume (PLUGIN-0004) swells it from there to full, so the strike is heard
       // before the controller's first pressure message. (The Computer Keyboard keeps v1's fixed level.)
@@ -564,7 +580,7 @@ void Engine::applyExpression(const Command& c) noexcept {
 
 /// v1 Source.NoteOn + GetVoice: mono takes (or keeps) the mono voice, poly the first free voice; with none free the
 /// oldest active voice is stolen without retriggering. Glide only when nothing is triggered and ≤ 1 voice is active.
-void Engine::voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel) noexcept {
+void Engine::voiceOn(int slot, BlockId controller, int key, bool poly, double glide, bool envFromChain, int channel, double offset) noexcept {
   Block& b = blocks_[static_cast<std::size_t>(slot)];
   const auto freeVoice = [&b]() {
     int best = -1;
@@ -609,7 +625,7 @@ void Engine::voiceOn(int slot, BlockId controller, int key, bool poly, double gl
   }
   if (!poly) b.lastMonoVoice = v;
   Voice& vo = b.voices[static_cast<std::size_t>(v)];
-  vo.key = key; vo.controller = controller;
+  vo.key = key; vo.controller = controller; vo.offset = offset;
   // A new note starts with neutral expression (PLUGIN-0004); its controller sends any initial values right after.
   vo.channel = channel; vo.bend = 0.0; vo.exprGain = vo.gainNow = vo.pressureFloor = 1.0; vo.lpA = 1.0; vo.trigTick = tick_; vo.slide = -1.0;
   if (!vo.active) { vo.active = true; vo.activeAt = ++b.voiceClock; }
@@ -666,6 +682,200 @@ void Engine::releaseVoice(int slot, int v) noexcept {
   log(Event::Type::GateOff, b.id);
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// arranged sources (CHG-0017, AUDIO-0002): note effects and Keys set pitch
+// ---------------------------------------------------------------------------------------------------------------
+
+namespace {
+/// Scales shared by Random Note and the Grid: major, minor, dorian, lydian, mixolydian, pentatonic.
+constexpr int kScaleCount = 6;
+constexpr int kScaleSize[kScaleCount] = {7, 7, 7, 7, 7, 5};
+constexpr int kScales[kScaleCount][7] = {
+  {0, 2, 4, 5, 7, 9, 11}, {0, 2, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 9, 10}, {0, 2, 4, 6, 7, 9, 11}, {0, 2, 4, 5, 7, 9, 10}, {0, 2, 4, 7, 9, 0, 0}};
+/// Chord: octave, fifth, major, minor, sus2, sus4, seventh, major 7th, minor 7th.
+constexpr int kChordCount = 9;
+constexpr int kChordSize[kChordCount] = {2, 2, 3, 3, 3, 3, 4, 4, 4};
+constexpr int kChords[kChordCount][4] = {{0, 12, 0, 0}, {0, 7, 0, 0}, {0, 4, 7, 0}, {0, 3, 7, 0}, {0, 2, 7, 0}, {0, 5, 7, 0}, {0, 4, 7, 10}, {0, 4, 7, 11}, {0, 3, 7, 10}};
+}  // namespace
+
+bool Engine::keysSetPitch(const Block& ctrl) noexcept {
+  if (ctrl.type == BlockType::InputComputerKeyboard) return ctrl.params[P::InputComputerKeyboard::keysSetPitch] != 0.0;
+  if (ctrl.type == BlockType::InputMidiController) return ctrl.params[P::InputMidiController::keysSetPitch] != 0.0;
+  return false;
+}
+
+/// The note effects in a source's chain (the last of each kind in chain order, as the Envelope).
+Engine::NoteFx Engine::noteFxFor(int slot) const noexcept {
+  NoteFx fx;
+  const int c = chains_.chainOf[static_cast<std::size_t>(slot)];
+  if (c < 0) return fx;
+  const auto r = chains_.chains[static_cast<std::size_t>(c)];
+  for (int m = 0; m < r.count; ++m) {
+    const int s = chains_.members[r.start + m];
+    const BlockType t = blocks_[static_cast<std::size_t>(s)].type;
+    if (t == BlockType::FxRandomNote) fx.random = s; else if (t == BlockType::FxChord) fx.chord = s; else if (t == BlockType::FxArpeggiator) fx.arp = s;
+  }
+  return fx;
+}
+
+/// A source is arranged while a note effect is in its chain or a connected keyboard has Keys set pitch on. Otherwise
+/// v1's voice rules apply untouched.
+bool Engine::wantsArranged(int slot) const noexcept {
+  const NoteFx fx = noteFxFor(slot);
+  if (fx.random >= 0 || fx.chord >= 0 || fx.arp >= 0) return true;
+  const auto& row = graph_.row(slot);
+  for (int k = 0; k < orderCount_; ++k) if (row[order_[k]] && blocks_[order_[k]].kind() == BlockKind::Controller && keysSetPitch(blocks_[order_[k]])) return true;
+  return false;
+}
+
+/// A controller's key on an arranged source: it joins or leaves the held keys; pressing a sounding key is a trigger.
+void Engine::arrangedKey(int slot, const Block& ctrl, int key, int channel, bool on) noexcept {
+  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  int n = 0;
+  for (int i = 0; i < b.arrKeyCount; ++i) {
+    const auto& h = b.arrKeys[static_cast<std::size_t>(i)];
+    if (h.key != key || h.controller != ctrl.id || h.channel != channel) b.arrKeys[static_cast<std::size_t>(n++)] = h;
+  }
+  const bool pitchOnly = keysSetPitch(ctrl);
+  if (on) {
+    if (n == static_cast<int>(b.arrKeys.size())) { std::copy(b.arrKeys.begin() + 1, b.arrKeys.end(), b.arrKeys.begin()); --n; }
+    b.arrKeys[static_cast<std::size_t>(n++)] = {static_cast<std::int16_t>(key), static_cast<std::int16_t>(channel), ctrl.id, pitchOnly, polyOf(ctrl)};
+  }
+  b.arrKeyCount = n;
+  arrange(slot, on && !pitchOnly);
+  updateNotePower(b);
+}
+
+/// Work out the notes an arranged source should be sounding and make its voices match (AUDIO-0002).
+/// Notes in: the keys held on its keyboards (a mono keyboard that sounds counts only its newest; with Keys set pitch
+/// every held key counts), or, with none, the source's own note. They sound while the source has power or a sounding
+/// key is held. Then Random Note picks one per trigger, Chord adds its intervals, and an Arpeggiator plays one at a
+/// time. `trigger`: power arrived, or a sounding key was pressed.
+void Engine::arrange(int slot, bool trigger) noexcept {
+  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  using Note = Block::ArrNote;
+  bool soundingKey = false;
+  for (int i = 0; i < b.arrKeyCount; ++i) soundingKey = soundingKey || !b.arrKeys[static_cast<std::size_t>(i)].pitchOnly;
+  const bool gate = b.powerOn || soundingKey;
+  const bool started = gate && !b.arrGate;
+  b.arrGate = gate;
+  if (!gate) {
+    for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) releaseVoice(slot, v);
+    b.randomValid = false;
+    return;
+  }
+  const NoteFx fx = noteFxFor(slot);
+  std::array<Note, 64> notes;
+  int n = 0;
+  for (int i = 0; i < b.arrKeyCount; ++i) {
+    const auto& h = b.arrKeys[static_cast<std::size_t>(i)];
+    if (!h.pitchOnly && !h.poly) {  // a sounding mono keyboard: only its newest key
+      bool newer = false;
+      for (int j = i + 1; j < b.arrKeyCount; ++j) newer = newer || (b.arrKeys[static_cast<std::size_t>(j)].controller == h.controller && !b.arrKeys[static_cast<std::size_t>(j)].pitchOnly);
+      if (newer) continue;
+    }
+    notes[static_cast<std::size_t>(n++)] = Note{h.controller, h.key, h.channel, 0.0};
+  }
+  const bool fromKeys = n > 0;
+  if (!fromKeys) notes[static_cast<std::size_t>(n++)] = Note{};  // the source's own note
+  if (fx.random >= 0) {
+    if (trigger || !b.randomValid) {
+      Block& rn = blocks_[static_cast<std::size_t>(fx.random)];
+      if (fromKeys) b.randomNote = notes[static_cast<std::size_t>(rn.grainRng.next() % static_cast<std::uint32_t>(n))];
+      else {
+        const int scale = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::scale])), 0, kScaleCount - 1);
+        const int root = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::key])), 0, 11);
+        int lo = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::low])), -3, 3), hi = std::clamp(static_cast<int>(std::lround(rn.params[P::FxRandomNote::high])), -3, 3);
+        if (hi < lo) std::swap(lo, hi);
+        const int size = kScaleSize[scale], count = (hi - lo + 1) * size;
+        const int pick = static_cast<int>(rn.grainRng.next() % static_cast<std::uint32_t>(count));
+        b.randomNote = Note{0, static_cast<std::int16_t>(60 + root + 12 * (lo + pick / size) + kScales[scale][pick % size]), 0, 0.0};
+      }
+      b.randomValid = true;
+    }
+    notes[0] = b.randomNote; n = 1;
+  }
+  if (fx.chord >= 0) {
+    const Block& ch = blocks_[static_cast<std::size_t>(fx.chord)];
+    const int type = std::clamp(static_cast<int>(std::lround(ch.params[P::FxChord::chord])), 0, kChordCount - 1), size = kChordSize[type];
+    const int inv = std::clamp(static_cast<int>(std::lround(ch.params[P::FxChord::inversion])), 0, size - 1);
+    const int in = n;
+    std::array<Note, 64> out;
+    int m = 0;
+    for (int i = 0; i < in; ++i) for (int k = 0; k < size && m < static_cast<int>(out.size()); ++k) {
+      Note x = notes[static_cast<std::size_t>(i)];
+      x.offset += kChords[type][k] + (k < inv ? 12 : 0);
+      out[static_cast<std::size_t>(m++)] = x;
+    }
+    notes = out; n = m;
+  }
+  const auto pitchOf = [](const Note& x) { return (x.key >= 0 ? x.key : 60) + x.offset; };
+  if (fx.arp >= 0) {
+    Block& ar = blocks_[static_cast<std::size_t>(fx.arp)];
+    const bool perHit = ar.params[P::FxArpeggiator::perHit] != 0.0;
+    // Timed: a fresh start begins at its first note, on the beat it is in. Per hit: every trigger is the next note.
+    // While it runs on its own, keys and hits change the notes but not where it is.
+    const bool advance = perHit ? trigger : arpTick_;
+    if (started && !perHit) { b.arpStep = 0; b.arpTicks = -1;  /* this tick's stepArps makes it 0 */ b.arpRand = ar.grainRng.next(); b.arpSlot = static_cast<std::int64_t>(std::floor(beat_ / std::max(1.0 / 64.0, ar.params[P::FxArpeggiator::division]) + 1e-9)); }
+    else if (advance) { ++b.arpStep; b.arpRand = ar.grainRng.next(); }
+    std::sort(notes.begin(), notes.begin() + n, [&](const Note& x, const Note& y) { return pitchOf(x) < pitchOf(y); });
+    const int octaves = std::clamp(static_cast<int>(std::lround(ar.params[P::FxArpeggiator::octaves])), 1, 3);
+    const int base = n;
+    for (int o = 1; o < octaves; ++o) for (int i = 0; i < base && n < static_cast<int>(notes.size()); ++i) {
+      Note x = notes[static_cast<std::size_t>(i)]; x.offset += 12.0 * o; notes[static_cast<std::size_t>(n++)] = x;
+    }
+    const int pattern = std::clamp(static_cast<int>(std::lround(ar.params[P::FxArpeggiator::pattern])), 0, 3);
+    const int step = std::max(0, b.arpStep);
+    int at = step % n;
+    if (pattern == 1) at = n - 1 - at;
+    else if (pattern == 2 && n > 1) { const int p = step % (2 * n - 2); at = p < n ? p : 2 * n - 2 - p; }
+    else if (pattern == 3) at = static_cast<int>(b.arpRand % static_cast<std::uint32_t>(n));
+    notes[0] = notes[static_cast<std::size_t>(at)]; n = 1;
+    if (advance) for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) releaseVoice(slot, v);  // each step is struck again
+  }
+  n = std::min(n, b.voiceCount);
+  // Voices no longer wanted let go; notes not yet sounding start. Notes that stay keep sounding as they are.
+  const auto same = [](const Voice& vo, const Note& x) { return vo.controller == x.controller && vo.key == x.key && vo.channel == x.channel && vo.offset == x.offset; };
+  for (int v = 0; v < kVoices; ++v) {
+    const Voice& vo = b.voices[static_cast<std::size_t>(v)];
+    if (!vo.active) continue;
+    bool wanted = false;
+    for (int i = 0; i < n && !wanted; ++i) wanted = same(vo, notes[static_cast<std::size_t>(i)]);
+    if (!wanted) releaseVoice(slot, v);
+  }
+  // v1's rule for the envelope: a source held by a Power block alone plays the default one (R10b).
+  const bool envFromChain = soundingKey || b.staticPower == 0;
+  for (int i = 0; i < n; ++i) {
+    const Note& x = notes[static_cast<std::size_t>(i)];
+    bool sounding = false;
+    for (int v = 0; v < kVoices && !sounding; ++v) sounding = b.voices[static_cast<std::size_t>(v)].active && same(b.voices[static_cast<std::size_t>(v)], x);
+    if (!sounding) voiceOn(slot, x.controller, x.key, true, 0.0, envFromChain, x.channel, x.offset);
+  }
+  updateNotePower(b);
+}
+
+/// Timed Arpeggiators move on: every `division` beats when synced, `speed` times a second when not.
+void Engine::stepArps() noexcept {
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& b = blocks_[order_[k]];
+    if (!b.arranged || !b.arrGate) continue;
+    const NoteFx fx = noteFxFor(order_[k]);
+    if (fx.arp < 0) continue;
+    const Block& ar = blocks_[static_cast<std::size_t>(fx.arp)];
+    if (ar.params[P::FxArpeggiator::perHit] != 0.0) continue;
+    bool step = false;
+    if (ar.params[P::FxArpeggiator::sync] != 0.0) {
+      const auto slot = static_cast<std::int64_t>(std::floor(beat_ / std::max(1.0 / 64.0, ar.params[P::FxArpeggiator::division]) + 1e-9));
+      step = slot != b.arpSlot;
+      b.arpSlot = slot;
+    } else {
+      const int every = std::max(1, static_cast<int>(std::lround(kTickRate / std::clamp(ar.params[P::FxArpeggiator::speed], 0.25, 60.0))));
+      if (++b.arpTicks >= every) { b.arpTicks = 0; step = true; }
+    }
+    if (step) { arpTick_ = true; arrange(order_[k], false); arpTick_ = false; }
+  }
+}
+
 void Engine::updateNotePower(Block& b) noexcept {
   b.notePower = 0;
   for (const auto& vo : b.voices) if (vo.active && vo.controller != 0) b.notePower = 1;
@@ -690,10 +900,11 @@ void Engine::setPitch(int slot, int v, double glide) noexcept {
     const double semis = p[P::SourceTone::transpose] + p[P::SourceTone::fine];
     // Power plays v1 Config.BaseNote; a controller key is midiToFrequency(key + controller mods + source mods).
     target = vo.key >= 0 ? 440.0 * dmath::exp2((vo.key + controllerMods(slot) + semis + vo.bend - 69.0) / 12.0) : kBaseNoteHz * dmath::exp2(semis / 12.0);
+    if (vo.offset != 0.0) target *= dmath::exp2(vo.offset / 12.0);  // CHG-0017: a Chord's interval, an Arpeggiator's octave
   } else if (isSampler(b.type) || b.type == BlockType::SourceGranular) {  // Granular's playbackRate/detune line up
     // playbackRate = 2^((note − DefaultNote + playbackRate + detune) / 12) × buffer/engine rate (AudioBufferSourceNode).
     const double semis = p[P::SourceSample::playbackRate] + p[P::SourceSample::detune] + (vo.key >= 0 ? vo.key + controllerMods(slot) + vo.bend - 60.0 : 0.0);
-    target = dmath::exp2(semis / 12.0) * (b.sampleRate / sampleRate_);
+    target = dmath::exp2((semis + vo.offset) / 12.0) * (b.sampleRate / sampleRate_);
   } else return;
   const int n = static_cast<int>(std::lround(glide * sampleRate_));
   if (n > 0 && vo.pitch > 0.0) { vo.glideTo = target; vo.glideLeft = n; vo.glideStep = (target - vo.pitch) / n; }
@@ -713,6 +924,29 @@ void Engine::refreshVoices(int slot) noexcept {
   const auto& row = graph_.row(slot);
   bool poly = false;
   for (int k = 0; k < orderCount_; ++k) if (row[order_[k]] && blocks_[order_[k]].kind() == BlockKind::Controller && polyOf(blocks_[order_[k]])) poly = true;
+  // CHG-0017: arranged or not. Changing over starts clean: every voice let go, held keys forgotten.
+  if (const bool arr = wantsArranged(slot); arr != b.arranged) {
+    for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) releaseVoice(slot, v);
+    b.monoVoice = b.lastMonoVoice = -1; b.monoHeldCount = 0; b.arrKeyCount = 0; b.randomValid = false; b.arrGate = false;
+    b.powerOn = false;  // power takes the source again on the next gate update
+    b.arranged = arr;
+  }
+  if (b.arranged) {
+    b.voiceCount = b.type == BlockType::SourceGranular ? 1 : kVoices;
+    int n = 0;
+    for (int i = 0; i < b.arrKeyCount; ++i) {  // keys of controllers no longer connected are gone; the rest follow their controller's switches
+      auto h = b.arrKeys[static_cast<std::size_t>(i)];
+      const int c = slotOf(h.controller);
+      if (c < 0 || !row[static_cast<std::size_t>(c)]) continue;
+      h.pitchOnly = keysSetPitch(blocks_[static_cast<std::size_t>(c)]); h.poly = polyOf(blocks_[static_cast<std::size_t>(c)]);
+      b.arrKeys[static_cast<std::size_t>(n++)] = h;
+    }
+    b.arrKeyCount = n;
+    arrange(slot, false);
+    for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) setPitch(slot, v, 0.0);
+    updateNotePower(b);
+    return;
+  }
   const int want = poly && b.type != BlockType::SourceGranular ? kVoices : 1;
   if (want != b.voiceCount) {
     if (want < b.voiceCount) {  // RemoveExtraVoices: everything released, back to one free voice
@@ -1183,6 +1417,8 @@ void Engine::runTick() noexcept {
   }
   // 4. gates follow power
   updateGates();
+  // 5. Arpeggiators step (CHG-0017)
+  stepArps();
 }
 
 /// Power (Power, Toggle, pulses, lasers, a press) holds the source's mono voice at the default note, as v1's
@@ -1194,6 +1430,7 @@ void Engine::updateGates() noexcept {
     const bool want = b.sourcePower() > 0;
     if (want == b.powerOn) continue;
     b.powerOn = want;
+    if (b.arranged) { arrange(order_[k], want); continue; }  // CHG-0017: power plays the notes the source is given
     // v1 rule (Source/ConnectionManager): a Power-held source always plays the default envelope (Power triggers
     // before the chain's Envelope block applies its settings); particle, pulse, laser, press and key triggers use it.
     if (want) voiceOn(order_[k], 0, -1, false, 0.0, b.staticPower == 0);

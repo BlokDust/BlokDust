@@ -1,0 +1,106 @@
+{
+  "description": "CHG-0017 (R10f, R10g): left, a Power-held Tone with a minor-seventh Chord and a synced Arpeggiator (1/16, up and down, 2 octaves); right, particles step a per-hit Arpeggiator through a sus4 Chord.",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 44100
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 2,
+    "blocks": [
+      {
+        "id": "t",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 1,
+          "transpose": -12
+        }
+      },
+      {
+        "id": "pw",
+        "type": "power.power",
+        "x": -3,
+        "y": 0
+      },
+      {
+        "id": "ch",
+        "type": "fx.chord",
+        "x": 3,
+        "y": 0,
+        "params": {
+          "chord": 8
+        }
+      },
+      {
+        "id": "arp",
+        "type": "fx.arpeggiator",
+        "x": 3,
+        "y": 3,
+        "params": {
+          "pattern": 2,
+          "octaves": 2,
+          "division": 0.25
+        }
+      },
+      {
+        "id": "env",
+        "type": "fx.envelope",
+        "x": 0,
+        "y": 3,
+        "params": {
+          "attack": 0.005,
+          "decay": 0.1,
+          "sustain": 0.3,
+          "release": 0.05
+        }
+      },
+      {
+        "id": "e",
+        "type": "power.emitter",
+        "x": 14,
+        "y": 0,
+        "params": {
+          "angle": 0,
+          "selfPoweredMode": true,
+          "rate": 24,
+          "speed": 10
+        }
+      },
+      {
+        "id": "t2",
+        "type": "source.tone",
+        "x": 24,
+        "y": 0,
+        "params": {
+          "waveform": 0,
+          "transpose": 5
+        }
+      },
+      {
+        "id": "ch2",
+        "type": "fx.chord",
+        "x": 27,
+        "y": 0,
+        "params": {
+          "chord": 5,
+          "inversion": 1
+        }
+      },
+      {
+        "id": "arp2",
+        "type": "fx.arpeggiator",
+        "x": 27,
+        "y": 3,
+        "params": {
+          "perHit": true,
+          "pattern": 0
+        }
+      }
+    ],
+    "tempo": 110
+  },
+  "script": []
+}
