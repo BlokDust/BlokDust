@@ -1,0 +1,47 @@
+{
+  "description": "Chorus rate 4, delay 6 ms, depth 1, feedback 0.2",
+  "seconds": 2,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "waveform": 3,
+          "transpose": 0,
+          "fine": 0
+        }
+      },
+      {
+        "Id": 3,
+        "Type": "Chorus",
+        "Position": {
+          "x": 3,
+          "y": 0
+        },
+        "ZIndex": 3,
+        "Params": {
+          "rate": 4,
+          "delayTime": 6,
+          "depth": 1,
+          "feedback": 0.2
+        }
+      }
+    ]
+  }
+}

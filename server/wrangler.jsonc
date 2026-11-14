@@ -1,0 +1,104 @@
+// BlokDust 2 Worker (SPEC-SHARING-BACKEND). Top level = local dev/tests (`pnpm bd server dev`, `pnpm test:sharing`);
+// `--env staging` = owner review, `--env production` = the public site (deployed after a phase merges).
+// Secrets (never in the repo): TURNSTILE_SECRET, FREESOUND_TOKEN — `pnpm bd server secret --env <env>`.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "blokdust-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    // Only these reach the Worker; every other file is served straight from the asset store (no request cost).
+    "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*"]
+  },
+  // Per-IP limits (SPEC-SHARING-BACKEND R5a); bindings are per environment.
+  "ratelimits": [
+    { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+  ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  "vars": {
+    "PUBLIC_BASE_URL": "",
+    "BASE_PATH": "",
+    // Cloudflare's always-passes invisible test key (local only).
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB"
+  },
+  "observability": { "enabled": true },
+  "env": {
+    // Local-only, for tests (`pnpm test:sharing:base`): the app under a base path (SHARING-0004), which no deployed
+    // env uses since SHARING-0006. `startLocal` copies web/dist to .cache/server/site/blokdust/, so the build's files
+    // are served straight from the asset store at /blokdust/… (no Worker request each).
+    "based": {
+      "name": "blokdust-based",
+      "assets": {
+        "directory": "../.cache/server/site",
+        "binding": "ASSETS",
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/", "/blokdust/index.html", "/blokdust/embed/*", "/blokdust/oembed", "/blokdust/api/*"]
+      },
+      "ratelimits": [
+        { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+      ],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+      ],
+      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB" }
+    },
+    "staging": {
+      "name": "blokdust-staging",
+      "workers_dev": true,
+      // At the root, as production (SHARING-0006); review links from before, under /blokdust/, redirect there.
+      "assets": {
+        "directory": "../web/dist",
+        "binding": "ASSETS",
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/*"]
+      },
+      "ratelimits": [
+        { "name": "SAVE_LIMIT", "namespace_id": "2001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } }
+      ],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "blokdust-staging", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
+      ],
+      "vars": {
+        "PUBLIC_BASE_URL": "https://staging.example.invalid",
+        "BASE_PATH": "",
+        "LEGACY_BASE_PATH": "/blokdust",
+        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY"
+      }
+    },
+    "production": {
+      "name": "blokdust",
+      // workers.dev stays on: its page links redirect to blokdust.funputs.com and its API keeps answering.
+      "workers_dev": true,
+      // blokdust.funputs.com (owner, 2026-11-12, SHARING-0006): a Custom Domain, created with its DNS record and
+      // certificate by the first production deploy after the merge. funputs.com/blokdust* comes here too and
+      // redirects (302) to the same page on blokdust.funputs.com; the rest of funputs.com stays funputs-site's.
+      "routes": [
+        { "pattern": "blokdust.funputs.com", "custom_domain": true },
+        { "pattern": "funputs.com/blokdust*", "zone_name": "funputs.com" }
+      ],
+      "assets": {
+        "directory": "../web/dist",
+        "binding": "ASSETS",
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/*"]
+      },
+      "ratelimits": [
+        { "name": "SAVE_LIMIT", "namespace_id": "3001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } }
+      ],
+      "d1_databases": [
+        { "binding": "DB", "database_name": "blokdust", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
+      ],
+      "vars": {
+        "PUBLIC_BASE_URL": "https://blokdust.funputs.com",
+        "BASE_PATH": "",
+        "LEGACY_BASE_PATH": "/blokdust",
+        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY"
+      }
+    }
+  }
+}

@@ -1,4 +1,0 @@
-
-requirejs.config({
-   baseUrl: doesNotExist
-});

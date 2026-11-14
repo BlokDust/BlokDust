@@ -1,0 +1,48 @@
+{
+  "description": "Open Tone options and drag the Note slider (UI value → param mapping and display)",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "down": [
+        780,
+        407
+      ]
+    },
+    {
+      "move": [
+        860,
+        407
+      ]
+    },
+    {
+      "up": [
+        905,
+        407
+      ]
+    },
+    {
+      "wait": 600
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "A powered sine through a +17.5 dB filter. The plugin test reaches the same gain via Dust 1 = 0.75 (−35..35 dB) mapped onto filter.gain, and must hash identically.",
+  "render": { "seconds": 2, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "tone", "type": "source.tone", "x": 0, "y": 0, "params": { "waveform": 0 } },
+      { "id": "power", "type": "power.power", "x": -3, "y": 0 },
+      { "id": "filter", "type": "fx.filter", "x": 3, "y": 0, "params": { "frequency": 261.6, "gain": 17.5 } }
+    ]
+  }
+}

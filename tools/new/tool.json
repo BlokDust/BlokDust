@@ -1,0 +1,7 @@
+{
+  "name": "new",
+  "summary": "Scaffold an ADR, domain spec or change proposal from the templates, with the next free ID.",
+  "usage": ["pnpm bd new adr <domain> \"Title\"", "pnpm bd new spec <domain> \"Title\"", "pnpm bd new change \"Title\""],
+  "outputs": "New markdown file(s); JSON list of created paths on stdout",
+  "deterministic": true
+}

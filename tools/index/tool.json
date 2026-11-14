@@ -1,0 +1,7 @@
+{
+  "name": "index",
+  "summary": "Regenerate and validate the ADR, spec, change and tool indexes from frontmatter. `--check` fails on stale indexes or invalid frontmatter (use in CI and before committing docs).",
+  "usage": ["pnpm bd index", "pnpm bd index --check"],
+  "outputs": "docs/decisions/**/README.md, docs/specs/README.md, tools/README.md; JSON summary on stdout",
+  "deterministic": true
+}

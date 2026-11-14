@@ -1,0 +1,108 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.scuzz",
+  "draft": true,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Scuzz",
+  "description": "Frequency modulation (FM) synthesis style effect that can create harmonic and overtone signals.",
+  "v1": {
+    "type": "Scuzz",
+    "class": [
+      "Scuzz",
+      "LFObase",
+      "PreEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Scuzz",
+    "source": "app/Blocks/Effects/Pre/Scuzz.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 10,
+        "points": [
+          [-1, -1],
+          [2, -1],
+          [0, 1],
+          [-1, 0]
+        ]
+      },
+      {
+        "palette": 7,
+        "points": [
+          [-1, -1],
+          [1, -1],
+          [0, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [2, -1],
+      [0, 1],
+      [-1, 0]
+    ],
+    "menuOffset": [0, 1]
+  },
+  "params": [
+    {
+      "key": "depth",
+      "default": 1000,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Power",
+          "props": {
+            "value": 1000,
+            "min": 1000,
+            "max": 10000,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.depth"
+      }
+    },
+    {
+      "key": "rate",
+      "default": 100,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Pulverisation",
+          "props": {
+            "value": 100,
+            "min": 100,
+            "max": 10000,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.rate"
+      }
+    },
+    {
+      "key": "waveform",
+      "default": 2,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.chorus",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Chorus",
+  "description": "Stereo chorus. Creates a delayed & modulated copy of the audio.",
+  "v1": {
+    "type": "Chorus",
+    "class": [
+      "Chorus",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Chorus",
+    "source": "app/Blocks/Effects/Post/Chorus.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 10,
+        "points": [
+          [-1, -1],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 6,
+        "points": [
+          [-1, -1],
+          [0, 0],
+          [-1, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [0, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0.5]
+  },
+  "params": [
+    {
+      "key": "rate",
+      "default": 1.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Rate",
+          "props": {
+            "value": 1.5,
+            "min": 0,
+            "max": 5,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.rate"
+      }
+    },
+    {
+      "key": "delayTime",
+      "default": 1.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Delay Time",
+          "props": {
+            "value": 1.5,
+            "min": 0.5,
+            "max": 8,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.delayTime"
+      }
+    },
+    {
+      "key": "depth",
+      "default": 0.75,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Depth",
+          "props": {
+            "value": 0.75,
+            "min": 0,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.depth"
+      }
+    },
+    {
+      "key": "feedback",
+      "default": 0.4,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Feedback",
+          "props": {
+            "value": 0.4,
+            "min": 0,
+            "max": 0.496,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.feedback"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "plugin",
+  "summary": "Build the JUCE 8 plugin (VST3/AU/Standalone, WebView editor embedding web/dist), run pluginval (strictness 5), and load the built VST3 headlessly like a DAW: golden fixtures must hash exactly like the native engine and the editor must build the stage from the patch. `package` makes the notarised universal macOS installer (BlokDust-<version>-Mac.pkg).",
+  "usage": [
+    "pnpm bd plugin build",
+    "pnpm bd plugin validate",
+    "pnpm bd plugin test",
+    "pnpm bd plugin package",
+    "pnpm bd plugin deploy [--no-build] [--force]"
+  ],
+  "outputs": "build/plugin/plugin/BlokDust_artefacts/Release/{VST3,AU,Standalone}; JSON {pluginval, renders}",
+  "deterministic": true
+}

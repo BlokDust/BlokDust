@@ -1,0 +1,81 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.toggle",
+  "draft": true,
+  "category": "power",
+  "kind": "logic",
+  "name": "Toggle Power",
+  "description": "When 'on', provides energy for sources, particle emitters & lasers.",
+  "v1": {
+    "type": "Toggle",
+    "class": [
+      "Toggle",
+      "Logic",
+      "PowerEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "TogglePower",
+    "source": "app/Blocks/Power/Logic/Toggle.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, -1],
+          [0, -1],
+          [1, 0],
+          [1, 2],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 7,
+        "points": [
+          [-1, -1],
+          [0, 0],
+          [0, 1],
+          [1, 2],
+          [0, 2],
+          [-1, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [0, -1],
+      [1, 0],
+      [1, 2],
+      [0, 2],
+      [-1, 1],
+      [-1, -1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "logic",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Off/On",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.logic"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "composition": {
+    "Composition": [
+      { "Id": 1, "Type": "ToneSource", "Position": { "x": 0, "y": 0 }, "ZIndex": 1,
+        "Effects": [ { "Id": 2, "Type": "Filter", "Position": { "x": 4, "y": -2 }, "ZIndex": 2, "Sources": [1] } ] },
+      { "Id": 3, "Type": "Noise", "Position": { "x": -10, "y": 5 }, "ZIndex": 3 },
+      { "Id": 4, "Type": "Reverb", "Position": { "x": -6, "y": 8 }, "ZIndex": 4 },
+      { "Id": 5, "Type": "Void", "Position": { "x": 10, "y": 6 }, "ZIndex": 5 },
+      { "Id": 6, "Type": "ParticleEmitter", "Position": { "x": -14, "y": -4 }, "ZIndex": 6 },
+      { "Id": 7, "Type": "Laser", "Position": { "x": 12, "y": -6 }, "ZIndex": 7 }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "description": "CHG-0002 1.3/1.5: stereo post-effects (Chorus, Reverb with v1 load swap, StereoDelay, Phaser) on three chains; a Filter rewires into the delay chain at 2 s (R5 fade).",
+  "render": {
+    "seconds": 6,
+    "sampleRate": 48000
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 7,
+    "blocks": [
+      {
+        "id": "p1",
+        "type": "power.power",
+        "x": -3,
+        "y": 0
+      },
+      {
+        "id": "t1",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 3
+        }
+      },
+      {
+        "id": "c1",
+        "type": "fx.chorus",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "p2",
+        "type": "power.power",
+        "x": -3,
+        "y": 20
+      },
+      {
+        "id": "n2",
+        "type": "source.noise",
+        "x": 0,
+        "y": 20,
+        "params": {
+          "waveform": 1
+        }
+      },
+      {
+        "id": "r2",
+        "type": "fx.reverb",
+        "x": 3,
+        "y": 20,
+        "params": {
+          "mix": 0.7
+        }
+      },
+      {
+        "id": "p3",
+        "type": "power.power",
+        "x": -3,
+        "y": 40
+      },
+      {
+        "id": "t3",
+        "type": "source.tone",
+        "x": 0,
+        "y": 40,
+        "params": {
+          "waveform": 1,
+          "transpose": 7
+        }
+      },
+      {
+        "id": "d3",
+        "type": "fx.stereo-delay",
+        "x": 3,
+        "y": 40,
+        "params": {
+          "delayTime": 0.18,
+          "feedback": 0.6
+        }
+      },
+      {
+        "id": "ph3",
+        "type": "fx.phaser",
+        "x": 3,
+        "y": 43
+      },
+      {
+        "id": "f4",
+        "type": "fx.filter",
+        "x": 60,
+        "y": 60,
+        "params": {
+          "frequency": 900,
+          "gain": 12
+        }
+      }
+    ]
+  },
+  "script": [
+    {
+      "atSample": 96000,
+      "op": "move",
+      "block": "f4",
+      "x": -1,
+      "y": 43
+    },
+    {
+      "atSample": 192000,
+      "op": "set",
+      "block": "d3",
+      "param": "delayTime",
+      "value": 0.3
+    }
+  ]
+}

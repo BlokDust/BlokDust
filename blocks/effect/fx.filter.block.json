@@ -1,0 +1,114 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.filter",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Filter",
+  "description": "A 'peaking' filter used for boosting or suppressing frequencies.",
+  "v1": {
+    "type": "Filter",
+    "class": [
+      "Filter",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Filter",
+    "source": "app/Blocks/Effects/Post/Filter.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 4,
+        "points": [
+          [-1, -2],
+          [1, 0],
+          [1, 2],
+          [-1, 0]
+        ]
+      },
+      {
+        "palette": 6,
+        "points": [
+          [0, -1],
+          [1, 0],
+          [1, 2],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -2],
+      [1, 0],
+      [1, 2],
+      [-1, 0]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "frequency",
+      "default": 440,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Frequency",
+          "props": {
+            "value": 440,
+            "min": 20,
+            "max": 20000,
+            "quantised": true,
+            "centered": false,
+            "logarithmic": true
+          }
+        },
+        "uiValueExpr": "this.Params.frequency"
+      }
+    },
+    {
+      "key": "gain",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Gain",
+          "props": {
+            "value": 0,
+            "min": -35,
+            "max": 35,
+            "quantised": false,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.gain"
+      }
+    },
+    {
+      "key": "type",
+      "default": 0,
+      "unit": "enum",
+      "range": [0, 3],
+      "description": "Filter type (owner, 2026-11-12, CHG-0010; not in v1): 0 Peak (v1's only type), 1 Low pass, 2 High pass, 3 Band pass. Gain is the Peak's gain, the Low/High pass resonance (dB, as Web Audio's Q) or the Band pass level"
+    },
+    {
+      "key": "Q",
+      "default": 1,
+      "unit": null,
+      "range": [0.5, 14],
+      "description": "Width of the Peak and Band pass (Web Audio Q; v1's Filter was fixed at 1). Unused by Low and High pass"
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

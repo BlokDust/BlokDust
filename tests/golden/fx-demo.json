@@ -1,0 +1,25 @@
+{
+  "description": "The FX plugin's start patch, Audio In alone (copy of web/src/demo/fx.patch.json; pnpm bd render --check verifies they match) fed the test sine.",
+  "render": {
+    "seconds": 3,
+    "sampleRate": 48000
+  },
+  "input": {
+    "type": "sine",
+    "frequency": 440,
+    "gain": 0.25
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 1,
+    "blocks": [
+      {
+        "id": "in",
+        "type": "source.audio-in",
+        "x": 0,
+        "y": 0
+      }
+    ]
+  }
+}

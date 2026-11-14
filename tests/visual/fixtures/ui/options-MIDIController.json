@@ -1,0 +1,36 @@
+{
+  "description": "Click a MIDIController to open its options panel",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "MIDIController",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    }
+  ],
+  "mask": [
+    [
+      440,
+      230,
+      640,
+      540
+    ]
+  ],
+  "maskReason": "CHG-0004 (owner, 2026-11-07): the MIDI Input panel adds an MPE switch and Channel/Device rows (MPE adds Pressure/Slide/Bend), so it is taller than v1's; checked by ui-regressions midi-input-options instead. The rest of the screen still matches v1."
+}

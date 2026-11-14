@@ -1,0 +1,14 @@
+{
+  "name": "v1",
+  "summary": "Reference BlokDust v1 at a pinned commit: fetch/serve it, capture deterministic screenshots (with stage metrics) and audio (v1 on an OfflineAudioContext), extract draft block manifests + palettes from the running app, and verify manifests re-render v1's pixels.",
+  "usage": [
+    "pnpm bd v1 fetch",
+    "pnpm bd v1 serve [port]",
+    "pnpm bd v1 capture tests/visual/fixtures/v1/*.json --blocks [--dpr 2] [--themes all] [--only name,...]",
+    "pnpm bd v1 audio [--only tone,fx-reverb]",
+    "pnpm bd v1 extract [--out blocks]",
+    "pnpm bd v1 verify [--dpr 1,2] [--only Laser,...] [--save-all]"
+  ],
+  "outputs": ".cache/v1; tests/visual/reference/v1/*.png + manifest.json; tests/audio/reference/v1/*.wav + manifest.json; blocks/**/*.block.json drafts + blocks/v1-palettes.json; tests/visual/output/v1-verify/ (summary.json, v2/diff PNGs for failures)",
+  "deterministic": true
+}

@@ -1,0 +1,18 @@
+{
+  "description": "Hold Alt (Option) and drag a block: v1 Block.MouseMove makes a copy with the same params (CreateBlockFromType(this.Type, this.Params)) and drags the copy",
+  "composition": {
+    "Composition": [
+      { "Id": 1, "Type": "ToneSource", "Position": { "x": -6, "y": 3 }, "ZIndex": 1, "Params": { "waveform": 3, "transpose": 7 } }
+    ]
+  },
+  "actions": [
+    { "keyDown": "Alt" },
+    { "down": [504, 473] },
+    { "move": [600, 500] },
+    { "move": [760, 560] },
+    { "wait": 300 },
+    { "up": [760, 560] },
+    { "keyUp": "Alt" },
+    { "wait": 600 }
+  ]
+}

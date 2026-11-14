@@ -1,0 +1,85 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.noise",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Noise",
+  "description": "A noise generator with 'White', 'Brown' and 'Pink' waveform types.",
+  "v1": {
+    "type": "Noise",
+    "class": [
+      "Noise",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Noise",
+    "source": "app/Blocks/Sources/Noise.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 4,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, -1],
+          [1, 0],
+          [-1, 2]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, -1],
+          [0, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [1, 0],
+      [-1, 2]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "playbackRate",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "waveform",
+      "default": 2,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "buttons",
+          "label": "Wave",
+          "props": {
+            "value": 2,
+            "mode": "string"
+          }
+        },
+        "uiValueExpr": "this.Params.waveform"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

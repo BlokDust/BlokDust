@@ -1,0 +1,17 @@
+{
+  "description": "A powered, rotating laser sweeps across tones (continuous power while hit), a Toggle and a Void (R7–R10).",
+  "render": { "seconds": 6, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "power", "type": "power.power", "x": -3, "y": 0 },
+      { "id": "laser", "type": "power.laser", "x": 0, "y": 0, "params": { "angle": 0, "rotate": 120, "range": 400 } },
+      { "id": "t1", "type": "source.tone", "x": 12, "y": 0, "params": { "waveform": 0, "transpose": 7 } },
+      { "id": "t2", "type": "source.tone", "x": 0, "y": 12, "params": { "waveform": 3, "transpose": -5 } },
+      { "id": "void", "type": "power.void", "x": -10, "y": -3 },
+      { "id": "t3", "type": "source.tone", "x": -18, "y": -6, "params": { "waveform": 1 } },
+      { "id": "toggle", "type": "power.toggle", "x": 0, "y": -12 },
+      { "id": "pad", "type": "source.tone", "x": 4, "y": -15, "params": { "waveform": 2, "transpose": -12 } }
+    ]
+  }
+}

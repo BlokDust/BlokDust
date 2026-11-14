@@ -1,5 +1,0 @@
-.idea
-.DS_Store
-node_modules
-src/*.js
-src/*.d.ts

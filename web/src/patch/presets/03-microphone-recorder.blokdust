@@ -1,0 +1,74 @@
+{
+  "format": "blokdust.patch",
+  "version": 2,
+  "meta": {
+    "title": "Microphone + Recorder"
+  },
+  "seed": 3,
+  "view": {
+    "x": 5.0,
+    "y": -2.0,
+    "zoom": 1.0
+  },
+  "blocks": [
+    {
+      "id": "mic",
+      "type": "source.microphone",
+      "x": 0,
+      "y": 0,
+      "params": {}
+    },
+    {
+      "id": "verb",
+      "type": "fx.convolver",
+      "x": 3,
+      "y": 1,
+      "params": {
+        "mix": 0.5
+      }
+    },
+    {
+      "id": "rec",
+      "type": "source.recorder",
+      "x": -10,
+      "y": 0,
+      "params": {
+        "reverse": false,
+        "startPosition": 0,
+        "endPosition": 2.647074829931973,
+        "loopStart": 1.3235374149659864,
+        "loopEnd": 2.647074829931973
+      }
+    },
+    {
+      "id": "b14",
+      "type": "fx.volume",
+      "x": -13,
+      "y": 1,
+      "params": {
+        "gain": 20
+      }
+    },
+    {
+      "id": "b15",
+      "type": "input.computer-keyboard",
+      "x": -10,
+      "y": 4,
+      "params": {}
+    }
+  ],
+  "connectionOrder": [
+    [
+      "mic",
+      "verb"
+    ],
+    [
+      "rec",
+      "b14"
+    ],
+    [
+      "rec",
+      "b15"
+    ]
+  ]
+}

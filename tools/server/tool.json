@@ -1,0 +1,7 @@
+{
+  "name": "server",
+  "summary": "The sharing backend (Cloudflare Worker + D1 in server/): run it locally on web/dist, create the D1 database and Turnstile widget for an environment, upload secrets, deploy, and run the sharing e2e suite against a deployed Worker.",
+  "usage": ["pnpm bd server dev [--real]", "pnpm bd server setup --env staging", "pnpm bd server config --env staging", "pnpm bd server secret --env staging", "pnpm bd server deploy --env staging", "pnpm bd server smoke --env staging"],
+  "outputs": "JSON summaries on stdout; local D1 state in .cache/server/; secrets only in ~/.config/blokdust and Cloudflare",
+  "deterministic": false
+}

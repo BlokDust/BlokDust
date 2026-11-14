@@ -1,0 +1,721 @@
+{
+ "description": "MPE (PLUGIN-0004): two fingers on their own channels with per-note bend, pressure and slide; same channel reused; then a channel-5 filter ignores channel 1.",
+ "render": {
+  "seconds": 4,
+  "sampleRate": 48000
+ },
+ "patch": {
+  "format": "blokdust.patch",
+  "version": 2,
+  "seed": 1,
+  "blocks": [
+   {
+    "id": "midi",
+    "type": "input.midi-controller",
+    "x": 0,
+    "y": 0,
+    "params": {
+     "mpe": true,
+     "isPolyphonic": true,
+     "glide": 0
+    }
+   },
+   {
+    "id": "lead",
+    "type": "source.tone",
+    "x": 3,
+    "y": 0,
+    "params": {
+     "waveform": 3
+    }
+   },
+   {
+    "id": "noise",
+    "type": "source.noise",
+    "x": -3,
+    "y": 0,
+    "params": {
+     "waveform": 0
+    }
+   }
+  ]
+ },
+ "script": [
+  {
+   "atSample": 0,
+   "op": "noteOn",
+   "note": 60,
+   "channel": 1
+  },
+  {
+   "atSample": 0,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.3
+  },
+  {
+   "atSample": 12000,
+   "op": "noteOn",
+   "note": 67,
+   "channel": 2
+  },
+  {
+   "atSample": 12000,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.4
+  },
+  {
+   "atSample": 13919,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.0833
+  },
+  {
+   "atSample": 13919,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.3292
+  },
+  {
+   "atSample": 13919,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.425
+  },
+  {
+   "atSample": 15840,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.1667
+  },
+  {
+   "atSample": 15840,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.3583
+  },
+  {
+   "atSample": 15840,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.45
+  },
+  {
+   "atSample": 17760,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.25
+  },
+  {
+   "atSample": 17760,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.3875
+  },
+  {
+   "atSample": 17760,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.475
+  },
+  {
+   "atSample": 19680,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.3333
+  },
+  {
+   "atSample": 19680,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.4167
+  },
+  {
+   "atSample": 19680,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.5
+  },
+  {
+   "atSample": 21600,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.4167
+  },
+  {
+   "atSample": 21600,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.4458
+  },
+  {
+   "atSample": 21600,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.525
+  },
+  {
+   "atSample": 23520,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.5
+  },
+  {
+   "atSample": 23520,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.475
+  },
+  {
+   "atSample": 23520,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.55
+  },
+  {
+   "atSample": 25440,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.5833
+  },
+  {
+   "atSample": 25440,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.5042
+  },
+  {
+   "atSample": 25440,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.575
+  },
+  {
+   "atSample": 27360,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.6667
+  },
+  {
+   "atSample": 27360,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.5333
+  },
+  {
+   "atSample": 27360,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.6
+  },
+  {
+   "atSample": 29280,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.75
+  },
+  {
+   "atSample": 29280,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.5625
+  },
+  {
+   "atSample": 29280,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.625
+  },
+  {
+   "atSample": 31200,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.8333
+  },
+  {
+   "atSample": 31200,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.5917
+  },
+  {
+   "atSample": 31200,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.65
+  },
+  {
+   "atSample": 33120,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0.9167
+  },
+  {
+   "atSample": 33120,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.6208
+  },
+  {
+   "atSample": 33120,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.675
+  },
+  {
+   "atSample": 35040,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.0
+  },
+  {
+   "atSample": 35040,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.65
+  },
+  {
+   "atSample": 35040,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.7
+  },
+  {
+   "atSample": 36960,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.0833
+  },
+  {
+   "atSample": 36960,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.6792
+  },
+  {
+   "atSample": 36960,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.725
+  },
+  {
+   "atSample": 38880,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.1667
+  },
+  {
+   "atSample": 38880,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.7083
+  },
+  {
+   "atSample": 38880,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.75
+  },
+  {
+   "atSample": 40800,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.25
+  },
+  {
+   "atSample": 40800,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.7375
+  },
+  {
+   "atSample": 40800,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.775
+  },
+  {
+   "atSample": 42720,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.3333
+  },
+  {
+   "atSample": 42720,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.7667
+  },
+  {
+   "atSample": 42720,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.8
+  },
+  {
+   "atSample": 44640,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.4167
+  },
+  {
+   "atSample": 44640,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.7958
+  },
+  {
+   "atSample": 44640,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.825
+  },
+  {
+   "atSample": 46560,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.5
+  },
+  {
+   "atSample": 46560,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.825
+  },
+  {
+   "atSample": 46560,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.85
+  },
+  {
+   "atSample": 48480,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.5833
+  },
+  {
+   "atSample": 48480,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.8542
+  },
+  {
+   "atSample": 48480,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.875
+  },
+  {
+   "atSample": 50400,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.6667
+  },
+  {
+   "atSample": 50400,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.8833
+  },
+  {
+   "atSample": 50400,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.9
+  },
+  {
+   "atSample": 52319,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.75
+  },
+  {
+   "atSample": 52319,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.9125
+  },
+  {
+   "atSample": 52319,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.925
+  },
+  {
+   "atSample": 54239,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.8333
+  },
+  {
+   "atSample": 54239,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.9417
+  },
+  {
+   "atSample": 54239,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.95
+  },
+  {
+   "atSample": 56160,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 1.9167
+  },
+  {
+   "atSample": 56160,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 0.9708
+  },
+  {
+   "atSample": 56160,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 0.975
+  },
+  {
+   "atSample": 58080,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "bend",
+   "value": 2.0
+  },
+  {
+   "atSample": 58080,
+   "op": "expression",
+   "note": 60,
+   "channel": 1,
+   "dim": "pressure",
+   "value": 1.0
+  },
+  {
+   "atSample": 58080,
+   "op": "expression",
+   "note": 67,
+   "channel": 2,
+   "dim": "slide",
+   "value": 1.0
+  },
+  {
+   "atSample": 67200,
+   "op": "noteOff",
+   "note": 60,
+   "channel": 1
+  },
+  {
+   "atSample": 76800,
+   "op": "noteOn",
+   "note": 64,
+   "channel": 1
+  },
+  {
+   "atSample": 76800,
+   "op": "expression",
+   "note": 64,
+   "channel": 1,
+   "dim": "bend",
+   "value": -1
+  },
+  {
+   "atSample": 105600,
+   "op": "expression",
+   "note": 64,
+   "channel": 1,
+   "dim": "bend",
+   "value": 0
+  },
+  {
+   "atSample": 124800,
+   "op": "noteOff",
+   "note": 67,
+   "channel": 2
+  },
+  {
+   "atSample": 134400,
+   "op": "noteOff",
+   "note": 64,
+   "channel": 1
+  },
+  {
+   "atSample": 139200,
+   "op": "set",
+   "block": "midi",
+   "param": "mpe",
+   "value": 0
+  },
+  {
+   "atSample": 139200,
+   "op": "set",
+   "block": "midi",
+   "param": "channel",
+   "value": 5
+  },
+  {
+   "atSample": 144000,
+   "op": "noteOn",
+   "note": 72,
+   "channel": 0
+  },
+  {
+   "atSample": 153600,
+   "op": "noteOn",
+   "note": 76,
+   "channel": 4
+  },
+  {
+   "atSample": 182400,
+   "op": "noteOff",
+   "note": 76,
+   "channel": 4
+  }
+ ]
+}

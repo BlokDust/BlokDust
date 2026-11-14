@@ -1,0 +1,123 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.chomp",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Chomp",
+  "description": "A randomised filter with adjustable rate & width.",
+  "v1": {
+    "type": "Chomp",
+    "class": [
+      "Chomp",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Chomp",
+    "source": "app/Blocks/Effects/Post/Chomp.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 7,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, 0],
+          [1, 1],
+          [0, 2],
+          [-1, 2]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [0, 1],
+          [-1, 2]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, 0],
+      [1, 1],
+      [0, 2],
+      [-1, 2]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "rate",
+      "default": 13,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Rate",
+          "props": {
+            "value": 88,
+            "min": 1,
+            "max": 100,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "Math.round(101-this.Params.rate)"
+      }
+    },
+    {
+      "key": "Q",
+      "default": 0.6,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Width",
+          "props": {
+            "value": 0.6,
+            "min": 0.1,
+            "max": 5,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.Q"
+      }
+    },
+    {
+      "key": "gain",
+      "default": 15,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Gain",
+          "props": {
+            "value": 15,
+            "min": 0,
+            "max": 20,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.gain"
+      }
+    }
+  ],
+  "review": [
+    "param 'rate': UI value is `Math.round(101-this.Params.rate)` (non-identity transform; define real units)",
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

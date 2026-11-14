@@ -1,0 +1,7 @@
+{
+  "name": "audio",
+  "summary": "Sounds-like-v1 check (SPEC-AUDIO-V1-PARITY): render each v1 audio fixture with the v2 WASM engine and compare level, pitch, spectrum, envelope and stereo descriptors with v1's own renders (from `bd v1 audio`); `selftest` proves it rejects audible changes.",
+  "usage": ["pnpm bd audio compare", "pnpm bd audio compare --only fx-reverb --save", "pnpm bd audio selftest"],
+  "outputs": "JSON {checked, passed, knownFailures, failed, rows}; tests/audio/output/*.v2.wav with --save",
+  "deterministic": true
+}

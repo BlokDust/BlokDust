@@ -1,0 +1,57 @@
+{
+  "description": "Drag a block onto the bin to delete it",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ToneSource",
+        "Position": {
+          "x": -6,
+          "y": 3
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "Power",
+        "Position": {
+          "x": -9,
+          "y": 3
+        },
+        "ZIndex": 2
+      }
+    ]
+  },
+  "actions": [
+    {
+      "down": [
+        504,
+        473
+      ]
+    },
+    {
+      "move": [
+        900,
+        600
+      ]
+    },
+    {
+      "move": [
+        1230,
+        752
+      ]
+    },
+    {
+      "wait": 300
+    },
+    {
+      "up": [
+        1232,
+        754
+      ]
+    },
+    {
+      "wait": 600
+    }
+  ]
+}

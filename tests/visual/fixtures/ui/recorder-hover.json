@@ -1,0 +1,27 @@
+{
+  "description": "v1 RecorderPanel beside a Recorder: hover state (button grows 10%)",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Recorder",
+        "Position": {
+          "x": -6,
+          "y": 3
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "move": [
+        504,
+        384
+      ]
+    },
+    {
+      "wait": 400
+    }
+  ]
+}

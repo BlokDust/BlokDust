@@ -1,0 +1,7 @@
+{
+  "name": "visual",
+  "summary": "Render v1 reference compositions through the real v2 Stage (Pixi) and pixel-diff against v1 screenshots (region of blocks/overlays/lines); `bakeoff` scores the three block renderers (baked/msaa/ss2) on parity and frame time (UI-0005).",
+  "usage": ["pnpm bd visual diff --full", "pnpm bd visual diff --renderer msaa --only proximity-chain --save-all", "pnpm bd visual bakeoff"],
+  "outputs": "JSON summary; tests/visual/output/v2-diff/*.png for failures; docs/engineering/renderer-bakeoff.md (bakeoff)",
+  "deterministic": true
+}

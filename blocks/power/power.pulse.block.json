@@ -1,0 +1,173 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.pulse",
+  "draft": true,
+  "category": "power",
+  "kind": "logic",
+  "name": "Pulse Power",
+  "description": "Provides a short fire of energy for sources, particle emitters & lasers.",
+  "v1": {
+    "type": "Pulse",
+    "class": [
+      "Pulse",
+      "Logic",
+      "PowerEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "PulsePower",
+    "source": "app/Blocks/Power/Logic/Pulse.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -1,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 5,
+        "points": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -1,
+            2
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        -1,
+        2
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "logic",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Pulse On",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.logic"
+      }
+    },
+    {
+      "key": "pulseLength",
+      "default": 0.15,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Pulse length",
+          "props": {
+            "value": 0.15,
+            "min": 0.01,
+            "max": 2,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.pulseLength"
+      }
+    },
+    {
+      "key": "sync",
+      "default": false,
+      "unit": "enum",
+      "description": "Tempo sync (SIMULATION-0003, CHG-0004 3.5): pulse length in beats"
+    },
+    {
+      "key": "pulseBeats",
+      "default": 0.25,
+      "unit": "beats",
+      "range": [
+        0.0625,
+        4
+      ],
+      "description": "Synced: pulse length in beats"
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

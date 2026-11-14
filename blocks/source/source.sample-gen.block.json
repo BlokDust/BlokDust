@@ -1,0 +1,225 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.sample-gen",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "SampleGen",
+  "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops.",
+  "v1": {
+    "type": "SampleGen",
+    "class": [
+      "SampleGen",
+      "SamplerBase",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "SampleGen",
+    "source": "app/Blocks/Sources/SampleGen.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [-1, -1],
+          [0, -1],
+          [1, 0],
+          [1, 2],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 10,
+        "points": [
+          [0, -1],
+          [1, 0],
+          [1, 2],
+          [0, 2]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [0, -1],
+      [1, 0],
+      [1, 2],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "playbackRate",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "playback",
+          "props": {
+            "value": 0,
+            "min": -24,
+            "max": 24,
+            "quantised": false,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.playbackRate"
+      }
+    },
+    {
+      "key": "detune",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "reverse",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Reverse",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.reverse"
+      }
+    },
+    {
+      "key": "startPosition",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.startPosition"
+      }
+    },
+    {
+      "key": "endPosition",
+      "default": null,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.endPosition"
+      }
+    },
+    {
+      "key": "loop",
+      "default": true,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Looping",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.loop"
+      }
+    },
+    {
+      "key": "loopStart",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.loopStart"
+      }
+    },
+    {
+      "key": "loopEnd",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.loopEnd"
+      }
+    },
+    {
+      "key": "volume",
+      "default": 11,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "generate",
+      "default": null,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "actionbutton",
+          "label": "Generate",
+          "props": {
+            "text": "Generate Wave"
+          }
+        },
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "seed",
+      "default": {},
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "region",
+      "default": null,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "waveregion",
+          "label": "Wave",
+          "props": {
+            "value": 5,
+            "min": 0,
+            "max": 0,
+            "quantised": false,
+            "centered": false,
+            "wavearray": [],
+            "mode": true,
+            "emptystring": "Generating Wave"
+          }
+        },
+        "uiValueExpr": "5"
+      }
+    }
+  ],
+  "review": [
+    "param 'region': UI value is `5` (non-identity transform; define real units)",
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

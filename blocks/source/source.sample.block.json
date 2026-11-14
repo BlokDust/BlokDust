@@ -1,0 +1,236 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.sample",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Sample",
+  "description": "A sample player loaded with a Soundcloud track. The track must be creative commons or tagged #blokdust.",
+  "v1": {
+    "type": "Sample",
+    "class": [
+      "Sample",
+      "SamplerBase",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Sample",
+    "source": "app/Blocks/Sources/Sample.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 7,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, -1],
+          [2, 0],
+          [1, 1],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 10,
+        "points": [
+          [1, 0],
+          [2, 0],
+          [1, 1],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [2, 0],
+      [1, 1],
+      [0, 1]
+    ],
+    "menuOffset": [-0.5, 0.5]
+  },
+  "params": [
+    {
+      "key": "playbackRate",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "playback",
+          "props": {
+            "value": 0,
+            "min": -24,
+            "max": 24,
+            "quantised": false,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.playbackRate"
+      }
+    },
+    {
+      "key": "detune",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "reverse",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Reverse",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.reverse"
+      }
+    },
+    {
+      "key": "startPosition",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.startPosition"
+      }
+    },
+    {
+      "key": "endPosition",
+      "default": null,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.endPosition"
+      }
+    },
+    {
+      "key": "loop",
+      "default": true,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Looping",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.loop"
+      }
+    },
+    {
+      "key": "loopStart",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.loopStart"
+      }
+    },
+    {
+      "key": "loopEnd",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.loopEnd"
+      }
+    },
+    {
+      "key": "volume",
+      "default": 11,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "track",
+      "default": "https://files.blokdust.io/impulse-responses/teufelsberg01.wav",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "trackName",
+      "default": "TEUFELSBERG",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "user",
+      "default": "Balance Mastering",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "permalink",
+      "default": "",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "region",
+      "default": null,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "waveregion",
+          "label": "Region",
+          "props": {
+            "value": 5,
+            "min": 0,
+            "max": 0,
+            "quantised": false,
+            "centered": false,
+            "wavearray": [],
+            "mode": true
+          }
+        },
+        "uiValueExpr": "5"
+      }
+    }
+  ],
+  "review": [
+    "param 'region': UI value is `5` (non-identity transform; define real units)",
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

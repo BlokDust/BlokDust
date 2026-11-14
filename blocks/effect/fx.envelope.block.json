@@ -1,0 +1,115 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.envelope",
+  "draft": true,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Envelope",
+  "description": "An ADSR envelope which alters the volume of sound over time.",
+  "v1": {
+    "type": "Envelope",
+    "class": [
+      "Envelope",
+      "PreEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Envelope",
+    "source": "app/Blocks/Effects/Pre/Envelope.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 6,
+        "points": [
+          [-1, -1],
+          [1, -1],
+          [1, 1],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 3,
+        "points": [
+          [0, 0],
+          [1, -1],
+          [1, 1],
+          [0, 2]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "attack",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.attack"
+      }
+    },
+    {
+      "key": "decay",
+      "default": 0.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.decay"
+      }
+    },
+    {
+      "key": "sustain",
+      "default": 0.7,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.sustain"
+      }
+    },
+    {
+      "key": "release",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": null,
+          "props": null
+        },
+        "uiValueExpr": "this.Params.release"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

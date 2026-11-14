@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blokdust.dev/schema/block.schema.json",
+  "title": "BlokDust block manifest",
+  "description": "Single source of truth for a block (DATA-0002). Drafts are produced by `pnpm bd v1 extract`; set draft=false once params have real units and the block passes visual + golden tests.",
+  "type": "object",
+  "required": ["id", "draft", "category", "kind", "name", "geometry", "params"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^(source|fx|power|input)\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "draft": { "type": "boolean" },
+    "category": { "enum": ["source", "effect", "power", "interaction"] },
+    "kind": { "enum": ["audio-source", "pre-effect", "post-effect", "power-source", "power-effect", "logic", "void", "controller"] },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "v1": {
+      "type": "object",
+      "properties": {
+        "type": { "type": ["string", "null"], "description": "v1 BlockCreator type name; null for v2-only blocks" },
+        "class": { "type": "array", "items": { "type": "string" } },
+        "l10nKey": { "type": ["string", "null"] },
+        "source": { "type": ["string", "null"] },
+        "sha": { "type": "string" }
+      }
+    },
+    "connection": {
+      "type": ["object", "null"],
+      "properties": { "catchment": { "type": "number", "description": "Radius in grid units (SPEC-CONNECTIONS-PROXIMITY R1)" } }
+    },
+    "geometry": {
+      "type": "object",
+      "required": ["units", "layers", "outline"],
+      "properties": {
+        "units": { "const": "grid" },
+        "unitsPerGrid": { "type": "number", "description": "v1 drawing units per grid cell (15)" },
+        "layers": {
+          "type": "array",
+          "description": "Filled polygons, drawn in order. palette = index into the theme palette (blocks/v1-palettes.json).",
+          "items": {
+            "type": "object",
+            "required": ["palette", "points"],
+            "properties": {
+              "palette": { "type": "integer", "minimum": 0 },
+              "kind": { "enum": ["pixel"] },
+              "units": { "enum": ["unit"], "description": "Points are in v1 units (1/unitsPerGrid of a cell) instead of grid cells" },
+              "anchor": { "enum": ["randomStar"], "description": "Offset by a per-instance seeded position (Void)" },
+              "points": { "$ref": "#/$defs/polygon" }
+            }
+          }
+        },
+        "outline": { "$ref": "#/$defs/polygon", "description": "Hit-test polygon in grid units" },
+        "menuOffset": { "$ref": "#/$defs/point", "description": "Grid offset used when drawing the menu icon (v1 unscaled sprite)" },
+        "overlays": {
+          "type": "array",
+          "description": "Block-attached UI drawn after all blocks (e.g. Recorder's record button). scale=screen: sized by the unscaled grid, does not zoom.",
+          "items": {
+            "type": "object",
+            "required": ["name", "scale", "states"],
+            "properties": {
+              "name": { "type": "string" }, "source": { "type": "string" },
+              "scale": { "enum": ["screen", "world"] }, "order": { "enum": ["afterBlocks"] },
+              "roles": { "type": "object" },
+              "states": { "type": "object", "additionalProperties": { "type": "array", "items": {
+                "type": "object", "required": ["palette", "points"],
+                "properties": { "palette": { "type": "integer" }, "alpha": { "type": "number" }, "points": { "$ref": "#/$defs/polygon" } } } } }
+            }
+          }
+        }
+      }
+    },
+    "params": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key"],
+        "properties": {
+          "key": { "type": "string" },
+          "default": {},
+          "unit": { "type": ["string", "null"], "description": "Real unit (Hz, s, dB, ratio, semitones, deg, enum…). null while draft." },
+          "range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+          "curve": { "enum": ["linear", "log", "exp"] },
+          "v1": { "type": "object" }
+        }
+      }
+    },
+    "review": { "type": "array", "items": { "type": "string" }, "description": "Open issues for a human/agent to resolve before draft=false" }
+  },
+  "$defs": {
+    "point": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+    "polygon": { "type": "array", "items": { "$ref": "#/$defs/point" }, "minItems": 3 }
+  }
+}

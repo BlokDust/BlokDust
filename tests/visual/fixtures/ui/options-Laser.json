@@ -1,0 +1,36 @@
+{
+  "description": "Click a Laser to open its options panel",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Laser",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    }
+  ],
+  "mask": [
+    [
+      470,
+      220,
+      575,
+      470
+    ]
+  ],
+  "maskReason": "Owner review 1 of Phase 3 (2026-11-07): the Laser panel adds a Tempo Sync switch row (synced: Turn replaces Rotate), so it is taller than v1's and the block/stage under it shift; checked by ui-regressions tempo-sync-options. The header and the rest of the screen still match v1."
+}

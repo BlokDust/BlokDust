@@ -1,0 +1,180 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.eq",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "EQ",
+  "description": "A 'parametric' EQ with 4 filters.",
+  "v1": {
+    "type": "EQ",
+    "class": [
+      "EQ",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Eq",
+    "source": "app/Blocks/Effects/Post/EQ.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, -1],
+          [2, 0],
+          [1, 1],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [0, 0],
+          [1, -1],
+          [2, 0]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [0, 0],
+          [1, 1],
+          [2, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [2, 0],
+      [1, 1],
+      [0, 1]
+    ],
+    "menuOffset": [-0.5, 0.5]
+  },
+  "params": [
+    {
+      "key": "frequency_1",
+      "default": 50,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "Q_1",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "gain_1",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "frequency_2",
+      "default": 440,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "Q_2",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "gain_2",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "frequency_3",
+      "default": 2000,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "Q_3",
+      "default": 2.5,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "gain_3",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "frequency_4",
+      "default": 10000,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "Q_4",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "gain_4",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

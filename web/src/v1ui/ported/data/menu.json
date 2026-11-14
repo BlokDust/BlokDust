@@ -1,0 +1,184 @@
+{
+  "categories": [
+    {
+      "name": "Source",
+      "items": [
+        {
+          "name": "Tone",
+          "id": "ToneSource",
+          "description": "A single oscillator. Creates a waveform used as the basis of most synths."
+        },
+        {
+          "name": "Noise",
+          "id": "Noise",
+          "description": "A noise generator with 'White', 'Brown' and 'Pink' waveform types."
+        },
+        {
+          "name": "Microphone",
+          "id": "Microphone",
+          "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones."
+        },
+        {
+          "name": "Sample",
+          "id": "Sample",
+          "description": "A sample player loaded with a Soundcloud track. The track must be creative commons or tagged #blokdust."
+        },
+        {
+          "name": "Granular",
+          "id": "Granular",
+          "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces which are used as a sound source."
+        },
+        {
+          "name": "Recorder",
+          "id": "Recorder",
+          "description": "It can record the master output and then be used as a sample player."
+        },
+        {
+          "name": "SampleGen",
+          "id": "SampleGen",
+          "description": "Procedurally generates a new audio sample, for creating unique textures or arpeggiated loops."
+        }
+      ]
+    },
+    {
+      "name": "Effect",
+      "items": [
+        {
+          "name": "AutoWah",
+          "id": "AutoWah",
+          "description": "Creates a filter sweep in response to the volume of audio input."
+        },
+        {
+          "name": "Bit Crusher",
+          "id": "BitCrusher",
+          "description": "Creates distortion by reducing the audio resolution."
+        },
+        {
+          "name": "Chomp",
+          "id": "Chomp",
+          "description": "A randomised filter with adjustable rate & width."
+        },
+        {
+          "name": "Chopper",
+          "id": "Chopper",
+          "description": "A tremolo effect that modulates the volume with an adjustable rate & depth."
+        },
+        {
+          "name": "Chorus",
+          "id": "Chorus",
+          "description": "Stereo chorus. Creates a delayed & modulated copy of the audio."
+        },
+        {
+          "name": "Convolution",
+          "id": "Convolver",
+          "description": "A convolution reverb which simulates a physical space by using a recorded sample."
+        },
+        {
+          "name": "Distortion",
+          "id": "Distortion",
+          "description": "A digital clipping distortion."
+        },
+        {
+          "name": "Envelope",
+          "id": "Envelope",
+          "description": "An ADSR envelope which alters the volume of sound over time."
+        },
+        {
+          "name": "EQ",
+          "id": "EQ",
+          "description": "A 'parametric' EQ with 4 filters."
+        },
+        {
+          "name": "Filter",
+          "id": "Filter",
+          "description": "A 'peaking' filter used for boosting or suppressing frequencies."
+        },
+        {
+          "name": "Phaser",
+          "id": "Phaser",
+          "description": "A modulating phaser effect that sweeps through a spectrum of sound frequencies."
+        },
+        {
+          "name": "Pitch Shifter",
+          "id": "PitchShifter",
+          "description": "Shifts the pitch of any sound."
+        },
+        {
+          "name": "Reverb",
+          "id": "Reverb",
+          "description": "A digital reverb with adjustable room size and dampening."
+        },
+        {
+          "name": "Scuzz",
+          "id": "Scuzz",
+          "description": "Frequency modulation (FM) synthesis style effect that can create harmonic and overtone signals."
+        },
+        {
+          "name": "Stereo Delay",
+          "id": "StereoDelay",
+          "description": "A stereo delay/echo with adjustable time & feedback."
+        },
+        {
+          "name": "Vibrato",
+          "id": "Vibrato",
+          "description": "An oscillation effect that modulates pitch and playback rate."
+        },
+        {
+          "name": "Volume",
+          "id": "Volume",
+          "description": "Increase or decrease the volume."
+        }
+      ]
+    },
+    {
+      "name": "Power",
+      "items": [
+        {
+          "name": "Particle Emitter",
+          "id": "ParticleEmitter",
+          "description": "Fires energy particles. When a particle hits a source block, that source is momentarily triggered."
+        },
+        {
+          "name": "Power",
+          "id": "Power",
+          "description": "Provides energy for sources, particle emitters & lasers. This allows them to be constantly on."
+        },
+        {
+          "name": "Toggle Power",
+          "id": "Toggle",
+          "description": "When 'on', provides energy for sources, particle emitters & lasers."
+        },
+        {
+          "name": "Void",
+          "id": "Void",
+          "description": "Absorbs any laser beams or particles that collide with it."
+        },
+        {
+          "name": "Pulse Power",
+          "id": "Pulse",
+          "description": "Provides a short fire of energy for sources, particle emitters & lasers."
+        },
+        {
+          "name": "Laser",
+          "id": "Laser",
+          "description": "A laser beam that gives energy to sources, particle emitters & other lasers in its path."
+        }
+      ]
+    },
+    {
+      "name": "Interaction",
+      "items": [
+        {
+          "name": "Computer Keyboard",
+          "id": "ComputerKeyboard",
+          "description": "Trigger sources using your computer keys arranged into a 2 1/2 octave piano."
+        },
+        {
+          "name": "MIDI Controller",
+          "id": "MIDIController",
+          "description": "Trigger sources using any connected USB MIDI device. Chrome only"
+        }
+      ]
+    }
+  ]
+}

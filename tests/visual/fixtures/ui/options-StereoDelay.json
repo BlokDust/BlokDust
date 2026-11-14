@@ -1,0 +1,36 @@
+{
+  "description": "Click a StereoDelay to open its options panel",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "StereoDelay",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    }
+  ],
+  "mask": [
+    [
+      470,
+      220,
+      575,
+      470
+    ]
+  ],
+  "maskReason": "Owner (2026-11-10, CHG-0005): the Stereo Delay panel adds a Tempo Sync switch row (synced: Delay replaces Delay Time), so it is taller than v1's and the block/stage under it shift; checked by ui-regressions tempo-sync-options. The header and the rest of the screen still match v1."
+}

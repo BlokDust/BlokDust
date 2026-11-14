@@ -1,0 +1,107 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.pitch-shifter",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Pitch Shifter",
+  "description": "Shifts the pitch of any sound.",
+  "v1": {
+    "type": "PitchShifter",
+    "class": [
+      "PitchShifter",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "PitchShifter",
+    "source": "app/Blocks/Effects/Post/PitchShifter.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [2, -1],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 5,
+        "points": [
+          [-1, 0],
+          [0, 0],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [2, -1],
+      [0, 1]
+    ],
+    "menuOffset": [-0.5, 0.5]
+  },
+  "params": [
+    {
+      "key": "mix",
+      "default": 0.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Mix",
+          "props": {
+            "value": 0.5,
+            "min": 0,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.mix"
+      }
+    },
+    {
+      "key": "pitchOffset",
+      "default": 6.9,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Pitchshift",
+          "props": {
+            "value": 6.9,
+            "min": -12,
+            "max": 12,
+            "quantised": false,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.pitchOffset"
+      }
+    },
+    {
+      "key": "windowSize",
+      "default": 0.07,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": "this.Params.windowSize"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

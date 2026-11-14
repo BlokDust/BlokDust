@@ -1,0 +1,55 @@
+{
+  "description": "EQ with every band moved (low shelf +9, peaks -12/+8, high shelf -10)",
+  "seconds": 2,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "waveform": 3,
+          "transpose": 0,
+          "fine": 0
+        }
+      },
+      {
+        "Id": 3,
+        "Type": "EQ",
+        "Position": {
+          "x": 3,
+          "y": 0
+        },
+        "ZIndex": 3,
+        "Params": {
+          "frequency_1": 120,
+          "Q_1": 1,
+          "gain_1": 9,
+          "frequency_2": 500,
+          "Q_2": 2,
+          "gain_2": -12,
+          "frequency_3": 2500,
+          "Q_3": 4,
+          "gain_3": 8,
+          "frequency_4": 6000,
+          "Q_4": 1,
+          "gain_4": -10
+        }
+      }
+    ]
+  }
+}

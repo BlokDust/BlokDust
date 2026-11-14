@@ -1,0 +1,101 @@
+{
+  "format": "blokdust.patch",
+  "version": 2,
+  "meta": {
+    "title": "Computer Keys + 2 Tones"
+  },
+  "seed": 3,
+  "view": {
+    "x": 0.5,
+    "y": 1.0,
+    "zoom": 1.0
+  },
+  "blocks": [
+    {
+      "id": "keys",
+      "type": "input.computer-keyboard",
+      "x": 0,
+      "y": 0,
+      "params": {
+        "isPolyphonic": 1,
+        "polyphonic": 1
+      }
+    },
+    {
+      "id": "tone",
+      "type": "source.tone",
+      "x": 6,
+      "y": 0,
+      "params": {
+        "waveform": 3
+      }
+    },
+    {
+      "id": "env",
+      "type": "fx.envelope",
+      "x": 9,
+      "y": 1,
+      "params": {
+        "attack": 0.2121171426074054,
+        "decay": 0.4,
+        "sustain": 0.6,
+        "release": 0.8
+      }
+    },
+    {
+      "id": "b4",
+      "type": "source.tone",
+      "x": -6,
+      "y": 0,
+      "params": {
+        "transpose": -24,
+        "waveform": 1
+      }
+    },
+    {
+      "id": "b5",
+      "type": "fx.filter",
+      "x": -10,
+      "y": 0,
+      "params": {
+        "frequency": 305.65097298480543,
+        "gain": 1.4377682403433383,
+        "type": 1
+      }
+    },
+    {
+      "id": "b8",
+      "type": "fx.chopper",
+      "x": 8,
+      "y": -3,
+      "params": {
+        "depth": 0.390400390881016,
+        "waveform": 0,
+        "spread": 58.25179637595504,
+        "rate": 0.964914070867336
+      }
+    }
+  ],
+  "connectionOrder": [
+    [
+      "tone",
+      "env"
+    ],
+    [
+      "b4",
+      "b5"
+    ],
+    [
+      "tone",
+      "b8"
+    ],
+    [
+      "keys",
+      "tone"
+    ],
+    [
+      "keys",
+      "b4"
+    ]
+  ]
+}

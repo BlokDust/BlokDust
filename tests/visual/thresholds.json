@@ -1,0 +1,5 @@
+{
+  "$comment": "Visual parity thresholds (SPEC-VISUAL-V1-PARITY R3). Start at 0.5% and tighten after owner review.",
+  "default": { "maxDiffPixelRatio": 0.005, "pixelThreshold": 0.1, "antialiasAware": false },
+  "overrides": {}
+}

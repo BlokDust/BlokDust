@@ -1,7 +1,0 @@
-requirejs(
-{
-  paths: {
-    a: "a"
-  }
-}
-);

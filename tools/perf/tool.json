@@ -1,0 +1,7 @@
+{
+  "name": "perf",
+  "summary": "Performance baselines: engine CPU per 128-frame buffer (native release + WASM) on generated voice/particle scenes, and the Pixi stage stress benchmark; writes .cache/perf/baselines.md.",
+  "usage": ["pnpm bd perf", "pnpm bd perf --no-web"],
+  "outputs": "JSON {machine, engine[], web[]}; .cache/perf/baselines.md; generated scenes in .cache/perf/",
+  "deterministic": false
+}

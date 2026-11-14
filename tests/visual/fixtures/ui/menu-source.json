@@ -1,0 +1,36 @@
+{
+  "description": "Header: open the source category menu",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ToneSource",
+        "Position": {
+          "x": -6,
+          "y": 3
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "Power",
+        "Position": {
+          "x": -9,
+          "y": 3
+        },
+        "ZIndex": 2
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        421,
+        45
+      ]
+    },
+    {
+      "wait": 800
+    }
+  ]
+}

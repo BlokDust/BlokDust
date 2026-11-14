@@ -1,0 +1,62 @@
+name: CI
+
+# DISABLED for automatic runs to save Actions minutes: run `pnpm bd ci` locally instead (same jobs).
+# To re-enable, restore:  push: { branches: [main, 'phase-*'] }  and  pull_request:
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Docs, codegen, visual parity, web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Indexes and generated code are current
+        run: pnpm check
+      - name: Block manifests re-render v1 pixels (SPEC-VISUAL-V1-PARITY)
+        run: pnpm bd v1 verify
+      - name: Web typecheck + build
+        run: pnpm web:typecheck && pnpm web:build
+      - name: Web smoke test
+        run: pnpm test:web
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-output
+          path: tests/visual/output/
+
+  engine:
+    name: Engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBLOKDUST_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  engine-sanitizers:
+    name: Engine (ASan + UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake --preset asan
+      - run: cmake --build --preset asan --parallel
+      - run: ctest --preset asan

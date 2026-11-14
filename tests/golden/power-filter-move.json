@@ -1,0 +1,16 @@
+{
+  "description": "A powered sine through a +20 dB peaking Filter; the Filter leaves the chain at 2 s and returns at 4 s.",
+  "render": { "seconds": 6, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "tone", "type": "source.tone", "x": 0, "y": 0, "params": { "waveform": 0 } },
+      { "id": "power", "type": "power.power", "x": -3, "y": 0 },
+      { "id": "filter", "type": "fx.filter", "x": 3, "y": 0, "params": { "frequency": 261.6, "gain": 20 } }
+    ]
+  },
+  "script": [
+    { "atSample": 96000, "op": "move", "block": "filter", "x": 20, "y": 0 },
+    { "atSample": 192000, "op": "move", "block": "filter", "x": 3, "y": 0 }
+  ]
+}

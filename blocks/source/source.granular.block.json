@@ -1,0 +1,194 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.granular",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Granular",
+  "description": "It takes a SoundCloud sample of your choice and chops it into tiny pieces which are used as a sound source.",
+  "v1": {
+    "type": "Granular",
+    "class": [
+      "Granular",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Granular",
+    "source": "app/Blocks/Sources/Granular.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 4,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, -1],
+          [1, 2]
+        ]
+      },
+      {
+        "palette": 5,
+        "points": [
+          [0, 0],
+          [1, -1],
+          [2, 0],
+          [2, 1],
+          [1, 2],
+          [1, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [2, 0],
+      [2, 1],
+      [1, 2]
+    ],
+    "menuOffset": [-0.5, 0]
+  },
+  "params": [
+    {
+      "key": "playbackRate",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "detune",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "density",
+      "default": 10,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Density",
+          "props": {
+            "value": 10,
+            "min": 2,
+            "max": 12,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.density"
+      }
+    },
+    {
+      "key": "region",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "waveslider",
+          "label": "Location",
+          "props": {
+            "value": 0,
+            "min": 0,
+            "max": 0,
+            "quantised": false,
+            "centered": false,
+            "wavearray": [],
+            "spread": 1.5
+          }
+        },
+        "uiValueExpr": "this.Params.region"
+      }
+    },
+    {
+      "key": "spread",
+      "default": 1.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Spread",
+          "props": {
+            "value": 1.5,
+            "min": 0,
+            "max": 4,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.spread"
+      }
+    },
+    {
+      "key": "grainlength",
+      "default": 0.25,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Grain Size",
+          "props": {
+            "value": 0.25,
+            "min": 0.03,
+            "max": 0.6,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.grainlength"
+      }
+    },
+    {
+      "key": "track",
+      "default": "https://files.blokdust.io/samples/sequence_fuzz_pad2.wav",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "trackName",
+      "default": "Fuzz Pad 2",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "user",
+      "default": "BlokDust",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "permalink",
+      "default": "",
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

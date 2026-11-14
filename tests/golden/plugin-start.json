@@ -1,0 +1,13 @@
+{
+  "description": "The instrument plugin's start patch: an empty scene (copy of web/src/demo/plugin-start.patch.json; pnpm bd render --check verifies they match).",
+  "render": {
+    "seconds": 1,
+    "sampleRate": 48000
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 1,
+    "blocks": []
+  }
+}

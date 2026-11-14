@@ -1,0 +1,31 @@
+{
+  "description": "Power -> Noise, pink",
+  "seconds": 2,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "Noise",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "playbackRate": 1,
+          "waveform": 1
+        }
+      }
+    ]
+  }
+}

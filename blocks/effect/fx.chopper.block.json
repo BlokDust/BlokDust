@@ -1,0 +1,147 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.chopper",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Chopper",
+  "description": "A tremolo effect that modulates the volume with an adjustable rate & depth.",
+  "v1": {
+    "type": "Chopper",
+    "class": [
+      "Chopper",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Chopper",
+    "source": "app/Blocks/Effects/Post/Chopper.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, -1],
+          [1, 1],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [0, 0],
+          [1, -1],
+          [1, 1],
+          [0, 2]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [1, 1],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "rate",
+      "default": 8,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Rate",
+          "props": {
+            "value": 8,
+            "min": 0,
+            "max": 50,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.rate"
+      }
+    },
+    {
+      "key": "depth",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Depth",
+          "props": {
+            "value": 1,
+            "min": 0,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.depth"
+      }
+    },
+    {
+      "key": "spread",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Spread",
+          "props": {
+            "value": 0,
+            "min": 0,
+            "max": 180,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.spread"
+      }
+    },
+    {
+      "key": "waveform",
+      "default": 2,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "buttons",
+          "label": "Wave",
+          "props": {
+            "value": 2,
+            "mode": "wave"
+          }
+        },
+        "uiValueExpr": "this.Params.waveform"
+      }
+    },
+    {
+      "key": "mix",
+      "default": 1,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

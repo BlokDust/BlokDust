@@ -1,0 +1,128 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.reverb",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Reverb",
+  "description": "A digital reverb with adjustable room size and dampening.",
+  "v1": {
+    "type": "Reverb",
+    "class": [
+      "Reverb",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Reverb",
+    "source": "app/Blocks/Effects/Post/Reverb.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 4,
+        "points": [
+          [-1, -1],
+          [1, -1],
+          [2, 0],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [-1, -1],
+          [0, 0],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 6,
+        "points": [
+          [0, 0],
+          [1, 0],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [1, -1],
+      [2, 0],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [-0.5, 0]
+  },
+  "params": [
+    {
+      "key": "dampening",
+      "default": 0.7,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Dampening",
+          "props": {
+            "value": 0.7,
+            "min": 0.1,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.dampening"
+      }
+    },
+    {
+      "key": "roomSize",
+      "default": 0.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Room Size",
+          "props": {
+            "value": 0.5,
+            "min": 0.1,
+            "max": 0.95,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.roomSize"
+      }
+    },
+    {
+      "key": "mix",
+      "default": 0.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Mix",
+          "props": {
+            "value": 0.5,
+            "min": 0,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.mix"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

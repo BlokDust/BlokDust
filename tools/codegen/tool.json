@@ -1,0 +1,7 @@
+{
+  "name": "codegen",
+  "summary": "Validate block manifests (JSON Schema + naming/folder/uniqueness rules) and generate the engine C++ catalogue and web TS block/palette modules. `--check` fails on invalid manifests or stale generated files.",
+  "usage": ["pnpm bd codegen", "pnpm bd codegen --check"],
+  "outputs": "engine/include/blokdust/generated/blocks.gen.hpp, web/src/generated/blocks.gen.ts, web/src/generated/palettes.gen.ts; JSON summary on stdout",
+  "deterministic": true
+}

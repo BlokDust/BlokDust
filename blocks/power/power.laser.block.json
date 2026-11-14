@@ -1,0 +1,152 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.laser",
+  "draft": true,
+  "category": "power",
+  "kind": "power-source",
+  "name": "Laser",
+  "description": "A laser beam that gives energy to sources, particle emitters & other lasers in its path.",
+  "v1": {
+    "type": "Laser",
+    "class": [
+      "Laser",
+      "PowerSource",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Laser",
+    "source": "app/Blocks/Power/Laser.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, -1],
+          [0, -1],
+          [0, 1],
+          [-1, 0]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [0, -1],
+          [1, -1],
+          [1, 0],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 7,
+        "points": [
+          [-1, -1],
+          [1, -1],
+          [0, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [1, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 0]
+    ],
+    "menuOffset": [0, 0.5]
+  },
+  "params": [
+    {
+      "key": "angle",
+      "default": -90,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Angle",
+          "props": {
+            "value": 0,
+            "min": -180,
+            "max": 180,
+            "quantised": true,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.angle+90"
+      }
+    },
+    {
+      "key": "range",
+      "default": 275,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Range",
+          "props": {
+            "value": 275,
+            "min": 50,
+            "max": 1200,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.range"
+      }
+    },
+    {
+      "key": "rotate",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Rotate",
+          "props": {
+            "value": 0,
+            "min": -500,
+            "max": 500,
+            "quantised": true,
+            "centered": true,
+            "snap": true
+          }
+        },
+        "uiValueExpr": "this.Params.rotate"
+      }
+    },
+    {
+      "key": "selfPoweredMode",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "sync",
+      "default": false,
+      "unit": "enum",
+      "description": "Tempo sync (owner): while powered, the beam turns at the tempo, one full turn every |turnBeats| (Rotate is not used)"
+    },
+    {
+      "key": "turnBeats",
+      "default": 4,
+      "unit": "beats",
+      "range": [
+        -64,
+        64
+      ],
+      "description": "Synced: beats per full turn, 1/16 note \u2026 16 bars (|value| \u2265 0.25); negative = anticlockwise"
+    }
+  ],
+  "review": [
+    "param 'angle': UI value is `this.Params.angle+90` (non-identity transform; define real units)",
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "description": "SPEC-CONNECTIONS-PROXIMITY R4a: a saved connectionOrder puts the Stereo Delay before the Bit Crusher on a powered saw Tone (both loaders replay it with Relink; WASM \u2261 native checks they agree).",
+  "render": {
+    "seconds": 2,
+    "sampleRate": 48000
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 1,
+    "blocks": [
+      {
+        "id": "power",
+        "type": "power.power",
+        "x": 0,
+        "y": 3
+      },
+      {
+        "id": "tone",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 3
+        }
+      },
+      {
+        "id": "crush",
+        "type": "fx.bit-crusher",
+        "x": 3,
+        "y": 0
+      },
+      {
+        "id": "delay",
+        "type": "fx.stereo-delay",
+        "x": -3,
+        "y": 0
+      }
+    ],
+    "connectionOrder": [
+      [
+        "tone",
+        "delay"
+      ],
+      [
+        "tone",
+        "crush"
+      ]
+    ]
+  }
+}

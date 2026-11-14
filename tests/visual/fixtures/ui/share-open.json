@@ -1,0 +1,46 @@
+{
+  "description": "Header: open the share panel (first session: generate-link button)",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ToneSource",
+        "Position": {
+          "x": -6,
+          "y": 3
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "Power",
+        "Position": {
+          "x": -9,
+          "y": 3
+        },
+        "ZIndex": 2
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        1138,
+        45
+      ]
+    },
+    {
+      "wait": 1200
+    }
+  ],
+  "mask": [
+    [
+      320,
+      205,
+      510,
+      55
+    ]
+  ],
+  "maskReason": "Title: v1 generates a random title (GenerateLabel uses Math.random).",
+  "retired": "CHG-0005 (owner, 2026-11-10): v1's Share panel is replaced by the Patches panel's SAVE tab (CREATE SHARE LINK, then COPY LINK with the link shown), built from v1's Share and Settings panel drawing. Its look is reviewed by the owner from screenshots; ui-regressions share-link-inline checks its behaviour."
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.audio-in",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Audio In",
+  "description": "The audio of the track BlokDust is loaded on (FX plugin) or the selected input (web). Always on: unlike v1 Microphone it needs no power.",
+  "v1": {
+    "type": null,
+    "class": [],
+    "l10nKey": null,
+    "source": null,
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 8,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, 0],
+          [1, 1],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 9,
+        "points": [
+          [0, -1],
+          [1, 0],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [1, 1],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "gain",
+      "default": 1,
+      "unit": "ratio",
+      "range": [0, 2]
+    }
+  ],
+  "review": [
+    "v2-only block (PLUGIN-0002): geometry reuses Microphone until the design library defines a variant"
+  ]
+}

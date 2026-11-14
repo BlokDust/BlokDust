@@ -1,0 +1,26 @@
+# CHG-0001 tasks: Phase 0 architecture spikes and verification harness
+
+- [x] 0.1 Docs structure, ADRs, specs, templates, `bd index` / `bd new` tools
+- [x] 0.2 `bd v1 fetch|serve|capture`: deterministic v1 reference screenshots (all 32 blocks + fixtures)
+- [x] 0.3 `bd v1 extract`: draft block manifests (exact geometry via intercepted v1 drawing calls, outline, catchment, defaults, v1 slider props + value expressions) and `blocks/v1-palettes.json` (13 themes)
+- [x] 0.3b `bd v1 verify`: Canvas2D re-render of manifests vs v1 references; verifier proven to fail on corrupted geometry/colour
+- [x] 0.3c Theme sweep: `bd v1 capture --themes all --jobs 6` (parallel, fonts served from vendored copies); 480/480 manifest re-renders identical across all 13 themes
+- [x] 0.3d Non-idle states as references: powered lines (`powered-lines`) and laser beams (`laser-beams`, beam jitter pinned via fixture `pinRandom`). Selected/hover states and menu icons move to Phase 1 with the menus; particles are animated and not pixel-compared
+- [x] 0.4a Block manifest JSON Schema (`blocks/schema/block.schema.json`)
+- [x] 0.4 `bd codegen`: schema + naming validation, C++ catalogue (`engine/include/blokdust/generated/blocks.gen.hpp`), TS blocks + palettes (`web/src/generated/`), `--check` in `pnpm check`
+- [x] 0.5 Monorepo skeleton: pnpm workspace, CMake presets (dev/release/asan) + Catch2 3.8.1, `web/` Vite 8 + Pixi 8 + TS 7 block library, `pnpm test:web` smoke test, CI workflow (macOS/Linux/Windows + sanitizers; **not yet run: no GitHub remote**)
+- [x] 0.6 Engine: SPSC command queue (sample-scheduled commands), proximity graph + chains, 240 Hz sample-clock tick, Emitter/Void/Power/Toggle/Pulse, Tone (4 waveforms, v1 base note, ADSR), peaking Filter; 32 Catch2 tests passing in Debug, Release and ASan/UBSan
+- [x] 0.6b Laser beams (SPEC-SIMULATION R7–R10, `test_lasers.cpp`, golden `laser-sweep`), controllers (keyboard/MIDI, golden `keys`/`midi-notes`), UI snapshot API (particles, connections, powered, beams over MessagePort and the JUCE bridge). **Rewiring crossfade (SPEC-CONNECTIONS R5, SHOULD) deferred to Phase 1**: it belongs to the real effect graph that replaces the Phase 0 per-chain render path
+- [x] 0.7 `blokdust_render` CLI + `bd render` golden tests (4 fixtures in `tests/golden/`, exact audio+event hashes, Debug ≡ Release); deterministic `dmath` replaces libm sin/cos/pow so hashes can match across platforms
+- [x] 0.7b Master compressor (v1 Audio.ts: −8 dB threshold, knee 10, ratio 8, release 50 ms, Web Audio make-up gain); `power-filter-move` peak now < 1; exact Chromium-compressor parity is a Phase 1 golden-audio job
+- [x] 0.8 Emscripten 6.0.13 (pinned, `bd wasm setup`), standalone 31.8 KB WASM with zero imports, TS `WasmEngine` + patch loader, AudioWorklet processor + MessagePort snapshots; **WASM (Node) and the browser AudioWorklet both reproduce the native golden hashes bit-for-bit**
+- [x] 0.9 Stage app (`web/index.html`): v1 metrics (unit = width/850·dpr, zoom slots), Canvas2D-baked block sprites, v1 45° connection lines (1 px / 2 px powered), particles, drag/pan/wheel-zoom, temporary add/delete toolbar, engine in AudioWorklet with snapshots; `pnpm test:stage` black-box test drives the real pointer
+- [x] 0.2b References at 1x and 2x DPR (`--dpr 2`), v1 zoom slots respected
+- [x] 0.10 `bd visual diff`: v1 compositions → v2 via `importV1` → real Stage → pixel diff vs v1 (66 scenes, 1×/2×): **all bit-identical** with the chosen renderer
+- [x] 0.10b Renderer bake-off (`bd visual bakeoff`, `docs/engineering/renderer-bakeoff.md`): one Canvas2D static layer wins (66/66 identical, 3.7 ms median) over baked sprites, Pixi MSAA and 2× supersampling; UI-0005 accepted
+- [x] 0.10c v1 chrome (header, zoom buttons, trash, + icon; closed state, vendored v1 fonts) and laser beams rendered; `bd visual diff --full` compares **whole frames: 525/525 bit-identical** (13 themes, 1x/2x). Open menus and hover states are Phase 1
+- [x] 0.11 JUCE 8.0.15 plugin (`plugin/`): VST3/AU/Standalone, state = patch JSON, WebView editor embedding the stage app over a JUCE event bridge, lock-free snapshot triple buffer; `bd plugin test`: pluginval strictness 5 passes on VST3, the **built VST3 renders golden fixtures bit-identical to native** with no editor, state round-trips, editor builds the stage from the plugin's patch
+- [x] 0.11b `bd plugin au`: auval + pluginval + golden render on both installed AUs; FX variant with Audio In (PLUGIN-0002); host MIDI → controllers; Dust 1–8 (PLUGIN-0003, assignment UI is Phase 1); `bd win plugin`: Windows VST3s bit-identical to macOS, pluginval, REAPER load + audio, Standalone; `bd plugin sign --profile blokdust`: Developer ID + hardened runtime, **notarised by Apple (Accepted), stapled, Gatekeeper: Notarized Developer ID** (docs/engineering/signing.md)
+- [x] 0.12 `bd perf` → `docs/engineering/perf-baselines.md`: engine µs per 128-frame buffer (native + WASM) on generated scenes up to 384 blocks, Pixi stress on a real GPU (headless Chromium, ANGLE Metal)
+
+**Owner review (2026-11-06):** web build reviewed over Tailscale: visuals match v1 exactly, particles fast, blocks and sounds behave correctly. Phase 0 accepted; Linux CI deferred.

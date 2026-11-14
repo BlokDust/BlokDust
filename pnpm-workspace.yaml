@@ -1,0 +1,8 @@
+packages:
+  - web
+  - server
+minimumReleaseAgeExclude:
+  - vite@8.3.6
+allowBuilds:
+  esbuild: true
+  workerd: true
