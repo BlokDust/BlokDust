@@ -1,0 +1,196 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "input.grid",
+  "draft": false,
+  "category": "interaction",
+  "kind": "controller",
+  "name": "Grid",
+  "description": "Play sources from a grid of pads, in the key and scale you choose. Slide between pads; hold several.",
+  "v1": {
+    "type": null
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 9,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 3,
+        "points": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        -1
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "menuOffset": [
+      -0.5,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "transpose",
+      "default": 0,
+      "unit": "octaves",
+      "range": [
+        -3,
+        3
+      ],
+      "description": "Octave shift (as the keyboards)"
+    },
+    {
+      "key": "glide",
+      "default": 0.05,
+      "unit": "s",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Mono: glide time between notes (as the keyboards)"
+    },
+    {
+      "key": "isPolyphonic",
+      "default": true,
+      "unit": "enum",
+      "description": "Poly (the default: several pads at once) or mono"
+    },
+    {
+      "key": "polyphonic",
+      "default": null,
+      "unit": null,
+      "description": "v1's switch name for isPolyphonic (as the keyboards)"
+    },
+    {
+      "key": "keysSetPitch",
+      "default": false,
+      "unit": "enum",
+      "description": "Keys set pitch (CHG-0017): held pads make no sound; they are the notes power plays"
+    },
+    {
+      "key": "key",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        11
+      ],
+      "description": "Root note: 0 = C \u2026 11 = B (the pads' layout; the engine does not read it)"
+    },
+    {
+      "key": "scale",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        5
+      ],
+      "description": "0 major, 1 minor, 2 dorian, 3 lydian, 4 mixolydian, 5 pentatonic (pads' layout)"
+    },
+    {
+      "key": "chromatic",
+      "default": false,
+      "unit": "enum",
+      "description": "Off: every pad is in the scale. On: every semitone, notes outside the scale dimmed (pads' layout)"
+    }
+  ]
+}

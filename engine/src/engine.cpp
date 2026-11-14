@@ -457,6 +457,10 @@ void Engine::apply(const Command& c) noexcept {
   }
 }
 
+// The Grid (CHG-0019) is a keyboard to the engine: its first params line up with the Computer Keyboard's.
+static_assert(P::InputGrid::transpose == P::InputComputerKeyboard::transpose && P::InputGrid::glide == P::InputComputerKeyboard::glide &&
+              P::InputGrid::isPolyphonic == P::InputComputerKeyboard::isPolyphonic && P::InputGrid::polyphonic == P::InputComputerKeyboard::polyphonic,
+              "controller params must line up");
 namespace {
 bool polyOf(const Block& c) noexcept { return c.params[P::InputComputerKeyboard::isPolyphonic] != 0.0 || c.params[P::InputComputerKeyboard::polyphonic] != 0.0; }
 }  // namespace
@@ -702,6 +706,7 @@ constexpr int kChords[kChordCount][4] = {{0, 12, 0, 0}, {0, 7, 0, 0}, {0, 4, 7, 
 bool Engine::keysSetPitch(const Block& ctrl) noexcept {
   if (ctrl.type == BlockType::InputComputerKeyboard) return ctrl.params[P::InputComputerKeyboard::keysSetPitch] != 0.0;
   if (ctrl.type == BlockType::InputMidiController) return ctrl.params[P::InputMidiController::keysSetPitch] != 0.0;
+  if (ctrl.type == BlockType::InputGrid) return ctrl.params[P::InputGrid::keysSetPitch] != 0.0;
   return false;
 }
 

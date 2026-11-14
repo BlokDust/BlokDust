@@ -16,11 +16,11 @@ dropped Touch Keys: a piano is a poor touchscreen UI.
 
 ## Decision
 We will put the Grid's pads in its options panel: 8 × 4 on desktop and iPad, 6 × 5 on a phone, in fourths. Rows above
-the pads: Key (12 buttons), Scale (a carousel: Major, Minor, Dorian, Lydian, Mixolydian, Pentatonic), Layout (In key /
-Chromatic), Octave. Root notes cyan, other scale notes light, held notes red, notes outside the scale dark.
+the pads: Key (12 buttons), Scale (a carousel: Major, Minor, Dorian, Lydian, Mixolydian, Pentatonic), switches
+(Mono/Poly, In Key, Set Pitch), Octave. Root notes cyan, other scale notes light, held notes red, notes outside the scale dark.
 - Every finger on a pad plays its note (multi-touch, extending UI-0006); the mouse plays one.
-- Sliding a finger from pad to pad is legato: the new note starts without retriggering the envelope, as a mono key does
-  (SPEC-SIMULATION-POWER-AND-PARTICLES R10d).
+- Sliding a finger from pad to pad is legato: the held note is bent to the new pad's pitch (per-note bend,
+  PLUGIN-0004), so nothing is struck again, in mono and poly alike.
 - Playing needs the panel open (accepted trade-off).
 
 ## Consequences

@@ -5,13 +5,14 @@
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { App, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
+import { gridForm } from './gridPanel.ts';
 
 /** Menu order within each v1 category (appended after v1's items). */
 const MENU: Record<string, string[]> = {
   Source: [],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
-  Interaction: [],
+  Interaction: ['input.grid'],
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
 const BY_NAME = new Map(NEW_DEFS.map(d => [d.name.toLowerCase(), d]));
@@ -84,6 +85,8 @@ const switches = (...list: { name: string; setting: string; value: boolean }[]) 
   switches: list.map(s => ({ ...s, lit: true, mode: 'offOn' })) });
 /** Switches whose change shows or hides other rows: the panel is laid out again. */
 export const settingRefreshes = (key: string): boolean => key === 'perHit';
+/** Converted settings whose rows must be laid out again once set. */
+const CONVERT_REFRESH = new Set(['inKey']);
 
 /** Slider settings that are not the param itself: the slider's value → the param's. */
 const CONVERT: Record<string, { param: string; to: (v: number) => number; from?: (v: number) => number }> = {
@@ -92,12 +95,13 @@ const CONVERT: Record<string, { param: string; to: (v: number) => number; from?:
   angle90: { param: 'angle', to: v => v - 90, from: v => wrapAngle(v + 90) },  // v1's Angle sliders show angle + 90 (0 = up)
   lfoDivisionIndex: { param: 'division', to: v => LFO_STEPS[Math.max(0, Math.min(LFO_STEPS.length - 1, Math.round(v)))].beats },
   whenQuieter: { param: 'invert', to: v => (v >= 0.5 ? 1 : 0) },
+  inKey: { param: 'chromatic', to: v => (v ? 0 : 1) },  // the Grid's In Key switch
   arpDivisionIndex: { param: 'division', to: v => ARP_STEPS[Math.max(0, Math.min(ARP_STEPS.length - 1, Math.round(v)))].beats },
 };
 /** v1 SetParam for the settings above. Returns the param and value to send, or null when `key` is an ordinary param. */
-export function convertSetting(key: string, value: number): { param: string; value: number } | null {
+export function convertSetting(key: string, value: number): { param: string; value: number; refresh: boolean } | null {
   const c = CONVERT[key];
-  return c ? { param: c.param, value: c.to(Number(value)) } : null;
+  return c ? { param: c.param, value: c.to(Number(value)), refresh: CONVERT_REFRESH.has(key) } : null;
 }
 
 const FORMS: Record<string, (b: FormBlock) => any[]> = {
@@ -257,6 +261,7 @@ export function prismAngles(angle: number, streams: number, spread: number): num
 }
 /** The options form of a new block (v1 UpdateOptionsForm), or false when `b` is not one. */
 export function newBlockForm(b: FormBlock): boolean {
+  if (b.def.id === 'input.grid') { gridForm(b, SCALES, choice); return true; }  // CHG-0019 (gridPanel.ts)
   const f = FORMS[b.def.id];
   if (!f) return false;
   b.OptionsForm = { name: b.BlockName, parameters: f(b) };
@@ -362,8 +367,11 @@ export function installLiveRows(panel: any): void {
       const draw = o.Type === 'slider' ? LIVE_ROWS[o.Setting] : undefined;
       if (draw) { o.Type = 'live'; o.Live = true; o.Draw = draw; }
     }
+    // v1 keeps a slider's rollover by row number; rows that are no longer sliders must not inherit one.
+    (panel.Options as any[]).forEach((o, i) => { if (o.Type !== 'slider' && o.Type !== 'waveslider' && panel._SliderRoll) panel._SliderRoll[i] = false; });
   };
 }
 /** Is a live row showing? (The scene then redraws the panel every frame.) */
 export const hasLiveRows = (panel: any): boolean => panel.Scale > 0 &&
-  (((panel.Options ?? []) as any[]).some(o => o.Live) || panel.SelectedBlock?.def?.id === 'power.prism');  // a Prism's exit lines turn with it
+  (((panel.Options ?? []) as any[]).some(o => o.Live) || panel.SelectedBlock?.def?.id === 'power.prism' ||  // a Prism's exit lines turn with it
+   panel.SelectedBlock?.def?.id === 'input.grid');     // the Grid's pads light as they are played

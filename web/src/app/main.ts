@@ -26,6 +26,7 @@ import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
 import { setMonitors } from '../v1ui/newBlocks.ts';
+import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/gridPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
@@ -1258,8 +1259,17 @@ async function main() {
   /** Tests: what each finger is doing. */
   (window as unknown as { __bd_touch?: unknown }).__bd_touch = () => ({ primaryId, primaryRole, extras: [...extras.entries()], pinch: !!pinch });
 
+  // The Grid's pads (CHG-0019, UI-0010): any pointer that lands on a pad plays it and belongs to the pads until it
+  // lifts; it never becomes v1's pointer or an extra finger. Notes go to that Grid block; a slide is a bend.
+  const GRID_TYPE = typeIndex('input.grid');
+  const padHost: PadHost = {
+    note: (block, note, on) => send([{ type: on ? CommandType.NoteOn : CommandType.NoteOff, id: block, blockType: GRID_TYPE, param: note, value: on ? 1 : 0, x: 0 }]),
+    bend: (block, note, semitones) => send([{ type: CommandType.NoteExpression, id: block, blockType: GRID_TYPE, param: note, x: 0, y: 0, value: semitones }]),
+  };
+  (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
     app.canvas.setPointerCapture(e.pointerId);
+    if (!placing && padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (e.pointerType === 'touch') touchAt.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     if (primaryId !== null && e.pointerId !== primaryId) { if (e.pointerType === 'touch') extraDown(e); return; }
     primaryId = e.pointerId; primaryRole = null;
@@ -1315,6 +1325,7 @@ async function main() {
     stage.redraw();
   });
   if (!embedId) app.canvas.addEventListener('pointermove', e => {
+    if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (touchAt.has(e.pointerId)) touchAt.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     const extra = extras.get(e.pointerId);
     if (extra) { extraMove(e, extra); return; }
@@ -1390,6 +1401,7 @@ async function main() {
     return false;
   };
   if (!embedId) app.canvas.addEventListener('pointercancel', e => {
+    if (padUp(scene.OptionsPanel, e.pointerId, padHost)) { stage.redraw(); return; }
     if (longPress) { clearTimeout(longPress); longPress = null; }
     if (pointerEnd(e)) return;
     pointerIsDown = false; swallowUp = false; downAt = null;
@@ -1401,6 +1413,7 @@ async function main() {
     stage.redraw();
   });
   if (!embedId) app.canvas.addEventListener('pointerup', e => {
+    if (padUp(scene.OptionsPanel, e.pointerId, padHost)) { stage.redraw(); return; }
     const role = primaryRole, wasGroup = grouped(), still = !!downAt && Math.hypot(e.offsetX - downAt.x, e.offsetY - downAt.y) <= STILL_PX;
     if (longPress) { clearTimeout(longPress); longPress = null; }
     if (pointerEnd(e)) return;

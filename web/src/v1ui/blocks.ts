@@ -134,7 +134,7 @@ export class V1Block {
     }
     if (key === 'lfoTarget') { setLfoTarget(this, Number(value)); this.RefreshOptionsPanel(); return; }  // an LFO's Target carousel (AUDIO-0003)
     const conv = convertSetting(key, value);  // a new block's slider in other units (ms → s, …)
-    if (conv) { this.Params[conv.param] = conv.value; App.MainScene.setParam(this, conv.param, conv.value); return; }
+    if (conv) { this.Params[conv.param] = conv.value; App.MainScene.setParam(this, conv.param, conv.value); if (conv.refresh) this.RefreshOptionsPanel(); return; }
     if (key === 'sync') { this.Params.sync = !!value; App.MainScene.setParam(this, 'sync', value ? 1 : 0); this.RefreshOptionsPanel(); return; }
     // MPE switches (PLUGIN-0004): the panel shows the mapping rows only while MPE is on.
     if (key === 'mpe') { const p = this.def.params.find(q => q.key === 'mpe'); if (p) { this.Params.mpe = !!value; App.MainScene.setParam(this, 'mpe', value ? 1 : 0); this.RefreshOptionsPanel(); } return; }

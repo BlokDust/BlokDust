@@ -286,3 +286,29 @@ TEST_CASE("CHG-0017: joining or leaving a note effect starts clean, and plain so
   CHECK(run(1024) == a);
   CHECK(run(37) == a);
 }
+
+TEST_CASE("CHG-0019 Grid: its pads play like a keyboard's keys (poly by default); a slide bends the held note, no new attack") {
+  auto e = makeEngine(48000, 1, false);
+  const BlockType GRID = BlockType::InputGrid;
+  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  e->push(Command::add(2, GRID, 0, -3));
+  Command a = Command::noteOn(GRID, 52); a.id = 2;   // the page names the Grid block the pad is on
+  Command b = Command::noteOn(GRID, 55); b.id = 2;
+  e->push(a); e->push(b);
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(52), hz(55)}));          // two pads, two voices
+  const auto strikes = eventsOf(*e, Event::Type::GateOn, 1).size();
+  Command slide = Command::noteExpression(GRID, 52, 0, Command::Expression::Bend, 1.0); slide.id = 2;  // E → F
+  e->push(slide);
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(53), hz(55)}));
+  CHECK(eventsOf(*e, Event::Type::GateOn, 1).size() == strikes);  // legato: nothing struck again
+  Command off = Command::noteOff(GRID, 52); off.id = 2;
+  e->push(off);
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(55)}));
+  // Octave moves every pad, as a keyboard's.
+  e->push(Command::setParam(2, P::InputGrid::transpose, 1));
+  render(*e, 480);
+  CHECK(are(pitches(*e), {hz(67)}));
+}

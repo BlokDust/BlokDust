@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 42;
+inline constexpr std::size_t kBlockTypeCount = 43;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -53,6 +53,7 @@ enum class BlockType : std::uint16_t {
   PowerToggle,  // power.toggle
   PowerVoid,  // power.void
   InputComputerKeyboard,  // input.computer-keyboard
+  InputGrid,  // input.grid
   InputMidiController,  // input.midi-controller
 };
 
@@ -527,6 +528,20 @@ inline constexpr ParamInfo kParamsInputComputerKeyboard[] = {
 };
 namespace param::InputComputerKeyboard { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, Count }; }
 
+// ---- input.grid (Grid)
+inline constexpr GridPoint kOutlineInputGrid[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {2.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
+inline constexpr ParamInfo kParamsInputGrid[] = {
+  {"transpose", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
+  {"glide", 0.05, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"isPolyphonic", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
+  {"scale", 0.0, true, UiTransform::Identity, 0.0, 5.0, 0.0},
+  {"chromatic", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+};
+namespace param::InputGrid { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, key, scale, chromatic, Count }; }
+
 // ---- input.midi-controller (MIDI Controller)
 inline constexpr GridPoint kOutlineInputMidiController[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {2.0f, 1.0f}, {1.0f, 2.0f}, {-1.0f, 2.0f}};
 inline constexpr ParamInfo kParamsInputMidiController[] = {
@@ -586,6 +601,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},
   {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 5, true},
+  {BlockType::InputGrid, "input.grid", "", BlockKind::Controller, 6.0f, kOutlineInputGrid, 6, kParamsInputGrid, 8, false},
   {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 11, true},
 }};
 
