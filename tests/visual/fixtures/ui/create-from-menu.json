@@ -1,0 +1,63 @@
+{
+  "description": "Drag Tone out of the Source menu onto the stage (v1 MenuItem → CreateBlockFromType)",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ToneSource",
+        "Position": {
+          "x": -6,
+          "y": 3
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "Power",
+        "Position": {
+          "x": -9,
+          "y": 3
+        },
+        "ZIndex": 2
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        421,
+        45
+      ]
+    },
+    {
+      "wait": 800
+    },
+    {
+      "down": [
+        182,
+        180
+      ]
+    },
+    {
+      "move": [
+        300,
+        400
+      ]
+    },
+    {
+      "move": [
+        640,
+        520
+      ]
+    },
+    {
+      "up": [
+        640,
+        520
+      ]
+    },
+    {
+      "wait": 600
+    }
+  ]
+}

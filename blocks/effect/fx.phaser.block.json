@@ -1,0 +1,137 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.phaser",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Phaser",
+  "description": "A modulating phaser effect that sweeps through a spectrum of sound frequencies.",
+  "v1": {
+    "type": "Phaser",
+    "class": [
+      "Phaser",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Phaser",
+    "source": "app/Blocks/Effects/Post/Phaser.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 9,
+        "points": [
+          [-1, 0],
+          [-1, -2],
+          [1, 0],
+          [1, 2]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [-1, 0],
+          [-1, -1],
+          [1, 1],
+          [1, 2]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [-1, -2],
+      [1, 0],
+      [1, 2]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "rate",
+      "default": 1.8,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Rate",
+          "props": {
+            "value": 1.8,
+            "min": 0,
+            "max": 10,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.rate"
+      }
+    },
+    {
+      "key": "depth",
+      "default": 3.2,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Width",
+          "props": {
+            "value": 3.2,
+            "min": 1,
+            "max": 10,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.depth"
+      }
+    },
+    {
+      "key": "baseFrequency",
+      "default": 400,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Frequency",
+          "props": {
+            "value": 400,
+            "min": 10,
+            "max": 2000,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.baseFrequency"
+      }
+    },
+    {
+      "key": "mix",
+      "default": 0.5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Mix",
+          "props": {
+            "value": 0.5,
+            "min": 0,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.mix"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

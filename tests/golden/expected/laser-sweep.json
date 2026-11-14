@@ -1,0 +1,16 @@
+{
+  "audioHash": "c5ed8126294759ac",
+  "eventHash": "108c62e5d07efad5",
+  "eventCount": 18,
+  "events": {
+    "connect": 2,
+    "gateOff": 4,
+    "gateOn": 5,
+    "hit": 6,
+    "logic": 1
+  },
+  "frames": 288000,
+  "sampleRate": 48000,
+  "rms": 0.026327,
+  "peak": 0.127798
+}

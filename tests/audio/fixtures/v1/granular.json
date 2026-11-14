@@ -1,0 +1,46 @@
+{
+ "description": "Granular (CHG-0004 3.8): v1's grain loop on a 4 s pad (served for v1's dead default URL), powered; rendered in 10 ms steps so v1's setTimeout grain scheduling runs with the audio clock.",
+ "seconds": 3,
+ "stepped": true,
+ "files": [
+  {
+   "url": "https://files.blokdust.io/samples/sequence_fuzz_pad2.wav",
+   "wav": "tests/audio/fixtures/files/pad.wav",
+   "block": 1
+  }
+ ],
+ "composition": {
+  "Composition": [
+   {
+    "Id": 1,
+    "Type": "Granular",
+    "Position": {
+     "x": 0,
+     "y": 0
+    },
+    "ZIndex": 1,
+    "Params": {
+     "playbackRate": 0,
+     "detune": 0,
+     "density": 10,
+     "region": 2,
+     "spread": 1.5,
+     "grainlength": 0.25,
+     "track": "https://files.blokdust.io/samples/sequence_fuzz_pad2.wav",
+     "trackName": "Pad",
+     "user": "BlokDust",
+     "permalink": ""
+    }
+   },
+   {
+    "Id": 2,
+    "Type": "Power",
+    "Position": {
+     "x": -3,
+     "y": 0
+    },
+    "ZIndex": 2
+   }
+  ]
+ }
+}

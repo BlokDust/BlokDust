@@ -1,0 +1,45 @@
+{
+  "description": "Filter -20 dB at 1500 Hz",
+  "seconds": 2,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "waveform": 3,
+          "transpose": 0,
+          "fine": 0
+        }
+      },
+      {
+        "Id": 3,
+        "Type": "Filter",
+        "Position": {
+          "x": 3,
+          "y": 0
+        },
+        "ZIndex": 3,
+        "Params": {
+          "frequency": 1500,
+          "gain": -20
+        }
+      }
+    ]
+  }
+}

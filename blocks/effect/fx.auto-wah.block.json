@@ -1,0 +1,155 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.auto-wah",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "AutoWah",
+  "description": "Creates a filter sweep in response to the volume of audio input.",
+  "v1": {
+    "type": "AutoWah",
+    "class": [
+      "AutoWah",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "AutoWah",
+    "source": "app/Blocks/Effects/Post/AutoWah.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [0, -1],
+          [1, -1],
+          [1, 1],
+          [-2, 1]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [1, -1],
+          [1, 1],
+          [-1, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [0, -1],
+      [1, -1],
+      [1, 1],
+      [-2, 1]
+    ],
+    "menuOffset": [0.5, 0.5]
+  },
+  "params": [
+    {
+      "key": "octaves",
+      "default": 5,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Range",
+          "props": {
+            "value": 5,
+            "min": 1,
+            "max": 8,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.octaves"
+      }
+    },
+    {
+      "key": "baseFrequency",
+      "default": 100,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Frequency",
+          "props": {
+            "value": 100,
+            "min": 50,
+            "max": 1200,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.baseFrequency"
+      }
+    },
+    {
+      "key": "mix",
+      "default": 0.3,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Mix",
+          "props": {
+            "value": 0.3,
+            "min": 0,
+            "max": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.mix"
+      }
+    },
+    {
+      "key": "attack",
+      "default": 0.75,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Attack",
+          "props": {
+            "value": 0.75,
+            "min": 0.01,
+            "max": 2,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.attack"
+      }
+    },
+    {
+      "key": "release",
+      "default": 0.3,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Release",
+          "props": {
+            "value": 0.3,
+            "min": 0.01,
+            "max": 2,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.release"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

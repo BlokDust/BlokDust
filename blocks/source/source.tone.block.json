@@ -1,0 +1,123 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.tone",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Tone",
+  "description": "A single oscillator. Creates a waveform used as the basis of most synths.",
+  "v1": {
+    "type": "ToneSource",
+    "class": [
+      "ToneSource",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Tone",
+    "source": "app/Blocks/Sources/ToneSource.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [-2, 0],
+          [0, -2],
+          [2, 0],
+          [1, 1],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [-2, 0],
+          [0, -2],
+          [0, 0],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [0, -2],
+          [1, -1],
+          [0, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-2, 0],
+      [0, -2],
+      [2, 0],
+      [1, 1],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0.5]
+  },
+  "params": [
+    {
+      "key": "waveform",
+      "default": 2,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "buttons",
+          "label": "Wave",
+          "props": {
+            "value": 2,
+            "mode": "wave"
+          }
+        },
+        "uiValueExpr": "this.Params.waveform"
+      }
+    },
+    {
+      "key": "transpose",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Note",
+          "props": {
+            "value": 0,
+            "min": -48,
+            "max": 48,
+            "quantised": true,
+            "centered": true,
+            "convertDisplay": "[fn anonymous]"
+          }
+        },
+        "uiValueExpr": "this.Params.transpose"
+      }
+    },
+    {
+      "key": "fine",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Fine",
+          "props": {
+            "value": 0,
+            "min": -1,
+            "max": 1,
+            "quantised": false,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.fine"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

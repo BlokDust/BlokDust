@@ -1,0 +1,73 @@
+{
+  "description": "Tone -> Distortion -> StereoDelay -> Reverb in series (chain order)",
+  "seconds": 4,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "waveform": 3,
+          "transpose": 0,
+          "fine": 0
+        }
+      },
+      {
+        "Id": 3,
+        "Type": "Distortion",
+        "Position": {
+          "x": 3,
+          "y": 0
+        },
+        "ZIndex": 3,
+        "Params": {
+          "drive": 0.8,
+          "mix": 0.6
+        }
+      },
+      {
+        "Id": 4,
+        "Type": "StereoDelay",
+        "Position": {
+          "x": 3,
+          "y": 3
+        },
+        "ZIndex": 4,
+        "Params": {
+          "delayTime": 0.2,
+          "feedback": 0.5,
+          "mix": 0.5
+        }
+      },
+      {
+        "Id": 5,
+        "Type": "Reverb",
+        "Position": {
+          "x": 6,
+          "y": 1
+        },
+        "ZIndex": 5,
+        "Params": {
+          "dampening": 0.7,
+          "roomSize": 0.5,
+          "mix": 0.4
+        }
+      }
+    ]
+  }
+}

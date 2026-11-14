@@ -1,0 +1,7 @@
+{
+  "name": "wasm",
+  "summary": "Install the pinned Emscripten (engine/emsdk-version), build the standalone engine WASM (no JS glue, zero imports), and prove WASM ≡ native: every golden fixture must hash identically in Node at 128- and 4096-frame blocks.",
+  "usage": ["pnpm bd wasm setup", "pnpm bd wasm build", "pnpm bd wasm test"],
+  "outputs": "build/wasm/engine/blokdust.wasm, web/public/blokdust.wasm; JSON {fixtures, identical, wasmBytes}",
+  "deterministic": true
+}

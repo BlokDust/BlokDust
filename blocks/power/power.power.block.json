@@ -1,0 +1,73 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.power",
+  "draft": true,
+  "category": "power",
+  "kind": "power-effect",
+  "name": "Power",
+  "description": "Provides energy for sources, particle emitters & lasers. This allows them to be constantly on.",
+  "v1": {
+    "type": "Power",
+    "class": [
+      "Power",
+      "PowerEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Power",
+    "source": "app/Blocks/Power/Power.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, 0],
+          [1, -2],
+          [2, -1],
+          [2, 0],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [0, 0],
+          [1, -1],
+          [2, 0],
+          [0, 2]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [-1, 0],
+          [1, -2],
+          [1, -1],
+          [0, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [1, -2],
+      [2, -1],
+      [2, 0],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

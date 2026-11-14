@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- BlokDust app icon (CHG-0010): the site favicon's diagonal two-tone square (v1's favicon colours), on macOS's
+       icon grid (an 824 px rounded square in 1024, 100 px margin). app-icon.png is this, rendered at 1024 px. -->
+  <defs>
+    <clipPath id="tile"><rect x="100" y="100" width="824" height="824" rx="185" ry="185"/></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect x="100" y="100" width="824" height="824" fill="#ad3475"/>
+    <polygon points="100,100 924,924 100,924" fill="#244091"/>
+  </g>
+</svg>

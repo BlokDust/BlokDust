@@ -1,0 +1,11 @@
+{
+  "composition": {
+    "Composition": [
+      { "Id": 1, "Type": "ToneSource", "Position": { "x": -4, "y": 0 }, "ZIndex": 1 },
+      { "Id": 2, "Type": "Power", "Position": { "x": -8, "y": 2 }, "ZIndex": 2 },
+      { "Id": 3, "Type": "Filter", "Position": { "x": 0, "y": -2 }, "ZIndex": 3 },
+      { "Id": 4, "Type": "Noise", "Position": { "x": 6, "y": 4 }, "ZIndex": 4 },
+      { "Id": 5, "Type": "Reverb", "Position": { "x": 9, "y": 1 }, "ZIndex": 5 }
+    ]
+  }
+}

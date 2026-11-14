@@ -1,0 +1,42 @@
+{
+  "description": "Power -> Tone (saw) -> Reverb (defaults). Tone.Freeverb is not deterministic in Chromium: rendered 5x for its spread",
+  "runs": 5,
+  "seconds": 4,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "waveform": 3,
+          "transpose": 0,
+          "fine": 0
+        }
+      },
+      {
+        "Id": 3,
+        "Type": "Reverb",
+        "Position": {
+          "x": 3,
+          "y": 0
+        },
+        "ZIndex": 3
+      }
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.volume",
+  "draft": true,
+  "category": "effect",
+  "kind": "post-effect",
+  "name": "Volume",
+  "description": "Increase or decrease the volume.",
+  "v1": {
+    "type": "Volume",
+    "class": [
+      "Volume",
+      "PostEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Volume",
+    "source": "app/Blocks/Effects/Post/Volume.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [2, 1],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 3,
+        "points": [
+          [-1, 0],
+          [0, 0],
+          [1, 1],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [2, 1],
+      [0, 1]
+    ],
+    "menuOffset": [-0.5, 0.5]
+  },
+  "params": [
+    {
+      "key": "gain",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Level",
+          "props": {
+            "value": 0,
+            "min": -20,
+            "max": 20,
+            "quantised": false,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.gain"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

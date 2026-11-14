@@ -1,0 +1,7 @@
+{
+  "name": "ui",
+  "summary": "Interactive v1 UI states as black-box references: replay the same pointer actions in v1 (capture) and in the real v2 app (diff), screenshot the settled state and pixel-diff (menus, options panels, settings, share, tooltip).",
+  "usage": ["pnpm bd ui capture", "pnpm bd ui diff", "pnpm bd ui diff --only menu-source --save-all"],
+  "outputs": "tests/visual/reference/v1/ui/*.png + manifest.json (capture); JSON summary and tests/visual/output/ui/*.{v2,diff}.png (diff)",
+  "deterministic": true
+}

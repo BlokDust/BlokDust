@@ -1,0 +1,114 @@
+{
+  "description": "Search panel: hover the second result (v1 rollover highlight + pointer)",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Sample",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "search": [
+    {
+      "title": "Glass Bell Long",
+      "user": "resonancia"
+    },
+    {
+      "title": "Analog Pad Swell",
+      "user": "modulator_k"
+    },
+    {
+      "title": "Field Recording Birds Morning",
+      "user": "dawnchorus"
+    },
+    {
+      "title": "Kick Drum Deep",
+      "user": "beatsmith"
+    },
+    {
+      "title": "Rain On Tin Roof",
+      "user": "wetweather"
+    },
+    {
+      "title": "Plucked Kalimba C",
+      "user": "thumbpiano"
+    },
+    {
+      "title": "Cello Drone D",
+      "user": "lowstrings"
+    }
+  ],
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "move": [
+        941,
+        443
+      ]
+    },
+    {
+      "click": [
+        941,
+        443
+      ]
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "click": [
+        450,
+        200
+      ]
+    },
+    {
+      "press": "ControlOrMeta+A"
+    },
+    {
+      "type": "rain"
+    },
+    {
+      "press": "Enter"
+    },
+    {
+      "wait": 1200
+    },
+    {
+      "move": [
+        640,
+        342
+      ]
+    },
+    {
+      "wait": 300
+    }
+  ],
+  "mask": [
+    [
+      790,
+      180,
+      175,
+      46
+    ],
+    [
+      590,
+      615,
+      100,
+      50
+    ]
+  ],
+  "maskReason": "v1 'SEARCH SOUNDCLOUD' vs v2 'SEARCH FREESOUND' (SoundCloud's API is gone), and v2's added YOUR FILE button (DATA-0005), CHG-0003"
+}

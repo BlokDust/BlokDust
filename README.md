@@ -1,61 +1,35 @@
-BlokDust
-========
+<p align="center"><img src="docs/media/blokdust-laser.gif" width="800" alt="BlokDust: a rotating laser plays a ring of tones and fires particle emitters"></p>
 
-[![Build Status](https://travis-ci.org/BlokDust/BlokDust.svg)](https://travis-ci.org/BlokDust/BlokDust)
-<a href="https://blokdust.herokuapp.com"><img src="https://worldvectorlogo.com/logos/slack.svg" width="60" /></a>
+# BlokDust 2
 
-[BlokDust](https://blokdust.com) is a web-based music making app. By joining blocks together, you can build synthesizers, put effects on your voice, remix & manipulate samples and arrange self-playing musical environments.
+A visual, physics-driven music playground. Drop blocks on a grid; nearby blocks connect; particle emitters and lasers
+fire into sound sources to make self-playing musical environments. A faithful, much faster rebuild of
+[BlokDust v1](https://github.com/BlokDust/BlokDust/tree/v1-legacy) (2015), for the web and as VST3/AU plug-ins and a standalone app.
 
-You can share what you make and if you want, you can expand on other people's creations. You can also contribute by tagging your tracks in SoundCloud with #blokdust so that your music is available for people to play with in the app.
+**Play it:** [blokdust.funputs.com](https://blokdust.funputs.com/) · **Plug-ins:** Settings › DOWNLOAD on the site
+(macOS and Windows, free)
 
-Play the app at [blokdust.com](https://blokdust.com)
+> **Status:** 2.0 is out (November 2026): the website and the free plug-ins for macOS and Windows. Next: an iPad
+> (AUv3) version. See the [roadmap](docs/plans/roadmap.md) and [what's new since v1](CHANGELOG.md).
 
-![BlokDust](https://guide.blokdust.com/wp-content/uploads/2016/03/synth01_4b.jpg "Creating a synth in BlokDust")
+- **Docs:** [docs/](docs/README.md) · [architecture](docs/architecture/overview.md) · [decisions](docs/decisions/README.md) · [specs](docs/specs/README.md)
+- **Agents:** read [AGENTS.md](AGENTS.md)
+- **Tools:** `pnpm install && pnpm bd list` · registry in [tools/README.md](tools/README.md)
 
+## Source and version history
+This repository is the public home of BlokDust 2, starting with version **2.0.2**. The `master` branch contains V2;
+new contributions should target it. V2 was introduced as a source snapshot after the original V1 history.
 
-Visit our [Youtube channel](https://www.youtube.com/channel/UCukBbnIMiUZBbD4fJHrcHZQ) to view some examples of the app in action and follow us on [Facebook](https://www.facebook.com/blokdust) and [Twitter](https://twitter.com/blokdust) for updates. Also, share your creations with each other on the [BlokDust Subreddit](https://www.reddit.com/r/blokdust).
+The original application and its history remain available on the [v1-legacy branch](https://github.com/BlokDust/BlokDust/tree/v1-legacy)
+and at the [v1-before-v2 tag](https://github.com/BlokDust/BlokDust/tree/v1-before-v2). V1 retains its MIT license;
+V2 is AGPL-3.0-or-later, with the original attribution and notices preserved in [NOTICE.md](NOTICE.md).
 
+Clone the current source with `git clone https://github.com/BlokDust/BlokDust.git`. Local setup and verification
+commands are in [docs/engineering/toolchain.md](docs/engineering/toolchain.md) and [AGENTS.md](AGENTS.md).
 
+## Credits
+BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, released in 2016
+([the original](https://github.com/BlokDust/BlokDust/tree/v1-legacy)). This rebuild was released in 2026, built by Luke Phillips.
 
-# Guide
-For tutorials, examples and other related features please visit our wiki/user companion site [guide.blokdust.com](https://guide.blokdust.com)
-
-
-
-# Frequently Asked Questions
-[guide.blokdust.com/frequently-asked-questions/](https://guide.blokdust.com/frequently-asked-questions/)
-
-
-
-# Requirements 
-Chrome browser recommended, desktop or tablet and an internet connection. If you have one, use a MIDI key controller for the best experience!
-
-
-
-# Contributing
-
-We’ll hopefully be publishing some developer notes when we have time. There’s a lot of things we’ve explored for the first time with this project and plenty that can be improved so we welcome any extra insight.
-
-#### Clone the repository   
-`git clone https://github.com/BlokDust/BlokDust.git`
-
-#### Prerequisites 
-Blokdust needs these things to work:
-- [Node](https://nodejs.org) `v12.22.0`
-- [Grunt](http://gruntjs.com/getting-started) `npm install -g grunt@v0.4.5`
-
-#### Workflow
-`npm install` to install the dependencies.  
-
-##### Serve Blokdust on localhost:8000:
-`grunt serve:dev`  
-
-##### Serve Blokdust on localhost:8000 and update on changes:
-`grunt watch:dev`  
-
-##### Build & compile project to dist folder: 
-`grunt dist`
-
-
-# Contact
-Get in touch with us at [blokdust@gmail.com](mailto:blokdust@gmail.com)
+## License
+[AGPL-3.0-or-later](LICENSE). Portions derived from BlokDust v1 (MIT), see [NOTICE.md](NOTICE.md). Patches you make are yours.

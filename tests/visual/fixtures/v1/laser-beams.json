@@ -1,0 +1,12 @@
+{
+  "pinRandom": 0.5,
+  "composition": {
+    "Composition": [
+      { "Id": 1, "Type": "Laser", "Position": { "x": -12, "y": 0 }, "ZIndex": 1, "Params": { "angle": 0, "range": 275, "rotate": 0, "selfPoweredMode": true } },
+      { "Id": 2, "Type": "ToneSource", "Position": { "x": -2, "y": 0 }, "ZIndex": 2 },
+      { "Id": 3, "Type": "Filter", "Position": { "x": 2, "y": -3 }, "ZIndex": 3 },
+      { "Id": 4, "Type": "Laser", "Position": { "x": 6, "y": 8 }, "ZIndex": 4, "Params": { "angle": -45, "range": 400, "rotate": 0, "selfPoweredMode": true } },
+      { "Id": 5, "Type": "Void", "Position": { "x": 12, "y": 2 }, "ZIndex": 5 }
+    ]
+  }
+}

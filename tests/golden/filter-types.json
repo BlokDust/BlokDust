@@ -1,0 +1,126 @@
+{
+  "description": "CHG-0010 Filter types: Peak (Q 3), Low pass (+9 dB resonance), High pass, Band pass (+6 dB level, Q 4), each on its own powered saw Tone.",
+  "render": {
+    "seconds": 2,
+    "sampleRate": 48000
+  },
+  "patch": {
+    "format": "blokdust.patch",
+    "version": 2,
+    "seed": 1,
+    "blocks": [
+      {
+        "id": "p0",
+        "type": "power.power",
+        "x": -3,
+        "y": 0
+      },
+      {
+        "id": "t0",
+        "type": "source.tone",
+        "x": 0,
+        "y": 0,
+        "params": {
+          "waveform": 3,
+          "transpose": -12
+        }
+      },
+      {
+        "id": "f0",
+        "type": "fx.filter",
+        "x": 3,
+        "y": -1,
+        "params": {
+          "type": 0,
+          "frequency": 900,
+          "gain": 12,
+          "Q": 3
+        }
+      },
+      {
+        "id": "p1",
+        "type": "power.power",
+        "x": 37,
+        "y": 0
+      },
+      {
+        "id": "t1",
+        "type": "source.tone",
+        "x": 40,
+        "y": 0,
+        "params": {
+          "waveform": 3,
+          "transpose": -7
+        }
+      },
+      {
+        "id": "f1",
+        "type": "fx.filter",
+        "x": 43,
+        "y": -1,
+        "params": {
+          "type": 1,
+          "frequency": 700,
+          "gain": 9,
+          "Q": 1
+        }
+      },
+      {
+        "id": "p2",
+        "type": "power.power",
+        "x": 77,
+        "y": 0
+      },
+      {
+        "id": "t2",
+        "type": "source.tone",
+        "x": 80,
+        "y": 0,
+        "params": {
+          "waveform": 3,
+          "transpose": -2
+        }
+      },
+      {
+        "id": "f2",
+        "type": "fx.filter",
+        "x": 83,
+        "y": -1,
+        "params": {
+          "type": 2,
+          "frequency": 1500,
+          "gain": 6,
+          "Q": 1
+        }
+      },
+      {
+        "id": "p3",
+        "type": "power.power",
+        "x": 117,
+        "y": 0
+      },
+      {
+        "id": "t3",
+        "type": "source.tone",
+        "x": 120,
+        "y": 0,
+        "params": {
+          "waveform": 3,
+          "transpose": 3
+        }
+      },
+      {
+        "id": "f3",
+        "type": "fx.filter",
+        "x": 123,
+        "y": -1,
+        "params": {
+          "type": 3,
+          "frequency": 1200,
+          "gain": 6,
+          "Q": 4
+        }
+      }
+    ]
+  }
+}

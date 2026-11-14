@@ -1,0 +1,6 @@
+{
+  "format": "blokdust.patch", "version": 2, "seed": 1,
+  "blocks": [
+    { "id": "in", "type": "source.audio-in", "x": 0, "y": 0 }
+  ]
+}

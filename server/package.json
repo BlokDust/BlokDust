@@ -1,0 +1,15 @@
+{
+  "name": "@blokdust/server",
+  "private": true,
+  "version": "2.0.0-dev",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "typescript": "7.0.2",
+    "wrangler": "4.158.0"
+  }
+}

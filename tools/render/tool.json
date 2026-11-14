@@ -1,0 +1,7 @@
+{
+  "name": "render",
+  "summary": "Offline-render a patch fixture with the native engine (WAV, event log, hashes, descriptors), and run golden tests: exact audio/event hashes for tests/golden/*.json, optionally across build configs.",
+  "usage": ["pnpm bd render tests/golden/emitter-tone.json --wav out.wav --events out.jsonl", "pnpm bd render --check --configs release,dev", "pnpm bd render --update"],
+  "outputs": "JSON summary {audioHash, eventHash, events, rms, peak, ...}; tests/golden/expected/*.json on --update",
+  "deterministic": true
+}

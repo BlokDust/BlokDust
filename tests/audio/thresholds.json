@@ -1,0 +1,63 @@
+{
+  "$comment": "SPEC-AUDIO-V1-PARITY R3: v2 vs v1 descriptor limits (tools/lib/audio-descriptors.ts). v1's own run-to-run spread (manifest) is added per fixture. Per-fixture overrides go in `fixtures`, each with a reason.",
+  "default": {
+    "rmsDb": 1.0,
+    "centroidPct": 5,
+    "f0Cents": 5,
+    "bandDb": 3,
+    "bandFloorDb": 40,
+    "envelopeDb": 3,
+    "envelopeFloorDb": 30,
+    "sideDb": 3
+  },
+  "fixtures": {
+    "noise": {
+      "limits": {
+        "envelopeDb": 6
+      },
+      "reason": "Noise: v1 and v2 use different random sequences, so the 50 ms level envelope differs frame by frame (pink and brown have large slow fluctuations). Spectrum and overall level are still held to the defaults."
+    },
+    "noise-white": {
+      "limits": {
+        "envelopeDb": 6
+      },
+      "reason": "Noise: v1 and v2 use different random sequences, so the 50 ms level envelope differs frame by frame (pink and brown have large slow fluctuations). Spectrum and overall level are still held to the defaults."
+    },
+    "noise-pink": {
+      "limits": {
+        "envelopeDb": 6
+      },
+      "reason": "Noise: v1 and v2 use different random sequences, so the 50 ms level envelope differs frame by frame (pink and brown have large slow fluctuations). Spectrum and overall level are still held to the defaults."
+    },
+    "p-delay-short": {
+      "limits": {
+        "bandDb": 5,
+        "centroidPct": 8
+      },
+      "reason": "High-feedback ping-pong comb: each harmonic's level depends on sub-sample loop timing in Chromium's cycle handling, so upper 1/3-octave bands swing up to ~4.7 dB; level, envelope, pitch, centroid and stereo width match."
+    },
+    "chain-dist-delay-reverb": {
+      "limits": {
+        "bandDb": 4
+      },
+      "reason": "High-feedback ping-pong comb: each harmonic's level depends on sub-sample loop timing in Chromium's cycle handling, so upper 1/3-octave bands swing up to ~4.7 dB; level, envelope, pitch, centroid and stereo width match."
+    },
+    "p-scuzz-square": {
+      "knownFailure": "Square-wave Scuzz (\u00b13000 cents at 400 Hz): v1 has 8\u201317 dB more energy in the FM sidebands below 400 Hz; level and everything above 400 Hz match within 0.1 dB. Cause not yet found (deferred, owner OK'd approximations 2026-11-06)."
+    },
+    "fx-chomp": {
+      "limits": {
+        "bandDb": 16,
+        "envelopeDb": 6
+      },
+      "reason": "Chomp jumps a peaking filter to a random frequency every 13 ms (v1 Math.random, v2 a seeded stream), so which 1/3-octave bands get boosted over 2 s differs take to take. Since CHG-0004 3.8 the v1 reference is rendered in 10 ms steps with v1's timers running (it used to be a known failure: timers frozen). Measured: level 0.01 dB, centroid 6.8%, f0 exact, envelope 4.2 dB, bands 13.5 dB."
+    },
+    "granular": {
+      "limits": {
+        "envelopeDb": 15,
+        "f0Cents": 100000
+      },
+      "reason": "Granular: grain positions are random (v1 Math.random, v2 a seeded per-block stream), so the 50 ms level envelope and the detected f0 (which partial of the pad dominates a window) differ take to take; v1 differs from itself between runs too. Overall level, spectral centroid and 1/3-octave bands are still held to the defaults (measured: 0.23 dB, 0.5%, 0.5 dB)."
+    }
+  }
+}

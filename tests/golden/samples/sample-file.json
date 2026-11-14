@@ -1,0 +1,50 @@
+{
+ "description": "A Sample with the user's own file (CHG-0004 3.6): rendered natively with the WAV attached; bd plugin test restores the same patch as DAW state (file ref by absolute path), lets the plugin load it, and must render identically.",
+ "render": {
+  "seconds": 2,
+  "sampleRate": 48000
+ },
+ "patch": {
+  "format": "blokdust.patch",
+  "version": 2,
+  "seed": 1,
+  "blocks": [
+   {
+    "id": "s",
+    "type": "source.sample",
+    "x": 0,
+    "y": 0,
+    "params": {
+     "track": "file:chord.wav",
+     "trackName": "chord.wav",
+     "user": "Local file",
+     "permalink": "",
+     "startPosition": 0,
+     "endPosition": 0.6,
+     "loopStart": 0.3,
+     "loopEnd": 0.6,
+     "loop": true
+    }
+   },
+   {
+    "id": "p",
+    "type": "power.power",
+    "x": -3,
+    "y": 0
+   }
+  ],
+  "refs": {
+   "file:chord.wav": {
+    "provider": "file",
+    "name": "chord.wav",
+    "path": "tests/golden/samples/chord.wav"
+   }
+  }
+ },
+ "samples": [
+  {
+   "block": "s",
+   "wav": "tests/golden/samples/chord.wav"
+  }
+ ]
+}

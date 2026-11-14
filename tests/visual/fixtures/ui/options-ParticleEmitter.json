@@ -1,0 +1,36 @@
+{
+  "description": "Click a ParticleEmitter to open its options panel",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ParticleEmitter",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    }
+  ],
+  "mask": [
+    [
+      470,
+      250,
+      575,
+      405
+    ]
+  ],
+  "maskReason": "CHG-0004 3.5 (owner-approved plan): the Emitter panel adds a Tempo Sync switch row, so it is taller than v1's and the block/stage under it shift; checked by ui-regressions tempo-sync-options. The header and the rest of the screen still match v1."
+}

@@ -1,0 +1,11 @@
+{
+  "description": "A self-powered emitter fires right into a triangle Tone: pulses every 1.333 s (SPEC-SIMULATION R4/R5).",
+  "render": { "seconds": 6, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "emitter", "type": "power.emitter", "x": -10, "y": 0, "params": { "angle": 0, "selfPoweredMode": true } },
+      { "id": "tone", "type": "source.tone", "x": 0, "y": -0.5 }
+    ]
+  }
+}

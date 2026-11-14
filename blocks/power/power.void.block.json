@@ -1,0 +1,114 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.void",
+  "draft": true,
+  "category": "power",
+  "kind": "void",
+  "name": "Void",
+  "description": "Absorbs any laser beams or particles that collide with it.",
+  "v1": {
+    "type": "Void",
+    "class": [
+      "Void",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Void",
+    "source": "app/Blocks/Power/Void.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 14,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 8,
+        "anchor": "randomStar",
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 1]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [-3, -8],
+          [-2.5, -8],
+          [-2.5, -7.5],
+          [-3, -7.5]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [1, -4],
+          [1.5, -4],
+          [1.5, -3.5],
+          [1, -3.5]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [8, -3],
+          [8.5, -3],
+          [8.5, -2.5],
+          [8, -2.5]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [-8, 1],
+          [-7.5, 1],
+          [-7.5, 1.5],
+          [-8, 1.5]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [1, 9],
+          [1.5, 9],
+          [1.5, 9.5],
+          [1, 9.5]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, 0],
+      [0, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

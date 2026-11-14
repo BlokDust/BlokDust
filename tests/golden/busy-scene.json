@@ -1,0 +1,22 @@
+{
+  "description": "The determinism stress scene from engine/tests/test_determinism.cpp: emitters, toggle, void, filter, mid-render edits.",
+  "render": { "seconds": 6, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "e1", "type": "power.emitter", "x": -12, "y": 0, "params": { "angle": 0, "selfPoweredMode": 1, "rate": 23 } },
+      { "id": "e2", "type": "power.emitter", "x": 0, "y": 12, "params": { "angle": -90, "selfPoweredMode": 1, "rate": 37, "speed": 7.3 } },
+      { "id": "t3", "type": "source.tone", "x": 0, "y": -0.5, "params": { "waveform": 3 } },
+      { "id": "f4", "type": "fx.filter", "x": 4, "y": -2, "params": { "gain": 9 } },
+      { "id": "tg5", "type": "power.toggle", "x": 0, "y": 6 },
+      { "id": "t6", "type": "source.tone", "x": 4, "y": 9, "params": { "transpose": 7 } },
+      { "id": "v7", "type": "power.void", "x": -6, "y": 1 },
+      { "id": "e8", "type": "power.emitter", "x": 0, "y": -12, "params": { "angle": 90, "selfPoweredMode": 1, "rate": 17 } }
+    ]
+  },
+  "script": [
+    { "atSample": 30001, "op": "move", "block": "v7", "x": -6, "y": 0 },
+    { "atSample": 120000, "op": "move", "block": "f4", "x": 30, "y": 30 },
+    { "atSample": 123457, "op": "set", "block": "t3", "param": "fine", "value": 0.37 }
+  ]
+}

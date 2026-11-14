@@ -1,0 +1,47 @@
+{
+  "description": "Reverb with v1 params dampening 0.3 / room 0.85 (swapped at load, as in v1), fully wet. Tone.Freeverb is not deterministic in Chromium: 5 runs for its spread",
+  "seconds": 4,
+  "sampleRate": 48000,
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Power",
+        "Position": {
+          "x": -3,
+          "y": 0
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "ToneSource",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 2,
+        "Params": {
+          "waveform": 3,
+          "transpose": 0,
+          "fine": 0
+        }
+      },
+      {
+        "Id": 3,
+        "Type": "Reverb",
+        "Position": {
+          "x": 3,
+          "y": 0
+        },
+        "ZIndex": 3,
+        "Params": {
+          "dampening": 0.3,
+          "roomSize": 0.85,
+          "mix": 1
+        }
+      }
+    ]
+  },
+  "runs": 5
+}

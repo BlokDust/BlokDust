@@ -1,0 +1,17 @@
+{
+  "description": "A MIDI controller plays a tone. The plugin test sends the same notes as host MIDI events (--midi) and must hash identically.",
+  "render": { "seconds": 3, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "midi", "type": "input.midi-controller", "x": 0, "y": 0 },
+      { "id": "tone", "type": "source.tone", "x": 3, "y": 0, "params": { "waveform": 3 } }
+    ]
+  },
+  "script": [
+    { "atSample": 4800, "op": "noteOn", "note": 60 },
+    { "atSample": 48000, "op": "noteOff", "note": 60 },
+    { "atSample": 72000, "op": "noteOn", "note": 67, "velocity": 0.5984251968503937 },
+    { "atSample": 120000, "op": "noteOff", "note": 67 }
+  ]
+}

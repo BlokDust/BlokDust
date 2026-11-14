@@ -1,0 +1,72 @@
+{
+  "description": "Settings: next colour theme",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "ToneSource",
+        "Position": {
+          "x": -6,
+          "y": 3
+        },
+        "ZIndex": 1
+      },
+      {
+        "Id": 2,
+        "Type": "Power",
+        "Position": {
+          "x": -9,
+          "y": 3
+        },
+        "ZIndex": 2
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        1233,
+        45
+      ]
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "click": [
+        991,
+        225
+      ]
+    },
+    {
+      "wait": 1000
+    }
+  ],
+  "mask": [
+    [
+      420,
+      20,
+      260,
+      50
+    ],
+    [
+      270,
+      410,
+      760,
+      85
+    ],
+    [
+      520,
+      745,
+      240,
+      30
+    ],
+    [
+      1120,
+      750,
+      150,
+      30
+    ]
+  ],
+  "maskReason": "Version string: v1 prints its own build number, v2 prints v2's. Owner (2026-11-10, CHG-0005): Settings has no Connect tab (SETTINGS, ABOUT), its last row is the patch Tempo (Tour is hidden, 2026-11-08), and the footer links the code on GitHub instead of \"Chrome Recommended\"; checked by ui-regressions settings-release1 and tour-hidden. The rest of the panel still matches v1."
+}

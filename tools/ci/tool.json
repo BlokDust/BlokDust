@@ -1,0 +1,7 @@
+{
+  "name": "ci",
+  "summary": "Run the CI jobs locally (GitHub Actions is manual-only to save minutes): docs/codegen checks, v1 pixel verify, web typecheck/build/smoke, engine dev/release/asan, golden renders, WASM≡native, plugin. Optional Linux engine run in Docker.",
+  "usage": ["pnpm bd ci", "pnpm bd ci --only engine,golden", "pnpm bd ci --linux", "pnpm bd ci --windows"],
+  "outputs": "Per-step pass/fail/skip summary on stderr; JSON counts on stdout; non-zero exit on any failure",
+  "deterministic": true
+}

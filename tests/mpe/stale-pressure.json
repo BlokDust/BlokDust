@@ -1,0 +1,14 @@
+{
+ "description": "A channel's pressure belongs to its note (PLUGIN-0004): a released note's last pressure (0, the key let go) must not start the next note on that channel silent. Slide and bend are sent before a note (MPE spec), so they carry over.",
+ "settings": { "mpe": true },
+ "messages": [
+  [0, 177, 74, 64], [0, 145, 60, 100], [10, 209, 90, 0], [20, 209, 0, 0], [30, 129, 60, 0],
+  [40, 145, 62, 100], [50, 209, 40, 0]
+ ],
+ "expect": [
+  [0, "on", 60, 1, 0.7874015748031497], [0, "bend", 60, 1, 0], [0, "slide", 60, 1, 0.5039370078740157],
+  [10, "pressure", 60, 1, 0.7086614173228346], [20, "pressure", 60, 1, 0], [30, "off", 60, 1],
+  [40, "on", 62, 1, 0.7874015748031497], [40, "bend", 62, 1, 0], [40, "slide", 62, 1, 0.5039370078740157],
+  [50, "pressure", 62, 1, 0.31496062992125984]
+ ]
+}

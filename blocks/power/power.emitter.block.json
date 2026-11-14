@@ -1,0 +1,215 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.emitter",
+  "draft": true,
+  "category": "power",
+  "kind": "power-source",
+  "name": "Particle Emitter",
+  "description": "Fires energy particles. When a particle hits a source block, that source is momentarily triggered.",
+  "v1": {
+    "type": "ParticleEmitter",
+    "class": [
+      "ParticleEmitter",
+      "PowerSource",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "ParticleEmitter",
+    "source": "app/Blocks/Power/ParticleEmitter.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 5,
+        "points": [
+          [
+            -2,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 7,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -2,
+        0
+      ],
+      [
+        -1,
+        0
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "angle",
+      "default": -90,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Angle",
+          "props": {
+            "value": 0,
+            "min": -180,
+            "max": 180,
+            "quantised": true,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.angle+90"
+      }
+    },
+    {
+      "key": "speed",
+      "default": 3,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "P. Speed",
+          "props": {
+            "value": 3,
+            "min": 1,
+            "max": 12,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.speed"
+      }
+    },
+    {
+      "key": "rate",
+      "default": 80,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Fire Rate",
+          "props": {
+            "value": 430,
+            "min": 1,
+            "max": 500,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "510 - this.Params.rate"
+      }
+    },
+    {
+      "key": "range",
+      "default": 600,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Range",
+          "props": {
+            "value": 600,
+            "min": 50,
+            "max": 2000,
+            "quantised": true,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.range"
+      }
+    },
+    {
+      "key": "selfPoweredMode",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "sync",
+      "default": false,
+      "unit": "enum",
+      "description": "Tempo sync (SIMULATION-0003, CHG-0004 3.5): emit on the beat grid instead of every `rate` frames. Off in saved patches without it (v1); a new Emitter starts synced (owner)"
+    },
+    {
+      "key": "division",
+      "default": 1,
+      "unit": "beats",
+      "range": [
+        0.0625,
+        16
+      ],
+      "description": "Synced: beats between emissions (1/64 note \u2026 4 bars; triplets 1/16T = 1/6, 1/8T = 1/3, 1/4T = 2/3, 1/2T = 4/3)"
+    },
+    {
+      "key": "swing",
+      "default": 0,
+      "unit": null,
+      "range": [
+        0,
+        1
+      ],
+      "description": "Synced: every second emission is late by swing x division / 3 (0 straight, 1 = triplet shuffle) (owner)"
+    }
+  ],
+  "review": [
+    "param 'angle': UI value is `this.Params.angle+90` (non-identity transform; define real units)",
+    "param 'rate': UI value is `510 - this.Params.rate` (non-identity transform; define real units)",
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "Audio In (FX plugin input) through a boosted filter; input is the deterministic test sine.",
+  "render": { "seconds": 3, "sampleRate": 48000 },
+  "input": { "type": "sine", "frequency": 440, "gain": 0.25 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "in", "type": "source.audio-in", "x": 0, "y": 0 },
+      { "id": "filter", "type": "fx.filter", "x": 3, "y": 0, "params": { "frequency": 440, "gain": 12 } }
+    ]
+  }
+}

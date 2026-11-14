@@ -1,2 +1,0 @@
-# perfex
-Structured performance extensions

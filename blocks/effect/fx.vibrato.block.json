@@ -1,0 +1,116 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "fx.vibrato",
+  "draft": true,
+  "category": "effect",
+  "kind": "pre-effect",
+  "name": "Vibrato",
+  "description": "An oscillation effect that modulates pitch and playback rate.",
+  "v1": {
+    "type": "Vibrato",
+    "class": [
+      "Vibrato",
+      "LFObase",
+      "PreEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Vibrato",
+    "source": "app/Blocks/Effects/Pre/Vibrato.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 9,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, 0],
+          [1, 2]
+        ]
+      },
+      {
+        "palette": 6,
+        "points": [
+          [0, 0],
+          [0, -1],
+          [1, 0],
+          [1, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, 0],
+      [1, 2]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "rate",
+      "default": 2,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Rate",
+          "props": {
+            "value": 2,
+            "min": 0,
+            "max": 20,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.rate"
+      }
+    },
+    {
+      "key": "depth",
+      "default": 20,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Depth",
+          "props": {
+            "value": 20,
+            "min": 0,
+            "max": 200,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.depth"
+      }
+    },
+    {
+      "key": "waveform",
+      "default": 2,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "buttons",
+          "label": "Wave",
+          "props": {
+            "value": 2,
+            "mode": "wave"
+          }
+        },
+        "uiValueExpr": "this.Params.waveform"
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

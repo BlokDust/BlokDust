@@ -1,0 +1,12 @@
+{
+  "name": "win",
+  "summary": "Windows checks in the externally configured Windows ARM VM (QEMU; tools/win-vm): MSVC x64 engine build + tests + golden renders compared with macOS hashes; plugin build + pluginval + REAPER smoke test. `package` builds the Windows installer (Inno Setup, unsigned for Release 1), checks it installs and uninstalls, and zips it with a README.txt (BlokDust-<version>-Windows.zip).",
+  "usage": [
+    "pnpm bd win engine",
+    "pnpm bd win plugin",
+    "pnpm bd win shot out.png",
+    "pnpm bd win package"
+  ],
+  "outputs": "JSON summary; full logs in .cache/win-engine.log and .cache/win-plugin.log",
+  "deterministic": true
+}

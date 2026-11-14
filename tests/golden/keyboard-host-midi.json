@@ -1,0 +1,17 @@
+{
+  "description": "A Computer Keyboard plays a tone. In a DAW its keys are the host's (Logic Musical Typing, Live's Computer MIDI Keyboard): the plugin test sends these notes as host MIDI (--midi) and must hash identically (owner, CHG-0004).",
+  "render": { "seconds": 3, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 1,
+    "blocks": [
+      { "id": "keys", "type": "input.computer-keyboard", "x": 0, "y": 0, "params": { "isPolyphonic": true, "glide": 0 } },
+      { "id": "tone", "type": "source.tone", "x": 3, "y": 0, "params": { "waveform": 3 } }
+    ]
+  },
+  "script": [
+    { "atSample": 4800, "op": "noteOn", "controller": "input.computer-keyboard", "note": 60 },
+    { "atSample": 24000, "op": "noteOn", "controller": "input.computer-keyboard", "note": 64 },
+    { "atSample": 48000, "op": "noteOff", "controller": "input.computer-keyboard", "note": 60 },
+    { "atSample": 60000, "op": "noteOff", "controller": "input.computer-keyboard", "note": 64 }
+  ]
+}

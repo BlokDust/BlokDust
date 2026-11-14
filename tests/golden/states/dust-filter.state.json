@@ -1,0 +1,38 @@
+{
+  "format": "blokdust.patch",
+  "version": 2,
+  "seed": 1,
+  "blocks": [
+    {
+      "id": "tone",
+      "type": "source.tone",
+      "x": 0,
+      "y": 0,
+      "params": {
+        "waveform": 0
+      }
+    },
+    {
+      "id": "power",
+      "type": "power.power",
+      "x": -3,
+      "y": 0
+    },
+    {
+      "id": "filter",
+      "type": "fx.filter",
+      "x": 3,
+      "y": 0,
+      "params": {
+        "frequency": 261.6
+      }
+    }
+  ],
+  "automation": [
+    {
+      "slot": 1,
+      "block": "filter",
+      "param": "gain"
+    }
+  ]
+}

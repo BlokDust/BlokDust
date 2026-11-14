@@ -1,0 +1,247 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "input.midi-controller",
+  "draft": true,
+  "category": "interaction",
+  "kind": "controller",
+  "name": "MIDI Controller",
+  "description": "Trigger sources using any connected USB MIDI device. Chrome only",
+  "v1": {
+    "type": "MIDIController",
+    "class": [
+      "MIDIController",
+      "Keyboard",
+      "Controller",
+      "PowerEffect",
+      "Effect",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "MIDIController",
+    "source": "app/Blocks/Interaction/MIDIController.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": {
+    "catchment": 6
+  },
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            -1,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 4,
+        "points": [
+          [
+            0,
+            -1
+          ],
+          [
+            -1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 9,
+        "points": [
+          [
+            -1,
+            -1
+          ],
+          [
+            -1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            -1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        -1,
+        2
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "transpose",
+      "default": 0,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Octave",
+          "props": {
+            "value": 0,
+            "min": -3,
+            "max": 3,
+            "quantised": true,
+            "centered": true
+          }
+        },
+        "uiValueExpr": "this.Params.transpose"
+      }
+    },
+    {
+      "key": "glide",
+      "default": 0.05,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": "slider",
+          "label": "Glide",
+          "props": {
+            "value": 5,
+            "min": 0.001,
+            "max": 100,
+            "truemin": 0,
+            "truemax": 1,
+            "quantised": false,
+            "centered": false
+          }
+        },
+        "uiValueExpr": "this.Params.glide*100"
+      }
+    },
+    {
+      "key": "isPolyphonic",
+      "default": false,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "polyphonic",
+      "default": null,
+      "unit": null,
+      "v1": {
+        "ui": {
+          "type": null,
+          "label": "Mono/Poly",
+          "props": null
+        },
+        "uiValueExpr": "this.Params.isPolyphonic"
+      }
+    },
+    {
+      "key": "channel",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        16
+      ],
+      "description": "MIDI channel filter: 0 = Omni, 1\u201316 (CHG-0004; ignored with MPE on, where the zone's member channels are used)"
+    },
+    {
+      "key": "mpe",
+      "default": false,
+      "unit": "enum",
+      "description": "MPE (PLUGIN-0004): each note's own channel carries its pitch bend, pressure and slide"
+    },
+    {
+      "key": "pressureTo",
+      "default": 1,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "MPE pressure \u2192 0 off, 1 note volume (owner default)"
+    },
+    {
+      "key": "slideTo",
+      "default": 1,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "MPE slide (CC74) \u2192 0 off, 1 timbre: Tone brightness, Sample start, Granular grain position (owner default)"
+    },
+    {
+      "key": "bendRange",
+      "default": 48,
+      "unit": "semitones",
+      "range": [
+        1,
+        96
+      ],
+      "description": "Per-note pitch bend range (MPE default 48; plain MIDI uses 2)"
+    },
+    {
+      "key": "device",
+      "default": "",
+      "unit": null,
+      "description": "Web only: the MIDI input device by name; \"\" = all devices (in a DAW the track picks the device). Host-side, never reaches the engine."
+    }
+  ],
+  "review": [
+    "param 'glide': UI value is `this.Params.glide*100` (non-identity transform; define real units)",
+    "param 'polyphonic': UI value is `this.Params.isPolyphonic` (non-identity transform; define real units)",
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}

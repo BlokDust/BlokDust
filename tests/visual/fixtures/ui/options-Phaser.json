@@ -1,0 +1,27 @@
+{
+  "description": "Click a Phaser to open its options panel",
+  "composition": {
+    "Composition": [
+      {
+        "Id": 1,
+        "Type": "Phaser",
+        "Position": {
+          "x": 0,
+          "y": 0
+        },
+        "ZIndex": 1
+      }
+    ]
+  },
+  "actions": [
+    {
+      "click": [
+        640,
+        402
+      ]
+    },
+    {
+      "wait": 1000
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "source.microphone",
+  "draft": true,
+  "category": "source",
+  "kind": "audio-source",
+  "name": "Microphone",
+  "description": "Captures sound from your device's microphone input. Connect to a Power source & avoid feedback by using headphones.",
+  "v1": {
+    "type": "Microphone",
+    "class": [
+      "Microphone",
+      "Source",
+      "Block",
+      "DisplayObject"
+    ],
+    "l10nKey": "Microphone",
+    "source": "app/Blocks/Sources/Microphone.ts",
+    "sha": "c427998a3f88bb11cb8cb9c8061b2d6723fee67e"
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 8,
+        "points": [
+          [-1, 0],
+          [0, -1],
+          [1, 0],
+          [1, 1],
+          [0, 2],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 9,
+        "points": [
+          [0, -1],
+          [1, 0],
+          [0, 1]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, 0],
+      [0, -1],
+      [1, -1],
+      [1, 1],
+      [0, 2],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "gain",
+      "default": 1,
+      "unit": "ratio",
+      "range": [0, 2],
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    },
+    {
+      "key": "monitor",
+      "default": true,
+      "unit": null,
+      "v1": {
+        "ui": null,
+        "uiValueExpr": null
+      }
+    }
+  ],
+  "review": [
+    "params: units/ranges in real units not yet defined (draft)"
+  ]
+}
