@@ -1,0 +1,124 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.chance",
+  "draft": false,
+  "category": "power",
+  "kind": "gate",
+  "name": "Chance",
+  "description": "Lets each particle or laser beam through at random, as often as its chance says.",
+  "v1": {
+    "type": null
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            -2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            -1,
+            1
+          ]
+        ]
+      },
+      {
+        "palette": 9,
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            -2
+          ],
+          [
+            1,
+            -1
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        -2
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        -1,
+        1
+      ]
+    ],
+    "menuOffset": [
+      0,
+      0
+    ]
+  },
+  "params": [
+    {
+      "key": "chance",
+      "default": 0.5,
+      "unit": "ratio",
+      "range": [
+        0,
+        1
+      ],
+      "description": "Probability a hit passes"
+    }
+  ]
+}

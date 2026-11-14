@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 34;
+inline constexpr std::size_t kBlockTypeCount = 37;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -38,9 +38,12 @@ enum class BlockType : std::uint16_t {
   FxStereoDelay,  // fx.stereo-delay
   FxVibrato,  // fx.vibrato
   FxVolume,  // fx.volume
+  PowerChance,  // power.chance
+  PowerCounter,  // power.counter
   PowerEmitter,  // power.emitter
   PowerLaser,  // power.laser
   PowerPower,  // power.power
+  PowerPrism,  // power.prism
   PowerPulse,  // power.pulse
   PowerToggle,  // power.toggle
   PowerVoid,  // power.void
@@ -371,6 +374,22 @@ inline constexpr ParamInfo kParamsFxVolume[] = {
 };
 namespace param::FxVolume { enum : std::uint8_t { gain, Count }; }
 
+// ---- power.chance (Chance)
+inline constexpr GridPoint kOutlinePowerChance[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {1.0f, 1.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerChance[] = {
+  {"chance", 0.5, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+};
+namespace param::PowerChance { enum : std::uint8_t { chance, Count }; }
+
+// ---- power.counter (Counter)
+inline constexpr GridPoint kOutlinePowerCounter[] = {{0.0f, -1.0f}, {1.0f, 0.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}};
+inline constexpr ParamInfo kParamsPowerCounter[] = {
+  {"steps", 8.0, true, UiTransform::Identity, 1.0, 16.0, 0.0},
+  {"hits", 3.0, true, UiTransform::Identity, 0.0, 16.0, 0.0},
+  {"rotate", 0.0, true, UiTransform::Identity, 0.0, 15.0, 0.0},
+};
+namespace param::PowerCounter { enum : std::uint8_t { steps, hits, rotate, Count }; }
+
 // ---- power.emitter (Particle Emitter)
 inline constexpr GridPoint kOutlinePowerEmitter[] = {{-2.0f, 0.0f}, {-1.0f, 0.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}};
 inline constexpr ParamInfo kParamsPowerEmitter[] = {
@@ -401,6 +420,16 @@ namespace param::PowerLaser { enum : std::uint8_t { angle, range, rotate, selfPo
 // ---- power.power (Power)
 inline constexpr GridPoint kOutlinePowerPower[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {2.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
 namespace param::PowerPower { enum : std::uint8_t { Count }; }
+
+// ---- power.prism (Prism)
+inline constexpr GridPoint kOutlinePowerPrism[] = {{-1.0f, 0.0f}, {-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerPrism[] = {
+  {"angle", -90.0, true, UiTransform::Identity, -270.0, 90.0, 0.0},
+  {"rotate", 0.0, true, UiTransform::Identity, -500.0, 500.0, 0.0},
+  {"streams", 1.0, true, UiTransform::Identity, 1.0, 4.0, 0.0},
+  {"spread", 60.0, true, UiTransform::Identity, 0.0, 180.0, 0.0},
+};
+namespace param::PowerPrism { enum : std::uint8_t { angle, rotate, streams, spread, Count }; }
 
 // ---- power.pulse (Pulse Power)
 inline constexpr GridPoint kOutlinePowerPulse[] = {{0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {0.0f, 2.0f}, {-1.0f, 2.0f}, {-1.0f, 0.0f}};
@@ -476,9 +505,12 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxStereoDelay, "fx.stereo-delay", "StereoDelay", BlockKind::PostEffect, 6.0f, kOutlineFxStereoDelay, 6, kParamsFxStereoDelay, 5, true},
   {BlockType::FxVibrato, "fx.vibrato", "Vibrato", BlockKind::PreEffect, 6.0f, kOutlineFxVibrato, 4, kParamsFxVibrato, 3, true},
   {BlockType::FxVolume, "fx.volume", "Volume", BlockKind::PostEffect, 6.0f, kOutlineFxVolume, 4, kParamsFxVolume, 1, true},
+  {BlockType::PowerChance, "power.chance", "", BlockKind::Gate, 0.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
+  {BlockType::PowerCounter, "power.counter", "", BlockKind::Gate, 0.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 3, false},
   {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
   {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, nullptr, 0, true},
+  {BlockType::PowerPrism, "power.prism", "", BlockKind::Gate, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
   {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 4, true},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},

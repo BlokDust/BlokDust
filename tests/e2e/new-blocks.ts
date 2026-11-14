@@ -76,6 +76,42 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const pass = synced.indexOf('Offset') === synced.indexOf('Swing') + 1 && free.indexOf('Offset') === free.indexOf('Fire Rate') + 1 && saved === 0.25;
     return [pass, { synced, free, saved }];
   },
+  // CHG-0015: Counter, Chance and Prism are in the Power menu; the Counter's panel shows its pattern and where it is.
+  async 'counter-panel'(errors) {
+    const p = await open(browser, [blk('e', 'power.emitter', -8, 0, { angle: 0, selfPoweredMode: true, rate: 30, speed: 12 }),
+      blk('c', 'power.counter', 0, 0, { steps: 8, hits: 3 }), blk('t', 'source.tone', 6, 0)], errors);
+    const menu = await menuItems(p, 'Power');
+    await openPanel(p, 'c');
+    const first = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string; next: number } | undefined;
+    await p.waitForTimeout(1200);  // a couple more particles
+    const later = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string; next: number } | undefined;
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('hits', 5));
+    await p.waitForTimeout(300);
+    const five = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string } | undefined;
+    await p.screenshot({ path: `${OUT}/counter-panel.png` });
+    const s = await state(p);
+    await p.close();
+    const pass = ['Counter', 'Chance', 'Prism'].every(n => menu.includes(n)) && first?.pattern === 'x..x..x.' && !!later && later.next !== first.next &&
+      five?.pattern === 'x.x.xx.x' && s.hits > 0 && s.connections.length === 0;
+    return [pass, { menu, first, later, five, hits: s.hits, connections: s.connections }];
+  },
+  // CHG-0015: a Prism splits a laser's beam into its streams, and its panel draws the exit lines on the stage.
+  async 'prism-splits-beam'(errors) {
+    const p = await open(browser, [blk('l', 'power.laser', -6, 0, { angle: 0, selfPoweredMode: true, range: 300 }),
+      blk('pr', 'power.prism', 0, 0, { angle: -90, streams: 3, spread: 90 }), blk('t', 'source.tone', 0, -8)], errors);
+    await p.waitForTimeout(400);
+    const beams = await p.evaluate(() => (window as any).__bd_probe.beams as number);
+    const sounding = (await state(p)).rms > 0.001;  // the middle stream points at the Tone
+    await openPanel(p, 'pr');
+    await p.waitForTimeout(300);
+    const exits = await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.PrismExits as [number, number][]);
+    const names = (await rows(p)).map(x => x.name);
+    await p.screenshot({ path: `${OUT}/prism.png` });
+    await p.close();
+    const up = exits?.[1], pass = beams === 4 && sounding && exits?.length === 3 && Math.abs(up[0]) < 0.5 && up[1] < 0 &&
+      ['Angle', 'Rotate', 'Streams', 'Spread'].every(n => names.includes(n));
+    return [pass, { beams, sounding, exits, names }];
+  },
 };
 
 try {

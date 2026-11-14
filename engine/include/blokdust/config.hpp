@@ -27,6 +27,11 @@ inline constexpr int kMaxDelays = 16;
 inline constexpr double kMaxDelaySeconds = 1.0;  // a synced Stereo Delay's longest time (v1's own is ≤ 0.5 s)
 inline constexpr int kMaxChoruses = 32;
 inline constexpr int kMaxPitchShifters = 16;
+// Lasers through Prisms (CHG-0015, SIMULATION-0006): a beam path passes through at most kMaxPrismDepth prisms, one
+// laser casts at most kMaxBeamSegments beams, and kMaxBeams are kept for the UI per tick.
+inline constexpr int kMaxPrismDepth = 8;
+inline constexpr int kMaxBeamSegments = 64;
+inline constexpr int kMaxBeams = 1024;
 inline constexpr int kMaxCompressors = 16;     // fx.compressor: 6 ms look-ahead memory each (CHG-0014)
 inline constexpr int kMaxConvolvers = 4;       // FFT convolution: memory and CPU heavy
 inline constexpr double kMaxImpulseSeconds = 2.5;  // longer impulse responses are truncated        // max samples rendered between tick boundaries in one pass

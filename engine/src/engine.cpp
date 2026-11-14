@@ -383,6 +383,7 @@ void Engine::apply(const Command& c) noexcept {
       const bool on = c.value != 0.0;
       if (on == worldPower_) break;
       worldPower_ = on;
+      if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].gateStep = 0;  // Counters start over (SIMULATION-0005)
       if (!on) {  // everything the world was powering lets go at once
         particleCount_ = 0;
         for (int k = 0; k < orderCount_; ++k) {
@@ -833,6 +834,7 @@ void Engine::releaseLaser(Block& laser) noexcept {
     if (laser.laserHits[static_cast<std::size_t>(order_[k])] && t.kind() != BlockKind::Logic && t.laserPower > 0) t.laserPower--;
   }
   laser.laserHits.reset();
+  laser.gateHits.reset(); laser.gateOpen.reset();
   laser.beamOn = false;
 }
 
@@ -861,25 +863,14 @@ void Engine::runLasers() noexcept {
       if (a < -270.0) a += 360.0;
       l.params[P::PowerLaser::angle] = a;
     }
-    const double angle = l.params[P::PowerLaser::angle] * kDegToRad;
     const double len = l.params[P::PowerLaser::range] / kV1UnitsPerGrid;
-    const double x1 = l.x + dmath::cos(angle) * len, y1 = l.y + dmath::sin(angle) * len;
-    double stop = 1.0, t = 0.0;
-    for (int i = 0; i < orderCount_; ++i) {
-      const Block& v = blocks_[order_[i]];
-      if (v.kind() != BlockKind::Void) continue;
-      if (segmentPolygonFirstHit(l.x, l.y, x1, y1, v.info().outline, v.info().outlineCount, v.x, v.y, t)) stop = std::min(stop, t);
-    }
-    const double ex = l.x + (x1 - l.x) * stop, ey = l.y + (y1 - l.y) * stop;
-    std::bitset<kMaxBlocks> hits;
-    for (int i = 0; i < orderCount_; ++i) {
+    std::bitset<kMaxBlocks> hits, gates, open;
+    double stop = 1.0;
+    traceBeam(order_[k], l.params[P::PowerLaser::angle], len, hits, gates, open, stop);
+    for (int i = 0; i < orderCount_; ++i) {  // newly hit, in creation order
       const int s = order_[i];
-      if (s == order_[k]) continue;
+      if (!hits[static_cast<std::size_t>(s)] || l.laserHits[static_cast<std::size_t>(s)]) continue;
       Block& b = blocks_[s];
-      if (!isSourceSide(b.kind()) && b.kind() != BlockKind::Logic) continue;
-      if (!segmentPolygonFirstHit(l.x, l.y, ex, ey, b.info().outline, b.info().outlineCount, b.x, b.y, t)) continue;
-      hits.set(static_cast<std::size_t>(s));
-      if (l.laserHits[static_cast<std::size_t>(s)]) continue;  // already hit last tick
       log(Event::Type::Hit, b.id, l.id);
       if (b.kind() == BlockKind::Logic) logicHit(b); else b.laserPower++;
     }
@@ -888,9 +879,97 @@ void Engine::runLasers() noexcept {
       if (l.laserHits[static_cast<std::size_t>(s)] && !hits[static_cast<std::size_t>(s)] && blocks_[s].kind() != BlockKind::Logic && blocks_[s].laserPower > 0) blocks_[s].laserPower--;
     }
     l.laserHits = hits;
+    l.gateHits = gates; l.gateOpen = open;
     l.beamOn = true;
     l.beamLength = len * stop;
-    beams_[beamCount_++] = Beam{l.id, l.x, l.y, ex, ey};
+  }
+}
+
+/// A Counter or Chance decides about one arriving hit (SIMULATION-0005). Counter: the Euclidean pattern E(hits, steps),
+/// read from `rotate`, one step per hit. Chance: its own random stream (seeded by block id, as Granular's grains, so
+/// the patch seed stays visual-only).
+bool Engine::gateDecide(Block& g) noexcept {
+  bool pass = true;
+  if (g.type == BlockType::PowerCounter) {
+    const int steps = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::steps])), 1, 16);
+    const int hits = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::hits])), 0, steps);
+    const int rotate = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::rotate])), 0, 15);
+    const int at = (g.gateStep % steps + rotate) % steps;
+    pass = (at * hits) % steps < hits;
+    g.gateStep = (g.gateStep % steps + 1) % steps;
+  } else if (g.type == BlockType::PowerChance) {
+    pass = static_cast<double>(g.grainRng.nextFloat()) < g.params[P::PowerChance::chance];
+  }
+  g.gatePassed = pass;
+  return pass;
+}
+
+/// One laser's beams (SPEC-SIMULATION R7, R7a). A beam runs to the nearest thing that stops it: a Void, a Counter or
+/// Chance that is closed to it, or a Prism, where it carries on as the Prism's streams with the length it has left
+/// (SIMULATION-0006). Every source and logic block a beam crosses before that is hit. Never through the same Prism
+/// twice on one path, nor through more than kMaxPrismDepth; at most kMaxBeamSegments beams per laser.
+void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, std::bitset<kMaxBlocks>& gates,
+                       std::bitset<kMaxBlocks>& open, double& firstStop) noexcept {
+  struct Seg { double x0, y0, angle, len; int depth; std::array<std::int16_t, kMaxPrismDepth> via; };
+  std::array<Seg, kMaxBeamSegments> stack;
+  int sp = 0, cast = 0;
+  Block& l = blocks_[static_cast<std::size_t>(laserSlot)];
+  stack[static_cast<std::size_t>(sp++)] = Seg{l.x, l.y, angleDeg, len, 0, {}};
+  while (sp > 0) {
+    const Seg seg = stack[static_cast<std::size_t>(--sp)];
+    const bool first = cast++ == 0;
+    const double angle = seg.angle * kDegToRad;
+    const double x1 = seg.x0 + dmath::cos(angle) * seg.len, y1 = seg.y0 + dmath::sin(angle) * seg.len;
+    double stop = 1.0, t = 0.0;
+    int prism = -1;
+    std::bitset<kMaxBlocks> seen;  // blockers already dealt with on this beam
+    for (;;) {  // the nearest blocker not yet seen
+      int best = -1; double bestT = 2.0;
+      for (int i = 0; i < orderCount_; ++i) {
+        const int s = order_[i];
+        const Block& v = blocks_[s];
+        if ((v.kind() != BlockKind::Void && v.kind() != BlockKind::Gate) || seen[static_cast<std::size_t>(s)]) continue;
+        if (segmentPolygonFirstHit(seg.x0, seg.y0, x1, y1, v.info().outline, v.info().outlineCount, v.x, v.y, t) && t < bestT) { best = s; bestT = t; }
+      }
+      if (best < 0) break;
+      seen.set(static_cast<std::size_t>(best));
+      Block& g = blocks_[static_cast<std::size_t>(best)];
+      if (g.kind() == BlockKind::Void) { stop = bestT; break; }
+      if (g.type == BlockType::PowerPrism) {
+        bool been = seg.depth >= kMaxPrismDepth;
+        for (int d = 0; d < seg.depth && !been; ++d) been = seg.via[static_cast<std::size_t>(d)] == best;
+        if (been) continue;  // straight through
+        stop = bestT; prism = best;
+        break;
+      }
+      // Counter / Chance: decided when the beam arrives, kept while it stays (and shared by this laser's beams).
+      bool isOpen;
+      if (gates[static_cast<std::size_t>(best)]) isOpen = open[static_cast<std::size_t>(best)];
+      else if (l.gateHits[static_cast<std::size_t>(best)]) isOpen = l.gateOpen[static_cast<std::size_t>(best)];
+      else { isOpen = gateDecide(g); log(isOpen ? Event::Type::Pass : Event::Type::Block, g.id, l.id); }
+      gates.set(static_cast<std::size_t>(best));
+      open.set(static_cast<std::size_t>(best), isOpen);
+      if (!isOpen) { stop = bestT; break; }
+    }
+    if (first) firstStop = stop;
+    const double ex = seg.x0 + (x1 - seg.x0) * stop, ey = seg.y0 + (y1 - seg.y0) * stop;
+    for (int i = 0; i < orderCount_; ++i) {
+      const int s = order_[i];
+      if (s == laserSlot) continue;
+      const Block& b = blocks_[s];
+      if (!isSourceSide(b.kind()) && b.kind() != BlockKind::Logic) continue;
+      if (segmentPolygonFirstHit(seg.x0, seg.y0, ex, ey, b.info().outline, b.info().outlineCount, b.x, b.y, t)) hits.set(static_cast<std::size_t>(s));
+    }
+    if (beamCount_ < kMaxBeams) beams_[static_cast<std::size_t>(beamCount_++)] = Beam{l.id, seg.x0, seg.y0, ex, ey};
+    if (prism < 0) continue;
+    const Block& p = blocks_[static_cast<std::size_t>(prism)];
+    const int streams = std::clamp(static_cast<int>(std::lround(p.params[P::PowerPrism::streams])), 1, 4);
+    const double spread = std::clamp(p.params[P::PowerPrism::spread], 0.0, 360.0), left = seg.len * (1.0 - stop);
+    for (int k = streams - 1; k >= 0 && sp < kMaxBeamSegments && cast + sp < kMaxBeamSegments; --k) {  // pushed last-first: cast in order
+      Seg child{p.x, p.y, p.params[P::PowerPrism::angle] + (streams > 1 ? spread * (static_cast<double>(k) / (streams - 1) - 0.5) : 0.0), left, seg.depth + 1, seg.via};
+      child.via[static_cast<std::size_t>(seg.depth)] = static_cast<std::int16_t>(prism);
+      stack[static_cast<std::size_t>(sp++)] = child;
+    }
   }
 }
 
@@ -918,6 +997,7 @@ void Engine::resyncToTransport(double beat) noexcept {
   for (int k = 0; k < orderCount_; ++k) {
     Block& b = blocks_[order_[k]];
     b.pulsePower = 0;
+    b.gateStep = 0;
     if (b.type != BlockType::PowerEmitter) continue;
     b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
     b.emitCounter = 0;  // as when added (v1 ParticleEmitter.Init)
@@ -981,6 +1061,15 @@ void Engine::runTick() noexcept {
     if (!running) { e.emitCounter = rateTicks - static_cast<int>(std::lround(std::clamp(e.params[P::PowerEmitter::offset], 0.0, 1.0) * rateTicks)); continue; }
     if (++e.emitCounter >= rateTicks) { fire(e); e.emitCounter = 0; }
   }
+  // 2a. Prisms turn (CHG-0015): Rotate as the Laser's, whenever the world is on (a Prism needs no power).
+  if (worldPower_) for (int k = 0; k < orderCount_; ++k) {
+    Block& pr = blocks_[order_[k]];
+    if (pr.type != BlockType::PowerPrism || std::lround(pr.params[P::PowerPrism::rotate]) == 0) continue;
+    double a = pr.params[P::PowerPrism::angle] + pr.params[P::PowerPrism::rotate] / 100.0 / kTicksPerV1Frame;
+    if (a > 90.0) a -= 360.0;
+    if (a < -270.0) a += 360.0;
+    pr.params[P::PowerPrism::angle] = a;
+  }
   // 2b. lasers (v1 LaserBeams.UpdateCollisions)
   runLasers();
   // 3. particles: age, collide at current position (topmost block first), then move (v1 ParticleLayer order)
@@ -988,6 +1077,9 @@ void Engine::runTick() noexcept {
   // after this pass (in hit order), so a new particle starts moving next tick, as an emitter's own do.
   int kept = 0, caughtCount = 0;
   std::array<int, kMaxParticles> caught;  // block slots, filled before read
+  struct SplitHit { int slot; double speed; int life; };
+  std::array<SplitHit, 256> splits;  // Prisms entered this tick, filled before read
+  int splitCount = 0;
   for (int i = 0; i < particleCount_; ++i) {
     Particle p = particles_[i];
     if (--p.life < 1) { continue; }
@@ -1007,6 +1099,23 @@ void Engine::runTick() noexcept {
         continue;
       }
       const BlockKind kind = b.kind();
+      if (kind == BlockKind::Gate) {
+        // R5c/R5d (CHG-0015): a gate acts on a particle as it enters (as an emitter catches one, R5b). A Counter or
+        // Chance lets it carry on or absorbs it; a Prism turns it into its streams, sent off after this pass.
+        if (p.fresh) continue;
+        const auto& inf = b.info();
+        if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y)) continue;
+        if (pointInPolygon(p.x - p.vx, p.y - p.vy, inf.outline, inf.outlineCount, b.x, b.y)) continue;
+        if (b.type == BlockType::PowerPrism) {
+          consumed = true;
+          log(Event::Type::Split, b.id);
+          if (splitCount < static_cast<int>(splits.size())) splits[static_cast<std::size_t>(splitCount++)] = {order_[k], std::sqrt(p.vx * p.vx + p.vy * p.vy), p.life};
+        } else if (gateDecide(b)) {
+          log(Event::Type::Pass, b.id);
+          break;  // through: nothing under the gate sees it this tick
+        } else { consumed = true; log(Event::Type::Block, b.id); }
+        continue;
+      }
       const bool absorbs = kind == BlockKind::Void;
       const bool reacts = isSourceSide(kind) || kind == BlockKind::Logic;
       if (!absorbs && !reacts) continue;
@@ -1022,6 +1131,21 @@ void Engine::runTick() noexcept {
   }
   particleCount_ = kept;
   for (int i = 0; i < caughtCount; ++i) emit(blocks_[caught[static_cast<std::size_t>(i)]]);
+  // R5d: each Prism entered sends out its streams from its centre, at the particle's speed and with the life it had
+  // left (so loops between Prisms die out, SIMULATION-0006). When the pool is full the rest are dropped.
+  for (int i = 0; i < splitCount; ++i) {
+    const SplitHit& h = splits[static_cast<std::size_t>(i)];
+    const Block& pr = blocks_[static_cast<std::size_t>(h.slot)];
+    const int streams = std::clamp(static_cast<int>(std::lround(pr.params[P::PowerPrism::streams])), 1, 4);
+    const double spread = std::clamp(pr.params[P::PowerPrism::spread], 0.0, 360.0);
+    for (int k = 0; k < streams && particleCount_ < kMaxParticles; ++k) {
+      const double a = (pr.params[P::PowerPrism::angle] + (streams > 1 ? spread * (static_cast<double>(k) / (streams - 1) - 0.5) : 0.0)) * kDegToRad;
+      Particle& np = particles_[particleCount_++];
+      np.x = pr.x; np.y = pr.y;
+      np.vx = dmath::cos(a) * h.speed; np.vy = dmath::sin(a) * h.speed;
+      np.life = h.life; np.size = 2.0f + rng_.nextFloat(); np.fresh = true;
+    }
+  }
   // 4. gates follow power
   updateGates();
 }
@@ -1366,8 +1490,9 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
   int n = 0;
   for (int k = 0; k < orderCount_ && n < max; ++k) {
     const Block& b = blocks_[order_[k]];
-    if (b.type != BlockType::FxCompressor) continue;
-    out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
+    if (b.type == BlockType::FxCompressor) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
+    else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.gateStep), b.gatePassed ? 1.0f : 0.0f, 0.0f, 0.0f}};
+    else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};
   }
   return n;
 }

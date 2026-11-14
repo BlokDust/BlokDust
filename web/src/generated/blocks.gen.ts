@@ -4202,6 +4202,241 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "power.chance",
+    "category": "power",
+    "kind": "gate",
+    "name": "Chance",
+    "description": "Lets each particle or laser beam through at random, as often as its chance says.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Chance",
+    "catchment": 0,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 3,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              1,
+              -2
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              -1,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 9,
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              2
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              1,
+              -2
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          0
+        ],
+        [
+          1,
+          -2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          -1,
+          1
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "chance",
+        "default": 0.5,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "power.counter",
+    "category": "power",
+    "kind": "gate",
+    "name": "Counter",
+    "description": "Counts the particles and laser beams that reach it, and lets through only the ones on its pattern's steps.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Counter",
+    "catchment": 0,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 3,
+          "points": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              2,
+              0
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              0,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          0,
+          -1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "menuOffset": [
+        -1,
+        -0.5
+      ]
+    },
+    "params": [
+      {
+        "key": "steps",
+        "default": 8,
+        "unit": "steps",
+        "ui": {
+          "transform": "Identity",
+          "min": 1,
+          "max": 16,
+          "k": 0
+        }
+      },
+      {
+        "key": "hits",
+        "default": 3,
+        "unit": "steps",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 16,
+          "k": 0
+        }
+      },
+      {
+        "key": "rotate",
+        "default": 0,
+        "unit": "steps",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 15,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "power.emitter",
     "category": "power",
     "kind": "power-source",
@@ -4675,6 +4910,137 @@ export const BLOCKS: readonly BlockDef[] = [
       ]
     },
     "params": []
+  },
+  {
+    "id": "power.prism",
+    "category": "power",
+    "kind": "gate",
+    "name": "Prism",
+    "description": "Sends the particles and laser beams that reach it off at its angle, split into up to four streams.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Prism",
+    "catchment": 0,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 7,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              -1,
+              -1
+            ],
+            [
+              0,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              0,
+              -1
+            ],
+            [
+              -1,
+              0
+            ],
+            [
+              -1,
+              -1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          0
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "angle",
+        "default": -90,
+        "unit": "deg",
+        "ui": {
+          "transform": "Identity",
+          "min": -270,
+          "max": 90,
+          "k": 0
+        }
+      },
+      {
+        "key": "rotate",
+        "default": 0,
+        "unit": null,
+        "ui": {
+          "transform": "Identity",
+          "min": -500,
+          "max": 500,
+          "k": 0
+        }
+      },
+      {
+        "key": "streams",
+        "default": 1,
+        "unit": "count",
+        "ui": {
+          "transform": "Identity",
+          "min": 1,
+          "max": 4,
+          "k": 0
+        }
+      },
+      {
+        "key": "spread",
+        "default": 60,
+        "unit": "deg",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 180,
+          "k": 0
+        }
+      }
+    ]
   },
   {
     "id": "power.pulse",
@@ -5504,6 +5870,6 @@ export const BLOCKS: readonly BlockDef[] = [
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.pulse' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

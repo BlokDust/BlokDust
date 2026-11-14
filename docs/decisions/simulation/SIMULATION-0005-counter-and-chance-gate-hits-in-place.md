@@ -23,12 +23,15 @@ We will make Counter and Chance gates in space, never powered and never connecte
   deciding per tick would flicker.
 - **Counter** advances one step per arriving hit and passes it when the step is active. Its pattern is Euclidean:
   Steps (length), Hits (how many active), Rotate. The count restarts when the world powers on.
-- **Chance** passes a hit with probability `chance`, drawn from the patch PRNG (SIMULATION-0001).
+- **Chance** passes a hit with probability `chance`, drawn from the block's own seeded stream (as Granular's grains),
+  so it is deterministic (SIMULATION-0001) and the patch seed stays visual-only.
 
 ## Consequences
 - They chain in a row (emitter → counter → chance → tone) and work over distance.
 - A gate never catches a particle born inside it (as SIMULATION-0004).
 - New event kinds (`Pass`, `Block`) for tests and visuals.
+- The pattern is E(hits, steps) by the rule "step i passes iff i × hits mod steps < hits": 3 in 8 is x..x..x.; 5 in 8
+  is x.x.xx.x (a rotation of the cinquillo; Rotate reaches the others).
 
 ## Alternatives considered
 - **Power the connected blocks** (Pulse-like): ambiguous next to sources it should not power; cannot reach far blocks.

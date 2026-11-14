@@ -7,7 +7,7 @@ import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
-import { drawNewSprite, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
+import { drawNewSprite, drawPrismExits, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -208,6 +208,7 @@ export class V1Scene {
   /** v1 MainScene display list, from the ToolTip upward (blocks/lines/beams are drawn by the stage before this). */
   draw(): void {
     for (const o of [this.ToolTip, this.AnimationsLayer, ...(this.drawRecorderPanel ? [this.RecorderPanel] : []), this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) {
+      if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);  // under the panel, over the stage
       this.Ctx.save();
       o.Draw();
       this.Ctx.restore();

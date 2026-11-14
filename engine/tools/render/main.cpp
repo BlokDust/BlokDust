@@ -43,6 +43,7 @@ const char* eventName(Event::Type t) {
     case Event::Type::Emit: return "emit"; case Event::Type::Hit: return "hit"; case Event::Type::Absorb: return "absorb";
     case Event::Type::Expire: return "expire"; case Event::Type::GateOn: return "gateOn"; case Event::Type::GateOff: return "gateOff";
     case Event::Type::Connect: return "connect"; case Event::Type::Disconnect: return "disconnect"; case Event::Type::Logic: return "logic";
+    case Event::Type::Pass: return "pass"; case Event::Type::Block: return "block"; case Event::Type::Split: return "split";
   }
   return "?";
 }

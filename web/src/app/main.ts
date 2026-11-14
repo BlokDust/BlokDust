@@ -911,9 +911,11 @@ async function main() {
     }
     return [...commands, ...relinks({ connectionOrder }, uidToId())];
   }
-  const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0 };
+  const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0 };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
+    /** Laser beams drawn now (a beam through a Prism is several, CHG-0015). */
+    get beams() { return probe.beams; },
     /** css px of a point on block `id` that the stage's own hit test maps to it (black-box tests click there). */
     blockPoint(id: number): [number, number] | null {
       const b = stage.block(id); if (!b) return null;
@@ -954,7 +956,7 @@ async function main() {
   };
   const overlay = document.getElementById('start')!;
   const onSnapshot = (s: Snapshot) => {
-    probe.snapshots++; probe.rms = s.rms; probe.particles = s.particles.length / 3;
+    probe.snapshots++; probe.rms = s.rms; probe.particles = s.particles.length / 3; probe.beams = s.beams.length / 4;
     // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the snapshot RMS.
     scene.setLevelDb(20 * Math.log10(Math.max(s.rms, 1e-5)));
     for (const e of s.events) { if (e.type === 4) probe.gateOns++; if (e.type === 1) probe.hits++; }

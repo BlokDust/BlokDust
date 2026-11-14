@@ -64,7 +64,9 @@ struct Command {
 };
 
 struct Event {
-  enum class Type : std::uint8_t { Emit, Hit, Absorb, Expire, GateOn, GateOff, Connect, Disconnect, Logic };
+  /// Pass / Block (CHG-0015): a Counter or Chance let a particle or beam through, or stopped it (`other`: the laser).
+  /// Split: a Prism turned a particle into its streams.
+  enum class Type : std::uint8_t { Emit, Hit, Absorb, Expire, GateOn, GateOff, Connect, Disconnect, Logic, Pass, Block, Split };
   std::int64_t sample;   // absolute sample index (always a tick boundary)
   std::uint32_t tick;
   Type type;
@@ -142,6 +144,8 @@ class Engine {
   int playheads(Playhead* out, int max) const noexcept;
   /// Live readouts for open options panels, one entry per block that has any (visual only; returns the count ≤ max).
   /// fx.compressor (CHG-0014): v[0] input level in dB (peak, falling slowly), v[1] gain reduction in dB (≤ 0).
+  /// power.counter (CHG-0015): v[0] the step the next hit lands on, v[1] 1 if the last hit passed.
+  /// power.prism: v[0] its exit angle now (it may be rotating).
   struct Monitor { BlockId block; float v[4]; };
   int monitors(Monitor* out, int max) const noexcept;
 
@@ -161,6 +165,8 @@ class Engine {
   void keyAim(Block& b, int note, bool down, bool poly) noexcept;
   void resyncToTransport(double beat) noexcept;
   void runLasers() noexcept;
+  void traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, std::bitset<kMaxBlocks>& gates, std::bitset<kMaxBlocks>& open, double& firstStop) noexcept;
+  bool gateDecide(Block& g) noexcept;
   void logicHit(Block& b) noexcept;
   void applyNote(const Command& c) noexcept;
   void applyExpression(const Command& c) noexcept;
@@ -272,7 +278,7 @@ class Engine {
   bool useCompressor_ = true;
   bool hostInput_ = false;
   double masterGain_ = kMasterGain;
-  std::array<Beam, kMaxBlocks> beams_{};
+  std::array<Beam, kMaxBeams> beams_{};
   int beamCount_ = 0;
 };
 

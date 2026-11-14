@@ -73,6 +73,12 @@ struct Block {
   // ---- laser (power.laser) ----
   std::bitset<kMaxBlocks> laserHits;  // slots this laser hit on the last tick
   bool beamOn = false;
+  // Gates in its beams' paths (CHG-0015): the ones reached on the last tick, and whether each let the beam through
+  // (a Counter or Chance decides once, when a beam arrives, SIMULATION-0005).
+  std::bitset<kMaxBlocks> gateHits, gateOpen;
+  // ---- power.counter: the step the next hit lands on; whether the last one passed (monitor) ----
+  int gateStep = 0;
+  bool gatePassed = false;
   double beamLength = 0.0;      // grid units, after Void truncation
 
   // ---- audio sources: voices (v1 Source voices; see Voice) ----

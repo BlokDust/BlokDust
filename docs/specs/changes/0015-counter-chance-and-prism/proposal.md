@@ -14,7 +14,7 @@ in the path like Void.
 
 ## What changes
 - **Counter** (`power.counter`): Steps 1–16, Hits 0–Steps, Rotate; passes the hit on active steps (SIMULATION-0005).
-  Its panel draws the pattern as a ring of steps with the hits filled and the current step marked.
+  Its panel's first row draws the pattern: a diamond per step, filled where a hit passes, the next step underlined.
 - **Chance** (`power.chance`): `chance` 0–100 %, seeded (SIMULATION-0005).
 - **Prism** (`power.prism`): Angle, Rotate, Streams 1–4, Spread (SIMULATION-0006); exit lines while its panel is open.
 - SPEC-SIMULATION-POWER-AND-PARTICLES: new R5c (gates), R5d (prism particles), R7a (beams through gates and prisms).
@@ -29,7 +29,10 @@ in the path like Void.
   remaining range, 8-prism path limit, pool-full drop; each cites its R number.
 - `pnpm bd render --check`: unchanged existing goldens; new `counter`, `chance`, `prism-split` goldens identical across
   release/dev, WASM and worklet.
-- `pnpm test:ui-regressions`: counter panel shows the pattern; prism exit lines follow Angle.
+- `pnpm test:new-blocks --only counter-panel,prism-splits-beam`: the menu has them, the Counter's panel shows the
+  pattern and where it is, a Prism splits a beam and draws its exit lines.
 
 ## Risks and unknowns
-- Beam fan-out cost with many prisms; the per-tick segment budget needs a number from `pnpm bd perf`.
+- Beam fan-out cost with many prisms: bounded at 64 beams per laser and 8 Prisms per path (`config.hpp`); not yet
+  measured with `pnpm bd perf`.
+- A Prism has Rotate but no tempo-synced Turn (the Laser has both); add it if wanted.

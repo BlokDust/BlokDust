@@ -703,7 +703,7 @@ Object.assign(tests, {
     const by = (t: string) => patch.blocks.find((b: any) => b.type === t).params;
     const em = by('power.emitter'), pu = by('power.pulse'), la = by('power.laser'), de = by('fx.stereo-delay');
     const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-    const ok = eq(emitterOff, ['Angle', 'Tempo Sync', 'Fire Rate', 'P. Speed', 'Range']) && eq(emitterOn, ['Angle', 'Tempo Sync', 'Division', 'Swing', 'Range']) &&
+    const ok = eq(emitterOff, ['Angle', 'Tempo Sync', 'Fire Rate', 'Offset', 'P. Speed', 'Range']) && eq(emitterOn, ['Angle', 'Tempo Sync', 'Division', 'Swing', 'Offset', 'Range'])  // Offset: CHG-0014 &&
       eq(pulseOff, ['Tempo Sync', 'Pulse length', 'Pulse On']) && eq(pulseOn, ['Tempo Sync', 'Length', 'Pulse On']) &&
       eq(laserOff, ['Angle', 'Tempo Sync', 'Rotate', 'Range']) && eq(laserOn, ['Angle', 'Tempo Sync', 'Turn', 'Range']) &&
       eq(delayOff, ['Tempo Sync', 'Delay Time', 'Feedback', 'Mix']) && eq(delayOn, ['Tempo Sync', 'Delay', 'Feedback', 'Mix']) &&

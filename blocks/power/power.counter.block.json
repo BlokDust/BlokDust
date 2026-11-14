@@ -1,0 +1,111 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.counter",
+  "draft": false,
+  "category": "power",
+  "kind": "gate",
+  "name": "Counter",
+  "description": "Counts the particles and laser beams that reach it, and lets through only the ones on its pattern's steps.",
+  "v1": {
+    "type": null
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "palette": 8,
+        "points": [
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "outline": [
+      [
+        0,
+        -1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "menuOffset": [
+      -1,
+      -0.5
+    ]
+  },
+  "params": [
+    {
+      "key": "steps",
+      "default": 8,
+      "unit": "steps",
+      "range": [
+        1,
+        16
+      ],
+      "description": "Length of the pattern: each hit moves one step on"
+    },
+    {
+      "key": "hits",
+      "default": 3,
+      "unit": "steps",
+      "range": [
+        0,
+        16
+      ],
+      "description": "How many steps let the hit through, spread as evenly as the length allows (Euclidean)"
+    },
+    {
+      "key": "rotate",
+      "default": 0,
+      "unit": "steps",
+      "range": [
+        0,
+        15
+      ],
+      "description": "Where in the pattern the count starts"
+    }
+  ]
+}

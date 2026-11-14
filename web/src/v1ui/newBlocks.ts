@@ -9,7 +9,7 @@ import { App, Point } from './shim.ts';
 const MENU: Record<string, string[]> = {
   Source: [],
   Effect: ['fx.compressor'],
-  Power: [],
+  Power: ['power.counter', 'power.chance', 'power.prism'],
   Interaction: [],
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
@@ -61,6 +61,7 @@ const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.ro
 const CONVERT: Record<string, { param: string; to: (v: number) => number }> = {
   attackMs: { param: 'attack', to: v => v / 1000 },
   releaseMs: { param: 'release', to: v => v / 1000 },
+  prismAngle: { param: 'angle', to: v => v - 90 },  // v1's Angle sliders show angle + 90 (0 = up)
 };
 /** v1 SetParam for the settings above. Returns the param and value to send, or null when `key` is an ordinary param. */
 export function convertSetting(key: string, value: number): { param: string; value: number } | null {
@@ -79,7 +80,34 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
   ],
+  // CHG-0015: the pattern as a row of steps, then the three numbers that make it (Euclidean, SIMULATION-0005).
+  'power.counter': b => [
+    slider('Pattern', 'counterPattern', 0, 0, 1),
+    slider('Steps', 'steps', Number(b.Params.steps), 1, 16, { quantised: true }),
+    slider('Hits', 'hits', Math.min(Number(b.Params.hits), Number(b.Params.steps)), 0, 16, { quantised: true }),
+    slider('Rotate', 'rotate', Number(b.Params.rotate), 0, 15, { quantised: true }),
+  ],
+  'power.chance': b => [slider('Chance', 'chance', Number(b.Params.chance), 0, 1, { display: v => `${Math.round(v * 100)}%` })],
+  // The Laser's Angle and Rotate rows, then how many streams and how wide they fan (SIMULATION-0006).
+  'power.prism': b => [
+    slider('Angle', 'prismAngle', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
+    { type: 'slider', name: 'Rotate', setting: 'rotate', props: { value: Number(b.Params.rotate), min: -500, max: 500, quantised: true, centered: true, snap: true } },
+    slider('Streams', 'streams', Number(b.Params.streams), 1, 4, { quantised: true }),
+    slider('Spread', 'spread', Number(b.Params.spread), 0, 180, { quantised: true, display: v => `${Math.round(v)}°` }),
+  ],
 };
+/** An angle in (−180, 180]. */
+const wrapAngle = (a: number) => { let v = a % 360; if (v > 180) v -= 360; if (v <= -180) v += 360; return v; };
+/** The Counter's pattern (engine gateDecide): which of its steps let a hit through, from the first one counted. */
+export function counterPattern(steps: number, hits: number, rotate: number): boolean[] {
+  const n = Math.max(1, Math.min(16, Math.round(steps))), k = Math.max(0, Math.min(n, Math.round(hits))), r = Math.max(0, Math.min(15, Math.round(rotate)));
+  return Array.from({ length: n }, (_, i) => (((i + r) % n) * k) % n < k);
+}
+/** A Prism's exit directions in degrees (engine traceBeam / R5d), from its angle now. */
+export function prismAngles(angle: number, streams: number, spread: number): number[] {
+  const n = Math.max(1, Math.min(4, Math.round(streams)));
+  return Array.from({ length: n }, (_, k) => angle + (n > 1 ? spread * (k / (n - 1) - 0.5) : 0));
+}
 /** The options form of a new block (v1 UpdateOptionsForm), or false when `b` is not one. */
 export function newBlockForm(b: FormBlock): boolean {
   const f = FORMS[b.def.id];
@@ -122,7 +150,54 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   this.Shown = { level: m[0], reduction: m[1], thresholdX: tx - x, width: w };  // tests
 };
 
-const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter };
+/** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where a hit passes; the step the next
+ * hit lands on is underlined (v1's selection bar). */
+const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
+  const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
+  const block = panel.SelectedBlock, p = block?.Params ?? {}, m = monitorOf(block?.Id) ?? [0, 0];
+  const pattern = counterPattern(Number(p.steps ?? 8), Number(p.hits ?? 3), Number(p.rotate ?? 0)), n = pattern.length;
+  const cell = w / 16, r = Math.min(cell * 0.36, h * 0.3), x0 = x + (w - cell * n) * 0.5, next = Math.round(m[0]) % n;
+  const colours = panel.SliderColours, dataType = Math.round(units * 10);
+  ctx.globalAlpha = 1;
+  App.StrokeColor(ctx, App.Palette[1]);
+  if (i !== panel.Options.length - 1) { ctx.beginPath(); ctx.moveTo(panel.Margin - units, y + h); ctx.lineTo(w + panel.Margin + units, y + h); ctx.stroke(); }
+  ctx.lineWidth = units;
+  pattern.forEach((on, k) => {
+    const cx = x0 + cell * (k + 0.5);
+    ctx.beginPath(); ctx.moveTo(cx - r, mid); ctx.lineTo(cx, mid - r); ctx.lineTo(cx + r, mid); ctx.lineTo(cx, mid + r); ctx.closePath();
+    if (on) { App.FillColor(ctx, colours[i % colours.length]); ctx.fill(); }
+    else { App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]); ctx.globalAlpha = 0.5; ctx.stroke(); ctx.globalAlpha = 1; }
+    if (k === next) { App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]); ctx.fillRect(cx - r, mid + r + 3 * units, 2 * r, 2 * units); }
+  });
+  ctx.lineWidth = 1;
+  App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
+  ctx.font = App.Metrics.TxtMid;
+  ctx.textAlign = 'right';
+  ctx.fillText(this.Name.toUpperCase(), panel.Margin - 15 * units, mid + dataType * 0.4);
+  this.Shown = { pattern: pattern.map(on => (on ? 'x' : '.')).join(''), next };  // tests
+};
+
+const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, counterPattern: drawCounterPattern };
+
+/** A selected Prism's exit directions, drawn on the stage while its panel is open (as a Laser shows its beam): thin
+ * dashed lines from the block, following its rotation. */
+export function drawPrismExits(ctx: CanvasRenderingContext2D, panel: any): void {
+  const b = panel.SelectedBlock;
+  if (!b || panel.Scale !== 1 || b.def?.id !== 'power.prism') return;
+  const angle = monitorOf(b.Id)?.[0] ?? Number(b.Params.angle), len = 6;
+  const from = App.Metrics.PointOnGrid(new Point(b.Position.x, b.Position.y));
+  ctx.save();
+  App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
+  ctx.globalAlpha = 0.6; ctx.lineWidth = App.Unit; ctx.setLineDash([4 * App.Unit, 4 * App.Unit]);
+  const ends: [number, number][] = [];
+  for (const a of prismAngles(angle, Number(b.Params.streams), Number(b.Params.spread))) {
+    const rad = a * Math.PI / 180, to = App.Metrics.PointOnGrid(new Point(b.Position.x + Math.cos(rad) * len, b.Position.y + Math.sin(rad) * len));
+    ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+    ends.push([to.x - from.x, to.y - from.y]);
+  }
+  ctx.restore();
+  panel.PrismExits = ends;  // tests
+}
 
 /** Teach the options panel the live rows (once, at start-up). */
 export function installLiveRows(panel: any): void {
@@ -136,4 +211,5 @@ export function installLiveRows(panel: any): void {
   };
 }
 /** Is a live row showing? (The scene then redraws the panel every frame.) */
-export const hasLiveRows = (panel: any): boolean => panel.Scale > 0 && ((panel.Options ?? []) as any[]).some(o => o.Live);
+export const hasLiveRows = (panel: any): boolean => panel.Scale > 0 &&
+  (((panel.Options ?? []) as any[]).some(o => o.Live) || panel.SelectedBlock?.def?.id === 'power.prism');  // a Prism's exit lines turn with it
