@@ -76,6 +76,10 @@ struct Block {
   // Gates in its beams' paths (CHG-0015): the ones reached on the last tick, and whether each let the beam through
   // (a Counter or Chance decides once, when a beam arrives, SIMULATION-0005).
   std::bitset<kMaxBlocks> gateHits, gateOpen;
+  // ---- power.sound-laser (CHG-0016): the level it hears (linear, peak with a 50 ms fall) and its gate ----
+  double listenEnv = 0.0;
+  std::uint32_t holdUntil = 0;
+  bool listenOn = false;
   // ---- power.counter: the step the next hit lands on; whether the last one passed (monitor) ----
   int gateStep = 0;
   bool gatePassed = false;
@@ -149,15 +153,17 @@ constexpr bool isSourceSide(BlockKind k) noexcept { return k == BlockKind::Audio
 /// Is `kind` on the effect side (has a catchment)?
 constexpr bool isEffectSide(BlockKind k) noexcept {
   return k == BlockKind::PreEffect || k == BlockKind::PostEffect || k == BlockKind::PowerEffect || k == BlockKind::Logic ||
-         k == BlockKind::Controller;
+         k == BlockKind::Controller || k == BlockKind::Listener;
 }
 /// v1 classes deriving from PowerEffect (Power, Toggle, Pulse, controllers) are excluded from audio chains.
 constexpr bool isPowerEffectLike(BlockKind k) noexcept {
-  return k == BlockKind::PowerEffect || k == BlockKind::Logic || k == BlockKind::Controller;
+  return k == BlockKind::PowerEffect || k == BlockKind::Logic || k == BlockKind::Controller || k == BlockKind::Listener;
 }
 /// SPEC-CONNECTIONS-PROXIMITY R2/R3: which source/effect kind pairs may connect.
 constexpr bool kindsMayConnect(BlockKind source, BlockKind effect) noexcept {
   if (!isSourceSide(source) || !isEffectSide(effect)) return false;
+  // A listener (Sound Laser, CHG-0016) hears audio sources only.
+  if (effect == BlockKind::Listener) return source == BlockKind::AudioSource;
   // Emitters and Lasers also take keyboards (owner review 2, beyond v1): a held key powers them, its note aims them.
   if (source == BlockKind::PowerSource) return effect == BlockKind::PowerEffect || effect == BlockKind::Logic || effect == BlockKind::Controller;
   return true;

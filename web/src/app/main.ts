@@ -911,7 +911,7 @@ async function main() {
     }
     return [...commands, ...relinks({ connectionOrder }, uidToId())];
   }
-  const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0 };
+  const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
     /** Laser beams drawn now (a beam through a Prism is several, CHG-0015). */
@@ -975,7 +975,7 @@ async function main() {
       if (juce && JSON.stringify(order) !== was) juce.emitEvent('bd_connectionOrder', { order });
       }
     }
-    stage.setPowered(s.powered);
+    stage.setPowered(s.powered); probe.powered = Array.from(s.powered);
     stage.setBeams(s.beams);
     stage.setParticles(s.particles);
     scene.setPlayheads(s.playheads ?? new Float32Array(0));

@@ -16,9 +16,10 @@ would power the very source it listens to, so the owner chose a **laser** that t
 
 ## Decision
 We will add a Sound Laser: a short laser whose beam is on while the level of the sources connected to it, in a chosen
-band, is above (or, inverted, below) a threshold, with a hold time. The engine measures the level at the end of each
-audio block; the simulation reads the last finished measurement on its next tick (one block of latency, about 3 ms at
-128 frames). It powers nothing by proximity; only its beam acts.
+band, is above (or, inverted, below) a threshold, with a hold time. The engine follows the level sample by sample as
+it renders (audio between two ticks is always rendered before the later tick runs), so each tick reads the level at
+its own sample, whatever the host's buffer size. It hears a source as it sounds, after its chain's effects. It powers
+nothing by proximity; only its beam acts.
 
 ## Consequences
 - Deterministic for a given input (SIMULATION-0001): offline renders and goldens use recorded input or engine sources.

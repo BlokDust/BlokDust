@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 37;
+inline constexpr std::size_t kBlockTypeCount = 38;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -45,6 +45,7 @@ enum class BlockType : std::uint16_t {
   PowerPower,  // power.power
   PowerPrism,  // power.prism
   PowerPulse,  // power.pulse
+  PowerSoundLaser,  // power.sound-laser
   PowerToggle,  // power.toggle
   PowerVoid,  // power.void
   InputComputerKeyboard,  // input.computer-keyboard
@@ -441,6 +442,19 @@ inline constexpr ParamInfo kParamsPowerPulse[] = {
 };
 namespace param::PowerPulse { enum : std::uint8_t { logic, pulseLength, sync, pulseBeats, Count }; }
 
+// ---- power.sound-laser (Sound Laser)
+inline constexpr GridPoint kOutlinePowerSoundLaser[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerSoundLaser[] = {
+  {"angle", -90.0, true, UiTransform::Identity, -270.0, 90.0, 0.0},
+  {"range", 150.0, true, UiTransform::Identity, 50.0, 1200.0, 0.0},
+  {"rotate", 0.0, true, UiTransform::Identity, -500.0, 500.0, 0.0},
+  {"band", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
+  {"threshold", -30.0, true, UiTransform::Identity, -60.0, 0.0, 0.0},
+  {"invert", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"hold", 0.1, true, UiTransform::Identity, 0.0, 2.0, 0.0},
+};
+namespace param::PowerSoundLaser { enum : std::uint8_t { angle, range, rotate, band, threshold, invert, hold, Count }; }
+
 // ---- power.toggle (Toggle Power)
 inline constexpr GridPoint kOutlinePowerToggle[] = {{0.0f, -1.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}, {-1.0f, -1.0f}};
 inline constexpr ParamInfo kParamsPowerToggle[] = {
@@ -512,6 +526,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, nullptr, 0, true},
   {BlockType::PowerPrism, "power.prism", "", BlockKind::Gate, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
   {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 4, true},
+  {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 7, false},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},
   {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 4, true},

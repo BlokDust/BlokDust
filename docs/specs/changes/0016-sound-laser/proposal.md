@@ -13,20 +13,24 @@ Let the microphone, audio input or any source trigger lasers, and through them p
 
 ## What changes
 - **Sound Laser** (`power.sound-laser`): listens to the sources connected to it; beam on while the band level is above
-  (or, with Invert, below) Threshold, for at least Hold. Settings: Band (low/mid/high, or frequency + width), Threshold,
-  Invert, Hold, Angle, Range (default short), Rotate. Its panel shows the same level meter + threshold line as the
+  (or, with Invert, below) Threshold, for at least Hold. Settings: Threshold, Band (All / Lows / Mids / Highs, a carousel), Beam on
+  (When louder / When quieter), Hold, Angle, Range (default 150, short), Rotate. Its panel shows the same level meter + threshold line as the
   Compressor (CHG-0014).
-- Engine: per-chain band level at the end of each audio block, read by the next tick (SIMULATION-0007).
+- Engine: each Sound Laser sums the chains of its connected sources (after their effects), band-filters the sum and
+  follows its peak per sample; each tick reads it (SIMULATION-0007, SPEC R7b). New kind `listener`: connects to audio
+  sources only (SPEC-CONNECTIONS-PROXIMITY R2b).
 - Designs: `tools/block-designer/proposed.json` (owner, 2026-11-13); copy each into its manifest unchanged.
 
 ## Out of scope
 - Pitch detection (notes from audio).
 
 ## Acceptance
-- `pnpm test:engine`: threshold, invert, hold, one-block latency, determinism with a recorded input.
+- `pnpm test:engine`: threshold, invert, hold, band, hearing after effects, determinism across buffer sizes.
+- `pnpm test:new-blocks --only sound-laser`.
 - `pnpm bd render --check`: new `sound-laser` golden (a Tone pulsed by Pulse lights a Sound Laser that powers a second
   Tone).
 - Owner check with a microphone on staging and Audio In in a DAW.
 
 ## Risks and unknowns
-- Depends on CHG-0014's meter. Band filters must be cheap enough to run on every listened chain.
+- Up to 8 Sound Lasers listen at once; more stay dark.
+- Not yet checked with a real microphone or DAW audio input: owner check.

@@ -144,6 +144,7 @@ class Engine {
   int playheads(Playhead* out, int max) const noexcept;
   /// Live readouts for open options panels, one entry per block that has any (visual only; returns the count ≤ max).
   /// fx.compressor (CHG-0014): v[0] input level in dB (peak, falling slowly), v[1] gain reduction in dB (≤ 0).
+  /// power.sound-laser (CHG-0016): v[0] the level it hears in dB, v[1] 1 while its beam is on.
   /// power.counter (CHG-0015): v[0] the step the next hit lands on, v[1] 1 if the last hit passed.
   /// power.prism: v[0] its exit angle now (it may be rotating).
   struct Monitor { BlockId block; float v[4]; };
@@ -261,6 +262,11 @@ class Engine {
   dsp::ConvolutionKernel defaultImpulse_;
   std::vector<dsp::MasterCompressor> compressors_;  // fx.compressor instances (pooled like the convolvers)
   std::vector<std::int16_t> compressorOwner_;
+  // power.sound-laser (CHG-0016, SIMULATION-0007): what each hears this segment (mono), pooled.
+  std::vector<float> listenBuf_;
+  std::array<std::int16_t, kMaxListeners> listenerOwner_{};
+  double listenDecay_ = 1.0;
+  void listen(int n) noexcept;
 
   // Rewiring fade (SPEC-CONNECTIONS-PROXIMITY R5): audio follows `audioChains_`; when the topology changes, only the
   // chains that changed fade out on the old routing, the routing switches, and the new chains fade in.

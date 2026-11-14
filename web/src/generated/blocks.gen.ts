@@ -5194,6 +5194,191 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "power.sound-laser",
+    "category": "power",
+    "kind": "listener",
+    "name": "Sound Laser",
+    "description": "A laser that listens: its beam comes on while the sources connected to it are louder (or quieter) than its threshold.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "SoundLaser",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 7,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              0,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 3,
+          "points": [
+            [
+              -1,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 4,
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              -1,
+              0
+            ],
+            [
+              0,
+              -1
+            ],
+            [
+              1,
+              -1
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "angle",
+        "default": -90,
+        "unit": "deg",
+        "ui": {
+          "transform": "Identity",
+          "min": -270,
+          "max": 90,
+          "k": 0
+        }
+      },
+      {
+        "key": "range",
+        "default": 150,
+        "unit": null,
+        "ui": {
+          "transform": "Identity",
+          "min": 50,
+          "max": 1200,
+          "k": 0
+        }
+      },
+      {
+        "key": "rotate",
+        "default": 0,
+        "unit": null,
+        "ui": {
+          "transform": "Identity",
+          "min": -500,
+          "max": 500,
+          "k": 0
+        }
+      },
+      {
+        "key": "band",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 3,
+          "k": 0
+        }
+      },
+      {
+        "key": "threshold",
+        "default": -30,
+        "unit": "dB",
+        "ui": {
+          "transform": "Identity",
+          "min": -60,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "invert",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "hold",
+        "default": 0.1,
+        "unit": "s",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 2,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "power.toggle",
     "category": "power",
     "kind": "logic",
@@ -5870,6 +6055,6 @@ export const BLOCKS: readonly BlockDef[] = [
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

@@ -52,6 +52,9 @@ Engine::Engine(const EngineConfig& cfg)
   compressors_.resize(kMaxCompressors);
   for (auto& c : compressors_) c.configure(cfg.sampleRate);
   compressorOwner_.assign(kMaxCompressors, -1);
+  listenBuf_.assign(static_cast<std::size_t>(kMaxListeners) * kMaxSegment, 0.0f);
+  listenerOwner_.fill(-1);
+  listenDecay_ = dmath::exp(-1.0 / (0.05 * cfg.sampleRate));
 }
 
 bool Engine::attachSample(BlockId id, const SampleBuffer& sb) noexcept {
@@ -115,6 +118,14 @@ void Engine::acquireDsp(Block& b, int slot) noexcept {
     }
     return;
   }
+  if (b.type == BlockType::PowerSoundLaser) {
+    for (int i = 0; i < kMaxListeners; ++i) if (listenerOwner_[static_cast<std::size_t>(i)] < 0) {
+      listenerOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
+      b.poolIndex = static_cast<std::int16_t>(i);
+      break;
+    }
+    return;
+  }
   if (b.type == BlockType::FxCompressor) {
     for (int i = 0; i < kMaxCompressors; ++i) if (compressorOwner_[static_cast<std::size_t>(i)] < 0) {
       compressorOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
@@ -147,6 +158,7 @@ void Engine::releaseDsp(Block& b) noexcept {
   if (b.type == BlockType::FxChorus) chorusPool_.release(b.poolIndex);
   if (b.type == BlockType::FxPitchShifter) pitchPool_.release(b.poolIndex);
   if (b.type == BlockType::FxConvolver && b.poolIndex >= 0) convolverOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
+  if (b.type == BlockType::PowerSoundLaser && b.poolIndex >= 0) listenerOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
   if (b.type == BlockType::FxCompressor && b.poolIndex >= 0) compressorOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
   b.poolIndex = -1;
 }
@@ -272,6 +284,13 @@ void Engine::configureDsp(Block& b) noexcept {
       b.chopper.configure(p[P::FxChopper::rate], p[P::FxChopper::depth], p[P::FxChopper::spread], static_cast<int>(p[P::FxChopper::waveform]), p[P::FxChopper::mix], sr, first);
       break;
     case BlockType::FxPitchShifter: b.pitchshift.configure(p[P::FxPitchShifter::pitchOffset], p[P::FxPitchShifter::mix], sr, first); break;
+    case BlockType::PowerSoundLaser: {  // Band: two biquads in series on what it hears (b.eq's left pair)
+      const int band = std::clamp(static_cast<int>(std::lround(p[P::PowerSoundLaser::band])), 0, 3);
+      if (band == 1) { b.eq.l[0].set(T::Lowpass, 250.0, 0.0, 0.0, sr); b.eq.l[1].set(T::Lowpass, 250.0, 0.0, 0.0, sr); }
+      else if (band == 2) { b.eq.l[0].set(T::Highpass, 250.0, 0.0, 0.0, sr); b.eq.l[1].set(T::Lowpass, 2500.0, 0.0, 0.0, sr); }
+      else if (band == 3) { b.eq.l[0].set(T::Highpass, 2500.0, 0.0, 0.0, sr); b.eq.l[1].set(T::Highpass, 2500.0, 0.0, 0.0, sr); }
+      break;
+    }
     case BlockType::FxCompressor:
       if (b.poolIndex >= 0)
         compressors_[static_cast<std::size_t>(b.poolIndex)].setParams(std::clamp(p[P::FxCompressor::threshold], -100.0, 0.0), std::clamp(p[P::FxCompressor::knee], 0.0, 40.0),
@@ -335,7 +354,7 @@ void Engine::apply(const Command& c) noexcept {
       if (slot < 0) return;
       const auto before = graph_.row(slot);
       if (blocks_[slot].gated()) log(Event::Type::GateOff, blocks_[slot].id);
-      if (blocks_[slot].type == BlockType::PowerLaser) releaseLaser(blocks_[slot]);
+      if (blocks_[slot].type == BlockType::PowerLaser || blocks_[slot].type == BlockType::PowerSoundLaser) releaseLaser(blocks_[slot]);
       for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].laserHits.reset(static_cast<std::size_t>(slot));  // slot may be reused
       blocks_[slot].alive = false;
       const auto end = std::remove(order_.begin(), order_.begin() + orderCount_, static_cast<std::uint16_t>(slot));
@@ -389,7 +408,7 @@ void Engine::apply(const Command& c) noexcept {
         for (int k = 0; k < orderCount_; ++k) {
           Block& b = blocks_[order_[k]];
           b.pulsePower = 0;
-          if (b.type == BlockType::PowerLaser) releaseLaser(b);
+          if (b.type == BlockType::PowerLaser || b.type == BlockType::PowerSoundLaser) releaseLaser(b);
         }
       }
       recomputeStaticPower();
@@ -838,18 +857,22 @@ void Engine::releaseLaser(Block& laser) noexcept {
   laser.beamOn = false;
 }
 
+static_assert(P::PowerSoundLaser::angle == P::PowerLaser::angle && P::PowerSoundLaser::range == P::PowerLaser::range &&
+              P::PowerSoundLaser::rotate == P::PowerLaser::rotate, "the Sound Laser's beam params line up with the Laser's");
+
 /// SPEC-SIMULATION R7–R10. Beams are recomputed every tick in creation order, so a laser powered by an earlier laser
 /// this tick fires this tick. Unlike v1, the beam stops at the *nearest* Void before any block is tested.
 void Engine::runLasers() noexcept {
   beamCount_ = 0;
   for (int k = 0; k < orderCount_; ++k) {
     Block& l = blocks_[order_[k]];
-    if (l.type != BlockType::PowerLaser) continue;
-    const bool running = worldPower_ && (l.params[P::PowerLaser::selfPoweredMode] != 0.0 || l.power() > 0);
+    const bool sound = l.type == BlockType::PowerSoundLaser;  // CHG-0016: its beam is gated by what it hears
+    if (l.type != BlockType::PowerLaser && !sound) continue;
+    const bool running = worldPower_ && (sound ? l.listenOn : l.params[P::PowerLaser::selfPoweredMode] != 0.0 || l.power() > 0);
     if (!running) { if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
     // v1 rotates only while *powered* (IsPowered: PowerAmount > 0), not when merely self-powered.
     const double rotate = l.params[P::PowerLaser::rotate];
-    const bool synced = l.params[P::PowerLaser::sync] != 0.0;
+    const bool synced = !sound && l.params[P::PowerLaser::sync] != 0.0;
     if (synced) {
       // Synced (owner): one full turn every |turnBeats| (negative: anticlockwise), locked to the beat: at beat 0 it
       // points at the Angle set, so every take from the same position turns the same (owner review 2).
@@ -857,7 +880,7 @@ void Engine::runLasers() noexcept {
       double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * beat_ / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
       if (a <= 0.0) a += 360.0;
       l.params[P::PowerLaser::angle] = a - 270.0;
-    } else if (l.power() > 0 && std::lround(rotate) != 0) {
+    } else if ((sound || l.power() > 0) && std::lround(rotate) != 0) {
       double a = l.params[P::PowerLaser::angle] + rotate / 100.0 / kTicksPerV1Frame;
       if (a > 90.0) a -= 360.0;
       if (a < -270.0) a += 360.0;
@@ -1069,6 +1092,18 @@ void Engine::runTick() noexcept {
     if (a > 90.0) a -= 360.0;
     if (a < -270.0) a += 360.0;
     pr.params[P::PowerPrism::angle] = a;
+  }
+  // 2a'. Sound Lasers (CHG-0016, R7b): on while the level heard is past the threshold (or under it, inverted), and for
+  // at least `hold` after.
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& l = blocks_[order_[k]];
+    if (l.type != BlockType::PowerSoundLaser) continue;
+    const double db = l.listenEnv > 1e-6 ? 20.0 * dmath::log10(l.listenEnv) : -120.0;
+    const bool above = db > l.params[P::PowerSoundLaser::threshold];
+    const bool want = l.poolIndex >= 0 && (l.params[P::PowerSoundLaser::invert] != 0.0 ? !above : above);
+    if (want) l.holdUntil = tick_ + static_cast<std::uint32_t>(std::lround(std::clamp(l.params[P::PowerSoundLaser::hold], 0.0, 10.0) * kTickRate));
+    l.listenOn = want || tick_ < l.holdUntil;
+    l.mon[0] = static_cast<float>(db); l.mon[1] = l.listenOn ? 1.0f : 0.0f;
   }
   // 2b. lasers (v1 LaserBeams.UpdateCollisions)
   runLasers();
@@ -1374,8 +1409,27 @@ void Engine::render(float* left, float* right, int n) noexcept {
   std::fill_n(mixL_.begin(), n, 0.0f);
   std::fill_n(mixR_.begin(), n, 0.0f);
   bool anyDirect = false;
+  // Sound Lasers (CHG-0016): which chains each one hears (those of the sources connected to it).
+  std::array<std::bitset<kMaxBlocks>, kMaxListeners> heard;
+  bool listening = false;
+  for (int i = 0; i < kMaxListeners; ++i) {
+    const int s = listenerOwner_[static_cast<std::size_t>(i)];
+    if (s < 0) continue;
+    listening = true;
+    std::fill_n(listenBuf_.begin() + static_cast<std::ptrdiff_t>(i) * kMaxSegment, n, 0.0f);
+    const auto& row = graph_.row(s);
+    for (int k = 0; k < orderCount_; ++k) {
+      const int src = order_[k], c = audioChains_.chainOf[static_cast<std::size_t>(src)];
+      if (row[static_cast<std::size_t>(src)] && c >= 0) heard[static_cast<std::size_t>(i)].set(static_cast<std::size_t>(c));
+    }
+  }
   for (int c = 0; c < audioChains_.chainCount; ++c) {
     renderChain(c, n);
+    if (listening) for (int i = 0; i < kMaxListeners; ++i) {  // as it sounds: after the chain's effects, mono
+      if (listenerOwner_[static_cast<std::size_t>(i)] < 0 || !heard[static_cast<std::size_t>(i)][static_cast<std::size_t>(c)]) continue;
+      float* buf = listenBuf_.data() + static_cast<std::ptrdiff_t>(i) * kMaxSegment;
+      for (int k = 0; k < n; ++k) buf[k] += 0.5f * (chainL_[k] + chainR_[k]);
+    }
     if (chainDirect_ && !anyDirect) { anyDirect = true; std::fill_n(directL_.begin(), n, 0.0f); std::fill_n(directR_.begin(), n, 0.0f); }
     const bool fading = fade_ != Fade::Idle && fadingChains_[static_cast<std::size_t>(c)];
     for (int i = 0; i < n; ++i) {
@@ -1390,6 +1444,7 @@ void Engine::render(float* left, float* right, int n) noexcept {
       else { toL[i] += chainL_[i]; toR[i] += chainR_[i]; }
     }
   }
+  if (listening) listen(n);
   // Pre-effect LFOs outside any chain keep their phase (Tone LFOs run from block creation).
   for (int k = 0; k < orderCount_; ++k) {
     Block& b = blocks_[order_[k]];
@@ -1409,6 +1464,25 @@ void Engine::render(float* left, float* right, int n) noexcept {
       if (fade_ == Fade::Out) switchRouting();
       else { fade_ = Fade::Idle; fadePos_ = 0; fadingChains_.reset(); }
     }
+  }
+}
+
+/// What each Sound Laser heard this segment, through its band filter, into its level: the peak, falling by half every
+/// 35 ms or so (a 50 ms time constant). Per sample, so it does not depend on how the timeline is cut into segments.
+void Engine::listen(int n) noexcept {
+  for (int i = 0; i < kMaxListeners; ++i) {
+    const int s = listenerOwner_[static_cast<std::size_t>(i)];
+    if (s < 0) continue;
+    Block& l = blocks_[static_cast<std::size_t>(s)];
+    const float* buf = listenBuf_.data() + static_cast<std::ptrdiff_t>(i) * kMaxSegment;
+    const bool filtered = std::lround(l.params[P::PowerSoundLaser::band]) != 0;
+    double env = l.listenEnv;
+    for (int k = 0; k < n; ++k) {
+      float x = buf[k];
+      if (filtered) x = l.eq.l[1].process(l.eq.l[0].process(x));
+      env = std::max(static_cast<double>(std::abs(x)), env * listenDecay_);
+    }
+    l.listenEnv = env < 1e-30 ? 0.0 : env;
   }
 }
 
@@ -1491,6 +1565,7 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
   for (int k = 0; k < orderCount_ && n < max; ++k) {
     const Block& b = blocks_[order_[k]];
     if (b.type == BlockType::FxCompressor) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
+    else if (b.type == BlockType::PowerSoundLaser) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.gateStep), b.gatePassed ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};
   }

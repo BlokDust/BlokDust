@@ -1,0 +1,13 @@
+{
+  "description": "CHG-0016 (R7b): an emitter blips a Tone; a Sound Laser hears it and its beam holds a second Tone for each blip (hold 0.2 s).",
+  "render": { "seconds": 6, "sampleRate": 44100 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 6,
+    "blocks": [
+      { "id": "e", "type": "power.emitter", "x": -10, "y": 0, "params": { "angle": 0, "selfPoweredMode": true, "rate": 45, "speed": 8 } },
+      { "id": "blip", "type": "source.tone", "x": 0, "y": 0, "params": { "waveform": 1 } },
+      { "id": "ear", "type": "power.sound-laser", "x": 3, "y": 2, "params": { "angle": 0, "range": 150, "threshold": -32, "hold": 0.2 } },
+      { "id": "answer", "type": "source.tone", "x": 10, "y": 2, "params": { "waveform": 0, "transpose": -12 } }
+    ]
+  }
+}

@@ -76,6 +76,32 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const pass = synced.indexOf('Offset') === synced.indexOf('Swing') + 1 && free.indexOf('Offset') === free.indexOf('Fire Rate') + 1 && saved === 0.25;
     return [pass, { synced, free, saved }];
   },
+  // CHG-0016: a Sound Laser hears the Tone beside it; its beam powers a second Tone; a higher threshold turns it off.
+  async 'sound-laser'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0),
+      blk('s', 'power.sound-laser', 3, 0, { angle: 0, hold: 0 }), blk('far', 'source.tone', 10, 0, { transpose: 7 })], errors);
+    await p.waitForTimeout(400);
+    const onBeams = await p.evaluate(() => (window as any).__bd_probe.beams as number);
+    const powered = (await state(p)).powered as number[];
+    await openPanel(p, 's');
+    await p.waitForTimeout(400);
+    const r = await rows(p);
+    const meter = r.find(x => x.setting === 'soundMeter')?.shown as { level: number; on: boolean } | undefined;
+    await p.screenshot({ path: `${OUT}/sound-laser.png` });
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('threshold', -3));
+    await p.waitForTimeout(500);
+    const offBeams = await p.evaluate(() => (window as any).__bd_probe.beams as number);
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('whenQuieter', 1));
+    await p.waitForTimeout(500);
+    const invertedBeams = await p.evaluate(() => (window as any).__bd_probe.beams as number);
+    const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 's').params;
+    const menu = await menuItems(p, 'Power');
+    await p.close();
+    const names = r.map(x => x.name);
+    const pass = menu.includes('Sound Laser') && onBeams === 1 && powered.length >= 2 && !!meter && meter.on && meter.level > -25 && offBeams === 0 && invertedBeams === 1 &&
+      saved.invert === 1 && saved.threshold === -3 && ['Level', 'Threshold', 'Band', 'Beam on', 'Hold', 'Angle', 'Range', 'Rotate'].every(n => names.includes(n));
+    return [pass, { onBeams, offBeams, invertedBeams, powered, meter, names, saved }];
+  },
   // CHG-0015: Counter, Chance and Prism are in the Power menu; the Counter's panel shows its pattern and where it is.
   async 'counter-panel'(errors) {
     const p = await open(browser, [blk('e', 'power.emitter', -8, 0, { angle: 0, selfPoweredMode: true, rate: 30, speed: 12 }),

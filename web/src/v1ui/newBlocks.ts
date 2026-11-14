@@ -4,12 +4,13 @@
 // show (a level meter, …), which read the engine's monitors.
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { App, Point } from './shim.ts';
+import { addSelector } from './selectorOption.ts';
 
 /** Menu order within each v1 category (appended after v1's items). */
 const MENU: Record<string, string[]> = {
   Source: [],
   Effect: ['fx.compressor'],
-  Power: ['power.counter', 'power.chance', 'power.prism'],
+  Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
   Interaction: [],
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
@@ -54,6 +55,12 @@ interface FormBlock { Id: number; BlockName: string; Params: Record<string, any>
 interface SliderOpts { quantised?: boolean; centered?: boolean; log?: boolean; display?: (v: number) => string }
 const slider = (name: string, setting: string, value: number, min: number, max: number, o: SliderOpts = {}) => ({ type: 'slider', name, setting,
   props: { value, min, max, quantised: !!o.quantised, centered: !!o.centered, ...(o.log ? { logarithmic: true } : {}), ...(o.display ? { convertDisplay: o.display } : {}) } });
+/** A carousel row (selectorOption.ts): arrows either side of the choice, wrapping round. */
+const choice = (name: string, setting: string, value: number, labels: string[]) => {
+  addSelector(setting);
+  return slider(name, setting, Math.max(0, Math.min(labels.length - 1, Math.round(value))), 0, labels.length - 1,
+    { quantised: true, display: v => labels[Math.max(0, Math.min(labels.length - 1, Math.round(v)))] });
+};
 const dB = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)} dB`;
 const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`);
 
@@ -61,7 +68,8 @@ const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.ro
 const CONVERT: Record<string, { param: string; to: (v: number) => number }> = {
   attackMs: { param: 'attack', to: v => v / 1000 },
   releaseMs: { param: 'release', to: v => v / 1000 },
-  prismAngle: { param: 'angle', to: v => v - 90 },  // v1's Angle sliders show angle + 90 (0 = up)
+  angle90: { param: 'angle', to: v => v - 90 },  // v1's Angle sliders show angle + 90 (0 = up)
+  whenQuieter: { param: 'invert', to: v => (v >= 0.5 ? 1 : 0) },
 };
 /** v1 SetParam for the settings above. Returns the param and value to send, or null when `key` is an ordinary param. */
 export function convertSetting(key: string, value: number): { param: string; value: number } | null {
@@ -80,6 +88,17 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
   ],
+  // CHG-0016: what it hears against its threshold, then when the beam comes on, then the Laser's own rows.
+  'power.sound-laser': b => [
+    slider('Level', 'soundMeter', 0, 0, 1),
+    slider('Threshold', 'threshold', Number(b.Params.threshold), -60, 0, { display: dB }),
+    choice('Band', 'band', Number(b.Params.band), ['ALL', 'LOWS', 'MIDS', 'HIGHS']),
+    choice('Beam on', 'whenQuieter', b.Params.invert ? 1 : 0, ['WHEN LOUDER', 'WHEN QUIETER']),
+    slider('Hold', 'hold', Number(b.Params.hold), 0, 2, { display: v => ms(v * 1000) }),
+    slider('Angle', 'angle90', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
+    slider('Range', 'range', Number(b.Params.range), 50, 1200, { quantised: true }),
+    { type: 'slider', name: 'Rotate', setting: 'rotate', props: { value: Number(b.Params.rotate), min: -500, max: 500, quantised: true, centered: true, snap: true } },
+  ],
   // CHG-0015: the pattern as a row of steps, then the three numbers that make it (Euclidean, SIMULATION-0005).
   'power.counter': b => [
     slider('Pattern', 'counterPattern', 0, 0, 1),
@@ -90,7 +109,7 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
   'power.chance': b => [slider('Chance', 'chance', Number(b.Params.chance), 0, 1, { display: v => `${Math.round(v * 100)}%` })],
   // The Laser's Angle and Rotate rows, then how many streams and how wide they fan (SIMULATION-0006).
   'power.prism': b => [
-    slider('Angle', 'prismAngle', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
+    slider('Angle', 'angle90', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
     { type: 'slider', name: 'Rotate', setting: 'rotate', props: { value: Number(b.Params.rotate), min: -500, max: 500, quantised: true, centered: true, snap: true } },
     slider('Streams', 'streams', Number(b.Params.streams), 1, 4, { quantised: true }),
     slider('Spread', 'spread', Number(b.Params.spread), 0, 180, { quantised: true, display: v => `${Math.round(v)}°` }),
@@ -119,8 +138,9 @@ export function newBlockForm(b: FormBlock): boolean {
 // ---- live rows: declared as sliders (so v1's OptionsPanel lays them out), then redrawn here ----
 type RowDraw = (this: any, ctx: CanvasRenderingContext2D, units: number, i: number, panel: any) => void;
 
-/** v1 OptionMeter's look (Settings › dB Meter), for a block: the input level as a bar on −60…0 dB, the threshold as
- * v1's peak marker, and under the bar the gain reduction, growing leftward from 0 dB. */
+/** v1 OptionMeter's look (Settings › dB Meter), for a block: the level as a bar on −60…0 dB and the threshold as v1's
+ * peak marker. Under the bar, a Compressor shows its gain reduction, growing leftward from 0 dB; a Sound Laser shows
+ * a full bar while its beam is on. */
 const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
   const block = panel.SelectedBlock, m = monitorOf(block?.Id) ?? [-100, 0];
@@ -134,10 +154,16 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   // LEVEL //
   App.FillColor(ctx, colours[i % colours.length]);
   ctx.fillRect(x - units, y + h * 0.19, units + at(m[0]), h * 0.4);
-  // GAIN REDUCTION (24 dB across the row) //
-  const gr = Math.max(0, Math.min(1, -m[1] / 24)) * w;
-  App.FillColor(ctx, colours[(i + 1) % colours.length]);
-  ctx.fillRect(x + w - gr, y + h * 0.65, gr, h * 0.16);
+  if (block?.def?.id === 'fx.compressor') {
+    // GAIN REDUCTION (24 dB across the row) //
+    const gr = Math.max(0, Math.min(1, -m[1] / 24)) * w;
+    App.FillColor(ctx, colours[(i + 1) % colours.length]);
+    ctx.fillRect(x + w - gr, y + h * 0.65, gr, h * 0.16);
+  } else if (m[1] > 0) {
+    // SOUND LASER: its beam is on (the Laser's colour, a bar under the level) //
+    App.FillColor(ctx, colours[(i + 1) % colours.length]);
+    ctx.fillRect(x - units, y + h * 0.65, w + units, h * 0.16);
+  }
   // THRESHOLD (v1 OptionMeter's peak marker) //
   const tx = x + at(Number(block?.Params.threshold ?? -24)), d = 2 * units;
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
@@ -147,7 +173,7 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';
   ctx.fillText(this.Name.toUpperCase(), panel.Margin - 15 * units, mid + dataType * 0.4);
-  this.Shown = { level: m[0], reduction: m[1], thresholdX: tx - x, width: w };  // tests
+  this.Shown = { level: m[0], reduction: m[1], on: m[1] > 0, thresholdX: tx - x, width: w };  // tests
 };
 
 /** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where a hit passes; the step the next
@@ -177,7 +203,7 @@ const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   this.Shown = { pattern: pattern.map(on => (on ? 'x' : '.')).join(''), next };  // tests
 };
 
-const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, counterPattern: drawCounterPattern };
+const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, soundMeter: drawCompressorMeter, counterPattern: drawCounterPattern };
 
 /** A selected Prism's exit directions, drawn on the stage while its panel is open (as a Laser shows its beam): thin
  * dashed lines from the block, following its rotation. */
