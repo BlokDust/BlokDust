@@ -9,10 +9,14 @@ export interface Patch { format?: string; version?: number; seed?: number; tempo
   /** The order the connected pairs connected in, oldest first, as [block id, block id] (R4a: a source's effects run in
    * the order they connected, as in v1). Ordering only: connections still come from positions. */
   connectionOrder?: [string, string][];
+  /** What is inside each Stage block (CHG-0021, SPEC-PATCH-FORMAT-V2 R7): one entry per Stage block, by its id. One
+   * level only: an inner patch's own Stage blocks stay empty. */
+  macros?: Macro[];
   /** Notes on the stage (CHG-0020, UI-0011): text at a grid position. The engine never reads them. */
   labels?: { id: string; text: string; x: number; y: number }[];
   /** The view it was saved at (owner, 2026-11-12, SPEC-PATCH-FORMAT-V2 R2): opening shows it. The engine ignores it. */
   view?: { x: number; y: number; zoom: number } }
+export interface Macro { block: string; blocks: PatchBlock[]; connectionOrder?: [string, string][]; labels?: Patch['labels']; view?: Patch['view'] }
 export type ScriptOp =
   | { op: 'add'; atSample?: number; block: PatchBlock }
   | { op: 'move'; atSample?: number; block: string; x: number; y: number }
@@ -86,6 +90,14 @@ export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   for (const b of patch.blocks) addBlock(b, out, -1);
   for (const c of targetCommands(patch.blocks, out.ids)) out.commands.push({ ...c, atSample: -1 });
   for (const r of relinks(patch, out.ids)) out.commands.push({ ...r, atSample: -1 });
+  // Stage blocks' inner patches (R7; the C++ loader's `stages`): their commands carry the Stage block's engine id, and
+  // come after the outer patch's, so the block exists when its inner world is made (WasmEngine.push).
+  const inner: Command[] = [];
+  for (const m of Array.isArray(patch.macros) ? patch.macros : []) {
+    const stage = m && typeof m.block === 'string' ? out.ids.get(m.block) : undefined;
+    if (stage === undefined || !Array.isArray(m.blocks)) continue;
+    for (const c of loadPatch({ blocks: m.blocks, connectionOrder: m.connectionOrder }).commands) inner.push({ ...c, stage });
+  }
   for (const s of script) {
     const at = s.atSample ?? -1;
     if (s.op === 'add') { addBlock(s.block, out, at); continue; }
@@ -115,5 +127,6 @@ export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   // Same ordering rule as the C++ loader: stable by due sample (immediate first).
   const due = (c: Command) => Math.max(c.atSample ?? -1, -1);
   out.commands = out.commands.map((c, i) => ({ c, i })).sort((a, b) => due(a.c) - due(b.c) || a.i - b.i).map(x => x.c);
+  out.commands.push(...inner);
   return out;
 }

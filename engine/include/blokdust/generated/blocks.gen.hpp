@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 43;
+inline constexpr std::size_t kBlockTypeCount = 44;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -19,6 +19,7 @@ enum class BlockType : std::uint16_t {
   SourceRecorder,  // source.recorder
   SourceSample,  // source.sample
   SourceSampleGen,  // source.sample-gen
+  SourceStage,  // source.stage
   SourceTone,  // source.tone
   FxArpeggiator,  // fx.arpeggiator
   FxAutoWah,  // fx.auto-wah
@@ -189,6 +190,13 @@ inline constexpr ParamInfo kParamsSourceSampleGen[] = {
   {"region", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
 };
 namespace param::SourceSampleGen { enum : std::uint8_t { playbackRate, detune, reverse, startPosition, endPosition, loop, loopStart, loopEnd, volume, generate, seed, region, Count }; }
+
+// ---- source.stage (Stage)
+inline constexpr GridPoint kOutlineSourceStage[] = {{-1.0f, -2.0f}, {0.0f, -2.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {-1.0f, 2.0f}};
+inline constexpr ParamInfo kParamsSourceStage[] = {
+  {"gain", 1.0, true, UiTransform::Identity, 0.0, 2.0, 0.0},
+};
+namespace param::SourceStage { enum : std::uint8_t { gain, Count }; }
 
 // ---- source.tone (Tone)
 inline constexpr GridPoint kOutlineSourceTone[] = {{-2.0f, 0.0f}, {0.0f, -2.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
@@ -567,6 +575,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceRecorder, "source.recorder", "Recorder", BlockKind::AudioSource, 0.0f, kOutlineSourceRecorder, 6, kParamsSourceRecorder, 13, true},
   {BlockType::SourceSample, "source.sample", "Sample", BlockKind::AudioSource, 0.0f, kOutlineSourceSample, 6, kParamsSourceSample, 14, true},
   {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 12, true},
+  {BlockType::SourceStage, "source.stage", "", BlockKind::AudioSource, 0.0f, kOutlineSourceStage, 5, kParamsSourceStage, 1, false},
   {BlockType::SourceTone, "source.tone", "ToneSource", BlockKind::AudioSource, 0.0f, kOutlineSourceTone, 5, kParamsSourceTone, 3, true},
   {BlockType::FxArpeggiator, "fx.arpeggiator", "", BlockKind::PreEffect, 6.0f, kOutlineFxArpeggiator, 5, kParamsFxArpeggiator, 6, false},
   {BlockType::FxAutoWah, "fx.auto-wah", "AutoWah", BlockKind::PostEffect, 6.0f, kOutlineFxAutoWah, 4, kParamsFxAutoWah, 5, true},

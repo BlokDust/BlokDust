@@ -13,20 +13,22 @@ import { SAMPLE_GEN } from '../v1ui/ported/SampleGenData';
 import { encodeWav } from '../audio/wav.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
-import { relinks, targetCommands, type Patch } from '../patch/loadPatch.ts';
+import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
 import { editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
 import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
 import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../stage/labels.ts';
+import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
+import { gridToPx } from '../stage/metrics.ts';
 import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
 import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
-import { LABEL_MENU_ID, setMonitors } from '../v1ui/newBlocks.ts';
+import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/gridPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
@@ -139,7 +141,20 @@ async function main() {
   /** The patch tempo (SIMULATION-0003): saved only once set, so older patches stay byte-identical. */
   let tempo: number | undefined;
   let engine: EngineNode | null = null;
-  let send = (cmds: Command[]) => engine?.send(cmds);
+  /** Commands to the engine (the plugin: to its processor), as given. */
+  let sendRaw = (cmds: Command[]) => engine?.send(cmds);
+  /**
+   * Stage blocks (CHG-0021, SCOPE-0006). `macros`: what is inside each, by the Stage block's patch id.
+   * `innerIds`: the engine ids its inner blocks have in this session. `inside`: the Stage being looked into; the page
+   * then shows and edits its inner world, the outer world's blocks set aside (the engine runs both all along).
+   */
+  const macros = new Map<string, Macro>();
+  const innerIds = new Map<string, { ids: Record<string, number>; nextId: number }>();
+  interface Outer { model: Map<number, ModelBlock>; v1Blocks: Map<number, V1Block>; samples: Map<number, AudioBuffer>; missing: Set<number>; labels: Label[];
+    connectionOrder: [string, string][]; nextId: number; view: { x: number; y: number; zoom: number }; undo: unknown[]; redo: unknown[] }
+  let inside: { stageId: number; stageUid: string; outer: Outer; image: HTMLCanvasElement; blockX: number; blockY: number; grid: number } | null = null;
+  /** Commands for the world on screen: inside a Stage, they go to its inner world. */
+  const send = (cmds: Command[]) => sendRaw(inside ? cmds.map(c => ({ ...c, stage: inside!.stageId })) : cmds);
   /** Sample references by `track` key (DATA-0005): the patch keeps the ones its blocks use. */
   const refs = new Map<string, SampleRef>();
   /** R4a (owner, 2026-11-12): the order the connected pairs connected in, as patch ids, oldest first. A source's
@@ -149,16 +164,43 @@ async function main() {
   /** Labels (CHG-0020, UI-0011): notes on the stage, kept in the patch. */
   const labels: Label[] = [];
   const uidToId = () => new Map([...model].map(([id, b]) => [b.uid, id]));
-  const toPatch = (): Patch => {
-    const used = new Set([...model.values()].map(b => b.params.track).filter((t): t is string => typeof t === 'string'));
-    const r = Object.fromEntries([...refs].filter(([k]) => used.has(k)));
-    const uids = uidToId(), order = connectionOrder.filter(([a, b]) => uids.has(a) && uids.has(b));
-    return { format: 'blokdust.patch', version: 2, seed, ...(tempo !== undefined ? { tempo } : {}),
-      blocks: [...model.values()].map(b => ({ id: b.uid, type: b.type, x: b.x, y: b.y, params: b.params })),
-      ...(Object.keys(r).length ? { refs: r } : {}), ...(order.length ? { connectionOrder: order } : {}),
-      ...(labels.length ? { labels: labels.map(l => ({ ...l })) } : {}),
-      view: currentView() };
+  /** The world on screen as patch parts: its blocks, their connection order, its labels. */
+  const worldParts = (m: Map<number, ModelBlock> = model, order = connectionOrder, lbls = labels) => {
+    const uids = new Set([...m.values()].map(b => b.uid));
+    return { blocks: [...m.values()].map(b => ({ id: b.uid, type: b.type, x: b.x, y: b.y, params: b.params })) as PatchBlock[],
+      order: order.filter(([a, b]) => uids.has(a) && uids.has(b)), labels: lbls };
   };
+  /** What is inside the Stage being looked into, as it is now. */
+  const innerMacro = (): Macro => {
+    const w = worldParts();
+    return { block: inside!.stageUid, blocks: w.blocks, ...(w.order.length ? { connectionOrder: w.order } : {}), ...(w.labels.length ? { labels: w.labels.map(l => ({ ...l })) } : {}), view: currentView() };
+  };
+  /** The whole patch: the outer world, with what is inside each of its Stage blocks (R7). Looking into a Stage, the
+   * inner world on screen is folded into its macro first. */
+  const toPatch = (): Patch => {
+    if (inside) macros.set(inside.stageUid, innerMacro());
+    const w = inside ? worldParts(inside.outer.model, inside.outer.connectionOrder, inside.outer.labels) : worldParts();
+    const stages = new Set(w.blocks.filter(b => b.type === 'source.stage').map(b => b.id));
+    const ms = [...macros.values()].filter(m => stages.has(m.block) && (m.blocks.length || m.labels?.length));
+    const used = new Set([...w.blocks, ...ms.flatMap(m => m.blocks)].map(b => b.params?.track).filter((t): t is string => typeof t === 'string'));
+    const r = Object.fromEntries([...refs].filter(([k]) => used.has(k)));
+    return { format: 'blokdust.patch', version: 2, seed, ...(tempo !== undefined ? { tempo } : {}),
+      blocks: w.blocks,
+      ...(Object.keys(r).length ? { refs: r } : {}), ...(w.order.length ? { connectionOrder: w.order } : {}),
+      ...(w.labels.length ? { labels: w.labels.map(l => ({ ...l })) } : {}),
+      ...(ms.length ? { macros: ms } : {}),
+      view: inside ? inside.outer.view : currentView() };
+  };
+  /** Engine commands that build what is inside Stage block `id` (patch id `uid`), remembering its inner blocks' ids. */
+  function stageCommands(id: number, uid: string): Command[] {
+    const m = macros.get(uid), blocks = (m?.blocks ?? []).filter(b => BLOCKS_BY_ID.has(b.type));
+    if (!blocks.length) return [];
+    try {
+      const loaded = loadPatch({ blocks, connectionOrder: m!.connectionOrder });
+      innerIds.set(uid, { ids: Object.fromEntries(loaded.ids), nextId: loaded.nextId });
+      return loaded.commands.map(c => ({ ...c, stage: id }));
+    } catch (e) { console.warn('BlokDust: a Stage block could not be filled', e); return []; }
+  }
   const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
   const round3 = (v: number) => Math.round(v * 1000) / 1000;
   // The view settles (owner, 2026-11-12): the plugin's processor keeps it with the DAW project (bd_view); the website's
@@ -201,8 +243,12 @@ async function main() {
   };
 
   const scene = new V1Scene({
+    openStage: id => enterStage(id),
+    loadStagePatch: id => loadStagePatch(id),
     createBlock: (v1Type, gx, gy) => {
-      if (v1Type === LABEL_MENU_ID) { newLabel(gx, gy); return null; }  // not a block: it follows the pointer by itself
+      if (v1Type === LABEL_MENU_ID) { newLabel(gx, gy); return null; }
+      // A Stage made while several blocks are selected takes them inside (CHG-0021).
+      if (v1Type === 'Stage' && selection.size > 1) { const id = wrapInStage([...selection], gx, gy); if (id !== null) { startDrag(id, 0, 0, true); return id; } }  // not a block: it follows the pointer by itself
       const def = DEF_BY_V1.get(v1Type);
       if (!def) return null;
       // A new Emitter, Pulse or Stereo Delay starts in tempo sync (owner, CHG-0004; the delay's 1/8 at 120 BPM is v1's
@@ -238,13 +284,15 @@ async function main() {
     reverseSample: (id, on) => reverseSample(id, on),
     setText: (id, key, value) => setParams(id, { [key]: value }),
     tempo: () => tempo ?? 120,
-    setTempo: bpm => { tempo = Math.max(40, Math.min(240, bpm)); send([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]); changed(); },
+    setTempo: bpm => { tempo = Math.max(40, Math.min(240, bpm)); sendRaw([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]); changed(); },
     hasLocalFiles: () => [...model.values()].some(b => !isPortable(b.params.track)),
-    setMasterDb: db => send([{ type: CommandType.SetMaster, id: 0, value: db <= -99 ? 0 : 2 ** (db / 6) }]),
-    setWorldPower: on => { send([{ type: CommandType.WorldPower, id: 0, value: on ? 1 : 0 }]); stage.redraw(); },
+    setMasterDb: db => sendRaw([{ type: CommandType.SetMaster, id: 0, value: db <= -99 ? 0 : 2 ** (db / 6) }]),
+    setWorldPower: on => { sendRaw([{ type: CommandType.WorldPower, id: 0, value: on ? 1 : 0 }]); stage.redraw(); },  // the whole patch, every stage (owner)
     resetScene: () => {
       for (const id of [...model.keys()]) removeBlock(id);
+      if (inside) leaveStage(false);
       labels.length = 0; endLabelEdit(false);
+      macros.clear(); innerIds.clear();
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
@@ -332,6 +380,8 @@ async function main() {
   stage.drawUi = ctx => {
     if (labels.length) drawLabels(ctx, stage.metrics, labels, theme.colors[theme.roles.txt], labelEdit?.id ?? null);  // embeds show them too
     if (embedId) return;
+    if (inside) drawInside(ctx, insideFrame(), stage.metrics.unit, 'STAGE', { image: inside.image, blockX: inside.blockX, blockY: inside.blockY, grid: inside.grid, layers: BLOCKS_BY_ID.get('source.stage')!.geometry.layers.filter(l => l.units !== 'unit') },
+      theme.colors, theme.roles.txt, `400 ${Math.round(10 * stage.metrics.unit)}px Dosis`);
     if (uiSync) { uiSync = false; scene.sync(ctx, theme, stage.zoom, stage.drag, [...v1Blocks.values()]); }
     scene.setView(stage.zoom, stage.drag);
     scene.draw();
@@ -382,6 +432,123 @@ async function main() {
     input.focus(); input.select();
     stage.redraw();
   }
+  // ---- inside a Stage block (CHG-0021, UI-0009) ----
+  /** Menu items not offered inside a Stage: Stage itself (one level, SCOPE-0006) and the blocks that need audio files
+   * or the microphone, which an inner world cannot take yet. */
+  const INSIDE_HIDDEN = new Set(['Stage', 'Sample', 'Granular', 'Recorder', 'SampleGen', 'Microphone']);
+  const insideFrame = () => {
+    const m = stage.metrics, h = scene.Header as unknown as { Height: number; Rows?: number };
+    return frameFor(m.width, m.height, m.unit, h.Height * (h.Rows ?? 1) * m.unit, { x: inside!.blockX, y: inside!.blockY });
+  };
+  function clearWorld(): void {
+    for (const id of [...model.keys()]) { model.delete(id); v1Blocks.delete(id); stage.removeBlock(id); }
+    samples.clear(); missing.clear(); labels.length = 0;
+    stage.selected.clear(); stage.held.clear();
+  }
+  /** Look into Stage block `id`: its inner world takes the page (in a window over the outer stage). Web only. */
+  function enterStage(id: number): void {
+    const b = model.get(id);
+    if (inside || juce || embedId || !b || b.type !== 'source.stage') return;
+    endLabelEdit(true); endPlacing(false);
+    scene.OptionsPanel.Close();
+    setTimeout(() => { if (inside && (scene.OptionsPanel.SelectedBlock as V1Block | null)?.def.id === 'source.stage') scene.OptionsPanel.Close(); }, 450);  // a panel on its way open (v1 opens it 400 ms after the click)
+    const [bx, by] = gridToPx(stage.metrics, b.x, b.y), image = stage.snapshot();
+    const outer: Outer = { model: new Map(model), v1Blocks: new Map(v1Blocks), samples: new Map(samples), missing: new Set(missing), labels: labels.slice(),
+      connectionOrder, nextId, view: currentView(), undo: undoStack.slice(), redo: redoStack.slice() };
+    clearWorld();
+    undoStack.length = 0; redoStack.length = 0;
+    inside = { stageId: id, stageUid: b.uid, outer, image, blockX: bx, blockY: by, grid: stage.metrics.scaledGridSize };
+    const macro = macros.get(b.uid) ?? { block: b.uid, blocks: [] }, known = innerIds.get(b.uid);
+    nextId = 1;
+    for (const blk of macro.blocks) if (BLOCKS_BY_ID.has(blk.type)) {
+      const fixed = known?.ids[blk.id];
+      if (fixed !== undefined) nextId = fixed;
+      addBlock(blk.type, blk.x ?? 0, blk.y ?? 0, structuredClone(blk.params ?? {}), blk.id, true);
+    }
+    nextId = Math.max(nextId, known?.nextId ?? 1, ...[...model.keys()].map(k => k + 1));
+    connectionOrder = [...(macro.connectionOrder ?? [])];
+    addLabels(readLabels(macro.labels));
+    engine?.setView(id);
+    const v = macro.view;
+    applyView(v && Number.isFinite(v.zoom) ? v : { x: 0, y: 0, zoom: 1 });
+    setMenuHidden(INSIDE_HIDDEN);
+    scene.setBlocks([...v1Blocks.values()]);
+    uiSync = true;
+    stage.redraw();
+  }
+  /** Back to the outer world. `keep`: what is inside is kept as the Stage's macro (not when the patch is being replaced). */
+  function leaveStage(keep: boolean): void {
+    const i = inside;
+    if (!i) return;
+    endLabelEdit(true); endPlacing(false);
+    scene.OptionsPanel.Close();
+    if (keep) {
+      macros.set(i.stageUid, innerMacro());
+      innerIds.set(i.stageUid, { ids: Object.fromEntries([...model].map(([id, b]) => [b.uid, id])), nextId });
+    }
+    clearWorld();
+    inside = null;
+    engine?.setView(0);
+    const o = i.outer;
+    for (const [id, b] of o.model) { model.set(id, b); stage.upsertBlock({ id, type: b.type, x: b.x, y: b.y, starPos: b.type === 'power.void' ? starPos(id) : undefined }); }
+    for (const [id, v] of o.v1Blocks) v1Blocks.set(id, v);
+    for (const [id, s] of o.samples) samples.set(id, s);
+    for (const id of o.missing) missing.add(id);
+    labels.push(...o.labels);
+    connectionOrder = o.connectionOrder; nextId = o.nextId;
+    undoStack.length = 0; redoStack.length = 0;
+    undoStack.push(...(o.undo as typeof undoStack)); redoStack.push(...(o.redo as typeof redoStack));
+    applyView(o.view);
+    setMenuHidden(new Set());
+    scene.setBlocks([...v1Blocks.values()]);
+    uiSync = true;
+    stage.redraw();
+  }
+  function exitStage(): void { if (!inside) return; leaveStage(true); changed(); }
+  /** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and carry on in there.
+   * A Stage in the selection stays out (one level). Not undoable. */
+  function wrapInStage(ids: number[], x: number, y: number): number | null {
+    const picked = ids.filter(id => model.has(id) && model.get(id)!.type !== 'source.stage');
+    if (inside || juce || !picked.length) return null;
+    const bs = picked.map(id => model.get(id)!), uids = new Set(bs.map(b => b.uid));
+    const cx = Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), cy = Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length);
+    const order = connectionOrder.filter(([a, b]) => uids.has(a) && uids.has(b));
+    const blocks = bs.map(b => ({ id: b.uid, type: b.type, x: b.x - cx, y: b.y - cy,
+      params: Object.fromEntries(Object.entries(structuredClone(b.params)).filter(([k]) => !SESSION_PARAMS.has(k))) }));
+    for (const id of picked) removeBlock(id);
+    undoStack.length = 0; redoStack.length = 0;
+    const taken = new Set([...model.values()].map(b => b.uid));
+    let uid = `stage${nextId}`; for (let k = 2; taken.has(uid); k++) uid = `stage${nextId}_${k}`;
+    macros.set(uid, { block: uid, blocks, ...(order.length ? { connectionOrder: order } : {}) });
+    setSelection([]);
+    return addBlock('source.stage', x, y, {}, uid);
+  }
+  /** The Stage panel's LOAD PATCH: a patch file's blocks become what is inside (the file's own Stage blocks are left
+   * out: one level). The block is made again, so its inner world starts fresh. */
+  function loadStagePatch(id: number): void {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = `.${PATCH_EXT},.json,application/json`;
+    input.onchange = async () => {
+      const f = input.files?.[0], patch = f ? parsePatchFile(await f.text()) : null, b = model.get(id);
+      if (!patch || !b || b.type !== 'source.stage' || inside) return;
+      useStagePatch(id, patch);
+    };
+    input.click();
+  }
+  function useStagePatch(id: number, patch: Patch): void {
+    const b = model.get(id);
+    if (!b) return;
+    const { uid, x, y, params } = b;
+    for (const [k, r] of Object.entries(patch.refs ?? {})) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
+    scene.OptionsPanel.Close();
+    removeBlock(id);
+    macros.set(uid, { block: uid, blocks: patch.blocks.filter(q => BLOCKS_BY_ID.has(q.type) && q.type !== 'source.stage').map(q => structuredClone(q)),
+      ...(patch.connectionOrder?.length ? { connectionOrder: patch.connectionOrder } : {}), ...(patch.labels?.length ? { labels: patch.labels } : {}) });
+    innerIds.delete(uid);
+    addBlock('source.stage', x, y, params, uid);
+    stage.redraw();
+  }
+  (window as unknown as { __bd_stage?: unknown }).__bd_stage = { enter: enterStage, exit: exitStage, wrap: wrapInStage, use: useStagePatch };  // tests
   function endLabelEdit(keep: boolean): void {
     const e = labelEdit;
     if (!e) return;
@@ -409,6 +576,7 @@ async function main() {
       void resolveSample(id, true);
       send([{ type: CommandType.AddBlock, id, blockType: typeIndex(type), x, y, key: uid },
         ...def.params.flatMap((q, i) => !SESSION_PARAMS.has(q.key) && (typeof p[q.key] === 'number' || typeof p[q.key] === 'boolean') ? [{ type: CommandType.SetParam, id, param: i, value: Number(p[q.key]) }] : [])]);
+      if (type === 'source.stage' && !inside) sendRaw(stageCommands(id, uid));  // what is inside it (CHG-0021)
       syncTargets();
       scene.setBlocks([...v1Blocks.values()]);
       changed();
@@ -542,6 +710,7 @@ async function main() {
    * (owner, 2026-11-10): see startPlacing. With a mouse they start under it; on a touch screen in the middle of the view.
    */
   function applyPatch(p: Patch, mode: 'open' | 'insert'): void {
+    if (inside) exitStage();
     const touch = lastPointerType !== 'mouse', at = !touch && lastPointer ? lastPointer : viewCentre();
     const part = mode === 'open'
       ? { blocks: p.blocks.filter(b => BLOCKS_BY_ID.has(b.type)), refs: { ...(p.refs ?? {}) } }
@@ -553,11 +722,13 @@ async function main() {
       juce.emitEvent('bd_patchApply', { mode, patch: JSON.stringify({ ...part, ...(mode === 'open' && p.tempo !== undefined ? { tempo: p.tempo } : {}),
         ...(mode === 'open' && p.connectionOrder ? { connectionOrder: p.connectionOrder } : {}),
         ...(mode === 'open' && p.view ? { view: p.view } : {}),
-        ...(mode === 'open' ? (p.labels?.length ? { labels: p.labels } : {}) : ('labels' in part && part.labels.length ? { labels: part.labels } : {})) }) });
+        ...(mode === 'open' ? (p.labels?.length ? { labels: p.labels } : {}) : ('labels' in part && part.labels.length ? { labels: part.labels } : {})),
+        ...(mode === 'open' ? (p.macros?.length ? { macros: p.macros } : {}) : ('macros' in part && part.macros.length ? { macros: part.macros } : {})) }) });
       return;
     }
-    if (mode === 'open') { scene.ResetScene(); if (typeof p.tempo === 'number') { tempo = p.tempo; send([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]); } }
+    if (mode === 'open') { scene.ResetScene(); if (typeof p.tempo === 'number') { tempo = p.tempo; sendRaw([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]); } }
     for (const [k, r] of Object.entries(part.refs)) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
+    for (const m of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : [])) macros.set(m.block, m);  // before their Stage blocks are added
     const ids = part.blocks.map(b => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
     addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
     if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); }
@@ -569,7 +740,8 @@ async function main() {
 
   // ---- unsaved changes (owner, 2026-11-10): the patch as last saved, shared or opened ----
   /** What Open would lose: blocks, their params and the tempo (not the view). */
-  const contentOf = (p: Patch) => JSON.stringify(p.labels?.length ? [p.blocks, p.tempo ?? null, p.labels] : [p.blocks, p.tempo ?? null]);
+  const contentOf = (p: Patch) => JSON.stringify([p.blocks, p.tempo ?? null, ...(p.labels?.length || p.macros?.length ? [p.labels ?? []] : []),
+    ...(p.macros?.length ? [p.macros.map(m => ({ ...m, view: undefined }))] : [])]);
   const BASELINE_KEY = 'blokdust.savedPatch';
   let baseline = '';
   function setBaseline(): void {
@@ -736,7 +908,7 @@ async function main() {
     if (region === 'reset') setParams(id, { startPosition: 0, endPosition: dur, loopStart: 0, loopEnd: dur, reverse: false });
     if (region === 'half') setParams(id, { startPosition: 0, endPosition: dur, loopStart: dur * 0.5, loopEnd: dur });
     if (v) { v.PrimaryBuffer = buffer; v.WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, waveDetail, 95); v.RefreshOptionsPanel(); }
-    engine?.sendSample(id, buffer);
+    if (!inside) engine?.sendSample(id, buffer);  // samplers inside a Stage have no audio yet (CHG-0021)
     stage.redraw();
   }
   // ---- v1 Recorder (RecorderPanel button): record the master output into the block ----
@@ -821,7 +993,7 @@ async function main() {
       // the file (v1 GetDuration of its first buffer), so the spawn and spread lines and dragging work.
       if (b.type === 'source.granular' && (fresh || typeof b.params.region !== 'number')) setParams(id, { region: buffer.duration * 0.5 });
       if (v) { v.PrimaryBuffer = buffer; v._WaveForm = new Waveform().GetWaveformFromBuffer(buffer, 200, 5, 95); v.RefreshOptionsPanel(); }
-      engine?.sendSample(id, buffer);  // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
+      if (!inside) engine?.sendSample(id, buffer);  // Granular plays it (CHG-0004 3.8); Convolver uses it as the impulse response
       stage.redraw();
       return;
     }
@@ -838,7 +1010,7 @@ async function main() {
       v.WaveForm = b.params.reverse ? wave.reverse() : wave;  // v1 shows the reversed buffer's waveform
       v.RefreshOptionsPanel();
     }
-    engine?.sendSample(id, buffer);
+    if (!inside) engine?.sendSample(id, buffer);  // samplers inside a Stage have no audio yet (CHG-0021)
     stage.redraw();
   }
   // Tests: attach a file without a picker.
@@ -931,12 +1103,16 @@ async function main() {
   }
   /** Show a patch. `ids` (plugin): the processor's engine ids by patch block id, which the page must use (its engine
    * keeps running when the editor reopens, and its ids are not 1..N once blocks were deleted). */
+  /** A patch's macros, checked: each names a block and lists blocks. */
+  const readMacros = (list: unknown): Macro[] => (Array.isArray(list) ? list : []).filter((m): m is Macro => !!m && typeof m === 'object' && typeof (m as Macro).block === 'string' && Array.isArray((m as Macro).blocks))
+    .map(m => structuredClone(m));
   function showPatch(p: Patch, ids?: Record<string, number>): void {
+    if (inside) leaveStage(false);
     for (const id of [...model.keys()]) { model.delete(id); v1Blocks.delete(id); stage.removeBlock(id); samples.delete(id); missing.delete(id); }
     undoStack.length = 0; redoStack.length = 0;
     seed = p.seed ?? 1; nextId = 1;
     tempo = typeof p.tempo === 'number' ? p.tempo : undefined;
-    if (tempo !== undefined) send([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]);
+    if (tempo !== undefined) sendRaw([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]);
     for (const [k, r] of Object.entries(p.refs ?? {})) if (r && typeof r === 'object' && 'provider' in r) refs.set(k, r as SampleRef);
     for (const b of p.blocks) if (BLOCKS_BY_ID.has(b.type)) {
       const fixed = ids && b.id !== undefined ? ids[b.id] : undefined;
@@ -946,6 +1122,8 @@ async function main() {
     if (ids) nextId = Math.max(nextId, ...Object.values(ids).map(i => i + 1));
     connectionOrder = Array.isArray(p.connectionOrder) ? [...p.connectionOrder] : [];
     labels.length = 0; addLabels(readLabels(p.labels));
+    macros.clear(); innerIds.clear();
+    for (const m of readMacros(p.macros)) macros.set(m.block, m);
     if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
     for (const id of model.keys()) void resolveSample(id);
     scene.setBlocks([...v1Blocks.values()]);
@@ -1014,11 +1192,18 @@ async function main() {
       commands.push({ type: CommandType.AddBlock, id, blockType: typeIndex(b.type), x: b.x, y: b.y });
       def.params.forEach((q, i) => { const v = b.params[q.key]; if (!SESSION_PARAMS.has(q.key) && (typeof v === 'number' || typeof v === 'boolean')) commands.push({ type: CommandType.SetParam, id, param: i, value: Number(v) }); });
     }
-    return [...commands, ...targetSetParams(), ...relinks({ connectionOrder }, uidToId())];
+    // Looking into a Stage, the engine is running already; this builds the patch from scratch (offline renders), so the
+    // outer world it is.
+    return [...commands, ...targetSetParams(), ...relinks({ connectionOrder }, uidToId()),
+      ...[...model].flatMap(([id, b]) => b.type === 'source.stage' ? stageCommands(id, b.uid) : [])];
   }
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
+    /** The Stage being looked into and its window, in css px (tests); null on the outer stage. */
+    get inside() { if (!inside) return null; const f = insideFrame(), d = stage.metrics.dpr; return { stage: inside.stageId, x: f.x / d, y: f.y / d, w: f.w / d, h: f.h / d, closeX: f.closeX / d, closeY: f.closeY / d }; },
+    /** The engine id of the block saved as `uid` in the world on show (tests). */
+    idOf(uid: string) { return idOfUid(uid); },
     /** Labels on the stage (CHG-0020) and where each is, in css px (tests). */
     get labels() { const m = stage.metrics; return labels.map(l => { const r = labelRect(measure, m, l); return { ...l, cx: (r.x + r.w / 2) / m.dpr, cy: (r.y + r.h / 2) / m.dpr }; }); },
     /** Laser beams drawn now (a beam through a Prism is several, CHG-0015). */
@@ -1090,7 +1275,7 @@ async function main() {
   };
   if (juce) {
     overlay.remove();
-    send = cmds => juce.emitEvent('bd_commands', { commands: cmds });
+    sendRaw = cmds => juce.emitEvent('bd_commands', { commands: cmds });
     juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number> }) => {
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
@@ -1137,7 +1322,7 @@ async function main() {
         connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []), monitors: new Float32Array(e.monitors ?? []) }));
     juce.emitEvent('bd_hello', {});
     juce.emitEvent('bd_samplesHello', {});
-    send([{ type: CommandType.WorldPower, id: 0, value: 1 }]);  // a reopened editor shows the switch on: so is the world
+    sendRaw([{ type: CommandType.WorldPower, id: 0, value: 1 }]);  // a reopened editor shows the switch on: so is the world
   }
   // The start button is v1's Splash, drawn by the scene (owner, 2026-11-11); #start is a clear layer over it that takes
   // the click (an AudioContext must start in one) and holds input back until the intro has shown the stage, as v1 did.
@@ -1188,6 +1373,7 @@ async function main() {
   let pointerIsDown = false;
   /** The press that ended (or is) a placement: its release goes nowhere else. */
   let swallowUp = false;
+  let stageClick: { id: number; t: number } | null = null;
   const v1At = (cssX: number, cssY: number) => { const hit = stage.hitTest(cssX, cssY); return hit ? v1Blocks.get(hit.id) ?? null : null; };
   /** `fresh`: the block was just made (menu, Alt-copy): its add step covers where it is put, so no move step. */
   function startDrag(id: number, grabX: number, grabY: number, fresh = false): void {
@@ -1237,6 +1423,11 @@ async function main() {
     for (const id of ids) {
       const b = model.get(id); if (!b) continue;
       const copy = addBlock(b.type, b.x + dx, b.y + dy, structuredClone(b.params));
+      if (b.type === 'source.stage' && macros.has(b.uid)) {  // a copy of a Stage has a copy of what is inside
+        const uid = model.get(copy)!.uid;
+        macros.set(uid, { ...structuredClone(macros.get(b.uid)!), block: uid });
+        sendRaw(stageCommands(copy, uid));
+      }
       const buf = samples.get(id);
       if (buf && b.type !== 'source.sample-gen') useBuffer(copy, buf, 'keep');
       made.set(id, copy);
@@ -1338,6 +1529,14 @@ async function main() {
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
     app.canvas.setPointerCapture(e.pointerId);
     if (!placing && padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
+    // Inside a Stage (UI-0009): the × or a press outside its window (not on the header, a panel or the bottom
+    // controls) goes back out.
+    if (inside && !placing) {
+      const f = insideFrame(), x = e.offsetX * dpr(), y = e.offsetY * dpr(), m = stage.metrics;
+      if (onClose(f, x, y) || (!inWindow(f, x, y) && !scene.uiAt(x, y) && y < m.height - 75 * m.unit && y > f.y - 24 * m.unit)) {
+        exitStage(); primaryId = e.pointerId; primaryRole = 'gone'; return;  // this press does nothing more
+      }
+    }
     // A label (CHG-0020): where no panel or block is in the way, a press on one takes the pointer until it lifts.
     if (!placing && !labelDrag && labels.length && !scene.uiAt(e.offsetX * dpr(), e.offsetY * dpr()) && !stage.hitTest(e.offsetX, e.offsetY)) {
       const l = labelAt(measure, stage.metrics, labels, e.offsetX * dpr(), e.offsetY * dpr());
@@ -1528,6 +1727,12 @@ async function main() {
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);  // v1 MouseUp → RemovePower
       if (moved && !drag.fresh) recordMove(wasGroup ? [...selection] : [drag.id], dragFrom);
     }
+    // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same; CHG-0021).
+    if (drag && !moved && !e.shiftKey && model.get(drag.id)?.type === 'source.stage') {
+      const now = performance.now(), id = drag.id;
+      if (stageClick && stageClick.id === id && now - stageClick.t < 450) { stageClick = null; setTimeout(() => enterStage(id), 0); }
+      else stageClick = { id, t: now };
+    }
     // A click on a selected block (no move) is v1's click: its options panel, and the group is let go.
     if (drag && !moved && wasGroup && !e.shiftKey) setSelection([]);
     if (role === 'stage' && still) setSelection([]);  // a tap on the stage clears the selection
@@ -1684,6 +1889,15 @@ async function main() {
     const tag = (e.target as HTMLElement)?.tagName;
     if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
       if (e.key === 'Escape' && placing) { e.preventDefault(); endPlacing(true); return; }
+      if (e.key === 'Escape' && inside && !scene.PatchesPanel.Open && !scene.SettingsPanel.Open) { e.preventDefault(); exitStage(); return; }
+      // Cmd/Ctrl+G: the selected blocks go inside a new Stage block where they were (CHG-0021).
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'g' && selection.size > 1 && !inside && !juce) {
+        e.preventDefault();
+        const bs = [...selection].map(id => model.get(id)!).filter(Boolean);
+        wrapInStage([...selection], Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length));
+        stage.redraw();
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && (placing || undoStack.length)) {
         e.preventDefault();
         if (placing) endPlacing(true);

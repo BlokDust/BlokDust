@@ -1602,6 +1602,129 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "source.stage",
+    "category": "source",
+    "kind": "audio-source",
+    "name": "Stage",
+    "description": "A whole patch inside one block. Power it to run what is inside; its sound comes out here.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Stage",
+    "catchment": 0,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 3,
+          "points": [
+            [
+              -1,
+              -2
+            ],
+            [
+              0,
+              -2
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              -1,
+              2
+            ]
+          ]
+        },
+        {
+          "palette": 9,
+          "points": [
+            [
+              -1,
+              1
+            ],
+            [
+              -1,
+              -2
+            ],
+            [
+              0,
+              -2
+            ],
+            [
+              1,
+              -1
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              -1,
+              1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              -1,
+              2
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          -2
+        ],
+        [
+          0,
+          -2
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          -1,
+          2
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "gain",
+        "default": 1,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 2,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "source.tone",
     "category": "source",
     "kind": "audio-source",
@@ -6864,6 +6987,6 @@ export const BLOCKS: readonly BlockDef[] = [
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.grid' | 'input.midi-controller';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.grid' | 'input.midi-controller';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

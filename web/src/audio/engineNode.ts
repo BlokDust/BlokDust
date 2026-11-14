@@ -36,6 +36,8 @@ export class EngineNode {
     return new EngineNode(node);
   }
 
+  /** Look inside Stage block `stage` (CHG-0021): snapshots come from its inner world; 0: back to the outer one. */
+  setView(stage: number): void { this.node.port.postMessage({ type: 'view', stage } satisfies ToWorklet); }
   send(commands: Command[]): void { this.node.port.postMessage({ type: 'commands', commands } satisfies ToWorklet); }
   sendSample(id: number, buffer: AudioBuffer): void {
     const left = buffer.getChannelData(0).slice(), right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1).slice() : undefined;

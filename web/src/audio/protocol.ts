@@ -12,7 +12,9 @@ export type ToWorklet =
   /** Decoded audio for a source.sample block (the user's own file, DATA-0005); copied into WASM memory. */
   | { type: 'sample'; id: number; left: Float32Array; right?: Float32Array; sampleRate: number }
   /** v1 Recorder (RecorderJS on the master output): start / stop capturing the engine's output. */
-  | { type: 'record'; on: boolean };
+  | { type: 'record'; on: boolean }
+  /** Snapshots come from this Stage block's inner world (CHG-0021); 0: the outer world. */
+  | { type: 'view'; stage: number };
 
 export interface Snapshot {
   type: 'snapshot';

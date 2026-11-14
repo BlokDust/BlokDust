@@ -52,7 +52,7 @@ The single, portable representation of a BlokDust creation, used by the web app,
 - **R6.** Serialized size MUST be <= 64 KB; typical patches are a few KB. Compressed patches <= ~2 KB SHOULD be shareable in a URL fragment (`#p=`).
 - **R6a.** `tempo` (BPM) is optional; it is written once the user sets one (SIMULATION-0003). In the plugin, the
   host's tempo overrides it.
-- **R7.** `macros` is reserved (SCOPE-0002) and MUST be an empty array until macros ship.
+- **R7.** *(CHG-0021, SCOPE-0006)* `macros` (optional) holds what is inside each Stage block: `{ block, blocks, connectionOrder?, labels?, view? }`, where `block` is the Stage's patch id and the rest read as the same keys of a patch (R2a, R2b, R3, R4). Ids inside a macro are their own namespace; an LFO `target` (R3a) there names a block of the same macro. A macro whose `block` is not a `source.stage` in `blocks` is dropped; a `source.stage` inside a macro has no world (one level). Refs are patch-wide. Insert brings the macros of the Stages it adds.
 - **R8.** Migrations are pure functions `migrate_vN_to_vN+1`; the v1 importer is `import_v1` (DATA-0004).
 - **R9.** Serialization MUST be canonical (stable key order, ids sorted by z then id) so identical patches hash identically.
 - **R10.** Patch files (CHG-0005): a `.blokdust` file is a v2 patch as UTF-8 JSON, its title in `meta.title`. The

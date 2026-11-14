@@ -14,6 +14,9 @@ class BlokdustProcessor extends AudioWorkletProcessor {
   private count = 0;
   private pending: EngineEvent[] = [];
   private topologyDirty = true;
+  /** The Stage block whose inner world the page is looking at (0: the outer world). Its connections go with every
+   * snapshot: the outer world's events do not say when they change. */
+  private viewing = 0;
   private readonly testInput?: { frequency: number; gain: number };
 
   constructor(options: AudioWorkletNodeOptions) {
@@ -27,6 +30,7 @@ class BlokdustProcessor extends AudioWorkletProcessor {
       const m = e.data;
       if (m.type === 'commands') for (const c of m.commands) this.engine.push(c);
       else if (m.type === 'sample') this.engine.attachSample(m.id, m.left, m.right, m.sampleRate);
+      else if (m.type === 'view') { this.engine.setView(m.stage); this.viewing = m.stage; this.topologyDirty = true; }
       else if (m.type === 'record') {
         if (m.on) this.recorded = [];
         else if (this.recorded) {
@@ -72,7 +76,7 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     const monitors = this.engine.monitors();
     const snap: Snapshot = { type: 'snapshot', frame: this.frame, particles, beams, powered, playheads, monitors, events: this.pending, rms: Math.sqrt(this.sumSq / Math.max(1, this.count)) };
     const transfer: Transferable[] = [particles.buffer, powered.buffer, beams.buffer, playheads.buffer, monitors.buffer];
-    if (this.topologyDirty) { snap.connections = this.engine.connections(); transfer.push(snap.connections.buffer); this.topologyDirty = false; }
+    if (this.topologyDirty || this.viewing) { snap.connections = this.engine.connections(); transfer.push(snap.connections.buffer); this.topologyDirty = false; }
     this.port.postMessage(snap, transfer);
     this.pending = []; this.sumSq = 0; this.count = 0;
   }

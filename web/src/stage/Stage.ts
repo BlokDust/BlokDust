@@ -195,6 +195,17 @@ export class Stage {
   /** Call once per frame. */
   update(): void { if (this.linesDirty) this.drawLines(); }
 
+  /** A picture of the stage as it is now, without v1's UI layer (the outer stage behind a Stage block's window,
+   * CHG-0021). Same size as the canvas, device px. */
+  snapshot(): HTMLCanvasElement {
+    const ui = this.drawUi, out = document.createElement('canvas');
+    this.drawUi = null; this.redraw();
+    try {
+      out.width = this.lineCanvas.width; out.height = this.lineCanvas.height;
+      out.getContext('2d')!.drawImage(this.lineCanvas, 0, 0);
+    } finally { this.drawUi = ui; this.redraw(); }
+    return out;
+  }
   /**
    * A link-preview image of the stage (SHARING-0002): blocks, lines and particles without the UI, cropped around the
    * blocks to the output's aspect ratio and scaled to width × height. Canvas renderer only.

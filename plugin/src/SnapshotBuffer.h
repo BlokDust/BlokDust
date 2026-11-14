@@ -18,7 +18,7 @@ struct Snapshot {
   int poweredCount = 0;
   std::array<std::uint32_t, kMaxBlocks> powered{};
   int beamCount = 0;
-  std::array<float, kMaxBlocks * 4> beams{};
+  std::array<float, kMaxBeams * 4> beams{};  // a laser through Prisms casts several (CHG-0015)
   int playheadCount = 0;                     // sampler playheads [blockId, seconds]* (the open panel's playback lines)
   std::array<float, 64 * 2> playheads{};
   int monitorCount = 0;                      // live panel readouts [blockId, v0, v1, v2, v3]* (Engine::monitors)

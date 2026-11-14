@@ -17,6 +17,8 @@ export interface Command {
   value?: number;
   /** Apply at the first tick boundary at or after this sample; -1 = as soon as possible. */
   atSample?: number;
+  /** The command is for the inner world of this Stage block (its engine id in the outer world; CHG-0021). */
+  stage?: number;
   /** AddBlock in the plugin: the block's patch id (the processor keeps the patch; the engine ignores it). */
   key?: string;
 }
@@ -55,6 +57,8 @@ interface Exports {
   bd_beams(h: number): number;
   bd_pack_playheads(h: number): number;
   bd_playheads(h: number): number;
+  bd_push_stage(h: number, stage: number, type: number, id: number, blockType: number, x: number, y: number, param: number, value: number, at: number): number;
+  bd_view(h: number, stage: number): void;
   bd_pack_monitors(h: number): number;
   bd_monitors(h: number): number;
 }
@@ -107,6 +111,8 @@ export class WasmEngine {
   }
 
   push(c: Command): boolean {
+    // A Stage block's inner world (CHG-0021) is made and attached the first time a command names it.
+    if (c.stage) return this.x.bd_push_stage(this.h, c.stage, c.type, c.id, c.blockType ?? 0, c.x ?? 0, c.y ?? 0, c.param ?? 0, c.value ?? 0, c.atSample ?? -1) === 1;
     return this.x.bd_push(this.h, c.type, c.id, c.blockType ?? 0, c.x ?? 0, c.y ?? 0, c.param ?? 0, c.value ?? 0, c.atSample ?? -1) === 1;
   }
 
@@ -134,6 +140,9 @@ export class WasmEngine {
   }
 
   /** Where samplers are playing, packed [blockId, seconds]* (one per sounding voice / grain). */
+  /** Snapshots (particles, connections, powered, beams, monitors) come from Stage block `stage`'s inner world; 0: the
+   * outer world. */
+  setView(stage: number): void { this.x.bd_view(this.h, stage); }
   /** Live readouts for open panels, packed [blockId, v0, v1, v2, v3]* (Engine::monitors). */
   monitors(): Float32Array {
     const n = this.x.bd_pack_monitors(this.h);

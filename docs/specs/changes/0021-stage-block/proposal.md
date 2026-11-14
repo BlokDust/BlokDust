@@ -30,5 +30,17 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 - `pnpm test:ui-regressions --only stage`: open, edit inside, close by ×, Esc and outside click; save and reopen.
 - Owner check on desktop, iPad and phone.
 
+## As built (2026-11-14)
+- Panel: Volume, OPEN STAGE, LOAD PATCH (a `.blokdust` file; share links not yet). No patch-name row.
+- Make a stage from a selection: drag Stage out of the Source menu while blocks are selected, or Cmd/Ctrl+G. The
+  selected blocks move inside and carry on. Not undoable.
+- In: OPEN STAGE or a double click on the block. Out: ×, Esc, or a press outside the window.
+- Tests: the browser tests live in `tests/e2e/new-blocks.ts` (`stage`, `stage-from-selection`), not in ui-regressions.
+  The `stage-nested` golden pins two Stages (one held by a Power, one struck by particles); "same as flattened" is an
+  engine test instead (`test_stage.cpp`).
+- Limits: inside a Stage the menu has no Stage, samplers or Microphone (an inner world takes no audio files or input
+  yet). Plugins play Stages in a patch but cannot make or open one (no menu item, no inside view). Keyboards and note
+  effects outside do not reach blocks inside.
+
 ## Risks and unknowns
 - Largest change in the set: engine world nesting, patch format, selection → stage, and the window UI. Do it last.

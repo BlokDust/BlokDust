@@ -31,7 +31,7 @@ async function open(b: Browser, blocks: PatchBlock[], errors: string[], extra: P
   return page;
 }
 /** The engine id of the block with patch id `uid`. */
-const idOf = (p: Page, uid: string) => p.evaluate(u => { const s = (window as any).__bd_probe.state; const i = s.patch.blocks.findIndex((b: any) => b.id === u); return s.blocks[i]?.id as number; }, uid);
+const idOf = (p: Page, uid: string) => p.evaluate(u => (window as any).__bd_probe.idOf(u) as number, uid);
 /** Click a block (opens its options panel) and wait for the panel. */
 async function openPanel(p: Page, uid: string): Promise<void> {
   const id = await idOf(p, uid);
@@ -75,6 +75,83 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.close();
     const pass = synced.indexOf('Offset') === synced.indexOf('Swing') + 1 && free.indexOf('Offset') === free.indexOf('Fire Rate') + 1 && saved === 0.25;
     return [pass, { synced, free, saved }];
+  },
+  // CHG-0021 (SCOPE-0006, UI-0009): a Stage block plays what is inside it when powered; OPEN STAGE shows the inner world
+  // in a window; an edit inside is kept in the patch; ×, Esc and a press outside go back out.
+  async 'stage'(errors) {
+    const macros = [{ block: 's', blocks: [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0), blk('f', 'fx.filter', 3, 0)] }];
+    const p = await open(browser, [blk('s', 'source.stage', 0, 0), blk('outer', 'fx.volume', 0, 8)], errors, { macros } as any);
+    const menu = await menuItems(p, 'Source');
+    const silent = (await state(p)).rms < 0.0005;                       // nothing powers it
+    const at = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 's')) as [number, number];
+    await p.mouse.move(at[0], at[1]); await p.mouse.down(); await p.waitForTimeout(400);
+    const held = (await state(p)).rms > 0.005;                          // a held pointer powers it: the inner Tone sounds
+    await p.mouse.up(); await p.waitForTimeout(700);
+    // its panel
+    await openPanel(p, 's');
+    const names = (await rows(p)).map(x => x.name || x.type);
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('openStage', 1));
+    await p.waitForFunction(() => (window as any).__bd_probe.inside, null, { timeout: 5000 });
+    await p.waitForTimeout(900);
+    const inner = (await state(p)).blocks.map((b: any) => b.type).sort();
+    const win = await p.evaluate(() => (window as any).__bd_probe.inside);
+    const insideMenu = await menuItems(p, 'Source');
+    const linked = (await state(p)).connections.length / 2;               // the inner world's own connections
+    await p.screenshot({ path: `${OUT}/stage-inside.png` });
+    // edit inside: move the inner Filter away (it disconnects)
+    const fAt = await p.evaluate(() => { const s = (window as any).__bd_probe; const i = s.state.blocks.find((b: any) => b.type === 'fx.filter').id; return s.blockPoint(i); }) as [number, number];
+    await p.mouse.move(fAt[0], fAt[1]); await p.mouse.down(); await p.mouse.move(fAt[0] + 260, fAt[1] + 60, { steps: 8 }); await p.mouse.up();
+    await p.waitForTimeout(500);
+    const unlinked = (await state(p)).connections.length / 2;
+    // out by the ×
+    await p.mouse.click(win.closeX, win.closeY); await p.waitForTimeout(500);
+    const out1 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
+    const outerBlocks = (await state(p)).blocks.map((b: any) => b.type).sort();
+    const saved = (await state(p)).patch.macros?.[0];
+    const movedFilter = saved?.blocks.find((b: any) => b.id === 'f');
+    // in again by double click; out by Esc; in again; out by a press in the margin
+    const at2 = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 's')) as [number, number];  // v1 moved the view for the panel
+    await p.mouse.dblclick(at2[0], at2[1]); await p.waitForFunction(() => (window as any).__bd_probe.inside, null, { timeout: 5000 }); await p.waitForTimeout(700);
+    const again = (await state(p)).blocks.length;
+    await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+    const out2 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
+    await p.evaluate(i => (window as any).__bd_stage.enter(i), await idOf(p, 's')); await p.waitForTimeout(700);
+    const w2 = await p.evaluate(() => (window as any).__bd_probe.inside);
+    await p.mouse.click(w2.x - 40, w2.y + w2.h / 2); await p.waitForTimeout(400);
+    const out3 = await p.evaluate(() => (window as any).__bd_probe.inside === null);
+    // still plays, and the patch round-trips
+    await p.mouse.move(at2[0], at2[1]); await p.mouse.down(); await p.waitForTimeout(400);
+    const stillPlays = (await state(p)).rms > 0.005;
+    await p.mouse.up();
+    await p.close();
+    const pass = menu.includes('Stage') && silent && held && names.includes('Volume') && names.filter((n: string) => n === 'actionbutton').length === 2 &&
+      inner.join() === 'fx.filter,power.power,source.tone' && !insideMenu.includes('Stage') && !insideMenu.includes('Sample') && insideMenu.includes('Tone') &&
+      linked === 2 && unlinked === 1 && out1 && outerBlocks.join() === 'fx.volume,source.stage' && !!movedFilter && movedFilter.x !== 3 && again === 3 && out2 && out3 && stillPlays &&
+      win.w > 900 && win.h > 500;
+    return [pass, { menu, silent, held, names, inner, insideMenu, linked, unlinked, out1, outerBlocks, movedFilter, again, out2, out3, stillPlays, win }];
+  },
+  // CHG-0021: selected blocks become what is inside a new Stage (Cmd/Ctrl+G); a copy of a Stage has its own inside.
+  async 'stage-from-selection'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', -6, 0), blk('pw', 'power.power', -9, 0), blk('f', 'fx.filter', -3, 0), blk('keep', 'fx.reverb', 12, 6)], errors);
+    await p.waitForTimeout(300);
+    const before = (await state(p)).rms > 0.005;
+    const ids = await Promise.all(['t', 'pw', 'f'].map(u => idOf(p, u)));
+    const stageId = await p.evaluate(list => (window as any).__bd_stage.wrap(list, -6, 0), ids);
+    await p.waitForTimeout(400);
+    const s1 = await state(p);
+    const quiet = s1.rms < 0.0005;                                      // inside now, and nothing powers the Stage
+    // power it: a Power block beside it (through a patch insert would be heavier; press instead)
+    const at = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), stageId) as [number, number];
+    await p.mouse.move(at[0], at[1]); await p.mouse.down(); await p.waitForTimeout(400);
+    const plays = (await state(p)).rms > 0.005;
+    await p.mouse.up(); await p.waitForTimeout(600);
+    await p.mouse.click(1100, 300); await p.waitForTimeout(400);       // close its panel
+    const patch = (await state(p)).patch;
+    await p.close();
+    const macro = patch.macros?.[0];
+    const pass = before && quiet && plays && s1.blocks.map((b: any) => b.type).sort().join() === 'fx.reverb,source.stage' &&
+      macro?.blocks.map((b: any) => b.type).sort().join() === 'fx.filter,power.power,source.tone' && macro.block === patch.blocks.find((b: any) => b.type === 'source.stage').id;
+    return [pass, { before, quiet, plays, outer: s1.blocks.map((b: any) => b.type), macro }];
   },
   // CHG-0020 (UI-0011): labels come with the patch and are drawn; a click edits the words, a drag moves one, the bin
   // deletes it, and the Interaction menu makes a new one. They never reach the engine.

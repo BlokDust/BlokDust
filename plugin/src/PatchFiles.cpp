@@ -57,6 +57,7 @@ nlohmann::json merge(const nlohmann::json& current, const nlohmann::json& part, 
     if (part.contains("connectionOrder")) out["connectionOrder"] = part["connectionOrder"]; else out.erase("connectionOrder");
     if (part.contains("view")) out["view"] = part["view"]; else out.erase("view");  // the opened patch's view
     if (part.contains("labels")) out["labels"] = part["labels"]; else out.erase("labels");  // and its labels (CHG-0020)
+    if (part.contains("macros")) out["macros"] = part["macros"]; else out.erase("macros");  // and what is inside its Stage blocks (CHG-0021)
   } else {
     if (!out.contains("blocks") || !out["blocks"].is_array()) out["blocks"] = nlohmann::json::array();
     for (const auto& b : blocks) out["blocks"].push_back(b);
@@ -65,6 +66,10 @@ nlohmann::json merge(const nlohmann::json& current, const nlohmann::json& part, 
     if (part.contains("labels") && part["labels"].is_array()) {  // inserted labels join the scene's
       if (!out.contains("labels") || !out["labels"].is_array()) out["labels"] = nlohmann::json::array();
       for (const auto& l : part["labels"]) out["labels"].push_back(l);
+    }
+    if (part.contains("macros") && part["macros"].is_array()) {
+      if (!out.contains("macros") || !out["macros"].is_array()) out["macros"] = nlohmann::json::array();
+      for (const auto& m : part["macros"]) out["macros"].push_back(m);
     }
   }
   if (out.contains("refs") && out["refs"].empty()) out.erase("refs");

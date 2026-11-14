@@ -71,10 +71,13 @@ void BlokDustProcessor::rebuildEngine() {
   auto next = std::make_unique<Engine>(EngineConfig{static_cast<int>(sampleRate_ + 0.5), loaded.seed, true, /*hostInput=*/true});
   for (const auto& c : loaded.commands) next->push(c);
   next->prime();  // blocks exist now, so samples attach before the first audio block (CHG-0004 3.6)
+  // Stage blocks' inner worlds (CHG-0021): made here, off the audio thread, and kept for as long as the engine.
+  auto nextStages = patch::attachStages(*next, loaded, static_cast<int>(sampleRate_ + 0.5));
   idToKey_.clear();
   for (const auto& [key, id] : loaded.ids) idToKey_[id] = key;
   suspendProcessing(true);  // takes the callback lock: the audio thread is not inside processBlock while we swap
   engine_.swap(next);
+  stageEngines_.swap(nextStages);  // the old worlds go with the old engine, after the swap
   suspendProcessing(false);
   rebuildDust();
   attachSamples();

@@ -81,6 +81,8 @@ struct Beam { BlockId laser; double x0, y0, x1, y1; };
 /// the audio thread, DATA-0005: samples are the user's own files); it must outlive the attachment.
 struct SampleBuffer { const float* left = nullptr; const float* right = nullptr; std::uint32_t frames = 0; double sampleRate = 48000.0; };
 
+class Engine;
+
 struct EngineConfig {
   int sampleRate = 48000;
   std::uint64_t seed = 1;
@@ -88,6 +90,11 @@ struct EngineConfig {
   /// Plugins: v1's Microphone is the DAW track ("Audio Input"), so it is passed through like Audio In (stereo, unity ×
   /// gain, skipping the master stage). The website keeps v1's Microphone level.
   bool hostInput = false;
+  /// A Stage block's inner world (CHG-0021, SCOPE-0006): no master stage of its own (its output is a source in the
+  /// outer patch), a quarter of the effect pools, and no Stage blocks of its own (depth 2). `parent`: the engine it
+  /// will be attached to, whose oscillator tables and built-in impulse response it shares (so making one is cheap).
+  bool child = false;
+  const Engine* parent = nullptr;
 };
 
 class Engine {
@@ -118,6 +125,12 @@ class Engine {
   /// Fresh loads set v1's region defaults (start 0, end = length, loop from half way to the end) unless the patch has
   /// a region already (endPosition > 0).
   bool attachSample(BlockId id, const SampleBuffer& s) noexcept;
+  /// Audio thread (between process calls): give a source.stage block its inner world, an Engine made with
+  /// EngineConfig::child. Host-owned: it must outlive the attachment (nullptr detaches; removing the block detaches).
+  /// The inner world then runs in step with this one: same ticks, same tempo, its world power following the block's.
+  bool attachStage(BlockId id, Engine* inner) noexcept;
+  /// The inner world attached to a source.stage block, or nullptr.
+  Engine* stage(BlockId id) const noexcept;
 
   // ---- introspection (audio thread / tests; a lock-free snapshot API for the UI comes with the web spike) ----
   std::int64_t sampleClock() const noexcept { return sample_; }
@@ -271,7 +284,7 @@ class Engine {
   std::vector<dsp::Convolver> convolvers_;
   std::vector<dsp::ConvolutionKernel> userImpulses_;
   std::vector<std::int16_t> convolverOwner_;
-  dsp::ConvolutionKernel defaultImpulse_;
+  std::shared_ptr<const dsp::ConvolutionKernel> defaultImpulse_;  // a child shares its parent's
   std::vector<dsp::MasterCompressor> compressors_;  // fx.compressor instances (pooled like the convolvers)
   std::vector<std::int16_t> compressorOwner_;
   // power.sound-laser (CHG-0016, SIMULATION-0007): what each hears this segment (mono), pooled.
@@ -292,7 +305,14 @@ class Engine {
   const float* inRight_ = nullptr;
   int inOffset_ = 0;
   dsp::MasterCompressor compressor_;
-  std::unique_ptr<const dsp::WavetableBank> wavetables_;  // shared oscillator tables, built once (allocates here only)
+  std::shared_ptr<const dsp::WavetableBank> wavetables_;  // oscillator tables, built once (allocates here only); a child shares its parent's
+  // source.stage (CHG-0021): inner worlds by pool index, and what each rendered this segment (stereo).
+  std::array<Engine*, kMaxStages> stages_{};
+  std::array<std::int16_t, kMaxStages> stageOwner_{};
+  std::vector<float> stageBuf_;
+  std::array<float, kMaxSegment> stageL_{}, stageR_{};
+  bool chainStage_ = false;
+  bool child_ = false;
   bool useCompressor_ = true;
   bool hostInput_ = false;
   double masterGain_ = kMasterGain;

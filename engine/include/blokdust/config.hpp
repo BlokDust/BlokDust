@@ -32,6 +32,7 @@ inline constexpr int kMaxPitchShifters = 16;
 inline constexpr int kMaxPrismDepth = 8;
 inline constexpr int kMaxBeamSegments = 64;
 inline constexpr int kMaxBeams = 1024;
+inline constexpr int kMaxStages = 8;           // source.stage blocks with an inner world attached (CHG-0021)
 inline constexpr int kMaxListeners = 8;        // power.sound-laser: a listening buffer each (CHG-0016)
 inline constexpr int kMaxCompressors = 16;     // fx.compressor: 6 ms look-ahead memory each (CHG-0014)
 inline constexpr int kMaxConvolvers = 4;       // FFT convolution: memory and CPU heavy

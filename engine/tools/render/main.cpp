@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
   }
   auto engine = std::make_unique<Engine>(EngineConfig{sr, loaded.seed});
   for (const auto& c : loaded.commands) if (!engine->push(c)) { std::cerr << "error: command queue full\n"; return 1; }
+  const auto stages = patch::attachStages(*engine, loaded, sr);  // Stage blocks' inner worlds (CHG-0021), alive with the engine
   // Optional samples: "samples": [{"block": "<patch id>", "wav": "<path>"}] (float32 or 16-bit PCM WAV). Attached before
   // the first block, as the plugin does once it has loaded a patch's files (CHG-0004 3.6).
   std::vector<std::vector<float>> sampleData;

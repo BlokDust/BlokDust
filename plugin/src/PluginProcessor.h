@@ -164,6 +164,7 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   nlohmann::json patch_;
   std::map<BlockId, std::string> idToKey_;  // engine id → patch block id
   std::unique_ptr<Engine> engine_;          // swapped only while processing is suspended
+  std::vector<std::unique_ptr<Engine>> stageEngines_;  // its Stage blocks' inner worlds (CHG-0021), swapped with it
   MidiRouter midiRouter_;                   // host MIDI → MIDI Input blocks (MPE, PLUGIN-0004)
   double lastBpm_ = 0.0;                    // host tempo last sent to the engine
   bool hostPlaying_ = false;                // the host transport was playing at the last block (audio thread)

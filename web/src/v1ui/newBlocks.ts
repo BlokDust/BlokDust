@@ -9,7 +9,7 @@ import { gridForm } from './gridPanel.ts';
 
 /** Menu order within each v1 category (appended after v1's items). */
 const MENU: Record<string, string[]> = {
-  Source: [],
+  Source: ['source.stage'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
   Interaction: ['input.grid'],
@@ -25,12 +25,22 @@ export function installNewBlockMenu(): void {
   for (const cat of (App.BlockCreator.MenuJson as { categories: { name: string; items: { name: string; id: string; description: string }[] }[] }).categories) {
     for (const id of MENU[cat.name] ?? []) {
       const def = BLOCKS_BY_ID.get(id);
+      if (id === 'source.stage' && App.IsPlugin) continue;  // the plugin plays Stage blocks; making and opening them is the website's for now
       if (def && !cat.items.some(i => i.id === def.menuId)) cat.items.push({ name: def.name, id: def.menuId, description: def.description });
     }
     // Label (CHG-0020): not a block, but it is made from the Interaction menu like one.
     if (cat.name === 'Interaction' && !cat.items.some(i => i.id === LABEL_MENU_ID))
       cat.items.push({ name: 'Label', id: LABEL_MENU_ID, description: 'A note on the stage. Drag it by its dot; click it to change the words.' });
   }
+}
+
+/** Hide these menu ids (inside a Stage block: no Stage, no samplers; CHG-0021), or none. The header is populated
+ * again by the scene's next sync. */
+let fullMenu: Map<string, { name: string; id: string; description: string }[]> | null = null;
+export function setMenuHidden(hidden: Set<string>): void {
+  const cats = (App.BlockCreator.MenuJson as { categories: { name: string; items: { name: string; id: string; description: string }[] }[] }).categories;
+  fullMenu ??= new Map(cats.map(c => [c.name, c.items.slice()]));
+  for (const c of cats) c.items.splice(0, c.items.length, ...(fullMenu.get(c.name) ?? []).filter(i => !hidden.has(i.id)));
 }
 
 /** v1 BlockSprites.DrawSprite for a new block (unscaled: menu icons and items dragged from the menu). */
@@ -128,6 +138,17 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     slider('Release', 'releaseMs', Math.max(10, Number(b.Params.release) * 1000), 10, 1000, { log: true, display: ms }),
     slider('Makeup', 'makeup', Number(b.Params.makeup), -24, 24, { centered: true, display: dB }),
   ],
+  // CHG-0021: its level, then the two things to do with it. (In the plugin a Stage plays; opening is the website's.)
+  'source.stage': b => {
+    const g = Number(b.Params.gain ?? 1);
+    return [
+      slider('Volume', 'gainDb', g > 0 ? Math.max(-40, 20 * Math.log10(g)) : -40, -40, 6, { display: v => (v <= -40 ? 'OFF' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} dB`) }),
+      ...(App.IsPlugin ? [] : [
+        { type: 'actionbutton', name: '', setting: 'openStage', props: { text: 'Open Stage' } },
+        { type: 'actionbutton', name: '', setting: 'loadStagePatch', props: { text: 'Load Patch' } },
+      ]),
+    ];
+  },
   // CHG-0018 (AUDIO-0003): what it moves (a carousel of "Block · Param" over the blocks connected to it), then how.
   'fx.lfo': b => {
     const list = lfoTargets(b), now = App.MainScene?.host?.targetOf?.(b.Id) ?? null;

@@ -26,35 +26,67 @@ constexpr double kDegToRad = 3.14159265358979323846 / 180.0;
 }  // namespace
 
 Engine::Engine(const EngineConfig& cfg)
-    : sampleRate_(cfg.sampleRate), rng_(cfg.seed), wavetables_(std::make_unique<dsp::WavetableBank>(cfg.sampleRate)),
-      useCompressor_(cfg.masterCompressor), hostInput_(cfg.hostInput) {
+    : sampleRate_(cfg.sampleRate), rng_(cfg.seed),
+      wavetables_(cfg.parent ? cfg.parent->wavetables_ : std::make_shared<const dsp::WavetableBank>(cfg.sampleRate)),
+      useCompressor_(cfg.masterCompressor && !cfg.child), hostInput_(cfg.hostInput), child_(cfg.child) {
   compressor_.configure(cfg.sampleRate);
   seed_ = cfg.seed;
+  if (cfg.child) masterGain_ = 1.0;  // its mix is a source in the outer patch, which has the master stage
   gainGlide_ = 1.0 - dmath::exp(-1.0 / (0.005 * cfg.sampleRate));
   fadeLen_ = std::max(1, cfg.sampleRate / 200);  // 5 ms out + 5 ms in (SPEC-CONNECTIONS-PROXIMITY R5: ≤ 10 ms)
   const auto pow2 = [](double n) { std::uint32_t s = 2; while (s < n) s <<= 1; return s; };
   const double sr = cfg.sampleRate;
-  reverbPool_.init(8, pow2(0.0367 * sr + 4), kMaxReverbs);   // Freeverb combs (longest 1617/44100 s)
-  delayPool_.init(3, pow2(kMaxDelaySeconds * sr + 4), kMaxDelays);  // PingPong: v1 delayTime ≤ 0.5 s; synced ≤ 1 s
-  chorusPool_.init(4, pow2(0.0165 * sr + 132), kMaxChoruses); // modulated delays ≤ 16 ms, + 128-frame quanta
-  pitchPool_.init(4, pow2(dsp::PitchShiftFx::kWindow * sr + 4), kMaxPitchShifters);  // A/B delays per side
+  const int div = cfg.child ? 4 : 1;  // an inner world has a quarter of each pool
+  reverbPool_.init(8, pow2(0.0367 * sr + 4), kMaxReverbs / div);   // Freeverb combs (longest 1617/44100 s)
+  delayPool_.init(3, pow2(kMaxDelaySeconds * sr + 4), kMaxDelays / div);  // PingPong: v1 delayTime ≤ 0.5 s; synced ≤ 1 s
+  chorusPool_.init(4, pow2(0.0165 * sr + 132), kMaxChoruses / div); // modulated delays ≤ 16 ms, + 128-frame quanta
+  pitchPool_.init(4, pow2(dsp::PitchShiftFx::kWindow * sr + 4), kMaxPitchShifters / div);  // A/B delays per side
   const int maxTaps = static_cast<int>(kMaxImpulseSeconds * sr);
-  defaultImpulse_.reserve(maxTaps);
-  {
+  if (cfg.parent) defaultImpulse_ = cfg.parent->defaultImpulse_;
+  else {
+    auto kernel = std::make_shared<dsp::ConvolutionKernel>();
+    kernel->reserve(maxTaps);
     std::vector<float> l(static_cast<std::size_t>(maxTaps)), r(static_cast<std::size_t>(maxTaps));
     dsp::makeDefaultImpulse(l.data(), r.data(), maxTaps, sr);
-    defaultImpulse_.build(l.data(), r.data(), static_cast<std::uint32_t>(maxTaps), sr, sr);
+    kernel->build(l.data(), r.data(), static_cast<std::uint32_t>(maxTaps), sr, sr);
+    defaultImpulse_ = kernel;
   }
-  convolvers_.resize(kMaxConvolvers); userImpulses_.resize(kMaxConvolvers);
-  for (auto& c : convolvers_) c.reserve(defaultImpulse_.maxTailParts());
+  const int convolvers = kMaxConvolvers / div;
+  convolvers_.resize(static_cast<std::size_t>(convolvers)); userImpulses_.resize(static_cast<std::size_t>(convolvers));
+  for (auto& c : convolvers_) c.reserve(defaultImpulse_->maxTailParts());
   for (auto& k : userImpulses_) k.reserve(maxTaps);
-  convolverOwner_.assign(kMaxConvolvers, -1);
-  compressors_.resize(kMaxCompressors);
+  convolverOwner_.assign(static_cast<std::size_t>(convolvers), -1);
+  compressors_.resize(static_cast<std::size_t>(kMaxCompressors / div));
   for (auto& c : compressors_) c.configure(cfg.sampleRate);
-  compressorOwner_.assign(kMaxCompressors, -1);
+  compressorOwner_.assign(compressors_.size(), -1);
   listenBuf_.assign(static_cast<std::size_t>(kMaxListeners) * kMaxSegment, 0.0f);
   listenerOwner_.fill(-1);
   listenDecay_ = dmath::exp(-1.0 / (0.05 * cfg.sampleRate));
+  stageOwner_.fill(-1);
+  if (!cfg.child) stageBuf_.assign(static_cast<std::size_t>(kMaxStages) * 2 * kMaxSegment, 0.0f);
+}
+
+/// A Stage block's inner world (CHG-0021). From here its clock is this engine's: the same sample, the same tick grid
+/// and beat, so both worlds tick together however the host cuts the timeline. Its world power is the block's power.
+bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
+  const int slot = slotOf(id);
+  if (slot < 0 || child_ || inner == this) return false;
+  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  if (b.type != BlockType::SourceStage || b.poolIndex < 0 || (inner && !inner->child_)) return false;
+  stages_[static_cast<std::size_t>(b.poolIndex)] = inner;
+  if (!inner) return true;
+  inner->sample_ = sample_; inner->tick_ = tick_; inner->tickOrigin_ = tickOrigin_; inner->tickBase_ = tickBase_;
+  inner->tempo_ = tempo_; inner->beat_ = beat_;
+  inner->worldPower_ = true;
+  inner->apply(Command::worldPower(b.powerOn));
+  return true;
+}
+
+Engine* Engine::stage(BlockId id) const noexcept {
+  const int slot = slotOf(id);
+  if (slot < 0) return nullptr;
+  const Block& b = blocks_[static_cast<std::size_t>(slot)];
+  return b.type == BlockType::SourceStage && b.poolIndex >= 0 ? stages_[static_cast<std::size_t>(b.poolIndex)] : nullptr;
 }
 
 bool Engine::attachSample(BlockId id, const SampleBuffer& sb) noexcept {
@@ -110,10 +142,19 @@ void Engine::acquireDsp(Block& b, int slot) noexcept {
   if (b.type == BlockType::SourceNoise)  // voice 0 keeps the original seed (golden renders); the others derive from it
     for (int v = 0; v < kVoices; ++v) b.voices[static_cast<std::size_t>(v)].noise.seed(seed_ * 0x9E3779B97F4A7C15ULL + b.id + static_cast<std::uint64_t>(v) * 0x1000193ULL);
   if (b.type == BlockType::FxConvolver) {
-    for (int i = 0; i < kMaxConvolvers; ++i) if (convolverOwner_[static_cast<std::size_t>(i)] < 0) {
+    for (int i = 0; i < static_cast<int>(convolverOwner_.size()); ++i) if (convolverOwner_[static_cast<std::size_t>(i)] < 0) {
       convolverOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
       convolvers_[static_cast<std::size_t>(i)].reset();
       b.poolIndex = static_cast<std::int16_t>(i); b.userImpulse = false;
+      break;
+    }
+    return;
+  }
+  if (b.type == BlockType::SourceStage) {  // a place for an inner world (none in a child: depth 2, SCOPE-0006)
+    if (!child_) for (int i = 0; i < kMaxStages; ++i) if (stageOwner_[static_cast<std::size_t>(i)] < 0) {
+      stageOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
+      stages_[static_cast<std::size_t>(i)] = nullptr;
+      b.poolIndex = static_cast<std::int16_t>(i);
       break;
     }
     return;
@@ -127,7 +168,7 @@ void Engine::acquireDsp(Block& b, int slot) noexcept {
     return;
   }
   if (b.type == BlockType::FxCompressor) {
-    for (int i = 0; i < kMaxCompressors; ++i) if (compressorOwner_[static_cast<std::size_t>(i)] < 0) {
+    for (int i = 0; i < static_cast<int>(compressorOwner_.size()); ++i) if (compressorOwner_[static_cast<std::size_t>(i)] < 0) {
       compressorOwner_[static_cast<std::size_t>(i)] = static_cast<std::int16_t>(slot);
       compressors_[static_cast<std::size_t>(i)].reset();
       b.poolIndex = static_cast<std::int16_t>(i); b.mon[0] = -100.0f;
@@ -158,6 +199,7 @@ void Engine::releaseDsp(Block& b) noexcept {
   if (b.type == BlockType::FxChorus) chorusPool_.release(b.poolIndex);
   if (b.type == BlockType::FxPitchShifter) pitchPool_.release(b.poolIndex);
   if (b.type == BlockType::FxConvolver && b.poolIndex >= 0) convolverOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
+  if (b.type == BlockType::SourceStage && b.poolIndex >= 0) { stageOwner_[static_cast<std::size_t>(b.poolIndex)] = -1; stages_[static_cast<std::size_t>(b.poolIndex)] = nullptr; }
   if (b.type == BlockType::PowerSoundLaser && b.poolIndex >= 0) listenerOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
   if (b.type == BlockType::FxCompressor && b.poolIndex >= 0) compressorOwner_[static_cast<std::size_t>(b.poolIndex)] = -1;
   b.poolIndex = -1;
@@ -438,6 +480,7 @@ void Engine::apply(const Command& c) noexcept {
       // Transport start: the tick grid restarts here, so the next tick is now and every take ticks alike.
       if (c.y != 0.0 && c.x >= 0.0) { tickOrigin_ = sample_; tickBase_ = tick_; resyncToTransport(c.x); }
       if (c.x >= 0.0) beat_ = c.x + static_cast<double>(tickSample(tick_) - sample_) / sampleRate_ * tempo_ / 60.0;
+      for (Engine* inner : stages_) if (inner) inner->applyNow(c);  // inner worlds keep this one's tempo and transport (CHG-0021)
       break;
     }
     case Command::Type::Press: {  // only v1 Source subclasses (audio and power sources) power themselves when pressed
@@ -520,7 +563,7 @@ void Engine::applyNote(const Command& c) noexcept {
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
       if (row[s] && blocks_[s].kind() == BlockKind::PowerSource) { keyAim(blocks_[static_cast<std::size_t>(s)], c.param, c.type == Command::Type::NoteOn, polyOf(ctrl)); continue; }
-      if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource) continue;
+      if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource || blocks_[s].type == BlockType::SourceStage) continue;
       if (blocks_[s].arranged) {  // CHG-0017: the key joins or leaves the notes this source is given
         arrangedKey(s, ctrl, c.param, ch, c.type == Command::Type::NoteOn);
         if (c.type != Command::Type::NoteOn) continue;
@@ -1549,6 +1592,11 @@ void Engine::updateGates() noexcept {
     const bool want = b.sourcePower() > 0;
     if (want == b.powerOn) continue;
     b.powerOn = want;
+    if (b.type == BlockType::SourceStage) {  // CHG-0021: power is the inner world's power switch
+      log(want ? Event::Type::GateOn : Event::Type::GateOff, b.id);
+      if (Engine* inner = b.poolIndex >= 0 ? stages_[static_cast<std::size_t>(b.poolIndex)] : nullptr) inner->applyNow(Command::worldPower(want));
+      continue;
+    }
     if (b.arranged) { arrange(order_[k], want); continue; }  // CHG-0017: power plays the notes the source is given
     // v1 rule (Source/ConnectionManager): a Power-held source always plays the default envelope (Power triggers
     // before the chain's Envelope block applies its settings); particle, pulse, laser, press and key triggers use it.
@@ -1613,7 +1661,7 @@ void Engine::addHostInput(const Block& b, int n) noexcept {
 void Engine::renderChain(int c, int n) noexcept {
   const auto r = audioChains_.chains[static_cast<std::size_t>(c)];
   std::fill_n(chainL_.begin(), n, 0.0f);
-  chainDirect_ = false;
+  chainDirect_ = false; chainStage_ = false;
   // Pre-effects (v1 LFObase): Vibrato/Scuzz LFOs drive every source's oscillator detune in this chain, summed.
   bool detuned = false;
   for (int m = 0; m < r.count; ++m) {
@@ -1687,6 +1735,14 @@ void Engine::renderChain(int c, int n) noexcept {
         break;
       }
       case BlockType::SourceGranular: renderGranular(b, n); break;
+      case BlockType::SourceStage:  // its inner world's mix, in stereo, at the block's level
+        if (b.poolIndex >= 0 && stages_[static_cast<std::size_t>(b.poolIndex)]) {
+          if (!chainStage_) { chainStage_ = true; std::fill_n(stageL_.begin(), n, 0.0f); std::fill_n(stageR_.begin(), n, 0.0f); }
+          const float* buf = stageBuf_.data() + static_cast<std::ptrdiff_t>(b.poolIndex) * 2 * kMaxSegment;
+          const auto g = static_cast<float>(std::clamp(b.params[P::SourceStage::gain], 0.0, 4.0));
+          for (int i = 0; i < n; ++i) { stageL_[i] += buf[i] * g; stageR_[i] += buf[kMaxSegment + i] * g; }
+        }
+        break;
       case BlockType::SourceNoise:
         for (int v = 0; v < kVoices; ++v) {
           Voice& vo = b.voices[static_cast<std::size_t>(v)];
@@ -1701,6 +1757,7 @@ void Engine::renderChain(int c, int n) noexcept {
     }
   }
   std::copy_n(chainL_.begin(), n, chainR_.begin());
+  if (chainStage_) for (int i = 0; i < n; ++i) { chainL_[i] += stageL_[i]; chainR_[i] += stageR_[i]; }
   if (chainDirect_) {
     // An Audio In chain skips the master stage, so its other sources take the master volume here, and the host
     // input joins at its own level: effects see the track as it is, and with no effects it is passed through as is.
@@ -1752,7 +1809,7 @@ void Engine::renderChain(int c, int n) noexcept {
       case BlockType::FxConvolver:
         if (b.poolIndex >= 0) {
           dsp::EqualPower mix; mix.set(b.params[P::FxConvolver::mix]);
-          const auto& k = b.userImpulse ? userImpulses_[static_cast<std::size_t>(b.poolIndex)] : defaultImpulse_;
+          const auto& k = b.userImpulse ? userImpulses_[static_cast<std::size_t>(b.poolIndex)] : *defaultImpulse_;
           convolvers_[static_cast<std::size_t>(b.poolIndex)].process(k, L, R, n, mix.dry, mix.wet);
         }
         break;
@@ -1765,6 +1822,13 @@ void Engine::render(float* left, float* right, int n) noexcept {
   std::fill_n(mixL_.begin(), n, 0.0f);
   std::fill_n(mixR_.begin(), n, 0.0f);
   bool anyDirect = false;
+  // Inner worlds (CHG-0021) render the same samples, whether or not their block is in a chain yet: their clocks
+  // never drift from this one.
+  if (!child_) for (int i = 0; i < kMaxStages; ++i) if (Engine* inner = stages_[static_cast<std::size_t>(i)]) {
+    float* buf = stageBuf_.data() + static_cast<std::ptrdiff_t>(i) * 2 * kMaxSegment;
+    inner->process(buf, buf + kMaxSegment, static_cast<std::uint32_t>(n));
+    inner->clearEvents();
+  }
   // Sound Lasers (CHG-0016): which chains each one hears (those of the sources connected to it).
   std::array<std::bitset<kMaxBlocks>, kMaxListeners> heard;
   bool listening = false;

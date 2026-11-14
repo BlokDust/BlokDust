@@ -2,9 +2,11 @@
 
 Check items off as they land. Each task should be independently verifiable.
 
-- [ ] 1. Patch format: `macros` used; migration none (was empty)
-- [ ] 2. Engine: nested worlds, power gating, depth limit, tests
-- [ ] 3. Stage block manifest, panel, load from share/file
-- [ ] 4. Make stage from selection
-- [ ] 5. Inside view (UI-0009) desktop + phone
-- [ ] 6. Goldens, UI regressions, owner check
+- [x] 1. Patch format: `macros` used (SPEC-PATCH-FORMAT-V2 R7); web, render tool and plugin loaders
+- [x] 2. Engine: inner worlds, power gating, one level, tests (`engine/tests/test_stage.cpp`, R13)
+- [x] 3. Stage block manifest and panel (Volume, OPEN STAGE, LOAD PATCH from a file)
+- [ ] 3a. Load patch from a share link (not built: file only)
+- [x] 4. Make stage from selection (drag Stage from the menu with blocks selected, or Cmd/Ctrl+G)
+- [x] 5. Inside view (UI-0009) desktop + phone layout
+- [x] 6. Golden `stage-nested`; browser tests `pnpm test:new-blocks -- --only stage,stage-from-selection`
+- [ ] 7. Owner check (desktop, iPad, phone)

@@ -65,6 +65,19 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
   if (patch.contains("tempo") && patch["tempo"].is_number()) out.commands.push_back(Command::tempo(patch["tempo"].get<double>()));
   for (const auto& b : patch["blocks"]) if (!addBlock(b, out, -1, err)) return false;
   resolveTargets(out);
+  // R7: `macros` holds what is inside each Stage block: { block: "<stage block id>", blocks: […], connectionOrder? }.
+  // One level only (SCOPE-0006): a Stage inside a Stage stays empty.
+  if (patch.contains("macros") && patch["macros"].is_array())
+    for (const auto& m : patch["macros"]) {
+      if (!m.is_object() || !m.contains("block") || !m["block"].is_string() || !m.contains("blocks") || !m["blocks"].is_array()) continue;
+      const auto it = out.ids.find(m["block"].get<std::string>());
+      if (it == out.ids.end()) continue;
+      auto inner = std::make_shared<Loaded>();
+      nlohmann::json body = {{"blocks", m["blocks"]}};
+      if (m.contains("connectionOrder")) body["connectionOrder"] = m["connectionOrder"];
+      if (!load(body, *inner, err)) return false;
+      out.stages.emplace_back(it->second, std::move(inner));
+    }
   // R4a: the order the pairs connected in, oldest first (SPEC-PATCH-FORMAT-V2 R4). Unknown or unconnected pairs are
   // skipped (the engine ignores them); without the list, pairs connect in block order.
   if (patch.contains("connectionOrder") && patch["connectionOrder"].is_array())
@@ -74,6 +87,19 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
       if (a != out.ids.end() && b != out.ids.end()) out.commands.push_back(Command::relink(a->second, b->second));
     }
   return true;
+}
+
+std::vector<std::unique_ptr<Engine>> attachStages(Engine& root, const Loaded& loaded, int sampleRate) {
+  std::vector<std::unique_ptr<Engine>> made;
+  root.prime();
+  for (const auto& [block, inner] : loaded.stages) {
+    EngineConfig cfg;
+    cfg.sampleRate = sampleRate; cfg.seed = loaded.seed; cfg.child = true; cfg.parent = &root;
+    auto e = std::make_unique<Engine>(cfg);
+    for (const auto& c : inner->commands) e->push(c);
+    if (root.attachStage(block, e.get())) made.push_back(std::move(e));
+  }
+  return made;
 }
 
 bool loadScript(const nlohmann::json& script, Loaded& io, std::string& err) {
