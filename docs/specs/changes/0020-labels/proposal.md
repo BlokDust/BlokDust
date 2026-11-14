@@ -12,16 +12,22 @@ adrs: [UI-0011]
 Patches need notes: what to press, what each part does.
 
 ## What changes
-- Interaction menu gets **Label**; dropping it places a text label with a drag dot (UI-0011).
-- Click to edit the text; drag the dot to move; drag to the trash to delete. Labels scale with zoom.
-- Patch: optional `labels: [{id, text, x, y}]` (SPEC-PATCH-FORMAT-V2); older readers ignore it.
+- Interaction menu gets **Label**; dragging it out places a label that follows the pointer and, once dropped, opens for
+  typing (UI-0011).
+- A press on a label (its dot or its words) and a drag moves it, in half grid cells; onto the bin deletes it. A press
+  without a drag edits the words in place (Enter or a click elsewhere keeps them; Escape does not; no words deletes
+  it). Labels scale with the zoom, show in embeds, and never reach the engine.
+- Patch: optional `labels: [{id, text, x, y}]` (SPEC-PATCH-FORMAT-V2 R2b); older readers ignore it. Unsaved-changes
+  checks count them. The plugin's processor keeps them with the DAW project (`bd_labels`).
 
 ## Out of scope
 - Rich text, sizes, colours.
+- Undo and redo of label edits (blocks have it; labels do not yet), and multi-select with blocks.
 
 ## Acceptance
 - `pnpm test:ui-regressions --only labels`: add, edit, move, delete, save and reopen.
 - `pnpm bd render --check`: unchanged (labels have no audio).
 
 ## Risks and unknowns
-- Text entry on a phone over the stage canvas.
+- Text entry on a phone over the stage canvas: a real text field is placed over the label, so the phone's keyboard
+  opens; not yet tried on a device.

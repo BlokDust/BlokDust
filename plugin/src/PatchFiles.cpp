@@ -56,11 +56,16 @@ nlohmann::json merge(const nlohmann::json& current, const nlohmann::json& part, 
     // in block order when the engine is rebuilt, and the editor then reports the whole order back.)
     if (part.contains("connectionOrder")) out["connectionOrder"] = part["connectionOrder"]; else out.erase("connectionOrder");
     if (part.contains("view")) out["view"] = part["view"]; else out.erase("view");  // the opened patch's view
+    if (part.contains("labels")) out["labels"] = part["labels"]; else out.erase("labels");  // and its labels (CHG-0020)
   } else {
     if (!out.contains("blocks") || !out["blocks"].is_array()) out["blocks"] = nlohmann::json::array();
     for (const auto& b : blocks) out["blocks"].push_back(b);
     if (!out.contains("refs") || !out["refs"].is_object()) out["refs"] = nlohmann::json::object();
     for (auto it = refs.begin(); it != refs.end(); ++it) if (!out["refs"].contains(it.key())) out["refs"][it.key()] = it.value();
+    if (part.contains("labels") && part["labels"].is_array()) {  // inserted labels join the scene's
+      if (!out.contains("labels") || !out["labels"].is_array()) out["labels"] = nlohmann::json::array();
+      for (const auto& l : part["labels"]) out["labels"].push_back(l);
+    }
   }
   if (out.contains("refs") && out["refs"].empty()) out.erase("refs");
   return out;

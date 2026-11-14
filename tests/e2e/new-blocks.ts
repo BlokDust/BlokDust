@@ -76,6 +76,39 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const pass = synced.indexOf('Offset') === synced.indexOf('Swing') + 1 && free.indexOf('Offset') === free.indexOf('Fire Rate') + 1 && saved === 0.25;
     return [pass, { synced, free, saved }];
   },
+  // CHG-0020 (UI-0011): labels come with the patch and are drawn; a click edits the words, a drag moves one, the bin
+  // deletes it, and the Interaction menu makes a new one. They never reach the engine.
+  async 'labels'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0)], errors,
+      { labels: [{ id: 'l1', text: 'Press the tone', x: -8, y: -6 }, { id: 'l2', text: 'Bin me', x: 6, y: 6 }] });
+    const menu = await menuItems(p, 'Interaction');
+    const labels = () => p.evaluate(() => (window as any).__bd_probe.labels as { id: string; text: string; x: number; y: number; cx: number; cy: number }[]);
+    const first = await labels();
+    await p.screenshot({ path: `${OUT}/labels.png` });
+    // click → edit in place
+    await p.mouse.click(first[0].cx, first[0].cy);
+    await p.waitForSelector('#labelEdit');
+    await p.keyboard.type('Hold a key');
+    await p.keyboard.press('Enter');
+    await p.waitForTimeout(200);
+    const edited = (await labels())[0].text;
+    // drag → moved (and saved in the patch)
+    const a = (await labels())[0];
+    await p.mouse.move(a.cx, a.cy); await p.mouse.down(); await p.mouse.move(a.cx + 60, a.cy + 45, { steps: 6 }); await p.mouse.up();
+    await p.waitForTimeout(200);
+    const moved = (await labels())[0];
+    // drag onto the bin → gone
+    const b = (await labels())[1];
+    await p.mouse.move(b.cx, b.cy); await p.mouse.down(); await p.mouse.move(1235, 755, { steps: 10 }); await p.waitForTimeout(150); await p.mouse.up();
+    await p.waitForTimeout(300);
+    const left = await labels();
+    const saved = (await state(p)).patch.labels, blocks = (await state(p)).blocks.length;
+    await p.screenshot({ path: `${OUT}/labels-after.png` });
+    await p.close();
+    const pass = menu.includes('Label') && first.length === 2 && edited === 'Hold a key' && (moved.x !== a.x || moved.y !== a.y) && left.length === 1 &&
+      saved?.length === 1 && saved[0].text === 'Hold a key' && saved[0].x === moved.x && blocks === 1;
+    return [pass, { menu, first: first.map(l => [l.text, l.x, l.y]), edited, moved: [moved.x, moved.y], left: left.length, saved, blocks }];
+  },
   // CHG-0019 (UI-0010): the Grid's pads are in its panel, in key; a pad plays, a slide is legato, Key and Scale change
   // the notes, and the panel fits between the header and the bottom controls.
   async 'grid'(errors) {

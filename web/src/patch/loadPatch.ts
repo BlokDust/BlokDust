@@ -9,6 +9,8 @@ export interface Patch { format?: string; version?: number; seed?: number; tempo
   /** The order the connected pairs connected in, oldest first, as [block id, block id] (R4a: a source's effects run in
    * the order they connected, as in v1). Ordering only: connections still come from positions. */
   connectionOrder?: [string, string][];
+  /** Notes on the stage (CHG-0020, UI-0011): text at a grid position. The engine never reads them. */
+  labels?: { id: string; text: string; x: number; y: number }[];
   /** The view it was saved at (owner, 2026-11-12, SPEC-PATCH-FORMAT-V2 R2): opening shows it. The engine ignores it. */
   view?: { x: number; y: number; zoom: number } }
 export type ScriptOp =

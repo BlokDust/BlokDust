@@ -17,6 +17,9 @@ const MENU: Record<string, string[]> = {
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
 const BY_NAME = new Map(NEW_DEFS.map(d => [d.name.toLowerCase(), d]));
 
+/** The menu id of a Label (scene.CreateBlockFromType hands it to the host like a block type). */
+export const LABEL_MENU_ID = 'Label';
+
 /** Add the new blocks to v1's menu JSON (once, before the header is populated). */
 export function installNewBlockMenu(): void {
   for (const cat of (App.BlockCreator.MenuJson as { categories: { name: string; items: { name: string; id: string; description: string }[] }[] }).categories) {
@@ -24,11 +27,21 @@ export function installNewBlockMenu(): void {
       const def = BLOCKS_BY_ID.get(id);
       if (def && !cat.items.some(i => i.id === def.menuId)) cat.items.push({ name: def.name, id: def.menuId, description: def.description });
     }
+    // Label (CHG-0020): not a block, but it is made from the Interaction menu like one.
+    if (cat.name === 'Interaction' && !cat.items.some(i => i.id === LABEL_MENU_ID))
+      cat.items.push({ name: 'Label', id: LABEL_MENU_ID, description: 'A note on the stage. Drag it by its dot; click it to change the words.' });
   }
 }
 
 /** v1 BlockSprites.DrawSprite for a new block (unscaled: menu icons and items dragged from the menu). */
 export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: string): boolean {
+  if (name === 'label') {  // a dot and a line of text, as it looks on the stage
+    const u = App.Unit, d = 3 * u, x = pos.x - 16 * u, y = pos.y + App.GridSize * 0.5;
+    App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
+    ctx.beginPath(); ctx.moveTo(x - d, y); ctx.lineTo(x, y - d); ctx.lineTo(x + d, y); ctx.lineTo(x, y + d); ctx.closePath(); ctx.fill();
+    ctx.save(); ctx.font = `400 ${Math.round(12 * u)}px Dosis`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('ABC', x + 8 * u, y); ctx.restore();
+    return true;
+  }
   const def = BY_NAME.get(name);
   if (!def) return false;
   const grd = App.GridSize, [ox, oy] = def.geometry.menuOffset ?? [0, 0];

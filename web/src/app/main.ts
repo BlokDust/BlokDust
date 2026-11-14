@@ -19,13 +19,14 @@ import { editToken, isServerId, load as loadShared, save as saveShared } from '.
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
 import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
+import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../stage/labels.ts';
 import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
 import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
-import { setMonitors } from '../v1ui/newBlocks.ts';
+import { LABEL_MENU_ID, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/gridPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
@@ -145,6 +146,8 @@ async function main() {
    * effects run in that order (v1). It starts from the opened patch and then follows the engine (each snapshot that
    * carries connections lists them oldest first); patches save it, and loading replays it (Relink). */
   let connectionOrder: [string, string][] = [];
+  /** Labels (CHG-0020, UI-0011): notes on the stage, kept in the patch. */
+  const labels: Label[] = [];
   const uidToId = () => new Map([...model].map(([id, b]) => [b.uid, id]));
   const toPatch = (): Patch => {
     const used = new Set([...model.values()].map(b => b.params.track).filter((t): t is string => typeof t === 'string'));
@@ -153,6 +156,7 @@ async function main() {
     return { format: 'blokdust.patch', version: 2, seed, ...(tempo !== undefined ? { tempo } : {}),
       blocks: [...model.values()].map(b => ({ id: b.uid, type: b.type, x: b.x, y: b.y, params: b.params })),
       ...(Object.keys(r).length ? { refs: r } : {}), ...(order.length ? { connectionOrder: order } : {}),
+      ...(labels.length ? { labels: labels.map(l => ({ ...l })) } : {}),
       view: currentView() };
   };
   const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
@@ -198,6 +202,7 @@ async function main() {
 
   const scene = new V1Scene({
     createBlock: (v1Type, gx, gy) => {
+      if (v1Type === LABEL_MENU_ID) { newLabel(gx, gy); return null; }  // not a block: it follows the pointer by itself
       const def = DEF_BY_V1.get(v1Type);
       if (!def) return null;
       // A new Emitter, Pulse or Stereo Delay starts in tempo sync (owner, CHG-0004; the delay's 1/8 at 120 BPM is v1's
@@ -239,6 +244,7 @@ async function main() {
     setWorldPower: on => { send([{ type: CommandType.WorldPower, id: 0, value: on ? 1 : 0 }]); stage.redraw(); },
     resetScene: () => {
       for (const id of [...model.keys()]) removeBlock(id);
+      labels.length = 0; endLabelEdit(false);
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
@@ -323,11 +329,68 @@ async function main() {
   let uiSync = true;
   stage.skipOverlays = new Set(['recordButton']);  // the ported RecorderPanel draws it (with hover/recording states)
   // The embed player (SHARING-0002, `/embed/<id>`) shows the stage only: no menus, panels or editing.
-  if (!embedId) stage.drawUi = ctx => {
+  stage.drawUi = ctx => {
+    if (labels.length) drawLabels(ctx, stage.metrics, labels, theme.colors[theme.roles.txt], labelEdit?.id ?? null);  // embeds show them too
+    if (embedId) return;
     if (uiSync) { uiSync = false; scene.sync(ctx, theme, stage.zoom, stage.drag, [...v1Blocks.values()]); }
     scene.setView(stage.zoom, stage.drag);
     scene.draw();
   };
+
+  // ---- labels (CHG-0020, UI-0011): text on the stage with a drag dot. Press and drag moves one (onto the bin deletes
+  // it); a press without a drag edits its words in place. They are not blocks: the engine never hears of them. ----
+  const measure = document.createElement('canvas').getContext('2d')!;
+  let labelDrag: { id: string; pointer: number; grabX: number; grabY: number; moved: boolean; fresh: boolean; downX: number; downY: number } | null = null;
+  let labelEdit: { id: string; input: HTMLInputElement } | null = null;
+  const labelsChanged = () => { changed(); if (juce) juce.emitEvent('bd_labels', { labels }); stage.redraw(); };
+  const readLabels = (list: unknown): Label[] => (Array.isArray(list) ? list : []).flatMap((l, i) => l && typeof l === 'object' && typeof (l as Label).text === 'string'
+    && Number.isFinite((l as Label).x) && Number.isFinite((l as Label).y) ? [{ id: typeof (l as Label).id === 'string' ? (l as Label).id : `l${i + 1}`, text: (l as Label).text.slice(0, 200), x: (l as Label).x, y: (l as Label).y }] : []);
+  /** Add labels, giving each an id no other label has. */
+  function addLabels(list: Label[]): void {
+    for (const l of list) { let id = l.id; for (let k = 1; labels.some(x => x.id === id); k++) id = `l${labels.length + k}`; labels.push({ ...l, id }); }
+  }
+  /** A new label from the menu: it follows the pointer until that lifts, then opens for typing. */
+  function newLabel(gx: number, gy: number): void {
+    addLabels([{ id: `l${labels.length + 1}`, text: 'LABEL', x: gx, y: gy }]);
+    const l = labels[labels.length - 1];
+    labelDrag = { id: l.id, pointer: primaryId ?? -1, grabX: 0, grabY: 0, moved: true, fresh: true, downX: 0, downY: 0 };
+    labelsChanged();
+  }
+  function moveLabel(e: PointerEvent): void {
+    const l = labels.find(x => x.id === labelDrag!.id);
+    if (!l) return;
+    if (!labelDrag!.moved && Math.hypot(e.offsetX - labelDrag!.downX, e.offsetY - labelDrag!.downY) > STILL_PX) labelDrag!.moved = true;
+    if (!labelDrag!.moved) return;
+    const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+    l.x = Math.round((gx - labelDrag!.grabX) * 2) / 2; l.y = Math.round((gy - labelDrag!.grabY) * 2) / 2;  // half cells: tidy, but free enough
+    stage.redraw();
+  }
+  /** Edit a label's words where it stands: Enter or a click elsewhere keeps them (no words: the label goes); Escape
+   * leaves it as it was. */
+  function editLabel(id: string): void {
+    endLabelEdit(true);
+    const l = labels.find(x => x.id === id);
+    if (!l) return;
+    const m = stage.metrics, r = labelRect(measure, m, l), input = document.createElement('input');
+    input.id = 'labelEdit'; input.type = 'text'; input.value = l.text; input.maxLength = 200; input.spellcheck = false;
+    input.style.cssText = `position:fixed;left:${r.textX / m.dpr}px;top:${r.y / m.dpr}px;height:${r.h / m.dpr}px;width:${Math.max(140, (r.w + 80 * m.scaledUnit) / m.dpr)}px;` +
+      `font:${labelCssFont(m)};color:${theme.colors[theme.roles.txt]};background:transparent;border:none;outline:none;padding:0;margin:0;text-transform:uppercase;z-index:5;`;
+    input.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') endLabelEdit(true); else if (e.key === 'Escape') endLabelEdit(false); });
+    input.addEventListener('blur', () => endLabelEdit(true));
+    document.body.appendChild(input);
+    labelEdit = { id, input };
+    input.focus(); input.select();
+    stage.redraw();
+  }
+  function endLabelEdit(keep: boolean): void {
+    const e = labelEdit;
+    if (!e) return;
+    labelEdit = null;
+    const l = labels.find(x => x.id === e.id), text = e.input.value.trim();
+    e.input.remove();
+    if (l && keep) { if (text) l.text = text; else labels.splice(labels.indexOf(l), 1); labelsChanged(); }
+    stage.redraw();
+  }
 
   function addBlock(type: string, x: number, y: number, p: Record<string, unknown>, uid?: string, quiet = false): number {
     const id = nextId++;
@@ -489,12 +552,14 @@ async function main() {
       else pluginAfterLoad = { place: new Set(part.blocks.map(b => b.id).filter((id): id is string => !!id)), touch, at };
       juce.emitEvent('bd_patchApply', { mode, patch: JSON.stringify({ ...part, ...(mode === 'open' && p.tempo !== undefined ? { tempo: p.tempo } : {}),
         ...(mode === 'open' && p.connectionOrder ? { connectionOrder: p.connectionOrder } : {}),
-        ...(mode === 'open' && p.view ? { view: p.view } : {}) }) });
+        ...(mode === 'open' && p.view ? { view: p.view } : {}),
+        ...(mode === 'open' ? (p.labels?.length ? { labels: p.labels } : {}) : ('labels' in part && part.labels.length ? { labels: part.labels } : {})) }) });
       return;
     }
     if (mode === 'open') { scene.ResetScene(); if (typeof p.tempo === 'number') { tempo = p.tempo; send([{ type: CommandType.Tempo, id: 0, value: tempo, x: -1 }]); } }
     for (const [k, r] of Object.entries(part.refs)) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
     const ids = part.blocks.map(b => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
+    addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
     if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); }
     if (mode === 'open') setBaseline(); else startPlacing(ids, touch, at);
     stage.redraw();
@@ -504,7 +569,7 @@ async function main() {
 
   // ---- unsaved changes (owner, 2026-11-10): the patch as last saved, shared or opened ----
   /** What Open would lose: blocks, their params and the tempo (not the view). */
-  const contentOf = (p: Patch) => JSON.stringify([p.blocks, p.tempo ?? null]);
+  const contentOf = (p: Patch) => JSON.stringify(p.labels?.length ? [p.blocks, p.tempo ?? null, p.labels] : [p.blocks, p.tempo ?? null]);
   const BASELINE_KEY = 'blokdust.savedPatch';
   let baseline = '';
   function setBaseline(): void {
@@ -880,6 +945,7 @@ async function main() {
     }
     if (ids) nextId = Math.max(nextId, ...Object.values(ids).map(i => i + 1));
     connectionOrder = Array.isArray(p.connectionOrder) ? [...p.connectionOrder] : [];
+    labels.length = 0; addLabels(readLabels(p.labels));
     if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
     for (const id of model.keys()) void resolveSample(id);
     scene.setBlocks([...v1Blocks.values()]);
@@ -953,6 +1019,8 @@ async function main() {
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
+    /** Labels on the stage (CHG-0020) and where each is, in css px (tests). */
+    get labels() { const m = stage.metrics; return labels.map(l => { const r = labelRect(measure, m, l); return { ...l, cx: (r.x + r.w / 2) / m.dpr, cy: (r.y + r.h / 2) / m.dpr }; }); },
     /** Laser beams drawn now (a beam through a Prism is several, CHG-0015). */
     get beams() { return probe.beams; },
     /** css px of a point on block `id` that the stage's own hit test maps to it (black-box tests click there). */
@@ -1270,6 +1338,16 @@ async function main() {
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
     app.canvas.setPointerCapture(e.pointerId);
     if (!placing && padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
+    // A label (CHG-0020): where no panel or block is in the way, a press on one takes the pointer until it lifts.
+    if (!placing && !labelDrag && labels.length && !scene.uiAt(e.offsetX * dpr(), e.offsetY * dpr()) && !stage.hitTest(e.offsetX, e.offsetY)) {
+      const l = labelAt(measure, stage.metrics, labels, e.offsetX * dpr(), e.offsetY * dpr());
+      if (l) {
+        const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+        labelDrag = { id: l.id, pointer: e.pointerId, grabX: gx - l.x, grabY: gy - l.y, moved: false, fresh: false, downX: e.offsetX, downY: e.offsetY };
+        scene.OptionsPanel.Close();
+        return;
+      }
+    }
     if (e.pointerType === 'touch') touchAt.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     if (primaryId !== null && e.pointerId !== primaryId) { if (e.pointerType === 'touch') extraDown(e); return; }
     primaryId = e.pointerId; primaryRole = null;
@@ -1326,6 +1404,13 @@ async function main() {
   });
   if (!embedId) app.canvas.addEventListener('pointermove', e => {
     if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
+    if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
+      moveLabel(e);
+      if (!labelDrag.fresh) {  // an existing label: the bin opens under it, as under a dragged block
+        if (labelDrag.moved) { scene.IsDraggingABlock = true; scene.pointerMove(e.offsetX * dpr(), e.offsetY * dpr(), true, () => null, true); }
+        return;
+      }
+    }
     if (touchAt.has(e.pointerId)) touchAt.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     const extra = extras.get(e.pointerId);
     if (extra) { extraMove(e, extra); return; }
@@ -1402,6 +1487,7 @@ async function main() {
   };
   if (!embedId) app.canvas.addEventListener('pointercancel', e => {
     if (padUp(scene.OptionsPanel, e.pointerId, padHost)) { stage.redraw(); return; }
+    if (labelDrag && e.pointerId === labelDrag.pointer && !labelDrag.fresh) { labelDrag = null; scene.IsDraggingABlock = false; stage.redraw(); return; }
     if (longPress) { clearTimeout(longPress); longPress = null; }
     if (pointerEnd(e)) return;
     pointerIsDown = false; swallowUp = false; downAt = null;
@@ -1414,6 +1500,19 @@ async function main() {
   });
   if (!embedId) app.canvas.addEventListener('pointerup', e => {
     if (padUp(scene.OptionsPanel, e.pointerId, padHost)) { stage.redraw(); return; }
+    if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
+      const d = labelDrag;
+      labelDrag = null;
+      if (d.fresh) setTimeout(() => editLabel(d.id), 0);  // dropped from the menu: type its words (after v1's own mouse-up)
+      else {
+        const binned = d.moved && scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), true) === 'delete';
+        scene.IsDraggingABlock = false;
+        if (binned) { const i = labels.findIndex(l => l.id === d.id); if (i >= 0) labels.splice(i, 1); }
+        if (d.moved) labelsChanged(); else editLabel(d.id);
+        stage.redraw();
+        return;
+      }
+    }
     const role = primaryRole, wasGroup = grouped(), still = !!downAt && Math.hypot(e.offsetX - downAt.x, e.offsetY - downAt.y) <= STILL_PX;
     if (longPress) { clearTimeout(longPress); longPress = null; }
     if (pointerEnd(e)) return;

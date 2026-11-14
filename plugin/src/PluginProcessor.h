@@ -102,6 +102,8 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void setConnectionOrder(const nlohmann::json& order) { if (order.is_array()) patch_["connectionOrder"] = order; }
   /// The editor's view (zoom, offset; owner 2026-11-12): saved with the patch, so a reopened project shows it.
   void setView(const nlohmann::json& view) { if (view.is_object() && view.contains("zoom")) patch_["view"] = view; }
+  /// Labels (CHG-0020): text on the stage, kept with the patch; the engine never reads them.
+  void setLabels(const nlohmann::json& labels) { if (labels.is_array() && !labels.empty()) patch_["labels"] = labels; else patch_.erase("labels"); }
   /// MIDI learn (CHG-0004 3.9): the next CC received drives Dust `slot` (saved in its automation entry as "cc").
   void learnCc(int slot) noexcept { learnSlot_.store(slot); }
   std::function<void(int slot, int cc)> onCcLearned;  // set by the editor (message thread)

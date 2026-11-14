@@ -32,6 +32,7 @@ The single, portable representation of a BlokDust creation, used by the web app,
 - **R2a.** `view` is the view the patch was saved at (`x`, `y`: the stage offset in grid units; `zoom`). Saving
   (files, share links, the autosave, the plugin's DAW state) records it; opening shows it; Insert ignores it; the engine
   never reads it (owner, 2026-11-12, CHG-0010).
+- **R2b.** *(CHG-0020, UI-0011)* `labels` (optional) is a list of notes on the stage: `{ id, text, x, y }`, `x`/`y` in grid units (half cells allowed), `text` at most 200 characters. Readers that do not know it ignore it; the engine never reads it. Insert brings a patch's labels along, moved with its blocks.
 - **R3.** Block `type` MUST be a stable namespaced id from the manifests (`source.*`, `fx.*`, `power.*`, `input.*`). Params MUST be in real units declared by the manifest; unknown params are dropped with a warning; missing params take defaults.
 - **R3a.** *(CHG-0018, AUDIO-0003)* An LFO names what it moves in its `target` param, a string `"<block id>:<param key>"` (patch ids, so it survives renumbering; Insert rewrites it when a block's id changes). Loaders turn it into the engine's `targetBlock`/`targetParam` once every block is known; those two are session-only and MUST NOT be read from a patch. A target that cannot be resolved leaves the LFO idle.
 - **R4.** Connections MUST NOT be stored (SPEC-CONNECTIONS-PROXIMITY R7). Their order is: optional

@@ -15,7 +15,8 @@ The owner wants notes on the stage to explain a patch. A label does not need a b
 
 ## Decision
 We will add labels: a line of text in v1's stage type (Dosis, the theme's text colour) with a small drag dot beside it.
-Drag the dot to move it; click the text to edit; drag to the trash to delete. Labels never connect, never collide with
+Press and drag it (by the dot or the words) to move it; a press without a drag edits the words; drag it to the trash
+to delete it. Labels never connect, never collide with
 particles or beams and never make sound. A label is added from the Interaction menu.
 
 ## Consequences

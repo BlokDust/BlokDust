@@ -60,6 +60,9 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_view", [this](const juce::var& v) {
                  proc_.setView(nlohmann::json::parse(juce::JSON::toString(v, true).toStdString()));
                })
+               .withEventListener("bd_labels", [this](const juce::var& v) {
+                 proc_.setLabels(nlohmann::json::parse(juce::JSON::toString(v.getProperty("labels", juce::var()), true).toStdString()));
+               })
                .withEventListener("bd_connectionOrder", [this](const juce::var& v) {
                  proc_.setConnectionOrder(nlohmann::json::parse(juce::JSON::toString(v.getProperty("order", juce::var()), true).toStdString()));
                })
