@@ -91,10 +91,10 @@ TEST_CASE("R10f Chord: power on a Tone plays the chord on its own note; the type
   render(*e, 480);
   const auto st = [](int semis) { return kBase * std::pow(2.0, semis / 12.0); };
   CHECK(are(pitches(*e), {st(0), st(4), st(7)}));   // major, the default
-  e->push(Command::setParam(10, P::FxChord::chord, 3));
+  e->push(Command::setParam(10, P::FxChord::chord, 2));
   render(*e, 480);
   CHECK(are(pitches(*e), {st(0), st(3), st(7)}));   // minor: only the third changed
-  e->push(Command::setParam(10, P::FxChord::chord, 6));
+  e->push(Command::setParam(10, P::FxChord::chord, 5));
   e->push(Command::setParam(10, P::FxChord::inversion, 1));
   render(*e, 480);
   CHECK(are(pitches(*e), {st(4), st(7), st(10), st(12)}));  // seventh, first inversion
@@ -103,7 +103,7 @@ TEST_CASE("R10f Chord: power on a Tone plays the chord on its own note; the type
 TEST_CASE("R10f Chord: every key of a keyboard becomes a chord, and lets go with its key") {
   auto e = toneAndKeys({BlockType::FxChord});
   e->push(Command::setParam(2, P::InputComputerKeyboard::isPolyphonic, 1));
-  e->push(Command::setParam(10, P::FxChord::chord, 1));  // fifths
+  e->push(Command::setParam(10, P::FxChord::chord, 0));  // fifths
   e->push(Command::noteOn(KB, 60));
   e->push(Command::noteOn(KB, 62));
   render(*e, 480);
@@ -113,7 +113,7 @@ TEST_CASE("R10f Chord: every key of a keyboard becomes a chord, and lets go with
   CHECK(are(pitches(*e), {hz(62), hz(69)}));
   // A mono keyboard sounds its newest key only.
   auto m = toneAndKeys({BlockType::FxChord});
-  m->push(Command::setParam(10, P::FxChord::chord, 1));
+  m->push(Command::setParam(10, P::FxChord::chord, 0));
   m->push(Command::noteOn(KB, 60));
   m->push(Command::noteOn(KB, 62));
   render(*m, 480);
@@ -130,7 +130,7 @@ TEST_CASE("R10f Chord: per-note bend reaches every note of that key's chord (PLU
   e->push(Command::add(2, MIDI, 0, -3));
   e->push(Command::setParam(2, P::InputMidiController::isPolyphonic, 1));
   e->push(Command::add(10, BlockType::FxChord, 3, 0));
-  e->push(Command::setParam(10, P::FxChord::chord, 1));
+  e->push(Command::setParam(10, P::FxChord::chord, 0));
   e->push(Command::noteOn(MIDI, 60, 1.0, -1, 3));
   e->push(Command::noteExpression(MIDI, 60, 3, Command::Expression::Bend, 2.0));
   render(*e, 480);
@@ -246,7 +246,7 @@ TEST_CASE("R10h Random Note with Keys set pitch picks among the held keys; then 
   }
   // Random Note → Chord → Arpeggiator: one random root per strike, its fifth chord, played one note at a time.
   auto c = toneAndKeys({BlockType::FxArpeggiator, BlockType::FxChord, BlockType::FxRandomNote});
-  c->push(Command::setParam(11, P::FxChord::chord, 1));
+  c->push(Command::setParam(11, P::FxChord::chord, 0));
   c->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
   c->push(Command::setParam(10, P::FxArpeggiator::speed, 20));
   c->push(Command::press(1, true));
@@ -287,28 +287,52 @@ TEST_CASE("CHG-0017: joining or leaving a note effect starts clean, and plain so
   CHECK(run(37) == a);
 }
 
-TEST_CASE("CHG-0019 Grid: its pads play like a keyboard's keys (poly by default); a slide bends the held note, no new attack") {
+TEST_CASE("CHG-0019 Touchpad: a slide moves the held key for an Arpeggiator, which then plays the note slid to") {
   auto e = makeEngine(48000, 1, false);
-  const BlockType GRID = BlockType::InputGrid;
+  const BlockType TOUCHPAD = BlockType::InputTouchpad;
   e->push(Command::add(1, BlockType::SourceTone, 0, 0));
-  e->push(Command::add(2, GRID, 0, -3));
-  Command a = Command::noteOn(GRID, 52); a.id = 2;   // the page names the Grid block the pad is on
-  Command b = Command::noteOn(GRID, 55); b.id = 2;
+  e->push(Command::add(2, TOUCHPAD, 0, -3));
+  e->push(Command::add(10, BlockType::FxArpeggiator, 3, 0));
+  e->push(Command::setParam(10, P::FxArpeggiator::sync, 0));
+  e->push(Command::setParam(10, P::FxArpeggiator::speed, 20));
+  Command a = Command::noteOn(TOUCHPAD, 52); a.id = 2;
+  Command b = Command::noteOn(TOUCHPAD, 59); b.id = 2;
+  e->push(a); e->push(b);
+  const auto heard = [&](int ms) {
+    std::vector<double> out;
+    for (int t = 0; t < ms; t += 5) { render(*e, 240); for (double f : pitches(*e)) if (std::none_of(out.begin(), out.end(), [&](double g) { return near(f, g); })) out.push_back(f); }
+    std::sort(out.begin(), out.end());
+    return out;
+  };
+  CHECK(are(heard(400), {hz(52), hz(59)}));
+  Command slide = Command::noteExpression(TOUCHPAD, 52, 0, Command::Expression::Bend, 3.0); slide.id = 2;  // E → G
+  e->push(slide);
+  render(*e, 240);
+  CHECK(are(heard(400), {hz(55), hz(59)}));
+}
+
+TEST_CASE("CHG-0019 Touchpad: its pads play like a keyboard's keys (poly by default); a slide bends the held note, no new attack") {
+  auto e = makeEngine(48000, 1, false);
+  const BlockType TOUCHPAD = BlockType::InputTouchpad;
+  e->push(Command::add(1, BlockType::SourceTone, 0, 0));
+  e->push(Command::add(2, TOUCHPAD, 0, -3));
+  Command a = Command::noteOn(TOUCHPAD, 52); a.id = 2;   // the page names the Touchpad block the pad is on
+  Command b = Command::noteOn(TOUCHPAD, 55); b.id = 2;
   e->push(a); e->push(b);
   render(*e, 480);
   CHECK(are(pitches(*e), {hz(52), hz(55)}));          // two pads, two voices
   const auto strikes = eventsOf(*e, Event::Type::GateOn, 1).size();
-  Command slide = Command::noteExpression(GRID, 52, 0, Command::Expression::Bend, 1.0); slide.id = 2;  // E → F
+  Command slide = Command::noteExpression(TOUCHPAD, 52, 0, Command::Expression::Bend, 1.0); slide.id = 2;  // E → F
   e->push(slide);
   render(*e, 480);
   CHECK(are(pitches(*e), {hz(53), hz(55)}));
   CHECK(eventsOf(*e, Event::Type::GateOn, 1).size() == strikes);  // legato: nothing struck again
-  Command off = Command::noteOff(GRID, 52); off.id = 2;
+  Command off = Command::noteOff(TOUCHPAD, 52); off.id = 2;
   e->push(off);
   render(*e, 480);
   CHECK(are(pitches(*e), {hz(55)}));
   // Octave moves every pad, as a keyboard's.
-  e->push(Command::setParam(2, P::InputGrid::transpose, 1));
+  e->push(Command::setParam(2, P::InputTouchpad::transpose, 1));
   render(*e, 480);
   CHECK(are(pitches(*e), {hz(67)}));
 }

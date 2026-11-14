@@ -174,6 +174,9 @@ class Engine {
   void emit(Block& emitter) noexcept;
   void emit(Block& emitter, double angleDeg) noexcept;
   void particleHit(Block& b) noexcept;
+  void restrike(int slot) noexcept;
+  void powerGap(Block& b) noexcept;
+  static bool gapsOnHit(const Block& b) noexcept;
   void pulse(Block& b, int ticks) noexcept;
   void updateGates() noexcept;
   static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;

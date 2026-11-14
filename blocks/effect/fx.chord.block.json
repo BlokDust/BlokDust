@@ -73,13 +73,13 @@
   "params": [
     {
       "key": "chord",
-      "default": 2,
+      "default": 1,
       "unit": "enum",
       "range": [
         0,
-        8
+        7
       ],
-      "description": "0 octave, 1 fifth, 2 major, 3 minor, 4 sus2, 5 sus4, 6 seventh, 7 major 7th, 8 minor 7th"
+      "description": "0 fifth, 1 major, 2 minor, 3 sus2, 4 sus4, 5 seventh, 6 major 7th, 7 minor 7th"
     },
     {
       "key": "inversion",

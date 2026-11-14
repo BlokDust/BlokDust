@@ -500,9 +500,9 @@ void Engine::apply(const Command& c) noexcept {
   }
 }
 
-// The Grid (CHG-0019) is a keyboard to the engine: its first params line up with the Computer Keyboard's.
-static_assert(P::InputGrid::transpose == P::InputComputerKeyboard::transpose && P::InputGrid::glide == P::InputComputerKeyboard::glide &&
-              P::InputGrid::isPolyphonic == P::InputComputerKeyboard::isPolyphonic && P::InputGrid::polyphonic == P::InputComputerKeyboard::polyphonic,
+// The Touchpad (CHG-0019) is a keyboard to the engine: its first params line up with the Computer Keyboard's.
+static_assert(P::InputTouchpad::transpose == P::InputComputerKeyboard::transpose && P::InputTouchpad::glide == P::InputComputerKeyboard::glide &&
+              P::InputTouchpad::isPolyphonic == P::InputComputerKeyboard::isPolyphonic && P::InputTouchpad::polyphonic == P::InputComputerKeyboard::polyphonic,
               "controller params must line up");
 namespace {
 bool polyOf(const Block& c) noexcept { return c.params[P::InputComputerKeyboard::isPolyphonic] != 0.0 || c.params[P::InputComputerKeyboard::polyphonic] != 0.0; }
@@ -602,6 +602,17 @@ void Engine::applyExpression(const Command& c) noexcept {
       const int s = order_[i];
       if (!row[s] || blocks_[s].kind() != BlockKind::AudioSource) continue;
       Block& b = blocks_[static_cast<std::size_t>(s)];
+      if (b.arranged && dim == Command::Expression::Bend) {
+        // An arranged source (AUDIO-0002): the held key itself moves, so Chord, Arpeggiator and Random Note work from
+        // where it slid to (a Touchpad slide, an MPE bend; owner 2026-11-14).
+        bool held = false;
+        for (int j = 0; j < b.arrKeyCount; ++j) {
+          auto& h = b.arrKeys[static_cast<std::size_t>(j)];
+          if (h.key == c.param && h.controller == ctrl.id && h.channel == ch) { h.bend = std::clamp(c.value, -96.0, 96.0); held = true; }
+        }
+        if (held) arrange(s, false);
+        continue;
+      }
       for (int v = 0; v < kVoices; ++v) {
         Voice& vo = b.voices[static_cast<std::size_t>(v)];
         if (!vo.active || vo.controller != ctrl.id || vo.key != c.param || vo.channel != ch) continue;
@@ -735,21 +746,21 @@ void Engine::releaseVoice(int slot, int v) noexcept {
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace {
-/// Scales shared by Random Note and the Grid: major, minor, dorian, lydian, mixolydian, pentatonic.
+/// Scales shared by Random Note and the Touchpad: major, minor, dorian, lydian, mixolydian, pentatonic.
 constexpr int kScaleCount = 6;
 constexpr int kScaleSize[kScaleCount] = {7, 7, 7, 7, 7, 5};
 constexpr int kScales[kScaleCount][7] = {
   {0, 2, 4, 5, 7, 9, 11}, {0, 2, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 9, 10}, {0, 2, 4, 6, 7, 9, 11}, {0, 2, 4, 5, 7, 9, 10}, {0, 2, 4, 7, 9, 0, 0}};
 /// Chord: octave, fifth, major, minor, sus2, sus4, seventh, major 7th, minor 7th.
-constexpr int kChordCount = 9;
-constexpr int kChordSize[kChordCount] = {2, 2, 3, 3, 3, 3, 4, 4, 4};
-constexpr int kChords[kChordCount][4] = {{0, 12, 0, 0}, {0, 7, 0, 0}, {0, 4, 7, 0}, {0, 3, 7, 0}, {0, 2, 7, 0}, {0, 5, 7, 0}, {0, 4, 7, 10}, {0, 4, 7, 11}, {0, 3, 7, 10}};
+constexpr int kChordCount = 8;
+constexpr int kChordSize[kChordCount] = {2, 3, 3, 3, 3, 4, 4, 4};
+constexpr int kChords[kChordCount][4] = {{0, 7, 0, 0}, {0, 4, 7, 0}, {0, 3, 7, 0}, {0, 2, 7, 0}, {0, 5, 7, 0}, {0, 4, 7, 10}, {0, 4, 7, 11}, {0, 3, 7, 10}};
 }  // namespace
 
 bool Engine::keysSetPitch(const Block& ctrl) noexcept {
   if (ctrl.type == BlockType::InputComputerKeyboard) return ctrl.params[P::InputComputerKeyboard::keysSetPitch] != 0.0;
   if (ctrl.type == BlockType::InputMidiController) return ctrl.params[P::InputMidiController::keysSetPitch] != 0.0;
-  if (ctrl.type == BlockType::InputGrid) return ctrl.params[P::InputGrid::keysSetPitch] != 0.0;
+  if (ctrl.type == BlockType::InputTouchpad) return ctrl.params[P::InputTouchpad::keysSetPitch] != 0.0;
   return false;
 }
 
@@ -823,7 +834,7 @@ void Engine::arrange(int slot, bool trigger) noexcept {
       for (int j = i + 1; j < b.arrKeyCount; ++j) newer = newer || (b.arrKeys[static_cast<std::size_t>(j)].controller == h.controller && !b.arrKeys[static_cast<std::size_t>(j)].pitchOnly);
       if (newer) continue;
     }
-    notes[static_cast<std::size_t>(n++)] = Note{h.controller, h.key, h.channel, 0.0};
+    notes[static_cast<std::size_t>(n++)] = Note{h.controller, h.key, h.channel, 0.0, h.bend};
   }
   const bool fromKeys = n > 0;
   if (!fromKeys) notes[static_cast<std::size_t>(n++)] = Note{};  // the source's own note
@@ -858,7 +869,7 @@ void Engine::arrange(int slot, bool trigger) noexcept {
     }
     notes = out; n = m;
   }
-  const auto pitchOf = [](const Note& x) { return (x.key >= 0 ? x.key : 60) + x.offset; };
+  const auto pitchOf = [](const Note& x) { return (x.key >= 0 ? x.key : 60) + x.offset + x.bend; };
   if (fx.arp >= 0) {
     Block& ar = blocks_[static_cast<std::size_t>(fx.arp)];
     const bool perHit = ar.params[P::FxArpeggiator::perHit] != 0.0;
@@ -899,6 +910,11 @@ void Engine::arrange(int slot, bool trigger) noexcept {
     bool sounding = false;
     for (int v = 0; v < kVoices && !sounding; ++v) sounding = b.voices[static_cast<std::size_t>(v)].active && same(b.voices[static_cast<std::size_t>(v)], x);
     if (!sounding) voiceOn(slot, x.controller, x.key, true, 0.0, envFromChain, x.channel, x.offset);
+    // A held key slid (a bend): its notes follow it, sounding or just struck (no new attack for a slide).
+    for (int v = 0; v < kVoices; ++v) {
+      Voice& vo = b.voices[static_cast<std::size_t>(v)];
+      if (vo.active && same(vo, x) && vo.bend != x.bend) { vo.bend = x.bend; setPitch(slot, v, 0.0); }
+    }
   }
   updateNotePower(b);
 }
@@ -1178,7 +1194,7 @@ void Engine::recomputeStaticPower() noexcept {
   if (!worldPower_) return;
   for (int k = 0; k < orderCount_; ++k) {
     const Block& p = blocks_[order_[k]];
-    const bool powers = p.type == BlockType::PowerPower ||
+    const bool powers = (p.type == BlockType::PowerPower && p.gapUntil == 0) ||  // not while a hit cuts it
                         (p.type == BlockType::PowerToggle && p.params[P::PowerToggle::logic] != 0.0);
     if (!powers) continue;
     const auto& row = graph_.row(order_[k]);
@@ -1217,7 +1233,42 @@ void Engine::emit(Block& e, double angleDeg) noexcept {
 
 void Engine::particleHit(Block& b) noexcept {
   if (b.kind() == BlockKind::Logic) { logicHit(b); return; }
+  // SIMULATION-0008 (owner, 2026-11-14; v1 only lengthened the note): a hit on a source that only earlier hits are
+  // holding strikes it again, so fast particles play every note (a new Random Note pick each time).
+  if (b.kind() == BlockKind::AudioSource && b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0) b.restrike = true;
   pulse(b, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
+}
+
+/// Strike a pulse-held source again (SIMULATION-0008): the power voice's envelope starts over (a sampler from its
+/// start); an arranged source lets its notes go and plays them as a new trigger.
+void Engine::restrike(int slot) noexcept {
+  Block& b = blocks_[static_cast<std::size_t>(slot)];
+  if (b.type == BlockType::SourceStage) return;
+  if (b.arranged) {
+    for (int v = 0; v < kVoices; ++v) if (b.voices[static_cast<std::size_t>(v)].active) releaseVoice(slot, v);
+    arrange(slot, true);
+    return;
+  }
+  if (b.monoVoice < 0) return;
+  Voice& vo = b.voices[static_cast<std::size_t>(b.monoVoice)];
+  if (!vo.active || vo.controller != 0) return;  // a key has the voice: power only keeps it
+  b.envFromChain = true;
+  vo.env.configure(envelopeFor(slot), sampleRate_);
+  vo.env.gateOn();
+  vo.trigTick = tick_;
+  if (isSampler(b.type)) { vo.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate; vo.samplePlaying = b.sampleFrames > 0; }
+  log(Event::Type::GateOn, b.id);
+}
+
+/// A Power with Gap on hit (owner, 2026-11-14): a Power that hits cut, rather than pass through.
+bool Engine::gapsOnHit(const Block& b) noexcept { return b.type == BlockType::PowerPower && b.params[P::PowerPower::gapOnHit] != 0.0; }
+
+/// A hit on a Power with Gap on hit: no power from it for `gap` (at least a tick), so its sources let go and are struck
+/// again when it comes back. A hit during a gap starts the gap over.
+void Engine::powerGap(Block& b) noexcept {
+  log(Event::Type::Logic, b.id);
+  b.gapUntil = tick_ + static_cast<std::uint32_t>(std::max(1L, std::lround(std::clamp(b.params[P::PowerPower::gap], 0.0, 10.0) * kTickRate)));
+  recomputeStaticPower();
 }
 
 void Engine::logicHit(Block& b) noexcept {
@@ -1251,8 +1302,8 @@ void Engine::releaseLaser(Block& laser) noexcept {
   laser.beamOn = false;
 }
 
-static_assert(P::PowerSoundLaser::angle == P::PowerLaser::angle && P::PowerSoundLaser::range == P::PowerLaser::range &&
-              P::PowerSoundLaser::rotate == P::PowerLaser::rotate, "the Sound Laser's beam params line up with the Laser's");
+static_assert(P::PowerSoundLaser::angle == P::PowerLaser::angle && P::PowerSoundLaser::range == P::PowerLaser::range,
+              "the Sound Laser's beam params line up with the Laser's");
 
 /// SPEC-SIMULATION R7–R10. Beams are recomputed every tick in creation order, so a laser powered by an earlier laser
 /// this tick fires this tick. Unlike v1, the beam stops at the *nearest* Void before any block is tested.
@@ -1265,7 +1316,7 @@ void Engine::runLasers() noexcept {
     const bool running = worldPower_ && (sound ? l.listenOn : l.params[P::PowerLaser::selfPoweredMode] != 0.0 || l.power() > 0);
     if (!running) { if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
     // v1 rotates only while *powered* (IsPowered: PowerAmount > 0), not when merely self-powered.
-    const double rotate = l.params[P::PowerLaser::rotate];
+    const double rotate = sound ? 0.0 : l.params[P::PowerLaser::rotate];  // the Sound Laser does not turn (owner, 2026-11-14)
     const bool synced = !sound && l.params[P::PowerLaser::sync] != 0.0;
     if (synced) {
       // Synced (owner): one full turn every |turnBeats| (negative: anticlockwise), locked to the beat: at beat 0 it
@@ -1274,7 +1325,7 @@ void Engine::runLasers() noexcept {
       double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * beat_ / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
       if (a <= 0.0) a += 360.0;
       l.params[P::PowerLaser::angle] = a - 270.0;
-    } else if ((sound || l.power() > 0) && std::lround(rotate) != 0) {
+    } else if (l.power() > 0 && std::lround(rotate) != 0) {
       double a = l.params[P::PowerLaser::angle] + rotate / 100.0 / kTicksPerV1Frame;
       if (a > 90.0) a -= 360.0;
       if (a < -270.0) a += 360.0;
@@ -1289,11 +1340,12 @@ void Engine::runLasers() noexcept {
       if (!hits[static_cast<std::size_t>(s)] || l.laserHits[static_cast<std::size_t>(s)]) continue;
       Block& b = blocks_[s];
       log(Event::Type::Hit, b.id, l.id);
-      if (b.kind() == BlockKind::Logic) logicHit(b); else b.laserPower++;
+      if (gapsOnHit(b)) powerGap(b);  // once per beam arriving, as a logic block
+      else if (b.kind() == BlockKind::Logic) logicHit(b); else b.laserPower++;
     }
     for (int i = 0; i < orderCount_; ++i) {  // no longer hit: release continuous power
       const int s = order_[i];
-      if (l.laserHits[static_cast<std::size_t>(s)] && !hits[static_cast<std::size_t>(s)] && blocks_[s].kind() != BlockKind::Logic && blocks_[s].laserPower > 0) blocks_[s].laserPower--;
+      if (l.laserHits[static_cast<std::size_t>(s)] && !hits[static_cast<std::size_t>(s)] && blocks_[s].kind() != BlockKind::Logic && blocks_[s].type != BlockType::PowerPower && blocks_[s].laserPower > 0) blocks_[s].laserPower--;
     }
     l.laserHits = hits;
     l.gateHits = gates; l.gateOpen = open;
@@ -1303,7 +1355,7 @@ void Engine::runLasers() noexcept {
 }
 
 /// A Counter or Chance decides about one arriving hit (SIMULATION-0005). Counter: the Euclidean pattern E(hits, steps),
-/// read from `rotate`, one step per hit. Chance: its own random stream (seeded by block id, as Granular's grains, so
+/// read from `rotate`, one step per hit, unless its steps were set by hand (`pattern` ≥ 0, owner 2026-11-14). Chance: its own random stream (seeded by block id, as Granular's grains, so
 /// the patch seed stays visual-only).
 bool Engine::gateDecide(Block& g) noexcept {
   bool pass = true;
@@ -1312,7 +1364,8 @@ bool Engine::gateDecide(Block& g) noexcept {
     const int hits = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::hits])), 0, steps);
     const int rotate = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::rotate])), 0, 15);
     const int at = (g.gateStep % steps + rotate) % steps;
-    pass = (at * hits) % steps < hits;
+    const long mask = std::lround(g.params[P::PowerCounter::pattern]);
+    pass = mask >= 0 ? ((mask >> (g.gateStep % steps)) & 1) != 0 : (at * hits) % steps < hits;  // steps set by hand win
     g.gateStep = (g.gateStep % steps + 1) % steps;
   } else if (g.type == BlockType::PowerChance) {
     pass = static_cast<double>(g.grainRng.nextFloat()) < g.params[P::PowerChance::chance];
@@ -1374,7 +1427,7 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
       const int s = order_[i];
       if (s == laserSlot) continue;
       const Block& b = blocks_[s];
-      if (!isSourceSide(b.kind()) && b.kind() != BlockKind::Logic) continue;
+      if (!isSourceSide(b.kind()) && b.kind() != BlockKind::Logic && !gapsOnHit(b)) continue;
       if (segmentPolygonFirstHit(seg.x0, seg.y0, ex, ey, b.info().outline, b.info().outlineCount, b.x, b.y, t)) hits.set(static_cast<std::size_t>(s));
     }
     if (beamCount_ < kMaxBeams) beams_[static_cast<std::size_t>(beamCount_++)] = Beam{l.id, seg.x0, seg.y0, ex, ey};
@@ -1548,12 +1601,14 @@ void Engine::runTick() noexcept {
         continue;
       }
       const bool absorbs = kind == BlockKind::Void;
-      const bool reacts = isSourceSide(kind) || kind == BlockKind::Logic;
+      const bool gaps = gapsOnHit(b);
+      const bool reacts = isSourceSide(kind) || kind == BlockKind::Logic || gaps;
       if (!absorbs && !reacts) continue;
       const auto& inf = b.info();
       if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y)) continue;
       consumed = true;
       if (absorbs) log(Event::Type::Absorb, b.id);
+      else if (gaps) { log(Event::Type::Hit, b.id); powerGap(b); }
       else { log(Event::Type::Hit, b.id); particleHit(b); }
     }
     if (consumed) continue;
@@ -1577,6 +1632,12 @@ void Engine::runTick() noexcept {
       np.life = h.life; np.size = 2.0f + rng_.nextFloat(); np.fresh = true;
     }
   }
+  // 3b. Powers whose gap is over give power again (owner, 2026-11-14)
+  {
+    bool ended = false;
+    for (int k = 0; k < orderCount_; ++k) { Block& b = blocks_[order_[k]]; if (b.gapUntil != 0 && tick_ >= b.gapUntil) { b.gapUntil = 0; ended = true; } }
+    if (ended) recomputeStaticPower();
+  }
   // 4. gates follow power
   updateGates();
   // 5. Arpeggiators step (CHG-0017)
@@ -1590,6 +1651,7 @@ void Engine::updateGates() noexcept {
     Block& b = blocks_[order_[k]];
     if (b.kind() != BlockKind::AudioSource) continue;
     const bool want = b.sourcePower() > 0;
+    if (b.restrike) { b.restrike = false; if (want && b.powerOn) { restrike(order_[k]); continue; } }
     if (want == b.powerOn) continue;
     b.powerOn = want;
     if (b.type == BlockType::SourceStage) {  // CHG-0021: power is the inner world's power switch

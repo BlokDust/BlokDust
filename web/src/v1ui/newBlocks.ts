@@ -5,14 +5,14 @@
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { App, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
-import { gridForm } from './gridPanel.ts';
+import { touchpadForm } from './touchpadPanel.ts';
 
 /** Menu order within each v1 category (appended after v1's items). */
 const MENU: Record<string, string[]> = {
   Source: ['source.stage'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
-  Interaction: ['input.grid'],
+  Interaction: ['input.touchpad'],
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
 const BY_NAME = new Map(NEW_DEFS.map(d => [d.name.toLowerCase(), d]));
@@ -88,10 +88,10 @@ const choice = (name: string, setting: string, value: number, labels: string[]) 
 const dB = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)} dB`;
 const ms = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(2)} s` : `${Math.round(v)} ms`);
 
-/** Scales shared by Random Note and the Grid (engine kScales), and the twelve keys. */
+/** Scales shared by Random Note and the Touchpad (engine kScales), and the twelve keys. */
 export const SCALES = ['MAJOR', 'MINOR', 'DORIAN', 'LYDIAN', 'MIXOLYDIAN', 'PENTATONIC'];
 export const KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const CHORDS = ['OCTAVE', 'FIFTH', 'MAJOR', 'MINOR', 'SUS 2', 'SUS 4', 'SEVENTH', 'MAJOR 7TH', 'MINOR 7TH'];
+const CHORDS = ['FIFTH', 'MAJOR', 'MINOR', 'SUS 2', 'SUS 4', 'SEVENTH', 'MAJOR 7TH', 'MINOR 7TH'];
 /** A synced Arpeggiator's speeds (beats per note), with triplets. */
 const ARP_STEPS = [
   { beats: 4, label: '1 BAR' }, { beats: 2, label: '1/2' }, { beats: 1, label: '1/4' }, { beats: 2 / 3, label: '1/4T' }, { beats: 0.5, label: '1/8' },
@@ -107,7 +107,7 @@ const nearestStep = (beats: number) => { let best = 0; ARP_STEPS.forEach((s, i) 
 const switches = (...list: { name: string; setting: string; value: boolean }[]) => ({ type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
   switches: list.map(s => ({ ...s, lit: true, mode: 'offOn' })) });
 /** Switches whose change shows or hides other rows: the panel is laid out again. */
-export const settingRefreshes = (key: string): boolean => key === 'perHit';
+export const settingRefreshes = (key: string): boolean => key === 'perHit' || key === 'gapOnHit';
 /** Converted settings whose rows must be laid out again once set. */
 const CONVERT_REFRESH = new Set(['inKey']);
 
@@ -115,10 +115,13 @@ const CONVERT_REFRESH = new Set(['inKey']);
 const CONVERT: Record<string, { param: string; to: (v: number) => number; from?: (v: number) => number }> = {
   attackMs: { param: 'attack', to: v => v / 1000, from: v => v * 1000 },
   releaseMs: { param: 'release', to: v => v / 1000, from: v => v * 1000 },
+  gapMs: { param: 'gap', to: v => v / 1000, from: v => v * 1000 },
+  compMeter: { param: 'threshold', to: v => v, from: v => v },   // the Level meter's line (owner, 2026-11-14)
+  soundMeter: { param: 'threshold', to: v => v, from: v => v },
   angle90: { param: 'angle', to: v => v - 90, from: v => wrapAngle(v + 90) },  // v1's Angle sliders show angle + 90 (0 = up)
   lfoDivisionIndex: { param: 'division', to: v => LFO_STEPS[Math.max(0, Math.min(LFO_STEPS.length - 1, Math.round(v)))].beats },
   whenQuieter: { param: 'invert', to: v => (v >= 0.5 ? 1 : 0) },
-  inKey: { param: 'chromatic', to: v => (v ? 0 : 1) },  // the Grid's In Key switch
+  inKey: { param: 'chromatic', to: v => (v ? 0 : 1) },  // the Touchpad's In Key switch
   arpDivisionIndex: { param: 'division', to: v => ARP_STEPS[Math.max(0, Math.min(ARP_STEPS.length - 1, Math.round(v)))].beats },
 };
 /** v1 SetParam for the settings above. Returns the param and value to send, or null when `key` is an ordinary param. */
@@ -130,8 +133,7 @@ export function convertSetting(key: string, value: number): { param: string; val
 const FORMS: Record<string, (b: FormBlock) => any[]> = {
   // CHG-0014: a level meter with the threshold on it (v1's dB meter), then Web Audio's compressor settings.
   'fx.compressor': b => [
-    slider('Level', 'compMeter', 0, 0, 1),
-    slider('Threshold', 'threshold', Number(b.Params.threshold), -60, 0, { display: dB }),
+    slider('Level', 'compMeter', Number(b.Params.threshold), -60, 0, { display: dB }),  // its line is the Threshold
     slider('Ratio', 'ratio', Number(b.Params.ratio), 1, 20, { display: v => `${v.toFixed(1)} : 1` }),
     slider('Knee', 'knee', Number(b.Params.knee), 0, 40, { display: dB }),
     slider('Attack', 'attackMs', Math.max(1, Number(b.Params.attack) * 1000), 1, 1000, { log: true, display: ms }),
@@ -193,14 +195,18 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
   ],
   // CHG-0016: what it hears against its threshold, then when the beam comes on, then the Laser's own rows.
   'power.sound-laser': b => [
-    slider('Level', 'soundMeter', 0, 0, 1),
-    slider('Threshold', 'threshold', Number(b.Params.threshold), -60, 0, { display: dB }),
+    slider('Level', 'soundMeter', Number(b.Params.threshold), -60, 0, { display: dB }),  // its line is the Threshold
     choice('Band', 'band', Number(b.Params.band), ['ALL', 'LOWS', 'MIDS', 'HIGHS']),
     choice('Beam on', 'whenQuieter', b.Params.invert ? 1 : 0, ['WHEN LOUDER', 'WHEN QUIETER']),
     slider('Hold', 'hold', Number(b.Params.hold), 0, 2, { display: v => ms(v * 1000) }),
     slider('Angle', 'angle90', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
     slider('Range', 'range', Number(b.Params.range), 50, 1200, { quantised: true }),
-    { type: 'slider', name: 'Rotate', setting: 'rotate', props: { value: Number(b.Params.rotate), min: -500, max: 500, quantised: true, centered: true, snap: true } },
+  ],
+  // v2 (owner, 2026-11-14): v1's Power had no panel. Gap on hit: a particle or beam hitting it cuts its power for a
+  // moment, so what it holds is struck again.
+  'power.power': b => [
+    switches({ name: 'Gap On Hit', setting: 'gapOnHit', value: !!b.Params.gapOnHit }),
+    ...(b.Params.gapOnHit ? [slider('Gap', 'gapMs', Number(b.Params.gap ?? 0.05) * 1000, 10, 1000, { log: true, display: ms })] : []),
   ],
   // CHG-0015: the pattern as a row of steps, then the three numbers that make it (Euclidean, SIMULATION-0005).
   'power.counter': b => [
@@ -213,7 +219,7 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
   // The Laser's Angle and Rotate rows, then how many streams and how wide they fan (SIMULATION-0006).
   'power.prism': b => [
     slider('Angle', 'angle90', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
-    { type: 'slider', name: 'Rotate', setting: 'rotate', props: { value: Number(b.Params.rotate), min: -500, max: 500, quantised: true, centered: true, snap: true } },
+    { type: 'slider', name: 'Rotate', setting: 'rotate', props: { value: Number(b.Params.rotate), min: -500, max: 500, quantised: true, centered: true } },
     slider('Streams', 'streams', Number(b.Params.streams), 1, 4, { quantised: true }),
     slider('Spread', 'spread', Number(b.Params.spread), 0, 180, { quantised: true, display: v => `${Math.round(v)}°` }),
   ],
@@ -227,7 +233,8 @@ function modulatable(block: any): { param: string; label: string }[] {
   if (def.id === 'fx.filter') return [{ param: 'frequency', label: 'Frequency' }, { param: 'gain', label: 'Gain' }, { param: 'Q', label: 'Width' }];
   block.UpdateOptionsForm();
   for (const row of (block.OptionsForm?.parameters ?? []) as any[]) {
-    if (row.type !== 'slider' || isSelector(row.setting) || LIVE_ROWS[row.setting]) continue;
+    if (row.type !== 'slider' || isSelector(row.setting) || (LIVE_ROWS[row.setting] && !METER_ROWS.has(row.setting))) continue;
+    if (METER_ROWS.has(row.setting)) { if (!out.some(o => o.param === 'threshold')) out.push({ param: 'threshold', label: 'Threshold' }); continue; }
     const param = CONVERT[row.setting]?.param ?? row.setting, p = def.params.find(q => q.key === param);
     if (p && p.ui.transform !== 'None' && !out.some(o => o.param === param)) out.push({ param, label: row.name });
   }
@@ -288,6 +295,11 @@ export function counterPattern(steps: number, hits: number, rotate: number): boo
   const n = Math.max(1, Math.min(16, Math.round(steps))), k = Math.max(0, Math.min(n, Math.round(hits))), r = Math.max(0, Math.min(15, Math.round(rotate)));
   return Array.from({ length: n }, (_, i) => (((i + r) % n) * k) % n < k);
 }
+/** A Counter's steps as they play: set by hand (`pattern` ≥ 0, bit k = step k) or the Euclidean pattern. */
+export function counterSteps(p: Record<string, any>): boolean[] {
+  const euclid = counterPattern(Number(p.steps ?? 8), Number(p.hits ?? 3), Number(p.rotate ?? 0)), mask = Math.round(Number(p.pattern ?? -1));
+  return mask >= 0 ? euclid.map((_, k) => ((mask >> k) & 1) === 1) : euclid;
+}
 /** A Prism's exit directions in degrees (engine traceBeam / R5d), from its angle now. */
 export function prismAngles(angle: number, streams: number, spread: number): number[] {
   const n = Math.max(1, Math.min(4, Math.round(streams)));
@@ -295,7 +307,7 @@ export function prismAngles(angle: number, streams: number, spread: number): num
 }
 /** The options form of a new block (v1 UpdateOptionsForm), or false when `b` is not one. */
 export function newBlockForm(b: FormBlock): boolean {
-  if (b.def.id === 'input.grid') { gridForm(b, SCALES, choice); return true; }  // CHG-0019 (gridPanel.ts)
+  if (b.def.id === 'input.touchpad') { touchpadForm(b, SCALES, choice); return true; }  // CHG-0019 (touchpadPanel.ts)
   const f = FORMS[b.def.id];
   if (!f) return false;
   b.OptionsForm = { name: b.BlockName, parameters: f(b) };
@@ -305,9 +317,10 @@ export function newBlockForm(b: FormBlock): boolean {
 // ---- live rows: declared as sliders (so v1's OptionsPanel lays them out), then redrawn here ----
 type RowDraw = (this: any, ctx: CanvasRenderingContext2D, units: number, i: number, panel: any) => void;
 
-/** v1 OptionMeter's look (Settings › dB Meter), for a block: the level as a bar on −60…0 dB and the threshold as v1's
- * peak marker. Under the bar, a Compressor shows its gain reduction, growing leftward from 0 dB; a Sound Laser shows
- * a full bar while its beam is on. */
+/** v1 OptionMeter's look (Settings › dB Meter), for a block: the level as a bar on −60…0 dB. Under the bar, a
+ * Compressor shows its gain reduction, growing leftward from 0 dB; a Sound Laser shows a full bar while its beam is on.
+ * The row is also the Threshold slider (owner, 2026-11-14): a full-height line with v1's grab diamond, dragged like
+ * any slider (its value is the threshold, CONVERT). */
 const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
   const block = panel.SelectedBlock, m = monitorOf(block?.Id) ?? [-100, 0];
@@ -331,11 +344,18 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
     App.FillColor(ctx, colours[(i + 1) % colours.length]);
     ctx.fillRect(x - units, y + h * 0.65, w + units, h * 0.16);
   }
-  // THRESHOLD (v1 OptionMeter's peak marker) //
-  const tx = x + at(Number(block?.Params.threshold ?? -24)), d = 2 * units;
+  // THRESHOLD: v1 OptionSlider's line and grab triangles, in the text colour //
+  const tx = x + Math.max(0, Math.min(w, this.Position.x)), d = h * 0.2;
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
-  ctx.fillRect(tx - 0.5 * units, y + h * 0.19, units, h * 0.62);
+  ctx.fillRect(tx - units, y, 2 * units, h);
   ctx.beginPath(); ctx.moveTo(tx - d, mid); ctx.lineTo(tx, mid - d); ctx.lineTo(tx + d, mid); ctx.lineTo(tx, mid + d); ctx.closePath(); ctx.fill();
+  App.FillColor(ctx, App.Palette[8]);
+  ctx.beginPath(); ctx.moveTo(tx - d, mid); ctx.lineTo(tx, mid - d); ctx.lineTo(tx + d * 0.5, mid - d * 0.5); ctx.lineTo(tx - d * 0.5, mid + d * 0.5); ctx.closePath(); ctx.fill();
+  App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
+  if (this.Selected) {  // VALUE TOOLTIP (v1) //
+    ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtSlider;
+    ctx.fillText(dB(this.Value), tx + 25 * units, mid + Math.round(units * 33) * 0.35);
+  }
   // NAME //
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';
@@ -348,7 +368,7 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
 const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
   const block = panel.SelectedBlock, p = block?.Params ?? {}, m = monitorOf(block?.Id) ?? [0, 0];
-  const pattern = counterPattern(Number(p.steps ?? 8), Number(p.hits ?? 3), Number(p.rotate ?? 0)), n = pattern.length;
+  const pattern = counterSteps(p), n = pattern.length;
   const cell = w / 16, r = Math.min(cell * 0.36, h * 0.3), x0 = x + (w - cell * n) * 0.5, next = Math.round(m[0]) % n;
   const colours = panel.SliderColours, dataType = Math.round(units * 10);
   ctx.globalAlpha = 1;
@@ -367,23 +387,45 @@ const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   ctx.font = App.Metrics.TxtMid;
   ctx.textAlign = 'right';
   ctx.fillText(this.Name.toUpperCase(), panel.Margin - 15 * units, mid + dataType * 0.4);
-  this.Shown = { pattern: pattern.map(on => (on ? 'x' : '.')).join(''), next };  // tests
+  this.Shown = { pattern: pattern.map(on => (on ? 'x' : '.')).join(''), next, cells: pattern.map((_, k) => x0 + cell * (k + 0.5)), cell };  // tests, clicks
 };
+/** A press on the Counter's pattern row toggles the step under it (owner, 2026-11-14): the steps are then set by hand
+ * until Steps, Hits or Rotate moves. Returns true when it took the press. */
+function counterPress(panel: any, mx: number, my: number): boolean {
+  const block = panel.SelectedBlock;
+  if (block?.def?.id !== 'power.counter' || panel.Scale !== 1) return false;
+  const row = (panel.Options as any[]).find(o => o.Setting === 'counterPattern');
+  if (!row?.Shown?.cells) return false;
+  const y = panel.Position.y + row.Position.y;
+  if (my < y || my > y + row.Size.height) return false;
+  const k = (row.Shown.cells as number[]).findIndex(cx => Math.abs(mx - (panel.Position.x + cx)) <= row.Shown.cell / 2);
+  if (k < 0) return false;
+  const steps = counterSteps(block.Params);
+  steps[k] = !steps[k];
+  const mask = steps.reduce((m, on, i) => m | (on ? 1 << i : 0), 0);
+  block.Params.pattern = mask;
+  App.MainScene.setParam(block, 'pattern', mask);
+  panel._DrawReady = true;
+  return true;
+}
 
+/** Live rows that are also sliders (dragged as v1 drags any slider). */
+const METER_ROWS = new Set(['compMeter', 'soundMeter']);
 const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, soundMeter: drawCompressorMeter, counterPattern: drawCounterPattern };
 
 /** A selected Prism's exit directions, drawn on the stage while its panel is open (as a Laser shows its beam): thin
  * dashed lines from the block, following its rotation. */
 export function drawPrismExits(ctx: CanvasRenderingContext2D, panel: any): void {
   const b = panel.SelectedBlock;
-  if (!b || panel.Scale !== 1 || b.def?.id !== 'power.prism') return;
-  const angle = monitorOf(b.Id)?.[0] ?? Number(b.Params.angle), len = 6;
+  const emitter = b?.def?.id === 'power.emitter';  // a Particle Emitter shows the way it fires too (owner, 2026-11-14)
+  if (!b || panel.Scale !== 1 || (b.def?.id !== 'power.prism' && !emitter)) return;
+  const angle = emitter ? Number(b.Params.angle) : monitorOf(b.Id)?.[0] ?? Number(b.Params.angle), len = 6;
   const from = App.Metrics.PointOnGrid(new Point(b.Position.x, b.Position.y));
   ctx.save();
   App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.globalAlpha = 0.6; ctx.lineWidth = App.Unit; ctx.setLineDash([4 * App.Unit, 4 * App.Unit]);
   const ends: [number, number][] = [];
-  for (const a of prismAngles(angle, Number(b.Params.streams), Number(b.Params.spread))) {
+  for (const a of emitter ? [angle] : prismAngles(angle, Number(b.Params.streams), Number(b.Params.spread))) {
     const rad = a * Math.PI / 180, to = App.Metrics.PointOnGrid(new Point(b.Position.x + Math.cos(rad) * len, b.Position.y + Math.sin(rad) * len));
     ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
     ends.push([to.x - from.x, to.y - from.y]);
@@ -392,14 +434,39 @@ export function drawPrismExits(ctx: CanvasRenderingContext2D, panel: any): void 
   panel.PrismExits = ends;  // tests
 }
 
+/** Sliders that stick at 0 (owner, 2026-11-14): a drag into the middle stops at 0; staying near it for a moment lets
+ * small values either side through. */
+const SNAP_ZERO = new Set(['power.laser:rotate', 'power.prism:rotate']);
+const SNAP_ZONE = 0.05, SNAP_HOLD_MS = 500;
+
 /** Teach the options panel the live rows (once, at start-up). */
 export function installLiveRows(panel: any): void {
+  const sliderSet = panel.SliderSet.bind(panel);
+  panel.SliderSet = (n: number, mx: number) => {
+    sliderSet(n, mx);
+    const o = panel.Options?.[n];
+    // A Counter's steps set by hand give way to the Euclidean pattern once Steps, Hits or Rotate moves.
+    if (o && panel.SelectedBlock?.def?.id === 'power.counter' && ['steps', 'hits', 'rotate'].includes(o.Setting) && Number(panel.SelectedBlock.Params.pattern ?? -1) >= 0) {
+      panel.SelectedBlock.Params.pattern = -1;
+      App.MainScene.setParam(panel.SelectedBlock, 'pattern', -1);
+    }
+    if (!o || !SNAP_ZERO.has(`${panel.SelectedBlock?.def?.id}:${o.Setting}`)) return;
+    const now = performance.now();
+    if (Math.abs(o.Value) > (o.Max - o.Min) * SNAP_ZONE) { o.SnapSince = undefined; return; }
+    o.SnapSince ??= now;
+    if (now - o.SnapSince < SNAP_HOLD_MS && o.Value !== 0) {
+      o.Value = 0; o.Position.x = panel.linPosition(0, panel.Range, o.Min, o.Max, 0);
+      panel.SelectedBlock.SetParam(o.Setting, 0);
+    }
+  };
+  const mouseDown = panel.MouseDown.bind(panel);
+  panel.MouseDown = (mx: number, my: number) => { if (counterPress(panel, mx, my)) panel.Hover = true; else mouseDown(mx, my); };  // the press is the panel's
   const populate = panel.Populate.bind(panel);
   panel.Populate = (json: any, open: boolean) => {
     populate(json, open);
     for (const o of panel.Options as any[]) {
       const draw = o.Type === 'slider' ? LIVE_ROWS[o.Setting] : undefined;
-      if (draw) { o.Type = 'live'; o.Live = true; o.Draw = draw; }
+      if (draw) { if (!METER_ROWS.has(o.Setting)) o.Type = 'live'; o.Live = true; o.Draw = draw; }
     }
     // v1 keeps a slider's rollover by row number; rows that are no longer sliders must not inherit one.
     (panel.Options as any[]).forEach((o, i) => { if (o.Type !== 'slider' && o.Type !== 'waveslider' && panel._SliderRoll) panel._SliderRoll[i] = false; });
@@ -407,5 +474,5 @@ export function installLiveRows(panel: any): void {
 }
 /** Is a live row showing? (The scene then redraws the panel every frame.) */
 export const hasLiveRows = (panel: any): boolean => panel.Scale > 0 &&
-  (((panel.Options ?? []) as any[]).some(o => o.Live) || panel.SelectedBlock?.def?.id === 'power.prism' ||  // a Prism's exit lines turn with it
-   panel.SelectedBlock?.def?.id === 'input.grid');     // the Grid's pads light as they are played
+  (((panel.Options ?? []) as any[]).some(o => o.Live) || panel.SelectedBlock?.def?.id === 'power.prism' || panel.SelectedBlock?.def?.id === 'power.emitter' ||  // their guide lines turn with them
+   panel.SelectedBlock?.def?.id === 'input.touchpad');     // the Touchpad's pads light as they are played

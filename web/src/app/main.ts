@@ -29,7 +29,7 @@ import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
-import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/gridPanel.ts';
+import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
@@ -423,8 +423,11 @@ async function main() {
     if (!l) return;
     const m = stage.metrics, r = labelRect(measure, m, l), input = document.createElement('input');
     input.id = 'labelEdit'; input.type = 'text'; input.value = l.text; input.maxLength = 200; input.spellcheck = false;
-    input.style.cssText = `position:fixed;left:${r.textX / m.dpr}px;top:${r.y / m.dpr}px;height:${r.h / m.dpr}px;width:${Math.max(140, (r.w + 80 * m.scaledUnit) / m.dpr)}px;` +
-      `font:${labelCssFont(m)};color:${theme.colors[theme.roles.txt]};background:transparent;border:none;outline:none;padding:0;margin:0;text-transform:uppercase;z-index:5;`;
+    // iOS zooms the page into any text field under 16 px: the field is 16 px, scaled down to the label's size.
+    const font = labelCssFont(m), px = Number(/([\d.]+)px/.exec(font)?.[1] ?? 16), k = Math.min(1, px / 16);
+    const w = Math.max(140, (r.w + 80 * m.scaledUnit) / m.dpr), h = r.h / m.dpr;
+    input.style.cssText = `position:fixed;left:${r.textX / m.dpr}px;top:${r.y / m.dpr}px;height:${h / k}px;width:${w / k}px;transform:scale(${k});transform-origin:0 0;` +
+      `font:${font.replace(/[\d.]+px/, `${px / k}px`)};color:${theme.colors[theme.roles.txt]};background:transparent;border:none;outline:none;padding:0;margin:0;text-transform:uppercase;z-index:5;`;
     input.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') endLabelEdit(true); else if (e.key === 'Escape') endLabelEdit(false); });
     input.addEventListener('blur', () => endLabelEdit(true));
     document.body.appendChild(input);
@@ -523,6 +526,45 @@ async function main() {
     setSelection([]);
     return addBlock('source.stage', x, y, {}, uid);
   }
+  /** Blocks that cannot go inside a Stage yet (they need audio files or the input; one level). */
+  const NOT_INSIDE = new Set(['source.stage', 'source.sample', 'source.granular', 'source.recorder', 'source.sample-gen', 'source.microphone', 'source.audio-in']);
+  /** Blocks dropped onto Stage block `stageId` go inside it (owner, 2026-11-14), to the right of what is there, keeping
+   * their layout and their connections. Its inner world starts again. Not undoable (as wrapping). */
+  function addToStage(stageId: number, ids: number[]): void {
+    const s = model.get(stageId);
+    const picked = ids.filter(id => id !== stageId && model.has(id) && !NOT_INSIDE.has(model.get(id)!.type));
+    if (!s || s.type !== 'source.stage' || inside || juce || !picked.length) return;
+    const was = macros.get(s.uid) ?? { block: s.uid, blocks: [] };
+    const bs = picked.map(id => model.get(id)!), taken = new Set(was.blocks.map(b => b.id)), rename = new Map<string, string>();
+    for (const b of bs) { let u = b.uid; for (let k = 2; taken.has(u); k++) u = `${b.uid}_${k}`; taken.add(u); rename.set(b.uid, u); }
+    const mean = (v: number[]) => Math.round(v.reduce((a, b) => a + b, 0) / v.length);
+    const minX = Math.min(...bs.map(b => b.x)), maxX = Math.max(...bs.map(b => b.x)), gy = mean(bs.map(b => b.y));
+    const there = was.blocks.map(b => ({ x: b.x ?? 0, y: b.y ?? 0 }));
+    const ox = there.length ? Math.max(...there.map(p => p.x)) + 4 - minX : -Math.round((minX + maxX) / 2);
+    const oy = there.length ? mean(there.map(p => p.y)) - gy : -gy;
+    const moved = bs.map(b => {
+      const params = Object.fromEntries(Object.entries(structuredClone(b.params)).filter(([k]) => !SESSION_PARAMS.has(k)));
+      if (typeof params.target === 'string') { const [u, k] = params.target.split(':'); if (rename.has(u)) params.target = `${rename.get(u)}:${k}`; }  // an LFO going in with its target
+      return { id: rename.get(b.uid)!, type: b.type, x: b.x + ox, y: b.y + oy, params };
+    });
+    const order = [...(was.connectionOrder ?? []), ...connectionOrder.filter(([a, b]) => rename.has(a) && rename.has(b)).map(([a, b]) => [rename.get(a)!, rename.get(b)!] as [string, string])];
+    for (const id of picked) removeBlock(id);
+    const { uid, x, y, params } = s;
+    scene.OptionsPanel.Close();
+    removeBlock(stageId);
+    macros.set(uid, { ...was, blocks: [...was.blocks, ...moved], ...(order.length ? { connectionOrder: order } : {}) });
+    innerIds.delete(uid);
+    undoStack.length = 0; redoStack.length = 0;
+    setSelection([]);
+    addBlock('source.stage', x, y, params, uid);
+    stage.redraw();
+  }
+  /** The Stage block under css (x, y) that the blocks `moving` would go into, or null. */
+  function dropStageAt(x: number, y: number, moving: Set<number>): number | null {
+    if (inside || juce || ![...moving].some(id => !NOT_INSIDE.has(model.get(id)?.type ?? ''))) return null;
+    const t = stage.hitTest(x, y, id => moving.has(id));
+    return t && model.get(t.id)?.type === 'source.stage' ? t.id : null;
+  }
   /** The Stage panel's LOAD PATCH: a patch file's blocks become what is inside (the file's own Stage blocks are left
    * out: one level). The block is made again, so its inner world starts fresh. */
   function loadStagePatch(id: number): void {
@@ -555,6 +597,7 @@ async function main() {
     labelEdit = null;
     const l = labels.find(x => x.id === e.id), text = e.input.value.trim();
     e.input.remove();
+    if (window.scrollX || window.scrollY) window.scrollTo(0, 0);  // iOS scrolls the page to show the field above its keyboard
     if (l && keep) { if (text) l.text = text; else labels.splice(labels.indexOf(l), 1); labelsChanged(); }
     stage.redraw();
   }
@@ -1208,6 +1251,10 @@ async function main() {
     get labels() { const m = stage.metrics; return labels.map(l => { const r = labelRect(measure, m, l); return { ...l, cx: (r.x + r.w / 2) / m.dpr, cy: (r.y + r.h / 2) / m.dpr }; }); },
     /** Laser beams drawn now (a beam through a Prism is several, CHG-0015). */
     get beams() { return probe.beams; },
+    /** The Stage block a drag would go into now (tests). */
+    get dropTarget() { return stage.dropTarget; },
+    /** Select blocks by engine id, as shift-clicks would (tests). */
+    select(ids: number[]) { setSelection(ids); stage.redraw(); },
     /** css px of a point on block `id` that the stage's own hit test maps to it (black-box tests click there). */
     blockPoint(id: number): [number, number] | null {
       const b = stage.block(id); if (!b) return null;
@@ -1475,7 +1522,7 @@ async function main() {
   }
   function extraDown(e: PointerEvent): void {
     const x = e.offsetX, y = e.offsetY;
-    if (pinch || placing) { extras.set(e.pointerId, { kind: 'idle' }); return; }
+    if (pinch || placing || padNotes().length) { extras.set(e.pointerId, { kind: 'idle' }); return; }  // not while the pads are played
     if (primaryRole === 'stage' && primaryId !== null && touchAt.has(primaryId)) {
       extras.set(e.pointerId, { kind: 'pinch' });
       startPinch(primaryId, e.pointerId);
@@ -1518,12 +1565,12 @@ async function main() {
   /** Tests: what each finger is doing. */
   (window as unknown as { __bd_touch?: unknown }).__bd_touch = () => ({ primaryId, primaryRole, extras: [...extras.entries()], pinch: !!pinch });
 
-  // The Grid's pads (CHG-0019, UI-0010): any pointer that lands on a pad plays it and belongs to the pads until it
-  // lifts; it never becomes v1's pointer or an extra finger. Notes go to that Grid block; a slide is a bend.
-  const GRID_TYPE = typeIndex('input.grid');
+  // The Touchpad's pads (CHG-0019, UI-0010): any pointer that lands on a pad plays it and belongs to the pads until it
+  // lifts; it never becomes v1's pointer or an extra finger. Notes go to that Touchpad block; a slide is a bend.
+  const TOUCHPAD_TYPE = typeIndex('input.touchpad');
   const padHost: PadHost = {
-    note: (block, note, on) => send([{ type: on ? CommandType.NoteOn : CommandType.NoteOff, id: block, blockType: GRID_TYPE, param: note, value: on ? 1 : 0, x: 0 }]),
-    bend: (block, note, semitones) => send([{ type: CommandType.NoteExpression, id: block, blockType: GRID_TYPE, param: note, x: 0, y: 0, value: semitones }]),
+    note: (block, note, on) => send([{ type: on ? CommandType.NoteOn : CommandType.NoteOff, id: block, blockType: TOUCHPAD_TYPE, param: note, value: on ? 1 : 0, x: 0 }]),
+    bend: (block, note, semitones) => send([{ type: CommandType.NoteExpression, id: block, blockType: TOUCHPAD_TYPE, param: note, x: 0, y: 0, value: semitones }]),
   };
   (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
@@ -1670,6 +1717,8 @@ async function main() {
         else moveBlock(drag.id, x, y);
         drag.moved = blockMoved = true;
       }
+      // Over a Stage block: let go and they go inside it (ringed while they would).
+      stage.dropTarget = drag.moved ? dropStageAt(e.offsetX, e.offsetY, new Set(grouped() ? selection : [drag.id])) : null;
     }  // stage panning: v1's MainSceneDragger inside the scene (setDrag)
     scene.pointerMove(e.offsetX * dpr(), e.offsetY * dpr(), pointerIsDown, () => v1At(e.offsetX, e.offsetY), blockMoved);
     stage.redraw();
@@ -1694,7 +1743,7 @@ async function main() {
     stage.held.clear();
     scene.pointerUp(-1, -1, true);
     if (drag) send([{ type: CommandType.Press, id: drag.id, value: 0 }]);
-    drag = null; stage.pressed = null;
+    drag = null; stage.pressed = null; stage.dropTarget = null;
     stage.redraw();
   });
   if (!embedId) app.canvas.addEventListener('pointerup', e => {
@@ -1702,7 +1751,9 @@ async function main() {
     if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
       const d = labelDrag;
       labelDrag = null;
-      if (d.fresh) setTimeout(() => editLabel(d.id), 0);  // dropped from the menu: type its words (after v1's own mouse-up)
+      // Dropped from the menu: type its words. A finger: now, inside the touch (iOS opens the keyboard only for a focus
+      // made while handling it); a mouse: after v1's own mouse-up.
+      if (d.fresh) { if (e.pointerType === 'touch') editLabel(d.id); else setTimeout(() => editLabel(d.id), 0); }
       else {
         const binned = d.moved && scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), true) === 'delete';
         scene.IsDraggingABlock = false;
@@ -1722,9 +1773,12 @@ async function main() {
     const moved = drag?.moved ?? false;
     const result = scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), moved);
     stage.held.clear();
+    const into = drag && moved && result !== 'delete' ? stage.dropTarget : null;
+    stage.dropTarget = null;
     if (result === 'delete' && drag) deleteBlocks(wasGroup ? [...selection] : [drag.id], dragFrom);
     else if (drag) {
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);  // v1 MouseUp → RemovePower
+      if (into !== null) { addToStage(into, wasGroup ? [...selection] : [drag.id]); drag = null; stage.pressed = null; stage.redraw(); return; }
       if (moved && !drag.fresh) recordMove(wasGroup ? [...selection] : [drag.id], dragFrom);
     }
     // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same; CHG-0021).
@@ -1768,7 +1822,8 @@ async function main() {
   const gestureAt = (e: GestureEv) => { const r = app.canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * dpr(), y: (e.clientY - r.top) * dpr() }; };
   if (!embedId) {
     // iOS sends these for a two-finger touch too: there the touch pinch has it (fingers are down), so they're ignored.
-    stageEl.addEventListener('gesturestart', e => { if (touchAt.size || pointerIsDown) return; const g = e as GestureEv, at = gestureAt(g); gesture = { z0: stage.zoom, w: stageAt(at.x, at.y) }; });
+    stageEl.addEventListener('gesturestart', e => { if (touchAt.size || pointerIsDown || padNotes().length) return;  // fingers on the Touchpad's pads play, never zoom
+    const g = e as GestureEv, at = gestureAt(g); gesture = { z0: stage.zoom, w: stageAt(at.x, at.y) }; });
     stageEl.addEventListener('gesturechange', e => { if (!gesture) return; const g = e as GestureEv, at = gestureAt(g); zoomAbout(at.x, at.y, gesture.z0 * g.scale, gesture.w); });
     stageEl.addEventListener('gestureend', () => { gesture = null; });
   }

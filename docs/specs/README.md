@@ -36,6 +36,6 @@
 | [CHG-0016](changes/0016-sound-laser/proposal.md) | Sound Laser | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
 | [CHG-0017](changes/0017-keys-set-pitch-and-note-effects/proposal.md) | Keys set pitch, and note effects (Chord, Arpeggiator, Random Note) | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-AUDIO-V1-PARITY |
 | [CHG-0018](changes/0018-lfo/proposal.md) | LFO | **proposed** | SPEC-AUDIO-V1-PARITY, SPEC-PATCH-FORMAT-V2 |
-| [CHG-0019](changes/0019-grid/proposal.md) | Grid | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
+| [CHG-0019](changes/0019-grid/proposal.md) | Touchpad | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0020](changes/0020-labels/proposal.md) | Labels on the stage | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-VISUAL-V1-PARITY |
 | [CHG-0021](changes/0021-stage-block/proposal.md) | Stage block | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |

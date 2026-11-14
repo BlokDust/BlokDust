@@ -54,8 +54,8 @@ enum class BlockType : std::uint16_t {
   PowerToggle,  // power.toggle
   PowerVoid,  // power.void
   InputComputerKeyboard,  // input.computer-keyboard
-  InputGrid,  // input.grid
   InputMidiController,  // input.midi-controller
+  InputTouchpad,  // input.touchpad
 };
 
 enum class BlockKind : std::uint8_t {
@@ -261,7 +261,7 @@ namespace param::FxChopper { enum : std::uint8_t { rate, depth, spread, waveform
 // ---- fx.chord (Chord)
 inline constexpr GridPoint kOutlineFxChord[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {1.0f, 2.0f}};
 inline constexpr ParamInfo kParamsFxChord[] = {
-  {"chord", 2.0, true, UiTransform::Identity, 0.0, 8.0, 0.0},
+  {"chord", 1.0, true, UiTransform::Identity, 0.0, 7.0, 0.0},
   {"inversion", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
 };
 namespace param::FxChord { enum : std::uint8_t { chord, inversion, Count }; }
@@ -447,8 +447,9 @@ inline constexpr ParamInfo kParamsPowerCounter[] = {
   {"steps", 8.0, true, UiTransform::Identity, 1.0, 16.0, 0.0},
   {"hits", 3.0, true, UiTransform::Identity, 0.0, 16.0, 0.0},
   {"rotate", 0.0, true, UiTransform::Identity, 0.0, 15.0, 0.0},
+  {"pattern", -1.0, true, UiTransform::Identity, -1.0, 65535.0, 0.0},
 };
-namespace param::PowerCounter { enum : std::uint8_t { steps, hits, rotate, Count }; }
+namespace param::PowerCounter { enum : std::uint8_t { steps, hits, rotate, pattern, Count }; }
 
 // ---- power.emitter (Particle Emitter)
 inline constexpr GridPoint kOutlinePowerEmitter[] = {{-2.0f, 0.0f}, {-1.0f, 0.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}};
@@ -479,7 +480,11 @@ namespace param::PowerLaser { enum : std::uint8_t { angle, range, rotate, selfPo
 
 // ---- power.power (Power)
 inline constexpr GridPoint kOutlinePowerPower[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {2.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
-namespace param::PowerPower { enum : std::uint8_t { Count }; }
+inline constexpr ParamInfo kParamsPowerPower[] = {
+  {"gapOnHit", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"gap", 0.05, true, UiTransform::Identity, 0.01, 1.0, 0.0},
+};
+namespace param::PowerPower { enum : std::uint8_t { gapOnHit, gap, Count }; }
 
 // ---- power.prism (Prism)
 inline constexpr GridPoint kOutlinePowerPrism[] = {{-1.0f, 0.0f}, {-1.0f, -1.0f}, {0.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
@@ -506,13 +511,12 @@ inline constexpr GridPoint kOutlinePowerSoundLaser[] = {{-1.0f, 0.0f}, {0.0f, -1
 inline constexpr ParamInfo kParamsPowerSoundLaser[] = {
   {"angle", -90.0, true, UiTransform::Identity, -270.0, 90.0, 0.0},
   {"range", 150.0, true, UiTransform::Identity, 50.0, 1200.0, 0.0},
-  {"rotate", 0.0, true, UiTransform::Identity, -500.0, 500.0, 0.0},
   {"band", 0.0, true, UiTransform::Identity, 0.0, 3.0, 0.0},
   {"threshold", -30.0, true, UiTransform::Identity, -60.0, 0.0, 0.0},
   {"invert", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"hold", 0.1, true, UiTransform::Identity, 0.0, 2.0, 0.0},
 };
-namespace param::PowerSoundLaser { enum : std::uint8_t { angle, range, rotate, band, threshold, invert, hold, Count }; }
+namespace param::PowerSoundLaser { enum : std::uint8_t { angle, range, band, threshold, invert, hold, Count }; }
 
 // ---- power.toggle (Toggle Power)
 inline constexpr GridPoint kOutlinePowerToggle[] = {{0.0f, -1.0f}, {1.0f, 0.0f}, {1.0f, 2.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}, {-1.0f, -1.0f}};
@@ -536,20 +540,6 @@ inline constexpr ParamInfo kParamsInputComputerKeyboard[] = {
 };
 namespace param::InputComputerKeyboard { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, Count }; }
 
-// ---- input.grid (Grid)
-inline constexpr GridPoint kOutlineInputGrid[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {2.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
-inline constexpr ParamInfo kParamsInputGrid[] = {
-  {"transpose", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
-  {"glide", 0.05, true, UiTransform::Identity, 0.0, 1.0, 0.0},
-  {"isPolyphonic", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
-  {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
-  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
-  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
-  {"scale", 0.0, true, UiTransform::Identity, 0.0, 5.0, 0.0},
-  {"chromatic", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
-};
-namespace param::InputGrid { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, key, scale, chromatic, Count }; }
-
 // ---- input.midi-controller (MIDI Controller)
 inline constexpr GridPoint kOutlineInputMidiController[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {2.0f, 1.0f}, {1.0f, 2.0f}, {-1.0f, 2.0f}};
 inline constexpr ParamInfo kParamsInputMidiController[] = {
@@ -566,6 +556,20 @@ inline constexpr ParamInfo kParamsInputMidiController[] = {
   {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
 namespace param::InputMidiController { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, channel, mpe, pressureTo, slideTo, bendRange, device, keysSetPitch, Count }; }
+
+// ---- input.touchpad (Touchpad)
+inline constexpr GridPoint kOutlineInputTouchpad[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {2.0f, 1.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
+inline constexpr ParamInfo kParamsInputTouchpad[] = {
+  {"transpose", 0.0, true, UiTransform::Identity, -3.0, 3.0, 0.0},
+  {"glide", 0.05, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"isPolyphonic", 1.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"polyphonic", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"keysSetPitch", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+  {"key", 0.0, true, UiTransform::Identity, 0.0, 11.0, 0.0},
+  {"scale", 0.0, true, UiTransform::Identity, 0.0, 5.0, 0.0},
+  {"chromatic", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+};
+namespace param::InputTouchpad { enum : std::uint8_t { transpose, glide, isPolyphonic, polyphonic, keysSetPitch, key, scale, chromatic, Count }; }
 
 inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceAudioIn, "source.audio-in", "", BlockKind::AudioSource, 0.0f, kOutlineSourceAudioIn, 6, kParamsSourceAudioIn, 1, true},
@@ -600,18 +604,18 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxVibrato, "fx.vibrato", "Vibrato", BlockKind::PreEffect, 6.0f, kOutlineFxVibrato, 4, kParamsFxVibrato, 3, true},
   {BlockType::FxVolume, "fx.volume", "Volume", BlockKind::PostEffect, 6.0f, kOutlineFxVolume, 4, kParamsFxVolume, 1, true},
   {BlockType::PowerChance, "power.chance", "", BlockKind::Gate, 0.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
-  {BlockType::PowerCounter, "power.counter", "", BlockKind::Gate, 0.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 3, false},
+  {BlockType::PowerCounter, "power.counter", "", BlockKind::Gate, 0.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
   {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
   {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
-  {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, nullptr, 0, true},
+  {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, kParamsPowerPower, 2, true},
   {BlockType::PowerPrism, "power.prism", "", BlockKind::Gate, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
   {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 4, true},
-  {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 7, false},
+  {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 6, false},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},
   {BlockType::InputComputerKeyboard, "input.computer-keyboard", "ComputerKeyboard", BlockKind::Controller, 6.0f, kOutlineInputComputerKeyboard, 5, kParamsInputComputerKeyboard, 5, true},
-  {BlockType::InputGrid, "input.grid", "", BlockKind::Controller, 6.0f, kOutlineInputGrid, 6, kParamsInputGrid, 8, false},
   {BlockType::InputMidiController, "input.midi-controller", "MIDIController", BlockKind::Controller, 6.0f, kOutlineInputMidiController, 5, kParamsInputMidiController, 11, true},
+  {BlockType::InputTouchpad, "input.touchpad", "", BlockKind::Controller, 6.0f, kOutlineInputTouchpad, 6, kParamsInputTouchpad, 8, false},
 }};
 
 constexpr const BlockInfo& info(BlockType t) { return kBlocks[static_cast<std::size_t>(t)]; }

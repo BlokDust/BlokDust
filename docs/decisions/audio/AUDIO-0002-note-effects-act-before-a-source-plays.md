@@ -27,7 +27,7 @@ Arpeggiator.
 
 ## Consequences
 - Hold a chord and particles strum it; add an Arpeggiator and each hit plays the next note.
-- Scales are shared with Grid (CHG-0019): one table in the engine.
+- Scales are shared with Touchpad (CHG-0019): one table in the engine.
 
 ## Alternatives considered
 - **Effects in chain order:** the user would have to place note effects first; the owner asked for no routing.

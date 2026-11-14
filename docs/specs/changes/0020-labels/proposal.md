@@ -31,3 +31,6 @@ Patches need notes: what to press, what each part does.
 ## Risks and unknowns
 - Text entry on a phone over the stage canvas: a real text field is placed over the label, so the phone's keyboard
   opens; not yet tried on a device.
+
+## Owner review 1 (2026-11-14)
+- Phones: a label dropped from the menu opens the keyboard at once; the text field no longer makes iOS zoom the page (16 px, scaled down) and the page scrolls back when typing ends.

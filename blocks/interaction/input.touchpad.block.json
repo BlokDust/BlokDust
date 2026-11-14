@@ -1,10 +1,10 @@
 {
   "$schema": "../schema/block.schema.json",
-  "id": "input.grid",
+  "id": "input.touchpad",
   "draft": false,
   "category": "interaction",
   "kind": "controller",
-  "name": "Grid",
+  "name": "Touchpad",
   "description": "Play sources from a grid of pads, in the key and scale you choose. Slide between pads; hold several.",
   "v1": {
     "type": null

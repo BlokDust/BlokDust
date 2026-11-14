@@ -26,13 +26,13 @@ We will add these blocks, each designed by the owner in `pnpm bd block-designer`
 | Sound Laser | Power | CHG-0016 |
 | Chord, Arpeggiator, Random Note | Effect | CHG-0017 |
 | LFO | Effect | CHG-0018 |
-| Grid | Interaction | CHG-0019 |
+| Touchpad | Interaction | CHG-0019 |
 | Stage | Source | CHG-0021 |
 
 Labels (CHG-0020) are text on the stage, not a block. Emitter Offset (CHG-0014) and Keys set pitch (CHG-0017) are
 settings on existing blocks.
 
-Not doing: **Touch Keys** (a piano is a poor touchscreen UI; Grid replaces it). Parked: **XY Pad** and **Wall**
+Not doing: **Touch Keys** (a piano is a poor touchscreen UI; Touchpad replaces it). Parked: **XY Pad** and **Wall**
 (a block that stops connections); the owner is not convinced they should be blocks.
 
 ## Consequences

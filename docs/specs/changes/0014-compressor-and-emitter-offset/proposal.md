@@ -41,3 +41,7 @@ its grid (or at once on power).
 ## Risks and unknowns
 - Chromium's compressor adds its own make-up gain (as Web Audio does), so a default Compressor is louder on quiet
   material; Makeup can take it back off.
+
+## Owner review 1 (2026-11-14)
+- Compressor and Sound Laser: the Threshold row is gone; the Level meter's line is the threshold, dragged like a slider (full height, v1's grab diamond).
+- The Particle Emitter's panel draws the way it fires (the Prism's dashed guide).

@@ -204,7 +204,7 @@
       }
     },
     {
-      "name": "Grid",
+      "name": "Touchpad",
       "category": "interaction",
       "geometry": {
         "units": "grid",
@@ -238,7 +238,7 @@
     ["Random Note", "Effects", "Note effect: picks a note from a scale pool"],
     ["LFO", "Effects", "Modulates one param on one connected block"],
     ["Stage", "Sources", "A whole patch inside one block"],
-    ["Grid", "Interaction", "Push-style pads in key, played in its panel (UI-0010)"],
+    ["Touchpad", "Interaction", "Push-style pads in key, played in its panel (UI-0010)"],
     ["Label", "Interaction", "No block: text on the stage with a small dot to drag it"]
   ]
 }

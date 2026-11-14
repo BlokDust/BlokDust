@@ -2618,12 +2618,12 @@ export const BLOCKS: readonly BlockDef[] = [
     "params": [
       {
         "key": "chord",
-        "default": 2,
+        "default": 1,
         "unit": "enum",
         "ui": {
           "transform": "Identity",
           "min": 0,
-          "max": 8,
+          "max": 7,
           "k": 0
         }
       },
@@ -5127,6 +5127,17 @@ export const BLOCKS: readonly BlockDef[] = [
           "max": 15,
           "k": 0
         }
+      },
+      {
+        "key": "pattern",
+        "default": -1,
+        "unit": "bitmask",
+        "ui": {
+          "transform": "Identity",
+          "min": -1,
+          "max": 65535,
+          "k": 0
+        }
       }
     ]
   },
@@ -5603,7 +5614,30 @@ export const BLOCKS: readonly BlockDef[] = [
         0
       ]
     },
-    "params": []
+    "params": [
+      {
+        "key": "gapOnHit",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "gap",
+        "default": 0.05,
+        "unit": "s",
+        "ui": {
+          "transform": "Identity",
+          "min": 0.01,
+          "max": 1,
+          "k": 0
+        }
+      }
+    ]
   },
   {
     "id": "power.prism",
@@ -6012,17 +6046,6 @@ export const BLOCKS: readonly BlockDef[] = [
           "transform": "Identity",
           "min": 50,
           "max": 1200,
-          "k": 0
-        }
-      },
-      {
-        "key": "rotate",
-        "default": 0,
-        "unit": null,
-        "ui": {
-          "transform": "Identity",
-          "min": -500,
-          "max": 500,
           "k": 0
         }
       },
@@ -6537,222 +6560,6 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
-    "id": "input.grid",
-    "category": "interaction",
-    "kind": "controller",
-    "name": "Grid",
-    "description": "Play sources from a grid of pads, in the key and scale you choose. Slide between pads; hold several.",
-    "draft": false,
-    "v1Type": null,
-    "menuId": "Grid",
-    "catchment": 6,
-    "geometry": {
-      "units": "grid",
-      "unitsPerGrid": 14.999999999999998,
-      "layers": [
-        {
-          "palette": 9,
-          "points": [
-            [
-              -1,
-              -1
-            ],
-            [
-              1,
-              -1
-            ],
-            [
-              2,
-              0
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              -1,
-              0
-            ]
-          ]
-        },
-        {
-          "palette": 8,
-          "points": [
-            [
-              -1,
-              -1
-            ],
-            [
-              0,
-              -1
-            ],
-            [
-              0,
-              0
-            ],
-            [
-              1,
-              1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              -1,
-              0
-            ]
-          ]
-        },
-        {
-          "palette": 3,
-          "points": [
-            [
-              1,
-              0
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              1,
-              1
-            ],
-            [
-              0,
-              0
-            ]
-          ]
-        }
-      ],
-      "outline": [
-        [
-          -1,
-          -1
-        ],
-        [
-          1,
-          -1
-        ],
-        [
-          2,
-          0
-        ],
-        [
-          2,
-          1
-        ],
-        [
-          0,
-          1
-        ],
-        [
-          -1,
-          0
-        ]
-      ],
-      "menuOffset": [
-        -0.5,
-        0
-      ]
-    },
-    "params": [
-      {
-        "key": "transpose",
-        "default": 0,
-        "unit": "octaves",
-        "ui": {
-          "transform": "Identity",
-          "min": -3,
-          "max": 3,
-          "k": 0
-        }
-      },
-      {
-        "key": "glide",
-        "default": 0.05,
-        "unit": "s",
-        "ui": {
-          "transform": "Identity",
-          "min": 0,
-          "max": 1,
-          "k": 0
-        }
-      },
-      {
-        "key": "isPolyphonic",
-        "default": true,
-        "unit": "enum",
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      },
-      {
-        "key": "polyphonic",
-        "default": null,
-        "unit": null,
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      },
-      {
-        "key": "keysSetPitch",
-        "default": false,
-        "unit": "enum",
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      },
-      {
-        "key": "key",
-        "default": 0,
-        "unit": "enum",
-        "ui": {
-          "transform": "Identity",
-          "min": 0,
-          "max": 11,
-          "k": 0
-        }
-      },
-      {
-        "key": "scale",
-        "default": 0,
-        "unit": "enum",
-        "ui": {
-          "transform": "Identity",
-          "min": 0,
-          "max": 5,
-          "k": 0
-        }
-      },
-      {
-        "key": "chromatic",
-        "default": false,
-        "unit": "enum",
-        "ui": {
-          "transform": "None",
-          "min": 0,
-          "max": 0,
-          "k": 0
-        }
-      }
-    ]
-  },
-  {
     "id": "input.midi-controller",
     "category": "interaction",
     "kind": "controller",
@@ -6984,9 +6791,225 @@ export const BLOCKS: readonly BlockDef[] = [
         }
       }
     ]
+  },
+  {
+    "id": "input.touchpad",
+    "category": "interaction",
+    "kind": "controller",
+    "name": "Touchpad",
+    "description": "Play sources from a grid of pads, in the key and scale you choose. Slide between pads; hold several.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Touchpad",
+    "catchment": 6,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 9,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              0
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              0,
+              -1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              0
+            ]
+          ]
+        },
+        {
+          "palette": 3,
+          "points": [
+            [
+              1,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -1,
+          0
+        ]
+      ],
+      "menuOffset": [
+        -0.5,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "transpose",
+        "default": 0,
+        "unit": "octaves",
+        "ui": {
+          "transform": "Identity",
+          "min": -3,
+          "max": 3,
+          "k": 0
+        }
+      },
+      {
+        "key": "glide",
+        "default": 0.05,
+        "unit": "s",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "isPolyphonic",
+        "default": true,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "polyphonic",
+        "default": null,
+        "unit": null,
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "keysSetPitch",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      },
+      {
+        "key": "key",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 11,
+          "k": 0
+        }
+      },
+      {
+        "key": "scale",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 5,
+          "k": 0
+        }
+      },
+      {
+        "key": "chromatic",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
+      }
+    ]
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.grid' | 'input.midi-controller';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller' | 'input.touchpad';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

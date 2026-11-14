@@ -31,7 +31,7 @@
         "x": 3,
         "y": 0,
         "params": {
-          "chord": 8
+          "chord": 7
         }
       },
       {
@@ -85,7 +85,7 @@
         "x": 27,
         "y": 0,
         "params": {
-          "chord": 5,
+          "chord": 4,
           "inversion": 1
         }
       },

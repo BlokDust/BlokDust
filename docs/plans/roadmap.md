@@ -19,7 +19,7 @@ No deadline: we work phase by phase and each phase merges to `main` only when it
 3. **iPad AUv3**, then the **main launch**: iPad, website and plugins announced together.
 4. **Post-2.0 blocks** (owner, 2026-11-13, [SCOPE-0005](../decisions/scope/SCOPE-0005-the-post-2-0-block-set.md)): designed in `pnpm bd block-designer`, built in this order:
    CHG-0014 Compressor + emitter Offset, CHG-0015 Counter/Chance/Prism, CHG-0016 Sound Laser, CHG-0017 Keys set pitch + note effects,
-   CHG-0018 LFO, CHG-0019 Grid (the Push-style grid replaces the XY pad idea; Touch Keys dropped), CHG-0020 Labels, CHG-0021 Stage block.
+   CHG-0018 LFO, CHG-0019 Touchpad (the Push-style grid replaces the XY pad idea; Touch Keys dropped), CHG-0020 Labels, CHG-0021 Stage block.
    XY Pad and Wall are parked.
 5. **Rebuild the BlokDust guide** (owner, 2026-11-10): guide.blokdust.com was a WordPress site the owner can no longer reach, and it has been hacked, so Settings no longer links it (Connect tab removed). A future agent task: collect the guide's text and images (archived copies, e.g. the Wayback Machine, not the hacked site) and make a static site that becomes the new guide.
 

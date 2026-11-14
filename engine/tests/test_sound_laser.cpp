@@ -119,7 +119,6 @@ TEST_CASE("R12 (CHG-0016): a Sound Laser renders bit-identically whatever the bu
     e->push(Command::add(2, BlockType::SourceTone, 0, 0));
     e->push(Command::add(3, BlockType::PowerSoundLaser, 3, 0));
     e->push(Command::setParam(3, P::PowerSoundLaser::angle, 0));
-    e->push(Command::setParam(3, P::PowerSoundLaser::rotate, 250));
     e->push(Command::add(4, BlockType::SourceTone, 10, 0));
     e->push(Command::setParam(4, P::SourceTone::transpose, 7));
     const auto out = render(*e, 48000 * 3, block);

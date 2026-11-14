@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**54 decisions** · proposed: 10 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**56 decisions** · proposed: 10 · accepted: 40 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -93,6 +93,8 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0005](simulation/SIMULATION-0005-counter-and-chance-gate-hits-in-place.md) | Counter and Chance gate hits in place | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
 | [SIMULATION-0006](simulation/SIMULATION-0006-prism-redirects-and-splits-hits.md) | Prism redirects and splits hits | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
 | [SIMULATION-0007](simulation/SIMULATION-0007-sound-can-drive-the-simulation.md) | Sound can drive the simulation (Sound Laser) | **proposed** | 2026-11-13 | simulation, audio, determinism, post-2-0 |
+| [SIMULATION-0008](simulation/SIMULATION-0008-every-particle-hit-strikes-the-source-again.md) | Every particle hit strikes the source again | **accepted** | 2026-11-14 | particles, power, v1-deviation |
+| [SIMULATION-0009](simulation/SIMULATION-0009-a-power-block-can-be-cut-by-hits.md) | A Power block can be cut by hits | **accepted** | 2026-11-14 | power, particles, lasers, v1-deviation |
 
 ## [ui](ui/README.md)
 
@@ -107,5 +109,5 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0007](ui/UI-0007-multi-select-a-set-beside-v1-s-one-selected-block.md) | Multi-select: a set beside v1's one selected block, ringed by its outline | **accepted** | 2026-11-11 | selection, input, release-1 |
 | [UI-0008](ui/UI-0008-a-power-switch-for-the-whole-world-on-the-stage.md) | A power switch for the whole world, on the stage | **accepted** | 2026-11-11 | power, release-1 |
 | [UI-0009](ui/UI-0009-stage-inside-view-is-a-window-that-points-at-its-block.md) | Stage inside view is a window that points at its block | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
-| [UI-0010](ui/UI-0010-grid-plays-in-its-options-panel.md) | Grid plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
+| [UI-0010](ui/UI-0010-grid-plays-in-its-options-panel.md) | Touchpad plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
 | [UI-0011](ui/UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |

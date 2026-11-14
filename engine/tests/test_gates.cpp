@@ -59,6 +59,21 @@ TEST_CASE("R5c Counter: steps, hits and rotate shape the pattern") {
   CHECK(run(8, 1, 0) == "x.......");   // every 8th hit
 }
 
+TEST_CASE("R5c Counter: steps set by hand (pattern >= 0) play as set; -1 goes back to the Euclidean pattern") {
+  const auto run = [](double mask) {
+    auto e = emitterRight();
+    e->push(Command::add(2, BlockType::PowerCounter, 6, 0));
+    e->push(Command::setParam(2, P::PowerCounter::steps, 6));
+    e->push(Command::setParam(2, P::PowerCounter::hits, 2));
+    e->push(Command::setParam(2, P::PowerCounter::rotate, 1));
+    e->push(Command::setParam(2, P::PowerCounter::pattern, mask));
+    render(*e, 48000 * 4);
+    return pattern(*e, 2).substr(0, 6);
+  };
+  CHECK(run(0b100110) == ".xx..x");   // bit k = step k, rotate ignored
+  CHECK(run(0) == "......");
+  CHECK(run(-1) == "..x..x");         // E(2,6) read from its 2nd step
+}
 TEST_CASE("R5c Chance: 0 stops everything, 1 passes everything, 0.5 about half, the same every run") {
   const auto run = [](double chance) {
     auto e = emitterRight(8);

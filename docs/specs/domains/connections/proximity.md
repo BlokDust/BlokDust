@@ -12,7 +12,7 @@ updated: 2026-11-05
 Blocks connect by being near each other, never by cables. This spec pins v1's rules so v2 reproduces them exactly while computing them incrementally in the engine.
 
 ## Terms
-- **Grid unit (gu):** block positions are integer grid coordinates. In v1 one grid cell = 15 drawing units, and 1 unit = viewport width / 850 (`Metrics.ts`). The engine works purely in gu; screen scaling is a UI concern.
+- **Touchpad unit (gu):** block positions are integer grid coordinates. In v1 one grid cell = 15 drawing units, and 1 unit = viewport width / 850 (`Metrics.ts`). The engine works purely in gu; screen scaling is a UI concern.
 - **Source-like:** audio sources (`ToneSource`, `Noise`, `Microphone`, `Sample`, `Granular`, `Recorder`, `SampleGen`, v2 `AudioIn`) and **power sources** (`ParticleEmitter`, `Laser`).
 - **Effect-like:** audio effects (17 v1 effects), **power effects** (`Power`, `Toggle`, `Pulse`) and **controllers** (`ComputerKeyboard`, `MIDIController`).
 

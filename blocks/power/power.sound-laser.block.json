@@ -129,16 +129,6 @@
       "description": "Beam length in v1 units (15 = one grid cell), as the Laser's"
     },
     {
-      "key": "rotate",
-      "default": 0,
-      "unit": null,
-      "range": [
-        -500,
-        500
-      ],
-      "description": "Turns the beam while it is on, as the Laser's Rotate"
-    },
-    {
       "key": "band",
       "default": 0,
       "unit": "enum",

@@ -66,7 +66,28 @@
     ],
     "menuOffset": [0, 0]
   },
-  "params": [],
+  "params": [
+    {
+      "key": "gapOnHit",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "v2 (owner, 2026-11-14): on, a particle or a laser beam hitting the Power cuts its power for `gap`, so what it powers plays again; off, they pass through it (v1)"
+    },
+    {
+      "key": "gap",
+      "default": 0.05,
+      "unit": "s",
+      "range": [
+        0.01,
+        1
+      ],
+      "description": "How long a hit cuts the power for"
+    }
+  ],
   "review": [
     "params: units/ranges in real units not yet defined (draft)"
   ]

@@ -143,15 +143,18 @@ export class Stage {
   held = new Set<number>();
   /** Multi-select (CHG-0005 task 9): selected blocks get their outline traced; the box being dragged, device px. */
   selected = new Set<number>();
+  /** A Stage block that what is being dragged would go into if let go now (CHG-0021): ringed solid. */
+  dropTarget: number | null = null;
   selectBox: { x0: number; y0: number; x1: number; y1: number } | null = null;
   allBlocks(): StageBlock[] { return [...this.blocks.values()].map(b => b.block); }
 
   /** Topmost block whose outline contains the css-px point (v1 hit order: last created on top). */
-  hitTest(cssX: number, cssY: number): StageBlock | undefined {
+  hitTest(cssX: number, cssY: number, skip?: (id: number) => boolean): StageBlock | undefined {
     const [gx, gy] = pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr);
     const list = [...this.blocks.values()];
     for (let i = list.length - 1; i >= 0; i--) {
       const { block, def } = list[i];
+      if (skip?.(block.id)) continue;
       if (pointInPolygon(gx, gy, def.geometry.outline, block.x, block.y)) return block;
     }
     return undefined;
@@ -335,6 +338,16 @@ export class Stage {
       }
       if (this.selectBox) { const b = this.selectBox; ctx.rect(Math.min(b.x0, b.x1), Math.min(b.y0, b.y1), Math.abs(b.x1 - b.x0), Math.abs(b.y1 - b.y0)); }
       ctx.stroke();
+      ctx.restore();
+    }
+    if (this.dropTarget !== null && this.blocks.has(this.dropTarget)) {
+      const e = this.blocks.get(this.dropTarget)!;
+      ctx.save();
+      ctx.strokeStyle = this.theme.colors[this.theme.roles.txt]; ctx.lineWidth = 2;
+      ctx.beginPath();
+      offsetPolygon(selectionRing(e.def).map(([x, y]) => gridToPx(m, e.block.x + x, e.block.y + y)), 6 * m.scaledUnit)
+        .forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.closePath(); ctx.stroke();
       ctx.restore();
     }
     if (this.beams.length) {  // v1 LaserBeams.Draw

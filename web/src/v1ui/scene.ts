@@ -8,7 +8,7 @@ import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
 import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
-import { installGrid } from './gridPanel.ts';
+import { installTouchpad } from './touchpadPanel.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -177,7 +177,7 @@ export class V1Scene {
       installFilterPanel(this.OptionsPanel);
       installSelectors(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
-      installGrid(this.OptionsPanel);  // last: it lays the Grid's rows out again after the others adapt them
+      installTouchpad(this.OptionsPanel);  // last: it lays the Touchpad's rows out again after the others adapt them
       locateMissingFiles(this);
     }
     this.Metrics.Compute();

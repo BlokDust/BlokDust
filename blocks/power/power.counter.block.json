@@ -106,6 +106,16 @@
         15
       ],
       "description": "Where in the pattern the count starts"
+    },
+    {
+      "key": "pattern",
+      "default": -1,
+      "unit": "bitmask",
+      "range": [
+        -1,
+        65535
+      ],
+      "description": "Steps set by hand (bit k = step k lets the hit through, from the first one counted); -1 = the Euclidean pattern from steps, hits and rotate"
     }
   ]
 }

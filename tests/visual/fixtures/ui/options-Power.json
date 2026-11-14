@@ -1,4 +1,5 @@
 {
+  "retired": "SIMULATION-0009 (owner, 2026-11-14): Power has params now (Gap On Hit, Gap), so a click opens its options panel; v1's Power opened none. tests/e2e/new-blocks.ts power-gap-rotate-guide checks the panel.",
   "description": "Click a Power to open its options panel",
   "composition": {
     "Composition": [

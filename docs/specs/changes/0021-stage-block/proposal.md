@@ -44,3 +44,6 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 
 ## Risks and unknowns
 - Largest change in the set: engine world nesting, patch format, selection → stage, and the window UI. Do it last.
+
+## Owner review 1 (2026-11-14)
+- Blocks dragged onto a Stage block go inside it (it is ringed while they would), to the right of what is there, with their connections. Not undoable.

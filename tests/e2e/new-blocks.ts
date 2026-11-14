@@ -43,6 +43,11 @@ async function openPanel(p: Page, uid: string): Promise<void> {
 }
 /** The open panel's rows: type, name and whatever a live row says it drew. */
 const rows = (p: Page) => p.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).map(o => ({ type: o.Type, name: o.Name, setting: o.Setting, value: o.Value, shown: o.Shown })));
+/** css px of a point `frac` of the way along the open panel's row `setting` (v1's slider range), at its middle. */
+const rowPoint = (p: Page, setting: string, frac: number) => p.evaluate(([s, f]) => {
+  const o = (window as any).__bd_probe.scene.OptionsPanel, pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio, r = (o.Options as any[]).find(x => x.Setting === s);
+  return [(o.Position.x + o.Margin + o.Range * (f as number)) / pr, (o.Position.y + r.Position.y + r.Size.height / 2) / pr] as [number, number];
+}, [setting, frac] as const);
 /** Menu item names of a header category. */
 const menuItems = (p: Page, category: string) => p.evaluate(c => ((window as any).__bd_probe.v1App.BlockCreator.MenuJson.categories as any[]).find(x => x.name === c)?.items.map((i: any) => i.name) as string[], category);
 
@@ -55,13 +60,18 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.waitForTimeout(600);
     const r = await rows(p);
     await p.screenshot({ path: `${OUT}/compressor-panel.png` });
-    const meter = r.find(x => x.type === 'live')?.shown as { level: number; reduction: number; thresholdX: number; width: number } | undefined;
+    const meter = r.find(x => x.setting === 'compMeter')?.shown as { level: number; reduction: number; thresholdX: number; width: number } | undefined;
     const names = r.map(x => x.name);
     const sounding = (await state(p)).rms > 0.001;
+    // The Level meter's line is the Threshold (owner, 2026-11-14): drag it to the middle → −30 dB.
+    const from = await rowPoint(p, 'compMeter', 20 / 60), to = await rowPoint(p, 'compMeter', 0.5);
+    await p.mouse.move(...from); await p.mouse.down(); await p.mouse.move(...to, { steps: 6 }); await p.mouse.up();
+    await p.waitForTimeout(300);
+    const dragged = (await state(p)).patch.blocks.find((b: any) => b.id === 'c').params.threshold;
     await p.close();
-    const pass = inMenu && sounding && !!meter && meter.level > -40 && meter.level < 0 && meter.reduction < -1 &&
-      Math.abs(meter.thresholdX - meter.width * (20 / 60)) < 1 && ['Threshold', 'Ratio', 'Knee', 'Attack', 'Release', 'Makeup'].every(n => names.includes(n));
-    return [pass, { inMenu, sounding, meter, names }];
+    const pass = inMenu && sounding && !!meter && meter.level > -40 && meter.level < 0 && meter.reduction < -1 && Math.abs(meter.thresholdX - meter.width * (20 / 60)) < 1 &&
+      ['Level', 'Ratio', 'Knee', 'Attack', 'Release', 'Makeup'].every(n => names.includes(n)) && !names.includes('Threshold') && Math.abs(dragged + 30) < 1;
+    return [pass, { inMenu, sounding, meter, names, dragged }];
   },
   // CHG-0014: the emitter's Offset row, after Swing when synced and after Fire Rate when not.
   async 'emitter-offset-row'(errors) {
@@ -153,6 +163,57 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       macro?.blocks.map((b: any) => b.type).sort().join() === 'fx.filter,power.power,source.tone' && macro.block === patch.blocks.find((b: any) => b.type === 'source.stage').id;
     return [pass, { before, quiet, plays, outer: s1.blocks.map((b: any) => b.type), macro }];
   },
+  // Owner review 2026-11-14: blocks dragged onto a Stage block go inside it (it is ringed while they would); with
+  // what was there, to its right, keeping their connections.
+  async 'drop-into-stage'(errors) {
+    const macros = [{ block: 's', blocks: [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0)] }];
+    const p = await open(browser, [blk('s', 'source.stage', 0, 0), blk('pw2', 'power.power', -4, 0), blk('t2', 'source.tone', 10, 6), blk('f2', 'fx.filter', 13, 6)], errors, { macros } as any);
+    await p.waitForTimeout(400);
+    const ids = await Promise.all(['t2', 'f2'].map(u => idOf(p, u)));
+    await p.evaluate(list => (window as any).__bd_probe.select?.(list), ids);
+    const from = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), ids[0]) as [number, number];
+    const onto = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 's')) as [number, number];
+    await p.mouse.move(...from); await p.mouse.down();
+    await p.mouse.move(onto[0], onto[1], { steps: 12 }); await p.waitForTimeout(200);
+    const ringed = await p.evaluate(() => (window as any).__bd_probe.dropTarget);
+    await p.mouse.up(); await p.waitForTimeout(600);
+    const s = await state(p), macro = s.patch.macros?.find((m: any) => m.block === 's');
+    const sounds = s.rms > 0.005;   // the outer Power still powers the Stage, whose inner Tone plays
+    await p.close();
+    const inner = macro?.blocks.map((b: any) => b.type).sort().join();
+    const outer = s.blocks.map((b: any) => b.type).sort().join();
+    const added = macro?.blocks.filter((b: any) => ['t2', 'f2'].includes(b.id)) ?? [];
+    const pass = ringed !== null && outer === 'power.power,source.stage' && inner === 'fx.filter,power.power,source.tone,source.tone' &&
+      added.length === 2 && added.every((b: any) => b.x > 0) && (macro?.connectionOrder ?? []).some((c: string[]) => c.join() === 't2,f2') && sounds;
+    return [pass, { ringed, outer, inner, added, order: macro?.connectionOrder, sounds }];
+  },
+  // Owner review 2026-11-14: the Power block's panel (Gap On Hit, then Gap); a Laser's Rotate sticks at 0; an emitter's
+  // panel draws the way it fires.
+  async 'power-gap-rotate-guide'(errors) {
+    const p = await open(browser, [blk('pw', 'power.power', -8, 0), blk('l', 'power.laser', 0, 0, { rotate: 200 }), blk('e', 'power.emitter', 8, 0, { angle: 0 })], errors);
+    await openPanel(p, 'pw');
+    const off = (await rows(p)).map(x => x.type === 'switches' ? 'switches' : x.name);
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('gapOnHit', true));
+    await p.waitForTimeout(300);
+    const on = (await rows(p)).map(x => x.type === 'switches' ? 'switches' : x.name);
+    const gapSaved = (await state(p)).patch.blocks.find((b: any) => b.id === 'pw').params;
+    await p.mouse.click(1100, 700); await p.waitForTimeout(500);
+    await openPanel(p, 'l');
+    const near = await rowPoint(p, 'rotate', 0.53);
+    await p.mouse.move(...near); await p.mouse.down(); await p.waitForTimeout(100);
+    const snapped = (await state(p)).patch.blocks.find((b: any) => b.id === 'l').params.rotate ?? 0;
+    await p.waitForTimeout(700);
+    await p.mouse.move(near[0] + 2, near[1]); await p.mouse.move(near[0], near[1]); await p.mouse.up();
+    const fine = (await state(p)).patch.blocks.find((b: any) => b.id === 'l').params.rotate ?? 0;
+    await p.mouse.click(1100, 700); await p.waitForTimeout(500);
+    await openPanel(p, 'e');
+    const guide = await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.PrismExits as [number, number][]);
+    await p.screenshot({ path: `${OUT}/emitter-guide.png` });
+    await p.close();
+    const pass = off.join() === 'switches' && on.join() === 'switches,Gap' && gapSaved.gapOnHit === 1 && snapped === 0 && fine > 0 && fine < 50 &&
+      guide?.length === 1 && guide[0][0] > 0 && Math.abs(guide[0][1]) < 1;
+    return [pass, { off, on, gapSaved, snapped, fine, guide }];
+  },
   // CHG-0020 (UI-0011): labels come with the patch and are drawn; a click edits the words, a drag moves one, the bin
   // deletes it, and the Interaction menu makes a new one. They never reach the engine.
   async 'labels'(errors) {
@@ -186,17 +247,17 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       saved?.length === 1 && saved[0].text === 'Hold a key' && saved[0].x === moved.x && blocks === 1;
     return [pass, { menu, first: first.map(l => [l.text, l.x, l.y]), edited, moved: [moved.x, moved.y], left: left.length, saved, blocks }];
   },
-  // CHG-0019 (UI-0010): the Grid's pads are in its panel, in key; a pad plays, a slide is legato, Key and Scale change
+  // CHG-0019 (UI-0010): the Touchpad's pads are in its panel, in key; a pad plays, a slide is legato, Key and Scale change
   // the notes, and the panel fits between the header and the bottom controls.
-  async 'grid'(errors) {
-    const p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('g', 'input.grid', 0, -3)], errors);
+  async 'touchpad'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('g', 'input.touchpad', 0, -3)], errors);
     const menu = await menuItems(p, 'Interaction');
     await openPanel(p, 'g');
     const info = () => p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel, pads = (o.Options as any[]).find(x => x.Type === 'pads');
       return { x: o.Position.x, y: o.Position.y, top: o.Position.y - o.Size.height / 2, bottom: o.Position.y + o.Size.height / 2, shown: pads.Shown,
         pads: (pads.Pads as any[]).map(q => ({ cx: o.Position.x + q.x + q.w / 2, cy: o.Position.y + q.y + q.h / 2, note: q.note, h: q.h })) }; });
     const a = await info();
-    await p.screenshot({ path: `${OUT}/grid.png` });
+    await p.screenshot({ path: `${OUT}/touchpad.png` });
     const names = (await rows(p)).map(x => x.name ?? x.type);
     // bottom row, left to right, in C major: C D E F G A B C
     const bottom = a.pads.slice(0, 8).map(q => q.note), second = a.pads.slice(8, 16).map(q => q.note);
@@ -217,18 +278,18 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const chromatic = (await info()).pads.slice(0, 8).map(q => q.note);
     const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 'g').params;
     await p.close();
-    const pass = menu.includes('Grid') && a.shown.cols === 8 && a.shown.rows === 4 && a.top > 90 + 20 && a.bottom < 800 - 100 && a.pads[0].h > 45 &&
+    const pass = menu.includes('Touchpad') && a.shown.cols === 8 && a.shown.rows === 4 && a.top > 90 + 20 && a.bottom < 800 - 100 && a.pads[0].h > 45 &&
       bottom.join() === '48,50,52,53,55,57,59,60' && second.join() === '53,55,57,59,60,62,64,65' &&
       struck === 1 && loud && held.join() === '52' && slid.join() === '53' && afterSlide === 1 && stillLoud && quiet && released.length === 0 &&
       dminor.join() === '50,52,53,55,57,58,60,62' && chromatic.join() === '50,51,52,53,54,55,56,57' && saved.key === 2 && saved.scale === 1 && saved.chromatic === 1;
     return [pass, { menu, names, shown: a.shown, top: a.top, bottom: a.bottom, padH: a.pads[0].h, bottomRow: bottom, second, struck, loud, held, slid, afterSlide, stillLoud, quiet, released, dminor, chromatic, saved }];
   },
   // CHG-0019: two fingers on two pads sound two voices (multi-touch), on a phone-sized screen with its 6 × 5 pads.
-  async 'grid-touch'(errors) {
+  async 'touchpad-touch'(errors) {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true });
     const p = await ctx.newPage();
     p.on('pageerror', e => errors.push(e.message));
-    const token = await encodePatch({ format: 'blokdust.patch', version: 2, seed: 1, blocks: [blk('t', 'source.tone', 0, 0), blk('g', 'input.grid', 0, -3)] });
+    const token = await encodePatch({ format: 'blokdust.patch', version: 2, seed: 1, blocks: [blk('t', 'source.tone', 0, 0), blk('g', 'input.touchpad', 0, -3)] });
     await p.goto(`${url}/index.html?c=${token}`);
     await p.waitForFunction(() => (window as any).__bd_probe);
     await p.click('#start');
@@ -238,7 +299,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const a = await p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel, pads = (o.Options as any[]).find(x => x.Type === 'pads'), d = devicePixelRatio;
       return { top: (o.Position.y - o.Size.height / 2) / d, bottom: (o.Position.y + o.Size.height / 2) / d, shown: pads.Shown,
         pads: (pads.Pads as any[]).map(q => ({ cx: (o.Position.x + q.x + q.w / 2) / d, cy: (o.Position.y + q.y + q.h / 2) / d, note: q.note, w: q.w / d, h: q.h / d })) }; });
-    await p.screenshot({ path: `${OUT}/grid-phone.png` });
+    await p.screenshot({ path: `${OUT}/touchpad-phone.png` });
     const cdp = await ctx.newCDPSession(p);
     const g0 = (await state(p)).gateOns;
     const pt = (i: number, id: number) => ({ x: a.pads[i].cx, y: a.pads[i].cy, id });
@@ -246,6 +307,12 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt(0, 1), pt(4, 2)] });
     await p.waitForTimeout(400);
     const two = await p.evaluate(() => (window as any).__bd_pads()), struck = (await state(p)).gateOns - g0;
+    // A third finger in the gap between two pads plays the nearer one (owner, 2026-11-14), and nothing zooms.
+    const gap = { x: (a.pads[1].cx + a.pads[2].cx) / 2, y: a.pads[1].cy, id: 3 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt(0, 1), pt(4, 2), gap] });
+    await p.waitForTimeout(300);
+    const three = await p.evaluate(() => (window as any).__bd_pads()), pinch = await p.evaluate(() => (window as any).__bd_touch().pinch);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [pt(0, 1), pt(4, 2)] });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [pt(4, 2)] });
     await p.waitForTimeout(200);
     const one = await p.evaluate(() => (window as any).__bd_pads());
@@ -254,8 +321,8 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const none = await p.evaluate(() => (window as any).__bd_pads());
     await ctx.close();
     const pass = a.shown.cols === 6 && a.shown.rows === 5 && a.pads[0].w > 44 && a.pads[0].h > 40 && a.bottom < 844 - 60 && a.top > 100 &&
-      two.length === 2 && struck === 2 && one.length === 1 && none.length === 0;
-    return [pass, { shown: a.shown, top: a.top, bottom: a.bottom, pad: [a.pads[0].w, a.pads[0].h], two, struck, one, none }];
+      two.length === 2 && struck === 2 && three.length === 3 && !pinch && one.length === 1 && none.length === 0;
+    return [pass, { shown: a.shown, top: a.top, bottom: a.bottom, pad: [a.pads[0].w, a.pads[0].h], two, struck, three, pinch, one, none }];
   },
   // CHG-0018: an LFO beside a Volume aims at its Level; the Volume's open slider follows; the patch keeps the target by
   // block id and the Level where it was set. The carousel lists "Block · Param" for what is connected.
@@ -364,7 +431,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.close();
     const names = r.map(x => x.name);
     const pass = menu.includes('Sound Laser') && onBeams === 1 && powered.length >= 2 && !!meter && meter.on && meter.level > -25 && offBeams === 0 && invertedBeams === 1 &&
-      saved.invert === 1 && saved.threshold === -3 && ['Level', 'Threshold', 'Band', 'Beam on', 'Hold', 'Angle', 'Range', 'Rotate'].every(n => names.includes(n));
+      saved.invert === 1 && saved.threshold === -3 && ['Level', 'Band', 'Beam on', 'Hold', 'Angle', 'Range'].every(n => names.includes(n)) && !names.includes('Threshold') && !names.includes('Rotate');
     return [pass, { onBeams, offBeams, invertedBeams, powered, meter, names, saved }];
   },
   // CHG-0015: Counter, Chance and Prism are in the Power menu; the Counter's panel shows its pattern and where it is.
@@ -378,13 +445,21 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const later = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string; next: number } | undefined;
     await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('hits', 5));
     await p.waitForTimeout(300);
-    const five = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string } | undefined;
+    const five = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string; cells: number[] } | undefined;
     await p.screenshot({ path: `${OUT}/counter-panel.png` });
     const s = await state(p);
+    // A click on a step toggles it (owner, 2026-11-14); moving Steps, Hits or Rotate gives the pattern back.
+    const step2 = await p.evaluate(x => { const o = (window as any).__bd_probe.scene.OptionsPanel, pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio, r = (o.Options as any[]).find(q => q.Setting === 'counterPattern');
+      return [(o.Position.x + x) / pr, (o.Position.y + r.Position.y + r.Size.height / 2) / pr]; }, five!.cells[1]) as [number, number];
+    await p.mouse.click(...step2); await p.waitForTimeout(300);
+    const toggled = (await rows(p)).find(x => x.type === 'live')?.shown.pattern, mask = (await state(p)).patch.blocks.find((b: any) => b.id === 'c').params.pattern;
+    const hitsAt = await rowPoint(p, 'hits', 5 / 16);
+    await p.mouse.click(...hitsAt); await p.waitForTimeout(300);
+    const back = (await rows(p)).find(x => x.type === 'live')?.shown.pattern, cleared = (await state(p)).patch.blocks.find((b: any) => b.id === 'c').params.pattern;
     await p.close();
     const pass = ['Counter', 'Chance', 'Prism'].every(n => menu.includes(n)) && first?.pattern === 'x..x..x.' && !!later && later.next !== first.next &&
-      five?.pattern === 'x.x.xx.x' && s.hits > 0 && s.connections.length === 0;
-    return [pass, { menu, first, later, five, hits: s.hits, connections: s.connections }];
+      five?.pattern === 'x.x.xx.x' && s.hits > 0 && s.connections.length === 0 && toggled === 'xxx.xx.x' && mask === 0b10110111 && back === 'x.x.xx.x' && (cleared ?? -1) === -1;
+    return [pass, { menu, first, later, five: five?.pattern, hits: s.hits, connections: s.connections, toggled, mask, back, cleared }];
   },
   // CHG-0015: a Prism splits a laser's beam into its streams, and its panel draws the exit lines on the stage.
   async 'prism-splits-beam'(errors) {

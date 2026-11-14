@@ -36,3 +36,7 @@ in the path like Void.
 - Beam fan-out cost with many prisms: bounded at 64 beams per laser and 8 Prisms per path (`config.hpp`); not yet
   measured with `pnpm bd perf`.
 - A Prism has Rotate but no tempo-synced Turn (the Laser has both); add it if wanted.
+
+## Owner review 1 (2026-11-14)
+- Counter: a click on a step toggles it (`pattern`, a bitmask; −1 = Euclidean). Moving Steps, Hits or Rotate gives the Euclidean pattern back.
+- Laser and Prism Rotate stick at 0: a drag into the middle stops there; staying near it for half a second lets small values through.

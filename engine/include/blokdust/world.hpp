@@ -70,6 +70,8 @@ struct Block {
   std::int64_t beatSlot = -1;   // synced emitter: the beat-grid slot it last saw (CHG-0004 3.5)
   double laserAngle0 = 0.0;     // synced laser: its Angle at beat 0 (the angle set by the user; owner review 2)
   bool powerOn = false;         // audio source: power (not notes) is holding a voice (v1 NoteOn("power"))
+  std::uint32_t gapUntil = 0;   // a Power cut by a hit (gapOnHit) gives no power until this tick
+  bool restrike = false;        // a particle hit it while only earlier hits' pulses held it: strike again (SIMULATION-0008)
 
   // ---- laser (power.laser) ----
   std::bitset<kMaxBlocks> laserHits;  // slots this laser hit on the last tick
@@ -104,8 +106,8 @@ struct Block {
   // ---- arranged sources (CHG-0017, AUDIO-0002): a source with a note effect in its chain, or a keyboard with Keys
   // set pitch connected, takes its notes from here instead of v1's voice rules. Keys held by its controllers, oldest
   // first; the note Random Note picked for the current trigger; where its Arpeggiator is. ----
-  struct ArrKey { std::int16_t key; std::int16_t channel; BlockId controller; bool pitchOnly; bool poly; };
-  struct ArrNote { BlockId controller = 0; std::int16_t key = -1; std::int16_t channel = 0; double offset = 0.0; };
+  struct ArrKey { std::int16_t key; std::int16_t channel; BlockId controller; bool pitchOnly; bool poly; double bend = 0.0; };  // bend: a slide (semitones)
+  struct ArrNote { BlockId controller = 0; std::int16_t key = -1; std::int16_t channel = 0; double offset = 0.0; double bend = 0.0; };
   bool arranged = false;
   bool arrGate = false;             // sounding (power or a sounding key) at the last arrange
   std::array<ArrKey, 16> arrKeys{};
