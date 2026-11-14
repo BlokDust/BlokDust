@@ -478,7 +478,7 @@ tests['share-new-tab'] = async browser => {
   };
   const before0 = (await probe(a)).patch.blocks.length;
   await dragOut([421, 45], [182, 180], [700, 600]);   // SOURCE → Tone
-  await dragOut([692, 45], [305, 180], [630, 600]);   // POWER → Power
+  await dragOut([692, 45], [365, 180], [630, 600]);   // POWER → Power (second item of a paged menu)
   const first = (await probe(a)).blocks[0];
   const p0 = await a.evaluate(i => (window as any).__bd_probe.blockPoint(i), first.id);
   await a.mouse.move(p0[0], p0[1]); await a.mouse.down(); await a.mouse.move(p0[0] + 150, p0[1] + 80, { steps: 8 }); await a.mouse.up(); await a.waitForTimeout(800);

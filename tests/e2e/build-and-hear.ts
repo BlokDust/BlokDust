@@ -12,8 +12,16 @@ let ok = true;
 const check = (name: string, pass: boolean, detail: unknown = '') => { checks[name] = pass ? (detail === '' ? true : detail) : `FAIL ${JSON.stringify(detail)}`; ok &&= pass; };
 const state = (p: Page) => p.evaluate(() => (window as any).__bd_probe.state);
 const empty = encodeURIComponent(JSON.stringify({ Composition: [], ZoomLevel: 1, DragOffset: { x: 0, y: 0 }, ColorThemeNo: 0 }));
-const dragOut = async (p: Page, category: [number, number], item: [number, number], to: [number, number]) => {
+/** Where the open category's item `name` is drawn, in css px (the menus page once they hold enough blocks). */
+const itemAt = (p: Page, name: string) => p.evaluate(n => {
+  const P = (window as any).__bd_probe, pr = P.v1App.Metrics.PixelRatio;
+  for (const cat of P.scene.Header.MenuItems) for (const it of cat.Items) if (String(it.Name).toLowerCase() === n.toLowerCase()) return [it.Position.x / pr, 180] as [number, number];
+  return null;
+}, name);
+const dragOut = async (p: Page, category: [number, number], name: string, to: [number, number]) => {
   await p.mouse.click(...category); await p.waitForTimeout(700);
+  const item = await itemAt(p, name);
+  if (!item) throw new Error(`no menu item ${name}`);
   await p.mouse.move(...item); await p.mouse.down();
   await p.mouse.move(item[0], 400, { steps: 6 }); await p.mouse.move(...to, { steps: 6 }); await p.mouse.up();
   await p.waitForTimeout(500);
@@ -35,8 +43,8 @@ try {
   await page.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
   check('starts silent and empty', (await state(page)).blocks.length === 0 && (await rmsOver(page, 400)) < 1e-4);
 
-  await dragOut(page, [421, 45], [182, 180], [640, 450]);   // SOURCE → Tone
-  await dragOut(page, [692, 45], [305, 180], [572, 450]);   // POWER (6 items, no paging) → Power, 3 cells left of the Tone
+  await dragOut(page, [421, 45], 'Tone', [640, 450]);   // SOURCE → Tone
+  await dragOut(page, [692, 45], 'Power', [572, 450]);   // POWER → Power, 3 cells left of the Tone
   const s1 = await state(page);
   check('menus created Tone and Power', s1.patch.blocks.map((b: any) => b.type).sort().join() === 'power.power,source.tone', s1.patch.blocks.map((b: any) => b.type));
   check('Power next to Tone connects', s1.connections.length / 2 >= 1, s1.connections.length / 2);
