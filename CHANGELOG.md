@@ -45,6 +45,9 @@
 - **Share links** with a title and a preview image for social media and chat apps.
 - **Embeds:** put a playable patch on your own website.
 - **Save and Save As are back**, as in v1, with no account or sign-up needed.
+- **Videos for Instagram, TikTok and more** (Patches › VIDEO): turn what you just played, or your patch from the
+  start, into a portrait, square or wide MP4, with the sound exactly as you heard it. Share it from your phone's share
+  sheet or download it. The video is made on your device; nothing is uploaded.
 
 ## Under the hood
 - **New audio engine:** rebuilt in C++, compiled to WebAssembly for the browser and native in the plug-ins, so patches

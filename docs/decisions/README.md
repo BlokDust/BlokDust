@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**57 decisions** · proposed: 10 · accepted: 41 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**58 decisions** · proposed: 11 · accepted: 41 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -81,6 +81,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SHARING-0004](sharing/SHARING-0004-host-on-a-placeholder-cloudflare-url.md) | Host on a placeholder Cloudflare URL with a configurable base path | **accepted** | 2026-11-05 | hosting, domain |
 | [SHARING-0005](sharing/SHARING-0005-host-release-1-at-funputs-com-blokdust-with-a.md) | Host Release 1 at funputs.com/blokdust with a Worker route | **superseded** | 2026-11-11 | hosting, domain, release-1 |
 | [SHARING-0006](sharing/SHARING-0006-host-at-blokdust-funputs-com-with-funputs-com.md) | Host at blokdust.funputs.com with funputs.com/blokdust redirecting | **accepted** | 2026-11-12 | hosting, domain, release-1 |
+| [SHARING-0007](sharing/SHARING-0007-video-export-replays-the-session-offline-and.md) | Video export replays the session offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
 
 ## [simulation](simulation/README.md)
 

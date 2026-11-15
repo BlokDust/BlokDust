@@ -35,6 +35,12 @@ importers:
 
   web:
     dependencies:
+      '@mediabunny/aac-encoder':
+        specifier: 1.64.0
+        version: 1.64.0(mediabunny@1.64.0)
+      mediabunny:
+        specifier: 1.64.0
+        version: 1.64.0
       pixi.js:
         specifier: 8.22.0
         version: 8.22.0
@@ -432,6 +438,11 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
+  '@mediabunny/aac-encoder@1.64.0':
+    resolution: {integrity: sha512-u9BnYGgDsPw4xjD7YRt285wsz+QR5Cp0Lzi/aZTrZ1FHBqYW4c7uyIFD1NhU+jKOO5IZgXhMOw9Y2IEjyr2k5Q==}
+    peerDependencies:
+      mediabunny: ^1.0.0
+
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
 
@@ -552,6 +563,12 @@ packages:
 
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
+
+  '@types/dom-mediacapture-transform@0.1.12':
+    resolution: {integrity: sha512-d7/QsLRwF864A5mgIM/YrfiglHoYn7zgCcAoJgW404r+2DwnNr7EBbLnCWpmOMgH8y0te73L1AV6H1bmauaWFw==}
+
+  '@types/dom-webcodecs@0.1.13':
+    resolution: {integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==}
 
   '@types/earcut@3.2.4':
     resolution: {integrity: sha512-I688mi107oflZOpzhs4EwasCN4ycLlZHf7XAGhM6EQIHEJkRTEuTL08lemIZOQ1YAACJoNoCzAiSDCJujpJLHA==}
@@ -824,6 +841,9 @@ packages:
   lightningcss@1.33.0:
     resolution: {integrity: sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA==}
     engines: {node: '>= 12.0.0'}
+
+  mediabunny@1.64.0:
+    resolution: {integrity: sha512-ILat5qSwfmZjnYhk7Dc8uEvEQNtzXNxUVyfxR9Fp6JRa8Axsg5xE1EXwCTOzXJHhH/a2eyk6sZ1ffivCk4rIXg==}
 
   miniflare@5.20261104.0-beta:
     resolution: {integrity: sha512-pYZ2n85+FYUb7s0oIVcQxO63/+wgaknm+A/kQjctJqshvHPJs3UtnzaIZ7xrrHMOk8atD7yAfauf6G9VAv7Upg==}
@@ -1237,6 +1257,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
+  '@mediabunny/aac-encoder@1.64.0(mediabunny@1.64.0)':
+    dependencies:
+      mediabunny: 1.64.0
+
   '@oxc-project/types@0.156.0': {}
 
   '@pixi/colord@2.9.6': {}
@@ -1303,6 +1327,12 @@ snapshots:
   '@sindresorhus/is@7.2.0': {}
 
   '@speed-highlight/core@1.2.24': {}
+
+  '@types/dom-mediacapture-transform@0.1.12':
+    dependencies:
+      '@types/dom-webcodecs': 0.1.13
+
+  '@types/dom-webcodecs@0.1.13': {}
 
   '@types/earcut@3.2.4':
     dependencies:
@@ -1495,6 +1525,11 @@ snapshots:
       lightningcss-linux-x64-musl: 1.33.0
       lightningcss-win32-arm64-msvc: 1.33.0
       lightningcss-win32-x64-msvc: 1.33.0
+
+  mediabunny@1.64.0:
+    dependencies:
+      '@types/dom-mediacapture-transform': 0.1.12
+      '@types/dom-webcodecs': 0.1.13
 
   miniflare@5.20261104.0-beta(@types/node@24.19.2):
     dependencies:

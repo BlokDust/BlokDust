@@ -14,6 +14,7 @@
 | [SPEC-PATCH-FORMAT-V2](domains/patch-format/patch-v2.md) | Patch format v2 | patch-format | **draft** | DATA-0001, DATA-0005, DATA-0004, SCOPE-0002, PLUGIN-0003 |
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
+| [SPEC-SHARING-VIDEO-EXPORT](domains/sharing/video-export.md) | Video export | sharing | **draft** | SHARING-0007, SIMULATION-0001, DATA-0005, UI-0005 |
 | [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
 
@@ -39,3 +40,4 @@
 | [CHG-0019](changes/0019-grid/proposal.md) | Touchpad | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0020](changes/0020-labels/proposal.md) | Labels on the stage | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-VISUAL-V1-PARITY |
 | [CHG-0021](changes/0021-stage-block/proposal.md) | Stage block | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0022](changes/0022-video-export/proposal.md) | Video export | **proposed** | SPEC-SHARING-VIDEO-EXPORT |

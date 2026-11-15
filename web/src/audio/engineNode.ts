@@ -2,7 +2,10 @@
 import { setAudioSession } from './session';
 import processorUrl from './processor.ts?worker&url';
 import type { Command } from '../engine/wasmEngine.ts';
-import type { FromWorklet, ProcessorOptions, Recording, Snapshot, ToWorklet } from './protocol.ts';
+import type { FromWorklet, ProcessorOptions, Recording, SessionLog, Snapshot, ToWorklet } from './protocol.ts';
+
+/** A sample the engine was given, kept for replays (video export, SPEC-SHARING-VIDEO-EXPORT R1): its number is `seq`. */
+export interface SentSample { id: number; stage: number; buffer: AudioBuffer }
 
 let modulePromise: Promise<WebAssembly.Module> | null = null;
 export function engineModule(url = new URL('blokdust.wasm', document.baseURI).href): Promise<WebAssembly.Module> {
@@ -42,7 +45,15 @@ export class EngineNode {
   /** `stage`: the block is inside that Stage block (CHG-0021); 0: the outer world. */
   sendSample(id: number, buffer: AudioBuffer, stage = 0): void {
     const left = buffer.getChannelData(0).slice(), right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1).slice() : undefined;
-    this.node.port.postMessage({ type: 'sample', id, left, right, sampleRate: buffer.sampleRate, ...(stage ? { stage } : {}) } satisfies ToWorklet, [left.buffer, ...(right ? [right.buffer] : [])]);
+    const seq = this.sent.push({ id, stage, buffer }) - 1;
+    this.node.port.postMessage({ type: 'sample', id, left, right, sampleRate: buffer.sampleRate, seq, ...(stage ? { stage } : {}) } satisfies ToWorklet, [left.buffer, ...(right ? [right.buffer] : [])]);
+  }
+  /** Every sample sent, by `seq` (the session log names them). */
+  readonly sent: SentSample[] = [];
+  /** The session log so far (video export): what the engine was given and at which frame. */
+  private logWaiting: ((l: SessionLog) => void)[] = [];
+  sessionLog(): Promise<SessionLog> {
+    return new Promise(res => { this.logWaiting.push(res); this.node.port.postMessage({ type: 'log' } satisfies ToWorklet); });
   }
   /** Live input for Microphone / Audio In blocks: ask for the microphone once and feed the worklet's input. */
   private input: Promise<void> | null = null;
@@ -61,7 +72,9 @@ export class EngineNode {
   }
   onSnapshot(cb: (s: Snapshot) => void): void {
     this.node.port.onmessage = (e: MessageEvent<FromWorklet>) => {
-      if (e.data.type === 'recording') { this.recordingDone?.(e.data); this.recordingDone = null; } else cb(e.data);
+      if (e.data.type === 'recording') { this.recordingDone?.(e.data); this.recordingDone = null; }
+      else if (e.data.type === 'log') this.logWaiting.shift()?.(e.data);
+      else cb(e.data);
     };
   }
 }

@@ -58,6 +58,13 @@ Blink's `modules/webaudio/periodic_wave_handler.cc` and `oscillator_handler.cc`:
 > LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 > OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+## Video export libraries
+The web app's video export (Patches › VIDEO) loads these only when a video is made:
+- **Mediabunny** (https://github.com/Vanilagy/mediabunny), Mozilla Public License 2.0. Its source code, unmodified,
+  is available from that repository and npm (`mediabunny`).
+- **@mediabunny/aac-encoder**, Mozilla Public License 2.0. It contains a WebAssembly build of FFmpeg's AAC encoder
+  (libavcodec, https://ffmpeg.org/), licensed under the GNU Lesser General Public License 2.1 or later.
+
 ## Your patches
 Patches you create are your own data. The AGPL applies to BlokDust's code, not to the patches made with it.
 

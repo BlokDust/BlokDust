@@ -23,6 +23,7 @@ import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../sta
 import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
 import { drawMakeStage, inBox, makeStageBox, type ButtonBox } from '../stage/makeStageButton.ts';
 import { frameBlocks } from '../stage/frameBlocks.ts';
+import { starPos } from '../stage/starPos.ts';
 import { gridToPx } from '../stage/metrics.ts';
 import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
@@ -33,6 +34,12 @@ import { V1Block } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
+import type { SentSample } from '../audio/engineNode.ts';
+import type { VideoChoice, VideoProgressInfo } from '../v1ui/patches.ts';
+import { playedSource, playedWindow, startSource } from '../video/sources.ts';
+import { Replay } from '../video/replay.ts';
+import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/share.ts';
+import type { Credit } from '../video/frame.ts';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
 const THUMB = { width: 1200, height: 630 } as const;
@@ -43,13 +50,6 @@ interface JuceBackend {
 }
 interface ModelBlock { uid: string; type: string; x: number; y: number; params: Record<string, unknown> }
 
-/** Visual-only per-block star position for Void (v1 RandomStarPos), seeded by block id so it is stable. */
-function starPos(id: number): { x: number; y: number } {
-  let s = (id * 2654435761) >>> 0;
-  const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
-  const x = Math.round(r() * 10), y = Math.round(r() * (10 - x));
-  return { x: r() < 0.5 ? -x : x, y: r() < 0.5 ? -y : y };
-}
 const typeIndex = (type: string) => BLOCKS.findIndex(b => b.id === type);
 /** Params that hold engine ids of this session (an LFO's resolved target, AUDIO-0003): never taken from a patch. */
 const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
@@ -429,7 +429,49 @@ async function main() {
       },
       warning: () => shareWarning(),
     },
+    // Video export (CHG-0022): web only (R16).
+    video: juce || embedId ? null : {
+      make: (choice, progress, signal) => makeVideoFile(choice, progress, signal),
+      canShare: file => canShareFile(file),
+      share: async file => { await shareFile(file, videoTitle(), `${videoTitle()} \u2014 made with BlokDust ${videoLink()}`); },
+      download: file => downloadFile(file),
+    },
   });
+  // ---- video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT) ----
+  const videoTitle = () => scene.PatchesPanel.Title.trim() || 'Untitled';
+  const videoLink = () => shareLink?.url ?? PUBLIC_SITE;
+  /** R8: every Freesound sound the patch uses (CC-BY asks for credit; CC0 gets it too). */
+  function videoCredits(): Credit[] {
+    return Object.values(toPatch().refs ?? {}).filter((r): r is FreesoundRef => (r as SampleRef).provider === 'freesound').map(r => ({ name: r.name, user: r.username, license: r.license }));
+  }
+  /** FROM START: what the engine is built from now, and every sample it would be given (outer world and Stages). */
+  function startSamples(): SentSample[] {
+    const out: SentSample[] = [];
+    for (const [id, buffer] of samples) if (model.has(id)) out.push({ id, stage: 0, buffer });
+    for (const [id, b] of model) if (b.type === 'source.stage')
+      for (const [uid, buffer] of innerSamples.get(b.uid) ?? []) { const iid = innerIds.get(b.uid)?.ids[uid]; if (iid !== undefined) out.push({ id: iid, stage: id, buffer }); }
+    return out;
+  }
+  async function makeVideoFile(choice: VideoChoice, progress: (p: VideoProgressInfo) => void, signal: AbortSignal): Promise<File> {
+    if (!engine) throw new Error('Press start first.');
+    const sampleRate = engine.node.context.sampleRate;
+    let source, from = 0, to = Math.round(choice.seconds * sampleRate);
+    if (choice.what === 'played') {
+      const log = await engine.sessionLog(), w = playedWindow(log, choice.seconds);
+      if ('error' in w) throw new Error(w.error);
+      ({ from, to } = w);
+      source = playedSource(log, engine.sent);
+    } else {
+      if (inside) throw new Error('Close the Stage first: FROM START plays the whole patch.');
+      source = startSource(sampleRate, seed, engineCommands(), startSamples());
+    }
+    const { makeVideo } = await import('../video/makeVideo.ts');
+    const blob = await makeVideo(await engineModule(), {
+      source, from, to, shape: choice.shape, theme, labels: (inside ? inside.outer.labels : labels).map(l => ({ ...l })),
+      card: { title: videoTitle(), link: videoLink(), credits: videoCredits() },
+    }, progress, signal);
+    return new File([blob], videoFileName(videoTitle()), { type: 'video/mp4' });
+  }
   function shareWarning(): string | null {
     return [...model.values()].some(b => b.type === 'source.recorder' || !isPortable(b.params.track)) ? SAVE_WARNING : null;
   }
@@ -1511,6 +1553,22 @@ async function main() {
         let peak = 0; for (let i = 0; i < frames; i++) peak = Math.max(peak, Math.abs(l[i]), Math.abs(r[i]));
         return { hash: hex(hashStereo(hashAudio(l), hashAudio(r))), peak };
       } finally { e.dispose(); }
+    },
+    /** Video export (tests, SPEC-SHARING-VIDEO-EXPORT R2): start capturing the worklet's output. */
+    startCapture() { engine?.startRecording(); },
+    /** Stop capturing and replay the session log offline: the replay's audio over the same frames must be identical. */
+    async replayCheck() {
+      if (!engine) return null;
+      const rec = await engine.stopRecording(), log = await engine.sessionLog();
+      const r = new Replay(await engineModule(), playedSource(log, engine.sent));
+      const n = rec.left.length, l = new Float32Array(n), rr = new Float32Array(n);
+      let at = 0;
+      r.run(rec.startFrame);
+      r.run(rec.startFrame + n, (a, b) => { const k = Math.min(a.length, n - at); l.set(a.subarray(0, k), at); rr.set(b.subarray(0, k), at); at += k; });
+      r.dispose();
+      let firstDiff = -1, peak = 0;
+      for (let i = 0; i < n; i++) { peak = Math.max(peak, Math.abs(rec.left[i])); if (firstDiff < 0 && (l[i] !== rec.left[i] || rr[i] !== rec.right[i])) firstDiff = i; }
+      return { frames: n, startFrame: rec.startFrame, entries: log.entries.length, peak, live: hex(hashStereo(hashAudio(rec.left), hashAudio(rec.right))), replay: hex(hashStereo(hashAudio(l), hashAudio(rr))), firstDiff };
     },
     /** Sample state per block (tests): loaded, or missing with its reference. */
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },

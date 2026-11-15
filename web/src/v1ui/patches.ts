@@ -15,6 +15,11 @@
 //   - SettingsPanel › Connect: the three 130×30 filled buttons (for the confirm step), and its 420×40 GUIDE button
 //     (OPEN FROM YOUR DEVICE, the OPEN tab's main button);
 //   - SoundcloudPanel: the paged rows, count, page number, arrows, and its bordered button (OPEN / INSERT);
+//
+// VIDEO (web only, CHG-0022, SPEC-SHARING-VIDEO-EXPORT R15): the OPEN tab's italic line and rule, then three rows of
+// Settings › Connect's 130×30 filled buttons (SHAPE, LENGTH, WHAT; the chosen one in the tab's colour, the others in the
+// off colour), MAKE VIDEO as the OPEN tab's 420×40 GUIDE button, SharePanel's "saving…" spinner for progress, and
+// SharePanel's SAVE-colour and DOWNLOAD PATCH-colour half buttons for SHARE VIDEO and DOWNLOAD.
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
 
@@ -27,6 +32,10 @@ export interface PatchItem {
   /** The user's own (saved here): the row has a bin. */
   removable?: boolean;
 }
+/** Video export (CHG-0022): what the VIDEO tab asks for. */
+export type VideoShape = 'portrait' | 'square' | 'wide';
+export interface VideoChoice { shape: VideoShape; seconds: 15 | 30 | 60; what: 'played' | 'start' }
+export interface VideoProgressInfo { phase: 'preparing' | 'rendering'; done: number }
 /** The share link of the current patch (web). */
 export interface ShareLink { url: string; /** The patch changed since the link was made. */ stale: boolean; /** This browser made it (it can update it). */ owned: boolean }
 /** A file picked with FROM YOUR COMPUTER or dropped on the stage: its title, or why it can't be used. */
@@ -48,6 +57,14 @@ export interface PatchesHost {
   /** What deleting does, for the confirm step. */
   removeLine: string;
   hasBlocks(): boolean;
+  /** Video export (SPEC-SHARING-VIDEO-EXPORT); null: no VIDEO tab (the plugin, R16). */
+  video: null | {
+    make(choice: VideoChoice, progress: (p: VideoProgressInfo) => void, signal: AbortSignal): Promise<File>;
+    canShare(file: File): boolean;
+    /** In a click: the system share sheet. */
+    share(file: File): Promise<void>;
+    download(file: File): void;
+  };
   /** Share links (SPEC-SHARING-BACKEND). */
   links: null | {
     /** Plugin: the link is made in the web browser (its page has the bot check); nothing is kept here. */
@@ -63,7 +80,7 @@ export interface PatchesHost {
 /** The tab Patches opens on: the last one chosen (owner, 2026-11-10). */
 const TAB_KEY = 'blokdust.patchesTab';
 function rememberedTab(): Tab {
-  try { return localStorage.getItem(TAB_KEY) === '1' ? 1 : 0; } catch { return 0; }
+  try { const t = localStorage.getItem(TAB_KEY); return t === '1' ? 1 : t === '2' ? 2 : 0; } catch { return 0; }
 }
 
 const ITEMS = 5;
@@ -84,7 +101,7 @@ export function downloadColour(): string {
   return cols.reduce((a: string, c: string) => (blackContrast(c) > blackContrast(a) ? c : a));
 }
 const COPY = {
-  panel: 'Patches', tabs: ['Save', 'Open'] as const,
+  panel: 'Patches', tabs: ['Save', 'Open', 'Video'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',
   saveLinePlugin: 'Save a .blokdust patch file. It opens in the web version of BlokDust too.',
@@ -101,9 +118,16 @@ const COPY = {
   confirm: 'Replace current patch?', confirmLine: 'You have unsaved changes. Opening another patch will replace your current work.',
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
+  videoLine: 'Make a video to share on Instagram, TikTok and more.',
+  shape: 'Shape', shapes: ['Portrait', 'Square', 'Wide'], length: 'Length', lengths: ['15 Seconds', '30 Seconds', '60 Seconds'],
+  what: 'What', whats: ['Just Played', 'From the Start'], makeVideo: 'Make Video', cancelVideo: 'Cancel',
+  preparing: 'getting ready', rendering: 'making video', shareVideo: 'Share Video', downloadVideo: 'Download',
+  videoReady: 'Your video is ready.', videoReadyDownload: 'Your video is ready. Download it, then post it from your device.',
 };
+const SHAPES: VideoShape[] = ['portrait', 'square', 'wide'];
+const LENGTHS = [15, 30, 60] as const;
 
-type Tab = 0 | 1;  // SAVE, OPEN
+type Tab = 0 | 1 | 2;  // SAVE, OPEN, VIDEO (web)
 type View = 'list' | 'file' | 'confirm' | 'remove';
 
 export class PatchesPanel extends DisplayObject {
@@ -125,7 +149,14 @@ export class PatchesPanel extends DisplayObject {
   private page = 1;
   private roll: Record<string, boolean> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
-  private selected = [1, 0];
+  private selected = [1, 0, 0];
+  /** The VIDEO tab (CHG-0022). */
+  Video: VideoChoice = { shape: 'portrait', seconds: 30, what: 'played' };
+  VideoState: 'idle' | 'making' | 'ready' | 'error' = 'idle';
+  VideoProgress: VideoProgressInfo = { phase: 'preparing', done: 0 };
+  VideoMessage = '';
+  private videoFile: File | null = null;
+  private videoAbort: AbortController | null = null;
   /** The patch the delete step asks about. */
   private removing: PatchItem | null = null;
   /** What OPEN ANYWAY / SAVE FIRST go on to do, and the view to go back to on CANCEL. */
@@ -159,7 +190,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
-  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
+  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
   /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
   private settle = 0;
   private settled(): void { this.settle = performance.now() + 250; }
@@ -177,7 +208,7 @@ export class PatchesPanel extends DisplayObject {
   private tabs() {
     const u = App.Unit, W = App.Width, menuWidth = this.mobile ? (W / 7) * 5 : (W / 7) * 4, gutter = App.Metrics.Device !== Device.desktop ? 40 : 60;
     let x = W * 0.5 - menuWidth * 0.5;
-    const tabs = COPY.tabs.map(name => {
+    const tabs = COPY.tabs.slice(0, this.host.video ? 3 : 2).map(name => {
       const w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { name: name.toUpperCase(), x: x + w * 0.5, w };
       x += w;
       return t;
@@ -248,6 +279,22 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, y = this.cy + (this.mobile ? 195 : 175) * u;
     return { x: App.Width * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: App.Width * 0.5 };
   }
+  // ---- VIDEO tab layout (units from the panel centre) ----
+  /** A row of v1 Settings › Connect's 130×30 buttons at `top`. */
+  private videoRow(top: number, n: 2 | 3) {
+    const u = App.Unit, W = App.Width, y = this.cy + top * u;
+    if (n === 3) return [-210, -65, 80].map(dx => ({ x: W * 0.5 + dx * u, y, w: 130 * u, h: 30 * u, cx: W * 0.5 + (dx + 65) * u }));
+    return [-210, 7.5].map(dx => ({ x: W * 0.5 + dx * u, y, w: 202.5 * u, h: 30 * u, cx: W * 0.5 + (dx + 101.25) * u }));
+  }
+  private videoRows() { return { shape: this.videoRow(-82, 3), length: this.videoRow(-22, 3), what: this.videoRow(38, 2) }; }
+  /** MAKE VIDEO: the OPEN tab's 420×40 GUIDE button; SHARE VIDEO · DOWNLOAD: SharePanel's half buttons there. */
+  private videoMain() {
+    const u = App.Unit, W = App.Width, y = this.cy + 95 * u;
+    return { make: { x: W * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: W * 0.5 },
+      share: { x: W * 0.5 - 210 * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 - 108.75 * u },
+      download: { x: W * 0.5 + 7.5 * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + 108.75 * u } };
+  }
+  private get videoShareable(): boolean { return !!this.videoFile && !!this.host.video?.canShare(this.videoFile); }
   /** v1 SharePanel's back chevron and its SKIP-style label. */
   private backArrow() {
     let arrowX = 275, arrowY = 0;
@@ -299,7 +346,7 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
-    if (this.Tab === 0) this.drawSave(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
+    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawVideo(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
   /** A filled button with v1's hover notch under its centre (SharePanel / SettingsPanel). */
@@ -506,6 +553,78 @@ export class PatchesPanel extends DisplayObject {
     this.filled(c, App.Palette[menu[3]], COPY.openAnyway, !!this.roll.openAnyway, font, 18.5);
   }
 
+  private drawVideo(): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    // HINT + RULE (the OPEN tab's) //
+    App.FillColor(ctx, txt);
+    ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+    ctx.fillText(COPY.videoLine, margin, cy - 120 * u);
+    App.StrokeColor(ctx, txt);
+    ctx.beginPath(); ctx.moveTo(margin, cy - 110 * u); ctx.lineTo(margin + this.pageW, cy - 110 * u); ctx.stroke();
+
+    // SHAPE · LENGTH · WHAT: the chosen one in its menu colour (Connect's order), the rest off //
+    const rows = this.videoRows(), busy = this.VideoState === 'making', font = App.Metrics.TxtMid;
+    const row = (label: string, bs: { x: number; y: number; w: number; h: number; cx: number }[], names: readonly string[], chosen: number, key: string) => {
+      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'left';
+      ctx.fillText(label.toUpperCase(), margin, bs[0].y - 8 * u);
+      // The chosen one in the VIDEO tab's own colour (its MenuCategory fill), so it reads the same in every row.
+      bs.forEach((b, i) => this.filled(b, App.Palette[i === chosen ? menu[2 % menu.length] : 1], names[i], !busy && !!this.roll[`${key}${i}`] && i !== chosen, font, 18.5));
+    };
+    row(COPY.shape, rows.shape, COPY.shapes, SHAPES.indexOf(this.Video.shape), 'shape');
+    row(COPY.length, rows.length, COPY.lengths, LENGTHS.indexOf(this.Video.seconds), 'len');
+    row(COPY.what, rows.what, COPY.whats, this.Video.what === 'played' ? 0 : 1, 'what');
+
+    // MAKE VIDEO / CANCEL, or SHARE VIDEO · DOWNLOAD //
+    const m = this.videoMain();
+    if (this.VideoState === 'ready') {
+      if (this.videoShareable) {
+        this.filled(m.share, App.Palette[menu[3]], COPY.shareVideo, !!this.roll.shareVideo);
+        this.filled(m.download, downloadColour(), COPY.downloadVideo, !!this.roll.downloadVideo, App.Metrics.TxtUrl2, 29, '#000');
+      } else this.filled(m.make, downloadColour(), COPY.downloadVideo, !!this.roll.downloadVideo, App.Metrics.TxtUrl2, 29, '#000');
+    } else if (busy) this.filled(m.make, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
+    else this.filled(m.make, App.Palette[menu[3]], COPY.makeVideo, !!this.roll.make && this.host.hasBlocks());
+
+    // PROGRESS (SharePanel's "saving…" spinner) or the message //
+    App.FillColor(ctx, txt);
+    if (busy) {
+      const p = this.VideoProgress, label = `${p.phase === 'preparing' ? COPY.preparing : COPY.rendering}... ${Math.floor(p.done * 100)}%`;
+      ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
+      ctx.fillText(label.toUpperCase(), W * 0.5, cy + 185 * u);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 160 * u, 16, true);
+    } else {
+      const line = this.VideoState === 'ready' ? (this.videoShareable ? COPY.videoReady : COPY.videoReadyDownload)
+        : this.VideoState === 'error' ? this.VideoMessage : !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : '';
+      if (line) { ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(line, margin, cy + 160 * u, 14 * u, this.pageW); }
+    }
+  }
+
+  /** Any change to the choice drops a made video (it no longer matches). */
+  private chooseVideo(c: Partial<VideoChoice>): void {
+    if (this.VideoState === 'making') return;
+    this.Video = { ...this.Video, ...c };
+    this.VideoState = 'idle'; this.videoFile = null; this.VideoMessage = '';
+  }
+  private async makeVideo(): Promise<void> {
+    const v = this.host.video;
+    if (!v || this.VideoState === 'making' || !this.host.hasBlocks()) return;
+    const abort = this.videoAbort = new AbortController();
+    this.VideoState = 'making'; this.VideoProgress = { phase: 'preparing', done: 0 }; this.videoFile = null; this.VideoMessage = '';
+    // Only the current render may change the panel: a cancelled one winds down on its own (CANCEL takes effect at once).
+    const current = () => this.videoAbort === abort;
+    try {
+      const file = await v.make(this.Video, p => { if (current()) this.VideoProgress = p; }, abort.signal);
+      if (current()) { this.videoFile = file; this.VideoState = 'ready'; }
+    } catch (e) {
+      if (current()) { this.VideoState = 'error'; this.VideoMessage = (e as Error).message || 'The video could not be made.'; }
+    } finally { if (current()) this.videoAbort = null; this.settled(); }
+  }
+  /** CANCEL: the panel is free at once; the render stops at its next check. */
+  private cancelVideo(): void {
+    this.videoAbort?.abort();
+    this.videoAbort = null;
+    this.VideoState = 'idle'; this.VideoMessage = '';
+  }
+
   /** v1 SharePanel.WordWrap. */
   private wordWrap(text: string, x: number, y: number, lineHeight: number, fitWidth: number): void {
     const ctx = this.Ctx;
@@ -531,7 +650,15 @@ export class PatchesPanel extends DisplayObject {
     tabs.forEach((t, i) => { r[`tab${i}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) => hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
-    if (this.Tab === 0) {
+    if (this.Tab === 2) {
+      const rows = this.videoRows(), m = this.videoMain();
+      rows.shape.forEach((b, i) => { r[`shape${i}`] = box(b); });
+      rows.length.forEach((b, i) => { r[`len${i}`] = box(b); });
+      rows.what.forEach((b, i) => { r[`what${i}`] = box(b); });
+      if (this.VideoState === 'ready' && this.videoShareable) { r.shareVideo = box(m.share); r.downloadVideo = box(m.download); }
+      else if (this.VideoState === 'ready') r.downloadVideo = box(m.make);
+      else r.make = box(m.make);
+    } else if (this.Tab === 0) {
       const { share, save, saveAs } = this.saveButtons();
       r.randomise = pad(this.randomise());
       r.save = box(save); r.share = box(share); r.saveAs = !!saveAs && box(saveAs);
@@ -575,6 +702,11 @@ export class PatchesPanel extends DisplayObject {
     const mid = (b: { x: number; y: number; w: number; h: number }) => at(b.x + b.w / 2, b.y + b.h / 2);
     const m = /^(open|ins|bin)(\d)$/.exec(name);
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
+    const v = /^(shape|len|what)(\d)$/.exec(name);
+    if (v) { const rows = this.videoRows(), b = (v[1] === 'shape' ? rows.shape : v[1] === 'len' ? rows.length : rows.what)[Number(v[2])]; return b ? mid(b) : null; }
+    if (name === 'make') return mid(this.videoMain().make);
+    if (name === 'shareVideo') return mid(this.videoMain().share);
+    if (name === 'downloadVideo') return mid(this.videoShareable ? this.videoMain().download : this.videoMain().make);
     const t = /^tab(\d)$/.exec(name);
     if (t) { const tab = this.tabs().tabs[Number(t[1])]; return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
     const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton(), { arrowX, arrowY } = this.backArrow();
@@ -605,7 +737,19 @@ export class PatchesPanel extends DisplayObject {
     this.HitTests(pt);
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
-    for (const i of [0, 1] as Tab[]) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    for (const i of [0, 1, 2] as Tab[]) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    if (this.Tab === 2) {
+      for (let i = 0; i < 3; i++) {
+        if (r[`shape${i}`]) { this.chooseVideo({ shape: SHAPES[i] }); return; }
+        if (r[`len${i}`]) { this.chooseVideo({ seconds: LENGTHS[i] }); return; }
+        if (r[`what${i}`]) { this.chooseVideo({ what: i === 0 ? 'played' : 'start' }); return; }
+      }
+      if (r.make) { if (this.VideoState === 'making') this.cancelVideo(); else void this.makeVideo(); return; }
+      // The share sheet needs this click's user activation: call it straight away.
+      if (r.shareVideo && this.videoFile) { void this.host.video?.share(this.videoFile).catch(e => { this.VideoState = 'error'; this.VideoMessage = (e as Error).message; }); return; }
+      if (r.downloadVideo && this.videoFile) { this.host.video?.download(this.videoFile); return; }
+      return;
+    }
     if (this.Tab === 0) {
       if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
       if (r.save) { if (!this.Saving && this.host.hasBlocks()) void this.save(); return; }
@@ -662,7 +806,7 @@ export class PatchesPanel extends DisplayObject {
   selectTab(i: Tab): void {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
     this.Tab = i;
-    for (const j of [0, 1]) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    for (const j of [0, 1, 2]) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
     this.showDom();
   }
 
@@ -705,7 +849,8 @@ export class PatchesPanel extends DisplayObject {
     if (!this.Title) this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? '');
     this.Open = true; this.shown = true;
     this.Tab = tab; this.View = 'list'; this.Picked = null; this.pending = null;
-    this.selected = [tab === 0 ? 1 : 0, tab === 1 ? 1 : 0];
+    if (tab === 2 && !this.host.video) tab = 0;
+    this.selected = [0, 1, 2].map(i => (i === tab ? 1 : 0));
     this.OffsetY = -App.Height;
     this.OffsetX = -(this.page - 1) * 430 * App.Unit;
     this.Input.value = this.Title;
