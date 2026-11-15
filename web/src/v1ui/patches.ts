@@ -20,6 +20,13 @@
 // rule, then two controls that cycle when pressed: SHAPE, a frame icon (as Instagram's crop icons) with its name, and
 // LENGTH, its seconds underlined (v1's link style); MAKE VIDEO as the OPEN tab's 420×40 GUIDE button, which becomes
 // SHARE VIDEO once made; SharePanel's "saving…" spinner for progress.
+//
+// ACCOUNT (web only, CHG-0023, SPEC-SHARING-ACCOUNTS R13): signed out, the OPEN tab's italic line and rule, then
+// SharePanel's two half buttons (SIGN IN WITH PASSKEY · SIGN IN WITH GOOGLE) and a bordered CREATE ACCOUNT; creating
+// one (or naming a new Google account), the file step's heading and line, the SAVE tab's name field and rule (a DOM
+// field as v1's title), and the GUIDE button; signed in, the header type for the name, the italic line, the half
+// buttons (ADD PASSKEY · SIGN OUT) and two bordered buttons (SIGN OUT EVERYWHERE, DELETE ACCOUNT); deleting asks
+// first with the delete step's CANCEL · DELETE.
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
 
@@ -31,6 +38,21 @@ export interface PatchItem {
   key: string;
   /** The user's own (saved here): the row has a bin. */
   removable?: boolean;
+}
+/** Accounts (CHG-0023): what the ACCOUNT tab shows. */
+export interface AccountInfo { handle: string | null; passkeys: number; providers: string[] }
+export interface AccountHost {
+  /** Who is signed in (null: nobody), whether Google sign-in is offered; null when there is no backend. */
+  me(): Promise<{ user: AccountInfo | null; google: boolean } | null>;
+  signUp(handle: string): Promise<void>;
+  signIn(): Promise<void>;
+  google(): void;
+  addPasskey(): Promise<void>;
+  setHandle(handle: string): Promise<void>;
+  signOut(everywhere: boolean): Promise<void>;
+  deleteAccount(): Promise<void>;
+  /** The passkey dialog was closed by the user: nothing to report. */
+  cancelled(e: unknown): boolean;
 }
 /** Video export (CHG-0022): what the VIDEO tab asks for. */
 export type VideoShape = 'portrait' | 'square' | 'wide';
@@ -64,6 +86,8 @@ export interface PatchesHost {
     /** In a click: the system share sheet (where a browser can't share files, the file is downloaded). */
     share(file: File): Promise<void>;
   };
+  /** Accounts (SPEC-SHARING-ACCOUNTS); null: no ACCOUNT tab (the plugin). */
+  account: AccountHost | null;
   /** Share links (SPEC-SHARING-BACKEND). */
   links: null | {
     /** Plugin: the link is made in the web browser (its page has the bot check); nothing is kept here. */
@@ -79,7 +103,7 @@ export interface PatchesHost {
 /** The tab Patches opens on: the last one chosen (owner, 2026-11-10). */
 const TAB_KEY = 'blokdust.patchesTab';
 function rememberedTab(): Tab {
-  try { const t = localStorage.getItem(TAB_KEY); return t === '1' ? 1 : t === '2' ? 2 : 0; } catch { return 0; }
+  try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 3 ? t : 0) as Tab; } catch { return 0; }
 }
 
 const ITEMS = 5;
@@ -100,7 +124,7 @@ export function downloadColour(): string {
   return cols.reduce((a: string, c: string) => (blackContrast(c) > blackContrast(a) ? c : a));
 }
 const COPY = {
-  panel: 'Patches', tabs: ['Save', 'Open', 'Video'] as const,
+  panel: 'Patches', tabs: ['Save', 'Open', 'Video', 'Account'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',
   saveLinePlugin: 'Save a .blokdust patch file. It opens in the web version of BlokDust too.',
@@ -120,6 +144,15 @@ const COPY = {
   videoLine: 'Make a video to share on Instagram, TikTok and more.',
   shape: 'Shape', length: 'Length', makeVideo: 'Make Video', cancelVideo: 'Cancel',
   rendering: 'making video', shareVideo: 'Share Video',
+  accountLine: 'Sign in to keep your patches on every device. Saving and sharing work without it.',
+  passkey: 'Sign In With Passkey', google: 'Sign In With Google', create: 'Create Account', newHere: 'New here?',
+  createTitle: 'Create your account', createLine: 'Choose a name. It shows on patches you publish. Your device then makes a passkey: no password.',
+  nameTitle: 'Choose your name', nameLine: 'It shows on patches you publish.', handle: 'Name',
+  createButton: 'Create With Passkey', saveName: 'Save Name', signedInAs: 'Signed in as',
+  signedInLine: 'Patches you save go to your account. Open them from any device you sign in on.',
+  addPasskey: 'Add Passkey', signOut: 'Sign Out', signOutAll: 'Sign Out Everywhere', deleteAccount: 'Delete Account',
+  deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
+  noAccounts: 'Accounts are not available here.', working: 'one moment',
   videoReady: 'Your video is ready.',
 };
 /** Instagram's order: portrait, then landscape, then square. */
@@ -127,7 +160,7 @@ const SHAPES: VideoShape[] = ['portrait', 'wide', 'square'];
 const SHAPE_NAMES: Record<VideoShape, string> = { portrait: 'Portrait', wide: 'Wide', square: 'Square' };
 const LENGTHS = [15, 30, 60] as const;
 
-type Tab = 0 | 1 | 2;  // SAVE, OPEN, VIDEO (web)
+type Tab = 0 | 1 | 2 | 3;  // SAVE, OPEN, VIDEO, ACCOUNT (web)
 type View = 'list' | 'file' | 'confirm' | 'remove';
 
 export class PatchesPanel extends DisplayObject {
@@ -149,7 +182,16 @@ export class PatchesPanel extends DisplayObject {
   private page = 1;
   private roll: Record<string, boolean> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
-  private selected = [1, 0, 0];
+  private selected = [1, 0, 0, 0];
+  /** The ACCOUNT tab (CHG-0023). Undefined until asked; null: signed out. */
+  Account: AccountInfo | null | undefined = undefined;
+  AccountView: 'main' | 'create' | 'name' | 'delete' = 'main';
+  AccountBusy = false;
+  AccountMessage = '';
+  private googleOn = false;
+  private noBackend = false;
+  HandleContainer!: HTMLElement;
+  HandleInput!: HTMLInputElement;
   /** The VIDEO tab (CHG-0022). */
   Video: VideoChoice = { shape: 'portrait', seconds: 15 };
   VideoState: 'idle' | 'making' | 'ready' | 'error' = 'idle';
@@ -180,6 +222,10 @@ export class PatchesPanel extends DisplayObject {
     this.Input.addEventListener('input', () => { this.Title = this.Input.value; });
     this.Input.addEventListener('keydown', e => { if (e.key === 'Enter') this.Input.blur(); });
     this.UrlInput.addEventListener('click', () => void this.copyLink());
+    this.HandleContainer = document.getElementById('accountHandle')!;
+    this.HandleInput = document.getElementById('accountHandleInput') as HTMLInputElement;
+    this.HandleInput.addEventListener('input', () => { this.HandleInput.value = this.HandleInput.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20); this.AccountMessage = ''; });
+    this.HandleInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.HandleInput.blur(); void this.submitHandle(); } });
   }
   /** Click the link: it is copied (and selected, so it can be copied by hand where the clipboard is refused). */
   private async copyLink(): Promise<void> {
@@ -190,7 +236,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
-  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
+  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || this.AccountBusy || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
   /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
   private settle = 0;
   private settled(): void { this.settle = performance.now() + 250; }
@@ -208,7 +254,8 @@ export class PatchesPanel extends DisplayObject {
   private tabs() {
     const u = App.Unit, W = App.Width, menuWidth = this.mobile ? (W / 7) * 5 : (W / 7) * 4, gutter = App.Metrics.Device !== Device.desktop ? 40 : 60;
     let x = W * 0.5 - menuWidth * 0.5;
-    const tabs = COPY.tabs.slice(0, this.host.video ? 3 : 2).map(name => {
+    const names = COPY.tabs.filter((_, i) => i < 2 || (i === 2 && this.host.video) || (i === 3 && this.host.account));
+    const tabs = names.map(name => {
       const w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { name: name.toUpperCase(), x: x + w * 0.5, w };
       x += w;
       return t;
@@ -342,7 +389,7 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
-    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawVideo(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
+    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawVideo(); else if (this.Tab === 3) this.drawAccount(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
   /** A filled button with v1's hover notch under its centre (SharePanel / SettingsPanel). */
@@ -627,6 +674,103 @@ export class PatchesPanel extends DisplayObject {
     this.VideoState = 'idle'; this.VideoMessage = '';
   }
 
+  // ---- ACCOUNT tab (CHG-0023) ----
+  private accountButtons() {
+    const u = App.Unit, W = App.Width, cy = this.cy, y = cy - 40 * u;
+    const half = (dx: number) => ({ x: W * 0.5 + dx * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + (dx + 101.25) * u });
+    const full = { x: W * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: W * 0.5 };
+    const allW = this.textW(COPY.signOutAll);
+    return { left: half(-210), right: half(7.5), full,
+      create: this.bordered(COPY.create, W * 0.5 + 210 * u, cy + 30 * u),
+      signOutAll: this.bordered(COPY.signOutAll, W * 0.5 - 200 * u + allW, cy + 30 * u),
+      deleteAccount: this.bordered(COPY.deleteAccount, W * 0.5 + 210 * u, cy + 30 * u),
+      submit: { x: W * 0.5 - 210 * u, y: cy + 40 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 } };
+  }
+  private drawAccount(): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const b = this.accountButtons(), busy = this.AccountBusy;
+    if (this.AccountView === 'create' || this.AccountView === 'name') {
+      const create = this.AccountView === 'create';
+      this.heading(create ? COPY.createTitle : COPY.nameTitle, create ? COPY.createLine : COPY.nameLine);
+      // NAME (the SAVE tab's label, field and rule) //
+      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'right';
+      if (!this.mobile) ctx.fillText(COPY.handle.toUpperCase(), W * 0.5 - 225 * u, cy + 4 * u);
+      App.StrokeColor(ctx, txt);
+      ctx.beginPath(); ctx.moveTo(W * 0.5 - 210 * u, cy + 20 * u); ctx.lineTo(W * 0.5 + 210 * u, cy + 20 * u); ctx.stroke();
+      this.filled(b.submit, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : create ? COPY.createButton : COPY.saveName, !busy && !!this.roll.submit);
+      if (create) this.drawBack();
+    } else if (this.AccountView === 'delete') {
+      this.heading(COPY.deleteTitle, COPY.deleteLine);
+      const { left, right } = this.halves();
+      for (const h of [left, right]) h.y = cy + 5 * u;
+      this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.deleteCancel);
+      this.filled(right, App.Palette[menu[3]], busy ? COPY.working : COPY.deleteAccount, !busy && !!this.roll.deleteOk);
+    } else if (this.Account) {
+      // SIGNED IN AS <NAME> (the panel title's header type) //
+      App.FillColor(ctx, txt); ctx.textAlign = 'left';
+      ctx.font = App.Metrics.TxtMid; ctx.fillText(COPY.signedInAs.toUpperCase(), margin, cy - 130 * u);
+      ctx.font = App.Metrics.TxtHeader; ctx.fillText((this.Account.handle ?? '').toUpperCase(), margin, cy - 96 * u);
+      App.StrokeColor(ctx, txt);
+      ctx.beginPath(); ctx.moveTo(margin, cy - 84 * u); ctx.lineTo(margin + this.pageW, cy - 84 * u); ctx.stroke();
+      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      this.wordWrap(COPY.signedInLine, margin, cy - 64 * u, 14 * u, this.pageW);
+      this.filled(b.left, App.Palette[busy ? 1 : menu[1]], COPY.addPasskey, !busy && !!this.roll.addPasskey, App.Metrics.TxtMid, 25);
+      this.filled(b.right, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!this.roll.signOut, App.Metrics.TxtMid, 25);
+      this.drawBordered(b.signOutAll, App.Palette[1]);
+      this.drawBordered(b.deleteAccount, App.Palette[1]);
+    } else {
+      // SIGNED OUT //
+      App.FillColor(ctx, txt);
+      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      this.wordWrap(this.noBackend ? COPY.noAccounts : COPY.accountLine, margin, cy - 120 * u, 14 * u, this.pageW);
+      App.StrokeColor(ctx, txt);
+      ctx.beginPath(); ctx.moveTo(margin, cy - 90 * u); ctx.lineTo(margin + this.pageW, cy - 90 * u); ctx.stroke();
+      if (this.Account === undefined && !this.noBackend) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy - 20 * u, 16, true);
+      else if (!this.noBackend) {
+        if (this.googleOn) {
+          this.filled(b.left, App.Palette[busy ? 1 : menu[3]], COPY.passkey, !busy && !!this.roll.passkey, App.Metrics.TxtMid, 25);
+          this.filled(b.right, App.Palette[busy ? 1 : menu[1]], COPY.google, !busy && !!this.roll.google, App.Metrics.TxtMid, 25);
+        } else this.filled(b.full, App.Palette[busy ? 1 : menu[3]], COPY.passkey, !busy && !!this.roll.passkey);
+        App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+        ctx.fillText(COPY.newHere, margin, b.create.textY);
+        this.drawBordered(b.create, txt);
+      }
+    }
+    if (this.AccountMessage) {
+      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      this.wordWrap(this.AccountMessage, margin, cy + (this.AccountView === 'main' ? 90 : 110) * u, 14 * u, this.pageW);
+    }
+  }
+  /** Ask who is signed in (on opening the tab, and after any change). */
+  async refreshAccount(): Promise<void> {
+    const a = this.host.account;
+    if (!a) return;
+    const m = await a.me();
+    this.noBackend = !m;
+    this.googleOn = !!m?.google;
+    this.Account = m?.user ?? null;
+    // A new Google account has no name yet: ask for one (R6).
+    if (this.Account && !this.Account.handle && this.AccountView === 'main') { this.AccountView = 'name'; this.HandleInput.value = ''; }
+    if (!this.Account && this.AccountView === 'name') this.AccountView = 'main';
+    this.settled(); this.showDom();
+  }
+  /** Run an account action: busy meanwhile, the error (not a cancelled passkey dialog) shown after. */
+  private async accountAction(run: () => Promise<void>, then: 'main' | null = 'main'): Promise<boolean> {
+    const a = this.host.account;
+    if (!a || this.AccountBusy) return false;
+    this.AccountBusy = true; this.AccountMessage = ''; this.showDom();
+    try { await run(); if (then) this.AccountView = then; await this.refreshAccount(); return true; }
+    catch (e) { if (!a.cancelled(e)) this.AccountMessage = (e as Error).message || 'That did not work. Try again.'; return false; }
+    finally { this.AccountBusy = false; this.settled(); this.showDom(); }
+  }
+  private async submitHandle(): Promise<void> {
+    const a = this.host.account, h = this.HandleInput.value.trim().toLowerCase();
+    if (!a) return;
+    if (!h) { this.AccountMessage = 'Choose a name first.'; return; }
+    if (this.AccountView === 'create') await this.accountAction(() => a.signUp(h));
+    else if (this.AccountView === 'name') await this.accountAction(() => a.setHandle(h));
+  }
+
   /** v1 SharePanel.WordWrap. */
   private wordWrap(text: string, x: number, y: number, lineHeight: number, fitWidth: number): void {
     const ctx = this.Ctx;
@@ -652,7 +796,23 @@ export class PatchesPanel extends DisplayObject {
     tabs.forEach((t, i) => { r[`tab${i}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) => hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
-    if (this.Tab === 2) {
+    if (this.Tab === 3) {
+      const b = this.accountButtons();
+      if (this.AccountView === 'create' || this.AccountView === 'name') {
+        r.submit = box(b.submit);
+        const { arrowX, arrowY } = this.backArrow();
+        r.accountBack = this.AccountView === 'create' && hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 60 * u);
+      } else if (this.AccountView === 'delete') {
+        const { left, right } = this.halves();
+        for (const h of [left, right]) h.y = cy + 5 * u;
+        r.deleteCancel = box(left); r.deleteOk = box(right);
+      } else if (this.Account) {
+        r.addPasskey = box(b.left); r.signOut = box(b.right); r.signOutAll = pad(b.signOutAll); r.deleteAccount = pad(b.deleteAccount);
+      } else if (this.Account === null && !this.noBackend) {
+        if (this.googleOn) { r.passkey = box(b.left); r.google = box(b.right); } else r.passkey = box(b.full);
+        r.create = pad(b.create);
+      }
+    } else if (this.Tab === 2) {
       const c = this.videoControls(), m = this.videoMain();
       r.shape = box(c.shape); r.length = box(c.length);
       if (this.VideoState === 'ready') r.shareVideo = box(m); else r.make = box(m);
@@ -702,6 +862,14 @@ export class PatchesPanel extends DisplayObject {
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
     if (name === 'shape' || name === 'length') return mid(this.videoControls()[name]);
     if (name === 'make' || name === 'shareVideo') return mid(this.videoMain());
+    {
+      const b = this.accountButtons(), { left, right } = this.halves();
+      const acct: Record<string, { x: number; y: number; w: number; h: number }> = {
+        passkey: this.googleOn ? b.left : b.full, google: b.right, create: b.create, submit: b.submit, addPasskey: b.left, signOut: b.right,
+        signOutAll: b.signOutAll, deleteAccount: b.deleteAccount, deleteCancel: { ...left, y: this.cy + 5 * u }, deleteOk: { ...right, y: this.cy + 5 * u },
+      };
+      if (acct[name]) return mid(acct[name]);
+    }
     const t = /^tab(\d)$/.exec(name);
     if (t) { const tab = this.tabs().tabs[Number(t[1])]; return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
     const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton(), { arrowX, arrowY } = this.backArrow();
@@ -732,7 +900,23 @@ export class PatchesPanel extends DisplayObject {
     this.HitTests(pt);
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
-    for (const i of [0, 1, 2] as Tab[]) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    for (const i of [0, 1, 2, 3] as Tab[]) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    if (this.Tab === 3) {
+      const a = this.host.account;
+      if (!a || this.AccountBusy) return;
+      if (r.passkey) { void this.accountAction(() => a.signIn()); return; }
+      if (r.google) { a.google(); return; }
+      if (r.create) { this.AccountView = 'create'; this.AccountMessage = ''; this.HandleInput.value = ''; this.showDom(); this.HandleInput.focus(); return; }
+      if (r.accountBack) { this.AccountView = 'main'; this.AccountMessage = ''; this.showDom(); return; }
+      if (r.submit) { void this.submitHandle(); return; }
+      if (r.addPasskey) { void this.accountAction(() => a.addPasskey()).then(ok => { if (ok) this.AccountMessage = 'Passkey added.'; }); return; }
+      if (r.signOut) { void this.accountAction(() => a.signOut(false)); return; }
+      if (r.signOutAll) { void this.accountAction(() => a.signOut(true)); return; }
+      if (r.deleteAccount) { this.AccountView = 'delete'; this.AccountMessage = ''; return; }
+      if (r.deleteCancel) { this.AccountView = 'main'; return; }
+      if (r.deleteOk) { void this.accountAction(() => a.deleteAccount()); return; }
+      return;
+    }
     if (this.Tab === 2) {
       const next = <T,>(list: readonly T[], v: T) => list[(list.indexOf(v) + 1) % list.length];
       if (r.shape) { this.chooseVideo({ shape: next(SHAPES, this.Video.shape) }); return; }
@@ -798,7 +982,10 @@ export class PatchesPanel extends DisplayObject {
   selectTab(i: Tab): void {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
     this.Tab = i;
-    for (const j of [0, 1, 2]) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    for (const j of [0, 1, 2, 3]) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    if (i === 3) { if (this.AccountView === 'delete') this.AccountView = 'main'; void this.refreshAccount(); }
+    // OPEN lists the account's patches too: signed in or out since the panel opened, the list has changed.
+    if (i === 1 && this.View === 'list') void this.refresh();
     this.showDom();
   }
 
@@ -841,8 +1028,9 @@ export class PatchesPanel extends DisplayObject {
     if (!this.Title) this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? '');
     this.Open = true; this.shown = true;
     this.Tab = tab; this.View = 'list'; this.Picked = null; this.pending = null;
-    if (tab === 2 && !this.host.video) tab = 0;
-    this.selected = [0, 1, 2].map(i => (i === tab ? 1 : 0));
+    if ((tab === 2 && !this.host.video) || (tab === 3 && !this.host.account)) tab = 0;
+    this.selected = [0, 1, 2, 3].map(i => (i === tab ? 1 : 0));
+    if (tab === 3) void this.refreshAccount();
     this.OffsetY = -App.Height;
     this.OffsetX = -(this.page - 1) * 430 * App.Unit;
     this.Input.value = this.Title;
@@ -884,11 +1072,14 @@ export class PatchesPanel extends DisplayObject {
     const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.OffsetY + App.Height * 0.5;
     this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
     this.UrlContainer.style.top = `${(mid + u * 65) / pr}px`;
+    if (this.HandleContainer) this.HandleContainer.style.top = `${(mid - u * 22) / pr}px`;
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
     this.TitleContainer.style.display = on && this.Tab === 0 ? 'block' : 'none';
+    const handle = on && this.Tab === 3 && (this.AccountView === 'create' || this.AccountView === 'name');
+    if (this.HandleContainer) this.HandleContainer.style.display = handle ? 'block' : 'none';
     this.UrlContainer.style.display = link ? 'block' : 'none';
     if (link && this.UrlInput.value !== link.url) this.UrlInput.value = link.url;  // unchanged: keep the selection
   }
@@ -911,6 +1102,13 @@ export class PatchesPanel extends DisplayObject {
     url.style.height = `${(u * 40) / pr}px`;
     url.style.lineHeight = `${(u * 40) / pr}px`;
     url.style.left = `${App.Width / pr * 0.5 - (u * 200) / pr}px`;
+    // The account name field: the title field's type and height across the page width (ACCOUNT tab).
+    const hf = this.HandleContainer;
+    if (hf) {
+      hf.style.font = App.Metrics.TxtHeaderPR;
+      hf.style.width = `${(u * 420) / pr}px`; hf.style.height = `${(u * 42) / pr}px`; hf.style.lineHeight = `${(u * 42) / pr}px`;
+      hf.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
+    }
     if (!this.Open) this.OffsetY = -App.Height;
     this.showDom();
     this.placeDom();

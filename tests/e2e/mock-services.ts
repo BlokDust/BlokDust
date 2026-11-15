@@ -24,10 +24,13 @@ export function sineWav(freq: number, seconds = 1.5, rate = 44100): Buffer {
   return Buffer.concat([h, data]);
 }
 
-export interface MockServices { url: string; server: Server; requests: { path: string; auth: string | undefined }[]; close(): void }
+export interface MockServices { url: string; server: Server; requests: { path: string; auth: string | undefined }[]; googleAuths: { challenge: string | null; method: string | null; client: string | null }[]; close(): void }
 
 export async function startMockServices(): Promise<MockServices> {
   const requests: MockServices['requests'] = [];
+  const googleAuths: MockServices['googleAuths'] = [];
+  /** Who signs in at the mock consent page next (`GET /google/next?user=`): their subject is google-sub-<user>. */
+  let nextGoogle = 'alice';
   let base = '';
   const sound = (s: typeof MOCK_SOUNDS[number]) => ({
     id: s.id, name: s.name, username: s.username, duration: 1.5,
@@ -46,6 +49,29 @@ export async function startMockServices(): Promise<MockServices> {
       req.on('end', () => send(200, { success: !body.includes('fail') && body.includes('response') }));
       return;
     }
+    // Google's OAuth endpoints (accounts, CHG-0023): the consent page sends the browser straight back with a code; the
+    // token endpoint answers with an ID token for subject `google-sub-<code>` (the code is the user set by /google/next) (unsigned: the Worker reads it from the
+    // token endpoint over TLS and checks issuer, audience and expiry, not a signature). A code ending "-bad" is refused.
+    if (u.pathname === '/google/next') { nextGoogle = u.searchParams.get('user') ?? 'alice'; return send(200, { ok: true }); }
+    if (u.pathname === '/google/auth') {
+      const back = new URL(u.searchParams.get('redirect_uri') ?? '/');
+      back.searchParams.set('code', nextGoogle); back.searchParams.set('state', u.searchParams.get('state') ?? '');
+      googleAuths.push({ challenge: u.searchParams.get('code_challenge'), method: u.searchParams.get('code_challenge_method'), client: u.searchParams.get('client_id') });
+      res.writeHead(302, { location: back.toString() }).end();
+      return;
+    }
+    if (u.pathname === '/google/token' && req.method === 'POST') {
+      let body = '';
+      req.on('data', c => (body += c));
+      req.on('end', () => {
+        const f = new URLSearchParams(body), code = f.get('code') ?? '';
+        if (code.endsWith('-bad') || !f.get('code_verifier')) return send(400, { error: 'invalid_grant' });
+        const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
+        const id = `${b64({ alg: 'RS256' })}.${b64({ iss: 'https://accounts.google.com', aud: 'test-google-client', sub: `google-sub-${code}`, exp: Math.floor(Date.now() / 1000) + 600 })}.sig`;
+        send(200, { access_token: 'at', token_type: 'Bearer', expires_in: 600, id_token: id });
+      });
+      return;
+    }
     if (u.pathname.startsWith('/apiv2/') && req.headers.authorization !== 'Token test-freesound-key') return send(401, { detail: 'bad token' });
     if (u.pathname === '/apiv2/search/text/') {
       const q = (u.searchParams.get('query') ?? '').toLowerCase();
@@ -62,5 +88,5 @@ export async function startMockServices(): Promise<MockServices> {
   });
   await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
-  return { url: base, server, requests, close: () => server.close() };
+  return { url: base, server, requests, googleAuths, close: () => server.close() };
 }

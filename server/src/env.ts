@@ -1,4 +1,4 @@
-// Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN (`pnpm bd server secret`).
+// Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET (`pnpm bd server secret`).
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
@@ -18,6 +18,13 @@ export interface Env {
   /** Overridable for tests (a local mock); defaults to Cloudflare's siteverify. */
   TURNSTILE_VERIFY_URL?: string;
   FREESOUND_TOKEN?: string;
+  /** Sign in with Google (SPEC-SHARING-ACCOUNTS R2a): OAuth client from Google Cloud; the secret is a Worker secret. */
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  /** Overridable for tests (a local mock); default to Google's endpoints and issuer. */
+  GOOGLE_AUTH_URL?: string;
+  GOOGLE_TOKEN_URL?: string;
+  GOOGLE_ISSUER?: string;
   /** Overridable for tests (a local mock); defaults to https://freesound.org/apiv2. */
   FREESOUND_API?: string;
 }

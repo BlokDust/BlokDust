@@ -2,6 +2,8 @@
 // "overwrite": only with the edit token the creator's browser keeps, as v1's SessionId), load, delete, thumbnails.
 import { LIMITS, type Env } from './env.ts';
 import { HttpError, b64urlBytes, json, publicBase, sameDigest, sha256Hex } from './http.ts';
+import { verifyTurnstile } from './turnstile.ts';
+import { currentUser, sameOrigin } from './auth/session.ts';
 
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** Share ids: 10 base62 chars that never start with "p" (Phase 1 `?c=p…` links carry the patch itself, R5b). */
@@ -56,30 +58,12 @@ function validThumb(t: unknown): Uint8Array | null {
   return bytes;
 }
 
-/** Turnstile (SHARING-0001): every save must carry a token Cloudflare accepts. Fails closed without a secret. */
-async function verifyTurnstile(env: Env, req: Request, token: unknown): Promise<void> {
-  if (!env.TURNSTILE_SECRET) throw new HttpError(503, 'saving is not configured');
-  if (typeof token !== 'string' || !token) throw new HttpError(403, 'bot check missing');
-  const form = new FormData();
-  form.append('secret', env.TURNSTILE_SECRET);
-  form.append('response', token);
-  const ip = req.headers.get('cf-connecting-ip');
-  if (ip) form.append('remoteip', ip);
-  const url = env.TURNSTILE_VERIFY_URL || 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-  let ok = false;
-  try {
-    const r = await fetch(url, { method: 'POST', body: form });
-    ok = r.ok && ((await r.json()) as { success?: boolean }).success === true;
-  } catch { throw new HttpError(503, 'bot check unavailable'); }
-  if (!ok) throw new HttpError(403, 'bot check failed');
-}
-
 function shareUrl(env: Env, req: Request, id: string, title: string): string {
   const t = title ? `&t=${encodeURI(title)}` : '';
   return `${publicBase(env, req)}/?c=${id}${t}`;
 }
 
-interface Row { id: string; title: string; parent: string | null; edit_hash: string; rev: number; created: number; updated: number; deleted: number }
+interface Row { id: string; title: string; parent: string | null; edit_hash: string; rev: number; created: number; updated: number; deleted: number; owner_id: string | null }
 
 async function row(env: Env, id: string): Promise<Row | null> {
   if (!ID_RE.test(id)) return null;
@@ -87,10 +71,17 @@ async function row(env: Env, id: string): Promise<Row | null> {
   return r && !r.deleted ? r : null;
 }
 
-async function authorise(req: Request, r: Row): Promise<void> {
+/** The patch's edit token (the browser that made it), or the account that owns it, signed in on this site
+ * (SPEC-SHARING-ACCOUNTS R9: an account's patches can be saved from any device). */
+async function authorise(env: Env, req: Request, r: Row): Promise<void> {
   const auth = req.headers.get('authorization') ?? '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  if (!token || !sameDigest(await sha256Hex(token), r.edit_hash)) throw new HttpError(403, 'not your patch (missing or wrong edit token)');
+  if (token && sameDigest(await sha256Hex(token), r.edit_hash)) return;
+  if (r.owner_id) {
+    const u = await currentUser(env, req);
+    if (u?.id === r.owner_id) { sameOrigin(env, req); return; }
+  }
+  throw new HttpError(403, 'not your patch (missing or wrong edit token)');
 }
 
 /** POST /api/patches: a new share id (v1 "generate share link" and "create new"; `parent` records the remix). */
@@ -103,13 +94,14 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
     parent = body.parent;
   }
   await verifyTurnstile(env, req, body.turnstile);
+  const owner = (await currentUser(env, req))?.id ?? null;  // signed in: the account's patch (R9)
   const editToken = b64urlBytes(24), editHash = await sha256Hex(editToken), now = Date.now();
   for (let attempt = 0; attempt < 5; attempt++) {
     const id = newId();
     try {
       await env.DB.batch([
-        env.DB.prepare('INSERT INTO patches (id, title, parent, edit_hash, rev, created, updated) VALUES (?, ?, ?, ?, 1, ?, ?)')
-          .bind(id, title, parent, editHash, now, now),
+        env.DB.prepare('INSERT INTO patches (id, title, parent, edit_hash, rev, created, updated, owner_id) VALUES (?, ?, ?, ?, 1, ?, ?, ?)')
+          .bind(id, title, parent, editHash, now, now, owner),
         env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, 1, ?, ?, ?, ?)')
           .bind(id, patch, title, thumb, now),
       ]);
@@ -125,7 +117,7 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
 export async function savePatch(env: Env, req: Request, id: string): Promise<Response> {
   const r = await row(env, id);
   if (!r) throw new HttpError(404, 'no such patch');
-  await authorise(req, r);
+  await authorise(env, req, r);
   const body = await readBody(req);
   const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb);
   await verifyTurnstile(env, req, body.turnstile);
@@ -139,7 +131,8 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
   return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title) });
 }
 
-export interface Loaded { id: string; rev: number; title: string; parent: string | null; created: number; updated: number; patch: unknown; hasThumb: boolean }
+export interface Loaded { id: string; rev: number; title: string; parent: string | null; created: number; updated: number; patch: unknown; hasThumb: boolean;
+  /** The owning account's handle (SPEC-SHARING-ACCOUNTS R12), when it has one. */ by: string | null }
 
 export async function loadPatch(env: Env, id: string): Promise<Loaded | null> {
   const r = await row(env, id);
@@ -147,14 +140,18 @@ export async function loadPatch(env: Env, id: string): Promise<Loaded | null> {
   const v = await env.DB.prepare('SELECT json, title, thumb IS NOT NULL AS has_thumb FROM revisions WHERE patch_id = ? AND rev = ?')
     .bind(id, r.rev).first<{ json: string; title: string; has_thumb: number }>();
   if (!v) return null;
-  return { id, rev: r.rev, title: v.title, parent: r.parent, created: r.created, updated: r.updated, patch: JSON.parse(v.json), hasThumb: !!v.has_thumb };
+  const by = r.owner_id ? (await env.DB.prepare('SELECT handle FROM users WHERE id = ?').bind(r.owner_id).first<{ handle: string | null }>())?.handle ?? null : null;
+  return { id, rev: r.rev, title: v.title, parent: r.parent, created: r.created, updated: r.updated, patch: JSON.parse(v.json), hasThumb: !!v.has_thumb, by };
 }
 
 /** GET /api/patches/:id: the latest revision. */
-export async function getPatch(env: Env, id: string): Promise<Response> {
+export async function getPatch(env: Env, req: Request, id: string): Promise<Response> {
   const p = await loadPatch(env, id);
   if (!p) throw new HttpError(404, 'no such patch');
-  return json(p, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*' });
+  // `mine`: the signed-in account owns it, so this device may save over it without the edit token (R9).
+  const owner = (await env.DB.prepare('SELECT owner_id FROM patches WHERE id = ?').bind(id).first<{ owner_id: string | null }>())?.owner_id;
+  const mine = !!owner && (await currentUser(env, req))?.id === owner;
+  return json({ ...p, mine }, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*', vary: 'cookie' });
 }
 
 /** GET /api/patches/:id/thumb.png[?rev=n]: the PNG saved with that revision (latest by default). */
@@ -175,7 +172,7 @@ export async function getThumb(env: Env, id: string, revParam: string | null): P
 export async function deletePatch(env: Env, req: Request, id: string): Promise<Response> {
   const r = await row(env, id);
   if (!r) throw new HttpError(404, 'no such patch');
-  await authorise(req, r);
+  await authorise(env, req, r);
   await env.DB.batch([
     env.DB.prepare('DELETE FROM revisions WHERE patch_id = ?').bind(id),
     env.DB.prepare('UPDATE patches SET deleted = 1, updated = ? WHERE id = ?').bind(Date.now(), id),

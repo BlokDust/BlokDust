@@ -20,13 +20,20 @@ export function serverConfig(): Promise<ServerConfig | null> {
 export const isServerId = (c: string) => /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(c);
 
 export interface Saved { id: string; rev: number; url: string; parent: string | null }
-export interface LoadedPatch { id: string; rev: number; title: string; parent: string | null; updated: number; patch: Patch }
+export interface LoadedPatch { id: string; rev: number; title: string; parent: string | null; updated: number; patch: Patch;
+  /** The signed-in account owns it (SPEC-SHARING-ACCOUNTS R9). */ mine?: boolean; /** Its account's handle. */ by?: string | null }
 
 function tokens(): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(TOKENS_KEY) ?? '{}') as Record<string, string>; } catch { return {}; }
 }
 /** v1 App.SessionId: the edit token for this composition, if this browser created it. */
 export const editToken = (id: string | null): string | null => (id ? tokens()[id] ?? null : null);
+/** Patches the signed-in account owns (SPEC-SHARING-ACCOUNTS R9): saved over from any device, without a token. */
+export const accountOwned = new Set<string>();
+/** This browser may save over `id`: it made it (edit token), or the signed-in account owns it. */
+export const canOverwrite = (id: string | null): boolean => !!id && (!!editToken(id) || accountOwned.has(id));
+/** Every edit token this browser holds (claimed by an account on sign-in, R9). */
+export const allEditTokens = (): { id: string; token: string }[] => Object.entries(tokens()).map(([id, token]) => ({ id, token }));
 function keepToken(id: string, token: string): void {
   try { localStorage.setItem(TOKENS_KEY, JSON.stringify({ ...tokens(), [id]: token })); } catch { /* private mode: overwrite unavailable later */ }
 }
@@ -47,7 +54,7 @@ function loadTurnstile(): Promise<TurnstileApi> {
   });
   return turnstileLoad;
 }
-async function turnstileToken(siteKey: string): Promise<string> {
+export async function turnstileToken(siteKey: string): Promise<string> {
   const t = await loadTurnstile();
   const host = document.createElement('div');
   // Invisible widget; if Cloudflare ever needs an interaction it shows its own small box here.
@@ -85,7 +92,7 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
   if (!cfg?.saving) return null;
   const turnstile = await turnstileToken(cfg.turnstileSiteKey);
   const token = editToken(currentId);
-  if (mode === 'save' && currentId && token) {
+  if (mode === 'save' && currentId && canOverwrite(currentId)) {
     try {
       return await call<Saved>('PUT', `patches/${currentId}`, { ...input, turnstile }, token);
     } catch (e) {
@@ -93,7 +100,7 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
       // Not ours any more (token lost or patch deleted): save as new, as v1 did when it had no SessionId.
     }
   }
-  const fresh = mode === 'save' && currentId && token ? await turnstileToken(cfg.turnstileSiteKey) : turnstile;
+  const fresh = mode === 'save' && currentId && canOverwrite(currentId) ? await turnstileToken(cfg.turnstileSiteKey) : turnstile;
   const r = await call<Saved & { editToken: string }>('POST', 'patches', { ...input, parent: currentId ?? undefined, turnstile: fresh });
   keepToken(r.id, r.editToken);
   return { id: r.id, rev: r.rev, url: r.url, parent: r.parent };
@@ -101,5 +108,9 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
 
 /** A shared patch by id (latest revision); null if it does not exist or there is no backend. */
 export async function load(id: string): Promise<LoadedPatch | null> {
-  try { return await call<LoadedPatch>('GET', `patches/${id}`); } catch { return null; }
+  try {
+    const p = await call<LoadedPatch>('GET', `patches/${id}`);
+    if (p.mine) accountOwned.add(id);
+    return p;
+  } catch { return null; }
 }

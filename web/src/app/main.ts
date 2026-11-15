@@ -15,7 +15,8 @@ import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts'
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
 import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
-import { editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
+import { accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
+import * as account from '../account/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
 import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
@@ -92,6 +93,11 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
   return { patch: loadLocal() ?? (demo as Patch), view: {}, id: loadSession().id };
 }
 
+/** v1 App.SessionId: the right to save over a composition: this browser's edit token, or, when the signed-in account
+ * owns it (SPEC-SHARING-ACCOUNTS R9), a marker (the cookie does the rest). */
+const accountOwnedClear = () => accountOwned.clear();
+const sessionFor = (id: string | null): string | null => editToken(id) ?? (canOverwrite(id) ? 'account' : null);
+
 async function main() {
   const params = new URLSearchParams(location.search);
   const juce = (window as unknown as { __JUCE__?: { backend: JuceBackend } }).__JUCE__?.backend;
@@ -111,7 +117,7 @@ async function main() {
   if (!juce && embedId) engineModule().catch(() => { /* reported when PLAY needs it */ });
   const start = await initialPatch(params, embedId, !!juce);
   // v1 App.CompositionId / App.SessionId: the open composition and (if this browser made it) the right to overwrite it.
-  App.CompositionId = start.id; App.SessionId = editToken(start.id);
+  App.CompositionId = start.id; App.SessionId = sessionFor(start.id);
   let session = { id: start.id, dirty: false };
   // v1's Share panel reads the title from `&t=` (GetTitleFromUrl): put a saved title there when the link had none.
   if (start.title && !params.has('t') && !embedId) history.replaceState(null, '', `${location.pathname}?c=${start.id}&t=${encodeURI(start.title)}`);
@@ -141,6 +147,8 @@ async function main() {
   /** The patch tempo (SIMULATION-0003): saved only once set, so older patches stay byte-identical. */
   let tempo: number | undefined;
   let engine: EngineNode | null = null;
+  /** Run once START has started audio and the stage shows (panels opened before it never slide in). */
+  const afterStart: (() => void)[] = [];
   /** Commands to the engine (the plugin: to its processor), as given. */
   let sendRaw = (cmds: Command[]) => engine?.send(cmds);
   /**
@@ -362,7 +370,7 @@ async function main() {
         const thumb = stage.thumbnail(THUMB.width, THUMB.height).toDataURL('image/png').split(',')[1];
         const r = await saveShared(mode, App.CompositionId, { patch, title, thumb });
         if (r) {
-          App.CompositionId = r.id; App.SessionId = editToken(r.id);
+          App.CompositionId = r.id; App.SessionId = sessionFor(r.id);
           session = { id: r.id, dirty: false }; saveSession(session); saveLocal(patch);
           return r.id;
         }
@@ -389,7 +397,8 @@ async function main() {
       changed();
     },
     // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files and built-in presets ----
-    listPatches: async () => [...(juce ? await nativePatches() : myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))),
+    listPatches: async () => [...(juce ? [] : await accountItems()),
+      ...(juce ? await nativePatches() : myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))),
       ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))],
     savePatch: title => savePatchFile(title),
     openPatch: (item, mode) => void openPatchItem(item.key, mode),
@@ -427,6 +436,18 @@ async function main() {
       },
       warning: () => shareWarning(),
     },
+    // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
+    account: juce || embedId ? null : {
+      me: () => account.me(),
+      signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
+      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); },
+      google: () => account.signInWithGoogle(),
+      addPasskey: () => account.addPasskey(),
+      setHandle: async h => { await account.setHandle(h); },
+      signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); },
+      deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
+      cancelled: e => account.cancelled(e),
+    },
     // Video export (CHG-0022): web only (R16).
     video: juce || embedId ? null : {
       make: (choice, progress, signal) => makeVideoFile(choice, progress, signal),
@@ -437,6 +458,12 @@ async function main() {
       },
     },
   });
+  /** After signing in or out: whether this device may save over the open composition (R9). */
+  function refreshOwnership(out = false): void {
+    if (out) accountOwnedClear();
+    App.SessionId = sessionFor(App.CompositionId);
+    if (shareLink) shareLink = { ...shareLink, owned: !!App.SessionId };
+  }
   // ---- video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT) ----
   const videoTitle = () => scene.PatchesPanel.Title.trim() || 'Untitled';
   const videoLink = () => shareLink?.url ?? PUBLIC_SITE;
@@ -892,7 +919,27 @@ async function main() {
     setBaseline(); keepMine(title);
     return true;
   }
+  /** Signed in: the account's patches (R8), as OPEN rows. */
+  async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
+    if (embedId) return [];
+    try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: `Your account \u00b7 ${savedOn(p.updated)}`, key: `acct:${p.id}` })); }
+    catch { return []; }  // signed out, or no backend
+  }
   async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<void> {
+    if (key.startsWith('acct:')) {
+      const id = key.slice(5), r = await loadShared(id);
+      if (!r) return;
+      usePatch(r.patch, r.title, mode);
+      if (mode === 'open') {  // it is the open composition now, saved over from this device (R9)
+        App.CompositionId = id; App.SessionId = sessionFor(id);
+        session = { id, dirty: false }; saveSession(session);
+        const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
+        history.replaceState(null, '', url);
+        shareLink = { url, owned: true, at: contentOf(toPatch()) };
+        setBaseline();
+      }
+      return;
+    }
     if (key.startsWith('preset:')) {
       const p = PRESETS.find(x => `preset:${x.file}` === key), patch = p && parsePatchFile(p.text);
       if (p && patch) usePatch(patch, p.name, mode);
@@ -1444,6 +1491,16 @@ async function main() {
       history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
       requestAnimationFrame(() => scene.PatchesPanel.OpenPanel(0));
     }
+    // Back from Google sign-in (CHG-0023): claim this browser's patches (R9) and show the account (a new one picks
+    // its name). The flag is dropped so a reload doesn't do it again.
+    if (params.has('account') && !juce && !embedId) {
+      params.delete('account');
+      history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
+      void account.claimMine().then(() => refreshOwnership()).catch(() => {});
+      // After START: opened before it, the panel stayed above the screen (its slide never ran), so the name step for
+      // a new account could not be reached (tests/e2e/accounts.ts 'google').
+      afterStart.push(() => scene.PatchesPanel.OpenPanel(3));
+    }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });
   app.ticker.add(() => {
@@ -1670,6 +1727,7 @@ async function main() {
     keepAwake(ctx);
     probe.started = true;
     ready = true; reveal();
+    for (const run of afterStart.splice(0)) requestAnimationFrame(run);
   }
   /** iOS interrupts the AudioContext when another app plays (a video, a podcast) and leaves it so when the page comes
    * back: the engine runs in it, so sound, connections and particles all stood still (owner, 2026-11-14). Coming back to

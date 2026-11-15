@@ -5,6 +5,10 @@ import { HttpError, assetBase, basePath, errorResponse, json, limit, prefix } fr
 import { createPatch, deletePatch, getPatch, getThumb, savePatch } from './patches.ts';
 import { oembed, page } from './pages.ts';
 import { search, sound } from './freesound.ts';
+import { claim, deleteAccount, logout, me, myPatches, setHandle } from './auth/account.ts';
+import { googleCallback, googleStart } from './auth/google.ts';
+import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
+import { sameOrigin } from './auth/session.ts';
 
 async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
@@ -53,10 +57,28 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (thumb && m === 'GET') return getThumb(env, thumb[1], url.searchParams.get('rev'));
   const one = path.match(/^\/api\/patches\/([^/]+)$/);
   if (one) {
-    if (m === 'GET') return getPatch(env, one[1]);
+    if (m === 'GET') return getPatch(env, req, one[1]);
     if (m === 'PUT') { await limit(env.SAVE_LIMIT, req, 'save'); return savePatch(env, req, one[1]); }
     if (m === 'DELETE') return deletePatch(env, req, one[1]);
     throw new HttpError(405, 'method not allowed');
+  }
+  // ---- accounts (SPEC-SHARING-ACCOUNTS) ----
+  if (path === '/api/me' && m === 'GET') return me(env, req);
+  if (path === '/api/auth/google/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return googleStart(env, req, url); }
+  if (path === '/api/auth/google/callback' && m === 'GET') return googleCallback(env, req, url);
+  if (path.startsWith('/api/auth/') || path.startsWith('/api/me')) {
+    if (m !== 'GET') sameOrigin(env, req);  // R5: cookie-authenticated changes only from this site
+    if (path.startsWith('/api/auth/passkey/')) await limit(env.SAVE_LIMIT, req, 'auth');
+    if (path === '/api/auth/passkey/register/options' && m === 'POST') return registerOptions(env, req);
+    if (path === '/api/auth/passkey/register/verify' && m === 'POST') return registerVerify(env, req);
+    if (path === '/api/auth/passkey/login/options' && m === 'POST') return loginOptions(env, req);
+    if (path === '/api/auth/passkey/login/verify' && m === 'POST') return loginVerify(env, req);
+    if (path === '/api/auth/logout' && m === 'POST') return logout(env, req);
+    if (path === '/api/me' && m === 'DELETE') return deleteAccount(env, req);
+    if (path === '/api/me/handle' && m === 'PUT') return setHandle(env, req);
+    if (path === '/api/me/claim' && m === 'POST') return claim(env, req);
+    if (path === '/api/me/patches' && m === 'GET') return myPatches(env, req);
+    throw new HttpError(404, 'no such endpoint');
   }
   if (path.startsWith('/api/freesound/')) await limit(env.SEARCH_LIMIT, req, 'freesound');
   if (path === '/api/freesound/search' && m === 'GET') return search(env, url, ctx);

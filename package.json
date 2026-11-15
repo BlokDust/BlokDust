@@ -29,6 +29,7 @@
     "test:new-blocks": "node tests/e2e/new-blocks.ts",
     "test:sharing": "node tests/e2e/sharing.ts",
     "test:video": "node tests/e2e/video.ts",
+    "test:accounts": "node tests/e2e/accounts.ts",
     "test:sharing:base": "node tests/e2e/sharing.ts --base",
     "server:typecheck": "pnpm -C server typecheck",
     "test:mpe": "node tests/mpe/run.ts"

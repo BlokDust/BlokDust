@@ -21,7 +21,8 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **R3.** `POST /api/patches` (v1 SAVE_AS: Generate share link, Create new) MUST create a new id and return a secret edit
   token. Only the token's SHA-256 is stored. `parent` records the patch it came from (a remix).
 - **R4.** `PUT /api/patches/:id` (v1 SAVE: Overwrite) MUST require `Authorization: Bearer <edit token>` and adds a
-  revision under the same id. `DELETE` needs the token too and removes every revision. Without the token: 403.
+  revision under the same id. `DELETE` needs the token too and removes every revision. Without the token: 403, unless
+  the request is signed in to the account that owns the patch (SPEC-SHARING-ACCOUNTS R9).
 - **R5.** Every save (R3, R4) MUST carry a Turnstile token that Cloudflare's siteverify accepts. Without a configured
   secret, saving is refused (it fails closed).
 - **R5a.** Per-IP limits (Workers rate limiting): 20 saves a minute, and 60 Freesound lookups a minute (one shared API
