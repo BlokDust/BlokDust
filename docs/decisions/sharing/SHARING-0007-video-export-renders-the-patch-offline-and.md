@@ -1,6 +1,6 @@
 ---
 id: SHARING-0007
-title: Video export replays the session offline and encodes in the browser
+title: Video export renders the patch offline and encodes in the browser
 status: proposed
 date: 2026-11-15
 domain: sharing
@@ -8,7 +8,7 @@ tags: [sharing, video, determinism, cost]
 supersedes: []
 superseded_by:
 ---
-# SHARING-0007: Video export replays the session offline and encodes in the browser
+# SHARING-0007: Video export renders the patch offline and encodes in the browser
 
 ## Context
 The owner wants a button that turns a patch into a video (sound and visuals) that can be shared to Instagram, TikTok
@@ -23,10 +23,9 @@ Instagram's and TikTok's posting APIs need app review, business accounts, or a p
 means hosting video, which costs money and goes against the spirit of DATA-0005.
 
 ## Decision
-- **Replay, don't record.** The AudioWorklet logs every command and sample attachment with the frame at which it applied
-  it. A video of "what I just played" re-runs that log from the start in a fresh WASM engine on the main thread, faster
-  than real time, and draws a frame every 1/30 s from the engine's own snapshot. "From the start" renders the patch as
-  it is now with an empty log. The audio in the video is sample-for-sample what the worklet played.
+- **Render, don't record.** The video plays the patch from the beginning, as when it has just loaded, in a fresh WASM
+  engine on the main thread, faster than real time, and draws a frame every 1/30 s from the engine's own snapshot.
+  The same patch always gives the same video.
 - **Drawn by the stage's own code.** The video frames are drawn by the same Canvas2D functions as the live stage
   (connections, blocks, beams, overlays, particles, labels), framed on the blocks, without the v1 menus.
 - **Encoded in the browser** with [Mediabunny](https://github.com/Vanilagy/mediabunny) (MPL-2.0, actively maintained,
@@ -37,9 +36,11 @@ means hosting video, which costs money and goes against the spirit of DATA-0005.
 
 ## Consequences
 - The video always matches what was heard, at full frame rate, on any device; slow devices just take longer to make it.
-- The worklet keeps a log for the whole session (small: commands, not audio). Very long sessions take longer to replay;
-  the log has a cap, past which only "from the start" is offered.
-- Live input (Microphone, Audio In) is not in the log; a session that used it says so instead of making a wrong video.
+- What the user does while playing (keys, drags) is not in the video. A first version also offered "just played": the
+  worklet logged every command with the frame it applied it, and a replay of that log was bit-identical to what was
+  heard (tested). The owner dropped it in review (2026-11-15) for simplicity; this ADR's approach supports bringing it
+  back.
+- Live input (Microphone, Audio In) is silent in the video.
 - Mediabunny and the AAC encoder are new dependencies (MPL-2.0 is compatible with AGPL-3.0-or-later). They are loaded
   on demand, so the app's start-up bundle does not grow.
 - The plugins do not get the feature yet (the host records audio; the editor has no share sheet).

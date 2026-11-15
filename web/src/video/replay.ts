@@ -1,22 +1,23 @@
-// Replays a session in a fresh WASM engine (SPEC-SHARING-VIDEO-EXPORT R1–R2, SHARING-0007): the commands and samples
-// the AudioWorklet logged, each given to the engine before the quantum it was given before live, in the same 128-frame
-// quanta. Determinism (SIMULATION-0001) makes the audio sample-for-sample what was heard. No DOM: runs in Node too.
+// Plays a patch in a fresh WASM engine, offline (SPEC-SHARING-VIDEO-EXPORT R1–R2, SHARING-0007): timed commands and
+// samples, each given to the engine before the 128-frame quantum it is timed for, as the AudioWorklet does. Determinism
+// (SIMULATION-0001) makes the same patch give the same audio and particles every time. No DOM: runs in Node too.
 import { CommandType, WasmEngine, type Command } from '../engine/wasmEngine.ts';
 import { BLOCKS, BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
-import type { LogEntry } from '../audio/protocol.ts';
 import type { StageBlock } from '../stage/drawWorld.ts';
 import { starPos } from '../stage/starPos.ts';
 
 /** The AudioWorklet's render quantum: the worklet hands the engine its commands only between quanta. */
 export const QUANTUM = 128;
 
+/** What the engine is given before the quantum that starts at `frame`: commands, or sample attachment `sample`. */
+export type LogEntry = { frame: number; commands: Command[] } | { frame: number; sample: number };
 export interface ReplaySample { id: number; stage: number; left: Float32Array; right?: Float32Array; sampleRate: number }
 export interface ReplaySource {
   sampleRate: number;
   seed: number;
   /** In frame order. */
   entries: LogEntry[];
-  /** The audio of logged sample attachment `seq`. */
+  /** The audio of sample attachment `seq`. */
   sample(seq: number): ReplaySample | undefined;
 }
 
@@ -76,7 +77,7 @@ export class Replay {
     this.engine = WasmEngine.fromModule(module, src.sampleRate, src.seed);
   }
 
-  /** Give the engine what the log says it was given before the quantum at `this.frame`. */
+  /** Give the engine what it is given before the quantum at `this.frame`. */
   private feed(): void {
     const es = this.src.entries;
     while (this.next < es.length && es[this.next].frame <= this.frame) {

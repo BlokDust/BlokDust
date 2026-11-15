@@ -14,19 +14,18 @@ of the patch (sound and particles) and hands it to the share sheet lets people p
 points back to BlokDust (owner, 2026-11-15: first of video export, user login, gallery).
 
 ## What changes
-- The AudioWorklet logs what it applied and when (SPEC-SHARING-VIDEO-EXPORT R1–R4).
-- An offline renderer replays the log (or the patch from its start) in a fresh WASM engine and draws each frame with
-  the stage's own drawing code, moved into `web/src/stage/drawWorld.ts` (R5–R9, R12).
+- An offline renderer plays the patch from its start in a fresh WASM engine and draws each frame with the stage's own
+  drawing code, moved into `web/src/stage/drawWorld.ts` (SPEC-SHARING-VIDEO-EXPORT R1–R9, R12).
 - Encoding to MP4 (H.264 + AAC) with Mediabunny, loaded on demand (R10–R11, SHARING-0007).
 - Share sheet or download (R13–R14).
 - Patches panel: a VIDEO tab (R15–R16).
 
 ## Out of scope
-- Plugins (R16), live input in replays (R3), posting through Instagram's or TikTok's APIs (SHARING-0007).
+- Plugins (R16), live input, what the user plays by hand, posting through Instagram's or TikTok's APIs (SHARING-0007).
 
 ## Acceptance
-- `pnpm test:video` passes: replay ≡ worklet audio; MP4 has H.264 + AAC at the chosen size, 30 fps, the chosen length
-  plus 3 s; the panel makes and offers the file.
+- `pnpm test:video` passes: MP4 has H.264 + AAC at the chosen size, 30 fps, the chosen length plus 3 s, sound and
+  moving particles; frames repeat; the panel makes the file and hands it to the share sheet (or downloads it).
 - `pnpm web:typecheck && pnpm web:build && pnpm test:web`, `pnpm test:ui-regressions`, `pnpm bd visual diff --full` pass.
 - Owner check on desktop and phone: a video shared to Instagram or TikTok.
 
@@ -35,8 +34,14 @@ points back to BlokDust (owner, 2026-11-15: first of video export, user login, g
 - Safari's AAC and H.264 encoders through WebCodecs (Safari 26 has them; older Safari gets the WASM AAC encoder).
 
 ## As built (2026-11-15)
-- Replay is bit-identical to the worklet (`replay-matches-worklet`: blocks dragged during the capture).
-- Speed (Chrome, M4): an 18 s square video in ~2.5 s; a 12 s portrait JUST PLAYED in ~4.5 s.
+- Speed (Chrome, M4): an 18 s portrait video in ~5 s, a 33 s square one in ~4.5 s.
 - Playwright's Chromium (no native AAC) uses the WASM AAC encoder; the same tests pass with `--chromium`.
 - The end card has no watermark during the video itself (spec open question).
 - Labels are drawn as they are when the video is made; the theme is the current one.
+
+## Owner review 1 (2026-11-15)
+- SHAPE is one control that cycles portrait → wide → square, drawn as Instagram's frame icons; LENGTH is the seconds,
+  underlined, cycling 15 (default) → 30 → 60.
+- No WHAT: the video always starts from the beginning, as the patch plays when it has just loaded. "Just played" (a
+  replay of the session from a worklet log, proven bit-identical) was removed, with the log.
+- No DOWNLOAD: SHARE VIDEO only (it downloads where the browser can't share files).

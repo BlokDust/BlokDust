@@ -9,23 +9,20 @@ updated: 2026-11-15
 # Video export
 
 ## Purpose
-Turn what the user played, or the patch from its start, into an MP4 video they can share to Instagram, TikTok and
-other apps from the web app, without any server (SHARING-0007).
+Turn the patch, played from the beginning as when it has just loaded, into an MP4 video the user can share to
+Instagram, TikTok and other apps from the web app, without any server (SHARING-0007).
 
 ## Requirements
-**Session log** (`web/src/audio/processor.ts`, `web/src/video/sessionLog.ts`)
-- **R1.** The AudioWorklet MUST log each batch of commands and each sample attachment with the engine frame at which it
-  applied it (the start of the next 128-frame quantum), from the moment the engine is built. The commands the engine
-  is built with are frame 0.
-- **R2.** Replaying the log in a fresh `WasmEngine` with the same seed and sample rate, in 128-frame quanta, MUST give
-  the same audio, sample for sample, as the worklet played.
-- **R3.** The log MUST record when live input (Microphone, Audio In) reached the engine. A replay that covers such a
-  stretch is refused with a message ("live input can't be replayed").
-- **R4.** The log is capped (500 000 commands). Past the cap, JUST PLAYED is not offered; FROM START still is.
+**Playing the patch** (`web/src/video/replay.ts`, `sources.ts`)
+- **R1.** The video plays the patch as it is now, from a fresh WASM engine built as the worklet is at START (same
+  seed and sample rate), its samples attached after the first quantum, in 128-frame quanta.
+- **R2.** The same patch, length and shape MUST give the same audio and the same frames (determinism,
+  SIMULATION-0001).
+- *(Owner review 2026-11-15: "just played", a replay of the user's session from a log the worklet kept, was built and
+  then dropped: videos always start from the beginning.)*
 
 **Rendering** (`web/src/video/`)
-- **R5.** JUST PLAYED renders the last 15, 30 or 60 seconds of the session (or all of it, if shorter); FROM START
-  renders the patch as it is now from a fresh engine for that long.
+- **R5.** The video is 15 (the default), 30 or 60 seconds long, then the end card.
 - **R6.** Each video frame (30 fps) MUST show the engine's state at the quantum boundary nearest to that frame's time:
   connections, blocks, beams, overlays, particles and labels, drawn by the same code as the live stage
   (`web/src/stage/drawWorld.ts`), in the current theme, without the v1 menus or panels.
@@ -37,21 +34,22 @@ other apps from the web app, without any server (SHARING-0007).
   encode AAC, the WASM AAC encoder is used. Where it cannot encode H.264, the panel says so.
 - **R11.** Rendering MUST NOT stop the live audio or the page: work is done in slices that yield to the page, and shows
   its progress. It can be cancelled.
-- **R12.** The same log, length and shape MUST give the same frames (the beam jitter uses a seeded random number).
+- **R12.** The beam jitter uses a seeded random number, so frames repeat (R2).
 
 **Sharing** (`web/src/video/share.ts`)
 - **R13.** SHARE VIDEO opens the system share sheet with the file (Web Share API, `navigator.canShare({ files })`), with
-  the title and the link as text. Where files can't be shared, it is offered as DOWNLOAD only.
+  the title and the link as text. Where files can't be shared (most desktop browsers), it downloads the file.
 - **R14.** Nothing is uploaded. The video exists only on the user's device (DATA-0005).
 
 **Panel** (`web/src/v1ui/patches.ts`)
-- **R15.** The Patches panel has a third tab, VIDEO, drawn only with v1 panel pieces: SHAPE (three buttons), LENGTH
-  (three buttons), WHAT (JUST PLAYED / FROM START), MAKE VIDEO, then progress, then SHARE VIDEO and DOWNLOAD.
+- **R15.** The Patches panel has a third tab, VIDEO (owner review 2026-11-15): SHAPE, a frame icon in the video's
+  shape (as Instagram's crop icons) that cycles PORTRAIT → WIDE → SQUARE when pressed; LENGTH, its seconds underlined,
+  cycling 15 → 30 → 60; MAKE VIDEO, then progress (CANCEL stops it at once), then SHARE VIDEO.
 - **R16.** The plugin does not show the VIDEO tab.
 
 ## Scenarios
-- **S1.** Given a patch played for 40 s with blocks moved and keys pressed, when the user makes a 30 s JUST PLAYED
-  video, then its audio equals the worklet's output from 10 s to 40 s (R1, R2, R5).
+- **S1.** Given a patch, when the user makes a video twice with the same shape and length, then both have the same
+  frames (R2).
 - **S2.** Given a phone browser, when the video is made and SHARE VIDEO is pressed, then the share sheet lists the
   apps that take videos (R13).
 
@@ -59,8 +57,8 @@ other apps from the web app, without any server (SHARING-0007).
 None: v1 had no video export (its Recorder block records audio only, which v2 keeps).
 
 ## Verification
-- `pnpm test:video`: R1–R2 (live worklet recording vs replay hash), R3, R6–R10, R12 (MP4 checked with ffprobe:
-  codecs, size, duration, frame rate), the panel (R15) by pointer.
+- `pnpm test:video`: R2 (repeatable frames), R5–R10 (MP4 checked with ffprobe/ffmpeg: codecs, size, duration, frame
+  rate, sound, moving particles), R11 (cancel), R13 (share sheet; download fallback), the panel (R15) by pointer.
 - `pnpm test:ui-regressions`, `pnpm bd visual diff --full`: the stage drawing moved into `drawWorld.ts` unchanged.
 
 ## Open questions
