@@ -20,7 +20,9 @@ const itemAt = (p: Page, name: string) => p.evaluate(n => {
 }, name);
 const dragOut = async (p: Page, category: [number, number], name: string, to: [number, number]) => {
   await p.mouse.click(...category); await p.waitForTimeout(700);
-  const item = await itemAt(p, name);
+  let item = await itemAt(p, name);
+  // The menus are alphabetical and page (owner 2026-11-14): turn pages with the right arrow until the item shows.
+  for (let i = 0; i < 6 && item && item[0] > 1280 - 60; i++) { await p.mouse.click(1265, 180); await p.waitForTimeout(800); item = await itemAt(p, name); }
   if (!item) throw new Error(`no menu item ${name}`);
   await p.mouse.move(...item); await p.mouse.down();
   await p.mouse.move(item[0], 400, { steps: 6 }); await p.mouse.move(...to, { steps: 6 }); await p.mouse.up();

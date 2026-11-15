@@ -1,5 +1,5 @@
 // The post-2.0 blocks (SCOPE-0005) in v1's UI. v1 knows nothing of them, so this file gives the ported UI what it
-// needs: their menu items (after v1's own in each category), their menu icons (drawn from the manifest geometry, as
+// needs: their menu items (each category sorted by name), their menu icons (drawn from the manifest geometry, as
 // v1's BlockSprites draws its own), their options forms (built from v1's option types) and the live rows some panels
 // show (a level meter, …), which read the engine's monitors.
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
@@ -7,7 +7,7 @@ import { App, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
 import { touchpadForm } from './touchpadPanel.ts';
 
-/** Menu order within each v1 category (appended after v1's items). */
+/** The new blocks in each v1 category (the menu then sorts each category by name). */
 const MENU: Record<string, string[]> = {
   Source: ['source.stage'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
@@ -31,6 +31,8 @@ export function installNewBlockMenu(): void {
     // Label (CHG-0020): not a block, but it is made from the Interaction menu like one.
     if (cat.name === 'Interaction' && !cat.items.some(i => i.id === LABEL_MENU_ID))
       cat.items.push({ name: 'Label', id: LABEL_MENU_ID, description: 'A note on the stage. Drag it by its dot; click it to change the words.' });
+    // Owner (2026-11-14): every category lists its blocks alphabetically (by the name shown, so the plugin's labels too).
+    cat.items.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
   }
   setMenuHidden(ONLY_INSIDE);  // the outer stage's menu
 }

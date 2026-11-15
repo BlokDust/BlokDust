@@ -76,7 +76,12 @@ export class V1Block {
     this.Searching = false;
     App.MainScene.OptionsPanel.Animating = false;
     // v1 SoundCloudTrack (ported) shortens and capitalises titles/users as v1 showed them.
-    this.SearchResults = results.map(s => Object.assign(new SoundCloudTrack(s.name, s.username, `freesound:${s.id}`, s.url), { Sound: s }));
+    // Owner (2026-11-14): the results also show each sound's length ("By User · 0:07"; the panel draws "By " + User).
+    this.SearchResults = results.map(s => {
+      const t = Object.assign(new SoundCloudTrack(s.name, s.username, `freesound:${s.id}`, s.url), { Sound: s });
+      t.User = `${t.User} · ${formatLength(s.duration)}`;
+      return t;
+    });
   }
   /** v1 Sample.LoadTrack: show the new track at once, then the app fetches and decodes it. */
   LoadTrack(track: SoundCloudTrack & { Sound: FreesoundSound }): void {
@@ -172,6 +177,11 @@ export class V1Block {
   }
 }
 
+/** A sample length as m:ss (h:mm:ss from an hour; a sound under a second shows 0:01). */
+export function formatLength(sec: number): string {
+  const n = Number(sec) || 0, t = n > 0 ? Math.max(1, Math.round(n)) : 0, h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = String(t % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+}
 const CATEGORY: Record<string, string> = { source: 'Source', effect: 'Effect', power: 'Power', interaction: 'Interaction' };
 function catOf(def: BlockDef): string { return CATEGORY[def.category] ?? 'Source'; }
 /** l10n key for a block: v1 uses e.g. Blocks.Source.Blocks.Tone for ToneSource. */

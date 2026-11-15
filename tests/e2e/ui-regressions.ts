@@ -2376,6 +2376,36 @@ Object.assign(tests, {
     await p.close();
     return [chord === 3, { chord }];
   },
+  // Owner (2026-11-14): every block menu category lists its blocks alphabetically (v1's and the new ones mixed).
+  async 'menus-alphabetical'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    const cats = await p.evaluate(() => ((window as any).__bd_probe.scene.Header.MenuItems as any[]).map(c => (c.Items as any[]).map(i => String(i.Name))));
+    await p.close();
+    const sorted = cats.map(c => [...c].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })));
+    return [cats.length >= 4 && cats.every((c, i) => c.length > 1 && c.join() === sorted[i].join()), { cats }];
+  },
+  // Owner (2026-11-14): the Freesound results show each sound's length after its author ("By User · 1:05").
+  async 'freesound-results-show-length'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'Sample', 0, 0)], errors);
+    const [x, y] = await toCss(p, 0, 0);
+    await p.mouse.click(x + 8, y + 8); await p.waitForTimeout(1000);  // the block: its options panel
+    await p.evaluate(() => {
+      const s = (window as any).__bd_probe.scene, seen: string[] = ((window as any).__texts = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); };
+      const sound = (id: number, name: string, username: string, duration: number) => ({ provider: 'freesound', id, name, username, duration, license: 'CC0',
+        licenseUrl: 'http://creativecommons.org/publicdomain/zero/1.0/', preview: `https://cdn.freesound.org/previews/${id}.mp3`, url: `https://freesound.org/s/${id}/` });
+      s.host.searchSamples = () => Promise.resolve([sound(1, 'Short hit', 'alice', 0.4), sound(2, 'Long pad', 'bob', 65.2)]);
+      s.OptionsPanel.SelectedBlock.SearchString = 'pad';
+      s.SoundcloudPanel.OpenPanel();
+      s.SoundcloudPanel.Submit();
+    });
+    await p.waitForTimeout(1500);
+    const r = await p.evaluate(() => ({ open: (window as any).__bd_probe.scene.SoundcloudPanel.Open, texts: [...new Set(((window as any).__texts as string[]).filter(t => /^By /.test(t)))] }));
+    await p.screenshot({ path: `${OUT}/freesound-results-show-length.png` });
+    await p.close();
+    return [r.open && r.texts.includes('By Alice · 0:01') && r.texts.includes('By Bob · 1:05'), r];
+  },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
 /** Bugs captured but not fixed yet: reported as KNOWN (not failing CI) with the reason; a pass says to remove it. */
