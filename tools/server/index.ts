@@ -4,7 +4,8 @@
 //   pnpm bd server setup --env staging|production  create the D1 database and the Turnstile widget (Cloudflare API via
 //                                                   wrangler's login), save their ids outside the checkout, keep the
 //                                                   Turnstile secret in ~/.config/blokdust (never in the repo)
-//   pnpm bd server secret --env staging|production upload TURNSTILE_SECRET and FREESOUND_TOKEN as Worker secrets
+//   pnpm bd server secret --env staging|production upload TURNSTILE_SECRET, FREESOUND_TOKEN and (if kept)
+//                                                   GOOGLE_CLIENT_SECRET (~/.config/blokdust/google_client_secret)
 //   pnpm bd server deploy --env staging|production [--no-build]  build web/dist, apply D1 migrations, deploy
 //   pnpm bd server smoke --env staging|production | --url <base>  the sharing e2e suite against a deployed Worker
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -91,7 +92,11 @@ async function secret(): Promise<void> {
   const e = envName();
   await putSecret(e, 'TURNSTILE_SECRET', readSecret(`turnstile_${e}`));
   await putSecret(e, 'FREESOUND_TOKEN', readSecret('freesound_token'));
-  console.log(JSON.stringify({ env: e, secrets: ['TURNSTILE_SECRET', 'FREESOUND_TOKEN'] }));
+  const secrets = ['TURNSTILE_SECRET', 'FREESOUND_TOKEN'];
+  // Sign in with Google (SPEC-SHARING-ACCOUNTS R2a), when its client secret is kept here.
+  const google = readSecret('google_client_secret');
+  if (google) { await putSecret(e, 'GOOGLE_CLIENT_SECRET', google); secrets.push('GOOGLE_CLIENT_SECRET'); }
+  console.log(JSON.stringify({ env: e, secrets }));
 }
 
 async function deploy(): Promise<void> {
