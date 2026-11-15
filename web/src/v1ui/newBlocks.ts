@@ -161,8 +161,8 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
       // R13b (owner, 2026-11-14): unpowered, the particles inside carry on.
       switches({ name: 'Keep Particles', setting: 'keepParticles', value: !!b.Params.keepParticles }),
       ...(App.IsPlugin ? [] : [
+        // One row: OPEN STAGE beside LOAD PATCH (owner, 2026-11-14; buttonPair.ts).
         { type: 'actionbutton', name: '', setting: 'openStage', props: { text: 'Open Stage' } },
-        { type: 'actionbutton', name: '', setting: 'loadStagePatch', props: { text: 'Load Patch' } },
       ]),
     ];
   },

@@ -143,7 +143,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const stillPlays = (await state(p)).rms > 0.005;
     await p.mouse.up();
     await p.close();
-    const pass = menu.includes('Stage') && silent && held && names.includes('Volume') && names.filter((n: string) => n === 'actionbutton').length === 2 &&
+    const pass = menu.includes('Stage') && silent && held && names.includes('Volume') && names.filter((n: string) => n === 'buttonpair').length === 1 &&
       inner.join() === 'fx.filter,power.power,source.tone' && !insideMenu.includes('Stage') && insideMenu.includes('Sample') && insideMenu.includes('Microphone') && insideMenu.includes('Tone') &&
       insideInteraction.includes('Stage In') && !outerInteraction.includes('Stage In') &&
       linked === 2 && unlinked === 1 && out1 && outerBlocks.join() === 'fx.volume,source.stage' && !!movedFilter && movedFilter.x !== 3 && again === 3 && out2 && out3 && stillPlays &&
@@ -307,8 +307,104 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const pass = JSON.stringify(before) === '[["Keep Particles",false]]' && saved.keepParticles === 1 && JSON.stringify(after) === '[["Keep Particles",true]]';
     return [pass, { before, saved, after }];
   },
+  // Owner 2026-11-14: OPEN STAGE and LOAD PATCH sit side by side on one row; a real click on each half does its own.
+  async 'stage-panel-buttons'(errors) {
+    const p = await open(browser, [blk('st', 'source.stage', 0, 0)], errors);
+    await p.evaluate(() => { const h = (window as any).__bd_probe.scene.host, seen: string[] = ((window as any).__pressed = []); h.openStage = () => seen.push('open'); h.loadStagePatch = () => seen.push('load'); });
+    await openPanel(p, 'st');
+    const row = await p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel, pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio;
+      const r = (o.Options as any[]).find(x => x.Type === 'buttonpair'); if (!r) return null;
+      const y = (o.Position.y + r.Position.y + r.Size.height / 2) / pr, x = (f: number) => (o.Position.x + o.Margin + o.Range * f) / pr;
+      return { rows: (o.Options as any[]).map(x => x.Type), left: [x(0.25), y], right: [x(0.75), y] }; });
+    if (!row) { await p.close(); return [false, 'no button pair row']; }
+    await p.screenshot({ path: `${OUT}/stage-panel-buttons.png` });
+    for (const at of [row.left, row.right]) { await p.mouse.move(at[0], at[1]); await p.mouse.click(at[0], at[1]); await p.waitForTimeout(200); }
+    const pressed = await p.evaluate(() => (window as any).__pressed);
+    await p.close();
+    return [row.rows.filter((t: string) => t === 'buttonpair').length === 1 && !row.rows.includes('actionbutton') && pressed.join() === 'open,load', { rows: row.rows, pressed }];
+  },
+  // Owner 2026-11-14: a double click on a Stage opens it, and its options panel never shows (the first click had set it
+  // on its way open).
+  async 'stage-double-click-no-panel'(errors) {
+    const p = await open(browser, [blk('st', 'source.stage', 0, 0)], errors);
+    const at = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 'st')) as [number, number];
+    await p.mouse.move(at[0], at[1]);
+    await p.mouse.click(at[0], at[1]); await p.waitForTimeout(120); await p.mouse.click(at[0], at[1]);
+    let maxScale = 0;
+    for (let t = 0; t < 1200; t += 30) { maxScale = Math.max(maxScale, await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.Scale)); await p.waitForTimeout(30); }
+    const inside = !!(await p.evaluate(() => (window as any).__bd_probe.inside));
+    // a single click still opens the panel (outside again first)
+    await p.keyboard.press('Escape'); await p.waitForTimeout(900);
+    const out = !(await p.evaluate(() => (window as any).__bd_probe.inside));
+    await openPanel(p, 'st').catch(() => {});
+    const single = await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.Scale);
+    await p.close();
+    return [inside && maxScale === 0 && out && single === 1, { inside, maxScale, out, single }];
+  },
   // CHG-0020 (UI-0011): labels come with the patch and are drawn; a click edits the words, a drag moves one, the bin
   // deletes it, and the Interaction menu makes a new one. They never reach the engine.
+  // Owner 2026-11-14: labels join the multi-selection: Shift+click, the box, Cmd/Ctrl+A; dragging any selected item moves
+  // them all (blocks too); Cmd/Ctrl+D copies, Delete deletes, Cmd/Ctrl+G takes them into the Stage with the blocks.
+  async 'label-multi-select'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0)], errors,
+      { labels: [{ id: 'l1', text: 'Mine', x: -8, y: -6 }, { id: 'l2', text: 'Not mine', x: 6, y: 6 }] });
+    const labels = () => p.evaluate(() => (window as any).__bd_probe.labels as { id: string; text: string; x: number; y: number; cx: number; cy: number }[]);
+    const sel = () => p.evaluate(() => ({ blocks: (window as any).__bd_selection().length as number, labels: (window as any).__bd_label_selection() as string[] }));
+    const tone = async () => (await state(p)).patch.blocks.find((b: any) => b.type === 'source.tone');
+    const tAt = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 't')) as [number, number];
+    const r: Record<string, unknown> = {};
+    // Shift+click the Tone and the first label
+    await p.keyboard.down('Shift');
+    await p.mouse.click(tAt[0], tAt[1]);
+    const l1 = (await labels())[0];
+    await p.mouse.click(l1.cx, l1.cy);
+    await p.keyboard.up('Shift');
+    await p.waitForTimeout(200);
+    r.picked = await sel();
+    await p.screenshot({ path: `${OUT}/label-multi-select.png` });
+    // drag the Tone: the label comes with it; the other stays
+    const t0 = await tone(), a0 = (await labels())[0], b0 = (await labels())[1];
+    await p.mouse.move(tAt[0], tAt[1]); await p.mouse.down(); await p.mouse.move(tAt[0] + 60, tAt[1] + 45, { steps: 8 }); await p.mouse.up();
+    await p.waitForTimeout(300);
+    const t1 = await tone(), a1 = (await labels())[0], b1 = (await labels())[1];
+    r.byBlock = { block: [t1.x - t0.x, t1.y - t0.y], label: [a1.x - a0.x, a1.y - a0.y], other: [b1.x - b0.x, b1.y - b0.y] };
+    // drag the label: the Tone comes with it
+    await p.mouse.move(a1.cx, a1.cy); await p.mouse.down(); await p.mouse.move(a1.cx - 60, a1.cy - 45, { steps: 8 }); await p.mouse.up();
+    await p.waitForTimeout(300);
+    const t2 = await tone(), a2 = (await labels())[0];
+    r.byLabel = { block: [t2.x - t1.x, t2.y - t1.y], label: [a2.x - a1.x, a2.y - a1.y] };
+    r.stillPicked = await sel();
+    // Cmd/Ctrl+D copies both; Delete deletes the copies
+    await p.mouse.move(640, 600);
+    await p.keyboard.press('ControlOrMeta+d'); await p.waitForTimeout(300);
+    r.copied = { blocks: (await state(p)).patch.blocks.length, labels: (await labels()).length, sel: await sel() };
+    await p.keyboard.press('Delete'); await p.waitForTimeout(300);
+    r.deleted = { blocks: (await state(p)).patch.blocks.length, labels: (await labels()).length };
+    // Cmd/Ctrl+A takes the labels too; Esc lets go
+    await p.keyboard.press('ControlOrMeta+a'); await p.waitForTimeout(200);
+    r.all = await sel();
+    await p.keyboard.press('Escape'); await p.waitForTimeout(200);
+    r.none = await sel();
+    // the box (Shift+drag on the stage) round the first label and the Tone
+    const now = await labels(), tAt2 = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), await idOf(p, 't')) as [number, number];
+    const x0 = Math.min(now[0].cx, tAt2[0]) - 40, y0 = Math.min(now[0].cy, tAt2[1]) - 40, x1 = Math.max(now[0].cx, tAt2[0]) + 40, y1 = Math.max(now[0].cy, tAt2[1]) + 40;
+    await p.keyboard.down('Shift'); await p.mouse.move(x0, y0); await p.mouse.down(); await p.mouse.move(x1, y1, { steps: 6 }); await p.mouse.up(); await p.keyboard.up('Shift');
+    await p.waitForTimeout(200);
+    r.boxed = await sel();
+    // Cmd/Ctrl+G: into a new Stage with the Tone
+    await p.keyboard.press('ControlOrMeta+g'); await p.waitForTimeout(500);
+    const patch = (await state(p)).patch;
+    r.staged = { outerLabels: (patch.labels ?? []).map((l: any) => l.text), inner: patch.macros?.[0]?.labels?.map((l: any) => l.text), blocks: patch.blocks.map((b: any) => b.type) };
+    await p.close();
+    const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    const bb = r.byBlock as any, bl = r.byLabel as any;
+    const pass = eq(r.picked, { blocks: 1, labels: ['l1'] }) && bb.block[0] !== 0 && eq(bb.block, bb.label) && eq(bb.other, [0, 0]) &&
+      bl.block[0] !== 0 && eq(bl.block, bl.label) && eq(r.stillPicked, { blocks: 1, labels: ['l1'] }) &&
+      eq({ b: (r.copied as any).blocks, l: (r.copied as any).labels, n: (r.copied as any).sel.blocks, m: (r.copied as any).sel.labels.length }, { b: 2, l: 3, n: 1, m: 1 }) &&
+      eq(r.deleted, { blocks: 1, labels: 2 }) && eq(r.all, { blocks: 1, labels: ['l1', 'l2'] }) && eq(r.none, { blocks: 0, labels: [] }) &&
+      eq(r.boxed, { blocks: 1, labels: ['l1'] }) && eq(r.staged, { outerLabels: ['Not mine'], inner: ['Mine'], blocks: ['source.stage'] });
+    return [pass, r];
+  },
   async 'labels'(errors) {
     const p = await open(browser, [blk('t', 'source.tone', 0, 0)], errors,
       { labels: [{ id: 'l1', text: 'Press the tone', x: -8, y: -6 }, { id: 'l2', text: 'Bin me', x: 6, y: 6 }] });

@@ -62,4 +62,6 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 
 ## Owner review 4 (2026-11-14)
 - Keep Particles switch on the Stage panel (R13b): unpowering the Stage leaves the particles inside flying and reacting
-  (two Emitters facing each other keep a particle going forever); the world POWER switch still clears them everywhere.
+  (two Emitters facing each other keep a particle going forever); the world POWER switch still clears them everywhere.- Panel: OPEN STAGE and LOAD PATCH share one row (`web/src/v1ui/buttonPair.ts`).
+- A double click on a Stage opens it without its panel showing first: the panel's 400 ms wait to open is called off
+  (`CancelOpen`, scene.ts). Browser tests `stage-panel-buttons`, `stage-double-click-no-panel`.

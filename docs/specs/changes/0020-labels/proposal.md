@@ -22,7 +22,7 @@ Patches need notes: what to press, what each part does.
 
 ## Out of scope
 - Rich text, sizes, colours.
-- Undo and redo of label edits (blocks have it; labels do not yet), and multi-select with blocks.
+- Undo and redo of label edits (blocks have it; labels do not yet).
 
 ## Acceptance
 - `pnpm test:ui-regressions --only labels`: add, edit, move, delete, save and reopen.
@@ -34,3 +34,9 @@ Patches need notes: what to press, what each part does.
 
 ## Owner review 1 (2026-11-14)
 - Phones: a label dropped from the menu opens the keyboard at once; the text field no longer makes iOS zoom the page (16 px, scaled down) and the page scrolls back when typing ends.
+
+## Owner review 2 (2026-11-14)
+- Labels join the multi-selection (UI-0007): Shift+click, the box (by the label's dot), Cmd/Ctrl+A; ringed dashed as
+  blocks are. Dragging any selected block or label moves them all (whole cells); the bin, Delete, Cmd/Ctrl+D, Alt+drag,
+  MAKE STAGE / Cmd/Ctrl+G and dropping on a Stage take the selected labels too. A click on a label (no drag) still edits
+  it. Deleting labels is not undoable (as before). Browser test: `new-blocks` `label-multi-select`.

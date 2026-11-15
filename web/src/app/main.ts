@@ -170,6 +170,10 @@ async function main() {
   let connectionOrder: [string, string][] = [];
   /** Labels (CHG-0020, UI-0011): notes on the stage, kept in the patch. */
   const labels: Label[] = [];
+  /** Labels in the multi-selection, by id (owner, 2026-11-14): they move, copy, delete and go into a Stage with the
+   * selected blocks (stage.selected holds the blocks). */
+  const selectedLabels = new Set<string>();
+  const selLabels = () => labels.filter(l => selectedLabels.has(l.id));
   const uidToId = () => new Map([...model].map(([id, b]) => [b.uid, id]));
   /** The world on screen as patch parts: its blocks, their connection order, its labels. */
   const worldParts = (m: Map<number, ModelBlock> = model, order = connectionOrder, lbls = labels) => {
@@ -303,7 +307,7 @@ async function main() {
     createBlock: (v1Type, gx, gy) => {
       if (v1Type === LABEL_MENU_ID) { newLabel(gx, gy); return null; }
       // A Stage made while several blocks are selected takes them inside (CHG-0021).
-      if (v1Type === 'Stage' && selection.size > 1) { const id = wrapInStage([...selection], gx, gy); if (id !== null) { startDrag(id, 0, 0, true); return id; } }  // not a block: it follows the pointer by itself
+      if (v1Type === 'Stage' && selection.size > 1) { const id = wrapInStage([...selection], gx, gy, [...selectedLabels]); if (id !== null) { startDrag(id, 0, 0, true); return id; } }  // not a block: it follows the pointer by itself
       const def = DEF_BY_V1.get(v1Type);
       if (!def) return null;
       // A new Emitter, Pulse or Stereo Delay starts in tempo sync (owner, CHG-0004; the delay's 1/8 at 120 BPM is v1's
@@ -346,7 +350,7 @@ async function main() {
     resetScene: () => {
       for (const id of [...model.keys()]) removeBlock(id);
       if (inside) leaveStage(false);
-      labels.length = 0; endLabelEdit(false);
+      labels.length = 0; selectedLabels.clear(); endLabelEdit(false);
       macros.clear(); innerIds.clear(); innerSamples.clear();
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
@@ -434,6 +438,15 @@ async function main() {
   // The embed player (SHARING-0002, `/embed/<id>`) shows the stage only: no menus, panels or editing.
   stage.drawUi = ctx => {
     if (labels.length) drawLabels(ctx, stage.metrics, labels, theme.colors[theme.roles.txt], labelEdit?.id ?? null);  // embeds show them too
+    if (selectedLabels.size && !embedId) {  // selected labels: dashed as selected blocks are (stage.ts)
+      const m = stage.metrics;
+      ctx.save();
+      ctx.strokeStyle = theme.colors[theme.roles.txt]; ctx.lineWidth = 2; ctx.globalAlpha = 0.5; ctx.setLineDash([4 * m.unit, 3 * m.unit]);
+      ctx.beginPath();
+      for (const l of selLabels()) { const r = labelRect(measure, m, l); ctx.rect(r.x, r.y, r.w, r.h); }
+      ctx.stroke();
+      ctx.restore();
+    }
     if (embedId) return;
     if (inside) drawInside(ctx, insideFrame(), stage.metrics.unit, 'STAGE', { image: inside.image, blockX: inside.blockX, blockY: inside.blockY, grid: inside.grid, layers: BLOCKS_BY_ID.get('source.stage')!.geometry.layers.filter(l => l.units !== 'unit') },
       theme.colors, theme.roles.txt, `400 ${Math.round(10 * stage.metrics.unit)}px Dosis`);
@@ -456,7 +469,7 @@ async function main() {
   function makeStage(): void {
     const bs = [...selection].map(id => model.get(id)!).filter(Boolean);
     if (!bs.length) return;
-    const id = wrapInStage([...selection], Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length));
+    const id = wrapInStage([...selection], Math.round(bs.reduce((a, b) => a + b.x, 0) / bs.length), Math.round(bs.reduce((a, b) => a + b.y, 0) / bs.length), [...selectedLabels]);
     makeStageHover = false;
     if (id !== null) setSelection([id]);
     stage.redraw();
@@ -465,7 +478,9 @@ async function main() {
   // ---- labels (CHG-0020, UI-0011): text on the stage with a drag dot. Press and drag moves one (onto the bin deletes
   // it); a press without a drag edits its words in place. They are not blocks: the engine never hears of them. ----
   const measure = document.createElement('canvas').getContext('2d')!;
-  let labelDrag: { id: string; pointer: number; grabX: number; grabY: number; moved: boolean; fresh: boolean; downX: number; downY: number } | null = null;
+  let labelDrag: { id: string; pointer: number; grabX: number; grabY: number; moved: boolean; fresh: boolean; downX: number; downY: number;
+    /** Dragging a selected label moves the whole selection (whole cells, as blocks move); where its blocks started. */
+    group?: Map<number, XY> } | null = null;
   let labelEdit: { id: string; input: HTMLInputElement } | null = null;
   const labelsChanged = () => { changed(); if (juce) juce.emitEvent('bd_labels', { labels }); stage.redraw(); };
   const readLabels = (list: unknown): Label[] => (Array.isArray(list) ? list : []).flatMap((l, i) => l && typeof l === 'object' && typeof (l as Label).text === 'string'
@@ -487,6 +502,15 @@ async function main() {
     if (!labelDrag!.moved && Math.hypot(e.offsetX - labelDrag!.downX, e.offsetY - labelDrag!.downY) > STILL_PX) labelDrag!.moved = true;
     if (!labelDrag!.moved) return;
     const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
+    if (labelDrag!.group) {
+      const dx = Math.round(gx - labelDrag!.grabX - l.x), dy = Math.round(gy - labelDrag!.grabY - l.y);
+      if (dx || dy) {
+        for (const o of selLabels()) { o.x += dx; o.y += dy; }
+        for (const id of labelDrag!.group.keys()) { const b = model.get(id); if (b) moveBlock(id, b.x + dx, b.y + dy); }
+      }
+      stage.redraw();
+      return;
+    }
     l.x = Math.round((gx - labelDrag!.grabX) * 2) / 2; l.y = Math.round((gy - labelDrag!.grabY) * 2) / 2;  // half cells: tidy, but free enough
     stage.redraw();
   }
@@ -520,15 +544,15 @@ async function main() {
   function clearWorld(): void {
     for (const id of [...model.keys()]) { model.delete(id); v1Blocks.delete(id); stage.removeBlock(id); }
     samples.clear(); missing.clear(); labels.length = 0;
-    stage.selected.clear(); stage.held.clear();
+    stage.selected.clear(); selectedLabels.clear(); stage.held.clear();
   }
   /** Look into Stage block `id`: its inner world takes the page (in a window over the outer stage). Web only. */
   function enterStage(id: number): void {
     const b = model.get(id);
     if (inside || juce || embedId || !b || b.type !== 'source.stage') return;
     endLabelEdit(true); endPlacing(false);
+    (scene.OptionsPanel as any).CancelOpen();  // a double click's first click set the panel on its way open: it stays shut
     scene.OptionsPanel.Close();
-    setTimeout(() => { if (inside && (scene.OptionsPanel.SelectedBlock as V1Block | null)?.def.id === 'source.stage') scene.OptionsPanel.Close(); }, 450);  // a panel on its way open (v1 opens it 400 ms after the click)
     const [bx, by] = gridToPx(stage.metrics, b.x, b.y), image = stage.snapshot();
     const outer: Outer = { model: new Map(model), v1Blocks: new Map(v1Blocks), samples: new Map(samples), missing: new Set(missing), labels: labels.slice(),
       connectionOrder, nextId, view: currentView(), undo: undoStack.slice(), redo: redoStack.slice() };
@@ -593,7 +617,7 @@ async function main() {
     new Map(ids.flatMap(id => { const b = model.get(id), buf = samples.get(id); return b && buf ? [[uidOf(b), buf] as [string, AudioBuffer]] : []; }));
   /** Selected blocks become what is inside a new Stage block at (x, y): they leave this stage and carry on in there,
    * with their audio. Not undoable. */
-  function wrapInStage(ids: number[], x: number, y: number): number | null {
+  function wrapInStage(ids: number[], x: number, y: number, labelIds: string[] = []): number | null {
     const picked = ids.filter(id => model.has(id));
     if (!canGoInside(picked) || !picked.length) return null;
     const bs = picked.map(id => model.get(id)!), uids = new Set(bs.map(b => b.uid));
@@ -602,18 +626,43 @@ async function main() {
     const blocks = bs.map(b => ({ id: b.uid, type: b.type, x: b.x - cx, y: b.y - cy,
       params: Object.fromEntries(Object.entries(structuredClone(b.params)).filter(([k]) => !SESSION_PARAMS.has(k))) }));
     const audio = audioOf(picked, b => b.uid);
+    const going = takeLabels(labelIds, -cx, -cy);  // selected labels go in too, where they were among the blocks
     for (const id of picked) removeBlock(id);
     undoStack.length = 0; redoStack.length = 0;
     const taken = new Set([...model.values()].map(b => b.uid));
     let uid = `stage${nextId}`; for (let k = 2; taken.has(uid); k++) uid = `stage${nextId}_${k}`;
-    macros.set(uid, { block: uid, blocks, ...(order.length ? { connectionOrder: order } : {}) });
+    macros.set(uid, { block: uid, blocks, ...(order.length ? { connectionOrder: order } : {}), ...(going.length ? { labels: going } : {}) });
     innerSamples.set(uid, audio);
     setSelection([]);
     return addBlock('source.stage', x, y, {}, uid);
   }
   /** Blocks dropped onto Stage block `stageId` go inside it (owner, 2026-11-14), to the right of what is there, keeping
    * their layout and their connections. Its inner world starts again. Not undoable (as wrapping). */
-  function addToStage(stageId: number, ids: number[]): void {
+  /** Labels `ids` leave this stage (for a Stage's inside), moved by (dx, dy). */
+  function takeLabels(ids: string[], dx: number, dy: number): Label[] {
+    const going = labels.filter(l => ids.includes(l.id));
+    if (!going.length) return [];
+    for (const l of going) { labels.splice(labels.indexOf(l), 1); selectedLabels.delete(l.id); }
+    labelsChanged();
+    return going.map(l => ({ ...l, x: l.x + dx, y: l.y + dy }));
+  }
+  /** Copies of labels, moved by (dx, dy); returns the copies' ids. */
+  function copyLabels(list: Label[], dx: number, dy: number): string[] {
+    const n = labels.length;
+    addLabels(list.map(l => ({ ...l, x: l.x + dx, y: l.y + dy })));
+    const ids = labels.slice(n).map(l => l.id);
+    if (ids.length) labelsChanged();
+    return ids;
+  }
+  /** Delete labels (the bin, Delete): not undoable, as a label binned alone. */
+  function deleteLabels(ids: Iterable<string>): void {
+    const gone = new Set(ids);
+    if (!gone.size) return;
+    for (let i = labels.length - 1; i >= 0; i--) if (gone.has(labels[i].id)) labels.splice(i, 1);
+    for (const id of gone) selectedLabels.delete(id);
+    labelsChanged();
+  }
+  function addToStage(stageId: number, ids: number[], labelIds: string[] = []): void {
     const s = model.get(stageId);
     const picked = ids.filter(id => id !== stageId && model.has(id));
     if (!s || s.type !== 'source.stage' || !canGoInside(picked) || !picked.length) return;
@@ -632,11 +681,12 @@ async function main() {
     });
     const order = [...(was.connectionOrder ?? []), ...connectionOrder.filter(([a, b]) => rename.has(a) && rename.has(b)).map(([a, b]) => [rename.get(a)!, rename.get(b)!] as [string, string])];
     const audio = new Map([...(innerSamples.get(s.uid) ?? []), ...audioOf(picked, b => rename.get(b.uid)!)]);
+    const going = takeLabels(labelIds, ox, oy);
     for (const id of picked) removeBlock(id);
     const { uid, x, y, params } = s;
     scene.OptionsPanel.Close();
     removeBlock(stageId);
-    macros.set(uid, { ...was, blocks: [...was.blocks, ...moved], ...(order.length ? { connectionOrder: order } : {}) });
+    macros.set(uid, { ...was, blocks: [...was.blocks, ...moved], ...(order.length ? { connectionOrder: order } : {}), ...(going.length ? { labels: [...(was.labels ?? []), ...going] } : {}) });
     innerIds.delete(uid);
     innerSamples.set(uid, audio);
     undoStack.length = 0; redoStack.length = 0;
@@ -683,7 +733,7 @@ async function main() {
     const l = labels.find(x => x.id === e.id), text = e.input.value.trim();
     e.input.remove();
     if (window.scrollX || window.scrollY) window.scrollTo(0, 0);  // iOS scrolls the page to show the field above its keyboard
-    if (l && keep) { if (text) l.text = text; else labels.splice(labels.indexOf(l), 1); labelsChanged(); }
+    if (l && keep) { if (text) l.text = text; else { labels.splice(labels.indexOf(l), 1); selectedLabels.delete(l.id); } labelsChanged(); }
     stage.redraw();
   }
 
@@ -1279,7 +1329,7 @@ async function main() {
     }
     if (ids) nextId = Math.max(nextId, ...Object.values(ids).map(i => i + 1));
     connectionOrder = Array.isArray(p.connectionOrder) ? [...p.connectionOrder] : [];
-    labels.length = 0; addLabels(readLabels(p.labels));
+    labels.length = 0; selectedLabels.clear(); addLabels(readLabels(p.labels));
     macros.clear(); innerIds.clear(); innerSamples.clear();
     for (const m of readMacros(p.macros)) macros.set(m.block, m);
     if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
@@ -1594,8 +1644,15 @@ async function main() {
   let downAt: { x: number; y: number } | null = null;
   let longPress: ReturnType<typeof setTimeout> | null = null;
   const LONG_PRESS_MS = 450, STILL_PX = 8;
-  function setSelection(ids: Iterable<number>): void { selection.clear(); for (const id of ids) if (model.has(id)) selection.add(id); stage.redraw(); }
-  const grouped = () => !!drag && selection.has(drag.id) && selection.size > 1;
+  function setSelection(ids: Iterable<number>, labelIds: Iterable<string> = []): void {
+    selection.clear(); selectedLabels.clear();
+    for (const id of ids) if (model.has(id)) selection.add(id);
+    for (const id of labelIds) if (labels.some(l => l.id === id)) selectedLabels.add(id);
+    stage.redraw();
+  }
+  /** Blocks and labels selected. */
+  const selectionSize = () => selection.size + selLabels().length;
+  const grouped = () => !!drag && selection.has(drag.id) && selectionSize() > 1;
   function showBox(): void {
     stage.selectBox = box && { x0: box.x0 * dpr(), y0: box.y0 * dpr(), x1: box.x1 * dpr(), y1: box.y1 * dpr() };
     stage.redraw();
@@ -1605,7 +1662,8 @@ async function main() {
     const [ax, ay] = stage.cssToGrid(Math.min(box.x0, box.x1), Math.min(box.y0, box.y1));
     const [bx, by] = stage.cssToGrid(Math.max(box.x0, box.x1), Math.max(box.y0, box.y1));
     const inside = [...model.entries()].filter(([, b]) => b.x >= ax && b.x <= bx && b.y >= ay && b.y <= by).map(([id]) => id);
-    setSelection(box.add ? [...selection, ...inside] : inside);
+    const insideLabels = labels.filter(l => l.x >= ax && l.x <= bx && l.y >= ay && l.y <= by).map(l => l.id);  // by the dot
+    setSelection(box.add ? [...selection, ...inside] : inside, box.add ? [...selectedLabels, ...insideLabels] : insideLabels);
     box = null; showBox();
   }
   /** Copies of the selected blocks (same params and audio), offset by (dx, dy); returns the copies' ids by original. */
@@ -1627,6 +1685,7 @@ async function main() {
     return made;
   }
   (window as unknown as { __bd_selection?: unknown }).__bd_selection = () => [...selection];
+  (window as unknown as { __bd_label_selection?: unknown }).__bd_label_selection = () => [...selectedLabels];
 
   // ---- multi-touch (CHG-0005 task 8, owner): the first finger is v1's one pointer (menus, panels, selecting, dragging
   // the stage). Each further finger takes what it lands on: a block (dragged by that finger, powered while held, as
@@ -1735,8 +1794,19 @@ async function main() {
       const l = labelAt(measure, stage.metrics, labels, e.offsetX * dpr(), e.offsetY * dpr());
       if (l) {
         const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY);
-        labelDrag = { id: l.id, pointer: e.pointerId, grabX: gx - l.x, grabY: gy - l.y, moved: false, fresh: false, downX: e.offsetX, downY: e.offsetY };
         scene.OptionsPanel.Close();
+        // Shift: add the label to the selection (and drag it with the rest at once) or take it out (owner, 2026-11-14).
+        if (e.shiftKey && selectedLabels.has(l.id)) {
+          selectedLabels.delete(l.id); primaryId = e.pointerId; primaryRole = 'select'; pointerIsDown = true; downAt = { x: e.offsetX, y: e.offsetY };
+          stage.redraw();
+          return;
+        }
+        if (e.shiftKey) selectedLabels.add(l.id);
+        else if (!selectedLabels.has(l.id) && selectionSize()) setSelection([]);  // another label: the selection is let go
+        const group = selectedLabels.has(l.id) && selectionSize() > 1 ? new Map([...selection].flatMap(id => { const b = model.get(id); return b ? [[id, { x: b.x, y: b.y }] as [number, XY]] : []; })) : undefined;
+        labelDrag = { id: l.id, pointer: e.pointerId, grabX: gx - l.x, grabY: gy - l.y, moved: !!e.shiftKey, fresh: false, downX: e.offsetX, downY: e.offsetY, group };
+        if (group) for (const id of group.keys()) stage.held.add(id);
+        stage.redraw();
         return;
       }
     }
@@ -1823,14 +1893,14 @@ async function main() {
     let blockMoved = false;
     if (drag && e.altKey && !drag.moved && grouped()) {
       // Alt + drag on a selection copies all of it (v1's Alt-copy, for the group): the copies are dragged and selected.
-      const ids = [...selection], made = copyBlocks(ids, 0, 0), first = made.get(drag.id);
+      const ids = [...selection], made = copyBlocks(ids, 0, 0), first = made.get(drag.id), madeLabels = copyLabels(selLabels(), 0, 0);
       pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);
       const v = v1Blocks.get(drag.id); if (v) v.IsPressed = false;
       stage.held.clear();
       if (first !== undefined) {
         const grab = { x: drag.grabX, y: drag.grabY };
-        setSelection(made.values());
+        setSelection(made.values(), madeLabels);
         startDrag(first, grab.x, grab.y, true);
         drag!.moved = true;  // copied once per drag
         for (const id of selection) if (id !== first) stage.held.add(id);
@@ -1861,8 +1931,10 @@ async function main() {
       const x = Math.round(gx - drag.grabX), y = Math.round(gy - drag.grabY), b = model.get(drag.id);
       if (b && (x !== b.x || y !== b.y)) {
         const dx = x - b.x, dy = y - b.y;
-        if (grouped()) for (const id of selection) { const o = model.get(id); if (o) moveBlock(id, o.x + dx, o.y + dy); }
-        else moveBlock(drag.id, x, y);
+        if (grouped()) {
+          for (const id of selection) { const o = model.get(id); if (o) moveBlock(id, o.x + dx, o.y + dy); }
+          for (const l of selLabels()) { l.x += dx; l.y += dy; }
+        } else moveBlock(drag.id, x, y);
         drag.moved = blockMoved = true;
       }
       // Over a Stage block: let go and they go inside it (ringed while they would).
@@ -1905,8 +1977,14 @@ async function main() {
       else {
         const binned = d.moved && scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), true) === 'delete';
         scene.IsDraggingABlock = false;
-        if (binned) { const i = labels.findIndex(l => l.id === d.id); if (i >= 0) labels.splice(i, 1); }
-        if (d.moved) labelsChanged(); else editLabel(d.id);
+        stage.held.clear();
+        if (d.group) {  // the selection, led by this label: binned all together, or one move step for its blocks
+          if (binned) { deleteBlocks([...d.group.keys()], d.group); deleteLabels([...selectedLabels]); setSelection([]); }
+          else if (d.moved) { recordMove([...d.group.keys()], d.group); labelsChanged(); }
+        } else if (binned) deleteLabels([d.id]);
+        else if (d.moved) labelsChanged();
+        // A click (no move) edits the words, and a selection holding it is let go (as a click on a selected block).
+        if (!d.moved) { if (d.group || selectedLabels.has(d.id)) setSelection([]); editLabel(d.id); }
         stage.redraw();
         return;
       }
@@ -1923,11 +2001,12 @@ async function main() {
     stage.held.clear();
     const into = drag && moved && result !== 'delete' ? stage.dropTarget : null;
     stage.dropTarget = null;
-    if (result === 'delete' && drag) deleteBlocks(wasGroup ? [...selection] : [drag.id], dragFrom);
+    if (result === 'delete' && drag) { deleteBlocks(wasGroup ? [...selection] : [drag.id], dragFrom); if (wasGroup) deleteLabels([...selectedLabels]); }
     else if (drag) {
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);  // v1 MouseUp → RemovePower
-      if (into !== null) { addToStage(into, wasGroup ? [...selection] : [drag.id]); drag = null; stage.pressed = null; stage.redraw(); return; }
+      if (into !== null) { addToStage(into, wasGroup ? [...selection] : [drag.id], wasGroup ? [...selectedLabels] : []); drag = null; stage.pressed = null; stage.redraw(); return; }
       if (moved && !drag.fresh) recordMove(wasGroup ? [...selection] : [drag.id], dragFrom);
+      if (moved && wasGroup && selectedLabels.size) labelsChanged();
     }
     // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same; CHG-0021).
     if (drag && !moved && !e.shiftKey && model.get(drag.id)?.type === 'source.stage') {
@@ -2131,17 +2210,18 @@ async function main() {
       const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
       // Space: the power switch (web; in a DAW, Space is the transport's).
       if (e.code === 'Space' && !mod && !e.repeat && !juce) { e.preventDefault(); scene.setWorldPower(!scene.worldPower); return; }
-      if (e.key === 'Escape' && selection.size) { e.preventDefault(); setSelection([]); return; }
-      if (mod && !e.shiftKey && k === 'a') { e.preventDefault(); setSelection(model.keys()); scene.OptionsPanel.Close(); return; }
-      if (mod && !e.shiftKey && k === 'd' && selection.size) {
+      if (e.key === 'Escape' && selectionSize()) { e.preventDefault(); setSelection([]); return; }
+      if (mod && !e.shiftKey && k === 'a') { e.preventDefault(); setSelection(model.keys(), labels.map(l => l.id)); scene.OptionsPanel.Close(); return; }
+      if (mod && !e.shiftKey && k === 'd' && selectionSize()) {
         e.preventDefault();
-        const made = copyBlocks([...selection], 2, 2);
-        pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
-        setSelection(made.values());
+        const made = copyBlocks([...selection], 2, 2), madeLabels = copyLabels(selLabels(), 2, 2);
+        if (made.size) pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
+        setSelection(made.values(), madeLabels);
         return;
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selection.size) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectionSize()) {
         e.preventDefault();
+        deleteLabels([...selectedLabels]);
         deleteBlocks([...selection]);
         scene.select(null); scene.OptionsPanel.Close(); stage.redraw();
         return;

@@ -30,6 +30,9 @@ drawn by `Stage.selected`):
   its normal, so the gap is even all round), dashed, in v1's 2 px text-colour line at half strength; the box is drawn
   the same way. v1 has no selection mark; this is built from v1's outline and line. (Owner, 2026-11-11: the first
   version, grown from the block's middle, sat closer on some sides than others and was too strong.)
+- **Labels** (owner, 2026-11-14, CHG-0020) are in the set too: chosen and acted on as blocks are (the box takes a label
+  by its dot), and a dragged label leads the group in whole cells. Each is ringed by a dashed box round its dot and
+  text. A plain click on a label still edits its words.
 
 ## Consequences
 - With nothing selected, everything is v1's behaviour.

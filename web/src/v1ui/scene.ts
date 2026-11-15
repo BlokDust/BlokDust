@@ -7,6 +7,7 @@ import { App, Dimensions, Point, Size, TWEEN } from './shim.ts';
 import { V1Block } from './blocks.ts';
 import { installFilterPanel } from './filterPanel.ts';
 import { installSelectors } from './selectorOption.ts';
+import { installButtonPairs } from './buttonPair.ts';
 import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { installTouchpad } from './touchpadPanel.ts';
 import { Metrics } from './ported/Metrics';
@@ -175,7 +176,9 @@ export class V1Scene {
       (this.SharePanel as any).OpenPanel = () => this.PatchesPanel.OpenPanel();
       release1Settings(this.SettingsPanel, this.host);
       installFilterPanel(this.OptionsPanel);
+      cancellableOpen(this.OptionsPanel);
       installSelectors(this.OptionsPanel);
+      installButtonPairs(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
       installTouchpad(this.OptionsPanel);  // last: it lays the Touchpad's rows out again after the others adapt them
       locateMissingFiles(this);
@@ -854,3 +857,28 @@ function locateMissingFiles(scene: V1Scene): void {
   };
 }
 
+/** v1 OptionsPanel.Open, with the 400 ms wait before the panel pops open kept, so it can be called off:
+ * `CancelOpen()` (a double click on a Stage block opens the Stage, not its panel; owner, 2026-11-14). */
+function cancellableOpen(panel: any): void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  panel.Open = (block: any) => {
+    block.UpdateOptionsForm();
+    if (!block.OptionsForm) return;
+    if (panel.Scale == 1 && block !== panel.SelectedBlock) panel.Close();
+    panel.Opening = true;
+    panel.SelectedBlock = block;
+    App.MainScene.MainSceneDragger.Jump(block.Position, new Point(App.Metrics.OptionsPoint.x, App.Metrics.OptionsPoint.y));
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = undefined;
+      panel.Opening = false;
+      panel.Populate(block.OptionsForm, true);
+      panel.PanelScale(panel, 1, 200);
+    }, 400);
+  };
+  panel.CancelOpen = () => {
+    if (timer === undefined) return;
+    clearTimeout(timer); timer = undefined;
+    panel.Opening = false;
+  };
+}
