@@ -158,6 +158,8 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     const g = Number(b.Params.gain ?? 1);
     return [
       slider('Volume', 'gainDb', g > 0 ? Math.max(-40, 20 * Math.log10(g)) : -40, -40, 6, { display: v => (v <= -40 ? 'OFF' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} dB`) }),
+      // R13b (owner, 2026-11-14): unpowered, the particles inside carry on.
+      switches({ name: 'Keep Particles', setting: 'keepParticles', value: !!b.Params.keepParticles }),
       ...(App.IsPlugin ? [] : [
         { type: 'actionbutton', name: '', setting: 'openStage', props: { text: 'Open Stage' } },
         { type: 'actionbutton', name: '', setting: 'loadStagePatch', props: { text: 'Load Patch' } },

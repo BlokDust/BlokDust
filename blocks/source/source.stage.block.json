@@ -119,6 +119,16 @@
         2
       ],
       "description": "Output level of the inner stage (1 = as it sounds inside)"
+    },
+    {
+      "key": "keepParticles",
+      "default": 0,
+      "unit": "enum",
+      "range": [
+        0,
+        1
+      ],
+      "description": "v2 (owner, 2026-11-14): on, particles in flight inside keep moving and hitting when the Stage loses power (nothing new is emitted or powered); off, they vanish. The world power switch clears them either way"
     }
   ]
 }

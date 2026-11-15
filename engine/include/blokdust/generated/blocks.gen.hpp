@@ -196,8 +196,9 @@ namespace param::SourceSampleGen { enum : std::uint8_t { playbackRate, detune, r
 inline constexpr GridPoint kOutlineSourceStage[] = {{-1.0f, -2.0f}, {0.0f, -2.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {-1.0f, 2.0f}};
 inline constexpr ParamInfo kParamsSourceStage[] = {
   {"gain", 1.0, true, UiTransform::Identity, 0.0, 2.0, 0.0},
+  {"keepParticles", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
 };
-namespace param::SourceStage { enum : std::uint8_t { gain, Count }; }
+namespace param::SourceStage { enum : std::uint8_t { gain, keepParticles, Count }; }
 
 // ---- source.tone (Tone)
 inline constexpr GridPoint kOutlineSourceTone[] = {{-2.0f, 0.0f}, {0.0f, -2.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
@@ -591,7 +592,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceRecorder, "source.recorder", "Recorder", BlockKind::AudioSource, 0.0f, kOutlineSourceRecorder, 6, kParamsSourceRecorder, 13, true},
   {BlockType::SourceSample, "source.sample", "Sample", BlockKind::AudioSource, 0.0f, kOutlineSourceSample, 6, kParamsSourceSample, 14, true},
   {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 12, true},
-  {BlockType::SourceStage, "source.stage", "", BlockKind::AudioSource, 0.0f, kOutlineSourceStage, 5, kParamsSourceStage, 1, false},
+  {BlockType::SourceStage, "source.stage", "", BlockKind::AudioSource, 0.0f, kOutlineSourceStage, 5, kParamsSourceStage, 2, false},
   {BlockType::SourceTone, "source.tone", "ToneSource", BlockKind::AudioSource, 0.0f, kOutlineSourceTone, 5, kParamsSourceTone, 3, true},
   {BlockType::FxArpeggiator, "fx.arpeggiator", "", BlockKind::PreEffect, 6.0f, kOutlineFxArpeggiator, 5, kParamsFxArpeggiator, 6, false},
   {BlockType::FxAutoWah, "fx.auto-wah", "AutoWah", BlockKind::PostEffect, 6.0f, kOutlineFxAutoWah, 4, kParamsFxAutoWah, 5, true},

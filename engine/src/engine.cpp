@@ -66,6 +66,12 @@ Engine::Engine(const EngineConfig& cfg)
   if (!cfg.child) stageBuf_.assign(static_cast<std::size_t>(kMaxStages) * 2 * kMaxSegment, 0.0f);
 }
 
+/// R13b: does Stage `b` keep its inner world's particles in flight when it loses power? Not while this world's POWER
+/// switch is off: that clears particles everywhere.
+bool Engine::keepsParticles(const Block& b) const noexcept {
+  return worldPower_ && b.params[P::SourceStage::keepParticles] != 0.0;
+}
+
 /// A Stage block's inner world (CHG-0021). From here its clock is this engine's: the same sample, the same tick grid
 /// and beat, so both worlds tick together however the host cuts the timeline. Its world power is the block's power.
 bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
@@ -80,7 +86,7 @@ bool Engine::attachStage(BlockId id, Engine* inner) noexcept {
   inner->sample_ = sample_; inner->tick_ = tick_; inner->tickOrigin_ = tickOrigin_; inner->tickBase_ = tickBase_;
   inner->tempo_ = tempo_; inner->beat_ = beat_;
   inner->worldPower_ = true;
-  inner->apply(Command::worldPower(b.powerOn));
+  inner->apply(Command::worldPower(b.powerOn, -1, keepsParticles(b)));
   return true;
 }
 
@@ -436,6 +442,9 @@ void Engine::apply(const Command& c) noexcept {
       configureDsp(b);
       b.lastParam = 255;
       if (b.type == BlockType::PowerToggle) recomputeStaticPower();
+      // R13b: Keep Particles turned off while the Stage is unpowered: what was kept in flight vanishes now.
+      if (b.type == BlockType::SourceStage && c.param == P::SourceStage::keepParticles && !b.powerOn && b.poolIndex >= 0)
+        if (Engine* inner = stages_[static_cast<std::size_t>(b.poolIndex)]) inner->applyNow(Command::worldPower(false, -1, keepsParticles(b)));
       if (b.type == BlockType::FxChord || b.type == BlockType::FxArpeggiator || b.type == BlockType::FxRandomNote) {
         // CHG-0017: the notes its sources are playing follow the new setting (no new trigger).
         const int ch = chains_.chainOf[static_cast<std::size_t>(slot)];
@@ -457,11 +466,15 @@ void Engine::apply(const Command& c) noexcept {
     case Command::Type::SetMaster: masterGain_ = std::clamp(c.value, 0.0, 4.0); break;
     case Command::Type::WorldPower: {
       const bool on = c.value != 0.0;
+      // Particles in flight vanish, unless this is a Stage's world losing its power with Keep Particles on (R13b).
+      // Sent again while off (the switch turned off, the world POWER switch off outside), it clears them then.
+      if (!on && c.x == 0.0) particleCount_ = 0;
+      // The world POWER switch off clears the particles in every Stage too, kept or not (owner, 2026-11-14).
+      if (!on && c.x == 0.0) for (Engine* inner : stages_) if (inner) inner->applyNow(Command::worldPower(false));
       if (on == worldPower_) break;
       worldPower_ = on;
       if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].gateStep = 0;  // Counters start over (SIMULATION-0005)
       if (!on) {  // everything the world was powering lets go at once
-        particleCount_ = 0;
         for (int k = 0; k < orderCount_; ++k) {
           Block& b = blocks_[order_[k]];
           b.pulsePower = 0;
@@ -1733,7 +1746,7 @@ void Engine::updateGates() noexcept {
     b.powerOn = want;
     if (b.type == BlockType::SourceStage) {  // CHG-0021: power is the inner world's power switch
       log(want ? Event::Type::GateOn : Event::Type::GateOff, b.id);
-      if (Engine* inner = b.poolIndex >= 0 ? stages_[static_cast<std::size_t>(b.poolIndex)] : nullptr) inner->applyNow(Command::worldPower(want));
+      if (Engine* inner = b.poolIndex >= 0 ? stages_[static_cast<std::size_t>(b.poolIndex)] : nullptr) inner->applyNow(Command::worldPower(want, -1, keepsParticles(b)));
       continue;
     }
     if (b.arranged) { arrange(order_[k], want); continue; }  // CHG-0017: power plays the notes the source is given

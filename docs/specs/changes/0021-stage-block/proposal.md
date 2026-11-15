@@ -59,3 +59,7 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
 ## Owner review 3 (2026-11-14)
 - Opening a Stage shows its blocks: when the saved view would show none or only some of them, the view centres them in
   the window, zooming out to fit (UI-0012).
+
+## Owner review 4 (2026-11-14)
+- Keep Particles switch on the Stage panel (R13b): unpowering the Stage leaves the particles inside flying and reacting
+  (two Emitters facing each other keep a particle going forever); the world POWER switch still clears them everywhere.

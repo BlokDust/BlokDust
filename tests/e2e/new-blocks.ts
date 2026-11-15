@@ -289,6 +289,24 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       guide?.length === 1 && guide[0][0] > 0 && Math.abs(guide[0][1]) < 1;
     return [pass, { off, on, gapSaved, snapped, fine, guide }];
   },
+  // Owner 2026-11-14 (R13b): a Stage's panel has Keep Particles (off by default); the switch is saved with the patch.
+  async 'stage-keep-particles'(errors) {
+    const p = await open(browser, [blk('st', 'source.stage', 0, 0)], errors);
+    await openPanel(p, 'st');
+    const sw = () => p.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.OptionsForm.parameters as any[])
+      .flatMap(r => r.type === 'switches' ? r.switches.map((x: any) => [x.name, !!x.value]) : []) as [string, boolean][]);
+    const before = await sw();
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('keepParticles', true));
+    await p.waitForTimeout(300);
+    const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 'st').params;
+    await p.mouse.click(1100, 700); await p.waitForTimeout(500);
+    await openPanel(p, 'st');
+    const after = await sw();
+    await p.screenshot({ path: `${OUT}/stage-keep-particles.png` });
+    await p.close();
+    const pass = JSON.stringify(before) === '[["Keep Particles",false]]' && saved.keepParticles === 1 && JSON.stringify(after) === '[["Keep Particles",true]]';
+    return [pass, { before, saved, after }];
+  },
   // CHG-0020 (UI-0011): labels come with the patch and are drawn; a click edits the words, a drag moves one, the bin
   // deletes it, and the Interaction menu makes a new one. They never reach the engine.
   async 'labels'(errors) {

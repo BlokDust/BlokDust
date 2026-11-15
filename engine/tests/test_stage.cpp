@@ -1,6 +1,7 @@
 // CHG-0021 (SCOPE-0006): the Stage block: a patch inside a block. Its inner world is an Engine of its own, attached
 // by the host, running in step with the outer one (SPEC-SIMULATION-POWER-AND-PARTICLES R13).
 #include <catch2/catch_test_macros.hpp>
+#include <algorithm>
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -236,4 +237,102 @@ TEST_CASE("Stage: the Microphone and Audio In inside a Stage hear the host input
     for (std::uint32_t d = 0; d < 48000; d += 128) outer->process(inL.data() + d, inR.data() + d, outL.data() + d, outR.data() + d, 128);
     CHECK(rms(outL, 24000) > 0.01);
   }
+}
+
+namespace {
+/// A Stage (1) powered by an outer Power (2); inside, an Emitter (3) firing right at a Tone (1) 10 cells away.
+struct Particles {
+  std::unique_ptr<Engine> outer = makeEngine(48000, 1, false);
+  std::unique_ptr<Engine> inner;
+  explicit Particles(bool keep) {
+    outer->push(Command::add(1, BlockType::SourceStage, 0, 0));
+    if (keep) outer->push(Command::setParam(1, P::SourceStage::keepParticles, 1));
+    outer->push(Command::add(2, BlockType::PowerPower, 3, 0));
+    outer->prime();
+    inner = makeChild(*outer);
+    inner->push(Command::add(1, BlockType::SourceTone, 10, 0));
+    inner->push(Command::add(3, BlockType::PowerEmitter, 0, 0));
+    inner->push(Command::setParam(3, P::PowerEmitter::selfPoweredMode, 1));
+    inner->push(Command::setParam(3, P::PowerEmitter::angle, 0));
+    inner->push(Command::setParam(3, P::PowerEmitter::rate, 10));
+    REQUIRE(outer->attachStage(1, inner.get()));
+    render(*outer, 24000);
+    REQUIRE(!inner->particles().empty());
+  }
+};
+}  // namespace
+
+TEST_CASE("R13b Stage: unpowered, its particles vanish (Keep Particles off, the default)") {
+  Particles s(false);
+  s.outer->push(Command::remove(2));
+  render(*s.outer, 480);
+  CHECK(s.inner->particles().empty());
+}
+
+TEST_CASE("R13b Stage: Keep Particles on, unpowering it leaves its particles flying and hitting; nothing new is emitted") {
+  Particles s(true);
+  s.outer->push(Command::remove(2));
+  render(*s.outer, 480);
+  CHECK(!s.inner->particles().empty());
+  const auto out = render(*s.outer, 24000);
+  CHECK(rms(out) > 0.001);                                 // they reach the Tone, and the hits sound through the Stage
+  render(*s.outer, 48000 * 10);
+  CHECK(s.inner->particles().empty());                     // the world is off: the Emitter fires no more, so they run out
+  CHECK(rms(render(*s.outer, 24000)) == 0.0);
+}
+
+TEST_CASE("R13b Stage: kept particles vanish when Keep Particles is turned off, or the world POWER switch goes off") {
+  {
+    Particles s(true);
+    s.outer->push(Command::remove(2));
+    render(*s.outer, 480);
+    REQUIRE(!s.inner->particles().empty());
+    s.outer->push(Command::setParam(1, P::SourceStage::keepParticles, 0));
+    render(*s.outer, 480);
+    CHECK(s.inner->particles().empty());
+  }
+  {
+    Particles s(true);
+    s.outer->push(Command::remove(2));
+    render(*s.outer, 480);
+    REQUIRE(!s.inner->particles().empty());
+    s.outer->push(Command::worldPower(false));    // the Stage was unpowered already: the switch still clears inside
+    render(*s.outer, 480);
+    CHECK(s.inner->particles().empty());
+  }
+  {
+    Particles s(true);                             // still powered: the world switch takes its power and its particles
+    s.outer->push(Command::worldPower(false));
+    render(*s.outer, 480);
+    CHECK(s.inner->particles().empty());
+  }
+}
+
+TEST_CASE("R13b Stage: kept particles go on reacting: two Emitters facing each other keep catching and firing, unpowered") {
+  auto outer = makeEngine(48000, 1, false);
+  outer->push(Command::add(1, BlockType::SourceStage, 0, 0));
+  outer->push(Command::setParam(1, P::SourceStage::keepParticles, 1));
+  outer->push(Command::add(2, BlockType::PowerPower, 3, 0));
+  outer->prime();
+  auto inner = makeChild(*outer);
+  inner->push(Command::add(1, BlockType::PowerEmitter, 0, 0));
+  inner->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));
+  inner->push(Command::setParam(1, P::PowerEmitter::angle, 0));
+  inner->push(Command::setParam(1, P::PowerEmitter::rate, 200));    // slow: one particle, then the Stage loses power
+  inner->push(Command::add(2, BlockType::PowerEmitter, 10, 0));
+  inner->push(Command::setParam(2, P::PowerEmitter::angle, 180));
+  REQUIRE(outer->attachStage(1, inner.get()));
+  for (int i = 0; i < 1200 && inner->particles().empty(); ++i) render(*outer, 200);   // its first, after ~3.3 s
+  REQUIRE(inner->particles().size() == 1);
+  outer->push(Command::remove(2));
+  render(*outer, 480);
+  REQUIRE(outer->block(1)->power() == 0);
+  // Far longer than one particle lives: each Emitter catches it and fires one back (R5b), so one is always flying.
+  double minX = 1e9, maxX = -1e9;
+  for (int i = 0; i < 100; ++i) {
+    render(*outer, 4800);
+    REQUIRE(inner->particles().size() == 1);
+    minX = std::min(minX, inner->particles()[0].x); maxX = std::max(maxX, inner->particles()[0].x);
+  }
+  CHECK(maxX - minX > 5.0);                                      // back and forth between the two
 }

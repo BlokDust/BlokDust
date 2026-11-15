@@ -60,7 +60,8 @@ struct Command {
   static Command setMaster(double gain, std::int64_t at = -1) { Command c; c.type = Type::SetMaster; c.value = gain; c.atSample = at; return c; }
   /// The app's power switch (owner, 2026-11-11, CHG-0005): off, nothing in the world powers anything (Power and Toggle
   /// blocks, emitters, lasers; particles in flight vanish). What the player does still plays: held blocks, keys, MIDI.
-  static Command worldPower(bool on, std::int64_t at = -1) { Command c; c.type = Type::WorldPower; c.value = on ? 1.0 : 0.0; c.atSample = at; return c; }
+  /// WorldPower: value = on; x = 1: when off, particles in flight carry on (a Stage's Keep Particles, CHG-0021); else they vanish.
+  static Command worldPower(bool on, std::int64_t at = -1, bool keepParticles = false) { Command c; c.type = Type::WorldPower; c.value = on ? 1.0 : 0.0; c.atSample = at; c.x = keepParticles ? 1.0 : 0.0; return c; }
   /// v1 Source.MouseDown/MouseUp → AddPower/RemovePower: a held source (audio or power source) is powered.
   static Command relink(BlockId a, BlockId b, std::int64_t at = -1) { Command c; c.type = Type::Relink; c.id = a; c.value = static_cast<double>(b); c.atSample = at; return c; }
   static Command press(BlockId id, bool down, std::int64_t at = -1) { Command c; c.type = Type::Press; c.id = id; c.value = down ? 1.0 : 0.0; c.atSample = at; return c; }
@@ -195,6 +196,7 @@ class Engine {
   bool controllerHears(const Block& ctrl, const Command& c) const noexcept;
   void forwardToStage(const Block& stage, const Block& ctrl, const Command& c) noexcept;
   void releaseStageNotes() noexcept;
+  bool keepsParticles(const Block& b) const noexcept;
   void renderGranular(Block& b, int n) noexcept;
   static bool acceptsChannel(const Block& ctrl, int channel) noexcept;
   // v1 Source voices (Source.NoteOn/NoteOff/GetVoice/RemoveVoice/SetPitch)

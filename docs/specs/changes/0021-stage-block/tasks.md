@@ -9,4 +9,5 @@ Check items off as they land. Each task should be independently verifiable.
 - [x] 4. Make stage from selection (drag Stage from the menu with blocks selected, or Cmd/Ctrl+G)
 - [x] 5. Inside view (UI-0009) desktop + phone layout
 - [x] 6. Golden `stage-nested`; browser tests `pnpm test:new-blocks -- --only stage,stage-from-selection`
+- [x] 6a. Keep Particles (R13b, owner review 4): engine `test_stage.cpp`, browser `stage-keep-particles`
 - [ ] 7. Owner check (desktop, iPad, phone)

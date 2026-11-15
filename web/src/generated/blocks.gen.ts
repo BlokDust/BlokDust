@@ -1721,6 +1721,17 @@ export const BLOCKS: readonly BlockDef[] = [
           "max": 2,
           "k": 0
         }
+      },
+      {
+        "key": "keepParticles",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
       }
     ]
   },
