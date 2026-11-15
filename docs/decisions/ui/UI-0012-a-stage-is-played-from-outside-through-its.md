@@ -29,6 +29,9 @@ We will let notes into a Stage (SPEC-SIMULATION-POWER-AND-PARTICLES R13a):
   does; the new Stage is then selected.
 - **Everything goes in, or nothing.** Samplers (with their audio), the Microphone and Audio In go inside like any
   block. A selection that holds a Stage cannot go in (one level, SCOPE-0006): no button, no drop ring.
+- **Opening a Stage shows its blocks** (owner, 2026-11-14). The view saved with the Stage is kept while every block
+  shows in the window; otherwise the view centres the blocks in the window, at the largest of v1's zoom levels (no
+  larger than the saved one) that fits them all, so a Stage never opens on an empty window.
 
 ## Consequences
 - The engine keeps, per Stage, the notes each outer controller holds inside, so they end on the key they started on.
@@ -36,7 +39,7 @@ We will let notes into a Stage (SPEC-SIMULATION-POWER-AND-PARTICLES R13a):
   Inputs inside Stages get Web MIDI from outside.
 - The plugin plays notes into Stages (the engine does it) but does not yet attach audio to samplers inside a Stage.
 - Stage In's look is a placeholder until the owner designs it in the block designer.
-- Tests: `test_stage.cpp` (UI-0012 cases), `pnpm test:new-blocks --only make-stage-button,stage-keys`.
+- Tests: `test_stage.cpp` (UI-0012 cases), `pnpm test:new-blocks --only make-stage-button,stage-keys,stage-opens-on-blocks`.
 
 ## Alternatives considered
 - **The Stage as a tape** (a note re-pitches and re-times the whole inner world): one note at a time, drums move with

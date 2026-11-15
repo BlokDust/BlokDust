@@ -221,6 +221,29 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       shown.length === 1 && shown[0].loaded && shown[0].frames > 0;
     return [pass, { none, btn, outer, inner, sounds, shown }];
   },
+  // Owner review 3 (2026-11-14, UI-0012): opening a Stage shows its blocks. Its blocks sit far from the centre, and the
+  // view saved with it shows none of them: the view moves to centre on them, zooming out to fit them all.
+  async 'stage-opens-on-blocks'(errors) {
+    const p = await open(browser, [blk('s', 'source.stage', 0, 0)], errors,
+      { macros: [{ block: 's', view: { x: 0, y: 0, zoom: 2 }, blocks: [blk('t', 'source.tone', 60, 40), blk('pw', 'power.power', 75, 48), blk('f', 'fx.filter', 66, 30)] }] } as any);
+    await p.evaluate(i => (window as any).__bd_stage.enter(i), await idOf(p, 's'));
+    await p.waitForTimeout(500);
+    const win = await p.evaluate(() => (window as any).__bd_probe.inside) as { x: number; y: number; w: number; h: number };
+    const pts = await p.evaluate(() => { const pr = (window as any).__bd_probe; return pr.state.blocks.map((b: any) => pr.toCss(b.x, b.y)); }) as [number, number][];
+    await p.screenshot({ path: `${OUT}/stage-opens-on-blocks.png` });
+    // A Stage whose blocks the saved view already shows keeps that view.
+    const p2 = await open(browser, [blk('s', 'source.stage', 0, 0)], errors,
+      { macros: [{ block: 's', view: { x: 30, y: 0, zoom: 1 }, blocks: [blk('t', 'source.tone', -2, 0)] }] } as any);
+    await p2.evaluate(i => (window as any).__bd_stage.enter(i), await idOf(p2, 's'));
+    await p2.waitForTimeout(500);
+    const kept = await p2.evaluate(() => { const pr = (window as any).__bd_probe; return pr.toCss(0, 0)[0] - innerWidth / 2; });
+    await p.close(); await p2.close();
+    const visible = pts.length === 3 && pts.every(([x, y]) => x > win.x && x < win.x + win.w && y > win.y && y < win.y + win.h);
+    const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+    const centred = Math.abs((Math.min(...xs) + Math.max(...xs)) / 2 - (win.x + win.w / 2)) < 2 && Math.abs((Math.min(...ys) + Math.max(...ys)) / 2 - (win.y + win.h / 2)) < 2;
+    const keptView = Math.abs(kept - 30 * (1280 / 850)) < 2;
+    return [visible && centred && keptView, { pts, win, kept }];
+  },
   // Owner review 2 (UI-0012): the computer's keys play a Keyboard inside a Stage from outside it; a Keyboard touching a
   // Stage plays its Stage In.
   async 'stage-keys'(errors) {

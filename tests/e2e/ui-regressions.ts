@@ -207,6 +207,36 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
    * AudioContext exists, is what a music app asks for (Safari 16.4+; Funputs demo-runtime does the same). A
    * Microphone block needs "play-and-record", set before asking for the mic. Chromium has no audioSession, so
    * the test stands one in and records the order. */
+  // Owner, 2026-11-14 (iOS): leave the browser, play a video or podcast, stop it, come back: iOS has interrupted the
+  // AudioContext, so the engine stood still (no sound, no new connections, lines stretched after dragged blocks).
+  // Coming back to the page, or the next press, resumes it; a press also kicks a context that says it runs but renders
+  // nothing (suspend, then resume).
+  async 'audio-resumes-after-interruption'(errors) {
+    const p = await browser.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.addInitScript(() => {
+      const AC = window.AudioContext;
+      (window as any).AudioContext = class extends AC { constructor(o?: AudioContextOptions) { super(o); (window as any).__ctx = this; } };
+    });
+    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0), blk(2, 'Power', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.click('#start');
+    await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 2);
+    const snaps = () => p.evaluate(() => (window as any).__bd_probe.state.snapshots as number);
+    const interrupt = () => p.evaluate(() => (window as any).__ctx.suspend());
+    // Interrupted while away; the page shows again.
+    await interrupt(); await p.waitForTimeout(200);
+    await p.evaluate(() => { document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event('pageshow')); });
+    await p.waitForTimeout(500);
+    const a = await snaps(); await p.waitForTimeout(300);
+    const backOnShow = (await snaps()) > a && await p.evaluate(() => (window as any).__ctx.state) === 'running';
+    // Interrupted again with no page event: the next press on the stage brings it back.
+    await interrupt(); await p.waitForTimeout(300);
+    await p.mouse.click(900, 650); await p.waitForTimeout(500);
+    const b = await snaps(); await p.waitForTimeout(300);
+    const backOnPress = (await snaps()) > b && await p.evaluate(() => (window as any).__ctx.state) === 'running';
+    await p.close();
+    return [backOnShow && backOnPress, { backOnShow, backOnPress }];
+  },
   async 'ios-silent-switch'(errors) {
     const run = async (blocks: Block[]) => {
       const p = await browser.newPage(); p.on('pageerror', e => errors.push(e.message));

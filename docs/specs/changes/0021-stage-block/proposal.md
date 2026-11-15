@@ -55,3 +55,7 @@ Condense a patch into one source block, enter it to edit, and hear both levels r
   Stage plays the controllers inside it, and the new **Stage In** block (inside a Stage only) (R13a).
 - The title is BLOKDUST 2 (header and splash).
 
+
+## Owner review 3 (2026-11-14)
+- Opening a Stage shows its blocks: when the saved view would show none or only some of them, the view centres them in
+  the window, zooming out to fit (UI-0012).

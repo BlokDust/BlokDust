@@ -22,6 +22,7 @@ import { Stage } from '../stage/Stage.ts';
 import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../stage/labels.ts';
 import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
 import { drawMakeStage, inBox, makeStageBox, type ButtonBox } from '../stage/makeStageButton.ts';
+import { frameBlocks } from '../stage/frameBlocks.ts';
 import { gridToPx } from '../stage/metrics.ts';
 import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
@@ -547,8 +548,8 @@ async function main() {
     connectionOrder = [...(macro.connectionOrder ?? [])];
     addLabels(readLabels(macro.labels));
     engine?.setView(id);
-    const v = macro.view;
-    applyView(v && Number.isFinite(v.zoom) ? v : { x: 0, y: 0, zoom: 1 });
+    const m = stage.metrics;  // opening it shows its blocks (owner, 2026-11-14)
+    applyView(frameBlocks([...model.values()], macro.view, { width: m.width, height: m.height, unit: m.unit, area: insideFrame() }));
     setMenuHidden(INSIDE_HIDDEN);
     scene.setBlocks([...v1Blocks.values()]);
     uiSync = true;
@@ -1416,7 +1417,7 @@ async function main() {
   };
   const overlay = document.getElementById('start')!;
   const onSnapshot = (s: Snapshot) => {
-    probe.snapshots++; probe.rms = s.rms; probe.particles = s.particles.length / 3; probe.beams = s.beams.length / 4;
+    probe.snapshots++; lastSnapshot = performance.now(); probe.rms = s.rms; probe.particles = s.particles.length / 3; probe.beams = s.beams.length / 4;
     // v1 Settings › dB Meter (Tone.Meter on the master output, smoothed 0.8): level in dB from the snapshot RMS.
     scene.setLevelDb(20 * Math.log10(Math.max(s.rms, 1e-5)));
     for (const e of s.events) { if (e.type === 4) probe.gateOns++; if (e.type === 1) probe.hits++; }
@@ -1530,8 +1531,29 @@ async function main() {
     if ([...model.values()].some(b => needsInput(b.type))) void engine.connectMicrophone();
     for (const [id, b] of model) if (b.type === 'source.stage') void fillStageSamples(id, b.uid);  // its inner world was built with the engine
     await running;
+    keepAwake(ctx);
     probe.started = true;
     ready = true; reveal();
+  }
+  /** iOS interrupts the AudioContext when another app plays (a video, a podcast) and leaves it so when the page comes
+   * back: the engine runs in it, so sound, connections and particles all stood still (owner, 2026-11-14). Coming back to
+   * the page and every press resume it; a press also kicks a context that says it runs but has rendered nothing for a
+   * while (suspend, then resume), which iOS sometimes leaves behind. Never the plugin (JUCE runs the engine). */
+  let lastSnapshot = 0;
+  function keepAwake(ctx: AudioContext): void {
+    let kicking = false;
+    const wake = (press: boolean) => {
+      if (document.hidden || ctx.state === 'closed' || kicking) return;
+      if (ctx.state !== 'running') { void ctx.resume().catch(() => {}); return; }
+      if (!press || performance.now() - lastSnapshot < 1000) return;
+      kicking = true;
+      void ctx.suspend().then(() => ctx.resume()).catch(() => {}).finally(() => { kicking = false; });
+    };
+    document.addEventListener('visibilitychange', () => wake(false));
+    window.addEventListener('pageshow', () => wake(false));
+    window.addEventListener('focus', () => wake(false));
+    ctx.addEventListener('statechange', () => wake(false));
+    for (const t of ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const) window.addEventListener(t, () => wake(true), { capture: true });
   }
 
   // ---- input: v1 MainScene order (UI first, then blocks, then stage drag) ----
