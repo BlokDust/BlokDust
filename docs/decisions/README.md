@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**59 decisions** · proposed: 12 · accepted: 41 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**60 decisions** · proposed: 13 · accepted: 41 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -83,6 +83,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SHARING-0006](sharing/SHARING-0006-host-at-blokdust-funputs-com-with-funputs-com.md) | Host at blokdust.funputs.com with funputs.com/blokdust redirecting | **accepted** | 2026-11-12 | hosting, domain, release-1 |
 | [SHARING-0007](sharing/SHARING-0007-video-export-renders-the-patch-offline-and.md) | Video export renders the patch offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
 | [SHARING-0008](sharing/SHARING-0008-optional-accounts-with-passkeys-and-google.md) | Optional accounts with passkeys and Google, sessions in D1 | **proposed** | 2026-11-15 | sharing, accounts, security, cost |
+| [SHARING-0009](sharing/SHARING-0009-a-public-gallery-of-published-patches-with-likes.md) | A public gallery of published patches with likes and reports | **proposed** | 2026-11-15 | sharing, gallery, moderation |
 
 ## [simulation](simulation/README.md)
 

@@ -17,6 +17,7 @@ import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchB
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
 import { accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
+import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
 import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
@@ -426,15 +427,26 @@ async function main() {
       warning: () => shareWarning(),
     } : {
       current: () => shareLink ? { url: shareLink.url, owned: shareLink.owned, stale: contentOf(toPatch()) !== shareLink.at } : null,
-      make: async (mode, title) => {
-        const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title);
-        const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
-        history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
-        shareLink = { url, owned: isServerId(id) && !!App.SessionId, at: contentOf(toPatch()) };
-        setBaseline();  // a shared patch counts as saved
-        keepMine(title);
-      },
+      make: (mode, title) => makeLink(mode, title),
       warning: () => shareWarning(),
+    },
+    // The public gallery (CHG-0024): web only.
+    gallery: juce || embedId ? null : {
+      browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
+      open: row => void openShared(row.id, 'open'),
+      like: (id, on) => gallery.like(id, on),
+      report: async id => { await gallery.report(id); },
+      publish: async title => {
+        const me = await account.me();
+        if (!me?.user) throw new Error('Sign in on the ACCOUNT tab to publish.');
+        if (!me.user.handle) throw new Error('Choose your name on the ACCOUNT tab first.');
+        // Saved to the account first: a new link if it has none (or isn't this account's), else saved over.
+        const link = shareLink;
+        if (!link || !link.owned || link.at !== contentOf(toPatch()) || !isServerId(App.CompositionId ?? '')) await makeLink(link?.owned ? 'save' : 'saveAs', title);
+        await gallery.publish(App.CompositionId!);
+      },
+      unpublish: async id => { await gallery.unpublish(id); },
+      currentId: () => (App.CompositionId && App.SessionId ? App.CompositionId : null),
     },
     // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
     account: juce || embedId ? null : {
@@ -919,6 +931,30 @@ async function main() {
     setBaseline(); keepMine(title);
     return true;
   }
+  /** SAVE / SAVE AS to a share link (SPEC-SHARING-BACKEND): v1 SAVE over this browser's (or account's) link, else a
+   * new one. The link goes in the address bar; the patch counts as saved. */
+  async function makeLink(mode: 'save' | 'saveAs', title: string): Promise<void> {
+    const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title);
+    const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
+    history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
+    shareLink = { url, owned: isServerId(id) && !!App.SessionId, at: contentOf(toPatch()) };
+    setBaseline();  // a shared patch counts as saved
+    keepMine(title);
+  }
+  /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
+   * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
+  async function openShared(id: string, mode: 'open' | 'insert'): Promise<void> {
+    const r = await loadShared(id);
+    if (!r) return;
+    usePatch(r.patch, r.title, mode);
+    if (mode !== 'open') return;
+    App.CompositionId = id; App.SessionId = sessionFor(id);
+    session = { id, dirty: false }; saveSession(session);
+    const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
+    history.replaceState(null, '', url);
+    shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()) };
+    setBaseline();
+  }
   /** Signed in: the account's patches (R8), as OPEN rows. */
   async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
     if (embedId) return [];
@@ -926,20 +962,7 @@ async function main() {
     catch { return []; }  // signed out, or no backend
   }
   async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<void> {
-    if (key.startsWith('acct:')) {
-      const id = key.slice(5), r = await loadShared(id);
-      if (!r) return;
-      usePatch(r.patch, r.title, mode);
-      if (mode === 'open') {  // it is the open composition now, saved over from this device (R9)
-        App.CompositionId = id; App.SessionId = sessionFor(id);
-        session = { id, dirty: false }; saveSession(session);
-        const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
-        history.replaceState(null, '', url);
-        shareLink = { url, owned: true, at: contentOf(toPatch()) };
-        setBaseline();
-      }
-      return;
-    }
+    if (key.startsWith('acct:')) { await openShared(key.slice(5), mode); return; }  // saved over from this device (R9)
     if (key.startsWith('preset:')) {
       const p = PRESETS.find(x => `preset:${x.file}` === key), patch = p && parsePatchFile(p.text);
       if (p && patch) usePatch(patch, p.name, mode);

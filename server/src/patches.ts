@@ -4,6 +4,7 @@ import { LIMITS, type Env } from './env.ts';
 import { HttpError, b64urlBytes, json, publicBase, sameDigest, sha256Hex } from './http.ts';
 import { verifyTurnstile } from './turnstile.ts';
 import { currentUser, sameOrigin } from './auth/session.ts';
+import { refreshPublished } from './gallery.ts';
 
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** Share ids: 10 base62 chars that never start with "p" (Phase 1 `?c=p…` links carry the patch itself, R5b). */
@@ -128,6 +129,7 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
     env.DB.prepare('UPDATE patches SET rev = ?, title = ?, updated = ? WHERE id = ? AND rev = ?').bind(rev, title, now, id, r.rev),
   ]);
   if (!res[1].meta.changes) throw new HttpError(409, 'saved elsewhere at the same time; try again');
+  await refreshPublished(env, id);  // SPEC-SHARING-GALLERY R5: the gallery shows the latest title and blocks
   return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title) });
 }
 
@@ -174,6 +176,7 @@ export async function deletePatch(env: Env, req: Request, id: string): Promise<R
   if (!r) throw new HttpError(404, 'no such patch');
   await authorise(env, req, r);
   await env.DB.batch([
+    env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id),
     env.DB.prepare('DELETE FROM revisions WHERE patch_id = ?').bind(id),
     env.DB.prepare('UPDATE patches SET deleted = 1, updated = ? WHERE id = ?').bind(Date.now(), id),
   ]);

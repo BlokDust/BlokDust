@@ -54,6 +54,20 @@ export interface AccountHost {
   /** The passkey dialog was closed by the user: nothing to report. */
   cancelled(e: unknown): boolean;
 }
+/** The gallery (CHG-0024). */
+export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; liked: boolean; mine: boolean }
+export interface GalleryHost {
+  browse(sort: 'popular' | 'new', q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
+  /** Open a published patch (it replaces the current one; SAVE then makes a remix of it). */
+  open(row: GalleryRow): void;
+  like(id: string, on: boolean): Promise<{ liked: boolean; likes: number }>;
+  report(id: string): Promise<void>;
+  /** Save the current patch to the signed-in account if needed, then publish it. */
+  publish(title: string): Promise<void>;
+  unpublish(id: string): Promise<void>;
+  /** The open patch's share id when the signed-in account owns it (its row then offers UNPUBLISH). */
+  currentId(): string | null;
+}
 /** Video export (CHG-0022): what the VIDEO tab asks for. */
 export type VideoShape = 'portrait' | 'square' | 'wide';
 /** Videos start from the beginning, as the patch plays when it has just loaded (owner, 2026-11-15). */
@@ -86,6 +100,8 @@ export interface PatchesHost {
     /** In a click: the system share sheet (where a browser can't share files, the file is downloaded). */
     share(file: File): Promise<void>;
   };
+  /** The public gallery (SPEC-SHARING-GALLERY); null: no GALLERY tab (the plugin). */
+  gallery: GalleryHost | null;
   /** Accounts (SPEC-SHARING-ACCOUNTS); null: no ACCOUNT tab (the plugin). */
   account: AccountHost | null;
   /** Share links (SPEC-SHARING-BACKEND). */
@@ -103,7 +119,7 @@ export interface PatchesHost {
 /** The tab Patches opens on: the last one chosen (owner, 2026-11-10). */
 const TAB_KEY = 'blokdust.patchesTab';
 function rememberedTab(): Tab {
-  try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 3 ? t : 0) as Tab; } catch { return 0; }
+  try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 4 ? t : 0) as Tab; } catch { return 0; }
 }
 
 const ITEMS = 5;
@@ -124,7 +140,7 @@ export function downloadColour(): string {
   return cols.reduce((a: string, c: string) => (blackContrast(c) > blackContrast(a) ? c : a));
 }
 const COPY = {
-  panel: 'Patches', tabs: ['Save', 'Open', 'Video', 'Account'] as const,
+  panel: 'Patches', tabs: ['Save', 'Open', 'Video', 'Account', 'Gallery'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',
   saveLinePlugin: 'Save a .blokdust patch file. It opens in the web version of BlokDust too.',
@@ -142,6 +158,11 @@ const COPY = {
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
   videoLine: 'Make a video to share on Instagram, TikTok and more.',
+  galleryLine: 'Patches people have published. Search names, blocks or @people.', search: 'Search',
+  popular: 'Popular', newest: 'New', publish: 'Publish This Patch', publishing: 'publishing...', unpublish: 'Unpublish',
+  like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
+  reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here. Patches reported by three people are hidden until they are reviewed.',
+  reported: 'Thank you. The patch was reported.', published: 'Published. It is in the gallery now.',
   shape: 'Shape', length: 'Length', makeVideo: 'Make Video', cancelVideo: 'Cancel',
   rendering: 'making video', shareVideo: 'Share Video',
   accountLine: 'Sign in to keep your patches on every device. Saving and sharing work without it.',
@@ -160,7 +181,10 @@ const SHAPES: VideoShape[] = ['portrait', 'wide', 'square'];
 const SHAPE_NAMES: Record<VideoShape, string> = { portrait: 'Portrait', wide: 'Wide', square: 'Square' };
 const LENGTHS = [15, 30, 60] as const;
 
-type Tab = 0 | 1 | 2 | 3;  // SAVE, OPEN, VIDEO, ACCOUNT (web)
+type Tab = 0 | 1 | 2 | 3 | 4;  // SAVE, OPEN, VIDEO, ACCOUNT, GALLERY (web): ids, not places
+/** The tabs in the order they show (owner, 2026-11-15: the gallery next to OPEN). */
+const TAB_ORDER: Tab[] = [0, 1, 4, 2, 3];
+const ALL_TABS: Tab[] = [0, 1, 2, 3, 4];
 type View = 'list' | 'file' | 'confirm' | 'remove';
 
 export class PatchesPanel extends DisplayObject {
@@ -182,7 +206,20 @@ export class PatchesPanel extends DisplayObject {
   private page = 1;
   private roll: Record<string, boolean> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
-  private selected = [1, 0, 0, 0];
+  private selected = [1, 0, 0, 0, 0];
+  /** The GALLERY tab (CHG-0024). */
+  GalleryItems: GalleryRow[] = [];
+  GallerySort: 'popular' | 'new' = 'popular';
+  GalleryQuery = '';
+  GalleryPage = 1;
+  GalleryMore = false;
+  GalleryLoading = false;
+  GalleryMessage = '';
+  GalleryView: 'list' | 'report' = 'list';
+  private reporting: GalleryRow | null = null;
+  private galleryAsk = 0;
+  SearchContainer!: HTMLElement;
+  SearchInput!: HTMLInputElement;
   /** The ACCOUNT tab (CHG-0023). Undefined until asked; null: signed out. */
   Account: AccountInfo | null | undefined = undefined;
   AccountView: 'main' | 'create' | 'name' | 'delete' = 'main';
@@ -222,6 +259,9 @@ export class PatchesPanel extends DisplayObject {
     this.Input.addEventListener('input', () => { this.Title = this.Input.value; });
     this.Input.addEventListener('keydown', e => { if (e.key === 'Enter') this.Input.blur(); });
     this.UrlInput.addEventListener('click', () => void this.copyLink());
+    this.SearchContainer = document.getElementById('gallerySearch')!;
+    this.SearchInput = document.getElementById('gallerySearchInput') as HTMLInputElement;
+    this.SearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.SearchInput.blur(); this.GalleryQuery = this.SearchInput.value.trim(); this.GalleryPage = 1; void this.browse(); } });
     this.HandleContainer = document.getElementById('accountHandle')!;
     this.HandleInput = document.getElementById('accountHandleInput') as HTMLInputElement;
     this.HandleInput.addEventListener('input', () => { this.HandleInput.value = this.HandleInput.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20); this.AccountMessage = ''; });
@@ -236,7 +276,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
-  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || this.AccountBusy || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
+  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || this.AccountBusy || this.GalleryLoading || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
   /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
   private settle = 0;
   private settled(): void { this.settle = performance.now() + 250; }
@@ -254,14 +294,15 @@ export class PatchesPanel extends DisplayObject {
   private tabs() {
     const u = App.Unit, W = App.Width, menuWidth = this.mobile ? (W / 7) * 5 : (W / 7) * 4, gutter = App.Metrics.Device !== Device.desktop ? 40 : 60;
     let x = W * 0.5 - menuWidth * 0.5;
-    const names = COPY.tabs.filter((_, i) => i < 2 || (i === 2 && this.host.video) || (i === 3 && this.host.account));
-    const tabs = names.map(name => {
-      const w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { name: name.toUpperCase(), x: x + w * 0.5, w };
+    const tabs = TAB_ORDER.filter(id => this.hasTab(id)).map(id => {
+      const name = COPY.tabs[id], w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { id, name: name.toUpperCase(), x: x + w * 0.5, w };
       x += w;
       return t;
     });
     return { tabs, half: menuWidth * 0.5 };
   }
+  /** VIDEO, ACCOUNT and GALLERY are web only. */
+  private hasTab(id: Tab): boolean { return id < 2 || (id === 2 && !!this.host.video) || (id === 3 && !!this.host.account) || (id === 4 && !!this.host.gallery); }
   /** v1's bordered button (Search Freesound, Randomise Title): right edge at `right`, text baseline 14 units under `top`. */
   private bordered(label: string, right: number, top: number) {
     const u = App.Unit, w = this.textW(label);
@@ -371,7 +412,7 @@ export class PatchesPanel extends DisplayObject {
     ctx.stroke();
     ctx.textAlign = 'center'; ctx.font = App.Metrics.TxtMid;
     tabs.forEach((t, i) => {
-      const s = this.selected[i], hw = t.w * 0.5, x = t.x;
+      const s = this.selected[t.id], hw = t.w * 0.5, x = t.x;
       App.FillColor(ctx, App.Palette[App.ThemeManager.MenuOrder[i % App.ThemeManager.MenuOrder.length]]);
       ctx.beginPath();
       ctx.moveTo(x - hw, tabY); ctx.lineTo(x + hw, tabY); ctx.lineTo(x + hw, tabY + h * s); ctx.lineTo(x + 10 * u, tabY + h * s);
@@ -389,7 +430,7 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
-    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawVideo(); else if (this.Tab === 3) this.drawAccount(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
+    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawVideo(); else if (this.Tab === 3) this.drawAccount(); else if (this.Tab === 4) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
   /** A filled button with v1's hover notch under its centre (SharePanel / SettingsPanel). */
@@ -674,6 +715,107 @@ export class PatchesPanel extends DisplayObject {
     this.VideoState = 'idle'; this.VideoMessage = '';
   }
 
+  // ---- GALLERY tab (CHG-0024) ----
+  // v1 SoundcloudPanel's layout: the search field and its rule and bordered SEARCH, then five rows a page with their
+  // count, page number and arrows; each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own);
+  // SORT as the VIDEO tab's underlined cycling control; PUBLISH THIS PATCH as the OPEN tab's GUIDE button.
+  private galleryLayout() {
+    const u = App.Unit, W = App.Width, cy = this.cy, right = this.margin + this.pageW;
+    const search = this.bordered(COPY.search, right, cy - 155 * u);
+    return { search, sortY: cy - 108 * u, sortRight: right,
+      publish: { x: W * 0.5 - 210 * u, y: cy + (this.mobile ? 195 : 175) * u, w: 420 * u, h: 40 * u, cx: W * 0.5 } };
+  }
+  private galleryRow(n: number) {
+    const u = App.Unit, y = this.cy - 70 * u + n * 40 * u, right = this.margin + this.pageW;
+    const rep = this.bordered(COPY.report, right, y - 19 * u);
+    const item = this.GalleryItems[n];
+    const likeLabel = item ? `${item.liked ? COPY.liked : COPY.like} ${item.likes}` : COPY.like;
+    const mine = !!item?.mine;
+    const unpub = this.bordered(COPY.unpublish, right, y - 19 * u);
+    const like = this.bordered(likeLabel, (mine ? unpub.x : rep.x) - 8 * u, y - 19 * u);
+    const open = this.bordered(COPY.open, like.x - 8 * u, y - 19 * u);
+    return { open, like, report: rep, unpublish: unpub, mine, textRight: open.x - 6 * u };
+  }
+  private sortLabel() { return (this.GallerySort === 'popular' ? COPY.popular : COPY.newest).toUpperCase(); }
+  private drawGallery(): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    if (this.GalleryView === 'report' && this.reporting) {
+      this.heading(COPY.reportTitle, COPY.reportLine);
+      const { left, right } = this.halves();
+      for (const h of [left, right]) h.y = cy + 5 * u;
+      this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.reportCancel);
+      this.filled(right, App.Palette[menu[3]], COPY.report, !!this.roll.reportOk);
+      return;
+    }
+    const L = this.galleryLayout();
+    // SEARCH (v1 SoundcloudPanel: the field over a rule, SEARCH bordered at its right) //
+    App.StrokeColor(ctx, txt);
+    ctx.beginPath(); ctx.moveTo(margin, cy - 135 * u); ctx.lineTo(margin + this.pageW, cy - 135 * u); ctx.stroke();
+    this.drawBordered(L.search, txt);
+    // The line, and SORT (underlined, cycles) //
+    App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+    ctx.fillText(COPY.galleryLine, margin, L.sortY);
+    ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'right';
+    const sl = this.sortLabel(), sw = ctx.measureText(sl).width;
+    ctx.fillText(sl, L.sortRight, L.sortY);
+    ctx.beginPath(); ctx.moveTo(L.sortRight - sw, L.sortY + 4 * u); ctx.lineTo(L.sortRight, L.sortY + 4 * u);
+    ctx.lineWidth = this.roll.sort ? 2 : 1; ctx.stroke(); ctx.lineWidth = 2;
+    // ROWS //
+    const n0 = this.GalleryItems.length;
+    for (let n = 0; n < Math.min(n0, ITEMS); n++) {
+      const y = cy - 70 * u + n * 40 * u, it = this.GalleryItems[n], b = this.galleryRow(n);
+      if (n < Math.min(n0, ITEMS) - 1) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
+      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
+      const maxW = b.textRight - margin - u;
+      const fit = (t: string, yy: number) => { const w = ctx.measureText(t).width; if (w <= maxW) { ctx.fillText(t, margin + u, yy); return; } ctx.save(); ctx.translate(margin + u, yy); ctx.scale(maxW / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
+      fit(it.title.toUpperCase(), y - 10 * u);
+      fit(`${COPY.by} @${it.by}${it.remixes ? ` \u00b7 ${it.remixes} remix${it.remixes === 1 ? '' : 'es'}` : ''}`, y);
+      this.drawBordered(b.open, txt);
+      this.drawBordered(b.like, it.liked ? txt : App.Palette[1]);
+      this.drawBordered(b.mine ? b.unpublish : b.report, App.Palette[1]);
+    }
+    App.FillColor(ctx, txt);
+    if (!n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
+    else if (!n0) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * u); }
+    else { ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'left'; ctx.fillText(`${1 + ITEMS * (this.GalleryPage - 1)} - ${ITEMS * (this.GalleryPage - 1) + Math.min(n0, ITEMS)}`, margin, cy + 160 * u); }
+    // PAGE ARROWS (v1, per device) //
+    let arrowX = 275, arrowY = 0;
+    if (this.tablet) arrowX = 245;
+    if (this.mobile) { arrowX = 60; arrowY = 160; }
+    for (const dir of [-1, 1]) {
+      const live = dir < 0 ? this.GalleryPage > 1 : this.GalleryMore;
+      App.StrokeColor(ctx, live ? txt : App.Palette[1]);
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5 + dir * arrowX * u, cy + (arrowY - 20) * u); ctx.lineTo(W * 0.5 + dir * (arrowX + 20) * u, cy + arrowY * u); ctx.lineTo(W * 0.5 + dir * arrowX * u, cy + (arrowY + 20) * u);
+      ctx.stroke();
+    }
+    // PUBLISH THIS PATCH (the OPEN tab's GUIDE button) and the message //
+    this.filled(L.publish, App.Palette[this.GalleryLoading ? 1 : menu[3]], this.GalleryLoading ? COPY.publishing : COPY.publish, !this.GalleryLoading && !!this.roll.publish && this.host.hasBlocks());
+    if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, L.publish.y + 60 * u, 14 * u, this.pageW); }
+  }
+  /** Fetch the page shown (stale answers, from an earlier search or page, are dropped). */
+  async browse(): Promise<void> {
+    const g = this.host.gallery;
+    if (!g) return;
+    const ask = ++this.galleryAsk;
+    this.GalleryLoading = true; this.showDom();
+    try {
+      const r = await g.browse(this.GallerySort, this.GalleryQuery, this.GalleryPage);
+      if (ask !== this.galleryAsk) return;
+      this.GalleryItems = r?.items ?? []; this.GalleryMore = !!r?.more;
+      if (!r) this.GalleryMessage = 'The gallery is not available here.';
+    } catch (e) { if (ask === this.galleryAsk) this.GalleryMessage = (e as Error).message; }
+    finally { if (ask === this.galleryAsk) { this.GalleryLoading = false; this.settled(); } }
+  }
+  private async galleryAction(run: () => Promise<string | void>): Promise<void> {
+    if (this.GalleryLoading) return;
+    this.GalleryLoading = true; this.GalleryMessage = '';
+    try { const msg = await run(); if (msg) this.GalleryMessage = msg; }
+    catch (e) { this.GalleryMessage = (e as Error).message || 'That did not work. Try again.'; }
+    finally { this.GalleryLoading = false; this.settled(); }
+    await this.browse();
+  }
+
   // ---- ACCOUNT tab (CHG-0023) ----
   private accountButtons() {
     const u = App.Unit, W = App.Width, cy = this.cy, y = cy - 40 * u;
@@ -793,10 +935,32 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, W = App.Width, cy = this.cy, hit = (x: number, y: number, w: number, h: number) => Dimensions.hitRect(x, y, w, h, pt.x, pt.y);
     const { tabs, half } = this.tabs(), tabY = this.OffsetY;
     const r: Record<string, boolean> = { close: hit(W * 0.5 + half, tabY + 10 * u, 40 * u, 40 * u) };
-    tabs.forEach((t, i) => { r[`tab${i}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
+    tabs.forEach(t => { r[`tab${t.id}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) => hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
-    if (this.Tab === 3) {
+    if (this.Tab === 4) {
+      if (this.GalleryView === 'report') {
+        const { left, right } = this.halves();
+        for (const h of [left, right]) h.y = cy + 5 * u;
+        r.reportCancel = box(left); r.reportOk = box(right);
+      } else {
+        const L = this.galleryLayout();
+        r.search = pad(L.search); r.publish = box(L.publish);
+        this.Ctx.font = App.Metrics.TxtMid;
+        const sw = this.Ctx.measureText(this.sortLabel()).width;
+        r.sort = hit(L.sortRight - sw - 5 * u, L.sortY - 20 * u, sw + 10 * u, 30 * u);
+        let arrowX = 285, arrowY = 0;
+        if (this.tablet) arrowX = 255;
+        if (this.mobile) { arrowX = 70; arrowY = 160; }
+        r.back = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 40 * u);
+        r.next = hit(W * 0.5 + (arrowX - 15) * u, cy + (arrowY - 20) * u, 30 * u, 40 * u);
+        for (let n = 0; n < Math.min(ITEMS, this.GalleryItems.length); n++) {
+          const b = this.galleryRow(n);
+          r[`gopen${n}`] = pad(b.open); r[`glike${n}`] = pad(b.like);
+          if (b.mine) r[`gunpub${n}`] = pad(b.unpublish); else r[`greport${n}`] = pad(b.report);
+        }
+      }
+    } else if (this.Tab === 3) {
       const b = this.accountButtons();
       if (this.AccountView === 'create' || this.AccountView === 'name') {
         r.submit = box(b.submit);
@@ -860,6 +1024,22 @@ export class PatchesPanel extends DisplayObject {
     const mid = (b: { x: number; y: number; w: number; h: number }) => at(b.x + b.w / 2, b.y + b.h / 2);
     const m = /^(open|ins|bin)(\d)$/.exec(name);
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
+    {
+      const gm = /^g(open|like|report|unpub)(\d)$/.exec(name);
+      if (gm) { const b = this.galleryRow(Number(gm[2])); return mid(gm[1] === 'open' ? b.open : gm[1] === 'like' ? b.like : gm[1] === 'report' ? b.report : b.unpublish); }
+      const L = this.galleryLayout();
+      if (name === 'search') return mid(L.search);
+      if (name === 'publish') return mid(L.publish);
+      if (name === 'sort') return at(L.sortRight - 15 * u, L.sortY - 5 * u);
+      if (name === 'galleryField') return at(this.margin + 100 * u, this.cy - 150 * u);
+      if (name === 'reportCancel' || name === 'reportOk') { const { left, right } = this.halves(); return at((name === 'reportOk' ? right : left).cx, this.cy + 25 * u); }
+      if (name === 'galleryNext' || name === 'galleryBack') {
+        let arrowX = 285, arrowY = 0;
+        if (this.tablet) arrowX = 255;
+        if (this.mobile) { arrowX = 70; arrowY = 160; }
+        return at(App.Width * 0.5 + (name === 'galleryNext' ? 1 : -1) * arrowX * u, this.cy + arrowY * u);
+      }
+    }
     if (name === 'shape' || name === 'length') return mid(this.videoControls()[name]);
     if (name === 'make' || name === 'shareVideo') return mid(this.videoMain());
     {
@@ -871,7 +1051,7 @@ export class PatchesPanel extends DisplayObject {
       if (acct[name]) return mid(acct[name]);
     }
     const t = /^tab(\d)$/.exec(name);
-    if (t) { const tab = this.tabs().tabs[Number(t[1])]; return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
+    if (t) { const tab = this.tabs().tabs.find(x => x.id === Number(t[1])); return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
     const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton(), { arrowX, arrowY } = this.backArrow();
     switch (name) {
       case 'close': return at(App.Width * 0.5 + this.tabs().half + 20 * u, this.OffsetY + 30 * u);
@@ -900,7 +1080,34 @@ export class PatchesPanel extends DisplayObject {
     this.HitTests(pt);
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
-    for (const i of [0, 1, 2, 3] as Tab[]) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    for (const i of ALL_TABS) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    if (this.Tab === 4) {
+      const g = this.host.gallery;
+      if (!g) return;
+      if (this.GalleryView === 'report') {
+        const row = this.reporting;
+        if (r.reportCancel) { this.GalleryView = 'list'; this.reporting = null; return; }
+        if (r.reportOk && row) { this.GalleryView = 'list'; this.reporting = null; void this.galleryAction(async () => { await g.report(row.id); return COPY.reported; }); }
+        return;
+      }
+      if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); this.GalleryPage = 1; void this.browse(); return; }
+      if (r.sort) { this.GallerySort = this.GallerySort === 'popular' ? 'new' : 'popular'; this.GalleryPage = 1; void this.browse(); return; }
+      if (r.back) { if (this.GalleryPage > 1) { this.GalleryPage--; void this.browse(); } return; }
+      if (r.next) { if (this.GalleryMore) { this.GalleryPage++; void this.browse(); } return; }
+      if (r.publish) { if (this.host.hasBlocks()) void this.galleryAction(async () => { await g.publish(this.Title.trim() || 'Untitled'); return COPY.published; }); return; }
+      for (let n = 0; n < ITEMS; n++) {
+        const row = this.GalleryItems[n];
+        if (!row) break;
+        if (r[`gopen${n}`]) { this.requestOpen(() => g.open(row)); return; }
+        if (r[`glike${n}`]) {
+          void g.like(row.id, !row.liked).then(x => { row.liked = x.liked; row.likes = x.likes; this.settled(); }).catch(e => { this.GalleryMessage = (e as Error).message; this.settled(); });
+          return;
+        }
+        if (r[`greport${n}`]) { this.reporting = row; this.GalleryView = 'report'; this.showDom(); return; }
+        if (r[`gunpub${n}`]) { void this.galleryAction(async () => { await g.unpublish(row.id); }); return; }
+      }
+      return;
+    }
     if (this.Tab === 3) {
       const a = this.host.account;
       if (!a || this.AccountBusy) return;
@@ -982,7 +1189,8 @@ export class PatchesPanel extends DisplayObject {
   selectTab(i: Tab): void {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
     this.Tab = i;
-    for (const j of [0, 1, 2, 3]) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    for (const j of ALL_TABS) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    if (i === 4) { this.GalleryView = 'list'; this.GalleryMessage = ''; void this.browse(); }
     if (i === 3) { if (this.AccountView === 'delete') this.AccountView = 'main'; void this.refreshAccount(); }
     // OPEN lists the account's patches too: signed in or out since the panel opened, the list has changed.
     if (i === 1 && this.View === 'list') void this.refresh();
@@ -1027,10 +1235,11 @@ export class PatchesPanel extends DisplayObject {
     // A new scene gets a v1-style random title (v1 SharePanel.GenerateLabel), as the Share panel did.
     if (!this.Title) this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? '');
     this.Open = true; this.shown = true;
+    if (!this.hasTab(tab)) tab = 0;  // a tab remembered from the web, in the plugin
     this.Tab = tab; this.View = 'list'; this.Picked = null; this.pending = null;
-    if ((tab === 2 && !this.host.video) || (tab === 3 && !this.host.account)) tab = 0;
-    this.selected = [0, 1, 2, 3].map(i => (i === tab ? 1 : 0));
+    this.selected = ALL_TABS.map(i => (i === tab ? 1 : 0));
     if (tab === 3) void this.refreshAccount();
+    if (tab === 4) void this.browse();
     this.OffsetY = -App.Height;
     this.OffsetX = -(this.page - 1) * 430 * App.Unit;
     this.Input.value = this.Title;
@@ -1073,11 +1282,13 @@ export class PatchesPanel extends DisplayObject {
     this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
     this.UrlContainer.style.top = `${(mid + u * 65) / pr}px`;
     if (this.HandleContainer) this.HandleContainer.style.top = `${(mid - u * 22) / pr}px`;
+    if (this.SearchContainer) this.SearchContainer.style.top = `${(mid - u * 177) / pr}px`;
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
     this.TitleContainer.style.display = on && this.Tab === 0 ? 'block' : 'none';
+    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 4 && this.GalleryView === 'list' ? 'block' : 'none';
     const handle = on && this.Tab === 3 && (this.AccountView === 'create' || this.AccountView === 'name');
     if (this.HandleContainer) this.HandleContainer.style.display = handle ? 'block' : 'none';
     this.UrlContainer.style.display = link ? 'block' : 'none';
@@ -1102,6 +1313,13 @@ export class PatchesPanel extends DisplayObject {
     url.style.height = `${(u * 40) / pr}px`;
     url.style.lineHeight = `${(u * 40) / pr}px`;
     url.style.left = `${App.Width / pr * 0.5 - (u * 200) / pr}px`;
+    // The gallery search field (v1 SoundcloudPanel's): up to SEARCH.
+    const sf = this.SearchContainer;
+    if (sf) {
+      sf.style.font = App.Metrics.TxtHeaderPR;
+      sf.style.width = `${(u * (410 - this.textW(COPY.search) / u - 20)) / pr}px`; sf.style.height = `${(u * 42) / pr}px`; sf.style.lineHeight = `${(u * 42) / pr}px`;
+      sf.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
+    }
     // The account name field: the title field's type and height across the page width (ACCOUNT tab).
     const hf = this.HandleContainer;
     if (hf) {

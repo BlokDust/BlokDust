@@ -15,6 +15,7 @@
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
 | [SPEC-SHARING-ACCOUNTS](domains/sharing/accounts.md) | Accounts | sharing | **draft** | SHARING-0008, SHARING-0001, DATA-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
+| [SPEC-SHARING-GALLERY](domains/sharing/gallery.md) | Gallery | sharing | **draft** | SHARING-0009, SHARING-0008, DATA-0005 |
 | [SPEC-SHARING-VIDEO-EXPORT](domains/sharing/video-export.md) | Video export | sharing | **draft** | SHARING-0007, SIMULATION-0001, DATA-0005, UI-0005 |
 | [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
@@ -43,3 +44,4 @@
 | [CHG-0021](changes/0021-stage-block/proposal.md) | Stage block | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
 | [CHG-0022](changes/0022-video-export/proposal.md) | Video export | **proposed** | SPEC-SHARING-VIDEO-EXPORT |
 | [CHG-0023](changes/0023-optional-accounts/proposal.md) | Optional accounts | **proposed** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND |
+| [CHG-0024](changes/0024-public-gallery/proposal.md) | Public gallery | **proposed** | SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |

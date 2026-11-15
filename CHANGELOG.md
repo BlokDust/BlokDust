@@ -45,6 +45,8 @@
 - **Share links** with a title and a preview image for social media and chat apps.
 - **Embeds:** put a playable patch on your own website.
 - **Save and Save As are back**, as in v1, with no account or sign-up needed.
+- **Gallery** (Patches › GALLERY): publish your patch for everyone, browse what others made (popular or new),
+  search by name, block or @person, like the ones you love, open and remix them.
 - **Accounts, if you want one** (Patches › ACCOUNT): sign in with a passkey (no password) or Google, and your
   patches follow you to every device. Saving and sharing still work without an account.
 - **Videos for Instagram, TikTok and more** (Patches › VIDEO): turn your patch into a portrait, wide or square MP4

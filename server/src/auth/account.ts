@@ -51,6 +51,9 @@ export async function logout(env: Env, req: Request): Promise<Response> {
 export async function deleteAccount(env: Env, req: Request): Promise<Response> {
   const u = await requireUser(env, req);
   await env.DB.batch([
+    env.DB.prepare('DELETE FROM gallery WHERE user_id = ? OR patch_id IN (SELECT id FROM patches WHERE owner_id = ?)').bind(u.id, u.id),
+    env.DB.prepare('DELETE FROM likes WHERE user_id = ?').bind(u.id),
+    env.DB.prepare('DELETE FROM reports WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM revisions WHERE patch_id IN (SELECT id FROM patches WHERE owner_id = ?)').bind(u.id),
     // The ids stay taken (as a deleted patch's do) so an old link can never open someone else's patch.
     env.DB.prepare('UPDATE patches SET deleted = 1, owner_id = NULL, updated = ? WHERE owner_id = ?').bind(Date.now(), u.id),
@@ -58,6 +61,8 @@ export async function deleteAccount(env: Env, req: Request): Promise<Response> {
     env.DB.prepare('DELETE FROM credentials WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM identities WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(u.id),
+    // Their likes went: recount what they had liked.
+    env.DB.prepare('UPDATE gallery SET likes = (SELECT COUNT(*) FROM likes l WHERE l.patch_id = gallery.patch_id)'),
   ]);
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', await endSession(env, req, false));

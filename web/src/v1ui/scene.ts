@@ -161,7 +161,7 @@ export class V1Scene {
     App.CommandManager = { ExecuteCommand: (c: unknown) => this.command(c) };
     App.Audio.Master.volume.onMaster = (db: number) => this.host.setMasterDb(db);
     // v1 ThemeManager: the share text fields take the theme's text colour.
-    for (const id of ['shareUrl', 'shareTitle', 'soundCloudSearch', 'patchTitle', 'patchUrl', 'accountHandle']) document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
+    for (const id of ['shareUrl', 'shareTitle', 'soundCloudSearch', 'patchTitle', 'patchUrl', 'accountHandle', 'gallerySearch']) document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
     App.BlockSprites = { DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) => this.drawSprite(dc.Ctx ?? dc, pos, scaled, name) };
     App.AnimationsLayer = this.AnimationsLayer;
     if (!this.initialised) {
@@ -612,13 +612,13 @@ export class V1Scene {
 function ensureShareDom(): void {
   if (document.getElementById('shareUrl')) return;
   const style = document.createElement('style');
-  style.textContent = `#shareUrl, #shareTitle, #soundCloudSearch, #patchTitle, #patchUrl, #accountHandle { font-family: "Dosis", Arial, Helvetica, sans-serif; font-weight: 200; font-size: 56px;
+  style.textContent = `#shareUrl, #shareTitle, #soundCloudSearch, #patchTitle, #patchUrl, #accountHandle, #gallerySearch { font-family: "Dosis", Arial, Helvetica, sans-serif; font-weight: 200; font-size: 56px;
     mix-blend-mode: normal; background-blend-mode: normal; width: 200px; height: 100px; position: absolute; left: 1000%; top: -100%; }
-  #shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form { width: inherit; height: inherit; }
-  #shareUrl input, #shareTitle input, #soundCloudSearch input, #patchTitle input, #patchUrl input, #accountHandle input { overflow: scroll; scrollbar-width: none; white-space: nowrap; width: inherit; height: inherit; font: inherit;
+  #shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form { width: inherit; height: inherit; }
+  #shareUrl input, #shareTitle input, #soundCloudSearch input, #patchTitle input, #patchUrl input, #accountHandle input, #gallerySearch input { overflow: scroll; scrollbar-width: none; white-space: nowrap; width: inherit; height: inherit; font: inherit;
     line-height: inherit; color: inherit; outline: none; border: none; padding: 0; margin: 0; background-color: transparent; resize: none; }
-  #shareUrl input::-webkit-scrollbar, #shareTitle input::-webkit-scrollbar, #soundCloudSearch input::-webkit-scrollbar, #patchTitle input::-webkit-scrollbar, #patchUrl input::-webkit-scrollbar, #accountHandle input::-webkit-scrollbar { display: none; }
-  #shareTitle input, #soundCloudSearch input, #patchTitle input, #accountHandle input { text-transform: uppercase; }`;
+  #shareUrl input::-webkit-scrollbar, #shareTitle input::-webkit-scrollbar, #soundCloudSearch input::-webkit-scrollbar, #patchTitle input::-webkit-scrollbar, #patchUrl input::-webkit-scrollbar, #accountHandle input::-webkit-scrollbar, #gallerySearch input::-webkit-scrollbar { display: none; }
+  #shareTitle input, #soundCloudSearch input, #patchTitle input, #accountHandle input, #gallerySearch input { text-transform: uppercase; }`;
   document.head.appendChild(style);
   const wrap = document.createElement('div');
   wrap.innerHTML = `<div id="shareUrl"><form action=""><input type="text" id="shareUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>
@@ -626,10 +626,11 @@ function ensureShareDom(): void {
     <div id="soundCloudSearch"><form action=""><input type="text" id="soundCloudSearchInput" name="title" autocomplete="off" spellcheck="false" maxlength="24" value=""></form></div>
     <div id="patchTitle"><form action=""><input type="text" id="patchTitleInput" name="title" autocomplete="off" spellcheck="false" maxlength="48" value=""></form></div>
     <div id="patchUrl"><form action=""><input type="text" id="patchUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>
-    <div id="accountHandle"><form action=""><input type="text" id="accountHandleInput" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" value=""></form></div>`;
+    <div id="accountHandle"><form action=""><input type="text" id="accountHandleInput" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" value=""></form></div>
+    <div id="gallerySearch"><form action=""><input type="search" id="gallerySearchInput" name="q" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40" value=""></form></div>`;
   for (const el of [...wrap.children]) document.body.appendChild(el);
   // Enter in these fields is handled by the panels (v1 EnterCheck); never submit (reload) the page.
-  for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form')) f.addEventListener('submit', e => e.preventDefault());
+  for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form')) f.addEventListener('submit', e => e.preventDefault());
   // v1 used a scrolling <textarea>; v2 shows the link on one line like the title field, with no scrollbars, and a
   // click selects the whole link (owner review 2026-11-06).
   for (const id of ['shareUrlText', 'patchUrlText']) {

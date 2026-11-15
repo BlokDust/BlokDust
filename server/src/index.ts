@@ -9,6 +9,7 @@ import { claim, deleteAccount, logout, me, myPatches, setHandle } from './auth/a
 import { googleCallback, googleStart } from './auth/google.ts';
 import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
 import { sameOrigin } from './auth/session.ts';
+import { like, list as galleryList, publish, report, unpublish } from './gallery.ts';
 
 async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
@@ -79,6 +80,18 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     if (path === '/api/me/claim' && m === 'POST') return claim(env, req);
     if (path === '/api/me/patches' && m === 'GET') return myPatches(env, req);
     throw new HttpError(404, 'no such endpoint');
+  }
+  // ---- gallery (SPEC-SHARING-GALLERY) ----
+  if (path === '/api/gallery' && m === 'GET') { await limit(env.SEARCH_LIMIT, req, 'gallery'); return galleryList(env, req, url); }
+  const gal = path.match(/^\/api\/gallery\/([^/]+)(\/like|\/report)?$/);
+  if (gal) {
+    if (m !== 'GET') sameOrigin(env, req);
+    await limit(env.SAVE_LIMIT, req, 'gallery');
+    if (!gal[2] && m === 'POST') return publish(env, req, gal[1]);
+    if (!gal[2] && m === 'DELETE') return unpublish(env, req, gal[1]);
+    if (gal[2] === '/like' && m === 'POST') return like(env, req, gal[1]);
+    if (gal[2] === '/report' && m === 'POST') return report(env, req, gal[1]);
+    throw new HttpError(405, 'method not allowed');
   }
   if (path.startsWith('/api/freesound/')) await limit(env.SEARCH_LIMIT, req, 'freesound');
   if (path === '/api/freesound/search' && m === 'GET') return search(env, url, ctx);
