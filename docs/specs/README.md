@@ -39,3 +39,4 @@
 | [CHG-0019](changes/0019-grid/proposal.md) | Touchpad | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0020](changes/0020-labels/proposal.md) | Labels on the stage | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-VISUAL-V1-PARITY |
 | [CHG-0021](changes/0021-stage-block/proposal.md) | Stage block | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0022](changes/0022-waveform-zoom-in-the-options-panel/proposal.md) | Waveform zoom in the options panel | **proposed** | SPEC-VISUAL-V1-PARITY |

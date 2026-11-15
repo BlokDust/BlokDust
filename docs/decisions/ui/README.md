@@ -17,3 +17,4 @@
 | [UI-0010](UI-0010-grid-plays-in-its-options-panel.md) | Touchpad plays in its options panel | **proposed** | 2026-11-13 | ui, touch, post-2-0 |
 | [UI-0011](UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
 | [UI-0012](UI-0012-a-stage-is-played-from-outside-through-its.md) | A Stage is played from outside through its controllers and Stage In | **accepted** | 2026-11-14 | stage, controllers, selection |
+| [UI-0013](UI-0013-waveforms-zoom-as-a-view-window-over-v1-s-panel.md) | Waveforms zoom as a view window over v1's panel | **proposed** | 2026-11-15 | ui, options-panel, samples, post-2-0 |
