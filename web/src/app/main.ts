@@ -480,7 +480,9 @@ async function main() {
   const measure = document.createElement('canvas').getContext('2d')!;
   let labelDrag: { id: string; pointer: number; grabX: number; grabY: number; moved: boolean; fresh: boolean; downX: number; downY: number;
     /** Dragging a selected label moves the whole selection (whole cells, as blocks move); where its blocks started. */
-    group?: Map<number, XY> } | null = null;
+    group?: Map<number, XY>;
+    /** Where the dragged labels were at the start (undo). */
+    labelFrom?: Map<string, XY> } | null = null;
   let labelEdit: { id: string; input: HTMLInputElement } | null = null;
   const labelsChanged = () => { changed(); if (juce) juce.emitEvent('bd_labels', { labels }); stage.redraw(); };
   const readLabels = (list: unknown): Label[] => (Array.isArray(list) ? list : []).flatMap((l, i) => l && typeof l === 'object' && typeof (l as Label).text === 'string'
@@ -493,6 +495,7 @@ async function main() {
   function newLabel(gx: number, gy: number): void {
     addLabels([{ id: `l${labels.length + 1}`, text: 'LABEL', x: gx, y: gy }]);
     const l = labels[labels.length - 1];
+    pushUndo({ kind: 'add', uids: [], labels: [l.id] });
     labelDrag = { id: l.id, pointer: primaryId ?? -1, grabX: 0, grabY: 0, moved: true, fresh: true, downX: 0, downY: 0 };
     labelsChanged();
   }
@@ -733,7 +736,16 @@ async function main() {
     const l = labels.find(x => x.id === e.id), text = e.input.value.trim();
     e.input.remove();
     if (window.scrollX || window.scrollY) window.scrollTo(0, 0);  // iOS scrolls the page to show the field above its keyboard
-    if (l && keep) { if (text) l.text = text; else { labels.splice(labels.indexOf(l), 1); selectedLabels.delete(l.id); } labelsChanged(); }
+    if (l && keep) {
+      if (text) l.text = text;
+      else {  // no words: the label goes. Just made: its add step goes too; else this is a removal to undo.
+        const top = undoStack[undoStack.length - 1];
+        if (top?.kind === 'add' && !top.uids.length && top.labels?.length === 1 && top.labels[0] === l.id) undoStack.pop();
+        else pushUndo({ kind: 'remove', snaps: [], labels: [{ ...l }] });
+        labels.splice(labels.indexOf(l), 1); selectedLabels.delete(l.id);
+      }
+      labelsChanged();
+    }
     stage.redraw();
   }
 
@@ -938,7 +950,11 @@ async function main() {
    * place, its sound). A new action clears what could be redone. Param changes are not steps. */
   type XY = { x: number; y: number };
   type Snap = { b: ModelBlock; buf?: AudioBuffer };
-  type UndoStep = { kind: 'add'; uids: string[]; snaps?: Snap[] } | { kind: 'remove'; snaps: Snap[] } | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[] };
+  // Labels (owner, 2026-11-14) are in the same steps, by label id: made (with the blocks made), removed (kept whole) and
+  // moved. Their words are not steps (as params are not).
+  type LabelMove = { id: string; from: XY; to: XY };
+  type UndoStep = { kind: 'add'; uids: string[]; snaps?: Snap[]; labels?: string[]; labelSnaps?: Label[] } | { kind: 'remove'; snaps: Snap[]; labels?: Label[] }
+    | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[]; labelMoves?: LabelMove[] };
   const undoStack: UndoStep[] = [], redoStack: UndoStep[] = [];
   const pushUndo = (u: UndoStep) => { undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; };
   const idOfUid = (uid: string) => { for (const [id, b] of model) if (b.uid === uid) return id; return undefined; };
@@ -1256,32 +1272,64 @@ async function main() {
     changed();
   }
   /** Delete blocks as one undoable step. */
-  function deleteBlocks(ids: number[], from?: Map<number, { x: number; y: number }>): void {
+  function deleteBlocks(ids: number[], from?: Map<number, { x: number; y: number }>, labelIds: string[] = [], labelFrom?: Map<string, XY>): void {
     // Kept where they were before the drag that took them to the trash.
     const snaps = ids.flatMap(id => { const b = model.get(id); return b ? [{ b: { ...structuredClone(b), ...from?.get(id) }, buf: samples.get(id) }] : []; });
-    if (!snaps.length) return;
+    const gone = labelSnapsOf(labelIds).map(l => ({ ...l, ...labelFrom?.get(l.id) }));
+    if (!snaps.length && !gone.length) return;
     for (const id of ids) removeBlock(id);
-    pushUndo({ kind: 'remove', snaps });
+    deleteLabels(gone.map(l => l.id));
+    pushUndo({ kind: 'remove', snaps, ...(gone.length ? { labels: gone } : {}) });
   }
   /** A drag that ended: one move step for the blocks it moved. */
-  function recordMove(ids: number[], from: Map<number, XY>): void {
+  function recordMove(ids: number[], from: Map<number, XY>, labelFrom?: Map<string, XY>): void {
     const moves = ids.flatMap(id => { const b = model.get(id), f = from.get(id); return b && f && (b.x !== f.x || b.y !== f.y) ? [{ uid: b.uid, from: f, to: { x: b.x, y: b.y } }] : []; });
-    if (moves.length) pushUndo({ kind: 'move', moves });
+    const labelMoves = labelFrom ? labelMovesSince(labelFrom) : [];
+    if (moves.length || labelMoves.length) pushUndo({ kind: 'move', moves, ...(labelMoves.length ? { labelMoves } : {}) });
   }
   const removeUids = (uids: string[]) => { for (const u of uids) { const id = idOfUid(u); if (id !== undefined) removeBlock(id); } };
   const moveUids = (moves: { uid: string; from: XY; to: XY }[], to: boolean) => {
     for (const m of moves) { const id = idOfUid(m.uid), at = to ? m.to : m.from; if (id !== undefined) moveBlock(id, at.x, at.y); }
   };
+  const labelSnapsOf = (ids: string[]) => ids.flatMap(id => { const l = labels.find(x => x.id === id); return l ? [{ ...l }] : []; });
+  /** Labels out (undo, redo): as deleting them, without a step. */
+  function takeOutLabels(ids: string[]): void {
+    const gone = new Set(ids);
+    if (!gone.size) return;
+    for (let i = labels.length - 1; i >= 0; i--) if (gone.has(labels[i].id)) labels.splice(i, 1);
+    for (const id of gone) selectedLabels.delete(id);
+    if (labelEdit && gone.has(labelEdit.id)) endLabelEdit(false);
+    labelsChanged();
+  }
+  /** Labels back (undo, redo), with the ids they had. */
+  function putBackLabels(list: Label[]): void {
+    if (!list.length) return;
+    addLabels(list.map(l => ({ ...l })));
+    labelsChanged();
+  }
+  function moveLabelSteps(moves: LabelMove[], to: boolean): void {
+    if (!moves.length) return;
+    for (const m of moves) { const l = labels.find(x => x.id === m.id); if (l) { const at = to ? m.to : m.from; l.x = at.x; l.y = at.y; } }
+    labelsChanged();
+  }
+  /** Where labels `ids` stand now (the start of a drag). */
+  const labelPlaces = (ids: Iterable<string>) => new Map([...ids].flatMap(id => { const l = labels.find(x => x.id === id); return l ? [[id, { x: l.x, y: l.y }] as [string, XY]] : []; }));
+  /** Label moves since `from`, for a move step. */
+  const labelMovesSince = (from: Map<string, XY>): LabelMove[] => [...from].flatMap(([id, f]) => {
+    const l = labels.find(x => x.id === id); return l && (l.x !== f.x || l.y !== f.y) ? [{ id, from: f, to: { x: l.x, y: l.y } }] : [];
+  });
   /** Undo the last step; false when there is none. */
   function undo(): boolean {
     const u = undoStack.pop();
     if (!u) return false;
     if (u.kind === 'add') {
       const snaps = u.uids.flatMap(uid => { const s = snapOf(uid); return s ? [s] : []; });
+      const labelSnaps = labelSnapsOf(u.labels ?? []);
       removeUids(u.uids);
-      redoStack.push({ kind: 'add', uids: u.uids, snaps });
-    } else if (u.kind === 'remove') { for (const s of u.snaps) restore(s); redoStack.push(u); }
-    else { moveUids(u.moves, false); redoStack.push(u); }
+      takeOutLabels(u.labels ?? []);
+      redoStack.push({ kind: 'add', uids: u.uids, snaps, labels: u.labels, labelSnaps });
+    } else if (u.kind === 'remove') { for (const s of u.snaps) restore(s); putBackLabels(u.labels ?? []); redoStack.push(u); }
+    else { moveUids(u.moves, false); moveLabelSteps(u.labelMoves ?? [], false); redoStack.push(u); }
     setSelection([]);
     stage.redraw();
     return true;
@@ -1290,12 +1338,14 @@ async function main() {
   function redo(): boolean {
     const u = redoStack.pop();
     if (!u) return false;
-    if (u.kind === 'add') { for (const s of u.snaps ?? []) restore(s); undoStack.push({ kind: 'add', uids: u.uids }); }
+    if (u.kind === 'add') { for (const s of u.snaps ?? []) restore(s); putBackLabels(u.labelSnaps ?? []); undoStack.push({ kind: 'add', uids: u.uids, labels: u.labels }); }
     else if (u.kind === 'remove') {
       const snaps = u.snaps.flatMap(s => { const now = snapOf(s.b.uid); return now ? [now] : []; });
+      const ids = (u.labels ?? []).map(l => l.id), labelsNow = labelSnapsOf(ids);
       removeUids(u.snaps.map(s => s.b.uid));
-      undoStack.push({ kind: 'remove', snaps });
-    } else { moveUids(u.moves, true); undoStack.push(u); }
+      takeOutLabels(ids);
+      undoStack.push({ kind: 'remove', snaps, labels: labelsNow });
+    } else { moveUids(u.moves, true); moveLabelSteps(u.labelMoves ?? [], true); undoStack.push(u); }
     setSelection([]);
     stage.redraw();
     return true;
@@ -1611,6 +1661,7 @@ async function main() {
   let drag: { id: number; grabX: number; grabY: number; moved: boolean; fresh?: boolean } | null = null;
   /** Where every block was when the drag began: Undo puts blocks dragged to the trash back there. */
   let dragFrom = new Map<number, { x: number; y: number }>();
+  let labelDragFrom = new Map<string, XY>();  // where the selected labels were when a block drag began
   let pointerIsDown = false;
   /** The press that ended (or is) a placement: its release goes nowhere else. */
   let swallowUp = false;
@@ -1620,6 +1671,7 @@ async function main() {
   function startDrag(id: number, grabX: number, grabY: number, fresh = false): void {
     drag = { id, grabX, grabY, moved: false, fresh };
     dragFrom = new Map([...model].map(([i, b]) => [i, { x: b.x, y: b.y }]));
+    labelDragFrom = labelPlaces(selectedLabels);
     stage.pressed = id; stage.toFront(id);
     send([{ type: CommandType.Press, id, value: 1 }]);  // v1 Block.MouseDown: a held source powers itself
   }
@@ -1804,7 +1856,8 @@ async function main() {
         if (e.shiftKey) selectedLabels.add(l.id);
         else if (!selectedLabels.has(l.id) && selectionSize()) setSelection([]);  // another label: the selection is let go
         const group = selectedLabels.has(l.id) && selectionSize() > 1 ? new Map([...selection].flatMap(id => { const b = model.get(id); return b ? [[id, { x: b.x, y: b.y }] as [number, XY]] : []; })) : undefined;
-        labelDrag = { id: l.id, pointer: e.pointerId, grabX: gx - l.x, grabY: gy - l.y, moved: !!e.shiftKey, fresh: false, downX: e.offsetX, downY: e.offsetY, group };
+        labelDrag = { id: l.id, pointer: e.pointerId, grabX: gx - l.x, grabY: gy - l.y, moved: !!e.shiftKey, fresh: false, downX: e.offsetX, downY: e.offsetY, group,
+          labelFrom: labelPlaces(group ? selectedLabels : [l.id]) };
         if (group) for (const id of group.keys()) stage.held.add(id);
         stage.redraw();
         return;
@@ -1894,7 +1947,7 @@ async function main() {
     if (drag && e.altKey && !drag.moved && grouped()) {
       // Alt + drag on a selection copies all of it (v1's Alt-copy, for the group): the copies are dragged and selected.
       const ids = [...selection], made = copyBlocks(ids, 0, 0), first = made.get(drag.id), madeLabels = copyLabels(selLabels(), 0, 0);
-      pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
+      pushUndo({ kind: 'add', uids: uidsOf(made.values()), labels: madeLabels });
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);
       const v = v1Blocks.get(drag.id); if (v) v.IsPressed = false;
       stage.held.clear();
@@ -1978,11 +2031,11 @@ async function main() {
         const binned = d.moved && scene.pointerUp(e.offsetX * dpr(), e.offsetY * dpr(), true) === 'delete';
         scene.IsDraggingABlock = false;
         stage.held.clear();
-        if (d.group) {  // the selection, led by this label: binned all together, or one move step for its blocks
-          if (binned) { deleteBlocks([...d.group.keys()], d.group); deleteLabels([...selectedLabels]); setSelection([]); }
-          else if (d.moved) { recordMove([...d.group.keys()], d.group); labelsChanged(); }
-        } else if (binned) deleteLabels([d.id]);
-        else if (d.moved) labelsChanged();
+        if (d.group) {  // the selection, led by this label: binned all together, or one move step
+          if (binned) { deleteBlocks([...d.group.keys()], d.group, [...selectedLabels], d.labelFrom); setSelection([]); }
+          else if (d.moved) { recordMove([...d.group.keys()], d.group, d.labelFrom); labelsChanged(); }
+        } else if (binned) deleteBlocks([], undefined, [d.id], d.labelFrom);
+        else if (d.moved) { recordMove([], new Map(), d.labelFrom); labelsChanged(); }
         // A click (no move) edits the words, and a selection holding it is let go (as a click on a selected block).
         if (!d.moved) { if (d.group || selectedLabels.has(d.id)) setSelection([]); editLabel(d.id); }
         stage.redraw();
@@ -2001,11 +2054,11 @@ async function main() {
     stage.held.clear();
     const into = drag && moved && result !== 'delete' ? stage.dropTarget : null;
     stage.dropTarget = null;
-    if (result === 'delete' && drag) { deleteBlocks(wasGroup ? [...selection] : [drag.id], dragFrom); if (wasGroup) deleteLabels([...selectedLabels]); }
+    if (result === 'delete' && drag) deleteBlocks(wasGroup ? [...selection] : [drag.id], dragFrom, wasGroup ? [...selectedLabels] : [], labelDragFrom);
     else if (drag) {
       send([{ type: CommandType.Press, id: drag.id, value: 0 }]);  // v1 MouseUp → RemovePower
       if (into !== null) { addToStage(into, wasGroup ? [...selection] : [drag.id], wasGroup ? [...selectedLabels] : []); drag = null; stage.pressed = null; stage.redraw(); return; }
-      if (moved && !drag.fresh) recordMove(wasGroup ? [...selection] : [drag.id], dragFrom);
+      if (moved && !drag.fresh) recordMove(wasGroup ? [...selection] : [drag.id], dragFrom, wasGroup ? labelDragFrom : undefined);
       if (moved && wasGroup && selectedLabels.size) labelsChanged();
     }
     // A double click on a Stage block looks inside it (the panel's OPEN STAGE does the same; CHG-0021).
@@ -2215,14 +2268,13 @@ async function main() {
       if (mod && !e.shiftKey && k === 'd' && selectionSize()) {
         e.preventDefault();
         const made = copyBlocks([...selection], 2, 2), madeLabels = copyLabels(selLabels(), 2, 2);
-        if (made.size) pushUndo({ kind: 'add', uids: uidsOf(made.values()) });
+        pushUndo({ kind: 'add', uids: uidsOf(made.values()), labels: madeLabels });
         setSelection(made.values(), madeLabels);
         return;
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectionSize()) {
         e.preventDefault();
-        deleteLabels([...selectedLabels]);
-        deleteBlocks([...selection]);
+        deleteBlocks([...selection], undefined, [...selectedLabels]);
         scene.select(null); scene.OptionsPanel.Close(); stage.redraw();
         return;
       }

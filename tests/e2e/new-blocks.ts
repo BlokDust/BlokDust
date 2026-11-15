@@ -405,6 +405,47 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       eq(r.boxed, { blocks: 1, labels: ['l1'] }) && eq(r.staged, { outerLabels: ['Not mine'], inner: ['Mine'], blocks: ['source.stage'] });
     return [pass, r];
   },
+  // Owner 2026-11-14: making, moving and deleting labels are undo/redo steps, as for blocks (one step with the blocks).
+  async 'label-undo-redo'(errors) {
+    const p = await open(browser, [blk('t', 'source.tone', 0, 0)], errors);
+    const labels = () => p.evaluate(() => (window as any).__bd_probe.labels as { id: string; text: string; x: number; y: number; cx: number; cy: number }[]);
+    const blocks = async () => (await state(p)).patch.blocks.length;
+    const key = async (k: string) => { await p.mouse.move(640, 650); await p.keyboard.press(k); await p.waitForTimeout(300); };
+    const r: Record<string, unknown> = {};
+    // a Label from the Interaction menu, dropped and typed into
+    await p.mouse.click(843, 45); await p.waitForTimeout(800);
+    const item = await p.evaluate(() => { const P = (window as any).__bd_probe, pr = P.v1App.Metrics.PixelRatio;
+      for (const cat of P.scene.Header.MenuItems) for (const it of cat.Items) if (String(it.Name).toLowerCase() === 'label') return it.Position.x / pr; return null; });
+    await p.mouse.move(item!, 180); await p.mouse.down(); await p.mouse.move(item!, 400, { steps: 6 }); await p.mouse.move(500, 560, { steps: 6 }); await p.mouse.up();
+    await p.waitForSelector('#labelEdit'); await p.keyboard.type('Hello'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+    r.made = (await labels()).map(l => l.text);
+    await key('ControlOrMeta+z'); r.madeUndone = (await labels()).length;
+    await key('ControlOrMeta+Shift+z'); r.madeRedone = (await labels()).map(l => l.text);
+    // moved
+    const a = (await labels())[0];
+    await p.mouse.move(a.cx, a.cy); await p.mouse.down(); await p.mouse.move(a.cx + 80, a.cy - 60, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(300);
+    const b = (await labels())[0];
+    await key('ControlOrMeta+z'); const c = (await labels())[0];
+    await key('ControlOrMeta+Shift+z'); const d = (await labels())[0];
+    r.move = { moved: b.x !== a.x || b.y !== a.y, undone: c.x === a.x && c.y === a.y, redone: d.x === b.x && d.y === b.y };
+    // binned
+    await p.mouse.move(d.cx, d.cy); await p.mouse.down(); await p.mouse.move(1235, 755, { steps: 10 }); await p.waitForTimeout(150); await p.mouse.up(); await p.waitForTimeout(300);
+    r.binned = (await labels()).length;
+    await key('ControlOrMeta+z'); const e = (await labels())[0];
+    r.binUndone = e && e.x === d.x && e.y === d.y && e.text === 'Hello';
+    await key('ControlOrMeta+Shift+z'); r.binRedone = (await labels()).length;
+    await key('ControlOrMeta+z');
+    // Cmd/Ctrl+A, Delete: one step brings back the Tone and the label
+    await key('ControlOrMeta+a'); await key('Delete');
+    r.deleted = { blocks: await blocks(), labels: (await labels()).length };
+    await key('ControlOrMeta+z');
+    r.restored = { blocks: await blocks(), labels: (await labels()).length };
+    await p.close();
+    const eq = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
+    const pass = eq(r.made, ['Hello']) && r.madeUndone === 0 && eq(r.madeRedone, ['Hello']) && eq(r.move, { moved: true, undone: true, redone: true }) &&
+      r.binned === 0 && r.binUndone === true && r.binRedone === 0 && eq(r.deleted, { blocks: 0, labels: 0 }) && eq(r.restored, { blocks: 1, labels: 1 });
+    return [pass, r];
+  },
   async 'labels'(errors) {
     const p = await open(browser, [blk('t', 'source.tone', 0, 0)], errors,
       { labels: [{ id: 'l1', text: 'Press the tone', x: -8, y: -6 }, { id: 'l2', text: 'Bin me', x: 6, y: 6 }] });

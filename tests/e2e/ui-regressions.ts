@@ -2406,6 +2406,23 @@ Object.assign(tests, {
     await p.close();
     return [r.open && r.texts.includes('By Alice · 0:01') && r.texts.includes('By Bob · 1:05'), r];
   },
+  // Owner (2026-11-14): Looping off still showed the loop markers on a Sample's waveform, and on again a Recorder's
+  // showed only Start and End: the panel was not drawn again when the switch changed (v1 Sample.SetParam('loop') is).
+  async 'looping-switch-redraws-waveform'(errors: string[]) {
+    const r: Record<string, unknown> = {};
+    for (const type of ['Sample', 'Recorder']) {
+      const p = await open(browser, [blk(1, type, 0, 0)], errors);
+      const [x, y] = await toCss(p, 0, 0);
+      await p.mouse.click(x + 8, y + 8); await p.waitForTimeout(1000);
+      const mode = () => p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel; return { loop: !!o.SelectedBlock.Params.loop, mode: !!(o.Options as any[]).find(x => x.Type === 'waveregion')?.Mode }; });
+      const seen = [await mode()];
+      for (const v of [false, true, false]) { await p.evaluate(on => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('loop', on), v); await p.waitForTimeout(200); seen.push(await mode()); }
+      await p.close();
+      r[type] = seen;
+    }
+    const ok = (seen: any[]) => seen.every(s => s.loop === s.mode) && seen.map(s => s.loop).join() === [seen[0].loop, false, true, false].join();
+    return [ok(r.Sample as any[]) && ok(r.Recorder as any[]), r];
+  },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
 /** Bugs captured but not fixed yet: reported as KNOWN (not failing CI) with the reason; a pass says to remove it. */

@@ -2114,8 +2114,12 @@ void Engine::renderGranular(Block& b, int n) noexcept {
       const double centre = lead->slide >= 0.0 ? lead->slide * dur : p[P::SourceGranular::region];
       const double spread = std::max(0.0, p[P::SourceGranular::spread]);
       const double at = std::clamp(centre - spread * 0.5 + b.grainRng.nextFloat() * spread, 0.0, dur - gl);
-      g.on = true; g.pos = at * b.sampleRate; g.rate = lead->pitch; g.age = 0; g.len = len;
+      // v1 Granular.SetPitch: the next grains take the new note's rate at once (no glide), the sounding ones keep theirs.
+      g.on = true; g.pos = at * b.sampleRate; g.rate = lead->glideLeft > 0 ? lead->glideTo : lead->pitch; g.age = 0; g.len = len;
     }
+    // A glide set by a keyboard runs on (its voice's pitch arrives) though grains do not glide (owner bug 2026-11-14:
+    // without this the pitch never left the first note).
+    for (auto& vo : b.voices) if (vo.glideLeft > 0) vo.pitch = --vo.glideLeft ? vo.pitch + vo.glideStep : vo.glideTo;
     double sum = 0.0;
     for (auto& g : b.grains) {
       if (!g.on) continue;

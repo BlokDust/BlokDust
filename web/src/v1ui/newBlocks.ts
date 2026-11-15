@@ -112,7 +112,9 @@ const nearestStep = (beats: number) => { let best = 0; ARP_STEPS.forEach((s, i) 
 const switches = (...list: { name: string; setting: string; value: boolean }[]) => ({ type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
   switches: list.map(s => ({ ...s, lit: true, mode: 'offOn' })) });
 /** Switches whose change shows or hides other rows: the panel is laid out again. */
-export const settingRefreshes = (key: string): boolean => key === 'perHit' || key === 'gapOnHit';
+// `loop`: v1 Sample.SetParam('loop') → RefreshOptionsPanel, so the waveform shows or hides the loop markers (owner bug
+// 2026-11-14: they stayed as the panel opened).
+export const settingRefreshes = (key: string): boolean => key === 'perHit' || key === 'gapOnHit' || key === 'loop';
 /** Converted settings whose rows must be laid out again once set. */
 const CONVERT_REFRESH = new Set(['inKey']);
 

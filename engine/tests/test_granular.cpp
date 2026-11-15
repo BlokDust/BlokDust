@@ -103,3 +103,54 @@ TEST_CASE("Playheads: a held Sample reports its voice's position; Granular one p
   }
   CHECK(grains >= 1);
 }
+
+namespace {
+/// Zero crossings per second of `x[a..b)`: a sine file played faster crosses more often.
+double crossings(const std::vector<float>& x, std::size_t a, std::size_t b) {
+  int n = 0; for (std::size_t i = a + 1; i < b; ++i) if ((x[i - 1] < 0.0f) != (x[i] < 0.0f)) ++n;
+  return n / (double(b - a) / 48000.0);
+}
+}  // namespace
+
+TEST_CASE("Granular + Computer Keyboard: the key played sets the grains' pitch (owner bug 2026-11-14)") {
+  std::vector<float> sine(48000 * 4);
+  for (std::size_t i = 0; i < sine.size(); ++i) sine[i] = static_cast<float>(std::sin(2.0 * 3.141592653589793 * 220.0 * double(i) / 48000.0));
+  auto played = [&](int note) {
+    auto e = makeEngine(48000, 1, false);
+    e->push(Command::add(1, BlockType::SourceGranular, 0, 0));
+    e->push(Command::add(2, BlockType::InputComputerKeyboard, -3, 0));
+    render(*e, 128);
+    REQUIRE(e->attachSample(1, SampleBuffer{sine.data(), nullptr, static_cast<std::uint32_t>(sine.size()), 48000.0}));
+    e->push(Command::noteOn(BlockType::InputComputerKeyboard, static_cast<std::uint8_t>(note)));
+    const auto out = render(*e, 48000);
+    return crossings(out, 9600, 48000);
+  };
+  const double low = played(48), high = played(60);   // an octave apart
+  CHECK(low > 100.0);
+  CHECK(high / low > 1.8);
+  CHECK(high / low < 2.2);
+}
+
+TEST_CASE("Granular + Computer Keyboard: a second key changes the pitch (it glides there, as other sources do; owner bug 2026-11-14)") {
+  std::vector<float> sine(48000 * 4);
+  for (std::size_t i = 0; i < sine.size(); ++i) sine[i] = static_cast<float>(std::sin(2.0 * 3.141592653589793 * 220.0 * double(i) / 48000.0));
+  auto e = makeEngine(48000, 1, false);
+  e->push(Command::add(1, BlockType::SourceGranular, 0, 0));
+  e->push(Command::add(2, BlockType::InputComputerKeyboard, -3, 0));
+  render(*e, 128);
+  REQUIRE(e->attachSample(1, SampleBuffer{sine.data(), nullptr, static_cast<std::uint32_t>(sine.size()), 48000.0}));
+  e->push(Command::noteOn(BlockType::InputComputerKeyboard, 48));
+  const double first = crossings(render(*e, 48000), 9600, 48000);
+  SECTION("legato: the next key while the first is held") {
+    e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
+    const double second = crossings(render(*e, 48000), 9600, 48000);
+    CHECK(second / first > 1.8);
+  }
+  SECTION("after a release") {
+    e->push(Command::noteOff(BlockType::InputComputerKeyboard, 48));
+    render(*e, 4800);
+    e->push(Command::noteOn(BlockType::InputComputerKeyboard, 60));
+    const double second = crossings(render(*e, 48000), 9600, 48000);
+    CHECK(second / first > 1.8);
+  }
+}
