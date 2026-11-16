@@ -61,22 +61,14 @@ export interface AccountHost {
   cancelled(e: unknown): boolean;
 }
 /** The gallery (CHG-0024). */
-/**
- * Likes, three directions for the owner to choose from (owner review 3, 2026-11-16: the star didn't read as an up vote
- * and its angles aren't BlokDust's 45°). `?likes=a|b|c` picks one until then.
- *  a: inline: an up arrow and the count after the credit, and in each gallery row's second line with the views.
- *  b: column: Reddit's arrow over the count, left of each gallery row; on the stage a second line under the credit.
- *  c: +1: a small v1 bordered "+1" button after the credit; rows and the stage read "12 likes · 340 views".
- */
-export type LikeStyle = 'a' | 'b' | 'c';
-export const likeLook: { style: LikeStyle } = { style: (() => { try { const v = new URLSearchParams(location.search).get('likes'); return v === 'b' || v === 'c' ? v : 'a'; } catch { return 'a'; } })() };
-/** An up arrow with 45° sides (v1's chevrons), centred on x, y, `s` wide; filled in `on` when liked. */
+/** The like control (owner review 3, 2026-11-16: chosen from three; the star didn't read as an up vote and its angles
+ * aren't BlokDust's 45°): the first peak of v1's triangle-wave icon (OptionButton "wave", 2) as an open up chevron,
+ * centred on x, y, `s` wide, in v1's 2 px line; liked, in the options colour. */
 export function drawUpArrow(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, liked: boolean, colour: string, on: string): void {
   const h = s / 2;
   ctx.save();
-  ctx.beginPath(); ctx.moveTo(x - h, y + h / 2); ctx.lineTo(x, y - h / 2); ctx.lineTo(x + h, y + h / 2); ctx.closePath();
-  ctx.lineJoin = 'miter'; ctx.lineWidth = Math.max(1, s / 8);
-  if (liked) { ctx.fillStyle = on; ctx.strokeStyle = on; ctx.fill(); ctx.stroke(); } else { ctx.strokeStyle = colour; ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(x - h, y + h / 2); ctx.lineTo(x, y - h / 2); ctx.lineTo(x + h, y + h / 2);
+  ctx.lineJoin = 'miter'; ctx.lineCap = 'butt'; ctx.lineWidth = 2; ctx.strokeStyle = liked ? on : colour; ctx.stroke();
   ctx.restore();
 }
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
@@ -90,7 +82,8 @@ export interface GalleryHost {
   browse(sort: GallerySort, q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
   /** Open a published patch (it replaces the current one; SAVE then makes a remix of it), or Insert its blocks. */
   open(row: GalleryRow, mode: 'open' | 'insert'): Promise<boolean>;
-  like(id: string, on: boolean): Promise<{ liked: boolean; likes: number }>;
+  /** Like or unlike (the host shows it at once on this row and the stage, and settles fast presses on the last). */
+  like(row: GalleryRow): void;
   report(id: string): Promise<void>;
   unpublish(id: string): Promise<void>;
 }
@@ -221,7 +214,7 @@ export class PatchesPanel extends DisplayObject {
   /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
   GalleryScroll = 0;
   /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
-  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' } | null = null;
+  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' | 'like' } | null = null;
   private reporting: { id: string; title: string } | null = null;
   /** After REPORT: the thanks, then the panel closes. */
   private reported = false;
@@ -818,23 +811,15 @@ export class PatchesPanel extends DisplayObject {
       if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
       if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
       App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
-      const look = likeLook.style, left = margin + u + (look === 'b' ? 30 * u : 0), maxW = b.textRight - left;
+      const left = margin + u + 30 * u, maxW = b.textRight - left;
       const fit = (t: string, yy: number, x = left) => { const w = ctx.measureText(t).width; if (w <= maxW - (x - left)) { ctx.fillText(t, x, yy); return; } ctx.save(); ctx.translate(x, yy); ctx.scale((maxW - (x - left)) / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
       const on = App.Palette[App.ThemeManager.OptionsOrder[2]];
       fit(it.title.toUpperCase(), y - 10 * u);
       const remixes = it.remixes ? ` \u00b7 ${plural(it.remixes, 'remix').replace('remixs', 'remixes')}` : '', views = plural(it.views, 'view');
-      if (look === 'a') {
-        // by @name · ▲ 12 · 340 views
-        const head = `${COPY.by} @${it.by} \u00b7 `, hw = ctx.measureText(head).width;
-        fit(head, y);
-        drawUpArrow(ctx, left + hw + 5 * u, y - 3.5 * u, 9 * u, it.liked, txt, on);
-        fit(`${it.likes} \u00b7 ${views}${remixes}`, y, left + hw + 13 * u);
-      } else if (look === 'b') {
-        // Reddit's column: the arrow over the count, left of the row.
-        drawUpArrow(ctx, margin + 12 * u, y - 15 * u, 10 * u, it.liked, txt, on);
-        ctx.textAlign = 'center'; ctx.fillText(String(it.likes), margin + 12 * u, y); ctx.textAlign = 'left';
-        fit(`${COPY.by} @${it.by} \u00b7 ${views}${remixes}`, y);
-      } else fit(`${COPY.by} @${it.by} \u00b7 ${plural(it.likes, 'like')} \u00b7 ${views}${remixes}`, y);
+      // Reddit's column (owner's pick, B): the like chevron over the count, left of the row; pressing it likes.
+      drawUpArrow(ctx, margin + 12 * u, y - 15 * u, 10 * u, it.liked, txt, on);
+      ctx.textAlign = 'center'; ctx.fillText(String(it.likes), margin + 12 * u, y); ctx.textAlign = 'left';
+      fit(`${COPY.by} @${it.by} \u00b7 ${views}${remixes}`, y);
       this.drawBordered(b.open, txt);
       this.drawBordered(b.insert, App.Palette[1]);
     }
@@ -909,6 +894,7 @@ export class PatchesPanel extends DisplayObject {
           if (b.open.y > win.bottom || b.open.y + b.open.h < win.top) continue;
           if (pad(b.open)) r[`gopen${n}`] = true;
           else if (pad(b.insert)) r[`gins${n}`] = true;
+          else if (hit(this.margin - 5 * u, this.galleryRowY(n) - 30 * u, 35 * u, 40 * u)) r[`glike${n}`] = true;
         }
       }
     } else if (this.Tab === 0 && this.View === 'video') {
@@ -970,6 +956,8 @@ export class PatchesPanel extends DisplayObject {
     {
       const gm = /^g(open|ins)(\d+)$/.exec(name);
       if (gm) { const b = this.galleryRow(Number(gm[2])); return mid(gm[1] === 'open' ? b.open : b.insert); }
+      const lm = /^glike(\d+)$/.exec(name);
+      if (lm) return at(this.margin + 12 * u, this.galleryRowY(Number(lm[1])) - 12 * u);
       if (name === 'list') { const w = this.galleryWindow(); return at(App.Width * 0.5, (w.top + w.bottom) / 2); }
       const L = this.galleryLayout();
       if (name === 'search') return mid(L.search);
@@ -1019,6 +1007,8 @@ export class PatchesPanel extends DisplayObject {
     if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2) return;
     const row = this.GalleryItems[d.row];
     if (!row) return;
+    // Likes from the list too (owner review 3: changed their mind); signed out, the host asks to sign in.
+    if (d.mode === 'like') { g.like(row); this.settled(); return; }
     // Insert adds to the patch: nothing is lost, so it doesn't ask first (as OPEN's INSERT).
     if (d.mode === 'insert') this.runOpen(() => g.open(row, 'insert'));
     else this.requestOpen(() => g.open(row, 'open'));
@@ -1048,10 +1038,11 @@ export class PatchesPanel extends DisplayObject {
       }
       // The list: a press may become a drag (scrolling); a row opens on release, if it didn't move.
       if (r.list) {
-        let row = -1, mode: 'open' | 'insert' = 'open';
+        let row = -1, mode: 'open' | 'insert' | 'like' = 'open';
         for (let n = 0; n < this.GalleryItems.length; n++) {
           if (r[`gopen${n}`]) { row = n; break; }
           if (r[`gins${n}`]) { row = n; mode = 'insert'; break; }
+          if (r[`glike${n}`]) { row = n; mode = 'like'; break; }
         }
         this.galleryDrag = { y: pt.y, scroll: this.GalleryScroll, moved: false, row, mode };
       }

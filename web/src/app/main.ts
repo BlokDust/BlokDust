@@ -36,7 +36,7 @@ import { V1Block } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
-import { drawUpArrow, likeLook, type VideoChoice, type VideoProgressInfo } from '../v1ui/patches.ts';
+import { drawUpArrow, type VideoChoice, type VideoProgressInfo } from '../v1ui/patches.ts';
 import { videoSeconds } from '../video/length.ts';
 import { startSource, type PatchSample } from '../video/sources.ts';
 import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/share.ts';
@@ -205,7 +205,8 @@ async function main() {
   /** SPEC-PATCH-FORMAT-V2 R11: the saved patches whose blocks were inserted into this one (owner review 3). */
   let sources: PatchSource[] = [];
   /** The sources that still have blocks here, with only those blocks. */
-  const liveSources = (ids: Set<string>) => sources.map(s => ({ ...s, blocks: s.blocks.filter(b => ids.has(b)) })).filter(s => s.blocks.length);
+  const SOURCES_MAX = 32;  // the newest; older ones are still reachable through the newer sources' own lists
+  const liveSources = (ids: Set<string>) => sources.map(s => ({ ...s, blocks: s.blocks.filter(b => ids.has(b)) })).filter(s => s.blocks.length).slice(-SOURCES_MAX);
   const readSources = (v: unknown): PatchSource[] => Array.isArray(v) ? v.filter((s): s is PatchSource => !!s && typeof s.id === 'string' && Array.isArray(s.blocks))
     .map(s => ({ id: s.id, ...(typeof s.rev === 'number' ? { rev: s.rev } : {}), ...(typeof s.title === 'string' ? { title: s.title } : {}), ...(typeof s.by === 'string' ? { by: s.by } : {}), blocks: s.blocks.filter(b => typeof b === 'string') })) : [];
   const toPatch = (): Patch => {
@@ -456,7 +457,7 @@ async function main() {
     gallery: juce || embedId ? null : {
       browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
       open: (row, mode) => openShared(row.id, mode),
-      like: (id, on) => gallery.like(id, on),
+      like: row => wantLike(row.id, row.liked, row.likes),
       report: async id => { await gallery.report(id); },
       unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
     },
@@ -528,8 +529,8 @@ async function main() {
   // (signed out: Settings › SIGN IN); right-clicking the credit reports it. Top right: who is signed in
   // (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT. v1's mid type in the text colour, under the panels.
   let credit: { id: string; title: string; by: string; published: boolean; liked: boolean; likes: number; views: number } | null = null;
-  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; star?: ButtonBox; credit?: ButtonBox } = {};
-  let byHover = false;
+  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; like?: ButtonBox; credit?: ButtonBox } = {};
+  let byHover = false, meHover = false;
   const accountPage = () => (scene.SettingsPanel as any).accountPage as import('../v1ui/accountPage.ts').AccountPage | null | undefined;
   function drawCorners(ctx: CanvasRenderingContext2D): void {
     cornerBoxes = {};
@@ -547,39 +548,22 @@ async function main() {
       cornerBoxes.by = { x: x + tw - 4 * u, y: y - 16 * u, w: bw + 8 * u, h: 24 * u };
       cornerBoxes.credit = { x: x - 4 * u, y: y - 16 * u, w: tw + bw + 8 * u, h: 24 * u };
       if (credit.published) {
-        // Likes: one of three directions until the owner picks (likeLook in v1ui/patches.ts). The arrow (or +1) is the
-        // button; liked, it takes the options colour.
-        const txt = theme.colors[theme.roles.txt], on = theme.colors[theme.roles.options[2]], look = likeLook.style;
+        // Likes (owner's pick, B): a second line, the like chevron, the count, the views. The chevron is the button;
+        // liked, it takes the options colour.
+        const txt = theme.colors[theme.roles.txt], on = theme.colors[theme.roles.options[2]];
         const views = `${credit.views} VIEW${credit.views === 1 ? '' : 'S'}`;
-        if (look === 'a') {
-          const ax = x + tw + bw + 16 * u, ay = y - 3 * u, count = String(credit.likes), cw = ctx.measureText(count).width;
-          drawUpArrow(ctx, ax, ay, 9 * u, credit.liked, txt, on);
-          ctx.fillText(count, ax + 8 * u, y);
-          ctx.globalAlpha = 0.6; ctx.fillText(` \u00b7 ${views}`, ax + 8 * u + cw, y); ctx.globalAlpha = 1;
-          cornerBoxes.star = { x: ax - 10 * u, y: y - 16 * u, w: cw + 22 * u, h: 24 * u };
-        } else if (look === 'b') {
-          const y2 = y + 16 * u, count = String(credit.likes), cw = ctx.measureText(count).width;
-          drawUpArrow(ctx, x + 4 * u, y2 - 3 * u, 9 * u, credit.liked, txt, on);
-          ctx.fillText(count, x + 12 * u, y2);
-          ctx.globalAlpha = 0.6; ctx.fillText(`   ${views}`, x + 12 * u + cw, y2); ctx.globalAlpha = 1;
-          cornerBoxes.star = { x: x - 6 * u, y: y2 - 14 * u, w: cw + 24 * u, h: 22 * u };
-        } else {
-          const bx = x + tw + bw + 12 * u, bwid = 22 * u, bh = 15 * u, by = y - 11 * u;
-          ctx.save(); ctx.lineWidth = Math.max(1, u);
-          if (credit.liked) { ctx.fillStyle = on; ctx.fillRect(bx, by, bwid, bh); ctx.fillStyle = txt; }
-          ctx.strokeStyle = credit.liked ? on : txt; ctx.strokeRect(bx, by, bwid, bh);
-          ctx.textAlign = 'center'; ctx.fillText('+1', bx + bwid / 2, y); ctx.restore();
-          ctx.textAlign = 'left'; ctx.globalAlpha = 0.6;
-          ctx.fillText(`${credit.likes} LIKE${credit.likes === 1 ? '' : 'S'} \u00b7 ${views}`, bx + bwid + 8 * u, y); ctx.globalAlpha = 1;
-          cornerBoxes.star = { x: bx - 4 * u, y: by - 5 * u, w: bwid + 8 * u, h: bh + 10 * u };
-        }
-        if (look !== 'b') cornerBoxes.credit.w = cornerBoxes.star.x + cornerBoxes.star.w - cornerBoxes.credit.x;
+        const y2 = y + 16 * u, count = String(credit.likes), cw = ctx.measureText(count).width;
+        drawUpArrow(ctx, x + 4 * u, y2 - 3 * u, 9 * u, credit.liked, txt, on);
+        ctx.fillText(count, x + 12 * u, y2);
+        ctx.globalAlpha = 0.6; ctx.fillText(`   ${views}`, x + 12 * u + cw, y2); ctx.globalAlpha = 1;
+        cornerBoxes.like = { x: x - 6 * u, y: y2 - 14 * u, w: cw + 24 * u, h: 22 * u };
       }
     }
     const me = accountPage()?.Account;
     if (me?.handle) {
       const t = `SIGNED IN AS ${me.handle.toUpperCase()}`, w = ctx.measureText(t).width, x = m.width - 20 * u;
       ctx.textAlign = 'right'; ctx.fillText(t, x, y);
+      if (meHover) ctx.fillRect(x - w, y + 3 * u, w, Math.max(1, u * 0.6));  // a link: underlined under the mouse
       cornerBoxes.me = { x: x - w - 4 * u, y: y - 16 * u, w: w + 8 * u, h: 24 * u };
     }
     ctx.restore();
@@ -588,19 +572,38 @@ async function main() {
   function cornerPress(x: number, y: number): boolean {
     if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open || scene.OptionsPanel.Scale > 0) return false;
     if (cornerBoxes.by && credit && inBox(cornerBoxes.by, x, y)) { scene.PatchesPanel.showGallery(`@${credit.by}`); return true; }
-    if (cornerBoxes.star && credit && inBox(cornerBoxes.star, x, y)) { void likeCredit(); return true; }
+    if (cornerBoxes.like && credit && inBox(cornerBoxes.like, x, y)) { likeCredit(); return true; }
     if (cornerBoxes.me && inBox(cornerBoxes.me, x, y)) { (scene.SettingsPanel as any).openAccount?.(); return true; }
     return false;
   }
-  /** The star: like or unlike the open patch (signed out: sign in first). Shown at once; put back if it fails. */
-  async function likeCredit(): Promise<void> {
-    const c = credit;
-    if (!c) return;
-    if (!accountPage()?.Account) { (scene.SettingsPanel as any).openAccount?.(); return; }
-    c.liked = !c.liked; c.likes += c.liked ? 1 : -1; stage.redraw();
-    try { const r = await gallery.like(c.id, c.liked); c.liked = r.liked; c.likes = r.likes; } catch { c.liked = !c.liked; c.likes += c.liked ? 1 : -1; }
+  /**
+   * Likes (SPEC-SHARING-GALLERY R8), from the stage or a gallery row: the user's latest wish shows at once, on both;
+   * one request per patch at a time, and when it lands another only if the wish changed meanwhile, so fast presses
+   * settle on the last without flicker (bug, owner review 3: a double press flipped back and forth as the answers
+   * arrived) and send at most two requests. If it fails, the server's state shows again.
+   */
+  const likeWish = new Map<string, boolean>(), likeSent = new Set<string>();
+  function showLike(id: string, liked: boolean, likes: number): void {
+    if (credit?.id === id) { credit.liked = liked; credit.likes = likes; }
+    for (const it of scene.PatchesPanel.GalleryItems) if (it.id === id) { it.liked = liked; it.likes = likes; }
     stage.redraw();
   }
+  function wantLike(id: string, liked: boolean, likes: number): void {
+    if (!accountPage()?.Account) { scene.PatchesPanel.ClosePanel(); (scene.SettingsPanel as any).openAccount?.(); return; }
+    const want = !liked;
+    likeWish.set(id, want); showLike(id, want, Math.max(0, likes + (want ? 1 : -1)));
+    if (likeSent.has(id)) return;
+    likeSent.add(id);
+    void (async () => {
+      let r: { liked: boolean; likes: number } | null = null;
+      try { for (;;) { const w = likeWish.get(id)!; r = await gallery.like(id, w); if (likeWish.get(id) === w) break; } }
+      catch { r = null; }
+      likeSent.delete(id); likeWish.delete(id);
+      if (r) showLike(id, r.liked, r.likes);
+      else { const p = await loadShared(id).catch(() => null); if (p) showLike(id, !!p.liked, p.likes ?? 0); }
+    })();
+  }
+  function likeCredit(): void { if (credit) wantLike(credit.id, credit.liked, credit.likes); }
   /** Right-click on the credit: report the patch (signed out: sign in first). */
   function reportCredit(x: number, y: number): boolean {
     if (!credit?.published || !cornerBoxes.credit || !inBox(cornerBoxes.credit, x, y)) return false;
@@ -1762,7 +1765,7 @@ async function main() {
       const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
       // creditAt: the title's start (right-click reports), clear of the @NAME link and the star.
       const titleAt = cornerBoxes.credit ? [(cornerBoxes.credit.x + 12 * stage.metrics.unit) / d, (cornerBoxes.credit.y + cornerBoxes.credit.h / 2) / d] : null;
-      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), starAt: c(cornerBoxes.star), creditAt: titleAt };
+      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), likeAt: c(cornerBoxes.like), creditAt: titleAt };
     },
     /** Sample state per block (tests): loaded, or missing with its reference. */
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
@@ -2182,7 +2185,8 @@ async function main() {
     const overMake = !!makeStageAt && e.pointerType === 'mouse' && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr());
     if (overMake !== makeStageHover) { makeStageHover = overMake; stage.redraw(); }
     const overBy = !!cornerBoxes.by && e.pointerType === 'mouse' && inBox(cornerBoxes.by, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
-    if (overBy !== byHover) { byHover = overBy; app.canvas.style.cursor = overBy ? 'pointer' : ''; stage.redraw(); }
+    const overMe = !!cornerBoxes.me && e.pointerType === 'mouse' && inBox(cornerBoxes.me, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
+    if (overBy !== byHover || overMe !== meHover) { byHover = overBy; meHover = overMe; app.canvas.style.cursor = overBy || overMe ? 'pointer' : ''; stage.redraw(); }
     if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
       moveLabel(e);
