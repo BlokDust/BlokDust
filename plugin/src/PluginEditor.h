@@ -46,7 +46,7 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
   juce::WebBrowserComponent web_;
   KeyUpsToHost keyUps_{*this};  // Logic's Musical Typing gets its note-offs while the page has the keys
   juce::ScopedMessageBox linkNote_;  // iPad extension: "Link copied" (bd_openUrl)
-  juce::ScopedMessageBox shareSheet_;  // iPad: the share menu for a patch link (bd_share)
+  int hostState_ = -1;               // power mode · 2 + host playing, last sent to the page (bd_hostState)
   double lastTick_ = 0;              // ms (Time::getMillisecondCounterHiRes) of the last tick
   // Each display refresh, at most 60 ticks a second (every other one at 120 Hz); the 30 Hz timer stands in when the
   // display sends none (owner, iPad: 30 snapshots a second looked jumpy, 2026-11-16).

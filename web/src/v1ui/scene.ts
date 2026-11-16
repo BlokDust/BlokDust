@@ -39,6 +39,8 @@ export interface SceneHost extends PatchesHost {
   setMasterDb(db: number): void;
   /** The power switch (owner, 2026-11-11): off, nothing in the world powers anything; held blocks and keys still play. */
   setWorldPower(on: boolean): void;
+  /** Plugin (owner, 2026-11-16, CHG-0025): the switch's mode, 0 off · 1 on · 2 host (the DAW's transport powers it). */
+  setPowerMode?(mode: 0 | 1 | 2): void;
   /** Sampler block: pick and decode a local audio file (never uploaded). */
   loadSample(id: number): void;
   /** v1 SoundcloudPanel search, on Freesound (DATA-0005): sounds of at most `maxSeconds`. */
@@ -192,7 +194,9 @@ export class V1Scene {
     const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating);
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
     const playing = this.playheadsShown || !!this.playheadLines();
-    return animating || easing || spinning || playing || this.splashDrawing;
+    const hint = this.hostHinting, hintGone = this.hintDrawn && !hint;  // one more frame clears the hint
+    this.hintDrawn = hint;
+    return animating || easing || spinning || playing || this.splashDrawing || hint || hintGone;
   }
   private lastZoom = 1;
   private lastDrag = { x: 0, y: 0 };
@@ -273,7 +277,7 @@ export class V1Scene {
     this.CreateNew.MouseDown(p); if (this.CreateNew.Hover) return true;
     this.Header.MouseDown(p); if (this.Header.MenuOver) return true;
     this.ZoomButtons.MouseDown(p); if (this.ZoomButtons.InRoll || this.ZoomButtons.OutRoll) return true;
-    if (this.powerHit(p)) { this.setWorldPower(!this.worldPower); return true; }
+    if (this.powerHit(p)) { this.pressPower(p.x); return true; }
     if (this.OptionsPanel.Scale === 1) { this.OptionsPanel.MouseDown(p.x, p.y); if (this.OptionsPanel.Hover) return true; }
     this.RecorderPanel.MouseDown(p); if (this.RecorderPanel.Hover) return true;
     const hit = blockAt();
@@ -334,39 +338,78 @@ export class V1Scene {
   worldPower = true;
   private powerHover = false;
   setWorldPower(on: boolean): void { this.worldPower = on; this.host.setWorldPower(on); }
+  /**
+   * DAW plugins (owner, 2026-11-16, CHG-0025): a third cell, HOST, hands the power to the DAW's transport: powered
+   * while it plays, off while it is stopped. Its icon shows the transport (▷ stopped, ■ playing). A plugin can't press
+   * the DAW's play (AUv3, AU and VST3 give it no way), so pressing HOST again says where play is.
+   */
+  hostPower = false;
+  powerMode: 0 | 1 | 2 = 1;
+  hostPlaying = false;
+  private hostHintUntil = 0;
+  private hintDrawn = false;
+  setPowerMode(mode: 0 | 1 | 2): void {
+    this.powerMode = mode;
+    this.host.setPowerMode?.(mode);  // first: the processor drops the page's power commands in host mode
+    if (mode < 2) this.setWorldPower(mode === 1); else this.worldPower = this.hostPlaying;
+  }
+  /** The processor's mode and the DAW's play state (bd_patch, bd_hostState). */
+  setHostState(mode: number, playing: boolean): void {
+    this.powerMode = mode === 2 ? 2 : mode === 0 ? 0 : 1; this.hostPlaying = playing;
+    if (this.powerMode === 2) this.worldPower = playing;
+  }
+  private pressPower(x: number): void {
+    if (!this.hostPower) { this.setWorldPower(!this.worldPower); return; }
+    const r = this.powerRect(), cell = Math.max(0, Math.min(2, Math.floor((x - r.x) / (r.w / 3)))) as 0 | 1 | 2;
+    if (cell === 2 && this.powerMode === 2) { this.hostHintUntil = performance.now() + 2500; return; }
+    this.setPowerMode(cell);
+  }
   /** Bottom centre, between the zoom buttons and the trash: v1's off/on switch (OptionSwitch, "offOn"), at its own size
-   * (a 60u options row, 60u wide). Its dash and diamond sit level with +, − and the trash (30u up, v1 ZoomButtons and
-   * TrashCan); the label goes above it, where v1's zoom shows its percentage (50u up), as below would meet the edge. */
-  private powerRect() { const u = App.Unit, w = 60 * u, h = 60 * u; return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * u - h * 0.35, w, h }; }
+   * (a 60u options row, 60u wide; 90u with HOST's cell). Its dash and diamond sit level with +, − and the trash (30u up,
+   * v1 ZoomButtons and TrashCan); the label goes above it, where v1's zoom shows its percentage (50u up), as below
+   * would meet the edge. */
+  private powerRect() { const u = App.Unit, w = (this.hostPower ? 90 : 60) * u, h = 60 * u; return { x: App.Width * 0.5 - w * 0.5, y: App.Height - 30 * u - h * 0.35, w, h }; }
   private powerHit(p: { x: number; y: number }): boolean {
     if (this.SharePanel.Open || this.SettingsPanel.Open || this.SoundcloudPanel.Open || this.PatchesPanel.Open) return false;
     const u = App.Unit, r = this.powerRect(); return Dimensions.hitRect(r.x, App.Height - 66 * u, r.w, 66 * u, p.x, p.y);
   }
+  /** Hosts: the HOST hint is showing (the stage keeps redrawing until it goes). */
+  private get hostHinting(): boolean { return this.hostHintUntil > performance.now(); }
   /**
-   * v1 OptionSwitch (style 1, "offOn"), its proportions unchanged: a divider from 0.15h to 0.55h, the dash (off) and
-   * diamond (on) at 0.35h, the lit side underlined at 0.55h. The label: POWER; when off, POWER OFF on v1's red
-   * (SAVE-coloured) fill, so a stopped world is never mistaken for a broken one. Space toggles it too.
+   * v1 OptionSwitch (style 1, "offOn"), its proportions unchanged: dividers from 0.15h to 0.55h, the dash (off),
+   * diamond (on) and HOST's ▷/■ at 0.35h, the chosen cell underlined at 0.55h. The label: POWER; when off, POWER OFF
+   * on v1's red (SAVE-coloured) fill, so a stopped world is never mistaken for a broken one; HOST stopped on the grey
+   * (SAVE AS) fill. Space toggles it too (web).
    */
   private drawPower(): void {
-    const ctx = this.Ctx, u = App.Unit, { x, y, w, h } = this.powerRect(), on = this.worldPower, menu = App.ThemeManager.MenuOrder;
-    const txt = App.Palette[App.ThemeManager.Txt], cy = y + h * 0.35, lx = x + w * 0.25, rx = x + w * 0.75;
+    const ctx = this.Ctx, u = App.Unit, { x, y, w, h } = this.powerRect(), menu = App.ThemeManager.MenuOrder;
+    const txt = App.Palette[App.ThemeManager.Txt], cy = y + h * 0.35, cells = this.hostPower ? 3 : 2, cw = w / cells;
+    const mode = this.hostPower ? this.powerMode : this.worldPower ? 1 : 0;
     App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(Math.round(x + w * 0.5), y + h * 0.15); ctx.lineTo(Math.round(x + w * 0.5), y + h * 0.55); ctx.stroke();
-    App.FillColor(ctx, App.Palette[on ? menu[2] : menu[3]]);
-    ctx.fillRect(on ? x + w * 0.5 : x, y + h * 0.55, w * 0.5, h * 0.05 + (this.powerHover ? u : 0));
+    ctx.beginPath();
+    for (let i = 1; i < cells; i++) { ctx.moveTo(Math.round(x + cw * i), y + h * 0.15); ctx.lineTo(Math.round(x + cw * i), y + h * 0.55); }
+    ctx.stroke();
+    App.FillColor(ctx, App.Palette[mode === 0 ? menu[3] : mode === 1 || this.hostPlaying ? menu[2] : menu[1]]);
+    ctx.fillRect(x + cw * mode, y + h * 0.55, cw, h * 0.05 + (this.powerHover ? u : 0));
+    const lx = x + cw * 0.5, rx = x + cw * 1.5, hx = x + cw * 2.5;
     ctx.lineWidth = 2; App.StrokeColor(ctx, txt);
     ctx.beginPath();
     ctx.moveTo(lx - 5 * u, cy); ctx.lineTo(lx + 5 * u, cy);
     ctx.moveTo(rx + 5 * u, cy); ctx.lineTo(rx, cy - 5 * u); ctx.lineTo(rx - 5 * u, cy); ctx.lineTo(rx, cy + 5 * u); ctx.lineTo(rx + 5 * u, cy);
+    if (this.hostPower && this.hostPlaying) ctx.rect(hx - 4.5 * u, cy - 4.5 * u, 9 * u, 9 * u);
+    else if (this.hostPower) { ctx.moveTo(hx - 4 * u, cy - 5 * u); ctx.lineTo(hx + 5 * u, cy); ctx.lineTo(hx - 4 * u, cy + 5 * u); ctx.closePath(); }
     ctx.stroke(); ctx.lineWidth = 1;
+    const hosted = mode === 2;
+    const label = this.hostHinting ? "USE THE HOST'S PLAY BUTTON" : mode === 0 ? 'POWER OFF' : !hosted ? 'POWER'
+      : this.hostPlaying ? 'POWER · HOST PLAYING' : 'HOST STOPPED · PRESS PLAY';
+    const fill = mode === 0 && !this.hostHinting ? menu[3] : this.hostHinting || (hosted && !this.hostPlaying) ? menu[1] : null;
     ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-    const label = on ? 'POWER' : 'POWER OFF';
     let base = App.Height - 50 * u;
-    if (!on) {
+    if (fill !== null) {
       const m = ctx.measureText(label), boxY = base - 11 * u, boxH = 15 * u;
-      App.FillColor(ctx, App.Palette[menu[3]]);
+      App.FillColor(ctx, App.Palette[fill]);
       ctx.fillRect(x + w * 0.5 - m.width * 0.5 - 6 * u, boxY, m.width + 12 * u, boxH);
-      // The letters sit in the middle of the red (owner, 2026-11-13: they sat a pixel or two high).
+      // The letters sit in the middle of the fill (owner, 2026-11-13: they sat a pixel or two high).
       base = boxY + boxH * 0.5 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) * 0.5;
     }
     App.FillColor(ctx, txt);

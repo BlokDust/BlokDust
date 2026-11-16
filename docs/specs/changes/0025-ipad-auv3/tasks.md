@@ -59,7 +59,9 @@ Check items off as they land. Each task should be independently verifiable.
       page shows no links: no "View the code on GitHub", no websites or Twitter names in About (`hideLinks`, test
       `ipad-extension-no-links`); the app keeps them. On iPad (app and extension) CREATE SHARE LINK opens the share
       menu (JUCE ContentSharer, `bd_share`) with the self-contained `?c=p…` link: a short link needs the site's bot
-      check, which the plugin can't run.
+      check, which the plugin can't run. The menu is a popover at the button (`shareLink`, WebViewDrops.mm): JUCE's
+      ContentSharer opened a page sheet the size of the view (owner: hard to close). DAW plugins get the power
+      switch's HOST cell (UI-0009).
 - [x] 9. BlokDust FX as a second AUv3 in the same app.
       2026-11-16: `BlokDust FX.appex` is embedded beside `BlokDust.appex` (`XCODE_EMBED_APP_EXTENSIONS`); on iPad its
       ID is `com.funputs.blokdust.fx` (extension `com.funputs.blokdust.fx.fxAUv3`), as an embedded extension's ID must

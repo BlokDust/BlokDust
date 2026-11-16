@@ -238,6 +238,7 @@ async function main() {
     hasLocalFiles: () => [...model.values()].some(b => !isPortable(b.params.track)),
     setMasterDb: db => send([{ type: CommandType.SetMaster, id: 0, value: db <= -99 ? 0 : 2 ** (db / 6) }]),
     setWorldPower: on => { send([{ type: CommandType.WorldPower, id: 0, value: on ? 1 : 0 }]); stage.redraw(); },
+    setPowerMode: mode => { juce?.emitEvent('bd_powerMode', { mode }); stage.redraw(); },
     resetScene: () => {
       for (const id of [...model.keys()]) removeBlock(id);
       stage.setView(1, { x: 0, y: 0 });
@@ -292,7 +293,11 @@ async function main() {
         const link = `${PUBLIC_SITE}?c=${await encodePatch(toPatch())}&t=${encodeURIComponent(title)}`;
         // iPad: the share menu sends the link itself (the patch is in it, so it opens with no server; owner,
         // 2026-11-16, CHG-0025). A short link needs the site's bot check, which the plugin can't run.
-        if (ios) { juce.emitEvent('bd_share', { url: link, title }); return; }
+        if (ios) {
+          const at = scene.PatchesPanel.centreOf('share');  // the share menu points at the button
+          juce.emitEvent('bd_share', { url: link, title, x: Math.round(at?.[0] ?? innerWidth / 2), y: Math.round(at?.[1] ?? innerHeight / 2) });
+          return;
+        }
         juce.emitEvent('bd_openUrl', { url: `${link}&share=1` });
       },
       warning: () => shareWarning(),
@@ -1010,9 +1015,12 @@ async function main() {
   if (juce) {
     overlay.remove();
     send = cmds => juce.emitEvent('bd_commands', { commands: cmds });
-    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean; ios?: boolean }) => {
+    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean; ios?: boolean; powerMode?: number; hostPlaying?: boolean }) => {
       standalone = !!e.standalone;
       ios = !!e.ios;
+      // DAW plugins: the power switch's HOST cell (a standalone app has no transport; CHG-0025).
+      scene.hostPower = !standalone;
+      scene.setHostState(e.powerMode ?? 1, !!e.hostPlaying);
       if (ios && !standalone && !App.NoLinks) hideLinks();  // an iPad extension can't open Safari (CHG-0025)
       if (ios) PATCH_COPY.shareLinePlugin = 'Send a link to this patch from the share menu: Messages, WhatsApp, Mail and more.';
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
@@ -1045,6 +1053,7 @@ async function main() {
       const dragging = ((scene.OptionsPanel as any).Options ?? []).some((o: any) => (o.Type === 'slider' && o.Selected) || o.Handles?.some((h: any) => h.Selected));
       if (refresh && !dragging) (open as V1Block).RefreshOptionsPanel();
     });
+    juce.addEventListener('bd_hostState', (h: { mode: number; playing: boolean }) => { scene.setHostState(h.mode, h.playing); stage.redraw(); });
     juce.addEventListener('bd_ccLearned', (e: { slot: number; cc: number }) => { ccBySlot.set(e.slot, e.cc); });
     juce.addEventListener('bd_sampleInfo', (s: PluginSampleInfo) => applyPluginSample(s));
     // A file dropped on the plugin editor (CHG-0004 3.7): which sampler is under it, or a new Sample there.

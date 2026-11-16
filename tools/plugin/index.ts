@@ -203,6 +203,18 @@ function test() {
     const ok = !!a.tailHash && a.tailHash === b.tailHash && a.peak > 0.001;
     renders.push({ case: 'Play resyncs: takes from bar 1 match', ok, audioHash: a.tailHash ?? a.error, expected: b.tailHash });
   }
+  // Owner (GarageBand on iPad, 2026-11-16, CHG-0025): the power switch's HOST mode (saved with the project) powers the
+  // world while the DAW plays and turns it off while it is stopped; plain ON keeps it running when stopped.
+  {
+    const fx = JSON.parse(readFileSync('tests/golden/tempo-host.json', 'utf8'));
+    const state = (mode: number) => { const f = resolve(`.cache/power-mode-${mode}.state.json`); writeFileSync(f, JSON.stringify({ ...fx.patch, plugin: { powerMode: mode } })); return f; };
+    // Stopped at 1.25 s, played again from bar 1 at 3 s: the stopped window starts 1 s after the stop (notes release).
+    const run = (mode: number, window: string) => hostRender(VST3, 'tests/golden/tempo-host.json', ['--state', state(mode), '--tempo', '120', '--stopped', '60000:144000', '--peak', window]);
+    const hostStopped = run(2, '108000:144000').windowPeak, hostPlaysAgain = run(2, '150000:240000').windowPeak, onStopped = run(1, '108000:144000').windowPeak;
+    const reloaded = hostRender(VST3, 'tests/golden/tempo-host.json', ['--state', state(2), '--reload']).stateAfter?.plugin;
+    const ok = hostStopped < 1e-4 && hostPlaysAgain > 0.001 && onStopped > 0.001 && reloaded?.powerMode === 2;
+    renders.push({ case: 'power HOST: off while the DAW is stopped, on when it plays', ok, audioHash: JSON.stringify({ hostStopped, hostPlaysAgain, onStopped, reloaded }), expected: 'stopped silent; plays; ON keeps running' });
+  }
   // Owner (Logic): a disabled plugin gets no audio callbacks at all; with its editor open the stage must still update.
   {
     const r = hostRender(VST3, 'tests/golden/emitter-tone.json', ['--idle', '--editor', diag], { BLOKDUST_DIAG_FILE: diag });

@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**45 decisions** · proposed: 0 · accepted: 39 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**46 decisions** · proposed: 0 · accepted: 40 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -100,3 +100,4 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0006](ui/UI-0006-multi-touch-the-first-finger-is-v1-s-pointer-more.md) | Multi-touch: the first finger is v1's pointer; more fingers take blocks, sliders or a pinch | **accepted** | 2026-11-11 | touch, input, release-1 |
 | [UI-0007](ui/UI-0007-multi-select-a-set-beside-v1-s-one-selected-block.md) | Multi-select: a set beside v1's one selected block, ringed by its outline | **accepted** | 2026-11-11 | selection, input, release-1 |
 | [UI-0008](ui/UI-0008-a-power-switch-for-the-whole-world-on-the-stage.md) | A power switch for the whole world, on the stage | **accepted** | 2026-11-11 | power, release-1 |
+| [UI-0009](ui/UI-0009-host-the-power-switch-s-third-cell-hands-power-to.md) | HOST: the power switch's third cell hands power to the DAW transport | **accepted** | 2026-11-16 | power, plugin, ipad |

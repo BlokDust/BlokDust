@@ -260,6 +260,13 @@ void BlokDustProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     lastBpm_ = bpm;
     hostPlaying_ = playing;
   }
+  hostPlayingUi_.store(hostPlaying_, std::memory_order_relaxed);
+  // Host power mode: the world is powered while the DAW plays (applied after the transport resync above, so a take
+  // from a position starts alike every time).
+  if (powerMode_.load(std::memory_order_relaxed) == 2) {
+    const int want = hostPlaying_ ? 1 : 0;
+    if (powerResync_.exchange(false) || want != hostPower_) { engine_->applyNow(Command::worldPower(want != 0)); hostPower_ = want; }
+  } else hostPower_ = -1;
   // Host MIDI → each MIDI Input block through its own MPE/MIDI parser (PLUGIN-0004; channel filter in the engine),
   // split at each event's sample offset (applied at the next tick boundary).
   midiRouter_.sync(*engine_);
@@ -379,6 +386,7 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
     c.blockType = static_cast<BlockType>(j.value("blockType", 0));
     c.x = j.value("x", 0.0); c.y = j.value("y", 0.0);
     c.param = static_cast<std::uint8_t>(j.value("param", 0)); c.value = j.value("value", 0.0);
+    if (c.type == Command::Type::WorldPower && powerMode_.load() == 2) continue;  // the transport has the power
     if (engine_) engine_->push(c);
     // keep the patch model (host state) in step with the engine
     switch (c.type) {
@@ -418,6 +426,11 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
   }
 }
 
+void BlokDustProcessor::setPowerMode(int mode) noexcept {
+  powerMode_.store(std::clamp(mode, 0, 2));
+  if (mode == 2) powerResync_.store(true);
+}
+
 void BlokDustProcessor::getStateInformation(juce::MemoryBlock& dest) {
   // The patch, plus what only the plugin has: the Dust 1–8 values (hosts restore them from this, CHG-0004 3.10).
   // Block params follow Dust (flushDust touches the patch, so only on the message thread, where hosts usually ask).
@@ -425,7 +438,7 @@ void BlokDustProcessor::getStateInformation(juce::MemoryBlock& dest) {
   auto state = patch_;
   auto dust = nlohmann::json::array();
   for (auto* p : dustParams_) dust.push_back(p->get());
-  state["plugin"] = {{"dust", dust}};
+  state["plugin"] = {{"dust", dust}, {"powerMode", powerMode_.load() == 2 ? 2 : 1}};
   const auto text = state.dump();
   dest.replaceAll(text.data(), text.size());
 }
@@ -439,6 +452,7 @@ void BlokDustProcessor::setStateInformation(const void* data, int sizeInBytes) {
     const auto dust = patch_["plugin"].value("dust", nlohmann::json::array());
     for (std::size_t i = 0; i < dustParams_.size() && i < dust.size(); ++i)
       if (dust[i].is_number()) dustParams_[i]->setValueNotifyingHost(dust[i].get<float>());
+    setPowerMode(patch_["plugin"].value("powerMode", 1) == 2 ? 2 : 1);  // off is never restored (v2 opens powered)
     patch_.erase("plugin");  // the patch itself stays a plain v2 patch (what the editor and web see)
   }
   samples_.clear(); missing_.clear();
