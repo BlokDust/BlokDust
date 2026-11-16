@@ -131,7 +131,9 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   /// and loaded as the block's file, so a reopened project plays it without the editor.
   void useGenerated(BlockId id, const std::vector<float>& mono, double sampleRate);
   /// Recorder's download button in a DAW: show the block's file in Finder / Explorer.
-  void revealSample(BlockId id) const;
+  /// The Recorder's download: the take is already a file, so show it (Finder / Explorer). iPad: export a copy through
+  /// the document picker (CHG-0025 task 6), as there is no Finder.
+  void revealSample(BlockId id);
 
   static constexpr int kDustSlots = 8;  // PLUGIN-0003
 

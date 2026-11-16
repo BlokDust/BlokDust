@@ -12,6 +12,16 @@ namespace blokdust::plugin {
 /// 'subsystem == "com.funputs.blokdust"'` shows them.
 void systemLog(const juce::String& message);
 
+/// The parent for a native file picker: the editor on iPad, where an AUv3's picker without one never opens (JUCE);
+/// none on desktop, which keeps its free-standing dialogs.
+inline juce::Component* pickerParent([[maybe_unused]] juce::Component* editor) {
+#if JUCE_IOS
+  return editor;
+#else
+  return nullptr;
+#endif
+}
+
 /// Stop native web views under `c` from claiming file drags. Returns true once done (call again until it is).
 bool routeFileDropsToEditor(juce::Component& c);
 

@@ -463,9 +463,20 @@ nlohmann::json* BlokDustProcessor::blockJson(const std::string& key) {
 void BlokDustProcessor::pickFile(BlockId id) {
   const auto key = keyOf(id);
   if (key.empty()) return;
-  chooser_ = std::make_unique<juce::FileChooser>("Choose an audio file for BlokDust", juce::File{}, "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf");
+  chooser_ = std::make_unique<juce::FileChooser>("Choose an audio file for BlokDust", juce::File{}, "*.wav;*.aif;*.aiff;*.flac;*.ogg;*.mp3;*.m4a;*.caf", true, false,
+                                                 pickerParent(getActiveEditor()));
   chooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this, id](const juce::FileChooser& fc) {
+#if JUCE_IOS
+    // iPad (CHG-0025 task 6): the picked file is copied into the shared Samples folder and the copy is what the patch
+    // references, so the app and the extension in any host can read it later.
+    if (const auto url = fc.getURLResult(); !url.isEmpty())
+      loader_.copyIn(url, patchfiles::root().getChildFile("Samples"), [this, id](juce::File f, std::string err) {
+        systemLog(f.existsAsFile() ? juce::String("sample: copied in, ") + juce::String(f.getSize()) + " bytes" : juce::String("sample: copy failed: ") + err);
+        if (f.existsAsFile()) loadFile(id, f);
+      });
+#else
     if (const auto f = fc.getResult(); f.existsAsFile()) loadFile(id, f);
+#endif
   });
 }
 
@@ -582,7 +593,13 @@ void BlokDustProcessor::restoreSamples() {
         if (s) useSample(key, s, false, display); else markMissing(key);
       });
     } else if (ref.value("provider", std::string{}) == "file") {
+#if JUCE_IOS
+      const auto f = SampleLoader::relink(ref, patchfiles::root().getChildFile("Samples"));
+      if (f.existsAsFile() && f.getFullPathName().toStdString() != ref.value("path", std::string{}) && f.isAChildOf(patchfiles::root().getChildFile("Samples")))
+        systemLog("sample: relinked from Samples");
+#else
       const auto f = SampleLoader::relink(ref);
+#endif
       if (!f.existsAsFile()) { missing_.insert(key); continue; }
       loading_.insert(key);
       nlohmann::json display = {{"trackName", b["params"].value("trackName", std::string{})}, {"user", "Local file"}, {"permalink", ""}};
@@ -689,11 +706,17 @@ void BlokDustProcessor::useGenerated(BlockId id, const std::vector<float>& mono,
   if (file.existsAsFile()) loadFile(id, file);
 }
 
-void BlokDustProcessor::revealSample(BlockId id) const {
+void BlokDustProcessor::revealSample(BlockId id) {
   const auto key = keyOf(id);
   const auto it = samples_.find(key);
   if (it == samples_.end()) return;
   const juce::File f(juce::String(it->second->ref.value("path", std::string{})));
-  if (f.existsAsFile()) f.revealToUser();
+  if (!f.existsAsFile()) return;
+#if JUCE_IOS
+  chooser_ = std::make_unique<juce::FileChooser>("Save the recording", f, "*.wav", true, false, pickerParent(getActiveEditor()));
+  chooser_->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles, [](const juce::FileChooser&) {});
+#else
+  f.revealToUser();
+#endif
 }
 }  // namespace blokdust::plugin

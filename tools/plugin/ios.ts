@@ -7,7 +7,8 @@
 //                              First the app itself (task 4): installed fresh, it must start output-only audio with no
 //                              microphone entry, show the first-launch patch, save it when sent to the background, and
 //                              restore it on the next launch. A patch put in the App Group's Patches folder must be
-//                              seen by both the app and the extension (task 5: one folder shared by both).
+//                              seen by both the app and the extension (task 5: one folder shared by both), and a patch
+//                              from another machine must find its sample there by name and render like native (task 6).
 //   --no-build                 test the existing build
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
 import { spawnSync } from 'node:child_process';
@@ -22,6 +23,9 @@ const HOST_APP = 'build/plugin-ios-sim/ioshost/BlokDustIOSHost.app';
 const HOST_ID = 'com.funputs.tests.blokdust-ioshost';
 const COMPONENT = 'aumu,Bdst,Bldt';
 const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];  // as `bd plugin test`
+// Task 6: a patch from another machine (its sample's path does not exist here) whose file is in the shared Samples
+// folder: the extension relinks it by name and must render like the native engine with the same WAV.
+const SAMPLE_FIXTURE = 'tests/golden/samples/sample-file.json';
 const OUT = '.cache/ios-host';
 const APP_ID = 'com.funputs.blokdust';
 const APP_GROUP = 'group.com.funputs.blokdust';  // plugin/CMakeLists.txt BLOKDUST_APP_GROUP
@@ -82,6 +86,20 @@ function waitForLog(udid: string, since: Date, patterns: RegExp[], seconds: numb
   return log;
 }
 
+/** The sample fixture as a patch from another machine, its WAV in the App Group's Samples folder; and the native hash. */
+function sampleRelinkFixture(group: string): { fixture: string; expected: string } {
+  const fx = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8'));
+  for (const r of Object.values(fx.patch.refs) as { provider: string; name: string; path: string }[]) if (r.provider === 'file') {
+    mkdirSync(resolve(group, 'BlokDust/Samples'), { recursive: true });
+    cpSync(resolve(r.path), resolve(group, 'BlokDust/Samples', r.name));
+    r.path = `/Volumes/Elsewhere/Samples/${r.name}`;  // a path that exists on no iPad
+  }
+  const fixture = resolve(OUT, 'sample-relink.json');
+  writeFileSync(fixture, JSON.stringify(fx));
+  const native = JSON.parse(must(run('node', ['tools/bd.ts', 'render', SAMPLE_FIXTURE], true), 'native render (sample)').stdout.trim().split('\n').pop()!);
+  return { fixture, expected: native.audioHash };
+}
+
 /** The app on its own (CHG-0025 task 4): output-only audio, the first-launch patch, saved and restored. */
 function appCheck(udid: string) {
   const plist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${APP}/Info.plist`], true), 'read Info.plist').stdout);
@@ -133,12 +151,14 @@ export function iosTest(noBuild: boolean): void {
   rmSync(resolve(group, 'BlokDust/Patches'), { recursive: true, force: true });
   mkdirSync(resolve(group, 'BlokDust/Patches'), { recursive: true });
   cpSync(FIRST_PATCH, resolve(group, 'BlokDust/Patches/Shared Test.blokdust'));
+  const sampleCase = sampleRelinkFixture(group);
   const app = appCheck(sim.udid);
 
   const out = resolve(OUT, 'result.json');
   rmSync(out, { force: true });
   const job = resolve(OUT, 'job.json');
-  writeFileSync(job, JSON.stringify({ component: COMPONENT, fixtures: FIXTURES.map(f => resolve(f)), out, editorSeconds: 15 }));
+  writeFileSync(job, JSON.stringify({ component: COMPONENT, fixtures: [...FIXTURES.map(f => resolve(f)), { path: sampleCase.fixture, settleMs: 3000 }],
+    out, editorSeconds: 15 }));
   const started = new Date(Date.now() - 1000);
   must(run('xcrun', ['simctl', 'launch', '--terminate-running-process', sim.udid, HOST_ID, '--job', job], true), 'launch test host');
   for (let i = 0; i < 120 && !existsSync(out); ++i) sleep(1000);
@@ -155,15 +175,20 @@ export function iosTest(noBuild: boolean): void {
   const wrapper = /processor created \((AUv3)/.exec(log)?.[1] ?? null;
   const extensionSharedFolder = SHARED.test(log);
 
-  const renders = (result.renders as { fixture: string; audioHash?: string; error?: string; stateRoundTrips?: boolean }[]).map((r, i) => {
+  const all = result.renders as { fixture: string; audioHash?: string; error?: string; stateRoundTrips?: boolean }[];
+  const renders = all.slice(0, FIXTURES.length).map((r, i) => {
     const expected = JSON.parse(readFileSync(FIXTURES[i].replace('tests/golden/', 'tests/golden/expected/'), 'utf8')).audioHash;
     return { fixture: FIXTURES[i], audioHash: r.audioHash ?? null, expected, identical: r.audioHash === expected, stateRoundTrips: !!r.stateRoundTrips, error: r.error };
   });
-  const lastBlocks = JSON.parse(readFileSync(FIXTURES[FIXTURES.length - 1], 'utf8')).patch.blocks.length;
+  // The relinked sample: the plugin rewrites the ref's path to the file it found, so the state cannot round-trip as is.
+  const s = all[FIXTURES.length];
+  const sample = { fixture: SAMPLE_FIXTURE, audioHash: s?.audioHash ?? null, expected: sampleCase.expected, identical: s?.audioHash === sampleCase.expected,
+    relinked: /sample: relinked from Samples/.test(log), error: s?.error };
+  const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length;  // the editor shows the last state set
   const editor = { sharedFolder: extensionSharedFolder, view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot };
-  const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips)
+  const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips) && sample.identical && sample.relinked
     && editor.sharedFolder && editor.view && editor.ready === lastBlocks;
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
-    error: result.error, app, renders, editor }));
+    error: result.error, app, renders, sample, editor }));
   if (!ok) process.exit(1);
 }

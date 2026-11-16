@@ -26,7 +26,14 @@ Check items off as they land. Each task should be independently verifiable.
       file; the bin deletes outright. `bd plugin ios test` puts a patch in the group and both the app and the extension
       must list it. Not automated: the picker flows themselves (check on the iPad, task 11). Device builds need the
       group registered in the owner's team (task 10).
-- [ ] 6. Samples on iPad: document picker, security-scoped access, copy into the container, relink by name.
+- [x] 6. Samples on iPad: document picker, security-scoped access, copy into the container, relink by name.
+      2026-11-16: a picked file is copied (off the message thread) into the App Group's BlokDust/Samples, reusing a
+      same-named copy with the same fingerprint, and the patch references the copy (`SampleLoader::copyIn`). A patch
+      whose file is missing also looks in Samples by name. `bd plugin ios test` loads a patch from another machine
+      (its path exists on no iPad) with the WAV in Samples: the extension relinks it and renders ≡ native. Not
+      automated: the picker itself (task 11). The Recorder's download exports the take through the picker (no Finder).
+      Every picker is parented to the editor on iPad (`pickerParent`): JUCE never opens an AUv3's picker without one.
+      Left for task 8: no file drops on iPad.
 - [ ] 7. Links: `bd_openUrl` in the extension (no `openURL` from extensions): hide or replace those buttons in the
       iPad plugin page.
 - [ ] 8. Editor on iPad: touch in WKWebView (Release 1 multi-touch), host view sizes (AUM, GarageBand, Logic for

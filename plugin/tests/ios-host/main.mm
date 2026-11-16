@@ -3,7 +3,8 @@
 // the state round-trip, then shows the extension's view so its WebView editor builds the stage.
 //
 // Run by `pnpm bd plugin ios test`, which passes a job file:  BlokDustIOSHost --job <job.json>
-//   job: {"component": "aumu,Bdst,Bldt", "fixtures": ["<abs path>", ...], "out": "<abs path>", "editorSeconds": 20}
+//   job: {"component": "aumu,Bdst,Bldt", "fixtures": ["<abs path>" | {"path", "settleMs"}, ...], "out": "<abs path>",
+//         "editorSeconds": 20}   (settleMs: wait after setting the state, for samples the plugin loads in the background)
 // Writes {"component", "renders": [{fixture, audioHash, frames, sampleRate, peak, stateRoundTrips}], "view": bool}
 // to "out". Simulator apps can read and write the Mac's file system, so paths are the Mac's. The editor's page
 // round-trip is read from the plugin's own log line ("page: ready, N blocks", subsystem com.funputs.blokdust):
@@ -36,7 +37,7 @@ static OSType fourCC(NSString* s) {
   return (OSType(c[0]) << 24) | (OSType(c[1]) << 16) | (OSType(c[2]) << 8) | OSType(c[3]);
 }
 
-static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path) {
+static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path, double settleMs) {
   NSData* raw = [NSData dataWithContentsOfFile:path];
   NSDictionary* fx = raw ? [NSJSONSerialization JSONObjectWithData:raw options:0 error:nil] : nil;
   if (!fx) return @{@"fixture": path, @"error": @"cannot read fixture"};
@@ -65,6 +66,7 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path) {
     [j removeObjectForKey:@"plugin"];  // plugin-only state (Dust values) beside the patch
     roundTrips = [j isEqual:fx[@"patch"]];
   }
+  if (settleMs > 0) [NSThread sleepForTimeInterval:settleMs / 1000.0];
 
   if (![au allocateRenderResourcesAndReturnError:&err]) return @{@"fixture": path, @"error": [NSString stringWithFormat:@"allocate: %@", err]};
   AURenderBlock renderBlock = au.renderBlock;
@@ -148,9 +150,11 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path) {
     for (AUParameter* p in au.parameterTree.allParameters) [params addObject:p.displayName ?: @""];
     self.result[@"params"] = params;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-      for (NSString* f in job[@"fixtures"]) {
+      for (id item in job[@"fixtures"]) {
+        NSString* f = [item isKindOfClass:NSDictionary.class] ? item[@"path"] : item;
+        const double settle = [item isKindOfClass:NSDictionary.class] ? [item[@"settleMs"] doubleValue] : 0.0;
         HOSTLOG(@"rendering %@", f.lastPathComponent);
-        [self.result[@"renders"] addObject:renderFixture(au, f)];
+        [self.result[@"renders"] addObject:renderFixture(au, f, settle)];
       }
       dispatch_async(dispatch_get_main_queue(), ^{
         // The editor: the host asks for the extension's view controller and shows it (AUM shows it in a window).

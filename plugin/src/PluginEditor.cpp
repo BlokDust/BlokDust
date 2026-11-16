@@ -98,7 +98,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  // Drive, another app's folder). The picker's URL is all we learn of where it went.
                  const auto tmp = patchfiles::saveTo(juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile(patchfiles::safeName(title) + ".blokdust"),
                                                      title, nlohmann::json::parse(proc_.patchJson()));
-                 patchChooser_ = std::make_unique<juce::FileChooser>("Save a BlokDust patch", tmp, "*.blokdust");
+                 patchChooser_ = std::make_unique<juce::FileChooser>("Save a BlokDust patch", tmp, "*.blokdust", true, false, pickerParent(this));
                  patchChooser_->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles, [this, req, tmp](const juce::FileChooser& fc) {
                    const auto url = fc.getURLResult();
                    tmp.deleteFile();
@@ -122,7 +122,7 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                })
                // FROM YOUR COMPUTER: one picker; the page then asks Open or Insert.
                .withEventListener("bd_patchPick", [this](const juce::var&) {
-                 patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json");
+                 patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json", true, false, pickerParent(this));
                  patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this](const juce::FileChooser& fc) {
 #if JUCE_IOS
                    // iPad: a document-picker URL outside our sandbox; JUCE's stream holds its security-scoped access.

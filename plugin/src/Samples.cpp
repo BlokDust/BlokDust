@@ -75,7 +75,33 @@ nlohmann::json SampleLoader::fingerprint(const juce::File& file) {
   return {{"bytes", size}, {"hash", "sha256:" + juce::SHA256(both).toHexString().toStdString()}};
 }
 
-juce::File SampleLoader::relink(const nlohmann::json& ref) {
+void SampleLoader::copyIn(const juce::URL& url, const juce::File& dir, std::function<void(juce::File, std::string)> done) {
+  pool_.addJob([url, dir, done]() mutable {
+    juce::File result;
+    std::string err;
+    const auto name = juce::File::createLegalFileName(juce::URL::removeEscapeChars(url.getFileName()));
+    dir.createDirectory();
+    const auto tmp = dir.getNonexistentChildFile(".incoming", ".part", false);
+    {
+      // JUCE's iOS stream keeps the picked file's security-scoped access open while it reads.
+      auto in = url.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress));
+      juce::FileOutputStream out(tmp);
+      if (!in || !out.openedOk() || out.writeFromInputStream(*in, -1) <= 0) err = "cannot copy the picked file";
+    }
+    if (err.empty()) {
+      const auto same = dir.getChildFile(name.isEmpty() ? "Sample" : name);
+      if (same.existsAsFile() && fingerprint(same) == fingerprint(tmp)) { tmp.deleteFile(); result = same; }
+      else {
+        result = same.existsAsFile() ? dir.getNonexistentChildFile(same.getFileNameWithoutExtension(), same.getFileExtension(), false) : same;
+        if (!tmp.moveFileTo(result)) { err = "cannot keep the copy"; result = juce::File(); }
+      }
+    }
+    if (!err.empty()) tmp.deleteFile();
+    juce::MessageManager::callAsync([done = std::move(done), result, err] { done(result, err); });
+  });
+}
+
+juce::File SampleLoader::relink(const nlohmann::json& ref, const juce::File& samplesDir) {
   const juce::File last(juce::String(ref.value("path", std::string{})));
   if (last.existsAsFile()) return last;
   const auto name = juce::String(ref.value("name", std::string{}));
@@ -85,6 +111,7 @@ juce::File SampleLoader::relink(const nlohmann::json& ref) {
     if (auto f = dir.getChildFile(name); f.existsAsFile()) return f;
     for (const auto& f : dir.findChildFiles(juce::File::findFiles, true, name)) return f;  // nearest match
   }
+  if (samplesDir.isDirectory()) if (auto f = samplesDir.getChildFile(name); f.existsAsFile()) return f;
   return {};
 }
 
