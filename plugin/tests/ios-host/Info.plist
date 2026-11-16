@@ -3,7 +3,7 @@
 <!-- BlokDust iOS AUv3 test host (CHG-0025 task 2), built by `pnpm bd plugin ios test` for the Simulator only. -->
 <plist version="1.0">
 <dict>
-  <key>CFBundleIdentifier</key><string>com.blokdust.tests.ioshost</string>
+  <key>CFBundleIdentifier</key><string>com.funputs.tests.BlokDustIOSHost</string>
   <key>CFBundleExecutable</key><string>BlokDustIOSHost</string>
   <key>CFBundleName</key><string>BlokDust Test Host</string>
   <key>CFBundlePackageType</key><string>APPL</string>

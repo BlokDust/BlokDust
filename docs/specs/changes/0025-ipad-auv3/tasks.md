@@ -22,4 +22,5 @@ Check items off as they land. Each task should be independently verifiable.
 - [ ] 9. BlokDust FX as a second AUv3 in the same app.
 - [ ] 10. Device: signing setup (local config), `plugin-ios` preset, install on the owner's iPad; CPU/memory check.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
-- [ ] 12. Licensing decision (LICENSING-0002) and App Store/TestFlight setup (owner).
+- [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.
+- [ ] 12b. App Store Connect / TestFlight setup (owner).

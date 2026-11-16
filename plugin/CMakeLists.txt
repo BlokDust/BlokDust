@@ -35,10 +35,17 @@ function(blokdust_plugin target)
     set(au_type kAudioUnitType_MusicDevice)
     set(vst3_cat Instrument Synth)
   endif()
+  # Bundle IDs (owner, 2026-11-15): iPadOS uses com.funputs.* (the App Store ID is permanent and blokdust.com is not
+  # the owner's). Desktop keeps the com.blokdust.* it shipped in 2.0.x; hosts find AUs and VST3s by their codes.
+  if(IOS)
+    set(bundle_id "com.funputs.${target}")
+  else()
+    set(bundle_id "com.blokdust.${target}")
+  endif()
   juce_add_plugin(${target}
     PRODUCT_NAME "${ARG_PRODUCT}"
     COMPANY_NAME "BlokDust"
-    BUNDLE_ID "com.blokdust.${target}"
+    BUNDLE_ID "${bundle_id}"
     PLUGIN_MANUFACTURER_CODE Bldt
     PLUGIN_CODE ${ARG_CODE}
     FORMATS ${ARG_FORMATS}
