@@ -6,6 +6,7 @@
     "pnpm bd plugin validate",
     "pnpm bd plugin test",
     "pnpm bd plugin ios test [--no-build]",
+    "pnpm bd plugin ios device [--no-build]",
     "pnpm bd plugin package",
     "pnpm bd plugin deploy [--no-build] [--force]"
   ],

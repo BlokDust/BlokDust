@@ -11,11 +11,15 @@
 //                              from another machine must find its sample there by name and render like native (task 6).
 //                              BlokDust FX, the app's second extension, renders its fixture with input ≡ golden (task 9).
 //   --no-build                 test the existing build
+//   pnpm bd plugin ios device   (task 10) build for an iPad with automatic signing (team BLOKDUST_APPLE_TEAM_ID; Xcode
+//                              creates the app IDs, the App Group and profiles: needs an Apple account in Xcode →
+//                              Settings → Accounts), then install on the connected iPad (BLOKDUST_IOS_DEVICE: a name or
+//                              identifier, else the first paired iPad).
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { setting } from '../lib/local-config.ts';
+import { configEnvironment, requiredSetting, setting } from '../lib/local-config.ts';
 
 const ART = 'build/plugin-ios-sim/plugin/BlokDust_artefacts/Release';
 const APP = `${ART}/Standalone/BlokDust.app`;
@@ -208,4 +212,38 @@ export function iosTest(noBuild: boolean): void {
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
     error: result.error, app, renders, sample, fx: { name: result.fxName ?? null, renders: fxRenders }, editor }));
   if (!ok) process.exit(1);
+}
+
+const DEVICE_APP = 'build/plugin-ios/plugin/BlokDust_artefacts/Release/Standalone/BlokDust.app';
+
+/** Build for an iPad (signed by Xcode for the team in local config) and install it on the connected iPad. */
+export function iosDevice(noBuild: boolean): void {
+  if (process.platform !== 'darwin') throw new Error('the iPadOS build needs macOS with Xcode');
+  if (!noBuild) {
+    requiredSetting('BLOKDUST_APPLE_TEAM_ID');
+    const env = configEnvironment();
+    if (!existsSync('web/dist/index.html')) must(run('pnpm', ['web:build']), 'web build');
+    must(spawnSync('cmake', ['--preset', 'plugin-ios'], { stdio: ['ignore', 'inherit', 'inherit'], env }), 'configure (plugin-ios)');
+    const b = spawnSync('cmake', ['--build', '--preset', 'plugin-ios', '--target', 'BlokDust_Standalone', '--', '-quiet', '-allowProvisioningUpdates'],
+      { encoding: 'utf8', env, maxBuffer: 64 << 20 });
+    if (b.status !== 0) {
+      const out = `${b.stdout}\n${b.stderr}`;
+      const errors = [...new Set(out.split('\n').filter(l => /error:|BUILD FAILED/.test(l)))].slice(0, 20).join('\n');
+      const account = /No Accounts|No Account for Team|No profiles for|App Groups capability|requires a provisioning profile|Signing for .* requires a development team/.test(out)
+        ? '\nXcode could not sign: add the Apple account of the team in Xcode → Settings → Accounts, then run this again.' : '';
+      throw new Error(`iPadOS device build failed:\n${errors}${account}`);
+    }
+  }
+  if (!existsSync(DEVICE_APP)) throw new Error(`missing ${DEVICE_APP}: run pnpm bd plugin ios device`);
+  const tmp = resolve(OUT, 'devices.json');
+  mkdirSync(OUT, { recursive: true });
+  must(run('xcrun', ['devicectl', 'list', 'devices', '--json-output', tmp], true), 'devicectl list');
+  type Dev = { identifier: string; deviceProperties: { name: string }; hardwareProperties: { deviceType?: string; productType?: string }; connectionProperties: { pairingState?: string } };
+  const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Dev[]).filter(d => d.connectionProperties.pairingState === 'paired');
+  const want = setting('BLOKDUST_IOS_DEVICE');
+  const ipad = want ? devices.find(d => d.identifier === want || d.deviceProperties.name === want)
+    : devices.find(d => d.hardwareProperties.deviceType === 'iPad' || /^iPad/.test(d.hardwareProperties.productType ?? ''));
+  if (!ipad) throw new Error('no paired iPad: connect it (USB or the same network), trust this Mac, and enable Developer Mode on it');
+  must(run('xcrun', ['devicectl', 'device', 'install', 'app', '--device', ipad.identifier, DEVICE_APP]), 'install on the iPad');
+  console.log(JSON.stringify({ ok: true, installed: DEVICE_APP, device: ipad.deviceProperties.name }));
 }

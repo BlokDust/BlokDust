@@ -54,6 +54,11 @@ Check items off as they land. Each task should be independently verifiable.
       `bd plugin ios test` loads it out of process and renders `fx-audio-in` with its sine fed in: ≡ golden, state
       round-trips.
 - [ ] 10. Device: signing setup (local config), `plugin-ios` preset, install on the owner's iPad; CPU/memory check.
+      2026-11-16 (in part): `plugin-ios` preset (iphoneos, automatic signing, team from local config) and
+      `pnpm bd plugin ios device [--no-build]` (build with `-allowProvisioningUpdates`, install on the paired iPad with
+      `devicectl`). The device build compiles (arm64, iPadOS 16+, both extensions; checked with signing off). Waiting
+      on the owner: the team's Apple account in Xcode on the build Mac (Xcode then registers the App IDs, the App Group
+      and the iPad), and an iPad paired with Developer Mode on. Then: install, CPU/memory check.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
 - [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.
 - [ ] 12b. App Store Connect / TestFlight setup (owner).

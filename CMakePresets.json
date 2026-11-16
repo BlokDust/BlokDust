@@ -77,6 +77,22 @@
         "BLOKDUST_BUILD_TOOLS": "ON",
         "BLOKDUST_BUILD_PLUGIN": "ON"
       }
+    },
+    {
+      "name": "plugin-ios",
+      "displayName": "iPadOS AUv3 + app for an iPad (CHG-0025 task 10; Xcode generator, automatic signing with the team in local config)",
+      "binaryDir": "${sourceDir}/build/plugin-ios",
+      "generator": "Xcode",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "iOS",
+        "CMAKE_OSX_SYSROOT": "iphoneos",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "BLOKDUST_BUILD_TESTS": "OFF",
+        "BLOKDUST_BUILD_TOOLS": "ON",
+        "BLOKDUST_BUILD_PLUGIN": "ON",
+        "CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM": "$env{BLOKDUST_APPLE_TEAM_ID}",
+        "CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_STYLE": "Automatic"
+      }
     }
   ],
   "buildPresets": [
@@ -108,6 +124,11 @@
     {
       "name": "plugin-ios-sim",
       "configurePreset": "plugin-ios-sim",
+      "configuration": "Release"
+    },
+    {
+      "name": "plugin-ios",
+      "configurePreset": "plugin-ios",
       "configuration": "Release"
     }
   ],
