@@ -7,10 +7,12 @@
 //                             `blokdust`), staple, Gatekeeper-check → build/plugin/dist/BlokDust-macOS.zip
 //   pnpm bd plugin package   macOS installer: universal, macOS 11+, signed, BlokDust-<version>-Mac.pkg notarised + stapled
 //                             (build/plugin-release/dist), with its .sha256 (CHG-0005 task 12)
+//   pnpm bd plugin ios build|test [--no-build]   iPadOS AUv3 in the Simulator (CHG-0025; see ios.ts)
 //   pnpm bd plugin test       build + validate + load the BUILT VST3 like a DAW: golden fixtures must hash exactly
 //                             like the native engine, and the WebView editor must build the stage from the patch
 import { spawn, spawnSync } from 'node:child_process';
 import { requiredSetting, setting } from '../lib/local-config.ts';
+import { iosBuild, iosTest } from './ios.ts';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -488,6 +490,8 @@ else if (cmd === 'reaper') await reaperMac();
 else if (cmd === 'deploy') deploy(process.argv.includes('--no-build'), process.argv.includes('--force'));
 else if (cmd === 'validate') { const v = validate(); console.log(JSON.stringify(v)); if (v.vst3 !== 'pass') process.exit(1); }
 else if (cmd === 'test') test();
+else if (cmd === 'ios' && process.argv[3] === 'build') iosBuild();
+else if (cmd === 'ios' && process.argv[3] === 'test') iosTest(process.argv.includes('--no-build'));
 else if (cmd === 'au') au(process.argv.includes('--keep'));
 else if (cmd === 'sign') {
   const arg = (k: string, d: string | (() => string)) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : typeof d === 'function' ? d() : d; };
@@ -498,4 +502,4 @@ else if (cmd === 'package') {
   packageMac(arg('--profile', setting('BLOKDUST_NOTARY_PROFILE', 'blokdust')), arg('--identity', () => requiredSetting('BLOKDUST_SIGNING_IDENTITY')),
     arg('--installer-identity', () => requiredSetting('BLOKDUST_INSTALLER_IDENTITY')), process.argv.includes('--no-build'));
 }
-else { console.error('usage: bd plugin build | package [--no-build] | validate | test | au [--keep] | reaper | deploy [--no-build] | sign [--profile blokdust] [--identity ...]'); process.exit(2); }
+else { console.error('usage: bd plugin build | package [--no-build] | validate | test | ios build|test [--no-build] | au [--keep] | reaper | deploy [--no-build] | sign [--profile blokdust] [--identity ...]'); process.exit(2); }

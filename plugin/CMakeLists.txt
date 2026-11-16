@@ -1,4 +1,5 @@
-# BlokDust plugin shell (PLUGIN-0001): JUCE 8 → VST3 / AU / Standalone, WebView editor hosting web/dist.
+# BlokDust plugin shell (PLUGIN-0001): JUCE 8 → VST3 / AU / Standalone on macOS and Windows, AUv3 + its container app
+# on iPadOS (CHG-0025), WebView editor hosting web/dist.
 # Build via `pnpm bd plugin build` (needs `pnpm web:build` first: the web bundle is embedded as BinaryData).
 include(FetchContent)
 FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE)
@@ -56,7 +57,17 @@ function(blokdust_plugin target)
     HARDENED_RUNTIME_OPTIONS com.apple.security.device.audio-input
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "BlokDust FX uses audio input for its Audio In block."
-    VST3_CATEGORIES ${vst3_cat})
+    VST3_CATEGORIES ${vst3_cat}
+    # iPadOS (CHG-0025): iPad only (UI-0004); the AUv3 extension lives in the Standalone app. Hosts (AUM, GarageBand,
+    # Logic for iPad, Cubasis) list it under the manufacturer name.
+    TARGETED_DEVICE_FAMILY 2
+    IPAD_SCREEN_ORIENTATIONS UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+      UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown
+    REQUIRES_FULL_SCREEN FALSE
+    STATUS_BAR_HIDDEN TRUE
+    FILE_SHARING_ENABLED TRUE
+    DOCUMENT_BROWSER_ENABLED TRUE
+    LAUNCH_STORYBOARD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ios/LaunchScreen.storyboard")
   target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp)
   if(APPLE)
     target_sources(${target} PRIVATE src/WebViewDrops.mm)
@@ -76,6 +87,13 @@ function(blokdust_plugin target)
     PRIVATE blokdust_patch blokdust_plugin_resources juce::juce_audio_utils juce::juce_gui_extra juce::juce_cryptography
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 endfunction()
+
+if(IOS)
+  # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container).
+  # BlokDust FX follows once both extensions can share one app (CHG-0025 task list).
+  blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS AUv3 Standalone)
+  return()
+endif()
 
 # BlokDust FX is a plug-in only (CHG-0010): an effect needs a host track, so it has no Standalone app.
 blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS VST3 AU Standalone)

@@ -16,7 +16,7 @@ No deadline: we work phase by phase and each phase merges to `main` only when it
 **Release plan (owner, 2026-11-08):** Phases 4 and 5 are deferred. Instead:
 1. **Release 1** ([CHG-0005](../specs/changes/0005-release-1/proposal.md), branch `release-1`): what the web and plugin need before real users: patch files and presets, mobile fixes and multi-touch, multi-select, hosting at blokdust.funputs.com, credits, plugin installers.
 2. **Quiet launch:** website + free plugins live at blokdust.funputs.com (funputs.com/blokdust redirects there), no announcement; real users find bugs.
-3. **iPad AUv3**, then the **main launch**: iPad, website and plugins announced together.
+3. **iPad AUv3** ([CHG-0025](../specs/changes/0025-ipad-auv3/proposal.md), branch `feat/ipad-auv3`), then the **main launch**: iPad, website and plugins announced together.
 4. **XY pad block:** its own branch and thread, after Release 1; the owner prototypes several designs (always-visible pad vs settings, fixed note+filter vs assignable axes, Push-style grid) before choosing.
 5. **Rebuild the BlokDust guide** (owner, 2026-11-10): guide.blokdust.com was a WordPress site the owner can no longer reach, and it has been hacked, so Settings no longer links it (Connect tab removed). A future agent task: collect the guide's text and images (archived copies, e.g. the Wayback Machine, not the hacked site) and make a static site that becomes the new guide.
 

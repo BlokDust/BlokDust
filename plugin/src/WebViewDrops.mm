@@ -1,13 +1,18 @@
 #include "WebViewDrops.h"
 
-#import <AppKit/AppKit.h>
+#include <TargetConditionals.h>
 #include <os/log.h>
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>
+#endif
 
 namespace blokdust::plugin {
 void systemLog(const juce::String& message) {
   static os_log_t log = os_log_create("com.blokdust.plugin", "editor");
   os_log(log, "%{public}s", message.toRawUTF8());
 }
+
+#if TARGET_OS_OSX
 
 namespace {
 bool isWebView(NSView* v) { return [NSStringFromClass([v class]) containsString:@"WKWebView"]; }
@@ -57,4 +62,12 @@ KeyUpsToHost::~KeyUpsToHost() {
   [NSEvent removeMonitor:m];
   [m release];
 }
+#else
+// iPadOS (AUv3 and the Standalone app, CHG-0025): no DAW window to share keys with and no Finder drags with paths.
+// Files come from the document picker (Files app); key-ups need no help.
+bool routeFileDropsToEditor(juce::Component&) { return true; }
+bool windowHasKeys(juce::Component& c) { return c.isShowing(); }
+KeyUpsToHost::KeyUpsToHost(juce::Component& c) : c_(c) {}
+KeyUpsToHost::~KeyUpsToHost() = default;
+#endif
 }  // namespace blokdust::plugin
