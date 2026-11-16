@@ -1,10 +1,14 @@
-# BlokDust plugin shell (PLUGIN-0001): JUCE 8 → VST3 / AU / Standalone, WebView editor hosting web/dist.
+# BlokDust plugin shell (PLUGIN-0001): JUCE 8 → VST3 / AU / Standalone on macOS and Windows, AUv3 + its container app
+# on iPadOS (CHG-0025), WebView editor hosting web/dist.
 # Build via `pnpm bd plugin build` (needs `pnpm web:build` first: the web bundle is embedded as BinaryData).
 include(FetchContent)
 FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG 8.0.15 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(JUCE)
 
 set(BLOKDUST_WEB_DIST "${CMAKE_SOURCE_DIR}/web/dist")
+# iPad: the App Group the app and its AUv3 extension share (CHG-0025 task 5). Registered in the owner's Apple Developer
+# team for device builds; the Simulator does not check it.
+set(BLOKDUST_APP_GROUP "group.com.funputs.blokdust")
 if(NOT EXISTS "${BLOKDUST_WEB_DIST}/index.html")
   message(FATAL_ERROR "web/dist missing: run `pnpm web:build` before building the plugin")
 endif()
@@ -34,15 +38,36 @@ function(blokdust_plugin target)
     set(au_type kAudioUnitType_MusicDevice)
     set(vst3_cat Instrument Synth)
   endif()
+  # Bundle IDs under Funputs, lowercase like FUNPUTS' plug-ins (owner, 2026-11-15; blokdust.com is not the owner's):
+  # com.funputs.blokdust, com.funputs.blokdustfx. Hosts find AUs and VST3s by their codes, which do not change.
+  string(TOLOWER "com.funputs.${target}" bundle_id)
+  # iPadOS rounds the icon itself and shows transparency as white: a full-bleed square there (CHG-0025).
+  if(IOS)
+    set(icon "${CMAKE_SOURCE_DIR}/assets/app-icon-ios.png")
+  else()
+    set(icon "${CMAKE_SOURCE_DIR}/assets/app-icon.png")
+  endif()
+  if(IOS AND ARG_FX)
+    # On iPad FX is a second extension inside the BlokDust app, so its ID must sit under the app's (CHG-0025 task 9):
+    # com.funputs.blokdust.fx; JUCE names the extension com.funputs.blokdust.fx.fxAUv3.
+    set(bundle_id "com.funputs.blokdust.fx")
+  endif()
+  if(IOS)
+    set(mic FALSE)
+    set(app_groups TRUE)
+  else()
+    set(mic TRUE)
+    set(app_groups FALSE)
+  endif()
   juce_add_plugin(${target}
     PRODUCT_NAME "${ARG_PRODUCT}"
     COMPANY_NAME "BlokDust"
-    BUNDLE_ID "com.blokdust.${target}"
+    BUNDLE_ID "${bundle_id}"
     PLUGIN_MANUFACTURER_CODE Bldt
     PLUGIN_CODE ${ARG_CODE}
     FORMATS ${ARG_FORMATS}
     # The app icon (CHG-0010): the site favicon's style, assets/app-icon.svg; JUCE makes the .icns / .ico from it.
-    ICON_BIG "${CMAKE_SOURCE_DIR}/assets/app-icon.png"
+    ICON_BIG "${icon}"
     IS_SYNTH ${synth}
     NEEDS_MIDI_INPUT ${midi_in}
     NEEDS_MIDI_OUTPUT FALSE
@@ -54,9 +79,27 @@ function(blokdust_plugin target)
     # Audio In (FX) in the Standalone uses the microphone/line input: hardened runtime needs the entitlement and
     # macOS needs a usage string, or input is silently denied.
     HARDENED_RUNTIME_OPTIONS com.apple.security.device.audio-input
-    MICROPHONE_PERMISSION_ENABLED TRUE
+    # Not on iPad (CHG-0025 task 4): the app plays output only, and an AUv3 hears its host's audio without the mic.
+    MICROPHONE_PERMISSION_ENABLED ${mic}
     MICROPHONE_PERMISSION_TEXT "BlokDust FX uses audio input for its Audio In block."
-    VST3_CATEGORIES ${vst3_cat})
+    VST3_CATEGORIES ${vst3_cat}
+    # iPadOS (CHG-0025): iPad only (UI-0004); the AUv3 extension lives in the Standalone app. Hosts (AUM, GarageBand,
+    # Logic for iPad, Cubasis) list it under the manufacturer name.
+    TARGETED_DEVICE_FAMILY 2
+    IPAD_SCREEN_ORIENTATIONS UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+      UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown
+    REQUIRES_FULL_SCREEN FALSE
+    STATUS_BAR_HIDDEN TRUE
+    FILE_SHARING_ENABLED TRUE
+    DOCUMENT_BROWSER_ENABLED TRUE
+    LAUNCH_STORYBOARD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ios/LaunchScreen.storyboard"
+    # Patches, recordings and SampleGen audio shared by the app and the AUv3 (CHG-0025 task 5; PatchFiles.h).
+    APP_GROUPS_ENABLED ${app_groups}
+    APP_GROUP_IDS ${BLOKDUST_APP_GROUP})
+  if(IOS)
+    target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}"
+      JUCE_CONTENT_SHARING=1)  # the iPad share menu for patch links (bd_share)
+  endif()
   target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp)
   if(APPLE)
     target_sources(${target} PRIVATE src/WebViewDrops.mm)
@@ -76,6 +119,24 @@ function(blokdust_plugin target)
     PRIVATE blokdust_patch blokdust_plugin_resources juce::juce_audio_utils juce::juce_gui_extra juce::juce_cryptography
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 endfunction()
+
+if(IOS)
+  # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container),
+  # and BlokDust FX as a second AUv3 in the same app (task 9): one App Store product holds both.
+  blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS AUv3 Standalone)
+  blokdust_plugin(BlokDustFX PRODUCT "BlokDust FX" CODE Bdfx FX TRUE FORMATS AUv3)
+  add_dependencies(BlokDust_Standalone BlokDustFX_AUv3)
+  set_target_properties(BlokDust_Standalone PROPERTIES XCODE_EMBED_APP_EXTENSIONS "BlokDust_AUv3;BlokDustFX_AUv3")
+  # The app is our own, output only (CHG-0025 task 4; plugin/src/ios/ContainerApp.mm): JUCE's standalone app opens a
+  # play-and-record session at launch (a microphone prompt; a Core Audio deadlock in the Simulator).
+  target_compile_definitions(BlokDust_Standalone PRIVATE JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
+  target_sources(BlokDust_Standalone PRIVATE src/ios/ContainerApp.mm)
+  set_source_files_properties(src/ios/ContainerApp.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+  target_link_libraries(BlokDust_Standalone PRIVATE "-framework AVFoundation")
+  # The extension's ID is JUCE's: <app id>.<last part>AUv3 = com.funputs.blokdust.blokdustAUv3 (juceaide writes it into
+  # the extension's Info.plist; no CMake property changes it). Users never see it.
+  return()
+endif()
 
 # BlokDust FX is a plug-in only (CHG-0010): an effect needs a host track, so it has no Standalone app.
 blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS VST3 AU Standalone)

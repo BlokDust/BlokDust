@@ -16,7 +16,7 @@ No deadline: we work phase by phase and each phase merges to `main` only when it
 **Release plan (owner, 2026-11-08):** Phases 4 and 5 are deferred. Instead:
 1. **Release 1** ([CHG-0005](../specs/changes/0005-release-1/proposal.md), branch `release-1`): what the web and plugin need before real users: patch files and presets, mobile fixes and multi-touch, multi-select, hosting at blokdust.funputs.com, credits, plugin installers.
 2. **Quiet launch:** website + free plugins live at blokdust.funputs.com (funputs.com/blokdust redirects there), no announcement; real users find bugs.
-3. **iPad AUv3**, then the **main launch**: iPad, website and plugins announced together.
+3. **iPad AUv3** ([CHG-0025](../specs/changes/0025-ipad-auv3/proposal.md), branch `feat/ipad-auv3`), then the **main launch**: iPad, website and plugins announced together.
 4. **Post-2.0 blocks** (owner, 2026-11-13, [SCOPE-0005](../decisions/scope/SCOPE-0005-the-post-2-0-block-set.md)): designed in `pnpm bd block-designer`, built in this order:
    CHG-0014 Compressor + emitter Offset, CHG-0015 Counter/Chance/Prism, CHG-0016 Sound Laser, CHG-0017 Keys set pitch + note effects,
    CHG-0018 LFO, CHG-0019 Touchpad (the Push-style grid replaces the XY pad idea; Touch Keys dropped), CHG-0020 Labels, CHG-0021 Stage block.

@@ -13,6 +13,9 @@ Tools fail with the missing variable's name when an operation needs an unconfigu
 - Plugin deployment: `BLOKDUST_TEST_HOST` (SSH host alias or user/host); private keys stay in the SSH agent or SSH directory.
 - Signing: `BLOKDUST_SIGNING_IDENTITY`, `BLOKDUST_INSTALLER_IDENTITY`, `BLOKDUST_APPLE_TEAM_ID` and
   `BLOKDUST_NOTARY_PROFILE`. Certificates, private keys and notarization credentials stay in macOS Keychain.
+- iPad (CHG-0025): `BLOKDUST_IOS_SIMULATOR` (a Simulator name for `bd plugin ios test`) and `BLOKDUST_IOS_DEVICE` (an
+  iPad's name or identifier for `bd plugin ios device`). Device builds sign with `BLOKDUST_APPLE_TEAM_ID` through
+  Xcode's automatic signing, which needs the team's Apple account in Xcode → Settings → Accounts.
 - Windows tests: `BLOKDUST_VM_DIR`, `BLOKDUST_VM_USER` and optional `BLOKDUST_VM_*` resource settings. Provision a VM
   separately; the test driver does not distribute a personal VM image, login, key or provisioning instructions.
 - Cloudflare: `CLOUDFLARE_ACCOUNT_ID`, `BLOKDUST_WORKERS_SUBDOMAIN`, per-environment public URLs, database IDs and

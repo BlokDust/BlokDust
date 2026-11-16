@@ -1,6 +1,6 @@
 // bd ci — run the CI jobs locally (.github/workflows/ci.yml is manual-only to save Actions minutes).
 //   pnpm bd ci                 all local jobs: checks, visual, web, engine (dev/release/asan), golden
-//   pnpm bd ci --only engine   one job (checks | visual | web | engine | golden | audio | wasm | plugin)
+//   pnpm bd ci --only engine   one job (checks | visual | web | engine | golden | audio | wasm | plugin | ios)
 //   pnpm bd ci --linux         also build + test the engine on Linux in Docker (if the daemon is running)
 //   pnpm bd ci --windows       also run the Windows engine + plugin checks in the local VM (tools/win-vm)
 import { spawnSync } from 'node:child_process';
@@ -9,6 +9,8 @@ import { setting } from '../lib/local-config.ts';
 
 interface Step { job: string; name: string; cmd: string; when?: () => boolean; skipReason?: string }
 const has = (bin: string) => spawnSync('sh', ['-c', `command -v ${bin}`]).status === 0;
+// An iOS Simulator runtime is installed (Xcode → Settings → Components).
+const iosSim = () => process.platform === 'darwin' && /^iOS /m.test(spawnSync('xcrun', ['simctl', 'list', 'runtimes', 'available'], { encoding: 'utf8' }).stdout ?? '');
 const dockerUp = () => has('docker') && spawnSync('docker', ['info'], { stdio: 'ignore' }).status === 0;
 
 const steps: Step[] = [
@@ -36,6 +38,7 @@ const steps: Step[] = [
   { job: 'audio', name: 'v2 engine sounds like v1 (bd audio compare)', cmd: 'node tools/bd.ts wasm build && node tools/bd.ts audio compare', when: () => existsSync('.cache/emsdk/emsdk_env.sh'), skipReason: 'emsdk not installed (pnpm bd wasm setup)' },
   { job: 'wasm', name: 'engine WASM ≡ native (Node)', cmd: 'node tools/bd.ts wasm test', when: () => existsSync('.cache/emsdk/emsdk_env.sh'), skipReason: 'emsdk not installed (pnpm bd wasm setup)' },
   { job: 'plugin', name: 'plugin build + pluginval + host render ≡ native', cmd: 'node tools/bd.ts plugin test', when: () => process.platform === 'darwin', skipReason: 'plugin job runs on macOS only for now' },
+  { job: 'ios', name: 'iPad app + AUv3 in the Simulator: output-only audio, host render ≡ native (CHG-0025)', cmd: 'node tools/bd.ts plugin ios test', when: iosSim, skipReason: 'no iOS Simulator runtime (macOS with Xcode only)' },
 ];
 
 const args = process.argv.slice(2);

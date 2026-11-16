@@ -5,6 +5,7 @@
 import l10n from './ported/data/l10n.json';
 import menu from './ported/data/menu.json';
 import config from './ported/data/config.json';
+import { MAX_ASPECT } from '../stage/metrics.ts';
 
 // v1 lib/extensions (MIT): the helpers the ported UI calls, defined non-enumerable so they never leak into for…in.
 const def = (o: object, k: string, v: unknown) => { if (!(k in o)) Object.defineProperty(o, k, { value: v, writable: true, configurable: true }); };
@@ -122,9 +123,13 @@ export const App: any = {
   BlockCreator: { MenuJson: menu },
   Palette: [] as string[],
   Unit: 1, GridSize: 15, ScaledUnit: 1, ScaledGridSize: 15, Width: 0, Height: 0, ZoomLevel: 1,
+  /** Widest view shape that sizes the UI from its width (stage/metrics.ts; Metrics.ts, rewritten by bd v1 port-ui). */
+  MaxAspect: MAX_ASPECT,
   DragOffset: new Point(), ScaledDragOffset: new Point(),
   /** Running inside the plugin's WebView (labels and options differ: CHG-0004). */
   IsPlugin: false,
+  /** Links can't open here (a plugin inside another iPad app): scene.ts hideLinks. */
+  NoLinks: false,
   Blocks: [] as any[], SubCanvas: [] as HTMLCanvasElement[], CompositionId: null as string | null, SessionId: null as string | null,
   FillColor(ctx: CanvasRenderingContext2D, c: string) { ctx.fillStyle = c; },
   StrokeColor(ctx: CanvasRenderingContext2D, c: string) { ctx.strokeStyle = c; },

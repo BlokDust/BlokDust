@@ -41,6 +41,10 @@ const REWRITES: Record<string, [string, string, string][]> = {
   'UI/SoundcloudPanel.ts': [['searchLine: "Search SoundCloud"', 'searchLine: "Search Freesound"', 'provider name']],
   // Owner (2026-11-10, CHG-0005): no "Chrome Recommended" footer (v2 runs alike in every browser and in the plugin).
   'UI/SettingsPanel.ts': [[CHROME_FOOTER, '', 'Chrome Recommended footer']],
+  // v1 sized everything from the width alone, so a short wide view (a plugin above GarageBand's keyboard on an iPad)
+  // got panels taller than the view: past App.MaxAspect (shim.ts) the unit follows the height (owner, 2026-11-16).
+  'Metrics.ts': [['App.Unit = (width/this._ScreenDivision) * this.PixelRatio;',
+    'App.Unit = (Math.min(width, height * App.MaxAspect)/this._ScreenDivision) * this.PixelRatio;', 'unit capped for short wide views']],
   'Splash.ts': [[SPLASH_CHROME, '', 'Chrome Recommended footer'],
     // Owner (2026-11-11): START under the play triangle (v1's button had no word).
     [SPLASH_TRIANGLE, SPLASH_TRIANGLE_START, 'START under the button'],

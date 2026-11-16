@@ -46,5 +46,6 @@
 | [CHG-0022](changes/0022-video-export/proposal.md) | Video export | **proposed** | SPEC-SHARING-VIDEO-EXPORT |
 | [CHG-0023](changes/0023-optional-accounts/proposal.md) | Optional accounts | **proposed** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND |
 | [CHG-0024](changes/0024-public-gallery/proposal.md) | Public gallery | **proposed** | SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
+| [CHG-0025](changes/0025-ipad-auv3/proposal.md) | iPad AUv3 | **proposed** |  |
 | [CHG-0027](changes/0027-account-stats/proposal.md) | Account stats | **proposed** | SPEC-SHARING-ACCOUNTS |
 | [CHG-0028](changes/0028-waveform-zoom-in-the-options-panel/proposal.md) | Waveform zoom in the options panel | **proposed** | SPEC-VISUAL-V1-PARITY |

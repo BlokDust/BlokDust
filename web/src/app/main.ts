@@ -32,7 +32,8 @@ import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
 import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
-import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
+import { SAVE_WARNING, V1Scene, hideLinks } from '../v1ui/scene.ts';
+import { COPY as PATCH_COPY } from '../v1ui/patches.ts';
 import { V1Block } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
@@ -161,6 +162,8 @@ async function main() {
   let engine: EngineNode | null = null;
   /** The plugin runs as the standalone app (the processor says so with its patch): no DAW to pass keys on to. */
   let standalone = false;
+  /** The plugin runs on iPad (CHG-0025): no Trash. */
+  let ios = false;
   /** Run once START has started audio and the stage shows (panels opened before it never slide in). */
   const afterStart: (() => void)[] = [];
   /** Commands to the engine (the plugin: to its processor), as given. */
@@ -441,17 +444,23 @@ async function main() {
         try { localStorage.setItem(MINE_KEY, JSON.stringify(myPatches().filter(m => m.title !== item.key.slice(5)))); } catch { /* private mode */ }
       } else if (juce && item.key.startsWith('file:')) await nativeReply(req => juce.emitEvent('bd_patchDelete', { req, path: item.key.slice(5) }));
     },
-    // Owner's wording (2026-11-10); the plugin's file really goes to the Trash, so it says so.
-    removeLine: juce ? 'This patch file will be moved to the Trash. Links you generated remain untouched.'
-      : 'This patch will be removed from the patches list. Your local downloaded patches and generated links remain untouched.',
+    // Owner's wording (2026-11-10); the plugin's file really goes to the Trash, so it says so (iPad has no Trash).
+    get removeLine() {
+      return !juce ? 'This patch will be removed from the patches list. Your local downloaded patches and generated links remain untouched.'
+        : ios ? 'This patch file will be deleted. Links you generated remain untouched.'
+        : 'This patch file will be moved to the Trash. Links you generated remain untouched.';
+    },
     // Plugin: CREATE SHARE LINK opens the patch on the public site, which makes the link (its page runs the bot check
     // the plugin's own page can't: Turnstile only runs on the site's own address). Nothing is uploaded until then.
     links: juce ? {
       external: true,
       current: () => null,
       make: async (_mode, title) => {
-        const url = `${PUBLIC_SITE}?c=${await encodePatch(toPatch())}&t=${encodeURIComponent(title)}&share=1`;
-        juce.emitEvent('bd_openUrl', { url });
+        const link = `${PUBLIC_SITE}?c=${await encodePatch(toPatch())}&t=${encodeURIComponent(title)}`;
+        // iPad: the share menu sends the link itself (the patch is in it, so it opens with no server; owner,
+        // 2026-11-16, CHG-0025). A short link needs the site's bot check, which the plugin can't run.
+        if (ios) { juce.emitEvent('bd_share', { url: link, title }); return; }
+        juce.emitEvent('bd_openUrl', { url: `${link}&share=1` });
       },
       warning: () => shareWarning(),
     } : {
@@ -1725,6 +1734,7 @@ async function main() {
   }
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
+    hideLinks,  // tests: the iPad extension's no-links view (CHG-0025)
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
     /** The Stage being looked into and its window, in css px (tests); null on the outer stage. */
     get inside() { if (!inside) return null; const f = insideFrame(), d = stage.metrics.dpr; return { stage: inside.stageId, x: f.x / d, y: f.y / d, w: f.w / d, h: f.h / d, closeX: f.closeX / d, closeY: f.closeY / d }; },
@@ -1836,8 +1846,11 @@ async function main() {
   if (juce) {
     overlay.remove();
     sendRaw = cmds => juce.emitEvent('bd_commands', { commands: cmds });
-    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean }) => {
+    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean; ios?: boolean }) => {
       standalone = !!e.standalone;
+      ios = !!e.ios;
+      if (ios && !standalone && !App.NoLinks) hideLinks();  // an iPad extension can't open Safari (CHG-0025)
+      if (ios) PATCH_COPY.shareLinePlugin = 'Send a link to this patch from the share menu: Messages, WhatsApp, Mail and more.';
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
       const after = pluginAfterLoad; pluginAfterLoad = null;
@@ -1878,9 +1891,21 @@ async function main() {
       if (id === null) { const [gx, gy] = stage.cssToGrid(x, y); id = addBlock('source.sample', Math.round(gx), Math.round(gy), {}); }
       juce.emitEvent('bd_dropTarget', { token: d.token, id });
     });
+    // Frame and snapshot rates, every 5 s, for the plugin's log (an iPad has no devtools; CHG-0025).
+    let frames = 0, snaps = 0, since = performance.now();
+    const count = (now: number) => {
+      ++frames;
+      if (now - since >= 5000) {
+        const s = (now - since) / 1000;
+        juce.emitEvent('bd_stats', { fps: Math.round(frames / s), snapshots: Math.round(snaps / s), w: innerWidth, h: innerHeight, dpr: devicePixelRatio });
+        frames = 0; snaps = 0; since = now;
+      }
+      requestAnimationFrame(count);
+    };
+    requestAnimationFrame(count);
     juce.addEventListener('bd_snapshot', (e: { particles: number[]; connections: number[]; powered: number[]; beams: number[]; playheads?: number[]; monitors?: number[] }) =>
-      onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
-        connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []), monitors: new Float32Array(e.monitors ?? []) }));
+      (++snaps, onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
+        connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []), monitors: new Float32Array(e.monitors ?? []) })));
     juce.emitEvent('bd_hello', {});
     juce.emitEvent('bd_samplesHello', {});
     sendRaw([{ type: CommandType.WorldPower, id: 0, value: 1 }]);  // a reopened editor shows the switch on: so is the world

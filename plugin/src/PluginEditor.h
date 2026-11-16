@@ -20,6 +20,7 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
   void sendSampleInfo(const nlohmann::json& s);
   /// A patch file's text to the page (bd_patchFile), for Open / Insert. `req` < 0: not a reply (a dialog or a drop).
   void sendPatchFile(const juce::File& f, const juce::String& mode, int req);
+  void sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req);
   // Audio files dropped from Finder/Explorer or the DAW (CHG-0004 3.7): the page says which block is under the drop
   // (or makes a new Sample there), then the processor loads the file by its path.
   bool isInterestedInFileDrag(const juce::StringArray& files) override;
@@ -29,17 +30,29 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
 
  private:
   void timerCallback() override;
+  void tick();  // snapshot, params, keys: on the display's refresh at up to 60 a second, like the web app's worklet
   static std::optional<juce::WebBrowserComponent::Resource> resource(const juce::String& url);
 
   BlokDustProcessor& proc_;
   int uiReadyBlocks_ = -1;
   bool dropsRouted_ = false;
   bool hadKeys_ = false;  // the editor's window had the keyboard at the last tick
+  int sent_ = 0;           // snapshots sent since the page's last stats (bd_stats)
+  double sentSince_ = 0;
+  double sentPerSecond();
   int dropToken_ = 0;
   juce::String pendingDrop_;
   std::unique_ptr<juce::FileChooser> patchChooser_;
   juce::WebBrowserComponent web_;
   KeyUpsToHost keyUps_{*this};  // Logic's Musical Typing gets its note-offs while the page has the keys
+  juce::ScopedMessageBox linkNote_;  // iPad extension: "Link copied" (bd_openUrl)
+  juce::ScopedMessageBox shareSheet_;  // iPad: the share menu for a patch link (bd_share)
+  double lastTick_ = 0;              // ms (Time::getMillisecondCounterHiRes) of the last tick
+  // Each display refresh, at most 60 ticks a second (every other one at 120 Hz); the 30 Hz timer stands in when the
+  // display sends none (owner, iPad: 30 snapshots a second looked jumpy, 2026-11-16).
+  juce::VBlankAttachment vblank_{this, [this] {
+    if (juce::Time::getMillisecondCounterHiRes() - lastTick_ >= 1000.0 / 60 - 4) tick();
+  }};
 };
 
 }  // namespace blokdust::plugin

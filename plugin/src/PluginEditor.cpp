@@ -45,6 +45,11 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withKeepPageLoadedWhenBrowserIsHidden()
                .withResourceProvider([](const juce::String& url) { return resource(url); })
                .withEventListener("bd_hello", [this](const juce::var&) { systemLog("page: hello"); reloadPatch(); })
+               .withEventListener("bd_stats", [this](const juce::var& v) {
+                 systemLog("page: " + v.getProperty("fps", 0).toString() + " fps, " + v.getProperty("snapshots", 0).toString() + " snapshots/s (sent "
+                           + juce::String(juce::roundToInt(sentPerSecond())) + "), " + v.getProperty("w", 0).toString() + "x" + v.getProperty("h", 0).toString()
+                           + " @" + v.getProperty("dpr", 1).toString());
+               })
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
                  systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
@@ -96,6 +101,20 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_patchSave", [this](const juce::var& v) {
                  const auto title = v.getProperty("title", "").toString();
                  const int req = static_cast<int>(v.getProperty("req", 0));
+#if JUCE_IOS
+                 // iPad (CHG-0025 task 5): the document picker exports a copy of a file we write first (to Files, iCloud
+                 // Drive, another app's folder). The picker's URL is all we learn of where it went.
+                 const auto tmp = patchfiles::saveTo(juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile(patchfiles::safeName(title) + ".blokdust"),
+                                                     title, nlohmann::json::parse(proc_.patchJson()));
+                 patchChooser_ = std::make_unique<juce::FileChooser>("Save a BlokDust patch", tmp, "*.blokdust", true, false, pickerParent(this));
+                 patchChooser_->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles, [this, req, tmp](const juce::FileChooser& fc) {
+                   const auto url = fc.getURLResult();
+                   tmp.deleteFile();
+                   auto r = nlohmann::json{{"req", req}, {"ok", !url.isEmpty()}, {"path", url.toString(false).toStdString()}};
+                   web_.emitEventIfBrowserIsVisible("bd_patchSaved", juce::JSON::parse(juce::String(r.dump())));
+                 });
+                 return;
+#endif
                  patchChooser_ = std::make_unique<juce::FileChooser>("Save a BlokDust patch", patchfiles::folder().getChildFile(patchfiles::safeName(title) + ".blokdust"), "*.blokdust");
                  patchChooser_->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting,
                    [this, title, req](const juce::FileChooser& fc) {
@@ -111,26 +130,64 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                })
                // FROM YOUR COMPUTER: one picker; the page then asks Open or Insert.
                .withEventListener("bd_patchPick", [this](const juce::var&) {
-                 patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json");
+                 patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json", true, false, pickerParent(this));
                  patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this](const juce::FileChooser& fc) {
+#if JUCE_IOS
+                   // iPad: a document-picker URL outside our sandbox; JUCE's stream holds its security-scoped access.
+                   if (const auto url = fc.getURLResult(); !url.isEmpty())
+                     if (auto in = url.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress))) {
+                       const auto name = juce::URL::removeEscapeChars(url.getFileName());
+                       sendPatchText(in->readEntireStreamAsString(), name.upToLastOccurrenceOf(".", false, false), name, "choose", -1);
+                     }
+#else
                    if (const auto f = fc.getResult(); f.existsAsFile()) sendPatchFile(f, "choose", -1);
+#endif
                  });
                })
                .withEventListener("bd_patchApply", [this](const juce::var& v) {
                  try { proc_.applyPatch(nlohmann::json::parse(v.getProperty("patch", "{}").toString().toStdString()), v.getProperty("mode", "") == "open"); }
                  catch (const std::exception& e) { DBG("BlokDust: bad patch: " << e.what()); }
                })
-               // A patch's bin (OPEN tab): the file goes to the Trash, not deleted outright. Only files in the patches folder.
+               // A patch's bin (OPEN tab): the file goes to the Trash, not deleted outright (iPad has no Trash: deleted). Only
+               // files in the patches folder.
                .withEventListener("bd_patchDelete", [this](const juce::var& v) {
                  const juce::File f(v.getProperty("path", "").toString());
-                 const bool ok = f.existsAsFile() && f.isAChildOf(patchfiles::folder()) && f.hasFileExtension("blokdust") && f.moveToTrash();
+                 const bool ok = f.existsAsFile() && f.isAChildOf(patchfiles::folder()) && f.hasFileExtension("blokdust") && patchfiles::remove(f);
                  auto r = nlohmann::json{{"req", static_cast<int>(v.getProperty("req", 0))}, {"ok", ok}};
                  web_.emitEventIfBrowserIsVisible("bd_patchDeleted", juce::JSON::parse(juce::String(r.dump())));
                })
                // CREATE SHARE LINK (and the About links): open a web page in the user's browser. https only.
-               .withEventListener("bd_openUrl", [](const juce::var& v) {
+               .withEventListener("bd_openUrl", [this](const juce::var& v) {
                  const auto url = v.getProperty("url", "").toString();
-                 if (url.startsWith("https://")) juce::URL(url).launchInDefaultBrowser();
+                 if (!url.startsWith("https://")) return;
+#if JUCE_IOS
+                 // iPadOS gives an AUv3 no way to open Safari (CHG-0025 task 7): the link goes to the clipboard, with a
+                 // note. The BlokDust app itself opens links as usual.
+                 if (juce::SystemStats::isRunningInAppExtensionSandbox()) {
+                   juce::SystemClipboard::copyTextToClipboard(url);
+                   systemLog("link: copied to the clipboard (extension)");
+                   linkNote_ = juce::NativeMessageBox::showScopedAsync(
+                       juce::MessageBoxOptions::makeOptionsOk(juce::MessageBoxIconType::InfoIcon, "Link copied",
+                                                              "BlokDust can't open Safari from inside another app. Paste the link into Safari to open it.")
+                           .withAssociatedComponent(this), nullptr);
+                   return;
+                 }
+#endif
+                 juce::URL(url).launchInDefaultBrowser();
+               })
+               // iPad: CREATE SHARE LINK sends the patch's link with the share menu (Messages, WhatsApp, Mail…), in the
+               // app and in a host (owner, 2026-11-16, CHG-0025). Elsewhere the page opens the site instead.
+               .withEventListener("bd_share", [this](const juce::var& v) {
+                 const auto url = v.getProperty("url", "").toString();
+                 if (!url.startsWith("https://")) return;
+#if JUCE_IOS
+                 systemLog("share: menu opened");
+                 shareSheet_ = juce::ContentSharer::shareTextScoped(url, [](bool ok, const juce::String& err) {
+                   systemLog(ok ? juce::String("share: sent") : "share: closed " + err);
+                 }, this);
+#else
+                 juce::URL(url).launchInDefaultBrowser();
+#endif
                })
                .withEventListener("bd_dropTarget", [this](const juce::var& v) {
                  if (static_cast<int>(v.getProperty("token", -1)) != dropToken_ || pendingDrop_.isEmpty()) return;
@@ -144,8 +201,15 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
     web_.emitEventIfBrowserIsVisible("bd_ccLearned", juce::var(obj));
   };
   addAndMakeVisible(web_);
+#if JUCE_IOS
+  // iPad (CHG-0025 task 8): the host sizes the view (AUM's windows are small, GarageBand's panel wide): no corner to
+  // drag, and a smaller floor so the page lays itself out instead of being clipped.
+  setResizable(true, false);
+  setResizeLimits(320, 240, 4096, 4096);
+#else
   setResizable(true, true);
   setResizeLimits(640, 400, 4096, 4096);
+#endif
   setSize(1280, 800);
   systemLog(juce::String(proc_.isFx() ? "fx" : "instrument") + " editor: loading " + juce::WebBrowserComponent::getResourceProviderRoot() + " (host " + juce::PluginHostType().getHostDescription() + ")");
   web_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
@@ -158,11 +222,15 @@ void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {
 
 void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req) {
   if (!f.existsAsFile()) return;
+  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req);
+}
+
+void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req) {
   auto* obj = new juce::DynamicObject();
   if (req >= 0) obj->setProperty("req", req);
-  obj->setProperty("text", f.loadFileAsString());
-  obj->setProperty("name", f.getFileNameWithoutExtension());
-  obj->setProperty("file", f.getFileName());
+  obj->setProperty("text", text);
+  obj->setProperty("name", name);
+  obj->setProperty("file", file);
   obj->setProperty("mode", mode);
   web_.emitEventIfBrowserIsVisible("bd_patchFile", juce::var(obj));
 }
@@ -178,6 +246,9 @@ void BlokDustEditor::reloadPatch() {
   // The standalone app has no DAW to pass keys on to: the page keeps every plain key, or macOS sounds its alert for
   // each one nobody takes (owner, 2026-11-13, CHG-0013).
   obj->setProperty("standalone", proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
+#if JUCE_IOS
+  obj->setProperty("ios", true);  // no Trash, no Finder (CHG-0025)
+#endif
   web_.emitEventIfBrowserIsVisible("bd_patch", juce::var(obj));
 }
 
@@ -197,6 +268,11 @@ void BlokDustEditor::filesDropped(const juce::StringArray& files, int x, int y) 
 }
 
 void BlokDustEditor::timerCallback() {
+  if (juce::Time::getMillisecondCounterHiRes() - lastTick_ > 100) tick();
+}
+
+void BlokDustEditor::tick() {
+  lastTick_ = juce::Time::getMillisecondCounterHiRes();
   if (!dropsRouted_) dropsRouted_ = routeFileDropsToEditor(*this);
   proc_.idleTick();  // a disabled plugin (no audio callbacks): the stage still runs
   // Clicking into the DAW while a computer key is held: the page sees no key-up (owner, Ableton), so end its notes.
@@ -235,6 +311,14 @@ void BlokDustEditor::timerCallback() {
   obj->setProperty("playheads", playheads);
   obj->setProperty("monitors", monitors);
   web_.emitEventIfBrowserIsVisible("bd_snapshot", juce::var(obj));
+  ++sent_;
+}
+
+double BlokDustEditor::sentPerSecond() {
+  const auto now = juce::Time::getMillisecondCounterHiRes();
+  const double rate = sentSince_ > 0 ? sent_ * 1000.0 / (now - sentSince_) : 0;
+  sent_ = 0; sentSince_ = now;
+  return rate;
 }
 
 }  // namespace blokdust::plugin

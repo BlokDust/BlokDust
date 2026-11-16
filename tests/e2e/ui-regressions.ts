@@ -1038,6 +1038,37 @@ Object.assign(tests, {
     return [ok, { onSettings: footer(onSettings), onAbout: footer(onAbout), sw, back, drawn, left }];
   },
 
+  /** Owner (2026-11-16, CHG-0025): a plugin inside another iPad app can't open Safari (the link is only copied), so
+   * it shows no links: About keeps the developers' blurbs but not their websites or Twitter names, and the footer's
+   * "View the code on GitHub" is gone; pressing where they were opens nothing. */
+  async 'ipad-extension-no-links'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    await p.evaluate(() => {
+      const seen: string[] = ((window as any).__texts = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); };
+      (window as any).__opened = []; window.open = (u?: string | URL) => { (window as any).__opened.push(String(u)); return null; };
+    });
+    const linkAt = await p.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; s.OpenPanel(); return null; });
+    await p.waitForTimeout(1200);
+    const before = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.footerLinks());
+    await p.evaluate(() => { (window as any).__bd_probe.hideLinks(); (window as any).__texts.length = 0; });
+    const about = await p.evaluate(() => { const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[2], pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio; return [m.Position.x / pr, 30]; });
+    await p.mouse.move(about[0], about[1]); await p.mouse.click(about[0], about[1]); await p.waitForTimeout(1200);
+    const after = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.footerLinks());
+    // Press across the About columns' link lines and where the footer link was.
+    for (let x = 100; x < 1200; x += 40) for (const y of [440, 455, 470, 485, 500]) await p.mouse.click(x, y);
+    if (before[0]) await p.mouse.click(before[0].x, before[0].y);
+    await p.waitForTimeout(300);
+    const r = await p.evaluate(() => { const t: string[] = (window as any).__texts; return { github: t.includes('View the code on GitHub'),
+      twitter: t.some(x => /^@/.test(x)), blurb: t.some(x => /Luke/.test(x)), opened: (window as any).__opened }; });
+    await p.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
+    await p.close();
+    void linkAt;
+    const ok = before.length === 1 && after.length === 0 && !r.github && !r.twitter && r.blurb && r.opened.length === 0;
+    return [ok, { footerBefore: before.length, footerAfter: after.length, ...r }];
+  },
+
   async 'settings-release1'(errors: string[]) {
     const p = await open(browser, [], errors);
     await p.evaluate(() => {
@@ -1540,6 +1571,40 @@ Object.assign(tests, {
 
   /** Owner (2026-11-10): Patches opens on the tab last chosen, also after a reload; OPEN FROM YOUR DEVICE is the OPEN
    * tab's main button, filled in v1's SAVE colour (MenuOrder[3]) like the old GUIDE button. */
+  /** Owner (2026-11-16, CHG-0025, iPad): above GarageBand's keyboard the plugin is ~1000×290 points. v1 sized the
+   * UI from the width alone, so the Patches name field covered the OPEN tab and Settings' rows ran into its tabs. Past
+   * 2:1 the height sets the unit (stage/metrics.ts MAX_ASPECT): both tabs are on top and switch, and the chrome and the
+   * stage share one unit. */
+  async 'short-wide-view'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 1000, height: 290 }, deviceScaleFactor: 2 });
+    const p = await ctx.newPage();
+    p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.click('#start'); await p.waitForTimeout(1500);
+    const units = await p.evaluate(() => { const A = (window as any).__bd_probe.v1App; return { unit: A.Unit, grid: A.GridSize }; });
+    await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(); });
+    await p.waitForTimeout(1200);
+    const [ox, oy] = await patchesAt(p, 'tab1');
+    const onTop = await p.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName, [ox, oy]);
+    await p.mouse.move(ox, oy); await p.mouse.click(ox, oy); await p.waitForTimeout(700);
+    const patchesTab = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
+    await p.screenshot({ path: `${OUT}/short-wide-patches.png` });
+    await patchesClick(p, 'close', 900);
+    await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.OpenPanel()); await p.waitForTimeout(1200);
+    const [ax, ay] = await p.evaluate(() => {
+      const s = (window as any).__bd_probe.scene.SettingsPanel, A = (window as any).__bd_probe.v1App, pr = A.Metrics.PixelRatio;
+      return [s.MenuItems[2].Position.x / pr, (s.OffsetY + s.Height * A.Unit * 0.5) / pr];  // [1] is the divider
+    });
+    await p.mouse.move(ax, ay); await p.mouse.click(ax, ay); await p.waitForTimeout(900);
+    const settingsTab = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel._OpenTab);
+    await p.screenshot({ path: `${OUT}/short-wide-about.png` });
+    await ctx.close();
+    const want = (290 * 2 / 850) * 2;  // height · MAX_ASPECT ÷ 850, at device pixel ratio 2
+    const ok = Math.abs(units.unit - want) < 1e-6 && onTop === 'CANVAS' && patchesTab === 1 && settingsTab === 2;
+    return [ok, { units, want, openTabUnder: onTop, patchesTab, settingsTab }];
+  },
+
   async 'patches-tab-remembered'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     const tab = () => p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);

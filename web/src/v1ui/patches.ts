@@ -151,7 +151,7 @@ function rememberedTab(): Tab {
 
 const ITEMS = 5;
 
-const COPY = {
+export const COPY = {
   panel: 'Patches', tabs: ['Save / Share', 'Open', 'Gallery'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',

@@ -63,7 +63,7 @@ export class Metrics {
         this.DeviceCheck();
 
         // DEFINE UNIT & GRID SIZE //
-        App.Unit = (width/this._ScreenDivision) * this.PixelRatio;
+        App.Unit = (Math.min(width, height * App.MaxAspect)/this._ScreenDivision) * this.PixelRatio;
         //App.ScaledUnit = (App.Unit * App.ZoomLevel) * this._DeviceZoom;
         App.GridSize = gridSize * App.Unit;
         //App.ScaledGridSize = (App.GridSize * App.ZoomLevel) * this._DeviceZoom;

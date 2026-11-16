@@ -2,10 +2,47 @@
 
 namespace blokdust::plugin::patchfiles {
 
-juce::File folder() {
-  auto dir = juce::File::getSpecialLocation(juce::File::userMusicDirectory).getChildFile("BlokDust").getChildFile("Patches");
+namespace {
+juce::File appGroup() {
+#if JUCE_IOS && defined(BLOKDUST_APP_GROUP)
+  return juce::File::getContainerForSecurityApplicationGroupIdentifier(BLOKDUST_APP_GROUP);
+#else
+  return {};
+#endif
+}
+}  // namespace
+
+juce::File root() {
+#if JUCE_IOS
+  const auto group = appGroup();
+  auto dir = (group != juce::File{} ? group : juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)).getChildFile("BlokDust");
+#else
+  auto dir = juce::File::getSpecialLocation(juce::File::userMusicDirectory).getChildFile("BlokDust");
+#endif
   dir.createDirectory();
   return dir;
+}
+
+const char* rootKind() {
+#if JUCE_IOS
+  return appGroup() != juce::File{} ? "app group" : "documents (no app group)";
+#else
+  return "music folder";
+#endif
+}
+
+juce::File folder() {
+  auto dir = root().getChildFile("Patches");
+  dir.createDirectory();
+  return dir;
+}
+
+bool remove(const juce::File& f) {
+#if JUCE_IOS
+  return f.deleteFile();
+#else
+  return f.moveToTrash();
+#endif
 }
 
 nlohmann::json list(const juce::File& dir) {
