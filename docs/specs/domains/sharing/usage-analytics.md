@@ -41,7 +41,7 @@ identifying anyone, and without endangering the shared Cloudflare account.
   other than VST3, AU, AUv3 and the standalone app. The Worker MUST accept plugin events only from a plugin surface
   with a well-formed install id. The reply MUST be ignored beyond its status.
 - **R9.** The website MUST load Sentry only when the Worker names a DSN and usage stats are on, with errors only (no
-  tracing, no replay, no breadcrumbs), `sendDefaultPii` off, query strings removed from URLs and file names and share
+  tracing, no replay, no breadcrumbs), no user, cookie, header, body or query-string collection (`dataCollection`), IP storage off in the project, query strings removed from URLs and file names and share
   ids removed from messages. Plugins MUST NOT install a crash handler.
 - **R10.** The dashboard (`/admin/analytics`, data at `/admin/analytics/data?days=N`) MUST answer 404 unless Cloudflare
   Access is configured for it (or, in local tests only, `ADMIN_LOCAL=1`), and 403 unless the request carries a valid
