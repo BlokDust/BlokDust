@@ -197,7 +197,28 @@ try {
   const renamed = (await api(anon, 'GET', 'gallery?q=glass')).json.items;
   check('R5: SAVE updates the published title', renamed.find((r: { id: string }) => r.id === aliceId)?.title === 'Glass Rain II', renamed);
 
-  // ---- R6: ADD TO GALLERY off, then SAVE, takes it out (the link still opens) ----
+  // ---- Option A (owner review 2): one main button; MAKE VIDEO on goes from SAVE on to the video ----
+  await tab(alice, 0);
+  const pp = () => alice.page.evaluate(() => { const x = (window as any).__bd_probe.scene.PatchesPanel; return { view: x.View, video: x.VideoState, on: x.videoOn, main: x.mainAction(), saving: x.Saving,
+    saveAs: !!x.centreOf('saveAs'), download: !!x.centreOf('save') }; });
+  const quiet = await pp();
+  await press(alice, 'videoSwitch', 300);
+  const nothing = await pp();
+  await alice.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Glass Rain III'));
+  await alice.page.evaluate(() => { (window as any).__bd_probe.scene.host.createBlock('ToneSource', -6, -5); });
+  await alice.page.waitForTimeout(300);
+  const toSave = await pp();
+  await press(alice, 'share', 200);
+  await alice.page.waitForFunction(() => (window as any).__bd_probe.scene.PatchesPanel.View === 'video', null, { timeout: 60000 }).catch(() => {});
+  const afterSave = await pp();
+  await alice.page.mouse.move(5, 5); await alice.page.waitForTimeout(400); await alice.page.screenshot({ path: `${OUT}/save-then-video.png` });
+  await press(alice, 'videoBack', 400);
+  await press(alice, 'videoSwitch', 300);
+  check('Option A: SAVE is the main button, SAVE AS and DOWNLOAD PATCH sit below; MAKE VIDEO (off on desktop) turns it into MAKE VIDEO when there is nothing to save, and SAVE then goes on to the video',
+    quiet.on === false && quiet.main.label === 'Save' && quiet.main.off && quiet.saveAs && quiet.download && nothing.on && nothing.main.label === 'Make Video' && !nothing.main.off
+    && toSave.main.label === 'Save' && afterSave.view === 'video' && afterSave.video !== 'idle', { quiet, nothing, toSave, afterSave });
+
+
   await tab(alice, 0);
   await press(alice, 'gallerySwitch', 300);
   const switched = await P(alice);

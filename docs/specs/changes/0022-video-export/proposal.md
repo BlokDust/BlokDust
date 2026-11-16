@@ -49,3 +49,9 @@ points back to BlokDust (owner, 2026-11-15: first of video export, user login, g
 ## Owner review 2 (2026-11-15)
 - No VIDEO tab: SHARE AS VIDEO at the end of Patches › SAVE / SHARE opens the controls in place (the name stays).
 - Desktop browsers (no file sharing) download the video as soon as it is made: DOWNLOAD VIDEO.
+
+## Owner review 2 (2026-11-15), option A
+- One main button: SAVE, with ADD TO GALLERY and MAKE VIDEO switches above it; SAVE AS and DOWNLOAD PATCH (not on
+  phones) are quiet bordered buttons at the bottom. The plugin keeps SAVE TO COMPUTER · CREATE SHARE LINK.
+- Saving with MAKE VIDEO on goes on to the video: portrait only, its length from the patch's timers (R5), shown in a
+  small player with SHARE VIDEO (DOWNLOAD VIDEO on desktop).

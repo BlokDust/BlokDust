@@ -37,6 +37,7 @@ import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts'
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 import type { VideoChoice, VideoProgressInfo } from '../v1ui/patches.ts';
+import { videoSeconds } from '../video/length.ts';
 import { startSource, type PatchSample } from '../video/sources.ts';
 import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/share.ts';
 import type { Credit } from '../video/frame.ts';
@@ -466,6 +467,7 @@ async function main() {
         else downloadFile(file);
       },
       canShareFiles: () => canShareFile(new File([''], 'video.mp4', { type: 'video/mp4' })),
+      seconds: () => videoSeconds([...model.values()], tempo ?? 120, (type, key) => BLOCKS_BY_ID.get(type)?.params.find(q => q.key === key)?.default),
     },
   });
   /** After signing in or out: whether this device may save over the open composition (R9). */

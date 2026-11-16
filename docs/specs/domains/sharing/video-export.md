@@ -22,14 +22,17 @@ Instagram, TikTok and other apps from the web app, without any server (SHARING-0
   then dropped: videos always start from the beginning.)*
 
 **Rendering** (`web/src/video/`)
-- **R5.** The video is 15 (the default), 30 or 60 seconds long, then the end card.
+- **R5.** The video runs whole cycles of the patch's longest timer, 10 to 30 seconds (owner review 2: a fixed 15 s was
+  arbitrary): tempo-synced Laser turns, Particle Emitter and Pulse divisions, LFO divisions or free rates, and a
+  Counter's steps of the shortest tick. Without timers, 15 seconds. Then the end card (`web/src/video/length.ts`).
 - **R6.** Each video frame (30 fps) MUST show the engine's state at the quantum boundary nearest to that frame's time:
   connections, blocks, beams, overlays, particles and labels, drawn by the same code as the live stage
   (`web/src/stage/drawWorld.ts`), in the current theme, without the v1 menus or panels.
 - **R7.** The camera is fixed for the whole video and frames every block that is on the stage during it, with a margin.
 - **R8.** After the chosen length, a 3-second end card shows the patch title, the share link (or the site address) and
   credits for every Freesound sound used, while the audio carries on (reverb tails).
-- **R9.** Shapes: PORTRAIT 1080×1920, SQUARE 1080×1080, WIDE 1920×1080.
+- **R9.** Portrait, 1080×1920 (owner review 2: the shape Instagram and TikTok use; SQUARE 1080×1080 and WIDE
+  1920×1080 remain in the renderer, not offered).
 - **R10.** Output: MP4 with H.264 video and AAC audio (stereo, the session's sample rate). Where the browser cannot
   encode AAC, the WASM AAC encoder is used. Where it cannot encode H.264, the panel says so.
 - **R11.** Rendering MUST NOT stop the live audio or the page: work is done in slices that yield to the page, and shows
@@ -37,16 +40,17 @@ Instagram, TikTok and other apps from the web app, without any server (SHARING-0
 - **R12.** The beam jitter uses a seeded random number, so frames repeat (R2).
 
 **Sharing** (`web/src/video/share.ts`)
-- **R13.** Where the browser can share files (phones, tablets: `navigator.canShare({ files })`), MAKE VIDEO makes it
-  and SHARE VIDEO opens the share sheet with the file, the title and the link as text. Elsewhere (desktop browsers)
-  the button reads DOWNLOAD VIDEO and the file downloads as soon as it is made (owner review 2026-11-15).
+- **R13.** Where the browser can share files (phones, tablets: `navigator.canShare({ files })`), SHARE VIDEO under the
+  player opens the share sheet with the file, the title and the link as text (apps that keep text get the link;
+  Instagram drops it). Elsewhere (desktop browsers) the file downloads as soon as it is made and the button reads
+  DOWNLOAD VIDEO (owner review 2026-11-15).
 - **R14.** Nothing is uploaded. The video exists only on the user's device (DATA-0005).
 
 **Panel** (`web/src/v1ui/patches.ts`)
-- **R15.** Patches › SAVE / SHARE ends with SHARE AS VIDEO (owner review 2026-11-15: no tab of its own). It turns the
-  tab's lower half into the video's controls, the patch name staying: SHAPE, a frame icon in the video's shape (as
-  Instagram's crop icons) that cycles PORTRAIT → WIDE → SQUARE when pressed; LENGTH, its seconds underlined, cycling
-  15 → 30 → 60; MAKE VIDEO / DOWNLOAD VIDEO, then progress (CANCEL stops it at once); the back chevron returns.
+- **R15.** Patches › SAVE / SHARE has a MAKE VIDEO switch under ADD TO GALLERY (owner review 2, option A): on by
+  default where the browser can share files, off elsewhere. SAVE with it on saves, then makes the video: the tab's
+  lower half shows the progress (CANCEL stops it at once), then the video in a small portrait player with SHARE VIDEO
+  (DOWNLOAD VIDEO) under it; BACK (top right) returns. With nothing to save, the main button reads MAKE VIDEO.
 - **R16.** The plugin does not show the VIDEO tab.
 
 ## Scenarios

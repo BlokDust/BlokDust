@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
+import { videoSeconds } from '../../web/src/video/length.ts';
 
 const OUT = 'tests/e2e/output/video';
 mkdirSync(OUT, { recursive: true });
@@ -45,14 +46,16 @@ async function open(b: Browser, blocks: Block[], errors: string[], share: 'none'
 }
 const centre = (p: Page, name: string) => p.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name) as Promise<[number, number]>;
 async function click(p: Page, name: string, wait = 500): Promise<void> { const [x, y] = await centre(p, name); await p.mouse.move(x, y); await p.mouse.click(x, y); await p.waitForTimeout(wait); }
-/** Patches › SAVE / SHARE › SHARE AS VIDEO (the header's PATCHES slot opens the panel). */
+/** Patches › SAVE / SHARE (the header's PATCHES slot opens the panel). These tests have no server to save to, so the
+ * video is started as SAVE starts it once saved (owner review 2, option A); test:gallery presses SAVE itself. */
 async function openVideoTab(p: Page): Promise<void> {
   await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } });
   await p.mouse.move(1138, 45); await p.mouse.click(1138, 45); await p.waitForTimeout(1500);
   await click(p, 'tab0', 700);
-  await click(p, 'videoEntry', 400);  // SAVE / SHARE › SHARE AS VIDEO (owner review 2026-11-15)
 }
-const panel = (p: Page) => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { state: pp.VideoState, message: pp.VideoMessage, progress: pp.VideoProgress, choice: pp.Video }; });
+const startVideo = (p: Page) => p.evaluate(() => { void (window as any).__bd_probe.scene.PatchesPanel.makeVideo(); });
+const panel = (p: Page) => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, v = document.getElementById('patchVideo') as HTMLVideoElement;
+  return { state: pp.VideoState, view: pp.View, message: pp.VideoMessage, progress: pp.VideoProgress, videoOn: pp.videoOn, seconds: (window as any).__bd_probe.scene.host.video.seconds(), player: { shown: v.style.display === 'block', src: !!v.src } }; });
 /** Drag block `id` by (dx, dy) grid cells with the real pointer. */
 async function dragBlock(p: Page, id: number, dx: number, dy: number): Promise<void> {
   const [x, y] = await p.evaluate(i => (window as any).__bd_probe.blockPoint(i), id) as [number, number];
@@ -61,15 +64,12 @@ async function dragBlock(p: Page, id: number, dx: number, dy: number): Promise<v
   for (let k = 1; k <= 10; k++) { await p.mouse.move(x + (dx * g * k) / 10, y + (dy * g * k) / 10); await p.waitForTimeout(30); }
   await p.mouse.up();
 }
-/** Make a video from the VIDEO tab (pressing `choose` first) and save what SHARE VIDEO downloads. */
-async function makeAndSave(p: Page, name: string, choose: string[]): Promise<{ file: string; ms: number; state: unknown }> {
-  for (const c of choose) await click(p, c, 300);
+/** Make the video and save what downloads (desktop Chrome can't share files: it downloads once made). */
+async function makeAndSave(p: Page, name: string): Promise<{ file: string; ms: number; state: Awaited<ReturnType<typeof panel>> }> {
   const t0 = Date.now();
-  // Desktop Chrome can't share files: DOWNLOAD VIDEO makes it and downloads it at once (owner, 2026-11-15).
-  const label = await p.evaluate(() => (window as any).__bd_probe.scene.host.video.canShareFiles());
-  if (label) throw new Error('this test expects a browser that downloads videos');
-  const [x, y] = await centre(p, 'make');
-  const [download] = await Promise.all([p.waitForEvent('download', { timeout: 180_000 }), p.mouse.click(x, y)]);
+  if (await p.evaluate(() => (window as any).__bd_probe.scene.host.video.canShareFiles())) throw new Error('this test expects a browser that downloads videos');
+  const [download] = await Promise.all([p.waitForEvent('download', { timeout: 180_000 }), startVideo(p)]);
+  await p.waitForTimeout(300);
   const ms = Date.now() - t0, state = await panel(p);
   const file = `${OUT}/${name}.mp4`;
   await download.saveAs(file);
@@ -112,90 +112,83 @@ function checkMp4(file: string, w: number, h: number, seconds: number | [number,
 }
 
 const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> = {
-  /** R5, R9, R13: the defaults — PORTRAIT, 15 SECONDS — from the beginning, then the 3 s end card. Desktop Chrome can't
-   * share files, so SHARE VIDEO downloads it. */
-  'portrait-15s': async errors => {
+  /** R5, R9, R13, R15: portrait only; a patch without timers runs 15 s, then the 3 s end card. Desktop Chrome can't
+   * share files, so it downloads once made, and the player shows it with DOWNLOAD VIDEO; MAKE VIDEO is off by default
+   * there. */
+  'portrait-default': async errors => {
     const p = await open(browser, SCENE, errors);
     await openVideoTab(p);
-    const choice = (await panel(p)).choice;
-    const r = await makeAndSave(p, 'portrait-15s', []);
+    const before = await panel(p);
+    const r = await makeAndSave(p, 'portrait-default');
+    await p.mouse.move(5, 5); await p.waitForTimeout(300); await p.screenshot({ path: `${OUT}/player-desktop.png` });
     await p.close();
     if (!r.file) return [false, r];
     const [ok, info] = checkMp4(r.file, 1080, 1920, 18);
-    return [ok && choice.shape === 'portrait' && choice.seconds === 15, { ...info, choice, ms: r.ms }];
+    return [ok && before.seconds === 15 && before.videoOn === false && r.state.state === 'ready' && r.state.view === 'video' && r.state.player.shown && r.state.player.src,
+      { ...info, before, after: r.state, ms: r.ms }];
   },
-  /** R15: SHAPE cycles portrait → wide → square → portrait (Instagram's order); LENGTH cycles 15 → 30 → 60 → 15. */
-  'shape-and-length-cycle': async errors => {
-    const p = await open(browser, SCENE, errors);
-    await openVideoTab(p);
-    const seen: string[] = [];
-    for (let i = 0; i < 3; i++) { await click(p, 'shape', 200); const c = (await panel(p)).choice; seen.push(`${c.shape}`); }
-    for (let i = 0; i < 3; i++) { await click(p, 'length', 200); const c = (await panel(p)).choice; seen.push(`${c.seconds}`); }
-    await p.close();
-    return [seen.join(',') === 'wide,square,portrait,30,60,15', seen];
+  /** R5 (owner review 2): the length is whole cycles of the longest timer, 10–30 s. */
+  'length-from-timers': async () => {
+    const d = (type: string, key: string) => ({ sync: false, turnBeats: 4, division: 1, pulseBeats: 0.25, rate: 1, steps: 8 } as Record<string, unknown>)[key];
+    const cases: [string, number, number][] = [
+      ['none', videoSeconds([{ type: 'source.tone', params: {} }], 120, d), 15],
+      ['lfo 1 Hz', videoSeconds([{ type: 'fx.lfo', params: { rate: 1 } }], 120, d), 10],
+      ['lfo 0.07 Hz', videoSeconds([{ type: 'fx.lfo', params: { rate: 0.07 } }], 120, d), Math.round(30 / 0.07) / 30],
+      ['laser 32 beats', videoSeconds([{ type: 'power.laser', params: { sync: true, turnBeats: -32 } }], 120, d), 16],
+      ['counter 16 × emitter beat', videoSeconds([{ type: 'power.emitter', params: { sync: true } }, { type: 'power.counter', params: { steps: 16 } }], 120, d), 16],
+      ['lfo 0.02 Hz: capped', videoSeconds([{ type: 'fx.lfo', params: { rate: 0.02 } }], 120, d), 30],
+    ];
+    return [cases.every(([, got, want]) => Math.abs(got - want) < 1e-6), cases];
   },
-  /** R9: SQUARE, 30 SECONDS. */
-  'square-30s': async errors => {
-    const p = await open(browser, SCENE, errors);
-    await openVideoTab(p);
-    const r = await makeAndSave(p, 'square-30s', ['shape', 'shape', 'length']);
-    await p.close();
-    if (!r.file) return [false, r];
-    const [ok, info] = checkMp4(r.file, 1080, 1080, 33);
-    return [ok, { ...info, ms: r.ms }];
-  },
-  /** R13: where the browser can share files, SHARE VIDEO hands the MP4 to the share sheet, in the click, with the
-   * title and the link as text. */
+  /** R13: where the browser can share files, MAKE VIDEO is on by default, and SHARE VIDEO under the player hands the
+   * MP4 to the share sheet, in the click, with the title and the link as text. */
   'share-sheet': async errors => {
     const p = await open(browser, SCENE, errors, 'sheet');
     await openVideoTab(p);
-    await click(p, 'make', 200);
+    const on = (await panel(p)).videoOn;
+    await startVideo(p);
     await p.waitForFunction(() => (window as any).__bd_probe.scene.PatchesPanel.VideoState === 'ready', null, { timeout: 120_000 });
     await click(p, 'shareVideo', 500);
     const shared = await p.evaluate(() => (window as any).__shared);
     await p.close();
-    return [!!shared && shared.type === 'video/mp4' && /\.mp4$/.test(shared.name) && shared.size > 50_000 && /made with BlokDust/.test(shared.text) && /https?:\/\//.test(shared.text), shared];
+    return [on === true && !!shared && shared.type === 'video/mp4' && /\.mp4$/.test(shared.name) && shared.size > 50_000 && /made with BlokDust/.test(shared.text) && /https?:\/\//.test(shared.text), { on, shared }];
   },
-  /** R12: the same patch, length and shape draw the same frames (the encoder may still vary bytes, so compare decoded
-   * frames; WIDE this time). */
+  /** R2: the same patch draws the same frames (the encoder may still vary bytes, so compare decoded frames). */
   'from-start-repeatable': async errors => {
     const p = await open(browser, SCENE, errors);
     await openVideoTab(p);
-    const a = await makeAndSave(p, 'repeat-a', ['shape']);
-    await click(p, 'shape', 200); await click(p, 'shape', 200); await click(p, 'shape', 200);  // round to WIDE again: drops the made video
-    const b = await makeAndSave(p, 'repeat-b', []);
+    const a = await makeAndSave(p, 'repeat-a');
+    const b = await makeAndSave(p, 'repeat-b');
     await p.close();
     if (!a.file || !b.file) return [false, { a, b }];
     const ha = frameHashes(a.file), hb = frameHashes(b.file), same = ha.filter((h, i) => h === hb[i]).length;
-    const [ok, info] = checkMp4(a.file, 1920, 1080, 18);
-    return [ok && same === ha.length && ha.length === hb.length, { ...info, frames: ha.length, identicalFrames: same }];
+    return [same === ha.length && ha.length === hb.length && ha.length > 0, { frames: ha.length, identicalFrames: same }];
   },
-  /** R11: CANCEL stops it and the panel can make another. */
+  /** R11: CANCEL stops it at once; BACK returns to SAVE / SHARE. */
   'cancel': async errors => {
     const p = await open(browser, SCENE, errors);
     await openVideoTab(p);
-    await click(p, 'length', 200); await click(p, 'length', 200);  // 60 s
-    await click(p, 'make', 1500);
+    await startVideo(p); await p.waitForTimeout(1500);
     const during = await panel(p);
     await click(p, 'make', 1000);  // CANCEL
     const after = await panel(p);
+    await click(p, 'videoBack', 500);
+    const back = await panel(p);
     await p.close();
-    return [during.state === 'making' && after.state === 'idle', { during, after }];
+    return [during.state === 'making' && after.state === 'idle' && back.view === 'list' && !back.player.shown, { during, after, back }];
   },
-  /** Bug (found making screenshots): CANCEL, then at once a new choice and MAKE VIDEO. The cancelled render was still
-   * winding down, so the panel still said making: the new choice was ignored, MAKE cancelled again, nothing was made. */
+  /** Bug (found making screenshots): CANCEL, then at once MAKE VIDEO. The cancelled render was still winding down, so
+   * the panel still said making: MAKE cancelled again and nothing was made. */
   'cancel-then-make-at-once': async errors => {
     const p = await open(browser, SCENE, errors, 'sheet');
     await openVideoTab(p);
-    await click(p, 'length', 200); await click(p, 'length', 200);  // 60 s
-    await click(p, 'make', 1500);
+    await startVideo(p); await p.waitForTimeout(1500);
     await click(p, 'make', 0);   // CANCEL
-    await click(p, 'length', 0); // round to 15 s
-    await click(p, 'make', 0);
-    await p.waitForFunction(() => { const s = (window as any).__bd_probe.scene.PatchesPanel.VideoState; return s === 'ready' || s === 'error'; }, null, { timeout: 30_000 }).catch(() => {});
+    await click(p, 'make', 0);   // MAKE VIDEO
+    await p.waitForFunction(() => { const s = (window as any).__bd_probe.scene.PatchesPanel.VideoState; return s === 'ready' || s === 'error'; }, null, { timeout: 60_000 }).catch(() => {});
     const after = await panel(p);
     await p.close();
-    return [after.state === 'ready' && after.choice.seconds === 15, after];
+    return [after.state === 'ready', after];
   },
 };
 

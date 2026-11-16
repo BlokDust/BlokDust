@@ -631,6 +631,11 @@ function ensureShareDom(): void {
     <div id="patchUrl"><form action=""><input type="text" id="patchUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>
     <div id="accountHandle"><form action=""><input type="text" id="accountHandleInput" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" value=""></form></div>
     <div id="gallerySearch"><form action=""><input type="text" id="gallerySearchInput" name="q" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40" value=""></form></div>`;
+  // The video player on SAVE / SHARE (owner review 2): portrait, over the panel like the text fields.
+  const video = document.createElement('video');
+  video.id = 'patchVideo'; video.playsInline = true; video.loop = true; video.controls = true; video.preload = 'auto';
+  Object.assign(video.style, { position: 'absolute', display: 'none', background: '#000', objectFit: 'contain' });
+  wrap.appendChild(video);
   for (const el of [...wrap.children]) document.body.appendChild(el);
   // Enter in these fields is handled by the panels (v1 EnterCheck); never submit (reload) the page.
   for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form')) f.addEventListener('submit', e => e.preventDefault());

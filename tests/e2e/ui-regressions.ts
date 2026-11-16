@@ -995,7 +995,8 @@ Object.assign(tests, {
     await openPatches(p);
     const sw = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, u = (window as any).__bd_probe.v1App.Unit, g = pp.gallerySwitch(); return { gap: (g.h * 0.55 - (g.h * 0.35 + 5 * u)) / u }; });
     // BACK on the video view (the patch has a block).
-    await patchesClick(p, 'videoEntry', 800); await texts(); await p.mouse.move(600, 700); await p.waitForTimeout(400);
+    await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; pp.View = 'video'; pp.VideoState = 'idle'; });  // the video step (SAVE with MAKE VIDEO on)
+    await p.waitForTimeout(300); await texts(); await p.mouse.move(600, 700); await p.waitForTimeout(400);
     const drawn = await p.evaluate(() => (window as any).__texts2.filter((e: any) => e.t === 'BACK').map((e: any) => e.x)) as number[];
     const back = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, a = pp.backArrow(), pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio, u = (window as any).__bd_probe.v1App.Unit;
       return { x: a.x, y: a.y, mid: (window as any).__bd_probe.v1App.Width / 2, right: (window as any).__bd_probe.v1App.Width / 2 + 210 * u, name: pp.centreOf('randomise')[1] * pr, u }; });
@@ -1571,7 +1572,8 @@ Object.assign(tests, {
     return [ok, { opts: r.opts, title: r.file.meta?.title, saved: r.saved, cancelled }];
   },
 
-  /** Owner (2026-11-11): the web SAVE tab is three buttons, SAVE · SAVE AS · DOWNLOAD PATCH, with no help lines; the
+  /** Owner (2026-11-11): the web SAVE tab has SAVE · SAVE AS · DOWNLOAD PATCH, with no help lines (owner review 2,
+   * option A: SAVE the main button, SAVE AS and DOWNLOAD PATCH quiet below it, left and right); the
    * link shows with "Share your creation with this unique URL:" and a click on it copies it. SAVE makes the link, then
    * is off until the patch changes; a link this browser can't save over (here: no backend, a self-contained link)
    * gets a new one. SAVE / SAVE AS on a stored link are checked by test:sharing. */
@@ -1589,7 +1591,7 @@ Object.assign(tests, {
     const state = () => p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.shareState());
     const texts = () => p.evaluate(() => { const t = (window as any).__texts as string[]; const r = [...new Set(t)]; t.length = 0; return r; });
     await texts(); await openPatches(p); await p.waitForTimeout(300);
-    const before = await texts(), xs = await p.evaluate(() => ['share', 'saveAs', 'save'].map(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n)[0]));
+    const before = await texts(), at = await p.evaluate(() => ['share', 'saveAs', 'save'].map(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n))), xs = at.map(c => c[0]);
     await p.screenshot({ path: `${OUT}/save-tab.png` });
     await patchesClick(p, 'close', 900);
     const first = await makeLink(p);
@@ -1610,7 +1612,7 @@ Object.assign(tests, {
     await ctx.close();
     const gone = ["Save your changes to your link.", "Your latest changes aren't in this link yet:", 'Your link is ready to share.', 'Save as a new link, and keep this one as it is.'];
     const labels = ['SAVE', 'SAVE AS', 'DOWNLOAD PATCH'];
-    const ok = labels.every(l => before.includes(l)) && xs[0] < xs[1] && xs[1] < xs[2] && !before.some(t => /blokdust patch file|shareable link/i.test(t))
+    const ok = labels.every(l => before.includes(l)) && xs[1] < xs[0] && xs[0] < xs[2] && at[1][1] > at[0][1] + 50 && at[2][1] === at[1][1] && !before.some(t => /blokdust patch file|shareable link/i.test(t))
       && /[?&]c=/.test(first) && fresh?.url === first && !fresh.stale && freshState.save === null && freshState.saveAs === false
       && withLink.includes('Share your creation with this unique URL:') && !withLink.some(t => gone.includes(t))
       && copied.line && copied.clip === first
@@ -1618,32 +1620,23 @@ Object.assign(tests, {
     return [ok, { before, xs, first: first.slice(0, 60), fresh, freshState, withLink, copied, stale, staleState, second }];
   },
 
-  /** Owner (2026-11-11): DOWNLOAD PATCH has black text on v1's third options colour (Mode Stereo's green, the
-   * Particle Emitter's Division), or the palette's options colour most readable with black where that one is too dark:
-   * readable (WCAG 4.5:1) in every palette. Crops: download-theme<n>.png. */
-  async 'download-colour'(errors: string[]) {
-    const { PNG } = await import('pngjs');
-    const lum = (c: number[]) => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
-    const rows: unknown[] = [];
-    let ok = true;
-    for (const t of THEMES) {
-      const p = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-      p.on('pageerror', e => errors.push(e.message));
-      await p.goto(`${url}/index.html?theme=${t.index}&v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+  /** Owner review 2 (option A, 2026-11-15): DOWNLOAD PATCH is a quiet bordered button at the bottom right (it was a
+   * filled button in v1's third options colour, owner 2026-11-11), and phones don't offer it. */
+  async 'download-quiet'(errors: string[]) {
+    const at = async (phone: boolean) => {
+      const ctx = await browser.newContext({ viewport: phone ? { width: 390, height: 844 } : { width: 1280, height: 800 }, deviceScaleFactor: 1, isMobile: phone, hasTouch: phone });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
       await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
-      await openPatches(p); await p.mouse.move(640, 700); await p.waitForTimeout(400);
-      const [cx, cy] = await patchesAt(p, 'save');
-      const png = PNG.sync.read(await p.screenshot({ clip: { x: cx - 85, y: cy - 16, width: 1, height: 1 } }));
-      const fill = [png.data[0], png.data[1], png.data[2]];
-      const contrast = (lum(fill) + 0.05) / 0.05;
-      await p.screenshot({ path: `${OUT}/download-theme${t.index}.png`, clip: { x: cx - 330, y: cy - 30, width: 440, height: 60 } });
-      await p.close();
-      const want = t.index === 0 ? [39, 213, 120] : null;
-      const good = contrast >= 4.5 && (!want || want.every((v, i) => Math.abs(v - fill[i]) < 3));
-      ok &&= good;
-      rows.push({ theme: t.name, fill, contrast: Math.round(contrast * 10) / 10, good });
-    }
-    return [ok, rows];
+      await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0)); await p.waitForTimeout(1200);
+      const r = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { main: pp.centreOf('share'), download: pp.centreOf('save'), saveAs: pp.centreOf('saveAs') }; });
+      if (!phone) await p.screenshot({ path: `${OUT}/save-tab-option-a.png` });
+      await ctx.close();
+      return r;
+    };
+    const desk = await at(false), phone = await at(true);
+    const ok = !!desk.download && desk.download[1] > desk.main[1] + 50 && desk.download[0] > desk.main[0] && !phone.download && !!phone.saveAs;
+    return [ok, { desk, phone }];
   },
 
   /** Owner (2026-11-10): on a touch screen an Insert lands in the middle of the view; a finger drags it (from wherever
