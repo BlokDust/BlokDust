@@ -24,6 +24,7 @@ import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
 import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene, hideLinks } from '../v1ui/scene.ts';
+import { COPY as PATCH_COPY } from '../v1ui/patches.ts';
 import { V1Block } from '../v1ui/blocks.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
@@ -288,8 +289,11 @@ async function main() {
       external: true,
       current: () => null,
       make: async (_mode, title) => {
-        const url = `${PUBLIC_SITE}?c=${await encodePatch(toPatch())}&t=${encodeURIComponent(title)}&share=1`;
-        juce.emitEvent('bd_openUrl', { url });
+        const link = `${PUBLIC_SITE}?c=${await encodePatch(toPatch())}&t=${encodeURIComponent(title)}`;
+        // iPad: the share menu sends the link itself (the patch is in it, so it opens with no server; owner,
+        // 2026-11-16, CHG-0025). A short link needs the site's bot check, which the plugin can't run.
+        if (ios) { juce.emitEvent('bd_share', { url: link, title }); return; }
+        juce.emitEvent('bd_openUrl', { url: `${link}&share=1` });
       },
       warning: () => shareWarning(),
     } : {
@@ -1010,6 +1014,7 @@ async function main() {
       standalone = !!e.standalone;
       ios = !!e.ios;
       if (ios && !standalone && !App.NoLinks) hideLinks();  // an iPad extension can't open Safari (CHG-0025)
+      if (ios) PATCH_COPY.shareLinePlugin = 'Send a link to this patch from the share menu: Messages, WhatsApp, Mail and more.';
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
       const after = pluginAfterLoad; pluginAfterLoad = null;

@@ -172,6 +172,20 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
 #endif
                  juce::URL(url).launchInDefaultBrowser();
                })
+               // iPad: CREATE SHARE LINK sends the patch's link with the share menu (Messages, WhatsApp, Mail…), in the
+               // app and in a host (owner, 2026-11-16, CHG-0025). Elsewhere the page opens the site instead.
+               .withEventListener("bd_share", [this](const juce::var& v) {
+                 const auto url = v.getProperty("url", "").toString();
+                 if (!url.startsWith("https://")) return;
+#if JUCE_IOS
+                 systemLog("share: menu opened");
+                 shareSheet_ = juce::ContentSharer::shareTextScoped(url, [](bool ok, const juce::String& err) {
+                   systemLog(ok ? juce::String("share: sent") : "share: closed " + err);
+                 }, this);
+#else
+                 juce::URL(url).launchInDefaultBrowser();
+#endif
+               })
                .withEventListener("bd_dropTarget", [this](const juce::var& v) {
                  if (static_cast<int>(v.getProperty("token", -1)) != dropToken_ || pendingDrop_.isEmpty()) return;
                  proc_.loadFile(static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))), juce::File(pendingDrop_));

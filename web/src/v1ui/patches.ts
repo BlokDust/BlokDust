@@ -83,7 +83,7 @@ export function downloadColour(): string {
   if (blackContrast(cols[2]) >= 4.5) return cols[2];
   return cols.reduce((a: string, c: string) => (blackContrast(c) > blackContrast(a) ? c : a));
 }
-const COPY = {
+export const COPY = {
   panel: 'Patches', tabs: ['Save', 'Open'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',

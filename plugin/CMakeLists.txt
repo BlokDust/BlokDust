@@ -97,7 +97,8 @@ function(blokdust_plugin target)
     APP_GROUPS_ENABLED ${app_groups}
     APP_GROUP_IDS ${BLOKDUST_APP_GROUP})
   if(IOS)
-    target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}")
+    target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}"
+      JUCE_CONTENT_SHARING=1)  # the iPad share menu for patch links (bd_share)
   endif()
   target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp)
   if(APPLE)

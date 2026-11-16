@@ -57,7 +57,9 @@ Check items off as they land. Each task should be independently verifiable.
       Second pass: the log showed 60 fps but 34 snapshots a second; the processor published one per 1/30 s of audio.
       It now publishes per 1/60 s of audio: 60/60 measured on the iPad. In the extension (it can't open Safari) the
       page shows no links: no "View the code on GitHub", no websites or Twitter names in About (`hideLinks`, test
-      `ipad-extension-no-links`); the app keeps them.
+      `ipad-extension-no-links`); the app keeps them. On iPad (app and extension) CREATE SHARE LINK opens the share
+      menu (JUCE ContentSharer, `bd_share`) with the self-contained `?c=p…` link: a short link needs the site's bot
+      check, which the plugin can't run.
 - [x] 9. BlokDust FX as a second AUv3 in the same app.
       2026-11-16: `BlokDust FX.appex` is embedded beside `BlokDust.appex` (`XCODE_EMBED_APP_EXTENSIONS`); on iPad its
       ID is `com.funputs.blokdust.fx` (extension `com.funputs.blokdust.fx.fxAUv3`), as an embedded extension's ID must
