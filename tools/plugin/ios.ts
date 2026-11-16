@@ -219,12 +219,27 @@ const DEVICE_APP = 'build/plugin-ios/plugin/BlokDust_artefacts/Release/Standalon
 /** Build for an iPad (signed by Xcode for the team in local config) and install it on the connected iPad. */
 export function iosDevice(noBuild: boolean): void {
   if (process.platform !== 'darwin') throw new Error('the iPadOS build needs macOS with Xcode');
+  // Find the iPad first: Xcode adds a device to the team's profile only when it builds for that device.
+  const tmp = resolve(OUT, 'devices.json');
+  mkdirSync(OUT, { recursive: true });
+  must(run('xcrun', ['devicectl', 'list', 'devices', '--json-output', tmp], true), 'devicectl list');
+  type Dev = { identifier: string; deviceProperties: { name: string };
+    hardwareProperties: { deviceType?: string; productType?: string; udid?: string }; connectionProperties: { pairingState?: string } };
+  const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Dev[]).filter(d => d.connectionProperties.pairingState === 'paired');
+  const want = setting('BLOKDUST_IOS_DEVICE');
+  const ipad = want ? devices.find(d => d.identifier === want || d.deviceProperties.name === want)
+    : devices.find(d => d.hardwareProperties.deviceType === 'iPad' || /^iPad/.test(d.hardwareProperties.productType ?? ''));
+  if (!ipad) throw new Error('no paired iPad: connect it (USB or the same network), trust this Mac, and enable Developer Mode on it');
   if (!noBuild) {
     requiredSetting('BLOKDUST_APPLE_TEAM_ID');
     const env = configEnvironment();
     if (!existsSync('web/dist/index.html')) must(run('pnpm', ['web:build']), 'web build');
     must(spawnSync('cmake', ['--preset', 'plugin-ios'], { stdio: ['ignore', 'inherit', 'inherit'], env }), 'configure (plugin-ios)');
-    const b = spawnSync('cmake', ['--build', '--preset', 'plugin-ios', '--target', 'BlokDust_Standalone', '--', '-quiet', '-allowProvisioningUpdates'],
+    // xcodebuild with the CMake-generated scheme and this iPad as the destination, so automatic signing registers the iPad
+    // in the team's profile (a plain target build signs for whatever devices the profile already lists).
+    const destination = ipad.hardwareProperties.udid ? `id=${ipad.hardwareProperties.udid}` : 'generic/platform=iOS';
+    const b = spawnSync('xcodebuild', ['-project', 'build/plugin-ios/blokdust.xcodeproj', '-scheme', 'BlokDust_Standalone', '-configuration', 'Release',
+      '-destination', destination, '-quiet', '-allowProvisioningUpdates', '-allowProvisioningDeviceRegistration', 'build'],
       { encoding: 'utf8', env, maxBuffer: 64 << 20 });
     if (b.status !== 0) {
       const out = `${b.stdout}\n${b.stderr}`;
@@ -235,15 +250,6 @@ export function iosDevice(noBuild: boolean): void {
     }
   }
   if (!existsSync(DEVICE_APP)) throw new Error(`missing ${DEVICE_APP}: run pnpm bd plugin ios device`);
-  const tmp = resolve(OUT, 'devices.json');
-  mkdirSync(OUT, { recursive: true });
-  must(run('xcrun', ['devicectl', 'list', 'devices', '--json-output', tmp], true), 'devicectl list');
-  type Dev = { identifier: string; deviceProperties: { name: string }; hardwareProperties: { deviceType?: string; productType?: string }; connectionProperties: { pairingState?: string } };
-  const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Dev[]).filter(d => d.connectionProperties.pairingState === 'paired');
-  const want = setting('BLOKDUST_IOS_DEVICE');
-  const ipad = want ? devices.find(d => d.identifier === want || d.deviceProperties.name === want)
-    : devices.find(d => d.hardwareProperties.deviceType === 'iPad' || /^iPad/.test(d.hardwareProperties.productType ?? ''));
-  if (!ipad) throw new Error('no paired iPad: connect it (USB or the same network), trust this Mac, and enable Developer Mode on it');
   must(run('xcrun', ['devicectl', 'device', 'install', 'app', '--device', ipad.identifier, DEVICE_APP]), 'install on the iPad');
   console.log(JSON.stringify({ ok: true, installed: DEVICE_APP, device: ipad.deviceProperties.name }));
 }
