@@ -44,7 +44,8 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   patch). It needs sign-in and counts once per person. At three reports the patch is hidden.
 - **R10.** `pnpm bd gallery reports|keep|hide|remove` lists reported or hidden patches with their reasons, and keeps
   (clears reports, shows), hides or removes one.
-- **R11.** OPEN loads the patch as the current one. SAVE then makes a new link with `parent` set (a remix), which
+- **R11.** OPEN loads the patch as the current one. While it is fetched the panel stays up with v1's spinner (owner
+  review 3: the old stage could be changed meanwhile), then closes; if it can't be fetched, the panel says so. SAVE then makes a new link with `parent` set (a remix), which
   the original's row counts.
 - **R12.** Deleting an account removes its gallery entries, likes and reports.
 - **R13.** The tab is v1 SoundcloudPanel's layout: the search field (a plain text field, no clear button) over its

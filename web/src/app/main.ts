@@ -409,7 +409,7 @@ async function main() {
       ? [...await nativePatches(), ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))]
       : [...await accountItems(), ...myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))],
     savePatch: title => savePatchFile(title),
-    openPatch: (item, mode) => void openPatchItem(item.key, mode),
+    openPatch: (item, mode) => openPatchItem(item.key, mode),
     pickPatchFile: () => pickPatchFile(),
     usePickedFile: mode => { if (picked) { const p = picked; picked = null; usePatch(p.patch, p.title, mode); } },
     isDirty: () => model.size > 0 && contentOf(toPatch()) !== baseline,
@@ -440,7 +440,7 @@ async function main() {
     // The public gallery (CHG-0024): web only.
     gallery: juce || embedId ? null : {
       browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
-      open: (row, mode) => void openShared(row.id, mode),
+      open: (row, mode) => openShared(row.id, mode),
       like: (id, on) => gallery.like(id, on),
       report: async id => { await gallery.report(id); },
       unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
@@ -1009,11 +1009,11 @@ async function main() {
   }
   /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
    * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
-  async function openShared(id: string, mode: 'open' | 'insert'): Promise<void> {
+  async function openShared(id: string, mode: 'open' | 'insert'): Promise<boolean> {
     const r = await loadShared(id);
-    if (!r) return;
+    if (!r) return false;
     usePatch(r.patch, r.title, mode);
-    if (mode !== 'open') return;
+    if (mode !== 'open') return true;
     App.CompositionId = id; App.SessionId = sessionFor(id);
     session = { id, dirty: false }; saveSession(session);
     const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
@@ -1022,6 +1022,7 @@ async function main() {
     setBaseline();
     credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked } : null;
     scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
+    return true;
   }
   /** Signed in: the account's patches (R8), as OPEN rows. */
   async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
@@ -1029,23 +1030,25 @@ async function main() {
     try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: `Your account \u00b7 ${savedOn(p.updated)}`, key: `acct:${p.id}` })); }
     catch { return []; }  // signed out, or no backend
   }
-  async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<void> {
-    if (key.startsWith('acct:')) { await openShared(key.slice(5), mode); return; }  // saved over from this device (R9)
+  async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<boolean> {
+    if (key.startsWith('acct:')) return openShared(key.slice(5), mode);  // saved over from this device (R9)
     if (key.startsWith('preset:')) {
       const p = PRESETS.find(x => `preset:${x.file}` === key), patch = p && parsePatchFile(p.text);
       if (p && patch) usePatch(patch, p.name, mode);
-      return;
+      return !!patch;
     }
     if (key.startsWith('mine:')) {
       const m = myPatches().find(x => x.title === key.slice(5)), patch = m && parsePatchFile(JSON.stringify(m.patch));
       if (m && patch) usePatch(patch, m.title, mode);
-      return;
+      return !!patch;
     }
     if (juce && key.startsWith('file:')) {
       const r = await nativeReply<{ text: string; name: string }>(req => juce.emitEvent('bd_patchRead', { req, path: key.slice(5) }));
       const patch = r && parsePatchFile(r.text);
       if (r && patch) usePatch(patch, patchTitle(patch, r.name), mode);
+      return !!patch;
     }
+    return false;
   }
   /** FROM YOUR COMPUTER: one picker; the panel then asks Open or Insert (owner, 2026-11-10). */
   function pickPatchFile(): void {

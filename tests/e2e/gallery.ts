@@ -279,8 +279,27 @@ try {
   const tutorials = (await P(carol)).items.map((r: { title: string }) => r.title);
   check('R16: bd gallery kind moves one to TUTORIALS', tutorialsEmpty === 0 && tutorials.join() === 'Step Sequencer', { tutorialsEmpty, tutorials });
   await press(carol, 'sort_examples', 300); await idle(carol);
-  await press(carol, 'gopen3', 2500);
-  if (await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View) === 'confirm') await press(carol, 'openAnyway', 2500);
+  // Owner review 3: while the patch is fetched the panel stays up with the spinner (the old stage can't be touched), then
+  // closes; if it can't be fetched, the panel says so.
+  const opening = () => carol.page.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { opening: pp.Opening, open: pp.Open, error: pp.OpenError, blocks: (window as any).__bd_probe.state.patch.blocks.length }; });
+  const blocksBefore = (await opening()).blocks;
+  await carol.page.route('**/api/patches/*', r => r.request().method() === 'GET' ? r.abort() : r.continue());
+  await press(carol, 'gopen3', 1200);
+  if (await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View) === 'confirm') await press(carol, 'openAnyway', 1200);
+  const failed = await opening();
+  await carol.page.unroute('**/api/patches/*');
+  await carol.page.route('**/api/patches/*', async r => { if (r.request().method() === 'GET') await new Promise(res => setTimeout(res, 2000)); await r.continue(); });
+  await press(carol, 'gopen3', 600);
+  if (await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View) === 'confirm') await press(carol, 'openAnyway', 600);
+  const during = await opening();
+  await carol.page.mouse.move(5, 5); await carol.page.waitForTimeout(100); await carol.page.screenshot({ path: `${OUT}/opening-spinner.png` });
+  await carol.page.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Opening, null, { timeout: 15000 });
+  await carol.page.waitForTimeout(1500);
+  await carol.page.unroute('**/api/patches/*');
+  const landed = await opening();
+  check('Owner review 3: while a gallery patch is fetched the panel stays up with the spinner, then closes; a failed fetch says so',
+    failed.open && !failed.opening && /couldn’t be opened/.test(failed.error) && failed.blocks === blocksBefore
+    && during.opening && during.open && during.blocks === blocksBefore && !landed.opening && !landed.open && landed.blocks === 10, { blocksBefore, failed, during, landed });
   const rotating = await carol.page.evaluate(() => ({ n: (window as any).__bd_probe.state.patch.blocks.length, credit: (window as any).__bd_probe.corners.credit }));
   check('R16: an example opens with all its blocks, credited to @blokdust', rotating.n === 10 && rotating.credit?.by === 'blokdust' && rotating.credit?.title === 'Rotating Sequencer', rotating);
   await tab(carol, 1); await carol.page.waitForTimeout(800);

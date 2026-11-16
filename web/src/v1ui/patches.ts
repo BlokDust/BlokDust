@@ -64,11 +64,13 @@ export interface AccountHost {
 /** POPULAR · NEW · EXAMPLES · TUTORIALS (owner review 3: EXAMPLES and TUTORIALS are @blokdust's patches). */
 export type GallerySort = 'popular' | 'new' | 'examples' | 'tutorials';
 export const GALLERY_SORTS: GallerySort[] = ['popular', 'new', 'examples', 'tutorials'];
+/** An Open or Insert: a promise while the patch is fetched (false: it couldn't be). */
+type OpenRun = () => void | Promise<boolean>;
 export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; views: number; liked: boolean; mine: boolean }
 export interface GalleryHost {
   browse(sort: GallerySort, q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
   /** Open a published patch (it replaces the current one; SAVE then makes a remix of it), or Insert its blocks. */
-  open(row: GalleryRow, mode: 'open' | 'insert'): void;
+  open(row: GalleryRow, mode: 'open' | 'insert'): Promise<boolean>;
   like(id: string, on: boolean): Promise<{ liked: boolean; likes: number }>;
   report(id: string): Promise<void>;
   unpublish(id: string): Promise<void>;
@@ -87,7 +89,7 @@ export interface PatchesHost {
   /** Save the scene as a file under `title`; resolves true once written (false: cancelled or failed). */
   savePatch(title: string): Promise<boolean>;
   /** Open (replace) or Insert (place by hand) a listed patch. */
-  openPatch(item: PatchItem, mode: 'open' | 'insert'): void;
+  openPatch(item: PatchItem, mode: 'open' | 'insert'): void | Promise<boolean>;
   /** Show the system file picker; the host answers with `PatchesPanel.showFile`. */
   pickPatchFile(): void;
   /** Open or Insert the file last given to `showFile`. */
@@ -158,7 +160,7 @@ const COPY = {
   search: 'Search', sorts: { popular: 'Popular', new: 'New', examples: 'Examples', tutorials: 'Tutorials' }, unpublish: 'Unpublish',
   like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
   reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here.',
-  reported: 'Thank you. The patch was reported.',
+  reported: 'Thank you. The patch was reported.', openFailed: 'This patch couldn’t be opened. Check your connection and try again.',
   addToGallery: 'Add to Gallery', signInToPublish: 'Only signed-in users can publish to the gallery.',
   makeVideo: 'Make Video', downloadVideo: 'Download Video', tryAgain: 'Try Again',
   cancelVideo: 'Cancel', rendering: 'making video', shareVideo: 'Share Video',
@@ -225,7 +227,11 @@ export class PatchesPanel extends DisplayObject {
   /** The patch the delete step asks about. */
   private removing: PatchItem | null = null;
   /** What OPEN ANYWAY / SAVE FIRST go on to do, and the view to go back to on CANCEL. */
-  private pending: { run: () => void; from: View } | null = null;
+  private pending: { run: OpenRun; from: View } | null = null;
+  /** A patch is being fetched to open or insert: the panel stays up with v1's spinner (owner review 3, 2026-11-16: the
+   * old stage showed, and could be changed, for the seconds it took), then closes. */
+  Opening = false;
+  OpenError = '';
   TitleContainer!: HTMLElement;
   Input!: HTMLInputElement;
   UrlContainer!: HTMLElement;
@@ -259,7 +265,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
-  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || this.GalleryLoading || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
+  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.Opening || this.VideoState === 'making' || this.GalleryLoading || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
   /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
   private settle = 0;
   private settled(): void { this.settle = performance.now() + 250; }
@@ -404,6 +410,8 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
+    if (this.Opening) { App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.cy, 16, true); return; }
+    if (this.OpenError) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.OpenError, this.margin, this.cy + 205 * u, 14 * u, this.pageW); }
     if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
@@ -975,10 +983,12 @@ export class PatchesPanel extends DisplayObject {
     const row = this.GalleryItems[d.row];
     if (!row) return;
     // Insert adds to the patch: nothing is lost, so it doesn't ask first (as OPEN's INSERT).
-    if (d.mode === 'insert') { this.ClosePanel(); g.open(row, 'insert'); }
+    if (d.mode === 'insert') this.runOpen(() => g.open(row, 'insert'));
     else this.requestOpen(() => g.open(row, 'open'));
   }
   MouseDown(pt: { x: number; y: number }): void {
+    if (this.Opening) return;
+    this.OpenError = '';
     this.HitTests(pt);
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
@@ -1044,7 +1054,7 @@ export class PatchesPanel extends DisplayObject {
         const item = this.Items[(this.page - 1) * ITEMS + n];
         if (!item) return;
         if (r[`bin${n}`]) { this.removing = item; this.View = 'remove'; return; }
-        if (r[`ins${n}`]) { this.ClosePanel(); this.host.openPatch(item, 'insert'); }
+        if (r[`ins${n}`]) this.runOpen(() => this.host.openPatch(item, 'insert'));
         else this.requestOpen(() => this.host.openPatch(item, 'open'));
         return;
       }
@@ -1065,19 +1075,32 @@ export class PatchesPanel extends DisplayObject {
     // confirm
     if (this.Saving) return;
     if (r.cancel) { this.View = this.pending?.from ?? 'list'; this.pending = null; return; }
-    if (r.openAnyway) { const p = this.pending; this.pending = null; this.ClosePanel(); p?.run(); return; }
+    if (r.openAnyway) { const p = this.pending; this.pending = null; if (p) this.runOpen(p.run); return; }
     if (r.saveFirst) {
       void this.save().then(ok => {
         if (!ok || !this.pending) return;
-        const p = this.pending; this.pending = null; this.ClosePanel(); p.run();
+        const p = this.pending; this.pending = null; this.runOpen(p.run);
       });
     }
   }
   /** Open replaces the patch: with unsaved changes, ask first (owner, 2026-11-10). */
-  private requestOpen(run: () => void): void {
-    if (!this.host.isDirty()) { this.ClosePanel(); run(); return; }
+  private requestOpen(run: OpenRun): void {
+    if (!this.host.isDirty()) { this.runOpen(run); return; }
     this.pending = { run, from: this.View };
     this.View = 'confirm';
+  }
+  /** Open or Insert. A patch from the server keeps the panel up, spinning, until it is in; then the panel closes. */
+  private runOpen(run: OpenRun): void {
+    this.OpenError = '';
+    const r = run();
+    if (!(r instanceof Promise)) { this.ClosePanel(); return; }
+    this.Opening = true; this.showDom();
+    const done = (ok: boolean) => {
+      this.Opening = false;
+      if (ok) this.ClosePanel(); else { this.OpenError = COPY.openFailed; this.showDom(); }
+      this.settled();
+    };
+    r.then(ok => done(ok !== false), () => done(false));
   }
   private turn(page: number): void { this.page = page; this.tween('OffsetX', -(page - 1) * 430 * App.Unit, 350); }
   /** v1 SettingsPanel category select: the new tab's fill drops in, the others lift. */
@@ -1209,8 +1232,8 @@ export class PatchesPanel extends DisplayObject {
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
-    this.TitleContainer.style.display = on && this.Tab === 0 ? 'block' : 'none';
-    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' ? 'block' : 'none';
+    this.TitleContainer.style.display = on && this.Tab === 0 && !this.Opening ? 'block' : 'none';
+    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' && !this.Opening ? 'block' : 'none';
     this.UrlContainer.style.display = link && this.View !== 'video' ? 'block' : 'none';
     if (this.player) this.player.style.display = on && this.Tab === 0 && this.View === 'video' && this.VideoState === 'ready' ? 'block' : 'none';
     if (link && this.UrlInput.value !== link.url) this.UrlInput.value = link.url;  // unchanged: keep the selection
