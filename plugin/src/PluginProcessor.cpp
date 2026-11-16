@@ -34,6 +34,15 @@ BlokDustProcessor::BlokDustProcessor() : AudioProcessor(buses()) {
   recDrain_.f = [this] { drainRecording(); };
   patch_ = kFx ? nlohmann::json::parse(BinaryData::fx_patch_json, BinaryData::fx_patch_json + BinaryData::fx_patch_jsonSize)
                : nlohmann::json::parse(BinaryData::pluginstart_patch_json, BinaryData::pluginstart_patch_json + BinaryData::pluginstart_patch_jsonSize);
+  // The standalone app's first launch (owner, 2026-11-13, CHG-0013): the Rotating Sequencer, a simple patch to start
+  // from. JUCE's standalone wrapper restores the last session over it on every later launch (setStateInformation).
+  if (!kFx && wrapperType == wrapperType_Standalone) {
+    int size = 0;
+    for (int i = 0; i < BinaryData::namedResourceListSize; ++i)
+      if (juce::String(BinaryData::originalFilenames[i]) == "04-rotating-sequencer.blokdust")
+        if (const char* d = BinaryData::getNamedResource(BinaryData::namedResourceList[i], size); d && size > 0)
+          patch_ = nlohmann::json::parse(d, d + size);
+  }
   // Dust 1–8 (PLUGIN-0003): fixed generic host parameters, mapped onto block params by the patch's "automation" list.
   for (int i = 0; i < kDustSlots; ++i) {
     auto p = std::make_unique<DustParameter>(i + 1);
@@ -159,6 +168,24 @@ void BlokDustProcessor::flushDust() {
   }
 }
 
+void BlokDustProcessor::syncToggles(const Snapshot& s) {
+  // Edge-triggered: only a change the engine made since the last snapshot is written, so a switch the user just set
+  // (already in the patch, not yet in the engine) is never undone by a snapshot from before it applied.
+  std::map<BlockId, bool> now;
+  for (int i = 0; i < s.toggleCount; ++i) now[s.toggles[static_cast<std::size_t>(i)]] = s.toggleOn[static_cast<std::size_t>(i)] != 0;
+  for (const auto& [id, on] : now) {
+    const auto was = togglesSeen_.find(id);
+    if (was == togglesSeen_.end() || was->second == on) continue;
+    const auto k = idToKey_.find(id);
+    auto* b = k == idToKey_.end() ? nullptr : blockJson(k->second);
+    if (!b) continue;
+    (*b)["params"]["logic"] = on;
+    auto it = std::find_if(paramUpdates_.begin(), paramUpdates_.end(), [&](const ParamUpdate& u) { return u.id == id && u.param == "logic"; });
+    if (it != paramUpdates_.end()) it->value = on ? 1.0 : 0.0; else paramUpdates_.push_back({id, "logic", on ? 1.0 : 0.0});
+  }
+  togglesSeen_ = std::move(now);
+}
+
 void BlokDustProcessor::handleAsyncUpdate() {
   const int slot = learnedSlot_.exchange(0), cc = learnedCc_.exchange(-1);
   if (slot < 1 || cc < 0 || !patch_.contains("automation")) return;
@@ -276,6 +303,12 @@ void BlokDustProcessor::publishSnapshot() noexcept {
   for (int i = 0; i < kMaxBlocks; ++i) {
     if (!blocks[static_cast<std::size_t>(i)].alive) continue;
     if (blocks[static_cast<std::size_t>(i)].power() > 0) s.powered[static_cast<std::size_t>(s.poweredCount++)] = blocks[static_cast<std::size_t>(i)].id;
+  }
+  s.toggleCount = 0;
+  for (const auto& b : blocks) {
+    if (!b.alive || b.type != BlockType::PowerToggle) continue;
+    s.toggles[static_cast<std::size_t>(s.toggleCount)] = b.id;
+    s.toggleOn[static_cast<std::size_t>(s.toggleCount++)] = b.params[gen::param::PowerToggle::logic] != 0.0 ? 1 : 0;
   }
   s.beamCount = 0;
   for (const auto& b : engine_->beams()) {

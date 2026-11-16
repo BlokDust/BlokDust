@@ -87,6 +87,10 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   void flushDust();
   /// Message thread: the Dust moves the editor has not shown yet (flushDust first).
   std::vector<ParamUpdate> takeParamUpdates() { return std::exchange(paramUpdates_, {}); }
+  /// Message thread: Toggles the engine switched (particle and laser hits) since the last snapshot go into the patch,
+  /// so the host's project, a saved file and a share link keep them as they are, as v1's Toggle did; and they are
+  /// queued for the editor like Dust moves (CHG-0013).
+  void syncToggles(const Snapshot& s);
   /// Engine id → patch block id (message thread).
   const std::map<BlockId, std::string>& blockIds() const noexcept { return idToKey_; }
   /// Apply UI commands ([{type,id,blockType,x,y,param,value}]) to the engine and the patch model.
@@ -159,6 +163,7 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   std::array<std::atomic<double>, kDustSlots> dustValue_{};
   std::array<std::atomic<bool>, kDustSlots> dustMoved_{};
   std::vector<ParamUpdate> paramUpdates_;
+  std::map<BlockId, bool> togglesSeen_;  // each Toggle's state in the last snapshot (syncToggles)
   std::array<DustParameter*, kDustSlots> dustParams_{};
 
   nlohmann::json patch_;

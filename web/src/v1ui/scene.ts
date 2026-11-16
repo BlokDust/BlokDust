@@ -380,11 +380,14 @@ export class V1Scene {
     ctx.moveTo(rx + 5 * u, cy); ctx.lineTo(rx, cy - 5 * u); ctx.lineTo(rx - 5 * u, cy); ctx.lineTo(rx, cy + 5 * u); ctx.lineTo(rx + 5 * u, cy);
     ctx.stroke(); ctx.lineWidth = 1;
     ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-    const label = on ? 'POWER' : 'POWER OFF', base = App.Height - 50 * u;
+    const label = on ? 'POWER' : 'POWER OFF';
+    let base = App.Height - 50 * u;
     if (!on) {
-      const tw = ctx.measureText(label).width;
+      const m = ctx.measureText(label), boxY = base - 11 * u, boxH = 15 * u;
       App.FillColor(ctx, App.Palette[menu[3]]);
-      ctx.fillRect(x + w * 0.5 - tw * 0.5 - 6 * u, base - 11 * u, tw + 12 * u, 15 * u);
+      ctx.fillRect(x + w * 0.5 - m.width * 0.5 - 6 * u, boxY, m.width + 12 * u, boxH);
+      // The letters sit in the middle of the red (owner, 2026-11-13: they sat a pixel or two high).
+      base = boxY + boxH * 0.5 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) * 0.5;
     }
     App.FillColor(ctx, txt);
     ctx.fillText(label, x + w * 0.5, base);

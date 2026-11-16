@@ -62,6 +62,8 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     this.frame += n;
     for (const ev of this.engine.drainEvents()) {  // drain every quantum so the engine log never fills
       if (ev.type === EventType.Connect || ev.type === EventType.Disconnect) this.topologyDirty = true;
+      // A Toggle flipped by a hit: its new state goes with the event, so the patch the page saves keeps it (CHG-0013).
+      if (ev.type === EventType.Logic) ev.value = this.engine.param(ev.block, 0);
       if (UI_EVENTS.has(ev.type)) this.pending.push(ev);
     }
     if (++this.quanta % this.snapshotEvery === 0) this.postSnapshot();

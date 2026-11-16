@@ -177,6 +177,12 @@ BD_EXPORT(bd_pack_monitors) int bd_pack_monitors(Host* h) {
 BD_EXPORT(bd_monitors) float* bd_monitors(Host* h) { return h->monitorsOut; }
 /// 1 if an audio source is currently gated on (powered).
 BD_EXPORT(bd_block_gate) int bd_block_gate(Host* h, std::uint32_t id) { const Block* b = viewed(h).block(id); return b && b->gated() ? 1 : 0; }
+/// A block's current param value (0 if no such block or param): the UI reads state the engine changes itself, e.g. a
+/// Toggle's on/off after a particle hit (CHG-0013), so a saved or shared patch keeps it, as v1's did.
+BD_EXPORT(bd_block_param) double bd_block_param(Host* h, std::uint32_t id, int param) {
+  const Block* b = viewed(h).block(id);
+  return b && param >= 0 && static_cast<std::size_t>(param) < b->params.size() ? b->params[static_cast<std::size_t>(param)] : 0.0;
+}
 
 // Samples (CHG-0002 1.7): the host allocates buffers in WASM memory (bd_alloc), copies decoded audio in, attaches them.
 // fx.convolver's built-in impulse response, for the options panel's waveform (no engine needed).

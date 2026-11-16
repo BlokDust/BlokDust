@@ -23,6 +23,9 @@ struct Snapshot {
   std::array<float, 64 * 2> playheads{};
   int monitorCount = 0;                      // live panel readouts [blockId, v0, v1, v2, v3]* (Engine::monitors)
   std::array<float, 64 * 5> monitors{};
+  int toggleCount = 0;                       // every Toggle and whether it is on: hits flip them (CHG-0013)
+  std::array<std::uint32_t, kMaxBlocks> toggles{};
+  std::array<std::uint8_t, kMaxBlocks> toggleOn{};
 };
 
 class SnapshotBuffer {

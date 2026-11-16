@@ -17,6 +17,9 @@ export interface MidiDevice { id: string; name: string }
 export function attachNoteInputs(on: { key: (note: number, down: boolean) => void;
   /** Plugin: note keys are BlokDust's (not passed on to the DAW) while this returns true. */
   captureKeys?: () => boolean;
+  /** Standalone app: every plain key outside a text field is BlokDust's. The web view passes on any key the page
+   * doesn't cancel, and macOS answers a key nobody takes with its alert sound (owner, 2026-11-13). */
+  captureAll?: () => boolean;
   midi: (status: number, d1: number, d2: number, device: MidiDevice) => void; devices?: (list: MidiDevice[]) => void;
   /** Plugin: called with a function that ends every held note, for the editor's "keys lost" message. */
   onReleaseAll?: (releaseAll: () => void) => void }) {
@@ -25,18 +28,23 @@ export function attachNoteInputs(on: { key: (note: number, down: boolean) => voi
   const down = (e: KeyboardEvent) => {
     // Typing in a text field (Share title, sample search) is text, not notes: v1's TypingManager intent.
     const tag = (e.target as HTMLElement)?.tagName;
-    if (e.repeat || e.metaKey || e.ctrlKey || tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+    if (e.metaKey || e.ctrlKey || tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+    const n = V1_KEY_NOTES[e.code];
+    // A held key repeats: the repeats are cancelled like the first press, or each one is passed on (an alert sound each).
+    if (on.captureAll?.() || (n !== undefined && on.captureKeys?.())) e.preventDefault();
+    if (e.repeat) return;
     if (OCTAVE_UP.has(e.code)) { octave = Math.min(3, octave + 1); return; }
     if (OCTAVE_DOWN.has(e.code)) { octave = Math.max(-3, octave - 1); return; }
-    const n = V1_KEY_NOTES[e.code];
     if (n === undefined) return;
-    if (on.captureKeys?.()) e.preventDefault();
     const note = n + 12 * octave;
     held.set(e.code, note);
     on.key(note, true);
   };
   const up = (e: KeyboardEvent) => {
-    if (V1_KEY_NOTES[e.code] !== undefined && on.captureKeys?.()) e.preventDefault();
+    if (!e.metaKey && !e.ctrlKey && (on.captureAll?.() || (V1_KEY_NOTES[e.code] !== undefined && on.captureKeys?.()))) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag !== 'SELECT' && tag !== 'INPUT' && tag !== 'TEXTAREA' && !(e.target as HTMLElement)?.isContentEditable) e.preventDefault();
+    }
     const note = held.get(e.code);
     if (note === undefined) return;
     held.delete(e.code);

@@ -25,7 +25,7 @@
 ## Making patches
 - **Patch files:** save, open and insert `.blokdust` files. Insert adds a patch's blocks to the patch you have open.
 - **Built-In Presets** to start from, to open or insert: keyboard synths, a microphone reverb recorder, a rotating laser
-  sequence and a step sequencer.
+  sequence, a step sequencer and a self-playing scene of alternating chords.
 - **Multi-select:** Shift-drag, Shift-click, (or press, hold, then drag on mobile) to select several blocks. Then move, duplicate (Option/Alt) or delete
   them (Backspace/Delete, or drag them to the trash) together.
 - **Undo/Redo** for adding, duplicating, moving and deleting blocks (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z).

@@ -197,9 +197,28 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
   },
 
   /** Acceptance: Share → open in a fresh browser → identical render hash; Overwrite / Create new as v1. */
+  /** CHG-0013 (owner, 2026-11-13): the plugin's CREATE SHARE LINK opens `?c=p…&t=…&share=1` here; the page makes the
+   * link at once and the address bar shows the short server link, which opens the same patch. */
+  async 'share-from-app'(browser) {
+    const { deflateRawSync } = await import('node:zlib');
+    const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(PATCH))).toString('base64url');
+    const a = await open(browser, `${base}/?c=${token}&t=${encodeURIComponent('From the app')}&share=1`);
+    await a.waitForFunction(() => /[?&]c=(?!p)[0-9A-Za-z]{10}(&|$)/.test(location.search), null, { timeout: 30000 }).catch(() => {});
+    const url = a.url(), id = idOf(url);
+    check('share=1 → the address bar shows a server link', /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(id) && !/share=/.test(url) && /t=From/.test(url), url);
+    check('… with the Patches panel closed', !(await a.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Open)));
+    const edit = await a.evaluate(i => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i], id);
+    if (id && edit) created.push({ id, token: edit });
+    const got = await api('GET', `patches/${id}`);
+    check('… which holds the patch and its title', got.status === 200 && JSON.stringify(got.json?.patch?.blocks) === JSON.stringify(PATCH.blocks) && got.json?.title === 'From the app', got.json?.title);
+  },
   async 'share-and-load'(browser) {
     const a = await open(browser, `${base}/?demo`);
     await a.waitForTimeout(1000);
+    // The demo's Toggles flip as it plays, and a link keeps them as they are (CHG-0013): the power switch holds them
+    // still, so the patch shared is the one rendered here.
+    await a.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
+    await a.waitForTimeout(500);
     const hashA = await renderHash(a);
     // The share card uses the sharer's colour theme (SPEC-SHARING-BACKEND R9): share from a non-default one.
     const themeBg = await a.evaluate(() => { const s = (window as any).__bd_probe; s.scene.host.setTheme(3); return s.scene.host.themes()[3].colors[0] as string; });
@@ -209,11 +228,16 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     check('the address bar shows the saved link (v1 AddressBarManager)', a.url().includes(`c=${id}`), a.url());
     const token = await a.evaluate(i => JSON.parse(localStorage.getItem('blokdust2.editTokens') ?? '{}')[i], id);
     if (id && token) created.push({ id, token });
-    const b = await open(browser, local(url));
-    await b.waitForTimeout(1000);
+    // As opened, before START (playing, its Toggles flip too).
+    const b = await (await browser.newContext(VIEW)).newPage();
+    if (!remote) await b.context().route('https://cdn.freesound.org/**', r => r.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'access-control-allow-origin': '*' }, body: sineWav(440) }));
+    await b.goto(local(url)); await b.waitForFunction(() => (window as any).__bd_probe?.state.patch);
     const [pa, pb] = [await probe(a), await probe(b)];
     check('a fresh browser opens the same patch', JSON.stringify(pa.patch.blocks) === JSON.stringify(pb.patch.blocks) && pb.patch.blocks.length > 0, pb.patch.blocks.length);
     const hashB = await renderHash(b);
+    await b.click('#start');
+    await b.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 });
+    await b.waitForFunction(() => !document.getElementById('start'), null, { timeout: 20000 });
     check('… and renders it identically (offline render hash)', hashA.hash === hashB.hash && hashA.peak > 0.001, { a: hashA, b: hashB });
     check("the recipient can't overwrite (no edit token: v1 first-session panel)", await b.evaluate(() => !(window as any).__bd_probe.v1App.SessionId));
 

@@ -17,7 +17,7 @@ Patches need notes: what to press, what each part does.
 - A press on a label (its dot or its words) and a drag moves it, in half grid cells; onto the bin deletes it. A press
   without a drag edits the words in place (Enter or a click elsewhere keeps them; Escape does not; no words deletes
   it). Labels scale with the zoom, show in embeds, and never reach the engine.
-- Patch: optional `labels: [{id, text, x, y}]` (SPEC-PATCH-FORMAT-V2 R2b); older readers ignore it. Unsaved-changes
+- Patch: optional `labels: [{id, text, x, y}]` (SPEC-PATCH-FORMAT-V2 R2c); older readers ignore it. Unsaved-changes
   checks count them. The plugin's processor keeps them with the DAW project (`bd_labels`).
 
 ## Out of scope

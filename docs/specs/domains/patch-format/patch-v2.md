@@ -32,7 +32,11 @@ The single, portable representation of a BlokDust creation, used by the web app,
 - **R2a.** `view` is the view the patch was saved at (`x`, `y`: the stage offset in grid units; `zoom`). Saving
   (files, share links, the autosave, the plugin's DAW state) records it; opening shows it; Insert ignores it; the engine
   never reads it (owner, 2026-11-12, CHG-0010).
-- **R2b.** *(CHG-0020, UI-0011)* `labels` (optional) is a list of notes on the stage: `{ id, text, x, y }`, `x`/`y` in grid units (half cells allowed), `text` at most 200 characters. Readers that do not know it ignore it; the engine never reads it. Insert brings a patch's labels along, moved with its blocks.
+- **R2b.** Params hold a block's state as it is now, including state the engine changes by itself: a Toggle's `logic`
+  (on/off) follows its particle and laser hits, so a file, share link, autosave or DAW project reopens with each Toggle
+  as it was (v1's Toggle kept `Params.logic`). That change alone is not an unsaved edit (owner, 2026-11-13, CHG-0013;
+  test `toggle-state-saved`).
+- **R2c.** *(CHG-0020, UI-0011)* `labels` (optional) is a list of notes on the stage: `{ id, text, x, y }`, `x`/`y` in grid units (half cells allowed), `text` at most 200 characters. Readers that do not know it ignore it; the engine never reads it. Insert brings a patch's labels along, moved with its blocks.
 - **R3.** Block `type` MUST be a stable namespaced id from the manifests (`source.*`, `fx.*`, `power.*`, `input.*`). Params MUST be in real units declared by the manifest; unknown params are dropped with a warning; missing params take defaults.
 - **R3a.** *(CHG-0018, AUDIO-0003)* An LFO names what it moves in its `target` param, a string `"<block id>:<param key>"` (patch ids, so it survives renumbering; Insert rewrites it when a block's id changes). Loaders turn it into the engine's `targetBlock`/`targetParam` once every block is known; those two are session-only and MUST NOT be read from a patch. A target that cannot be resolved leaves the LFO idle.
 - **R4.** Connections MUST NOT be stored (SPEC-CONNECTIONS-PROXIMITY R7). Their order is: optional
@@ -52,7 +56,7 @@ The single, portable representation of a BlokDust creation, used by the web app,
 - **R6.** Serialized size MUST be <= 64 KB; typical patches are a few KB. Compressed patches <= ~2 KB SHOULD be shareable in a URL fragment (`#p=`).
 - **R6a.** `tempo` (BPM) is optional; it is written once the user sets one (SIMULATION-0003). In the plugin, the
   host's tempo overrides it.
-- **R7.** *(CHG-0021, SCOPE-0006)* `macros` (optional) holds what is inside each Stage block: `{ block, blocks, connectionOrder?, labels?, view? }`, where `block` is the Stage's patch id and the rest read as the same keys of a patch (R2a, R2b, R3, R4). Ids inside a macro are their own namespace; an LFO `target` (R3a) there names a block of the same macro. A macro whose `block` is not a `source.stage` in `blocks` is dropped; a `source.stage` inside a macro has no world (one level). Refs are patch-wide. Insert brings the macros of the Stages it adds.
+- **R7.** *(CHG-0021, SCOPE-0006)* `macros` (optional) holds what is inside each Stage block: `{ block, blocks, connectionOrder?, labels?, view? }`, where `block` is the Stage's patch id and the rest read as the same keys of a patch (R2a, R2b, R2c, R3, R4). Ids inside a macro are their own namespace; an LFO `target` (R3a) there names a block of the same macro. A macro whose `block` is not a `source.stage` in `blocks` is dropped; a `source.stage` inside a macro has no world (one level). Refs are patch-wide. Insert brings the macros of the Stages it adds.
 - **R8.** Migrations are pure functions `migrate_vN_to_vN+1`; the v1 importer is `import_v1` (DATA-0004).
 - **R9.** Serialization MUST be canonical (stable key order, ids sorted by z then id) so identical patches hash identically.
 - **R10.** Patch files (CHG-0005): a `.blokdust` file is a v2 patch as UTF-8 JSON, its title in `meta.title`. The
@@ -68,7 +72,8 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - OPEN lists the user's own patches above the built-in presets: in the plugin, the patches folder; on the web, the
     patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only.
   - The plugin's SAVE tab has SAVE TO COMPUTER, then CREATE SHARE LINK, which opens the public site with the patch in
-    the address (`?c=p…&t=<title>&share=1`); the site opens Patches on SAVE, ready to make the link there.
+    the address (`?c=p…&t=<title>&share=1`); the site makes the link as it loads (as SAVE would) and the address bar
+    shows it, short, to copy; START shows the scene (owner, 2026-11-13, CHG-0013; it used to open Patches on SAVE).
   - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is the OPEN tab's main (filled) button.
   - The web's SAVE tab is three buttons, no help lines (owner, 2026-11-11): SAVE · SAVE AS · DOWNLOAD PATCH.
     Share links (SPEC-SHARING-BACKEND): SAVE makes the link the first time; once the patch changes it puts the changes

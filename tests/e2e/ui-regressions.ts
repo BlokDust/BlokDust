@@ -1060,18 +1060,18 @@ Object.assign(tests, {
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
 /** The plugin page with a fake JUCE backend: the processor sends `patch`; what the page sends is recorded (__sent). */
-async function openPlugin(patch: unknown, errors: string[], ids?: Record<string, number>): Promise<{ pg: Page; close: () => Promise<void> }> {
+async function openPlugin(patch: unknown, errors: string[], ids?: Record<string, number>, standalone = false): Promise<{ pg: Page; close: () => Promise<void> }> {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-  await ctx.addInitScript(([p, ids]) => {
+  await ctx.addInitScript(([p, ids, standalone]) => {
     const listeners: Record<string, ((x: unknown) => void)[]> = {};
     const sent: { id: string; v: any }[] = [];
     (window as any).__sent = sent;
     (window as any).__fire = (id: string, v: unknown) => listeners[id]?.forEach(f => f(v));
     (window as any).__JUCE__ = { backend: {
       addEventListener: (id: string, fn: (x: unknown) => void) => { (listeners[id] ??= []).push(fn); },
-      emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify(p), ...(ids ? { ids } : {}) })), 50); },
+      emitEvent: (id: string, v: unknown) => { sent.push({ id, v }); if (id === 'bd_hello') setTimeout(() => listeners.bd_patch?.forEach(f => f({ patch: JSON.stringify(p), ...(ids ? { ids } : {}), ...(standalone ? { standalone } : {}) })), 50); },
     } };
-  }, [patch, ids] as const);
+  }, [patch, ids, standalone] as const);
   const pg = await ctx.newPage();
   pg.on('pageerror', e => errors.push(e.message));
   await pg.goto(`${url}/index.html`);
@@ -1260,19 +1260,23 @@ Object.assign(tests, {
     const p = await open(browser, [], errors);
     await openList(p);
     const items: string[] = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name));
-    const want: Record<string, number> = { 'Computer Keys + 2 Tones': 6, 'MIDI Keys + 2 Tones': 6, 'Microphone + Recorder': 5, 'Rotating Sequencer': 10, 'Step Sequencer': 21 };
+    const want: Record<string, number> = { 'Computer Keys + 2 Tones': 6, 'MIDI Keys + 2 Tones': 6, 'Microphone + Recorder': 5, 'Rotating Sequencer': 10, 'Step Sequencer': 21, 'Self Playing Scene': 29 };
+    const selfPlaying = new Set(['Rotating Sequencer', 'Step Sequencer', 'Self Playing Scene']);
     const got: Record<string, unknown> = {};
     for (let i = 0; i < items.length; i++) {
       if (i) await openList(p);
-      await patchesClick(p, `open${i}`, 400);  // a preset just opened is saved: no confirm
+      await rowButton(p, 'open', items[i], 400);  // a preset just opened is saved: no confirm
       const pb = (await state(p)).patch.blocks, blocks = pb.length;
       // Owner (PR #1 review, 2026-11-12): lasers and emitters are never self-powered; a Power block next to each runs it.
       if (pb.some((b: any) => /laser|emitter/.test(b.type) && b.params?.selfPoweredMode)) got[`${items[i]}: self-powered`] = true;
-      const plays = items[i] === 'Rotating Sequencer' || items[i] === 'Step Sequencer' ? await maxOver(p, 'rms', 3000) : null;
-      got[items[i]] = { blocks, ...(plays !== null ? { rms: plays } : {}) };
+      // CHG-0013: the owner's Self Playing Scene opens with its two Toggles opposite (they flip together: the chords take turns).
+      const toggles = pb.filter((b: any) => b.type === 'power.toggle').map((b: any) => !!b.params?.logic);
+      const plays = selfPlaying.has(items[i]) ? await maxOver(p, 'rms', 3000) : null;
+      got[items[i]] = { blocks, ...(plays !== null ? { rms: plays } : {}), ...(toggles.length ? { toggles } : {}) };
     }
     await p.close();
-    const ok = Object.entries(want).every(([n, k]) => (got[n] as any)?.blocks === k) && !Object.keys(got).some(k => k.endsWith('self-powered')) && (got['Rotating Sequencer'] as any).rms > 0.001 && (got['Step Sequencer'] as any).rms > 0.001;
+    const ok = Object.entries(want).every(([n, k]) => (got[n] as any)?.blocks === k) && !Object.keys(got).some(k => k.endsWith('self-powered'))
+      && [...selfPlaying].every(n => (got[n] as any)?.rms > 0.001) && (got['Self Playing Scene'] as any)?.toggles?.length === 2 && (got['Self Playing Scene'] as any).toggles[0] !== (got['Self Playing Scene'] as any).toggles[1];
     return [ok, got];
   },
 
@@ -1343,7 +1347,7 @@ Object.assign(tests, {
     const afterDrop = await count();
     await p.screenshot({ path: `${OUT}/patches-web-after.png` });
     await p.close();
-    const ok = tab === 0 && items.includes('MIDI Keys + 2 Tones') && items.length === 5 && !!title
+    const ok = tab === 0 && items.includes('MIDI Keys + 2 Tones') && items.length === 6 && !!title
       && mine?.name === title && /^Saved \d/.test(mine?.detail) && reopened.blocks === 1 && reopened.title === title
       && placing?.ids.length === 6 && placed.count === 7 && !placed.placing && Math.hypot(cx - 400, cy - 600) < 40
       && undone === 1 && escaped === 1
@@ -1430,29 +1434,37 @@ Object.assign(tests, {
     const presetView = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
     await p.close();
     const ok = listed[0] === 'Bass + Bells [bin]' && listed.slice(1).every((n: string) => !n.endsWith('[bin]')) && asked === 'remove' && kept === 'Bass + Bells' && words.title && words.line
-      && after.items.length === 5 && !after.items.includes('Bass + Bells') && after.stored === 0 && presetView === 'list';
+      && after.items.length === 6 && !after.items.includes('Bass + Bells') && after.stored === 0 && presetView === 'list';
     return [ok, { listed, asked, kept, words, after, presetView }];
   },
 
-  /** Owner (2026-11-10): the plugin's CREATE SHARE LINK opens the patch on the site (`?c=p…&t=…&share=1`); the page
-   * opens Patches on SAVE with the name filled in, one click from the link, and drops the flag from the address. */
+  /** The plugin's CREATE SHARE LINK opens the patch on the site (`?c=p…&t=…&share=1`). Owner (2026-11-13, CHG-0013):
+   * it opened the Patches panel at once, whose title showed over the start screen, and after START the panel was
+   * still in the way, one more click from the link. Now the site makes the link as it loads (the user asked for it in
+   * the app) and the address bar shows it (here, with no backend, the self-contained link); the start screen is the
+   * start screen alone, START shows the scene, and Patches › SAVE has the link and the name. */
   async 'share-from-plugin'(errors: string[]) {
     const { deflateRawSync } = await import('node:zlib');
     const patch = { format: 'blokdust.patch', version: 2, blocks: [{ id: 'a', type: 'source.tone', x: 0, y: 0, params: {} }, { id: 'b', type: 'power.emitter', x: -60, y: 0, params: {} }] };
     const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(patch))).toString('base64url');
     const p = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
     p.on('pageerror', e => errors.push(e.message));
-    await p.goto(`${url}/index.html?c=${token}&t=${encodeURIComponent('Bass + Bells')}&share=1`);
-    await p.waitForFunction(() => (window as any).__bd_probe);
-    await p.click('#start'); await p.waitForTimeout(1500);
+    await p.goto(`${url}/index.html?splash=1&c=${token}&t=${encodeURIComponent('Bass + Bells')}&share=1`);
+    await p.waitForFunction(() => (window as any).__bd_probe); await p.waitForTimeout(1500);
+    const before = await p.evaluate(() => ({ panel: (window as any).__bd_probe.scene.PatchesPanel.Open, link: !!(window as any).__bd_probe.scene.host.links.current() }));
+    await p.screenshot({ path: `${OUT}/share-from-plugin-start.png` });
+    await p.mouse.click(640, 400);
+    await p.waitForFunction(() => !document.getElementById('start'), null, { timeout: 10000 }).catch(() => {});
+    await p.waitForTimeout(1000);
     const r = await p.evaluate(() => {
-      const pp = (window as any).__bd_probe.scene.PatchesPanel;
-      return { open: pp.Open, tab: pp.Tab, title: pp.Title, blocks: (window as any).__bd_probe.state.blocks.length, search: location.search, state: pp.shareState() };
+      const pp = (window as any).__bd_probe.scene.PatchesPanel, link = (window as any).__bd_probe.scene.host.links.current();
+      return { open: pp.Open, title: pp.Title, blocks: (window as any).__bd_probe.state.blocks.length, search: location.search, link: link?.url ?? null, stale: link?.stale, state: pp.shareState() };
     });
     await p.screenshot({ path: `${OUT}/share-from-plugin.png` });
     await p.close();
-    const ok = r.open && r.tab === 0 && r.title === 'Bass + Bells' && r.blocks === 2 && !/share=/.test(r.search) && r.search.includes('c=p') && r.state.save === 'make';
-    return [ok, r];
+    const ok = !before.panel && !r.open && r.title === 'Bass + Bells' && r.blocks === 2 && !/share=/.test(r.search) && r.search.includes('c=p')
+      && !!r.link && r.link.endsWith(r.search) && r.stale === false && r.state.save !== 'make';
+    return [ok, { before, ...r, link: r.link?.slice(0, 60) }];
   },
 
   /** Owner (2026-11-10): Patches opens on the tab last chosen, also after a reload; OPEN FROM YOUR DEVICE is the OPEN
@@ -1961,6 +1973,76 @@ Object.assign(tests, {
     return [ok, { before, off, particles, label, held, back, on }];
   },
 
+  /** Owner (2026-11-13, CHG-0013): POWER OFF sat high in its red box. The letters are centred in it: the red above
+   * and below them differs by at most one device pixel (at 1× and 2×). */
+  async 'power-off-label-centred'(errors: string[]) {
+    const { PNG } = await import('pngjs');
+    const measure = async (dpr: number) => {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: dpr });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', -3, 3)])}`);
+      await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
+      await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
+      const want = await p.evaluate(() => { const a = (window as any).__bd_probe.v1App, w = document.createElement('canvas').getContext('2d')!; w.fillStyle = a.Palette[a.ThemeManager.MenuOrder[3]]; w.fillRect(0, 0, 1, 1); return [...w.getImageData(0, 0, 1, 1).data.slice(0, 3)]; });
+      await p.mouse.move(640, 300); await p.waitForTimeout(500);
+      const png = PNG.sync.read(await p.screenshot({ clip: { x: 560, y: 690, width: 160, height: 60 } }));
+      await p.screenshot({ path: `${OUT}/power-off-label-${dpr}x.png`, clip: { x: 560, y: 690, width: 160, height: 60 } });
+      await ctx.close();
+      // The red box: rows whose middle column is the box's red; the text: non-red pixels inside the box's columns.
+      const px = (x: number, y: number) => { const i = (y * png.width + x) * 4; return [png.data[i], png.data[i + 1], png.data[i + 2]]; };
+      const isRed = (c: number[]) => c.every((v, i) => Math.abs(v - want[i]) < 4);
+      let left = -1, right = -1, top = -1, bottom = -1;
+      for (let y = 0; y < png.height && top < 0; y++) for (let x = 0; x < png.width; x++) if (isRed(px(x, y))) { top = y; break; }
+      if (top < 0) return null;
+      for (let x = 0; x < png.width; x++) if (isRed(px(x, top))) { if (left < 0) left = x; right = x; }
+      bottom = top; while (bottom + 1 < png.height && isRed(px(left, bottom + 1))) bottom++;
+      let tTop = -1, tBottom = -1;
+      // Text: the letters' solid pixels (cream: high green), not their anti-aliased edges.
+      for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) if (px(x, y)[1] > 150) { if (tTop < 0) tTop = y; tBottom = y; break; }
+      return { box: [top, bottom], text: [tTop, tBottom], above: tTop - top, below: bottom - tBottom };
+    };
+    const r1 = await measure(1), r2 = await measure(2);
+    const ok = !!r1 && !!r2 && Math.abs(r1.above - r1.below) <= 1 && Math.abs(r2.above - r2.below) <= 1;
+    return [ok, { '1x': r1, '2x': r2 }];
+  },
+
+  /** Owner (2026-11-13, CHG-0013): a scene with two Toggles set opposite (one on, one off), saved as a share link,
+   * reopened with both the same. The engine flips a Toggle when a particle hits it, but the page's patch never heard,
+   * so it saved whatever was set by hand. Now the patch follows the engine (as v1's Toggle kept Params.logic): it
+   * changes with each hit, the autosave keeps it, and it doesn't count as an unsaved change. */
+  async 'toggle-state-saved'(errors: string[]) {
+    const patch = { format: 'blokdust.patch', version: 2, seed: 7, blocks: [
+      { id: 'e1', type: 'power.emitter', x: -10, y: 0, params: { angle: 0, selfPoweredMode: true, rate: 60 } },
+      { id: 'on', type: 'power.toggle', x: 0, y: 0, params: { logic: true } },
+      { id: 'pad', type: 'source.tone', x: 0, y: 5, params: { waveform: 3, transpose: -12 } },
+      { id: 'off', type: 'power.toggle', x: 0, y: -12, params: {} } ] };
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await ctx.addInitScript(pt => { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('blokdust2.autosave', pt); } }, JSON.stringify(patch));
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start');
+    const logic = (id: string) => p.evaluate(i => (window as any).__bd_probe.state.patch.blocks.find((b: any) => b.id === i).params.logic, id);
+    const seen = new Set<string>();
+    for (let t = 0; t < 6000 && seen.size < 2; t += 100) { seen.add(String(!!(await logic('on')))); await p.waitForTimeout(100); }
+    // Freeze the world, then the patch, the panel's switch, the autosave and a reload all agree.
+    await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));
+    await p.waitForTimeout(1600);
+    const now = !!(await logic('on')), other = !!(await logic('off'));
+    const saved = await p.evaluate(() => JSON.parse(localStorage.getItem('blokdust2.autosave')!).blocks.find((b: any) => b.id === 'on').params.logic);
+    await p.reload(); await p.waitForFunction(() => (window as any).__bd_probe?.state.patch);
+    const reopened = !!(await logic('on'));  // before START: as saved
+    await ctx.close();
+    // Opened from a link (counted as saved), the flips are not unsaved changes.
+    const { deflateRawSync } = await import('node:zlib');
+    const token = 'p' + deflateRawSync(Buffer.from(JSON.stringify(patch))).toString('base64url');
+    const q = await browser.newPage({ viewport: { width: 1280, height: 800 } }); q.on('pageerror', e => errors.push(e.message));
+    await q.goto(`${url}/index.html?c=${token}`); await q.waitForFunction(() => (window as any).__bd_probe); await q.click('#start');
+    await q.waitForFunction(() => !(window as any).__bd_probe.state.patch.blocks.find((b: any) => b.id === 'on').params.logic, null, { timeout: 6000 }).catch(() => {});
+    const dirty = await q.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.host.isDirty());
+    await q.close();
+    const r = { seen: [...seen], now, other, saved, reopened, dirty };
+    return [seen.size === 2 && !!saved === now && reopened === now && other === false && dirty === false, r];
+  },
+
   /** Owner (2026-11-11): a trackpad pinch zooms smoothly about the pointer, as a pinch on a touch screen does. Chrome
    * and Firefox send it as wheel events with ctrlKey (CDP modifiers 2); Safari as gesture events. (A plain wheel zooms
    * too since CHG-0010: mouse-wheel-zoom.) */
@@ -2201,6 +2283,32 @@ Object.assign(tests, {
     const without = await probe(b.pg);
     await b.close();
     return [withKeyboard && !without, { preventedWithKeyboard: withKeyboard, preventedWithout: without }];
+  },
+
+  /** Owner (2026-11-13, CHG-0013): holding a key in the standalone app made macOS's "no one took that key" sound over
+   * and over. The web view passes on every key the page doesn't cancel, and the page let key repeats through. Now a
+   * note key's repeats are the page's too, and in the standalone app (no DAW to pass keys to) every plain key outside
+   * a text field is; Cmd/Ctrl shortcuts still reach the menus. In a DAW, keys BlokDust doesn't use still reach it. */
+  async 'plugin-key-repeat-no-beep'(errors: string[]) {
+    const press = (pg: Page, code: string, key: string, more: KeyboardEventInit = {}) => pg.evaluate(([c, k, m]) => {
+      const e = new KeyboardEvent('keydown', { code: c, key: k, bubbles: true, cancelable: true, ...m });
+      document.body.dispatchEvent(e);
+      document.body.dispatchEvent(new KeyboardEvent('keyup', { code: c, key: k, bubbles: true, cancelable: true }));
+      return e.defaultPrevented;
+    }, [code, key, more] as const);
+    const kb = [{ id: 'k', type: 'input.computer-keyboard', x: -3, y: 0 }, { id: 't', type: 'source.tone', x: 0, y: 0 }];
+    const daw = await openPlugin(plugPatch(kb), errors);
+    const dawRepeat = await press(daw.pg, 'KeyZ', 'z', { repeat: true });
+    await daw.close();
+    const dawBare = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors);
+    const dawOther = await press(dawBare.pg, 'KeyA', 'a');
+    await dawBare.close();
+    const app = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors, undefined, true);
+    const appLetter = await press(app.pg, 'KeyA', 'a'), appRepeat = await press(app.pg, 'KeyA', 'a', { repeat: true });
+    const appArrow = await press(app.pg, 'ArrowUp', 'ArrowUp', { repeat: true }), appCmd = await press(app.pg, 'KeyQ', 'q', { metaKey: true });
+    await app.close();
+    const r = { dawRepeat, dawOther, appLetter, appRepeat, appArrow, appCmd };
+    return [dawRepeat && !dawOther && appLetter && appRepeat && appArrow && !appCmd, r];
   },
 
   /** Plugin (Logic): the Convolver's panel waveform shows the spinning square while the processor loads its sound. */

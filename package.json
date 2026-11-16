@@ -1,7 +1,7 @@
 {
   "name": "blokdust",
   "private": true,
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "BlokDust 2: a visual, physics-driven music playground for web, VST3, AU and standalone.",
   "license": "AGPL-3.0-or-later",
   "type": "module",
