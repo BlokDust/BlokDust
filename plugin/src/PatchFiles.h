@@ -7,8 +7,16 @@
 
 namespace blokdust::plugin::patchfiles {
 
-/// ~/Music/BlokDust/Patches (created on first use).
+/// BlokDust's own folder: ~/Music/BlokDust on desktop. On iPad (CHG-0025 task 5) the App Group container shared by the
+/// app and the AUv3 extension (BLOKDUST_APP_GROUP), so a patch saved in AUM shows in the app; the app's Documents if
+/// the group is missing (an unsigned build). Created on first use.
+juce::File root();
+/// Where root() is: "music folder", "app group" or "documents (no app group)", for logs and tests.
+const char* rootKind();
+/// root()/Patches (created on first use).
 juce::File folder();
+/// A patch's bin: to the Trash on desktop; deleted outright on iPad (no Trash there).
+bool remove(const juce::File& f);
 /// The folder's `.blokdust` files, newest first: [{name, path, modified (ms since epoch)}].
 nlohmann::json list(const juce::File& dir);
 /// A title → a safe file name (no path or reserved characters, never empty).

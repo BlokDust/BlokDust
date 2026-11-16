@@ -6,7 +6,8 @@
 //                              round-trip, and the editor's page must report bd_ready with the patch's blocks.
 //                              First the app itself (task 4): installed fresh, it must start output-only audio with no
 //                              microphone entry, show the first-launch patch, save it when sent to the background, and
-//                              restore it on the next launch.
+//                              restore it on the next launch. A patch put in the App Group's Patches folder must be
+//                              seen by both the app and the extension (task 5: one folder shared by both).
 //   --no-build                 test the existing build
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
 import { spawnSync } from 'node:child_process';
@@ -23,6 +24,8 @@ const COMPONENT = 'aumu,Bdst,Bldt';
 const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];  // as `bd plugin test`
 const OUT = '.cache/ios-host';
 const APP_ID = 'com.funputs.blokdust';
+const APP_GROUP = 'group.com.funputs.blokdust';  // plugin/CMakeLists.txt BLOKDUST_APP_GROUP
+const SHARED = /storage: app group, 1 patches/;
 const FIRST_PATCH = 'web/src/patch/presets/04-rotating-sequencer.blokdust';  // the app's first launch (PluginProcessor.cpp)
 
 const run = (cmd: string, args: string[], quiet = false) =>
@@ -108,9 +111,10 @@ function appCheck(udid: string) {
   const readyAgain = Number(/page: ready, (-?\d+) blocks/.exec(log3)?.[1] ?? -1);
   run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
 
-  const ok = noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
+  const sharedFolder = SHARED.test(log1);
+  const ok = sharedFolder && noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
     && readyAgain === firstBlocks;
-  return { ok, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
+  return { ok, sharedFolder, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
     ready, expectedBlocks: firstBlocks, saved, restored, readyAfterRelaunch: readyAgain, screenshot: shot };
 }
 
@@ -124,6 +128,11 @@ export function iosTest(noBuild: boolean): void {
   must(run('xcrun', ['simctl', 'install', sim.udid, APP], true), 'install BlokDust.app');
   must(run('xcrun', ['simctl', 'install', sim.udid, HOST_APP], true), 'install test host');
   mkdirSync(OUT, { recursive: true });
+  // One patch in the shared folder: the app and the extension both count it (their "storage:" log line).
+  const group = must(run('xcrun', ['simctl', 'get_app_container', sim.udid, APP_ID, APP_GROUP], true), 'App Group container').stdout.trim();
+  rmSync(resolve(group, 'BlokDust/Patches'), { recursive: true, force: true });
+  mkdirSync(resolve(group, 'BlokDust/Patches'), { recursive: true });
+  cpSync(FIRST_PATCH, resolve(group, 'BlokDust/Patches/Shared Test.blokdust'));
   const app = appCheck(sim.udid);
 
   const out = resolve(OUT, 'result.json');
@@ -144,15 +153,16 @@ export function iosTest(noBuild: boolean): void {
     '--predicate', 'subsystem == "com.funputs.blokdust"'], true).stdout;
   const ready = [...log.matchAll(/page: ready, (-?\d+) blocks/g)].map(m => Number(m[1]));
   const wrapper = /processor created \((AUv3)/.exec(log)?.[1] ?? null;
+  const extensionSharedFolder = SHARED.test(log);
 
   const renders = (result.renders as { fixture: string; audioHash?: string; error?: string; stateRoundTrips?: boolean }[]).map((r, i) => {
     const expected = JSON.parse(readFileSync(FIXTURES[i].replace('tests/golden/', 'tests/golden/expected/'), 'utf8')).audioHash;
     return { fixture: FIXTURES[i], audioHash: r.audioHash ?? null, expected, identical: r.audioHash === expected, stateRoundTrips: !!r.stateRoundTrips, error: r.error };
   });
   const lastBlocks = JSON.parse(readFileSync(FIXTURES[FIXTURES.length - 1], 'utf8')).patch.blocks.length;
-  const editor = { view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot };
+  const editor = { sharedFolder: extensionSharedFolder, view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot };
   const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips)
-    && editor.view && editor.ready === lastBlocks;
+    && editor.sharedFolder && editor.view && editor.ready === lastBlocks;
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
     error: result.error, app, renders, editor }));
   if (!ok) process.exit(1);

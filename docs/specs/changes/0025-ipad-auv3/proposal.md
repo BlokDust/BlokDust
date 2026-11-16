@@ -24,7 +24,8 @@ build, the iPad-specific native pieces, and the tools that prove it works.
 2. **Same plugin, same behaviour:** the AUv3 is the same processor and WebView editor as VST3/AU: patch state in the
    host project, Dust 1–8 parameters (PLUGIN-0003), MIDI and MPE in (PLUGIN-0004), host tempo and transport.
 3. **iPad native pieces** (`plugin/src`, `#if` iOS only): no AppKit (key-up forwarding and drop routing are no-ops);
-   patches in a folder shared by the app and the extension (App Group), visible in the Files app; Open/Save/samples
+   patches in a folder shared by the app and the extension (App Group; not browsable in the Files app, so Files is
+   reached through the picker); Open/Save/samples
    through the iPadOS document picker, with picked audio copied into the app's container (local only, DATA-0005);
    delete moves nothing to a Trash that iPadOS lacks; links open only where iPadOS allows (not from an extension).
 4. **BlokDust FX** as a second AUv3 extension in the same app (PLUGIN-0002), so one App Store product holds both.

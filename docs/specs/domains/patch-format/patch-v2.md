@@ -83,12 +83,16 @@ The single, portable representation of a BlokDust creation, used by the web app,
     PATCH has black text on v1's third options-panel colour (Mode Stereo's green), or, in palettes where black on that
     is under WCAG 4.5:1, the options colour most readable with black (test `download-colour`, all 13 palettes).
   - The user's own patches in OPEN have a bin (asks "Delete <name>?" first): the web takes the patch off this browser's
-    list (files on the device and links are untouched); the plugin moves the file to the Trash.
+    list (files on the device and links are untouched); the plugin moves the file to the Trash (iPad: deletes it, as
+    iPadOS has no Trash).
   - Samples stay references (R5): a `file` ref the machine can't find shows as missing and is relinked by dropping a
     file on the block or with LOCATE FILE.
   - SAVE TO COMPUTER (the web's DOWNLOAD PATCH) lets the user choose where: the plugin's save dialog starts in `~/Music/BlokDust/Patches`; on the
     web the browser's save dialog where there is one (starting in Music, then the folder last used for patches), else a
     download. Patch names may use any characters; the file name drops only those a file system can't hold.
+  - iPad (CHG-0025): the patches folder is `BlokDust/Patches` in an App Group shared by the app and its AUv3, so both
+    list the same patches. SAVE TO COMPUTER exports a copy through the document picker (to Files, iCloud Drive or
+    another app's folder), and FROM YOUR COMPUTER opens a file picked there.
   - Built-in presets ship as `.blokdust` files (`web/src/patch/presets/`).
 
 ## Verification

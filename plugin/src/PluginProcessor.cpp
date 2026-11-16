@@ -31,6 +31,10 @@ juce::AudioProcessor::BusesProperties BlokDustProcessor::buses() {
 BlokDustProcessor::BlokDustProcessor() : AudioProcessor(buses()) {
   systemLog(juce::String(kFx ? "fx" : "instrument") + ": processor created (" + getWrapperTypeDescription(wrapperType) + ", "
             + juce::String(getTotalNumInputChannels()) + " in / " + juce::String(getTotalNumOutputChannels()) + " out)");
+#if JUCE_IOS
+  // Where patches live on iPad, and how many: the Simulator test checks the app and the extension share them.
+  systemLog(juce::String("storage: ") + patchfiles::rootKind() + ", " + juce::String(patchfiles::list(patchfiles::folder()).size()) + " patches");
+#endif
   recDrain_.f = [this] { drainRecording(); };
   patch_ = kFx ? nlohmann::json::parse(BinaryData::fx_patch_json, BinaryData::fx_patch_json + BinaryData::fx_patch_jsonSize)
                : nlohmann::json::parse(BinaryData::pluginstart_patch_json, BinaryData::pluginstart_patch_json + BinaryData::pluginstart_patch_jsonSize);
@@ -625,7 +629,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new blokdust::
 namespace blokdust::plugin {
 namespace {
 juce::File blokdustFolder(const char* sub) {
-  auto dir = juce::File::getSpecialLocation(juce::File::userMusicDirectory).getChildFile("BlokDust").getChildFile(sub);
+  auto dir = patchfiles::root().getChildFile(sub);  // ~/Music/BlokDust, or the App Group on iPad
   dir.createDirectory();
   return dir;
 }

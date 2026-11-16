@@ -6,6 +6,9 @@ FetchContent_Declare(JUCE GIT_REPOSITORY https://github.com/juce-framework/JUCE.
 FetchContent_MakeAvailable(JUCE)
 
 set(BLOKDUST_WEB_DIST "${CMAKE_SOURCE_DIR}/web/dist")
+# iPad: the App Group the app and its AUv3 extension share (CHG-0025 task 5). Registered in the owner's Apple Developer
+# team for device builds; the Simulator does not check it.
+set(BLOKDUST_APP_GROUP "group.com.funputs.blokdust")
 if(NOT EXISTS "${BLOKDUST_WEB_DIST}/index.html")
   message(FATAL_ERROR "web/dist missing: run `pnpm web:build` before building the plugin")
 endif()
@@ -40,8 +43,10 @@ function(blokdust_plugin target)
   string(TOLOWER "com.funputs.${target}" bundle_id)
   if(IOS)
     set(mic FALSE)
+    set(app_groups TRUE)
   else()
     set(mic TRUE)
+    set(app_groups FALSE)
   endif()
   juce_add_plugin(${target}
     PRODUCT_NAME "${ARG_PRODUCT}"
@@ -76,7 +81,13 @@ function(blokdust_plugin target)
     STATUS_BAR_HIDDEN TRUE
     FILE_SHARING_ENABLED TRUE
     DOCUMENT_BROWSER_ENABLED TRUE
-    LAUNCH_STORYBOARD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ios/LaunchScreen.storyboard")
+    LAUNCH_STORYBOARD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ios/LaunchScreen.storyboard"
+    # Patches, recordings and SampleGen audio shared by the app and the AUv3 (CHG-0025 task 5; PatchFiles.h).
+    APP_GROUPS_ENABLED ${app_groups}
+    APP_GROUP_IDS ${BLOKDUST_APP_GROUP})
+  if(IOS)
+    target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}")
+  endif()
   target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp)
   if(APPLE)
     target_sources(${target} PRIVATE src/WebViewDrops.mm)

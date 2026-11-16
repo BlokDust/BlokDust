@@ -93,6 +93,20 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_patchSave", [this](const juce::var& v) {
                  const auto title = v.getProperty("title", "").toString();
                  const int req = static_cast<int>(v.getProperty("req", 0));
+#if JUCE_IOS
+                 // iPad (CHG-0025 task 5): the document picker exports a copy of a file we write first (to Files, iCloud
+                 // Drive, another app's folder). The picker's URL is all we learn of where it went.
+                 const auto tmp = patchfiles::saveTo(juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile(patchfiles::safeName(title) + ".blokdust"),
+                                                     title, nlohmann::json::parse(proc_.patchJson()));
+                 patchChooser_ = std::make_unique<juce::FileChooser>("Save a BlokDust patch", tmp, "*.blokdust");
+                 patchChooser_->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles, [this, req, tmp](const juce::FileChooser& fc) {
+                   const auto url = fc.getURLResult();
+                   tmp.deleteFile();
+                   auto r = nlohmann::json{{"req", req}, {"ok", !url.isEmpty()}, {"path", url.toString(false).toStdString()}};
+                   web_.emitEventIfBrowserIsVisible("bd_patchSaved", juce::JSON::parse(juce::String(r.dump())));
+                 });
+                 return;
+#endif
                  patchChooser_ = std::make_unique<juce::FileChooser>("Save a BlokDust patch", patchfiles::folder().getChildFile(patchfiles::safeName(title) + ".blokdust"), "*.blokdust");
                  patchChooser_->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles | juce::FileBrowserComponent::warnAboutOverwriting,
                    [this, title, req](const juce::FileChooser& fc) {
@@ -110,17 +124,27 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withEventListener("bd_patchPick", [this](const juce::var&) {
                  patchChooser_ = std::make_unique<juce::FileChooser>("Choose a BlokDust patch", patchfiles::folder(), "*.blokdust;*.json");
                  patchChooser_->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this](const juce::FileChooser& fc) {
+#if JUCE_IOS
+                   // iPad: a document-picker URL outside our sandbox; JUCE's stream holds its security-scoped access.
+                   if (const auto url = fc.getURLResult(); !url.isEmpty())
+                     if (auto in = url.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress))) {
+                       const auto name = juce::URL::removeEscapeChars(url.getFileName());
+                       sendPatchText(in->readEntireStreamAsString(), name.upToLastOccurrenceOf(".", false, false), name, "choose", -1);
+                     }
+#else
                    if (const auto f = fc.getResult(); f.existsAsFile()) sendPatchFile(f, "choose", -1);
+#endif
                  });
                })
                .withEventListener("bd_patchApply", [this](const juce::var& v) {
                  try { proc_.applyPatch(nlohmann::json::parse(v.getProperty("patch", "{}").toString().toStdString()), v.getProperty("mode", "") == "open"); }
                  catch (const std::exception& e) { DBG("BlokDust: bad patch: " << e.what()); }
                })
-               // A patch's bin (OPEN tab): the file goes to the Trash, not deleted outright. Only files in the patches folder.
+               // A patch's bin (OPEN tab): the file goes to the Trash, not deleted outright (iPad has no Trash: deleted). Only
+               // files in the patches folder.
                .withEventListener("bd_patchDelete", [this](const juce::var& v) {
                  const juce::File f(v.getProperty("path", "").toString());
-                 const bool ok = f.existsAsFile() && f.isAChildOf(patchfiles::folder()) && f.hasFileExtension("blokdust") && f.moveToTrash();
+                 const bool ok = f.existsAsFile() && f.isAChildOf(patchfiles::folder()) && f.hasFileExtension("blokdust") && patchfiles::remove(f);
                  auto r = nlohmann::json{{"req", static_cast<int>(v.getProperty("req", 0))}, {"ok", ok}};
                  web_.emitEventIfBrowserIsVisible("bd_patchDeleted", juce::JSON::parse(juce::String(r.dump())));
                })
@@ -155,11 +179,15 @@ void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {
 
 void BlokDustEditor::sendPatchFile(const juce::File& f, const juce::String& mode, int req) {
   if (!f.existsAsFile()) return;
+  sendPatchText(f.loadFileAsString(), f.getFileNameWithoutExtension(), f.getFileName(), mode, req);
+}
+
+void BlokDustEditor::sendPatchText(const juce::String& text, const juce::String& name, const juce::String& file, const juce::String& mode, int req) {
   auto* obj = new juce::DynamicObject();
   if (req >= 0) obj->setProperty("req", req);
-  obj->setProperty("text", f.loadFileAsString());
-  obj->setProperty("name", f.getFileNameWithoutExtension());
-  obj->setProperty("file", f.getFileName());
+  obj->setProperty("text", text);
+  obj->setProperty("name", name);
+  obj->setProperty("file", file);
   obj->setProperty("mode", mode);
   web_.emitEventIfBrowserIsVisible("bd_patchFile", juce::var(obj));
 }

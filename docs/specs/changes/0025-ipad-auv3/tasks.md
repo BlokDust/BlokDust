@@ -18,8 +18,14 @@ Check items off as they land. Each task should be independently verifiable.
       `NSMicrophoneUsageDescription` on iPad (app or extension); Audio In is silent in the app. `bd plugin ios test`
       checks it on a fresh install: Playback session, sound at the output, first-launch patch (10 blocks), saved in the
       background and restored on relaunch. Left for task 8: the status bar still shows; the editor's resize corner.
-- [ ] 5. Patches on iPad: App Group container shared by app and extension; Files app visibility; Save/Open through the
+- [x] 5. Patches on iPad: App Group container shared by app and extension; Files app visibility; Save/Open through the
       document picker; Delete without a Trash.
+      2026-11-16: `group.com.funputs.blokdust` (`BLOKDUST_APP_GROUP`) holds BlokDust/{Patches,Recordings,SampleGen}
+      (`patchfiles::root()`); the app's Documents if the group is missing. The App Group is not browsable in the Files
+      app, so Files is reached through the picker: SAVE TO COMPUTER exports a copy, FROM YOUR COMPUTER reads the picked
+      file; the bin deletes outright. `bd plugin ios test` puts a patch in the group and both the app and the extension
+      must list it. Not automated: the picker flows themselves (check on the iPad, task 11). Device builds need the
+      group registered in the owner's team (task 10).
 - [ ] 6. Samples on iPad: document picker, security-scoped access, copy into the container, relink by name.
 - [ ] 7. Links: `bd_openUrl` in the extension (no `openURL` from extensions): hide or replace those buttons in the
       iPad plugin page.
