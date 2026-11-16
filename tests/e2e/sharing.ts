@@ -3,6 +3,7 @@
 //   siteverify (tests/e2e/mock-services.ts), so every run is the same.
 //   --remote <url>: the same flow against a deployed Worker (`pnpm bd server smoke`): real Turnstile and Freesound;
 //   checks that need the mocks are skipped there, and patches it creates are deleted at the end.
+import { inflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Frame, type Page } from 'playwright';
 import { startLocal, type LocalServer } from '../../tools/server/lib.ts';
@@ -200,6 +201,8 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     const a = await open(browser, `${base}/?demo`);
     await a.waitForTimeout(1000);
     const hashA = await renderHash(a);
+    // The share card uses the sharer's colour theme (SPEC-SHARING-BACKEND R9): share from a non-default one.
+    const themeBg = await a.evaluate(() => { const s = (window as any).__bd_probe; s.scene.host.setTheme(3); return s.scene.host.themes()[3].colors[0] as string; });
     const url = await shareVia(a, 'generate');
     const id = idOf(url);
     check('generate link → a server id (not a patch token)', /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(id), url);
@@ -264,6 +267,9 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     const html = await (await fetch(`${base}/?c=${id}`)).text();
     const meta = (p: string) => html.match(new RegExp(`<meta (?:property|name)="${p}" content="([^"]*)"`))?.[1] ?? null;
     check('share page: Open Graph + twitter tags', !!meta('og:title') && !!meta('og:image') && meta('twitter:card') === 'player' && !!meta('twitter:player'), { title: meta('og:title'), image: meta('og:image') });
+    const saved = (await api('GET', `patches/${id}`)).json?.title ?? null;
+    check('share page: og:title is the patch title alone, og:description says what BlokDust is (SPEC-SHARING-BACKEND R9)',
+      meta('og:title') === (saved || 'BlokDust') && /^Connect blocks to make sounds/.test(meta('og:description') ?? ''), { title: meta('og:title'), saved, description: meta('og:description') });
     check('share page: oEmbed discovery link', /type="application\/json\+oembed"/.test(html));
     const img = await fetch(local(meta('og:image')!.replace(/&amp;/g, '&')));
     const png = new Uint8Array(await img.arrayBuffer());
@@ -272,6 +278,12 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     const dims = png.length > 24 ? [dv.getUint32(16), dv.getUint32(20)] : null;
     check('og:image is the saved PNG thumbnail (1200×630)', img.headers.get('content-type') === 'image/png' && dims?.[0] === 1200 && dims?.[1] === 630,
       { status: img.status, bytes: png.length, dims, url: meta('og:image') });
+    // Pixel (0,0) of a PNG is its first row's first bytes whatever the row filter (every predictor is 0 there).
+    let off = 8; const idat: Uint8Array[] = [];
+    while (off < png.length) { const n = dv.getUint32(off), t = String.fromCharCode(...png.subarray(off + 4, off + 8)); if (t === 'IDAT') idat.push(png.subarray(off + 8, off + 8 + n)); off += 12 + n; }
+    const raw = inflateSync(Buffer.concat(idat));
+    const corner = '#' + [raw[1], raw[2], raw[3]].map(v => v.toString(16).padStart(2, '0')).join('');
+    check("og:image is drawn in the sharer's colour theme (theme 3's background)", [raw[1], raw[2], raw[3]].join() === themeBg.match(/\d+/g)!.slice(0, 3).join(), { corner, themeBg });
     const oe = await (await fetch(`${base}/oembed?url=${encodeURIComponent(`${base}/?c=${id}`)}&maxwidth=480`)).json() as any;
     check('/oembed: rich JSON with an iframe to /embed/<id>, maxwidth respected', oe.type === 'rich' && oe.version === '1.0' && oe.width === 480 && oe.height === 300 && new RegExp(`/embed/${id}"`).test(oe.html), oe);
     check('/oembed: other sites → 404', (await fetch(`${base}/oembed?url=${encodeURIComponent('https://example.com/?c=' + id)}`)).status === 404);

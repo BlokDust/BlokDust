@@ -211,9 +211,10 @@ export class Stage {
   }
   /**
    * A link-preview image of the stage (SHARING-0002): blocks, lines and particles without the UI, cropped around the
-   * blocks to the output's aspect ratio and scaled to width × height. Canvas renderer only.
+   * blocks to the output's aspect ratio and scaled to width × height. Canvas renderer only. With `caption`, the share
+   * card (SPEC-SHARING-BACKEND R9): "TITLE — BY AUTHOR" bottom left and "BLOKDUST" bottom right in v1's Dosis.
    */
-  thumbnail(width: number, height: number): HTMLCanvasElement {
+  thumbnail(width: number, height: number, caption?: { title: string; author?: string | null }): HTMLCanvasElement {
     const ui = this.drawUi;
     this.drawUi = null; this.redraw();
     const src = this.lineCanvas, m = this.metrics, out = document.createElement('canvas');
@@ -237,6 +238,7 @@ export class Stage {
       ctx.fillRect(0, 0, width, height);
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(src, sx, sy, w, h, 0, 0, width, height);
+      if (caption) drawCaption(ctx, width, height, this.theme.colors[this.theme.roles.txt], caption.title, caption.author);
     } finally {
       this.drawUi = ui; this.redraw();
     }
@@ -434,4 +436,35 @@ export function offsetPolygon(pts: [number, number][], d: number): [number, numb
     const len = Math.hypot(bx, by), scale = Math.min(d / dot, (3 * d) / len);
     return [v[0] + bx * scale, v[1] + by * scale] as [number, number];
   });
+}
+
+/** The share card's caption, sized for 1200 px wide (the mock-up the owner chose: layout C). */
+function drawCaption(ctx: CanvasRenderingContext2D, width: number, height: number, colour: string, title: string, author?: string | null): void {
+  const k = width / 1200, size = Math.round(30 * k), margin = Math.round(44 * k), y = height - Math.round(36 * k);
+  ctx.save();
+  ctx.fillStyle = colour; ctx.textBaseline = 'alphabetic';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = `${Math.round(2 * k)}px`;
+  const font = (weight: number) => `${weight} ${size}px Dosis, Arial, Helvetica, sans-serif`;
+  ctx.font = font(200); ctx.globalAlpha = 0.55; ctx.textAlign = 'right';
+  const mark = 'BLOKDUST';
+  ctx.fillText(mark, width - margin, y);
+  const room = width - 2 * margin - ctx.measureText(mark).width - margin;
+  ctx.textAlign = 'left';
+  const name = title.trim().toUpperCase(), by = author ? ` — BY ${author.toUpperCase()}` : '';
+  const fit = (s: string, max: number) => {
+    if (ctx.measureText(s).width <= max) return s;
+    while (s.length > 1 && ctx.measureText(`${s}…`).width > max) s = s.slice(0, -1);
+    return `${s.trimEnd()}…`;
+  };
+  if (!name) { ctx.restore(); return; }  // untitled: the BLOKDUST mark alone
+  ctx.font = font(200); const byW = Math.min(ctx.measureText(by).width, room / 2);
+  ctx.font = font(400); ctx.globalAlpha = 1;
+  const shown = fit(name, room - byW);
+  ctx.fillText(shown, margin, y);
+  if (by) {
+    const x = margin + ctx.measureText(shown).width;
+    ctx.font = font(200); ctx.globalAlpha = 0.7;
+    ctx.fillText(fit(by, room - (x - margin)), x, y);
+  }
+  ctx.restore();
 }

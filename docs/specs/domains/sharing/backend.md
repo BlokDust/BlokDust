@@ -42,6 +42,11 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **R9.** `/` with `?c=<id>` and `/embed/<id>` MUST serve the app with Open Graph tags (title, description, url, a
   1200×630 PNG `og:image` saved with that revision), `twitter:card=player` with `twitter:player`, and an oEmbed
   discovery link. Every absolute URL comes from `PUBLIC_BASE_URL` (SHARING-0004).
+  - `og:title` is the patch title alone (`og:site_name` already says BlokDust); `og:description` says what BlokDust
+    is: "Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin."
+  - The image is the share card the app draws when saving: the stage cropped around its blocks, with the title (and
+    "— by <handle>" once accounts exist) bottom left and a dimmed "BLOKDUST" bottom right, in v1's Dosis and the
+    theme's text colour. Untitled patches show the mark alone.
 - **R10.** `/oembed?url=<share or embed URL>` MUST return oEmbed 1.0 `rich` JSON: an iframe to `/embed/<id>`, 640×400
   by default, scaled down to fit `maxwidth` and `maxheight`, plus the thumbnail. Other hosts and unknown ids return 404.
   Only `format=json` is supported (501 otherwise).

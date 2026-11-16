@@ -361,7 +361,7 @@ async function main() {
     share: async (mode, title) => {
       const patch = toPatch();
       try {
-        const thumb = stage.thumbnail(THUMB.width, THUMB.height).toDataURL('image/png').split(',')[1];
+        const thumb = stage.thumbnail(THUMB.width, THUMB.height, { title }).toDataURL('image/png').split(',')[1];
         const r = await saveShared(mode, App.CompositionId, { patch, title, thumb });
         if (r) {
           App.CompositionId = r.id; App.SessionId = editToken(r.id);

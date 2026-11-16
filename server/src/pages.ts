@@ -9,11 +9,13 @@ export const THUMB = { width: 1200, height: 630 } as const;
 const EMBED = { width: 640, height: 400 } as const;
 
 const displayTitle = (p: Loaded | null) => (p?.title ? `${p.title} · BlokDust` : 'BlokDust');
-const DESCRIPTION = 'A BlokDust creation: a visual music playground. Press play to hear it in your browser.';
+/** Link previews show og:site_name ("BlokDust") already, so the card title is just the patch's (R9). */
+const cardTitle = (p: Loaded | null) => p?.title || 'BlokDust';
+const DESCRIPTION = 'Connect blocks to make sounds, instruments and self-playing music. Free on the web and as a VST/AU plugin.';
 
 function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed: boolean): string {
   const base = publicBase(env, req);
-  const title = displayTitle(p);
+  const title = cardTitle(p);
   const pageUrl = id ? `${base}/?c=${id}${p?.title ? `&t=${encodeURI(p.title)}` : ''}` : `${base}/`;
   const out: string[] = [
     `<meta property="og:site_name" content="BlokDust">`,
