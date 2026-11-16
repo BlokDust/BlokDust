@@ -2,6 +2,7 @@
 // helpers (loaded only when used), Google through a redirect, and the account's patches. The session is an HttpOnly
 // cookie the page never sees.
 import { accountOwned, allEditTokens, serverConfig, turnstileToken } from '../patch/server.ts';
+import { activity } from './activity.ts';
 
 const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
 
@@ -10,6 +11,8 @@ export interface AccountStats {
   since: number; patches: number; remixes: number; remixed: number; likes: number; opens: number;
   mostRemixed: { id: string; title: string; n: number } | null;
   favourites: { type: string; patches: number; count: number }[];
+  /** R16: running totals the server has (this browser may have more waiting: see activity.ts). */
+  playMs: number; blocksAdded: number; particles: number; laserTurns: number;
 }
 export interface Account { id: string; handle: string | null; passkeys: number; providers: string[]; stats?: AccountStats }
 export interface Me { user: Account | null; google: boolean; apple?: boolean }
@@ -81,4 +84,18 @@ export async function accountPatches(): Promise<AccountPatch[]> {
   const { patches } = await call<{ patches: AccountPatch[] }>('GET', 'me/patches');
   for (const p of patches) accountOwned.add(p.id);
   return patches;
+}
+
+/** R16: whether the server takes the page-close request (ACTIVITY_BEACON); known before the page closes. */
+let beacon = false;
+export function watchActivityBeacon(): void { void serverConfig().then(c => { beacon = !!c?.activityBeacon; }); }
+
+/** R16: the page is closing; send what it counted, once, when signed in and the server takes it. Synchronous (a
+ * pagehide handler), with keepalive so the request outlives the page. */
+export function sendActivityOnClose(signedIn: boolean): void {
+  if (!beacon || !signedIn) { activity.keep(); return; }
+  const a = activity.toSend();
+  if (!a) return;
+  activity.sent(a);  // counted as sent now: the page may be gone before the answer (rather lose a little than count it twice)
+  void fetch(api('me/activity'), { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(a) }).catch(() => {});
 }

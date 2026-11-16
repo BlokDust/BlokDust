@@ -36,6 +36,9 @@ export interface Env {
   APPLE_ISSUER?: string;
   /** Overridable for tests (a local mock); defaults to https://freesound.org/apiv2. */
   FREESOUND_API?: string;
+  /** "off" stops the page-close activity request (SPEC-SHARING-ACCOUNTS R16) if D1's free writes run short; saves still
+   * carry activity. A var, or `wrangler secret put ACTIVITY_BEACON` to flip it without a deploy. Default on. */
+  ACTIVITY_BEACON?: string;
 }
 
 export const LIMITS = {

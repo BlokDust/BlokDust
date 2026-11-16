@@ -58,22 +58,38 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
     and PASSKEY, in that order (owner review 2), and a bordered CREATE ACCOUNT;
   - creating an account or naming one: a small heading in the tab type with no rule and no explanation (owner review
     2: the large heading over a rule read as a text field), a NAME field, the main button and BACK;
-  - signed in: "SIGNED IN AS NAME" on one line in the tab type, no rule (owner review 2), ADD PASSKEY · SIGN OUT, and
-    DELETE ACCOUNT (asked first).
+  - signed in: "SIGNED IN AS NAME" on one line in the tab type, no rule (owner review 2), DELETE ACCOUNT (asked
+    first) at the right of that line (CHG-0027), the stats (R15, R16), then ADD PASSKEY · SIGN OUT.
   Signing in with a passkey closes Settings: back to the stage.
 - **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
 - **R15.** (CHG-0027) Signed in, ACCOUNT shows the account's stats between SIGNED IN AS NAME and ADD PASSKEY · SIGN
   OUT, all in the one `GET /api/me?stats=1` the tab already makes (loading the page asks `/api/me` without them):
-  - "Since MONTH YEAR" (the account's creation), right of the SIGNED IN line, in v1's italic;
+  - "since MONTH YEAR" (the account's creation) after SIGNED IN AS NAME, in v1's italic (left out when a long name
+    leaves no room before DELETE ACCOUNT);
   - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
     LIKES (on its gallery patches) and OPENS (its patches opened in the app), each a number in the Settings sliders'
     light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);
   - FAVOURITE BLOCKS: up to five block types, in the most of the account's patches first, then the most of them,
     each v1's menu icon over its menu name (two lines when wider than its column); or a line saying to save a patch;
-  - "Most remixed: TITLE, N times" when others have made patches from one of the account's.
+  - "Most remixed: TITLE, N times" at the right of the FAVOURITE BLOCKS line, when others have made patches from one
+    of the account's.
   The block tally is kept per patch (`patches.blocks`, "type:n" pairs) on every save, so the stats never read patch
   JSON; patches saved before it are counted, 25 at a time, when their owner next opens the tab.
+- **R16.** (CHG-0027) Under the first row of numbers, a second: MINUTES PLAYED (HOURS PLAYED from an hour, one
+  decimal under ten), BLOCKS ADDED, PARTICLES and LASER TURNS. They are for fun, not exact (owner, 2026-11-16: few
+  requests matter more than accuracy), and only their owner sees them:
+  - the website counts them (not the plugin or embeds): time while the page is shown and the sound started; each
+    block added (menu, paste, duplicate, insert: what undo removes); particles and turns estimated from each
+    Emitter's and Laser's params while it runs (Emitter: 60 / Rate a second, or one per Division synced; Laser:
+    |Rotate| / 100 × 60 / 360 turns a second while powered, or one per Turn Beats synced; nothing with POWER off);
+  - what isn't sent waits in localStorage (shared by the site's tabs) and is shown on top of the account's totals;
+  - it goes with every save (`activity` in the body; added only when signed in, and the reply says so), and, when
+    the page closes signed in, in one `POST /api/me/activity` (keepalive). The server clamps each request (a day
+    of play, 10,000 blocks, 10 million particles, a million turns) and keeps the totals on `users`;
+  - `ACTIVITY_BEACON=off` (a var, or a Worker secret to flip it without a deploy) turns that request off, in case
+    D1's free writes run short: `/api/config` says `activityBeacon: false`, the page stops sending it, and the
+    endpoint writes nothing. Saves still carry the totals.
 - **R14.** Signed in, the stage's top right reads "SIGNED IN AS NAME" (v1's mid type, under the panels); pressing it
   opens Settings › ACCOUNT.
 
@@ -83,7 +99,7 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   it and presses SAVE, then the same link gets revision 2 (R2, R8, R9).
 
 ## Verification
-`pnpm test:accounts` covers R1–R10 and R13–R15: a local Worker, mocked siteverify, Google and Apple (its client secret
+`pnpm test:accounts` covers R1–R10 and R13–R16: a local Worker, mocked siteverify, Google and Apple (its client secret
 checked against the run's key), and Chrome's virtual WebAuthn
 authenticator (the passkey is copied to a second context to stand in for sync).
 

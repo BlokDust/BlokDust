@@ -12,6 +12,7 @@
 //               ACCOUNT, which asks first with CANCEL · DELETE.
 import { App, Dimensions, Point } from './shim.ts';
 import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
+import { activity } from '../account/activity.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
 
@@ -25,6 +26,7 @@ const COPY = {
   noAccounts: 'Accounts are not available here.', working: 'one moment', added: 'Passkey added.',
   patches: 'Patches', remixes: 'Remixes', likes: 'Likes', opens: 'Opens', favourites: 'Favourite blocks',
   noFavourites: 'Save a patch to see your favourite blocks here.', since: 'Since', mostRemixed: 'Most remixed',
+  minutesPlayed: 'Minutes played', hoursPlayed: 'Hours played', blocksAdded: 'Blocks added', particles: 'Particles', laserTurns: 'Laser turns',
 };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 /** 1234 → 1,234; 12345 → 12.3K; 1234567 → 1.2M (the numbers are for fun: short beats exact). */
@@ -101,11 +103,12 @@ export class AccountPage {
     ways.forEach((k, i) => { out[k] = full(top + (35 + i * 55) * u); });
     const below = top + (35 + ways.length * 55) * u;
     const naming = { field: top + 24 * u, rule: top + 66 * u, submit: full(top + 85 * u), back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 145 * u) };
-    // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive.
+    // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive. DELETE ACCOUNT
+    // sits top right, on the SIGNED IN line (CHG-0027: the stats need its row).
     const below2 = top + this.statsHeight() * u;
-    const signedIn = { add: half(-210, below2), out: half(7.5, below2), del: this.bordered(COPY.deleteAccount, R, below2 + 65 * u) };
+    const signedIn = { add: half(-210, below2), out: half(7.5, below2), del: this.bordered(COPY.deleteAccount, R, top - 4 * u) };
     const del = { cancel: half(-210, top + 75 * u), ok: half(7.5, top + 75 * u) };
-    const message = this.View === 'main' && !this.Account ? below + 70 * u : this.View === 'main' ? below2 + 115 * u : top + 190 * u;
+    const message = this.View === 'main' && !this.Account ? below + 70 * u : this.View === 'main' ? below2 + 60 * u : top + 190 * u;
     return { L, R, out, create: this.bordered(COPY.create, R, below + 10 * u), naming, signedIn, del, message };
   }
   /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
@@ -151,7 +154,7 @@ export class AccountPage {
   private statsHeight(): number {
     const st = this.Account?.stats;
     if (!st) return 35;
-    return 30 + 75 + 105 + (st.mostRemixed ? 30 : 0) + 15;
+    return 30 + 70 + 70 + 100 + 15;
   }
   /** One row of numbers, four columns across the page's 420 units: the number large and light, its label under it. */
   private numberRow(cells: [string, string][], y: number, L: number): void {
@@ -166,15 +169,33 @@ export class AccountPage {
   private drawStats(top: number, L: number, R: number): void {
     const st = this.Account?.stats, c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
     if (!st) { App.AnimationsLayer.DrawSprite(c, 'loading', App.Width * 0.5, top + 25 * u, 16, true); return; }
+    // "since November 2026" after SIGNED IN AS NAME, in v1's italic.
     const d = new Date(st.since);
-    App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'right';
-    c.fillText(`${COPY.since} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`, R, top + 10 * u);
+    c.font = App.Metrics.TxtMid;
+    const after = L + c.measureText(`${COPY.signedInAs} ${this.Account!.handle ?? ''}`.toUpperCase()).width + 10 * u;
+    App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
+    const since = `${COPY.since.toLowerCase()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    // Left out when a long name leaves no room before DELETE ACCOUNT.
+    if (after + c.measureText(since).width < R - this.textW(COPY.deleteAccount) - 20 * u) c.fillText(since, after, top + 10 * u);
     let y = top + 30 * u;
     this.numberRow([[shortNumber(st.patches), COPY.patches], [shortNumber(st.remixes), COPY.remixes], [shortNumber(st.likes), COPY.likes], [shortNumber(st.opens), COPY.opens]], y, L);
-    y += 75 * u;
+    y += 70 * u;
+    // R16: the running totals, with what this browser counted and hasn't sent yet (so they move without a request).
+    const p = activity.pending(), ms = st.playMs + p.playMs, hours = ms >= 3_600_000;
+    const played = hours ? (ms < 36_000_000 ? (Math.floor(ms / 360_000) / 10).toString() : shortNumber(Math.floor(ms / 3_600_000))) : shortNumber(Math.floor(ms / 60_000));
+    this.numberRow([[played, hours ? COPY.hoursPlayed : COPY.minutesPlayed], [shortNumber(st.blocksAdded + p.blocks), COPY.blocksAdded],
+      [shortNumber(Math.floor(st.particles + p.particles)), COPY.particles], [shortNumber(Math.floor(st.laserTurns + p.laserTurns)), COPY.laserTurns]], y, L);
+    y += 70 * u;
     // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) over their names.
     App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';
     c.fillText(COPY.favourites.toUpperCase(), L, y + 10 * u);
+    // The most remixed patch on the same line, at the right.
+    if (st.mostRemixed) {
+      const n = st.mostRemixed.n, t = st.mostRemixed.title || 'Untitled';
+      c.font = App.Metrics.TxtItalic2; c.textAlign = 'right';
+      c.fillText(`${COPY.mostRemixed}: ${t.length > 24 ? `${t.slice(0, 23)}…` : t}, ${n} ${n === 1 ? 'time' : 'times'}`, R, y + 10 * u);
+      c.textAlign = 'left';
+    }
     const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item);
     if (!favs.length) { c.font = App.Metrics.TxtItalic2; c.fillText(COPY.noFavourites, L, y + 40 * u); }
     const w = 84 * u;
@@ -189,12 +210,6 @@ export class AccountPage {
         c.fillText(words.slice(0, cut).join(' '), x, y + 82 * u); c.fillText(words.slice(cut).join(' '), x, y + 96 * u);
       } else c.fillText(name, x, y + 82 * u);
     });
-    y += 105 * u;
-    if (st.mostRemixed) {
-      App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
-      const n = st.mostRemixed.n;
-      c.fillText(`${COPY.mostRemixed}: ${st.mostRemixed.title || 'Untitled'}, ${n} ${n === 1 ? 'time' : 'times'}`, L, y + 12 * u);
-    }
   }
 
   draw(top: number): void {

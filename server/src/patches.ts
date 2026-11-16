@@ -6,6 +6,7 @@ import { verifyTurnstile } from './turnstile.ts';
 import { currentUser, sameOrigin } from './auth/session.ts';
 import { afterSave } from './gallery.ts';
 import { blockTally } from './stats.ts';
+import { addActivity, readActivity } from './activity.ts';
 
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** Share ids: 10 base62 chars that never start with "p" (Phase 1 `?c=p…` links carry the patch itself, R5b). */
@@ -22,7 +23,8 @@ function newId(): string {
   return s;
 }
 
-interface SaveBody { patch?: unknown; title?: unknown; thumb?: unknown; parent?: unknown; turnstile?: unknown; /** SPEC-SHARING-GALLERY R1: in the gallery or not. */ gallery?: unknown }
+interface SaveBody { patch?: unknown; title?: unknown; thumb?: unknown; parent?: unknown; turnstile?: unknown; /** SPEC-SHARING-GALLERY R1: in the gallery or not. */ gallery?: unknown;
+  /** SPEC-SHARING-ACCOUNTS R16: running totals to add to the signed-in account. */ activity?: unknown }
 
 async function readBody(req: Request): Promise<SaveBody> {
   const len = Number(req.headers.get('content-length') ?? 0);
@@ -93,6 +95,14 @@ async function authorise(env: Env, req: Request, r: Row): Promise<void> {
   throw new HttpError(403, 'not your patch (missing or wrong edit token)');
 }
 
+/** R16 of accounts: a save carries the browser's running totals; added when someone is signed in. */
+async function withActivity(env: Env, userId: string | null, raw: unknown): Promise<boolean> {
+  const a = userId ? readActivity(raw) : null;
+  if (!a || !userId) return false;
+  await addActivity(env, userId, a).run();
+  return true;
+}
+
 /** POST /api/patches: a new share id (v1 "generate share link" and "create new"; `parent` records the remix). */
 export async function createPatch(env: Env, req: Request): Promise<Response> {
   const body = await readBody(req);
@@ -115,7 +125,8 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
           .bind(id, patch, title, thumb, now),
       ]);
       const gallery = await afterSave(env, id, owner, body.gallery === true ? true : undefined);
-      return json({ id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title), gallery }, 201);
+      const activity = await withActivity(env, owner, body.activity);
+      return json({ id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title), gallery, activity }, 201);
     } catch (e) {
       if (!String(e).includes('UNIQUE')) throw e;  // id collision: try another
     }
@@ -140,7 +151,8 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
   if (!res[1].meta.changes) throw new HttpError(409, 'saved elsewhere at the same time; try again');
   // SPEC-SHARING-GALLERY R1, R5: in or out of the gallery as asked; published, it shows the latest title and blocks.
   const gallery = await afterSave(env, id, r.owner_id, typeof body.gallery === 'boolean' ? body.gallery : undefined);
-  return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title), gallery });
+  const activity = body.activity ? await withActivity(env, (await currentUser(env, req))?.id ?? null, body.activity) : false;
+  return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title), gallery, activity });
 }
 
 export interface Loaded { id: string; rev: number; title: string; parent: string | null; created: number; updated: number; patch: unknown; hasThumb: boolean;

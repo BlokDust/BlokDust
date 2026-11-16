@@ -7,6 +7,7 @@ import { ID_RE } from '../patches.ts';
 import { withCookies } from './passkey.ts';
 import { currentUser, endSession, requireUser } from './session.ts';
 import { accountStats } from '../stats.ts';
+import { addActivity, beaconOn, parseBody, readActivity } from '../activity.ts';
 
 /** Patches per claim request (R9). */
 export const CLAIM_MAX = 90;
@@ -100,4 +101,14 @@ export async function myPatches(env: Env, req: Request): Promise<Response> {
   const u = await requireUser(env, req);
   const r = await env.DB.prepare('SELECT id, title, rev, created, updated FROM patches WHERE owner_id = ? AND deleted = 0 ORDER BY updated DESC LIMIT 500').bind(u.id).all();
   return json({ patches: r.results }, 200, { 'cache-control': 'no-store' });
+}
+
+/** POST /api/me/activity {playMs, blocks, particles, laserTurns} — the page closing adds what it counted (R16). Off
+ * (ACTIVITY_BEACON=off): answered without a write, and the browser keeps it for its next save. */
+export async function postActivity(env: Env, req: Request): Promise<Response> {
+  if (!beaconOn(env)) return json({ added: false });  // off: no session lookup, no write
+  const u = await requireUser(env, req);
+  const a = readActivity(await parseBody(req));
+  if (a) await addActivity(env, u.id, a).run();
+  return json({ added: !!a });
 }

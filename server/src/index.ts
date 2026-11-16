@@ -1,11 +1,12 @@
 // BlokDust 2 Worker (SHARING-0001/0002/0004, SPEC-SHARING-BACKEND): serves the web build from static assets and the
 // sharing API. Routes are relative to BASE_PATH so the app can live at `/` or under a prefix such as `/blokdust`.
 import type { Env } from './env.ts';
+import { beaconOn } from './activity.ts';
 import { HttpError, assetBase, basePath, errorResponse, json, limit, prefix } from './http.ts';
 import { createPatch, deletePatch, getPatch, getThumb, mayEdit, savePatch } from './patches.ts';
 import { oembed, page } from './pages.ts';
 import { search, sound } from './freesound.ts';
-import { claim, deleteAccount, logout, me, myPatches, setHandle } from './auth/account.ts';
+import { claim, deleteAccount, logout, me, myPatches, postActivity, setHandle } from './auth/account.ts';
 import { googleCallback, googleStart } from './auth/google.ts';
 import { appleCallback, appleStart } from './auth/apple.ts';
 import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
@@ -53,7 +54,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/oembed' && m === 'GET') return oembed(env, req, url);
 
   if (path === '/api/config' && m === 'GET')
-    return json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY ?? '', saving: !!env.TURNSTILE_SECRET, freesound: !!env.FREESOUND_TOKEN }, 200, { 'cache-control': 'no-cache' });
+    return json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY ?? '', saving: !!env.TURNSTILE_SECRET, freesound: !!env.FREESOUND_TOKEN, activityBeacon: beaconOn(env) }, 200, { 'cache-control': 'no-cache' });
   if (path === '/api/patches' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'save'); return createPatch(env, req); }
   const thumb = path.match(/^\/api\/patches\/([^/]+)\/thumb\.png$/);
   if (thumb && m === 'GET') return getThumb(env, thumb[1], url.searchParams.get('rev'));
@@ -82,6 +83,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     if (path === '/api/me/handle' && m === 'PUT') return setHandle(env, req);
     if (path === '/api/me/claim' && m === 'POST') return claim(env, req);
     if (path === '/api/me/patches' && m === 'GET') return myPatches(env, req);
+    if (path === '/api/me/activity' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'activity'); return postActivity(env, req); }
     throw new HttpError(404, 'no such endpoint');
   }
   // ---- gallery (SPEC-SHARING-GALLERY) ----

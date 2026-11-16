@@ -17,6 +17,7 @@ import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchB
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
 import { type GalleryState, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
+import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
 import { importV1, type V1Composition } from '../patch/importV1.ts';
@@ -154,6 +155,8 @@ async function main() {
   let seed = 1, nextId = 1;
   /** The patch tempo (SIMULATION-0003): saved only once set, so older patches stay byte-identical. */
   let tempo: number | undefined;
+  /** The account's running totals are counted (SPEC-SHARING-ACCOUNTS R16): the website, not the plugin or embeds. */
+  let countActivity = false;
   let engine: EngineNode | null = null;
   /** Run once START has started audio and the stage shows (panels opened before it never slide in). */
   const afterStart: (() => void)[] = [];
@@ -1188,7 +1191,7 @@ async function main() {
   type UndoStep = { kind: 'add'; uids: string[]; snaps?: Snap[]; labels?: string[]; labelSnaps?: Label[] } | { kind: 'remove'; snaps: Snap[]; labels?: Label[] }
     | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[]; labelMoves?: LabelMove[] };
   const undoStack: UndoStep[] = [], redoStack: UndoStep[] = [];
-  const pushUndo = (u: UndoStep) => { undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; };
+  const pushUndo = (u: UndoStep) => { if (u.kind === 'add' && countActivity) activity.blockAdded(u.uids.length); undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; };
   const idOfUid = (uid: string) => { for (const [id, b] of model) if (b.uid === uid) return id; return undefined; };
   const uidsOf = (ids: Iterable<number>) => [...ids].flatMap(id => { const b = model.get(id); return b ? [b.uid] : []; });
   const snapOf = (uid: string): Snap | null => { const id = idOfUid(uid), b = id === undefined ? undefined : model.get(id); return b ? { b: structuredClone(b), buf: samples.get(id!) } : null; };
@@ -1640,6 +1643,14 @@ async function main() {
     // Who is signed in (the corner, the Settings tab's name, the gallery switch).
     const page = accountPage();
     if (page && !juce && !embedId) { const prev = page.onChange; page.onChange = () => { prev(); stage.redraw(); }; void page.refresh(false); }
+    // R16: count time played, blocks added, particles and laser turns; keep them when the page is hidden, and send them
+    // in one request when it closes (saves carry them too).
+    if (page && !juce && !embedId) {
+      countActivity = true;
+      account.watchActivityBeacon();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') activity.keep(); });
+      addEventListener('pagehide', () => account.sendActivityOnClose(!!page.Account));
+    }
     // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`) and Patches opens on SAVE,
     // one click from its link. The flag is dropped so a reload doesn't open it again.
     if (params.has('share') && !juce && !embedId) {
@@ -1768,6 +1779,8 @@ async function main() {
       return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), likeAt: c(cornerBoxes.like), creditAt: titleAt };
     },
     /** Sample state per block (tests): loaded, or missing with its reference. */
+    /** The account's running totals not yet sent (SPEC-SHARING-ACCOUNTS R16; tests). */
+    get activity() { return activity.pending(); },
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
   };
   const overlay = document.getElementById('start')!;
@@ -1792,6 +1805,7 @@ async function main() {
       }
     }
     stage.setPowered(s.powered); probe.powered = Array.from(s.powered);
+    if (countActivity) activity.frame(performance.now(), { blocks: model, powered: new Set(s.powered), worldOn: scene.worldPower, tempo: tempo ?? 120, visible: document.visibilityState === 'visible' });
     stage.setBeams(s.beams);
     stage.setParticles(s.particles);
     scene.setPlayheads(s.playheads ?? new Float32Array(0));

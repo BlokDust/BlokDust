@@ -1,12 +1,14 @@
 // Sharing backend client (CHG-0003, SPEC-SHARING-BACKEND): v1's SAVE / SAVE_AS against the Worker API.
 // v1 kept a composition's SessionId (the right to overwrite it) in localStorage; v2 keeps the edit token the same way.
 import type { Patch } from './loadPatch.ts';
+import { activity } from '../account/activity.ts';
 
 /** Where the API lives: the Worker serving this page (relative to the page; embeds pin <base>). */
 const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
 const TOKENS_KEY = 'blokdust2.editTokens';
 
-export interface ServerConfig { turnstileSiteKey: string; saving: boolean; freesound: boolean }
+export interface ServerConfig { turnstileSiteKey: string; saving: boolean; freesound: boolean;
+  /** SPEC-SHARING-ACCOUNTS R16: the page-close activity request is on (off: saves still carry it). */ activityBeacon?: boolean }
 let configPromise: Promise<ServerConfig | null> | null = null;
 /** null when there is no backend (static hosting, the plugin, the Tailscale review build): sharing falls back to URLs. */
 export function serverConfig(): Promise<ServerConfig | null> {
@@ -96,16 +98,19 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
   if (!cfg?.saving) return null;
   const turnstile = await turnstileToken(cfg.turnstileSiteKey);
   const token = editToken(currentId);
+  // R16 of accounts: the running totals go with the save (added when signed in; otherwise they keep waiting here).
+  const sending = activity.toSend(), credit = <T extends { activity?: boolean }>(r: T) => { if (r.activity && sending) activity.sent(sending); return r; };
+  input = { ...input, ...(sending ? { activity: sending } : {}) } as SaveInput;
   if (mode === 'save' && currentId && canOverwrite(currentId)) {
     try {
-      return await call<Saved>('PUT', `patches/${currentId}`, { ...input, turnstile }, token);
+      return credit(await call<Saved & { activity?: boolean }>('PUT', `patches/${currentId}`, { ...input, turnstile }, token));
     } catch (e) {
       if ((e as { status?: number }).status !== 403 && (e as { status?: number }).status !== 404) throw e;
       // Not ours any more (token lost or patch deleted): save as new, as v1 did when it had no SessionId.
     }
   }
   const fresh = mode === 'save' && currentId && canOverwrite(currentId) ? await turnstileToken(cfg.turnstileSiteKey) : turnstile;
-  const r = await call<Saved & { editToken: string }>('POST', 'patches', { ...input, parent: currentId ?? undefined, turnstile: fresh });
+  const r = credit(await call<Saved & { editToken: string; activity?: boolean }>('POST', 'patches', { ...input, parent: currentId ?? undefined, turnstile: fresh }));
   keepToken(r.id, r.editToken);
   return { id: r.id, rev: r.rev, url: r.url, parent: r.parent, gallery: r.gallery };
 }

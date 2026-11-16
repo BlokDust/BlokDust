@@ -6,6 +6,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type BrowserContext, type CDPSession, type Page } from 'playwright';
 import { startLocal } from '../../tools/server/lib.ts';
 import { sineWav, startMockServices } from './mock-services.ts';
+import { rates } from '../../web/src/account/activity.ts';
 
 const args = process.argv.slice(2);
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1].split(',') : null;
@@ -264,6 +265,54 @@ const tests: Record<string, () => Promise<void>> = {
     await a.page.setViewportSize({ width: 1280, height: 800 }); await a.page.waitForTimeout(500);
     await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await a.page.waitForTimeout(700);
     await anon.ctx.close();
+  },
+
+  /** R16 (CHG-0027): running totals estimated in the page, credited with a save, and sent once when the page closes;
+   * ACTIVITY_BEACON=off stops that request. */
+  async 'activity'() {
+    // The estimates (owner: rough is fine): Emitter Rate is v1 frames per particle, synced it is one per Division;
+    // Laser Rotate is hundredths of a degree per v1 frame, only while powered; synced, one turn per Turn Beats.
+    const near = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+    const r = [rates({ type: 'power.emitter', params: { rate: 80 } }, true, 120).particles, rates({ type: 'power.emitter', params: { sync: true, division: 1 } }, true, 120).particles,
+      rates({ type: 'power.emitter', params: { rate: 80 } }, false, 120).particles, rates({ type: 'power.laser', params: { rotate: 100 } }, true, 120).turns,
+      rates({ type: 'power.laser', params: { rotate: 100 } }, false, 120).turns, rates({ type: 'power.laser', params: { sync: true, turnBeats: 4 } }, true, 120).turns];
+    check('R16: particles and turns per second from the params', near(r[0], 0.75) && near(r[1], 2) && r[2] === 0 && near(r[3], 1 / 6) && r[4] === 0 && near(r[5], 0.5), r);
+
+    const a = shared.a!;
+    const stats = async () => (await api(a, 'GET', 'me?stats=1')).json.user.stats as { blocksAdded: number; particles: number; playMs: number; laserTurns: number };
+    const pending = () => a.page.evaluate(() => (window as any).__bd_probe.activity as { playMs: number; blocks: number; particles: number; laserTurns: number });
+    await openApp(a);
+    await a.page.evaluate(() => localStorage.removeItem('bd_activity'));
+    const before = await stats();
+    // A self-powered Emitter (a new one starts synced: 2 a second at 120 BPM), added from the menu.
+    await a.page.evaluate(() => { const h = (window as any).__bd_probe.scene.host, id = h.createBlock('ParticleEmitter', 6, 6); h.setParam(id, 'selfPoweredMode', 1); });
+    await a.page.waitForTimeout(3000);
+    const p1 = await pending();
+    check('R16: the page counts time played, the block added and the particles', p1.blocks >= 1 && p1.playMs >= 2000 && p1.particles >= 3, p1);
+    await (async () => { for (let i = 0; i < 8 && !(await pp(a.page)).open; i++) { await a.page.mouse.move(1138, 45); await a.page.mouse.click(1138, 45); await a.page.waitForTimeout(700); } })();
+    await saveLink(a.page);
+    const after = await stats(), p2 = await pending();
+    check('R16: a save carries them to the account, and they stop waiting here', after.blocksAdded >= before.blocksAdded + 1 && after.particles >= before.particles + 3 && after.playMs >= before.playMs + 2000
+      && p2.blocks === 0 && p2.particles < p1.particles, { before: [before.blocksAdded, before.particles, before.playMs], after: [after.blocksAdded, after.particles, after.playMs], p2 });
+    // One more block, then the page closes: one request takes it.
+    await a.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel()); await a.page.waitForTimeout(600);
+    await a.page.evaluate(() => (window as any).__bd_probe.scene.host.createBlock('ToneSource', 10, 6));
+    await a.page.waitForTimeout(500);
+    await a.page.goto('about:blank'); await new Promise(res => setTimeout(res, 1500));
+    await a.page.goto(`${base}/api/config`);  // back on the site (its cookie) to ask
+    const closed = await stats();
+    // (Playwright doesn't see a keepalive request from a page being unloaded: the account's total is the evidence.)
+    check('R16: closing the page sends what it counted (credited once)', closed.blocksAdded === after.blocksAdded + 1, { after: after.blocksAdded, closed: closed.blocksAdded });
+    // The switch: ACTIVITY_BEACON=off (a second local Worker).
+    const off = await startLocal({ name: 'accounts-beacon-off', vars: { TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`, ACTIVITY_BEACON: 'off' } });
+    try {
+      const cfg = await (await fetch(`${off.url}/api/config`)).json() as { activityBeacon: boolean };
+      const post = await fetch(`${off.url}/api/me/activity`, { method: 'POST', headers: { origin: off.url, 'content-type': 'application/json' }, body: JSON.stringify({ blocks: 1 }) });
+      const onCfg = await (await fetch(`${server.url}/api/config`)).json() as { activityBeacon: boolean };
+      check('R16: ACTIVITY_BEACON=off: the page is told not to send, and the request writes nothing', cfg.activityBeacon === false && onCfg.activityBeacon === true
+        && post.status === 200 && (await post.json()).added === false, { cfg, onCfg });
+    } finally { await off.stop(); }
+    await openApp(a);
   },
 
   /** R4, R10: SIGN OUT EVERYWHERE ends device B's session too; DELETE ACCOUNT removes the account and its patches. */
