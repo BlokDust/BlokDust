@@ -99,10 +99,10 @@ try {
   await tab(anon, 0);
   check('R2: signed out, the switch says so (and SAVE leaves the gallery alone)', !(await anon.page.evaluate(() => (window as any).__bd_probe.scene.host.signedIn())));
 
-  // ---- R13: the gallery's rows have OPEN only (owner review 2: like and report with the patch open) ----
+  // ---- R13: the gallery's rows have OPEN and INSERT only (owner review 2: like and report with the patch open; review 3: INSERT) ----
   await tab(anon, GALLERY); await idle(anon);
-  const rowControls = await anon.page.evaluate(() => ['glike0', 'greport0', 'gunpub0'].map(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n)));
-  check('R13: a row has OPEN and nothing else', rowControls.every(c => c === null) && !!(await anon.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('gopen0'))), rowControls);
+  const rowControls = await anon.page.evaluate(() => ['glike0', 'greport0', 'gunpub0', 'gopen0', 'gins0'].map(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n)));
+  check('R13: a row has OPEN and INSERT and nothing else', rowControls.slice(0, 3).every(c => c === null) && !!rowControls[3] && !!rowControls[4] && rowControls[3][0] < rowControls[4][0], rowControls);
 
   // ---- R8: likes, from the star by the credit; signed in only, one per person, no down votes ----
   await press(anon, 'gopen0', 2500);
@@ -137,12 +137,21 @@ try {
   await search(bob, '');
   const popular = (await P(bob)).items.map((r: { title: string }) => r.title);
   await bob.page.mouse.move(5, 5); await bob.page.waitForTimeout(300); await bob.page.screenshot({ path: `${OUT}/gallery-rows.png` });
-  await press(bob, 'sort', 300); await idle(bob);
+  await press(bob, 'sort_new', 300); await idle(bob);
   const newest = (await P(bob)).items.map((r: { title: string }) => r.title);
   check('R7: POPULAR puts the liked patch first; NEW the newest', popular[0] === 'Glass Rain' && newest[0] === 'Bob Lasers', { popular, newest });
 
   // ---- R11, R14, R15: OPEN from the gallery: counted, credited; SAVE makes a remix ----
-  await press(bob, 'sort', 300); await idle(bob);  // back to POPULAR: Glass Rain is row 0
+  // ---- R13 (owner review 3): INSERT adds a gallery patch's blocks to yours; it doesn't open it (no credit, no remix) ----
+  const bobBefore = await bob.page.evaluate(() => ({ n: (window as any).__bd_probe.state.patch.blocks.length, id: (window as any).__bd_probe.v1App.CompositionId }));
+  const glassAt = (await P(bob)).items.findIndex((r: { title: string }) => r.title === 'Glass Rain');
+  await press(bob, `gins${glassAt}`, 300);
+  await bob.page.mouse.move(300, 600, { steps: 4 }); await bob.page.mouse.click(300, 600); await bob.page.waitForTimeout(800);
+  const bobAfter = await bob.page.evaluate(() => ({ n: (window as any).__bd_probe.state.patch.blocks.length, id: (window as any).__bd_probe.v1App.CompositionId, credit: (window as any).__bd_probe.corners.credit, open: (window as any).__bd_probe.scene.PatchesPanel.Open }));
+  check('R13: INSERT puts its blocks into the patch, keeping the patch (no credit)', bobAfter.n > bobBefore.n && bobAfter.id === bobBefore.id && !bobAfter.credit && !bobAfter.open, { bobBefore, bobAfter });
+  await bob.page.keyboard.press('ControlOrMeta+z'); await bob.page.waitForTimeout(300);
+  await tab(bob, GALLERY); await idle(bob);
+  await press(bob, 'sort_popular', 300); await idle(bob);  // back to POPULAR: Glass Rain is row 0
   const viewsBefore = (await P(bob)).items[0].views;
   await press(bob, 'gopen0', 2500);
   const opened = await bob.page.evaluate(() => ({ id: (window as any).__bd_probe.v1App.CompositionId, corners: (window as any).__bd_probe.corners }));
@@ -252,6 +261,42 @@ try {
   await carol.page.mouse.up(); await carol.page.waitForTimeout(600);
   const dragged = await carol.page.evaluate(() => ({ scroll: (window as any).__bd_probe.scene.PatchesPanel.GalleryScroll, open: (window as any).__bd_probe.scene.PatchesPanel.Open, comp: (window as any).__bd_probe.v1App.CompositionId }));
   check('R7a: dragging the list scrolls it and opens nothing', dragged.scroll < before && dragged.open && dragged.comp === compBefore, { before, dragged });
+
+  // ---- R16 (owner review 3): the presets are @blokdust's EXAMPLES; OPEN lists only the user's own patches ----
+  const seeded = bd('presets'), again2 = bd('presets');
+  await tab(carol, GALLERY); await search(carol, '');
+  await press(carol, 'sort_examples', 300); await idle(carol);
+  const examples = await P(carol);
+  await carol.page.mouse.move(5, 5); await carol.page.waitForTimeout(300); await carol.page.screenshot({ path: `${OUT}/gallery-examples.png` });
+  const want = ['Computer Keys + 2 Tones', 'MIDI Keys + 2 Tones', 'Microphone + Recorder', 'Rotating Sequencer', 'Step Sequencer'];
+  check('R16: bd gallery presets publishes the five presets as @blokdust\'s EXAMPLES, in order, once', seeded.added.length === 5 && again2.added.length === 0
+    && examples.sort === 'examples' && examples.items.map((r: { title: string }) => r.title).join() === want.join() && examples.items.every((r: { by: string }) => r.by === 'blokdust'),
+    { seeded, again: again2, examples: examples.items.map((r: { title: string; by: string }) => `${r.title} @${r.by}`) });
+  await press(carol, 'sort_tutorials', 300); await idle(carol);
+  const tutorialsEmpty = (await P(carol)).items.length;
+  bd('kind', seeded.added[4].id, 'tutorial');
+  await press(carol, 'sort_examples', 300); await press(carol, 'sort_tutorials', 300); await idle(carol);
+  const tutorials = (await P(carol)).items.map((r: { title: string }) => r.title);
+  check('R16: bd gallery kind moves one to TUTORIALS', tutorialsEmpty === 0 && tutorials.join() === 'Step Sequencer', { tutorialsEmpty, tutorials });
+  await press(carol, 'sort_examples', 300); await idle(carol);
+  await press(carol, 'gopen3', 2500);
+  if (await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View) === 'confirm') await press(carol, 'openAnyway', 2500);
+  const rotating = await carol.page.evaluate(() => ({ n: (window as any).__bd_probe.state.patch.blocks.length, credit: (window as any).__bd_probe.corners.credit }));
+  check('R16: an example opens with all its blocks, credited to @blokdust', rotating.n === 10 && rotating.credit?.by === 'blokdust' && rotating.credit?.title === 'Rotating Sequencer', rotating);
+  await tab(carol, 1); await carol.page.waitForTimeout(800);
+  const carolOpen = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: { name: string; detail: string }) => `${i.name} | ${i.detail}`));
+  check('R16: the web OPEN lists only the user\'s own patches (no presets)', !carolOpen.some((i: string) => /Preset|Computer Keys/.test(i)), carolOpen);
+  const taken = await api(dave, 'PUT', 'me/handle', { handle: 'BlokDust' });
+  // An account made for the site's own patches: once handed over, signing in that way is signing in as @blokdust.
+  const zed = await device('zed_g');
+  await zed.page.evaluate(() => { (window as any).__bd_probe.scene.host.createBlock('ToneSource', 0, 0); (window as any).__bd_probe.scene.PatchesPanel.setTitle('Zed Tones'); });
+  const zedId = await save(zed);
+  const merged = bd('official', 'zed_g');
+  const zedMe = (await api(zed, 'GET', 'me')).json;
+  const zedNow = (await api(anon, 'GET', 'gallery?sort=examples')).json.items.map((r: { id: string; by: string }) => `${r.id} @${r.by}`);
+  check('R16: nobody can choose the name; bd gallery official hands an account\'s sign-ins and patches to @blokdust', taken.status === 400 && merged.into === 'blokdust'
+    && zedMe.user?.handle === 'blokdust' && zedNow.includes(`${zedId} @blokdust`), { taken: taken.json, merged, me: zedMe.user, zedNow });
+  await zed.ctx.close();
 
   // ---- account deletion takes its gallery entries and likes ----
   const bobDel = await api(bob, 'DELETE', 'me');

@@ -65,8 +65,10 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - **Open** over unsaved changes (the patch differs from what was last saved, shared or opened) asks first: CANCEL ·
     SAVE FIRST · OPEN ANYWAY. Insert never asks.
   - A picked or dropped file asks Open or Insert; a file that isn't a patch says so.
-  - OPEN lists the user's own patches above the built-in presets: in the plugin, the patches folder; on the web, the
-    patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only.
+  - OPEN lists the user's own patches: in the plugin, the patches folder, above the built-in presets; on the web, the
+    patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only, and the
+    signed-in account's (owner review 3, 2026-11-16: on the web the presets are @blokdust's EXAMPLES in the gallery,
+    SPEC-SHARING-GALLERY R16, so OPEN is empty until the user saves something; OPEN FROM YOUR DEVICE is always there).
   - The plugin's SAVE tab has SAVE TO COMPUTER, then CREATE SHARE LINK, which opens the public site with the patch in
     the address (`?c=p…&t=<title>&share=1`); the site opens Patches on SAVE, ready to make the link there.
   - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is the OPEN tab's main (filled) button.
@@ -86,7 +88,7 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - SAVE TO COMPUTER (the web's DOWNLOAD PATCH) lets the user choose where: the plugin's save dialog starts in `~/Music/BlokDust/Patches`; on the
     web the browser's save dialog where there is one (starting in Music, then the folder last used for patches), else a
     download. Patch names may use any characters; the file name drops only those a file system can't hold.
-  - Built-in presets ship as `.blokdust` files (`web/src/patch/presets/`).
+  - Built-in presets ship as `.blokdust` files (`web/src/patch/presets/`); `pnpm bd gallery presets` publishes them as @blokdust's.
 
 ## Verification
 Schema tests; round-trip property tests (parse → serialize → parse); v1 import tests against `tests/visual/fixtures/v1/*.json`; size checks.

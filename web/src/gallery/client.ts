@@ -14,7 +14,8 @@ async function call<T>(method: string, path: string, body?: unknown, token?: str
   return j as T;
 }
 
-export const browse = (sort: 'popular' | 'new', q: string, page: number) =>
+export type GallerySort = 'popular' | 'new' | 'examples' | 'tutorials';
+export const browse = (sort: GallerySort, q: string, page: number) =>
   call<GalleryPage>('GET', `gallery?sort=${sort}&q=${encodeURIComponent(q)}&page=${page}`);
 /** Out of the gallery: the owning account, or this browser's edit token (publishing itself is part of saving). */
 export const unpublish = (id: string, token?: string | null) => call('DELETE', `gallery/${id}`, undefined, token);

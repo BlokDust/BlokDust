@@ -61,11 +61,14 @@ export interface AccountHost {
   cancelled(e: unknown): boolean;
 }
 /** The gallery (CHG-0024). */
+/** POPULAR · NEW · EXAMPLES · TUTORIALS (owner review 3: EXAMPLES and TUTORIALS are @blokdust's patches). */
+export type GallerySort = 'popular' | 'new' | 'examples' | 'tutorials';
+export const GALLERY_SORTS: GallerySort[] = ['popular', 'new', 'examples', 'tutorials'];
 export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; views: number; liked: boolean; mine: boolean }
 export interface GalleryHost {
-  browse(sort: 'popular' | 'new', q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
-  /** Open a published patch (it replaces the current one; SAVE then makes a remix of it). */
-  open(row: GalleryRow): void;
+  browse(sort: GallerySort, q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
+  /** Open a published patch (it replaces the current one; SAVE then makes a remix of it), or Insert its blocks. */
+  open(row: GalleryRow, mode: 'open' | 'insert'): void;
   like(id: string, on: boolean): Promise<{ liked: boolean; likes: number }>;
   report(id: string): Promise<void>;
   unpublish(id: string): Promise<void>;
@@ -126,6 +129,7 @@ export interface PatchesHost {
 }
 
 /** The tab Patches opens on: the last one chosen (owner, 2026-11-10). */
+const SORT_KEY = 'blokdust.gallerySort';
 const TAB_KEY = 'blokdust.patchesTab';
 function rememberedTab(): Tab {
   try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 2 ? t : 0) as Tab; } catch { return 0; }
@@ -151,7 +155,7 @@ const COPY = {
   confirm: 'Replace current patch?', confirmLine: 'You have unsaved changes. Opening another patch will replace your current work.',
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
-  search: 'Search', popular: 'Popular', newest: 'New', unpublish: 'Unpublish',
+  search: 'Search', sorts: { popular: 'Popular', new: 'New', examples: 'Examples', tutorials: 'Tutorials' }, unpublish: 'Unpublish',
   like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
   reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here.',
   reported: 'Thank you. The patch was reported.',
@@ -186,7 +190,7 @@ export class PatchesPanel extends DisplayObject {
   private selected = [1, 0, 0];
   /** The GALLERY tab (CHG-0024). */
   GalleryItems: GalleryRow[] = [];
-  GallerySort: 'popular' | 'new' = 'popular';
+  GallerySort: GallerySort = (() => { try { const v = localStorage.getItem(SORT_KEY) as GallerySort; return GALLERY_SORTS.includes(v) ? v : 'popular'; } catch { return 'popular'; } })();
   GalleryQuery = '';
   GalleryPage = 1;
   GalleryMore = false;
@@ -196,7 +200,7 @@ export class PatchesPanel extends DisplayObject {
   /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
   GalleryScroll = 0;
   /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
-  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number } | null = null;
+  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' } | null = null;
   private reporting: { id: string; title: string } | null = null;
   /** After REPORT: the thanks, then the panel closes. */
   private reported = false;
@@ -330,8 +334,9 @@ export class PatchesPanel extends DisplayObject {
   // ---- SAVE / SHARE (web): units from the panel centre ----
   /** ADD TO GALLERY and MAKE VIDEO: v1's OptionSwitch in an options-panel row's proportions (60 units: the icons sit 7
    * units clear of the underline; owner review 2), one under the other between the name and SAVE. */
-  private gallerySwitch() { const u = App.Unit; return { x: this.margin, y: this.cy - 87 * u, w: 60 * u, h: 60 * u }; }
-  private videoSwitch() { const u = App.Unit; return { x: this.margin, y: this.cy - 45 * u, w: 60 * u, h: 60 * u }; }
+  /** ADD TO GALLERY and MAKE VIDEO side by side, each in half the page (owner review 3, 2026-11-16). */
+  private gallerySwitch() { const u = App.Unit; return { x: this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
+  private videoSwitch() { const u = App.Unit; return { x: this.host.gallery ? this.margin + this.pageW * 0.5 + 10 * u : this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
   /** SAVE (or MAKE VIDEO): Connect's 420×40 GUIDE button. */
   private mainButton() { const u = App.Unit, W = App.Width; return { x: W * 0.5 - 210 * u, y: this.cy + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
   /** SAVE AS (left) and DOWNLOAD PATCH (right, not on phones): v1's bordered buttons at the bottom. */
@@ -518,7 +523,8 @@ export class PatchesPanel extends DisplayObject {
     App.FillColor(ctx, txt); ctx.textAlign = 'left';
     ctx.font = App.Metrics.TxtMid;
     ctx.fillText(name.toUpperCase(), x + w + 12 * u, cy + (note ? -2 : 4) * u);
-    if (note) { ctx.font = App.Metrics.TxtItalic2; ctx.fillText(note, x + w + 12 * u, cy + 12 * u); }
+    // The note wraps inside this switch's half of the page.
+    if (note) { ctx.font = App.Metrics.TxtItalic2; this.wordWrap(note, x + w + 12 * u, cy + 12 * u, 12 * u, this.pageW * 0.5 - 10 * u - w - 12 * u); }
   }
 
   private drawList(): void {
@@ -720,9 +726,21 @@ export class PatchesPanel extends DisplayObject {
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
   private galleryRowY(n: number) { return this.cy - 70 * App.Unit + n * 40 * App.Unit - this.GalleryScroll; }
   private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * 40 * u + (this.GalleryMore || this.GalleryLoading ? 40 * u : 0) - (w.bottom - w.top) - 10 * u); }
+  /** OPEN and INSERT, as OPEN's rows (owner review 3: insert from the gallery too). */
   private galleryRow(n: number) {
-    const u = App.Unit, y = this.galleryRowY(n), open = this.bordered(COPY.open, this.margin + this.pageW, y - 19 * u);
-    return { open, textRight: open.x - 6 * u };
+    const u = App.Unit, y = this.galleryRowY(n), insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * u);
+    const open = this.bordered(COPY.open, insert.x - 10 * u, y - 19 * u);
+    return { open, insert, textRight: open.x - 6 * u };
+  }
+  /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count and RANDOMISE),
+   * spread across the page; the chosen one underlined. */
+  private sortButtons() {
+    const L = this.galleryLayout(), ctx = this.Ctx;
+    ctx.font = App.Metrics.TxtMid;
+    const names = GALLERY_SORTS.map(s => COPY.sorts[s].toUpperCase()), ws = names.map(t => ctx.measureText(t).width);
+    const gap = (this.pageW - ws.reduce((a, b) => a + b, 0)) / (names.length - 1);
+    let x = this.margin;
+    return GALLERY_SORTS.map((sort, i) => { const b = { sort, label: names[i], x, y: L.sortY, w: ws[i] }; x += ws[i] + gap; return b; });
   }
   /** Scroll the list by `dy` device px; near its end, the next page loads. */
   scrollGallery(dy: number): void {
@@ -732,7 +750,6 @@ export class PatchesPanel extends DisplayObject {
   }
   /** A mouse wheel over the open panel (scene.wheel). */
   Wheel(e: WheelEvent): void { if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }
-  private sortLabel() { return (this.GallerySort === 'popular' ? COPY.popular : COPY.newest).toUpperCase(); }
   private drawGallery(): void {
     const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
     if (this.GalleryView === 'report' && this.reporting) {
@@ -754,12 +771,15 @@ export class PatchesPanel extends DisplayObject {
     App.StrokeColor(ctx, txt);
     ctx.beginPath(); ctx.moveTo(margin, L.rule); ctx.lineTo(margin + this.pageW, L.rule); ctx.stroke();
     this.drawBordered(L.search, txt);
-    // POPULAR / NEW (v1's RANDOMISE place, underlined: pressing it cycles) //
-    App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'right';
-    const sl = this.sortLabel(), sw = ctx.measureText(sl).width;
-    ctx.fillText(sl, L.sortRight, L.sortY);
-    ctx.beginPath(); ctx.moveTo(L.sortRight - sw, L.sortY + 4 * u); ctx.lineTo(L.sortRight, L.sortY + 4 * u);
-    ctx.lineWidth = this.roll.sort ? 2 : 1; ctx.stroke(); ctx.lineWidth = 2;
+    // POPULAR · NEW · EXAMPLES · TUTORIALS (the chosen one underlined; the others underline on hover) //
+    App.FillColor(ctx, txt); App.StrokeColor(ctx, txt); ctx.textAlign = 'left';
+    for (const b of this.sortButtons()) {
+      ctx.font = App.Metrics.TxtMid; ctx.fillText(b.label, b.x, b.y);
+      const on = b.sort === this.GallerySort;
+      if (!on && !this.roll[`sort_${b.sort}`]) continue;
+      ctx.beginPath(); ctx.moveTo(b.x, b.y + 4 * u); ctx.lineTo(b.x + b.w, b.y + 4 * u);
+      ctx.lineWidth = on ? 2 : 1; ctx.stroke(); ctx.lineWidth = 2;
+    }
     // ROWS: one list, clipped to its window and scrolled //
     const n0 = this.GalleryItems.length;
     ctx.save();
@@ -774,6 +794,7 @@ export class PatchesPanel extends DisplayObject {
       fit(it.title.toUpperCase(), y - 10 * u);
       fit(`${COPY.by} @${it.by}${it.remixes ? ` \u00b7 ${it.remixes} remix${it.remixes === 1 ? '' : 'es'}` : ''} \u00b7 ${it.views} view${it.views === 1 ? '' : 's'}`, y);
       this.drawBordered(b.open, txt);
+      this.drawBordered(b.insert, App.Palette[1]);
     }
     // More on the way: v1's spinner where the next row will be.
     if (n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.galleryRowY(n0) - 5 * u, 16, true);
@@ -835,15 +856,14 @@ export class PatchesPanel extends DisplayObject {
       } else {
         const L = this.galleryLayout();
         r.search = pad(L.search);
-        this.Ctx.font = App.Metrics.TxtMid;
-        const sw = this.Ctx.measureText(this.sortLabel()).width;
-        r.sort = hit(L.sortRight - sw - 5 * u, L.sortY - 20 * u, sw + 10 * u, 30 * u);
+        for (const b of this.sortButtons()) r[`sort_${b.sort}`] = hit(b.x - 5 * u, b.y - 20 * u, b.w + 10 * u, 30 * u);
         const win = this.galleryWindow();
         r.list = hit(this.margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top);
         if (r.list) for (let n = 0; n < this.GalleryItems.length; n++) {
           const b = this.galleryRow(n);
           if (b.open.y > win.bottom || b.open.y + b.open.h < win.top) continue;
           if (pad(b.open)) r[`gopen${n}`] = true;
+          else if (pad(b.insert)) r[`gins${n}`] = true;
         }
       }
     } else if (this.Tab === 0 && this.View === 'video') {
@@ -903,12 +923,14 @@ export class PatchesPanel extends DisplayObject {
     const m = /^(open|ins|bin)(\d)$/.exec(name);
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
     {
-      const gm = /^gopen(\d+)$/.exec(name);
-      if (gm) return mid(this.galleryRow(Number(gm[1])).open);
+      const gm = /^g(open|ins)(\d+)$/.exec(name);
+      if (gm) { const b = this.galleryRow(Number(gm[2])); return mid(gm[1] === 'open' ? b.open : b.insert); }
       if (name === 'list') { const w = this.galleryWindow(); return at(App.Width * 0.5, (w.top + w.bottom) / 2); }
       const L = this.galleryLayout();
       if (name === 'search') return mid(L.search);
-      if (name === 'sort') return at(L.sortRight - 15 * u, L.sortY - 5 * u);
+      const sb = /^sort_(\w+)$/.exec(name) && this.sortButtons().find(b => `sort_${b.sort}` === name);
+      if (sb) return at(sb.x + sb.w / 2, sb.y - 5 * u);
+
       if (name === 'reportCancel' || name === 'reportOk') { const { left, right } = this.halves(); return at((name === 'reportOk' ? right : left).cx, this.cy + 25 * u); }
     }
     if (name === 'gallerySwitch' || name === 'videoSwitch') { const g = name === 'gallerySwitch' ? this.gallerySwitch() : this.videoSwitch(); return at(g.x + g.w / 2, g.y + g.h * 0.35); }
@@ -951,7 +973,10 @@ export class PatchesPanel extends DisplayObject {
     this.galleryDrag = null;
     if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2) return;
     const row = this.GalleryItems[d.row];
-    if (row) this.requestOpen(() => g.open(row));
+    if (!row) return;
+    // Insert adds to the patch: nothing is lost, so it doesn't ask first (as OPEN's INSERT).
+    if (d.mode === 'insert') { this.ClosePanel(); g.open(row, 'insert'); }
+    else this.requestOpen(() => g.open(row, 'open'));
   }
   MouseDown(pt: { x: number; y: number }): void {
     this.HitTests(pt);
@@ -969,12 +994,19 @@ export class PatchesPanel extends DisplayObject {
         return;
       }
       if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); void this.browse(); return; }
-      if (r.sort) { this.GallerySort = this.GallerySort === 'popular' ? 'new' : 'popular'; void this.browse(); return; }
+      const sort = GALLERY_SORTS.find(s => r[`sort_${s}`]);
+      if (sort) {
+        this.GallerySort = sort; try { localStorage.setItem(SORT_KEY, sort); } catch { /* private mode */ }
+        void this.browse(); return;
+      }
       // The list: a press may become a drag (scrolling); a row opens on release, if it didn't move.
       if (r.list) {
-        let row = -1;
-        for (let n = 0; n < this.GalleryItems.length; n++) if (r[`gopen${n}`]) { row = n; break; }
-        this.galleryDrag = { y: pt.y, scroll: this.GalleryScroll, moved: false, row };
+        let row = -1, mode: 'open' | 'insert' = 'open';
+        for (let n = 0; n < this.GalleryItems.length; n++) {
+          if (r[`gopen${n}`]) { row = n; break; }
+          if (r[`gins${n}`]) { row = n; mode = 'insert'; break; }
+        }
+        this.galleryDrag = { y: pt.y, scroll: this.GalleryScroll, moved: false, row, mode };
       }
       return;
     }

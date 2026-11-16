@@ -402,10 +402,12 @@ async function main() {
       syncTargets();
       changed();
     },
-    // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files and built-in presets ----
-    listPatches: async () => [...(juce ? [] : await accountItems()),
-      ...(juce ? await nativePatches() : myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))),
-      ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))],
+    // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files ----
+    // OPEN lists only the user's own patches on the web (owner review 3, 2026-11-16): the built-in presets are
+    // @blokdust's EXAMPLES in the gallery. The plugin has no gallery, so it keeps them under its own.
+    listPatches: async () => juce
+      ? [...await nativePatches(), ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))]
+      : [...await accountItems(), ...myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))],
     savePatch: title => savePatchFile(title),
     openPatch: (item, mode) => void openPatchItem(item.key, mode),
     pickPatchFile: () => pickPatchFile(),
@@ -438,7 +440,7 @@ async function main() {
     // The public gallery (CHG-0024): web only.
     gallery: juce || embedId ? null : {
       browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
-      open: row => void openShared(row.id, 'open'),
+      open: (row, mode) => void openShared(row.id, mode),
       like: (id, on) => gallery.like(id, on),
       report: async id => { await gallery.report(id); },
       unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },

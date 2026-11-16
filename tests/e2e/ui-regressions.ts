@@ -1,7 +1,7 @@
 // Regression tests for bugs found in review (each reproduced first: it failed on the build that had the bug).
 //   pnpm test:ui-regressions [--only name,name]
 // Real app, real pointer, real AudioWorklet. One check per bug, named after it; a failure prints what was seen.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
 import { serveDist } from './serve.ts';
 import { THEMES } from '../../web/src/generated/palettes.gen.ts';
@@ -32,6 +32,12 @@ async function openPatches(p: Page, keep = false): Promise<void> {
 async function patchesClick(p: Page, name: string, wait = 700): Promise<void> { const [x, y] = await patchesAt(p, name); await p.mouse.move(x, y); await p.mouse.click(x, y); await p.waitForTimeout(wait); }
 /** The OPEN tab. */
 async function openList(p: Page): Promise<void> { await openPatches(p); await patchesClick(p, 'tab1', 600); }
+/** Owner review 3 (2026-11-16): the web OPEN lists only the user's own patches (the presets are @blokdust's in the
+ * gallery). Tests of OPEN's rows use the presets as if this browser had saved them, in their file order. */
+async function keepPresets(p: Page): Promise<void> {
+  const dir = 'web/src/patch/presets', list = readdirSync(dir).filter(f => f.endsWith('.blokdust')).sort().map(f => JSON.parse(readFileSync(`${dir}/${f}`, 'utf8')));
+  await p.evaluate(l => localStorage.setItem('blokdust.myPatches', JSON.stringify(l.map((patch: any, i: number) => ({ title: patch.meta.title, saved: Date.UTC(2026, 10, 1) - i * 60_000, patch })))), list);
+}
 /** OPEN or INSERT on the row named `name` (turning pages as needed: 5 rows a page). */
 async function rowButton(p: Page, kind: 'open' | 'ins', name: string, wait = 700): Promise<void> {
   const { i, page } = await p.evaluate(n => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { i: pp.Items.findIndex((x: any) => x.name === n), page: pp.page }; }, name);
@@ -993,7 +999,10 @@ Object.assign(tests, {
     await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await p.waitForTimeout(800);
     // The switch: v1 OptionSwitch puts the icons at 35% of the row and the underline at 55%: 7 units clear in a 60-unit row.
     await openPatches(p);
-    const sw = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, u = (window as any).__bd_probe.v1App.Unit, g = pp.gallerySwitch(); return { gap: (g.h * 0.55 - (g.h * 0.35 + 5 * u)) / u }; });
+    // Owner review 3 (2026-11-16): ADD TO GALLERY and MAKE VIDEO side by side, MAKE VIDEO in the right half.
+    const sw = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, A = (window as any).__bd_probe.v1App, u = A.Unit, g = pp.gallerySwitch(), v = pp.videoSwitch();
+      return { gap: (g.h * 0.55 - (g.h * 0.35 + 5 * u)) / u, sameRow: g.y === v.y, videoRight: v.x >= A.Width / 2 }; });
+    await p.mouse.move(5, 5); await p.waitForTimeout(300); await p.screenshot({ path: `${OUT}/review3-switches.png` });
     // BACK on the video view (the patch has a block).
     await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; pp.View = 'video'; pp.VideoState = 'idle'; });  // the video step (SAVE with MAKE VIDEO on)
     await p.waitForTimeout(300); await texts(); await p.mouse.move(600, 700); await p.waitForTimeout(400);
@@ -1005,7 +1014,7 @@ Object.assign(tests, {
     const left = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
     await p.close();
     const ok = !footer(onSettings).github && !footer(onSettings).build && footer(onAbout).github && footer(onAbout).build
-      && sw.gap >= 6
+      && sw.gap >= 6 && sw.sameRow && sw.videoRight
       && back.x > back.mid + 150 * back.u && back.x < back.right && back.y < back.name - 30 * back.u
       && drawn.length > 0 && drawn.every(x => Math.abs(x - back.x) < 0.5) && left === 'list';
     return [ok, { onSettings: footer(onSettings), onAbout: footer(onAbout), sw, back, drawn, left }];
@@ -1298,6 +1307,7 @@ Object.assign(tests, {
    * Sequencer: Power blocks run their laser and emitters) are heard without touching anything. Keys and Microphone presets wait for the player. */
   async 'presets-load'(errors: string[]) {
     const p = await open(browser, [], errors);
+    await keepPresets(p);
     await openList(p);
     const items: string[] = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name));
     const want: Record<string, number> = { 'Computer Keys + 2 Tones': 6, 'MIDI Keys + 2 Tones': 6, 'Microphone + Recorder': 5, 'Rotating Sequencer': 10, 'Step Sequencer': 21 };
@@ -1323,6 +1333,7 @@ Object.assign(tests, {
   async 'patches-web'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await p.evaluate(() => { delete (window as any).showSaveFilePicker; });  // a browser without a save dialog
+    await keepPresets(p);
     const count = async () => (await state(p)).patch.blocks.length;
     const centre = async (from: number) => p.evaluate(n => { const b = (window as any).__bd_probe.state.patch.blocks.slice(n); const xs = b.map((q: any) => q.x), ys = b.map((q: any) => q.y);
       return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]; }, from) as Promise<[number, number]>;
@@ -1352,7 +1363,7 @@ Object.assign(tests, {
     await patchesClick(p, 'save');
     const d = await dl, file = JSON.parse(readFileSync(await d.path(), 'utf8'));
     const saved = { name: d.suggestedFilename(), title: file.meta?.title, blocks: file.blocks?.length, format: file.format };
-    // The saved patch is listed first, above the presets (this browser only); OPEN a preset: just saved, so no question.
+    // The saved patch is listed first (this browser only); OPEN a preset: just saved, so no question.
     await openList(p);
     const mine = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items[0]);
     await rowButton(p, 'open', 'Computer Keys + 2 Tones');
@@ -1398,6 +1409,7 @@ Object.assign(tests, {
   async 'open-confirms-unsaved'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await p.evaluate(() => { delete (window as any).showSaveFilePicker; });
+    await keepPresets(p);
     const count = async () => (await state(p)).patch.blocks.length;
     /** Drag the patch's first block 4 cells right: a change. */
     const change = async () => {
@@ -1440,7 +1452,8 @@ Object.assign(tests, {
   },
 
   /** Owner (2026-11-10): the user's own saved patches have a bin (a small v1 trash can) right of INSERT; it asks first,
-   * then takes the patch off this browser's list. Presets have none. */
+   * then takes the patch off this browser's list. Owner review 3 (2026-11-16): OPEN lists only the user's own patches
+   * (no presets: they are @blokdust's in the gallery), so with that one gone it is empty. */
   async 'patch-delete'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await p.evaluate(() => { delete (window as any).showSaveFilePicker; });
@@ -1465,13 +1478,13 @@ Object.assign(tests, {
     const kept = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items[0]?.name);
     await patchesClick(p, 'bin0', 400); await patchesClick(p, 'removeOk', 800);
     const after = await p.evaluate(() => ({ items: (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name), stored: JSON.parse(localStorage.getItem('blokdust.myPatches') ?? '[]').length }));
-    // A preset row has no bin: clicking there does nothing.
-    await patchesClick(p, 'bin0', 400);
-    const presetView = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
+    await p.waitForTimeout(300);
+    const empty = await p.evaluate(() => (window as any).__texts.includes('NO PATCHES YET'));
+    await p.screenshot({ path: `${OUT}/open-empty.png` });
     await p.close();
-    const ok = listed[0] === 'Bass + Bells [bin]' && listed.slice(1).every((n: string) => !n.endsWith('[bin]')) && asked === 'remove' && kept === 'Bass + Bells' && words.title && words.line
-      && after.items.length === 5 && !after.items.includes('Bass + Bells') && after.stored === 0 && presetView === 'list';
-    return [ok, { listed, asked, kept, words, after, presetView }];
+    const ok = listed.length === 1 && listed[0] === 'Bass + Bells [bin]' && asked === 'remove' && kept === 'Bass + Bells' && words.title && words.line
+      && after.items.length === 0 && after.stored === 0 && empty;
+    return [ok, { listed, asked, kept, words, after, empty }];
   },
 
   /** Owner (2026-11-10): the plugin's CREATE SHARE LINK opens the patch on the site (`?c=p…&t=…&share=1`); the page
@@ -1650,6 +1663,7 @@ Object.assign(tests, {
     const cdp = await ctx.newCDPSession(p);
     const touch = (type: string, x: number, y: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
     const tap = async (x: number, y: number) => { await touch('touchStart', x, y); await p.waitForTimeout(40); await touch('touchEnd', 0, 0); await p.waitForTimeout(700); };
+    await keepPresets(p);
     await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(1)); await p.waitForTimeout(1200);
     const [ix, iy] = await patchesAt(p, 'ins0'); await tap(ix, iy);
     const blocks = () => p.evaluate(() => (window as any).__bd_probe.state.patch.blocks.slice(1).map((b: any) => [b.x, b.y]));
@@ -1935,6 +1949,7 @@ Object.assign(tests, {
    * out). In the plugin the processor keeps the view with the DAW project. */
   async 'patch-view'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await keepPresets(p);
     const view = () => p.evaluate(() => { const a = (window as any).__bd_probe.v1App; return { zoom: +a.ZoomLevel.toFixed(3), x: +a.DragOffset.x.toFixed(3), y: +a.DragOffset.y.toFixed(3) }; });
     await p.evaluate(() => { const s = (window as any).__bd_probe.scene; s.pinchView(0.5, { x: 3, y: -2 }); s.host.setZoom(0.5); s.host.setDrag({ x: 3, y: -2 }); s.pinchEnd(); });
     await p.waitForTimeout(300);

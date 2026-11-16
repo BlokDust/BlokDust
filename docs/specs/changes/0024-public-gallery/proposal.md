@@ -41,3 +41,10 @@ share them with other BlokDust users. Moderation starts as a simple check on sav
   longer says how many reports hide a patch.
 - The ADD TO GALLERY switch has an options-panel row's proportions (its icons were crowding the underline).
 - BACK is at the top right of the page, its label centred under the chevron.
+
+## Owner review 3 (2026-11-16)
+- OPEN lists only the user's own patches on the web. The five built-in presets are now in the gallery, published by
+  the site's own account @blokdust (`pnpm bd gallery presets`); the plugin, which has no gallery, keeps them in OPEN.
+- The gallery's bottom row is POPULAR · NEW · EXAMPLES · TUTORIALS; EXAMPLES and TUTORIALS are @blokdust's patches
+  (R16). The site owner signs in as @blokdust through an account handed over with `pnpm bd gallery official <name>`.
+- Gallery rows have INSERT next to OPEN.
