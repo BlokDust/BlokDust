@@ -9,6 +9,7 @@
 //                              restore it on the next launch. A patch put in the App Group's Patches folder must be
 //                              seen by both the app and the extension (task 5: one folder shared by both), and a patch
 //                              from another machine must find its sample there by name and render like native (task 6).
+//                              BlokDust FX, the app's second extension, renders its fixture with input ≡ golden (task 9).
 //   --no-build                 test the existing build
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
 import { spawnSync } from 'node:child_process';
@@ -22,6 +23,9 @@ const APPEX = `${APP}/PlugIns/BlokDust.appex`;
 const HOST_APP = 'build/plugin-ios-sim/ioshost/BlokDustIOSHost.app';
 const HOST_ID = 'com.funputs.tests.blokdust-ioshost';
 const COMPONENT = 'aumu,Bdst,Bldt';
+const FX_COMPONENT = 'aufx,Bdfx,Bldt';  // BlokDust FX, the app's second extension (task 9)
+const FX_FIXTURES = ['tests/golden/fx-audio-in.json'];  // its test sine goes in through the effect's input
+const FX_APPEX = `${APP}/PlugIns/BlokDust FX.appex`;
 const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];  // as `bd plugin test`
 // Task 6: a patch from another machine (its sample's path does not exist here) whose file is in the shared Samples
 // folder: the extension relinks it by name and must render like the native engine with the same WAV.
@@ -139,7 +143,7 @@ function appCheck(udid: string) {
 
 export function iosTest(noBuild: boolean): void {
   if (!noBuild) iosBuild();
-  for (const p of [APPEX, HOST_APP]) if (!existsSync(p)) throw new Error(`missing ${p}: run pnpm bd plugin ios build`);
+  for (const p of [APPEX, FX_APPEX, HOST_APP]) if (!existsSync(p)) throw new Error(`missing ${p}: run pnpm bd plugin ios build`);
   const sim = simulator();
   run('xcrun', ['simctl', 'boot', sim.udid], true);  // already booted is fine
   must(run('xcrun', ['simctl', 'bootstatus', sim.udid, '-b'], true), 'Simulator boot');
@@ -160,7 +164,7 @@ export function iosTest(noBuild: boolean): void {
   rmSync(resolve(OUT, 'editor-small.png'), { force: true });
   const job = resolve(OUT, 'job.json');
   writeFileSync(job, JSON.stringify({ component: COMPONENT, fixtures: [...FIXTURES.map(f => resolve(f)), { path: sampleCase.fixture, settleMs: 3000 }],
-    out, editorSeconds: 15, smallView: SMALL_VIEW }));
+    out, editorSeconds: 15, smallView: SMALL_VIEW, fx: { component: FX_COMPONENT, fixtures: FX_FIXTURES.map(f => resolve(f)) } }));
   const started = new Date(Date.now() - 1000);
   must(run('xcrun', ['simctl', 'launch', '--terminate-running-process', sim.udid, HOST_ID, '--job', job], true), 'launch test host');
   for (let i = 0; i < 120 && !existsSync(out); ++i) sleep(1000);
@@ -187,6 +191,10 @@ export function iosTest(noBuild: boolean): void {
     const expected = JSON.parse(readFileSync(FIXTURES[i].replace('tests/golden/', 'tests/golden/expected/'), 'utf8')).audioHash;
     return { fixture: FIXTURES[i], audioHash: r.audioHash ?? null, expected, identical: r.audioHash === expected, stateRoundTrips: !!r.stateRoundTrips, error: r.error };
   });
+  const fxRenders = ((result.fxRenders ?? []) as { audioHash?: string; error?: string; stateRoundTrips?: boolean }[]).map((r, i) => {
+    const expected = JSON.parse(readFileSync(FX_FIXTURES[i].replace('tests/golden/', 'tests/golden/expected/'), 'utf8')).audioHash;
+    return { fixture: FX_FIXTURES[i], audioHash: r.audioHash ?? null, expected, identical: r.audioHash === expected, stateRoundTrips: !!r.stateRoundTrips, error: r.error };
+  });
   // The relinked sample: the plugin rewrites the ref's path to the file it found, so the state cannot round-trip as is.
   const s = all[FIXTURES.length];
   const sample = { fixture: SAMPLE_FIXTURE, audioHash: s?.audioHash ?? null, expected: sampleCase.expected, identical: s?.audioHash === sampleCase.expected,
@@ -194,9 +202,10 @@ export function iosTest(noBuild: boolean): void {
   const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length;  // the editor shows the last state set
   const editor = { sharedFolder: extensionSharedFolder, view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot,
     smallScreenshot: existsSync(small) ? small : null };
-  const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips) && sample.identical && sample.relinked
+  const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips) && sample.identical
+    && result.fxName === 'BlokDust FX' && fxRenders.length === FX_FIXTURES.length && fxRenders.every(r => r.identical && r.stateRoundTrips) && sample.relinked
     && editor.sharedFolder && editor.view && editor.ready === lastBlocks;
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
-    error: result.error, app, renders, sample, editor }));
+    error: result.error, app, renders, sample, fx: { name: result.fxName ?? null, renders: fxRenders }, editor }));
   if (!ok) process.exit(1);
 }

@@ -41,6 +41,11 @@ function(blokdust_plugin target)
   # Bundle IDs under Funputs, lowercase like FUNPUTS' plug-ins (owner, 2026-11-15; blokdust.com is not the owner's):
   # com.funputs.blokdust, com.funputs.blokdustfx. Hosts find AUs and VST3s by their codes, which do not change.
   string(TOLOWER "com.funputs.${target}" bundle_id)
+  if(IOS AND ARG_FX)
+    # On iPad FX is a second extension inside the BlokDust app, so its ID must sit under the app's (CHG-0025 task 9):
+    # com.funputs.blokdust.fx; JUCE names the extension com.funputs.blokdust.fx.fxAUv3.
+    set(bundle_id "com.funputs.blokdust.fx")
+  endif()
   if(IOS)
     set(mic FALSE)
     set(app_groups TRUE)
@@ -109,9 +114,12 @@ function(blokdust_plugin target)
 endfunction()
 
 if(IOS)
-  # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container).
-  # BlokDust FX follows once both extensions can share one app (CHG-0025 task list).
+  # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container),
+  # and BlokDust FX as a second AUv3 in the same app (task 9): one App Store product holds both.
   blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS AUv3 Standalone)
+  blokdust_plugin(BlokDustFX PRODUCT "BlokDust FX" CODE Bdfx FX TRUE FORMATS AUv3)
+  add_dependencies(BlokDust_Standalone BlokDustFX_AUv3)
+  set_target_properties(BlokDust_Standalone PROPERTIES XCODE_EMBED_APP_EXTENSIONS "BlokDust_AUv3;BlokDustFX_AUv3")
   # The app is our own, output only (CHG-0025 task 4; plugin/src/ios/ContainerApp.mm): JUCE's standalone app opens a
   # play-and-record session at launch (a microphone prompt; a Core Audio deadlock in the Simulator).
   target_compile_definitions(BlokDust_Standalone PRIVATE JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)

@@ -4,7 +4,9 @@
 //
 // Run by `pnpm bd plugin ios test`, which passes a job file:  BlokDustIOSHost --job <job.json>
 //   job: {"component": "aumu,Bdst,Bldt", "fixtures": ["<abs path>" | {"path", "settleMs"}, ...], "out": "<abs path>",
-//         "editorSeconds": 20}   (settleMs: wait after setting the state, for samples the plugin loads in the background)
+//         "editorSeconds": 20, "fx": {"component": "aufx,Bdfx,Bldt", "fixtures": [...]}}
+//   (settleMs: wait after setting the state, for samples the plugin loads in the background. A fixture's "input" sine
+//   is fed through the render block's input, as `bd plugin test` feeds BlokDust FX. "fx" results go to "fxRenders".)
 // Writes {"component", "renders": [{fixture, audioHash, frames, sampleRate, peak, stateRoundTrips}], "view": bool}
 // to "out". Simulator apps can read and write the Mac's file system, so paths are the Mac's. The editor's page
 // round-trip is read from the plugin's own log line ("page: ready, N blocks", subsystem com.funputs.blokdust):
@@ -25,6 +27,7 @@
 #include <vector>
 
 #include "blokdust/hash.hpp"
+#include "blokdust/test_signal.hpp"
 
 static os_log_t hostLog() {
   static os_log_t l = os_log_create("com.funputs.blokdust.ioshost", "test");
@@ -70,9 +73,18 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path, double settl
 
   if (![au allocateRenderResourcesAndReturnError:&err]) return @{@"fixture": path, @"error": [NSString stringWithFormat:@"allocate: %@", err]};
   AURenderBlock renderBlock = au.renderBlock;
+  // The input: silence, or the fixture's test sine (same samples as blokdust_host_test), from the block's start frame.
+  NSDictionary* input = [fx[@"input"] isKindOfClass:NSDictionary.class] ? fx[@"input"] : nil;
+  const double inFreq = input[@"frequency"] ? [input[@"frequency"] doubleValue] : 440.0;
+  const double inGain = input[@"gain"] ? [input[@"gain"] doubleValue] : 0.25;
+  __block long blockStart = 0;
   AURenderPullInputBlock silence = ^AUAudioUnitStatus(AudioUnitRenderActionFlags*, const AudioTimeStamp*, AUAudioFrameCount n, NSInteger, AudioBufferList* io) {
-    for (UInt32 b = 0; b < io->mNumberBuffers; ++b)
-      if (io->mBuffers[b].mData) std::fill_n(static_cast<float*>(io->mBuffers[b].mData), n, 0.0f);
+    for (UInt32 b = 0; b < io->mNumberBuffers; ++b) {
+      auto* d = static_cast<float*>(io->mBuffers[b].mData);
+      if (!d) continue;
+      for (AUAudioFrameCount i = 0; i < n; ++i)
+        d[i] = input ? blokdust::testsignal::sine(blockStart + i, static_cast<int>(sr), inFreq, inGain) : 0.0f;
+    }
     return noErr;
   };
 
@@ -89,6 +101,7 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path, double settl
     ts.mSampleTime = static_cast<Float64>(done);
     ts.mFlags = kAudioTimeStampSampleTimeValid;
     AudioUnitRenderActionFlags flags = 0;
+    blockStart = done;
     const AUAudioUnitStatus st = renderBlock(&flags, &ts, n, 0, &abl.list, silence);
     if (st != noErr) return @{@"fixture": path, @"error": [NSString stringWithFormat:@"render failed at %ld: %d", done, (int)st]};
     // An out-of-process AU may hand back its own buffers instead of filling ours.
@@ -136,6 +149,7 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path, double settl
   const double editorSeconds = job[@"editorSeconds"] ? [job[@"editorSeconds"] doubleValue] : 20.0;
 
   HOSTLOG(@"instantiating %@", job[@"component"]);
+  [self renderEffect:job[@"fx"] then:^{
   [AUAudioUnit instantiateWithComponentDescription:desc options:kAudioComponentInstantiation_LoadOutOfProcess
                                  completionHandler:^(AUAudioUnit* au, NSError* err) {
     if (!au) {
@@ -182,7 +196,29 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path, double settl
       });
     });
   }];
+  }];
   return YES;
+}
+
+/// BlokDust FX, the second extension in the app: instantiated out of process and its fixtures rendered (no editor).
+- (void)renderEffect:(NSDictionary*)fxJob then:(void (^)(void))next {
+  if (![fxJob isKindOfClass:NSDictionary.class]) { next(); return; }
+  NSArray* parts = [fxJob[@"component"] componentsSeparatedByString:@","];
+  AudioComponentDescription desc{fourCC(parts[0]), fourCC(parts[1]), fourCC(parts[2]), 0, 0};
+  NSMutableArray* renders = [NSMutableArray array];
+  self.result[@"fxRenders"] = renders;
+  HOSTLOG(@"instantiating %@", fxJob[@"component"]);
+  [AUAudioUnit instantiateWithComponentDescription:desc options:kAudioComponentInstantiation_LoadOutOfProcess
+                                 completionHandler:^(AUAudioUnit* au, NSError* err) {
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+      if (!au) [renders addObject:@{@"error": [NSString stringWithFormat:@"instantiate: %@", err]}];
+      else {
+        self.result[@"fxName"] = au.audioUnitName ?: @"";
+        for (NSString* f in fxJob[@"fixtures"]) [renders addObject:renderFixture(au, f, 0)];
+      }
+      dispatch_async(dispatch_get_main_queue(), next);
+    });
+  }];
 }
 @end
 

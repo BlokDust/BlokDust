@@ -47,7 +47,12 @@ Check items off as they land. Each task should be independently verifiable.
       shows the view at an AUM-like 480×320 (`.cache/ios-host/editor-small.png`, for review): the page lays out.
       Left: touch inside the extension (the page's touch handling is Release 1's, tested in iPad Safari) and real
       host sizes, both on the iPad (task 11).
-- [ ] 9. BlokDust FX as a second AUv3 in the same app.
+- [x] 9. BlokDust FX as a second AUv3 in the same app.
+      2026-11-16: `BlokDust FX.appex` is embedded beside `BlokDust.appex` (`XCODE_EMBED_APP_EXTENSIONS`); on iPad its
+      ID is `com.funputs.blokdust.fx` (extension `com.funputs.blokdust.fx.fxAUv3`), as an embedded extension's ID must
+      start with the app's. It registers as `aufx Bdfx Bldt` (same codes as desktop) and shares the App Group.
+      `bd plugin ios test` loads it out of process and renders `fx-audio-in` with its sine fed in: ≡ golden, state
+      round-trips.
 - [ ] 10. Device: signing setup (local config), `plugin-ios` preset, install on the owner's iPad; CPU/memory check.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
 - [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.

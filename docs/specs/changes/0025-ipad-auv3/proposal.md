@@ -28,7 +28,8 @@ build, the iPad-specific native pieces, and the tools that prove it works.
    reached through the picker); Open/Save/samples
    through the iPadOS document picker, with picked audio copied into the app's container (local only, DATA-0005);
    delete moves nothing to a Trash that iPadOS lacks; links open only where iPadOS allows (not from an extension).
-4. **BlokDust FX** as a second AUv3 extension in the same app (PLUGIN-0002), so one App Store product holds both.
+4. **BlokDust FX** as a second AUv3 extension in the same app (PLUGIN-0002), so one App Store product holds both. On iPad its ID is `com.funputs.blokdust.fx`
+   (an embedded extension's ID must start with the app's); its AU codes match desktop.
 5. **Tools:** `pnpm bd plugin ios build|test`: build for the Simulator, then an iOS AUv3 test host loads the extension
    out of process like AUM does: golden fixtures render bit-identical to native, state round-trips, and the editor's
    page reports `bd_ready`. Device installs and owner review builds after signing is set up.
