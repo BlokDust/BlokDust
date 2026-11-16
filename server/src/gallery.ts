@@ -22,7 +22,7 @@ async function body<T>(req: Request): Promise<T> {
 
 interface PatchJson { blocks?: { type?: unknown; params?: Record<string, unknown> }[]; macros?: { blocks?: { type?: unknown; params?: Record<string, unknown> }[] }[] }
 /** Every block in the patch, Stage insides included. */
-const allBlocks = (p: PatchJson) => [...(p.blocks ?? []), ...(p.macros ?? []).flatMap(m => m.blocks ?? [])];
+export const allBlocks = (p: PatchJson) => [...(p.blocks ?? []), ...(p.macros ?? []).flatMap(m => m.blocks ?? [])];
 /** R3: why a patch can't be in the gallery (others can't hear the user's own audio files: DATA-0005), or null. */
 export function notPublishable(p: PatchJson): string | null {
   const bs = allBlocks(p);

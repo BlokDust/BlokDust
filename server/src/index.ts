@@ -65,7 +65,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     throw new HttpError(405, 'method not allowed');
   }
   // ---- accounts (SPEC-SHARING-ACCOUNTS) ----
-  if (path === '/api/me' && m === 'GET') return me(env, req);
+  if (path === '/api/me' && m === 'GET') return me(env, req, url);
   if (path === '/api/auth/google/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return googleStart(env, req, url); }
   if (path === '/api/auth/google/callback' && m === 'GET') return googleCallback(env, req, url);
   if (path === '/api/auth/apple/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return appleStart(env, req, url); }

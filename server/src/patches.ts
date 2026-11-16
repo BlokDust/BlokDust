@@ -5,6 +5,7 @@ import { HttpError, b64urlBytes, json, publicBase, sameDigest, sha256Hex } from 
 import { verifyTurnstile } from './turnstile.ts';
 import { currentUser, sameOrigin } from './auth/session.ts';
 import { afterSave } from './gallery.ts';
+import { blockTally } from './stats.ts';
 
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** Share ids: 10 base62 chars that never start with "p" (Phase 1 `?c=p…` links carry the patch itself, R5b). */
@@ -95,7 +96,7 @@ async function authorise(env: Env, req: Request, r: Row): Promise<void> {
 /** POST /api/patches: a new share id (v1 "generate share link" and "create new"; `parent` records the remix). */
 export async function createPatch(env: Env, req: Request): Promise<Response> {
   const body = await readBody(req);
-  const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb);
+  const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb), blocks = blockTally(body.patch);
   let parent: string | null = null;
   if (body.parent !== undefined && body.parent !== null && body.parent !== '') {
     if (typeof body.parent !== 'string' || !(await row(env, body.parent))) throw new HttpError(400, 'unknown parent');
@@ -108,8 +109,8 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
     const id = newId();
     try {
       await env.DB.batch([
-        env.DB.prepare('INSERT INTO patches (id, title, parent, edit_hash, rev, created, updated, owner_id) VALUES (?, ?, ?, ?, 1, ?, ?, ?)')
-          .bind(id, title, parent, editHash, now, now, owner),
+        env.DB.prepare('INSERT INTO patches (id, title, parent, edit_hash, rev, created, updated, owner_id, blocks) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)')
+          .bind(id, title, parent, editHash, now, now, owner, blocks),
         env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, 1, ?, ?, ?, ?)')
           .bind(id, patch, title, thumb, now),
       ]);
@@ -130,11 +131,11 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
   const body = await readBody(req);
   const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb);
   await verifyTurnstile(env, req, body.turnstile);
-  const now = Date.now(), rev = r.rev + 1;
+  const now = Date.now(), rev = r.rev + 1, blocks = blockTally(body.patch);
   const res = await env.DB.batch([
     env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, ?, ?, ?, ?, ?)').bind(id, rev, patch, title, thumb, now),
     // Guarded on the revision we read: two concurrent saves cannot both win.
-    env.DB.prepare('UPDATE patches SET rev = ?, title = ?, updated = ? WHERE id = ? AND rev = ?').bind(rev, title, now, id, r.rev),
+    env.DB.prepare('UPDATE patches SET rev = ?, title = ?, updated = ?, blocks = ? WHERE id = ? AND rev = ?').bind(rev, title, now, blocks, id, r.rev),
   ]);
   if (!res[1].meta.changes) throw new HttpError(409, 'saved elsewhere at the same time; try again');
   // SPEC-SHARING-GALLERY R1, R5: in or out of the gallery as asked; published, it shows the latest title and blocks.

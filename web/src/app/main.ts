@@ -464,7 +464,7 @@ async function main() {
     signedIn: () => !!accountPage()?.Account,
     // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
     account: juce || embedId ? null : {
-      me: () => account.me(),
+      me: stats => account.me(stats),
       signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
       // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so.
       signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); },
@@ -1639,7 +1639,7 @@ async function main() {
     if (start.mine) scene.PatchesPanel.galleryKnown(!!start.published);
     // Who is signed in (the corner, the Settings tab's name, the gallery switch).
     const page = accountPage();
-    if (page && !juce && !embedId) { const prev = page.onChange; page.onChange = () => { prev(); stage.redraw(); }; void page.refresh(); }
+    if (page && !juce && !embedId) { const prev = page.onChange; page.onChange = () => { prev(); stage.redraw(); }; void page.refresh(false); }
     // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`) and Patches opens on SAVE,
     // one click from its link. The flag is dropped so a reload doesn't open it again.
     if (params.has('share') && !juce && !embedId) {

@@ -4,7 +4,7 @@ title: Accounts
 status: draft
 domain: sharing
 adrs: [SHARING-0008, SHARING-0001, DATA-0005]
-updated: 2026-11-15
+updated: 2026-11-16
 ---
 # Accounts
 
@@ -63,6 +63,17 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   Signing in with a passkey closes Settings: back to the stage.
 - **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
+- **R15.** (CHG-0027) Signed in, ACCOUNT shows the account's stats between SIGNED IN AS NAME and ADD PASSKEY · SIGN
+  OUT, all in the one `GET /api/me?stats=1` the tab already makes (loading the page asks `/api/me` without them):
+  - "Since MONTH YEAR" (the account's creation), right of the SIGNED IN line, in v1's italic;
+  - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
+    LIKES (on its gallery patches) and OPENS (its patches opened in the app), each a number in the Settings sliders'
+    light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);
+  - FAVOURITE BLOCKS: up to five block types, in the most of the account's patches first, then the most of them,
+    each v1's menu icon over its menu name (two lines when wider than its column); or a line saying to save a patch;
+  - "Most remixed: TITLE, N times" when others have made patches from one of the account's.
+  The block tally is kept per patch (`patches.blocks`, "type:n" pairs) on every save, so the stats never read patch
+  JSON; patches saved before it are counted, 25 at a time, when their owner next opens the tab.
 - **R14.** Signed in, the stage's top right reads "SIGNED IN AS NAME" (v1's mid type, under the panels); pressing it
   opens Settings › ACCOUNT.
 
@@ -72,7 +83,7 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   it and presses SAVE, then the same link gets revision 2 (R2, R8, R9).
 
 ## Verification
-`pnpm test:accounts` covers R1–R10 and R13–R14: a local Worker, mocked siteverify, Google and Apple (its client secret
+`pnpm test:accounts` covers R1–R10 and R13–R15: a local Worker, mocked siteverify, Google and Apple (its client secret
 checked against the run's key), and Chrome's virtual WebAuthn
 authenticator (the passkey is copied to a second context to stand in for sync).
 

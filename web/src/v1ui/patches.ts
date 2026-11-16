@@ -45,10 +45,10 @@ export interface PatchItem {
   removable?: boolean;
 }
 /** Accounts (CHG-0023): what the ACCOUNT tab shows. */
-export interface AccountInfo { handle: string | null; passkeys: number; providers: string[] }
+export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; stats?: import('../account/client.ts').AccountStats }
 export interface AccountHost {
   /** Who is signed in (null: nobody), whether Google and Apple sign-in are offered; null when there is no backend. */
-  me(): Promise<{ user: AccountInfo | null; google: boolean; apple?: boolean } | null>;
+  me(stats?: boolean): Promise<{ user: AccountInfo | null; google: boolean; apple?: boolean } | null>;
   signUp(handle: string): Promise<void>;
   signIn(): Promise<void>;
   google(): void;

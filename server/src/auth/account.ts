@@ -6,6 +6,7 @@ import { handleProblem } from '../moderation.ts';
 import { ID_RE } from '../patches.ts';
 import { withCookies } from './passkey.ts';
 import { currentUser, endSession, requireUser } from './session.ts';
+import { accountStats } from '../stats.ts';
 
 /** Patches per claim request (R9). */
 export const CLAIM_MAX = 90;
@@ -16,16 +17,18 @@ async function body<T>(req: Request): Promise<T> {
   try { return JSON.parse(t || '{}') as T; } catch { throw new HttpError(400, 'body must be JSON'); }
 }
 
-/** GET /api/me — who is signed in, how, and whether Google and Apple sign-in are offered here. */
-export async function me(env: Env, req: Request): Promise<Response> {
+/** GET /api/me — who is signed in, how, and whether Google and Apple sign-in are offered here. `?stats=1` (Settings ›
+ * ACCOUNT) adds the account's stats (R15) to the same answer. */
+export async function me(env: Env, req: Request, url?: URL): Promise<Response> {
   const u = await currentUser(env, req);
   const google = !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET, apple = appleConfigured(env);
   if (!u) return json({ user: null, google, apple }, 200, { 'cache-control': 'no-store' });
-  const [pk, ids] = await Promise.all([
+  const [pk, ids, stats] = await Promise.all([
     env.DB.prepare('SELECT COUNT(*) AS n FROM credentials WHERE user_id = ?').bind(u.id).first<{ n: number }>(),
     env.DB.prepare('SELECT provider FROM identities WHERE user_id = ?').bind(u.id).all<{ provider: string }>(),
+    url?.searchParams.get('stats') === '1' ? accountStats(env, u.id, u.created) : undefined,
   ]);
-  return json({ user: { id: u.id, handle: u.handle, passkeys: pk?.n ?? 0, providers: ids.results.map(r => r.provider) }, google, apple }, 200, { 'cache-control': 'no-store' });
+  return json({ user: { id: u.id, handle: u.handle, passkeys: pk?.n ?? 0, providers: ids.results.map(r => r.provider), ...(stats ? { stats } : {}) }, google, apple }, 200, { 'cache-control': 'no-store' });
 }
 
 /** PUT /api/me/handle {handle} (R6). */

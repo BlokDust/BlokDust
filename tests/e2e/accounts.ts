@@ -228,6 +228,44 @@ const tests: Record<string, () => Promise<void>> = {
     check('R5: another site (or no Origin) cannot sign out or delete with the cookie', evil.status === 403 && none.status === 403 && still.json.user?.handle === 'tester_1', [evil.status, none.status]);
   },
 
+  /** R15 (CHG-0027): Settings › ACCOUNT shows the account's stats from the one `/api/me?stats=1` it already asks;
+   * favourite blocks come from the tally kept on each save (and patches saved before it are counted on the way). */
+  async 'stats'() {
+    const a = shared.a!;
+    const patch = (types: string[]) => ({ format: 'blokdust.patch', version: 2, blocks: types.map((type, i) => ({ id: `b${i}`, type, x: i * 4, y: 0 })) });
+    const save = (d: Device, body: Record<string, unknown>) => api(d, 'POST', 'patches', { turnstile: 'ok', ...body }, { origin: base });
+    // Someone else (signed out) remixes the account's first patch, twice; the account remixes theirs once.
+    const anon = await device(); await anon.page.goto(`${base}/api/config`);
+    const theirs = await save(anon, { patch: patch(['source.noise']), title: 'Theirs', parent: shared.firstPatch });
+    await save(anon, { patch: patch(['source.noise']), title: 'Theirs 2', parent: shared.firstPatch });
+    const mine1 = await save(a, { patch: patch(['source.tone', 'source.tone', 'power.emitter', 'power.laser']), title: 'Lasers', parent: theirs.json.id });
+    await save(a, { patch: patch(['source.tone', 'power.emitter', 'fx.reverb']), title: 'Tones' });
+    // A patch from before migration 0006 (blocks not counted yet): counted when the tab next asks.
+    await server.sql(`UPDATE patches SET blocks = '' WHERE id = '${mine1.json.id}'`);
+    const requests: string[] = [];
+    a.page.on('request', r => { if (r.url().includes('/api/')) requests.push(new URL(r.url()).pathname + new URL(r.url()).search); });
+    await openAccount(a.page);
+    await a.page.waitForFunction(() => !!(window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.stats, null, { timeout: 10000 });
+    await a.page.waitForTimeout(400);
+    const st = (await pp(a.page)).account?.stats;
+    check('R15: opening ACCOUNT asks once, for who is signed in and the stats together', requests.filter(r => r.startsWith('/api/')).length === 1 && requests[0] === '/api/me?stats=1', requests);
+    check('R15: patches, remixes made, remixes of the account’s patches, the most remixed', st?.patches === 3 && st.remixes === 1 && st.remixed === 2
+      && st.mostRemixed?.id === shared.firstPatch && st.mostRemixed.n === 2, st);
+    const favs = st?.favourites.map((f: { type: string; patches: number; count: number }) => `${f.type}:${f.patches}:${f.count}`);
+    // The demo patch (the first save, with a Tone added on device B) has Tones and an Emitter: Tone is in 3 patches only
+    // if the older one was counted.
+    check('R15: favourite blocks, in the most patches first, then the most of them (an older patch counted on the way)',
+      /^source\.tone:3:\d+$/.test(favs?.[0] ?? '') && favs?.[1].startsWith('power.emitter:3:') && favs.length === 5 && !favs.some((f: string) => f.startsWith('power.laser')), favs);
+    const plain = await api(a, 'GET', 'me');
+    check('R15: /api/me without ?stats=1 does no stats work (loading the page)', plain.json.user && !('stats' in plain.json.user), plain.json.user);
+    await a.page.screenshot({ path: `${OUT}/account-stats.png` });
+    await a.page.setViewportSize({ width: 390, height: 844 }); await a.page.waitForTimeout(800);
+    await a.page.screenshot({ path: `${OUT}/account-stats-phone.png` });
+    await a.page.setViewportSize({ width: 1280, height: 800 }); await a.page.waitForTimeout(500);
+    await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await a.page.waitForTimeout(700);
+    await anon.ctx.close();
+  },
+
   /** R4, R10: SIGN OUT EVERYWHERE ends device B's session too; DELETE ACCOUNT removes the account and its patches. */
   async 'sign-out-everywhere-and-delete'() {
     const a = shared.a!, b = shared.b!;

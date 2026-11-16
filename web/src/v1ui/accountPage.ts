@@ -6,9 +6,12 @@
 //               and a bordered CREATE ACCOUNT;
 //   naming:     a small heading in the tab type (no rule: owner review 2, it read as a text field), the Patches name
 //               field (a DOM field like v1's title) over its rule, the GUIDE button, a bordered BACK;
-//   signed in:  SIGNED IN AS NAME on one line in the tab type, half buttons (ADD PASSKEY · SIGN OUT), a bordered DELETE
+//   signed in:  SIGNED IN AS NAME on one line in the tab type, the account's stats (R15, CHG-0027: numbers in the
+//               Settings sliders' large light type over mid-type labels, the favourite blocks as v1's menu icons over
+//               their names, as in the blocks menu), then half buttons (ADD PASSKEY · SIGN OUT) and a bordered DELETE
 //               ACCOUNT, which asks first with CANCEL · DELETE.
-import { App, Dimensions } from './shim.ts';
+import { App, Dimensions, Point } from './shim.ts';
+import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
 
@@ -20,7 +23,25 @@ const COPY = {
   addPasskey: 'Add Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
   deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
   noAccounts: 'Accounts are not available here.', working: 'one moment', added: 'Passkey added.',
+  patches: 'Patches', remixes: 'Remixes', likes: 'Likes', opens: 'Opens', favourites: 'Favourite blocks',
+  noFavourites: 'Save a patch to see your favourite blocks here.', since: 'Since', mostRemixed: 'Most remixed',
 };
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+/** 1234 → 1,234; 12345 → 12.3K; 1234567 → 1.2M (the numbers are for fun: short beats exact). */
+export function shortNumber(n: number): string {
+  const f = (v: number, s: string) => `${v >= 100 ? Math.round(v) : Math.round(v * 10) / 10}${s}`;
+  if (n >= 1e9) return f(n / 1e9, 'B');
+  if (n >= 1e6) return f(n / 1e6, 'M');
+  if (n >= 1e4) return f(n / 1e3, 'K');
+  return Math.round(n).toLocaleString('en-GB');
+}
+/** A block type's menu item (its icon is drawn by name, as the blocks menu does), or null if it has none. */
+function menuItem(type: string): { name: string } | null {
+  const id = BLOCKS_BY_ID.get(type)?.menuId;
+  for (const cat of (App.BlockCreator.MenuJson as { categories: { items: { name: string; id: string }[] }[] }).categories)
+    for (const item of cat.items) if (item.id === id) return item;
+  return null;
+}
 type Box = { x: number; y: number; w: number; h: number; cx: number };
 type Bordered = { label: string; x: number; y: number; w: number; h: number; textX: number; textY: number };
 
@@ -50,11 +71,14 @@ export class AccountPage {
   private settle = 0;
   private mark(): void { this.settle = performance.now() + 300; }
 
-  /** Ask who is signed in (opening the tab, and after any change). */
-  async refresh(): Promise<void> {
-    const m = await this.host.me();
+  /** Ask who is signed in (opening the tab, and after any change); `stats` with the account's stats (R15: only for the
+   * tab, so loading the page asks for less). */
+  async refresh(stats = true): Promise<void> {
+    const m = await this.host.me(stats);
     const before = this.Account?.handle ?? null, was = this.Account;
     this.noBackend = !m; this.google = !!m?.google; this.apple = !!m?.apple; this.Account = m?.user ?? null;
+    // Without stats asked for, keep the ones already shown for the same account.
+    if (this.Account && !this.Account.stats && was?.stats && was.handle === this.Account.handle) this.Account.stats = was.stats;
     // A new Google account has no name yet: ask for one (SPEC-SHARING-ACCOUNTS R6).
     if (this.Account && !this.Account.handle && this.View === 'main') { this.View = 'name'; this.input.value = ''; }
     if (!this.Account && this.View !== 'create') this.View = 'main';
@@ -77,9 +101,11 @@ export class AccountPage {
     ways.forEach((k, i) => { out[k] = full(top + (35 + i * 55) * u); });
     const below = top + (35 + ways.length * 55) * u;
     const naming = { field: top + 24 * u, rule: top + 66 * u, submit: full(top + 85 * u), back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 145 * u) };
-    const signedIn = { add: half(-210, top + 35 * u), out: half(7.5, top + 35 * u), del: this.bordered(COPY.deleteAccount, R, top + 100 * u) };
+    // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive.
+    const below2 = top + this.statsHeight() * u;
+    const signedIn = { add: half(-210, below2), out: half(7.5, below2), del: this.bordered(COPY.deleteAccount, R, below2 + 65 * u) };
     const del = { cancel: half(-210, top + 75 * u), ok: half(7.5, top + 75 * u) };
-    const message = this.View === 'main' && !this.Account ? below + 70 * u : top + 190 * u;
+    const message = this.View === 'main' && !this.Account ? below + 70 * u : this.View === 'main' ? below2 + 115 * u : top + 190 * u;
     return { L, R, out, create: this.bordered(COPY.create, R, below + 10 * u), naming, signedIn, del, message };
   }
   /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
@@ -120,6 +146,57 @@ export class AccountPage {
     if (line) { c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 32 * u, 14 * u, 420 * u); }
   }
 
+  // ---- stats (R15) ----
+  /** The stats' rows, in units from the page's top (the account buttons go below them). */
+  private statsHeight(): number {
+    const st = this.Account?.stats;
+    if (!st) return 35;
+    return 30 + 75 + 105 + (st.mostRemixed ? 30 : 0) + 15;
+  }
+  /** One row of numbers, four columns across the page's 420 units: the number large and light, its label under it. */
+  private numberRow(cells: [string, string][], y: number, L: number): void {
+    const c = this.ctx(), u = App.Unit, w = 420 * u / cells.length;
+    App.FillColor(c, App.Palette[App.ThemeManager.Txt]); c.textAlign = 'center';
+    cells.forEach(([n, label], i) => {
+      const x = L + w * (i + 0.5);
+      c.font = App.Metrics.TxtSlider; c.fillText(n, x, y + 32 * u);
+      c.font = App.Metrics.TxtMid; c.fillText(label.toUpperCase(), x, y + 52 * u);
+    });
+  }
+  private drawStats(top: number, L: number, R: number): void {
+    const st = this.Account?.stats, c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
+    if (!st) { App.AnimationsLayer.DrawSprite(c, 'loading', App.Width * 0.5, top + 25 * u, 16, true); return; }
+    const d = new Date(st.since);
+    App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'right';
+    c.fillText(`${COPY.since} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`, R, top + 10 * u);
+    let y = top + 30 * u;
+    this.numberRow([[shortNumber(st.patches), COPY.patches], [shortNumber(st.remixes), COPY.remixes], [shortNumber(st.likes), COPY.likes], [shortNumber(st.opens), COPY.opens]], y, L);
+    y += 75 * u;
+    // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) over their names.
+    App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';
+    c.fillText(COPY.favourites.toUpperCase(), L, y + 10 * u);
+    const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item);
+    if (!favs.length) { c.font = App.Metrics.TxtItalic2; c.fillText(COPY.noFavourites, L, y + 40 * u); }
+    const w = 84 * u;
+    favs.forEach((f, i) => {
+      const x = L + w * (i + 0.5);
+      App.BlockSprites.DrawSprite({ Ctx: c }, new Point(x, y + 42 * u), false, f.item!.name.toLowerCase());
+      // Its name, on two lines when it is wider than its column (PARTICLE EMITTER beside COMPUTER KEYBOARD).
+      App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'center';
+      const name = f.item!.name.toUpperCase(), words = name.split(' ');
+      if (words.length > 1 && c.measureText(name).width > w - 6 * u) {
+        const cut = Math.ceil(words.length / 2);
+        c.fillText(words.slice(0, cut).join(' '), x, y + 82 * u); c.fillText(words.slice(cut).join(' '), x, y + 96 * u);
+      } else c.fillText(name, x, y + 82 * u);
+    });
+    y += 105 * u;
+    if (st.mostRemixed) {
+      App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
+      const n = st.mostRemixed.n;
+      c.fillText(`${COPY.mostRemixed}: ${st.mostRemixed.title || 'Untitled'}, ${n} ${n === 1 ? 'time' : 'times'}`, L, y + 12 * u);
+    }
+  }
+
   draw(top: number): void {
     const c = this.ctx(), u = App.Unit, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
     const Lo = this.layout(top), busy = this.Busy, r = this.roll;
@@ -138,6 +215,7 @@ export class AccountPage {
     } else if (this.Account) {
       App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
       c.fillText(`${COPY.signedInAs} ${this.Account.handle ?? ''}`.toUpperCase(), Lo.L, top + 10 * u);
+      this.drawStats(top, Lo.L, Lo.R);
       this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], COPY.addPasskey, !busy && !!r.addPasskey, true);
       this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
       this.drawBordered(Lo.signedIn.del, App.Palette[1]);

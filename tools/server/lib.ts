@@ -35,7 +35,9 @@ export function buildSite(): void {
   cpSync('web/dist', join(root, SITE_BASE), { recursive: true });
 }
 
-export interface LocalServer { url: string; stop(): Promise<void>; log(): string }
+export interface LocalServer { url: string; stop(): Promise<void>; log(): string;
+  /** Run SQL on the local D1 (tests: set up states the API can't make, such as rows from before a migration). */
+  sql(command: string): Promise<string> }
 
 /**
  * Start the Worker locally. `vars` become an env file (mode 600, never in the repo): secrets such as
@@ -68,6 +70,11 @@ export async function startLocal(opts: { name: string; vars: Record<string, stri
   }
   return {
     url, log: () => log,
+    sql: async command => {
+      const r = await run([WRANGLER, 'd1', 'execute', 'blokdust-dev', '--local', '--persist-to', state, ...envArgs, '--command', command], { quiet: true });
+      if (r.code) throw new Error(`d1 execute failed:\n${r.out}`);
+      return r.out;
+    },
     stop: () => new Promise(r => { if (child.exitCode !== null) return r(); child.once('exit', () => r()); child.kill('SIGTERM'); setTimeout(() => child.kill('SIGKILL'), 5000); }),
   };
 }

@@ -5,7 +5,13 @@ import { accountOwned, allEditTokens, serverConfig, turnstileToken } from '../pa
 
 const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
 
-export interface Account { id: string; handle: string | null; passkeys: number; providers: string[] }
+/** Settings › ACCOUNT's numbers (SPEC-SHARING-ACCOUNTS R15), from `GET /api/me?stats=1`. */
+export interface AccountStats {
+  since: number; patches: number; remixes: number; remixed: number; likes: number; opens: number;
+  mostRemixed: { id: string; title: string; n: number } | null;
+  favourites: { type: string; patches: number; count: number }[];
+}
+export interface Account { id: string; handle: string | null; passkeys: number; providers: string[]; stats?: AccountStats }
 export interface Me { user: Account | null; google: boolean; apple?: boolean }
 export interface AccountPatch { id: string; title: string; rev: number; created: number; updated: number }
 
@@ -17,9 +23,10 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   return j as T;
 }
 
-/** Who is signed in; null when there is no backend (static hosting, the plugin). */
-export async function me(): Promise<Me | null> {
-  try { return await call<Me>('GET', 'me'); } catch { return null; }
+/** Who is signed in; null when there is no backend (static hosting, the plugin). `stats`: with the account's stats
+ * (R15), in the same request. */
+export async function me(stats = false): Promise<Me | null> {
+  try { return await call<Me>('GET', stats ? 'me?stats=1' : 'me'); } catch { return null; }
 }
 
 /** The passkey ceremony was cancelled by the user (closed the system dialog): not an error to show. */
