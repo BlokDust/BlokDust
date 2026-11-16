@@ -93,7 +93,8 @@ The single, portable representation of a BlokDust creation, used by the web app,
   followed back one day (a family tree in the gallery):
   - `sources`: one entry per saved (server) patch that INSERT brought in: `{ id, rev, title, by, blocks }`, `blocks`
     being the ids, in this patch, of the blocks it brought that are still here. Entries with no blocks left are
-    dropped on save.
+    dropped on save; at most the newest 32 are kept (older ones stay reachable through the newer sources' own
+    lists).
   - Opening a patch keeps its `sources`; inserting one carries its `sources` along under the blocks' new ids, so the
     whole chain survives even when the middle patch is a local file.
   - A patch opened from a link and saved again is a remix: the server keeps `parent` (SPEC-SHARING-GALLERY R11).
