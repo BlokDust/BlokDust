@@ -30,18 +30,28 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
 
  private:
   void timerCallback() override;
+  void tick();  // snapshot, params, keys: on the display's refresh at up to 60 a second, like the web app's worklet
   static std::optional<juce::WebBrowserComponent::Resource> resource(const juce::String& url);
 
   BlokDustProcessor& proc_;
   int uiReadyBlocks_ = -1;
   bool dropsRouted_ = false;
   bool hadKeys_ = false;  // the editor's window had the keyboard at the last tick
+  int sent_ = 0;           // snapshots sent since the page's last stats (bd_stats)
+  double sentSince_ = 0;
+  double sentPerSecond();
   int dropToken_ = 0;
   juce::String pendingDrop_;
   std::unique_ptr<juce::FileChooser> patchChooser_;
   juce::WebBrowserComponent web_;
   KeyUpsToHost keyUps_{*this};  // Logic's Musical Typing gets its note-offs while the page has the keys
   juce::ScopedMessageBox linkNote_;  // iPad extension: "Link copied" (bd_openUrl)
+  double lastTick_ = 0;              // ms (Time::getMillisecondCounterHiRes) of the last tick
+  // Each display refresh, at most 60 ticks a second (every other one at 120 Hz); the 30 Hz timer stands in when the
+  // display sends none (owner, iPad: 30 snapshots a second looked jumpy, 2026-11-16).
+  juce::VBlankAttachment vblank_{this, [this] {
+    if (juce::Time::getMillisecondCounterHiRes() - lastTick_ >= 1000.0 / 60 - 4) tick();
+  }};
 };
 
 }  // namespace blokdust::plugin

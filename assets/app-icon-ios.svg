@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- BlokDust iPad app icon (CHG-0025): app-icon.svg's two-tone square, full bleed with no transparency, since
+       iPadOS rounds the corners itself (with the macOS margin it showed a white border). app-icon-ios.png is this at
+       1024 px. -->
+  <rect width="1024" height="1024" fill="#ad3475"/>
+  <polygon points="0,0 1024,1024 0,1024" fill="#244091"/>
+</svg>

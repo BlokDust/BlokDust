@@ -41,6 +41,12 @@ function(blokdust_plugin target)
   # Bundle IDs under Funputs, lowercase like FUNPUTS' plug-ins (owner, 2026-11-15; blokdust.com is not the owner's):
   # com.funputs.blokdust, com.funputs.blokdustfx. Hosts find AUs and VST3s by their codes, which do not change.
   string(TOLOWER "com.funputs.${target}" bundle_id)
+  # iPadOS rounds the icon itself and shows transparency as white: a full-bleed square there (CHG-0025).
+  if(IOS)
+    set(icon "${CMAKE_SOURCE_DIR}/assets/app-icon-ios.png")
+  else()
+    set(icon "${CMAKE_SOURCE_DIR}/assets/app-icon.png")
+  endif()
   if(IOS AND ARG_FX)
     # On iPad FX is a second extension inside the BlokDust app, so its ID must sit under the app's (CHG-0025 task 9):
     # com.funputs.blokdust.fx; JUCE names the extension com.funputs.blokdust.fx.fxAUv3.
@@ -61,7 +67,7 @@ function(blokdust_plugin target)
     PLUGIN_CODE ${ARG_CODE}
     FORMATS ${ARG_FORMATS}
     # The app icon (CHG-0010): the site favicon's style, assets/app-icon.svg; JUCE makes the .icns / .ico from it.
-    ICON_BIG "${CMAKE_SOURCE_DIR}/assets/app-icon.png"
+    ICON_BIG "${icon}"
     IS_SYNTH ${synth}
     NEEDS_MIDI_INPUT ${midi_in}
     NEEDS_MIDI_OUTPUT FALSE

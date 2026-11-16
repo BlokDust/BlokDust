@@ -1,7 +1,10 @@
 #include "WebViewDrops.h"
+#include "PatchFiles.h"
 
 #include <TargetConditionals.h>
 #include <os/log.h>
+#include <mutex>
+#import <Foundation/Foundation.h>
 #if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #endif
@@ -10,6 +13,17 @@ namespace blokdust::plugin {
 void systemLog(const juce::String& message) {
   static os_log_t log = os_log_create("com.funputs.blokdust", "editor");
   os_log(log, "%{public}s", message.toRawUTF8());
+#if TARGET_OS_IOS
+  // An iPad's system log needs Console and a cable; this copy sits in the App Group, where `bd plugin ios log` reads it
+  // over the network (CHG-0025). Never called from the audio thread; kept under 256 KB.
+  static std::mutex lock;
+  const std::scoped_lock hold(lock);
+  const auto file = patchfiles::root().getChildFile("Logs").getChildFile("blokdust.log");
+  file.getParentDirectory().createDirectory();
+  if (file.getSize() > (256 << 10)) file.moveFileTo(file.withFileExtension("old.log"));
+  const juce::String who([NSBundle mainBundle].bundleIdentifier.UTF8String ?: "?");
+  file.appendText(juce::Time::getCurrentTime().toISO8601(true) + " " + who + " " + message + "\n");
+#endif
 }
 
 #if TARGET_OS_OSX

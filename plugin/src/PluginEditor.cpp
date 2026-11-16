@@ -45,6 +45,11 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withKeepPageLoadedWhenBrowserIsHidden()
                .withResourceProvider([](const juce::String& url) { return resource(url); })
                .withEventListener("bd_hello", [this](const juce::var&) { systemLog("page: hello"); reloadPatch(); })
+               .withEventListener("bd_stats", [this](const juce::var& v) {
+                 systemLog("page: " + v.getProperty("fps", 0).toString() + " fps, " + v.getProperty("snapshots", 0).toString() + " snapshots/s (sent "
+                           + juce::String(juce::roundToInt(sentPerSecond())) + "), " + v.getProperty("w", 0).toString() + "x" + v.getProperty("h", 0).toString()
+                           + " @" + v.getProperty("dpr", 1).toString());
+               })
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
                  systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
@@ -246,6 +251,11 @@ void BlokDustEditor::filesDropped(const juce::StringArray& files, int x, int y) 
 }
 
 void BlokDustEditor::timerCallback() {
+  if (juce::Time::getMillisecondCounterHiRes() - lastTick_ > 100) tick();
+}
+
+void BlokDustEditor::tick() {
+  lastTick_ = juce::Time::getMillisecondCounterHiRes();
   if (!dropsRouted_) dropsRouted_ = routeFileDropsToEditor(*this);
   proc_.idleTick();  // a disabled plugin (no audio callbacks): the stage still runs
   // Clicking into the DAW while a computer key is held: the page sees no key-up (owner, Ableton), so end its notes.
@@ -282,6 +292,14 @@ void BlokDustEditor::timerCallback() {
   obj->setProperty("beams", beams);
   obj->setProperty("playheads", playheads);
   web_.emitEventIfBrowserIsVisible("bd_snapshot", juce::var(obj));
+  ++sent_;
+}
+
+double BlokDustEditor::sentPerSecond() {
+  const auto now = juce::Time::getMillisecondCounterHiRes();
+  const double rate = sentSince_ > 0 ? sent_ * 1000.0 / (now - sentSince_) : 0;
+  sent_ = 0; sentSince_ = now;
+  return rate;
 }
 
 }  // namespace blokdust::plugin

@@ -216,20 +216,44 @@ export function iosTest(noBuild: boolean): void {
 
 const DEVICE_APP = 'build/plugin-ios/plugin/BlokDust_artefacts/Release/Standalone/BlokDust.app';
 
-/** Build for an iPad (signed by Xcode for the team in local config) and install it on the connected iPad. */
-export function iosDevice(noBuild: boolean): void {
-  if (process.platform !== 'darwin') throw new Error('the iPadOS build needs macOS with Xcode');
-  // Find the iPad first: Xcode adds a device to the team's profile only when it builds for that device.
+type Ipad = { identifier: string; deviceProperties: { name: string };
+  hardwareProperties: { deviceType?: string; productType?: string; udid?: string }; connectionProperties: { pairingState?: string } };
+
+/** The paired iPad: BLOKDUST_IOS_DEVICE (name or identifier), or the first one. */
+function findIpad(): Ipad {
   const tmp = resolve(OUT, 'devices.json');
   mkdirSync(OUT, { recursive: true });
   must(run('xcrun', ['devicectl', 'list', 'devices', '--json-output', tmp], true), 'devicectl list');
-  type Dev = { identifier: string; deviceProperties: { name: string };
-    hardwareProperties: { deviceType?: string; productType?: string; udid?: string }; connectionProperties: { pairingState?: string } };
-  const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Dev[]).filter(d => d.connectionProperties.pairingState === 'paired');
+  const devices = (JSON.parse(readFileSync(tmp, 'utf8')).result.devices as Ipad[]).filter(d => d.connectionProperties.pairingState === 'paired');
   const want = setting('BLOKDUST_IOS_DEVICE');
   const ipad = want ? devices.find(d => d.identifier === want || d.deviceProperties.name === want)
     : devices.find(d => d.hardwareProperties.deviceType === 'iPad' || /^iPad/.test(d.hardwareProperties.productType ?? ''));
   if (!ipad) throw new Error('no paired iPad: connect it (USB or the same network), trust this Mac, and enable Developer Mode on it');
+  return ipad;
+}
+
+/** The plugin's log from the iPad (the App Group copy WebViewDrops.mm keeps), to stdout as JSON lines. */
+export function iosLog(): void {
+  const ipad = findIpad();
+  const dest = resolve(OUT, 'ipad-log');
+  mkdirSync(dest, { recursive: true });
+  const lines: string[] = [];
+  for (const name of ['blokdust.old.log', 'blokdust.log']) {
+    const out = resolve(dest, name);
+    rmSync(out, { force: true });
+    run('xcrun', ['devicectl', 'device', 'copy', 'from', '--device', ipad.identifier, '--domain-type', 'appGroupDataContainer',
+      '--domain-identifier', APP_GROUP, '--source', `BlokDust/Logs/${name}`, '--destination', out], true);
+    if (existsSync(out)) lines.push(...readFileSync(out, 'utf8').split('\n').filter(Boolean));
+  }
+  if (!lines.length) throw new Error('no log on the iPad yet: open BlokDust (the app or the plugin in a host) first');
+  console.log(JSON.stringify({ ok: true, device: ipad.deviceProperties.name, lines: lines.slice(-200) }));
+}
+
+/** Build for an iPad (signed by Xcode for the team in local config) and install it on the connected iPad. */
+export function iosDevice(noBuild: boolean): void {
+  if (process.platform !== 'darwin') throw new Error('the iPadOS build needs macOS with Xcode');
+  // Find the iPad first: Xcode adds a device to the team's profile only when it builds for that device.
+  const ipad = findIpad();
   if (!noBuild) {
     requiredSetting('BLOKDUST_APPLE_TEAM_ID');
     const env = configEnvironment();

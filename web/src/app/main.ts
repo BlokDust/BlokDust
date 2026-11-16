@@ -1048,9 +1048,21 @@ async function main() {
       if (id === null) { const [gx, gy] = stage.cssToGrid(x, y); id = addBlock('source.sample', Math.round(gx), Math.round(gy), {}); }
       juce.emitEvent('bd_dropTarget', { token: d.token, id });
     });
+    // Frame and snapshot rates, every 5 s, for the plugin's log (an iPad has no devtools; CHG-0025).
+    let frames = 0, snaps = 0, since = performance.now();
+    const count = (now: number) => {
+      ++frames;
+      if (now - since >= 5000) {
+        const s = (now - since) / 1000;
+        juce.emitEvent('bd_stats', { fps: Math.round(frames / s), snapshots: Math.round(snaps / s), w: innerWidth, h: innerHeight, dpr: devicePixelRatio });
+        frames = 0; snaps = 0; since = now;
+      }
+      requestAnimationFrame(count);
+    };
+    requestAnimationFrame(count);
     juce.addEventListener('bd_snapshot', (e: { particles: number[]; connections: number[]; powered: number[]; beams: number[]; playheads?: number[] }) =>
-      onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
-        connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []) }));
+      (++snaps, onSnapshot({ type: 'snapshot', frame: 0, rms: 0, events: [], particles: new Float32Array(e.particles),
+        connections: new Uint32Array(e.connections), powered: new Uint32Array(e.powered), beams: new Float32Array(e.beams ?? []), playheads: new Float32Array(e.playheads ?? []) })));
     juce.emitEvent('bd_hello', {});
     juce.emitEvent('bd_samplesHello', {});
     send([{ type: CommandType.WorldPower, id: 0, value: 1 }]);  // a reopened editor shows the switch on: so is the world

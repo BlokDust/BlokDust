@@ -1439,6 +1439,40 @@ Object.assign(tests, {
 
   /** Owner (2026-11-10): Patches opens on the tab last chosen, also after a reload; OPEN FROM YOUR DEVICE is the OPEN
    * tab's main button, filled in v1's SAVE colour (MenuOrder[3]) like the old GUIDE button. */
+  /** Owner (2026-11-16, CHG-0025, iPad): above GarageBand's keyboard the plugin is ~1000×290 points. v1 sized the
+   * UI from the width alone, so the Patches name field covered the OPEN tab and Settings' rows ran into its tabs. Past
+   * 2:1 the height sets the unit (stage/metrics.ts MAX_ASPECT): both tabs are on top and switch, and the chrome and the
+   * stage share one unit. */
+  async 'short-wide-view'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 1000, height: 290 }, deviceScaleFactor: 2 });
+    const p = await ctx.newPage();
+    p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.click('#start'); await p.waitForTimeout(1500);
+    const units = await p.evaluate(() => { const A = (window as any).__bd_probe.v1App; return { unit: A.Unit, grid: A.GridSize }; });
+    await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(); });
+    await p.waitForTimeout(1200);
+    const [ox, oy] = await patchesAt(p, 'tab1');
+    const onTop = await p.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName, [ox, oy]);
+    await p.mouse.move(ox, oy); await p.mouse.click(ox, oy); await p.waitForTimeout(700);
+    const patchesTab = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
+    await p.screenshot({ path: `${OUT}/short-wide-patches.png` });
+    await patchesClick(p, 'close', 900);
+    await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.OpenPanel()); await p.waitForTimeout(1200);
+    const [ax, ay] = await p.evaluate(() => {
+      const s = (window as any).__bd_probe.scene.SettingsPanel, A = (window as any).__bd_probe.v1App, pr = A.Metrics.PixelRatio;
+      return [s.MenuItems[2].Position.x / pr, (s.OffsetY + s.Height * A.Unit * 0.5) / pr];  // [1] is the divider
+    });
+    await p.mouse.move(ax, ay); await p.mouse.click(ax, ay); await p.waitForTimeout(900);
+    const settingsTab = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel._OpenTab);
+    await p.screenshot({ path: `${OUT}/short-wide-about.png` });
+    await ctx.close();
+    const want = (290 * 2 / 850) * 2;  // height · MAX_ASPECT ÷ 850, at device pixel ratio 2
+    const ok = Math.abs(units.unit - want) < 1e-6 && onTop === 'CANVAS' && patchesTab === 1 && settingsTab === 2;
+    return [ok, { units, want, openTabUnder: onTop, patchesTab, settingsTab }];
+  },
+
   async 'patches-tab-remembered'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     const tab = () => p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);

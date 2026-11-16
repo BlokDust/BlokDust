@@ -47,6 +47,13 @@ Check items off as they land. Each task should be independently verifiable.
       shows the view at an AUM-like 480×320 (`.cache/ios-host/editor-small.png`, for review): the page lays out.
       Left: touch inside the extension (the page's touch handling is Release 1's, tested in iPad Safari) and real
       host sizes, both on the iPad (task 11).
+      2026-11-16, first iPad review (GarageBand): touch, the on-screen keys and a MIDI keyboard work. Above GarageBand's
+      keyboard the view is ~1000×290 pt and v1's width-only unit made panels taller than it (the Patches name field
+      covered OPEN, Settings rows ran into the tabs). Past 2:1 the height now sets the unit, for the chrome
+      (`Metrics.ts` via `bd v1 port-ui`) and the stage (`stage/metrics.ts` `MAX_ASPECT`); views up to 2:1 (every v1
+      reference, 16:9) are unchanged. Test: `short-wide-view`. Snapshots go to the page on the display's refresh at up
+      to 60 a second (they were 30; the web worklet sends ~60), and the page reports its frame and snapshot rates to
+      the plugin log. The iPad app icon is full-bleed (`assets/app-icon-ios.svg`; the macOS one's margin showed white).
 - [x] 9. BlokDust FX as a second AUv3 in the same app.
       2026-11-16: `BlokDust FX.appex` is embedded beside `BlokDust.appex` (`XCODE_EMBED_APP_EXTENSIONS`); on iPad its
       ID is `com.funputs.blokdust.fx` (extension `com.funputs.blokdust.fx.fxAUv3`), as an embedded extension's ID must
@@ -59,6 +66,9 @@ Check items off as they land. Each task should be independently verifiable.
       `devicectl`). The device build compiles (arm64, iPadOS 16+, both extensions; checked with signing off). Waiting
       on the owner: the team's Apple account in Xcode on the build Mac (Xcode then registers the App IDs, the App Group
       and the iPad), and an iPad paired with Developer Mode on. Then: install, CPU/memory check.
+      2026-11-16: installed on the owner's iPad Pro (M4). The build targets the paired iPad (generated schemes,
+      `-destination id=…`), so automatic signing registers it. `pnpm bd plugin ios log` copies the plugin's log from
+      the App Group (the iPad keeps one there: `Logs/blokdust.log`). Left: CPU/memory.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
 - [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.
 - [ ] 12b. App Store Connect / TestFlight setup (owner).
