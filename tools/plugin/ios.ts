@@ -4,6 +4,9 @@
 //   pnpm bd plugin ios test    build, boot an iPad Simulator, install both apps, and let the test host load the AUv3 out
 //                              of process like AUM: golden fixtures must hash exactly like the native engine, state must
 //                              round-trip, and the editor's page must report bd_ready with the patch's blocks.
+//                              First the app itself (task 4): installed fresh, it must start output-only audio with no
+//                              microphone entry, show the first-launch patch, save it when sent to the background, and
+//                              restore it on the next launch.
 //   --no-build                 test the existing build
 // The Simulator is picked by name: BLOKDUST_IOS_SIMULATOR (local config) or the first available "iPad Pro 11-inch".
 import { spawnSync } from 'node:child_process';
@@ -19,6 +22,8 @@ const HOST_ID = 'com.funputs.tests.blokdust-ioshost';
 const COMPONENT = 'aumu,Bdst,Bldt';
 const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];  // as `bd plugin test`
 const OUT = '.cache/ios-host';
+const APP_ID = 'com.funputs.blokdust';
+const FIRST_PATCH = 'web/src/patch/presets/04-rotating-sequencer.blokdust';  // the app's first launch (PluginProcessor.cpp)
 
 const run = (cmd: string, args: string[], quiet = false) =>
   spawnSync(cmd, args, { encoding: 'utf8', stdio: quiet ? 'pipe' : ['ignore', 'inherit', 'inherit'], maxBuffer: 64 << 20 });
@@ -60,16 +65,67 @@ function simulator(): { udid: string; name: string } {
 
 const logTime = (d: Date) => { const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
 
+const appLog = (udid: string, since: Date) => run('xcrun', ['simctl', 'spawn', udid, 'log', 'show', '--start', logTime(since), '--style', 'compact',
+  '--predicate', 'subsystem == "com.funputs.blokdust"'], true).stdout;
+
+/** Waits up to `seconds` for every pattern to appear in the plugin's log since `since`. */
+function waitForLog(udid: string, since: Date, patterns: RegExp[], seconds: number): string {
+  let log = '';
+  for (let i = 0; i < seconds; ++i) {
+    log = appLog(udid, since);
+    if (patterns.every(p => p.test(log))) break;
+    sleep(1000);
+  }
+  return log;
+}
+
+/** The app on its own (CHG-0025 task 4): output-only audio, the first-launch patch, saved and restored. */
+function appCheck(udid: string) {
+  const plist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${APP}/Info.plist`], true), 'read Info.plist').stdout);
+  const appexPlist = JSON.parse(must(run('plutil', ['-convert', 'json', '-o', '-', `${APPEX}/Info.plist`], true), 'read appex Info.plist').stdout);
+  const noMicrophone = !('NSMicrophoneUsageDescription' in plist) && !('NSMicrophoneUsageDescription' in appexPlist);
+  const firstBlocks = JSON.parse(readFileSync(FIRST_PATCH, 'utf8')).blocks.length;
+
+  const t1 = new Date(Date.now() - 1000);
+  must(run('xcrun', ['simctl', 'launch', '--terminate-running-process', udid, APP_ID], true), 'launch BlokDust.app');
+  const log1 = waitForLog(udid, t1, [/container: audio running/, /page: ready, \d+ blocks/], 60);
+  const session = /container: audio started \((\w+), (\d+) Hz, (\d+) frames\)/.exec(log1);
+  const peak = Number(/container: audio running, peak ([\d.]+)/.exec(log1)?.[1] ?? 0);
+  const ready = Number(/page: ready, (-?\d+) blocks/.exec(log1)?.[1] ?? -1);
+  const shot = resolve(OUT, 'app.png');
+  run('xcrun', ['simctl', 'io', udid, 'screenshot', shot], true);
+
+  // To the background (another app in front): the app saves its patch. Then a fresh launch must restore it.
+  const t2 = new Date(Date.now() - 1000);
+  run('xcrun', ['simctl', 'launch', udid, 'com.apple.Preferences'], true);
+  const saved = /container: patch saved/.test(waitForLog(udid, t2, [/container: patch saved/], 20));
+  run('xcrun', ['simctl', 'terminate', udid, 'com.apple.Preferences'], true);
+  run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
+  const t3 = new Date(Date.now() - 1000);
+  must(run('xcrun', ['simctl', 'launch', udid, APP_ID], true), 'relaunch BlokDust.app');
+  const log3 = waitForLog(udid, t3, [/container: patch restored/, /page: ready, \d+ blocks/], 60);
+  const restored = /container: patch restored/.test(log3);
+  const readyAgain = Number(/page: ready, (-?\d+) blocks/.exec(log3)?.[1] ?? -1);
+  run('xcrun', ['simctl', 'terminate', udid, APP_ID], true);
+
+  const ok = noMicrophone && session?.[1] === 'AVAudioSessionCategoryPlayback' && peak > 0 && ready === firstBlocks && saved && restored
+    && readyAgain === firstBlocks;
+  return { ok, noMicrophone, session: session?.[1] ?? null, sampleRate: Number(session?.[2] ?? 0), frames: Number(session?.[3] ?? 0), peak,
+    ready, expectedBlocks: firstBlocks, saved, restored, readyAfterRelaunch: readyAgain, screenshot: shot };
+}
+
 export function iosTest(noBuild: boolean): void {
   if (!noBuild) iosBuild();
   for (const p of [APPEX, HOST_APP]) if (!existsSync(p)) throw new Error(`missing ${p}: run pnpm bd plugin ios build`);
   const sim = simulator();
   run('xcrun', ['simctl', 'boot', sim.udid], true);  // already booted is fine
   must(run('xcrun', ['simctl', 'bootstatus', sim.udid, '-b'], true), 'Simulator boot');
+  run('xcrun', ['simctl', 'uninstall', sim.udid, APP_ID], true);  // a first launch: no saved patch
   must(run('xcrun', ['simctl', 'install', sim.udid, APP], true), 'install BlokDust.app');
   must(run('xcrun', ['simctl', 'install', sim.udid, HOST_APP], true), 'install test host');
-
   mkdirSync(OUT, { recursive: true });
+  const app = appCheck(sim.udid);
+
   const out = resolve(OUT, 'result.json');
   rmSync(out, { force: true });
   const job = resolve(OUT, 'job.json');
@@ -95,9 +151,9 @@ export function iosTest(noBuild: boolean): void {
   });
   const lastBlocks = JSON.parse(readFileSync(FIXTURES[FIXTURES.length - 1], 'utf8')).patch.blocks.length;
   const editor = { view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot };
-  const ok = !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips)
+  const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips)
     && editor.view && editor.ready === lastBlocks;
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,
-    error: result.error, renders, editor }));
+    error: result.error, app, renders, editor }));
   if (!ok) process.exit(1);
 }

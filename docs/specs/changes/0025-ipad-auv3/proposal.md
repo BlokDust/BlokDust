@@ -32,6 +32,8 @@ build, the iPad-specific native pieces, and the tools that prove it works.
    out of process like AUM does: golden fixtures render bit-identical to native, state round-trips, and the editor's
    page reports `bd_ready`. Device installs and owner review builds after signing is set up.
 6. **The container app** opens BlokDust full screen with output-only audio: no microphone prompt for the instrument.
+   It is our own app rather than JUCE's standalone (whose iOS audio device always opens a record-capable session); it
+   plays in the foreground only and its Audio In block is silent.
 
 ## Out of scope
 - iPhone layout (UI-0004: phones get what the existing layout gives).

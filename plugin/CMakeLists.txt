@@ -38,6 +38,11 @@ function(blokdust_plugin target)
   # Bundle IDs under Funputs, lowercase like FUNPUTS' plug-ins (owner, 2026-11-15; blokdust.com is not the owner's):
   # com.funputs.blokdust, com.funputs.blokdustfx. Hosts find AUs and VST3s by their codes, which do not change.
   string(TOLOWER "com.funputs.${target}" bundle_id)
+  if(IOS)
+    set(mic FALSE)
+  else()
+    set(mic TRUE)
+  endif()
   juce_add_plugin(${target}
     PRODUCT_NAME "${ARG_PRODUCT}"
     COMPANY_NAME "BlokDust"
@@ -58,7 +63,8 @@ function(blokdust_plugin target)
     # Audio In (FX) in the Standalone uses the microphone/line input: hardened runtime needs the entitlement and
     # macOS needs a usage string, or input is silently denied.
     HARDENED_RUNTIME_OPTIONS com.apple.security.device.audio-input
-    MICROPHONE_PERMISSION_ENABLED TRUE
+    # Not on iPad (CHG-0025 task 4): the app plays output only, and an AUv3 hears its host's audio without the mic.
+    MICROPHONE_PERMISSION_ENABLED ${mic}
     MICROPHONE_PERMISSION_TEXT "BlokDust FX uses audio input for its Audio In block."
     VST3_CATEGORIES ${vst3_cat}
     # iPadOS (CHG-0025): iPad only (UI-0004); the AUv3 extension lives in the Standalone app. Hosts (AUM, GarageBand,
@@ -95,6 +101,12 @@ if(IOS)
   # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container).
   # BlokDust FX follows once both extensions can share one app (CHG-0025 task list).
   blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS AUv3 Standalone)
+  # The app is our own, output only (CHG-0025 task 4; plugin/src/ios/ContainerApp.mm): JUCE's standalone app opens a
+  # play-and-record session at launch (a microphone prompt; a Core Audio deadlock in the Simulator).
+  target_compile_definitions(BlokDust_Standalone PRIVATE JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
+  target_sources(BlokDust_Standalone PRIVATE src/ios/ContainerApp.mm)
+  set_source_files_properties(src/ios/ContainerApp.mm PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+  target_link_libraries(BlokDust_Standalone PRIVATE "-framework AVFoundation")
   # The extension's ID is JUCE's: <app id>.<last part>AUv3 = com.funputs.blokdust.blokdustAUv3 (juceaide writes it into
   # the extension's Info.plist; no CMake property changes it). Users never see it.
   return()

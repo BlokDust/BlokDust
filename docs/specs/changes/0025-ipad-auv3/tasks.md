@@ -9,9 +9,15 @@ Check items off as they land. Each task should be independently verifiable.
       render the golden fixtures via state (≡ native hashes), state round-trip, open its view and wait for `bd_ready`.
 - [x] 3. `pnpm bd plugin ios build|test` (tool + `tool.json`, `pnpm bd index`): boot a Simulator, install, run task 2,
       JSON result. 2026-11-15: both fixtures ≡ native through the out-of-process AUv3, state round-trips, page
-      `ready, 6 blocks` (`plugin/tests/ios-host/main.mm`, `tools/plugin/ios.ts`). Still to do: add it to `bd ci`.
-- [ ] 4. Container app without a microphone prompt: output-only session for the instrument (JUCE's iOS device always
+      `ready, 6 blocks` (`plugin/tests/ios-host/main.mm`, `tools/plugin/ios.ts`). 2026-11-16: in `bd ci` (job `ios`, skipped without an iOS Simulator runtime).
+- [x] 4. Container app without a microphone prompt: output-only session for the instrument (JUCE's iOS device always
       activates `PlayAndRecord`, which also deadlocks the Simulator); the app opens BlokDust full screen.
+      2026-11-16: our own app (`plugin/src/ios/ContainerApp.mm`, `JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP`) runs the
+      processor from an AVAudioEngine source node on a `Playback` session (mixes with other apps), opens every MIDI input,
+      restarts after interruptions and route changes, and saves the patch when it leaves the foreground. No
+      `NSMicrophoneUsageDescription` on iPad (app or extension); Audio In is silent in the app. `bd plugin ios test`
+      checks it on a fresh install: Playback session, sound at the output, first-launch patch (10 blocks), saved in the
+      background and restored on relaunch. Left for task 8: the status bar still shows; the editor's resize corner.
 - [ ] 5. Patches on iPad: App Group container shared by app and extension; Files app visibility; Save/Open through the
       document picker; Delete without a Trash.
 - [ ] 6. Samples on iPad: document picker, security-scoped access, copy into the container, relink by name.
