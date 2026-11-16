@@ -2,7 +2,7 @@
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
-import { CONFIG_DIR, requiredSetting } from '../lib/local-config.ts';
+import { CONFIG_DIR, requiredSetting, setting } from '../lib/local-config.ts';
 
 export type EnvName = 'staging' | 'production';
 export const envKey = (env: EnvName, suffix: string) => `BLOKDUST_${env.toUpperCase()}_${suffix}`;
@@ -24,6 +24,11 @@ export function remoteConfig(env: EnvName): string {
   target.d1_databases[0].database_id = requiredSetting(envKey(env, 'DATABASE_ID'));
   target.vars.PUBLIC_BASE_URL = publicUrl(env);
   target.vars.TURNSTILE_SITE_KEY = requiredSetting(envKey(env, 'TURNSTILE_SITE_KEY'));
+  // Sign in with Google (SPEC-SHARING-ACCOUNTS R2a): optional; the client secret is a Worker secret (`bd server secret`).
+  const google = setting('BLOKDUST_GOOGLE_CLIENT_ID').trim();
+  if (google) target.vars.GOOGLE_CLIENT_ID = google;
+  // Sign in with Apple (R2b): optional; the Services ID, team id and key id are vars, the .p8 key a Worker secret.
+  for (const k of ['CLIENT_ID', 'TEAM_ID', 'KEY_ID']) { const v = setting(`BLOKDUST_APPLE_${k}`).trim(); if (v) target.vars[`APPLE_${k}`] = v; }
   // Avoid validating unrelated remote placeholders in the other environment.
   config.env = { [env]: target };
   const hash = createHash('sha256').update(server).digest('hex').slice(0, 16);

@@ -1,4 +1,4 @@
-# CHG-0022 tasks: Waveform zoom in the options panel
+# CHG-0028 tasks: Waveform zoom in the options panel
 
 Check items off as they land. Each task should be independently verifiable.
 

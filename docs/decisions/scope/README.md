@@ -7,7 +7,7 @@
 |---|---|---|---|---|
 | [SCOPE-0001](SCOPE-0001-no-user-programmable-dsp-or-custom-code-blocks.md) | No user-programmable DSP or custom code blocks | **rejected** | 2026-11-05 | scope, blocks |
 | [SCOPE-0002](SCOPE-0002-macros-grouped-blocks.md) | Macros (grouped blocks) | **deferred** | 2026-11-05 | scope, macros |
-| [SCOPE-0003](SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **deferred** | 2026-11-05 | scope, backend |
+| [SCOPE-0003](SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **superseded** | 2026-11-05 | scope, backend |
 | [SCOPE-0004](SCOPE-0004-faithful-v1-parity-same-blocks-same-look-same-feel.md) | Faithful v1 parity: same blocks, same look, same feel | **accepted** | 2026-11-05 | scope, parity |
 | [SCOPE-0005](SCOPE-0005-the-post-2-0-block-set.md) | The post-2.0 block set | **proposed** | 2026-11-13 | scope, blocks, post-2-0 |
 | [SCOPE-0006](SCOPE-0006-stage-block-nested-patches.md) | Stage block: a patch inside a block (macros, depth 2) | **proposed** | 2026-11-13 | scope, macros, stage |

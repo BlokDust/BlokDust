@@ -1,12 +1,12 @@
 ---
-id: CHG-0022
+id: CHG-0028
 title: Waveform zoom in the options panel
 status: proposed
 date: 2026-11-15
 specs: [SPEC-VISUAL-V1-PARITY]
 adrs: [UI-0013]
 ---
-# CHG-0022: Waveform zoom in the options panel
+# CHG-0028: Waveform zoom in the options panel
 
 ## Why
 Picking a tiny loop out of a long sample is hard: the waveform always shows the whole sound across the panel, so the

@@ -69,8 +69,10 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - **Open** over unsaved changes (the patch differs from what was last saved, shared or opened) asks first: CANCEL ·
     SAVE FIRST · OPEN ANYWAY. Insert never asks.
   - A picked or dropped file asks Open or Insert; a file that isn't a patch says so.
-  - OPEN lists the user's own patches above the built-in presets: in the plugin, the patches folder; on the web, the
-    patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only.
+  - OPEN lists the user's own patches: in the plugin, the patches folder, above the built-in presets; on the web, the
+    patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only, and the
+    signed-in account's (owner review 3, 2026-11-16: on the web the presets are @blokdust's EXAMPLES in the gallery,
+    SPEC-SHARING-GALLERY R16, so OPEN is empty until the user saves something; OPEN FROM YOUR DEVICE is always there).
   - The plugin's SAVE tab has SAVE TO COMPUTER, then CREATE SHARE LINK, which opens the public site with the patch in
     the address (`?c=p…&t=<title>&share=1`); the site makes the link as it loads (as SAVE would) and the address bar
     shows it, short, to copy; START shows the scene (owner, 2026-11-13, CHG-0013; it used to open Patches on SAVE).
@@ -91,7 +93,17 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - SAVE TO COMPUTER (the web's DOWNLOAD PATCH) lets the user choose where: the plugin's save dialog starts in `~/Music/BlokDust/Patches`; on the
     web the browser's save dialog where there is one (starting in Music, then the folder last used for patches), else a
     download. Patch names may use any characters; the file name drops only those a file system can't hold.
-  - Built-in presets ship as `.blokdust` files (`web/src/patch/presets/`).
+  - Built-in presets ship as `.blokdust` files (`web/src/patch/presets/`); `pnpm bd gallery presets` publishes them as @blokdust's.
+- **R11.** A patch lists where its blocks came from (owner review 3, 2026-11-16), so how patches were combined can be
+  followed back one day (a family tree in the gallery):
+  - `sources`: one entry per saved (server) patch that INSERT brought in: `{ id, rev, title, by, blocks }`, `blocks`
+    being the ids, in this patch, of the blocks it brought that are still here. Entries with no blocks left are
+    dropped on save; at most the newest 32 are kept (older ones stay reachable through the newer sources' own
+    lists).
+  - Opening a patch keeps its `sources`; inserting one carries its `sources` along under the blocks' new ids, so the
+    whole chain survives even when the middle patch is a local file.
+  - A patch opened from a link and saved again is a remix: the server keeps `parent` (SPEC-SHARING-GALLERY R11).
+  - The plugin has no gallery: what it inserts from files carries no `sources` yet.
 
 ## Verification
 Schema tests; round-trip property tests (parse → serialize → parse); v1 import tests against `tests/visual/fixtures/v1/*.json`; size checks.

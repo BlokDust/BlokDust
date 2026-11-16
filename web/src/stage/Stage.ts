@@ -9,16 +9,14 @@ import { Container, Graphics, RenderTexture, Sprite, Texture, type Application }
 import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import type { Theme } from '../generated/palettes.gen.ts';
 import { bakeBlock, bakeOverlays, layerPoints } from '../render/bakeBlock.ts';
-import { routeConnection } from './connectionRoute.ts';
 import { computeMetrics, gridToPx, pxToGrid, type Metrics } from './metrics.ts';
 import { drawV1Chrome } from '../chrome/v1Chrome.ts';
+import { drawBeams, drawBlocks, drawConnections, drawOverlays, drawParticles, type StageBlock } from './drawWorld.ts';
 
 /** UI-0005 bake-off: how block geometry is rasterised. */
 export type BlockRenderer = 'baked' | 'msaa' | 'ss2' | 'canvas';
 
-export interface StageBlock { id: number; type: string; x: number; y: number; starPos?: { x: number; y: number } }
-
-const isSourceKind = (d: BlockDef) => d.kind === 'audio-source' || d.kind === 'power-source';
+export type { StageBlock } from './drawWorld.ts';
 
 /** Crossing-number test, grid units (same rule as the engine). */
 function pointInPolygon(px: number, py: number, poly: [number, number][], ox: number, oy: number): boolean {
@@ -314,17 +312,8 @@ export class Stage {
   /** Renderer 'canvas': blocks then overlays drawn straight into the opaque stage canvas, exactly as v1 does. */
   private drawBlocksAndOverlays(ctx: CanvasRenderingContext2D): void {
     const m = this.metrics;
-    const poly = (pts: [number, number][], fill: string, alpha = 1) => {
-      ctx.beginPath();
-      pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-      ctx.closePath(); ctx.fillStyle = fill; ctx.globalAlpha = alpha; ctx.fill(); ctx.globalAlpha = 1;
-    };
-    for (const { block, def } of this.blocks.values()) {
-      const upg = def.geometry.unitsPerGrid ?? 15;
-      const alpha = block.id === this.pressed || this.placing.has(block.id) || this.held.has(block.id) ? 0.5 : 1;  // v1 Block.Draw: pressed + selected → 50%
-      for (const l of def.geometry.layers)
-        poly(layerPoints(l, upg, block.starPos).map(([x, y]) => gridToPx(m, block.x + x, block.y + y)), this.theme.colors[l.palette], alpha);
-    }
+    // v1 Block.Draw: pressed + selected → 50%
+    drawBlocks(ctx, m, this.theme, this.blocks.values(), id => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1));
     // Multi-select (not in v1): each selected block ringed by its outline moved out 4 units on every side, and the box,
     // dashed in the text colour at half strength (owner, 2026-11-11: quieter than a solid line).
     if (this.selected.size || this.selectBox) {
@@ -352,33 +341,9 @@ export class Stage {
       ctx.closePath(); ctx.stroke();
       ctx.restore();
     }
-    if (this.beams.length) {  // v1 LaserBeams.Draw
-      ctx.strokeStyle = this.theme.colors[this.theme.roles.power];
-      ctx.lineWidth = m.scaledUnit * 2 * (0.8 + (this.beamJitter ?? Math.random()) * 0.5);
-      ctx.beginPath();
-      for (let i = 0; i < this.beams.length; i += 4) {
-        const [x0, y0] = gridToPx(m, this.beams[i], this.beams[i + 1]), [x1, y1] = gridToPx(m, this.beams[i + 2], this.beams[i + 3]);
-        ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
-      }
-      ctx.stroke();
-      ctx.lineWidth = 1;
-    }
-    for (const { block, def } of this.blocks.values()) {
-      const [bx, by] = gridToPx(m, block.x, block.y);
-      for (const o of def.geometry.overlays ?? []) if (!this.skipOverlays.has(o.name)) for (const l of o.states.idle ?? [])
-        poly(l.points.map(([x, y]) => [bx + x * m.gridSize, by + y * m.gridSize] as [number, number]), this.theme.colors[l.palette], l.alpha);
-    }
-    if (this.particleData.length) {  // v1 ParticleLayer.Draw: one diamond path per particle
-      const p = this.particleData;
-      ctx.fillStyle = this.theme.colors[this.theme.roles.power];
-      ctx.globalAlpha = 1;
-      for (let i = 0; i < p.length; i += 3) {
-        const [sx, sy] = gridToPx(m, p[i], p[i + 1]), size = p[i + 2] * m.scaledUnit;
-        ctx.beginPath();
-        ctx.moveTo(sx - size, sy); ctx.lineTo(sx, sy - size); ctx.lineTo(sx + size, sy); ctx.lineTo(sx, sy + size);
-        ctx.closePath(); ctx.fill();
-      }
-    }
+    drawBeams(ctx, m, this.theme, this.beams, this.beamJitter ?? Math.random());  // v1 LaserBeams.Draw
+    drawOverlays(ctx, m, this.theme, this.blocks.values(), this.skipOverlays);
+    drawParticles(ctx, m, this.theme, this.particleData);  // v1 ParticleLayer.Draw
     if (this.drawUi) this.drawUi(ctx);  // v1 chrome/panels (web/src/v1ui), drawn after blocks as in v1's display list
     else if (this.chrome) drawV1Chrome({ ctx, theme: this.theme, width: this.lineCanvas.width, height: this.lineCanvas.height, units: m.unit,
       cssWidth: this.app.screen.width, cssHeight: this.app.screen.height, blockCount: this.blocks.size });
@@ -389,22 +354,7 @@ export class Stage {
     const m = this.metrics;
     ctx.clearRect(0, 0, this.lineCanvas.width, this.lineCanvas.height);
     if (this.renderer === 'canvas') { ctx.fillStyle = this.theme.colors[0]; ctx.fillRect(0, 0, this.lineCanvas.width, this.lineCanvas.height); }
-    ctx.strokeStyle = this.theme.colors[15];
-    for (const powered of [false, true]) {
-      ctx.lineWidth = powered ? 2 : 1;
-      ctx.beginPath();
-      for (let i = 0; i < this.connections.length; i += 2) {
-        let s = this.blocks.get(this.connections[i]), t = this.blocks.get(this.connections[i + 1]);
-        if (!s || !t) continue;
-        if (!isSourceKind(s.def)) [s, t] = [t, s];  // lines run source → effect
-        if (this.powered.has(s.block.id) !== powered) continue;
-        routeConnection(s.block.x, s.block.y, t.block.x, t.block.y).forEach(([gx, gy], k) => {
-          const [px, py] = gridToPx(m, gx, gy);
-          if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py);
-        });
-      }
-      ctx.stroke();
-    }
+    drawConnections(ctx, m, this.theme, this.blocks, this.connections, this.powered);
     if (this.renderer === 'canvas') this.drawBlocksAndOverlays(ctx);
     if (this.renderer !== 'canvas') this.lineSprite.texture.source.update();
     this.linesDirty = false;

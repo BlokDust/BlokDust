@@ -37,6 +37,9 @@ Run `pnpm bd privacy check` before committing and `pnpm bd privacy history` befo
 - `pnpm test:e2e`: build a patch with v1's UI and hear it (CHG-0002 acceptance)
 - `pnpm test:sharing`: sharing backend + embeds + samples (local `wrangler dev`, Turnstile test key, Freesound/siteverify mocks)
 - `pnpm bd server dev|setup|secret|deploy|smoke`: the Cloudflare Worker + D1 in `server/` (staging = owner review; production only after a merge)
+- `pnpm test:gallery`: the public gallery (publish, search, likes, remixes, reports, `bd gallery` review)
+- `pnpm test:accounts`: optional accounts (local Worker, mocked Google/siteverify, Chrome's virtual passkey authenticator)
+- `pnpm test:video`: video export in Google Chrome (MP4 checked with ffprobe/ffmpeg; `--chromium` for the WASM AAC path)
 - `pnpm test:mpe`: the web MPE/MIDI parser on the shared streams in `tests/mpe/` (the C++ parser runs them in the engine tests; PLUGIN-0004)
 - `pnpm test:ui-regressions`: one browser test per UI bug found in review; every new bug gets a failing test here (or in engine tests) before its fix
 - `pnpm bd render --check --configs release,dev`: golden audio/event hashes

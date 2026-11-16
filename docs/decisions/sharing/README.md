@@ -11,3 +11,6 @@
 | [SHARING-0004](SHARING-0004-host-on-a-placeholder-cloudflare-url.md) | Host on a placeholder Cloudflare URL with a configurable base path | **accepted** | 2026-11-05 | hosting, domain |
 | [SHARING-0005](SHARING-0005-host-release-1-at-funputs-com-blokdust-with-a.md) | Host Release 1 at funputs.com/blokdust with a Worker route | **superseded** | 2026-11-11 | hosting, domain, release-1 |
 | [SHARING-0006](SHARING-0006-host-at-blokdust-funputs-com-with-funputs-com.md) | Host at blokdust.funputs.com with funputs.com/blokdust redirecting | **accepted** | 2026-11-12 | hosting, domain, release-1 |
+| [SHARING-0007](SHARING-0007-video-export-renders-the-patch-offline-and.md) | Video export renders the patch offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
+| [SHARING-0008](SHARING-0008-optional-accounts-with-passkeys-and-google.md) | Optional accounts with passkeys and Google, sessions in D1 | **proposed** | 2026-11-15 | sharing, accounts, security, cost |
+| [SHARING-0009](SHARING-0009-a-public-gallery-of-published-patches-with-likes.md) | A public gallery of published patches with likes and reports | **proposed** | 2026-11-15 | sharing, gallery, moderation |

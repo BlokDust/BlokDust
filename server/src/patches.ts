@@ -2,6 +2,11 @@
 // "overwrite": only with the edit token the creator's browser keeps, as v1's SessionId), load, delete, thumbnails.
 import { LIMITS, type Env } from './env.ts';
 import { HttpError, b64urlBytes, json, publicBase, sameDigest, sha256Hex } from './http.ts';
+import { verifyTurnstile } from './turnstile.ts';
+import { currentUser, sameOrigin } from './auth/session.ts';
+import { afterSave } from './gallery.ts';
+import { blockTally } from './stats.ts';
+import { addActivity, readActivity } from './activity.ts';
 
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** Share ids: 10 base62 chars that never start with "p" (Phase 1 `?c=p…` links carry the patch itself, R5b). */
@@ -18,7 +23,8 @@ function newId(): string {
   return s;
 }
 
-interface SaveBody { patch?: unknown; title?: unknown; thumb?: unknown; parent?: unknown; turnstile?: unknown }
+interface SaveBody { patch?: unknown; title?: unknown; thumb?: unknown; parent?: unknown; turnstile?: unknown; /** SPEC-SHARING-GALLERY R1: in the gallery or not. */ gallery?: unknown;
+  /** SPEC-SHARING-ACCOUNTS R16: running totals to add to the signed-in account. */ activity?: unknown }
 
 async function readBody(req: Request): Promise<SaveBody> {
   const len = Number(req.headers.get('content-length') ?? 0);
@@ -56,30 +62,12 @@ function validThumb(t: unknown): Uint8Array | null {
   return bytes;
 }
 
-/** Turnstile (SHARING-0001): every save must carry a token Cloudflare accepts. Fails closed without a secret. */
-async function verifyTurnstile(env: Env, req: Request, token: unknown): Promise<void> {
-  if (!env.TURNSTILE_SECRET) throw new HttpError(503, 'saving is not configured');
-  if (typeof token !== 'string' || !token) throw new HttpError(403, 'bot check missing');
-  const form = new FormData();
-  form.append('secret', env.TURNSTILE_SECRET);
-  form.append('response', token);
-  const ip = req.headers.get('cf-connecting-ip');
-  if (ip) form.append('remoteip', ip);
-  const url = env.TURNSTILE_VERIFY_URL || 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-  let ok = false;
-  try {
-    const r = await fetch(url, { method: 'POST', body: form });
-    ok = r.ok && ((await r.json()) as { success?: boolean }).success === true;
-  } catch { throw new HttpError(503, 'bot check unavailable'); }
-  if (!ok) throw new HttpError(403, 'bot check failed');
-}
-
 function shareUrl(env: Env, req: Request, id: string, title: string): string {
   const t = title ? `&t=${encodeURI(title)}` : '';
   return `${publicBase(env, req)}/?c=${id}${t}`;
 }
 
-interface Row { id: string; title: string; parent: string | null; edit_hash: string; rev: number; created: number; updated: number; deleted: number }
+interface Row { id: string; title: string; parent: string | null; edit_hash: string; rev: number; created: number; updated: number; deleted: number; owner_id: string | null }
 
 async function row(env: Env, id: string): Promise<Row | null> {
   if (!ID_RE.test(id)) return null;
@@ -87,33 +75,58 @@ async function row(env: Env, id: string): Promise<Row | null> {
   return r && !r.deleted ? r : null;
 }
 
-async function authorise(req: Request, r: Row): Promise<void> {
+/** May this request change patch `id` (save over, delete, unpublish)? See authorise. */
+export async function mayEdit(env: Env, req: Request, id: string): Promise<boolean> {
+  const r = await row(env, id);
+  if (!r) return false;
+  try { await authorise(env, req, r); return true; } catch { return false; }
+}
+
+/** The patch's edit token (the browser that made it), or the account that owns it, signed in on this site
+ * (SPEC-SHARING-ACCOUNTS R9: an account's patches can be saved from any device). */
+async function authorise(env: Env, req: Request, r: Row): Promise<void> {
   const auth = req.headers.get('authorization') ?? '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
-  if (!token || !sameDigest(await sha256Hex(token), r.edit_hash)) throw new HttpError(403, 'not your patch (missing or wrong edit token)');
+  if (token && sameDigest(await sha256Hex(token), r.edit_hash)) return;
+  if (r.owner_id) {
+    const u = await currentUser(env, req);
+    if (u?.id === r.owner_id) { sameOrigin(env, req); return; }
+  }
+  throw new HttpError(403, 'not your patch (missing or wrong edit token)');
+}
+
+/** R16 of accounts: a save carries the browser's running totals; added when someone is signed in. */
+async function withActivity(env: Env, userId: string | null, raw: unknown): Promise<boolean> {
+  const a = userId ? readActivity(raw) : null;
+  if (!a || !userId) return false;
+  await addActivity(env, userId, a).run();
+  return true;
 }
 
 /** POST /api/patches: a new share id (v1 "generate share link" and "create new"; `parent` records the remix). */
 export async function createPatch(env: Env, req: Request): Promise<Response> {
   const body = await readBody(req);
-  const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb);
+  const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb), blocks = blockTally(body.patch);
   let parent: string | null = null;
   if (body.parent !== undefined && body.parent !== null && body.parent !== '') {
     if (typeof body.parent !== 'string' || !(await row(env, body.parent))) throw new HttpError(400, 'unknown parent');
     parent = body.parent;
   }
   await verifyTurnstile(env, req, body.turnstile);
+  const owner = (await currentUser(env, req))?.id ?? null;  // signed in: the account's patch (R9)
   const editToken = b64urlBytes(24), editHash = await sha256Hex(editToken), now = Date.now();
   for (let attempt = 0; attempt < 5; attempt++) {
     const id = newId();
     try {
       await env.DB.batch([
-        env.DB.prepare('INSERT INTO patches (id, title, parent, edit_hash, rev, created, updated) VALUES (?, ?, ?, ?, 1, ?, ?)')
-          .bind(id, title, parent, editHash, now, now),
+        env.DB.prepare('INSERT INTO patches (id, title, parent, edit_hash, rev, created, updated, owner_id, blocks) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)')
+          .bind(id, title, parent, editHash, now, now, owner, blocks),
         env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, 1, ?, ?, ?, ?)')
           .bind(id, patch, title, thumb, now),
       ]);
-      return json({ id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title) }, 201);
+      const gallery = await afterSave(env, id, owner, body.gallery === true ? true : undefined);
+      const activity = await withActivity(env, owner, body.activity);
+      return json({ id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title), gallery, activity }, 201);
     } catch (e) {
       if (!String(e).includes('UNIQUE')) throw e;  // id collision: try another
     }
@@ -125,21 +138,25 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
 export async function savePatch(env: Env, req: Request, id: string): Promise<Response> {
   const r = await row(env, id);
   if (!r) throw new HttpError(404, 'no such patch');
-  await authorise(req, r);
+  await authorise(env, req, r);
   const body = await readBody(req);
   const patch = validPatch(body.patch), title = validTitle(body.title), thumb = validThumb(body.thumb);
   await verifyTurnstile(env, req, body.turnstile);
-  const now = Date.now(), rev = r.rev + 1;
+  const now = Date.now(), rev = r.rev + 1, blocks = blockTally(body.patch);
   const res = await env.DB.batch([
     env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, ?, ?, ?, ?, ?)').bind(id, rev, patch, title, thumb, now),
     // Guarded on the revision we read: two concurrent saves cannot both win.
-    env.DB.prepare('UPDATE patches SET rev = ?, title = ?, updated = ? WHERE id = ? AND rev = ?').bind(rev, title, now, id, r.rev),
+    env.DB.prepare('UPDATE patches SET rev = ?, title = ?, updated = ?, blocks = ? WHERE id = ? AND rev = ?').bind(rev, title, now, blocks, id, r.rev),
   ]);
   if (!res[1].meta.changes) throw new HttpError(409, 'saved elsewhere at the same time; try again');
-  return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title) });
+  // SPEC-SHARING-GALLERY R1, R5: in or out of the gallery as asked; published, it shows the latest title and blocks.
+  const gallery = await afterSave(env, id, r.owner_id, typeof body.gallery === 'boolean' ? body.gallery : undefined);
+  const activity = body.activity ? await withActivity(env, (await currentUser(env, req))?.id ?? null, body.activity) : false;
+  return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title), gallery, activity });
 }
 
-export interface Loaded { id: string; rev: number; title: string; parent: string | null; created: number; updated: number; patch: unknown; hasThumb: boolean }
+export interface Loaded { id: string; rev: number; title: string; parent: string | null; created: number; updated: number; patch: unknown; hasThumb: boolean;
+  /** The owning account's handle (SPEC-SHARING-ACCOUNTS R12), when it has one. */ by: string | null }
 
 export async function loadPatch(env: Env, id: string): Promise<Loaded | null> {
   const r = await row(env, id);
@@ -147,14 +164,26 @@ export async function loadPatch(env: Env, id: string): Promise<Loaded | null> {
   const v = await env.DB.prepare('SELECT json, title, thumb IS NOT NULL AS has_thumb FROM revisions WHERE patch_id = ? AND rev = ?')
     .bind(id, r.rev).first<{ json: string; title: string; has_thumb: number }>();
   if (!v) return null;
-  return { id, rev: r.rev, title: v.title, parent: r.parent, created: r.created, updated: r.updated, patch: JSON.parse(v.json), hasThumb: !!v.has_thumb };
+  const by = r.owner_id ? (await env.DB.prepare('SELECT handle FROM users WHERE id = ?').bind(r.owner_id).first<{ handle: string | null }>())?.handle ?? null : null;
+  return { id, rev: r.rev, title: v.title, parent: r.parent, created: r.created, updated: r.updated, patch: JSON.parse(v.json), hasThumb: !!v.has_thumb, by };
 }
 
 /** GET /api/patches/:id: the latest revision. */
-export async function getPatch(env: Env, id: string): Promise<Response> {
+export async function getPatch(env: Env, req: Request, id: string, ctx?: ExecutionContext): Promise<Response> {
   const p = await loadPatch(env, id);
   if (!p) throw new HttpError(404, 'no such patch');
-  return json(p, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*' });
+  // SPEC-SHARING-GALLERY R14: roughly how often it is opened in the app (pages and previews don't count).
+  const counting = env.DB.prepare('UPDATE patches SET views = views + 1 WHERE id = ?').bind(id).run().catch(() => {});
+  if (ctx) ctx.waitUntil(counting); else await counting;
+  const views = (await env.DB.prepare('SELECT views FROM patches WHERE id = ?').bind(id).first<{ views: number }>())?.views ?? 0;
+  const published = !!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ? AND hidden = 0').bind(id).first());
+  // `mine`: the signed-in account owns it, so this device may save over it without the edit token (R9).
+  const owner = (await env.DB.prepare('SELECT owner_id FROM patches WHERE id = ?').bind(id).first<{ owner_id: string | null }>())?.owner_id;
+  const me = await currentUser(env, req), mine = !!owner && me?.id === owner;
+  // Its likes, and whether the signed-in user has liked it (the star by its credit on the stage, owner review 2).
+  const likes = published ? (await env.DB.prepare('SELECT likes FROM gallery WHERE patch_id = ?').bind(id).first<{ likes: number }>())?.likes ?? 0 : 0;
+  const liked = !!me && published && !!(await env.DB.prepare('SELECT 1 FROM likes WHERE patch_id = ? AND user_id = ?').bind(id, me.id).first());
+  return json({ ...p, mine, views, published, likes, liked }, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*', vary: 'cookie' });
 }
 
 /** GET /api/patches/:id/thumb.png[?rev=n]: the PNG saved with that revision (latest by default). */
@@ -175,8 +204,9 @@ export async function getThumb(env: Env, id: string, revParam: string | null): P
 export async function deletePatch(env: Env, req: Request, id: string): Promise<Response> {
   const r = await row(env, id);
   if (!r) throw new HttpError(404, 'no such patch');
-  await authorise(req, r);
+  await authorise(env, req, r);
   await env.DB.batch([
+    env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id),
     env.DB.prepare('DELETE FROM revisions WHERE patch_id = ?').bind(id),
     env.DB.prepare('UPDATE patches SET deleted = 1, updated = ? WHERE id = ?').bind(Date.now(), id),
   ]);

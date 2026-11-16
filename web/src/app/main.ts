@@ -13,9 +13,12 @@ import { SAMPLE_GEN } from '../v1ui/ported/SampleGenData';
 import { encodeWav } from '../audio/wav.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
-import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock } from '../patch/loadPatch.ts';
+import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock, type PatchSource } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
-import { editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
+import { type GalleryState, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
+import * as account from '../account/client.ts';
+import { activity } from '../account/activity.ts';
+import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
 import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
@@ -23,6 +26,7 @@ import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../sta
 import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
 import { drawMakeStage, inBox, makeStageBox, type ButtonBox } from '../stage/makeStageButton.ts';
 import { frameBlocks } from '../stage/frameBlocks.ts';
+import { starPos } from '../stage/starPos.ts';
 import { gridToPx } from '../stage/metrics.ts';
 import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
@@ -34,6 +38,11 @@ import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts'
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { moveWavePinch, snapshotWave, startWavePinch, waveRowAt, wheelWave, type WavePinch } from '../v1ui/waveZoom.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
+import { drawUpArrow, type VideoChoice, type VideoProgressInfo } from '../v1ui/patches.ts';
+import { videoSeconds } from '../video/length.ts';
+import { startSource, type PatchSample } from '../video/sources.ts';
+import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/share.ts';
+import type { Credit } from '../video/frame.ts';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
 const THUMB = { width: 1200, height: 630 } as const;
@@ -44,13 +53,6 @@ interface JuceBackend {
 }
 interface ModelBlock { uid: string; type: string; x: number; y: number; params: Record<string, unknown> }
 
-/** Visual-only per-block star position for Void (v1 RandomStarPos), seeded by block id so it is stable. */
-function starPos(id: number): { x: number; y: number } {
-  let s = (id * 2654435761) >>> 0;
-  const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
-  const x = Math.round(r() * 10), y = Math.round(r() * (10 - x));
-  return { x: r() < 0.5 ? -x : x, y: r() < 0.5 ? -y : y };
-}
 const typeIndex = (type: string) => BLOCKS.findIndex(b => b.id === type);
 /** Params that hold engine ids of this session (an LFO's resolved target, AUDIO-0003): never taken from a patch. */
 const SESSION_PARAMS = new Set(['targetBlock', 'targetParam']);
@@ -72,7 +74,7 @@ function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
 }
-interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean }
+interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
 async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
@@ -85,7 +87,7 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
     // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
     if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c };
     const r = await loadShared(c);
-    if (r) return { patch: r.patch, view: {}, id: c, title: r.title };
+    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 };
     return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: true };
   }
   if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null }; }
@@ -95,8 +97,15 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
   return { patch: loadLocal() ?? (demo as Patch), view: {}, id: loadSession().id };
 }
 
+/** v1 App.SessionId: the right to save over a composition: this browser's edit token, or, when the signed-in account
+ * owns it (SPEC-SHARING-ACCOUNTS R9), a marker (the cookie does the rest). */
+const accountOwnedClear = () => accountOwned.clear();
+const sessionFor = (id: string | null): string | null => editToken(id) ?? (canOverwrite(id) ? 'account' : null);
+
 async function main() {
   const params = new URLSearchParams(location.search);
+  /** Back from Google sign-in (`?account=in|new`, SPEC-SHARING-ACCOUNTS R2a). */
+  const signInReturn = params.get('account');
   const juce = (window as unknown as { __JUCE__?: { backend: JuceBackend } }).__JUCE__?.backend;
   applyHostLabels(!!juce);
   const embedId = embedIdFromPage();
@@ -114,11 +123,15 @@ async function main() {
   if (!juce && embedId) engineModule().catch(() => { /* reported when PLAY needs it */ });
   const start = await initialPatch(params, embedId, !!juce);
   // v1 App.CompositionId / App.SessionId: the open composition and (if this browser made it) the right to overwrite it.
-  App.CompositionId = start.id; App.SessionId = editToken(start.id);
+  App.CompositionId = start.id; App.SessionId = sessionFor(start.id);
   let session = { id: start.id, dirty: false };
   // v1's Share panel reads the title from `&t=` (GetTitleFromUrl): put a saved title there when the link had none.
   if (start.title && !params.has('t') && !embedId) history.replaceState(null, '', `${location.pathname}?c=${start.id}&t=${encodeURI(start.title)}`);
-  let theme: Theme = THEMES[Math.min(Number(params.get('theme') ?? start.view.theme ?? 0), THEMES.length - 1)];
+  // The colour theme is the user's preference, kept in this browser (owner review 3, 2026-11-16: it went back to the
+  // first on every reload). `?theme=` (embeds, tests) comes first; a v1 composition's own theme only when none is kept.
+  const THEME_KEY = 'blokdust.theme';
+  const keptTheme = (() => { if (embedId) return null; try { const v = localStorage.getItem(THEME_KEY); return v === null ? null : Number(v); } catch { return null; } })();
+  let theme: Theme = THEMES[Math.min(Number(params.get('theme') ?? keptTheme ?? start.view.theme ?? 0), THEMES.length - 1)] ?? THEMES[0];
 
   const app = new Application();
   // Transparent: the static stage is an on-page Canvas2D layer behind Pixi (Stage 'canvas' renderer, UI-0005).
@@ -143,9 +156,13 @@ async function main() {
   let seed = 1, nextId = 1;
   /** The patch tempo (SIMULATION-0003): saved only once set, so older patches stay byte-identical. */
   let tempo: number | undefined;
+  /** The account's running totals are counted (SPEC-SHARING-ACCOUNTS R16): the website, not the plugin or embeds. */
+  let countActivity = false;
   let engine: EngineNode | null = null;
   /** The plugin runs as the standalone app (the processor says so with its patch): no DAW to pass keys on to. */
   let standalone = false;
+  /** Run once START has started audio and the stage shows (panels opened before it never slide in). */
+  const afterStart: (() => void)[] = [];
   /** Commands to the engine (the plugin: to its processor), as given. */
   let sendRaw = (cmds: Command[]) => engine?.send(cmds);
   /**
@@ -191,6 +208,13 @@ async function main() {
   };
   /** The whole patch: the outer world, with what is inside each of its Stage blocks (R7). Looking into a Stage, the
    * inner world on screen is folded into its macro first. */
+  /** SPEC-PATCH-FORMAT-V2 R11: the saved patches whose blocks were inserted into this one (owner review 3). */
+  let sources: PatchSource[] = [];
+  /** The sources that still have blocks here, with only those blocks. */
+  const SOURCES_MAX = 32;  // the newest; older ones are still reachable through the newer sources' own lists
+  const liveSources = (ids: Set<string>) => sources.map(s => ({ ...s, blocks: s.blocks.filter(b => ids.has(b)) })).filter(s => s.blocks.length).slice(-SOURCES_MAX);
+  const readSources = (v: unknown): PatchSource[] => Array.isArray(v) ? v.filter((s): s is PatchSource => !!s && typeof s.id === 'string' && Array.isArray(s.blocks))
+    .map(s => ({ id: s.id, ...(typeof s.rev === 'number' ? { rev: s.rev } : {}), ...(typeof s.title === 'string' ? { title: s.title } : {}), ...(typeof s.by === 'string' ? { by: s.by } : {}), blocks: s.blocks.filter(b => typeof b === 'string') })) : [];
   const toPatch = (): Patch => {
     if (inside) macros.set(inside.stageUid, innerMacro());
     const w = inside ? worldParts(inside.outer.model, inside.outer.connectionOrder, inside.outer.labels) : worldParts();
@@ -198,11 +222,13 @@ async function main() {
     const ms = [...macros.values()].filter(m => stages.has(m.block) && (m.blocks.length || m.labels?.length));
     const used = new Set([...w.blocks, ...ms.flatMap(m => m.blocks)].map(b => b.params?.track).filter((t): t is string => typeof t === 'string'));
     const r = Object.fromEntries([...refs].filter(([k]) => used.has(k)));
+    const src = liveSources(new Set(w.blocks.map(b => b.id).filter((id): id is string => !!id)));
     return { format: 'blokdust.patch', version: 2, seed, ...(tempo !== undefined ? { tempo } : {}),
       blocks: w.blocks,
       ...(Object.keys(r).length ? { refs: r } : {}), ...(w.order.length ? { connectionOrder: w.order } : {}),
       ...(w.labels.length ? { labels: w.labels.map(l => ({ ...l })) } : {}),
       ...(ms.length ? { macros: ms } : {}),
+      ...(src.length ? { sources: src } : {}),
       view: inside ? inside.outer.view : currentView() };
   };
   /** Engine commands that build what is inside Stage block `id` (patch id `uid`), remembering its inner blocks' ids. */
@@ -330,7 +356,10 @@ async function main() {
       send([{ type: CommandType.SetParam, id, param: p, value }]);
       changed();
     },
-    setTheme: n => { theme = THEMES[n] ?? THEMES[0]; stage.setTheme(theme); uiSync = true; stage.redraw(); },
+    setTheme: n => {
+      theme = THEMES[n] ?? THEMES[0]; stage.setTheme(theme); uiSync = true; stage.redraw();
+      if (!embedId) try { localStorage.setItem(THEME_KEY, String(theme.index)); } catch { /* private mode */ }
+    },
     setZoom: z => { stage.setView(z, stage.drag); },
     setDrag: d => { stage.setView(stage.zoom, d); },
     // Tone.Volume dB → gain is 2^(dB/6); the value v1 writes is the one it later reads back (20·log10 form).
@@ -354,20 +383,22 @@ async function main() {
       for (const id of [...model.keys()]) removeBlock(id);
       if (inside) leaveStage(false);
       labels.length = 0; selectedLabels.clear(); endLabelEdit(false);
-      macros.clear(); innerIds.clear(); innerSamples.clear();
+      macros.clear(); innerIds.clear(); innerSamples.clear(); sources = [];
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
-      shareLink = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
+      shareLink = null; credit = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
       setBaseline();
     },
-    share: async (mode, title) => {
+    share: async (mode, title, gallery) => {
       const patch = toPatch();
+      lastGallery = null;
       try {
         const thumb = stage.thumbnail(THUMB.width, THUMB.height, { title }).toDataURL('image/png').split(',')[1];
-        const r = await saveShared(mode, App.CompositionId, { patch, title, thumb });
+        const r = await saveShared(mode, App.CompositionId, { patch, title, thumb, ...(gallery !== undefined ? { gallery } : {}) });
         if (r) {
-          App.CompositionId = r.id; App.SessionId = editToken(r.id);
+          lastGallery = r.gallery ?? null;
+          App.CompositionId = r.id; App.SessionId = sessionFor(r.id);
           session = { id: r.id, dirty: false }; saveSession(session); saveLocal(patch);
           return r.id;
         }
@@ -393,11 +424,14 @@ async function main() {
       syncTargets();
       changed();
     },
-    // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files and built-in presets ----
-    listPatches: async () => [...(juce ? await nativePatches() : myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))),
-      ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))],
+    // ---- Patches panel (CHG-0005; SAVE / OPEN tabs, owner 2026-11-10): `.blokdust` files ----
+    // OPEN lists only the user's own patches on the web (owner review 3, 2026-11-16): the built-in presets are
+    // @blokdust's EXAMPLES in the gallery. The plugin has no gallery, so it keeps them under its own.
+    listPatches: async () => juce
+      ? [...await nativePatches(), ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))]
+      : [...await accountItems(), ...myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))],
     savePatch: title => savePatchFile(title),
-    openPatch: (item, mode) => void openPatchItem(item.key, mode),
+    openPatch: (item, mode) => openPatchItem(item.key, mode),
     pickPatchFile: () => pickPatchFile(),
     usePickedFile: mode => { if (picked) { const p = picked; picked = null; usePatch(p.patch, p.title, mode); } },
     isDirty: () => model.size > 0 && contentOf(toPatch()) !== baseline,
@@ -422,17 +456,168 @@ async function main() {
       warning: () => shareWarning(),
     } : {
       current: () => shareLink ? { url: shareLink.url, owned: shareLink.owned, stale: contentOf(toPatch()) !== shareLink.at } : null,
-      make: async (mode, title) => {
-        const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title);
-        const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
-        history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
-        shareLink = { url, owned: isServerId(id) && !!App.SessionId, at: contentOf(toPatch()) };
-        setBaseline();  // a shared patch counts as saved
-        keepMine(title);
-      },
+      make: (mode, title, gallery) => makeLink(mode, title, gallery),
       warning: () => shareWarning(),
     },
+    // The public gallery (CHG-0024): web only.
+    gallery: juce || embedId ? null : {
+      browse: async (sort, q, page) => { try { return await gallery.browse(sort, q, page); } catch (e) { if ((e as { status?: number }).status === undefined) return null; throw e; } },
+      open: (row, mode) => openShared(row.id, mode),
+      like: row => wantLike(row.id, row.liked, row.likes),
+      report: async id => { await gallery.report(id); },
+      unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
+    },
+    signedIn: () => !!accountPage()?.Account,
+    // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
+    account: juce || embedId ? null : {
+      me: stats => account.me(stats),
+      signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
+      // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so.
+      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); },
+      google: () => account.signInWith('google'),
+      apple: () => account.signInWith('apple'),
+      addPasskey: () => account.addPasskey(),
+      setHandle: async h => { await account.setHandle(h); },
+      signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
+      deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
+      cancelled: e => account.cancelled(e),
+    },
+    // Video export (CHG-0022): web only (R16).
+    video: juce || embedId ? null : {
+      make: (choice, progress, signal) => makeVideoFile(choice, progress, signal),
+      // The share sheet where the browser can share files (phones, Safari…); elsewhere the file is downloaded.
+      share: async file => {
+        if (canShareFile(file)) await shareFile(file, videoTitle(), `${videoTitle()} \u2014 made with BlokDust ${videoLink()}`);
+        else downloadFile(file);
+      },
+      canShareFiles: () => canShareFile(new File([''], 'video.mp4', { type: 'video/mp4' })),
+      seconds: () => videoSeconds([...model.values()], tempo ?? 120, (type, key) => BLOCKS_BY_ID.get(type)?.params.find(q => q.key === key)?.default),
+    },
   });
+  /** After signing in or out: whether this device may save over the open composition (R9). */
+  function refreshOwnership(out = false): void {
+    if (out) accountOwnedClear();
+    App.SessionId = sessionFor(App.CompositionId);
+    if (shareLink) shareLink = { ...shareLink, owned: !!App.SessionId };
+  }
+  // ---- video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT) ----
+  const videoTitle = () => scene.PatchesPanel.Title.trim() || 'Untitled';
+  const videoLink = () => shareLink?.url ?? PUBLIC_SITE;
+  /** R8: every Freesound sound the patch uses (CC-BY asks for credit; CC0 gets it too). */
+  function videoCredits(): Credit[] {
+    return Object.values(toPatch().refs ?? {}).filter((r): r is FreesoundRef => (r as SampleRef).provider === 'freesound').map(r => ({ name: r.name, user: r.username, license: r.license }));
+  }
+  /** FROM START: what the engine is built from now, and every sample it would be given (outer world and Stages). */
+  function startSamples(): PatchSample[] {
+    const out: PatchSample[] = [];
+    for (const [id, buffer] of samples) if (model.has(id)) out.push({ id, stage: 0, buffer });
+    for (const [id, b] of model) if (b.type === 'source.stage')
+      for (const [uid, buffer] of innerSamples.get(b.uid) ?? []) { const iid = innerIds.get(b.uid)?.ids[uid]; if (iid !== undefined) out.push({ id: iid, stage: id, buffer }); }
+    return out;
+  }
+  async function makeVideoFile(choice: VideoChoice, progress: (p: VideoProgressInfo) => void, signal: AbortSignal): Promise<File> {
+    if (!engine) throw new Error('Press start first.');
+    // From the beginning, as the patch plays when it has just loaded (owner, 2026-11-15): the whole patch, so not
+    // while looking into a Stage.
+    if (inside) throw new Error('Close the Stage first: the video plays the whole patch.');
+    const sampleRate = engine.node.context.sampleRate;
+    const source = startSource(sampleRate, seed, engineCommands(), startSamples());
+    const { makeVideo } = await import('../video/makeVideo.ts');
+    const blob = await makeVideo(await engineModule(), {
+      source, from: 0, to: Math.round(choice.seconds * sampleRate), shape: choice.shape, theme, labels: labels.map(l => ({ ...l })),
+      card: { title: videoTitle(), link: videoLink(), credits: videoCredits() },
+    }, progress, signal);
+    return new File([blob], videoFileName(videoTitle()), { type: 'video/mp4' });
+  }
+  // ---- the stage's corners (owner review 2026-11-15) ----
+  // Top left, under the header: a patch someone else made, "TITLE BY @NAME" (SPEC-SHARING-GALLERY R15); the name opens
+  // the gallery on their patches. A published one has a star after it (owner review 2): pressing it likes the patch
+  // (signed out: Settings › SIGN IN); right-clicking the credit reports it. Top right: who is signed in
+  // (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT. v1's mid type in the text colour, under the panels.
+  let credit: { id: string; title: string; by: string; published: boolean; liked: boolean; likes: number; views: number } | null = null;
+  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; like?: ButtonBox; credit?: ButtonBox } = {};
+  let byHover = false, meHover = false;
+  const accountPage = () => (scene.SettingsPanel as any).accountPage as import('../v1ui/accountPage.ts').AccountPage | null | undefined;
+  function drawCorners(ctx: CanvasRenderingContext2D): void {
+    cornerBoxes = {};
+    if (inside) return;
+    const m = stage.metrics, u = m.unit, h = scene.Header as unknown as { Height: number; Rows?: number }, y = h.Height * (h.Rows ?? 1) * u + 22 * u;
+    ctx.save();
+    if (!App.Metrics?.TxtMid) { ctx.restore(); return; }
+    // The size of Settings › About's "Current Build" line (v1's 8-unit italic), in Dosis capitals (owner review 3).
+    ctx.fillStyle = theme.colors[theme.roles.txt]; ctx.font = `400 ${Math.round(u * 8)}px Dosis`; ctx.textBaseline = 'alphabetic';
+    if (credit) {
+      const title = `${credit.title.toUpperCase()} BY `, by = `@${credit.by.toUpperCase()}`, tw = ctx.measureText(title).width, bw = ctx.measureText(by).width, x = 20 * u;
+      ctx.textAlign = 'left'; ctx.fillText(title, x, y); ctx.fillText(by, x + tw, y);
+      // A link: underlined only under the mouse (owner review 3, 2026-11-16).
+      if (byHover) ctx.fillRect(x + tw, y + 3 * u, bw, Math.max(1, u * 0.6));
+      cornerBoxes.by = { x: x + tw - 4 * u, y: y - 16 * u, w: bw + 8 * u, h: 24 * u };
+      cornerBoxes.credit = { x: x - 4 * u, y: y - 16 * u, w: tw + bw + 8 * u, h: 24 * u };
+      if (credit.published) {
+        // Likes (owner's pick, B): a second line, the like chevron, the count, the views. The chevron is the button;
+        // liked, it takes the options colour.
+        const txt = theme.colors[theme.roles.txt], on = theme.colors[theme.roles.options[2]];
+        const views = `${credit.views} VIEW${credit.views === 1 ? '' : 'S'}`;
+        const y2 = y + 16 * u, count = String(credit.likes), cw = ctx.measureText(count).width;
+        drawUpArrow(ctx, x + 4 * u, y2 - 3 * u, 9 * u, credit.liked, txt, on);
+        ctx.fillText(count, x + 12 * u, y2);
+        ctx.globalAlpha = 0.6; ctx.fillText(`   ${views}`, x + 12 * u + cw, y2); ctx.globalAlpha = 1;
+        cornerBoxes.like = { x: x - 6 * u, y: y2 - 14 * u, w: cw + 24 * u, h: 22 * u };
+      }
+    }
+    const me = accountPage()?.Account;
+    if (me?.handle) {
+      const t = `SIGNED IN AS ${me.handle.toUpperCase()}`, w = ctx.measureText(t).width, x = m.width - 20 * u;
+      ctx.textAlign = 'right'; ctx.fillText(t, x, y);
+      if (meHover) ctx.fillRect(x - w, y + 3 * u, w, Math.max(1, u * 0.6));  // a link: underlined under the mouse
+      cornerBoxes.me = { x: x - w - 4 * u, y: y - 16 * u, w: w + 8 * u, h: 24 * u };
+    }
+    ctx.restore();
+  }
+  /** A press on the corner text (device px): true if it was used. Not while a panel is open over the stage. */
+  function cornerPress(x: number, y: number): boolean {
+    if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open || scene.OptionsPanel.Scale > 0) return false;
+    if (cornerBoxes.by && credit && inBox(cornerBoxes.by, x, y)) { scene.PatchesPanel.showGallery(`@${credit.by}`); return true; }
+    if (cornerBoxes.like && credit && inBox(cornerBoxes.like, x, y)) { likeCredit(); return true; }
+    if (cornerBoxes.me && inBox(cornerBoxes.me, x, y)) { (scene.SettingsPanel as any).openAccount?.(); return true; }
+    return false;
+  }
+  /**
+   * Likes (SPEC-SHARING-GALLERY R8), from the stage or a gallery row: the user's latest wish shows at once, on both;
+   * one request per patch at a time, and when it lands another only if the wish changed meanwhile, so fast presses
+   * settle on the last without flicker (bug, owner review 3: a double press flipped back and forth as the answers
+   * arrived) and send at most two requests. If it fails, the server's state shows again.
+   */
+  const likeWish = new Map<string, boolean>(), likeSent = new Set<string>();
+  function showLike(id: string, liked: boolean, likes: number): void {
+    if (credit?.id === id) { credit.liked = liked; credit.likes = likes; }
+    for (const it of scene.PatchesPanel.GalleryItems) if (it.id === id) { it.liked = liked; it.likes = likes; }
+    stage.redraw();
+  }
+  function wantLike(id: string, liked: boolean, likes: number): void {
+    if (!accountPage()?.Account) { scene.PatchesPanel.ClosePanel(); (scene.SettingsPanel as any).openAccount?.(); return; }
+    const want = !liked;
+    likeWish.set(id, want); showLike(id, want, Math.max(0, likes + (want ? 1 : -1)));
+    if (likeSent.has(id)) return;
+    likeSent.add(id);
+    void (async () => {
+      let r: { liked: boolean; likes: number } | null = null;
+      try { for (;;) { const w = likeWish.get(id)!; r = await gallery.like(id, w); if (likeWish.get(id) === w) break; } }
+      catch { r = null; }
+      likeSent.delete(id); likeWish.delete(id);
+      if (r) showLike(id, r.liked, r.likes);
+      else { const p = await loadShared(id).catch(() => null); if (p) showLike(id, !!p.liked, p.likes ?? 0); }
+    })();
+  }
+  function likeCredit(): void { if (credit) wantLike(credit.id, credit.liked, credit.likes); }
+  /** Right-click on the credit: report the patch (signed out: sign in first). */
+  function reportCredit(x: number, y: number): boolean {
+    if (!credit?.published || !cornerBoxes.credit || !inBox(cornerBoxes.credit, x, y)) return false;
+    if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open) return false;
+    if (!accountPage()?.Account) (scene.SettingsPanel as any).openAccount?.();
+    else scene.PatchesPanel.askReport({ id: credit.id, title: credit.title });
+    return true;
+  }
   function shareWarning(): string | null {
     return [...model.values()].some(b => b.type === 'source.recorder' || !isPortable(b.params.track)) ? SAVE_WARNING : null;
   }
@@ -455,6 +640,7 @@ async function main() {
       theme.colors, theme.roles.txt, `400 ${Math.round(10 * stage.metrics.unit)}px Dosis`);
     if (uiSync) { uiSync = false; scene.sync(ctx, theme, stage.zoom, stage.drag, [...v1Blocks.values()]); }
     scene.setView(stage.zoom, stage.drag);
+    drawCorners(ctx);  // after the scene's sync (v1's type sizes), before its panels
     scene.draw();
     makeStageAt = null;
     if (offerMakeStage()) {
@@ -859,22 +1045,60 @@ async function main() {
     setBaseline(); keepMine(title);
     return true;
   }
-  async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<void> {
+  /** SAVE / SAVE AS to a share link (SPEC-SHARING-BACKEND): v1 SAVE over this browser's (or account's) link, else a
+   * new one. The link goes in the address bar; the patch counts as saved. */
+  async function makeLink(mode: 'save' | 'saveAs', title: string, gallery?: boolean): Promise<GalleryState | null> {
+    const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title, gallery);
+    const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
+    history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
+    shareLink = { url, owned: isServerId(id) && !!App.SessionId, at: contentOf(toPatch()) };
+    setBaseline();  // a shared patch counts as saved
+    keepMine(title);
+    credit = null;  // saved: it is yours now (a remix keeps `parent`)
+    return lastGallery;
+  }
+  /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
+   * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
+  async function openShared(id: string, mode: 'open' | 'insert'): Promise<boolean> {
+    const r = await loadShared(id);
+    if (!r) return false;
+    usePatch(r.patch, r.title, mode, { id, rev: r.rev, ...(r.title ? { title: r.title } : {}), ...(r.by ? { by: r.by } : {}) });
+    if (mode !== 'open') return true;
+    App.CompositionId = id; App.SessionId = sessionFor(id);
+    session = { id, dirty: false }; saveSession(session);
+    const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
+    history.replaceState(null, '', url);
+    shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()) };
+    setBaseline();
+    credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 } : null;
+    scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
+    return true;
+  }
+  /** Signed in: the account's patches (R8), as OPEN rows. */
+  async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
+    if (embedId) return [];
+    try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: `Your account \u00b7 ${savedOn(p.updated)}`, key: `acct:${p.id}` })); }
+    catch { return []; }  // signed out, or no backend
+  }
+  async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<boolean> {
+    if (key.startsWith('acct:')) return openShared(key.slice(5), mode);  // saved over from this device (R9)
     if (key.startsWith('preset:')) {
       const p = PRESETS.find(x => `preset:${x.file}` === key), patch = p && parsePatchFile(p.text);
       if (p && patch) usePatch(patch, p.name, mode);
-      return;
+      return !!patch;
     }
     if (key.startsWith('mine:')) {
       const m = myPatches().find(x => x.title === key.slice(5)), patch = m && parsePatchFile(JSON.stringify(m.patch));
       if (m && patch) usePatch(patch, m.title, mode);
-      return;
+      return !!patch;
     }
     if (juce && key.startsWith('file:')) {
       const r = await nativeReply<{ text: string; name: string }>(req => juce.emitEvent('bd_patchRead', { req, path: key.slice(5) }));
       const patch = r && parsePatchFile(r.text);
       if (r && patch) usePatch(patch, patchTitle(patch, r.name), mode);
+      return !!patch;
     }
+    return false;
   }
   /** FROM YOUR COMPUTER: one picker; the panel then asks Open or Insert (owner, 2026-11-10). */
   function pickPatchFile(): void {
@@ -895,15 +1119,15 @@ async function main() {
   (window as unknown as { __bd_pickedFile: unknown }).__bd_pickedFile = showPicked;  // tests: a file without a picker
   /** The view's centre, as a grid cell. */
   const viewCentre = () => { const [x, y] = stage.cssToGrid(app.canvas.clientWidth / 2, app.canvas.clientHeight / 2); return { x, y }; };
-  function usePatch(p: Patch, title: string, mode: 'open' | 'insert'): void {
-    applyPatch(p, mode);
+  function usePatch(p: Patch, title: string, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
+    applyPatch(p, mode, from);
     if (mode === 'open') scene.PatchesPanel.setTitle(title);
   }
   /**
    * Open replaces the scene. Insert adds the patch's blocks, keeping their layout, and hands them to the pointer to place
    * (owner, 2026-11-10): see startPlacing. With a mouse they start under it; on a touch screen in the middle of the view.
    */
-  function applyPatch(p: Patch, mode: 'open' | 'insert'): void {
+  function applyPatch(p: Patch, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
     if (inside) exitStage();
     const touch = lastPointerType !== 'mouse', at = !touch && lastPointer ? lastPointer : viewCentre();
     const part = mode === 'open'
@@ -924,6 +1148,15 @@ async function main() {
     for (const [k, r] of Object.entries(part.refs)) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
     for (const m of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : [])) macros.set(m.block, m);  // before their Stage blocks are added
     const ids = part.blocks.map(b => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
+    // Lineage (SPEC-PATCH-FORMAT-V2 R11): opening keeps the patch's sources; inserting adds the inserted patch (when it is a saved one) and
+    // carries its own sources, under the blocks' new ids.
+    if (mode === 'open') sources = readSources(p.sources);
+    else {
+      const kept = p.blocks.filter(b => BLOCKS_BY_ID.has(b.type)), now = new Map(kept.map((b, i) => [b.id, part.blocks[i]?.id]));
+      const moved = (bs: string[]) => bs.map(b => now.get(b)).filter((b): b is string => !!b);
+      for (const s of readSources(p.sources)) { const bs = moved(s.blocks); if (bs.length) sources.push({ ...s, blocks: bs }); }
+      if (from) sources.push({ ...from, blocks: part.blocks.map(b => b.id).filter((b): b is string => !!b) });
+    }
     addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
     if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); }
     if (mode === 'open') setBaseline(); else startPlacing(ids, touch, at);
@@ -947,6 +1180,8 @@ async function main() {
   }
   /** The share link made here (or the one this browser can update, from the start-up link). */
   let shareLink: { url: string; owned: boolean; at: string } | null = null;
+  /** What the last save said about the gallery (SPEC-SHARING-GALLERY R1). */
+  let lastGallery: GalleryState | null = null;
 
   // ---- Insert: the new blocks follow the pointer until a click (or, on a touch screen, a drag) puts them down ----
   let placing: { ids: number[]; at: { x: number; y: number }; touch: boolean; grabbed?: boolean } | null = null;
@@ -962,7 +1197,7 @@ async function main() {
   type UndoStep = { kind: 'add'; uids: string[]; snaps?: Snap[]; labels?: string[]; labelSnaps?: Label[] } | { kind: 'remove'; snaps: Snap[]; labels?: Label[] }
     | { kind: 'move'; moves: { uid: string; from: XY; to: XY }[]; labelMoves?: LabelMove[] };
   const undoStack: UndoStep[] = [], redoStack: UndoStep[] = [];
-  const pushUndo = (u: UndoStep) => { undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; };
+  const pushUndo = (u: UndoStep) => { if (u.kind === 'add' && countActivity) activity.blockAdded(u.uids.length); undoStack.push(u); if (undoStack.length > 100) undoStack.shift(); redoStack.length = 0; };
   const idOfUid = (uid: string) => { for (const [id, b] of model) if (b.uid === uid) return id; return undefined; };
   const uidsOf = (ids: Iterable<number>) => [...ids].flatMap(id => { const b = model.get(id); return b ? [b.uid] : []; });
   const snapOf = (uid: string): Snap | null => { const id = idOfUid(uid), b = id === undefined ? undefined : model.get(id); return b ? { b: structuredClone(b), buf: samples.get(id!) } : null; };
@@ -1388,6 +1623,7 @@ async function main() {
     labels.length = 0; selectedLabels.clear(); addLabels(readLabels(p.labels));
     macros.clear(); innerIds.clear(); innerSamples.clear();
     for (const m of readMacros(p.macros)) macros.set(m.block, m);
+    sources = readSources(p.sources);
     if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
     for (const id of model.keys()) void resolveSample(id);
     scene.setBlocks([...v1Blocks.values()]);
@@ -1407,6 +1643,20 @@ async function main() {
     if (title) scene.PatchesPanel.setTitle(title);
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
     if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
+    // Someone else's patch: "TITLE BY @NAME" in the corner; yours: the gallery switch shows whether it is published.
+    if (start.by && !start.mine && !embedId && start.id) credit = { id: start.id, title: start.title || 'Untitled', by: start.by, published: !!start.published, liked: !!start.liked, likes: start.likes ?? 0, views: start.views ?? 0 };
+    if (start.mine) scene.PatchesPanel.galleryKnown(!!start.published);
+    // Who is signed in (the corner, the Settings tab's name, the gallery switch).
+    const page = accountPage();
+    if (page && !juce && !embedId) { const prev = page.onChange; page.onChange = () => { prev(); stage.redraw(); }; void page.refresh(false); }
+    // R16: count time played, blocks added, particles and laser turns; keep them when the page is hidden, and send them
+    // in one request when it closes (saves carry them too).
+    if (page && !juce && !embedId) {
+      countActivity = true;
+      account.watchActivityBeacon();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') activity.keep(); });
+      addEventListener('pagehide', () => account.sendActivityOnClose(!!page.Account));
+    }
     // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`). The link is made here at
     // once, as SAVE makes it (the user asked for it in the app), and the address bar shows it, short, to copy; START
     // shows the scene (owner, 2026-11-13: the Patches panel opened instead, its title over the start screen). The flag
@@ -1416,6 +1666,15 @@ async function main() {
       history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
       requestAnimationFrame(() => void scene.host.links?.make('saveAs', title || 'Untitled')
         .catch(e => console.warn('BlokDust: making the share link failed', e)));
+    }
+    // Back from Google sign-in (CHG-0023): claim this browser's patches (R9) and show the account (a new one picks
+    // its name). The flag is dropped so a reload doesn't do it again.
+    if (signInReturn && !juce && !embedId) {
+      params.delete('account');
+      history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
+      void account.claimMine().then(() => refreshOwnership()).catch(() => {});
+      // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15).
+      if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
     }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });
@@ -1521,7 +1780,16 @@ async function main() {
         return { hash: hex(hashStereo(hashAudio(l), hashAudio(r))), peak };
       } finally { e.dispose(); }
     },
+    /** The stage's corners (tests): a patch's credit and who is signed in, with their centres in css px. */
+    get corners() {
+      const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
+      // creditAt: the title's start (right-click reports), clear of the @NAME link and the star.
+      const titleAt = cornerBoxes.credit ? [(cornerBoxes.credit.x + 12 * stage.metrics.unit) / d, (cornerBoxes.credit.y + cornerBoxes.credit.h / 2) / d] : null;
+      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), likeAt: c(cornerBoxes.like), creditAt: titleAt };
+    },
     /** Sample state per block (tests): loaded, or missing with its reference. */
+    /** The account's running totals not yet sent (SPEC-SHARING-ACCOUNTS R16; tests). */
+    get activity() { return activity.pending(); },
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
   };
   const overlay = document.getElementById('start')!;
@@ -1559,6 +1827,7 @@ async function main() {
       }
     }
     stage.setPowered(s.powered); probe.powered = Array.from(s.powered);
+    if (countActivity) activity.frame(performance.now(), { blocks: model, powered: new Set(s.powered), worldOn: scene.worldPower, tempo: tempo ?? 120, visible: document.visibilityState === 'visible' });
     stage.setBeams(s.beams);
     stage.setParticles(s.particles);
     scene.setPlayheads(s.playheads ?? new Float32Array(0));
@@ -1619,7 +1888,7 @@ async function main() {
   // The start button is v1's Splash, drawn by the scene (owner, 2026-11-11); #start is a clear layer over it that takes
   // the click (an AudioContext must start in one) and holds input back until the intro has shown the stage, as v1 did.
   // Automated browsers skip the intro (their screenshots expect the stage) unless the URL asks for it (`splash=1`).
-  const splash = !juce && !embedId && (!navigator.webdriver || params.get('splash') === '1');
+  const splash = !juce && !embedId && !signInReturn && (!navigator.webdriver || params.get('splash') === '1');
   if (splash) { scene.showSplash(); stage.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.background = 'transparent'; })); }
   else if (!embedId) overlay.style.background = 'transparent';
   // START begins on the press (v1 Splash.MouseDown), not the release: the intro starts at once and the engine is built
@@ -1635,6 +1904,13 @@ async function main() {
   });
   overlay.addEventListener('pointerup', resume);
   overlay.addEventListener('click', () => { if (!begun) void begin(); else resume(); });
+  // Back from Google sign-in (owner, 2026-11-15): no start screen and no intro. The stage takes input at once and the
+  // first press or key starts the sound (browsers start audio only in a user gesture); that press still does its job.
+  if (signInReturn && !juce && !embedId) {
+    overlay.remove();
+    const first = () => { for (const t of ['pointerdown', 'keydown'] as const) window.removeEventListener(t, first, true); if (!begun) void begin(); };
+    for (const t of ['pointerdown', 'keydown'] as const) window.addEventListener(t, first, true);
+  }
   async function begin(): Promise<void> {
     begun = true;
     let shown = !splash, ready = false;
@@ -1657,6 +1933,7 @@ async function main() {
     keepAwake(ctx);
     probe.started = true;
     ready = true; reveal();
+    for (const run of afterStart.splice(0)) requestAnimationFrame(run);
   }
   /** iOS interrupts the AudioContext when another app plays (a video, a podcast) and leaves it so when the page comes
    * back: the engine runs in it, so sound, connections and particles all stood still (owner, 2026-11-14). Coming back to
@@ -1881,6 +2158,7 @@ async function main() {
   (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
     app.canvas.setPointerCapture(e.pointerId);
+    if (primaryId === null && cornerPress(e.offsetX * dpr(), e.offsetY * dpr())) { primaryId = e.pointerId; primaryRole = 'gone'; return; }
     if (makeStageAt && primaryId === null && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr())) { makeStage(); primaryId = e.pointerId; primaryRole = 'gone'; return; }
     if (!placing && padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     // Inside a Stage (UI-0009): the × or a press outside its window (not on the header, a panel or the bottom
@@ -1975,6 +2253,9 @@ async function main() {
   if (!embedId) app.canvas.addEventListener('pointermove', e => {
     const overMake = !!makeStageAt && e.pointerType === 'mouse' && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr());
     if (overMake !== makeStageHover) { makeStageHover = overMake; stage.redraw(); }
+    const overBy = !!cornerBoxes.by && e.pointerType === 'mouse' && inBox(cornerBoxes.by, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
+    const overMe = !!cornerBoxes.me && e.pointerType === 'mouse' && inBox(cornerBoxes.me, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
+    if (overBy !== byHover || overMe !== meHover) { byHover = overBy; meHover = overMe; app.canvas.style.cursor = overBy || overMe ? 'pointer' : ''; stage.redraw(); }
     if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
       moveLabel(e);
@@ -2217,6 +2498,7 @@ async function main() {
 
   // ---- Dust 1–8 (plugin only, PLUGIN-0003): right-click an options-panel slider to map a host parameter to it ----
   app.canvas.addEventListener('contextmenu', e => {
+    if (!juce && !embedId && reportCredit(e.offsetX * dpr(), e.offsetY * dpr())) { e.preventDefault(); return; }
     if (!juce) return;
     const hit = scene.sliderAt(e.offsetX * dpr(), e.offsetY * dpr());
     if (!hit) return;
@@ -2378,3 +2660,5 @@ function setupEmbedChrome(id: string, title: string): void {
 }
 
 void main();
+
+/** A five-pointed star centred on (x, y), `r` to its points: outlined, or filled once liked (owner review 2). */

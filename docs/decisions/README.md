@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**58 decisions** · proposed: 11 · accepted: 41 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**61 decisions** · proposed: 14 · accepted: 41 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -66,7 +66,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 |---|---|---|---|---|
 | [SCOPE-0001](scope/SCOPE-0001-no-user-programmable-dsp-or-custom-code-blocks.md) | No user-programmable DSP or custom code blocks | **rejected** | 2026-11-05 | scope, blocks |
 | [SCOPE-0002](scope/SCOPE-0002-macros-grouped-blocks.md) | Macros (grouped blocks) | **deferred** | 2026-11-05 | scope, macros |
-| [SCOPE-0003](scope/SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **deferred** | 2026-11-05 | scope, backend |
+| [SCOPE-0003](scope/SCOPE-0003-user-accounts-galleries-and-moderation.md) | User accounts, galleries and moderation | **superseded** | 2026-11-05 | scope, backend |
 | [SCOPE-0004](scope/SCOPE-0004-faithful-v1-parity-same-blocks-same-look-same-feel.md) | Faithful v1 parity: same blocks, same look, same feel | **accepted** | 2026-11-05 | scope, parity |
 | [SCOPE-0005](scope/SCOPE-0005-the-post-2-0-block-set.md) | The post-2.0 block set | **proposed** | 2026-11-13 | scope, blocks, post-2-0 |
 | [SCOPE-0006](scope/SCOPE-0006-stage-block-nested-patches.md) | Stage block: a patch inside a block (macros, depth 2) | **proposed** | 2026-11-13 | scope, macros, stage |
@@ -81,6 +81,9 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SHARING-0004](sharing/SHARING-0004-host-on-a-placeholder-cloudflare-url.md) | Host on a placeholder Cloudflare URL with a configurable base path | **accepted** | 2026-11-05 | hosting, domain |
 | [SHARING-0005](sharing/SHARING-0005-host-release-1-at-funputs-com-blokdust-with-a.md) | Host Release 1 at funputs.com/blokdust with a Worker route | **superseded** | 2026-11-11 | hosting, domain, release-1 |
 | [SHARING-0006](sharing/SHARING-0006-host-at-blokdust-funputs-com-with-funputs-com.md) | Host at blokdust.funputs.com with funputs.com/blokdust redirecting | **accepted** | 2026-11-12 | hosting, domain, release-1 |
+| [SHARING-0007](sharing/SHARING-0007-video-export-renders-the-patch-offline-and.md) | Video export renders the patch offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
+| [SHARING-0008](sharing/SHARING-0008-optional-accounts-with-passkeys-and-google.md) | Optional accounts with passkeys and Google, sessions in D1 | **proposed** | 2026-11-15 | sharing, accounts, security, cost |
+| [SHARING-0009](sharing/SHARING-0009-a-public-gallery-of-published-patches-with-likes.md) | A public gallery of published patches with likes and reports | **proposed** | 2026-11-15 | sharing, gallery, moderation |
 
 ## [simulation](simulation/README.md)
 

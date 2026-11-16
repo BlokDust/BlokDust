@@ -15,6 +15,23 @@
 //   - SettingsPanel › Connect: the three 130×30 filled buttons (for the confirm step), and its 420×40 GUIDE button
 //     (OPEN FROM YOUR DEVICE, the OPEN tab's main button);
 //   - SoundcloudPanel: the paged rows, count, page number, arrows, and its bordered button (OPEN / INSERT);
+//
+// Owner review 1 (2026-11-15): three tabs, SAVE / SHARE · OPEN · GALLERY (web; the plugin keeps SAVE and OPEN).
+// SAVE / SHARE (web) adds, from v1 pieces:
+//   - ADD TO GALLERY: v1's OptionSwitch ("offOn": a dash, a divider, a diamond, the chosen side underlined), with the
+//     options type for its name; signed out, an italic line says only signed-in users can publish;
+// Owner review 2 (option A): one main button. Under the name, two switches, ADD TO GALLERY and MAKE VIDEO (on by
+// default where the browser can share a video file, i.e. phones and tablets), then SAVE: Connect's 420×40 GUIDE button
+// in SharePanel's SAVE colour. The link sits under it. SAVE AS and DOWNLOAD PATCH (not on phones) are v1's bordered
+// buttons at the bottom. Saving with MAKE VIDEO on goes on to the video: portrait, as long as the patch's timers need
+// (videoSeconds), shown as it renders with SharePanel's spinner, then played in a small portrait player (a DOM video
+// over the panel, like v1's text fields) with SHARE VIDEO under it (DOWNLOAD VIDEO on desktop, where it also downloads
+// once made). Nothing to save, the main button reads MAKE VIDEO. The plugin keeps SAVE TO COMPUTER · CREATE SHARE
+// LINK and has no video.
+// GALLERY (CHG-0024) is v1 SoundcloudPanel's layout: the search field over its rule with the bordered SEARCH above it,
+// and POPULAR / NEW bottom right where v1 had RANDOMISE. Owner review 2: the rows are one list that scrolls (wheel or
+// drag) and loads the next page as it nears its end, and each row has OPEN only (liking and reporting are on the stage,
+// with the patch open: main.ts).
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
 
@@ -27,6 +44,54 @@ export interface PatchItem {
   /** The user's own (saved here): the row has a bin. */
   removable?: boolean;
 }
+/** Accounts (CHG-0023): what the ACCOUNT tab shows. */
+export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; stats?: import('../account/client.ts').AccountStats }
+export interface AccountHost {
+  /** Who is signed in (null: nobody), whether Google and Apple sign-in are offered; null when there is no backend. */
+  me(stats?: boolean): Promise<{ user: AccountInfo | null; google: boolean; apple?: boolean } | null>;
+  signUp(handle: string): Promise<void>;
+  signIn(): Promise<void>;
+  google(): void;
+  apple(): void;
+  addPasskey(): Promise<void>;
+  setHandle(handle: string): Promise<void>;
+  signOut(everywhere: boolean): Promise<void>;
+  deleteAccount(): Promise<void>;
+  /** The passkey dialog was closed by the user: nothing to report. */
+  cancelled(e: unknown): boolean;
+}
+/** The gallery (CHG-0024). */
+/** The like control (owner review 3, 2026-11-16: chosen from three; the star didn't read as an up vote and its angles
+ * aren't BlokDust's 45°): the first peak of v1's triangle-wave icon (OptionButton "wave", 2) as an open up chevron,
+ * centred on x, y, `s` wide, in v1's 2 px line; liked, in the options colour. */
+export function drawUpArrow(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, liked: boolean, colour: string, on: string): void {
+  const h = s / 2;
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(x - h, y + h / 2); ctx.lineTo(x, y - h / 2); ctx.lineTo(x + h, y + h / 2);
+  ctx.lineJoin = 'miter'; ctx.lineCap = 'butt'; ctx.lineWidth = 2; ctx.strokeStyle = liked ? on : colour; ctx.stroke();
+  ctx.restore();
+}
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
+/** POPULAR · NEW · EXAMPLES · TUTORIALS (owner review 3: EXAMPLES and TUTORIALS are @blokdust's patches). */
+export type GallerySort = 'popular' | 'new' | 'examples' | 'tutorials';
+export const GALLERY_SORTS: GallerySort[] = ['popular', 'new', 'examples', 'tutorials'];
+/** An Open or Insert: a promise while the patch is fetched (false: it couldn't be). */
+type OpenRun = () => void | Promise<boolean>;
+export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; views: number; liked: boolean; mine: boolean }
+export interface GalleryHost {
+  browse(sort: GallerySort, q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
+  /** Open a published patch (it replaces the current one; SAVE then makes a remix of it), or Insert its blocks. */
+  open(row: GalleryRow, mode: 'open' | 'insert'): Promise<boolean>;
+  /** Like or unlike (the host shows it at once on this row and the stage, and settles fast presses on the last). */
+  like(row: GalleryRow): void;
+  report(id: string): Promise<void>;
+  unpublish(id: string): Promise<void>;
+}
+/** Video export (CHG-0022): what the VIDEO tab asks for. */
+export type VideoShape = 'portrait' | 'square' | 'wide';
+/** Videos start from the beginning, as the patch plays when it has just loaded (owner, 2026-11-15). */
+export interface VideoChoice { shape: VideoShape; seconds: number }
+export interface VideoProgressInfo { phase: 'preparing' | 'rendering'; done: number }
 /** The share link of the current patch (web). */
 export interface ShareLink { url: string; /** The patch changed since the link was made. */ stale: boolean; /** This browser made it (it can update it). */ owned: boolean }
 /** A file picked with FROM YOUR COMPUTER or dropped on the stage: its title, or why it can't be used. */
@@ -36,7 +101,7 @@ export interface PatchesHost {
   /** Save the scene as a file under `title`; resolves true once written (false: cancelled or failed). */
   savePatch(title: string): Promise<boolean>;
   /** Open (replace) or Insert (place by hand) a listed patch. */
-  openPatch(item: PatchItem, mode: 'open' | 'insert'): void;
+  openPatch(item: PatchItem, mode: 'open' | 'insert'): void | Promise<boolean>;
   /** Show the system file picker; the host answers with `PatchesPanel.showFile`. */
   pickPatchFile(): void;
   /** Open or Insert the file last given to `showFile`. */
@@ -48,43 +113,46 @@ export interface PatchesHost {
   /** What deleting does, for the confirm step. */
   removeLine: string;
   hasBlocks(): boolean;
+  /** Video export (SPEC-SHARING-VIDEO-EXPORT); null: no VIDEO tab (the plugin, R16). */
+  video: null | {
+    make(choice: VideoChoice, progress: (p: VideoProgressInfo) => void, signal: AbortSignal): Promise<File>;
+    /** In a click: the system share sheet (where a browser can't share files, the file is downloaded). */
+    share(file: File): Promise<void>;
+    /** This browser can hand a video to the share sheet (phones, tablets); else the video downloads. */
+    canShareFiles(): boolean;
+    /** How long the video runs: whole cycles of the patch's longest timer, 10 to 30 seconds (owner review 2). */
+    seconds(): number;
+  };
+  /** The public gallery (SPEC-SHARING-GALLERY); null: no GALLERY tab (the plugin). */
+  gallery: GalleryHost | null;
+  /** Accounts (SPEC-SHARING-ACCOUNTS): Settings › SIGN IN / ACCOUNT (accountPage.ts); null in the plugin. */
+  account: AccountHost | null;
+  /** Someone is signed in (the gallery switch: only signed-in users can publish, SPEC-SHARING-GALLERY R2). */
+  signedIn(): boolean;
   /** Share links (SPEC-SHARING-BACKEND). */
   links: null | {
     /** Plugin: the link is made in the web browser (its page has the bot check); nothing is kept here. */
     external?: boolean;
     current(): ShareLink | null;
-    /** v1 SAVE_AS (a new link) / SAVE (overwrite this browser's link). */
-    make(mode: 'saveAs' | 'save', title: string): Promise<void>;
+    /** v1 SAVE_AS (a new link) / SAVE (overwrite this browser's link); `gallery`: in the gallery or not (undefined:
+     * leave it). Resolves with what the server said about the gallery. */
+    make(mode: 'saveAs' | 'save', title: string, gallery?: boolean): Promise<{ published: boolean; reason?: string } | null | void>;
     /** v1 SharePanel's warning (recordings, the user's own files), or null. */
     warning(): string | null;
   };
 }
 
 /** The tab Patches opens on: the last one chosen (owner, 2026-11-10). */
+const SORT_KEY = 'blokdust.gallerySort';
 const TAB_KEY = 'blokdust.patchesTab';
 function rememberedTab(): Tab {
-  try { return localStorage.getItem(TAB_KEY) === '1' ? 1 : 0; } catch { return 0; }
+  try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 2 ? t : 0) as Tab; } catch { return 0; }
 }
 
 const ITEMS = 5;
 
-/** WCAG relative luminance of an `rgba(r,g,b,a)` palette colour, and its contrast with black text. */
-function blackContrast(c: string): number {
-  const [r, g, b] = (c.match(/\d+(\.\d+)?/g) ?? ['0', '0', '0']).slice(0, 3).map(Number).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b + 0.05) / 0.05;
-}
-/**
- * DOWNLOAD PATCH, with black text (owner, 2026-11-11: the menu colour was unreadable under the cream text): v1's third
- * options-panel slider colour (Mode Stereo's green, the Particle Emitter's Division), or, where black on it is below
- * WCAG's 4.5:1, the palette's options colour that is most readable with black.
- */
-export function downloadColour(): string {
-  const cols = App.ThemeManager.OptionsOrder.map((i: number) => App.Palette[i] as string);
-  if (blackContrast(cols[2]) >= 4.5) return cols[2];
-  return cols.reduce((a: string, c: string) => (blackContrast(c) > blackContrast(a) ? c : a));
-}
 const COPY = {
-  panel: 'Patches', tabs: ['Save', 'Open'] as const,
+  panel: 'Patches', tabs: ['Save / Share', 'Open', 'Gallery'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',
   saveLinePlugin: 'Save a .blokdust patch file. It opens in the web version of BlokDust too.',
@@ -101,10 +169,18 @@ const COPY = {
   confirm: 'Replace current patch?', confirmLine: 'You have unsaved changes. Opening another patch will replace your current work.',
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
+  search: 'Search', sorts: { popular: 'Popular', new: 'New', examples: 'Examples', tutorials: 'Tutorials' }, unpublish: 'Unpublish',
+  like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
+  reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here.',
+  reported: 'Thank you. The patch was reported.', openFailed: 'This patch couldn’t be opened. Check your connection and try again.',
+  addToGallery: 'Add to Gallery', signInToPublish: 'Only signed-in users can publish to the gallery.',
+  makeVideo: 'Make Video', downloadVideo: 'Download Video', tryAgain: 'Try Again',
+  cancelVideo: 'Cancel', rendering: 'making video', shareVideo: 'Share Video',
 };
 
-type Tab = 0 | 1;  // SAVE, OPEN
-type View = 'list' | 'file' | 'confirm' | 'remove';
+type Tab = 0 | 1 | 2;  // SAVE / SHARE, OPEN, GALLERY (web)
+const ALL_TABS: Tab[] = [0, 1, 2];
+type View = 'list' | 'file' | 'confirm' | 'remove' | 'video';
 
 export class PatchesPanel extends DisplayObject {
   Open = false;
@@ -125,11 +201,49 @@ export class PatchesPanel extends DisplayObject {
   private page = 1;
   private roll: Record<string, boolean> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
-  private selected = [1, 0];
+  private selected = [1, 0, 0];
+  /** The GALLERY tab (CHG-0024). */
+  GalleryItems: GalleryRow[] = [];
+  GallerySort: GallerySort = (() => { try { const v = localStorage.getItem(SORT_KEY) as GallerySort; return GALLERY_SORTS.includes(v) ? v : 'popular'; } catch { return 'popular'; } })();
+  GalleryQuery = '';
+  GalleryPage = 1;
+  GalleryMore = false;
+  GalleryLoading = false;
+  GalleryMessage = '';
+  GalleryView: 'list' | 'report' = 'list';
+  /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
+  GalleryScroll = 0;
+  /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
+  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' | 'like' } | null = null;
+  private reporting: { id: string; title: string } | null = null;
+  /** After REPORT: the thanks, then the panel closes. */
+  private reported = false;
+  private galleryAsk = 0;
+  SearchContainer!: HTMLElement;
+  SearchInput!: HTMLInputElement;
+  /** SAVE / SHARE › ADD TO GALLERY (on by default, owner 2026-11-15), and what the last save made of it. */
+  GalleryOn = true;
+  private savedGallery: boolean | null = null;
+  /** Why the last save could not publish (a Recorder, the user's own files, a rude title). */
+  GalleryNote = '';
+  /** SAVE / SHARE › MAKE VIDEO (CHG-0022, owner review 2): on by default where the video can go to the share sheet. */
+  VideoOn: boolean | null = null;
+  VideoState: 'idle' | 'making' | 'ready' | 'error' = 'idle';
+  VideoProgress: VideoProgressInfo = { phase: 'preparing', done: 0 };
+  VideoMessage = '';
+  private videoFile: File | null = null;
+  /** The small portrait player (a DOM video over the panel). */
+  private player: HTMLVideoElement | null = null;
+  private playerUrl = '';
+  private videoAbort: AbortController | null = null;
   /** The patch the delete step asks about. */
   private removing: PatchItem | null = null;
   /** What OPEN ANYWAY / SAVE FIRST go on to do, and the view to go back to on CANCEL. */
-  private pending: { run: () => void; from: View } | null = null;
+  private pending: { run: OpenRun; from: View } | null = null;
+  /** A patch is being fetched to open or insert: the panel stays up with v1's spinner (owner review 3, 2026-11-16: the
+   * old stage showed, and could be changed, for the seconds it took), then closes. */
+  Opening = false;
+  OpenError = '';
   TitleContainer!: HTMLElement;
   Input!: HTMLInputElement;
   UrlContainer!: HTMLElement;
@@ -149,6 +263,10 @@ export class PatchesPanel extends DisplayObject {
     this.Input.addEventListener('input', () => { this.Title = this.Input.value; });
     this.Input.addEventListener('keydown', e => { if (e.key === 'Enter') this.Input.blur(); });
     this.UrlInput.addEventListener('click', () => void this.copyLink());
+    this.player = document.getElementById('patchVideo') as HTMLVideoElement | null;
+    this.SearchContainer = document.getElementById('gallerySearch')!;
+    this.SearchInput = document.getElementById('gallerySearchInput') as HTMLInputElement;
+    this.SearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.SearchInput.blur(); this.GalleryQuery = this.SearchInput.value.trim(); void this.browse(); } });
   }
   /** Click the link: it is copied (and selected, so it can be copied by hand where the clipboard is refused). */
   private async copyLink(): Promise<void> {
@@ -159,7 +277,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
-  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
+  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.Opening || this.VideoState === 'making' || this.GalleryLoading || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
   /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
   private settle = 0;
   private settled(): void { this.settle = performance.now() + 250; }
@@ -177,13 +295,15 @@ export class PatchesPanel extends DisplayObject {
   private tabs() {
     const u = App.Unit, W = App.Width, menuWidth = this.mobile ? (W / 7) * 5 : (W / 7) * 4, gutter = App.Metrics.Device !== Device.desktop ? 40 : 60;
     let x = W * 0.5 - menuWidth * 0.5;
-    const tabs = COPY.tabs.map(name => {
-      const w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { name: name.toUpperCase(), x: x + w * 0.5, w };
+    const tabs = ALL_TABS.filter(id => this.hasTab(id)).map(id => {
+      const name = COPY.tabs[id], w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { id, name: name.toUpperCase(), x: x + w * 0.5, w };
       x += w;
       return t;
     });
     return { tabs, half: menuWidth * 0.5 };
   }
+  /** VIDEO, ACCOUNT and GALLERY are web only. */
+  private hasTab(id: Tab): boolean { return id < 2 || (id === 2 && !!this.host.gallery); }
   /** v1's bordered button (Search Freesound, Randomise Title): right edge at `right`, text baseline 14 units under `top`. */
   private bordered(label: string, right: number, top: number) {
     const u = App.Unit, w = this.textW(label);
@@ -195,29 +315,8 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, W = App.Width, cy = this.cy;
     return { left: { x: W * 0.5 - 210 * u, y: cy - 20 * u, w: 202.5 * u, h: 40 * u, cx: W * 0.5 - 108.75 * u }, right: { x: W * 0.5 + 7.5 * u, y: cy - 20 * u, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + 108.75 * u } };
   }
-  /** The web's three: SAVE · SAVE AS · DOWNLOAD PATCH (owner, 2026-11-11), each a third of v1's 420u row (7.5u gaps,
-   * as its halves). */
+  /** The web app (links made here), not the plugin (links made in the browser). */
   private get web(): boolean { return !!this.host.links && !this.host.links.external; }
-  private threeRow() {
-    const u = App.Unit, W = App.Width, y = this.cy - 20 * u, w = 135 * u;
-    return [-210, -67.5, 75].map(dx => ({ x: W * 0.5 + dx * u, y, w, h: 40 * u, cx: W * 0.5 + (dx + 67.5) * u }));
-  }
-  /** Web: SAVE (`share`), SAVE AS (`saveAs`), DOWNLOAD PATCH (`save`). Plugin: SAVE TO COMPUTER first (a file is what a
-   * plugin user mostly wants), then CREATE SHARE LINK (owner, 2026-11-10). */
-  private saveButtons() {
-    if (this.web) { const [share, saveAs, save] = this.threeRow(); return { share, saveAs, save }; }
-    const { left, right } = this.halves();
-    return { save: left, share: right, saveAs: null };
-  }
-  /** One type for the three, the largest of v1's 24u that fits DOWNLOAD PATCH (owner: smaller rather than squeezed). */
-  private threeFont(): { font: string; dy: number } {
-    const ctx = this.Ctx, u = App.Unit, w = this.threeRow()[0].w - 16 * u;
-    ctx.save(); ctx.font = App.Metrics.TxtUrl2;
-    const at24 = Math.max(...[COPY.saveLink, COPY.saveAs, COPY.download].map(l => ctx.measureText(l.toUpperCase()).width));
-    ctx.restore();
-    const size = Math.min(24, Math.floor(24 * w / at24 * 2) / 2);  // in units (at24 and w are both device px)
-    return { font: `200 ${Math.round(size * u)}px Dosis`, dy: 20 + size * 0.37 };
-  }
   /** What SAVE does now. Web: no link yet → make one; changed since it was saved → save over it (v1 SAVE), or, for a
    * link made elsewhere (can't be saved over), make a new one; unchanged → nothing (off). Plugin: always a new link,
    * made in the browser. SAVE AS: a new link, once the patch has changed since the last (no repeated copies). */
@@ -226,7 +325,9 @@ export class PatchesPanel extends DisplayObject {
     if (!links) return { save: null, saveAs: false };
     if (links.external) return { save: 'make', saveAs: false };
     if (!link) return { save: 'make', saveAs: false };
-    if (!link.stale) return { save: null, saveAs: false };
+    const galleryChanged = this.host.signedIn() && link.owned && this.savedGallery !== null && this.GalleryOn !== this.savedGallery;
+    if (!link.stale && !galleryChanged) return { save: null, saveAs: false };
+    if (!link.stale) return { save: 'save', saveAs: false };
     return { save: link.owned ? 'save' : 'new', saveAs: true };
   }
   /** v1 SettingsPanel › Connect: three 130×30 buttons. */
@@ -248,12 +349,34 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, y = this.cy + (this.mobile ? 195 : 175) * u;
     return { x: App.Width * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: App.Width * 0.5 };
   }
-  /** v1 SharePanel's back chevron and its SKIP-style label. */
+  // ---- SAVE / SHARE (web): units from the panel centre ----
+  /** ADD TO GALLERY and MAKE VIDEO: v1's OptionSwitch in an options-panel row's proportions (60 units: the icons sit 7
+   * units clear of the underline; owner review 2), one under the other between the name and SAVE. */
+  /** ADD TO GALLERY and MAKE VIDEO side by side, each in half the page (owner review 3, 2026-11-16). */
+  private gallerySwitch() { const u = App.Unit; return { x: this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
+  private videoSwitch() { const u = App.Unit; return { x: this.host.gallery ? this.margin + this.pageW * 0.5 + 10 * u : this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
+  /** SAVE (or MAKE VIDEO): Connect's 420×40 GUIDE button. */
+  private mainButton() { const u = App.Unit, W = App.Width; return { x: W * 0.5 - 210 * u, y: this.cy + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
+  /** SAVE AS (left) and DOWNLOAD PATCH (right, not on phones): v1's bordered buttons at the bottom. */
+  private secondary() {
+    const u = App.Unit, top = this.cy + 190 * u, L = this.margin;
+    return { saveAs: this.bordered(COPY.saveAs, L + this.textW(COPY.saveAs) + 10 * u, top), download: this.mobile ? null : this.bordered(COPY.download, L + this.pageW, top) };
+  }
+  /** The video view: the portrait player (9:16) and the button under it. */
+  private playerBox() { const u = App.Unit, w = 126 * u, h = 224 * u; return { x: App.Width * 0.5 - w / 2, y: this.cy - 70 * u, w, h }; }
+  private videoMain() { const u = App.Unit, W = App.Width; return { x: W * 0.5 - 210 * u, y: this.cy + 170 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
+  private get videoOn(): boolean { return !!this.host.video && (this.VideoOn ?? this.shareFiles); }
+  private get shareFiles(): boolean { return !!this.host.video?.canShareFiles(); }
+  /** v1 SharePanel's back chevron and its SKIP-style label, at the top right of the page, under the tabs (owner
+   * review 2: the same place on every device). `x` is the chevron's middle (the label is centred under it), `y` its
+   * point, in device px. */
   private backArrow() {
-    let arrowX = 275, arrowY = 0;
-    if (this.tablet) arrowX = 245;
-    if (this.mobile) { arrowX = 190; arrowY = 110; }
-    return { arrowX, arrowY };
+    const u = App.Unit;
+    return { x: App.Width * 0.5 + 195 * u, y: this.cy - 175 * u };
+  }
+  private backHit(pt: { x: number; y: number }) {
+    const u = App.Unit, b = this.backArrow();
+    return Dimensions.hitRect(b.x - 20 * u, b.y - 22 * u, 40 * u, 64 * u, pt.x, pt.y);
   }
   private get link() { return this.host.links?.current() ?? null; }
 
@@ -281,7 +404,7 @@ export class PatchesPanel extends DisplayObject {
     ctx.stroke();
     ctx.textAlign = 'center'; ctx.font = App.Metrics.TxtMid;
     tabs.forEach((t, i) => {
-      const s = this.selected[i], hw = t.w * 0.5, x = t.x;
+      const s = this.selected[t.id], hw = t.w * 0.5, x = t.x;
       App.FillColor(ctx, App.Palette[App.ThemeManager.MenuOrder[i % App.ThemeManager.MenuOrder.length]]);
       ctx.beginPath();
       ctx.moveTo(x - hw, tabY); ctx.lineTo(x + hw, tabY); ctx.lineTo(x + hw, tabY + h * s); ctx.lineTo(x + 10 * u, tabY + h * s);
@@ -299,7 +422,11 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
-    if (this.Tab === 0) this.drawSave(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
+    if (this.Opening) { App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.cy, 16, true); return; }
+    if (this.OpenError) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.OpenError, this.margin, this.cy + 205 * u, 14 * u, this.pageW); }
+    // OPEN over unsaved changes asks first, from the OPEN tab or the gallery (bug, owner review 3: the gallery's
+    // question was never drawn nor answered, so OPEN did nothing after an INSERT).
+    if (this.View === 'confirm') this.drawConfirm(); else if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
   /** A filled button with v1's hover notch under its centre (SharePanel / SettingsPanel). */
@@ -334,51 +461,92 @@ export class PatchesPanel extends DisplayObject {
     App.StrokeColor(ctx, txt);
     ctx.beginPath(); ctx.moveTo(W * 0.5 - 210 * u, cy - 90 * u); ctx.lineTo(W * 0.5 + 210 * u, cy - 90 * u); ctx.stroke();
     this.drawBordered(this.randomise(), txt);
+    if (this.View === 'video') { this.drawVideo(); return; }
+    const off = this.Saving || !this.host.hasBlocks(), links = this.host.links, link = this.link;
+    if (!this.web) { this.drawPluginSave(off); return; }
 
-    const { share, save, saveAs } = this.saveButtons(), off = this.Saving || !this.host.hasBlocks(), links = this.host.links, link = this.link;
-    const st = this.shareState();
-    if (this.web) {
-      // SAVE · SAVE AS · DOWNLOAD PATCH: v1 SharePanel's SAVE and SAVE AS colours, then the next menu colour. //
-      const { font, dy } = this.threeFont();
-      const fill = (isOff: boolean, c: string) => (isOff ? App.Palette[1] : c);
-      const saveOff = off || !st.save, asOff = off || !st.saveAs;
-      this.filled(share, fill(saveOff, App.Palette[menu[3]]), this.label('share', COPY.saveLink), !!this.roll.share && !saveOff, font, dy);
-      this.filled(saveAs!, fill(asOff, App.Palette[menu[1]]), this.label('saveAs', COPY.saveAs), !!this.roll.saveAs && !asOff, font, dy);
-      this.filled(save, fill(off, downloadColour()), this.label('save', COPY.download), !!this.roll.save && !off, font, dy, off ? App.Palette[App.ThemeManager.Txt] : '#000');
-    } else {
-      // Plugin: SAVE TO COMPUTER · CREATE SHARE LINK (v1 SAVE / SAVE AS), each with its line. //
-      const { left } = this.halves();
-      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; App.FillColor(ctx, txt);
-      this.wordWrap(COPY.saveLinePlugin, save.x, cy - 59 * u, 14 * u, save.w);
-      this.wordWrap(COPY.shareLinePlugin, share.x, cy - 59 * u, 14 * u, share.w);
-      // The left button is v1's SAVE colour, the right its SAVE AS colour.
-      const colour = (b: { x: number }, isOff: boolean) => App.Palette[isOff ? 1 : b.x === left.x ? menu[3] : menu[1]];
-      this.filled(save, colour(save, off), this.label('save', COPY.save), !!this.roll.save && !off);
-      const shareOff = !links || off;
-      this.filled(share, colour(share, shareOff), this.label('share', COPY.share), !!this.roll.share && !shareOff);
-    }
+    // ADD TO GALLERY · MAKE VIDEO (v1 OptionSwitch "offOn") //
+    const signedIn = this.host.signedIn();
+    if (this.host.gallery) this.drawSwitch(this.gallerySwitch(), COPY.addToGallery, signedIn && this.GalleryOn, signedIn, signedIn ? '' : COPY.signInToPublish);
+    if (this.host.video) this.drawSwitch(this.videoSwitch(), COPY.makeVideo, this.videoOn, true, '');
+
+    // SAVE, or MAKE VIDEO when there is nothing to save (the GUIDE button, SharePanel's SAVE colour) //
+    const main = this.mainAction(), m = this.mainButton();
+    this.filled(m, App.Palette[main.off ? 1 : menu[3]], this.label('share', main.label), !!this.roll.share && !main.off);
 
     // THE LINK (v1 SharePanel's second page: its line + URL box; a click on it copies) //
     App.FillColor(ctx, txt);
-    let warnY = cy + 75 * u;
+    let warnY = cy + 85 * u;
     if (this.Saving) {
       ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-      ctx.fillText(COPY.saving.toUpperCase(), W * 0.5, cy + 75 * u);
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 50 * u, 16, true);
-      warnY = cy + 105 * u;
+      ctx.fillText(COPY.saving.toUpperCase(), W * 0.5, cy + 110 * u);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 88 * u, 16, true);
+      warnY = cy + 135 * u;
     } else if (link) {
       ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      this.wordWrap(this.label('url', COPY.linkLine), W * 0.5 - 210 * u, cy + 51 * u, 14 * u, 420 * u);
+      this.wordWrap(this.label('url', COPY.linkLine), W * 0.5 - 210 * u, cy + 83 * u, 14 * u, 420 * u);
       App.FillColor(ctx, App.Palette[1]);
-      ctx.fillRect(W * 0.5 - 210 * u, cy + 65 * u, 420 * u, 40 * u);
-      warnY = cy + 135 * u;
+      ctx.fillRect(W * 0.5 - 210 * u, cy + 95 * u, 420 * u, 40 * u);
+      warnY = cy + 160 * u;
     }
     // WARNINGS (v1 SharePanel) //
     if (!this.Saving) {
       App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      const warn = !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : links?.warning();
+      const warn = !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : this.GalleryNote || links?.warning();
       if (warn) this.wordWrap(warn, W * 0.5 - 210 * u, warnY, 14 * u, 420 * u);
     }
+    // SAVE AS · DOWNLOAD PATCH (v1's bordered buttons, quieter: owner review 2) //
+    const sec = this.secondary(), st = this.shareState();
+    const quiet = (b: ReturnType<PatchesPanel['bordered']>, live: boolean, key: string) => {
+      ctx.save(); if (!live) ctx.globalAlpha = 0.4;
+      this.drawBordered({ ...b, label: this.label(key, b.label) }, live && this.roll[key] ? txt : App.Palette[1]);
+      ctx.restore();
+    };
+    quiet(sec.saveAs, !off && st.saveAs, 'saveAs');
+    if (sec.download) quiet(sec.download, !off, 'save');
+  }
+  /** What the main button does: SAVE (see shareState); with nothing to save and MAKE VIDEO on, MAKE VIDEO. */
+  private mainAction(): { kind: 'save' | 'video' | null; label: string; off: boolean } {
+    const st = this.shareState(), blocks = this.host.hasBlocks() && !this.Saving;
+    if (st.save) return { kind: 'save', label: COPY.saveLink, off: !blocks };
+    if (this.videoOn) return { kind: 'video', label: COPY.makeVideo, off: !blocks };
+    return { kind: null, label: COPY.saveLink, off: true };
+  }
+  /** Plugin: SAVE TO COMPUTER · CREATE SHARE LINK (v1 SAVE / SAVE AS), each with its line. */
+  private drawPluginSave(off: boolean): void {
+    const ctx = this.Ctx, u = App.Unit, cy = this.cy, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const { left, right } = this.halves(), save = left, share = right;
+    ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; App.FillColor(ctx, txt);
+    this.wordWrap(COPY.saveLinePlugin, save.x, cy - 59 * u, 14 * u, save.w);
+    this.wordWrap(COPY.shareLinePlugin, share.x, cy - 59 * u, 14 * u, share.w);
+    this.filled(save, App.Palette[off ? 1 : menu[3]], this.label('save', COPY.save), !!this.roll.save && !off);
+    const shareOff = !this.host.links || off;
+    this.filled(share, App.Palette[shareOff ? 1 : menu[1]], this.label('share', COPY.share), !!this.roll.share && !shareOff);
+    if (!this.host.hasBlocks()) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; this.wordWrap(App.L10n.UI.SharePanel.NoBlocks, save.x, cy + 75 * u, 14 * u, this.pageW); }
+    else { const warn = this.host.links?.warning(); if (warn) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; this.wordWrap(warn, save.x, cy + 75 * u, 14 * u, this.pageW); } }
+  }
+  /** v1 OptionSwitch.Draw, style 1, mode "offOn": the chosen side underlined in the options colour; its name after it,
+   * and (dimmed) a line saying why it can't be used. */
+  private drawSwitch(b: { x: number; y: number; w: number; h: number }, name: string, on: boolean, enabled: boolean, note: string): void {
+    const ctx = this.Ctx, u = App.Unit, txt = App.Palette[App.ThemeManager.Txt], { x, y, w, h } = b;
+    ctx.save();
+    if (!enabled) ctx.globalAlpha = 0.5;
+    App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(Math.round(x + w * 0.5), y + h * 0.15); ctx.lineTo(Math.round(x + w * 0.5), y + h * 0.55); ctx.stroke();
+    App.FillColor(ctx, App.Palette[App.ThemeManager.OptionsOrder[2]]);
+    ctx.fillRect(on ? x + w * 0.5 : x, y + h * 0.55, w * 0.5, h * 0.05);
+    App.StrokeColor(ctx, txt);
+    const cy = y + h * 0.35, lx = x + w * 0.25, rx = x + w * 0.75;
+    ctx.beginPath();
+    ctx.moveTo(lx - 5 * u, cy); ctx.lineTo(lx + 5 * u, cy);
+    ctx.moveTo(rx + 5 * u, cy); ctx.lineTo(rx, cy - 5 * u); ctx.lineTo(rx - 5 * u, cy); ctx.lineTo(rx, cy + 5 * u); ctx.lineTo(rx + 5 * u, cy);
+    ctx.stroke();
+    ctx.restore();
+    App.FillColor(ctx, txt); ctx.textAlign = 'left';
+    ctx.font = App.Metrics.TxtMid;
+    ctx.fillText(name.toUpperCase(), x + w + 12 * u, cy + (note ? -2 : 4) * u);
+    // The note wraps inside this switch's half of the page.
+    if (note) { ctx.font = App.Metrics.TxtItalic2; this.wordWrap(note, x + w + 12 * u, cy + 12 * u, 12 * u, this.pageW * 0.5 - 10 * u - w - 12 * u); }
   }
 
   private drawList(): void {
@@ -462,15 +630,13 @@ export class PatchesPanel extends DisplayObject {
     this.wordWrap(line, this.margin, cy - 40 * u, 14 * u, this.pageW);
   }
   private drawBack(): void {
-    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, { arrowX, arrowY } = this.backArrow();
+    const ctx = this.Ctx, u = App.Unit, { x, y } = this.backArrow();
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]); App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.beginPath();
-    ctx.moveTo(W * 0.5 - arrowX * u, cy + (arrowY - 20) * u);
-    ctx.lineTo(W * 0.5 - (arrowX + 20) * u, cy + arrowY * u);
-    ctx.lineTo(W * 0.5 - arrowX * u, cy + (arrowY + 20) * u);
+    ctx.moveTo(x + 10 * u, y - 20 * u); ctx.lineTo(x - 10 * u, y); ctx.lineTo(x + 10 * u, y + 20 * u);
     ctx.stroke();
     ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-    ctx.fillText(COPY.back.toUpperCase(), W * 0.5 - arrowX * u, cy + (arrowY + 35) * u);
+    ctx.fillText(COPY.back.toUpperCase(), x, y + 35 * u);
   }
   private drawFile(): void {
     const f = this.Picked, u = App.Unit, menu = App.ThemeManager.MenuOrder;
@@ -506,6 +672,184 @@ export class PatchesPanel extends DisplayObject {
     this.filled(c, App.Palette[menu[3]], COPY.openAnyway, !!this.roll.openAnyway, font, 18.5);
   }
 
+  /** The video: SharePanel's spinner while it renders (CANCEL under it), then the portrait player with SHARE VIDEO
+   * (DOWNLOAD VIDEO on desktop) under it; BACK at the top right. */
+  private drawVideo(): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    this.drawBack();
+    const m = this.videoMain(), pb = this.playerBox();
+    App.FillColor(ctx, txt);
+    if (this.VideoState === 'making') {
+      ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
+      ctx.fillText(`${COPY.rendering}... ${Math.floor(this.VideoProgress.done * 100)}%`.toUpperCase(), W * 0.5, cy + 55 * u);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 30 * u, 16, true);
+      this.filled(m, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
+    } else if (this.VideoState === 'ready') {
+      // The player's frame (the DOM video sits inside it; its edge in the rule colour, as the URL box).
+      App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 2; ctx.strokeRect(pb.x - 1, pb.y - 1, pb.w + 2, pb.h + 2);
+      this.filled(m, App.Palette[menu[3]], this.shareFiles ? COPY.shareVideo : COPY.downloadVideo, !!this.roll.shareVideo);
+    } else {
+      const line = this.VideoState === 'error' ? this.VideoMessage : !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : '';
+      if (line) { ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(line, this.margin, cy + 30 * u, 14 * u, this.pageW); }
+      this.filled(m, App.Palette[this.host.hasBlocks() ? menu[3] : 1], this.VideoState === 'error' ? COPY.tryAgain : COPY.makeVideo, !!this.roll.make && this.host.hasBlocks());
+    }
+  }
+
+  /** Make the video (portrait, videoSeconds long) and show it; on desktop it also downloads once made. */
+  private async makeVideo(): Promise<void> {
+    const v = this.host.video;
+    if (!v || this.VideoState === 'making' || !this.host.hasBlocks()) return;
+    this.View = 'video'; this.dropPlayer();
+    const abort = this.videoAbort = new AbortController();
+    this.VideoState = 'making'; this.VideoProgress = { phase: 'preparing', done: 0 }; this.videoFile = null; this.VideoMessage = '';
+    this.showDom();
+    // Only the current render may change the panel: a cancelled one winds down on its own (CANCEL takes effect at once).
+    const current = () => this.videoAbort === abort;
+    try {
+      const file = await v.make({ shape: 'portrait', seconds: v.seconds() }, p => { if (current()) this.VideoProgress = p; }, abort.signal);
+      if (!current()) return;
+      this.videoFile = file; this.VideoState = 'ready'; this.showPlayer(file);
+      // Where the share sheet can't take files (desktop browsers), it downloads at once (owner, 2026-11-15).
+      if (!this.shareFiles) await v.share(file).catch(() => {});
+    } catch (e) {
+      if (current()) { this.VideoState = 'error'; this.VideoMessage = (e as Error).message || 'The video could not be made.'; }
+    } finally { if (current()) this.videoAbort = null; this.settled(); this.showDom(); }
+  }
+  /** CANCEL: the panel is free at once; the render stops at its next check. */
+  private cancelVideo(): void {
+    this.videoAbort?.abort();
+    this.videoAbort = null;
+    this.VideoState = 'idle'; this.VideoMessage = '';
+  }
+  private showPlayer(file: File): void {
+    const el = this.player;
+    if (!el) return;
+    if (this.playerUrl) URL.revokeObjectURL(this.playerUrl);
+    this.playerUrl = URL.createObjectURL(file);
+    el.src = this.playerUrl;
+    void el.play().catch(() => {});
+  }
+  private dropPlayer(): void {
+    const el = this.player;
+    if (el) { el.pause(); el.removeAttribute('src'); el.load(); }
+    if (this.playerUrl) { URL.revokeObjectURL(this.playerUrl); this.playerUrl = ''; }
+  }
+
+  // ---- GALLERY tab (CHG-0024) ----
+  // v1 SoundcloudPanel's layout: SEARCH bordered above the rule at its right (the field is a DOM input over the rule),
+  // five rows a page with their count bottom left, POPULAR / NEW bottom right where v1 had RANDOMISE, page arrows;
+  // each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own).
+  private galleryLayout() {
+    const u = App.Unit, cy = this.cy, right = App.Width * 0.5 + 210 * u;
+    return { search: this.bordered(COPY.search, right, cy - 140 * u), rule: cy - 110 * u, sortY: cy + 160 * u, sortRight: right };
+  }
+  /** The list's window: under the search rule, above POPULAR / NEW. */
+  private galleryWindow() { const u = App.Unit; return { top: this.cy - 100 * u, bottom: this.cy + 135 * u }; }
+  /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
+  private galleryRowY(n: number) { return this.cy - 70 * App.Unit + n * 40 * App.Unit - this.GalleryScroll; }
+  private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * 40 * u + (this.GalleryMore || this.GalleryLoading ? 40 * u : 0) - (w.bottom - w.top) - 10 * u); }
+  /** OPEN and INSERT, as OPEN's rows (owner review 3: insert from the gallery too). */
+  private galleryRow(n: number) {
+    const u = App.Unit, y = this.galleryRowY(n), insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * u);
+    const open = this.bordered(COPY.open, insert.x - 10 * u, y - 19 * u);
+    return { open, insert, textRight: open.x - 6 * u };
+  }
+  /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count and RANDOMISE),
+   * spread across the page; the chosen one underlined. */
+  private sortButtons() {
+    const L = this.galleryLayout(), ctx = this.Ctx;
+    ctx.font = App.Metrics.TxtMid;
+    const names = GALLERY_SORTS.map(s => COPY.sorts[s].toUpperCase()), ws = names.map(t => ctx.measureText(t).width);
+    const gap = (this.pageW - ws.reduce((a, b) => a + b, 0)) / (names.length - 1);
+    let x = this.margin;
+    return GALLERY_SORTS.map((sort, i) => { const b = { sort, label: names[i], x, y: L.sortY, w: ws[i] }; x += ws[i] + gap; return b; });
+  }
+  /** Scroll the list by `dy` device px; near its end, the next page loads. */
+  scrollGallery(dy: number): void {
+    this.GalleryScroll = Math.max(0, Math.min(this.galleryMaxScroll(), this.GalleryScroll + dy));
+    if (this.GalleryMore && !this.GalleryLoading && this.GalleryScroll > this.galleryMaxScroll() - 120 * App.Unit) void this.browse(true);
+    this.settled();
+  }
+  /** A mouse wheel over the open panel (scene.wheel). */
+  Wheel(e: WheelEvent): void { if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }
+  private drawGallery(): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    if (this.GalleryView === 'report' && this.reporting) {
+      this.heading(COPY.reportTitle, this.reporting.title ? `${this.reporting.title.toUpperCase()}. ${COPY.reportLine}` : COPY.reportLine);
+      if (this.reported || this.GalleryLoading) {
+        App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+        if (this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 25 * u, 16, true);
+        else this.wordWrap(this.GalleryMessage, margin, cy + 25 * u, 14 * u, this.pageW);
+        return;
+      }
+      const { left, right } = this.halves();
+      for (const h of [left, right]) h.y = cy + 5 * u;
+      this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.reportCancel);
+      this.filled(right, App.Palette[menu[3]], COPY.report, !!this.roll.reportOk);
+      return;
+    }
+    const L = this.galleryLayout(), win = this.galleryWindow();
+    // SEARCH (v1 SoundcloudPanel: the rule under the field, SEARCH bordered above it at the right) //
+    App.StrokeColor(ctx, txt);
+    ctx.beginPath(); ctx.moveTo(margin, L.rule); ctx.lineTo(margin + this.pageW, L.rule); ctx.stroke();
+    this.drawBordered(L.search, txt);
+    // POPULAR · NEW · EXAMPLES · TUTORIALS (the chosen one underlined; the others underline on hover) //
+    App.FillColor(ctx, txt); App.StrokeColor(ctx, txt); ctx.textAlign = 'left';
+    for (const b of this.sortButtons()) {
+      ctx.font = App.Metrics.TxtMid; ctx.fillText(b.label, b.x, b.y);
+      const on = b.sort === this.GallerySort;
+      if (!on && !this.roll[`sort_${b.sort}`]) continue;
+      ctx.beginPath(); ctx.moveTo(b.x, b.y + 4 * u); ctx.lineTo(b.x + b.w, b.y + 4 * u);
+      ctx.lineWidth = on ? 2 : 1; ctx.stroke(); ctx.lineWidth = 2;
+    }
+    // ROWS: one list, clipped to its window and scrolled //
+    const n0 = this.GalleryItems.length;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top); ctx.clip();
+    for (let n = 0; n < n0; n++) {
+      const y = this.galleryRowY(n), it = this.GalleryItems[n], b = this.galleryRow(n);
+      if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
+      if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
+      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
+      const left = margin + u + 30 * u, maxW = b.textRight - left;
+      const fit = (t: string, yy: number, x = left) => { const w = ctx.measureText(t).width; if (w <= maxW - (x - left)) { ctx.fillText(t, x, yy); return; } ctx.save(); ctx.translate(x, yy); ctx.scale((maxW - (x - left)) / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
+      const on = App.Palette[App.ThemeManager.OptionsOrder[2]];
+      fit(it.title.toUpperCase(), y - 10 * u);
+      const remixes = it.remixes ? ` \u00b7 ${plural(it.remixes, 'remix').replace('remixs', 'remixes')}` : '', views = plural(it.views, 'view');
+      // Reddit's column (owner's pick, B): the like chevron over the count, left of the row; pressing it likes.
+      drawUpArrow(ctx, margin + 12 * u, y - 15 * u, 10 * u, it.liked, txt, on);
+      ctx.textAlign = 'center'; ctx.fillText(String(it.likes), margin + 12 * u, y); ctx.textAlign = 'left';
+      fit(`${COPY.by} @${it.by} \u00b7 ${views}${remixes}`, y);
+      this.drawBordered(b.open, txt);
+      this.drawBordered(b.insert, App.Palette[1]);
+    }
+    // More on the way: v1's spinner where the next row will be.
+    if (n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.galleryRowY(n0) - 5 * u, 16, true);
+    ctx.restore();
+    App.FillColor(ctx, txt);
+    if (!n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
+    else if (!n0) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * u); }
+    if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, cy + 185 * u, 14 * u, this.pageW); }
+  }
+  /** Fetch the list from the top, or (`more`) the next page onto its end. Stale answers (an earlier search) are dropped. */
+  async browse(more = false): Promise<void> {
+    const g = this.host.gallery;
+    if (!g) return;
+    if (more && (!this.GalleryMore || this.GalleryLoading)) return;
+    const ask = ++this.galleryAsk, page = more ? this.GalleryPage + 1 : 1;
+    if (!more) { this.GalleryItems = []; this.GalleryScroll = 0; this.GalleryMore = false; }
+    this.GalleryLoading = true; this.showDom();
+    try {
+      const r = await g.browse(this.GallerySort, this.GalleryQuery, page);
+      if (ask !== this.galleryAsk) return;
+      // A patch can move up between pages (POPULAR changes as people like): keep each once.
+      const have = new Set(this.GalleryItems.map(i => i.id));
+      this.GalleryItems = [...this.GalleryItems, ...(r?.items ?? []).filter(i => !have.has(i.id))];
+      this.GalleryMore = !!r?.more; this.GalleryPage = page;
+      if (!r) this.GalleryMessage = 'The gallery is not available here.';
+    } catch (e) { if (ask === this.galleryAsk) this.GalleryMessage = (e as Error).message; }
+    finally { if (ask === this.galleryAsk) { this.GalleryLoading = false; this.settled(); } }
+  }
   /** v1 SharePanel.WordWrap. */
   private wordWrap(text: string, x: number, y: number, lineHeight: number, fitWidth: number): void {
     const ctx = this.Ctx;
@@ -528,14 +872,49 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, W = App.Width, cy = this.cy, hit = (x: number, y: number, w: number, h: number) => Dimensions.hitRect(x, y, w, h, pt.x, pt.y);
     const { tabs, half } = this.tabs(), tabY = this.OffsetY;
     const r: Record<string, boolean> = { close: hit(W * 0.5 + half, tabY + 10 * u, 40 * u, 40 * u) };
-    tabs.forEach((t, i) => { r[`tab${i}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
+    tabs.forEach(t => { r[`tab${t.id}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) => hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
-    if (this.Tab === 0) {
-      const { share, save, saveAs } = this.saveButtons();
+    if (this.View === 'confirm') {
+      const [a, b, c] = this.thirds();
+      r.cancel = box(a); r.saveFirst = box(b); r.openAnyway = box(c);
+    } else if (this.Tab === 2) {
+      if (this.GalleryView === 'report') {
+        const { left, right } = this.halves();
+        for (const h of [left, right]) h.y = cy + 5 * u;
+        r.reportCancel = box(left); r.reportOk = box(right);
+      } else {
+        const L = this.galleryLayout();
+        r.search = pad(L.search);
+        for (const b of this.sortButtons()) r[`sort_${b.sort}`] = hit(b.x - 5 * u, b.y - 20 * u, b.w + 10 * u, 30 * u);
+        const win = this.galleryWindow();
+        r.list = hit(this.margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top);
+        if (r.list) for (let n = 0; n < this.GalleryItems.length; n++) {
+          const b = this.galleryRow(n);
+          if (b.open.y > win.bottom || b.open.y + b.open.h < win.top) continue;
+          if (pad(b.open)) r[`gopen${n}`] = true;
+          else if (pad(b.insert)) r[`gins${n}`] = true;
+          else if (hit(this.margin - 5 * u, this.galleryRowY(n) - 30 * u, 35 * u, 40 * u)) r[`glike${n}`] = true;
+        }
+      }
+    } else if (this.Tab === 0 && this.View === 'video') {
+      const m = this.videoMain();
       r.randomise = pad(this.randomise());
-      r.save = box(save); r.share = box(share); r.saveAs = !!saveAs && box(saveAs);
-      r.url = !!this.link && !this.Saving && hit(W * 0.5 - 210 * u, cy + 65 * u, 420 * u, 40 * u);
+      if (this.VideoState === 'ready') r.shareVideo = box(m); else r.make = box(m);
+      r.videoBack = this.backHit(pt);
+    } else if (this.Tab === 0 && !this.web) {
+      const { left, right } = this.halves();
+      r.randomise = pad(this.randomise());
+      r.save = box(left); r.share = box(right);
+    } else if (this.Tab === 0) {
+      const sw = (g: { x: number; y: number; w: number; h: number }, name: string) => hit(g.x, g.y + g.h * 0.1, g.w + 12 * u + this.textW(name), g.h * 0.55);
+      if (this.host.gallery) r.gallerySwitch = sw(this.gallerySwitch(), COPY.addToGallery);
+      if (this.host.video) r.videoSwitch = sw(this.videoSwitch(), COPY.makeVideo);
+      r.randomise = pad(this.randomise());
+      r.share = box(this.mainButton());
+      const sec = this.secondary();
+      r.saveAs = pad(sec.saveAs); r.save = !!sec.download && pad(sec.download);
+      r.url = !!this.link && !this.Saving && hit(W * 0.5 - 210 * u, cy + 95 * u, 420 * u, 40 * u);
     } else if (this.View === 'list') {
       let arrowX = 285, arrowY = 0;
       if (this.tablet) arrowX = 255;
@@ -550,7 +929,6 @@ export class PatchesPanel extends DisplayObject {
         r[`bin${n}`] = !!item?.removable && hit(b.bin.x, b.bin.y - 10 * u, b.bin.w + 5 * u, 40 * u);
       }
     } else {
-      const { arrowX, arrowY } = this.backArrow();
       if (this.View === 'remove') {
         const { left, right } = this.halves();
         for (const b of [left, right]) b.y = cy + 5 * u;
@@ -559,7 +937,7 @@ export class PatchesPanel extends DisplayObject {
         const { left, right } = this.halves();
         for (const b of [left, right]) b.y = cy + 5 * u;
         r.fileOpen = !this.Picked?.error && box(left); r.fileInsert = !this.Picked?.error && box(right);
-        r.fileBack = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 60 * u);
+        r.fileBack = this.backHit(pt);
       } else {
         const [a, b, c] = this.thirds();
         r.cancel = box(a); r.saveFirst = box(b); r.openAnyway = box(c);
@@ -575,20 +953,36 @@ export class PatchesPanel extends DisplayObject {
     const mid = (b: { x: number; y: number; w: number; h: number }) => at(b.x + b.w / 2, b.y + b.h / 2);
     const m = /^(open|ins|bin)(\d)$/.exec(name);
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
+    {
+      const gm = /^g(open|ins)(\d+)$/.exec(name);
+      if (gm) { const b = this.galleryRow(Number(gm[2])); return mid(gm[1] === 'open' ? b.open : b.insert); }
+      const lm = /^glike(\d+)$/.exec(name);
+      if (lm) return at(this.margin + 12 * u, this.galleryRowY(Number(lm[1])) - 12 * u);
+      if (name === 'list') { const w = this.galleryWindow(); return at(App.Width * 0.5, (w.top + w.bottom) / 2); }
+      const L = this.galleryLayout();
+      if (name === 'search') return mid(L.search);
+      const sb = /^sort_(\w+)$/.exec(name) && this.sortButtons().find(b => `sort_${b.sort}` === name);
+      if (sb) return at(sb.x + sb.w / 2, sb.y - 5 * u);
+
+      if (name === 'reportCancel' || name === 'reportOk') { const { left, right } = this.halves(); return at((name === 'reportOk' ? right : left).cx, this.cy + 25 * u); }
+    }
+    if (name === 'gallerySwitch' || name === 'videoSwitch') { const g = name === 'gallerySwitch' ? this.gallerySwitch() : this.videoSwitch(); return at(g.x + g.w / 2, g.y + g.h * 0.35); }
+    if (name === 'player') return mid(this.playerBox());
+    if (name === 'videoBack' || name === 'fileBack') { const b = this.backArrow(); return at(b.x, b.y); }
+    if (name === 'make' || name === 'shareVideo') return mid(this.videoMain());
     const t = /^tab(\d)$/.exec(name);
-    if (t) { const tab = this.tabs().tabs[Number(t[1])]; return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
-    const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton(), { arrowX, arrowY } = this.backArrow();
+    if (t) { const tab = this.tabs().tabs.find(x => x.id === Number(t[1])); return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
+    const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton();
     switch (name) {
       case 'close': return at(App.Width * 0.5 + this.tabs().half + 20 * u, this.OffsetY + 30 * u);
       case 'randomise': return mid(this.randomise());
-      case 'save': return mid(this.saveButtons().save);
-      case 'share': return mid(this.saveButtons().share);
-      case 'saveAs': { const b = this.saveButtons().saveAs; return b ? mid(b) : null; }
-      case 'url': return at(App.Width * 0.5, this.cy + 85 * u);
+      case 'save': { if (!this.web) return mid(left); const d = this.secondary().download; return d ? mid(d) : null; }
+      case 'share': return this.web ? mid(this.mainButton()) : mid(right);
+      case 'saveAs': return this.web ? mid(this.secondary().saveAs) : null;
+      case 'url': return at(App.Width * 0.5, this.cy + 115 * u);
       case 'file': return mid(f);
       case 'fileOpen': return at(left.cx, this.cy + 25 * u);
       case 'fileInsert': return at(right.cx, this.cy + 25 * u);
-      case 'fileBack': return at(App.Width * 0.5 - (arrowX + 10) * u, this.cy + arrowY * u);
       case 'removeCancel': return at(left.cx, this.cy + 25 * u);
       case 'removeOk': return at(right.cx, this.cy + 25 * u);
       case 'cancel': return mid(a);
@@ -599,18 +993,84 @@ export class PatchesPanel extends DisplayObject {
   }
   get Hover(): boolean { return Object.values(this.roll).some(Boolean); }
 
-  MouseMove(pt: { x: number; y: number }): void { this.HitTests(pt); }
-  MouseUp(): void {}
+  MouseMove(pt: { x: number; y: number }): void {
+    const d = this.galleryDrag;
+    if (d) {
+      if (Math.abs(pt.y - d.y) > 6 * App.Unit) d.moved = true;
+      if (d.moved) { this.GalleryScroll = d.scroll; this.scrollGallery(d.y - pt.y); }
+    }
+    this.HitTests(pt);
+  }
+  MouseUp(): void {
+    const d = this.galleryDrag, g = this.host.gallery;
+    this.galleryDrag = null;
+    if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2) return;
+    const row = this.GalleryItems[d.row];
+    if (!row) return;
+    // Likes from the list too (owner review 3: changed their mind); signed out, the host asks to sign in.
+    if (d.mode === 'like') { g.like(row); this.settled(); return; }
+    // Insert adds to the patch: nothing is lost, so it doesn't ask first (as OPEN's INSERT).
+    if (d.mode === 'insert') this.runOpen(() => g.open(row, 'insert'));
+    else this.requestOpen(() => g.open(row, 'open'));
+  }
   MouseDown(pt: { x: number; y: number }): void {
+    if (this.Opening) return;
+    this.OpenError = '';
     this.HitTests(pt);
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
-    for (const i of [0, 1] as Tab[]) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    for (const i of ALL_TABS) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
+    if (this.Tab === 2 && this.View !== 'confirm') {
+      const g = this.host.gallery;
+      if (!g) return;
+      if (this.GalleryView === 'report') {
+        const row = this.reporting;
+        if (this.reported || this.GalleryLoading) return;
+        if (r.reportCancel) { this.reporting = null; this.GalleryView = 'list'; this.ClosePanel(); return; }
+        if (r.reportOk && row) void this.sendReport(g, row);
+        return;
+      }
+      if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); void this.browse(); return; }
+      const sort = GALLERY_SORTS.find(s => r[`sort_${s}`]);
+      if (sort) {
+        this.GallerySort = sort; try { localStorage.setItem(SORT_KEY, sort); } catch { /* private mode */ }
+        void this.browse(); return;
+      }
+      // The list: a press may become a drag (scrolling); a row opens on release, if it didn't move.
+      if (r.list) {
+        let row = -1, mode: 'open' | 'insert' | 'like' = 'open';
+        for (let n = 0; n < this.GalleryItems.length; n++) {
+          if (r[`gopen${n}`]) { row = n; break; }
+          if (r[`gins${n}`]) { row = n; mode = 'insert'; break; }
+          if (r[`glike${n}`]) { row = n; mode = 'like'; break; }
+        }
+        this.galleryDrag = { y: pt.y, scroll: this.GalleryScroll, moved: false, row, mode };
+      }
+      return;
+    }
+    if (this.Tab === 0 && this.View === 'video') {
+      if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
+      if (r.videoBack) { if (this.VideoState === 'making') this.cancelVideo(); this.dropPlayer(); this.View = 'list'; this.showDom(); return; }
+      if (r.make) { if (this.VideoState === 'making') this.cancelVideo(); else void this.makeVideo(); return; }
+      // The share sheet needs this click's user activation: call it straight away.
+      if (r.shareVideo && this.videoFile) { void this.host.video?.share(this.videoFile).catch(e => { this.VideoState = 'error'; this.VideoMessage = (e as Error).message; }); return; }
+      return;
+    }
     if (this.Tab === 0) {
+      if (r.gallerySwitch) { if (this.host.signedIn()) { this.GalleryOn = !this.GalleryOn; this.GalleryNote = ''; } return; }
+      if (r.videoSwitch) { this.VideoOn = !this.videoOn; return; }
       if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
       if (r.save) { if (!this.Saving && this.host.hasBlocks()) void this.save(); return; }
-      if (r.share) { void this.share(); return; }
-      if (r.saveAs) { if (this.shareState().saveAs) void this.saveAsLink(); return; }
+      if (r.share) {
+        if (!this.web) { void this.share(); return; }
+        const main = this.mainAction();
+        if (main.off) return;
+        // SAVE, then (MAKE VIDEO on) on to the video; or just the video when there is nothing to save.
+        if (main.kind === 'save') void this.share().then(ok => { if (ok && this.videoOn) void this.makeVideo(); });
+        else if (main.kind === 'video') void this.makeVideo();
+        return;
+      }
+      if (r.saveAs) { if (this.shareState().saveAs && !this.Saving) void this.saveAsLink().then(ok => { if (ok && this.videoOn) void this.makeVideo(); }); return; }
       return;
     }
     if (this.View === 'list') {
@@ -622,7 +1082,7 @@ export class PatchesPanel extends DisplayObject {
         const item = this.Items[(this.page - 1) * ITEMS + n];
         if (!item) return;
         if (r[`bin${n}`]) { this.removing = item; this.View = 'remove'; return; }
-        if (r[`ins${n}`]) { this.ClosePanel(); this.host.openPatch(item, 'insert'); }
+        if (r[`ins${n}`]) this.runOpen(() => this.host.openPatch(item, 'insert'));
         else this.requestOpen(() => this.host.openPatch(item, 'open'));
         return;
       }
@@ -643,26 +1103,42 @@ export class PatchesPanel extends DisplayObject {
     // confirm
     if (this.Saving) return;
     if (r.cancel) { this.View = this.pending?.from ?? 'list'; this.pending = null; return; }
-    if (r.openAnyway) { const p = this.pending; this.pending = null; this.ClosePanel(); p?.run(); return; }
+    if (r.openAnyway) { const p = this.pending; this.pending = null; if (p) this.runOpen(p.run); return; }
     if (r.saveFirst) {
       void this.save().then(ok => {
         if (!ok || !this.pending) return;
-        const p = this.pending; this.pending = null; this.ClosePanel(); p.run();
+        const p = this.pending; this.pending = null; this.runOpen(p.run);
       });
     }
   }
   /** Open replaces the patch: with unsaved changes, ask first (owner, 2026-11-10). */
-  private requestOpen(run: () => void): void {
-    if (!this.host.isDirty()) { this.ClosePanel(); run(); return; }
+  private requestOpen(run: OpenRun): void {
+    if (!this.host.isDirty()) { this.runOpen(run); return; }
     this.pending = { run, from: this.View };
     this.View = 'confirm';
+  }
+  /** Open or Insert. A patch from the server keeps the panel up, spinning, until it is in; then the panel closes. */
+  private runOpen(run: OpenRun): void {
+    this.OpenError = '';
+    const r = run();
+    if (!(r instanceof Promise)) { this.ClosePanel(); return; }
+    this.Opening = true; this.showDom();
+    const done = (ok: boolean) => {
+      this.Opening = false;
+      if (ok) this.ClosePanel(); else { this.OpenError = COPY.openFailed; this.showDom(); }
+      this.settled();
+    };
+    r.then(ok => done(ok !== false), () => done(false));
   }
   private turn(page: number): void { this.page = page; this.tween('OffsetX', -(page - 1) * 430 * App.Unit, 350); }
   /** v1 SettingsPanel category select: the new tab's fill drops in, the others lift. */
   selectTab(i: Tab): void {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
     this.Tab = i;
-    for (const j of [0, 1]) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    for (const j of ALL_TABS) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
+    if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; this.reporting = null; void this.browse(); }
+    // OPEN lists the account's patches too: signed in or out since the panel opened, the list has changed.
+    if (i === 1 && this.View === 'list') void this.refresh();
     this.showDom();
   }
 
@@ -674,26 +1150,55 @@ export class PatchesPanel extends DisplayObject {
     return ok;
   }
   /** SAVE (web) / CREATE SHARE LINK (plugin): see shareState. */
-  private async share(): Promise<void> {
+  private async share(): Promise<boolean> {
     const st = this.shareState();
-    if (!st.save) return;
+    if (!st.save) return false;
     if (this.host.links?.external) {
-      if (await this.makeLink('saveAs')) { this.flash = { key: 'share', label: COPY.opened, until: performance.now() + 1500 }; this.settled(); }
-      return;
+      if (await this.makeLink('saveAs')) { this.flash = { key: 'share', label: COPY.opened, until: performance.now() + 1500 }; this.settled(); return true; }
+      return false;
     }
     // Save over this link (v1 SAVE, "overwrite"); otherwise a new link (v1 SAVE_AS).
-    if (await this.makeLink(st.save === 'save' ? 'save' : 'saveAs')) { this.flash = { key: 'share', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); }
+    if (await this.makeLink(st.save === 'save' ? 'save' : 'saveAs')) { this.flash = { key: 'share', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); return true; }
+    return false;
   }
   /** SAVE AS: a new link; the old one keeps what it had. */
-  private async saveAsLink(): Promise<void> {
-    if (await this.makeLink('saveAs')) { this.flash = { key: 'saveAs', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); }
+  private async saveAsLink(): Promise<boolean> {
+    if (await this.makeLink('saveAs')) { this.flash = { key: 'saveAs', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); return true; }
+    return false;
   }
   private async makeLink(mode: 'saveAs' | 'save'): Promise<boolean> {
     if (this.Saving || !this.host.hasBlocks() || !this.host.links) return false;
     this.Saving = true; this.showDom();
-    try { await this.host.links.make(mode, this.Title.trim() || 'Untitled'); return true; } finally { this.Saving = false; this.settled(); this.showDom(); }
+    // Signed out, the gallery is left as it is (only signed-in users can publish, SPEC-SHARING-GALLERY R2).
+    const gallery = this.web && this.host.gallery && this.host.signedIn() ? this.GalleryOn : undefined;
+    try {
+      const g = await this.host.links.make(mode, this.Title.trim() || 'Untitled', gallery);
+      if (g) { this.savedGallery = g.published; this.GalleryNote = g.reason ?? ''; }
+      return true;
+    } finally { this.Saving = false; this.settled(); this.showDom(); }
   }
   setTitle(t: string): void { this.Title = t; if (this.Input) this.Input.value = t; }
+  /** Open the gallery on a search (a patch's "by @name" on the stage). */
+  showGallery(q: string): void {
+    this.GalleryQuery = q; this.GalleryView = 'list'; this.GalleryMessage = '';
+    if (this.SearchInput) this.SearchInput.value = q;
+    if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
+  }
+  /** Report a patch (from the stage, owner review 2: right-click its credit): the GALLERY tab asks first. */
+  askReport(row: { id: string; title: string }): void {
+    this.reporting = row; this.reported = false; this.GalleryMessage = ''; this.GalleryView = 'report';
+    if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
+    this.GalleryView = 'report'; this.reporting = row; this.showDom();
+  }
+  private async sendReport(g: GalleryHost, row: { id: string }): Promise<void> {
+    this.GalleryLoading = true; this.GalleryMessage = '';
+    try { await g.report(row.id); this.GalleryMessage = COPY.reported; this.reported = true; }
+    catch (e) { this.GalleryMessage = (e as Error).message || 'That did not work. Try again.'; this.reported = true; }
+    finally { this.GalleryLoading = false; this.settled(); }
+    setTimeout(() => { if (this.GalleryView === 'report' && this.reporting === row) { this.ClosePanel(); this.reporting = null; this.reported = false; this.GalleryView = 'list'; } }, 1800);
+  }
+  /** The open patch is (or isn't) in the gallery: the switch shows it (an opened patch of yours; null: unknown). */
+  galleryKnown(published: boolean | null): void { this.savedGallery = published; if (published !== null) this.GalleryOn = published; this.GalleryNote = ''; }
   async refresh(): Promise<void> {
     this.Loading = true;
     try { this.Items = await this.host.listPatches(); } finally { this.Loading = false; this.settled(); }
@@ -704,8 +1209,10 @@ export class PatchesPanel extends DisplayObject {
     // A new scene gets a v1-style random title (v1 SharePanel.GenerateLabel), as the Share panel did.
     if (!this.Title) this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? '');
     this.Open = true; this.shown = true;
+    if (!this.hasTab(tab)) tab = 0;  // a tab remembered from the web, in the plugin
     this.Tab = tab; this.View = 'list'; this.Picked = null; this.pending = null;
-    this.selected = [tab === 0 ? 1 : 0, tab === 1 ? 1 : 0];
+    this.selected = ALL_TABS.map(i => (i === tab ? 1 : 0));
+    if (tab === 2) void this.browse();
     this.OffsetY = -App.Height;
     this.OffsetX = -(this.page - 1) * 430 * App.Unit;
     this.Input.value = this.Title;
@@ -746,13 +1253,17 @@ export class PatchesPanel extends DisplayObject {
   private placeDom(): void {
     const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.OffsetY + App.Height * 0.5;
     this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
-    this.UrlContainer.style.top = `${(mid + u * 65) / pr}px`;
+    this.UrlContainer.style.top = `${(mid + u * 95) / pr}px`;
+    if (this.player) this.player.style.top = `${this.playerBox().y / pr}px`;
+    if (this.SearchContainer) this.SearchContainer.style.top = `${(mid - u * 152) / pr}px`;  // v1 StyleDom(…, 152)
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
-    this.TitleContainer.style.display = on && this.Tab === 0 ? 'block' : 'none';
-    this.UrlContainer.style.display = link ? 'block' : 'none';
+    this.TitleContainer.style.display = on && this.Tab === 0 && !this.Opening ? 'block' : 'none';
+    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' && this.View !== 'confirm' && !this.Opening ? 'block' : 'none';
+    this.UrlContainer.style.display = link && this.View !== 'video' ? 'block' : 'none';
+    if (this.player) this.player.style.display = on && this.Tab === 0 && this.View === 'video' && this.VideoState === 'ready' ? 'block' : 'none';
     if (link && this.UrlInput.value !== link.url) this.UrlInput.value = link.url;  // unchanged: keep the selection
   }
   /** Keep the link field in step with the link (made, gone stale, reset). */
@@ -774,6 +1285,14 @@ export class PatchesPanel extends DisplayObject {
     url.style.height = `${(u * 40) / pr}px`;
     url.style.lineHeight = `${(u * 40) / pr}px`;
     url.style.left = `${App.Width / pr * 0.5 - (u * 200) / pr}px`;
+    // The gallery search field: v1 SoundcloudPanel StyleDom(SearchInputContainer, 300, 42, 210, 152, 0, TxtHeaderPR).
+    const sf = this.SearchContainer;
+    if (sf) {
+      sf.style.font = App.Metrics.TxtHeaderPR;
+      sf.style.width = `${(u * 300) / pr}px`; sf.style.height = `${(u * 42) / pr}px`; sf.style.lineHeight = `${(u * 42) / pr}px`;
+      sf.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
+    }
+    if (this.player) { const b = this.playerBox(); Object.assign(this.player.style, { left: `${b.x / pr}px`, width: `${b.w / pr}px`, height: `${b.h / pr}px` }); }
     if (!this.Open) this.OffsetY = -App.Height;
     this.showDom();
     this.placeDom();

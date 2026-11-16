@@ -1,0 +1,73 @@
+// Sessions (SPEC-SHARING-ACCOUNTS R3–R5, SHARING-0008): a random token in an HttpOnly cookie; D1 keeps its SHA-256.
+// Requests that change anything with the cookie must come from this site (Origin check, on top of SameSite=Lax).
+import type { Env } from '../env.ts';
+import { HttpError, b64urlBytes, publicBase, sha256Hex } from '../http.ts';
+
+export const SESSION_DAYS = 30;
+const DAY = 86_400_000;
+
+export interface User { id: string; handle: string | null; created: number }
+
+/** Secure cookies on https; plain http only for local dev and tests (`wrangler dev`). `__Host-` needs Secure. */
+const secure = (req: Request) => new URL(req.url).protocol === 'https:';
+export const cookieName = (req: Request, name: string) => (secure(req) ? `__Host-${name}` : name);
+
+export function cookie(req: Request, name: string, value: string, maxAgeSeconds: number): string {
+  return `${cookieName(req, name)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure(req) ? '; Secure' : ''}`;
+}
+export function readCookie(req: Request, name: string): string | null {
+  const want = cookieName(req, name);
+  for (const part of (req.headers.get('cookie') ?? '').split(';')) {
+    const i = part.indexOf('=');
+    if (i > 0 && part.slice(0, i).trim() === want) return part.slice(i + 1).trim();
+  }
+  return null;
+}
+
+/** R5: a request that changes state with the session cookie must say it comes from this site. */
+export function sameOrigin(env: Env, req: Request): void {
+  const origin = req.headers.get('origin');
+  const allowed = new Set([new URL(req.url).origin, new URL(publicBase(env, req)).origin]);
+  if (!origin || !allowed.has(origin)) throw new HttpError(403, 'cross-site request refused');
+}
+
+/** A new session for `userId`: its Set-Cookie header. */
+export async function startSession(env: Env, req: Request, userId: string): Promise<string> {
+  const token = b64urlBytes(32), now = Date.now();
+  await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, created, expires) VALUES (?, ?, ?, ?)')
+    .bind(await sha256Hex(token), userId, now, now + SESSION_DAYS * DAY).run();
+  return cookie(req, 'bd_session', token, SESSION_DAYS * 86_400);
+}
+
+/** The signed-in user, or null. A session past half its life is extended (sliding expiry, R3). */
+export async function currentUser(env: Env, req: Request): Promise<User | null> {
+  const token = readCookie(req, 'bd_session');
+  if (!token || token.length > 64) return null;
+  const hash = await sha256Hex(token), now = Date.now();
+  const row = await env.DB.prepare('SELECT u.id, u.handle, u.created, s.expires FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?')
+    .bind(hash).first<User & { expires: number }>();
+  if (!row) return null;
+  if (row.expires <= now) { await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run(); return null; }
+  if (row.expires - now < (SESSION_DAYS * DAY) / 2)
+    await env.DB.prepare('UPDATE sessions SET expires = ? WHERE token_hash = ?').bind(now + SESSION_DAYS * DAY, hash).run();
+  return { id: row.id, handle: row.handle, created: row.created };
+}
+
+export async function requireUser(env: Env, req: Request): Promise<User> {
+  const u = await currentUser(env, req);
+  if (!u) throw new HttpError(401, 'sign in first');
+  return u;
+}
+
+/** Sign out: this session, or every session of the user (`everywhere`). Returns the clearing Set-Cookie. */
+export async function endSession(env: Env, req: Request, everywhere: boolean): Promise<string> {
+  const token = readCookie(req, 'bd_session');
+  if (token) {
+    const hash = await sha256Hex(token);
+    if (everywhere) await env.DB.prepare('DELETE FROM sessions WHERE user_id = (SELECT user_id FROM sessions WHERE token_hash = ?)').bind(hash).run();
+    else await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(hash).run();
+  }
+  return cookie(req, 'bd_session', '', 0);
+}
+
+export const newUserId = () => b64urlBytes(12);

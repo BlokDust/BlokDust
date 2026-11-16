@@ -31,6 +31,7 @@ import { OptionSample } from './ported/UI/Options/OptionSample';
 import { Slider } from './ported/UI/Options/OptionSlider';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
+import { AccountPage } from './accountPage.ts';
 
 export interface SceneHost extends PatchesHost {
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
@@ -64,7 +65,7 @@ export interface SceneHost extends PatchesHost {
   resetScene(): void;
   /** v1 SAVE ("overwrite") / SAVE_AS ("generate link", "create new"): the share id to show (a server id, or a
    * `p…` patch token when there is no backend). Updates App.CompositionId / App.SessionId as v1's handlers did. */
-  share(mode: 'save' | 'saveAs', title: string): Promise<string>;
+  share(mode: 'save' | 'saveAs', title: string, gallery?: boolean): Promise<string>;
   /** v1 Recorder.ToggleRecording / DownloadRecording; SampleGen "generate". */
   toggleRecording(id: number): void;
   downloadRecording(id: number): void;
@@ -162,7 +163,7 @@ export class V1Scene {
     App.CommandManager = { ExecuteCommand: (c: unknown) => this.command(c) };
     App.Audio.Master.volume.onMaster = (db: number) => this.host.setMasterDb(db);
     // v1 ThemeManager: the share text fields take the theme's text colour.
-    for (const id of ['shareUrl', 'shareTitle', 'soundCloudSearch', 'patchTitle', 'patchUrl']) document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
+    for (const id of ['shareUrl', 'shareTitle', 'soundCloudSearch', 'patchTitle', 'patchUrl', 'accountHandle', 'gallerySearch']) document.getElementById(id)!.style.color = theme.colors[theme.roles.txt];
     App.BlockSprites = { DrawSprite: (dc: any, pos: Point, scaled: boolean, name: string) => this.drawSprite(dc.Ctx ?? dc, pos, scaled, name) };
     App.AnimationsLayer = this.AnimationsLayer;
     if (!this.initialised) {
@@ -207,7 +208,8 @@ export class V1Scene {
     const d = App.DragOffset, easing = Math.round(d.x) !== Math.round(this.MainSceneDragger.Destination.x) || Math.round(d.y) !== Math.round(this.MainSceneDragger.Destination.y);
     if (d.x !== this.lastDrag.x || d.y !== this.lastDrag.y) { this.lastDrag = { x: d.x, y: d.y }; this.host.setDrag({ x: d.x, y: d.y }); }
     // Spinners (AnimationsLayer: loading blocks, Share "saving…", sample search) animate every frame while shown.
-    const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating);
+    const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating)
+      || (this.SettingsPanel.Open && !!(this.SettingsPanel as any).accountPage?.animating);
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
     const playing = this.playheadsShown || !!this.playheadLines();
     // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
@@ -395,7 +397,8 @@ export class V1Scene {
     ctx.fillText(label, x + w * 0.5, base);
   }
 
-  wheel(e: WheelEvent): void { this.ZoomButtons.MouseWheel(e); }
+  /** A mouse wheel over the UI: the gallery's list scrolls (owner review 2); elsewhere v1's zoom buttons take it. */
+  wheel(e: WheelEvent): void { if (this.PatchesPanel.Open) { this.PatchesPanel.Wheel(e); return; } this.ZoomButtons.MouseWheel(e); }
 
   // ---- multi-touch (CHG-0005 task 8; not in v1, which took one pointer) ----
   /** Is (x, y) device px on the UI (an open panel, the header with its open menu, the options panel)? Another finger
@@ -624,23 +627,30 @@ export class V1Scene {
 function ensureShareDom(): void {
   if (document.getElementById('shareUrl')) return;
   const style = document.createElement('style');
-  style.textContent = `#shareUrl, #shareTitle, #soundCloudSearch, #patchTitle, #patchUrl { font-family: "Dosis", Arial, Helvetica, sans-serif; font-weight: 200; font-size: 56px;
+  style.textContent = `#shareUrl, #shareTitle, #soundCloudSearch, #patchTitle, #patchUrl, #accountHandle, #gallerySearch { font-family: "Dosis", Arial, Helvetica, sans-serif; font-weight: 200; font-size: 56px;
     mix-blend-mode: normal; background-blend-mode: normal; width: 200px; height: 100px; position: absolute; left: 1000%; top: -100%; }
-  #shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form { width: inherit; height: inherit; }
-  #shareUrl input, #shareTitle input, #soundCloudSearch input, #patchTitle input, #patchUrl input { overflow: scroll; scrollbar-width: none; white-space: nowrap; width: inherit; height: inherit; font: inherit;
+  #shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form { width: inherit; height: inherit; }
+  #shareUrl input, #shareTitle input, #soundCloudSearch input, #patchTitle input, #patchUrl input, #accountHandle input, #gallerySearch input { overflow: scroll; scrollbar-width: none; white-space: nowrap; width: inherit; height: inherit; font: inherit;
     line-height: inherit; color: inherit; outline: none; border: none; padding: 0; margin: 0; background-color: transparent; resize: none; }
-  #shareUrl input::-webkit-scrollbar, #shareTitle input::-webkit-scrollbar, #soundCloudSearch input::-webkit-scrollbar, #patchTitle input::-webkit-scrollbar, #patchUrl input::-webkit-scrollbar { display: none; }
-  #shareTitle input, #soundCloudSearch input, #patchTitle input { text-transform: uppercase; }`;
+  #shareUrl input::-webkit-scrollbar, #shareTitle input::-webkit-scrollbar, #soundCloudSearch input::-webkit-scrollbar, #patchTitle input::-webkit-scrollbar, #patchUrl input::-webkit-scrollbar, #accountHandle input::-webkit-scrollbar, #gallerySearch input::-webkit-scrollbar { display: none; }
+  #shareTitle input, #soundCloudSearch input, #patchTitle input, #accountHandle input, #gallerySearch input { text-transform: uppercase; }`;
   document.head.appendChild(style);
   const wrap = document.createElement('div');
   wrap.innerHTML = `<div id="shareUrl"><form action=""><input type="text" id="shareUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>
     <div id="shareTitle"><form action=""><input type="text" id="shareTitleInput" name="title" autocomplete="off" spellcheck="false" maxlength="24" value=""></form></div>
     <div id="soundCloudSearch"><form action=""><input type="text" id="soundCloudSearchInput" name="title" autocomplete="off" spellcheck="false" maxlength="24" value=""></form></div>
     <div id="patchTitle"><form action=""><input type="text" id="patchTitleInput" name="title" autocomplete="off" spellcheck="false" maxlength="48" value=""></form></div>
-    <div id="patchUrl"><form action=""><input type="text" id="patchUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>`;
+    <div id="patchUrl"><form action=""><input type="text" id="patchUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>
+    <div id="accountHandle"><form action=""><input type="text" id="accountHandleInput" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" value=""></form></div>
+    <div id="gallerySearch"><form action=""><input type="text" id="gallerySearchInput" name="q" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40" value=""></form></div>`;
+  // The video player on SAVE / SHARE (owner review 2): portrait, over the panel like the text fields.
+  const video = document.createElement('video');
+  video.id = 'patchVideo'; video.playsInline = true; video.loop = true; video.controls = true; video.preload = 'auto';
+  Object.assign(video.style, { position: 'absolute', display: 'none', background: '#000', objectFit: 'contain' });
+  wrap.appendChild(video);
   for (const el of [...wrap.children]) document.body.appendChild(el);
   // Enter in these fields is handled by the panels (v1 EnterCheck); never submit (reload) the page.
-  for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form')) f.addEventListener('submit', e => e.preventDefault());
+  for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form')) f.addEventListener('submit', e => e.preventDefault());
   // v1 used a scrolling <textarea>; v2 shows the link on one line like the title field, with no scrollbars, and a
   // click selects the whole link (owner review 2026-11-06).
   for (const id of ['shareUrlText', 'patchUrlText']) {
@@ -698,7 +708,8 @@ export const FOOTER_LINKS = [SOURCE_LINK];
  *    v1 addresses its tabs by index (0 Settings, 1 Connect, 2 About), so SETTINGS and ABOUT are laid out as a two-tab
  *    bar and index 1 becomes an inert, zero-width stand-in that is never drawn, hit or opened.
  *  - The About text is the owner's; the footer links the code on GitHub in v1's footer type, underlined on hover like
- *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts).
+ *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts). The link and v1's build line
+ *    show on About only (owner review 2, 2026-11-15).
  *  - Tour (owner, 2026-11-08) is hidden until v1's tutorial is ported; on the web its row (the last) is the patch Tempo
  *    (owner, 2026-11-10: one tempo in Settings instead of a Tempo row on every synced block). In a DAW the host's tempo
  *    rules, so the row stays empty there.
@@ -709,16 +720,39 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const populate = p.Populate.bind(p);
   // DOWNLOAD (web only) is tab 3: v1 draws nothing for it, so its page is drawn here, following its tab's YOffset.
   const withDownload = !App.IsPlugin;
+  // SIGN IN / ACCOUNT (web only, CHG-0023, owner review 2026-11-15) is tab 4, drawn here the same way.
+  const account: AccountPage | null = withDownload && host.account ? new AccountPage(host.account, () => p.Ctx) : null;
+  p.accountPage = account;
   p.Populate = () => {
     const open = p._OpenTab;
-    p._OpenTab = open === 2 ? 1 : open === 3 ? 2 : 0;
-    populate({ categories: [{ name: 'settings' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : [])] });
+    p._OpenTab = open === 2 ? 1 : open === 3 ? 2 : open === 4 ? 3 : 0;
+    populate({ categories: [{ name: 'settings' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
     p._OpenTab = open;
-    const [settings, about, download] = p.MenuItems;
+    const [settings, about, download, acct] = p.MenuItems;
     const gone = { Position: new Point(about.Position.x - about.Size.width * 0.5, 0), Size: new Size(0, 16), Name: '', Items: [], Selected: 0,
       Hover: false, XOffset: 0, YOffset: -p.DrawTo.Height, CurrentPage: 0, Draw() {} };
-    p.MenuItems = [settings, gone, about, ...(download ? [download] : [])];
+    p.MenuItems = [settings, gone, about, ...(download ? [download] : []), ...(acct ? [acct] : [])];
   };
+  if (account) {
+    // The tab's name follows who is signed in (SIGN IN / ACCOUNT): lay the tabs out again, keeping each tab's state.
+    const prevChange = account.onChange;
+    account.onChange = () => {
+      prevChange();
+      const keep = (p.MenuItems as any[]).map(m => ({ Selected: m.Selected, YOffset: m.YOffset }));
+      p.Populate();
+      (p.MenuItems as any[]).forEach((m, i) => { if (keep[i]) { m.Selected = keep[i].Selected; m.YOffset = keep[i].YOffset; } });
+    };
+    /** Open Settings on SIGN IN / ACCOUNT (back from Google, the signed-in mark on the stage). */
+    p.openAccount = () => {
+      p._OpenTab = 4;
+      (p.MenuItems as any[]).forEach((m, i) => { m.Selected = i === 4 ? 1 : 0; m.YOffset = i === 4 ? 0 : -p.DrawTo.Height; });
+      void account.refresh();
+      p.OpenPanel();
+    };
+  }
+  const accountTop = () => p.OffsetY + 120 * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
+  /** Tests: an account control's centre in CSS px. */
+  p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
   const downloads = () => {
     const u = App.Unit, W = App.Width, y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
@@ -802,8 +836,9 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
     const f = footer();
-    linkHover = f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
+    linkHover = p._OpenTab !== 2 ? -1 : f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
+    if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
     if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + 156 * f.u, p.Range + 20 * f.u, 48 * App.Unit, pt.x, pt.y);
   };
@@ -816,10 +851,13 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   const mouseDown = p.MouseDown.bind(p);
   p.MouseDown = (pt: { x: number; y: number }) => {
+    const before = p._OpenTab;
     mouseDown(pt);
+    if (account && p._OpenTab === 4 && before !== 4) { account.View = account.View === 'delete' ? 'main' : account.View; void account.refresh(); }
     if (!p.Open) return;
     if (linkHover >= 0) { window.open(FOOTER_LINKS[linkHover].url, '_blank'); return; }
     if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(`${r.url}?source=download-page`, '_blank'); return; }
+    if (account && p._OpenTab === 4) { account.hit(pt, accountTop()); account.press(); }
     const i = tempoRow();
     if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x);  // v1 sliders jump to the press, as Volume does
   };
@@ -831,9 +869,15 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   const draw = p.Draw.bind(p);
   p.Draw = () => {
-    draw();
+    // The build line and the GitHub link are About's (owner review 2, 2026-11-15); v1 drew the build under every tab.
+    const about = p._OpenTab === 2, build = p._Attribution.build;
+    if (!about) p._Attribution.build = '';
+    try { draw(); } finally { p._Attribution.build = build; }
+    account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
     if (!p.Open) return;
     drawDownload();
+    if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
+    if (!about) return;
     const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(ctx, txt); App.StrokeColor(ctx, txt);
     ctx.font = App.Metrics.TxtLarge; ctx.textAlign = 'left';
