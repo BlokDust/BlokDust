@@ -29,6 +29,15 @@ export function remoteConfig(env: EnvName): string {
   if (google) target.vars.GOOGLE_CLIENT_ID = google;
   // Sign in with Apple (R2b): optional; the Services ID, team id and key id are vars, the .p8 key a Worker secret.
   for (const k of ['CLIENT_ID', 'TEAM_ID', 'KEY_ID']) { const v = setting(`BLOKDUST_APPLE_${k}`).trim(); if (v) target.vars[`APPLE_${k}`] = v; }
+  // Usage analytics (SHARING-0010): optional, per environment, from local config. Access protects /admin/*; Sentry's
+  // DSN is public (it's in the page) but stays out of the repo with the rest; ANALYTICS_RATE overrides the committed
+  // default (production's is "0", off). The dashboard's account id and query token are secrets (`bd server secret`).
+  for (const [name, key] of [['ACCESS_TEAM_DOMAIN', 'ACCESS_TEAM_DOMAIN'], ['ACCESS_AUD', 'ACCESS_AUD'], ['SENTRY_DSN', 'SENTRY_DSN'], ['ANALYTICS_RATE', 'ANALYTICS_RATE']] as const) {
+    const v = setting(envKey(env, key));
+    if (v) target.vars[name] = v;
+  }
+  // The dashboard without Access is for local tests only (SPEC-SHARING-USAGE-ANALYTICS R10).
+  delete target.vars.ADMIN_LOCAL;
   // Avoid validating unrelated remote placeholders in the other environment.
   config.env = { [env]: target };
   const hash = createHash('sha256').update(server).digest('hex').slice(0, 16);

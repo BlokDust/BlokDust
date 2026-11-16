@@ -1103,8 +1103,9 @@ Object.assign(tests, {
     // SIGN IN: CHG-0023 owner review 2026-11-15.
     const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
-      && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
-      && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2']);
+      // CHG-0026 (SPEC-SHARING-USAGE-ANALYTICS R12): the privacy note sits beside the code link.
+      && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub', 'Privacy'])
+      && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2', 'https://blokdust.funputs.com/privacy.html']);
     return [ok, { tabs, aboutTab, ...r, links, shipped, hoverUnderlines: !idle.equals(hover) }];
   },
 

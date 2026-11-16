@@ -44,6 +44,8 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
   juce::String pendingDrop_;
   std::unique_ptr<juce::FileChooser> patchChooser_;
   juce::WebBrowserComponent web_;
+  /// Runs the daily usage ping off the message thread (SHARING-0010 R8); waits for it, briefly, when the editor closes.
+  juce::ThreadPool telemetryPool_{1};
   KeyUpsToHost keyUps_{*this};  // Logic's Musical Typing gets its note-offs while the page has the keys
   juce::ScopedMessageBox linkNote_;  // iPad extension: "Link copied" (bd_openUrl)
   juce::ScopedMessageBox shareSheet_;  // iPad: the share menu for a patch link (bd_share)

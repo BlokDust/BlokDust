@@ -14,3 +14,4 @@
 | [SHARING-0007](SHARING-0007-video-export-renders-the-patch-offline-and.md) | Video export renders the patch offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
 | [SHARING-0008](SHARING-0008-optional-accounts-with-passkeys-and-google.md) | Optional accounts with passkeys and Google, sessions in D1 | **proposed** | 2026-11-15 | sharing, accounts, security, cost |
 | [SHARING-0009](SHARING-0009-a-public-gallery-of-published-patches-with-likes.md) | A public gallery of published patches with likes and reports | **proposed** | 2026-11-15 | sharing, gallery, moderation |
+| [SHARING-0010](SHARING-0010-usage-analytics-on-workers-analytics-engine.md) | Usage analytics on Workers Analytics Engine | **proposed** | 2026-11-16 | analytics, privacy, plugin, cloudflare |

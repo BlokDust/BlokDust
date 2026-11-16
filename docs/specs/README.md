@@ -16,6 +16,7 @@
 | [SPEC-SHARING-ACCOUNTS](domains/sharing/accounts.md) | Accounts | sharing | **draft** | SHARING-0008, SHARING-0001, DATA-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
 | [SPEC-SHARING-GALLERY](domains/sharing/gallery.md) | Gallery | sharing | **draft** | SHARING-0009, SHARING-0008, DATA-0005 |
+| [SPEC-SHARING-USAGE-ANALYTICS](domains/sharing/usage-analytics.md) | Usage analytics | sharing | **draft** | SHARING-0010 |
 | [SPEC-SHARING-VIDEO-EXPORT](domains/sharing/video-export.md) | Video export | sharing | **draft** | SHARING-0007, SIMULATION-0001, DATA-0005, UI-0005 |
 | [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
@@ -47,5 +48,6 @@
 | [CHG-0023](changes/0023-optional-accounts/proposal.md) | Optional accounts | **proposed** | SPEC-SHARING-ACCOUNTS, SPEC-SHARING-BACKEND |
 | [CHG-0024](changes/0024-public-gallery/proposal.md) | Public gallery | **proposed** | SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
 | [CHG-0025](changes/0025-ipad-auv3/proposal.md) | iPad AUv3 | **proposed** |  |
+| [CHG-0026](changes/0026-usage-analytics/proposal.md) | Usage analytics | **proposed** | SPEC-SHARING-USAGE-ANALYTICS, SPEC-SHARING-BACKEND |
 | [CHG-0027](changes/0027-account-stats/proposal.md) | Account stats | **proposed** | SPEC-SHARING-ACCOUNTS |
 | [CHG-0028](changes/0028-waveform-zoom-in-the-options-panel/proposal.md) | Waveform zoom in the options panel | **proposed** | SPEC-VISUAL-V1-PARITY |

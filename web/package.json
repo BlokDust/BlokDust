@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mediabunny/aac-encoder": "1.64.0",
+    "@sentry/browser": "11.12.0",
     "@simplewebauthn/browser": "14.0.0",
     "mediabunny": "1.64.0",
     "pixi.js": "8.22.0"

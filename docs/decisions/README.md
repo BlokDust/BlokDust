@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**62 decisions** · proposed: 14 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**63 decisions** · proposed: 15 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -85,6 +85,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SHARING-0007](sharing/SHARING-0007-video-export-renders-the-patch-offline-and.md) | Video export renders the patch offline and encodes in the browser | **proposed** | 2026-11-15 | sharing, video, determinism, cost |
 | [SHARING-0008](sharing/SHARING-0008-optional-accounts-with-passkeys-and-google.md) | Optional accounts with passkeys and Google, sessions in D1 | **proposed** | 2026-11-15 | sharing, accounts, security, cost |
 | [SHARING-0009](sharing/SHARING-0009-a-public-gallery-of-published-patches-with-likes.md) | A public gallery of published patches with likes and reports | **proposed** | 2026-11-15 | sharing, gallery, moderation |
+| [SHARING-0010](sharing/SHARING-0010-usage-analytics-on-workers-analytics-engine.md) | Usage analytics on Workers Analytics Engine | **proposed** | 2026-11-16 | analytics, privacy, plugin, cloudflare |
 
 ## [simulation](simulation/README.md)
 

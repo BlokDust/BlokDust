@@ -22,6 +22,10 @@ Tools fail with the missing variable's name when an operation needs an unconfigu
   Turnstile site keys. `bd server setup` saves discovered settings externally. Remote commands generate a private,
   per-checkout Wrangler configuration outside the checkout, with absolute build/migration paths. The committed
   Wrangler configuration contains only local test settings and remote placeholders.
+- Usage analytics (SHARING-0010), optional per environment: `BLOKDUST_<ENV>_ACCESS_TEAM_DOMAIN` and
+  `BLOKDUST_<ENV>_ACCESS_AUD` (Cloudflare Access in front of `/admin/*`), `BLOKDUST_<ENV>_SENTRY_DSN`, and
+  `BLOKDUST_PRODUCTION_ANALYTICS_RATE` (production's committed default is 0, off). The dashboard's Account Analytics:
+  Read token lives in the secret file `analytics_token`; `bd server secret` uploads it with the account id.
 - Existing secret files `freesound_token`, `turnstile_staging` and `turnstile_production` stay in the external config
   directory. `bd server secret` sends them over stdin to Wrangler; deployed values stay in Cloudflare secret storage.
   Wrangler login or an environment-supplied `CLOUDFLARE_API_TOKEN` provides deploy authorization.

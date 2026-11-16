@@ -37,6 +37,8 @@ export interface SceneHost extends PatchesHost {
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
   createBlock(v1Type: string, gx: number, gy: number): number | null;
   deleteBlock(id: number): void;
+  /** Settings › About: the anonymous usage stats switch (SPEC-SHARING-USAGE-ANALYTICS R7). Absent: not shown. */
+  usageStats?: { get(): boolean; set(on: boolean): void };
   setParam(id: number, key: string, value: number): void;
   setTheme(index: number): void;
   setZoom(zoom: number): void;
@@ -700,7 +702,7 @@ export const DOWNLOAD = {
 };
 /** The About footer: the code (owner, 2026-11-11: the licences are viewable there, NOTICE.md, so no separate links;
  * every build also carries NOTICE.txt and LICENSE.txt). */
-export const FOOTER_LINKS = [SOURCE_LINK];
+export const FOOTER_LINKS = [SOURCE_LINK, { label: 'Privacy', url: 'https://blokdust.funputs.com/privacy.html' }];
 /** The footer links shown: none where links can't open (App.NoLinks). */
 const footerLinks = () => (App.NoLinks ? [] : FOOTER_LINKS);
 
@@ -713,6 +715,8 @@ export function hideLinks(): void {
   App.NoLinks = true;
   for (const who of Object.values(App.L10n.Attribution as Record<string, any>)) if (who && typeof who === 'object') { who.url = ''; who.twitter = ''; }
 }
+/** The usage stats switch's words (SHARING-0010; owner 2026-11-16: very small, beside the version number). */
+export const USAGE_STATS = (on: boolean) => `Anonymous usage stats: ${on ? 'on' : 'off'}`;
 
 /**
  * Release 1 changes to v1's Settings panel (CHG-0005), made around the ported code:
@@ -833,6 +837,18 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
 
   /** Which footer link the pointer is over (-1: none). */
   let linkHover = -1;
+  /** The usage stats switch (About tab only): its box, left of the version number, in v1's build-number type. */
+  let statsHover = false;
+  const statsBox = () => {
+    if (!host.usageStats || p._OpenTab !== 2) return null;
+    const u = App.Unit, ctx = p.Ctx as CanvasRenderingContext2D;
+    ctx.font = App.Metrics.TxtItalic2;
+    const right = p.DrawTo.Width - 20 * u - ctx.measureText(p._Attribution.build).width - 24 * u;
+    const w = ctx.measureText(USAGE_STATS(host.usageStats.get())).width, y = p.OffsetY + p.DrawTo.Height - 20 * u;
+    return { x: right - w, y, w, u };
+  };
+  /** Tests: the switch's centre in CSS px, and its words (null: not shown). */
+  p.usageStatsSwitch = () => { const b = statsBox(), pr = App.Metrics.PixelRatio; return b ? { x: (b.x + b.w / 2) / pr, y: (b.y - 4 * b.u) / pr, label: USAGE_STATS(host.usageStats!.get()) } : null; };
   /** The footer links in one centred row, in v1's footer type (where it had "Chrome Recommended"), 30u apart. */
   const footer = () => {
     const u = App.Unit, ctx = p.Ctx as CanvasRenderingContext2D;
@@ -851,6 +867,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     if (App.NoLinks) for (let i = 1; i <= 6; i++) p._RollOvers[i] = false;
     const f = footer();
     linkHover = p._OpenTab !== 2 ? -1 : f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
+    const sb = statsBox();
+    statsHover = !!sb && Dimensions.hitRect(sb.x - 4 * sb.u, sb.y - 14 * sb.u, sb.w + 8 * sb.u, 20 * sb.u, pt.x, pt.y);
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
     if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
@@ -870,6 +888,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     if (account && p._OpenTab === 4 && before !== 4) { account.View = account.View === 'delete' ? 'main' : account.View; void account.refresh(); }
     if (!p.Open) return;
     if (linkHover >= 0) { window.open(footerLinks()[linkHover].url, '_blank'); return; }
+    if (statsHover && host.usageStats) { host.usageStats.set(!host.usageStats.get()); return; }
     if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(`${r.url}?source=download-page`, '_blank'); return; }
     if (account && p._OpenTab === 4) { account.hit(pt, accountTop()); account.press(); }
     const i = tempoRow();
@@ -899,6 +918,12 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       ctx.fillText(footerLinks()[i].label, l.x, f.y);
       if (i === linkHover) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(l.x, f.y + 2 * f.u); ctx.lineTo(l.x + l.w, f.y + 2 * f.u); ctx.stroke(); }
     });
+    const sb = statsBox();
+    if (sb && host.usageStats) {
+      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      ctx.fillText(USAGE_STATS(host.usageStats.get()), sb.x, sb.y);
+      if (statsHover) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sb.x, sb.y + 2 * sb.u); ctx.lineTo(sb.x + sb.w, sb.y + 2 * sb.u); ctx.stroke(); }
+    }
   };
 }
 

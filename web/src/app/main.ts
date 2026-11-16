@@ -44,6 +44,8 @@ import { videoSeconds } from '../video/length.ts';
 import { startSource, type PatchSample } from '../video/sources.ts';
 import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/share.ts';
 import type { Credit } from '../video/frame.ts';
+import { analyticsAllowed, count, flushAnalytics, hostOf, pageRate, setAnalyticsAllowed, startAnalytics, track } from '../analytics/client.ts';
+import { startSentry } from '../analytics/sentry.ts';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
 const THUMB = { width: 1200, height: 630 } as const;
@@ -75,7 +77,8 @@ function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
 }
-interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number }
+interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number;
+  /** Where the patch came from (SPEC-SHARING-USAGE-ANALYTICS patch_opened). */ source?: 'link' | 'embed' | 'autosave' | 'demo' | 'v1' }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
 async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
@@ -86,16 +89,17 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
   if (c && isServerId(c)) {
     const session = loadSession(), local = loadLocal();
     // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
-    if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c };
+    if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c, source: 'autosave' };
     const r = await loadShared(c);
-    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 };
+    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0, source: embedId ? 'embed' : 'link' };
     return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: true };
   }
-  if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null }; }
+  if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null, source: 'link' }; }
   const v1 = params.get('v1');
-  if (v1) { try { const r = importV1(JSON.parse(v1) as V1Composition); return { patch: r.patch, view: r.view, id: null }; } catch { /* fall through */ } }
-  if (params.has('demo')) return { patch: demo as Patch, view: {}, id: null };
-  return { patch: loadLocal() ?? (demo as Patch), view: {}, id: loadSession().id };
+  if (v1) { try { const r = importV1(JSON.parse(v1) as V1Composition); return { patch: r.patch, view: r.view, id: null, source: 'v1' }; } catch { /* fall through */ } }
+  if (params.has('demo')) return { patch: demo as Patch, view: {}, id: null, source: 'demo' };
+  const local = loadLocal();
+  return { patch: local ?? (demo as Patch), view: {}, id: loadSession().id, source: local ? 'autosave' : 'demo' };
 }
 
 /** v1 App.SessionId: the right to save over a composition: this browser's edit token, or, when the signed-in account
@@ -123,6 +127,26 @@ async function main() {
   })() : null;
   if (!juce && embedId) engineModule().catch(() => { /* reported when PLAY needs it */ });
   const start = await initialPatch(params, embedId, !!juce);
+  // Usage analytics and error reports (SHARING-0010): the website and embeds only; the plugin's page has no Worker (its
+  // daily ping is native, R8). Off when the Worker's rate is 0 or the user turned it off (R5, R7).
+  if (!juce) {
+    const surface = embedId ? 'embed' : 'web';
+    void startSentry(surface).catch(() => { /* no error reports: nothing to do */ });
+    if (startAnalytics(surface, pageRate())) {
+      const ancestor = (location as Location & { ancestorOrigins?: DOMStringList }).ancestorOrigins?.[0];
+      track('session_start', { referrer: embedId ? undefined : hostOf(document.referrer), embed_host: embedId ? hostOf(ancestor ?? document.referrer) : undefined } as Record<string, string>);
+      if (typeof WebAssembly === 'undefined') track('wasm_unsupported');
+      if (start.source) track('patch_opened', { source: start.source });
+    }
+  }
+  /** Plugin: the install's usage stats choice (R7), as the processor last said (bd_analytics). */
+  let pluginStats = true;
+  /** Session totals for session_summary (sent when the page goes). */
+  const usage = { blocksMax: 0, blocksDeleted: 0, undos: 0, keys: false, midi: false };
+  addEventListener('pagehide', () => {
+    track('session_summary', undefined, { seconds: Math.round(performance.now() / 1000), blocks_max: usage.blocksMax, blocks_deleted: usage.blocksDeleted, undos: usage.undos });
+    flushAnalytics(true);
+  });
   // v1 App.CompositionId / App.SessionId: the open composition and (if this browser made it) the right to overwrite it.
   App.CompositionId = start.id; App.SessionId = sessionFor(start.id);
   let session = { id: start.id, dirty: false };
@@ -346,11 +370,18 @@ async function main() {
       // 0.25 s); saved patches without it keep v1 timing.
       const id = addBlock(def.id, gx, gy, def.id === 'power.emitter' || def.id === 'power.pulse' || def.id === 'fx.stereo-delay' ? { sync: true } : {});
       pushUndo({ kind: 'add', uids: uidsOf([id]) });
+      count('block_added', def.id);
+      usage.blocksMax = Math.max(usage.blocksMax, model.size);
       startDrag(id, 0, 0, true);
       return id;
     },
     // A drop on the trash (v1 TrashCan.MouseUp → DeleteSelectedBlock) is deleted by pointerup, with its group, as one step.
     deleteBlock: id => { if (!drag) deleteBlocks([id]); },
+    // Settings › About (SPEC-SHARING-USAGE-ANALYTICS R7): this browser's choice; in the plugin, the install's (the
+    // processor keeps it and sends it with bd_analytics).
+    usageStats: juce
+      ? { get: () => pluginStats, set: on => { pluginStats = on; juce.emitEvent('bd_analytics', { on }); } }
+      : { get: () => analyticsAllowed(), set: on => { setAnalyticsAllowed(on); } },
     setParam: (id, key, value) => {
       const b = model.get(id), def = b && BLOCKS_BY_ID.get(b.type);
       const p = def?.params.findIndex(q => q.key === key) ?? -1;
@@ -392,6 +423,7 @@ async function main() {
       session = { id: null, dirty: false }; saveSession(session);
       shareLink = null; credit = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
       setBaseline();
+      track('patch_created', { from: 'reset' });
     },
     share: async (mode, title, gallery) => {
       const patch = toPatch();
@@ -405,7 +437,7 @@ async function main() {
           session = { id: r.id, dirty: false }; saveSession(session); saveLocal(patch);
           return r.id;
         }
-      } catch (e) { console.warn('BlokDust: saving to the server failed; sharing as a link instead', e); }
+      } catch (e) { console.warn('BlokDust: saving to the server failed; sharing as a link instead', e); track('save_failed', { kind: 'link' }); }
       return encodePatch(patch);  // no backend (or it failed): Phase 1's self-contained link
     },
     toggleRecording: id => void toggleRecording(id),
@@ -1038,9 +1070,12 @@ async function main() {
         console.warn('BlokDust: no save dialog; downloading instead', e);
         return download(name, text, title);
       }
-      const out = await handle.createWritable();
-      await out.write(text); await out.close();
+      try {
+        const out = await handle.createWritable();
+        await out.write(text); await out.close();
+      } catch (e) { track('save_failed', { kind: 'file' }); throw e; }
       setBaseline(); keepMine(title);
+      track('patch_saved', { kind: 'file' }, { blocks: model.size });
       return true;
     }
     return download(name, text, title);
@@ -1052,6 +1087,7 @@ async function main() {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     setBaseline(); keepMine(title);
+    track('patch_saved', { kind: 'file' }, { blocks: model.size });
     return true;
   }
   /** SAVE / SAVE AS to a share link (SPEC-SHARING-BACKEND): v1 SAVE over this browser's (or account's) link, else a
@@ -1064,6 +1100,7 @@ async function main() {
     setBaseline();  // a shared patch counts as saved
     keepMine(title);
     credit = null;  // saved: it is yours now (a remix keeps `parent`)
+    track('patch_saved', { kind: 'link' }, { blocks: model.size });
     return lastGallery;
   }
   /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
@@ -1093,7 +1130,7 @@ async function main() {
     if (key.startsWith('acct:')) return openShared(key.slice(5), mode);  // saved over from this device (R9)
     if (key.startsWith('preset:')) {
       const p = PRESETS.find(x => `preset:${x.file}` === key), patch = p && parsePatchFile(p.text);
-      if (p && patch) usePatch(patch, p.name, mode);
+      if (p && patch) usePatch(patch, p.name, mode, undefined, 'preset');
       return !!patch;
     }
     if (key.startsWith('mine:')) {
@@ -1128,8 +1165,9 @@ async function main() {
   (window as unknown as { __bd_pickedFile: unknown }).__bd_pickedFile = showPicked;  // tests: a file without a picker
   /** The view's centre, as a grid cell. */
   const viewCentre = () => { const [x, y] = stage.cssToGrid(app.canvas.clientWidth / 2, app.canvas.clientHeight / 2); return { x, y }; };
-  function usePatch(p: Patch, title: string, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
+  function usePatch(p: Patch, title: string, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>, source: 'file' | 'preset' | 'link' = from ? 'link' : 'file'): void {
     applyPatch(p, mode, from);
+    track('patch_opened', { source });
     if (mode === 'open') scene.PatchesPanel.setTitle(title);
   }
   /**
@@ -1449,6 +1487,7 @@ async function main() {
     const b = model.get(id), v = v1Blocks.get(id);
     if (!b) return;
     if (ref.provider === 'file') ref.durationSec = Math.round(buffer.duration * 1000) / 1000;
+    if (fresh) track('sample_loaded', { source: ref.provider === 'file' ? 'file' : DEFAULT_SOUNDS[b.type]?.id === ref.id ? 'default' : 'freesound' });
     const key = refKey(ref);
     refs.set(key, ref);
     missing.delete(id);
@@ -1523,6 +1562,7 @@ async function main() {
   }
   /** Delete blocks as one undoable step. */
   function deleteBlocks(ids: number[], from?: Map<number, { x: number; y: number }>, labelIds: string[] = [], labelFrom?: Map<string, XY>): void {
+    usage.blocksDeleted += ids.length;
     // Kept where they were before the drag that took them to the trash.
     const snaps = ids.flatMap(id => { const b = model.get(id); return b ? [{ b: { ...structuredClone(b), ...from?.get(id) }, buf: samples.get(id) }] : []; });
     const gone = labelSnapsOf(labelIds).map(l => ({ ...l, ...labelFrom?.get(l.id) }));
@@ -1571,6 +1611,7 @@ async function main() {
   /** Undo the last step; false when there is none. */
   function undo(): boolean {
     const u = undoStack.pop();
+    if (u) usage.undos++;
     if (!u) return false;
     if (u.kind === 'add') {
       const snaps = u.uids.flatMap(uid => { const s = snapOf(uid); return s ? [s] : []; });
@@ -1882,6 +1923,7 @@ async function main() {
       if (refresh && !dragging) (open as V1Block).RefreshOptionsPanel();
     });
     juce.addEventListener('bd_ccLearned', (e: { slot: number; cc: number }) => { ccBySlot.set(e.slot, e.cc); });
+    juce.addEventListener('bd_analytics', (e: { on: boolean }) => { pluginStats = !!e.on; });
     juce.addEventListener('bd_sampleInfo', (s: PluginSampleInfo) => applyPluginSample(s));
     // A file dropped on the plugin editor (CHG-0004 3.7): which sampler is under it, or a new Sample there.
     juce.addEventListener('bd_dropAt', (d: { x: number; y: number; token: number }) => {
@@ -1949,7 +1991,10 @@ async function main() {
     });
     void ctx.resume().catch(() => {});  // in the press: a mouse press is allowed to start audio
     App.Audio.sampleRate = ctx.sampleRate;
-    engine = EngineNode.build(ctx, await (audio?.module ?? EngineNode.prepare(ctx)), { seed, commands: engineCommands() });
+    let module: Awaited<ReturnType<typeof EngineNode.prepare>>;
+    try { module = await (audio?.module ?? EngineNode.prepare(ctx)); }
+    catch (e) { track('audio_failed', { reason: (e as Error)?.name || 'error' }); flushAnalytics(); throw e; }
+    engine = EngineNode.build(ctx, module, { seed, commands: engineCommands() });
     engine.onSnapshot(onSnapshot);
     for (const [id, buf] of samples) if (model.has(id)) engine.sendSample(id, buf);
     if ([...model.values()].some(b => needsInput(b.type))) void engine.connectMicrophone();
@@ -1959,6 +2004,21 @@ async function main() {
     probe.started = true;
     ready = true; reveal();
     for (const run of afterStart.splice(0)) requestAnimationFrame(run);
+    track('audio_started', undefined, { seconds: Math.round(performance.now() / 100) / 10 });
+    measureFps();
+  }
+  /** perf (SPEC-SHARING-USAGE-ANALYTICS): the frame rate over 10 s of running, as a bucket. */
+  function measureFps(): void {
+    let frames = 0;
+    const t0 = performance.now(), tick = () => {
+      frames++;
+      const t = performance.now() - t0;
+      if (t < 10_000) { requestAnimationFrame(tick); return; }
+      if (document.visibilityState !== 'visible') return;  // a hidden tab says nothing about speed
+      const fps = frames / (t / 1000);
+      track('perf', { fps: fps < 20 ? '<20' : fps < 40 ? '20-40' : fps < 55 ? '40-55' : '55+' });
+    };
+    requestAnimationFrame(tick);
   }
   /** iOS interrupts the AudioContext when another app plays (a video, a podcast) and leaves it so when the page comes
    * back: the engine runs in it, so sound, connections and particles all stood still (owner, 2026-11-14). Coming back to
@@ -2579,7 +2639,7 @@ async function main() {
   const parsers = new Map<string, MpeParser>();  // by "<stage>:<block id>" (0: the outer world)
   let midiDevices: MidiDevice[] = [];
   attachNoteInputs({
-    key: (n, down) => note(keyboardType, n, down),
+    key: (n, down) => { if (down && !usage.keys) { usage.keys = true; track('keyboard_played'); } note(keyboardType, n, down); },
     // Plugin: with a Computer Keyboard in the patch its keys are BlokDust's while the editor has the keys (the DAW's
     // shortcuts would fire too); without one they go on to the DAW (Logic's Musical Typing → MIDI Input).
     captureKeys: () => !!juce && [...model.values()].some(b => b.type === 'input.computer-keyboard'),
@@ -2605,6 +2665,7 @@ async function main() {
         if (want && want !== device.name) continue;
         let p = parsers.get(key);
         if (!p) { p = new MpeParser(id, midiType); parsers.set(key, p); }
+        if (!usage.midi) { usage.midi = true; track('midi_connected', { mpe: q.mpe ? 'yes' : 'no' }); }
         p.setSettings({ mpe: !!q.mpe, memberBendRange: typeof q.bendRange === 'number' ? q.bendRange : 48 });
         const out: Command[] = [];
         p.message(status, d1, d2, -1, out);
@@ -2680,6 +2741,7 @@ function setupEmbedChrome(id: string, title: string): void {
   link.target = '_blank'; link.rel = 'noopener';
   link.textContent = 'OPEN IN BLOKDUST ↗';
   link.id = 'open-in-blokdust';
+  link.addEventListener('click', () => { track('embed_opened_full'); flushAnalytics(true); });
   link.style.cssText = 'position:fixed;right:10px;bottom:8px;z-index:4;color:#fff4d6;opacity:.75;font:400 11px Dosis, system-ui, sans-serif;letter-spacing:.1em;text-decoration:none';
   document.body.appendChild(link);
 }

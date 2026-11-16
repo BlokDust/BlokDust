@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BlokDust privacy</title>
+<meta name="description" content="What BlokDust records about how it is used, and how to turn it off.">
+<style>
+  /* SPEC-SHARING-USAGE-ANALYTICS R12. v1's About colours and type. */
+  :root { --bg: #1a1f21; --txt: #fff4d6; --dim: #c9c1a8; --link: #fff4d6; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #fff4d6; --txt: #1a1f21; --dim: #4b4a45; --link: #1a1f21; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--txt); font: 300 17px/1.55 Dosis, system-ui, -apple-system, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-weight: 400; letter-spacing: .12em; font-size: 26px; margin: 0 0 6px; }
+  h2 { font-weight: 500; letter-spacing: .1em; font-size: 15px; text-transform: uppercase; margin: 32px 0 8px; }
+  p, li { color: var(--dim); }
+  ul { padding-left: 20px; }
+  a { color: var(--link); }
+  .updated { font-style: italic; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>BLOKDUST PRIVACY</h1>
+  <p class="updated">Updated 16 November 2026</p>
+
+  <p>BlokDust records a few anonymous facts about how it is used, so we can see what people make with it and what
+    breaks. It never records who you are, what your patches contain, what you search for, or your files. There are no
+    cookies, no adverts and no tracking across other sites.</p>
+
+  <h2>On the website</h2>
+  <ul>
+    <li>Counts of things you do: starting a session, starting audio, adding a block (by type), loading a sample (by
+      where it came from: Freesound, your own file, a default), opening, saving or sharing a patch, using MIDI or the
+      computer keyboard, and a rough frame rate.</li>
+    <li>With each: the BlokDust version, your country (from the connection), your operating system and browser name
+      (not the full user agent), and the site that linked to BlokDust or embeds it.</li>
+    <li>To count visitors without cookies, our server combines your IP address and browser with a random value that is
+      replaced every day and then deleted, and keeps only the result. It can't be linked to you or to another day.
+      Your IP address is never stored.</li>
+    <li>Errors in the website are reported to Sentry (Functional Software, Inc.), stored in the EU: the error, the page
+      address without anything after "?", your browser and operating system. No IP address, no cookies, no recordings
+      of the screen. File names and patch links are removed first.</li>
+  </ul>
+
+  <h2>In the plugins and the app</h2>
+  <ul>
+    <li>Once a day when BlokDust runs, it sends: the BlokDust version, the plugin format (VST3, Audio Unit or the app),
+      instrument or effect, the name and version of the program it runs in (your DAW), your operating system and
+      processor type, and a random number made when it was installed, so each installation counts once. The random
+      number is stored only as a one-way hash.</li>
+  </ul>
+
+  <h2>Turning it off</h2>
+  <p>Open <strong>Settings › About</strong> and press <strong>Anonymous usage stats: on</strong> beside the version
+    number in the bottom corner. On the website this is remembered by your browser and also stops error reports; in
+    the plugins and the app it is remembered for every project on your computer. If your browser sends the Global
+    Privacy Control signal, the website records nothing.</p>
+
+  <h2>Where it goes and for how long</h2>
+  <p>Usage counts are stored by Cloudflare (our host) for three months and then deleted. Error reports are kept by Sentry for up to 90 days. Nothing is sold or shared with anyone else.</p>
+
+  <h2>Patches and samples</h2>
+  <p>A patch you share is stored so its link works; it holds only what you put in it. Samples stay on your computer or
+    on Freesound: BlokDust never uploads audio.</p>
+
+  <h2>Questions</h2>
+  <p>BlokDust is open source: you can read exactly what is sent in
+    <a href="https://github.com/lukephills/blokdust-v2">the code on GitHub</a>, and ask questions there.</p>
+</main>
+</body>
+</html>

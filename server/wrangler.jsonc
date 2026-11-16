@@ -14,13 +14,16 @@
     "directory": "../web/dist",
     "binding": "ASSETS",
     // Only these reach the Worker; every other file is served straight from the asset store (no request cost).
-    "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*"]
+    "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/admin/*"]
   },
   // Per-IP limits (SPEC-SHARING-BACKEND R5a); bindings are per environment.
   "ratelimits": [
     { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
-    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+    { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "EVENTS_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }
   ],
+  // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+  "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events_dev" }],
   "d1_databases": [
     { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
   ],
@@ -28,7 +31,11 @@
     "PUBLIC_BASE_URL": "",
     "BASE_PATH": "",
     // Cloudflare's always-passes invisible test key (local only).
-    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB"
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000BB",
+    // Usage analytics (SHARING-0010 R5): every local session sends events; the dashboard needs no Access locally.
+    "ANALYTICS_RATE": "1",
+    "ANALYTICS_DATASET": "blokdust_events_dev",
+    "ADMIN_LOCAL": "1"
   },
   "observability": { "enabled": true },
   "env": {
@@ -40,16 +47,19 @@
       "assets": {
         "directory": "../.cache/server/site",
         "binding": "ASSETS",
-        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/", "/blokdust/index.html", "/blokdust/embed/*", "/blokdust/oembed", "/blokdust/api/*"]
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/", "/blokdust/index.html", "/blokdust/embed/*", "/blokdust/oembed", "/blokdust/api/*", "/admin/*", "/blokdust/admin/*"]
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "EVENTS_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }
       ],
+      // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+      "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events_dev" }],
       "d1_databases": [
         { "binding": "DB", "database_name": "blokdust-dev", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
       ],
-      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB" }
+      "vars": { "PUBLIC_BASE_URL": "", "BASE_PATH": "/blokdust", "ASSET_BASE": "/blokdust", "TURNSTILE_SITE_KEY": "1x00000000000000000000BB", "ANALYTICS_RATE": "1", "ANALYTICS_DATASET": "blokdust_events_dev", "ADMIN_LOCAL": "1" }
     },
     "staging": {
       "name": "blokdust-staging",
@@ -58,12 +68,15 @@
       "assets": {
         "directory": "../web/dist",
         "binding": "ASSETS",
-        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/*"]
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/admin/*", "/blokdust", "/blokdust/*"]
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "2001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "EVENTS_LIMIT", "namespace_id": "2003", "simple": { "limit": 30, "period": 60 } }
       ],
+      // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+      "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events_staging" }],
       "d1_databases": [
         { "binding": "DB", "database_name": "blokdust-staging", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
       ],
@@ -71,7 +84,11 @@
         "PUBLIC_BASE_URL": "https://staging.example.invalid",
         "BASE_PATH": "",
         "LEGACY_BASE_PATH": "/blokdust",
-        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY"
+        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY",
+        // Usage analytics (SHARING-0010): on for owner review. Access and Sentry settings come from local config.
+        "ANALYTICS_RATE": "1",
+        "ANALYTICS_DATASET": "blokdust_events_staging",
+        "SENTRY_ENVIRONMENT": "staging"
       }
     },
     "production": {
@@ -88,12 +105,15 @@
       "assets": {
         "directory": "../web/dist",
         "binding": "ASSETS",
-        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/blokdust", "/blokdust/*"]
+        "run_worker_first": ["/", "/index.html", "/embed/*", "/oembed", "/api/*", "/admin/*", "/blokdust", "/blokdust/*"]
       },
       "ratelimits": [
         { "name": "SAVE_LIMIT", "namespace_id": "3001", "simple": { "limit": 20, "period": 60 } },
-        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } }
+        { "name": "SEARCH_LIMIT", "namespace_id": "3002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "EVENTS_LIMIT", "namespace_id": "3003", "simple": { "limit": 30, "period": 60 } }
       ],
+      // Usage analytics (SHARING-0010): one Analytics Engine dataset per environment.
+      "analytics_engine_datasets": [{ "binding": "EVENTS", "dataset": "blokdust_events" }],
       "d1_databases": [
         { "binding": "DB", "database_name": "blokdust", "database_id": "REMOTE_DATABASE_ID", "migrations_dir": "migrations" }
       ],
@@ -101,7 +121,12 @@
         "PUBLIC_BASE_URL": "https://blokdust.funputs.com",
         "BASE_PATH": "",
         "LEGACY_BASE_PATH": "/blokdust",
-        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY"
+        "TURNSTILE_SITE_KEY": "REMOTE_TURNSTILE_SITE_KEY",
+        // Usage analytics (SHARING-0010): OFF ("0") until the owner switches it on (BLOKDUST_PRODUCTION_ANALYTICS_RATE
+        // in local config overrides it at deploy); the kill switch is setting it back to "0".
+        "ANALYTICS_RATE": "0",
+        "ANALYTICS_DATASET": "blokdust_events",
+        "SENTRY_ENVIRONMENT": "production"
       }
     }
   }

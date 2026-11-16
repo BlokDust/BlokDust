@@ -100,7 +100,7 @@ function(blokdust_plugin target)
     target_compile_definitions(${target} PUBLIC BLOKDUST_APP_GROUP="${BLOKDUST_APP_GROUP}"
       JUCE_CONTENT_SHARING=1)  # the iPad share menu for patch links (bd_share)
   endif()
-  target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp)
+  target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp src/Telemetry.cpp)
   if(APPLE)
     target_sources(${target} PRIVATE src/WebViewDrops.mm)
   else()
