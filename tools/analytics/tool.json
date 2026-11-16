@@ -1,0 +1,7 @@
+{
+  "name": "analytics",
+  "summary": "Usage analytics (SHARING-0010) from the command line: run the private dashboard's fixed queries against an environment's Workers Analytics Engine dataset with the local query token, or print them (--sql). No custom SQL.",
+  "usage": ["pnpm bd analytics --env staging [--days 7]", "pnpm bd analytics --env production --only daws,blocks", "pnpm bd analytics --sql --env staging"],
+  "outputs": "JSON {env, dataset, days, results{name: rows|error}} on stdout (or the SQL with --sql)",
+  "deterministic": false
+}

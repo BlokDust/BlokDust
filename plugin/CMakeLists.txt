@@ -57,7 +57,7 @@ function(blokdust_plugin target)
     MICROPHONE_PERMISSION_ENABLED TRUE
     MICROPHONE_PERMISSION_TEXT "BlokDust FX uses audio input for its Audio In block."
     VST3_CATEGORIES ${vst3_cat})
-  target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp)
+  target_sources(${target} PRIVATE src/PluginProcessor.cpp src/PluginEditor.cpp src/Samples.cpp src/PatchFiles.cpp src/Telemetry.cpp)
   if(APPLE)
     target_sources(${target} PRIVATE src/WebViewDrops.mm)
   else()

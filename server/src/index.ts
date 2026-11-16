@@ -5,6 +5,8 @@ import { HttpError, assetBase, basePath, errorResponse, json, limit, prefix } fr
 import { createPatch, deletePatch, getPatch, getThumb, savePatch } from './patches.ts';
 import { oembed, page } from './pages.ts';
 import { search, sound } from './freesound.ts';
+import { clientConfig, ingest, record } from './analytics.ts';
+import { admin } from './admin.ts';
 
 async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
@@ -34,7 +36,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     const p = url.pathname;
     if ((m === 'GET' || m === 'HEAD') && (p === '/' || p === '/index.html' || p.startsWith('/embed/') || p === '/oembed'))
       return Response.redirect(`${url.origin}${base}${p === '/index.html' ? '/' : p}${url.search}`, 301);
-    if (!p.startsWith('/api/')) return new Response('Not found', { status: 404 });
+    if (!p.startsWith('/api/') && !p.startsWith('/admin/')) return new Response('Not found', { status: 404 });
   }
   const path = base && url.pathname.startsWith(base + '/') ? url.pathname.slice(base.length) : url.pathname;
 
@@ -47,19 +49,42 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/oembed' && m === 'GET') return oembed(env, req, url);
 
   if (path === '/api/config' && m === 'GET')
-    return json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY ?? '', saving: !!env.TURNSTILE_SECRET, freesound: !!env.FREESOUND_TOKEN }, 200, { 'cache-control': 'no-cache' });
-  if (path === '/api/patches' && m === 'POST') { await limit(env.SAVE_LIMIT, req, 'save'); return createPatch(env, req); }
+    return json({ turnstileSiteKey: env.TURNSTILE_SITE_KEY ?? '', saving: !!env.TURNSTILE_SECRET, freesound: !!env.FREESOUND_TOKEN,
+      analytics: clientConfig(env) }, 200, { 'cache-control': 'no-cache' });
+  // Usage analytics (SHARING-0010): events in, and the private dashboard (behind Cloudflare Access).
+  if (path === '/api/events') { if (m !== 'POST') throw new HttpError(405, 'method not allowed'); return ingest(env, req); }
+  if (path.startsWith('/admin/')) return admin(env, req, path);
+  if (path === '/api/patches' && m === 'POST') {
+    await limit(env.SAVE_LIMIT, req, 'save');
+    const r = await createPatch(env, req);
+    if (r.ok) ctx.waitUntil(record(env, req, 'patch_shared', { kind: 'new' }));
+    return r;
+  }
   const thumb = path.match(/^\/api\/patches\/([^/]+)\/thumb\.png$/);
   if (thumb && m === 'GET') return getThumb(env, thumb[1], url.searchParams.get('rev'));
   const one = path.match(/^\/api\/patches\/([^/]+)$/);
   if (one) {
     if (m === 'GET') return getPatch(env, one[1]);
-    if (m === 'PUT') { await limit(env.SAVE_LIMIT, req, 'save'); return savePatch(env, req, one[1]); }
+    if (m === 'PUT') {
+      await limit(env.SAVE_LIMIT, req, 'save');
+      const r = await savePatch(env, req, one[1]);
+      if (r.ok) ctx.waitUntil(record(env, req, 'patch_shared', { kind: 'update' }));
+      return r;
+    }
     if (m === 'DELETE') return deletePatch(env, req, one[1]);
     throw new HttpError(405, 'method not allowed');
   }
   if (path.startsWith('/api/freesound/')) await limit(env.SEARCH_LIMIT, req, 'freesound');
-  if (path === '/api/freesound/search' && m === 'GET') return search(env, url, ctx);
+  if (path === '/api/freesound/search' && m === 'GET') {
+    try {
+      const r = await search(env, url, ctx);
+      ctx.waitUntil(r.clone().json().then(b => record(env, req, 'freesound_search', {}, { results: (b as { count?: number }).count ?? 0 })).catch(() => {}));
+      return r;
+    } catch (e) {
+      ctx.waitUntil(record(env, req, 'freesound_error', {}, { status: e instanceof HttpError ? e.status : 500 }));
+      throw e;
+    }
+  }
   const fs = path.match(/^\/api\/freesound\/sounds\/([^/]+)$/);
   if (fs && m === 'GET') return sound(env, fs[1], ctx);
   if (path.startsWith('/api/')) throw new HttpError(404, 'no such endpoint');

@@ -3,6 +3,7 @@
 import type { Env } from './env.ts';
 import { HttpError, assetBase, basePath, escapeHtml, json, publicBase } from './http.ts';
 import { ID_RE, loadPatch, type Loaded } from './patches.ts';
+import { clientConfig } from './analytics.ts';
 
 export const THUMB = { width: 1200, height: 630 } as const;
 /** Default embed size (v1's stage is landscape; 16:10 like the review viewport). */
@@ -44,6 +45,10 @@ function tags(env: Env, req: Request, id: string | null, p: Loaded | null, embed
   // The app reads these instead of re-fetching what the Worker already looked up.
   out.push(`<meta name="blokdust-base" content="${escapeHtml(base)}">`);
   if (embed && id) out.push(`<meta name="blokdust-embed" content="${escapeHtml(id)}">`);
+  // Usage analytics and error reports (SHARING-0010 R5, R9): the share of sessions that send events (0: off), and Sentry.
+  const a = clientConfig(env);
+  out.push(`<meta name="blokdust-analytics" content="${a.rate}">`);
+  if (a.sentryDsn) out.push(`<meta name="blokdust-sentry" content="${escapeHtml(a.sentryDsn)}">`, `<meta name="blokdust-sentry-env" content="${escapeHtml(a.sentryEnv)}">`);
   return out.join('\n    ');
 }
 

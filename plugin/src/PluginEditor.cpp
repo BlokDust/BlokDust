@@ -1,5 +1,6 @@
 #include "PluginEditor.h"
 #include "PatchFiles.h"
+#include "Telemetry.h"
 
 #include <BinaryData.h>
 
@@ -44,7 +45,15 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                .withNativeIntegrationEnabled()
                .withKeepPageLoadedWhenBrowserIsHidden()
                .withResourceProvider([](const juce::String& url) { return resource(url); })
-               .withEventListener("bd_hello", [this](const juce::var&) { systemLog("page: hello"); reloadPatch(); })
+               .withEventListener("bd_hello", [this](const juce::var&) {
+                 systemLog("page: hello");
+                 reloadPatch();
+                 // Settings › About's usage stats switch shows this install's choice (SHARING-0010 R7).
+                 auto* a = new juce::DynamicObject();
+                 a->setProperty("on", telemetry::enabled());
+                 web_.emitEventIfBrowserIsVisible("bd_analytics", juce::var(a));
+               })
+               .withEventListener("bd_analytics", [](const juce::var& v) { telemetry::setEnabled(static_cast<bool>(v.getProperty("on", true))); })
                .withEventListener("bd_ready", [this](const juce::var& v) {
                  uiReadyBlocks_ = static_cast<int>(v.getProperty("blocks", -1));
                  systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
@@ -147,6 +156,8 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
   systemLog(juce::String(proc_.isFx() ? "fx" : "instrument") + " editor: loading " + juce::WebBrowserComponent::getResourceProviderRoot() + " (host " + juce::PluginHostType().getHostDescription() + ")");
   web_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
   startTimerHz(30);
+  // Usage stats (SHARING-0010 R8): BlokDust's window opening counts as using it today; at most one ping a day.
+  telemetry::dailyPing(telemetryPool_, proc_.wrapperType, proc_.isFx());
 }
 
 void BlokDustEditor::sendSampleInfo(const nlohmann::json& s) {

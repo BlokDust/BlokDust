@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**44 decisions** · proposed: 0 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
+**45 decisions** · proposed: 1 · accepted: 38 · deferred: 3 · rejected: 1 · superseded: 2 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -77,6 +77,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SHARING-0004](sharing/SHARING-0004-host-on-a-placeholder-cloudflare-url.md) | Host on a placeholder Cloudflare URL with a configurable base path | **accepted** | 2026-11-05 | hosting, domain |
 | [SHARING-0005](sharing/SHARING-0005-host-release-1-at-funputs-com-blokdust-with-a.md) | Host Release 1 at funputs.com/blokdust with a Worker route | **superseded** | 2026-11-11 | hosting, domain, release-1 |
 | [SHARING-0006](sharing/SHARING-0006-host-at-blokdust-funputs-com-with-funputs-com.md) | Host at blokdust.funputs.com with funputs.com/blokdust redirecting | **accepted** | 2026-11-12 | hosting, domain, release-1 |
+| [SHARING-0010](sharing/SHARING-0010-usage-analytics-on-workers-analytics-engine.md) | Usage analytics on Workers Analytics Engine | **proposed** | 2026-11-16 | analytics, privacy, plugin, cloudflare |
 
 ## [simulation](simulation/README.md)
 

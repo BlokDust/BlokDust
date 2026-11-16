@@ -14,6 +14,7 @@
 | [SPEC-PATCH-FORMAT-V2](domains/patch-format/patch-v2.md) | Patch format v2 | patch-format | **draft** | DATA-0001, DATA-0005, DATA-0004, SCOPE-0002, PLUGIN-0003 |
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
 | [SPEC-SHARING-BACKEND](domains/sharing/backend.md) | Sharing backend, embeds and sample references | sharing | **draft** | SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003 |
+| [SPEC-SHARING-USAGE-ANALYTICS](domains/sharing/usage-analytics.md) | Usage analytics | sharing | **draft** | SHARING-0010 |
 | [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
 
@@ -32,3 +33,4 @@
 | [CHG-0011](changes/0011-effects-run-in-the-order-they-connected/proposal.md) | Effects run in the order they connected | **proposed** | SPEC-CONNECTIONS-PROXIMITY, SPEC-PATCH-FORMAT-V2 |
 | [CHG-0012](changes/0012-dust-automation-moves-the-sliders/proposal.md) | Dust automation moves the sliders | **proposed** | SPEC-PATCH-FORMAT-V2 |
 | [CHG-0013](changes/0013-post-launch-fixes-2-0-2/proposal.md) | Post-launch fixes (2.0.2) | **proposed** | SPEC-PATCH-FORMAT-V2, SPEC-SIMULATION-POWER-AND-PARTICLES |
+| [CHG-0026](changes/0026-usage-analytics/proposal.md) | Usage analytics | **proposed** | SPEC-SHARING-USAGE-ANALYTICS, SPEC-SHARING-BACKEND |

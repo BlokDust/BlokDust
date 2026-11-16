@@ -15,6 +15,9 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFil
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+// Validators and test hosts never send the daily usage ping (SHARING-0010 R8): every child inherits this.
+process.env.BLOKDUST_NO_TELEMETRY ??= '1';
+
 const ART = 'build/plugin/plugin/BlokDust_artefacts/Release';
 const VST3 = `${ART}/VST3/BlokDust.vst3`;
 const AU = `${ART}/AU/BlokDust.component`;

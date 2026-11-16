@@ -20,6 +20,28 @@ export interface Env {
   FREESOUND_TOKEN?: string;
   /** Overridable for tests (a local mock); defaults to https://freesound.org/apiv2. */
   FREESOUND_API?: string;
+  // ---- usage analytics (SHARING-0010, SPEC-SHARING-USAGE-ANALYTICS) ----
+  /** Workers Analytics Engine dataset the events go to. Without it nothing is recorded. */
+  EVENTS?: AnalyticsEngineDataset;
+  /** Per-IP limit on POST /api/events. */
+  EVENTS_LIMIT?: RateLimit;
+  /** Share of sessions that send events, "0" (off: the kill switch) … "1" (all). R5. */
+  ANALYTICS_RATE?: string;
+  /** The dataset's name, for the dashboard's queries (the binding only writes). */
+  ANALYTICS_DATASET?: string;
+  /** Secrets for the dashboard's queries: the account, and an Account Analytics: Read token. */
+  CF_ACCOUNT_ID?: string;
+  CF_ANALYTICS_TOKEN?: string;
+  /** Tests: a mock SQL API instead of Cloudflare's. */
+  ANALYTICS_SQL_URL?: string;
+  /** Cloudflare Access in front of /admin/*: https://<team>.cloudflareaccess.com and the application's AUD tag. */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
+  /** Local tests only: the dashboard without Access. Never set on a deployed env. */
+  ADMIN_LOCAL?: string;
+  /** Sentry for the web app's errors (public DSN, EU region) and the environment name it reports. R9. */
+  SENTRY_DSN?: string;
+  SENTRY_ENVIRONMENT?: string;
 }
 
 export const LIMITS = {

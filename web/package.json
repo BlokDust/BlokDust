@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
+    "@sentry/browser": "10.78.0",
     "pixi.js": "8.22.0"
   },
   "devDependencies": {
