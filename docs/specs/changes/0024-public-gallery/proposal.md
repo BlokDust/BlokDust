@@ -34,3 +34,10 @@ share them with other BlokDust users. Moderation starts as a simple check on sav
   The search field has no clear button. Plain words match names too.
 - Rows show views (migration 0004: `patches.views`, counted when the app opens a patch).
 - Someone else's patch shows "TITLE BY @NAME" on the stage; the name opens the gallery on their patches.
+
+## Owner review 2 (2026-11-15)
+- Rows have OPEN only; the list scrolls and loads more as it goes (R7a).
+- Liking is a star by the credit on the stage, reporting a right-click on the credit (R8, R9); the report step no
+  longer says how many reports hide a patch.
+- The ADD TO GALLERY switch has an options-panel row's proportions (its icons were crowding the underline).
+- BACK is at the top right of the page, its label centred under the chevron.

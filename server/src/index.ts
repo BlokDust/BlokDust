@@ -7,6 +7,7 @@ import { oembed, page } from './pages.ts';
 import { search, sound } from './freesound.ts';
 import { claim, deleteAccount, logout, me, myPatches, setHandle } from './auth/account.ts';
 import { googleCallback, googleStart } from './auth/google.ts';
+import { appleCallback, appleStart } from './auth/apple.ts';
 import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
 import { sameOrigin } from './auth/session.ts';
 import { like, list as galleryList, report, unpublish } from './gallery.ts';
@@ -67,6 +68,8 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (path === '/api/me' && m === 'GET') return me(env, req);
   if (path === '/api/auth/google/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return googleStart(env, req, url); }
   if (path === '/api/auth/google/callback' && m === 'GET') return googleCallback(env, req, url);
+  if (path === '/api/auth/apple/start' && m === 'GET') { await limit(env.SAVE_LIMIT, req, 'auth'); return appleStart(env, req, url); }
+  if (path === '/api/auth/apple/callback' && m === 'GET') return appleCallback(env, req, url);
   if (path.startsWith('/api/auth/') || path.startsWith('/api/me')) {
     if (m !== 'GET') sameOrigin(env, req);  // R5: cookie-authenticated changes only from this site
     if (path.startsWith('/api/auth/passkey/')) await limit(env.SAVE_LIMIT, req, 'auth');

@@ -24,7 +24,8 @@ export interface GalleryState { published: boolean; reason?: string }
 export interface Saved { id: string; rev: number; url: string; parent: string | null; gallery?: GalleryState }
 export interface LoadedPatch { id: string; rev: number; title: string; parent: string | null; updated: number; patch: Patch;
   /** The signed-in account owns it (SPEC-SHARING-ACCOUNTS R9). */ mine?: boolean; /** Its account's handle. */ by?: string | null;
-  /** Roughly how often it was opened (SPEC-SHARING-GALLERY R14), and whether it is in the gallery. */ views?: number; published?: boolean }
+  /** Roughly how often it was opened (SPEC-SHARING-GALLERY R14), and whether it is in the gallery. */ views?: number; published?: boolean;
+  /** Its likes, and whether the signed-in user liked it. */ likes?: number; liked?: boolean }
 
 function tokens(): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(TOKENS_KEY) ?? '{}') as Record<string, string>; } catch { return {}; }

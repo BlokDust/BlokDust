@@ -25,7 +25,9 @@
 //     cycling when pressed; then MAKE VIDEO (or DOWNLOAD VIDEO where the browser can't share files), SharePanel's
 //     "saving…" spinner, SHARE VIDEO; the file step's back chevron returns.
 // GALLERY (CHG-0024) is v1 SoundcloudPanel's layout: the search field over its rule with the bordered SEARCH above it,
-// five rows a page, the count bottom left and POPULAR / NEW bottom right where v1 had RANDOMISE.
+// and POPULAR / NEW bottom right where v1 had RANDOMISE. Owner review 2: the rows are one list that scrolls (wheel or
+// drag) and loads the next page as it nears its end, and each row has OPEN only (liking and reporting are on the stage,
+// with the patch open: main.ts).
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
 
@@ -41,11 +43,12 @@ export interface PatchItem {
 /** Accounts (CHG-0023): what the ACCOUNT tab shows. */
 export interface AccountInfo { handle: string | null; passkeys: number; providers: string[] }
 export interface AccountHost {
-  /** Who is signed in (null: nobody), whether Google sign-in is offered; null when there is no backend. */
-  me(): Promise<{ user: AccountInfo | null; google: boolean } | null>;
+  /** Who is signed in (null: nobody), whether Google and Apple sign-in are offered; null when there is no backend. */
+  me(): Promise<{ user: AccountInfo | null; google: boolean; apple?: boolean } | null>;
   signUp(handle: string): Promise<void>;
   signIn(): Promise<void>;
   google(): void;
+  apple(): void;
   addPasskey(): Promise<void>;
   setHandle(handle: string): Promise<void>;
   signOut(everywhere: boolean): Promise<void>;
@@ -159,7 +162,7 @@ const COPY = {
   remove: 'Delete', removeButton: 'Delete',
   search: 'Search', popular: 'Popular', newest: 'New', unpublish: 'Unpublish',
   like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
-  reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here. Patches reported by three people are hidden until they are reviewed.',
+  reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here.',
   reported: 'Thank you. The patch was reported.',
   addToGallery: 'Add to Gallery', signInToPublish: 'Only signed-in users can publish to the gallery.',
   videoEntry: 'Share as Video', shape: 'Shape', length: 'Length', makeVideo: 'Make Video', downloadVideo: 'Download Video',
@@ -203,7 +206,13 @@ export class PatchesPanel extends DisplayObject {
   GalleryLoading = false;
   GalleryMessage = '';
   GalleryView: 'list' | 'report' = 'list';
-  private reporting: GalleryRow | null = null;
+  /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
+  GalleryScroll = 0;
+  /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
+  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number } | null = null;
+  private reporting: { id: string; title: string } | null = null;
+  /** After REPORT: the thanks, then the panel closes. */
+  private reported = false;
   private galleryAsk = 0;
   SearchContainer!: HTMLElement;
   SearchInput!: HTMLInputElement;
@@ -244,7 +253,7 @@ export class PatchesPanel extends DisplayObject {
     this.UrlInput.addEventListener('click', () => void this.copyLink());
     this.SearchContainer = document.getElementById('gallerySearch')!;
     this.SearchInput = document.getElementById('gallerySearchInput') as HTMLInputElement;
-    this.SearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.SearchInput.blur(); this.GalleryQuery = this.SearchInput.value.trim(); this.GalleryPage = 1; void this.browse(); } });
+    this.SearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.SearchInput.blur(); this.GalleryQuery = this.SearchInput.value.trim(); void this.browse(); } });
   }
   /** Click the link: it is copied (and selected, so it can be copied by hand where the clipboard is refused). */
   private async copyLink(): Promise<void> {
@@ -349,10 +358,11 @@ export class PatchesPanel extends DisplayObject {
     return { x: App.Width * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: App.Width * 0.5 };
   }
   // ---- SAVE / SHARE: the gallery switch and the video (units from the panel centre) ----
-  /** ADD TO GALLERY: v1's OptionSwitch, 60×40 units, between the name and the buttons. */
+  /** ADD TO GALLERY: v1's OptionSwitch between the name and the buttons, in the proportions of an options-panel row
+   * (60 units: the icons sit 7 units clear of the underline; owner review 2, the 40-unit box crowded them). */
   private gallerySwitch() {
     const u = App.Unit;
-    return { x: this.margin, y: this.cy - 80 * u, w: 60 * u, h: 40 * u };
+    return { x: this.margin, y: this.cy - 87 * u, w: 60 * u, h: 60 * u };
   }
   /** SHARE AS VIDEO: the OPEN tab's GUIDE button, under everything. */
   private videoEntry() { return this.fileButton(); }
@@ -368,12 +378,16 @@ export class PatchesPanel extends DisplayObject {
     return { x: W * 0.5 - 210 * u, y: this.cy + 55 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 };
   }
   private get shareFiles(): boolean { return !!this.host.video?.canShareFiles(); }
-  /** v1 SharePanel's back chevron and its SKIP-style label. */
+  /** v1 SharePanel's back chevron and its SKIP-style label, at the top right of the page, under the tabs (owner
+   * review 2: the same place on every device). `x` is the chevron's middle (the label is centred under it), `y` its
+   * point, in device px. */
   private backArrow() {
-    let arrowX = 275, arrowY = 0;
-    if (this.tablet) arrowX = 245;
-    if (this.mobile) { arrowX = 190; arrowY = 110; }
-    return { arrowX, arrowY };
+    const u = App.Unit;
+    return { x: App.Width * 0.5 + 195 * u, y: this.cy - 175 * u };
+  }
+  private backHit(pt: { x: number; y: number }) {
+    const u = App.Unit, b = this.backArrow();
+    return Dimensions.hitRect(b.x - 20 * u, b.y - 22 * u, 40 * u, 64 * u, pt.x, pt.y);
   }
   private get link() { return this.host.links?.current() ?? null; }
 
@@ -609,19 +623,14 @@ export class PatchesPanel extends DisplayObject {
     ctx.font = App.Metrics.TxtItalic2;
     this.wordWrap(line, this.margin, cy - 40 * u, 14 * u, this.pageW);
   }
-  /** The video view's back chevron: the file step's, except on a phone, where that place is under MAKE VIDEO: there it
-   * goes below the progress line (owner review screenshots, 2026-11-15). */
-  private videoBackArrow() { const a = this.backArrow(); return this.mobile ? { ...a, arrowY: 190 } : a; }
-  private drawBack(at = this.backArrow()): void {
-    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, { arrowX, arrowY } = at;
+  private drawBack(): void {
+    const ctx = this.Ctx, u = App.Unit, { x, y } = this.backArrow();
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]); App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.beginPath();
-    ctx.moveTo(W * 0.5 - arrowX * u, cy + (arrowY - 20) * u);
-    ctx.lineTo(W * 0.5 - (arrowX + 20) * u, cy + arrowY * u);
-    ctx.lineTo(W * 0.5 - arrowX * u, cy + (arrowY + 20) * u);
+    ctx.moveTo(x + 10 * u, y - 20 * u); ctx.lineTo(x - 10 * u, y); ctx.lineTo(x + 10 * u, y + 20 * u);
     ctx.stroke();
     ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-    ctx.fillText(COPY.back.toUpperCase(), W * 0.5 - arrowX * u, cy + (arrowY + 35) * u);
+    ctx.fillText(COPY.back.toUpperCase(), x, y + 35 * u);
   }
   private drawFile(): void {
     const f = this.Picked, u = App.Unit, menu = App.ThemeManager.MenuOrder;
@@ -659,7 +668,7 @@ export class PatchesPanel extends DisplayObject {
 
   private drawVideo(): void {
     const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
-    this.drawBack(this.videoBackArrow());
+    this.drawBack();
     // SHAPE: a frame of the video's shape (Instagram's crop icons: a rounded outline round a filled inner frame) //
     const c = this.videoControls(), busy = this.VideoState === 'making';
     App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
@@ -739,29 +748,41 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, cy = this.cy, right = App.Width * 0.5 + 210 * u;
     return { search: this.bordered(COPY.search, right, cy - 140 * u), rule: cy - 110 * u, sortY: cy + 160 * u, sortRight: right };
   }
+  /** The list's window: under the search rule, above POPULAR / NEW. */
+  private galleryWindow() { const u = App.Unit; return { top: this.cy - 100 * u, bottom: this.cy + 135 * u }; }
+  /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
+  private galleryRowY(n: number) { return this.cy - 70 * App.Unit + n * 40 * App.Unit - this.GalleryScroll; }
+  private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * 40 * u + (this.GalleryMore || this.GalleryLoading ? 40 * u : 0) - (w.bottom - w.top) - 10 * u); }
   private galleryRow(n: number) {
-    const u = App.Unit, y = this.cy - 70 * u + n * 40 * u, right = this.margin + this.pageW;
-    const rep = this.bordered(COPY.report, right, y - 19 * u);
-    const item = this.GalleryItems[n];
-    const likeLabel = item ? `${item.liked ? COPY.liked : COPY.like} ${item.likes}` : COPY.like;
-    const mine = !!item?.mine;
-    const unpub = this.bordered(COPY.unpublish, right, y - 19 * u);
-    const like = this.bordered(likeLabel, (mine ? unpub.x : rep.x) - 8 * u, y - 19 * u);
-    const open = this.bordered(COPY.open, like.x - 8 * u, y - 19 * u);
-    return { open, like, report: rep, unpublish: unpub, mine, textRight: open.x - 6 * u };
+    const u = App.Unit, y = this.galleryRowY(n), open = this.bordered(COPY.open, this.margin + this.pageW, y - 19 * u);
+    return { open, textRight: open.x - 6 * u };
   }
+  /** Scroll the list by `dy` device px; near its end, the next page loads. */
+  scrollGallery(dy: number): void {
+    this.GalleryScroll = Math.max(0, Math.min(this.galleryMaxScroll(), this.GalleryScroll + dy));
+    if (this.GalleryMore && !this.GalleryLoading && this.GalleryScroll > this.galleryMaxScroll() - 120 * App.Unit) void this.browse(true);
+    this.settled();
+  }
+  /** A mouse wheel over the open panel (scene.wheel). */
+  Wheel(e: WheelEvent): void { if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }
   private sortLabel() { return (this.GallerySort === 'popular' ? COPY.popular : COPY.newest).toUpperCase(); }
   private drawGallery(): void {
     const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
     if (this.GalleryView === 'report' && this.reporting) {
-      this.heading(COPY.reportTitle, COPY.reportLine);
+      this.heading(COPY.reportTitle, this.reporting.title ? `${this.reporting.title.toUpperCase()}. ${COPY.reportLine}` : COPY.reportLine);
+      if (this.reported || this.GalleryLoading) {
+        App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+        if (this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 25 * u, 16, true);
+        else this.wordWrap(this.GalleryMessage, margin, cy + 25 * u, 14 * u, this.pageW);
+        return;
+      }
       const { left, right } = this.halves();
       for (const h of [left, right]) h.y = cy + 5 * u;
       this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.reportCancel);
       this.filled(right, App.Palette[menu[3]], COPY.report, !!this.roll.reportOk);
       return;
     }
-    const L = this.galleryLayout();
+    const L = this.galleryLayout(), win = this.galleryWindow();
     // SEARCH (v1 SoundcloudPanel: the rule under the field, SEARCH bordered above it at the right) //
     App.StrokeColor(ctx, txt);
     ctx.beginPath(); ctx.moveTo(margin, L.rule); ctx.lineTo(margin + this.pageW, L.rule); ctx.stroke();
@@ -772,60 +793,48 @@ export class PatchesPanel extends DisplayObject {
     ctx.fillText(sl, L.sortRight, L.sortY);
     ctx.beginPath(); ctx.moveTo(L.sortRight - sw, L.sortY + 4 * u); ctx.lineTo(L.sortRight, L.sortY + 4 * u);
     ctx.lineWidth = this.roll.sort ? 2 : 1; ctx.stroke(); ctx.lineWidth = 2;
-    // ROWS //
+    // ROWS: one list, clipped to its window and scrolled //
     const n0 = this.GalleryItems.length;
-    for (let n = 0; n < Math.min(n0, ITEMS); n++) {
-      const y = cy - 70 * u + n * 40 * u, it = this.GalleryItems[n], b = this.galleryRow(n);
-      if (n < Math.min(n0, ITEMS) - 1) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
+    ctx.save();
+    ctx.beginPath(); ctx.rect(margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top); ctx.clip();
+    for (let n = 0; n < n0; n++) {
+      const y = this.galleryRowY(n), it = this.GalleryItems[n], b = this.galleryRow(n);
+      if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
+      if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
       App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
       const maxW = b.textRight - margin - u;
       const fit = (t: string, yy: number) => { const w = ctx.measureText(t).width; if (w <= maxW) { ctx.fillText(t, margin + u, yy); return; } ctx.save(); ctx.translate(margin + u, yy); ctx.scale(maxW / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
       fit(it.title.toUpperCase(), y - 10 * u);
       fit(`${COPY.by} @${it.by}${it.remixes ? ` \u00b7 ${it.remixes} remix${it.remixes === 1 ? '' : 'es'}` : ''} \u00b7 ${it.views} view${it.views === 1 ? '' : 's'}`, y);
       this.drawBordered(b.open, txt);
-      this.drawBordered(b.like, it.liked ? txt : App.Palette[1]);
-      this.drawBordered(b.mine ? b.unpublish : b.report, App.Palette[1]);
     }
+    // More on the way: v1's spinner where the next row will be.
+    if (n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.galleryRowY(n0) - 5 * u, 16, true);
+    ctx.restore();
     App.FillColor(ctx, txt);
     if (!n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
     else if (!n0) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * u); }
-    else { ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'left'; ctx.fillText(`${1 + ITEMS * (this.GalleryPage - 1)} - ${ITEMS * (this.GalleryPage - 1) + Math.min(n0, ITEMS)}`, margin, cy + 160 * u); }
-    // PAGE ARROWS (v1, per device) //
-    let arrowX = 275, arrowY = 0;
-    if (this.tablet) arrowX = 245;
-    if (this.mobile) { arrowX = 60; arrowY = 160; }
-    for (const dir of [-1, 1]) {
-      const live = dir < 0 ? this.GalleryPage > 1 : this.GalleryMore;
-      App.StrokeColor(ctx, live ? txt : App.Palette[1]);
-      ctx.beginPath();
-      ctx.moveTo(W * 0.5 + dir * arrowX * u, cy + (arrowY - 20) * u); ctx.lineTo(W * 0.5 + dir * (arrowX + 20) * u, cy + arrowY * u); ctx.lineTo(W * 0.5 + dir * arrowX * u, cy + (arrowY + 20) * u);
-      ctx.stroke();
-    }
     if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, cy + 185 * u, 14 * u, this.pageW); }
   }
-  /** Fetch the page shown (stale answers, from an earlier search or page, are dropped). */
-  async browse(): Promise<void> {
+  /** Fetch the list from the top, or (`more`) the next page onto its end. Stale answers (an earlier search) are dropped. */
+  async browse(more = false): Promise<void> {
     const g = this.host.gallery;
     if (!g) return;
-    const ask = ++this.galleryAsk;
+    if (more && (!this.GalleryMore || this.GalleryLoading)) return;
+    const ask = ++this.galleryAsk, page = more ? this.GalleryPage + 1 : 1;
+    if (!more) { this.GalleryItems = []; this.GalleryScroll = 0; this.GalleryMore = false; }
     this.GalleryLoading = true; this.showDom();
     try {
-      const r = await g.browse(this.GallerySort, this.GalleryQuery, this.GalleryPage);
+      const r = await g.browse(this.GallerySort, this.GalleryQuery, page);
       if (ask !== this.galleryAsk) return;
-      this.GalleryItems = r?.items ?? []; this.GalleryMore = !!r?.more;
+      // A patch can move up between pages (POPULAR changes as people like): keep each once.
+      const have = new Set(this.GalleryItems.map(i => i.id));
+      this.GalleryItems = [...this.GalleryItems, ...(r?.items ?? []).filter(i => !have.has(i.id))];
+      this.GalleryMore = !!r?.more; this.GalleryPage = page;
       if (!r) this.GalleryMessage = 'The gallery is not available here.';
     } catch (e) { if (ask === this.galleryAsk) this.GalleryMessage = (e as Error).message; }
     finally { if (ask === this.galleryAsk) { this.GalleryLoading = false; this.settled(); } }
   }
-  private async galleryAction(run: () => Promise<string | void>): Promise<void> {
-    if (this.GalleryLoading) return;
-    this.GalleryLoading = true; this.GalleryMessage = '';
-    try { const msg = await run(); if (msg) this.GalleryMessage = msg; }
-    catch (e) { this.GalleryMessage = (e as Error).message || 'That did not work. Try again.'; }
-    finally { this.GalleryLoading = false; this.settled(); }
-    await this.browse();
-  }
-
   /** v1 SharePanel.WordWrap. */
   private wordWrap(text: string, x: number, y: number, lineHeight: number, fitWidth: number): void {
     const ctx = this.Ctx;
@@ -862,26 +871,23 @@ export class PatchesPanel extends DisplayObject {
         this.Ctx.font = App.Metrics.TxtMid;
         const sw = this.Ctx.measureText(this.sortLabel()).width;
         r.sort = hit(L.sortRight - sw - 5 * u, L.sortY - 20 * u, sw + 10 * u, 30 * u);
-        let arrowX = 285, arrowY = 0;
-        if (this.tablet) arrowX = 255;
-        if (this.mobile) { arrowX = 70; arrowY = 160; }
-        r.back = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 40 * u);
-        r.next = hit(W * 0.5 + (arrowX - 15) * u, cy + (arrowY - 20) * u, 30 * u, 40 * u);
-        for (let n = 0; n < Math.min(ITEMS, this.GalleryItems.length); n++) {
+        const win = this.galleryWindow();
+        r.list = hit(this.margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top);
+        if (r.list) for (let n = 0; n < this.GalleryItems.length; n++) {
           const b = this.galleryRow(n);
-          r[`gopen${n}`] = pad(b.open); r[`glike${n}`] = pad(b.like);
-          if (b.mine) r[`gunpub${n}`] = pad(b.unpublish); else r[`greport${n}`] = pad(b.report);
+          if (b.open.y > win.bottom || b.open.y + b.open.h < win.top) continue;
+          if (pad(b.open)) r[`gopen${n}`] = true;
         }
       }
     } else if (this.Tab === 0 && this.View === 'video') {
-      const c = this.videoControls(), m = this.videoMain(), { arrowX, arrowY } = this.videoBackArrow();
+      const c = this.videoControls(), m = this.videoMain();
       r.randomise = pad(this.randomise());
       r.shape = box(c.shape); r.length = box(c.length);
       if (this.VideoState === 'ready') r.shareVideo = box(m); else r.make = box(m);
-      r.videoBack = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 60 * u);
+      r.videoBack = this.backHit(pt);
     } else if (this.Tab === 0) {
       const { share, save, saveAs } = this.saveButtons();
-      if (this.web && this.host.gallery) { const g = this.gallerySwitch(); r.gallerySwitch = hit(g.x, g.y, g.w + 12 * u + this.textW(COPY.addToGallery), g.h * 0.6); }
+      if (this.web && this.host.gallery) { const g = this.gallerySwitch(); r.gallerySwitch = hit(g.x, g.y + g.h * 0.1, g.w + 12 * u + this.textW(COPY.addToGallery), g.h * 0.55); }
       if (this.host.video) r.videoEntry = box(this.videoEntry());
       r.randomise = pad(this.randomise());
       r.save = box(save); r.share = box(share); r.saveAs = !!saveAs && box(saveAs);
@@ -900,7 +906,6 @@ export class PatchesPanel extends DisplayObject {
         r[`bin${n}`] = !!item?.removable && hit(b.bin.x, b.bin.y - 10 * u, b.bin.w + 5 * u, 40 * u);
       }
     } else {
-      const { arrowX, arrowY } = this.backArrow();
       if (this.View === 'remove') {
         const { left, right } = this.halves();
         for (const b of [left, right]) b.y = cy + 5 * u;
@@ -909,7 +914,7 @@ export class PatchesPanel extends DisplayObject {
         const { left, right } = this.halves();
         for (const b of [left, right]) b.y = cy + 5 * u;
         r.fileOpen = !this.Picked?.error && box(left); r.fileInsert = !this.Picked?.error && box(right);
-        r.fileBack = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 60 * u);
+        r.fileBack = this.backHit(pt);
       } else {
         const [a, b, c] = this.thirds();
         r.cancel = box(a); r.saveFirst = box(b); r.openAnyway = box(c);
@@ -926,8 +931,9 @@ export class PatchesPanel extends DisplayObject {
     const m = /^(open|ins|bin)(\d)$/.exec(name);
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
     {
-      const gm = /^g(open|like|report|unpub)(\d)$/.exec(name);
-      if (gm) { const b = this.galleryRow(Number(gm[2])); return mid(gm[1] === 'open' ? b.open : gm[1] === 'like' ? b.like : gm[1] === 'report' ? b.report : b.unpublish); }
+      const gm = /^gopen(\d+)$/.exec(name);
+      if (gm) return mid(this.galleryRow(Number(gm[1])).open);
+      if (name === 'list') { const w = this.galleryWindow(); return at(App.Width * 0.5, (w.top + w.bottom) / 2); }
       const L = this.galleryLayout();
       if (name === 'search') return mid(L.search);
       if (name === 'sort') return at(L.sortRight - 15 * u, L.sortY - 5 * u);
@@ -935,12 +941,12 @@ export class PatchesPanel extends DisplayObject {
     }
     if (name === 'gallerySwitch') { const g = this.gallerySwitch(); return at(g.x + g.w / 2, g.y + g.h * 0.35); }
     if (name === 'videoEntry') return mid(this.videoEntry());
-    if (name === 'videoBack') { const { arrowX, arrowY } = this.videoBackArrow(); return at(App.Width * 0.5 - (arrowX + 10) * u, this.cy + arrowY * u); }
+    if (name === 'videoBack' || name === 'fileBack') { const b = this.backArrow(); return at(b.x, b.y); }
     if (name === 'shape' || name === 'length') return mid(this.videoControls()[name]);
     if (name === 'make' || name === 'shareVideo') return mid(this.videoMain());
     const t = /^tab(\d)$/.exec(name);
     if (t) { const tab = this.tabs().tabs.find(x => x.id === Number(t[1])); return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
-    const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton(), { arrowX, arrowY } = this.backArrow();
+    const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton();
     switch (name) {
       case 'close': return at(App.Width * 0.5 + this.tabs().half + 20 * u, this.OffsetY + 30 * u);
       case 'randomise': return mid(this.randomise());
@@ -951,7 +957,6 @@ export class PatchesPanel extends DisplayObject {
       case 'file': return mid(f);
       case 'fileOpen': return at(left.cx, this.cy + 25 * u);
       case 'fileInsert': return at(right.cx, this.cy + 25 * u);
-      case 'fileBack': return at(App.Width * 0.5 - (arrowX + 10) * u, this.cy + arrowY * u);
       case 'removeCancel': return at(left.cx, this.cy + 25 * u);
       case 'removeOk': return at(right.cx, this.cy + 25 * u);
       case 'cancel': return mid(a);
@@ -962,8 +967,21 @@ export class PatchesPanel extends DisplayObject {
   }
   get Hover(): boolean { return Object.values(this.roll).some(Boolean); }
 
-  MouseMove(pt: { x: number; y: number }): void { this.HitTests(pt); }
-  MouseUp(): void {}
+  MouseMove(pt: { x: number; y: number }): void {
+    const d = this.galleryDrag;
+    if (d) {
+      if (Math.abs(pt.y - d.y) > 6 * App.Unit) d.moved = true;
+      if (d.moved) { this.GalleryScroll = d.scroll; this.scrollGallery(d.y - pt.y); }
+    }
+    this.HitTests(pt);
+  }
+  MouseUp(): void {
+    const d = this.galleryDrag, g = this.host.gallery;
+    this.galleryDrag = null;
+    if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2) return;
+    const row = this.GalleryItems[d.row];
+    if (row) this.requestOpen(() => g.open(row));
+  }
   MouseDown(pt: { x: number; y: number }): void {
     this.HitTests(pt);
     const r = this.roll;
@@ -974,24 +992,18 @@ export class PatchesPanel extends DisplayObject {
       if (!g) return;
       if (this.GalleryView === 'report') {
         const row = this.reporting;
-        if (r.reportCancel) { this.GalleryView = 'list'; this.reporting = null; this.showDom(); return; }
-        if (r.reportOk && row) { this.GalleryView = 'list'; this.reporting = null; this.showDom(); void this.galleryAction(async () => { await g.report(row.id); return COPY.reported; }); }
+        if (this.reported || this.GalleryLoading) return;
+        if (r.reportCancel) { this.reporting = null; this.GalleryView = 'list'; this.ClosePanel(); return; }
+        if (r.reportOk && row) void this.sendReport(g, row);
         return;
       }
-      if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); this.GalleryPage = 1; void this.browse(); return; }
-      if (r.sort) { this.GallerySort = this.GallerySort === 'popular' ? 'new' : 'popular'; this.GalleryPage = 1; void this.browse(); return; }
-      if (r.back) { if (this.GalleryPage > 1) { this.GalleryPage--; void this.browse(); } return; }
-      if (r.next) { if (this.GalleryMore) { this.GalleryPage++; void this.browse(); } return; }
-      for (let n = 0; n < ITEMS; n++) {
-        const row = this.GalleryItems[n];
-        if (!row) break;
-        if (r[`gopen${n}`]) { this.requestOpen(() => g.open(row)); return; }
-        if (r[`glike${n}`]) {
-          void g.like(row.id, !row.liked).then(x => { row.liked = x.liked; row.likes = x.likes; this.settled(); }).catch(e => { this.GalleryMessage = (e as Error).message; this.settled(); });
-          return;
-        }
-        if (r[`greport${n}`]) { this.reporting = row; this.GalleryView = 'report'; this.showDom(); return; }
-        if (r[`gunpub${n}`]) { void this.galleryAction(async () => { await g.unpublish(row.id); }); return; }
+      if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); void this.browse(); return; }
+      if (r.sort) { this.GallerySort = this.GallerySort === 'popular' ? 'new' : 'popular'; void this.browse(); return; }
+      // The list: a press may become a drag (scrolling); a row opens on release, if it didn't move.
+      if (r.list) {
+        let row = -1;
+        for (let n = 0; n < this.GalleryItems.length; n++) if (r[`gopen${n}`]) { row = n; break; }
+        this.galleryDrag = { y: pt.y, scroll: this.GalleryScroll, moved: false, row };
       }
       return;
     }
@@ -1065,7 +1077,7 @@ export class PatchesPanel extends DisplayObject {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
     this.Tab = i;
     for (const j of ALL_TABS) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
-    if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; void this.browse(); }
+    if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; this.reporting = null; void this.browse(); }
     // OPEN lists the account's patches too: signed in or out since the panel opened, the list has changed.
     if (i === 1 && this.View === 'list') void this.refresh();
     this.showDom();
@@ -1107,9 +1119,22 @@ export class PatchesPanel extends DisplayObject {
   setTitle(t: string): void { this.Title = t; if (this.Input) this.Input.value = t; }
   /** Open the gallery on a search (a patch's "by @name" on the stage). */
   showGallery(q: string): void {
-    this.GalleryQuery = q; this.GalleryPage = 1; this.GalleryView = 'list';
+    this.GalleryQuery = q; this.GalleryView = 'list'; this.GalleryMessage = '';
     if (this.SearchInput) this.SearchInput.value = q;
     if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
+  }
+  /** Report a patch (from the stage, owner review 2: right-click its credit): the GALLERY tab asks first. */
+  askReport(row: { id: string; title: string }): void {
+    this.reporting = row; this.reported = false; this.GalleryMessage = ''; this.GalleryView = 'report';
+    if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
+    this.GalleryView = 'report'; this.reporting = row; this.showDom();
+  }
+  private async sendReport(g: GalleryHost, row: { id: string }): Promise<void> {
+    this.GalleryLoading = true; this.GalleryMessage = '';
+    try { await g.report(row.id); this.GalleryMessage = COPY.reported; this.reported = true; }
+    catch (e) { this.GalleryMessage = (e as Error).message || 'That did not work. Try again.'; this.reported = true; }
+    finally { this.GalleryLoading = false; this.settled(); }
+    setTimeout(() => { if (this.GalleryView === 'report' && this.reporting === row) { this.ClosePanel(); this.reporting = null; this.reported = false; this.GalleryView = 'list'; } }, 1800);
   }
   /** The open patch is (or isn't) in the gallery: the switch shows it (an opened patch of yours; null: unknown). */
   galleryKnown(published: boolean | null): void { this.savedGallery = published; if (published !== null) this.GalleryOn = published; this.GalleryNote = ''; }

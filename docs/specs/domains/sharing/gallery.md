@@ -25,28 +25,35 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
 - **R4.** The title must pass the word check (server/src/moderation.ts) and not be empty.
 - **R5.** Saving over a published patch updates its title and block types in the gallery. If the patch can no longer
   be published (R3, R4), it is withdrawn.
-- **R6.** Switching ADD TO GALLERY off and saving takes the patch out; the owner's own gallery rows offer UNPUBLISH
-  too (the account, or the browser with the edit token). The link keeps working.
-- **R7.** `GET /api/gallery?sort=popular|new&q=&page=` returns 20 a page; the tab shows 5 rows a page.
+- **R6.** Switching ADD TO GALLERY off and saving takes the patch out (`DELETE /api/gallery/:id` too: the account, or
+  the browser with the edit token). The link keeps working.
+- **R7.** `GET /api/gallery?sort=popular|new&q=&page=` returns 20 a page.
   - Each row: title, `by @handle`, remixes, likes, and whether you liked it.
   - `q` words match titles, block types and names; `@name` matches exactly one person.
   - Popular = (likes + 2 × remixes + 1) ÷ (hours since published + 2).
   - Hidden patches are never listed.
-- **R8.** LIKE needs sign-in and counts one per person. Pressing it again takes the like back. There are no down
-  votes.
-- **R9.** REPORT (asked first) needs sign-in and counts once per person. At three reports the patch is hidden.
+- **R7a.** The tab's rows are one list that scrolls (mouse wheel, or a drag, which never opens the row it started
+  on) and fetches the next page as it nears its end, with v1's spinner where the next row will go (owner review 2:
+  no pages of five).
+- **R8.** Liking is the star after the credit on the stage (R15), with the patch open (owner review 2: not from the
+  list). It needs sign-in (signed out, the star opens Settings › SIGN IN) and counts one per person; pressing it
+  again takes the like back. There are no down votes. `GET /api/patches/:id` says `likes` and `liked`.
+- **R9.** Reporting is a right-click on the credit (owner review 2: harder to do by accident), asked first on the
+  GALLERY tab ("For a rude name or anything that should not be here.": it doesn't say how many reports hide a
+  patch). It needs sign-in and counts once per person. At three reports the patch is hidden.
 - **R10.** `pnpm bd gallery reports|keep|hide|remove` lists reported or hidden patches with their reasons, and keeps
   (clears reports, shows), hides or removes one.
 - **R11.** OPEN loads the patch as the current one. SAVE then makes a new link with `parent` set (a remix), which
   the original's row counts.
 - **R12.** Deleting an account removes its gallery entries, likes and reports.
 - **R13.** The tab is v1 SoundcloudPanel's layout: the search field (a plain text field, no clear button) over its
-  rule at −110 units, SEARCH bordered above the rule at the right, five rows, the count bottom left and POPULAR / NEW
-  (underlined, cycling) bottom right where v1 had RANDOMISE. Rows read `by @name · N remixes · N views`. The plugin and
+  rule at −110 units, SEARCH bordered above the rule at the right, the list (R7a), and POPULAR / NEW (underlined,
+  cycling) bottom right where v1 had RANDOMISE. Rows read `by @name · N remixes · N views` and have OPEN only. The plugin and
   embeds have no GALLERY tab.
 - **R14.** Opening a patch in the app (`GET /api/patches/:id`) counts a view, roughly (pages and previews don't).
 - **R15.** Someone else's patch, opened from the gallery or a link, shows "TITLE BY @NAME" at the stage's top left
-  (v1's mid type, under the panels). Pressing @NAME opens the gallery searching `@name`. Saving it (a remix, or over a
+  (v1's mid type, under the panels), with a star after it when the patch is published (R8). Pressing @NAME opens
+  the gallery searching `@name`. Saving it (a remix, or over a
   link of yours) removes the credit.
 
 ## Verification

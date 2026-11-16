@@ -71,7 +71,7 @@ function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
 }
-interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean }
+interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
 async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
@@ -84,7 +84,7 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
     // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
     if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c };
     const r = await loadShared(c);
-    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published };
+    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked };
     return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: true };
   }
   if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null }; }
@@ -449,7 +449,8 @@ async function main() {
       signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
       // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so.
       signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); },
-      google: () => account.signInWithGoogle(),
+      google: () => account.signInWith('google'),
+      apple: () => account.signInWith('apple'),
       addPasskey: () => account.addPasskey(),
       setHandle: async h => { await account.setHandle(h); },
       signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
@@ -504,10 +505,11 @@ async function main() {
   }
   // ---- the stage's corners (owner review 2026-11-15) ----
   // Top left, under the header: a patch someone else made, "TITLE BY @NAME" (SPEC-SHARING-GALLERY R15); the name opens
-  // the gallery on their patches. Top right: who is signed in (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT.
-  // v1's mid type in the text colour, under the panels.
-  let credit: { title: string; by: string } | null = null;
-  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox } = {};
+  // the gallery on their patches. A published one has a star after it (owner review 2): pressing it likes the patch
+  // (signed out: Settings › SIGN IN); right-clicking the credit reports it. Top right: who is signed in
+  // (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT. v1's mid type in the text colour, under the panels.
+  let credit: { id: string; title: string; by: string; published: boolean; liked: boolean } | null = null;
+  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; star?: ButtonBox; credit?: ButtonBox } = {};
   const accountPage = () => (scene.SettingsPanel as any).accountPage as import('../v1ui/accountPage.ts').AccountPage | null | undefined;
   function drawCorners(ctx: CanvasRenderingContext2D): void {
     cornerBoxes = {};
@@ -521,6 +523,13 @@ async function main() {
       ctx.textAlign = 'left'; ctx.fillText(title, x, y); ctx.fillText(by, x + tw, y);
       ctx.fillRect(x + tw, y + 3 * u, bw, Math.max(1, u * 0.6));  // a link: underlined
       cornerBoxes.by = { x: x + tw - 4 * u, y: y - 16 * u, w: bw + 8 * u, h: 24 * u };
+      cornerBoxes.credit = { x: x - 4 * u, y: y - 16 * u, w: tw + bw + 8 * u, h: 24 * u };
+      if (credit.published) {
+        const sx = x + tw + bw + 18 * u, sy = y - 5 * u;
+        drawStar(ctx, sx, sy, 8 * u, credit.liked, theme.colors[theme.roles.txt]);
+        cornerBoxes.star = { x: sx - 14 * u, y: sy - 14 * u, w: 28 * u, h: 28 * u };
+        cornerBoxes.credit.w += 30 * u;
+      }
     }
     const me = accountPage()?.Account;
     if (me?.handle) {
@@ -534,8 +543,26 @@ async function main() {
   function cornerPress(x: number, y: number): boolean {
     if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open || scene.OptionsPanel.Scale > 0) return false;
     if (cornerBoxes.by && credit && inBox(cornerBoxes.by, x, y)) { scene.PatchesPanel.showGallery(`@${credit.by}`); return true; }
+    if (cornerBoxes.star && credit && inBox(cornerBoxes.star, x, y)) { void likeCredit(); return true; }
     if (cornerBoxes.me && inBox(cornerBoxes.me, x, y)) { (scene.SettingsPanel as any).openAccount?.(); return true; }
     return false;
+  }
+  /** The star: like or unlike the open patch (signed out: sign in first). Shown at once; put back if it fails. */
+  async function likeCredit(): Promise<void> {
+    const c = credit;
+    if (!c) return;
+    if (!accountPage()?.Account) { (scene.SettingsPanel as any).openAccount?.(); return; }
+    c.liked = !c.liked; stage.redraw();
+    try { c.liked = (await gallery.like(c.id, c.liked)).liked; } catch { c.liked = !c.liked; }
+    stage.redraw();
+  }
+  /** Right-click on the credit: report the patch (signed out: sign in first). */
+  function reportCredit(x: number, y: number): boolean {
+    if (!credit?.published || !cornerBoxes.credit || !inBox(cornerBoxes.credit, x, y)) return false;
+    if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open) return false;
+    if (!accountPage()?.Account) (scene.SettingsPanel as any).openAccount?.();
+    else scene.PatchesPanel.askReport({ id: credit.id, title: credit.title });
+    return true;
   }
   function shareWarning(): string | null {
     return [...model.values()].some(b => b.type === 'source.recorder' || !isPortable(b.params.track)) ? SAVE_WARNING : null;
@@ -989,7 +1016,7 @@ async function main() {
     history.replaceState(null, '', url);
     shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()) };
     setBaseline();
-    credit = r.by && !r.mine ? { title: r.title || 'Untitled', by: r.by } : null;
+    credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked } : null;
     scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
   }
   /** Signed in: the account's patches (R8), as OPEN rows. */
@@ -1547,7 +1574,7 @@ async function main() {
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
     if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
     // Someone else's patch: "TITLE BY @NAME" in the corner; yours: the gallery switch shows whether it is published.
-    if (start.by && !start.mine && !embedId) credit = { title: start.title || 'Untitled', by: start.by };
+    if (start.by && !start.mine && !embedId && start.id) credit = { id: start.id, title: start.title || 'Untitled', by: start.by, published: !!start.published, liked: !!start.liked };
     if (start.mine) scene.PatchesPanel.galleryKnown(!!start.published);
     // Who is signed in (the corner, the Settings tab's name, the gallery switch).
     const page = accountPage();
@@ -1675,7 +1702,9 @@ async function main() {
     /** The stage's corners (tests): a patch's credit and who is signed in, with their centres in css px. */
     get corners() {
       const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
-      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me) };
+      // creditAt: the title's start (right-click reports), clear of the @NAME link and the star.
+      const titleAt = cornerBoxes.credit ? [(cornerBoxes.credit.x + 12 * stage.metrics.unit) / d, (cornerBoxes.credit.y + cornerBoxes.credit.h / 2) / d] : null;
+      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), starAt: c(cornerBoxes.star), creditAt: titleAt };
     },
     /** Sample state per block (tests): loaded, or missing with its reference. */
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
@@ -2315,6 +2344,7 @@ async function main() {
 
   // ---- Dust 1–8 (plugin only, PLUGIN-0003): right-click an options-panel slider to map a host parameter to it ----
   app.canvas.addEventListener('contextmenu', e => {
+    if (!juce && !embedId && reportCredit(e.offsetX * dpr(), e.offsetY * dpr())) { e.preventDefault(); return; }
     if (!juce) return;
     const hit = scene.sliderAt(e.offsetX * dpr(), e.offsetY * dpr());
     if (!hit) return;
@@ -2475,3 +2505,17 @@ function setupEmbedChrome(id: string, title: string): void {
 }
 
 void main();
+
+/** A five-pointed star centred on (x, y), `r` to its points: outlined, or filled once liked (owner review 2). */
+function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, filled: boolean, colour: string): void {
+  ctx.save();
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5, d = i % 2 ? r * 0.45 : r;
+    if (i) ctx.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d); else ctx.moveTo(x + Math.cos(a) * d, y + Math.sin(a) * d);
+  }
+  ctx.closePath();
+  ctx.lineJoin = 'round'; ctx.lineWidth = 2; ctx.strokeStyle = colour; ctx.fillStyle = colour;
+  if (filled) ctx.fill(); else ctx.stroke();
+  ctx.restore();
+}

@@ -6,7 +6,7 @@ import { accountOwned, allEditTokens, serverConfig, turnstileToken } from '../pa
 const api = (path: string) => new URL(`api/${path}`, document.baseURI).toString();
 
 export interface Account { id: string; handle: string | null; passkeys: number; providers: string[] }
-export interface Me { user: Account | null; google: boolean }
+export interface Me { user: Account | null; google: boolean; apple?: boolean }
 export interface AccountPatch { id: string; title: string; rev: number; created: number; updated: number }
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -50,11 +50,12 @@ export async function signInWithPasskey(): Promise<Account> {
   return (await call<{ user: Account }>('POST', 'auth/passkey/login/verify', { response })).user;
 }
 
-/** Sign in with Google (R2a): leaves the page and comes back here with `?account=in|new`. */
-export function signInWithGoogle(): void {
+/** Sign in with Google (R2a) or Apple (R2b): leaves the page and comes back here with `?account=in|new`. */
+export function signInWith(provider: 'google' | 'apple'): void {
   const back = location.pathname + location.search.replace(/([?&])account=[^&]*&?/, '$1').replace(/[?&]$/, '');
-  location.assign(`${api('auth/google/start')}?return=${encodeURIComponent(back)}`);
+  location.assign(`${api(`auth/${provider}/start`)}?return=${encodeURIComponent(back)}`);
 }
+export const signInWithGoogle = () => signInWith('google');
 
 export const signOut = (everywhere = false) => call('POST', 'auth/logout', { everywhere });
 export const deleteAccount = () => call('DELETE', 'me');

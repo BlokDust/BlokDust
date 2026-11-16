@@ -392,7 +392,8 @@ export class V1Scene {
     ctx.fillText(label, x + w * 0.5, base);
   }
 
-  wheel(e: WheelEvent): void { this.ZoomButtons.MouseWheel(e); }
+  /** A mouse wheel over the UI: the gallery's list scrolls (owner review 2); elsewhere v1's zoom buttons take it. */
+  wheel(e: WheelEvent): void { if (this.PatchesPanel.Open) { this.PatchesPanel.Wheel(e); return; } this.ZoomButtons.MouseWheel(e); }
 
   // ---- multi-touch (CHG-0005 task 8; not in v1, which took one pointer) ----
   /** Is (x, y) device px on the UI (an open panel, the header with its open menu, the options panel)? Another finger
@@ -690,7 +691,8 @@ export const FOOTER_LINKS = [SOURCE_LINK];
  *    v1 addresses its tabs by index (0 Settings, 1 Connect, 2 About), so SETTINGS and ABOUT are laid out as a two-tab
  *    bar and index 1 becomes an inert, zero-width stand-in that is never drawn, hit or opened.
  *  - The About text is the owner's; the footer links the code on GitHub in v1's footer type, underlined on hover like
- *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts).
+ *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts). The link and v1's build line
+ *    show on About only (owner review 2, 2026-11-15).
  *  - Tour (owner, 2026-11-08) is hidden until v1's tutorial is ported; on the web its row (the last) is the patch Tempo
  *    (owner, 2026-11-10: one tempo in Settings instead of a Tempo row on every synced block). In a DAW the host's tempo
  *    rules, so the row stays empty there.
@@ -817,7 +819,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
     const f = footer();
-    linkHover = f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
+    linkHover = p._OpenTab !== 2 ? -1 : f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
     if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
@@ -850,11 +852,15 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   const draw = p.Draw.bind(p);
   p.Draw = () => {
-    draw();
+    // The build line and the GitHub link are About's (owner review 2, 2026-11-15); v1 drew the build under every tab.
+    const about = p._OpenTab === 2, build = p._Attribution.build;
+    if (!about) p._Attribution.build = '';
+    try { draw(); } finally { p._Attribution.build = build; }
     account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
     if (!p.Open) return;
     drawDownload();
     if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
+    if (!about) return;
     const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(ctx, txt); App.StrokeColor(ctx, txt);
     ctx.font = App.Metrics.TxtLarge; ctx.textAlign = 'left';

@@ -23,6 +23,10 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R2a.** SIGN IN WITH GOOGLE uses the authorisation code flow with PKCE S256 and a state check, and keeps only
   Google's subject id. If that Google account is new here, a new account is made and the user then picks a handle
   (R6). If the user is already signed in, Google is added to their account. Shown only when Google is configured.
+- **R2b.** SIGN IN WITH APPLE (owner review 2, 2026-11-15) is the same flow without PKCE: no scopes (no name or email),
+  so Apple answers by redirect (`response_mode=query`); the client secret is an ES256 JWT signed with the Sign in with
+  Apple key (`APPLE_PRIVATE_KEY`, a Worker secret; `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID` vars). Only
+  Apple's subject id is kept. Shown only when Apple is configured.
 
 **Sessions**
 - **R3.** A session is a 32-byte random token in an HttpOnly, SameSite=Lax cookie (`__Host-` and Secure on https).
@@ -50,12 +54,14 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R12.** The plugin and embeds have no ACCOUNT tab.
 - **R13.** Settings has a tab after ABOUT and DOWNLOAD (owner review 2026-11-15), named SIGN IN until someone is
   signed in, then ACCOUNT, drawn with v1 panel pieces (web/src/v1ui/accountPage.ts):
-  - signed out: "Sign in to keep your patches on every device.", SIGN IN WITH PASSKEY · SIGN IN WITH GOOGLE, and a
-    bordered CREATE ACCOUNT;
-  - creating an account or naming one: a heading, a NAME field, the main button and BACK;
-  - signed in: the name, ADD PASSKEY · SIGN OUT, and DELETE ACCOUNT (asked first).
+  - signed out: "Sign in to keep your patches on every device.", then one full-width button each for GOOGLE, APPLE
+    and PASSKEY, in that order (owner review 2), and a bordered CREATE ACCOUNT;
+  - creating an account or naming one: a small heading in the tab type with no rule and no explanation (owner review
+    2: the large heading over a rule read as a text field), a NAME field, the main button and BACK;
+  - signed in: "SIGNED IN AS NAME" on one line in the tab type, no rule (owner review 2), ADD PASSKEY · SIGN OUT, and
+    DELETE ACCOUNT (asked first).
   Signing in with a passkey closes Settings: back to the stage.
-- **R13a.** Back from Google there is no start screen and no intro: the stage takes input at once and the first press
+- **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
 - **R14.** Signed in, the stage's top right reads "SIGNED IN AS NAME" (v1's mid type, under the panels); pressing it
   opens Settings › ACCOUNT.
@@ -66,7 +72,8 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   it and presses SAVE, then the same link gets revision 2 (R2, R8, R9).
 
 ## Verification
-`pnpm test:accounts` covers R1–R10 and R13–R14: a local Worker, mocked siteverify and Google, and Chrome's virtual WebAuthn
+`pnpm test:accounts` covers R1–R10 and R13–R14: a local Worker, mocked siteverify, Google and Apple (its client secret
+checked against the run's key), and Chrome's virtual WebAuthn
 authenticator (the passkey is copied to a second context to stand in for sync).
 
 ## Open questions

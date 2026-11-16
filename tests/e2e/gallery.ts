@@ -99,19 +99,30 @@ try {
   await tab(anon, 0);
   check('R2: signed out, the switch says so (and SAVE leaves the gallery alone)', !(await anon.page.evaluate(() => (window as any).__bd_probe.scene.host.signedIn())));
 
-  // ---- R8: likes, signed in only, one per person, no down votes ----
+  // ---- R13: the gallery's rows have OPEN only (owner review 2: like and report with the patch open) ----
   await tab(anon, GALLERY); await idle(anon);
-  await press(anon, 'glike0', 800);
-  check('R8: liking needs an account', /Sign in/.test((await P(anon)).message) && (await P(anon)).items[0].likes === 0, (await P(anon)).message);
+  const rowControls = await anon.page.evaluate(() => ['glike0', 'greport0', 'gunpub0'].map(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n)));
+  check('R13: a row has OPEN and nothing else', rowControls.every(c => c === null) && !!(await anon.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('gopen0'))), rowControls);
+
+  // ---- R8: likes, from the star by the credit; signed in only, one per person, no down votes ----
+  await press(anon, 'gopen0', 2500);
+  const anonCorners = await anon.page.evaluate(() => (window as any).__bd_probe.corners);
+  await anon.page.mouse.click(anonCorners.starAt[0], anonCorners.starAt[1]); await anon.page.waitForTimeout(1000);
+  const anonSettings = await anon.page.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return { open: s.Open, tab: s._OpenTab }; });
+  check('R8: a published patch has a star by its credit; signed out, it opens SIGN IN', !!anonCorners.starAt && anonSettings.open && anonSettings.tab === 4
+    && (await api(anon, 'GET', `patches/${aliceId}`)).json.likes === 0, { anonCorners, anonSettings });
+  await anon.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await anon.page.waitForTimeout(800);
+  const erin = await device('erin_g');
+  await tab(erin, GALLERY); await idle(erin);
+  await press(erin, 'gopen0', 2500);
+  const star = async () => { const c = await erin.page.evaluate(() => (window as any).__bd_probe.corners); await erin.page.mouse.click(c.starAt[0], c.starAt[1]); await erin.page.waitForTimeout(800); return (await api(erin, 'GET', `patches/${aliceId}`)).json; };
+  const liked = await star(), unliked = await star(), relike = await star();
+  await erin.page.mouse.move(5, 5); await erin.page.waitForTimeout(300); await erin.page.screenshot({ path: `${OUT}/stage-star.png` });
+  const again = await api(erin, 'POST', `gallery/${aliceId}/like`, { on: true });
+  check('R8: the star likes it, again takes it back; one like per person', liked.liked && liked.likes === 1 && !unliked.liked && unliked.likes === 0 && relike.likes === 1 && again.json.likes === 1,
+    [liked.likes, unliked.likes, relike.likes, again.json]);
+  await erin.ctx.close();
   const bob = await device('bob_g');
-  await tab(bob, GALLERY); await idle(bob);
-  await press(bob, 'glike0', 800);
-  const liked = (await P(bob)).items[0];
-  await press(bob, 'glike0', 800);
-  const unliked = (await P(bob)).items[0];
-  await press(bob, 'glike0', 800);
-  const again = await api(bob, 'POST', `gallery/${aliceId}/like`, { on: true });
-  check('R8: LIKE, then again to take it back; one like per person', liked.liked && liked.likes === 1 && !unliked.liked && unliked.likes === 0 && again.json.likes === 1, [liked, unliked, again.json]);
 
   // ---- R7: search by title, block, name (with or without @); sort ----
   await bob.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel());
@@ -150,14 +161,23 @@ try {
   check('R11: SAVE after opening someone\'s patch makes a remix; the original counts it; the credit goes', opened.id === aliceId && remix !== aliceId && rp.json.parent === aliceId && glass?.remixes === 1
     && !(await bob.page.evaluate(() => (window as any).__bd_probe.corners.credit)), { remix, parent: rp.json?.parent, remixes: glass?.remixes });
 
-  // ---- R9, R10: three reports hide it; the site owner reviews with bd gallery ----
+  // ---- R9, R10: right-click the credit to report; three reports hide it; the site owner reviews with bd gallery ----
   const carol = await device('carol_g'), dave = await device('dave_g');
   for (const d of [bob, carol, dave]) {
     await tab(d, GALLERY); await search(d, '');
     const i = (await P(d)).items.findIndex((r: { id: string }) => r.id === aliceId);
-    await press(d, `greport${i}`, 300);
-    if (d === bob) check('R9: REPORT asks first', (await P(d)).view === 'report');
+    await press(d, `gopen${i}`, 2500);
+    const c = await d.page.evaluate(() => (window as any).__bd_probe.corners);
+    await d.page.mouse.click(c.creditAt[0], c.creditAt[1], { button: 'right' }); await d.page.waitForTimeout(900);
+    if (d === bob) {
+      const asked = await P(d);
+      const text = await d.page.evaluate(() => { const seen: string[] = []; const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); }; (window as any).__bd_probe.scene.PatchesPanel.Draw(); CanvasRenderingContext2D.prototype.fillText = f; return seen.join(' | '); });
+      await d.page.mouse.move(5, 5); await d.page.waitForTimeout(300); await d.page.screenshot({ path: `${OUT}/report-confirm.png` });
+      check('R9: right-click on the credit asks first, without saying how many reports hide a patch', asked.open && asked.view === 'report' && !/three|hidden/i.test(text), text.slice(0, 300));
+    }
     await press(d, 'reportOk', 300); await idle(d);
+    await d.page.waitForTimeout(2200);
+    if (d === bob) check('R9: after REPORT the thanks shows, then the panel closes', !(await P(d)).open);
   }
   const after = await api(anon, 'GET', 'gallery?sort=new');
   check('R9: reported by three people, it is hidden', !after.json.items.some((r: { id: string }) => r.id === aliceId), after.json.items.map((r: { title: string }) => r.title));
@@ -187,6 +207,30 @@ try {
   await alice.page.waitForTimeout(500);
   const gone = (await api(anon, 'GET', 'gallery?q=%40alice_g')).json.items;
   check('R6: switching ADD TO GALLERY off makes SAVE available, and SAVE unpublishes', switched.on === false && st.save === 'save' && gone.length === 0 && (await api(anon, 'GET', `patches/${aliceId}`)).status === 200, { st, gone });
+
+  // ---- R7a: one list that scrolls and loads the next page as it nears its end (owner review 2) ----
+  for (let i = 0, tries = 0; i < 22; i++) {
+    const r = await api(alice, 'POST', 'patches', { patch: PATCH([{ id: 'b1', type: 'source.tone', x: i, y: 0, params: {} }]), title: `Pad ${i}`, turnstile: 'ok', gallery: true });
+    // Saves are rate-limited per address (SPEC-SHARING-BACKEND): wait out the minute.
+    if (r.status === 429 && tries++ < 2) { await new Promise(res => setTimeout(res, 61_000)); i--; continue; }
+    if (r.status !== 201 || !r.json.gallery.published) { check('R7a: made 22 patches', false, r); break; }
+  }
+  await tab(carol, GALLERY); await carol.page.fill('#gallerySearchInput', 'pad'); await press(carol, 'search'); await idle(carol);
+  const first = await P(carol);
+  const list = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('list'));
+  for (let i = 0; i < 12; i++) { await carol.page.mouse.move(list[0], list[1]); await carol.page.mouse.wheel(0, 400); await carol.page.waitForTimeout(150); }
+  await idle(carol); await carol.page.waitForTimeout(300);
+  const more = await P(carol);
+  const scrolled = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.GalleryScroll);
+  check('R7a: 20 a page; scrolling to the end loads the rest onto the same list, each once', first.items.length === 20 && more.items.length === 22
+    && new Set(more.items.map((r: { id: string }) => r.id)).size === 22 && scrolled > 0, { first: first.items.length, more: more.items.length, scrolled });
+  // A drag scrolls and doesn't open the row it started on.
+  const before = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.GalleryScroll), compBefore = await carol.page.evaluate(() => (window as any).__bd_probe.v1App.CompositionId);
+  await carol.page.mouse.move(list[0] + 100, list[1]); await carol.page.mouse.down();
+  for (let k = 1; k <= 6; k++) { await carol.page.mouse.move(list[0] + 100, list[1] + k * 20); await carol.page.waitForTimeout(30); }
+  await carol.page.mouse.up(); await carol.page.waitForTimeout(600);
+  const dragged = await carol.page.evaluate(() => ({ scroll: (window as any).__bd_probe.scene.PatchesPanel.GalleryScroll, open: (window as any).__bd_probe.scene.PatchesPanel.Open, comp: (window as any).__bd_probe.v1App.CompositionId }));
+  check('R7a: dragging the list scrolls it and opens nothing', dragged.scroll < before && dragged.open && dragged.comp === compBefore, { before, dragged });
 
   // ---- account deletion takes its gallery entries and likes ----
   const bobDel = await api(bob, 'DELETE', 'me');

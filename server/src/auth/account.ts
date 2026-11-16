@@ -1,4 +1,5 @@
 // The signed-in account (SPEC-SHARING-ACCOUNTS R4, R6, R8–R11).
+import { appleConfigured } from './apple.ts';
 import type { Env } from '../env.ts';
 import { HttpError, json, sameDigest, sha256Hex } from '../http.ts';
 import { handleProblem } from '../moderation.ts';
@@ -15,16 +16,16 @@ async function body<T>(req: Request): Promise<T> {
   try { return JSON.parse(t || '{}') as T; } catch { throw new HttpError(400, 'body must be JSON'); }
 }
 
-/** GET /api/me — who is signed in, how, and whether Google sign-in is offered here. */
+/** GET /api/me — who is signed in, how, and whether Google and Apple sign-in are offered here. */
 export async function me(env: Env, req: Request): Promise<Response> {
   const u = await currentUser(env, req);
-  const google = !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET;
-  if (!u) return json({ user: null, google }, 200, { 'cache-control': 'no-store' });
+  const google = !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET, apple = appleConfigured(env);
+  if (!u) return json({ user: null, google, apple }, 200, { 'cache-control': 'no-store' });
   const [pk, ids] = await Promise.all([
     env.DB.prepare('SELECT COUNT(*) AS n FROM credentials WHERE user_id = ?').bind(u.id).first<{ n: number }>(),
     env.DB.prepare('SELECT provider FROM identities WHERE user_id = ?').bind(u.id).all<{ provider: string }>(),
   ]);
-  return json({ user: { id: u.id, handle: u.handle, passkeys: pk?.n ?? 0, providers: ids.results.map(r => r.provider) }, google }, 200, { 'cache-control': 'no-store' });
+  return json({ user: { id: u.id, handle: u.handle, passkeys: pk?.n ?? 0, providers: ids.results.map(r => r.provider) }, google, apple }, 200, { 'cache-control': 'no-store' });
 }
 
 /** PUT /api/me/handle {handle} (R6). */

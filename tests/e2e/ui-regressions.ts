@@ -972,6 +972,44 @@ Object.assign(tests, {
    * Recommended" footer; About has the owner's text (no Web Audio API / Tone.js); the footer links the code on GitHub,
    * (where the licences are too; owner 2026-11-11), underlined on hover, opening in a new window; the build carries
    * NOTICE.txt (v1's MIT notice) and LICENSE.txt. */
+  /** Owner review 2 (CHG-0023/0024, 2026-11-15): the GitHub link and the build line show on About only; the ADD TO
+   * GALLERY switch's icons sit clear of its underline (as in an options-panel row); BACK is at the top right of the
+   * page, its label centred under the chevron. */
+  async 'review2-panels'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await p.evaluate(() => {
+      const seen: { t: string; x: number }[] = ((window as any).__texts2 = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, x: number, ...a: any[]) { seen.push({ t, x }); return (f as any).call(this, t, x, ...a); };
+    });
+    const texts = () => p.evaluate(() => { const t = (window as any).__texts2.map((e: any) => e.t); (window as any).__texts2.length = 0; return t as string[]; });
+    for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
+    await p.waitForTimeout(900); await texts(); await p.mouse.move(600, 400); await p.waitForTimeout(400);
+    const onSettings = await texts();
+    const about = await p.evaluate(() => { const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[2], pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio; return [m.Position.x / pr, 30]; });
+    await p.mouse.click(about[0], about[1]); await p.waitForTimeout(1200); await texts(); await p.mouse.move(600, 420); await p.waitForTimeout(400);
+    const onAbout = await texts();
+    const footer = (t: string[]) => ({ github: t.includes('View the code on GitHub'), build: t.some(x => /^Current Build/.test(x)) });
+    await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await p.waitForTimeout(800);
+    // The switch: v1 OptionSwitch puts the icons at 35% of the row and the underline at 55%: 7 units clear in a 60-unit row.
+    await openPatches(p);
+    const sw = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, u = (window as any).__bd_probe.v1App.Unit, g = pp.gallerySwitch(); return { gap: (g.h * 0.55 - (g.h * 0.35 + 5 * u)) / u }; });
+    // BACK on the video view (the patch has a block).
+    await patchesClick(p, 'videoEntry', 800); await texts(); await p.mouse.move(600, 700); await p.waitForTimeout(400);
+    const drawn = await p.evaluate(() => (window as any).__texts2.filter((e: any) => e.t === 'BACK').map((e: any) => e.x)) as number[];
+    const back = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, a = pp.backArrow(), pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio, u = (window as any).__bd_probe.v1App.Unit;
+      return { x: a.x, y: a.y, mid: (window as any).__bd_probe.v1App.Width / 2, right: (window as any).__bd_probe.v1App.Width / 2 + 210 * u, name: pp.centreOf('randomise')[1] * pr, u }; });
+    await p.screenshot({ path: `${OUT}/review2-video-back.png` });
+    await patchesClick(p, 'videoBack', 600);
+    const left = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
+    await p.close();
+    const ok = !footer(onSettings).github && !footer(onSettings).build && footer(onAbout).github && footer(onAbout).build
+      && sw.gap >= 6
+      && back.x > back.mid + 150 * back.u && back.x < back.right && back.y < back.name - 30 * back.u
+      && drawn.length > 0 && drawn.every(x => Math.abs(x - back.x) < 0.5) && left === 'list';
+    return [ok, { onSettings: footer(onSettings), onAbout: footer(onAbout), sw, back, drawn, left }];
+  },
+
   async 'settings-release1'(errors: string[]) {
     const p = await open(browser, [], errors);
     await p.evaluate(() => {
@@ -1003,7 +1041,8 @@ Object.assign(tests, {
     const r = await p.evaluate(() => { const t: string[] = (window as any).__texts, s = (window as any).__bd_probe.scene.SettingsPanel; return { chrome: t.includes('Chrome Recommended'), connect: t.includes('CONNECT'), connectAway: s.MenuItems[1].YOffset === -s.DrawTo.Height,
       about: t.some(x => /This rebuild was released in 2026/.test(x)), toneJs: t.some(x => /Tone\.js/.test(x)), source: t.includes('View the code on GitHub'), opened: (window as any).__opened }; });
     await p.close();
-    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN'])  // SIGN IN: CHG-0023 owner review 2026-11-15 && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
+    // SIGN IN: CHG-0023 owner review 2026-11-15.
+    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
       && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
       && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2']);

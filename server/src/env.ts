@@ -1,4 +1,4 @@
-// Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET (`pnpm bd server secret`).
+// Bindings and settings (wrangler.jsonc). Secrets: TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET, APPLE_PRIVATE_KEY (`pnpm bd server secret`).
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
@@ -25,6 +25,15 @@ export interface Env {
   GOOGLE_AUTH_URL?: string;
   GOOGLE_TOKEN_URL?: string;
   GOOGLE_ISSUER?: string;
+  /** Sign in with Apple (SPEC-SHARING-ACCOUNTS R2b): the Services ID, team and key ids (vars) and the .p8 key (a secret). */
+  APPLE_CLIENT_ID?: string;
+  APPLE_TEAM_ID?: string;
+  APPLE_KEY_ID?: string;
+  APPLE_PRIVATE_KEY?: string;
+  /** Overridable for tests (a local mock); default to Apple's endpoints and issuer. */
+  APPLE_AUTH_URL?: string;
+  APPLE_TOKEN_URL?: string;
+  APPLE_ISSUER?: string;
   /** Overridable for tests (a local mock); defaults to https://freesound.org/apiv2. */
   FREESOUND_API?: string;
 }

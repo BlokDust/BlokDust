@@ -166,8 +166,11 @@ export async function getPatch(env: Env, req: Request, id: string, ctx?: Executi
   const published = !!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ? AND hidden = 0').bind(id).first());
   // `mine`: the signed-in account owns it, so this device may save over it without the edit token (R9).
   const owner = (await env.DB.prepare('SELECT owner_id FROM patches WHERE id = ?').bind(id).first<{ owner_id: string | null }>())?.owner_id;
-  const mine = !!owner && (await currentUser(env, req))?.id === owner;
-  return json({ ...p, mine, views, published }, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*', vary: 'cookie' });
+  const me = await currentUser(env, req), mine = !!owner && me?.id === owner;
+  // Its likes, and whether the signed-in user has liked it (the star by its credit on the stage, owner review 2).
+  const likes = published ? (await env.DB.prepare('SELECT likes FROM gallery WHERE patch_id = ?').bind(id).first<{ likes: number }>())?.likes ?? 0 : 0;
+  const liked = !!me && published && !!(await env.DB.prepare('SELECT 1 FROM likes WHERE patch_id = ? AND user_id = ?').bind(id, me.id).first());
+  return json({ ...p, mine, views, published, likes, liked }, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*', vary: 'cookie' });
 }
 
 /** GET /api/patches/:id/thumb.png[?rev=n]: the PNG saved with that revision (latest by default). */

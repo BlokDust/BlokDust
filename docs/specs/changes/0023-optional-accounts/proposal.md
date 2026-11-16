@@ -43,3 +43,11 @@ and hands-on authentication experience. No passwords, nothing paid, only trusted
 - Back from Google: no start screen or intro; a new account names itself in Settings, a known one stays on the stage.
 - Signing in with a passkey returns to the stage, which says SIGNED IN AS NAME at the top right.
 - Fix found on the way: the corner text crashed the first frame before v1's fonts were set (caught by test:video).
+
+## Owner review 2 (2026-11-15)
+- Sign in offers Google, Apple and a passkey, in that order (R2b: Sign in with Apple, shown once its Services ID and
+  key are configured).
+- Settings shows the GitHub link and the build line on About only.
+- Create account and choose-your-name have a small heading in the tab type, no rule, no explanation; signed in reads
+  "SIGNED IN AS NAME" on one line.
+- Fix found on the way: a line comment in the `settings-release1` UI regression swallowed half of its checks.

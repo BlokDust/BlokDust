@@ -22,6 +22,8 @@ const server = await startLocal({ name: 'accounts', vars: {
   TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`,
   GOOGLE_CLIENT_ID: 'test-google-client', GOOGLE_CLIENT_SECRET: 'test-google-secret',
   GOOGLE_AUTH_URL: `${mocks.url}/google/auth`, GOOGLE_TOKEN_URL: `${mocks.url}/google/token`,
+  APPLE_CLIENT_ID: 'test-apple-client', APPLE_TEAM_ID: 'test-team', APPLE_KEY_ID: 'test-key-id', APPLE_PRIVATE_KEY: mocks.appleKey,
+  APPLE_AUTH_URL: `${mocks.url}/apple/auth`, APPLE_TOKEN_URL: `${mocks.url}/apple/token`,
 } });
 const base = server.url.replace('127.0.0.1', 'localhost');
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
@@ -53,7 +55,7 @@ const pp = (p: Page) => p.evaluate(() => {
   const s = (window as any).__bd_probe.scene, x = s.SettingsPanel.accountPage;
   return { open: s.PatchesPanel.Open, settings: s.SettingsPanel.Open, tabName: s.SettingsPanel.MenuItems[4]?.Name, view: x.View, account: x.Account, busy: x.Busy, message: x.Message };
 });
-const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'create', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk']);
+const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'apple', 'create', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk']);
 async function press(p: Page, name: string, wait = 400): Promise<void> {
   const at = await p.evaluate(([n, inSettings]) => { const s = (window as any).__bd_probe.scene; return inSettings ? s.SettingsPanel.accountCentre(n) : s.PatchesPanel.centreOf(n); }, [name, ACCOUNT_CONTROLS.has(name)] as const);
   if (!at) throw new Error(`no control ${name}`);
@@ -96,8 +98,9 @@ const tests: Record<string, () => Promise<void>> = {
     await (async () => { for (let i = 0; i < 8 && !(await pp(a.page)).open; i++) { await a.page.mouse.move(1138, 45); await a.page.mouse.click(1138, 45); await a.page.waitForTimeout(700); } })();
     const before = await saveLink(a.page);  // anonymous: this browser holds its edit token
     await openAccount(a.page);
-    check('signed out: Settings › SIGN IN offers passkey and Google', (await pp(a.page)).account === null && (await pp(a.page)).tabName === 'SIGN IN'
-      && !!(await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountCentre('google'))), await pp(a.page));
+    const ways = await a.page.evaluate(() => ['google', 'apple', 'passkey'].map(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k)));
+    check('signed out: Settings › SIGN IN offers Google, Apple and a passkey, in that order (owner review 2)', (await pp(a.page)).account === null && (await pp(a.page)).tabName === 'SIGN IN'
+      && ways.every(Boolean) && ways[0][1] < ways[1][1] && ways[1][1] < ways[2][1], { p: await pp(a.page), ways });
     await press(a.page, 'create');
     await a.page.fill('#accountHandleInput', 'Admin');
     await press(a.page, 'submit'); await settled(a.page);
@@ -193,6 +196,26 @@ const tests: Record<string, () => Promise<void>> = {
     const r = await fetch(`${base}/api/auth/google/callback?code=x&state=wrong`, { redirect: 'manual', headers: { cookie: 'bd_oauth=right.verifier.%2F' } });
     check('R2a: a callback whose state does not match is refused', r.status === 400, r.status);
     await c.ctx.close(); await d.ctx.close();
+  },
+
+  /** R2b: Sign in with Apple (no scopes, query response; client secret signed with the key); a new account picks its name. */
+  async 'apple'() {
+    const e = await device();
+    await fetch(`${mocks.url}/google/next?user=erin`);  // the mock's next user, for Apple too
+    await openApp(e); await openAccount(e.page);
+    await Promise.all([e.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(e.page, 'apple', 0)]);
+    await e.page.waitForFunction(() => (window as any).__bd_probe, null, { timeout: 20000 });
+    await e.page.waitForFunction(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return s.Open && s.OffsetY === 0 && s.accountPage.View === 'name'; }, null, { timeout: 20000 }).catch(() => {});
+    const auth = mocks.appleAuths.at(-1);
+    check('R2b: Apple is asked for no name or email, answering by redirect, with our Services ID', auth?.mode === 'query' && !auth.scope && auth.client === 'test-apple-client', auth);
+    check('R2b: the client secret is an ES256 JWT signed with the key', mocks.appleSecrets.length > 0 && mocks.appleSecrets.every(Boolean), mocks.appleSecrets);
+    check('R2b, R6: a new Apple account is asked for a name in Settings', (await pp(e.page)).view === 'name' && (await pp(e.page)).settings === true, await pp(e.page));
+    await e.page.fill('#accountHandleInput', 'erin_a');
+    await press(e.page, 'submit'); await settled(e.page);
+    check('… and has it, with Apple as its way in', (await pp(e.page)).account?.handle === 'erin_a' && (await pp(e.page)).account?.providers.includes('apple'), await pp(e.page));
+    const r = await fetch(`${base}/api/auth/apple/callback?code=x&state=s`, { redirect: 'manual', headers: { cookie: 'bd_oauth=s.verifier.%2F' } });
+    check('R2b: a Google sign-in\'s cookie is no good for Apple\'s callback', r.status === 400, r.status);
+    await e.ctx.close();
   },
 
   /** R5: cookie-authenticated changes only from this site. */

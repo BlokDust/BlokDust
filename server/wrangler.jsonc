@@ -1,7 +1,8 @@
 // BlokDust 2 Worker (SPEC-SHARING-BACKEND). Top level = local dev/tests (`pnpm bd server dev`, `pnpm test:sharing`);
 // `--env staging` = owner review, `--env production` = the public site (deployed after a phase merges).
-// Secrets (never in the repo): TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET — `pnpm bd server secret --env <env>`.
+// Secrets (never in the repo): TURNSTILE_SECRET, FREESOUND_TOKEN, GOOGLE_CLIENT_SECRET, APPLE_PRIVATE_KEY — `pnpm bd server secret --env <env>`.
 // GOOGLE_CLIENT_ID (a var) turns on Sign in with Google with the secret (SPEC-SHARING-ACCOUNTS R2a); without both, passkeys only.
+// APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID (vars) with APPLE_PRIVATE_KEY turn on Sign in with Apple (R2b).
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "blokdust-dev",

@@ -1,20 +1,21 @@
 // Settings › SIGN IN / ACCOUNT (CHG-0023, owner review 2026-11-15: in Settings beside ABOUT and DOWNLOAD, not in
 // Patches; the tab reads SIGN IN until you are signed in). Drawn into v1's Settings panel like the DOWNLOAD page, with v1
 // pieces only:
-//   signed out: v1 About's body type for the line, SharePanel's half buttons (PASSKEY · GOOGLE), a bordered CREATE ACCOUNT;
-//   naming:     the header type and rule, the Patches name field (a DOM field like v1's title), the GUIDE button, a
-//               bordered BACK;
-//   signed in:  the name in header type over a rule, half buttons (ADD PASSKEY · SIGN OUT), a bordered DELETE ACCOUNT,
-//               which asks first with CANCEL · DELETE.
+//   signed out: v1 About's body type for the line, then Connect's 420×40 GUIDE buttons, one a way to sign in (owner
+//               review 2: GOOGLE, APPLE, PASSKEY, in that order; Google and Apple only where the server offers them),
+//               and a bordered CREATE ACCOUNT;
+//   naming:     a small heading in the tab type (no rule: owner review 2, it read as a text field), the Patches name
+//               field (a DOM field like v1's title) over its rule, the GUIDE button, a bordered BACK;
+//   signed in:  SIGNED IN AS NAME on one line in the tab type, half buttons (ADD PASSKEY · SIGN OUT), a bordered DELETE
+//               ACCOUNT, which asks first with CANCEL · DELETE.
 import { App, Dimensions } from './shim.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
 
 const COPY = {
   line: 'Sign in to keep your patches on every device.',
-  passkey: 'Sign In With Passkey', google: 'Sign In With Google', create: 'Create Account',
-  createTitle: 'Create your account', createLine: 'Choose a name. It shows on patches you publish. Your device then makes a passkey: no password.',
-  nameTitle: 'Choose your name', nameLine: 'It shows on patches you publish.', name: 'Name',
+  passkey: 'Sign In With Passkey', google: 'Sign In With Google', apple: 'Sign In With Apple', create: 'Create Account',
+  createTitle: 'Create your account', nameTitle: 'Choose your name', name: 'Name',
   createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', signedInAs: 'Signed in as',
   addPasskey: 'Add Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
   deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
@@ -29,6 +30,7 @@ export class AccountPage {
   Busy = false;
   Message = '';
   private google = false;
+  private apple = false;
   private noBackend = false;
   private roll: Record<string, boolean> = {};
   private readonly field = document.getElementById('accountHandle')!;
@@ -52,7 +54,7 @@ export class AccountPage {
   async refresh(): Promise<void> {
     const m = await this.host.me();
     const before = this.Account?.handle ?? null, was = this.Account;
-    this.noBackend = !m; this.google = !!m?.google; this.Account = m?.user ?? null;
+    this.noBackend = !m; this.google = !!m?.google; this.apple = !!m?.apple; this.Account = m?.user ?? null;
     // A new Google account has no name yet: ask for one (SPEC-SHARING-ACCOUNTS R6).
     if (this.Account && !this.Account.handle && this.View === 'main') { this.View = 'name'; this.input.value = ''; }
     if (!this.Account && this.View !== 'create') this.View = 'main';
@@ -70,11 +72,19 @@ export class AccountPage {
     const u = App.Unit, W = App.Width, L = W * 0.5 - 210 * u, R = W * 0.5 + 210 * u;
     const half = (dx: number, y: number): Box => ({ x: W * 0.5 + dx * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + (dx + 101.25) * u });
     const full = (y: number): Box => ({ x: L, y, w: 420 * u, h: 40 * u, cx: W * 0.5 });
-    const out = { passkey: this.google ? half(-210, top + 35 * u) : full(top + 35 * u), google: half(7.5, top + 35 * u), create: this.bordered(COPY.create, R, top + 100 * u) };
-    const naming = { field: top + 66 * u, rule: top + 108 * u, submit: full(top + 125 * u), back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 185 * u) };
-    const signedIn = { add: half(-210, top + 95 * u), out: half(7.5, top + 95 * u), del: this.bordered(COPY.deleteAccount, R, top + 160 * u) };
+    // Signed out: one row per way to sign in, 15 units apart, then CREATE ACCOUNT.
+    const ways = this.ways(), out: Record<string, Box> = {};
+    ways.forEach((k, i) => { out[k] = full(top + (35 + i * 55) * u); });
+    const below = top + (35 + ways.length * 55) * u;
+    const naming = { field: top + 24 * u, rule: top + 66 * u, submit: full(top + 85 * u), back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 145 * u) };
+    const signedIn = { add: half(-210, top + 35 * u), out: half(7.5, top + 35 * u), del: this.bordered(COPY.deleteAccount, R, top + 100 * u) };
     const del = { cancel: half(-210, top + 75 * u), ok: half(7.5, top + 75 * u) };
-    return { L, R, out, naming, signedIn, del, message: top + 230 * u };
+    const message = this.View === 'main' && !this.Account ? below + 70 * u : top + 190 * u;
+    return { L, R, out, create: this.bordered(COPY.create, R, below + 10 * u), naming, signedIn, del, message };
+  }
+  /** The ways to sign in, in the owner's order: Google, Apple, then a passkey (always offered). */
+  private ways(): ('google' | 'apple' | 'passkey')[] {
+    return [...(this.google ? ['google' as const] : []), ...(this.apple ? ['apple' as const] : []), 'passkey'];
   }
 
   // ---- drawing (v1's own pieces) ----
@@ -102,12 +112,12 @@ export class AccountPage {
     if (line) { c.fillText(line, x, y); y += lh; }
     return y;
   }
+  /** A sub-heading: the tab type (v1's mid type), no rule under it (owner review 2), and its italic line if any. */
   private heading(title: string, line: string, top: number, L: number): void {
     const c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
-    App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtHeader;
-    c.fillText(title.toUpperCase(), L, top + 18 * u);
-    App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(L, top + 30 * u); c.lineTo(L + 420 * u, top + 30 * u); c.stroke();
-    c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 48 * u, 14 * u, 420 * u);
+    App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
+    c.fillText(title.toUpperCase(), L, top + 10 * u);
+    if (line) { c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 32 * u, 14 * u, 420 * u); }
   }
 
   draw(top: number): void {
@@ -115,7 +125,7 @@ export class AccountPage {
     const Lo = this.layout(top), busy = this.Busy, r = this.roll;
     if (this.View === 'create' || this.View === 'name') {
       const create = this.View === 'create';
-      this.heading(create ? COPY.createTitle : COPY.nameTitle, create ? COPY.createLine : COPY.nameLine, top, Lo.L);
+      this.heading(create ? COPY.createTitle : COPY.nameTitle, '', top, Lo.L);
       App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'right';
       if (App.Metrics.Device !== Device.mobile) c.fillText(COPY.name.toUpperCase(), Lo.L - 15 * u, Lo.naming.field + 28 * u);
       App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, Lo.naming.rule); c.lineTo(Lo.R, Lo.naming.rule); c.stroke();
@@ -126,10 +136,8 @@ export class AccountPage {
       this.filled(Lo.del.cancel, App.Palette[1], COPY.cancel, !!r.deleteCancel);
       this.filled(Lo.del.ok, App.Palette[menu[3]], busy ? COPY.working : COPY.deleteButton, !busy && !!r.deleteOk);
     } else if (this.Account) {
-      App.FillColor(c, txt); c.textAlign = 'left';
-      c.font = App.Metrics.TxtMid; c.fillText(COPY.signedInAs.toUpperCase(), Lo.L, top + 10 * u);
-      c.font = App.Metrics.TxtHeader; c.fillText((this.Account.handle ?? '').toUpperCase(), Lo.L, top + 50 * u);
-      App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, top + 62 * u); c.lineTo(Lo.R, top + 62 * u); c.stroke();
+      App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
+      c.fillText(`${COPY.signedInAs} ${this.Account.handle ?? ''}`.toUpperCase(), Lo.L, top + 10 * u);
       this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], COPY.addPasskey, !busy && !!r.addPasskey, true);
       this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
       this.drawBordered(Lo.signedIn.del, App.Palette[1]);
@@ -138,9 +146,10 @@ export class AccountPage {
       c.fillText(this.noBackend ? COPY.noAccounts : COPY.line, Lo.L, top + 10 * u);
       if (this.Account === undefined && !this.noBackend) App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, top + 55 * u, 16, true);
       else if (!this.noBackend) {
-        this.filled(Lo.out.passkey, App.Palette[busy ? 1 : menu[3]], COPY.passkey, !busy && !!r.passkey, true);
-        if (this.google) this.filled(Lo.out.google, App.Palette[busy ? 1 : menu[1]], COPY.google, !busy && !!r.google, true);
-        this.drawBordered(Lo.out.create, txt);
+        // Each its own menu colour, as Connect's GUIDE buttons and the Patches panel's.
+        const colours = { google: menu[3], apple: menu[1], passkey: menu[2 % menu.length] } as const;
+        for (const k of this.ways()) this.filled(Lo.out[k], App.Palette[busy ? 1 : colours[k]], COPY[k], !busy && !!r[k]);
+        this.drawBordered(Lo.create, txt);
       }
     }
     if (this.Message) { App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; this.wrap(this.Message, Lo.L, Lo.message, 14 * u, 420 * u); }
@@ -164,7 +173,7 @@ export class AccountPage {
     if (this.View === 'create' || this.View === 'name') return { submit: Lo.naming.submit, ...(this.View === 'create' ? { back: pad(Lo.naming.back) } : {}) };
     if (this.View === 'delete') return { deleteCancel: Lo.del.cancel, deleteOk: Lo.del.ok };
     if (this.Account) return { addPasskey: Lo.signedIn.add, signOut: Lo.signedIn.out, deleteAccount: pad(Lo.signedIn.del) };
-    if (this.Account === null && !this.noBackend) return { passkey: Lo.out.passkey, ...(this.google ? { google: Lo.out.google } : {}), create: pad(Lo.out.create) };
+    if (this.Account === null && !this.noBackend) return { ...Lo.out, create: pad(Lo.create) };
     return {};
   }
   hit(pt: { x: number; y: number }, top: number): boolean {
@@ -184,6 +193,7 @@ export class AccountPage {
     this.mark();
     if (r.passkey) { void this.action(() => a.signIn()); return; }
     if (r.google) { a.google(); return; }
+    if (r.apple) { a.apple(); return; }
     if (r.create) { this.View = 'create'; this.Message = ''; this.input.value = ''; setTimeout(() => this.input.focus(), 0); return; }
     if (r.back) { this.View = 'main'; this.Message = ''; return; }
     if (r.submit) { void this.submit(); return; }

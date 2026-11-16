@@ -6,6 +6,7 @@
 //                                                   Turnstile secret in ~/.config/blokdust (never in the repo)
 //   pnpm bd server secret --env staging|production upload TURNSTILE_SECRET, FREESOUND_TOKEN and (if kept)
 //                                                   GOOGLE_CLIENT_SECRET (~/.config/blokdust/google_client_secret)
+//                                                   APPLE_PRIVATE_KEY (~/.config/blokdust/apple_private_key.p8)
 //   pnpm bd server deploy --env staging|production [--no-build]  build web/dist, apply D1 migrations, deploy
 //   pnpm bd server smoke --env staging|production | --url <base>  the sharing e2e suite against a deployed Worker
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -96,6 +97,9 @@ async function secret(): Promise<void> {
   // Sign in with Google (SPEC-SHARING-ACCOUNTS R2a), when its client secret is kept here.
   const google = readSecret('google_client_secret');
   if (google) { await putSecret(e, 'GOOGLE_CLIENT_SECRET', google); secrets.push('GOOGLE_CLIENT_SECRET'); }
+  // Sign in with Apple (R2b): the .p8 key from Apple, kept as apple_private_key.p8.
+  const apple = readSecret('apple_private_key.p8');
+  if (apple) { await putSecret(e, 'APPLE_PRIVATE_KEY', apple); secrets.push('APPLE_PRIVATE_KEY'); }
   console.log(JSON.stringify({ env: e, secrets }));
 }
 
