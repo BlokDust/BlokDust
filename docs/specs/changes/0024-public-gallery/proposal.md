@@ -26,3 +26,11 @@ share them with other BlokDust users. Moderation starts as a simple check on sav
 
 ## Risks and unknowns
 - Spam accounts: passkey sign-up has Turnstile, and saves are rate-limited per IP. Per-account limits may be needed.
+
+## Owner review 1 (2026-11-15)
+- Publishing is the ADD TO GALLERY switch on SAVE / SHARE (on by default), not a button in the gallery. Only signed-in
+  users can publish; signed out, the switch says so. No "Published" message.
+- The gallery copies the sample search's layout (field, rule, SEARCH above it, POPULAR / NEW where RANDOMISE was).
+  The search field has no clear button. Plain words match names too.
+- Rows show views (migration 0004: `patches.views`, counted when the app opens a patch).
+- Someone else's patch shows "TITLE BY @NAME" on the stage; the name opens the gallery on their patches.

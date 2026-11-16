@@ -1,4 +1,4 @@
-// The public gallery (SPEC-SHARING-GALLERY, SHARING-0009): signed-in users publish their saved patches; anyone browses
+// The public gallery (SPEC-SHARING-GALLERY, SHARING-0009): signed-in users publish with the gallery switch on SAVE; anyone browses
 // (newest, or popular: likes and remixes over age); signed-in users like (no down votes) and report. Reports hide a
 // patch at REPORTS_TO_HIDE; the site owner reviews with `pnpm bd gallery`.
 import type { Env } from './env.ts';
@@ -37,45 +37,46 @@ async function latest(env: Env, id: string): Promise<{ owner_id: string | null; 
     .bind(id).first();
 }
 
-/** POST /api/gallery/:id — publish (R1–R4): the owner, with a name, a portable patch and a clean title. */
-export async function publish(env: Env, req: Request, id: string): Promise<Response> {
-  const u = await requireUser(env, req);
-  if (!u.handle) throw new HttpError(400, 'Choose your name first (ACCOUNT).');
+export const SIGN_IN_TO_PUBLISH = 'Only signed-in users can publish to the gallery.';
+/**
+ * After a save (R1, R5): `on` puts the patch in the gallery (or keeps it there with its latest title and blocks), off
+ * takes it out; undefined leaves it as it is, refreshed. Only a signed-in owner with a name can publish (R2; owner,
+ * 2026-11-15: accountability and ownership). Returns whether it is published, and why not when it can't be.
+ */
+export async function afterSave(env: Env, id: string, ownerId: string | null, on: boolean | undefined): Promise<{ published: boolean; reason?: string }> {
+  const was = !!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ?').bind(id).first());
+  if (on === false || (on === undefined && !was)) {
+    if (was) await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
+    return { published: false };
+  }
+  const owner = ownerId ? await env.DB.prepare('SELECT handle FROM users WHERE id = ?').bind(ownerId).first<{ handle: string | null }>() : null;
+  if (!owner) return { published: false, reason: SIGN_IN_TO_PUBLISH };
+  if (!owner.handle) return { published: false, reason: 'Choose your name in Settings first.' };
   const p = await latest(env, id);
-  if (!p) throw new HttpError(404, 'no such patch');
-  if (p.owner_id !== u.id) throw new HttpError(403, 'Only your own patches can be published.');
-  const patch = JSON.parse(p.json) as PatchJson, why = notPublishable(patch);
-  if (why) throw new HttpError(400, why);
-  if (!p.title.trim()) throw new HttpError(400, 'Give the patch a name first.');
-  if (isOffensive(p.title)) throw new HttpError(400, 'Please choose another name for the patch.');
+  if (!p) return { published: false };
+  const patch = JSON.parse(p.json) as PatchJson;
+  const reason = notPublishable(patch) ?? (!p.title.trim() ? 'Give the patch a name first.' : isOffensive(p.title) ? 'Please choose another name for the patch.' : null);
+  if (reason) {
+    if (was) await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
+    return { published: false, reason };
+  }
   await env.DB.prepare(`INSERT INTO gallery (patch_id, user_id, title, blocks, published) VALUES (?, ?, ?, ?, ?)
     ON CONFLICT(patch_id) DO UPDATE SET title = excluded.title, blocks = excluded.blocks`)
-    .bind(id, u.id, p.title, blockTypes(patch), Date.now()).run();
-  return json({ published: true });
+    .bind(id, ownerId, p.title, blockTypes(patch), Date.now()).run();
+  return { published: true };
 }
 
-/** Called after a save (R5): a published patch shows its latest title and blocks; one that can't stay is withdrawn. */
-export async function refreshPublished(env: Env, id: string): Promise<void> {
-  const g = await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ?').bind(id).first();
-  if (!g) return;
-  const p = await latest(env, id);
-  if (!p) return;
-  const patch = JSON.parse(p.json) as PatchJson;
-  if (notPublishable(patch) || !p.title.trim() || isOffensive(p.title)) await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
-  else await env.DB.prepare('UPDATE gallery SET title = ?, blocks = ? WHERE patch_id = ?').bind(p.title, blockTypes(patch), id).run();
-}
-
-/** DELETE /api/gallery/:id — the owner takes it out (R6). */
-export async function unpublish(env: Env, req: Request, id: string): Promise<Response> {
-  const u = await requireUser(env, req);
-  const r = await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ? AND user_id = ?').bind(id, u.id).run();
+/** DELETE /api/gallery/:id — the owner takes it out (R6): the account that owns it, or the browser with its edit token. */
+export async function unpublish(env: Env, id: string, mayEdit: (id: string) => Promise<boolean>): Promise<Response> {
+  if (!(await mayEdit(id))) throw new HttpError(403, 'not your patch');
+  const r = await env.DB.prepare('DELETE FROM gallery WHERE patch_id = ?').bind(id).run();
   if (!r.meta.changes) throw new HttpError(404, 'not in the gallery');
   return json({ published: false });
 }
 
 /**
- * GET /api/gallery?sort=popular|new&q=&page= (R7, R8). `q`: words matched in titles and block types ("laser", "tone");
- * `@name` lists one person's patches. Popular: (likes + 2·remixes + 1) / (hours since published + 2), a simple decay so
+ * GET /api/gallery?sort=popular|new&q=&page= (R7, R8). `q`: words matched in titles, block types ("laser", "tone") and
+ * names; `@name` lists exactly one person's patches. Popular: (likes + 2·remixes + 1) / (hours since published + 2), a simple decay so
  * new patches get a chance.
  */
 export async function list(env: Env, req: Request, url: URL): Promise<Response> {
@@ -87,17 +88,18 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
   let handle: string | null = null;
   for (const w of q.split(/\s+/).filter(Boolean).slice(0, 4)) {
     if (w.startsWith('@')) { handle = w.slice(1); where.push('u.handle = ?'); binds.push(handle); continue; }
-    where.push("(lower(g.title) LIKE ? ESCAPE '\\' OR g.blocks LIKE ? ESCAPE '\\')");
+    where.push("(lower(g.title) LIKE ? ESCAPE '\\' OR g.blocks LIKE ? ESCAPE '\\' OR u.handle LIKE ? ESCAPE '\\')");
     const like = `%${w.replace(/[\\%_]/g, c => `\\${c}`)}%`;
-    binds.push(like, like);
+    binds.push(like, like, like);
   }
   const remixes = '(SELECT COUNT(*) FROM patches c WHERE c.parent = g.patch_id AND c.deleted = 0)';
   const order = sort === 'new' ? 'g.published DESC' : `((g.likes + 2 * ${remixes} + 1) * ${HOUR}.0 / (? - g.published + 2 * ${HOUR})) DESC, g.published DESC`;
   const sql = `SELECT g.patch_id AS id, g.title, u.handle AS by, g.likes, ${remixes} AS remixes, g.published,
+      (SELECT views FROM patches v WHERE v.id = g.patch_id) AS views,
       ${me ? 'EXISTS (SELECT 1 FROM likes l WHERE l.patch_id = g.patch_id AND l.user_id = ?)' : '0'} AS liked
     FROM gallery g JOIN users u ON u.id = g.user_id WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`;
   const args = [...(me ? [me.id] : []), ...binds, ...(sort === 'new' ? [] : [now]), PAGE + 1, (page - 1) * PAGE];
-  const rows = (await env.DB.prepare(sql).bind(...args).all<{ id: string; title: string; by: string; likes: number; remixes: number; published: number; liked: number }>()).results;
+  const rows = (await env.DB.prepare(sql).bind(...args).all<{ id: string; title: string; by: string; likes: number; remixes: number; published: number; views: number; liked: number }>()).results;
   return json({ items: rows.slice(0, PAGE).map(r => ({ ...r, liked: !!r.liked, mine: !!me && r.by === me.handle })), page, more: rows.length > PAGE, sort, q },
     200, { 'cache-control': 'no-store' });
 }

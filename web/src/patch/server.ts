@@ -19,9 +19,12 @@ export function serverConfig(): Promise<ServerConfig | null> {
 /** Server share ids (never start with "p": Phase 1 `?c=p…` links carry the patch itself). */
 export const isServerId = (c: string) => /^[0-9A-Za-oq-z][0-9A-Za-z]{9}$/.test(c);
 
-export interface Saved { id: string; rev: number; url: string; parent: string | null }
+/** Whether a save left the patch in the gallery, and why not when it couldn't be (SPEC-SHARING-GALLERY R1). */
+export interface GalleryState { published: boolean; reason?: string }
+export interface Saved { id: string; rev: number; url: string; parent: string | null; gallery?: GalleryState }
 export interface LoadedPatch { id: string; rev: number; title: string; parent: string | null; updated: number; patch: Patch;
-  /** The signed-in account owns it (SPEC-SHARING-ACCOUNTS R9). */ mine?: boolean; /** Its account's handle. */ by?: string | null }
+  /** The signed-in account owns it (SPEC-SHARING-ACCOUNTS R9). */ mine?: boolean; /** Its account's handle. */ by?: string | null;
+  /** Roughly how often it was opened (SPEC-SHARING-GALLERY R14), and whether it is in the gallery. */ views?: number; published?: boolean }
 
 function tokens(): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(TOKENS_KEY) ?? '{}') as Record<string, string>; } catch { return {}; }
@@ -82,7 +85,7 @@ async function call<T>(method: string, path: string, body?: unknown, token?: str
   return j as T;
 }
 
-export interface SaveInput { patch: Patch; title: string; thumb: string | null }
+export interface SaveInput { patch: Patch; title: string; thumb: string | null; /** In the gallery or not (undefined: leave it). */ gallery?: boolean }
 /**
  * v1 SAVE (overwrite `id` when this browser holds its edit token) or SAVE_AS (a new id, `parent` = the patch it
  * came from). Returns null when the backend is unavailable, so the caller can fall back to a URL link.
@@ -103,7 +106,7 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
   const fresh = mode === 'save' && currentId && canOverwrite(currentId) ? await turnstileToken(cfg.turnstileSiteKey) : turnstile;
   const r = await call<Saved & { editToken: string }>('POST', 'patches', { ...input, parent: currentId ?? undefined, turnstile: fresh });
   keepToken(r.id, r.editToken);
-  return { id: r.id, rev: r.rev, url: r.url, parent: r.parent };
+  return { id: r.id, rev: r.rev, url: r.url, parent: r.parent, gallery: r.gallery };
 }
 
 /** A shared patch by id (latest revision); null if it does not exist or there is no backend. */

@@ -45,11 +45,12 @@ async function open(b: Browser, blocks: Block[], errors: string[], share: 'none'
 }
 const centre = (p: Page, name: string) => p.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name) as Promise<[number, number]>;
 async function click(p: Page, name: string, wait = 500): Promise<void> { const [x, y] = await centre(p, name); await p.mouse.move(x, y); await p.mouse.click(x, y); await p.waitForTimeout(wait); }
-/** Patches › VIDEO (the header's PATCHES slot opens the panel). */
+/** Patches › SAVE / SHARE › SHARE AS VIDEO (the header's PATCHES slot opens the panel). */
 async function openVideoTab(p: Page): Promise<void> {
   await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } });
   await p.mouse.move(1138, 45); await p.mouse.click(1138, 45); await p.waitForTimeout(1500);
-  await click(p, 'tab2', 700);
+  await click(p, 'tab0', 700);
+  await click(p, 'videoEntry', 400);  // SAVE / SHARE › SHARE AS VIDEO (owner review 2026-11-15)
 }
 const panel = (p: Page) => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { state: pp.VideoState, message: pp.VideoMessage, progress: pp.VideoProgress, choice: pp.Video }; });
 /** Drag block `id` by (dx, dy) grid cells with the real pointer. */
@@ -64,12 +65,12 @@ async function dragBlock(p: Page, id: number, dx: number, dy: number): Promise<v
 async function makeAndSave(p: Page, name: string, choose: string[]): Promise<{ file: string; ms: number; state: unknown }> {
   for (const c of choose) await click(p, c, 300);
   const t0 = Date.now();
-  await click(p, 'make', 200);
-  await p.waitForFunction(() => { const s = (window as any).__bd_probe.scene.PatchesPanel.VideoState; return s === 'ready' || s === 'error'; }, null, { timeout: 180_000 });
+  // Desktop Chrome can't share files: DOWNLOAD VIDEO makes it and downloads it at once (owner, 2026-11-15).
+  const label = await p.evaluate(() => (window as any).__bd_probe.scene.host.video.canShareFiles());
+  if (label) throw new Error('this test expects a browser that downloads videos');
+  const [x, y] = await centre(p, 'make');
+  const [download] = await Promise.all([p.waitForEvent('download', { timeout: 180_000 }), p.mouse.click(x, y)]);
   const ms = Date.now() - t0, state = await panel(p);
-  if ((state as { state: string }).state !== 'ready') return { file: '', ms, state };
-  const [x, y] = await centre(p, 'shareVideo');
-  const [download] = await Promise.all([p.waitForEvent('download'), p.mouse.click(x, y)]);
   const file = `${OUT}/${name}.mp4`;
   await download.saveAs(file);
   return { file, ms, state };
@@ -184,7 +185,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
   /** Bug (found making screenshots): CANCEL, then at once a new choice and MAKE VIDEO. The cancelled render was still
    * winding down, so the panel still said making: the new choice was ignored, MAKE cancelled again, nothing was made. */
   'cancel-then-make-at-once': async errors => {
-    const p = await open(browser, SCENE, errors);
+    const p = await open(browser, SCENE, errors, 'sheet');
     await openVideoTab(p);
     await click(p, 'length', 200); await click(p, 'length', 200);  // 60 s
     await click(p, 'make', 1500);

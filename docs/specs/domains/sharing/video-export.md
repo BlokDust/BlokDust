@@ -37,14 +37,16 @@ Instagram, TikTok and other apps from the web app, without any server (SHARING-0
 - **R12.** The beam jitter uses a seeded random number, so frames repeat (R2).
 
 **Sharing** (`web/src/video/share.ts`)
-- **R13.** SHARE VIDEO opens the system share sheet with the file (Web Share API, `navigator.canShare({ files })`), with
-  the title and the link as text. Where files can't be shared (most desktop browsers), it downloads the file.
+- **R13.** Where the browser can share files (phones, tablets: `navigator.canShare({ files })`), MAKE VIDEO makes it
+  and SHARE VIDEO opens the share sheet with the file, the title and the link as text. Elsewhere (desktop browsers)
+  the button reads DOWNLOAD VIDEO and the file downloads as soon as it is made (owner review 2026-11-15).
 - **R14.** Nothing is uploaded. The video exists only on the user's device (DATA-0005).
 
 **Panel** (`web/src/v1ui/patches.ts`)
-- **R15.** The Patches panel has a third tab, VIDEO (owner review 2026-11-15): SHAPE, a frame icon in the video's
-  shape (as Instagram's crop icons) that cycles PORTRAIT → WIDE → SQUARE when pressed; LENGTH, its seconds underlined,
-  cycling 15 → 30 → 60; MAKE VIDEO, then progress (CANCEL stops it at once), then SHARE VIDEO.
+- **R15.** Patches › SAVE / SHARE ends with SHARE AS VIDEO (owner review 2026-11-15: no tab of its own). It turns the
+  tab's lower half into the video's controls, the patch name staying: SHAPE, a frame icon in the video's shape (as
+  Instagram's crop icons) that cycles PORTRAIT → WIDE → SQUARE when pressed; LENGTH, its seconds underlined, cycling
+  15 → 30 → 60; MAKE VIDEO / DOWNLOAD VIDEO, then progress (CANCEL stops it at once); the back chevron returns.
 - **R16.** The plugin does not show the VIDEO tab.
 
 ## Scenarios

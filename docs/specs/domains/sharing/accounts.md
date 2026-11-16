@@ -27,7 +27,8 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 **Sessions**
 - **R3.** A session is a 32-byte random token in an HttpOnly, SameSite=Lax cookie (`__Host-` and Secure on https).
   Only the token's SHA-256 is stored. It lasts 30 days and slides forward once half used.
-- **R4.** SIGN OUT ends this session. SIGN OUT EVERYWHERE ends all of the account's sessions.
+- **R4.** SIGN OUT ends this session. `POST /api/auth/logout {everywhere: true}` ends all of the account's sessions (no
+  button: owner review 2026-11-15).
 - **R5.** Every cookie-authenticated request that changes something (POST, PUT, DELETE under `/api/auth/` and
   `/api/me`, and saving over an owned patch) MUST carry this site's `Origin`, or it gets 403.
 
@@ -47,11 +48,17 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 
 **Panel**
 - **R12.** The plugin and embeds have no ACCOUNT tab.
-- **R13.** Patches › ACCOUNT is drawn with v1 panel pieces:
-  - signed out: the line, SIGN IN WITH PASSKEY · SIGN IN WITH GOOGLE, and CREATE ACCOUNT;
-  - creating an account or naming one: a heading, a NAME field and the main button;
-  - signed in: the name, ADD PASSKEY · SIGN OUT, SIGN OUT EVERYWHERE and DELETE ACCOUNT.
-  Back from Google, the panel opens on ACCOUNT once START has been pressed.
+- **R13.** Settings has a tab after ABOUT and DOWNLOAD (owner review 2026-11-15), named SIGN IN until someone is
+  signed in, then ACCOUNT, drawn with v1 panel pieces (web/src/v1ui/accountPage.ts):
+  - signed out: "Sign in to keep your patches on every device.", SIGN IN WITH PASSKEY · SIGN IN WITH GOOGLE, and a
+    bordered CREATE ACCOUNT;
+  - creating an account or naming one: a heading, a NAME field, the main button and BACK;
+  - signed in: the name, ADD PASSKEY · SIGN OUT, and DELETE ACCOUNT (asked first).
+  Signing in with a passkey closes Settings: back to the stage.
+- **R13a.** Back from Google there is no start screen and no intro: the stage takes input at once and the first press
+  or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
+- **R14.** Signed in, the stage's top right reads "SIGNED IN AS NAME" (v1's mid type, under the panels); pressing it
+  opens Settings › ACCOUNT.
 
 ## Scenarios
 - **S1.** Given a patch saved anonymously, when the user creates an account, then the patch is the account's (R1, R9).
@@ -59,7 +66,7 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   it and presses SAVE, then the same link gets revision 2 (R2, R8, R9).
 
 ## Verification
-`pnpm test:accounts` covers R1–R10 and R13: a local Worker, mocked siteverify and Google, and Chrome's virtual WebAuthn
+`pnpm test:accounts` covers R1–R10 and R13–R14: a local Worker, mocked siteverify and Google, and Chrome's virtual WebAuthn
 authenticator (the passkey is copied to a second context to stand in for sync).
 
 ## Open questions

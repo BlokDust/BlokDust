@@ -30,6 +30,7 @@ import { OptionSample } from './ported/UI/Options/OptionSample';
 import { Slider } from './ported/UI/Options/OptionSlider';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
+import { AccountPage } from './accountPage.ts';
 
 export interface SceneHost extends PatchesHost {
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
@@ -63,7 +64,7 @@ export interface SceneHost extends PatchesHost {
   resetScene(): void;
   /** v1 SAVE ("overwrite") / SAVE_AS ("generate link", "create new"): the share id to show (a server id, or a
    * `p…` patch token when there is no backend). Updates App.CompositionId / App.SessionId as v1's handlers did. */
-  share(mode: 'save' | 'saveAs', title: string): Promise<string>;
+  share(mode: 'save' | 'saveAs', title: string, gallery?: boolean): Promise<string>;
   /** v1 Recorder.ToggleRecording / DownloadRecording; SampleGen "generate". */
   toggleRecording(id: number): void;
   downloadRecording(id: number): void;
@@ -205,7 +206,8 @@ export class V1Scene {
     const d = App.DragOffset, easing = Math.round(d.x) !== Math.round(this.MainSceneDragger.Destination.x) || Math.round(d.y) !== Math.round(this.MainSceneDragger.Destination.y);
     if (d.x !== this.lastDrag.x || d.y !== this.lastDrag.y) { this.lastDrag = { x: d.x, y: d.y }; this.host.setDrag({ x: d.x, y: d.y }); }
     // Spinners (AnimationsLayer: loading blocks, Share "saving…", sample search) animate every frame while shown.
-    const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating);
+    const spinning = this.AnimationsLayer.ActiveBlocks.length > 0 || (this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).Animating) || !!(this.SharePanel as any)._Saving || (this.SoundcloudPanel.Open && !!(this.OptionsPanel.SelectedBlock as any)?.Searching) || (this.PatchesPanel.Open && this.PatchesPanel.animating)
+      || (this.SettingsPanel.Open && !!(this.SettingsPanel as any).accountPage?.animating);
     // Playback lines move every frame while shown (and once more to clear them when playback stops).
     const playing = this.playheadsShown || !!this.playheadLines();
     // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
@@ -627,7 +629,7 @@ function ensureShareDom(): void {
     <div id="patchTitle"><form action=""><input type="text" id="patchTitleInput" name="title" autocomplete="off" spellcheck="false" maxlength="48" value=""></form></div>
     <div id="patchUrl"><form action=""><input type="text" id="patchUrlText" name="url" readonly autocomplete="off" spellcheck="false"></form></div>
     <div id="accountHandle"><form action=""><input type="text" id="accountHandleInput" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" value=""></form></div>
-    <div id="gallerySearch"><form action=""><input type="search" id="gallerySearchInput" name="q" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40" value=""></form></div>`;
+    <div id="gallerySearch"><form action=""><input type="text" id="gallerySearchInput" name="q" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="40" value=""></form></div>`;
   for (const el of [...wrap.children]) document.body.appendChild(el);
   // Enter in these fields is handled by the panels (v1 EnterCheck); never submit (reload) the page.
   for (const f of document.querySelectorAll('#shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form')) f.addEventListener('submit', e => e.preventDefault());
@@ -699,16 +701,39 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const populate = p.Populate.bind(p);
   // DOWNLOAD (web only) is tab 3: v1 draws nothing for it, so its page is drawn here, following its tab's YOffset.
   const withDownload = !App.IsPlugin;
+  // SIGN IN / ACCOUNT (web only, CHG-0023, owner review 2026-11-15) is tab 4, drawn here the same way.
+  const account: AccountPage | null = withDownload && host.account ? new AccountPage(host.account, () => p.Ctx) : null;
+  p.accountPage = account;
   p.Populate = () => {
     const open = p._OpenTab;
-    p._OpenTab = open === 2 ? 1 : open === 3 ? 2 : 0;
-    populate({ categories: [{ name: 'settings' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : [])] });
+    p._OpenTab = open === 2 ? 1 : open === 3 ? 2 : open === 4 ? 3 : 0;
+    populate({ categories: [{ name: 'settings' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
     p._OpenTab = open;
-    const [settings, about, download] = p.MenuItems;
+    const [settings, about, download, acct] = p.MenuItems;
     const gone = { Position: new Point(about.Position.x - about.Size.width * 0.5, 0), Size: new Size(0, 16), Name: '', Items: [], Selected: 0,
       Hover: false, XOffset: 0, YOffset: -p.DrawTo.Height, CurrentPage: 0, Draw() {} };
-    p.MenuItems = [settings, gone, about, ...(download ? [download] : [])];
+    p.MenuItems = [settings, gone, about, ...(download ? [download] : []), ...(acct ? [acct] : [])];
   };
+  if (account) {
+    // The tab's name follows who is signed in (SIGN IN / ACCOUNT): lay the tabs out again, keeping each tab's state.
+    const prevChange = account.onChange;
+    account.onChange = () => {
+      prevChange();
+      const keep = (p.MenuItems as any[]).map(m => ({ Selected: m.Selected, YOffset: m.YOffset }));
+      p.Populate();
+      (p.MenuItems as any[]).forEach((m, i) => { if (keep[i]) { m.Selected = keep[i].Selected; m.YOffset = keep[i].YOffset; } });
+    };
+    /** Open Settings on SIGN IN / ACCOUNT (back from Google, the signed-in mark on the stage). */
+    p.openAccount = () => {
+      p._OpenTab = 4;
+      (p.MenuItems as any[]).forEach((m, i) => { m.Selected = i === 4 ? 1 : 0; m.YOffset = i === 4 ? 0 : -p.DrawTo.Height; });
+      void account.refresh();
+      p.OpenPanel();
+    };
+  }
+  const accountTop = () => p.OffsetY + 120 * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
+  /** Tests: an account control's centre in CSS px. */
+  p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
   const downloads = () => {
     const u = App.Unit, W = App.Width, y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
@@ -794,6 +819,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     const f = footer();
     linkHover = f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
+    if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
     if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + 156 * f.u, p.Range + 20 * f.u, 48 * App.Unit, pt.x, pt.y);
   };
@@ -806,10 +832,13 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   const mouseDown = p.MouseDown.bind(p);
   p.MouseDown = (pt: { x: number; y: number }) => {
+    const before = p._OpenTab;
     mouseDown(pt);
+    if (account && p._OpenTab === 4 && before !== 4) { account.View = account.View === 'delete' ? 'main' : account.View; void account.refresh(); }
     if (!p.Open) return;
     if (linkHover >= 0) { window.open(FOOTER_LINKS[linkHover].url, '_blank'); return; }
     if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(`${r.url}?source=download-page`, '_blank'); return; }
+    if (account && p._OpenTab === 4) { account.hit(pt, accountTop()); account.press(); }
     const i = tempoRow();
     if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x);  // v1 sliders jump to the press, as Volume does
   };
@@ -822,8 +851,10 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const draw = p.Draw.bind(p);
   p.Draw = () => {
     draw();
+    account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
     if (!p.Open) return;
     drawDownload();
+    if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
     const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(ctx, txt); App.StrokeColor(ctx, txt);
     ctx.font = App.Metrics.TxtLarge; ctx.textAlign = 'left';

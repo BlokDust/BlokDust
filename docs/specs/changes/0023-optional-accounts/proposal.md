@@ -36,3 +36,10 @@ and hands-on authentication experience. No passwords, nothing paid, only trusted
 
 ## Risks and unknowns
 - Passkey UX varies by platform (Windows Hello, Android, iCloud Keychain); check on real devices.
+
+## Owner review 1 (2026-11-15)
+- The account is in Settings (SIGN IN until signed in, then ACCOUNT), not Patches.
+- No SIGN OUT EVERYWHERE button, no "New here?", no rule under the line, shorter line.
+- Back from Google: no start screen or intro; a new account names itself in Settings, a known one stays on the stage.
+- Signing in with a passkey returns to the stage, which says SIGNED IN AS NAME at the top right.
+- Fix found on the way: the corner text crashed the first frame before v1's fonts were set (caught by test:video).

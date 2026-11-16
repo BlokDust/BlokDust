@@ -1,0 +1,208 @@
+// Settings › SIGN IN / ACCOUNT (CHG-0023, owner review 2026-11-15: in Settings beside ABOUT and DOWNLOAD, not in
+// Patches; the tab reads SIGN IN until you are signed in). Drawn into v1's Settings panel like the DOWNLOAD page, with v1
+// pieces only:
+//   signed out: v1 About's body type for the line, SharePanel's half buttons (PASSKEY · GOOGLE), a bordered CREATE ACCOUNT;
+//   naming:     the header type and rule, the Patches name field (a DOM field like v1's title), the GUIDE button, a
+//               bordered BACK;
+//   signed in:  the name in header type over a rule, half buttons (ADD PASSKEY · SIGN OUT), a bordered DELETE ACCOUNT,
+//               which asks first with CANCEL · DELETE.
+import { App, Dimensions } from './shim.ts';
+import { Device } from './ported/Device';
+import type { AccountHost, AccountInfo } from './patches.ts';
+
+const COPY = {
+  line: 'Sign in to keep your patches on every device.',
+  passkey: 'Sign In With Passkey', google: 'Sign In With Google', create: 'Create Account',
+  createTitle: 'Create your account', createLine: 'Choose a name. It shows on patches you publish. Your device then makes a passkey: no password.',
+  nameTitle: 'Choose your name', nameLine: 'It shows on patches you publish.', name: 'Name',
+  createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', signedInAs: 'Signed in as',
+  addPasskey: 'Add Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
+  deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
+  noAccounts: 'Accounts are not available here.', working: 'one moment', added: 'Passkey added.',
+};
+type Box = { x: number; y: number; w: number; h: number; cx: number };
+type Bordered = { label: string; x: number; y: number; w: number; h: number; textX: number; textY: number };
+
+export class AccountPage {
+  Account: AccountInfo | null | undefined = undefined;
+  View: 'main' | 'create' | 'name' | 'delete' = 'main';
+  Busy = false;
+  Message = '';
+  private google = false;
+  private noBackend = false;
+  private roll: Record<string, boolean> = {};
+  private readonly field = document.getElementById('accountHandle')!;
+  private readonly input = document.getElementById('accountHandleInput') as HTMLInputElement;
+  /** Called when who is signed in changes (the tab's name, the signed-in mark on the stage). */
+  onChange: () => void = () => {};
+
+  constructor(private readonly host: AccountHost, private readonly ctx: () => CanvasRenderingContext2D) {
+    this.input.addEventListener('input', () => { this.input.value = this.input.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20); this.Message = ''; });
+    this.input.addEventListener('keydown', e => { if (e.key === 'Enter') { this.input.blur(); void this.submit(); } });
+  }
+
+  /** The Settings tab's name: SIGN IN until signed in. */
+  get tabName(): string { return this.Account ? 'account' : 'sign in'; }
+  get animating(): boolean { return this.Busy || this.Account === undefined || performance.now() < this.settle; }
+  /** Keep drawing a moment after something async lands, so its last state is drawn. */
+  private settle = 0;
+  private mark(): void { this.settle = performance.now() + 300; }
+
+  /** Ask who is signed in (opening the tab, and after any change). */
+  async refresh(): Promise<void> {
+    const m = await this.host.me();
+    const before = this.Account?.handle ?? null, was = this.Account;
+    this.noBackend = !m; this.google = !!m?.google; this.Account = m?.user ?? null;
+    // A new Google account has no name yet: ask for one (SPEC-SHARING-ACCOUNTS R6).
+    if (this.Account && !this.Account.handle && this.View === 'main') { this.View = 'name'; this.input.value = ''; }
+    if (!this.Account && this.View !== 'create') this.View = 'main';
+    if (was === undefined || (this.Account?.handle ?? null) !== before || !!was !== !!this.Account) this.onChange();
+    this.mark();
+  }
+
+  // ---- layout, from the page's top (Settings: OffsetY + 120 units + the tab's YOffset) ----
+  private textW(t: string, font = App.Metrics.TxtMid) { const c = this.ctx(); c.font = font; return c.measureText(t.toUpperCase()).width; }
+  private bordered(label: string, right: number, top: number): Bordered {
+    const u = App.Unit, w = this.textW(label);
+    return { label, x: right - 10 * u - w, y: top, w: w + 10 * u, h: 20 * u, textX: right - 5 * u - w, textY: top + 14 * u };
+  }
+  private layout(top: number) {
+    const u = App.Unit, W = App.Width, L = W * 0.5 - 210 * u, R = W * 0.5 + 210 * u;
+    const half = (dx: number, y: number): Box => ({ x: W * 0.5 + dx * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + (dx + 101.25) * u });
+    const full = (y: number): Box => ({ x: L, y, w: 420 * u, h: 40 * u, cx: W * 0.5 });
+    const out = { passkey: this.google ? half(-210, top + 35 * u) : full(top + 35 * u), google: half(7.5, top + 35 * u), create: this.bordered(COPY.create, R, top + 100 * u) };
+    const naming = { field: top + 66 * u, rule: top + 108 * u, submit: full(top + 125 * u), back: this.bordered(COPY.back, L + this.textW(COPY.back) + 10 * u, top + 185 * u) };
+    const signedIn = { add: half(-210, top + 95 * u), out: half(7.5, top + 95 * u), del: this.bordered(COPY.deleteAccount, R, top + 160 * u) };
+    const del = { cancel: half(-210, top + 75 * u), ok: half(7.5, top + 75 * u) };
+    return { L, R, out, naming, signedIn, del, message: top + 230 * u };
+  }
+
+  // ---- drawing (v1's own pieces) ----
+  private filled(b: Box, colour: string, label: string, hover: boolean, small = false): void {
+    const c = this.ctx(), u = App.Unit;
+    App.FillColor(c, colour); c.fillRect(b.x, b.y, b.w, b.h);
+    if (hover) { c.beginPath(); c.moveTo(b.cx, b.y + b.h + 9 * u); c.lineTo(b.cx - 10 * u, b.y + b.h - u); c.lineTo(b.cx + 10 * u, b.y + b.h - u); c.closePath(); c.fill(); }
+    App.FillColor(c, App.Palette[App.ThemeManager.Txt]); c.textAlign = 'center'; c.font = small ? App.Metrics.TxtMid : App.Metrics.TxtUrl2;
+    const t = label.toUpperCase(), w = c.measureText(t).width, max = b.w - 12 * u, y = b.y + (small ? 25 : 29) * u;
+    if (w > max) { c.save(); c.translate(b.cx, 0); c.scale(max / w, 1); c.fillText(t, 0, y); c.restore(); } else c.fillText(t, b.cx, y);
+  }
+  private drawBordered(b: Bordered, stroke: string): void {
+    const c = this.ctx();
+    c.font = App.Metrics.TxtMid; c.textAlign = 'left'; App.FillColor(c, App.Palette[App.ThemeManager.Txt]);
+    c.fillText(b.label.toUpperCase(), b.textX, b.textY);
+    App.StrokeColor(c, stroke); c.lineWidth = 2; c.beginPath(); c.rect(b.x, b.y, b.w, b.h); c.stroke();
+  }
+  private wrap(text: string, x: number, y: number, lh: number, width: number): number {
+    const c = this.ctx();
+    let line = '';
+    for (const word of text.split(' ')) {
+      const t = line ? `${line} ${word}` : word;
+      if (c.measureText(t).width > width && line) { c.fillText(line, x, y); y += lh; line = word; } else line = t;
+    }
+    if (line) { c.fillText(line, x, y); y += lh; }
+    return y;
+  }
+  private heading(title: string, line: string, top: number, L: number): void {
+    const c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
+    App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtHeader;
+    c.fillText(title.toUpperCase(), L, top + 18 * u);
+    App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(L, top + 30 * u); c.lineTo(L + 420 * u, top + 30 * u); c.stroke();
+    c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 48 * u, 14 * u, 420 * u);
+  }
+
+  draw(top: number): void {
+    const c = this.ctx(), u = App.Unit, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const Lo = this.layout(top), busy = this.Busy, r = this.roll;
+    if (this.View === 'create' || this.View === 'name') {
+      const create = this.View === 'create';
+      this.heading(create ? COPY.createTitle : COPY.nameTitle, create ? COPY.createLine : COPY.nameLine, top, Lo.L);
+      App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'right';
+      if (App.Metrics.Device !== Device.mobile) c.fillText(COPY.name.toUpperCase(), Lo.L - 15 * u, Lo.naming.field + 28 * u);
+      App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, Lo.naming.rule); c.lineTo(Lo.R, Lo.naming.rule); c.stroke();
+      this.filled(Lo.naming.submit, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : create ? COPY.createButton : COPY.saveName, !busy && !!r.submit);
+      if (create) this.drawBordered(Lo.naming.back, App.Palette[1]);
+    } else if (this.View === 'delete') {
+      this.heading(COPY.deleteTitle, COPY.deleteLine, top, Lo.L);
+      this.filled(Lo.del.cancel, App.Palette[1], COPY.cancel, !!r.deleteCancel);
+      this.filled(Lo.del.ok, App.Palette[menu[3]], busy ? COPY.working : COPY.deleteButton, !busy && !!r.deleteOk);
+    } else if (this.Account) {
+      App.FillColor(c, txt); c.textAlign = 'left';
+      c.font = App.Metrics.TxtMid; c.fillText(COPY.signedInAs.toUpperCase(), Lo.L, top + 10 * u);
+      c.font = App.Metrics.TxtHeader; c.fillText((this.Account.handle ?? '').toUpperCase(), Lo.L, top + 50 * u);
+      App.StrokeColor(c, txt); c.lineWidth = 2; c.beginPath(); c.moveTo(Lo.L, top + 62 * u); c.lineTo(Lo.R, top + 62 * u); c.stroke();
+      this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], COPY.addPasskey, !busy && !!r.addPasskey, true);
+      this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
+      this.drawBordered(Lo.signedIn.del, App.Palette[1]);
+    } else {
+      App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';
+      c.fillText(this.noBackend ? COPY.noAccounts : COPY.line, Lo.L, top + 10 * u);
+      if (this.Account === undefined && !this.noBackend) App.AnimationsLayer.DrawSprite(c, 'loading', W * 0.5, top + 55 * u, 16, true);
+      else if (!this.noBackend) {
+        this.filled(Lo.out.passkey, App.Palette[busy ? 1 : menu[3]], COPY.passkey, !busy && !!r.passkey, true);
+        if (this.google) this.filled(Lo.out.google, App.Palette[busy ? 1 : menu[1]], COPY.google, !busy && !!r.google, true);
+        this.drawBordered(Lo.out.create, txt);
+      }
+    }
+    if (this.Message) { App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; this.wrap(this.Message, Lo.L, Lo.message, 14 * u, 420 * u); }
+  }
+
+  /** The name field follows the page (it slides with the tab); shown only while naming. */
+  placeField(top: number, shown: boolean): void {
+    const on = shown && (this.View === 'create' || this.View === 'name');
+    this.field.style.display = on ? 'block' : 'none';
+    if (!on) return;
+    const u = App.Unit, pr = App.Metrics.PixelRatio;
+    this.field.style.font = App.Metrics.TxtHeaderPR;
+    this.field.style.width = `${(u * 420) / pr}px`; this.field.style.height = `${(u * 42) / pr}px`; this.field.style.lineHeight = `${(u * 42) / pr}px`;
+    this.field.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
+    this.field.style.top = `${this.layout(top).naming.field / pr}px`;
+  }
+
+  // ---- input ----
+  private boxes(top: number): Record<string, { x: number; y: number; w: number; h: number }> {
+    const Lo = this.layout(top), pad = (b: Bordered) => ({ x: b.x - 5 * App.Unit, y: b.y - 10 * App.Unit, w: b.w + 10 * App.Unit, h: 40 * App.Unit });
+    if (this.View === 'create' || this.View === 'name') return { submit: Lo.naming.submit, ...(this.View === 'create' ? { back: pad(Lo.naming.back) } : {}) };
+    if (this.View === 'delete') return { deleteCancel: Lo.del.cancel, deleteOk: Lo.del.ok };
+    if (this.Account) return { addPasskey: Lo.signedIn.add, signOut: Lo.signedIn.out, deleteAccount: pad(Lo.signedIn.del) };
+    if (this.Account === null && !this.noBackend) return { passkey: Lo.out.passkey, ...(this.google ? { google: Lo.out.google } : {}), create: pad(Lo.out.create) };
+    return {};
+  }
+  hit(pt: { x: number; y: number }, top: number): boolean {
+    const r: Record<string, boolean> = {};
+    for (const [k, b] of Object.entries(this.boxes(top))) r[k] = Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y);
+    this.roll = r;
+    return Object.values(r).some(Boolean);
+  }
+  /** Tests: a control's centre in CSS px. */
+  centreOf(name: string, top: number): [number, number] | null {
+    const b = this.boxes(top)[name], pr = App.Metrics.PixelRatio;
+    return b ? [(b.x + b.w / 2) / pr, (b.y + b.h / 2) / pr] : null;
+  }
+  press(): void {
+    const r = this.roll, a = this.host;
+    if (this.Busy) return;
+    this.mark();
+    if (r.passkey) { void this.action(() => a.signIn()); return; }
+    if (r.google) { a.google(); return; }
+    if (r.create) { this.View = 'create'; this.Message = ''; this.input.value = ''; setTimeout(() => this.input.focus(), 0); return; }
+    if (r.back) { this.View = 'main'; this.Message = ''; return; }
+    if (r.submit) { void this.submit(); return; }
+    if (r.addPasskey) { void this.action(() => a.addPasskey()).then(ok => { if (ok) this.Message = COPY.added; }); return; }
+    if (r.signOut) { void this.action(() => a.signOut(false)); return; }
+    if (r.deleteAccount) { this.View = 'delete'; this.Message = ''; return; }
+    if (r.deleteCancel) { this.View = 'main'; return; }
+    if (r.deleteOk) { void this.action(() => a.deleteAccount()); }
+  }
+  private async action(run: () => Promise<void>): Promise<boolean> {
+    this.Busy = true; this.Message = '';
+    try { await run(); this.View = 'main'; await this.refresh(); return true; }
+    catch (e) { if (!this.host.cancelled(e)) this.Message = (e as Error).message || 'That did not work. Try again.'; return false; }
+    finally { this.Busy = false; this.mark(); }
+  }
+  private async submit(): Promise<void> {
+    const h = this.input.value.trim().toLowerCase();
+    if (!h) { this.Message = 'Choose a name first.'; return; }
+    if (this.View === 'create') await this.action(() => this.host.signUp(h));
+    else if (this.View === 'name') await this.action(() => this.host.setHandle(h));
+  }
+}

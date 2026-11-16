@@ -16,17 +16,16 @@
 //     (OPEN FROM YOUR DEVICE, the OPEN tab's main button);
 //   - SoundcloudPanel: the paged rows, count, page number, arrows, and its bordered button (OPEN / INSERT);
 //
-// VIDEO (web only, CHG-0022, SPEC-SHARING-VIDEO-EXPORT R15; owner review 2026-11-15): the OPEN tab's italic line and
-// rule, then two controls that cycle when pressed: SHAPE, a frame icon (as Instagram's crop icons) with its name, and
-// LENGTH, its seconds underlined (v1's link style); MAKE VIDEO as the OPEN tab's 420×40 GUIDE button, which becomes
-// SHARE VIDEO once made; SharePanel's "saving…" spinner for progress.
-//
-// ACCOUNT (web only, CHG-0023, SPEC-SHARING-ACCOUNTS R13): signed out, the OPEN tab's italic line and rule, then
-// SharePanel's two half buttons (SIGN IN WITH PASSKEY · SIGN IN WITH GOOGLE) and a bordered CREATE ACCOUNT; creating
-// one (or naming a new Google account), the file step's heading and line, the SAVE tab's name field and rule (a DOM
-// field as v1's title), and the GUIDE button; signed in, the header type for the name, the italic line, the half
-// buttons (ADD PASSKEY · SIGN OUT) and two bordered buttons (SIGN OUT EVERYWHERE, DELETE ACCOUNT); deleting asks
-// first with the delete step's CANCEL · DELETE.
+// Owner review 1 (2026-11-15): three tabs, SAVE / SHARE · OPEN · GALLERY (web; the plugin keeps SAVE and OPEN).
+// SAVE / SHARE (web) adds, from v1 pieces:
+//   - ADD TO GALLERY: v1's OptionSwitch ("offOn": a dash, a divider, a diamond, the chosen side underlined), with the
+//     options type for its name; signed out, an italic line says only signed-in users can publish;
+//   - SHARE AS VIDEO: the OPEN tab's 420×40 GUIDE button under everything. It turns the lower half into the video's
+//     controls (the name stays): SHAPE, a frame icon as Instagram's crop icons, and LENGTH, its seconds underlined, both
+//     cycling when pressed; then MAKE VIDEO (or DOWNLOAD VIDEO where the browser can't share files), SharePanel's
+//     "saving…" spinner, SHARE VIDEO; the file step's back chevron returns.
+// GALLERY (CHG-0024) is v1 SoundcloudPanel's layout: the search field over its rule with the bordered SEARCH above it,
+// five rows a page, the count bottom left and POPULAR / NEW bottom right where v1 had RANDOMISE.
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
 
@@ -55,18 +54,14 @@ export interface AccountHost {
   cancelled(e: unknown): boolean;
 }
 /** The gallery (CHG-0024). */
-export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; liked: boolean; mine: boolean }
+export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; views: number; liked: boolean; mine: boolean }
 export interface GalleryHost {
   browse(sort: 'popular' | 'new', q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
   /** Open a published patch (it replaces the current one; SAVE then makes a remix of it). */
   open(row: GalleryRow): void;
   like(id: string, on: boolean): Promise<{ liked: boolean; likes: number }>;
   report(id: string): Promise<void>;
-  /** Save the current patch to the signed-in account if needed, then publish it. */
-  publish(title: string): Promise<void>;
   unpublish(id: string): Promise<void>;
-  /** The open patch's share id when the signed-in account owns it (its row then offers UNPUBLISH). */
-  currentId(): string | null;
 }
 /** Video export (CHG-0022): what the VIDEO tab asks for. */
 export type VideoShape = 'portrait' | 'square' | 'wide';
@@ -99,18 +94,23 @@ export interface PatchesHost {
     make(choice: VideoChoice, progress: (p: VideoProgressInfo) => void, signal: AbortSignal): Promise<File>;
     /** In a click: the system share sheet (where a browser can't share files, the file is downloaded). */
     share(file: File): Promise<void>;
+    /** This browser can hand a video to the share sheet (phones, tablets); else MAKE VIDEO downloads it. */
+    canShareFiles(): boolean;
   };
   /** The public gallery (SPEC-SHARING-GALLERY); null: no GALLERY tab (the plugin). */
   gallery: GalleryHost | null;
-  /** Accounts (SPEC-SHARING-ACCOUNTS); null: no ACCOUNT tab (the plugin). */
+  /** Accounts (SPEC-SHARING-ACCOUNTS): Settings › SIGN IN / ACCOUNT (accountPage.ts); null in the plugin. */
   account: AccountHost | null;
+  /** Someone is signed in (the gallery switch: only signed-in users can publish, SPEC-SHARING-GALLERY R2). */
+  signedIn(): boolean;
   /** Share links (SPEC-SHARING-BACKEND). */
   links: null | {
     /** Plugin: the link is made in the web browser (its page has the bot check); nothing is kept here. */
     external?: boolean;
     current(): ShareLink | null;
-    /** v1 SAVE_AS (a new link) / SAVE (overwrite this browser's link). */
-    make(mode: 'saveAs' | 'save', title: string): Promise<void>;
+    /** v1 SAVE_AS (a new link) / SAVE (overwrite this browser's link); `gallery`: in the gallery or not (undefined:
+     * leave it). Resolves with what the server said about the gallery. */
+    make(mode: 'saveAs' | 'save', title: string, gallery?: boolean): Promise<{ published: boolean; reason?: string } | null | void>;
     /** v1 SharePanel's warning (recordings, the user's own files), or null. */
     warning(): string | null;
   };
@@ -119,7 +119,7 @@ export interface PatchesHost {
 /** The tab Patches opens on: the last one chosen (owner, 2026-11-10). */
 const TAB_KEY = 'blokdust.patchesTab';
 function rememberedTab(): Tab {
-  try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 4 ? t : 0) as Tab; } catch { return 0; }
+  try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 2 ? t : 0) as Tab; } catch { return 0; }
 }
 
 const ITEMS = 5;
@@ -140,7 +140,7 @@ export function downloadColour(): string {
   return cols.reduce((a: string, c: string) => (blackContrast(c) > blackContrast(a) ? c : a));
 }
 const COPY = {
-  panel: 'Patches', tabs: ['Save', 'Open', 'Video', 'Account', 'Gallery'] as const,
+  panel: 'Patches', tabs: ['Save / Share', 'Open', 'Gallery'] as const,
   name: 'Patch Name', randomise: 'Randomise Title',
   save: 'Save to Computer', saved: 'Saved',
   saveLinePlugin: 'Save a .blokdust patch file. It opens in the web version of BlokDust too.',
@@ -157,35 +157,22 @@ const COPY = {
   confirm: 'Replace current patch?', confirmLine: 'You have unsaved changes. Opening another patch will replace your current work.',
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
-  videoLine: 'Make a video to share on Instagram, TikTok and more.',
-  galleryLine: 'Patches people have published. Search names, blocks or @people.', search: 'Search',
-  popular: 'Popular', newest: 'New', publish: 'Publish This Patch', publishing: 'publishing...', unpublish: 'Unpublish',
+  search: 'Search', popular: 'Popular', newest: 'New', unpublish: 'Unpublish',
   like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
   reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here. Patches reported by three people are hidden until they are reviewed.',
-  reported: 'Thank you. The patch was reported.', published: 'Published. It is in the gallery now.',
-  shape: 'Shape', length: 'Length', makeVideo: 'Make Video', cancelVideo: 'Cancel',
-  rendering: 'making video', shareVideo: 'Share Video',
-  accountLine: 'Sign in to keep your patches on every device. Saving and sharing work without it.',
-  passkey: 'Sign In With Passkey', google: 'Sign In With Google', create: 'Create Account', newHere: 'New here?',
-  createTitle: 'Create your account', createLine: 'Choose a name. It shows on patches you publish. Your device then makes a passkey: no password.',
-  nameTitle: 'Choose your name', nameLine: 'It shows on patches you publish.', handle: 'Name',
-  createButton: 'Create With Passkey', saveName: 'Save Name', signedInAs: 'Signed in as',
-  signedInLine: 'Patches you save go to your account. Open them from any device you sign in on.',
-  addPasskey: 'Add Passkey', signOut: 'Sign Out', signOutAll: 'Sign Out Everywhere', deleteAccount: 'Delete Account',
-  deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
-  noAccounts: 'Accounts are not available here.', working: 'one moment',
-  videoReady: 'Your video is ready.',
+  reported: 'Thank you. The patch was reported.',
+  addToGallery: 'Add to Gallery', signInToPublish: 'Only signed-in users can publish to the gallery.',
+  videoEntry: 'Share as Video', shape: 'Shape', length: 'Length', makeVideo: 'Make Video', downloadVideo: 'Download Video',
+  cancelVideo: 'Cancel', rendering: 'making video', shareVideo: 'Share Video',
 };
 /** Instagram's order: portrait, then landscape, then square. */
 const SHAPES: VideoShape[] = ['portrait', 'wide', 'square'];
 const SHAPE_NAMES: Record<VideoShape, string> = { portrait: 'Portrait', wide: 'Wide', square: 'Square' };
 const LENGTHS = [15, 30, 60] as const;
 
-type Tab = 0 | 1 | 2 | 3 | 4;  // SAVE, OPEN, VIDEO, ACCOUNT, GALLERY (web): ids, not places
-/** The tabs in the order they show (owner, 2026-11-15: the gallery next to OPEN). */
-const TAB_ORDER: Tab[] = [0, 1, 4, 2, 3];
-const ALL_TABS: Tab[] = [0, 1, 2, 3, 4];
-type View = 'list' | 'file' | 'confirm' | 'remove';
+type Tab = 0 | 1 | 2;  // SAVE / SHARE, OPEN, GALLERY (web)
+const ALL_TABS: Tab[] = [0, 1, 2];
+type View = 'list' | 'file' | 'confirm' | 'remove' | 'video';
 
 export class PatchesPanel extends DisplayObject {
   Open = false;
@@ -206,7 +193,7 @@ export class PatchesPanel extends DisplayObject {
   private page = 1;
   private roll: Record<string, boolean> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
-  private selected = [1, 0, 0, 0, 0];
+  private selected = [1, 0, 0];
   /** The GALLERY tab (CHG-0024). */
   GalleryItems: GalleryRow[] = [];
   GallerySort: 'popular' | 'new' = 'popular';
@@ -220,16 +207,12 @@ export class PatchesPanel extends DisplayObject {
   private galleryAsk = 0;
   SearchContainer!: HTMLElement;
   SearchInput!: HTMLInputElement;
-  /** The ACCOUNT tab (CHG-0023). Undefined until asked; null: signed out. */
-  Account: AccountInfo | null | undefined = undefined;
-  AccountView: 'main' | 'create' | 'name' | 'delete' = 'main';
-  AccountBusy = false;
-  AccountMessage = '';
-  private googleOn = false;
-  private noBackend = false;
-  HandleContainer!: HTMLElement;
-  HandleInput!: HTMLInputElement;
-  /** The VIDEO tab (CHG-0022). */
+  /** SAVE / SHARE › ADD TO GALLERY (on by default, owner 2026-11-15), and what the last save made of it. */
+  GalleryOn = true;
+  private savedGallery: boolean | null = null;
+  /** Why the last save could not publish (a Recorder, the user's own files, a rude title). */
+  GalleryNote = '';
+  /** SAVE / SHARE › SHARE AS VIDEO (CHG-0022). */
   Video: VideoChoice = { shape: 'portrait', seconds: 15 };
   VideoState: 'idle' | 'making' | 'ready' | 'error' = 'idle';
   VideoProgress: VideoProgressInfo = { phase: 'preparing', done: 0 };
@@ -262,10 +245,6 @@ export class PatchesPanel extends DisplayObject {
     this.SearchContainer = document.getElementById('gallerySearch')!;
     this.SearchInput = document.getElementById('gallerySearchInput') as HTMLInputElement;
     this.SearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.SearchInput.blur(); this.GalleryQuery = this.SearchInput.value.trim(); this.GalleryPage = 1; void this.browse(); } });
-    this.HandleContainer = document.getElementById('accountHandle')!;
-    this.HandleInput = document.getElementById('accountHandleInput') as HTMLInputElement;
-    this.HandleInput.addEventListener('input', () => { this.HandleInput.value = this.HandleInput.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20); this.AccountMessage = ''; });
-    this.HandleInput.addEventListener('keydown', e => { if (e.key === 'Enter') { this.HandleInput.blur(); void this.submitHandle(); } });
   }
   /** Click the link: it is copied (and selected, so it can be copied by hand where the clipboard is refused). */
   private async copyLink(): Promise<void> {
@@ -276,7 +255,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
-  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || this.AccountBusy || this.GalleryLoading || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
+  get animating(): boolean { const now = performance.now(); return this.Loading || this.Saving || this.VideoState === 'making' || this.GalleryLoading || now < this.settle || (!!this.flash && now < this.flash.until + 250); }
   /** Keep drawing a moment after something async lands (a save, a link, the list), so its last state is drawn. */
   private settle = 0;
   private settled(): void { this.settle = performance.now() + 250; }
@@ -294,7 +273,7 @@ export class PatchesPanel extends DisplayObject {
   private tabs() {
     const u = App.Unit, W = App.Width, menuWidth = this.mobile ? (W / 7) * 5 : (W / 7) * 4, gutter = App.Metrics.Device !== Device.desktop ? 40 : 60;
     let x = W * 0.5 - menuWidth * 0.5;
-    const tabs = TAB_ORDER.filter(id => this.hasTab(id)).map(id => {
+    const tabs = ALL_TABS.filter(id => this.hasTab(id)).map(id => {
       const name = COPY.tabs[id], w = this.textW(name, `400 ${u * 10}px Dosis`) + gutter * u, t = { id, name: name.toUpperCase(), x: x + w * 0.5, w };
       x += w;
       return t;
@@ -302,7 +281,7 @@ export class PatchesPanel extends DisplayObject {
     return { tabs, half: menuWidth * 0.5 };
   }
   /** VIDEO, ACCOUNT and GALLERY are web only. */
-  private hasTab(id: Tab): boolean { return id < 2 || (id === 2 && !!this.host.video) || (id === 3 && !!this.host.account) || (id === 4 && !!this.host.gallery); }
+  private hasTab(id: Tab): boolean { return id < 2 || (id === 2 && !!this.host.gallery); }
   /** v1's bordered button (Search Freesound, Randomise Title): right edge at `right`, text baseline 14 units under `top`. */
   private bordered(label: string, right: number, top: number) {
     const u = App.Unit, w = this.textW(label);
@@ -345,7 +324,9 @@ export class PatchesPanel extends DisplayObject {
     if (!links) return { save: null, saveAs: false };
     if (links.external) return { save: 'make', saveAs: false };
     if (!link) return { save: 'make', saveAs: false };
-    if (!link.stale) return { save: null, saveAs: false };
+    const galleryChanged = this.host.signedIn() && link.owned && this.savedGallery !== null && this.GalleryOn !== this.savedGallery;
+    if (!link.stale && !galleryChanged) return { save: null, saveAs: false };
+    if (!link.stale) return { save: 'save', saveAs: false };
     return { save: link.owned ? 'save' : 'new', saveAs: true };
   }
   /** v1 SettingsPanel › Connect: three 130×30 buttons. */
@@ -367,18 +348,26 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, y = this.cy + (this.mobile ? 195 : 175) * u;
     return { x: App.Width * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: App.Width * 0.5 };
   }
-  // ---- VIDEO tab layout (units from the panel centre) ----
-  /** SHAPE (left half) and LENGTH (right half): each a press area under its label. */
+  // ---- SAVE / SHARE: the gallery switch and the video (units from the panel centre) ----
+  /** ADD TO GALLERY: v1's OptionSwitch, 60×40 units, between the name and the buttons. */
+  private gallerySwitch() {
+    const u = App.Unit;
+    return { x: this.margin, y: this.cy - 80 * u, w: 60 * u, h: 40 * u };
+  }
+  /** SHARE AS VIDEO: the OPEN tab's GUIDE button, under everything. */
+  private videoEntry() { return this.fileButton(); }
+  /** SHAPE (left half) and LENGTH (right half), under the name: each a press area under its label. */
   private videoControls() {
     const u = App.Unit, W = App.Width, y = this.cy - 70 * u;
     return { shape: { x: W * 0.5 - 210 * u, y, w: 202.5 * u, h: 100 * u, cx: W * 0.5 - 108.75 * u },
       length: { x: W * 0.5 + 7.5 * u, y, w: 202.5 * u, h: 100 * u, cx: W * 0.5 + 108.75 * u } };
   }
-  /** MAKE VIDEO, then SHARE VIDEO: the OPEN tab's 420×40 GUIDE button. */
+  /** MAKE VIDEO / DOWNLOAD VIDEO, then SHARE VIDEO: the GUIDE button. */
   private videoMain() {
     const u = App.Unit, W = App.Width;
     return { x: W * 0.5 - 210 * u, y: this.cy + 55 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 };
   }
+  private get shareFiles(): boolean { return !!this.host.video?.canShareFiles(); }
   /** v1 SharePanel's back chevron and its SKIP-style label. */
   private backArrow() {
     let arrowX = 275, arrowY = 0;
@@ -430,7 +419,7 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
-    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawVideo(); else if (this.Tab === 3) this.drawAccount(); else if (this.Tab === 4) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
+    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
   /** A filled button with v1's hover notch under its centre (SharePanel / SettingsPanel). */
@@ -465,6 +454,10 @@ export class PatchesPanel extends DisplayObject {
     App.StrokeColor(ctx, txt);
     ctx.beginPath(); ctx.moveTo(W * 0.5 - 210 * u, cy - 90 * u); ctx.lineTo(W * 0.5 + 210 * u, cy - 90 * u); ctx.stroke();
     this.drawBordered(this.randomise(), txt);
+    if (this.View === 'video') { this.drawVideo(); return; }
+
+    // ADD TO GALLERY (v1 OptionSwitch "offOn") //
+    if (this.web && this.host.gallery) this.drawGallerySwitch();
 
     const { share, save, saveAs } = this.saveButtons(), off = this.Saving || !this.host.hasBlocks(), links = this.host.links, link = this.link;
     const st = this.shareState();
@@ -507,9 +500,33 @@ export class PatchesPanel extends DisplayObject {
     // WARNINGS (v1 SharePanel) //
     if (!this.Saving) {
       App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      const warn = !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : links?.warning();
+      const warn = !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : this.GalleryNote || links?.warning();
       if (warn) this.wordWrap(warn, W * 0.5 - 210 * u, warnY, 14 * u, 420 * u);
     }
+    // SHARE AS VIDEO (the GUIDE button) //
+    if (this.host.video) this.filled(this.videoEntry(), App.Palette[this.host.hasBlocks() ? menu[1] : 1], COPY.videoEntry, !!this.roll.videoEntry && this.host.hasBlocks());
+  }
+  /** v1 OptionSwitch.Draw, style 1, mode "offOn": the chosen side underlined in the options colour. */
+  private drawGallerySwitch(): void {
+    const ctx = this.Ctx, u = App.Unit, b = this.gallerySwitch(), txt = App.Palette[App.ThemeManager.Txt];
+    const signedIn = this.host.signedIn(), on = signedIn && this.GalleryOn, x = b.x, y = b.y, w = b.w, h = b.h;
+    ctx.save();
+    if (!signedIn) ctx.globalAlpha = 0.5;
+    App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(Math.round(x + w * 0.5), y + h * 0.15); ctx.lineTo(Math.round(x + w * 0.5), y + h * 0.55); ctx.stroke();
+    App.FillColor(ctx, App.Palette[App.ThemeManager.OptionsOrder[2]]);
+    ctx.fillRect(on ? x + w * 0.5 : x, y + h * 0.55, w * 0.5, h * 0.05);
+    App.StrokeColor(ctx, txt);
+    const cy = y + h * 0.35, lx = x + w * 0.25, rx = x + w * 0.75;
+    ctx.beginPath();
+    ctx.moveTo(lx - 5 * u, cy); ctx.lineTo(lx + 5 * u, cy);
+    ctx.moveTo(rx + 5 * u, cy); ctx.lineTo(rx, cy - 5 * u); ctx.lineTo(rx - 5 * u, cy); ctx.lineTo(rx, cy + 5 * u); ctx.lineTo(rx + 5 * u, cy);
+    ctx.stroke();
+    ctx.restore();
+    App.FillColor(ctx, txt); ctx.textAlign = 'left';
+    ctx.font = App.Metrics.TxtMid;
+    ctx.fillText(COPY.addToGallery.toUpperCase(), x + w + 12 * u, cy + (signedIn ? 4 : -2) * u);
+    if (!signedIn) { ctx.font = App.Metrics.TxtItalic2; ctx.fillText(COPY.signInToPublish, x + w + 12 * u, cy + 12 * u); }
   }
 
   private drawList(): void {
@@ -592,8 +609,11 @@ export class PatchesPanel extends DisplayObject {
     ctx.font = App.Metrics.TxtItalic2;
     this.wordWrap(line, this.margin, cy - 40 * u, 14 * u, this.pageW);
   }
-  private drawBack(): void {
-    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, { arrowX, arrowY } = this.backArrow();
+  /** The video view's back chevron: the file step's, except on a phone, where that place is under MAKE VIDEO: there it
+   * goes below the progress line (owner review screenshots, 2026-11-15). */
+  private videoBackArrow() { const a = this.backArrow(); return this.mobile ? { ...a, arrowY: 190 } : a; }
+  private drawBack(at = this.backArrow()): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, { arrowX, arrowY } = at;
     App.StrokeColor(ctx, App.Palette[App.ThemeManager.Txt]); App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
     ctx.beginPath();
     ctx.moveTo(W * 0.5 - arrowX * u, cy + (arrowY - 20) * u);
@@ -639,13 +659,7 @@ export class PatchesPanel extends DisplayObject {
 
   private drawVideo(): void {
     const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
-    // HINT + RULE (the OPEN tab's) //
-    App.FillColor(ctx, txt);
-    ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    ctx.fillText(COPY.videoLine, margin, cy - 120 * u);
-    App.StrokeColor(ctx, txt);
-    ctx.beginPath(); ctx.moveTo(margin, cy - 110 * u); ctx.lineTo(margin + this.pageW, cy - 110 * u); ctx.stroke();
-
+    this.drawBack(this.videoBackArrow());
     // SHAPE: a frame of the video's shape (Instagram's crop icons: a rounded outline round a filled inner frame) //
     const c = this.videoControls(), busy = this.VideoState === 'making';
     App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
@@ -668,11 +682,11 @@ export class PatchesPanel extends DisplayObject {
     ctx.beginPath(); ctx.moveTo(c.length.cx - lw / 2, ly + 6 * u); ctx.lineTo(c.length.cx + lw / 2, ly + 6 * u);
     ctx.lineWidth = !busy && this.roll.length ? 2 : 1; ctx.stroke(); ctx.lineWidth = 2;
 
-    // MAKE VIDEO / CANCEL, then SHARE VIDEO //
+    // MAKE VIDEO (DOWNLOAD VIDEO where it can't be shared) / CANCEL, then SHARE VIDEO //
     const m = this.videoMain();
     if (this.VideoState === 'ready') this.filled(m, App.Palette[menu[3]], COPY.shareVideo, !!this.roll.shareVideo);
     else if (busy) this.filled(m, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
-    else this.filled(m, App.Palette[menu[3]], COPY.makeVideo, !!this.roll.make && this.host.hasBlocks());
+    else this.filled(m, App.Palette[menu[3]], this.shareFiles ? COPY.makeVideo : COPY.downloadVideo, !!this.roll.make && this.host.hasBlocks());
 
     // PROGRESS (SharePanel's "saving…" spinner) or the message //
     App.FillColor(ctx, txt);
@@ -682,8 +696,7 @@ export class PatchesPanel extends DisplayObject {
       ctx.fillText(label.toUpperCase(), W * 0.5, cy + 145 * u);
       App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 120 * u, 16, true);
     } else {
-      const line = this.VideoState === 'ready' ? COPY.videoReady
-        : this.VideoState === 'error' ? this.VideoMessage : !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : '';
+      const line = this.VideoState === 'error' ? this.VideoMessage : !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : '';
       if (line) { ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(line, margin, cy + 120 * u, 14 * u, this.pageW); }
     }
   }
@@ -703,7 +716,10 @@ export class PatchesPanel extends DisplayObject {
     const current = () => this.videoAbort === abort;
     try {
       const file = await v.make(this.Video, p => { if (current()) this.VideoProgress = p; }, abort.signal);
-      if (current()) { this.videoFile = file; this.VideoState = 'ready'; }
+      if (!current()) return;
+      // Where the share sheet can't take files (desktop browsers), the video downloads at once (owner, 2026-11-15).
+      if (!this.shareFiles) { await v.share(file); this.VideoState = 'idle'; return; }
+      this.videoFile = file; this.VideoState = 'ready';
     } catch (e) {
       if (current()) { this.VideoState = 'error'; this.VideoMessage = (e as Error).message || 'The video could not be made.'; }
     } finally { if (current()) this.videoAbort = null; this.settled(); }
@@ -716,14 +732,12 @@ export class PatchesPanel extends DisplayObject {
   }
 
   // ---- GALLERY tab (CHG-0024) ----
-  // v1 SoundcloudPanel's layout: the search field and its rule and bordered SEARCH, then five rows a page with their
-  // count, page number and arrows; each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own);
-  // SORT as the VIDEO tab's underlined cycling control; PUBLISH THIS PATCH as the OPEN tab's GUIDE button.
+  // v1 SoundcloudPanel's layout: SEARCH bordered above the rule at its right (the field is a DOM input over the rule),
+  // five rows a page with their count bottom left, POPULAR / NEW bottom right where v1 had RANDOMISE, page arrows;
+  // each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own).
   private galleryLayout() {
-    const u = App.Unit, W = App.Width, cy = this.cy, right = this.margin + this.pageW;
-    const search = this.bordered(COPY.search, right, cy - 155 * u);
-    return { search, sortY: cy - 108 * u, sortRight: right,
-      publish: { x: W * 0.5 - 210 * u, y: cy + (this.mobile ? 195 : 175) * u, w: 420 * u, h: 40 * u, cx: W * 0.5 } };
+    const u = App.Unit, cy = this.cy, right = App.Width * 0.5 + 210 * u;
+    return { search: this.bordered(COPY.search, right, cy - 140 * u), rule: cy - 110 * u, sortY: cy + 160 * u, sortRight: right };
   }
   private galleryRow(n: number) {
     const u = App.Unit, y = this.cy - 70 * u + n * 40 * u, right = this.margin + this.pageW;
@@ -748,14 +762,12 @@ export class PatchesPanel extends DisplayObject {
       return;
     }
     const L = this.galleryLayout();
-    // SEARCH (v1 SoundcloudPanel: the field over a rule, SEARCH bordered at its right) //
+    // SEARCH (v1 SoundcloudPanel: the rule under the field, SEARCH bordered above it at the right) //
     App.StrokeColor(ctx, txt);
-    ctx.beginPath(); ctx.moveTo(margin, cy - 135 * u); ctx.lineTo(margin + this.pageW, cy - 135 * u); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(margin, L.rule); ctx.lineTo(margin + this.pageW, L.rule); ctx.stroke();
     this.drawBordered(L.search, txt);
-    // The line, and SORT (underlined, cycles) //
-    App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    ctx.fillText(COPY.galleryLine, margin, L.sortY);
-    ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'right';
+    // POPULAR / NEW (v1's RANDOMISE place, underlined: pressing it cycles) //
+    App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'right';
     const sl = this.sortLabel(), sw = ctx.measureText(sl).width;
     ctx.fillText(sl, L.sortRight, L.sortY);
     ctx.beginPath(); ctx.moveTo(L.sortRight - sw, L.sortY + 4 * u); ctx.lineTo(L.sortRight, L.sortY + 4 * u);
@@ -769,7 +781,7 @@ export class PatchesPanel extends DisplayObject {
       const maxW = b.textRight - margin - u;
       const fit = (t: string, yy: number) => { const w = ctx.measureText(t).width; if (w <= maxW) { ctx.fillText(t, margin + u, yy); return; } ctx.save(); ctx.translate(margin + u, yy); ctx.scale(maxW / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
       fit(it.title.toUpperCase(), y - 10 * u);
-      fit(`${COPY.by} @${it.by}${it.remixes ? ` \u00b7 ${it.remixes} remix${it.remixes === 1 ? '' : 'es'}` : ''}`, y);
+      fit(`${COPY.by} @${it.by}${it.remixes ? ` \u00b7 ${it.remixes} remix${it.remixes === 1 ? '' : 'es'}` : ''} \u00b7 ${it.views} view${it.views === 1 ? '' : 's'}`, y);
       this.drawBordered(b.open, txt);
       this.drawBordered(b.like, it.liked ? txt : App.Palette[1]);
       this.drawBordered(b.mine ? b.unpublish : b.report, App.Palette[1]);
@@ -789,9 +801,7 @@ export class PatchesPanel extends DisplayObject {
       ctx.moveTo(W * 0.5 + dir * arrowX * u, cy + (arrowY - 20) * u); ctx.lineTo(W * 0.5 + dir * (arrowX + 20) * u, cy + arrowY * u); ctx.lineTo(W * 0.5 + dir * arrowX * u, cy + (arrowY + 20) * u);
       ctx.stroke();
     }
-    // PUBLISH THIS PATCH (the OPEN tab's GUIDE button) and the message //
-    this.filled(L.publish, App.Palette[this.GalleryLoading ? 1 : menu[3]], this.GalleryLoading ? COPY.publishing : COPY.publish, !this.GalleryLoading && !!this.roll.publish && this.host.hasBlocks());
-    if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, L.publish.y + 60 * u, 14 * u, this.pageW); }
+    if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, cy + 185 * u, 14 * u, this.pageW); }
   }
   /** Fetch the page shown (stale answers, from an earlier search or page, are dropped). */
   async browse(): Promise<void> {
@@ -814,103 +824,6 @@ export class PatchesPanel extends DisplayObject {
     catch (e) { this.GalleryMessage = (e as Error).message || 'That did not work. Try again.'; }
     finally { this.GalleryLoading = false; this.settled(); }
     await this.browse();
-  }
-
-  // ---- ACCOUNT tab (CHG-0023) ----
-  private accountButtons() {
-    const u = App.Unit, W = App.Width, cy = this.cy, y = cy - 40 * u;
-    const half = (dx: number) => ({ x: W * 0.5 + dx * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + (dx + 101.25) * u });
-    const full = { x: W * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: W * 0.5 };
-    const allW = this.textW(COPY.signOutAll);
-    return { left: half(-210), right: half(7.5), full,
-      create: this.bordered(COPY.create, W * 0.5 + 210 * u, cy + 30 * u),
-      signOutAll: this.bordered(COPY.signOutAll, W * 0.5 - 200 * u + allW, cy + 30 * u),
-      deleteAccount: this.bordered(COPY.deleteAccount, W * 0.5 + 210 * u, cy + 30 * u),
-      submit: { x: W * 0.5 - 210 * u, y: cy + 40 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 } };
-  }
-  private drawAccount(): void {
-    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
-    const b = this.accountButtons(), busy = this.AccountBusy;
-    if (this.AccountView === 'create' || this.AccountView === 'name') {
-      const create = this.AccountView === 'create';
-      this.heading(create ? COPY.createTitle : COPY.nameTitle, create ? COPY.createLine : COPY.nameLine);
-      // NAME (the SAVE tab's label, field and rule) //
-      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'right';
-      if (!this.mobile) ctx.fillText(COPY.handle.toUpperCase(), W * 0.5 - 225 * u, cy + 4 * u);
-      App.StrokeColor(ctx, txt);
-      ctx.beginPath(); ctx.moveTo(W * 0.5 - 210 * u, cy + 20 * u); ctx.lineTo(W * 0.5 + 210 * u, cy + 20 * u); ctx.stroke();
-      this.filled(b.submit, App.Palette[busy ? 1 : menu[3]], busy ? COPY.working : create ? COPY.createButton : COPY.saveName, !busy && !!this.roll.submit);
-      if (create) this.drawBack();
-    } else if (this.AccountView === 'delete') {
-      this.heading(COPY.deleteTitle, COPY.deleteLine);
-      const { left, right } = this.halves();
-      for (const h of [left, right]) h.y = cy + 5 * u;
-      this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.deleteCancel);
-      this.filled(right, App.Palette[menu[3]], busy ? COPY.working : COPY.deleteAccount, !busy && !!this.roll.deleteOk);
-    } else if (this.Account) {
-      // SIGNED IN AS <NAME> (the panel title's header type) //
-      App.FillColor(ctx, txt); ctx.textAlign = 'left';
-      ctx.font = App.Metrics.TxtMid; ctx.fillText(COPY.signedInAs.toUpperCase(), margin, cy - 130 * u);
-      ctx.font = App.Metrics.TxtHeader; ctx.fillText((this.Account.handle ?? '').toUpperCase(), margin, cy - 96 * u);
-      App.StrokeColor(ctx, txt);
-      ctx.beginPath(); ctx.moveTo(margin, cy - 84 * u); ctx.lineTo(margin + this.pageW, cy - 84 * u); ctx.stroke();
-      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      this.wordWrap(COPY.signedInLine, margin, cy - 64 * u, 14 * u, this.pageW);
-      this.filled(b.left, App.Palette[busy ? 1 : menu[1]], COPY.addPasskey, !busy && !!this.roll.addPasskey, App.Metrics.TxtMid, 25);
-      this.filled(b.right, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!this.roll.signOut, App.Metrics.TxtMid, 25);
-      this.drawBordered(b.signOutAll, App.Palette[1]);
-      this.drawBordered(b.deleteAccount, App.Palette[1]);
-    } else {
-      // SIGNED OUT //
-      App.FillColor(ctx, txt);
-      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      this.wordWrap(this.noBackend ? COPY.noAccounts : COPY.accountLine, margin, cy - 120 * u, 14 * u, this.pageW);
-      App.StrokeColor(ctx, txt);
-      ctx.beginPath(); ctx.moveTo(margin, cy - 90 * u); ctx.lineTo(margin + this.pageW, cy - 90 * u); ctx.stroke();
-      if (this.Account === undefined && !this.noBackend) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy - 20 * u, 16, true);
-      else if (!this.noBackend) {
-        if (this.googleOn) {
-          this.filled(b.left, App.Palette[busy ? 1 : menu[3]], COPY.passkey, !busy && !!this.roll.passkey, App.Metrics.TxtMid, 25);
-          this.filled(b.right, App.Palette[busy ? 1 : menu[1]], COPY.google, !busy && !!this.roll.google, App.Metrics.TxtMid, 25);
-        } else this.filled(b.full, App.Palette[busy ? 1 : menu[3]], COPY.passkey, !busy && !!this.roll.passkey);
-        App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-        ctx.fillText(COPY.newHere, margin, b.create.textY);
-        this.drawBordered(b.create, txt);
-      }
-    }
-    if (this.AccountMessage) {
-      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      this.wordWrap(this.AccountMessage, margin, cy + (this.AccountView === 'main' ? 90 : 110) * u, 14 * u, this.pageW);
-    }
-  }
-  /** Ask who is signed in (on opening the tab, and after any change). */
-  async refreshAccount(): Promise<void> {
-    const a = this.host.account;
-    if (!a) return;
-    const m = await a.me();
-    this.noBackend = !m;
-    this.googleOn = !!m?.google;
-    this.Account = m?.user ?? null;
-    // A new Google account has no name yet: ask for one (R6).
-    if (this.Account && !this.Account.handle && this.AccountView === 'main') { this.AccountView = 'name'; this.HandleInput.value = ''; }
-    if (!this.Account && this.AccountView === 'name') this.AccountView = 'main';
-    this.settled(); this.showDom();
-  }
-  /** Run an account action: busy meanwhile, the error (not a cancelled passkey dialog) shown after. */
-  private async accountAction(run: () => Promise<void>, then: 'main' | null = 'main'): Promise<boolean> {
-    const a = this.host.account;
-    if (!a || this.AccountBusy) return false;
-    this.AccountBusy = true; this.AccountMessage = ''; this.showDom();
-    try { await run(); if (then) this.AccountView = then; await this.refreshAccount(); return true; }
-    catch (e) { if (!a.cancelled(e)) this.AccountMessage = (e as Error).message || 'That did not work. Try again.'; return false; }
-    finally { this.AccountBusy = false; this.settled(); this.showDom(); }
-  }
-  private async submitHandle(): Promise<void> {
-    const a = this.host.account, h = this.HandleInput.value.trim().toLowerCase();
-    if (!a) return;
-    if (!h) { this.AccountMessage = 'Choose a name first.'; return; }
-    if (this.AccountView === 'create') await this.accountAction(() => a.signUp(h));
-    else if (this.AccountView === 'name') await this.accountAction(() => a.setHandle(h));
   }
 
   /** v1 SharePanel.WordWrap. */
@@ -938,14 +851,14 @@ export class PatchesPanel extends DisplayObject {
     tabs.forEach(t => { r[`tab${t.id}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) => hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
-    if (this.Tab === 4) {
+    if (this.Tab === 2) {
       if (this.GalleryView === 'report') {
         const { left, right } = this.halves();
         for (const h of [left, right]) h.y = cy + 5 * u;
         r.reportCancel = box(left); r.reportOk = box(right);
       } else {
         const L = this.galleryLayout();
-        r.search = pad(L.search); r.publish = box(L.publish);
+        r.search = pad(L.search);
         this.Ctx.font = App.Metrics.TxtMid;
         const sw = this.Ctx.measureText(this.sortLabel()).width;
         r.sort = hit(L.sortRight - sw - 5 * u, L.sortY - 20 * u, sw + 10 * u, 30 * u);
@@ -960,28 +873,16 @@ export class PatchesPanel extends DisplayObject {
           if (b.mine) r[`gunpub${n}`] = pad(b.unpublish); else r[`greport${n}`] = pad(b.report);
         }
       }
-    } else if (this.Tab === 3) {
-      const b = this.accountButtons();
-      if (this.AccountView === 'create' || this.AccountView === 'name') {
-        r.submit = box(b.submit);
-        const { arrowX, arrowY } = this.backArrow();
-        r.accountBack = this.AccountView === 'create' && hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 60 * u);
-      } else if (this.AccountView === 'delete') {
-        const { left, right } = this.halves();
-        for (const h of [left, right]) h.y = cy + 5 * u;
-        r.deleteCancel = box(left); r.deleteOk = box(right);
-      } else if (this.Account) {
-        r.addPasskey = box(b.left); r.signOut = box(b.right); r.signOutAll = pad(b.signOutAll); r.deleteAccount = pad(b.deleteAccount);
-      } else if (this.Account === null && !this.noBackend) {
-        if (this.googleOn) { r.passkey = box(b.left); r.google = box(b.right); } else r.passkey = box(b.full);
-        r.create = pad(b.create);
-      }
-    } else if (this.Tab === 2) {
-      const c = this.videoControls(), m = this.videoMain();
+    } else if (this.Tab === 0 && this.View === 'video') {
+      const c = this.videoControls(), m = this.videoMain(), { arrowX, arrowY } = this.videoBackArrow();
+      r.randomise = pad(this.randomise());
       r.shape = box(c.shape); r.length = box(c.length);
       if (this.VideoState === 'ready') r.shareVideo = box(m); else r.make = box(m);
+      r.videoBack = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 60 * u);
     } else if (this.Tab === 0) {
       const { share, save, saveAs } = this.saveButtons();
+      if (this.web && this.host.gallery) { const g = this.gallerySwitch(); r.gallerySwitch = hit(g.x, g.y, g.w + 12 * u + this.textW(COPY.addToGallery), g.h * 0.6); }
+      if (this.host.video) r.videoEntry = box(this.videoEntry());
       r.randomise = pad(this.randomise());
       r.save = box(save); r.share = box(share); r.saveAs = !!saveAs && box(saveAs);
       r.url = !!this.link && !this.Saving && hit(W * 0.5 - 210 * u, cy + 65 * u, 420 * u, 40 * u);
@@ -1029,27 +930,14 @@ export class PatchesPanel extends DisplayObject {
       if (gm) { const b = this.galleryRow(Number(gm[2])); return mid(gm[1] === 'open' ? b.open : gm[1] === 'like' ? b.like : gm[1] === 'report' ? b.report : b.unpublish); }
       const L = this.galleryLayout();
       if (name === 'search') return mid(L.search);
-      if (name === 'publish') return mid(L.publish);
       if (name === 'sort') return at(L.sortRight - 15 * u, L.sortY - 5 * u);
-      if (name === 'galleryField') return at(this.margin + 100 * u, this.cy - 150 * u);
       if (name === 'reportCancel' || name === 'reportOk') { const { left, right } = this.halves(); return at((name === 'reportOk' ? right : left).cx, this.cy + 25 * u); }
-      if (name === 'galleryNext' || name === 'galleryBack') {
-        let arrowX = 285, arrowY = 0;
-        if (this.tablet) arrowX = 255;
-        if (this.mobile) { arrowX = 70; arrowY = 160; }
-        return at(App.Width * 0.5 + (name === 'galleryNext' ? 1 : -1) * arrowX * u, this.cy + arrowY * u);
-      }
     }
+    if (name === 'gallerySwitch') { const g = this.gallerySwitch(); return at(g.x + g.w / 2, g.y + g.h * 0.35); }
+    if (name === 'videoEntry') return mid(this.videoEntry());
+    if (name === 'videoBack') { const { arrowX, arrowY } = this.videoBackArrow(); return at(App.Width * 0.5 - (arrowX + 10) * u, this.cy + arrowY * u); }
     if (name === 'shape' || name === 'length') return mid(this.videoControls()[name]);
     if (name === 'make' || name === 'shareVideo') return mid(this.videoMain());
-    {
-      const b = this.accountButtons(), { left, right } = this.halves();
-      const acct: Record<string, { x: number; y: number; w: number; h: number }> = {
-        passkey: this.googleOn ? b.left : b.full, google: b.right, create: b.create, submit: b.submit, addPasskey: b.left, signOut: b.right,
-        signOutAll: b.signOutAll, deleteAccount: b.deleteAccount, deleteCancel: { ...left, y: this.cy + 5 * u }, deleteOk: { ...right, y: this.cy + 5 * u },
-      };
-      if (acct[name]) return mid(acct[name]);
-    }
     const t = /^tab(\d)$/.exec(name);
     if (t) { const tab = this.tabs().tabs.find(x => x.id === Number(t[1])); return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
     const { left, right } = this.halves(), [a, b, c] = this.thirds(), f = this.fileButton(), { arrowX, arrowY } = this.backArrow();
@@ -1081,20 +969,19 @@ export class PatchesPanel extends DisplayObject {
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
     for (const i of ALL_TABS) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
-    if (this.Tab === 4) {
+    if (this.Tab === 2) {
       const g = this.host.gallery;
       if (!g) return;
       if (this.GalleryView === 'report') {
         const row = this.reporting;
-        if (r.reportCancel) { this.GalleryView = 'list'; this.reporting = null; return; }
-        if (r.reportOk && row) { this.GalleryView = 'list'; this.reporting = null; void this.galleryAction(async () => { await g.report(row.id); return COPY.reported; }); }
+        if (r.reportCancel) { this.GalleryView = 'list'; this.reporting = null; this.showDom(); return; }
+        if (r.reportOk && row) { this.GalleryView = 'list'; this.reporting = null; this.showDom(); void this.galleryAction(async () => { await g.report(row.id); return COPY.reported; }); }
         return;
       }
       if (r.search) { this.GalleryQuery = this.SearchInput.value.trim(); this.GalleryPage = 1; void this.browse(); return; }
       if (r.sort) { this.GallerySort = this.GallerySort === 'popular' ? 'new' : 'popular'; this.GalleryPage = 1; void this.browse(); return; }
       if (r.back) { if (this.GalleryPage > 1) { this.GalleryPage--; void this.browse(); } return; }
       if (r.next) { if (this.GalleryMore) { this.GalleryPage++; void this.browse(); } return; }
-      if (r.publish) { if (this.host.hasBlocks()) void this.galleryAction(async () => { await g.publish(this.Title.trim() || 'Untitled'); return COPY.published; }); return; }
       for (let n = 0; n < ITEMS; n++) {
         const row = this.GalleryItems[n];
         if (!row) break;
@@ -1108,24 +995,10 @@ export class PatchesPanel extends DisplayObject {
       }
       return;
     }
-    if (this.Tab === 3) {
-      const a = this.host.account;
-      if (!a || this.AccountBusy) return;
-      if (r.passkey) { void this.accountAction(() => a.signIn()); return; }
-      if (r.google) { a.google(); return; }
-      if (r.create) { this.AccountView = 'create'; this.AccountMessage = ''; this.HandleInput.value = ''; this.showDom(); this.HandleInput.focus(); return; }
-      if (r.accountBack) { this.AccountView = 'main'; this.AccountMessage = ''; this.showDom(); return; }
-      if (r.submit) { void this.submitHandle(); return; }
-      if (r.addPasskey) { void this.accountAction(() => a.addPasskey()).then(ok => { if (ok) this.AccountMessage = 'Passkey added.'; }); return; }
-      if (r.signOut) { void this.accountAction(() => a.signOut(false)); return; }
-      if (r.signOutAll) { void this.accountAction(() => a.signOut(true)); return; }
-      if (r.deleteAccount) { this.AccountView = 'delete'; this.AccountMessage = ''; return; }
-      if (r.deleteCancel) { this.AccountView = 'main'; return; }
-      if (r.deleteOk) { void this.accountAction(() => a.deleteAccount()); return; }
-      return;
-    }
-    if (this.Tab === 2) {
+    if (this.Tab === 0 && this.View === 'video') {
       const next = <T,>(list: readonly T[], v: T) => list[(list.indexOf(v) + 1) % list.length];
+      if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
+      if (r.videoBack) { if (this.VideoState === 'making') this.cancelVideo(); this.View = 'list'; this.showDom(); return; }
       if (r.shape) { this.chooseVideo({ shape: next(SHAPES, this.Video.shape) }); return; }
       if (r.length) { this.chooseVideo({ seconds: next(LENGTHS, this.Video.seconds) }); return; }
       if (r.make) { if (this.VideoState === 'making') this.cancelVideo(); else void this.makeVideo(); return; }
@@ -1134,6 +1007,8 @@ export class PatchesPanel extends DisplayObject {
       return;
     }
     if (this.Tab === 0) {
+      if (r.gallerySwitch) { if (this.host.signedIn()) { this.GalleryOn = !this.GalleryOn; this.GalleryNote = ''; } return; }
+      if (r.videoEntry) { if (this.host.hasBlocks()) { this.View = 'video'; this.VideoState = this.VideoState === 'making' ? 'making' : 'idle'; this.showDom(); } return; }
       if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
       if (r.save) { if (!this.Saving && this.host.hasBlocks()) void this.save(); return; }
       if (r.share) { void this.share(); return; }
@@ -1190,8 +1065,7 @@ export class PatchesPanel extends DisplayObject {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
     this.Tab = i;
     for (const j of ALL_TABS) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
-    if (i === 4) { this.GalleryView = 'list'; this.GalleryMessage = ''; void this.browse(); }
-    if (i === 3) { if (this.AccountView === 'delete') this.AccountView = 'main'; void this.refreshAccount(); }
+    if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; void this.browse(); }
     // OPEN lists the account's patches too: signed in or out since the panel opened, the list has changed.
     if (i === 1 && this.View === 'list') void this.refresh();
     this.showDom();
@@ -1222,9 +1096,23 @@ export class PatchesPanel extends DisplayObject {
   private async makeLink(mode: 'saveAs' | 'save'): Promise<boolean> {
     if (this.Saving || !this.host.hasBlocks() || !this.host.links) return false;
     this.Saving = true; this.showDom();
-    try { await this.host.links.make(mode, this.Title.trim() || 'Untitled'); return true; } finally { this.Saving = false; this.settled(); this.showDom(); }
+    // Signed out, the gallery is left as it is (only signed-in users can publish, SPEC-SHARING-GALLERY R2).
+    const gallery = this.web && this.host.gallery && this.host.signedIn() ? this.GalleryOn : undefined;
+    try {
+      const g = await this.host.links.make(mode, this.Title.trim() || 'Untitled', gallery);
+      if (g) { this.savedGallery = g.published; this.GalleryNote = g.reason ?? ''; }
+      return true;
+    } finally { this.Saving = false; this.settled(); this.showDom(); }
   }
   setTitle(t: string): void { this.Title = t; if (this.Input) this.Input.value = t; }
+  /** Open the gallery on a search (a patch's "by @name" on the stage). */
+  showGallery(q: string): void {
+    this.GalleryQuery = q; this.GalleryPage = 1; this.GalleryView = 'list';
+    if (this.SearchInput) this.SearchInput.value = q;
+    if (!this.Open) this.OpenPanel(2); else this.selectTab(2);
+  }
+  /** The open patch is (or isn't) in the gallery: the switch shows it (an opened patch of yours; null: unknown). */
+  galleryKnown(published: boolean | null): void { this.savedGallery = published; if (published !== null) this.GalleryOn = published; this.GalleryNote = ''; }
   async refresh(): Promise<void> {
     this.Loading = true;
     try { this.Items = await this.host.listPatches(); } finally { this.Loading = false; this.settled(); }
@@ -1238,8 +1126,7 @@ export class PatchesPanel extends DisplayObject {
     if (!this.hasTab(tab)) tab = 0;  // a tab remembered from the web, in the plugin
     this.Tab = tab; this.View = 'list'; this.Picked = null; this.pending = null;
     this.selected = ALL_TABS.map(i => (i === tab ? 1 : 0));
-    if (tab === 3) void this.refreshAccount();
-    if (tab === 4) void this.browse();
+    if (tab === 2) void this.browse();
     this.OffsetY = -App.Height;
     this.OffsetX = -(this.page - 1) * 430 * App.Unit;
     this.Input.value = this.Title;
@@ -1281,17 +1168,14 @@ export class PatchesPanel extends DisplayObject {
     const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.OffsetY + App.Height * 0.5;
     this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
     this.UrlContainer.style.top = `${(mid + u * 65) / pr}px`;
-    if (this.HandleContainer) this.HandleContainer.style.top = `${(mid - u * 22) / pr}px`;
-    if (this.SearchContainer) this.SearchContainer.style.top = `${(mid - u * 177) / pr}px`;
+    if (this.SearchContainer) this.SearchContainer.style.top = `${(mid - u * 152) / pr}px`;  // v1 StyleDom(…, 152)
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
     this.TitleContainer.style.display = on && this.Tab === 0 ? 'block' : 'none';
-    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 4 && this.GalleryView === 'list' ? 'block' : 'none';
-    const handle = on && this.Tab === 3 && (this.AccountView === 'create' || this.AccountView === 'name');
-    if (this.HandleContainer) this.HandleContainer.style.display = handle ? 'block' : 'none';
-    this.UrlContainer.style.display = link ? 'block' : 'none';
+    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' ? 'block' : 'none';
+    this.UrlContainer.style.display = link && this.View !== 'video' ? 'block' : 'none';
     if (link && this.UrlInput.value !== link.url) this.UrlInput.value = link.url;  // unchanged: keep the selection
   }
   /** Keep the link field in step with the link (made, gone stale, reset). */
@@ -1313,19 +1197,12 @@ export class PatchesPanel extends DisplayObject {
     url.style.height = `${(u * 40) / pr}px`;
     url.style.lineHeight = `${(u * 40) / pr}px`;
     url.style.left = `${App.Width / pr * 0.5 - (u * 200) / pr}px`;
-    // The gallery search field (v1 SoundcloudPanel's): up to SEARCH.
+    // The gallery search field: v1 SoundcloudPanel StyleDom(SearchInputContainer, 300, 42, 210, 152, 0, TxtHeaderPR).
     const sf = this.SearchContainer;
     if (sf) {
       sf.style.font = App.Metrics.TxtHeaderPR;
-      sf.style.width = `${(u * (410 - this.textW(COPY.search) / u - 20)) / pr}px`; sf.style.height = `${(u * 42) / pr}px`; sf.style.lineHeight = `${(u * 42) / pr}px`;
+      sf.style.width = `${(u * 300) / pr}px`; sf.style.height = `${(u * 42) / pr}px`; sf.style.lineHeight = `${(u * 42) / pr}px`;
       sf.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
-    }
-    // The account name field: the title field's type and height across the page width (ACCOUNT tab).
-    const hf = this.HandleContainer;
-    if (hf) {
-      hf.style.font = App.Metrics.TxtHeaderPR;
-      hf.style.width = `${(u * 420) / pr}px`; hf.style.height = `${(u * 42) / pr}px`; hf.style.lineHeight = `${(u * 42) / pr}px`;
-      hf.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
     }
     if (!this.Open) this.OffsetY = -App.Height;
     this.showDom();

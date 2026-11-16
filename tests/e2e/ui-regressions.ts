@@ -1003,7 +1003,7 @@ Object.assign(tests, {
     const r = await p.evaluate(() => { const t: string[] = (window as any).__texts, s = (window as any).__bd_probe.scene.SettingsPanel; return { chrome: t.includes('Chrome Recommended'), connect: t.includes('CONNECT'), connectAway: s.MenuItems[1].YOffset === -s.DrawTo.Height,
       about: t.some(x => /This rebuild was released in 2026/.test(x)), toneJs: t.some(x => /Tone\.js/.test(x)), source: t.includes('View the code on GitHub'), opened: (window as any).__opened }; });
     await p.close();
-    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD']) && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
+    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN'])  // SIGN IN: CHG-0023 owner review 2026-11-15 && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
       && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
       && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2']);
@@ -1049,7 +1049,7 @@ Object.assign(tests, {
     for (const b of buttons) { await p.mouse.move(b.x, b.y); await p.mouse.click(b.x, b.y); await p.waitForTimeout(200); }
     const opened = await p.evaluate(() => (window as any).__opened);
     await p.close();
-    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD']) && openTab === 3
+    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN'])  // SIGN IN: CHG-0023 owner review 2026-11-15 && openTab === 3
       && before.includes('Coming soon.') && openedBefore === 0
       && before.includes('Download the standalone app or VST3/AU plugins to use in your DAW.')
       && before.includes('BlokDust can be used as both an instrument and an effect.')

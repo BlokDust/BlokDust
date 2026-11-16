@@ -4,7 +4,7 @@ import { LIMITS, type Env } from './env.ts';
 import { HttpError, b64urlBytes, json, publicBase, sameDigest, sha256Hex } from './http.ts';
 import { verifyTurnstile } from './turnstile.ts';
 import { currentUser, sameOrigin } from './auth/session.ts';
-import { refreshPublished } from './gallery.ts';
+import { afterSave } from './gallery.ts';
 
 const ID_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 /** Share ids: 10 base62 chars that never start with "p" (Phase 1 `?c=p…` links carry the patch itself, R5b). */
@@ -21,7 +21,7 @@ function newId(): string {
   return s;
 }
 
-interface SaveBody { patch?: unknown; title?: unknown; thumb?: unknown; parent?: unknown; turnstile?: unknown }
+interface SaveBody { patch?: unknown; title?: unknown; thumb?: unknown; parent?: unknown; turnstile?: unknown; /** SPEC-SHARING-GALLERY R1: in the gallery or not. */ gallery?: unknown }
 
 async function readBody(req: Request): Promise<SaveBody> {
   const len = Number(req.headers.get('content-length') ?? 0);
@@ -72,6 +72,13 @@ async function row(env: Env, id: string): Promise<Row | null> {
   return r && !r.deleted ? r : null;
 }
 
+/** May this request change patch `id` (save over, delete, unpublish)? See authorise. */
+export async function mayEdit(env: Env, req: Request, id: string): Promise<boolean> {
+  const r = await row(env, id);
+  if (!r) return false;
+  try { await authorise(env, req, r); return true; } catch { return false; }
+}
+
 /** The patch's edit token (the browser that made it), or the account that owns it, signed in on this site
  * (SPEC-SHARING-ACCOUNTS R9: an account's patches can be saved from any device). */
 async function authorise(env: Env, req: Request, r: Row): Promise<void> {
@@ -106,7 +113,8 @@ export async function createPatch(env: Env, req: Request): Promise<Response> {
         env.DB.prepare('INSERT INTO revisions (patch_id, rev, json, title, thumb, created) VALUES (?, 1, ?, ?, ?, ?)')
           .bind(id, patch, title, thumb, now),
       ]);
-      return json({ id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title) }, 201);
+      const gallery = await afterSave(env, id, owner, body.gallery === true ? true : undefined);
+      return json({ id, rev: 1, editToken, parent, url: shareUrl(env, req, id, title), gallery }, 201);
     } catch (e) {
       if (!String(e).includes('UNIQUE')) throw e;  // id collision: try another
     }
@@ -129,8 +137,9 @@ export async function savePatch(env: Env, req: Request, id: string): Promise<Res
     env.DB.prepare('UPDATE patches SET rev = ?, title = ?, updated = ? WHERE id = ? AND rev = ?').bind(rev, title, now, id, r.rev),
   ]);
   if (!res[1].meta.changes) throw new HttpError(409, 'saved elsewhere at the same time; try again');
-  await refreshPublished(env, id);  // SPEC-SHARING-GALLERY R5: the gallery shows the latest title and blocks
-  return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title) });
+  // SPEC-SHARING-GALLERY R1, R5: in or out of the gallery as asked; published, it shows the latest title and blocks.
+  const gallery = await afterSave(env, id, r.owner_id, typeof body.gallery === 'boolean' ? body.gallery : undefined);
+  return json({ id, rev, parent: r.parent, url: shareUrl(env, req, id, title), gallery });
 }
 
 export interface Loaded { id: string; rev: number; title: string; parent: string | null; created: number; updated: number; patch: unknown; hasThumb: boolean;
@@ -147,13 +156,18 @@ export async function loadPatch(env: Env, id: string): Promise<Loaded | null> {
 }
 
 /** GET /api/patches/:id: the latest revision. */
-export async function getPatch(env: Env, req: Request, id: string): Promise<Response> {
+export async function getPatch(env: Env, req: Request, id: string, ctx?: ExecutionContext): Promise<Response> {
   const p = await loadPatch(env, id);
   if (!p) throw new HttpError(404, 'no such patch');
+  // SPEC-SHARING-GALLERY R14: roughly how often it is opened in the app (pages and previews don't count).
+  const counting = env.DB.prepare('UPDATE patches SET views = views + 1 WHERE id = ?').bind(id).run().catch(() => {});
+  if (ctx) ctx.waitUntil(counting); else await counting;
+  const views = (await env.DB.prepare('SELECT views FROM patches WHERE id = ?').bind(id).first<{ views: number }>())?.views ?? 0;
+  const published = !!(await env.DB.prepare('SELECT 1 FROM gallery WHERE patch_id = ? AND hidden = 0').bind(id).first());
   // `mine`: the signed-in account owns it, so this device may save over it without the edit token (R9).
   const owner = (await env.DB.prepare('SELECT owner_id FROM patches WHERE id = ?').bind(id).first<{ owner_id: string | null }>())?.owner_id;
   const mine = !!owner && (await currentUser(env, req))?.id === owner;
-  return json({ ...p, mine }, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*', vary: 'cookie' });
+  return json({ ...p, mine, views, published }, 200, { 'cache-control': 'no-cache', 'access-control-allow-origin': '*', vary: 'cookie' });
 }
 
 /** GET /api/patches/:id/thumb.png[?rev=n]: the PNG saved with that revision (latest by default). */

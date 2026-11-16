@@ -48,22 +48,26 @@ async function openApp(d: Device, query = ''): Promise<void> {
   }
   await d.page.waitForTimeout(1500);
 }
-const pp = (p: Page) => p.evaluate(() => { const x = (window as any).__bd_probe.scene.PatchesPanel; return { open: x.Open, tab: x.Tab, view: x.AccountView, account: x.Account, busy: x.AccountBusy, message: x.AccountMessage }; });
+/** Patches open, and Settings › ACCOUNT's state (accountPage.ts). */
+const pp = (p: Page) => p.evaluate(() => {
+  const s = (window as any).__bd_probe.scene, x = s.SettingsPanel.accountPage;
+  return { open: s.PatchesPanel.Open, settings: s.SettingsPanel.Open, tabName: s.SettingsPanel.MenuItems[4]?.Name, view: x.View, account: x.Account, busy: x.Busy, message: x.Message };
+});
+const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'create', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk']);
 async function press(p: Page, name: string, wait = 400): Promise<void> {
-  const at = await p.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name);
+  const at = await p.evaluate(([n, inSettings]) => { const s = (window as any).__bd_probe.scene; return inSettings ? s.SettingsPanel.accountCentre(n) : s.PatchesPanel.centreOf(n); }, [name, ACCOUNT_CONTROLS.has(name)] as const);
   if (!at) throw new Error(`no control ${name}`);
   await p.mouse.move(at[0], at[1]); await p.mouse.click(at[0], at[1]); await p.waitForTimeout(wait);
 }
-/** Patches › ACCOUNT, by the header's PATCHES slot and the tab. */
+/** Settings › SIGN IN / ACCOUNT (the corner name and the Google return open it the same way). */
 async function openAccount(p: Page): Promise<void> {
-  if (!(await pp(p)).open) {
-    for (let i = 0; i < 8 && !(await pp(p)).open; i++) { await p.mouse.move(1138, 45); await p.mouse.click(1138, 45); await p.waitForTimeout(700); }
-    await p.waitForTimeout(800);
-  }
-  await press(p, 'tab3', 300);
-  await p.waitForFunction(() => (window as any).__bd_probe.scene.PatchesPanel.Account !== undefined, null, { timeout: 10000 });
+  if ((await pp(p)).open) { await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel()); await p.waitForTimeout(700); }
+  await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
+  await p.waitForFunction(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return s.OffsetY === 0 && s.accountPage.Account !== undefined; }, null, { timeout: 10000 });
+  await p.waitForTimeout(300);
 }
-const settled = (p: Page) => p.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.AccountBusy, null, { timeout: 30000 });
+const settled = (p: Page) => p.waitForFunction(() => !(window as any).__bd_probe.scene.SettingsPanel.accountPage.Busy, null, { timeout: 30000 });
+const corners = (p: Page) => p.evaluate(() => (window as any).__bd_probe.corners);
 const api = (d: Device, method: string, path: string, body?: unknown, headers: Record<string, string> = {}) =>
   d.page.evaluate(async ([m, url, b, h]) => {
     const r = await fetch(url as string, { method: m as string, headers: { 'content-type': 'application/json', ...(h as object) }, body: b === undefined ? undefined : JSON.stringify(b) });
@@ -92,8 +96,8 @@ const tests: Record<string, () => Promise<void>> = {
     await (async () => { for (let i = 0; i < 8 && !(await pp(a.page)).open; i++) { await a.page.mouse.move(1138, 45); await a.page.mouse.click(1138, 45); await a.page.waitForTimeout(700); } })();
     const before = await saveLink(a.page);  // anonymous: this browser holds its edit token
     await openAccount(a.page);
-    check('signed out: the ACCOUNT tab offers passkey and Google', (await pp(a.page)).account === null
-      && !!(await a.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('google'))));
+    check('signed out: Settings › SIGN IN offers passkey and Google', (await pp(a.page)).account === null && (await pp(a.page)).tabName === 'SIGN IN'
+      && !!(await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountCentre('google'))), await pp(a.page));
     await press(a.page, 'create');
     await a.page.fill('#accountHandleInput', 'Admin');
     await press(a.page, 'submit'); await settled(a.page);
@@ -101,7 +105,12 @@ const tests: Record<string, () => Promise<void>> = {
     await a.page.fill('#accountHandleInput', 'tester_1');
     await press(a.page, 'submit'); await settled(a.page);
     const st = await pp(a.page);
-    check('R1: CREATE WITH PASSKEY makes the account and signs in', st.account?.handle === 'tester_1' && st.view === 'main', st);
+    check('R1: CREATE WITH PASSKEY makes the account and signs in; the tab reads ACCOUNT', st.account?.handle === 'tester_1' && st.view === 'main' && st.tabName === 'ACCOUNT', st);
+    await a.page.evaluate(() => { const s = (window as any).__bd_probe.scene; s.SettingsPanel.ClosePanel(); s.PatchesPanel.ClosePanel(); }); await a.page.waitForTimeout(700);
+    const c1 = await corners(a.page);
+    check('R14: the stage says who is signed in; pressing it opens Settings › ACCOUNT', c1.me === 'tester_1' && !!c1.meAt, c1);
+    await a.page.mouse.click(c1.meAt![0], c1.meAt![1]); await a.page.waitForTimeout(900);
+    check('… it does', (await pp(a.page)).settings === true);
     const cookie = (await a.ctx.cookies()).find(c => c.name === 'bd_session');
     check('R3: the session is an HttpOnly, SameSite=Lax cookie the page cannot read', !!cookie && cookie.httpOnly && cookie.sameSite === 'Lax'
       && !(await a.page.evaluate(() => document.cookie)).includes('bd_session'), cookie && { httpOnly: cookie.httpOnly, sameSite: cookie.sameSite });
@@ -124,11 +133,13 @@ const tests: Record<string, () => Promise<void>> = {
    * account's patches, opens one, changes it and SAVEs over the same link without its edit token. */
   async 'second-device'() {
     const a = shared.a!;
+    await openAccount(a.page);
     await press(a.page, 'signOut'); await settled(a.page);
     const out = await api(a, 'GET', 'me');
     check('R4: SIGN OUT ends the session', out.json.user === null && (await pp(a.page)).account === null);
     await press(a.page, 'passkey'); await settled(a.page);
-    check('R2: SIGN IN WITH PASSKEY (no name needed)', (await pp(a.page)).account?.handle === 'tester_1', await pp(a.page));
+    await a.page.waitForTimeout(700);
+    check('R2: SIGN IN WITH PASSKEY (no name needed), then back to the stage', (await pp(a.page)).account?.handle === 'tester_1' && (await pp(a.page)).settings === false, await pp(a.page));
 
     // The passkey syncs to another device (iCloud Keychain, Google Password Manager): copy it to device B.
     const b = await device();
@@ -138,6 +149,9 @@ const tests: Record<string, () => Promise<void>> = {
     await openAccount(b.page);
     await press(b.page, 'passkey'); await settled(b.page);
     check('R2: the synced passkey signs in on device B', (await pp(b.page)).account?.handle === 'tester_1');
+    // Signed in, the page is back on the stage (owner review 2026-11-15): open Patches › OPEN.
+    for (let i = 0; i < 8 && !(await pp(b.page)).open; i++) { await b.page.mouse.move(1138, 45); await b.page.mouse.click(1138, 45); await b.page.waitForTimeout(700); }
+    await b.page.waitForTimeout(600);
     await press(b.page, 'tab1', 1500);
     const rows = await b.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items as { name: string; detail: string; key: string }[]);
     const row = rows.findIndex(r => r.key === `acct:${shared.firstPatch}`);
@@ -160,25 +174,22 @@ const tests: Record<string, () => Promise<void>> = {
     await openApp(c);
     await openAccount(c.page);
     await Promise.all([c.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(c.page, 'google', 0)]);
-    await c.page.waitForURL(u => !u.search.includes('account='), { timeout: 20000 }).catch(() => {});
     await c.page.waitForFunction(() => (window as any).__bd_probe, null, { timeout: 20000 });
-    if (await c.page.$('#start')) await c.page.click('#start');
-    await c.page.waitForFunction(() => { const x = (window as any).__bd_probe.scene.PatchesPanel; return x.Open && x.OffsetY === 0 && x.Tab === 3 && x.Account !== undefined; }, null, { timeout: 20000 }).catch(() => {});
+    // Back from Google (owner review 2026-11-15): no START and no intro; a new account names itself in Settings at once.
+    await c.page.waitForFunction(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return s.Open && s.OffsetY === 0 && s.accountPage.View === 'name'; }, null, { timeout: 20000 }).catch(() => {});
     const auth = mocks.googleAuths.at(-1);
     check('R2a: PKCE S256 with our client id', auth?.method === 'S256' && !!auth.challenge && auth.client === 'test-google-client', auth);
-    check('R6: a new Google account is asked for a name', (await pp(c.page)).view === 'name', await pp(c.page));
+    check('R2a: back from Google there is no start screen', !(await c.page.$('#start')) && !(await c.page.evaluate(() => location.search.includes('account='))));
+    check('R6: a new Google account is asked for a name in Settings', (await pp(c.page)).view === 'name' && (await pp(c.page)).settings === true, await pp(c.page));
     await c.page.fill('#accountHandleInput', 'carol_g');
     await press(c.page, 'submit'); await settled(c.page);
     check('… and has it', (await pp(c.page)).account?.handle === 'carol_g' && (await pp(c.page)).account?.providers.includes('google'), await pp(c.page));
-    // The same Google account again, on another device: the same BlokDust account, no name step.
+    // The same Google account again, on another device: the same BlokDust account, straight to the stage.
     const d = await device();
     await openApp(d); await openAccount(d.page);
     await Promise.all([d.page.waitForURL(/account=/, { timeout: 20000 }).catch(() => {}), press(d.page, 'google', 0)]);
-    await d.page.waitForURL(u => !u.search.includes('account='), { timeout: 20000 }).catch(() => {});
-    await d.page.waitForFunction(() => (window as any).__bd_probe, null, { timeout: 20000 });
-    if (await d.page.$('#start')) await d.page.click('#start');
-    await d.page.waitForFunction(() => { const x = (window as any).__bd_probe.scene.PatchesPanel; return x.Open && x.OffsetY === 0 && x.Account !== undefined; }, null, { timeout: 20000 }).catch(() => {});
-    check('R2a: the same Google account signs in to the same account', (await pp(d.page)).account?.handle === 'carol_g', await pp(d.page));
+    await d.page.waitForFunction(() => (window as any).__bd_probe?.corners?.me === 'carol_g', null, { timeout: 20000 }).catch(() => {});
+    check('R2a: the same Google account signs in to the same account, no panel in the way', (await corners(d.page)).me === 'carol_g' && !(await pp(d.page)).settings && !(await pp(d.page)).open, { c: await corners(d.page), p: await pp(d.page) });
     const r = await fetch(`${base}/api/auth/google/callback?code=x&state=wrong`, { redirect: 'manual', headers: { cookie: 'bd_oauth=right.verifier.%2F' } });
     check('R2a: a callback whose state does not match is refused', r.status === 400, r.status);
     await c.ctx.close(); await d.ctx.close();
@@ -197,10 +208,10 @@ const tests: Record<string, () => Promise<void>> = {
   /** R4, R10: SIGN OUT EVERYWHERE ends device B's session too; DELETE ACCOUNT removes the account and its patches. */
   async 'sign-out-everywhere-and-delete'() {
     const a = shared.a!, b = shared.b!;
-    await press(a.page, 'tab3', 600); await settled(a.page);
-    await press(a.page, 'signOutAll'); await settled(a.page);
+    await api(a, 'POST', 'auth/logout', { everywhere: true }, { origin: base });
     const bMe = await api(b, 'GET', 'me');
-    check('R4: SIGN OUT EVERYWHERE ends every session', bMe.json.user === null && (await pp(a.page)).account === null);
+    await openAccount(a.page);
+    check('R4: signing out everywhere (the API) ends every session', bMe.json.user === null && (await pp(a.page)).account === null);
     // The passkey manager syncs B's use back to A (its signature counter moved on there): copy it back. Without this
     // the server rightly refuses A's older counter as a possibly cloned key.
     const { credentials } = await b.cdp.send('WebAuthn.getCredentials', { authenticatorId: b.authenticator });
@@ -208,6 +219,9 @@ const tests: Record<string, () => Promise<void>> = {
     for (const c of credentials) await a.cdp.send('WebAuthn.addCredential', { authenticatorId: a.authenticator, credential: c });
     await press(a.page, 'passkey'); await settled(a.page);
     const signedIn = await pp(a.page);
+    await a.page.waitForFunction(() => !(window as any).__bd_probe.scene.SettingsPanel.Open, null, { timeout: 5000 }).catch(() => {});
+    await a.page.waitForTimeout(600);  // its slide away ends (v1's panel tween)
+    await openAccount(a.page);  // signing in went back to the stage
     await press(a.page, 'deleteAccount', 500);
     check('DELETE ACCOUNT asks first', (await pp(a.page)).view === 'delete', { signedIn, now: await pp(a.page) });
     await press(a.page, 'deleteOk'); await settled(a.page);

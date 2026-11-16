@@ -45,3 +45,7 @@ points back to BlokDust (owner, 2026-11-15: first of video export, user login, g
 - No WHAT: the video always starts from the beginning, as the patch plays when it has just loaded. "Just played" (a
   replay of the session from a worklet log, proven bit-identical) was removed, with the log.
 - No DOWNLOAD: SHARE VIDEO only (it downloads where the browser can't share files).
+
+## Owner review 2 (2026-11-15)
+- No VIDEO tab: SHARE AS VIDEO at the end of Patches › SAVE / SHARE opens the controls in place (the name stays).
+- Desktop browsers (no file sharing) download the video as soon as it is made: DOWNLOAD VIDEO.

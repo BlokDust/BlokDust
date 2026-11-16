@@ -15,7 +15,7 @@ import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts'
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
 import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
-import { accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
+import { type GalleryState, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
 import * as gallery from '../gallery/client.ts';
 import { DEFAULT_SOUNDS, PUBLIC_SITE, isDeadDefault, fetchFreesound, fingerprint, isPortable, openRemembered, pickAudioFile, refKey, rememberHandle, searchFreesound, type FileRef, type FreesoundRef, type SampleRef } from '../patch/samples.ts';
@@ -71,7 +71,7 @@ function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
 }
-interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean }
+interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
 async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
@@ -84,7 +84,7 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
     // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
     if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c };
     const r = await loadShared(c);
-    if (r) return { patch: r.patch, view: {}, id: c, title: r.title };
+    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published };
     return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: true };
   }
   if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null }; }
@@ -101,6 +101,8 @@ const sessionFor = (id: string | null): string | null => editToken(id) ?? (canOv
 
 async function main() {
   const params = new URLSearchParams(location.search);
+  /** Back from Google sign-in (`?account=in|new`, SPEC-SHARING-ACCOUNTS R2a). */
+  const signInReturn = params.get('account');
   const juce = (window as unknown as { __JUCE__?: { backend: JuceBackend } }).__JUCE__?.backend;
   applyHostLabels(!!juce);
   const embedId = embedIdFromPage();
@@ -362,15 +364,17 @@ async function main() {
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
-      shareLink = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
+      shareLink = null; credit = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
       setBaseline();
     },
-    share: async (mode, title) => {
+    share: async (mode, title, gallery) => {
       const patch = toPatch();
+      lastGallery = null;
       try {
         const thumb = stage.thumbnail(THUMB.width, THUMB.height).toDataURL('image/png').split(',')[1];
-        const r = await saveShared(mode, App.CompositionId, { patch, title, thumb });
+        const r = await saveShared(mode, App.CompositionId, { patch, title, thumb, ...(gallery !== undefined ? { gallery } : {}) });
         if (r) {
+          lastGallery = r.gallery ?? null;
           App.CompositionId = r.id; App.SessionId = sessionFor(r.id);
           session = { id: r.id, dirty: false }; saveSession(session); saveLocal(patch);
           return r.id;
@@ -427,7 +431,7 @@ async function main() {
       warning: () => shareWarning(),
     } : {
       current: () => shareLink ? { url: shareLink.url, owned: shareLink.owned, stale: contentOf(toPatch()) !== shareLink.at } : null,
-      make: (mode, title) => makeLink(mode, title),
+      make: (mode, title, gallery) => makeLink(mode, title, gallery),
       warning: () => shareWarning(),
     },
     // The public gallery (CHG-0024): web only.
@@ -436,27 +440,19 @@ async function main() {
       open: row => void openShared(row.id, 'open'),
       like: (id, on) => gallery.like(id, on),
       report: async id => { await gallery.report(id); },
-      publish: async title => {
-        const me = await account.me();
-        if (!me?.user) throw new Error('Sign in on the ACCOUNT tab to publish.');
-        if (!me.user.handle) throw new Error('Choose your name on the ACCOUNT tab first.');
-        // Saved to the account first: a new link if it has none (or isn't this account's), else saved over.
-        const link = shareLink;
-        if (!link || !link.owned || link.at !== contentOf(toPatch()) || !isServerId(App.CompositionId ?? '')) await makeLink(link?.owned ? 'save' : 'saveAs', title);
-        await gallery.publish(App.CompositionId!);
-      },
-      unpublish: async id => { await gallery.unpublish(id); },
-      currentId: () => (App.CompositionId && App.SessionId ? App.CompositionId : null),
+      unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
     },
+    signedIn: () => !!accountPage()?.Account,
     // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
     account: juce || embedId ? null : {
       me: () => account.me(),
       signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
-      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); },
+      // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so.
+      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); },
       google: () => account.signInWithGoogle(),
       addPasskey: () => account.addPasskey(),
       setHandle: async h => { await account.setHandle(h); },
-      signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); },
+      signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
       deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
       cancelled: e => account.cancelled(e),
     },
@@ -468,6 +464,7 @@ async function main() {
         if (canShareFile(file)) await shareFile(file, videoTitle(), `${videoTitle()} \u2014 made with BlokDust ${videoLink()}`);
         else downloadFile(file);
       },
+      canShareFiles: () => canShareFile(new File([''], 'video.mp4', { type: 'video/mp4' })),
     },
   });
   /** After signing in or out: whether this device may save over the open composition (R9). */
@@ -505,6 +502,41 @@ async function main() {
     }, progress, signal);
     return new File([blob], videoFileName(videoTitle()), { type: 'video/mp4' });
   }
+  // ---- the stage's corners (owner review 2026-11-15) ----
+  // Top left, under the header: a patch someone else made, "TITLE BY @NAME" (SPEC-SHARING-GALLERY R15); the name opens
+  // the gallery on their patches. Top right: who is signed in (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT.
+  // v1's mid type in the text colour, under the panels.
+  let credit: { title: string; by: string } | null = null;
+  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox } = {};
+  const accountPage = () => (scene.SettingsPanel as any).accountPage as import('../v1ui/accountPage.ts').AccountPage | null | undefined;
+  function drawCorners(ctx: CanvasRenderingContext2D): void {
+    cornerBoxes = {};
+    if (inside) return;
+    const m = stage.metrics, u = m.unit, h = scene.Header as unknown as { Height: number; Rows?: number }, y = h.Height * (h.Rows ?? 1) * u + 22 * u;
+    ctx.save();
+    if (!App.Metrics?.TxtMid) { ctx.restore(); return; }
+    ctx.fillStyle = theme.colors[theme.roles.txt]; ctx.font = App.Metrics.TxtMid; ctx.textBaseline = 'alphabetic';
+    if (credit) {
+      const title = `${credit.title.toUpperCase()} BY `, by = `@${credit.by.toUpperCase()}`, tw = ctx.measureText(title).width, bw = ctx.measureText(by).width, x = 20 * u;
+      ctx.textAlign = 'left'; ctx.fillText(title, x, y); ctx.fillText(by, x + tw, y);
+      ctx.fillRect(x + tw, y + 3 * u, bw, Math.max(1, u * 0.6));  // a link: underlined
+      cornerBoxes.by = { x: x + tw - 4 * u, y: y - 16 * u, w: bw + 8 * u, h: 24 * u };
+    }
+    const me = accountPage()?.Account;
+    if (me?.handle) {
+      const t = `SIGNED IN AS ${me.handle.toUpperCase()}`, w = ctx.measureText(t).width, x = m.width - 20 * u;
+      ctx.textAlign = 'right'; ctx.fillText(t, x, y);
+      cornerBoxes.me = { x: x - w - 4 * u, y: y - 16 * u, w: w + 8 * u, h: 24 * u };
+    }
+    ctx.restore();
+  }
+  /** A press on the corner text (device px): true if it was used. Not while a panel is open over the stage. */
+  function cornerPress(x: number, y: number): boolean {
+    if (scene.PatchesPanel.Open || (scene.SettingsPanel as any).Open || scene.OptionsPanel.Scale > 0) return false;
+    if (cornerBoxes.by && credit && inBox(cornerBoxes.by, x, y)) { scene.PatchesPanel.showGallery(`@${credit.by}`); return true; }
+    if (cornerBoxes.me && inBox(cornerBoxes.me, x, y)) { (scene.SettingsPanel as any).openAccount?.(); return true; }
+    return false;
+  }
   function shareWarning(): string | null {
     return [...model.values()].some(b => b.type === 'source.recorder' || !isPortable(b.params.track)) ? SAVE_WARNING : null;
   }
@@ -527,6 +559,7 @@ async function main() {
       theme.colors, theme.roles.txt, `400 ${Math.round(10 * stage.metrics.unit)}px Dosis`);
     if (uiSync) { uiSync = false; scene.sync(ctx, theme, stage.zoom, stage.drag, [...v1Blocks.values()]); }
     scene.setView(stage.zoom, stage.drag);
+    drawCorners(ctx);  // after the scene's sync (v1's type sizes), before its panels
     scene.draw();
     makeStageAt = null;
     if (offerMakeStage()) {
@@ -933,13 +966,15 @@ async function main() {
   }
   /** SAVE / SAVE AS to a share link (SPEC-SHARING-BACKEND): v1 SAVE over this browser's (or account's) link, else a
    * new one. The link goes in the address bar; the patch counts as saved. */
-  async function makeLink(mode: 'save' | 'saveAs', title: string): Promise<void> {
-    const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title);
+  async function makeLink(mode: 'save' | 'saveAs', title: string, gallery?: boolean): Promise<GalleryState | null> {
+    const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title, gallery);
     const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
     history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
     shareLink = { url, owned: isServerId(id) && !!App.SessionId, at: contentOf(toPatch()) };
     setBaseline();  // a shared patch counts as saved
     keepMine(title);
+    credit = null;  // saved: it is yours now (a remix keeps `parent`)
+    return lastGallery;
   }
   /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
    * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
@@ -954,6 +989,8 @@ async function main() {
     history.replaceState(null, '', url);
     shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()) };
     setBaseline();
+    credit = r.by && !r.mine ? { title: r.title || 'Untitled', by: r.by } : null;
+    scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
   }
   /** Signed in: the account's patches (R8), as OPEN rows. */
   async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
@@ -1047,6 +1084,8 @@ async function main() {
   }
   /** The share link made here (or the one this browser can update, from the start-up link). */
   let shareLink: { url: string; owned: boolean; at: string } | null = null;
+  /** What the last save said about the gallery (SPEC-SHARING-GALLERY R1). */
+  let lastGallery: GalleryState | null = null;
 
   // ---- Insert: the new blocks follow the pointer until a click (or, on a touch screen, a drag) puts them down ----
   let placing: { ids: number[]; at: { x: number; y: number }; touch: boolean; grabbed?: boolean } | null = null;
@@ -1507,6 +1546,12 @@ async function main() {
     if (title) scene.PatchesPanel.setTitle(title);
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
     if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
+    // Someone else's patch: "TITLE BY @NAME" in the corner; yours: the gallery switch shows whether it is published.
+    if (start.by && !start.mine && !embedId) credit = { title: start.title || 'Untitled', by: start.by };
+    if (start.mine) scene.PatchesPanel.galleryKnown(!!start.published);
+    // Who is signed in (the corner, the Settings tab's name, the gallery switch).
+    const page = accountPage();
+    if (page && !juce && !embedId) { const prev = page.onChange; page.onChange = () => { prev(); stage.redraw(); }; void page.refresh(); }
     // From the plugin's CREATE SHARE LINK: the patch arrives in the address (`?c=p…&share=1`) and Patches opens on SAVE,
     // one click from its link. The flag is dropped so a reload doesn't open it again.
     if (params.has('share') && !juce && !embedId) {
@@ -1516,13 +1561,12 @@ async function main() {
     }
     // Back from Google sign-in (CHG-0023): claim this browser's patches (R9) and show the account (a new one picks
     // its name). The flag is dropped so a reload doesn't do it again.
-    if (params.has('account') && !juce && !embedId) {
+    if (signInReturn && !juce && !embedId) {
       params.delete('account');
       history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
       void account.claimMine().then(() => refreshOwnership()).catch(() => {});
-      // After START: opened before it, the panel stayed above the screen (its slide never ran), so the name step for
-      // a new account could not be reached (tests/e2e/accounts.ts 'google').
-      afterStart.push(() => scene.PatchesPanel.OpenPanel(3));
+      // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15).
+      if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
     }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });
@@ -1628,6 +1672,11 @@ async function main() {
         return { hash: hex(hashStereo(hashAudio(l), hashAudio(r))), peak };
       } finally { e.dispose(); }
     },
+    /** The stage's corners (tests): a patch's credit and who is signed in, with their centres in css px. */
+    get corners() {
+      const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
+      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me) };
+    },
     /** Sample state per block (tests): loaded, or missing with its reference. */
     get samples() { return [...model].filter(([, b]) => BLOCKS_BY_ID.get(b.type)?.params.some(q => q.key === 'track')).map(([id, b]) => ({ id, uid: b.uid, type: b.type, track: b.params.track, loaded: samples.has(id), frames: samples.get(id)?.length ?? 0 })); },
   };
@@ -1712,7 +1761,7 @@ async function main() {
   // The start button is v1's Splash, drawn by the scene (owner, 2026-11-11); #start is a clear layer over it that takes
   // the click (an AudioContext must start in one) and holds input back until the intro has shown the stage, as v1 did.
   // Automated browsers skip the intro (their screenshots expect the stage) unless the URL asks for it (`splash=1`).
-  const splash = !juce && !embedId && (!navigator.webdriver || params.get('splash') === '1');
+  const splash = !juce && !embedId && !signInReturn && (!navigator.webdriver || params.get('splash') === '1');
   if (splash) { scene.showSplash(); stage.redraw(); requestAnimationFrame(() => requestAnimationFrame(() => { overlay.style.background = 'transparent'; })); }
   else if (!embedId) overlay.style.background = 'transparent';
   // START begins on the press (v1 Splash.MouseDown), not the release: the intro starts at once and the engine is built
@@ -1728,6 +1777,13 @@ async function main() {
   });
   overlay.addEventListener('pointerup', resume);
   overlay.addEventListener('click', () => { if (!begun) void begin(); else resume(); });
+  // Back from Google sign-in (owner, 2026-11-15): no start screen and no intro. The stage takes input at once and the
+  // first press or key starts the sound (browsers start audio only in a user gesture); that press still does its job.
+  if (signInReturn && !juce && !embedId) {
+    overlay.remove();
+    const first = () => { for (const t of ['pointerdown', 'keydown'] as const) window.removeEventListener(t, first, true); if (!begun) void begin(); };
+    for (const t of ['pointerdown', 'keydown'] as const) window.addEventListener(t, first, true);
+  }
   async function begin(): Promise<void> {
     begun = true;
     let shown = !splash, ready = false;
@@ -1948,6 +2004,7 @@ async function main() {
   (window as unknown as { __bd_pads?: unknown }).__bd_pads = padNotes;
   if (!embedId) app.canvas.addEventListener('pointerdown', e => {
     app.canvas.setPointerCapture(e.pointerId);
+    if (primaryId === null && cornerPress(e.offsetX * dpr(), e.offsetY * dpr())) { primaryId = e.pointerId; primaryRole = 'gone'; return; }
     if (makeStageAt && primaryId === null && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr())) { makeStage(); primaryId = e.pointerId; primaryRole = 'gone'; return; }
     if (!placing && padDown(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     // Inside a Stage (UI-0009): the × or a press outside its window (not on the header, a panel or the bottom

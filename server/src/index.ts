@@ -2,14 +2,14 @@
 // sharing API. Routes are relative to BASE_PATH so the app can live at `/` or under a prefix such as `/blokdust`.
 import type { Env } from './env.ts';
 import { HttpError, assetBase, basePath, errorResponse, json, limit, prefix } from './http.ts';
-import { createPatch, deletePatch, getPatch, getThumb, savePatch } from './patches.ts';
+import { createPatch, deletePatch, getPatch, getThumb, mayEdit, savePatch } from './patches.ts';
 import { oembed, page } from './pages.ts';
 import { search, sound } from './freesound.ts';
 import { claim, deleteAccount, logout, me, myPatches, setHandle } from './auth/account.ts';
 import { googleCallback, googleStart } from './auth/google.ts';
 import { loginOptions, loginVerify, registerOptions, registerVerify } from './auth/passkey.ts';
 import { sameOrigin } from './auth/session.ts';
-import { like, list as galleryList, publish, report, unpublish } from './gallery.ts';
+import { like, list as galleryList, report, unpublish } from './gallery.ts';
 
 async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(req.url);
@@ -58,7 +58,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (thumb && m === 'GET') return getThumb(env, thumb[1], url.searchParams.get('rev'));
   const one = path.match(/^\/api\/patches\/([^/]+)$/);
   if (one) {
-    if (m === 'GET') return getPatch(env, req, one[1]);
+    if (m === 'GET') return getPatch(env, req, one[1], ctx);
     if (m === 'PUT') { await limit(env.SAVE_LIMIT, req, 'save'); return savePatch(env, req, one[1]); }
     if (m === 'DELETE') return deletePatch(env, req, one[1]);
     throw new HttpError(405, 'method not allowed');
@@ -87,8 +87,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if (gal) {
     if (m !== 'GET') sameOrigin(env, req);
     await limit(env.SAVE_LIMIT, req, 'gallery');
-    if (!gal[2] && m === 'POST') return publish(env, req, gal[1]);
-    if (!gal[2] && m === 'DELETE') return unpublish(env, req, gal[1]);
+    if (!gal[2] && m === 'DELETE') return unpublish(env, gal[1], id => mayEdit(env, req, id));
     if (gal[2] === '/like' && m === 'POST') return like(env, req, gal[1]);
     if (gal[2] === '/report' && m === 'POST') return report(env, req, gal[1]);
     throw new HttpError(405, 'method not allowed');

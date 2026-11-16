@@ -34,14 +34,26 @@ async function device(name: string | null, query = '?demo'): Promise<Device> {
   await page.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 });
   await page.waitForTimeout(1200);
   const d = { ctx, page };
-  if (name) {  // an account, made in the ACCOUNT tab
-    await tab(d, 3);
-    await press(d, 'create'); await page.fill('#accountHandleInput', name); await press(d, 'submit');
-    await page.waitForFunction(() => !!(window as any).__bd_probe.scene.PatchesPanel.Account?.handle, null, { timeout: 20000 });
+  if (name) {  // an account, made in Settings › SIGN IN
+    await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
+    await page.waitForFunction(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return s.OffsetY === 0 && s.accountPage.Account !== undefined; }, null, { timeout: 10000 });
+    const at = async (n: string) => { const c = await page.evaluate(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k), n); await page.mouse.click(c[0], c[1]); await page.waitForTimeout(400); };
+    await at('create'); await page.fill('#accountHandleInput', name); await at('submit');
+    await page.waitForFunction(() => !!(window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.handle, null, { timeout: 20000 });
+    await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await page.waitForTimeout(800);
   }
   return d;
 }
-const P = (d: Device) => d.page.evaluate(() => { const x = (window as any).__bd_probe.scene.PatchesPanel; return { open: x.Open, items: x.GalleryItems, message: x.GalleryMessage, view: x.GalleryView, loading: x.GalleryLoading, sort: x.GallerySort }; });
+const P = (d: Device) => d.page.evaluate(() => { const x = (window as any).__bd_probe.scene.PatchesPanel; return { open: x.Open, items: x.GalleryItems, message: x.GalleryMessage, view: x.GalleryView, loading: x.GalleryLoading, sort: x.GallerySort, on: x.GalleryOn, note: x.GalleryNote }; });
+/** SAVE on Patches › SAVE / SHARE (a new link the first time, then saves over it); resolves once saved. */
+async function save(d: Device): Promise<string> {
+  await tab(d, 0);
+  await press(d, 'share', 200);
+  await d.page.waitForFunction(() => { const s = (window as any).__bd_probe; const l = s.scene.host.links.current(); return !!l && !l.stale && !s.scene.PatchesPanel.Saving; }, null, { timeout: 60000 });
+  await d.page.waitForTimeout(400);
+  return d.page.evaluate(() => (window as any).__bd_probe.v1App.CompositionId);
+}
+const GALLERY = 2;
 async function press(d: Device, name: string, wait = 400): Promise<void> {
   const at = await d.page.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name);
   if (!at) throw new Error(`no control ${name}`);
@@ -65,32 +77,34 @@ const PATCH = (blocks: { id: string; type: string; x: number; y: number; params:
 const bd = (...a: string[]) => JSON.parse(execFileSync('node', ['tools/bd.ts', 'gallery', ...a, '--local', STATE], { encoding: 'utf8' }));
 
 try {
-  // ---- R1, R2: publishing from the GALLERY tab saves to the account first ----
+  // ---- R1: SAVE with ADD TO GALLERY (on by default) publishes ----
   const alice = await device('alice_g');
   await alice.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Glass Rain'));
-  await tab(alice, 4); await idle(alice);
+  await tab(alice, GALLERY); await idle(alice);
   check('R7: an empty gallery says so', (await P(alice)).items.length === 0);
-  await press(alice, 'publish', 300); await idle(alice);
+  check('R1: ADD TO GALLERY is on by default', (await P(alice)).on === true);
+  const aliceId = await save(alice);
+  await tab(alice, GALLERY); await idle(alice);
   const a1 = await P(alice);
-  const aliceId = await alice.page.evaluate(() => (window as any).__bd_probe.v1App.CompositionId);
-  check('R1: PUBLISH THIS PATCH saves it to the account and publishes it', /Published/.test(a1.message) && a1.items.length === 1 && a1.items[0].title === 'Glass Rain' && a1.items[0].by === 'alice_g' && a1.items[0].mine && a1.items[0].id === aliceId, a1);
+  check('R1: SAVE published it, with no message to read', a1.items.length === 1 && a1.items[0].title === 'Glass Rain' && a1.items[0].by === 'alice_g' && a1.items[0].mine && a1.items[0].id === aliceId && !a1.note, a1);
 
-  // ---- R3, R4: what can't be published ----
-  const own = await api(alice, 'POST', 'patches', { patch: PATCH([{ id: 'b1', type: 'source.sample', x: 0, y: 0, params: { track: 'file:loop.wav' } }]), title: 'Mine', turnstile: 'ok' });
-  const ownPub = await api(alice, 'POST', `gallery/${own.json.id}`);
-  const rude = await api(alice, 'POST', 'patches', { patch: PATCH([{ id: 'b1', type: 'source.tone', x: 0, y: 0, params: {} }]), title: 'shit tune', turnstile: 'ok' });
-  const rudePub = await api(alice, 'POST', `gallery/${rude.json.id}`);
+  // ---- R2–R4: what can't be published ----
+  const own = await api(alice, 'POST', 'patches', { patch: PATCH([{ id: 'b1', type: 'source.sample', x: 0, y: 0, params: { track: 'file:loop.wav' } }]), title: 'Mine', turnstile: 'ok', gallery: true });
+  const rude = await api(alice, 'POST', 'patches', { patch: PATCH([{ id: 'b1', type: 'source.tone', x: 0, y: 0, params: {} }]), title: 'shit tune', turnstile: 'ok', gallery: true });
   const anon = await device(null);
-  const anonPub = await api(anon, 'POST', `gallery/${aliceId}`);
-  check('R3: a patch with the user\'s own audio files can\'t be published', ownPub.status === 400 && /audio files/.test(ownPub.json.error), ownPub);
-  check('R4: a rude title can\'t; R2: only the owner, signed in, can publish', rudePub.status === 400 && anonPub.status === 401, [rudePub.status, anonPub.status]);
+  const anonSave = await api(anon, 'POST', 'patches', { patch: PATCH([{ id: 'b1', type: 'source.tone', x: 0, y: 0, params: {} }]), title: 'Anon', turnstile: 'ok', gallery: true });
+  check('R3: the user\'s own audio files keep a patch out (saved, not published)', own.status === 201 && own.json.gallery.published === false && /audio files/.test(own.json.gallery.reason), own.json?.gallery);
+  check('R4: a rude title keeps it out', rude.status === 201 && rude.json.gallery.published === false, rude.json?.gallery);
+  check('R2: only signed-in users can publish (owner, 2026-11-15)', anonSave.status === 201 && anonSave.json.gallery.published === false && anonSave.json.gallery.reason === 'Only signed-in users can publish to the gallery.', anonSave.json?.gallery);
+  await tab(anon, 0);
+  check('R2: signed out, the switch says so (and SAVE leaves the gallery alone)', !(await anon.page.evaluate(() => (window as any).__bd_probe.scene.host.signedIn())));
 
   // ---- R8: likes, signed in only, one per person, no down votes ----
-  await tab(anon, 4); await idle(anon);
+  await tab(anon, GALLERY); await idle(anon);
   await press(anon, 'glike0', 800);
   check('R8: liking needs an account', /Sign in/.test((await P(anon)).message) && (await P(anon)).items[0].likes === 0, (await P(anon)).message);
   const bob = await device('bob_g');
-  await tab(bob, 4); await idle(bob);
+  await tab(bob, GALLERY); await idle(bob);
   await press(bob, 'glike0', 800);
   const liked = (await P(bob)).items[0];
   await press(bob, 'glike0', 800);
@@ -99,16 +113,16 @@ try {
   const again = await api(bob, 'POST', `gallery/${aliceId}/like`, { on: true });
   check('R8: LIKE, then again to take it back; one like per person', liked.liked && liked.likes === 1 && !unliked.liked && unliked.likes === 0 && again.json.likes === 1, [liked, unliked, again.json]);
 
-  // ---- R7: search by title, block, @name; sort ----
+  // ---- R7: search by title, block, name (with or without @); sort ----
   await bob.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel());
   await bob.page.waitForTimeout(600);
-  await bob.page.evaluate(() => { const h = (window as any).__bd_probe.scene.host; h.createBlock('Laser', 3, 3); });
+  await bob.page.evaluate(() => { (window as any).__bd_probe.scene.host.createBlock('Laser', 3, 3); });
   await bob.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Bob Lasers'));
-  await tab(bob, 4); await idle(bob);
-  await press(bob, 'publish', 300); await idle(bob);
-  const byTitle = await search(bob, 'glass'), byBlock = await search(bob, 'laser'), byName = await search(bob, '@alice_g'), none = await search(bob, 'zzzz');
-  check('R7: search finds titles, block types and @names', byTitle.length === 1 && byTitle[0].title === 'Glass Rain' && byBlock.some(r => r.title === 'Bob Lasers')
-    && byName.length === 1 && byName[0].by === 'alice_g' && none.length === 0, { byTitle, byBlock: byBlock.map(r => r.title), byName, none });
+  await save(bob);
+  await tab(bob, GALLERY); await idle(bob);
+  const byTitle = await search(bob, 'glass'), byBlock = await search(bob, 'laser'), byAt = await search(bob, '@alice_g'), byName = await search(bob, 'alice'), none = await search(bob, 'zzzz');
+  check('R7: search finds titles, block types and names (with or without @)', byTitle.length === 1 && byTitle[0].title === 'Glass Rain' && byBlock.some(r => r.title === 'Bob Lasers')
+    && byAt.length === 1 && byAt[0].by === 'alice_g' && byName.some(r => r.by === 'alice_g') && none.length === 0, { byTitle, byBlock: byBlock.map(r => r.title), byAt, byName: byName.map(r => r.by), none });
   await search(bob, '');
   const popular = (await P(bob)).items.map((r: { title: string }) => r.title);
   await bob.page.mouse.move(5, 5); await bob.page.waitForTimeout(300); await bob.page.screenshot({ path: `${OUT}/gallery-rows.png` });
@@ -116,24 +130,30 @@ try {
   const newest = (await P(bob)).items.map((r: { title: string }) => r.title);
   check('R7: POPULAR puts the liked patch first; NEW the newest', popular[0] === 'Glass Rain' && newest[0] === 'Bob Lasers', { popular, newest });
 
-  // ---- R11: OPEN from the gallery; SAVE makes a remix, counted on the original ----
+  // ---- R11, R14, R15: OPEN from the gallery: counted, credited; SAVE makes a remix ----
   await press(bob, 'sort', 300); await idle(bob);  // back to POPULAR: Glass Rain is row 0
+  const viewsBefore = (await P(bob)).items[0].views;
   await press(bob, 'gopen0', 2500);
-  const opened = await bob.page.evaluate(() => ({ id: (window as any).__bd_probe.v1App.CompositionId, blocks: (window as any).__bd_probe.state.blocks.length }));
+  const opened = await bob.page.evaluate(() => ({ id: (window as any).__bd_probe.v1App.CompositionId, corners: (window as any).__bd_probe.corners }));
+  check('R15: someone else\'s patch shows "TITLE BY @NAME" on the stage', opened.corners.credit?.by === 'alice_g' && opened.corners.credit?.title === 'Glass Rain' && !!opened.corners.byAt, opened.corners);
+  await bob.page.mouse.click(opened.corners.byAt[0], opened.corners.byAt[1]); await bob.page.waitForTimeout(1200); await idle(bob);
+  const theirs = await P(bob);
+  check('R15: pressing @NAME opens the gallery on their patches', theirs.open && theirs.items.every((r: { by: string }) => r.by === 'alice_g') && theirs.items.length === 1
+    && await bob.page.evaluate(() => (document.getElementById('gallerySearchInput') as HTMLInputElement).value === '@alice_g'), theirs.items);
+  check('R14: opening it counted a view', theirs.items[0].views === viewsBefore + 1, [viewsBefore, theirs.items[0].views]);
+  await bob.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel()); await bob.page.waitForTimeout(600);
   await bob.page.evaluate(() => { (window as any).__bd_probe.scene.host.createBlock('ToneSource', -5, 5); });
-  await tab(bob, 0);
-  await press(bob, 'share', 200);
-  await bob.page.waitForFunction(id => { const v = (window as any).__bd_probe.v1App.CompositionId; return v && v !== id && !(window as any).__bd_probe.scene.PatchesPanel.Saving; }, opened.id, { timeout: 60000 });
-  const remix = await bob.page.evaluate(() => (window as any).__bd_probe.v1App.CompositionId);
+  const remix = await save(bob);
   const rp = await api(bob, 'GET', `patches/${remix}`);
-  await tab(bob, 4); await idle(bob);
+  await tab(bob, GALLERY); await search(bob, '');
   const glass = (await P(bob)).items.find((r: { id: string }) => r.id === aliceId);
-  check('R11: SAVE after opening someone\'s patch makes a remix; the original counts it', opened.id === aliceId && remix !== aliceId && rp.json.parent === aliceId && glass?.remixes === 1, { opened, remix, parent: rp.json?.parent, remixes: glass?.remixes });
+  check('R11: SAVE after opening someone\'s patch makes a remix; the original counts it; the credit goes', opened.id === aliceId && remix !== aliceId && rp.json.parent === aliceId && glass?.remixes === 1
+    && !(await bob.page.evaluate(() => (window as any).__bd_probe.corners.credit)), { remix, parent: rp.json?.parent, remixes: glass?.remixes });
 
   // ---- R9, R10: three reports hide it; the site owner reviews with bd gallery ----
   const carol = await device('carol_g'), dave = await device('dave_g');
   for (const d of [bob, carol, dave]) {
-    await tab(d, 4); await idle(d);
+    await tab(d, GALLERY); await search(d, '');
     const i = (await P(d)).items.findIndex((r: { id: string }) => r.id === aliceId);
     await press(d, `greport${i}`, 300);
     if (d === bob) check('R9: REPORT asks first', (await P(d)).view === 'report');
@@ -150,26 +170,30 @@ try {
   bd('keep', aliceId);
   check('R10: keep shows it again; hide takes it out', kept.json.items.some((r: { id: string }) => r.id === aliceId) && !hidden.json.items.some((r: { id: string }) => r.id === aliceId));
 
-  // ---- R5: saving a published patch updates it; a rude new title withdraws it ----
+  // ---- R5: saving a published patch updates it ----
   await alice.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Glass Rain II'));
   await alice.page.evaluate(() => { (window as any).__bd_probe.scene.host.createBlock('ToneSource', 6, -5); });
-  await tab(alice, 0); await press(alice, 'share', 200);
-  await alice.page.waitForFunction(() => !(window as any).__bd_probe.scene.host.links.current()?.stale && !(window as any).__bd_probe.scene.PatchesPanel.Saving, null, { timeout: 60000 });
+  await save(alice);
   const renamed = (await api(anon, 'GET', 'gallery?q=glass')).json.items;
-  check('R5: SAVE updates the published title', renamed.length === 1 && renamed[0].title === 'Glass Rain II', renamed);
+  check('R5: SAVE updates the published title', renamed.find((r: { id: string }) => r.id === aliceId)?.title === 'Glass Rain II', renamed);
 
-  // ---- R6: the owner unpublishes from their row ----
-  await tab(alice, 4); await idle(alice);
-  await search(alice, '@alice_g');
-  await press(alice, 'gunpub0', 300); await idle(alice);
+  // ---- R6: ADD TO GALLERY off, then SAVE, takes it out (the link still opens) ----
+  await tab(alice, 0);
+  await press(alice, 'gallerySwitch', 300);
+  const switched = await P(alice);
+  const st = await alice.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.shareState());
+  await press(alice, 'share', 200);
+  await alice.page.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Saving, null, { timeout: 60000 });
+  await alice.page.waitForTimeout(500);
   const gone = (await api(anon, 'GET', 'gallery?q=%40alice_g')).json.items;
-  check('R6: UNPUBLISH takes it out (the link still opens)', gone.length === 0 && (await api(anon, 'GET', `patches/${aliceId}`)).status === 200, gone);
+  check('R6: switching ADD TO GALLERY off makes SAVE available, and SAVE unpublishes', switched.on === false && st.save === 'save' && gone.length === 0 && (await api(anon, 'GET', `patches/${aliceId}`)).status === 200, { st, gone });
 
   // ---- account deletion takes its gallery entries and likes ----
   const bobDel = await api(bob, 'DELETE', 'me');
   const afterDel = (await api(anon, 'GET', 'gallery?q=%40bob_g')).json.items;
   check('Deleting an account removes its gallery entries', bobDel.status === 200 && afterDel.length === 0, afterDel);
-  await alice.page.screenshot({ path: `${OUT}/gallery-alice.png` });
+  await tab(alice, 0); await alice.page.mouse.move(5, 5); await alice.page.waitForTimeout(300);
+  await alice.page.screenshot({ path: `${OUT}/save-share.png` });
 } catch (e) {
   check('gallery run', false, String((e as Error).stack ?? e).slice(0, 800));
 } finally {
