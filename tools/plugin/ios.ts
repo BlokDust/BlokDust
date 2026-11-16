@@ -27,6 +27,7 @@ const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.j
 // folder: the extension relinks it by name and must render like the native engine with the same WAV.
 const SAMPLE_FIXTURE = 'tests/golden/samples/sample-file.json';
 const OUT = '.cache/ios-host';
+const SMALL_VIEW = [480, 320];  // an AUM-sized plugin window (task 8): screenshot only, for review
 const APP_ID = 'com.funputs.blokdust';
 const APP_GROUP = 'group.com.funputs.blokdust';  // plugin/CMakeLists.txt BLOKDUST_APP_GROUP
 const SHARED = /storage: app group, 1 patches/;
@@ -72,14 +73,14 @@ function simulator(): { udid: string; name: string } {
 
 const logTime = (d: Date) => { const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
 
-const appLog = (udid: string, since: Date) => run('xcrun', ['simctl', 'spawn', udid, 'log', 'show', '--start', logTime(since), '--style', 'compact',
-  '--predicate', 'subsystem == "com.funputs.blokdust"'], true).stdout;
+const appLog = (udid: string, since: Date, subsystem = 'com.funputs.blokdust') => run('xcrun', ['simctl', 'spawn', udid, 'log', 'show', '--start', logTime(since),
+  '--style', 'compact', '--predicate', `subsystem == "${subsystem}"`], true).stdout;
 
-/** Waits up to `seconds` for every pattern to appear in the plugin's log since `since`. */
-function waitForLog(udid: string, since: Date, patterns: RegExp[], seconds: number): string {
+/** Waits up to `seconds` for every pattern to appear in the plugin's (or `subsystem`'s) log since `since`. */
+function waitForLog(udid: string, since: Date, patterns: RegExp[], seconds: number, subsystem?: string): string {
   let log = '';
   for (let i = 0; i < seconds; ++i) {
-    log = appLog(udid, since);
+    log = appLog(udid, since, subsystem);
     if (patterns.every(p => p.test(log))) break;
     sleep(1000);
   }
@@ -156,9 +157,10 @@ export function iosTest(noBuild: boolean): void {
 
   const out = resolve(OUT, 'result.json');
   rmSync(out, { force: true });
+  rmSync(resolve(OUT, 'editor-small.png'), { force: true });
   const job = resolve(OUT, 'job.json');
   writeFileSync(job, JSON.stringify({ component: COMPONENT, fixtures: [...FIXTURES.map(f => resolve(f)), { path: sampleCase.fixture, settleMs: 3000 }],
-    out, editorSeconds: 15 }));
+    out, editorSeconds: 15, smallView: SMALL_VIEW }));
   const started = new Date(Date.now() - 1000);
   must(run('xcrun', ['simctl', 'launch', '--terminate-running-process', sim.udid, HOST_ID, '--job', job], true), 'launch test host');
   for (let i = 0; i < 120 && !existsSync(out); ++i) sleep(1000);
@@ -166,6 +168,11 @@ export function iosTest(noBuild: boolean): void {
   const result = JSON.parse(readFileSync(out, 'utf8'));
   const shot = resolve(OUT, 'editor.png');
   run('xcrun', ['simctl', 'io', sim.udid, 'screenshot', shot], true);
+  const small = resolve(OUT, 'editor-small.png');
+  if (/view small/.test(waitForLog(sim.udid, started, [/view small/], 10, 'com.funputs.blokdust.ioshost'))) {
+    sleep(4000);  // the page relayouts
+    run('xcrun', ['simctl', 'io', sim.udid, 'screenshot', small], true);
+  }
   run('xcrun', ['simctl', 'terminate', sim.udid, HOST_ID], true);
 
   // The page's round-trip, from the extension's own log line (environment variables never reach an extension).
@@ -185,7 +192,8 @@ export function iosTest(noBuild: boolean): void {
   const sample = { fixture: SAMPLE_FIXTURE, audioHash: s?.audioHash ?? null, expected: sampleCase.expected, identical: s?.audioHash === sampleCase.expected,
     relinked: /sample: relinked from Samples/.test(log), error: s?.error };
   const lastBlocks = JSON.parse(readFileSync(SAMPLE_FIXTURE, 'utf8')).patch.blocks.length;  // the editor shows the last state set
-  const editor = { sharedFolder: extensionSharedFolder, view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot };
+  const editor = { sharedFolder: extensionSharedFolder, view: !!result.view, ready: ready.at(-1) ?? null, expectedBlocks: lastBlocks, screenshot: shot,
+    smallScreenshot: existsSync(small) ? small : null };
   const ok = app.ok && !result.error && wrapper === 'AUv3' && renders.length === FIXTURES.length && renders.every(r => r.identical && r.stateRoundTrips) && sample.identical && sample.relinked
     && editor.sharedFolder && editor.view && editor.ready === lastBlocks;
   console.log(JSON.stringify({ ok, simulator: sim.name, component: COMPONENT, name: result.name, wrapper, params: result.params?.length ?? 0,

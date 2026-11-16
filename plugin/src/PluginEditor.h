@@ -41,6 +41,7 @@ class BlokDustEditor : public juce::AudioProcessorEditor, public juce::FileDragA
   std::unique_ptr<juce::FileChooser> patchChooser_;
   juce::WebBrowserComponent web_;
   KeyUpsToHost keyUps_{*this};  // Logic's Musical Typing gets its note-offs while the page has the keys
+  juce::ScopedMessageBox linkNote_;  // iPad extension: "Link copied" (bd_openUrl)
 };
 
 }  // namespace blokdust::plugin

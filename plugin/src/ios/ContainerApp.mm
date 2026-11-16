@@ -191,6 +191,8 @@ class ContainerApp : public juce::JUCEApplication, private juce::Timer {
     window_->setUsingNativeTitleBar(true);
     window_->setContentNonOwned(stage_.get(), false);
     window_->setFullScreen(true);
+    // Kiosk mode is how JUCE hides the status bar and the home indicator (its view controller asks for it).
+    juce::Desktop::getInstance().setKioskModeComponent(window_.get(), false);
     window_->setVisible(true);
     startTimer(500);
   }
@@ -201,6 +203,7 @@ class ContainerApp : public juce::JUCEApplication, private juce::Timer {
     for (id o : observers_) [NSNotificationCenter.defaultCenter removeObserver:o];
     observers_.clear();
     audio_ = nullptr;
+    juce::Desktop::getInstance().setKioskModeComponent(nullptr, false);
     window_ = nullptr;
     stage_ = nullptr;
     editor_ = nullptr;  // before the processor (its destructor tells the processor)

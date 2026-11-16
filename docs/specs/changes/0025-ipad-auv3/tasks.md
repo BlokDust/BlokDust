@@ -34,10 +34,19 @@ Check items off as they land. Each task should be independently verifiable.
       automated: the picker itself (task 11). The Recorder's download exports the take through the picker (no Finder).
       Every picker is parented to the editor on iPad (`pickerParent`): JUCE never opens an AUv3's picker without one.
       Left for task 8: no file drops on iPad.
-- [ ] 7. Links: `bd_openUrl` in the extension (no `openURL` from extensions): hide or replace those buttons in the
+- [x] 7. Links: `bd_openUrl` in the extension (no `openURL` from extensions): hide or replace those buttons in the
       iPad plugin page.
+      2026-11-16: replaced, not hidden. In the extension a link (About, the code, CREATE SHARE LINK's site page) is
+      copied to the clipboard and a native "Link copied" alert says to paste it into Safari; the app opens links as
+      usual. The page learns it runs on iPad (`bd_patch` `ios`): the patch bin says the file will be deleted, not moved
+      to the Trash. Not automated (the host cannot press page buttons): check on the iPad (task 11).
 - [ ] 8. Editor on iPad: touch in WKWebView (Release 1 multi-touch), host view sizes (AUM, GarageBand, Logic for
       iPad), safe areas, no hardware keyboard.
+      2026-11-16 (in part): the editor has no resize corner on iPad and a 320×240 floor (hosts size the view); the app
+      is a kiosk window (no status bar, home indicator hides) inset from the safe area. `bd plugin ios test` also
+      shows the view at an AUM-like 480×320 (`.cache/ios-host/editor-small.png`, for review): the page lays out.
+      Left: touch inside the extension (the page's touch handling is Release 1's, tested in iPad Safari) and real
+      host sizes, both on the iPad (task 11).
 - [ ] 9. BlokDust FX as a second AUv3 in the same app.
 - [ ] 10. Device: signing setup (local config), `plugin-ios` preset, install on the owner's iPad; CPU/memory check.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.

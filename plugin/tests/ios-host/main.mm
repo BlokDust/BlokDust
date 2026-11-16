@@ -168,7 +168,16 @@ static NSDictionary* renderFixture(AUAudioUnit* au, NSString* path, double settl
             self.result[@"view"] = @YES;
           }
           HOSTLOG(@"view %@; waiting %.0f s for the editor", vc ? @"shown" : @"missing", editorSeconds);
-          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(editorSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ [self finish]; });
+          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(editorSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self finish];
+            // Then an AUM-sized window (job "smallView": [w, h]): the tool screenshots it after this log line.
+            NSArray* small = job[@"smallView"];
+            if (vc && small.count == 2) {
+              vc.view.autoresizingMask = UIViewAutoresizingNone;
+              vc.view.frame = CGRectMake(40, 80, [small[0] doubleValue], [small[1] doubleValue]);
+              HOSTLOG(@"view small %@x%@", small[0], small[1]);
+            }
+          });
         }];
       });
     });

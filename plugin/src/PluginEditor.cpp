@@ -149,9 +149,23 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  web_.emitEventIfBrowserIsVisible("bd_patchDeleted", juce::JSON::parse(juce::String(r.dump())));
                })
                // CREATE SHARE LINK (and the About links): open a web page in the user's browser. https only.
-               .withEventListener("bd_openUrl", [](const juce::var& v) {
+               .withEventListener("bd_openUrl", [this](const juce::var& v) {
                  const auto url = v.getProperty("url", "").toString();
-                 if (url.startsWith("https://")) juce::URL(url).launchInDefaultBrowser();
+                 if (!url.startsWith("https://")) return;
+#if JUCE_IOS
+                 // iPadOS gives an AUv3 no way to open Safari (CHG-0025 task 7): the link goes to the clipboard, with a
+                 // note. The BlokDust app itself opens links as usual.
+                 if (juce::SystemStats::isRunningInAppExtensionSandbox()) {
+                   juce::SystemClipboard::copyTextToClipboard(url);
+                   systemLog("link: copied to the clipboard (extension)");
+                   linkNote_ = juce::NativeMessageBox::showScopedAsync(
+                       juce::MessageBoxOptions::makeOptionsOk(juce::MessageBoxIconType::InfoIcon, "Link copied",
+                                                              "BlokDust can't open Safari from inside another app. Paste the link into Safari to open it.")
+                           .withAssociatedComponent(this), nullptr);
+                   return;
+                 }
+#endif
+                 juce::URL(url).launchInDefaultBrowser();
                })
                .withEventListener("bd_dropTarget", [this](const juce::var& v) {
                  if (static_cast<int>(v.getProperty("token", -1)) != dropToken_ || pendingDrop_.isEmpty()) return;
@@ -165,8 +179,15 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
     web_.emitEventIfBrowserIsVisible("bd_ccLearned", juce::var(obj));
   };
   addAndMakeVisible(web_);
+#if JUCE_IOS
+  // iPad (CHG-0025 task 8): the host sizes the view (AUM's windows are small, GarageBand's panel wide): no corner to
+  // drag, and a smaller floor so the page lays itself out instead of being clipped.
+  setResizable(true, false);
+  setResizeLimits(320, 240, 4096, 4096);
+#else
   setResizable(true, true);
   setResizeLimits(640, 400, 4096, 4096);
+#endif
   setSize(1280, 800);
   systemLog(juce::String(proc_.isFx() ? "fx" : "instrument") + " editor: loading " + juce::WebBrowserComponent::getResourceProviderRoot() + " (host " + juce::PluginHostType().getHostDescription() + ")");
   web_.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
@@ -203,6 +224,9 @@ void BlokDustEditor::reloadPatch() {
   // The standalone app has no DAW to pass keys on to: the page keeps every plain key, or macOS sounds its alert for
   // each one nobody takes (owner, 2026-11-13, CHG-0013).
   obj->setProperty("standalone", proc_.wrapperType == juce::AudioProcessor::wrapperType_Standalone);
+#if JUCE_IOS
+  obj->setProperty("ios", true);  // no Trash, no Finder (CHG-0025)
+#endif
   web_.emitEventIfBrowserIsVisible("bd_patch", juce::var(obj));
 }
 

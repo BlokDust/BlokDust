@@ -136,6 +136,8 @@ async function main() {
   let engine: EngineNode | null = null;
   /** The plugin runs as the standalone app (the processor says so with its patch): no DAW to pass keys on to. */
   let standalone = false;
+  /** The plugin runs on iPad (CHG-0025): no Trash. */
+  let ios = false;
   let send = (cmds: Command[]) => engine?.send(cmds);
   /** Sample references by `track` key (DATA-0005): the patch keeps the ones its blocks use. */
   const refs = new Map<string, SampleRef>();
@@ -274,9 +276,12 @@ async function main() {
         try { localStorage.setItem(MINE_KEY, JSON.stringify(myPatches().filter(m => m.title !== item.key.slice(5)))); } catch { /* private mode */ }
       } else if (juce && item.key.startsWith('file:')) await nativeReply(req => juce.emitEvent('bd_patchDelete', { req, path: item.key.slice(5) }));
     },
-    // Owner's wording (2026-11-10); the plugin's file really goes to the Trash, so it says so.
-    removeLine: juce ? 'This patch file will be moved to the Trash. Links you generated remain untouched.'
-      : 'This patch will be removed from the patches list. Your local downloaded patches and generated links remain untouched.',
+    // Owner's wording (2026-11-10); the plugin's file really goes to the Trash, so it says so (iPad has no Trash).
+    get removeLine() {
+      return !juce ? 'This patch will be removed from the patches list. Your local downloaded patches and generated links remain untouched.'
+        : ios ? 'This patch file will be deleted. Links you generated remain untouched.'
+        : 'This patch file will be moved to the Trash. Links you generated remain untouched.';
+    },
     // Plugin: CREATE SHARE LINK opens the patch on the public site, which makes the link (its page runs the bot check
     // the plugin's own page can't: Turnstile only runs on the site's own address). Nothing is uploaded until then.
     links: juce ? {
@@ -1000,8 +1005,9 @@ async function main() {
   if (juce) {
     overlay.remove();
     send = cmds => juce.emitEvent('bd_commands', { commands: cmds });
-    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean }) => {
+    juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean; ios?: boolean }) => {
       standalone = !!e.standalone;
+      ios = !!e.ios;
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
       const after = pluginAfterLoad; pluginAfterLoad = null;

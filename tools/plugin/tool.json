@@ -9,6 +9,6 @@
     "pnpm bd plugin package",
     "pnpm bd plugin deploy [--no-build] [--force]"
   ],
-  "outputs": "build/plugin/plugin/BlokDust_artefacts/Release/{VST3,AU,Standalone}; JSON {pluginval, renders}; build/plugin-ios-sim/…/Standalone/BlokDust.app (AUv3 inside); .cache/ios-host/{result.json,app.png,editor.png}",
+  "outputs": "build/plugin/plugin/BlokDust_artefacts/Release/{VST3,AU,Standalone}; JSON {pluginval, renders}; build/plugin-ios-sim/…/Standalone/BlokDust.app (AUv3 inside); .cache/ios-host/{result.json,app.png,editor.png,editor-small.png}",
   "deterministic": true
 }
