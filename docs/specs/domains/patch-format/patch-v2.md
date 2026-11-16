@@ -89,6 +89,15 @@ The single, portable representation of a BlokDust creation, used by the web app,
     web the browser's save dialog where there is one (starting in Music, then the folder last used for patches), else a
     download. Patch names may use any characters; the file name drops only those a file system can't hold.
   - Built-in presets ship as `.blokdust` files (`web/src/patch/presets/`); `pnpm bd gallery presets` publishes them as @blokdust's.
+- **R11.** A patch lists where its blocks came from (owner review 3, 2026-11-16), so how patches were combined can be
+  followed back one day (a family tree in the gallery):
+  - `sources`: one entry per saved (server) patch that INSERT brought in: `{ id, rev, title, by, blocks }`, `blocks`
+    being the ids, in this patch, of the blocks it brought that are still here. Entries with no blocks left are
+    dropped on save.
+  - Opening a patch keeps its `sources`; inserting one carries its `sources` along under the blocks' new ids, so the
+    whole chain survives even when the middle patch is a local file.
+  - A patch opened from a link and saved again is a remix: the server keeps `parent` (SPEC-SHARING-GALLERY R11).
+  - The plugin has no gallery: what it inserts from files carries no `sources` yet.
 
 ## Verification
 Schema tests; round-trip property tests (parse → serialize → parse); v1 import tests against `tests/visual/fixtures/v1/*.json`; size checks.

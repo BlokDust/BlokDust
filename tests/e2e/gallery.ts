@@ -302,6 +302,46 @@ try {
     && during.opening && during.open && during.blocks === blocksBefore && !landed.opening && !landed.open && landed.blocks === 10, { blocksBefore, failed, during, landed });
   const rotating = await carol.page.evaluate(() => ({ n: (window as any).__bd_probe.state.patch.blocks.length, credit: (window as any).__bd_probe.corners.credit }));
   check('R16: an example opens with all its blocks, credited to @blokdust', rotating.n === 10 && rotating.credit?.by === 'blokdust' && rotating.credit?.title === 'Rotating Sequencer', rotating);
+  // Bug (owner review 3): after an INSERT the patch has changes, so OPEN asks first; on the GALLERY tab the question
+  // wasn't drawn and its buttons didn't answer, so OPEN seemed to do nothing.
+  await tab(carol, GALLERY); await idle(carol);
+  await press(carol, 'gins0', 300);
+  await carol.page.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Opening, null, { timeout: 15000 });
+  await carol.page.mouse.move(300, 650, { steps: 4 }); await carol.page.mouse.click(300, 650); await carol.page.waitForTimeout(800);
+  await tab(carol, GALLERY); await idle(carol);
+  await press(carol, 'gopen1', 600);
+  const askedText = await carol.page.evaluate(() => { const seen: string[] = []; const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); }; (window as any).__bd_probe.scene.PatchesPanel.Draw(); CanvasRenderingContext2D.prototype.fillText = f; return seen.join(' | '); });
+  const askedView = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.View);
+  await carol.page.mouse.move(5, 5); await carol.page.waitForTimeout(200); await carol.page.screenshot({ path: `${OUT}/gallery-open-asks.png` });
+  await press(carol, 'openAnyway', 300);
+  await carol.page.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Opening, null, { timeout: 15000 }); await carol.page.waitForTimeout(1500);
+  const afterAsk = await opening();
+  check('Bug: after an INSERT, OPEN in the gallery asks first (shown, answered) and OPEN ANYWAY opens it', askedView === 'confirm' && /REPLACE CURRENT PATCH/i.test(askedText) && !/SEARCH/.test(askedText)
+    && !afterAsk.open && afterAsk.blocks === 6, { askedView, askedText: askedText.slice(0, 200), afterAsk });
+  // ---- SPEC-PATCH-FORMAT-V2 R11 (owner review 3): a saved patch lists the saved patches inserted into it, and
+  // inserting that one carries them along, so how patches were combined can be followed back ----
+  const place = async (d: Device, x: number) => {
+    await d.page.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Opening, null, { timeout: 15000 });
+    await d.page.mouse.move(x, 650, { steps: 4 }); await d.page.mouse.click(x, 650); await d.page.waitForTimeout(800);
+  };
+  await tab(carol, GALLERY); await idle(carol);
+  await press(carol, 'gins0', 300); await place(carol, 250);
+  await tab(carol, GALLERY); await idle(carol);
+  await press(carol, 'gins3', 300); await place(carol, 1000);
+  const combined = await save(carol);
+  const cj = (await api(carol, 'GET', `patches/${combined}`)).json;
+  const ex = (await api(anon, 'GET', 'gallery?sort=examples')).json.items as { id: string; title: string }[];
+  const idOf = (t: string) => ex.find(r => r.title === t)?.id;
+  const srcs = (cj.patch.sources ?? []) as { id: string; by?: string; blocks: string[] }[];
+  check('PATCH-V2 R11: the saved patch lists each saved patch inserted into it, with its blocks', srcs.some(x => x.id === idOf('Computer Keys + 2 Tones') && x.by === 'blokdust' && x.blocks.length === 6)
+    && srcs.some(x => x.id === idOf('Rotating Sequencer') && x.blocks.length === 10) && cj.parent === idOf('MIDI Keys + 2 Tones'), { sources: srcs, parent: cj.parent });
+  await dave.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel()); await dave.page.waitForTimeout(500);
+  await dave.page.evaluate(id => (window as any).__bd_probe.scene.host.gallery.open({ id }, 'insert'), combined); await place(dave, 600);
+  const daveSaved = await save(dave);
+  const dsrc = ((await api(dave, 'GET', `patches/${daveSaved}`)).json.patch.sources ?? []) as { id: string; blocks: string[] }[];
+  const ids = new Set(await dave.page.evaluate(() => (window as any).__bd_probe.state.patch.blocks.map((b: any) => b.id)));
+  check('PATCH-V2 R11: inserting a combined patch carries its sources along, under the new block ids', dsrc.some(x => x.id === combined) && dsrc.some(x => x.id === idOf('Computer Keys + 2 Tones'))
+    && dsrc.some(x => x.id === idOf('Rotating Sequencer')) && dsrc.every(x => x.blocks.every(b => ids.has(b))), dsrc.map(x => `${x.id}:${x.blocks.length}`));
   await tab(carol, 1); await carol.page.waitForTimeout(800);
   const carolOpen = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: { name: string; detail: string }) => `${i.name} | ${i.detail}`));
   check('R16: the web OPEN lists only the user\'s own patches (no presets)', !carolOpen.some((i: string) => /Preset|Computer Keys/.test(i)), carolOpen);

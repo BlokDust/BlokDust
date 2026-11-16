@@ -981,6 +981,24 @@ Object.assign(tests, {
   /** Owner review 2 (CHG-0023/0024, 2026-11-15): the GitHub link and the build line show on About only; the ADD TO
    * GALLERY switch's icons sit clear of its underline (as in an options-panel row); BACK is at the top right of the
    * page, its label centred under the chevron. */
+  /** Bug (owner review 3, 2026-11-16): the colour theme went back to the first one on every reload. It is the user's
+   * preference, kept in this browser, and stays when another patch opens. */
+  async 'theme-remembered'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    const boot = async (q = '') => { await p.goto(`${url}/index.html${q}`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1200); };
+    const no = () => p.evaluate(() => (window as any).__bd_probe.v1App.ThemeManager.CurrentThemeNo);
+    await boot();
+    const first = await no();
+    await p.evaluate(() => (window as any).__bd_probe.v1App.ThemeManager.LoadTheme(3)); await p.waitForTimeout(300);
+    await boot();
+    const reloaded = await no();
+    await boot(`?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    const another = await no();
+    await ctx.close();
+    return [first === 0 && reloaded === 3 && another === 3, { first, reloaded, another }];
+  },
+
   async 'review2-panels'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await p.evaluate(() => {

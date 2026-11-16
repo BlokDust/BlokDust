@@ -61,6 +61,25 @@ export interface AccountHost {
   cancelled(e: unknown): boolean;
 }
 /** The gallery (CHG-0024). */
+/**
+ * Likes, three directions for the owner to choose from (owner review 3, 2026-11-16: the star didn't read as an up vote
+ * and its angles aren't BlokDust's 45°). `?likes=a|b|c` picks one until then.
+ *  a: inline: an up arrow and the count after the credit, and in each gallery row's second line with the views.
+ *  b: column: Reddit's arrow over the count, left of each gallery row; on the stage a second line under the credit.
+ *  c: +1: a small v1 bordered "+1" button after the credit; rows and the stage read "12 likes · 340 views".
+ */
+export type LikeStyle = 'a' | 'b' | 'c';
+export const likeLook: { style: LikeStyle } = { style: (() => { try { const v = new URLSearchParams(location.search).get('likes'); return v === 'b' || v === 'c' ? v : 'a'; } catch { return 'a'; } })() };
+/** An up arrow with 45° sides (v1's chevrons), centred on x, y, `s` wide; filled in `on` when liked. */
+export function drawUpArrow(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, liked: boolean, colour: string, on: string): void {
+  const h = s / 2;
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(x - h, y + h / 2); ctx.lineTo(x, y - h / 2); ctx.lineTo(x + h, y + h / 2); ctx.closePath();
+  ctx.lineJoin = 'miter'; ctx.lineWidth = Math.max(1, s / 8);
+  if (liked) { ctx.fillStyle = on; ctx.strokeStyle = on; ctx.fill(); ctx.stroke(); } else { ctx.strokeStyle = colour; ctx.stroke(); }
+  ctx.restore();
+}
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 /** POPULAR · NEW · EXAMPLES · TUTORIALS (owner review 3: EXAMPLES and TUTORIALS are @blokdust's patches). */
 export type GallerySort = 'popular' | 'new' | 'examples' | 'tutorials';
 export const GALLERY_SORTS: GallerySort[] = ['popular', 'new', 'examples', 'tutorials'];
@@ -412,7 +431,9 @@ export class PatchesPanel extends DisplayObject {
 
     if (this.Opening) { App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.cy, 16, true); return; }
     if (this.OpenError) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.OpenError, this.margin, this.cy + 205 * u, 14 * u, this.pageW); }
-    if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
+    // OPEN over unsaved changes asks first, from the OPEN tab or the gallery (bug, owner review 3: the gallery's
+    // question was never drawn nor answered, so OPEN did nothing after an INSERT).
+    if (this.View === 'confirm') this.drawConfirm(); else if (this.Tab === 0) this.drawSave(); else if (this.Tab === 2) this.drawGallery(); else if (this.View === 'list') this.drawList(); else if (this.View === 'file') this.drawFile(); else if (this.View === 'remove') this.drawRemove(); else this.drawConfirm();
   }
 
   /** A filled button with v1's hover notch under its centre (SharePanel / SettingsPanel). */
@@ -797,10 +818,23 @@ export class PatchesPanel extends DisplayObject {
       if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
       if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
       App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
-      const maxW = b.textRight - margin - u;
-      const fit = (t: string, yy: number) => { const w = ctx.measureText(t).width; if (w <= maxW) { ctx.fillText(t, margin + u, yy); return; } ctx.save(); ctx.translate(margin + u, yy); ctx.scale(maxW / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
+      const look = likeLook.style, left = margin + u + (look === 'b' ? 30 * u : 0), maxW = b.textRight - left;
+      const fit = (t: string, yy: number, x = left) => { const w = ctx.measureText(t).width; if (w <= maxW - (x - left)) { ctx.fillText(t, x, yy); return; } ctx.save(); ctx.translate(x, yy); ctx.scale((maxW - (x - left)) / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
+      const on = App.Palette[App.ThemeManager.OptionsOrder[2]];
       fit(it.title.toUpperCase(), y - 10 * u);
-      fit(`${COPY.by} @${it.by}${it.remixes ? ` \u00b7 ${it.remixes} remix${it.remixes === 1 ? '' : 'es'}` : ''} \u00b7 ${it.views} view${it.views === 1 ? '' : 's'}`, y);
+      const remixes = it.remixes ? ` \u00b7 ${plural(it.remixes, 'remix').replace('remixs', 'remixes')}` : '', views = plural(it.views, 'view');
+      if (look === 'a') {
+        // by @name · ▲ 12 · 340 views
+        const head = `${COPY.by} @${it.by} \u00b7 `, hw = ctx.measureText(head).width;
+        fit(head, y);
+        drawUpArrow(ctx, left + hw + 5 * u, y - 3.5 * u, 9 * u, it.liked, txt, on);
+        fit(`${it.likes} \u00b7 ${views}${remixes}`, y, left + hw + 13 * u);
+      } else if (look === 'b') {
+        // Reddit's column: the arrow over the count, left of the row.
+        drawUpArrow(ctx, margin + 12 * u, y - 15 * u, 10 * u, it.liked, txt, on);
+        ctx.textAlign = 'center'; ctx.fillText(String(it.likes), margin + 12 * u, y); ctx.textAlign = 'left';
+        fit(`${COPY.by} @${it.by} \u00b7 ${views}${remixes}`, y);
+      } else fit(`${COPY.by} @${it.by} \u00b7 ${plural(it.likes, 'like')} \u00b7 ${views}${remixes}`, y);
       this.drawBordered(b.open, txt);
       this.drawBordered(b.insert, App.Palette[1]);
     }
@@ -856,7 +890,10 @@ export class PatchesPanel extends DisplayObject {
     tabs.forEach(t => { r[`tab${t.id}`] = hit(t.x - t.w * 0.5, tabY, t.w, 60 * u); });
     const box = (b: { x: number; y: number; w: number; h: number }) => hit(b.x, b.y, b.w, b.h);
     const pad = (b: { x: number; y: number; w: number }) => hit(b.x - 5 * u, b.y - 10 * u, b.w + 10 * u, 40 * u);
-    if (this.Tab === 2) {
+    if (this.View === 'confirm') {
+      const [a, b, c] = this.thirds();
+      r.cancel = box(a); r.saveFirst = box(b); r.openAnyway = box(c);
+    } else if (this.Tab === 2) {
       if (this.GalleryView === 'report') {
         const { left, right } = this.halves();
         for (const h of [left, right]) h.y = cy + 5 * u;
@@ -993,7 +1030,7 @@ export class PatchesPanel extends DisplayObject {
     const r = this.roll;
     if (r.close) { this.ClosePanel(); return; }
     for (const i of ALL_TABS) if (r[`tab${i}`]) { this.selectTab(i); try { localStorage.setItem(TAB_KEY, String(i)); } catch { /* private mode */ } return; }
-    if (this.Tab === 2) {
+    if (this.Tab === 2 && this.View !== 'confirm') {
       const g = this.host.gallery;
       if (!g) return;
       if (this.GalleryView === 'report') {
@@ -1233,7 +1270,7 @@ export class PatchesPanel extends DisplayObject {
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
     this.TitleContainer.style.display = on && this.Tab === 0 && !this.Opening ? 'block' : 'none';
-    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' && !this.Opening ? 'block' : 'none';
+    if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' && this.View !== 'confirm' && !this.Opening ? 'block' : 'none';
     this.UrlContainer.style.display = link && this.View !== 'video' ? 'block' : 'none';
     if (this.player) this.player.style.display = on && this.Tab === 0 && this.View === 'video' && this.VideoState === 'ready' ? 'block' : 'none';
     if (link && this.UrlInput.value !== link.url) this.UrlInput.value = link.url;  // unchanged: keep the selection

@@ -13,7 +13,7 @@ import { SAMPLE_GEN } from '../v1ui/ported/SampleGenData';
 import { encodeWav } from '../audio/wav.ts';
 import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
-import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock } from '../patch/loadPatch.ts';
+import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock, type PatchSource } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
 import { type GalleryState, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
@@ -36,7 +36,7 @@ import { V1Block } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
-import type { VideoChoice, VideoProgressInfo } from '../v1ui/patches.ts';
+import { drawUpArrow, likeLook, type VideoChoice, type VideoProgressInfo } from '../v1ui/patches.ts';
 import { videoSeconds } from '../video/length.ts';
 import { startSource, type PatchSample } from '../video/sources.ts';
 import { canShareFile, downloadFile, shareFile, videoFileName } from '../video/share.ts';
@@ -72,7 +72,7 @@ function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
 }
-interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean }
+interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
 async function initialPatch(params: URLSearchParams, embedId: string | null, plugin = false): Promise<Start> {
@@ -85,7 +85,7 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
     // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
     if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c };
     const r = await loadShared(c);
-    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked };
+    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 };
     return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: true };
   }
   if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null }; }
@@ -125,7 +125,11 @@ async function main() {
   let session = { id: start.id, dirty: false };
   // v1's Share panel reads the title from `&t=` (GetTitleFromUrl): put a saved title there when the link had none.
   if (start.title && !params.has('t') && !embedId) history.replaceState(null, '', `${location.pathname}?c=${start.id}&t=${encodeURI(start.title)}`);
-  let theme: Theme = THEMES[Math.min(Number(params.get('theme') ?? start.view.theme ?? 0), THEMES.length - 1)];
+  // The colour theme is the user's preference, kept in this browser (owner review 3, 2026-11-16: it went back to the
+  // first on every reload). `?theme=` (embeds, tests) comes first; a v1 composition's own theme only when none is kept.
+  const THEME_KEY = 'blokdust.theme';
+  const keptTheme = (() => { if (embedId) return null; try { const v = localStorage.getItem(THEME_KEY); return v === null ? null : Number(v); } catch { return null; } })();
+  let theme: Theme = THEMES[Math.min(Number(params.get('theme') ?? keptTheme ?? start.view.theme ?? 0), THEMES.length - 1)] ?? THEMES[0];
 
   const app = new Application();
   // Transparent: the static stage is an on-page Canvas2D layer behind Pixi (Stage 'canvas' renderer, UI-0005).
@@ -198,6 +202,12 @@ async function main() {
   };
   /** The whole patch: the outer world, with what is inside each of its Stage blocks (R7). Looking into a Stage, the
    * inner world on screen is folded into its macro first. */
+  /** SPEC-PATCH-FORMAT-V2 R11: the saved patches whose blocks were inserted into this one (owner review 3). */
+  let sources: PatchSource[] = [];
+  /** The sources that still have blocks here, with only those blocks. */
+  const liveSources = (ids: Set<string>) => sources.map(s => ({ ...s, blocks: s.blocks.filter(b => ids.has(b)) })).filter(s => s.blocks.length);
+  const readSources = (v: unknown): PatchSource[] => Array.isArray(v) ? v.filter((s): s is PatchSource => !!s && typeof s.id === 'string' && Array.isArray(s.blocks))
+    .map(s => ({ id: s.id, ...(typeof s.rev === 'number' ? { rev: s.rev } : {}), ...(typeof s.title === 'string' ? { title: s.title } : {}), ...(typeof s.by === 'string' ? { by: s.by } : {}), blocks: s.blocks.filter(b => typeof b === 'string') })) : [];
   const toPatch = (): Patch => {
     if (inside) macros.set(inside.stageUid, innerMacro());
     const w = inside ? worldParts(inside.outer.model, inside.outer.connectionOrder, inside.outer.labels) : worldParts();
@@ -205,11 +215,13 @@ async function main() {
     const ms = [...macros.values()].filter(m => stages.has(m.block) && (m.blocks.length || m.labels?.length));
     const used = new Set([...w.blocks, ...ms.flatMap(m => m.blocks)].map(b => b.params?.track).filter((t): t is string => typeof t === 'string'));
     const r = Object.fromEntries([...refs].filter(([k]) => used.has(k)));
+    const src = liveSources(new Set(w.blocks.map(b => b.id).filter((id): id is string => !!id)));
     return { format: 'blokdust.patch', version: 2, seed, ...(tempo !== undefined ? { tempo } : {}),
       blocks: w.blocks,
       ...(Object.keys(r).length ? { refs: r } : {}), ...(w.order.length ? { connectionOrder: w.order } : {}),
       ...(w.labels.length ? { labels: w.labels.map(l => ({ ...l })) } : {}),
       ...(ms.length ? { macros: ms } : {}),
+      ...(src.length ? { sources: src } : {}),
       view: inside ? inside.outer.view : currentView() };
   };
   /** Engine commands that build what is inside Stage block `id` (patch id `uid`), remembering its inner blocks' ids. */
@@ -337,7 +349,10 @@ async function main() {
       send([{ type: CommandType.SetParam, id, param: p, value }]);
       changed();
     },
-    setTheme: n => { theme = THEMES[n] ?? THEMES[0]; stage.setTheme(theme); uiSync = true; stage.redraw(); },
+    setTheme: n => {
+      theme = THEMES[n] ?? THEMES[0]; stage.setTheme(theme); uiSync = true; stage.redraw();
+      if (!embedId) try { localStorage.setItem(THEME_KEY, String(theme.index)); } catch { /* private mode */ }
+    },
     setZoom: z => { stage.setView(z, stage.drag); },
     setDrag: d => { stage.setView(stage.zoom, d); },
     // Tone.Volume dB → gain is 2^(dB/6); the value v1 writes is the one it later reads back (20·log10 form).
@@ -361,7 +376,7 @@ async function main() {
       for (const id of [...model.keys()]) removeBlock(id);
       if (inside) leaveStage(false);
       labels.length = 0; selectedLabels.clear(); endLabelEdit(false);
-      macros.clear(); innerIds.clear(); innerSamples.clear();
+      macros.clear(); innerIds.clear(); innerSamples.clear(); sources = [];
       stage.setView(1, { x: 0, y: 0 });
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
@@ -512,8 +527,9 @@ async function main() {
   // the gallery on their patches. A published one has a star after it (owner review 2): pressing it likes the patch
   // (signed out: Settings › SIGN IN); right-clicking the credit reports it. Top right: who is signed in
   // (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT. v1's mid type in the text colour, under the panels.
-  let credit: { id: string; title: string; by: string; published: boolean; liked: boolean } | null = null;
+  let credit: { id: string; title: string; by: string; published: boolean; liked: boolean; likes: number; views: number } | null = null;
   let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; star?: ButtonBox; credit?: ButtonBox } = {};
+  let byHover = false;
   const accountPage = () => (scene.SettingsPanel as any).accountPage as import('../v1ui/accountPage.ts').AccountPage | null | undefined;
   function drawCorners(ctx: CanvasRenderingContext2D): void {
     cornerBoxes = {};
@@ -521,18 +537,43 @@ async function main() {
     const m = stage.metrics, u = m.unit, h = scene.Header as unknown as { Height: number; Rows?: number }, y = h.Height * (h.Rows ?? 1) * u + 22 * u;
     ctx.save();
     if (!App.Metrics?.TxtMid) { ctx.restore(); return; }
-    ctx.fillStyle = theme.colors[theme.roles.txt]; ctx.font = App.Metrics.TxtMid; ctx.textBaseline = 'alphabetic';
+    // The size of Settings › About's "Current Build" line (v1's 8-unit italic), in Dosis capitals (owner review 3).
+    ctx.fillStyle = theme.colors[theme.roles.txt]; ctx.font = `400 ${Math.round(u * 8)}px Dosis`; ctx.textBaseline = 'alphabetic';
     if (credit) {
       const title = `${credit.title.toUpperCase()} BY `, by = `@${credit.by.toUpperCase()}`, tw = ctx.measureText(title).width, bw = ctx.measureText(by).width, x = 20 * u;
       ctx.textAlign = 'left'; ctx.fillText(title, x, y); ctx.fillText(by, x + tw, y);
-      ctx.fillRect(x + tw, y + 3 * u, bw, Math.max(1, u * 0.6));  // a link: underlined
+      // A link: underlined only under the mouse (owner review 3, 2026-11-16).
+      if (byHover) ctx.fillRect(x + tw, y + 3 * u, bw, Math.max(1, u * 0.6));
       cornerBoxes.by = { x: x + tw - 4 * u, y: y - 16 * u, w: bw + 8 * u, h: 24 * u };
       cornerBoxes.credit = { x: x - 4 * u, y: y - 16 * u, w: tw + bw + 8 * u, h: 24 * u };
       if (credit.published) {
-        const sx = x + tw + bw + 18 * u, sy = y - 5 * u;
-        drawStar(ctx, sx, sy, 8 * u, credit.liked, theme.colors[theme.roles.txt]);
-        cornerBoxes.star = { x: sx - 14 * u, y: sy - 14 * u, w: 28 * u, h: 28 * u };
-        cornerBoxes.credit.w += 30 * u;
+        // Likes: one of three directions until the owner picks (likeLook in v1ui/patches.ts). The arrow (or +1) is the
+        // button; liked, it takes the options colour.
+        const txt = theme.colors[theme.roles.txt], on = theme.colors[theme.roles.options[2]], look = likeLook.style;
+        const views = `${credit.views} VIEW${credit.views === 1 ? '' : 'S'}`;
+        if (look === 'a') {
+          const ax = x + tw + bw + 16 * u, ay = y - 3 * u, count = String(credit.likes), cw = ctx.measureText(count).width;
+          drawUpArrow(ctx, ax, ay, 9 * u, credit.liked, txt, on);
+          ctx.fillText(count, ax + 8 * u, y);
+          ctx.globalAlpha = 0.6; ctx.fillText(` \u00b7 ${views}`, ax + 8 * u + cw, y); ctx.globalAlpha = 1;
+          cornerBoxes.star = { x: ax - 10 * u, y: y - 16 * u, w: cw + 22 * u, h: 24 * u };
+        } else if (look === 'b') {
+          const y2 = y + 16 * u, count = String(credit.likes), cw = ctx.measureText(count).width;
+          drawUpArrow(ctx, x + 4 * u, y2 - 3 * u, 9 * u, credit.liked, txt, on);
+          ctx.fillText(count, x + 12 * u, y2);
+          ctx.globalAlpha = 0.6; ctx.fillText(`   ${views}`, x + 12 * u + cw, y2); ctx.globalAlpha = 1;
+          cornerBoxes.star = { x: x - 6 * u, y: y2 - 14 * u, w: cw + 24 * u, h: 22 * u };
+        } else {
+          const bx = x + tw + bw + 12 * u, bwid = 22 * u, bh = 15 * u, by = y - 11 * u;
+          ctx.save(); ctx.lineWidth = Math.max(1, u);
+          if (credit.liked) { ctx.fillStyle = on; ctx.fillRect(bx, by, bwid, bh); ctx.fillStyle = txt; }
+          ctx.strokeStyle = credit.liked ? on : txt; ctx.strokeRect(bx, by, bwid, bh);
+          ctx.textAlign = 'center'; ctx.fillText('+1', bx + bwid / 2, y); ctx.restore();
+          ctx.textAlign = 'left'; ctx.globalAlpha = 0.6;
+          ctx.fillText(`${credit.likes} LIKE${credit.likes === 1 ? '' : 'S'} \u00b7 ${views}`, bx + bwid + 8 * u, y); ctx.globalAlpha = 1;
+          cornerBoxes.star = { x: bx - 4 * u, y: by - 5 * u, w: bwid + 8 * u, h: bh + 10 * u };
+        }
+        if (look !== 'b') cornerBoxes.credit.w = cornerBoxes.star.x + cornerBoxes.star.w - cornerBoxes.credit.x;
       }
     }
     const me = accountPage()?.Account;
@@ -556,8 +597,8 @@ async function main() {
     const c = credit;
     if (!c) return;
     if (!accountPage()?.Account) { (scene.SettingsPanel as any).openAccount?.(); return; }
-    c.liked = !c.liked; stage.redraw();
-    try { c.liked = (await gallery.like(c.id, c.liked)).liked; } catch { c.liked = !c.liked; }
+    c.liked = !c.liked; c.likes += c.liked ? 1 : -1; stage.redraw();
+    try { const r = await gallery.like(c.id, c.liked); c.liked = r.liked; c.likes = r.likes; } catch { c.liked = !c.liked; c.likes += c.liked ? 1 : -1; }
     stage.redraw();
   }
   /** Right-click on the credit: report the patch (signed out: sign in first). */
@@ -1012,7 +1053,7 @@ async function main() {
   async function openShared(id: string, mode: 'open' | 'insert'): Promise<boolean> {
     const r = await loadShared(id);
     if (!r) return false;
-    usePatch(r.patch, r.title, mode);
+    usePatch(r.patch, r.title, mode, { id, rev: r.rev, ...(r.title ? { title: r.title } : {}), ...(r.by ? { by: r.by } : {}) });
     if (mode !== 'open') return true;
     App.CompositionId = id; App.SessionId = sessionFor(id);
     session = { id, dirty: false }; saveSession(session);
@@ -1020,7 +1061,7 @@ async function main() {
     history.replaceState(null, '', url);
     shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()) };
     setBaseline();
-    credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked } : null;
+    credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 } : null;
     scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
     return true;
   }
@@ -1069,15 +1110,15 @@ async function main() {
   (window as unknown as { __bd_pickedFile: unknown }).__bd_pickedFile = showPicked;  // tests: a file without a picker
   /** The view's centre, as a grid cell. */
   const viewCentre = () => { const [x, y] = stage.cssToGrid(app.canvas.clientWidth / 2, app.canvas.clientHeight / 2); return { x, y }; };
-  function usePatch(p: Patch, title: string, mode: 'open' | 'insert'): void {
-    applyPatch(p, mode);
+  function usePatch(p: Patch, title: string, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
+    applyPatch(p, mode, from);
     if (mode === 'open') scene.PatchesPanel.setTitle(title);
   }
   /**
    * Open replaces the scene. Insert adds the patch's blocks, keeping their layout, and hands them to the pointer to place
    * (owner, 2026-11-10): see startPlacing. With a mouse they start under it; on a touch screen in the middle of the view.
    */
-  function applyPatch(p: Patch, mode: 'open' | 'insert'): void {
+  function applyPatch(p: Patch, mode: 'open' | 'insert', from?: Omit<PatchSource, 'blocks'>): void {
     if (inside) exitStage();
     const touch = lastPointerType !== 'mouse', at = !touch && lastPointer ? lastPointer : viewCentre();
     const part = mode === 'open'
@@ -1098,6 +1139,15 @@ async function main() {
     for (const [k, r] of Object.entries(part.refs)) if (r && typeof r === 'object' && 'provider' in r && !refs.has(k)) refs.set(k, r as SampleRef);
     for (const m of readMacros(mode === 'open' ? p.macros : 'macros' in part ? part.macros : [])) macros.set(m.block, m);  // before their Stage blocks are added
     const ids = part.blocks.map(b => addBlock(b.type, b.x ?? 0, b.y ?? 0, b.params ?? {}, b.id));
+    // Lineage (SPEC-PATCH-FORMAT-V2 R11): opening keeps the patch's sources; inserting adds the inserted patch (when it is a saved one) and
+    // carries its own sources, under the blocks' new ids.
+    if (mode === 'open') sources = readSources(p.sources);
+    else {
+      const kept = p.blocks.filter(b => BLOCKS_BY_ID.has(b.type)), now = new Map(kept.map((b, i) => [b.id, part.blocks[i]?.id]));
+      const moved = (bs: string[]) => bs.map(b => now.get(b)).filter((b): b is string => !!b);
+      for (const s of readSources(p.sources)) { const bs = moved(s.blocks); if (bs.length) sources.push({ ...s, blocks: bs }); }
+      if (from) sources.push({ ...from, blocks: part.blocks.map(b => b.id).filter((b): b is string => !!b) });
+    }
     addLabels(readLabels(mode === 'open' ? p.labels : 'labels' in part ? part.labels : []));
     if (mode === 'open') { connectionOrder = [...(p.connectionOrder ?? [])]; send(relinks(p, uidToId())); applyView(p.view); }
     if (mode === 'open') setBaseline(); else startPlacing(ids, touch, at);
@@ -1561,6 +1611,7 @@ async function main() {
     labels.length = 0; selectedLabels.clear(); addLabels(readLabels(p.labels));
     macros.clear(); innerIds.clear(); innerSamples.clear();
     for (const m of readMacros(p.macros)) macros.set(m.block, m);
+    sources = readSources(p.sources);
     if (juce) applyView(p.view);  // the plugin's patch, from the processor (on the web, startup applies it below)
     for (const id of model.keys()) void resolveSample(id);
     scene.setBlocks([...v1Blocks.values()]);
@@ -1581,7 +1632,7 @@ async function main() {
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
     if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
     // Someone else's patch: "TITLE BY @NAME" in the corner; yours: the gallery switch shows whether it is published.
-    if (start.by && !start.mine && !embedId && start.id) credit = { id: start.id, title: start.title || 'Untitled', by: start.by, published: !!start.published, liked: !!start.liked };
+    if (start.by && !start.mine && !embedId && start.id) credit = { id: start.id, title: start.title || 'Untitled', by: start.by, published: !!start.published, liked: !!start.liked, likes: start.likes ?? 0, views: start.views ?? 0 };
     if (start.mine) scene.PatchesPanel.galleryKnown(!!start.published);
     // Who is signed in (the corner, the Settings tab's name, the gallery switch).
     const page = accountPage();
@@ -2130,6 +2181,8 @@ async function main() {
   if (!embedId) app.canvas.addEventListener('pointermove', e => {
     const overMake = !!makeStageAt && e.pointerType === 'mouse' && inBox(makeStageAt, e.offsetX * dpr(), e.offsetY * dpr());
     if (overMake !== makeStageHover) { makeStageHover = overMake; stage.redraw(); }
+    const overBy = !!cornerBoxes.by && e.pointerType === 'mouse' && inBox(cornerBoxes.by, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
+    if (overBy !== byHover) { byHover = overBy; app.canvas.style.cursor = overBy ? 'pointer' : ''; stage.redraw(); }
     if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
       moveLabel(e);
@@ -2514,15 +2567,3 @@ function setupEmbedChrome(id: string, title: string): void {
 void main();
 
 /** A five-pointed star centred on (x, y), `r` to its points: outlined, or filled once liked (owner review 2). */
-function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, filled: boolean, colour: string): void {
-  ctx.save();
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const a = -Math.PI / 2 + (i * Math.PI) / 5, d = i % 2 ? r * 0.45 : r;
-    if (i) ctx.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d); else ctx.moveTo(x + Math.cos(a) * d, y + Math.sin(a) * d);
-  }
-  ctx.closePath();
-  ctx.lineJoin = 'round'; ctx.lineWidth = 2; ctx.strokeStyle = colour; ctx.fillStyle = colour;
-  if (filled) ctx.fill(); else ctx.stroke();
-  ctx.restore();
-}

@@ -15,7 +15,14 @@ export interface Patch { format?: string; version?: number; seed?: number; tempo
   /** Notes on the stage (CHG-0020, UI-0011): text at a grid position. The engine never reads them. */
   labels?: { id: string; text: string; x: number; y: number }[];
   /** The view it was saved at (owner, 2026-11-12, SPEC-PATCH-FORMAT-V2 R2): opening shows it. The engine ignores it. */
-  view?: { x: number; y: number; zoom: number } }
+  view?: { x: number; y: number; zoom: number };
+  /** Where its blocks came from (owner review 3, 2026-11-16; SPEC-PATCH-FORMAT-V2 R11): each saved patch INSERT brought
+   * in, with the ids of the blocks it brought that are still here. With `parent` (a remix, kept by the server) and
+   * each source's own `sources`, the patches a patch was made from can be followed all the way back. The engine
+   * ignores it. */
+  sources?: PatchSource[] }
+/** A shared patch (server id, and its revision then) whose blocks were inserted into this one. */
+export interface PatchSource { id: string; rev?: number; title?: string; by?: string | null; blocks: string[] }
 export interface Macro { block: string; blocks: PatchBlock[]; connectionOrder?: [string, string][]; labels?: Patch['labels']; view?: Patch['view'] }
 export type ScriptOp =
   | { op: 'add'; atSample?: number; block: PatchBlock }

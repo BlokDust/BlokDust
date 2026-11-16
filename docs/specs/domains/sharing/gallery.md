@@ -36,8 +36,9 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
 - **R7a.** The tab's rows are one list that scrolls (mouse wheel, or a drag, which never opens the row it started
   on) and fetches the next page as it nears its end, with v1's spinner where the next row will go (owner review 2:
   no pages of five).
-- **R8.** Liking is the star after the credit on the stage (R15), with the patch open (owner review 2: not from the
-  list). It needs sign-in (signed out, the star opens Settings › SIGN IN) and counts one per person; pressing it
+- **R8.** Liking is done on the stage, by the credit (R15), with the patch open (owner review 2: not from the list).
+  Owner review 3: the star didn't read as an up vote and isn't 45°; three directions are on staging (`?likes=a|b|c`:
+  an inline up arrow and count; Reddit's arrow-over-count column in gallery rows; a +1 button) until the owner picks. It needs sign-in (signed out, the star opens Settings › SIGN IN) and counts one per person; pressing it
   again takes the like back. There are no down votes. `GET /api/patches/:id` says `likes` and `liked`.
 - **R9.** Reporting is a right-click on the credit (owner review 2: harder to do by accident), asked first on the
   GALLERY tab ("For a rude name or anything that should not be here.": it doesn't say how many reports hide a
@@ -56,7 +57,8 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   plugin and embeds have no GALLERY tab.
 - **R14.** Opening a patch in the app (`GET /api/patches/:id`) counts a view, roughly (pages and previews don't).
 - **R15.** Someone else's patch, opened from the gallery or a link, shows "TITLE BY @NAME" at the stage's top left
-  (v1's mid type, under the panels), with a star after it when the patch is published (R8). Pressing @NAME opens
+  (the 8-unit size of About's build line, in capitals, owner review 3), with the like control when it is published (R8).
+  @NAME is underlined only under the mouse. Pressing @NAME opens
   the gallery searching `@name`. Saving it (a remix, or over a
   link of yours) removes the credit.
 - **R16.** The site's own account, @blokdust (owner review 3, 2026-11-16), makes the EXAMPLES and TUTORIALS: its
