@@ -54,6 +54,10 @@ Check items off as they land. Each task should be independently verifiable.
       reference, 16:9) are unchanged. Test: `short-wide-view`. Snapshots go to the page on the display's refresh at up
       to 60 a second (they were 30; the web worklet sends ~60), and the page reports its frame and snapshot rates to
       the plugin log. The iPad app icon is full-bleed (`assets/app-icon-ios.svg`; the macOS one's margin showed white).
+      Second pass: the log showed 60 fps but 34 snapshots a second; the processor published one per 1/30 s of audio.
+      It now publishes per 1/60 s of audio: 60/60 measured on the iPad. In the extension (it can't open Safari) the
+      page shows no links: no "View the code on GitHub", no websites or Twitter names in About (`hideLinks`, test
+      `ipad-extension-no-links`); the app keeps them.
 - [x] 9. BlokDust FX as a second AUv3 in the same app.
       2026-11-16: `BlokDust FX.appex` is embedded beside `BlokDust.appex` (`XCODE_EMBED_APP_EXTENSIONS`); on iPad its
       ID is `com.funputs.blokdust.fx` (extension `com.funputs.blokdust.fx.fxAUv3`), as an embedded extension's ID must
@@ -68,7 +72,8 @@ Check items off as they land. Each task should be independently verifiable.
       and the iPad), and an iPad paired with Developer Mode on. Then: install, CPU/memory check.
       2026-11-16: installed on the owner's iPad Pro (M4). The build targets the paired iPad (generated schemes,
       `-destination id=…`), so automatic signing registers it. `pnpm bd plugin ios log` copies the plugin's log from
-      the App Group (the iPad keeps one there: `Logs/blokdust.log`). Left: CPU/memory.
+      the App Group (the iPad keeps one there: `Logs/blokdust.log`); devicectl cannot read an App Group on a device,
+      so the app copies it to its own `Library/Logs` when it opens, and the tool reads that. Left: CPU/memory.
 - [ ] 11. Owner review in AUM, GarageBand, Logic for iPad, Cubasis.
 - [x] 12a. Licensing: JUCE 8 Starter for the App Store build (LICENSING-0003); bundle IDs under `com.funputs`; iPad only.
 - [ ] 12b. App Store Connect / TestFlight setup (owner).

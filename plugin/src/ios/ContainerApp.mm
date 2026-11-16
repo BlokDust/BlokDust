@@ -20,6 +20,7 @@
 #include <cmath>
 #include <memory>
 
+#include "../PatchFiles.h"
 #include "../WebViewDrops.h"
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter();
@@ -163,6 +164,7 @@ class ContainerApp : public juce::JUCEApplication, private juce::Timer {
   bool moreThanOneInstanceAllowed() override { return false; }
 
   void initialise(const juce::String&) override {
+    mirrorLogs();
     juce::PropertiesFile::Options o;  // as JUCE's standalone app, so the saved patch has the same home
     o.applicationName = JucePlugin_Name;
     o.filenameSuffix = ".settings";
@@ -215,7 +217,19 @@ class ContainerApp : public juce::JUCEApplication, private juce::Timer {
   void anotherInstanceStarted(const juce::String&) override {}
   // iOS may end a backgrounded app without calling shutdown(): keep the patch whenever the app leaves the foreground.
   void suspended() override { save(); }
-  void resumed() override { if (audio_ != nullptr && !audio_->running()) audio_->start(); }
+  void resumed() override {
+    mirrorLogs();
+    if (audio_ != nullptr && !audio_->running()) audio_->start();
+  }
+
+  // The plugin's log (the app's and the extensions', WebViewDrops.mm) is in the App Group, which devicectl cannot
+  // read on an iPad; a copy in the app's own container can be (`bd plugin ios log`, CHG-0025).
+  static void mirrorLogs() {
+    const auto from = blokdust::plugin::patchfiles::root().getChildFile("Logs");
+    const auto to = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("Logs");
+    to.createDirectory();
+    for (const auto& f : from.findChildFiles(juce::File::findFiles, false, "*.log")) f.copyFileTo(to.getChildFile(f.getFileName()));
+  }
 
  private:
   void save() {

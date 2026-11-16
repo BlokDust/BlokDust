@@ -232,7 +232,8 @@ function findIpad(): Ipad {
   return ipad;
 }
 
-/** The plugin's log from the iPad (the App Group copy WebViewDrops.mm keeps), to stdout as JSON lines. */
+/** The plugin's log from the iPad, to stdout as JSON lines. The app and its extensions write it to the App Group
+ * (WebViewDrops.mm), which devicectl cannot read; the app copies it into its own container each time it opens. */
 export function iosLog(): void {
   const ipad = findIpad();
   const dest = resolve(OUT, 'ipad-log');
@@ -241,12 +242,12 @@ export function iosLog(): void {
   for (const name of ['blokdust.old.log', 'blokdust.log']) {
     const out = resolve(dest, name);
     rmSync(out, { force: true });
-    run('xcrun', ['devicectl', 'device', 'copy', 'from', '--device', ipad.identifier, '--domain-type', 'appGroupDataContainer',
-      '--domain-identifier', APP_GROUP, '--source', `BlokDust/Logs/${name}`, '--destination', out], true);
+    run('xcrun', ['devicectl', 'device', 'copy', 'from', '--device', ipad.identifier, '--domain-type', 'appDataContainer',
+      '--domain-identifier', APP_ID, '--source', `Library/Logs/${name}`, '--destination', out], true);
     if (existsSync(out)) lines.push(...readFileSync(out, 'utf8').split('\n').filter(Boolean));
   }
-  if (!lines.length) throw new Error('no log on the iPad yet: open BlokDust (the app or the plugin in a host) first');
-  console.log(JSON.stringify({ ok: true, device: ipad.deviceProperties.name, lines: lines.slice(-200) }));
+  if (!lines.length) throw new Error('no log yet: open the BlokDust app on the iPad (it copies the plugin\'s log where this can read it)');
+  console.log(JSON.stringify({ ok: true, device: ipad.deviceProperties.name, lines: lines.slice(-300) }));
 }
 
 /** Build for an iPad (signed by Xcode for the team in local config) and install it on the connected iPad. */

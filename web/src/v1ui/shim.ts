@@ -128,6 +128,8 @@ export const App: any = {
   DragOffset: new Point(), ScaledDragOffset: new Point(),
   /** Running inside the plugin's WebView (labels and options differ: CHG-0004). */
   IsPlugin: false,
+  /** Links can't open here (a plugin inside another iPad app): scene.ts hideLinks. */
+  NoLinks: false,
   Blocks: [] as any[], SubCanvas: [] as HTMLCanvasElement[], CompositionId: null as string | null, SessionId: null as string | null,
   FillColor(ctx: CanvasRenderingContext2D, c: string) { ctx.fillStyle = c; },
   StrokeColor(ctx: CanvasRenderingContext2D, c: string) { ctx.strokeStyle = c; },

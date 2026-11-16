@@ -23,7 +23,7 @@ import demo from '../demo/demo.patch.json';
 import { attachNoteInputs, type MidiDevice } from '../input/keys.ts';
 import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
-import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
+import { SAVE_WARNING, V1Scene, hideLinks } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
@@ -924,6 +924,7 @@ async function main() {
   }
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0 };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
+    hideLinks,  // tests: the iPad extension's no-links view (CHG-0025)
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
     /** css px of a point on block `id` that the stage's own hit test maps to it (black-box tests click there). */
     blockPoint(id: number): [number, number] | null {
@@ -1008,6 +1009,7 @@ async function main() {
     juce.addEventListener('bd_patch', (e: { patch: string; ids?: Record<string, number>; standalone?: boolean; ios?: boolean }) => {
       standalone = !!e.standalone;
       ios = !!e.ios;
+      if (ios && !standalone && !App.NoLinks) hideLinks();  // an iPad extension can't open Safari (CHG-0025)
       const p = JSON.parse(e.patch) as Patch & { automation?: { slot: number; block: string; param: string; cc?: number }[] };
       showPatch(p, e.ids);
       const after = pluginAfterLoad; pluginAfterLoad = null;

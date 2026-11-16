@@ -661,6 +661,18 @@ export const DOWNLOAD = {
 /** The About footer: the code (owner, 2026-11-11: the licences are viewable there, NOTICE.md, so no separate links;
  * every build also carries NOTICE.txt and LICENSE.txt). */
 export const FOOTER_LINKS = [SOURCE_LINK];
+/** The footer links shown: none where links can't open (App.NoLinks). */
+const footerLinks = () => (App.NoLinks ? [] : FOOTER_LINKS);
+
+/**
+ * Owner (2026-11-16, CHG-0025): a plugin inside another iPad app can't open Safari, so it shows no links: no footer
+ * link, and About's websites and Twitter names are gone (v1 draws and hit-tests them from the Attribution strings, so
+ * empty strings draw nothing and take no press). The iPad app itself opens them.
+ */
+export function hideLinks(): void {
+  App.NoLinks = true;
+  for (const who of Object.values(App.L10n.Attribution as Record<string, any>)) if (who && typeof who === 'object') { who.url = ''; who.twitter = ''; }
+}
 
 /**
  * Release 1 changes to v1's Settings panel (CHG-0005), made around the ported code:
@@ -761,16 +773,18 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const footer = () => {
     const u = App.Unit, ctx = p.Ctx as CanvasRenderingContext2D;
     ctx.font = App.Metrics.TxtLarge;
-    const ws = FOOTER_LINKS.map(l => ctx.measureText(l.label).width), gap = 30 * u, y = p.OffsetY + p.DrawTo.Height - 20 * u;
+    const ws = footerLinks().map(l => ctx.measureText(l.label).width), gap = 30 * u, y = p.OffsetY + p.DrawTo.Height - 20 * u;
     let x = App.Width * 0.5 - (ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1)) * 0.5;
     const links = ws.map(w => { const l = { x, w }; x += w + gap; return l; });
     return { links, y, u };
   };
   /** Tests: each footer link's centre in CSS px. */
-  p.footerLinks = () => { const f = footer(), pr = App.Metrics.PixelRatio; return f.links.map((l, i) => ({ label: FOOTER_LINKS[i].label, x: (l.x + l.w / 2) / pr, y: (f.y - 5 * f.u) / pr })); };
+  p.footerLinks = () => { const f = footer(), pr = App.Metrics.PixelRatio; return f.links.map((l, i) => ({ label: footerLinks()[i].label, x: (l.x + l.w / 2) / pr, y: (f.y - 5 * f.u) / pr })); };
   const hitTests = p.HitTests.bind(p);
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
+    // No links (hideLinks): v1 hit-tests About's websites and Twitter names (rollovers 1–6) over fixed widths.
+    if (App.NoLinks) for (let i = 1; i <= 6; i++) p._RollOvers[i] = false;
     const f = footer();
     linkHover = f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
@@ -788,7 +802,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   p.MouseDown = (pt: { x: number; y: number }) => {
     mouseDown(pt);
     if (!p.Open) return;
-    if (linkHover >= 0) { window.open(FOOTER_LINKS[linkHover].url, '_blank'); return; }
+    if (linkHover >= 0) { window.open(footerLinks()[linkHover].url, '_blank'); return; }
     if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(`${r.url}?source=download-page`, '_blank'); return; }
     const i = tempoRow();
     if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x);  // v1 sliders jump to the press, as Volume does
@@ -808,7 +822,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     App.FillColor(ctx, txt); App.StrokeColor(ctx, txt);
     ctx.font = App.Metrics.TxtLarge; ctx.textAlign = 'left';
     f.links.forEach((l, i) => {
-      ctx.fillText(FOOTER_LINKS[i].label, l.x, f.y);
+      ctx.fillText(footerLinks()[i].label, l.x, f.y);
       if (i === linkHover) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(l.x, f.y + 2 * f.u); ctx.lineTo(l.x + l.w, f.y + 2 * f.u); ctx.stroke(); }
     });
   };

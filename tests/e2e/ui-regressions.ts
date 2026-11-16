@@ -942,6 +942,37 @@ Object.assign(tests, {
    * Recommended" footer; About has the owner's text (no Web Audio API / Tone.js); the footer links the code on GitHub,
    * (where the licences are too; owner 2026-11-11), underlined on hover, opening in a new window; the build carries
    * NOTICE.txt (v1's MIT notice) and LICENSE.txt. */
+  /** Owner (2026-11-16, CHG-0025): a plugin inside another iPad app can't open Safari (the link is only copied), so
+   * it shows no links: About keeps the developers' blurbs but not their websites or Twitter names, and the footer's
+   * "View the code on GitHub" is gone; pressing where they were opens nothing. */
+  async 'ipad-extension-no-links'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    await p.evaluate(() => {
+      const seen: string[] = ((window as any).__texts = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { seen.push(t); return (f as any).call(this, t, ...a); };
+      (window as any).__opened = []; window.open = (u?: string | URL) => { (window as any).__opened.push(String(u)); return null; };
+    });
+    const linkAt = await p.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; s.OpenPanel(); return null; });
+    await p.waitForTimeout(1200);
+    const before = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.footerLinks());
+    await p.evaluate(() => { (window as any).__bd_probe.hideLinks(); (window as any).__texts.length = 0; });
+    const about = await p.evaluate(() => { const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[2], pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio; return [m.Position.x / pr, 30]; });
+    await p.mouse.move(about[0], about[1]); await p.mouse.click(about[0], about[1]); await p.waitForTimeout(1200);
+    const after = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.footerLinks());
+    // Press across the About columns' link lines and where the footer link was.
+    for (let x = 100; x < 1200; x += 40) for (const y of [440, 455, 470, 485, 500]) await p.mouse.click(x, y);
+    if (before[0]) await p.mouse.click(before[0].x, before[0].y);
+    await p.waitForTimeout(300);
+    const r = await p.evaluate(() => { const t: string[] = (window as any).__texts; return { github: t.includes('View the code on GitHub'),
+      twitter: t.some(x => /^@/.test(x)), blurb: t.some(x => /Luke/.test(x)), opened: (window as any).__opened }; });
+    await p.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
+    await p.close();
+    void linkAt;
+    const ok = before.length === 1 && after.length === 0 && !r.github && !r.twitter && r.blurb && r.opened.length === 0;
+    return [ok, { footerBefore: before.length, footerAfter: after.length, ...r }];
+  },
+
   async 'settings-release1'(errors: string[]) {
     const p = await open(browser, [], errors);
     await p.evaluate(() => {

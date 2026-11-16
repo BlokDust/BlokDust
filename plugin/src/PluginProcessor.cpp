@@ -68,7 +68,8 @@ void BlokDustProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
             + " frames, " + juce::String(getTotalNumInputChannels()) + " in / " + juce::String(getTotalNumOutputChannels()) + " out");
   sampleRate_ = sampleRate;
   scratch_.assign(static_cast<std::size_t>(std::max(samplesPerBlock, 4096)), 0.0f);
-  blocksPerSnapshot_ = std::max(1, static_cast<int>(sampleRate / std::max(1, samplesPerBlock) / 30.0));  // ~30 Hz UI
+  // ~60 a second, as the web worklet sends (owner, iPad: 30 looked jumpy, 2026-11-16); a large block sends one each.
+  samplesPerSnapshot_ = std::max(1, static_cast<int>(sampleRate / 60.0));
   idleBuf_.setSize(2, 2048);
   recFifoBuf_.setSize(2, static_cast<int>(sampleRate * 4));  // 4 s between drains (the drain runs at 20 Hz)
   recFifo_.setTotalSize(recFifoBuf_.getNumSamples());
@@ -286,7 +287,7 @@ void BlokDustProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
   }
   render(buffer, pos, n);
   engine_->clearEvents();
-  if (++blocksSinceSnapshot_ >= blocksPerSnapshot_) { blocksSinceSnapshot_ = 0; publishSnapshot(); }
+  if ((samplesSinceSnapshot_ += n) >= samplesPerSnapshot_) { samplesSinceSnapshot_ %= samplesPerSnapshot_; publishSnapshot(); }
 }
 
 void BlokDustProcessor::publishSnapshot() noexcept {

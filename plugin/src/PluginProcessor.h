@@ -178,7 +178,7 @@ class BlokDustProcessor : public juce::AudioProcessor, private juce::AsyncUpdate
   std::map<std::string, int> loadGen_;      // latest load request per block: an older one finishing late is ignored
   std::unique_ptr<juce::FileChooser> chooser_;
   double sampleRate_ = 0.0;
-  int blocksSinceSnapshot_ = 0, blocksPerSnapshot_ = 1;
+  int samplesSinceSnapshot_ = 0, samplesPerSnapshot_ = 735;  // a UI snapshot each 1/60 s of audio
   std::uint64_t snapshotSeq_ = 0;
   std::bitset<128> pageKeys_;  // Computer Keyboard notes held from the editor page (message thread)
   std::atomic<double> lastProcessMs_{0.0};  // when processBlock last ran (ms counter); 0 = never
