@@ -6,7 +6,7 @@
 //   job: {"component": "aumu,Bdst,Bldt", "fixtures": ["<abs path>", ...], "out": "<abs path>", "editorSeconds": 20}
 // Writes {"component", "renders": [{fixture, audioHash, frames, sampleRate, peak, stateRoundTrips}], "view": bool}
 // to "out". Simulator apps can read and write the Mac's file system, so paths are the Mac's. The editor's page
-// round-trip is read from the plugin's own log line ("page: ready, N blocks", subsystem com.blokdust.plugin):
+// round-trip is read from the plugin's own log line ("page: ready, N blocks", subsystem com.funputs.blokdust):
 // environment variables do not reach an extension process.
 //
 // No audio session is activated: rendering pulls the AU's render block directly (manual rendering), which works in
@@ -26,7 +26,7 @@
 #include "blokdust/hash.hpp"
 
 static os_log_t hostLog() {
-  static os_log_t l = os_log_create("com.blokdust.ioshost", "test");
+  static os_log_t l = os_log_create("com.funputs.blokdust.ioshost", "test");
   return l;
 }
 #define HOSTLOG(...) os_log(hostLog(), "%{public}@", [NSString stringWithFormat:__VA_ARGS__])

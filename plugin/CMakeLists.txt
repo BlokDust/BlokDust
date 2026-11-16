@@ -35,13 +35,9 @@ function(blokdust_plugin target)
     set(au_type kAudioUnitType_MusicDevice)
     set(vst3_cat Instrument Synth)
   endif()
-  # Bundle IDs (owner, 2026-11-15): iPadOS uses com.funputs.* (the App Store ID is permanent and blokdust.com is not
-  # the owner's). Desktop keeps the com.blokdust.* it shipped in 2.0.x; hosts find AUs and VST3s by their codes.
-  if(IOS)
-    set(bundle_id "com.funputs.${target}")
-  else()
-    set(bundle_id "com.blokdust.${target}")
-  endif()
+  # Bundle IDs under Funputs, lowercase like FUNPUTS' plug-ins (owner, 2026-11-15; blokdust.com is not the owner's):
+  # com.funputs.blokdust, com.funputs.blokdustfx. Hosts find AUs and VST3s by their codes, which do not change.
+  string(TOLOWER "com.funputs.${target}" bundle_id)
   juce_add_plugin(${target}
     PRODUCT_NAME "${ARG_PRODUCT}"
     COMPANY_NAME "BlokDust"
@@ -99,6 +95,8 @@ if(IOS)
   # iPadOS (CHG-0025): the instrument as an AUv3 inside the BlokDust app (JUCE needs the Standalone as its container).
   # BlokDust FX follows once both extensions can share one app (CHG-0025 task list).
   blokdust_plugin(BlokDust PRODUCT "BlokDust" CODE Bdst FORMATS AUv3 Standalone)
+  # The extension's ID is JUCE's: <app id>.<last part>AUv3 = com.funputs.blokdust.blokdustAUv3 (juceaide writes it into
+  # the extension's Info.plist; no CMake property changes it). Users never see it.
   return()
 endif()
 

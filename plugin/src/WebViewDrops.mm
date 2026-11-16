@@ -8,7 +8,7 @@
 
 namespace blokdust::plugin {
 void systemLog(const juce::String& message) {
-  static os_log_t log = os_log_create("com.blokdust.plugin", "editor");
+  static os_log_t log = os_log_create("com.funputs.blokdust", "editor");
   os_log(log, "%{public}s", message.toRawUTF8());
 }
 

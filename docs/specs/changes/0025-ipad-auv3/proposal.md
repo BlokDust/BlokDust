@@ -17,8 +17,9 @@ build, the iPad-specific native pieces, and the tools that prove it works.
 ## What changes
 1. **Build:** `plugin/CMakeLists.txt` builds, on iOS, `BlokDust` as an **AUv3 app extension inside the BlokDust app**
    (JUCE's Standalone is the container). iPad only for now (`TARGETED_DEVICE_FAMILY 2`, UI-0004; owner 2026-11-15),
-   iPadOS 16+. Bundle IDs under Funputs (owner, 2026-11-15): app `com.funputs.BlokDust`, extension
-   `com.funputs.BlokDust.BlokDustAUv3`; desktop keeps the `com.blokdust.*` it shipped. Presets
+   iPadOS 16+. Bundle IDs under Funputs, lowercase like FUNPUTS (owner, 2026-11-15): app `com.funputs.blokdust`,
+   extension `com.funputs.blokdust.blokdustAUv3` (JUCE's naming); the desktop plugins move to `com.funputs.blokdust` and
+   `com.funputs.blokdustfx` too (their AU/VST3 codes stay, so DAW projects still find them). Presets
    `plugin-ios-sim` (Simulator, unsigned) and later `plugin-ios` (device; team from local config, never committed).
 2. **Same plugin, same behaviour:** the AUv3 is the same processor and WebView editor as VST3/AU: patch state in the
    host project, Dust 1–8 parameters (PLUGIN-0003), MIDI and MPE in (PLUGIN-0004), host tempo and transport.

@@ -366,7 +366,7 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
     mkdirSync(r.dir, { recursive: true });
     if (r.ext) for (const b of bundles.filter(x => x.path.endsWith(r.ext!))) cpSync(b.path, join(r.dir, b.path.split('/').pop()!), { recursive: true, verbatimSymlinks: true });
     else { cpSync('NOTICE.md', join(r.dir, 'NOTICE.txt')); cpSync('LICENSE', join(r.dir, 'LICENSE.txt')); }
-    const args = ['--root', r.dir, '--identifier', `com.blokdust.pkg.${key}`, '--version', VERSION, '--install-location', r.to];
+    const args = ['--root', r.dir, '--identifier', `com.funputs.blokdust.pkg.${key}`, '--version', VERSION, '--install-location', r.to];
     if (r.ext) {
       // Install where it says, not over a copy the user moved elsewhere (bundles are relocatable by default).
       const plist = join(staging, `${key}.plist`);
@@ -378,20 +378,20 @@ function packageMac(profile: string, appId: string, installerId: string, noBuild
     const p = run('pkgbuild', [...args, join(pkgs, `${key}.pkg`)], true);
     if (p.status !== 0) throw new Error(`pkgbuild ${key}: ${p.stderr}`);
   }
-  const ref = (key: string) => `<pkg-ref id="com.blokdust.pkg.${key}" version="${VERSION}">${key}.pkg</pkg-ref>`;
+  const ref = (key: string) => `<pkg-ref id="com.funputs.blokdust.pkg.${key}" version="${VERSION}">${key}.pkg</pkg-ref>`;
   writeFileSync(join(staging, 'distribution.xml'), `<?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
     <title>BlokDust ${VERSION}</title>
-    <organization>com.blokdust</organization>
+    <organization>com.funputs</organization>
     <options customize="allow" require-scripts="false" hostArchitectures="arm64,x86_64"/>
     <volume-check><allowed-os-versions><os-version min="11.0"/></allowed-os-versions></volume-check>
     <choices-outline>
         <line choice="vst3"/><line choice="au"/><line choice="app"/><line choice="docs"/>
     </choices-outline>
-    <choice id="vst3" title="VST3 plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/VST3 (Live, REAPER, Bitwig, Cubase)."><pkg-ref id="com.blokdust.pkg.vst3"/></choice>
-    <choice id="au" title="Audio Unit plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/Components (Logic, GarageBand)."><pkg-ref id="com.blokdust.pkg.au"/></choice>
-    <choice id="app" title="Standalone app" description="BlokDust, in /Applications."><pkg-ref id="com.blokdust.pkg.app"/></choice>
-    <choice id="docs" title="Licences" visible="false" description="Notices and licences."><pkg-ref id="com.blokdust.pkg.docs"/></choice>
+    <choice id="vst3" title="VST3 plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/VST3 (Live, REAPER, Bitwig, Cubase)."><pkg-ref id="com.funputs.blokdust.pkg.vst3"/></choice>
+    <choice id="au" title="Audio Unit plug-ins" description="BlokDust and BlokDust FX, in /Library/Audio/Plug-Ins/Components (Logic, GarageBand)."><pkg-ref id="com.funputs.blokdust.pkg.au"/></choice>
+    <choice id="app" title="Standalone app" description="BlokDust, in /Applications."><pkg-ref id="com.funputs.blokdust.pkg.app"/></choice>
+    <choice id="docs" title="Licences" visible="false" description="Notices and licences."><pkg-ref id="com.funputs.blokdust.pkg.docs"/></choice>
     ${ref('vst3')}
     ${ref('au')}
     ${ref('app')}

@@ -15,7 +15,7 @@ const ART = 'build/plugin-ios-sim/plugin/BlokDust_artefacts/Release';
 const APP = `${ART}/Standalone/BlokDust.app`;
 const APPEX = `${APP}/PlugIns/BlokDust.appex`;
 const HOST_APP = 'build/plugin-ios-sim/ioshost/BlokDustIOSHost.app';
-const HOST_ID = 'com.funputs.tests.BlokDustIOSHost';
+const HOST_ID = 'com.funputs.tests.blokdust-ioshost';
 const COMPONENT = 'aumu,Bdst,Bldt';
 const FIXTURES = ['tests/golden/emitter-tone.json', 'tests/golden/toggle-pulse.json'];  // as `bd plugin test`
 const OUT = '.cache/ios-host';
@@ -77,7 +77,7 @@ export function iosTest(noBuild: boolean): void {
   const started = new Date(Date.now() - 1000);
   must(run('xcrun', ['simctl', 'launch', '--terminate-running-process', sim.udid, HOST_ID, '--job', job], true), 'launch test host');
   for (let i = 0; i < 120 && !existsSync(out); ++i) sleep(1000);
-  if (!existsSync(out)) throw new Error(`the test host wrote no result in 120 s (log: xcrun simctl spawn ${sim.udid} log show --last 5m --predicate 'subsystem BEGINSWITH "com.blokdust"')`);
+  if (!existsSync(out)) throw new Error(`the test host wrote no result in 120 s (log: xcrun simctl spawn ${sim.udid} log show --last 5m --predicate 'subsystem BEGINSWITH "com.funputs.blokdust"')`);
   const result = JSON.parse(readFileSync(out, 'utf8'));
   const shot = resolve(OUT, 'editor.png');
   run('xcrun', ['simctl', 'io', sim.udid, 'screenshot', shot], true);
@@ -85,7 +85,7 @@ export function iosTest(noBuild: boolean): void {
 
   // The page's round-trip, from the extension's own log line (environment variables never reach an extension).
   const log = run('xcrun', ['simctl', 'spawn', sim.udid, 'log', 'show', '--start', logTime(started), '--style', 'compact',
-    '--predicate', 'subsystem == "com.blokdust.plugin"'], true).stdout;
+    '--predicate', 'subsystem == "com.funputs.blokdust"'], true).stdout;
   const ready = [...log.matchAll(/page: ready, (-?\d+) blocks/g)].map(m => Number(m[1]));
   const wrapper = /processor created \((AUv3)/.exec(log)?.[1] ?? null;
 

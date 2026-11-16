@@ -7,9 +7,9 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace blokdust::plugin {
-/// A line in the system log (macOS unified log, subsystem "com.blokdust.plugin"; Windows debug output): how the
+/// A line in the system log (macOS unified log, subsystem "com.funputs.blokdust"; Windows debug output): how the
 /// editor got on in a host we cannot attach to (Logic hosts AUs out of process). `log stream --predicate
-/// 'subsystem == "com.blokdust.plugin"'` shows them.
+/// 'subsystem == "com.funputs.blokdust"'` shows them.
 void systemLog(const juce::String& message);
 
 /// Stop native web views under `c` from claiming file drags. Returns true once done (call again until it is).
