@@ -10,6 +10,7 @@ import { installSelectors } from './selectorOption.ts';
 import { installButtonPairs } from './buttonPair.ts';
 import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { installTouchpad } from './touchpadPanel.ts';
+import { installWaveZoom, panelView } from './waveZoom.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -180,7 +181,8 @@ export class V1Scene {
       installSelectors(this.OptionsPanel);
       installButtonPairs(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
-      installTouchpad(this.OptionsPanel);  // last: it lays the Touchpad's rows out again after the others adapt them
+      installTouchpad(this.OptionsPanel);  // it lays the Touchpad's rows out again after the others adapt them
+      installWaveZoom(this.OptionsPanel);  // outermost: it narrows the form the others are given (waveZoom.ts)
       locateMissingFiles(this);
     }
     this.Metrics.Compute();
@@ -404,6 +406,10 @@ export class V1Scene {
     if (y < (h.Height * (h.Rows ?? 1) + (h.DropDown ?? 0)) * u) return true;
     return this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y));
   }
+  /** Is (x, y) device px on the open options panel? (A trackpad pinch there never zooms the stage.) */
+  optionsPanelAt(x: number, y: number): boolean {
+    return this.OptionsPanel.Scale === 1 && !!(this.OptionsPanel as any).OutlineTest(new Point(x, y));
+  }
   /** A second finger turned a stage drag into a pinch: the first finger stops dragging the stage. */
   endStageDrag(): void { this.MainSceneDragger.MouseUp(); }
   /** The open options panel's slider row under (x, y) device px (v1 OptionsPanel.RolloverCheck's rect), or -1. */
@@ -481,7 +487,10 @@ export class V1Scene {
     const w = (o.Options ?? []).find((q: any) => q.Type === 'waveregion' || q.Type === 'waveslider' || q.Type === 'waveimage');
     const dur = v.GetDuration();
     if (!secs?.length || !w || !(dur > 0) || !(w.Waveform?.length > 0)) return null;
-    return { xs: secs.map(t => Math.max(0, Math.min(1, t / dur))), x: o.Margin, y: w.Position.y, width: o.Range, height: w.Size.height };
+    // A zoomed waveform (waveZoom.ts) shows only the playheads inside its window.
+    const view = panelView(o) ?? { f0: 0, f1: 1 };
+    const xs = secs.map(t => Math.max(0, Math.min(1, t / dur))).map(f => (f - view.f0) / (view.f1 - view.f0)).filter(f => f >= 0 && f <= 1);
+    return { xs, x: o.Margin, y: w.Position.y, width: o.Range, height: w.Size.height };
   }
   private drawPlayheads(): void {
     const l = this.playheadLines();

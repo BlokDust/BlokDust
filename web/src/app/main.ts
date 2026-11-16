@@ -32,6 +32,7 @@ import { SAVE_WARNING, V1Scene } from '../v1ui/scene.ts';
 import { V1Block } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, setMenuHidden, setMonitors } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
+import { moveWavePinch, snapshotWave, startWavePinch, waveRowAt, wheelWave, type WavePinch } from '../v1ui/waveZoom.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
 
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
@@ -1765,7 +1766,7 @@ async function main() {
   // the stage). Each further finger takes what it lands on: a block (dragged by that finger, powered while held, as
   // v1's pressed block), or a slider of the open options panel. A second finger while the first drags the stage
   // turns it into a pinch: zoom about the fingers' midpoint, which stays put, and pan with it. ----
-  type Extra = { kind: 'block'; id: number; grabX: number; grabY: number; from: XY } | { kind: 'slider'; index: number } | { kind: 'pinch' } | { kind: 'idle' };
+  type Extra = { kind: 'block'; id: number; grabX: number; grabY: number; from: XY } | { kind: 'slider'; index: number } | { kind: 'pinch' } | { kind: 'wavepinch' } | { kind: 'idle' };
   let primaryId: number | null = null;
   /** What the first finger is doing; 'gone': it was in a pinch that ended, so it does nothing until it lifts. */
   let primaryRole: 'ui' | 'block' | 'stage' | 'placing' | 'gone' | 'box' | 'select' | null = null;
@@ -1798,9 +1799,34 @@ async function main() {
     pinch = null;
     scene.pinchEnd();
   }
+  // Two fingers on a waveform in the options panel (owner, 2026-11-15; waveZoom.ts): they zoom and slide that
+  // waveform, not the stage. The first finger's press may have moved a handle or the slider: that is put back.
+  let wavePinch: (WavePinch & { a: number; b: number }) | null = null;
+  let waveTouch: { row: number; undo: () => void } | null = null;
+  function moveWave(): void {
+    if (!wavePinch) return;
+    const a = touchAt.get(wavePinch.a), b = touchAt.get(wavePinch.b);
+    if (a && b) moveWavePinch(scene.OptionsPanel, wavePinch, (a.x + b.x) / 2 * dpr(), Math.hypot(a.x - b.x, a.y - b.y));
+  }
+  function endWavePinch(): void {
+    if (!wavePinch) return;
+    for (const id of [wavePinch.a, wavePinch.b]) { if (id === primaryId) primaryRole = 'gone'; else if (extras.has(id)) extras.set(id, { kind: 'idle' }); }
+    wavePinch = null;
+  }
   function extraDown(e: PointerEvent): void {
     const x = e.offsetX, y = e.offsetY;
-    if (pinch || placing || padNotes().length) { extras.set(e.pointerId, { kind: 'idle' }); return; }  // not while the pads are played
+    if (pinch || wavePinch || placing || padNotes().length) { extras.set(e.pointerId, { kind: 'idle' }); return; }  // not while the pads are played
+    const first = primaryId !== null ? touchAt.get(primaryId) : undefined;
+    if (primaryRole === 'ui' && waveTouch && first) {
+      const { row, undo } = waveTouch;
+      waveTouch = null;
+      undo();
+      primaryRole = 'gone';
+      extras.set(e.pointerId, { kind: 'wavepinch' });
+      wavePinch = { a: primaryId!, b: e.pointerId, ...startWavePinch(scene.OptionsPanel, row, (first.x + x) / 2 * dpr(), Math.hypot(first.x - x, first.y - y)) };
+      stage.redraw();
+      return;
+    }
     if (primaryRole === 'stage' && primaryId !== null && touchAt.has(primaryId)) {
       extras.set(e.pointerId, { kind: 'pinch' });
       startPinch(primaryId, e.pointerId);
@@ -1822,6 +1848,7 @@ async function main() {
   }
   function extraMove(e: PointerEvent, t: Extra): void {
     if (t.kind === 'pinch') { movePinch(); stage.redraw(); return; }
+    if (t.kind === 'wavepinch') { moveWave(); stage.redraw(); return; }
     if (t.kind === 'slider') { scene.setSlider(t.index, e.offsetX * dpr()); stage.redraw(); return; }
     if (t.kind === 'block') {
       const [gx, gy] = stage.cssToGrid(e.offsetX, e.offsetY), b = model.get(t.id);
@@ -1834,6 +1861,7 @@ async function main() {
     extras.delete(id);
     if (!t) return;
     if (t.kind === 'pinch') endPinch();
+    if (t.kind === 'wavepinch') endWavePinch();
     if (t.kind === 'block') {
       stage.held.delete(t.id);
       if (model.has(t.id)) { send([{ type: CommandType.Press, id: t.id, value: 0 }]); recordMove([t.id], new Map([[t.id, t.from]])); }
@@ -1916,6 +1944,11 @@ async function main() {
       stage.redraw();
       return;
     }
+    waveTouch = null;
+    if (e.pointerType === 'touch') {  // on a waveform: what to put back if a second finger makes this a pinch
+      const row = waveRowAt(scene.OptionsPanel, e.offsetX * dpr(), e.offsetY * dpr()), undo = row >= 0 ? snapshotWave(scene.OptionsPanel, row) : null;
+      if (undo) waveTouch = { row, undo };
+    }
     const tookUi = scene.pointerDown(e.offsetX * dpr(), e.offsetY * dpr(), () => v1At(e.offsetX, e.offsetY));
     if (!tookUi && !drag) {
       const hit = stage.hitTest(e.offsetX, e.offsetY);
@@ -1955,6 +1988,7 @@ async function main() {
     if (extra) { extraMove(e, extra); return; }
     if (primaryId !== null && e.pointerId !== primaryId) return;
     if (pinch && (pinch.a === e.pointerId || pinch.b === e.pointerId)) { movePinch(); stage.redraw(); return; }
+    if (wavePinch && (wavePinch.a === e.pointerId || wavePinch.b === e.pointerId)) { moveWave(); stage.redraw(); return; }
     if (primaryRole === 'gone') return;
     lastPointerType = e.pointerType; lastPointer = (([x, y]) => ({ x, y }))(stage.cssToGrid(e.offsetX, e.offsetY));
     if (placing) {
@@ -2023,7 +2057,8 @@ async function main() {
     if (extras.has(e.pointerId)) { extraUp(e.pointerId); return true; }
     if (primaryId !== null && e.pointerId !== primaryId) return true;
     if (pinch && (pinch.a === e.pointerId || pinch.b === e.pointerId)) endPinch();
-    primaryId = null;
+    if (wavePinch && (wavePinch.a === e.pointerId || wavePinch.b === e.pointerId)) endWavePinch();
+    primaryId = null; waveTouch = null;
     if (primaryRole === 'gone') { primaryRole = null; pointerIsDown = false; scene.pointerUp(-1, -1, true); stage.redraw(); return true; }
     primaryRole = null;
     return false;
@@ -2100,6 +2135,7 @@ async function main() {
   // mouse wheel zooms the same way (owner, 2026-11-12, CHG-0010; v1 had turned its stepped wheel zoom off), except over
   // the UI (an open panel, the header, the options panel), where it stays v1's (which does nothing).
   let gesture: { z0: number; w: { x: number; y: number } } | null = null;
+  let waveGesture: WavePinch | null = null;  // Safari's trackpad pinch on a waveform
   let zoomSettle: ReturnType<typeof setTimeout> | undefined;
   /** The stage point under device px (x, y), in v1 units (see startPinch). */
   const stageAt = (x: number, y: number) => { const m = stage.metrics; return { x: (x - m.width / 2) / (stage.zoom * m.unit) - stage.drag.x, y: (y - m.height / 2) / (stage.zoom * m.unit) - stage.drag.y }; };
@@ -2113,6 +2149,17 @@ async function main() {
   if (!embedId) app.canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const x = e.offsetX * dpr(), y = e.offsetY * dpr();
+    // Over a waveform in the options panel: zoom or slide it (waveZoom.ts), never the stage under it.
+    const row = waveRowAt(scene.OptionsPanel, x, y);
+    if (row >= 0) {
+      if (!pointerIsDown && !waveGesture && !wavePinch) {
+        const k = e.deltaMode === 1 ? 16 : 1;
+        wheelWave(scene.OptionsPanel, row, x, { deltaX: e.deltaX * k, deltaY: e.deltaY * k, ctrlKey: e.ctrlKey, shiftKey: e.shiftKey }, dpr());
+        stage.redraw();
+      }
+      return;
+    }
+    if (e.ctrlKey && scene.optionsPanelAt(x, y)) return;  // a trackpad pinch elsewhere on the panel does nothing
     if (!e.ctrlKey && scene.uiAt(x, y)) { scene.wheel(e); return; }
     if (gesture || pinch || pointerIsDown) return;
     const dy = Math.max(-25, Math.min(25, e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY));
@@ -2125,9 +2172,16 @@ async function main() {
   if (!embedId) {
     // iOS sends these for a two-finger touch too: there the touch pinch has it (fingers are down), so they're ignored.
     stageEl.addEventListener('gesturestart', e => { if (touchAt.size || pointerIsDown || padNotes().length) return;  // fingers on the Touchpad's pads play, never zoom
-    const g = e as GestureEv, at = gestureAt(g); gesture = { z0: stage.zoom, w: stageAt(at.x, at.y) }; });
-    stageEl.addEventListener('gesturechange', e => { if (!gesture) return; const g = e as GestureEv, at = gestureAt(g); zoomAbout(at.x, at.y, gesture.z0 * g.scale, gesture.w); });
-    stageEl.addEventListener('gestureend', () => { gesture = null; });
+    const g = e as GestureEv, at = gestureAt(g), row = waveRowAt(scene.OptionsPanel, at.x, at.y);
+    if (row >= 0) { waveGesture = startWavePinch(scene.OptionsPanel, row, at.x, 1); return; }  // a waveform zooms instead
+    if (scene.optionsPanelAt(at.x, at.y)) return;
+    gesture = { z0: stage.zoom, w: stageAt(at.x, at.y) }; });
+    stageEl.addEventListener('gesturechange', e => {
+      const g = e as GestureEv, at = gestureAt(g);
+      if (waveGesture) { moveWavePinch(scene.OptionsPanel, waveGesture, at.x, g.scale); stage.redraw(); return; }
+      if (!gesture) return;
+      zoomAbout(at.x, at.y, gesture.z0 * g.scale, gesture.w); });
+    stageEl.addEventListener('gestureend', () => { gesture = null; waveGesture = null; });
   }
   if (embedId) setupEmbedChrome(embedId, start.title ?? '');
 
