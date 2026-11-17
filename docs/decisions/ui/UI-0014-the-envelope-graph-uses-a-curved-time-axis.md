@@ -1,7 +1,7 @@
 ---
 id: UI-0014
 title: The Envelope graph uses a curved time axis
-status: proposed
+status: accepted
 date: 2026-11-17
 domain: ui
 tags: [ui, options-panel, envelope, post-2-0]
@@ -22,8 +22,8 @@ verbatim, and must not be edited by hand.
 We will place the Envelope's time handles on a curved axis, applied around v1's panel in `web/src/v1ui/adsrPanel.ts`:
 a log axis by default (10 ms → 5 s, each tenfold step the same width), with the graph drawn by v1's own code on those
 positions. A held handle follows the pointer from where it was grabbed (Shift: a tenth as fast), a press takes only the
-nearest handle, and the held value is written just above the graph's top-right corner in the title's type. For the owner's review,
-`?adsr=log|square|v1` picks the axis (remembered per browser); one is kept after review and the switch removed.
+nearest handle, and the held value is written just above the graph's top-right corner in the title's type. The owner tried log,
+squared and straight axes on staging (2026-11-17) and picked log; the others were removed.
 
 ## Consequences
 - Short times get most of the room: on the log axis 10–100 ms is 37 % of the track, 1 s sits at 74 %.
@@ -33,7 +33,7 @@ nearest handle, and the held value is written just above the graph's top-right c
 
 ## Alternatives considered
 - **Squared axis** (`?adsr=square`): gentler (1 s at 45 %), closer to v1's picture, but 10–100 ms still gets only
-  ~13 %. Offered for comparison.
+  ~13 %. Tried on staging; not picked.
 - **v1's straight axis with fine-drag only**: keeps v1's picture; relies on Shift (no keyboard on touch devices).
-  Offered as `?adsr=v1`.
+  Tried on staging; not picked.
 - **Typed values / a numeric field**: precise, but not in v1's visual language and clumsy on touch.

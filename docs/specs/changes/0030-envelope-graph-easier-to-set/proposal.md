@@ -1,12 +1,12 @@
 ---
-id: CHG-0029
+id: CHG-0030
 title: Envelope graph easier to set
 status: proposed
 date: 2026-11-17
 specs: [SPEC-VISUAL-V1-PARITY]
 adrs: [UI-0014]
 ---
-# CHG-0029: Envelope graph easier to set
+# CHG-0030: Envelope graph easier to set
 
 ## Why
 Short attacks are hard to set on the Envelope's graph (owner, 2026-11-17): v1 draws 10 ms – 5 s on a straight line,
@@ -19,8 +19,6 @@ handles are grabbed together.
   `RELEASE 1.20 s`.
 - A handle follows the pointer from where it was grabbed (no jump on press); Shift moves it a tenth as fast.
 - A press where handles overlap takes the nearest one only.
-- Review switch: `?adsr=log` (default), `?adsr=square`, `?adsr=v1` (v1's straight axis with the other improvements),
-  remembered in the browser.
 
 ## Out of scope
 - Engine, patch format, and the parameter ranges (still 10 ms – 5 s, sustain 0–1).
@@ -32,4 +30,4 @@ handles are grabbed together.
 - `pnpm test:ui-regressions`: everything else unchanged.
 
 ## Risks and unknowns
-- The owner picks an axis after trying them; the other variants and the `?adsr` switch are then removed.
+- None known. The owner compared log, squared and straight axes on staging (2026-11-17) and picked log.
