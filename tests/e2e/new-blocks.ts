@@ -691,7 +691,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       five?.pattern === 'x.x.xx.x' && s.hits > 0 && s.connections.length === 0 && toggled === 'xxx.xx.x' && mask === 0b10110111 && back === 'x.x.xx.x' && (cleared ?? -1) === -1;
     return [pass, { menu, first, later, five: five?.pattern, hits: s.hits, connections: s.connections, toggled, mask, back, cleared }];
   },
-  // CHG-0029 (SPEC-AUDIO-WAVETABLE R7): the Wavetable is in the Source menu and sounds; its panel draws the frame it
+  // CHG-0031 (SPEC-AUDIO-WAVETABLE R7): the Wavetable is in the Source menu and sounds; its panel draws the frame it
   // plays, which changes with Table and follows an LFO moving Position.
   async 'wavetable'(errors) {
     const p = await open(browser, [blk('w', 'source.wavetable', 0, 0, { table: 0, position: 0.2 }), blk('pw', 'power.power', -3, 0),

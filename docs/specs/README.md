@@ -52,4 +52,4 @@
 | [CHG-0026](changes/0026-usage-analytics/proposal.md) | Usage analytics | **proposed** | SPEC-SHARING-USAGE-ANALYTICS, SPEC-SHARING-BACKEND |
 | [CHG-0027](changes/0027-account-stats/proposal.md) | Account stats | **proposed** | SPEC-SHARING-ACCOUNTS |
 | [CHG-0028](changes/0028-waveform-zoom-in-the-options-panel/proposal.md) | Waveform zoom in the options panel | **proposed** | SPEC-VISUAL-V1-PARITY |
-| [CHG-0029](changes/0029-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |
+| [CHG-0031](changes/0031-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |

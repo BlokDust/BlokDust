@@ -1,5 +1,5 @@
 {
-  "description": "CHG-0029: Position swept by a synced LFO (SYNC table) and by a free one (SWEEP), FOLD moved by hand, PULSE held; Note and Fine changed while sounding.",
+  "description": "CHG-0031: Position swept by a synced LFO (SYNC table) and by a free one (SWEEP), FOLD moved by hand, PULSE held; Note and Fine changed while sounding.",
   "render": { "seconds": 6, "sampleRate": 44100 },
   "patch": {
     "format": "blokdust.patch", "version": 2, "seed": 9,

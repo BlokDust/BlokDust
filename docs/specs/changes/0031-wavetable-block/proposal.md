@@ -1,12 +1,12 @@
 ---
-id: CHG-0029
+id: CHG-0031
 title: Wavetable block
 status: proposed
 date: 2026-11-17
 specs: [SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY]
 adrs: [AUDIO-0004, SCOPE-0005, DATA-0005]
 ---
-# CHG-0029: Wavetable block
+# CHG-0031: Wavetable block
 
 ## Why
 The owner wants unusual sounds (bells, chimes, glass) from one source block, with a Position that the LFO and Dust

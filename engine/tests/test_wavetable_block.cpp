@@ -1,4 +1,4 @@
-// CHG-0029: the Wavetable source block and its built-in tables (SPEC-AUDIO-WAVETABLE, AUDIO-0004).
+// CHG-0031: the Wavetable source block and its built-in tables (SPEC-AUDIO-WAVETABLE, AUDIO-0004).
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <cstring>

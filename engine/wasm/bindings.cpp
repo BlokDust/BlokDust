@@ -189,7 +189,7 @@ BD_EXPORT(bd_block_param) double bd_block_param(Host* h, std::uint32_t id, int p
 BD_EXPORT(bd_default_impulse) void bd_default_impulse(float* left, float* right, int frames, int sampleRate) {
   blokdust::dsp::makeDefaultImpulse(left, right, frames, sampleRate);
 }
-// source.wavetable (CHG-0029, SPEC-AUDIO-WAVETABLE R7): the frame at `position` of `table`, `n` points over `cycles`
+// source.wavetable (CHG-0031, SPEC-AUDIO-WAVETABLE R7): the frame at `position` of `table`, `n` points over `cycles`
 // table cycles, for the options panel's picture (no engine needed).
 BD_EXPORT(bd_table_picture) void bd_table_picture(float* out, int table, double position, int n, double cycles) {
   const auto v = blokdust::dsp::TableBank::picture(table, position, n, cycles);

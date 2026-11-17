@@ -993,7 +993,7 @@ async function main() {
     const known = quiet && inside && innerSamples.get(inside.stageUid)?.has(uid);  // looking into a Stage: shown from what it has
     if (type === 'source.sample-gen' && !savedFile && !known) generateSample(id, !!(p.seed as { waveVoices?: unknown } | undefined)?.waveVoices);
     if (type === 'fx.convolver') void showBuiltInImpulse(id);
-    // CHG-0029: the Wavetable's panel draws its frames with the engine module (shows v1's loading square until then).
+    // CHG-0031: the Wavetable's panel draws its frames with the engine module (shows v1's loading square until then).
     if (type === 'source.wavetable') void engineModule().then(m => { setTableModule(m); v1Blocks.get(id)?.RefreshOptionsPanel(); }, () => {});
     if (!quiet) {
       void resolveSample(id, true);

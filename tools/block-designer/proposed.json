@@ -264,6 +264,6 @@
     ["Stage", "Sources", "A whole patch inside one block"],
     ["Touchpad", "Interaction", "Push-style pads in key, played in its panel (UI-0010)"],
     ["Label", "Interaction", "No block: text on the stage with a small dot to drag it"],
-    ["Wavetable", "Sources", "Built-in wavetables (bells, chimes, glass…) with a Position to sweep (CHG-0029)"]
+    ["Wavetable", "Sources", "Built-in wavetables (bells, chimes, glass…) with a Position to sweep (CHG-0031)"]
   ]
 }

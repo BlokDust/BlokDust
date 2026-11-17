@@ -1,5 +1,5 @@
 #pragma once
-// The Wavetable block's built-in tables (CHG-0029, AUDIO-0004). Each table is kFrames single-cycle frames that the
+// The Wavetable block's built-in tables (CHG-0031, AUDIO-0004). Each table is kFrames single-cycle frames that the
 // block's Position fades through. Every frame is made from maths in tablebank.cpp (no audio is stored anywhere,
 // DATA-0005): a spectrum of up to kMaxPartials harmonics, turned into one band-limited cycle per octave band by the
 // same deterministic inverse FFT as the Tone's tables (wavetable.hpp).

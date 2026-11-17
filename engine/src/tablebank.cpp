@@ -1,4 +1,4 @@
-// The Wavetable block's built-in tables (CHG-0029, AUDIO-0004): every frame is a spectrum made here from maths, then
+// The Wavetable block's built-in tables (CHG-0031, AUDIO-0004): every frame is a spectrum made here from maths, then
 // band-limited per octave by the Tone's deterministic inverse FFT. Nothing is sampled or stored (DATA-0005).
 #include "blokdust/tablebank.hpp"
 

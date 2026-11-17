@@ -18,7 +18,7 @@ static_assert(P::SourceRecorder::playbackRate == P::SourceSample::playbackRate &
               P::SourceSampleGen::reverse == P::SourceSample::reverse, "sampler params must line up");
 namespace {
 bool isSampler(BlockType t) noexcept { return t == BlockType::SourceSample || t == BlockType::SourceRecorder || t == BlockType::SourceSampleGen; }
-/// Oscillator sources: the Tone and the Wavetable (CHG-0029) share Note and Fine, pitch and expression rules.
+/// Oscillator sources: the Tone and the Wavetable (CHG-0031) share Note and Fine, pitch and expression rules.
 bool isOscillator(BlockType t) noexcept { return t == BlockType::SourceTone || t == BlockType::SourceWavetable; }
 }  // namespace
 
@@ -278,7 +278,7 @@ void Engine::configureDsp(Block& b) noexcept {
         Voice& vo = b.voices[static_cast<std::size_t>(v)];
         if (first) vo.env.configure({}, sr);
         if (b.type == BlockType::SourceTone) vo.osc.setWaveform(static_cast<dsp::Waveform>(std::clamp(static_cast<int>(p[P::SourceTone::waveform]), 0, 3)));
-        if (b.type == BlockType::SourceWavetable) {  // CHG-0029: a new block starts where it is set; later moves glide
+        if (b.type == BlockType::SourceWavetable) {  // CHG-0031: a new block starts where it is set; later moves glide
           vo.tosc.setTable(std::clamp(static_cast<int>(std::lround(p[P::SourceWavetable::table])), 0, dsp::TableBank::kTables - 1));
           vo.tosc.setGlide(gainGlide_);
           vo.tosc.setPosition(p[P::SourceWavetable::position], first);
@@ -1869,7 +1869,7 @@ void Engine::renderChain(int c, int n) noexcept {
           }
         }
         break;
-      case BlockType::SourceWavetable:  // CHG-0029: the Tone's voice rules, reading the TableBank
+      case BlockType::SourceWavetable:  // CHG-0031: the Tone's voice rules, reading the TableBank
         for (int v = 0; v < kVoices; ++v) {
           Voice& vo = b.voices[static_cast<std::size_t>(v)];
           for (int i = 0; i < n; ++i) {

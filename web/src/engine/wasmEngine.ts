@@ -78,7 +78,7 @@ export function defaultImpulse(module: WebAssembly.Module, sampleRate: number, s
   return { left: new Float32Array(x.memory.buffer, pl, n).slice(), right: new Float32Array(x.memory.buffer, pr, n).slice() };
 }
 
-/** source.wavetable (CHG-0029): one frame of a built-in table as the engine reads it, `n` points across two note
+/** source.wavetable (CHG-0031): one frame of a built-in table as the engine reads it, `n` points across two note
  * cycles (one table cycle for the harmonic tables). One module instance, kept. */
 let tableInstance: { module: WebAssembly.Module; x: Exports; out: number; n: number } | null = null;
 export function tablePicture(module: WebAssembly.Module, table: number, position: number, n = 200): Float32Array {

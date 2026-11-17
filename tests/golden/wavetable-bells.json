@@ -1,5 +1,5 @@
 {
-  "description": "CHG-0029: particles strike three Wavetables (BELL, CHIME, GLASS) through a Reverb, while a MIDI controller plays a GONG and a VOICE table through a Vibrato.",
+  "description": "CHG-0031: particles strike three Wavetables (BELL, CHIME, GLASS) through a Reverb, while a MIDI controller plays a GONG and a VOICE table through a Vibrato.",
   "render": { "seconds": 6, "sampleRate": 48000 },
   "patch": {
     "format": "blokdust.patch", "version": 2, "seed": 4,

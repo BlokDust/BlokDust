@@ -317,7 +317,7 @@ class Engine {
   const float* inRight_ = nullptr;
   int inOffset_ = 0;
   dsp::MasterCompressor compressor_;
-  std::shared_ptr<const dsp::TableBank> tables_;  // the Wavetable block's tables (CHG-0029), built once like wavetables_
+  std::shared_ptr<const dsp::TableBank> tables_;  // the Wavetable block's tables (CHG-0031), built once like wavetables_
   std::shared_ptr<const dsp::WavetableBank> wavetables_;  // oscillator tables, built once (allocates here only); a child shares its parent's
   // source.stage (CHG-0021): inner worlds by pool index, and what each rendered this segment (stereo).
   std::array<Engine*, kMaxStages> stages_{};

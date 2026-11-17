@@ -1,4 +1,4 @@
-# CHG-0029 tasks: Wavetable block
+# CHG-0031 tasks: Wavetable block
 
 Check items off as they land. Each task should be independently verifiable.
 

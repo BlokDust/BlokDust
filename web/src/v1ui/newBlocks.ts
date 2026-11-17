@@ -139,11 +139,11 @@ export function convertSetting(key: string, value: number): { param: string; val
   return c ? { param: c.param, value: c.to(Number(value)), refresh: CONVERT_REFRESH.has(key) } : null;
 }
 
-/** The Wavetable's built-in tables, in the engine's order (TableBank::names, CHG-0029). */
+/** The Wavetable's built-in tables, in the engine's order (TableBank::names, CHG-0031). */
 export const WAVETABLES = ['BELL', 'CHIME', 'GLASS', 'GONG', 'VOICE', 'SWEEP', 'SYNC', 'FOLD', 'PULSE'];
 
 const FORMS: Record<string, (b: FormBlock) => any[]> = {
-  // CHG-0029 (AUDIO-0004): the frame being played, drawn as v1 draws a waveform; then which table, where in it, and
+  // CHG-0031 (AUDIO-0004): the frame being played, drawn as v1 draws a waveform; then which table, where in it, and
   // the Tone's Note and Fine rows.
   'source.wavetable': b => [
     slider('Wave', 'wavePicture', 0, 0, 1),
@@ -439,7 +439,7 @@ function counterPress(panel: any, mx: number, my: number): boolean {
   return true;
 }
 
-// ---- the Wavetable's picture (CHG-0029, SPEC-AUDIO-WAVETABLE R7) ----
+// ---- the Wavetable's picture (CHG-0031, SPEC-AUDIO-WAVETABLE R7) ----
 let tableModule: WebAssembly.Module | null = null;
 /** The engine module the pictures are drawn with (the app hands it over once loaded). */
 export function setTableModule(m: WebAssembly.Module): void { tableModule = m; }
