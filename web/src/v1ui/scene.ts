@@ -686,7 +686,7 @@ function relabelShareButton(header: any): void {
  * doesn't use. "DAW plugin" becomes a link to the downloads once they exist (CHG-0005 task 12). */
 /** Luke Phillips's credit in About (owner, 2026-11-16): v1's roles, plus V2, which he built alone; his site is funputs.com.
  * At most three lines in its column: v1 draws the website 42 units below the blurb's first line. */
-export const PHILLIPS = { blurb: 'Luke Phillips - audio development & musical interaction. V2: architecture & full-stack development.', url: 'funputs.com' };
+export const PHILLIPS = { blurb: 'Luke Phillips - audio/musical interaction. V2 architecture & full-stack development.', url: 'funputs.com' };
 export const ABOUT = 'BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, developed in Brighton, UK, '
   + 'and released in 2016. This rebuild was released in 2026, built by Luke Phillips, now available as a DAW plugin.';
 /** The code (owner: people can read it and send pull requests), where v1 had "Chrome Recommended". */

@@ -68,7 +68,7 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   - "since MONTH YEAR" (the account's creation) after SIGNED IN AS NAME, in v1's italic (left out when a long name
     leaves no room before DELETE ACCOUNT);
   - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
-    LIKES (on its gallery patches) and OPENS (its patches opened in the app), each a number in the Settings sliders'
+    LIKES (on its gallery patches) and PLAYS (its patches opened in the app, by anyone; owner, 2026-11-16: was OPENS), each a number in the Settings sliders'
     light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);
   - FAVOURITE BLOCKS: up to five block types, in the most of the account's patches first, then the most of them,
     each v1's menu icon over its menu name (two lines when wider than its column); or a line saying to save a patch;

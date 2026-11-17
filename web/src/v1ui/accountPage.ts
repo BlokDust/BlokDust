@@ -24,7 +24,7 @@ const COPY = {
   addPasskey: 'Add Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
   deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
   noAccounts: 'Accounts are not available here.', working: 'one moment', added: 'Passkey added.',
-  patches: 'Patches', remixes: 'Remixes', likes: 'Likes', opens: 'Opens', favourites: 'Favourite blocks',
+  patches: 'Patches', remixes: 'Remixes', likes: 'Likes', opens: 'Plays', favourites: 'Favourite blocks',
   noFavourites: 'Save a patch to see your favourite blocks here.', since: 'Since', mostRemixed: 'Most remixed',
   minutesPlayed: 'Minutes played', hoursPlayed: 'Hours played', blocksAdded: 'Blocks added', particles: 'Particles', laserTurns: 'Laser turns',
 };
