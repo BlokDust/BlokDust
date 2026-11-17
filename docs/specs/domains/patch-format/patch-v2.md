@@ -72,11 +72,17 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - OPEN lists the user's own patches: in the plugin, the patches folder, above the built-in presets; on the web, the
     patches this browser saved (to a file or a link), one per title, kept in the browser's local storage only, and the
     signed-in account's (owner review 3, 2026-11-16: on the web the presets are @blokdust's EXAMPLES in the gallery,
-    SPEC-SHARING-GALLERY R16, so OPEN is empty until the user saves something; OPEN FROM YOUR DEVICE is always there).
+    SPEC-SHARING-GALLERY R16, so OPEN is empty until the user saves something). OPEN's rows are one list that scrolls
+    (mouse wheel or a drag, as the gallery's; owner, 2026-11-16: no pages of five).
   - The plugin's SAVE tab has SAVE TO COMPUTER, then CREATE SHARE LINK, which opens the public site with the patch in
     the address (`?c=p…&t=<title>&share=1`); the site makes the link as it loads (as SAVE would) and the address bar
     shows it, short, to copy; START shows the scene (owner, 2026-11-13, CHG-0013; it used to open Patches on SAVE).
-  - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is the OPEN tab's main (filled) button.
+  - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is the OPEN tab's main (filled) button, except in a
+    phone's browser, where it opens nothing useful (owner, 2026-11-16).
+  - On a phone (portrait) OPEN and GALLERY run from the tabs to the foot of the screen, with taller rows in larger type,
+    and the video view from the tabs down (owner, 2026-11-16: v1 centred its pages, leaving wide gaps on a tall screen).
+  - The video view (after SAVE with MAKE VIDEO on) shows the player, its button and the patch's link to copy; no name
+    or RANDOMISE TITLE (the name is chosen by then); BACK at the top left (owner, 2026-11-16).
   - The web's SAVE tab is three buttons, no help lines (owner, 2026-11-11): SAVE · SAVE AS · DOWNLOAD PATCH.
     Share links (SPEC-SHARING-BACKEND): SAVE makes the link the first time; once the patch changes it puts the changes
     on the same link (v1 SAVE; a link made elsewhere gets a new one); unchanged, it is off. SAVE AS makes a new link

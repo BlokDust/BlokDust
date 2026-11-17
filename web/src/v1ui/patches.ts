@@ -149,7 +149,6 @@ function rememberedTab(): Tab {
   try { const t = Number(localStorage.getItem(TAB_KEY)); return (t >= 0 && t <= 2 ? t : 0) as Tab; } catch { return 0; }
 }
 
-const ITEMS = 5;
 
 export const COPY = {
   panel: 'Patches', tabs: ['Save / Share', 'Open', 'Gallery'] as const,
@@ -198,7 +197,8 @@ export class PatchesPanel extends DisplayObject {
   Saving = false;
   /** A short label in place of a button's own (SAVED, COPIED) until `flashUntil`. */
   private flash: { key: string; label: string; until: number } | null = null;
-  private page = 1;
+  /** OPEN's list, scrolled (owner, 2026-11-16: one scrolling list, as the gallery, not pages of five). */
+  OpenScroll = 0;
   private roll: Record<string, boolean> = {};
   /** Tab fills, 0..1 (v1 MenuCategory.Selected, tweened). */
   private selected = [1, 0, 0];
@@ -214,7 +214,8 @@ export class PatchesPanel extends DisplayObject {
   /** The list's scroll, device px from the top (owner review 2: one scrolling list, pages appended). */
   GalleryScroll = 0;
   /** A press on the list: where it started, and whether it has become a drag (a drag doesn't open the row under it). */
-  private galleryDrag: { y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' | 'like' } | null = null;
+  /** A press on a list (OPEN's or the gallery's): it scrolls if it moves, else the row's button acts on release. */
+  private galleryDrag: { tab: 1 | 2; y: number; scroll: number; moved: boolean; row: number; mode: 'open' | 'insert' | 'like' | 'bin' } | null = null;
   private reporting: { id: string; title: string } | null = null;
   /** After REPORT: the thanks, then the panel closes. */
   private reported = false;
@@ -285,11 +286,20 @@ export class PatchesPanel extends DisplayObject {
 
   // ---- layout ----
   private get mobile() { return App.Metrics.Device === Device.mobile; }
-  private get tablet() { return App.Metrics.Device === Device.tablet; }
   private get cy() { return this.OffsetY + App.Height * 0.5; }
   private get margin() { return App.Width * 0.5 - 210 * App.Unit; }
   private get pageW() { return 420 * App.Unit; }
-  private get pages() { return Math.max(1, Math.ceil(this.Items.length / ITEMS)); }
+  /** Phones (portrait, owner 2026-11-16): OPEN, GALLERY and the video are laid out from the tabs down to the bottom of
+   * the screen (v1 centred its pages, which left wide gaps above and below on a tall phone), the rows taller and their
+   * type larger. `top` is the tabs' rule, `bottom` the screen's foot. */
+  private get top() { return this.OffsetY + 60 * App.Unit; }
+  private get bottom() { return this.OffsetY + App.Height; }
+  private get rowH() { return (this.mobile ? 48 : 40) * App.Unit; }
+  private get rowFont() { return this.mobile ? App.Metrics.TxtItalic3 : App.Metrics.TxtItalic; }
+  /** A row's first line sits this far above its second (v1: 10 units). */
+  private get rowGap() { return (this.mobile ? 13 : 10) * App.Unit; }
+  /** OPEN FROM YOUR DEVICE: not in a phone's browser (owner: it opens nothing useful there; the list does). */
+  private get fileButtonShown() { return !(this.mobile && this.web); }
   private textW(t: string, font = App.Metrics.TxtMid) { this.Ctx.font = font; return this.Ctx.measureText(t.toUpperCase()).width; }
   /** v1 SettingsPanel.Populate: the tab bar's width, and each tab's centre and width. */
   private tabs() {
@@ -337,7 +347,7 @@ export class PatchesPanel extends DisplayObject {
   }
   /** OPEN, INSERT and (the user's own patches) a bin at the right: a small copy of v1's trash can. */
   private rowButtons(n: number) {
-    const u = App.Unit, y = this.cy - 70 * u + n * 40 * u;
+    const u = App.Unit, y = this.openRowY(n);
     const insert = this.bordered(COPY.insert, this.margin + this.pageW - 30 * u, y - 19 * u);
     const open = this.bordered(COPY.open, insert.x - 10 * u, y - 19 * u);
     return { open, insert, bin: { x: this.margin + this.pageW - 20 * u, y: y - 19 * u, w: 20 * u, h: 20 * u, cx: this.margin + this.pageW - 9 * u, cy: y - 9 * u } };
@@ -346,7 +356,7 @@ export class PatchesPanel extends DisplayObject {
    * Connect) under the list, with the upload mark. On a phone v1 puts the page number and arrows in the middle of the
    * bottom row, so it goes beneath them. */
   private fileButton() {
-    const u = App.Unit, y = this.cy + (this.mobile ? 195 : 175) * u;
+    const u = App.Unit, y = this.mobile ? this.bottom - 60 * u : this.cy + 175 * u;
     return { x: App.Width * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: App.Width * 0.5 };
   }
   // ---- SAVE / SHARE (web): units from the panel centre ----
@@ -362,17 +372,24 @@ export class PatchesPanel extends DisplayObject {
     const u = App.Unit, top = this.cy + 190 * u, L = this.margin;
     return { saveAs: this.bordered(COPY.saveAs, L + this.textW(COPY.saveAs) + 10 * u, top), download: this.mobile ? null : this.bordered(COPY.download, L + this.pageW, top) };
   }
-  /** The video view: the portrait player (9:16) and the button under it. */
-  private playerBox() { const u = App.Unit, w = 126 * u, h = 224 * u; return { x: App.Width * 0.5 - w / 2, y: this.cy - 70 * u, w, h }; }
-  private videoMain() { const u = App.Unit, W = App.Width; return { x: W * 0.5 - 210 * u, y: this.cy + 170 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
+  /** The video view: the portrait player (9:16), the button under it and the link under that (owner, 2026-11-16: no
+   * name or RANDOMISE here, the name is chosen by now; BACK at the top left; larger on a phone). */
+  private playerBox() {
+    const u = App.Unit, w = (this.mobile ? 252 : 126) * u, h = w * 16 / 9;
+    return { x: App.Width * 0.5 - w / 2, y: this.mobile ? this.top + 70 * u : this.cy - 150 * u, w, h };
+  }
+  private videoMain() { const u = App.Unit, W = App.Width, pb = this.playerBox(); return { x: W * 0.5 - 210 * u, y: pb.y + pb.h + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
+  /** The link's line (baseline) and its box's top, under the video's button: the link can be shared alone. */
+  private videoLink() { const u = App.Unit, m = this.videoMain(); return { line: m.y + m.h + 30 * u, box: m.y + m.h + 42 * u }; }
   private get videoOn(): boolean { return !!this.host.video && (this.VideoOn ?? this.shareFiles); }
   private get shareFiles(): boolean { return !!this.host.video?.canShareFiles(); }
   /** v1 SharePanel's back chevron and its SKIP-style label, at the top right of the page, under the tabs (owner
    * review 2: the same place on every device). `x` is the chevron's middle (the label is centred under it), `y` its
    * point, in device px. */
   private backArrow() {
-    const u = App.Unit;
-    return { x: App.Width * 0.5 + 195 * u, y: this.cy - 175 * u };
+    const u = App.Unit, video = this.Tab === 0 && this.View === 'video';
+    // The video's BACK at the top left (owner, 2026-11-16), as a browser's.
+    return { x: video ? this.margin + 10 * u : App.Width * 0.5 + 195 * u, y: video ? this.playerBox().y + 20 * u : this.cy - 175 * u };
   }
   private backHit(pt: { x: number; y: number }) {
     const u = App.Unit, b = this.backArrow();
@@ -453,6 +470,7 @@ export class PatchesPanel extends DisplayObject {
   }
 
   private drawSave(): void {
+    if (this.View === 'video') { this.drawVideo(); return; }
     const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
     // NAME (v1 SharePanel TITLE) //
     ctx.font = App.Metrics.TxtMid;
@@ -461,7 +479,6 @@ export class PatchesPanel extends DisplayObject {
     App.StrokeColor(ctx, txt);
     ctx.beginPath(); ctx.moveTo(W * 0.5 - 210 * u, cy - 90 * u); ctx.lineTo(W * 0.5 + 210 * u, cy - 90 * u); ctx.stroke();
     this.drawBordered(this.randomise(), txt);
-    if (this.View === 'video') { this.drawVideo(); return; }
     const off = this.Saving || !this.host.hasBlocks(), links = this.host.links, link = this.link;
     if (!this.web) { this.drawPluginSave(off); return; }
 
@@ -549,65 +566,60 @@ export class PatchesPanel extends DisplayObject {
     if (note) { ctx.font = App.Metrics.TxtItalic2; this.wordWrap(note, x + w + 12 * u, cy + 12 * u, 12 * u, this.pageW * 0.5 - 10 * u - w - 12 * u); }
   }
 
+  /** OPEN: the hint and its rule, then the list in a window, scrolled (as the gallery's). */
+  private openLayout() {
+    const u = App.Unit;
+    if (this.mobile) { const hint = this.top + 40 * u; return { hint, rule: hint + 10 * u, top: hint + 20 * u, bottom: (this.fileButtonShown ? this.fileButton().y - 20 * u : this.bottom - 30 * u) }; }
+    const cy = this.cy;
+    return { hint: cy - 120 * u, rule: cy - 110 * u, top: cy - 100 * u, bottom: cy + 150 * u };
+  }
+  /** Row n's second line's baseline, scrolled. */
+  private openRowY(n: number) { return this.openLayout().top + 30 * App.Unit + n * this.rowH - this.OpenScroll; }
+  private openMaxScroll() { const L = this.openLayout(), n = this.Items.length; return Math.max(0, 30 * App.Unit + (n - 1) * this.rowH + 20 * App.Unit - (L.bottom - L.top)); }
+  scrollOpen(dy: number): void { this.OpenScroll = Math.max(0, Math.min(this.openMaxScroll(), this.OpenScroll + dy)); this.settled(); }
   private drawList(): void {
-    const ctx = this.Ctx, u = App.Unit, cy = this.cy, margin = this.margin, pageW = this.pageW, W = App.Width, txt = App.Palette[App.ThemeManager.Txt];
+    const ctx = this.Ctx, u = App.Unit, margin = this.margin, pageW = this.pageW, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], L = this.openLayout();
     // HINT + RULE //
     App.FillColor(ctx, txt);
     ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    ctx.fillText(COPY.openLine, margin, cy - 120 * u);
+    ctx.fillText(COPY.openLine, margin, L.hint);
     App.StrokeColor(ctx, txt);
-    ctx.beginPath(); ctx.moveTo(margin, cy - 110 * u); ctx.lineTo(margin + pageW, cy - 110 * u); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(margin, L.rule); ctx.lineTo(margin + pageW, L.rule); ctx.stroke();
 
-    // ROWS (v1 SoundcloudPanel track loop) //
+    // ROWS (v1 SoundcloudPanel track loop), clipped to the window and scrolled //
     const n0 = this.Items.length;
     ctx.save();
-    ctx.beginPath(); ctx.rect(margin - 5 * u, cy - 100 * u, pageW + 15 * u, 230 * u); ctx.clip();
-    for (let i = 0; i < n0; i++) {
-      const p = Math.floor(i / ITEMS), n = i - p * ITEMS;
-      const x = this.OffsetX + (pageW + 10 * u) * p, y = cy - 70 * u + n * 40 * u;
-      if (!(p > this.page - 3 && p < this.page + 1)) continue;
-      if (n < 4 && i < n0 - 1) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(x + margin, y + 12 * u); ctx.lineTo(x + margin + pageW, y + 12 * u); ctx.stroke(); }
-      const item = this.Items[i];
+    ctx.beginPath(); ctx.rect(margin - 5 * u, L.top, pageW + 15 * u, L.bottom - L.top); ctx.clip();
+    for (let n = 0; n < n0; n++) {
+      const y = this.openRowY(n);
+      if (y + 20 * u < L.top || y - 40 * u > L.bottom) continue;
+      if (n < n0 - 1) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + this.rowH - 28 * u); ctx.lineTo(margin + pageW, y + this.rowH - 28 * u); ctx.stroke(); }
+      const item = this.Items[n], b = this.rowButtons(n);
       App.FillColor(ctx, txt);
-      ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
-      ctx.fillText(item.name.toUpperCase(), x + margin + u, y - 10 * u);
-      ctx.fillText(item.detail, x + margin + u, y);
+      ctx.font = this.rowFont; ctx.textAlign = 'left';
+      // A long name is narrowed to the room left of OPEN, not run under it.
+      const room = b.open.x - 8 * u - (margin + u), fit = (t: string, yy: number) => { const w = ctx.measureText(t).width; if (w <= room) { ctx.fillText(t, margin + u, yy); return; } ctx.save(); ctx.translate(margin + u, yy); ctx.scale(room / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
+      fit(item.name.toUpperCase(), y - this.rowGap);
+      fit(item.detail, y);
       // OPEN (text-colour border) and INSERT (the lighter rule colour): both explicit, Open the stronger.
       // No hover mark: v1's bordered buttons (Randomise Title, Search) have none.
-      const b = this.rowButtons(n);
-      this.drawBordered(b.open, txt, x);
-      this.drawBordered(b.insert, App.Palette[1], x);
-      if (item.removable) drawBin(ctx, b.bin.cx + x, b.bin.cy, p === this.page - 1 && !!this.roll[`bin${n}`] ? 0.55 * 1.2 : 0.55);
+      this.drawBordered(b.open, txt);
+      this.drawBordered(b.insert, App.Palette[1]);
+      if (item.removable) drawBin(ctx, b.bin.cx, b.bin.cy, this.roll[`bin${n}`] ? 0.55 * 1.2 : 0.55);
     }
     ctx.restore();
 
-    // ITEM NUMBERS / EMPTY / LOADING //
+    // EMPTY / LOADING //
     App.FillColor(ctx, txt);
-    ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'left';
-    if (n0 > 0) ctx.fillText(`${1 + ITEMS * (this.page - 1)} - ${Math.min(ITEMS * this.page, n0)} of ${n0}`, margin, cy + 160 * u);
-    else if (this.Loading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
-    else { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.empty.toUpperCase(), W * 0.5, cy + 10 * u); }
-
-    // PAGE NO + ARROWS (v1, per device) //
-    let pageX = margin - 75 * u, pageY = -68, arrowX = 275, arrowY = 0;
-    if (this.tablet) { pageX = margin - 45 * u; arrowX = 245; }
-    if (this.mobile) { pageX = W * 0.5; pageY = 170; arrowX = 60; arrowY = 160; }
-    if (n0 > ITEMS) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(`${this.page}/${this.pages}`, pageX, cy + pageY * u); }
-    for (const dir of [-1, 1]) {
-      const live = dir < 0 ? this.page > 1 : this.page < this.pages;
-      App.StrokeColor(ctx, live ? txt : App.Palette[1]);
-      ctx.beginPath();
-      ctx.moveTo(W * 0.5 + dir * arrowX * u, cy + (arrowY - 20) * u);
-      ctx.lineTo(W * 0.5 + dir * (arrowX + 20) * u, cy + arrowY * u);
-      ctx.lineTo(W * 0.5 + dir * arrowX * u, cy + (arrowY + 20) * u);
-      ctx.stroke();
-    }
+    if (!n0 && this.Loading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, (L.top + L.bottom) / 2, 16, true);
+    else if (!n0) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.empty.toUpperCase(), W * 0.5, (L.top + L.bottom) / 2 + 10 * u); }
 
     // OPEN FROM YOUR DEVICE (v1 GUIDE button: SAVE colour, URL type, hover notch) + the upload mark left of its label //
+    if (!this.fileButtonShown) return;
     const f = this.fileButton();
     ctx.font = App.Metrics.TxtUrl2;
-    const lw = ctx.measureText(COPY.file.toUpperCase()).width, mark = 22 * u;
-    this.filled({ ...f, cx: f.cx + mark / 2 }, App.Palette[App.ThemeManager.MenuOrder[3]], COPY.file, false);
+    const lw = ctx.measureText(COPY.file.toUpperCase()).width;
+    this.filled({ ...f, cx: f.cx + 11 * u }, App.Palette[App.ThemeManager.MenuOrder[3]], COPY.file, false);
     if (this.roll.file) {  // the notch stays under the button's centre
       App.FillColor(ctx, App.Palette[App.ThemeManager.MenuOrder[3]]);
       ctx.beginPath(); ctx.moveTo(f.cx, f.y + f.h + 9 * u); ctx.lineTo(f.cx - 10 * u, f.y + f.h - u); ctx.lineTo(f.cx + 10 * u, f.y + f.h - u); ctx.closePath(); ctx.fill();
@@ -675,23 +687,32 @@ export class PatchesPanel extends DisplayObject {
   /** The video: SharePanel's spinner while it renders (CANCEL under it), then the portrait player with SHARE VIDEO
    * (DOWNLOAD VIDEO on desktop) under it; BACK at the top right. */
   private drawVideo(): void {
-    const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
     this.drawBack();
-    const m = this.videoMain(), pb = this.playerBox();
+    const m = this.videoMain(), pb = this.playerBox(), mid = pb.y + pb.h / 2;
+    // The player's frame, in every state (the DOM video sits inside it once made; its edge in the rule colour, as the
+    // URL box), so the page keeps its shape while the video is made.
+    App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 2; ctx.strokeRect(pb.x - 1, pb.y - 1, pb.w + 2, pb.h + 2);
     App.FillColor(ctx, txt);
     if (this.VideoState === 'making') {
       ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-      ctx.fillText(`${COPY.rendering}... ${Math.floor(this.VideoProgress.done * 100)}%`.toUpperCase(), W * 0.5, cy + 55 * u);
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 30 * u, 16, true);
+      ctx.fillText(`${COPY.rendering}... ${Math.floor(this.VideoProgress.done * 100)}%`.toUpperCase(), W * 0.5, mid + 25 * u);
+      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, mid, 16, true);
       this.filled(m, App.Palette[1], COPY.cancelVideo, !!this.roll.make);
     } else if (this.VideoState === 'ready') {
-      // The player's frame (the DOM video sits inside it; its edge in the rule colour, as the URL box).
-      App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 2; ctx.strokeRect(pb.x - 1, pb.y - 1, pb.w + 2, pb.h + 2);
       this.filled(m, App.Palette[menu[3]], this.shareFiles ? COPY.shareVideo : COPY.downloadVideo, !!this.roll.shareVideo);
     } else {
       const line = this.VideoState === 'error' ? this.VideoMessage : !this.host.hasBlocks() ? App.L10n.UI.SharePanel.NoBlocks : '';
-      if (line) { ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(line, this.margin, cy + 30 * u, 14 * u, this.pageW); }
+      if (line) { ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(line, pb.x + 10 * u, mid, 14 * u, pb.w - 20 * u); }
       this.filled(m, App.Palette[this.host.hasBlocks() ? menu[3] : 1], this.VideoState === 'error' ? COPY.tryAgain : COPY.makeVideo, !!this.roll.make && this.host.hasBlocks());
+    }
+    // THE LINK, to share on its own (v1 SharePanel's line + URL box; the field over it copies on a click) //
+    if (this.link && this.web) {
+      const L = this.videoLink();
+      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      this.wordWrap(this.label('url', COPY.linkLine), this.margin, L.line, 14 * u, this.pageW);
+      App.FillColor(ctx, App.Palette[1]);
+      ctx.fillRect(this.margin, L.box, this.pageW, 40 * u);
     }
   }
 
@@ -739,15 +760,17 @@ export class PatchesPanel extends DisplayObject {
   // v1 SoundcloudPanel's layout: SEARCH bordered above the rule at its right (the field is a DOM input over the rule),
   // five rows a page with their count bottom left, POPULAR / NEW bottom right where v1 had RANDOMISE, page arrows;
   // each row's bordered buttons (OPEN · LIKE · REPORT, or UNPUBLISH on your own).
+  /** SEARCH and its rule at the top, POPULAR · NEW · … at the bottom; on a phone, right under the tabs and at the foot of
+   * the screen, the list between them (owner, 2026-11-16). */
   private galleryLayout() {
-    const u = App.Unit, cy = this.cy, right = App.Width * 0.5 + 210 * u;
-    return { search: this.bordered(COPY.search, right, cy - 140 * u), rule: cy - 110 * u, sortY: cy + 160 * u, sortRight: right };
+    const u = App.Unit, right = App.Width * 0.5 + 210 * u, rule = this.mobile ? this.top + 60 * u : this.cy - 110 * u;
+    return { search: this.bordered(COPY.search, right, rule - 30 * u), rule, sortY: this.mobile ? this.bottom - 30 * u : this.cy + 160 * u, sortRight: right };
   }
   /** The list's window: under the search rule, above POPULAR / NEW. */
-  private galleryWindow() { const u = App.Unit; return { top: this.cy - 100 * u, bottom: this.cy + 135 * u }; }
+  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(); return { top: L.rule + 10 * u, bottom: L.sortY - 25 * u }; }
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
-  private galleryRowY(n: number) { return this.cy - 70 * App.Unit + n * 40 * App.Unit - this.GalleryScroll; }
-  private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * 40 * u + (this.GalleryMore || this.GalleryLoading ? 40 * u : 0) - (w.bottom - w.top) - 10 * u); }
+  private galleryRowY(n: number) { return this.galleryWindow().top + 30 * App.Unit + n * this.rowH - this.GalleryScroll; }
+  private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * this.rowH + (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) - (w.bottom - w.top) - 10 * u); }
   /** OPEN and INSERT, as OPEN's rows (owner review 3: insert from the gallery too). */
   private galleryRow(n: number) {
     const u = App.Unit, y = this.galleryRowY(n), insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * u);
@@ -771,7 +794,11 @@ export class PatchesPanel extends DisplayObject {
     this.settled();
   }
   /** A mouse wheel over the open panel (scene.wheel). */
-  Wheel(e: WheelEvent): void { if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY); }
+  Wheel(e: WheelEvent): void {
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    if (this.Tab === 2 && this.GalleryView === 'list') this.scrollGallery(dy);
+    else if (this.Tab === 1 && this.View === 'list') this.scrollOpen(dy);
+  }
   private drawGallery(): void {
     const ctx = this.Ctx, u = App.Unit, W = App.Width, cy = this.cy, margin = this.margin, txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
     if (this.GalleryView === 'report' && this.reporting) {
@@ -809,12 +836,12 @@ export class PatchesPanel extends DisplayObject {
     for (let n = 0; n < n0; n++) {
       const y = this.galleryRowY(n), it = this.GalleryItems[n], b = this.galleryRow(n);
       if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
-      if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + 12 * u); ctx.lineTo(margin + this.pageW, y + 12 * u); ctx.stroke(); }
-      App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic; ctx.textAlign = 'left';
+      if (n < n0 - 1 || this.GalleryMore) { App.StrokeColor(ctx, App.Palette[1]); ctx.beginPath(); ctx.moveTo(margin, y + this.rowH - 28 * u); ctx.lineTo(margin + this.pageW, y + this.rowH - 28 * u); ctx.stroke(); }
+      App.FillColor(ctx, txt); ctx.font = this.rowFont; ctx.textAlign = 'left';
       const left = margin + u + 30 * u, maxW = b.textRight - left;
       const fit = (t: string, yy: number, x = left) => { const w = ctx.measureText(t).width; if (w <= maxW - (x - left)) { ctx.fillText(t, x, yy); return; } ctx.save(); ctx.translate(x, yy); ctx.scale((maxW - (x - left)) / w, 1); ctx.fillText(t, 0, 0); ctx.restore(); };
       const on = App.Palette[App.ThemeManager.OptionsOrder[2]];
-      fit(it.title.toUpperCase(), y - 10 * u);
+      fit(it.title.toUpperCase(), y - this.rowGap);
       const remixes = it.remixes ? ` \u00b7 ${plural(it.remixes, 'remix').replace('remixs', 'remixes')}` : '', views = plural(it.views, 'view');
       // Reddit's column (owner's pick, B): the like chevron over the count, left of the row; pressing it likes.
       drawUpArrow(ctx, margin + 12 * u, y - 15 * u, 10 * u, it.liked, txt, on);
@@ -829,7 +856,7 @@ export class PatchesPanel extends DisplayObject {
     App.FillColor(ctx, txt);
     if (!n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
     else if (!n0) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.noneYet.toUpperCase(), W * 0.5, cy + 10 * u); }
-    if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, cy + 185 * u, 14 * u, this.pageW); }
+    if (this.GalleryMessage) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.GalleryMessage, margin, this.mobile ? win.top + 30 * u : cy + 185 * u, 14 * u, this.pageW); }
   }
   /** Fetch the list from the top, or (`more`) the next page onto its end. Stale answers (an earlier search) are dropped. */
   async browse(more = false): Promise<void> {
@@ -899,7 +926,6 @@ export class PatchesPanel extends DisplayObject {
       }
     } else if (this.Tab === 0 && this.View === 'video') {
       const m = this.videoMain();
-      r.randomise = pad(this.randomise());
       if (this.VideoState === 'ready') r.shareVideo = box(m); else r.make = box(m);
       r.videoBack = this.backHit(pt);
     } else if (this.Tab === 0 && !this.web) {
@@ -916,17 +942,15 @@ export class PatchesPanel extends DisplayObject {
       r.saveAs = pad(sec.saveAs); r.save = !!sec.download && pad(sec.download);
       r.url = !!this.link && !this.Saving && hit(W * 0.5 - 210 * u, cy + 95 * u, 420 * u, 40 * u);
     } else if (this.View === 'list') {
-      let arrowX = 285, arrowY = 0;
-      if (this.tablet) arrowX = 255;
-      if (this.mobile) { arrowX = 70; arrowY = 160; }
-      const f = this.fileButton();
-      r.back = hit(W * 0.5 - (arrowX + 15) * u, cy + (arrowY - 20) * u, 30 * u, 40 * u);
-      r.next = hit(W * 0.5 + (arrowX - 15) * u, cy + (arrowY - 20) * u, 30 * u, 40 * u);
-      r.file = box(f);
-      for (let n = 0; n < ITEMS; n++) {
-        const b = this.rowButtons(n), item = this.Items[(this.page - 1) * ITEMS + n];
-        r[`open${n}`] = pad(b.open); r[`ins${n}`] = pad(b.insert);
-        r[`bin${n}`] = !!item?.removable && hit(b.bin.x, b.bin.y - 10 * u, b.bin.w + 5 * u, 40 * u);
+      if (this.fileButtonShown) r.file = box(this.fileButton());
+      const L = this.openLayout();
+      r.list = hit(this.margin - 5 * u, L.top, this.pageW + 15 * u, L.bottom - L.top);
+      if (r.list) for (let n = 0; n < this.Items.length; n++) {
+        const b = this.rowButtons(n);
+        if (b.open.y > L.bottom || b.open.y + b.open.h < L.top) continue;
+        if (pad(b.open)) r[`open${n}`] = true;
+        else if (pad(b.insert)) r[`ins${n}`] = true;
+        else if (this.Items[n].removable && hit(b.bin.x, b.bin.y - 10 * u, b.bin.w + 5 * u, 40 * u)) r[`bin${n}`] = true;
       }
     } else {
       if (this.View === 'remove') {
@@ -951,7 +975,7 @@ export class PatchesPanel extends DisplayObject {
   centreOf(name: string): [number, number] | null {
     const u = App.Unit, pr = App.Metrics.PixelRatio, at = (x: number, y: number): [number, number] => [x / pr, y / pr];
     const mid = (b: { x: number; y: number; w: number; h: number }) => at(b.x + b.w / 2, b.y + b.h / 2);
-    const m = /^(open|ins|bin)(\d)$/.exec(name);
+    const m = /^(open|ins|bin)(\d+)$/.exec(name);
     if (m) { const b = this.rowButtons(Number(m[2])); return mid(m[1] === 'open' ? b.open : m[1] === 'ins' ? b.insert : b.bin); }
     {
       const gm = /^g(open|ins)(\d+)$/.exec(name);
@@ -969,6 +993,7 @@ export class PatchesPanel extends DisplayObject {
     if (name === 'gallerySwitch' || name === 'videoSwitch') { const g = name === 'gallerySwitch' ? this.gallerySwitch() : this.videoSwitch(); return at(g.x + g.w / 2, g.y + g.h * 0.35); }
     if (name === 'player') return mid(this.playerBox());
     if (name === 'videoBack' || name === 'fileBack') { const b = this.backArrow(); return at(b.x, b.y); }
+    if (name === 'list') { const L = this.openLayout(); return at(App.Width * 0.5, (L.top + L.bottom) / 2); }
     if (name === 'make' || name === 'shareVideo') return mid(this.videoMain());
     const t = /^tab(\d)$/.exec(name);
     if (t) { const tab = this.tabs().tabs.find(x => x.id === Number(t[1])); return tab ? at(tab.x, this.OffsetY + 30 * u) : null; }
@@ -979,7 +1004,7 @@ export class PatchesPanel extends DisplayObject {
       case 'save': { if (!this.web) return mid(left); const d = this.secondary().download; return d ? mid(d) : null; }
       case 'share': return this.web ? mid(this.mainButton()) : mid(right);
       case 'saveAs': return this.web ? mid(this.secondary().saveAs) : null;
-      case 'url': return at(App.Width * 0.5, this.cy + 115 * u);
+      case 'url': return this.View === 'video' ? at(App.Width * 0.5, this.videoLink().box + 20 * u) : at(App.Width * 0.5, this.cy + 115 * u);
       case 'file': return mid(f);
       case 'fileOpen': return at(left.cx, this.cy + 25 * u);
       case 'fileInsert': return at(right.cx, this.cy + 25 * u);
@@ -997,14 +1022,22 @@ export class PatchesPanel extends DisplayObject {
     const d = this.galleryDrag;
     if (d) {
       if (Math.abs(pt.y - d.y) > 6 * App.Unit) d.moved = true;
-      if (d.moved) { this.GalleryScroll = d.scroll; this.scrollGallery(d.y - pt.y); }
+      if (d.moved) { if (d.tab === 2) { this.GalleryScroll = d.scroll; this.scrollGallery(d.y - pt.y); } else { this.OpenScroll = d.scroll; this.scrollOpen(d.y - pt.y); } }
     }
     this.HitTests(pt);
   }
   MouseUp(): void {
     const d = this.galleryDrag, g = this.host.gallery;
     this.galleryDrag = null;
-    if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2) return;
+    if (d && !d.moved && d.row >= 0 && d.tab === 1 && this.Tab === 1 && this.View === 'list') {
+      const item = this.Items[d.row];
+      if (!item) return;
+      if (d.mode === 'bin') { this.removing = item; this.View = 'remove'; return; }
+      if (d.mode === 'insert') this.runOpen(() => this.host.openPatch(item, 'insert'));
+      else this.requestOpen(() => this.host.openPatch(item, 'open'));
+      return;
+    }
+    if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2 || d.tab !== 2) return;
     const row = this.GalleryItems[d.row];
     if (!row) return;
     // Likes from the list too (owner review 3: changed their mind); signed out, the host asks to sign in.
@@ -1044,12 +1077,11 @@ export class PatchesPanel extends DisplayObject {
           if (r[`gins${n}`]) { row = n; mode = 'insert'; break; }
           if (r[`glike${n}`]) { row = n; mode = 'like'; break; }
         }
-        this.galleryDrag = { y: pt.y, scroll: this.GalleryScroll, moved: false, row, mode };
+        this.galleryDrag = { tab: 2, y: pt.y, scroll: this.GalleryScroll, moved: false, row, mode };
       }
       return;
     }
     if (this.Tab === 0 && this.View === 'video') {
-      if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
       if (r.videoBack) { if (this.VideoState === 'making') this.cancelVideo(); this.dropPlayer(); this.View = 'list'; this.showDom(); return; }
       if (r.make) { if (this.VideoState === 'making') this.cancelVideo(); else void this.makeVideo(); return; }
       // The share sheet needs this click's user activation: call it straight away.
@@ -1074,17 +1106,16 @@ export class PatchesPanel extends DisplayObject {
       return;
     }
     if (this.View === 'list') {
-      if (r.back) { if (this.page > 1) this.turn(this.page - 1); return; }
-      if (r.next) { if (this.page < this.pages) this.turn(this.page + 1); return; }
       if (r.file) { this.host.pickPatchFile(); return; }
-      for (let n = 0; n < ITEMS; n++) {
-        if (!r[`open${n}`] && !r[`ins${n}`] && !r[`bin${n}`]) continue;
-        const item = this.Items[(this.page - 1) * ITEMS + n];
-        if (!item) return;
-        if (r[`bin${n}`]) { this.removing = item; this.View = 'remove'; return; }
-        if (r[`ins${n}`]) this.runOpen(() => this.host.openPatch(item, 'insert'));
-        else this.requestOpen(() => this.host.openPatch(item, 'open'));
-        return;
+      // The list: a press may become a drag (scrolling); a row's button acts on release, if it didn't move.
+      if (r.list) {
+        let row = -1, mode: 'open' | 'insert' | 'bin' = 'open';
+        for (let n = 0; n < this.Items.length; n++) {
+          if (r[`open${n}`]) { row = n; break; }
+          if (r[`ins${n}`]) { row = n; mode = 'insert'; break; }
+          if (r[`bin${n}`]) { row = n; mode = 'bin'; break; }
+        }
+        this.galleryDrag = { tab: 1, y: pt.y, scroll: this.OpenScroll, moved: false, row, mode };
       }
       return;
     }
@@ -1130,7 +1161,6 @@ export class PatchesPanel extends DisplayObject {
     };
     r.then(ok => done(ok !== false), () => done(false));
   }
-  private turn(page: number): void { this.page = page; this.tween('OffsetX', -(page - 1) * 430 * App.Unit, 350); }
   /** v1 SettingsPanel category select: the new tab's fill drops in, the others lift. */
   selectTab(i: Tab): void {
     if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
@@ -1202,7 +1232,7 @@ export class PatchesPanel extends DisplayObject {
   async refresh(): Promise<void> {
     this.Loading = true;
     try { this.Items = await this.host.listPatches(); } finally { this.Loading = false; this.settled(); }
-    if (this.page > this.pages) { this.page = this.pages; this.OffsetX = -(this.page - 1) * 430 * App.Unit; }
+    this.OpenScroll = Math.min(this.OpenScroll, this.openMaxScroll());
   }
 
   OpenPanel(tab: Tab = rememberedTab()): void {
@@ -1214,7 +1244,7 @@ export class PatchesPanel extends DisplayObject {
     this.selected = ALL_TABS.map(i => (i === tab ? 1 : 0));
     if (tab === 2) void this.browse();
     this.OffsetY = -App.Height;
-    this.OffsetX = -(this.page - 1) * 430 * App.Unit;
+    this.OpenScroll = 0;
     this.Input.value = this.Title;
     this.tween('OffsetY', 0, 500);
     this.showDom();
@@ -1253,25 +1283,25 @@ export class PatchesPanel extends DisplayObject {
   private placeDom(): void {
     const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.OffsetY + App.Height * 0.5;
     this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
-    this.UrlContainer.style.top = `${(mid + u * 95) / pr}px`;
+    this.UrlContainer.style.top = `${(this.Tab === 0 && this.View === 'video' ? this.videoLink().box : mid + u * 95) / pr}px`;
     if (this.player) this.player.style.top = `${this.playerBox().y / pr}px`;
-    if (this.SearchContainer) this.SearchContainer.style.top = `${(mid - u * 152) / pr}px`;  // v1 StyleDom(…, 152)
+    if (this.SearchContainer) this.SearchContainer.style.top = `${(this.galleryLayout().rule - u * 42) / pr}px`;  // v1 StyleDom(…, 152): 42 above the rule
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {
     const on = this.shown, link = this.Tab === 0 && on && !this.Saving ? this.link : null;
-    this.TitleContainer.style.display = on && this.Tab === 0 && !this.Opening ? 'block' : 'none';
+    this.TitleContainer.style.display = on && this.Tab === 0 && this.View !== 'video' && !this.Opening ? 'block' : 'none';
     if (this.SearchContainer) this.SearchContainer.style.display = on && this.Tab === 2 && this.GalleryView === 'list' && this.View !== 'confirm' && !this.Opening ? 'block' : 'none';
-    this.UrlContainer.style.display = link && this.View !== 'video' ? 'block' : 'none';
+    this.UrlContainer.style.display = link && (this.View !== 'video' || this.web) ? 'block' : 'none';
     if (this.player) this.player.style.display = on && this.Tab === 0 && this.View === 'video' && this.VideoState === 'ready' ? 'block' : 'none';
     if (link && this.UrlInput.value !== link.url) this.UrlInput.value = link.url;  // unchanged: keep the selection
+    this.placeDom();  // the link sits under the video in the video view
   }
   /** Keep the link field in step with the link (made, gone stale, reset). */
   Update(): void { if (this.shown) this.showDom(); }
   Resize(): void {
     const u = App.Unit, pr = App.Metrics.PixelRatio, el = this.TitleContainer, url = this.UrlContainer;
     if (!el) return;
-    this.OffsetX = -(this.page - 1) * 430 * u;
     // v1 StyleDom(TitleInputContainer, 300, 42, 210, 132): up to RANDOMISE TITLE.
     const width = 420 - this.textW(COPY.randomise) / u - 20;
     el.style.font = App.Metrics.TxtHeaderPR;

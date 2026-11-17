@@ -38,12 +38,16 @@ async function keepPresets(p: Page): Promise<void> {
   const dir = 'web/src/patch/presets', list = readdirSync(dir).filter(f => f.endsWith('.blokdust')).sort().map(f => JSON.parse(readFileSync(`${dir}/${f}`, 'utf8')));
   await p.evaluate(l => localStorage.setItem('blokdust.myPatches', JSON.stringify(l.map((patch: any, i: number) => ({ title: patch.meta.title, saved: Date.UTC(2026, 10, 1) - i * 60_000, patch })))), list);
 }
-/** OPEN or INSERT on the row named `name` (turning pages as needed: 5 rows a page). */
+/** OPEN or INSERT on the row named `name`, scrolled into view first (OPEN is one scrolling list, owner 2026-11-16). */
 async function rowButton(p: Page, kind: 'open' | 'ins', name: string, wait = 700): Promise<void> {
-  const { i, page } = await p.evaluate(n => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { i: pp.Items.findIndex((x: any) => x.name === n), page: pp.page }; }, name);
+  const i = await p.evaluate(n => {
+    const pp = (window as any).__bd_probe.scene.PatchesPanel, i = pp.Items.findIndex((x: any) => x.name === n);
+    if (i >= 0) { pp.OpenScroll = 0; pp.scrollOpen(Math.max(0, i - 2) * 40 * (window as any).__bd_probe.v1App.Unit); }
+    return i;
+  }, name);
   if (i < 0) throw new Error(`no row ${name}`);
-  for (let pg = page; pg !== Math.floor(i / 5) + 1;) { const dir = pg < Math.floor(i / 5) + 1 ? 1 : -1; const [ax, ay] = await p.evaluate(d => { const A = (window as any).__bd_probe.v1App, u = A.Unit, pr = A.Metrics.PixelRatio; return [(A.Width / 2 + d * 285 * u) / pr, A.Height / 2 / pr]; }, dir); await p.mouse.click(ax, ay); await p.waitForTimeout(500); pg += dir; }
-  await patchesClick(p, `${kind}${i % 5}`, wait);
+  await p.waitForTimeout(150);
+  await patchesClick(p, `${kind}${i}`, wait);
 }
 /** SAVE with no link yet (Patches › SAVE tab; it was CREATE SHARE LINK): waits for the link field. */
 async function makeLink(p: Page): Promise<string> {
@@ -1033,7 +1037,7 @@ Object.assign(tests, {
     await p.close();
     const ok = !footer(onSettings).github && !footer(onSettings).build && footer(onAbout).github && footer(onAbout).build
       && sw.gap >= 6 && sw.sameRow && sw.videoRight
-      && back.x > back.mid + 150 * back.u && back.x < back.right && back.y < back.name - 30 * back.u
+      && back.x < back.mid - 150 * back.u  // owner, 2026-11-16: the video's BACK at the top left
       && drawn.length > 0 && drawn.every(x => Math.abs(x - back.x) < 0.5) && left === 'list';
     return [ok, { onSettings: footer(onSettings), onAbout: footer(onAbout), sw, back, drawn, left }];
   },
@@ -1115,6 +1119,47 @@ Object.assign(tests, {
    * the intro's second sentence starts its own line, and the SmartScreen note is gone (it is in the zip's README.txt). */
   /** Bug (owner, 2026-11-16): DOWNLOAD and SIGN IN / ACCOUNT slid over the tabs (or showed under them) when switching
    * tabs; SETTINGS and ABOUT are drawn in v1's clipping box. Every text of those two pages must be drawn clipped. */
+  /** Owner review (2026-11-16, phone): the Patches panel used the middle of a tall screen, with wide gaps above and below,
+   * small row type, pages of five and an OPEN FROM YOUR DEVICE that does nothing there; the video view had the name and
+   * RANDOMISE again and BACK at the right. Now: lists from the tabs to the foot of the screen, one scrolling list,
+   * larger rows, no file button in a phone's browser; the video's BACK at the left, no name, the link under it. */
+  async 'patches-phone-layout'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html`); await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(2000);
+    await p.evaluate(() => {
+      const P = (window as any).__bd_probe.scene.PatchesPanel;
+      P.host.listPatches = async () => Array.from({ length: 30 }, (_, i) => ({ name: `Patch ${i}`, detail: 'Saved 16 Nov 2026', removable: true }));
+      const t: string[] = ((window as any).__texts = []), f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (x: string, ...a: any[]) { t.push(x); return (f as any).call(this, x, ...a); };
+      P.OpenPanel(1);
+    });
+    await p.waitForTimeout(1200);
+    const texts = () => p.evaluate(() => { const t = (window as any).__texts as string[]; const r = [...new Set(t)]; t.length = 0; return r; });
+    await texts(); await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.scrollOpen(0)); await p.waitForTimeout(300);
+    const drawn = await texts();
+    const first = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('open0'));
+    const last = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('open12'));
+    // A drag up scrolls the list (a touch on the list, away from the buttons).
+    await p.mouse.move(60, 600); await p.mouse.down(); await p.mouse.move(60, 300, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(300);
+    const scrolled = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenScroll);
+    // The video view.
+    await p.evaluate(() => { const P = (window as any).__bd_probe.scene.PatchesPanel; P.selectTab(0); });
+    await p.waitForTimeout(800);
+    await p.evaluate(() => { const P = (window as any).__bd_probe.scene.PatchesPanel; P.host.links.current = () => ({ url: 'https://example.com/?c=x', owned: true, stale: false }); P.View = 'video'; P.VideoState = 'idle'; P.Update(); });
+    await p.waitForTimeout(500);
+    const video = await p.evaluate(() => {
+      const P = (window as any).__bd_probe.scene.PatchesPanel, back = P.centreOf('videoBack'), player = P.centreOf('player'), link = P.centreOf('url');
+      return { back, player, link, title: (document.getElementById('patchTitle') as HTMLElement).style.display, url: (document.getElementById('patchUrl') as HTMLElement).style.display };
+    });
+    await p.screenshot({ path: `${OUT}/patches-phone-video.png` });
+    await ctx.close();
+    const ok = !drawn.includes('OPEN FROM YOUR DEVICE') && !drawn.some(t => / of 30$|^1\/\d/.test(t)) && drawn.includes('PATCH 0') && drawn.includes('PATCH 12')
+      && !!first && !!last && last[1] > first[1] && last[1] < 844 && scrolled > 0
+      && video.back[0] < 100 && video.title === 'none' && video.url === 'block' && video.link[1] > video.player[1];
+    return [ok, { drawn: drawn.length, first, last, scrolled, video }];
+  },
+
   async 'settings-pages-clipped'(errors: string[]) {
     const p = await open(browser, [], errors);
     await p.evaluate(() => {
