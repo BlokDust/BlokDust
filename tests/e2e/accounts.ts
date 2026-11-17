@@ -289,6 +289,25 @@ const tests: Record<string, () => Promise<void>> = {
     await a.page.waitForTimeout(3000);
     const p1 = await pending();
     check('R16: the page counts time played, the block added and the particles', p1.blocks >= 1 && p1.playMs >= 2000 && p1.particles >= 3, p1);
+    // Bug (owner, 2026-11-16): the particle count was estimated from each Emitter's Rate while powered, so it didn't
+    // match what was fired (presses, laser hits, keys). Now every particle the engine emits counts, exactly: an
+    // unpowered Emitter held for 2 s, its particles slow enough (10 s of life) that none are gone when it is let go,
+    // so the particles on the stage are all it fired.
+    await a.page.evaluate(() => (window as any).__bd_probe.scene.host.resetScene());
+    const held = await a.page.evaluate(() => { const h = (window as any).__bd_probe.scene.host, id = h.createBlock('ParticleEmitter', 0, 0);
+      h.setParam(id, 'sync', 0); h.setParam(id, 'rate', 10); h.setParam(id, 'speed', 1); return id as number; });
+    await a.page.mouse.click(40, 400);
+    // A block made from the menu is held until the pointer is let go (and a held Emitter fires): let go on the empty
+    // stage. Particles already flying go on until their range runs out: wait for an empty stage.
+    await a.page.waitForFunction(() => (window as any).__bd_probe.state.particles === 0, null, { timeout: 20000 }).catch(() => {});
+    const pt = await a.page.evaluate(id => (window as any).__bd_probe.blockPoint(id), held) as [number, number];
+    const emptyBefore = await a.page.evaluate(() => (window as any).__bd_probe.state.particles as number);
+    const beforeHold = (await pending()).particles;
+    await a.page.mouse.move(pt[0], pt[1]); await a.page.mouse.down(); await a.page.waitForTimeout(2000); await a.page.mouse.up();
+    await a.page.waitForTimeout(500);
+    const onStage = await a.page.evaluate(() => (window as any).__bd_probe.state.particles as number);
+    const counted = (await pending()).particles - beforeHold;
+    check('R16: every particle fired counts, exactly (an Emitter held, not powered)', emptyBefore === 0 && onStage > 3 && counted === onStage, { emptyBefore, onStage, counted });
     await (async () => { for (let i = 0; i < 8 && !(await pp(a.page)).open; i++) { await a.page.mouse.move(1138, 45); await a.page.mouse.click(1138, 45); await a.page.waitForTimeout(700); } })();
     await saveLink(a.page);
     const after = await stats(), p2 = await pending();

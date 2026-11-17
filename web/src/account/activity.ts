@@ -1,6 +1,6 @@
 // Running totals for Settings › ACCOUNT (SPEC-SHARING-ACCOUNTS R16, CHG-0027): time played, blocks added, particles
-// emitted and laser turns, estimated here from the blocks' params and what is powered (the engine doesn't count them;
-// the owner: accuracy doesn't matter, few requests do). What isn't sent yet waits in localStorage and goes with the
+// emitted (the engine's own count: pressed, powered, hit by a laser, played from keys) and laser turns, estimated here
+// from the blocks' params and what is powered (the owner: rough is fine for turns, few requests matter). What isn't sent yet waits in localStorage and goes with the
 // next save, or in one request when the page is closed.
 
 export interface Activity { playMs: number; blocks: number; particles: number; laserTurns: number }
@@ -21,6 +21,8 @@ export interface TallyFrame {
   tempo: number;
   /** The page is shown (time played counts only then). */
   visible: boolean;
+  /** Particles the engine emitted since the last frame (owner, 2026-11-16: every particle counts, not an estimate). */
+  emitted: number;
 }
 
 const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
@@ -58,14 +60,13 @@ export class ActivityTally {
   frame(now: number, f: TallyFrame): void {
     const dt = this.last ? Math.min(MAX_STEP_MS, Math.max(0, now - this.last)) : 0;
     this.last = now;
+    this.fresh.particles += f.emitted;
     if (!dt) return;
     if (f.visible) this.fresh.playMs += dt;
     if (!f.worldOn) return;
     for (const [id, b] of f.blocks) {
-      if (b.type !== 'power.emitter' && b.type !== 'power.laser') continue;
-      const r = rates(b, f.powered.has(id), f.tempo);
-      this.fresh.particles += r.particles * dt / 1000;
-      this.fresh.laserTurns += r.turns * dt / 1000;
+      if (b.type !== 'power.laser') continue;
+      this.fresh.laserTurns += rates(b, f.powered.has(id), f.tempo).turns * dt / 1000;
     }
   }
   /** The user added a block (from the menu, a paste or a duplicate; not opening a patch). */

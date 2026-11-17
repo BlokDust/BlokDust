@@ -11,6 +11,8 @@ class BlokdustProcessor extends AudioWorkletProcessor {
   private quanta = 0;
   private frame = 0;
   private sumSq = 0;
+  /** Emit events since the last snapshot: only their number goes to the page (R16). */
+  private emitted = 0;
   private count = 0;
   private pending: EngineEvent[] = [];
   private topologyDirty = true;
@@ -61,6 +63,7 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     this.count += n;
     this.frame += n;
     for (const ev of this.engine.drainEvents()) {  // drain every quantum so the engine log never fills
+      if (ev.type === EventType.Emit) { this.emitted++; continue; }
       if (ev.type === EventType.Connect || ev.type === EventType.Disconnect) this.topologyDirty = true;
       // A Toggle flipped by a hit: its new state goes with the event, so the patch the page saves keeps it (CHG-0013).
       if (ev.type === EventType.Logic) ev.value = this.engine.param(ev.block, 0);
@@ -76,11 +79,11 @@ class BlokdustProcessor extends AudioWorkletProcessor {
     const beams = this.engine.beams();
     const playheads = this.engine.playheads();
     const monitors = this.engine.monitors();
-    const snap: Snapshot = { type: 'snapshot', frame: this.frame, particles, beams, powered, playheads, monitors, events: this.pending, rms: Math.sqrt(this.sumSq / Math.max(1, this.count)) };
+    const snap: Snapshot = { type: 'snapshot', frame: this.frame, particles, beams, powered, playheads, monitors, events: this.pending, emitted: this.emitted, rms: Math.sqrt(this.sumSq / Math.max(1, this.count)) };
     const transfer: Transferable[] = [particles.buffer, powered.buffer, beams.buffer, playheads.buffer, monitors.buffer];
     if (this.topologyDirty || this.viewing) { snap.connections = this.engine.connections(); transfer.push(snap.connections.buffer); this.topologyDirty = false; }
     this.port.postMessage(snap, transfer);
-    this.pending = []; this.sumSq = 0; this.count = 0;
+    this.pending = []; this.emitted = 0; this.sumSq = 0; this.count = 0;
   }
 }
 

@@ -28,6 +28,12 @@ const COPY = {
   noFavourites: 'Save a patch to see your favourite blocks here.', since: 'Since', mostRemixed: 'Most remixed',
   minutesPlayed: 'Minutes played', hoursPlayed: 'Hours played', blocksAdded: 'Blocks added', particles: 'Particles', laserTurns: 'Laser turns',
 };
+/** Where each part of the stats starts (units from the page's top). Numbers: their tops are 5 units under a row's y,
+ * their labels' baselines 52; FAVOURITE BLOCKS' title tops are 2 units under its y. */
+const STATS_Y = { row1: 27, row2: 96, favourites: 168, buttons: 266 } as const;
+/** Favourite blocks (from FAVOURITE BLOCKS' y): the icons at half v1's menu size (owner, 2026-11-16), centred 31 units
+ * down; their names' baselines 62 down (a second line 14 under). */
+const FAV = { scale: 0.5, icon: 31, name: 62 } as const;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 /** 1234 → 1,234; 12345 → 12.3K; 1234567 → 1.2M (the numbers are for fun: short beats exact). */
 export function shortNumber(n: number): string {
@@ -150,11 +156,13 @@ export class AccountPage {
   }
 
   // ---- stats (R15) ----
+  // Rows in units from the page's top, one even gap (22 units) between SIGNED IN, the two rows of numbers, FAVOURITE
+  // BLOCKS and the buttons (owner, 2026-11-16: it was roomy at the top and bunched from FAVOURITE BLOCKS down).
   /** The stats' rows, in units from the page's top (the account buttons go below them). */
   private statsHeight(): number {
     const st = this.Account?.stats;
     if (!st) return 35;
-    return 30 + 70 + 70 + 100 + 15;
+    return STATS_Y.buttons;
   }
   /** One row of numbers, four columns across the page's 420 units: the number large and light, its label under it. */
   private numberRow(cells: [string, string][], y: number, L: number): void {
@@ -177,16 +185,16 @@ export class AccountPage {
     const since = `${COPY.since.toLowerCase()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
     // Left out when a long name leaves no room before DELETE ACCOUNT.
     if (after + c.measureText(since).width < R - this.textW(COPY.deleteAccount) - 20 * u) c.fillText(since, after, top + 10 * u);
-    let y = top + 30 * u;
+    let y = top + STATS_Y.row1 * u;
     this.numberRow([[shortNumber(st.patches), COPY.patches], [shortNumber(st.remixes), COPY.remixes], [shortNumber(st.likes), COPY.likes], [shortNumber(st.opens), COPY.opens]], y, L);
-    y += 70 * u;
+    y = top + STATS_Y.row2 * u;
     // R16: the running totals, with what this browser counted and hasn't sent yet (so they move without a request).
     const p = activity.pending(), ms = st.playMs + p.playMs, hours = ms >= 3_600_000;
     const played = hours ? (ms < 36_000_000 ? (Math.floor(ms / 360_000) / 10).toString() : shortNumber(Math.floor(ms / 3_600_000))) : shortNumber(Math.floor(ms / 60_000));
     this.numberRow([[played, hours ? COPY.hoursPlayed : COPY.minutesPlayed], [shortNumber(st.blocksAdded + p.blocks), COPY.blocksAdded],
       [shortNumber(Math.floor(st.particles + p.particles)), COPY.particles], [shortNumber(Math.floor(st.laserTurns + p.laserTurns)), COPY.laserTurns]], y, L);
-    y += 70 * u;
-    // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) over their names.
+    y = top + STATS_Y.favourites * u;
+    // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) at half size over their names.
     App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';
     c.fillText(COPY.favourites.toUpperCase(), L, y + 10 * u);
     // The most remixed patch on the same line, at the right.
@@ -197,18 +205,21 @@ export class AccountPage {
       c.textAlign = 'left';
     }
     const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item);
-    if (!favs.length) { c.font = App.Metrics.TxtItalic2; c.fillText(COPY.noFavourites, L, y + 40 * u); }
+    if (!favs.length) { c.font = App.Metrics.TxtItalic2; c.fillText(COPY.noFavourites, L, y + FAV.icon * u); }
     const w = 84 * u;
     favs.forEach((f, i) => {
       const x = L + w * (i + 0.5);
-      App.BlockSprites.DrawSprite({ Ctx: c }, new Point(x, y + 42 * u), false, f.item!.name.toLowerCase());
+      const iy = y + FAV.icon * u;
+      c.save(); c.translate(x, iy); c.scale(FAV.scale, FAV.scale); c.translate(-x, -iy);
+      App.BlockSprites.DrawSprite({ Ctx: c }, new Point(x, iy), false, f.item!.name.toLowerCase());
+      c.restore();
       // Its name, on two lines when it is wider than its column (PARTICLE EMITTER beside COMPUTER KEYBOARD).
       App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'center';
       const name = f.item!.name.toUpperCase(), words = name.split(' ');
       if (words.length > 1 && c.measureText(name).width > w - 6 * u) {
         const cut = Math.ceil(words.length / 2);
-        c.fillText(words.slice(0, cut).join(' '), x, y + 82 * u); c.fillText(words.slice(cut).join(' '), x, y + 96 * u);
-      } else c.fillText(name, x, y + 82 * u);
+        c.fillText(words.slice(0, cut).join(' '), x, y + FAV.name * u); c.fillText(words.slice(cut).join(' '), x, y + (FAV.name + 14) * u);
+      } else c.fillText(name, x, y + FAV.name * u);
     });
   }
 

@@ -1065,8 +1065,7 @@ Object.assign(tests, {
     await p.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
     await p.close();
     void linkAt;
-    // Two footer links on a desktop or the iPad app: the code on GitHub and Privacy (SHARING-0010); none in the extension.
-    const ok = before.length === 2 && after.length === 0 && !r.github && !r.twitter && r.blurb && r.opened.length === 0;
+    const ok = before.length === 1 && after.length === 0 && !r.github && !r.twitter && r.blurb && r.opened.length === 0;
     return [ok, { footerBefore: before.length, footerAfter: after.length, ...r }];
   },
 
@@ -1104,9 +1103,9 @@ Object.assign(tests, {
     // SIGN IN: CHG-0023 owner review 2026-11-15.
     const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
-      // CHG-0026 (SPEC-SHARING-USAGE-ANALYTICS R12): the privacy note sits beside the code link.
-      && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub', 'Privacy'])
-      && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2', 'https://blokdust.funputs.com/privacy.html']);
+      // SPEC-SHARING-USAGE-ANALYTICS R12 (owner, 2026-11-16): no Privacy link until production serves the page.
+      && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
+      && JSON.stringify(r.opened) === JSON.stringify(['https://github.com/lukephills/blokdust-v2']);
     return [ok, { tabs, aboutTab, ...r, links, shipped, hoverUnderlines: !idle.equals(hover) }];
   },
 
@@ -1114,6 +1113,31 @@ Object.assign(tests, {
    * DOWNLOAD. Before a release is published both buttons are off and say "Coming soon."; once published they open
    * the installers (macOS .pkg, Windows .zip) with ?source=download-page; the version shows. CHG-0010 (owner, 2026-11-12):
    * the intro's second sentence starts its own line, and the SmartScreen note is gone (it is in the zip's README.txt). */
+  /** Bug (owner, 2026-11-16): DOWNLOAD and SIGN IN / ACCOUNT slid over the tabs (or showed under them) when switching
+   * tabs; SETTINGS and ABOUT are drawn in v1's clipping box. Every text of those two pages must be drawn clipped. */
+  async 'settings-pages-clipped'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    await p.evaluate(() => {
+      const P = CanvasRenderingContext2D.prototype as any, stack: boolean[] = [], st = new WeakMap<object, boolean>();
+      const save = P.save, restore = P.restore, clip = P.clip, fill = P.fillText;
+      P.save = function (this: any) { stack.push(!!st.get(this)); return save.call(this); };
+      P.restore = function (this: any) { st.set(this, stack.pop() ?? false); return restore.call(this); };
+      P.clip = function (this: any, ...a: any[]) { st.set(this, true); return clip.apply(this, a); };
+      (window as any).__unclipped = [];
+      P.fillText = function (this: any, t: string, ...a: any[]) { if (!st.get(this)) (window as any).__unclipped.push(t); return fill.call(this, t, ...a); };
+    });
+    for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
+    await p.waitForTimeout(900);
+    const tabAt = (i: number) => p.evaluate(i => { const m = (window as any).__bd_probe.scene.SettingsPanel.MenuItems[i], pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio; return [m.Position.x / pr, 30]; }, i);
+    // DOWNLOAD in, out to SETTINGS, then SIGN IN in and out to ABOUT: every frame of each slide.
+    for (const i of [3, 0, 4, 2]) { const t = await tabAt(i); await p.mouse.click(t[0], t[1]); await p.waitForTimeout(900); }
+    const unclipped: string[] = await p.evaluate(() => [...new Set((window as any).__unclipped as string[])]);
+    await p.close();
+    const pageWords = ['MACOS', 'WINDOWS', 'IPAD', 'Coming soon.', 'SIGN IN WITH GOOGLE', 'CREATE ACCOUNT'];
+    const leaked = unclipped.filter(t => pageWords.includes(t) || /^Download the standalone/.test(t));
+    return [leaked.length === 0, { leaked }];
+  },
+
   async 'settings-download'(errors: string[]) {
     const p = await open(browser, [], errors);
     await p.evaluate(() => {
@@ -1151,10 +1175,11 @@ Object.assign(tests, {
     await p.close();
     const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN'])  // SIGN IN: CHG-0023 owner review 2026-11-15 && openTab === 3
       && before.includes('Coming soon.') && openedBefore === 0
-      && before.includes('Download the standalone app or VST3/AU plugins to use in your DAW.')
+      && before.includes('Download the standalone app or VST3/AU plugins to use in your DAW, or get the iPad app with its AUv3 plugin.')
       && before.includes('BlokDust can be used as both an instrument and an effect.')
-      && after.includes('MACOS') && after.includes('WINDOWS') && after.includes('Version 2.0.0') && !after.some(t => /More info|isn't signed/.test(t))
-      && JSON.stringify(opened) === JSON.stringify(buttons.map((b: any) => `${b.url}?source=download-page`));
+      && buttons.length === 3 && after.includes('MACOS') && after.includes('WINDOWS') && after.includes('IPAD') && after.includes('Version 2.0.0')
+      && new Set(buttons.map((b: any) => b.y)).size === 1  // one row, as v1 Connect's share buttons (owner, 2026-11-16) && !after.some(t => /More info|isn't signed/.test(t))
+      && JSON.stringify(opened) === JSON.stringify(buttons.filter((b: any) => b.url).map((b: any) => `${b.url}?source=download-page`));
     return [ok, { names, openTab, before, after, opened }];
   },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);

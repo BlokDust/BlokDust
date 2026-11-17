@@ -80,9 +80,10 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   decimal under ten), BLOCKS ADDED, PARTICLES and LASER TURNS. They are for fun, not exact (owner, 2026-11-16: few
   requests matter more than accuracy), and only their owner sees them:
   - the website counts them (not the plugin or embeds): time while the page is shown and the sound started; each
-    block added (menu, paste, duplicate, insert: what undo removes); particles and turns estimated from each
-    Emitter's and Laser's params while it runs (Emitter: 60 / Rate a second, or one per Division synced; Laser:
-    |Rotate| / 100 × 60 / 360 turns a second while powered, or one per Turn Beats synced; nothing with POWER off);
+    block added (menu, paste, duplicate, insert: what undo removes); every particle the engine emits, however it was
+    fired (powered, pressed, hit by a laser, played from keys or MIDI; owner, 2026-11-16: the snapshot carries the
+    count of Emit events); laser turns estimated from each Laser's params (|Rotate| / 100 × 60 / 360 turns a second
+    while powered, or one per Turn Beats synced; nothing with POWER off);
   - what isn't sent waits in localStorage (shared by the site's tabs) and is shown on top of the account's totals;
   - it goes with every save (`activity` in the body; added only when signed in, and the reply says so), and, when
     the page closes signed in, in one `POST /api/me/activity` (keepalive). The server clamps each request (a day

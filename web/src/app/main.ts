@@ -1878,7 +1878,7 @@ async function main() {
       }
     }
     stage.setPowered(s.powered); probe.powered = Array.from(s.powered);
-    if (countActivity) activity.frame(performance.now(), { blocks: model, powered: new Set(s.powered), worldOn: scene.worldPower, tempo: tempo ?? 120, visible: document.visibilityState === 'visible' });
+    if (countActivity) activity.frame(performance.now(), { blocks: model, powered: new Set(s.powered), worldOn: scene.worldPower, tempo: tempo ?? 120, visible: document.visibilityState === 'visible', emitted: s.emitted ?? 0 });
     stage.setBeams(s.beams);
     stage.setParticles(s.particles);
     scene.setPlayheads(s.playheads ?? new Float32Array(0));

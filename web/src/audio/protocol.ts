@@ -35,6 +35,8 @@ export interface Snapshot {
   monitors?: Float32Array;
   /** UI-relevant events since the previous snapshot. */
   events: EngineEvent[];
+  /** Particles emitted since the previous snapshot, however they were fired (Settings › ACCOUNT's count, R16). */
+  emitted?: number;
   /** Output RMS since the previous snapshot (meters / tests). */
   rms: number;
 }

@@ -49,8 +49,9 @@ identifying anyone, and without endangering the shared Cloudflare account.
   (an integer, 1–90) varies. The query token MUST stay on the server.
 - **R11.** The dashboard MUST show client-sent values as text only and send a CSP that allows only its own (nonce)
   script and style, no framing.
-- **R12.** A privacy note (`/privacy.html`, linked from the About footer) MUST describe what is recorded, why, for how
-  long, Sentry as a processor, and how to turn it off, and be live before production's rate is above 0.
+- **R12.** A privacy note (`/privacy.html`) MUST describe what is recorded, why, for how long, Sentry as a processor, and
+  how to turn it off, and be live, and linked from the About footer, before production's rate is above 0. Owner
+  (2026-11-16): the footer link is left out until then (it pointed at production, which doesn't serve the page yet).
 
 ## Scenarios
 - **S1.** Given a visitor on the website with usage stats on, when they start audio and add three Tone blocks, then the
@@ -66,7 +67,7 @@ v1 used Google Analytics (`App.Analytics`, removed in the port). v2 deliberately
 
 ## Verification
 - `pnpm test:analytics` (tests/e2e/analytics.ts): R3, R5, R6, R7, R8 (Worker side), R10, R11, S2, S3, S5.
-- `pnpm test:ui-regressions` settings-about: R12's footer link.
+- `pnpm test:ui-regressions` settings-release1: the footer holds only the code link until R12's link returns.
 - R8 plugin side: `pnpm bd plugin test` (pings off under the tool), and a manual check against a local Worker with
   `BLOKDUST_EVENTS_URL` (CHG-0026 tasks).
 - R9: manual, with a staging DSN (CHG-0026 tasks).

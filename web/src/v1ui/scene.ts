@@ -684,6 +684,9 @@ function relabelShareButton(header: any): void {
 
 /** Settings › About (owner, 2026-11-10, reworded 2026-11-11): v1's text named the Web Audio API and Tone.js, which v2
  * doesn't use. "DAW plugin" becomes a link to the downloads once they exist (CHG-0005 task 12). */
+/** Luke Phillips's credit in About (owner, 2026-11-16): v1's roles, plus V2, which he built alone; his site is funputs.com.
+ * At most three lines in its column: v1 draws the website 42 units below the blurb's first line. */
+export const PHILLIPS = { blurb: 'Luke Phillips - audio development & musical interaction. V2: architecture & full-stack development.', url: 'funputs.com' };
 export const ABOUT = 'BlokDust is a collaboration between Luke Twyman, Luke Phillips and Ed Silverton, developed in Brighton, UK, '
   + 'and released in 2016. This rebuild was released in 2026, built by Luke Phillips, now available as a DAW plugin.';
 /** The code (owner: people can read it and send pull requests), where v1 had "Chrome Recommended". */
@@ -695,14 +698,18 @@ let RELEASE = RELEASES as { version: string | null; macos: Release; windows: Rel
  * paragraphs, each starting on its own line (owner, 2026-11-12, CHG-0010). The unsigned-Windows note moved into the
  * Windows zip's README.txt (CHG-0010). */
 export const DOWNLOAD = {
-  intro: ['Download the standalone app or VST3/AU plugins to use in your DAW.', 'BlokDust can be used as both an instrument and an effect.'],
+  intro: ['Download the standalone app or VST3/AU plugins to use in your DAW, or get the iPad app with its AUv3 plugin.',
+    'BlokDust can be used as both an instrument and an effect.'],
   macos: 'macOS 11 or later, Apple silicon and Intel. VST3, Audio Unit and the standalone app.',
   windows: 'Windows 10 or 11, 64-bit. VST3 and the standalone app.',
+  ipad: 'iPadOS 16 or later. AUv3 for AUM, GarageBand, Logic Pro and other hosts, and the standalone app.',
   soon: 'Coming soon.',
 };
+/** The iPad app's App Store page (CHG-0025): null until it is listed; the iPad button says Coming soon until then. */
+export const IPAD_APP_STORE_URL: string | null = null;
 /** The About footer: the code (owner, 2026-11-11: the licences are viewable there, NOTICE.md, so no separate links;
  * every build also carries NOTICE.txt and LICENSE.txt). */
-export const FOOTER_LINKS = [SOURCE_LINK, { label: 'Privacy', url: 'https://blokdust.funputs.com/privacy.html' }];
+export const FOOTER_LINKS = [SOURCE_LINK];  // no Privacy link until the page exists (owner, 2026-11-16)
 /** The footer links shown: none where links can't open (App.NoLinks). */
 const footerLinks = () => (App.NoLinks ? [] : FOOTER_LINKS);
 
@@ -733,6 +740,7 @@ export const USAGE_STATS = (on: boolean) => `Anonymous usage stats: ${on ? 'on' 
 function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const p = panel as any;
   (App.L10n as any).Attribution.about = ABOUT;
+  Object.assign((App.L10n as any).Attribution.phillips, App.NoLinks ? { blurb: PHILLIPS.blurb } : PHILLIPS);
   const populate = p.Populate.bind(p);
   // DOWNLOAD (web only) is tab 3: v1 draws nothing for it, so its page is drawn here, following its tab's YOffset.
   const withDownload = !App.IsPlugin;
@@ -770,11 +778,16 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   /** Tests: an account control's centre in CSS px. */
   p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
+  /** MACOS · WINDOWS · IPAD in one row, laid out as v1 Connect's share buttons (130 units each, 15 apart, 420 across;
+   * owner, 2026-11-16). The iPad one opens the App Store page as it is; the installers carry ?source=download-page. */
   const downloads = () => {
     const u = App.Unit, W = App.Width, y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
+    const at = (i: number) => ({ x: W * 0.5 + (-210 + 145 * i) * u, y, w: 130 * u, h: 40 * u, cx: W * 0.5 + (-145 + 145 * i) * u });
+    const ipad = IPAD_APP_STORE_URL ? { file: '', url: IPAD_APP_STORE_URL, sha256: '', bytes: 0, store: true } : null;
     return [
-      { key: 'macos' as const, label: 'macOS', release: RELEASE.macos, x: W * 0.5 - 210 * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 - 108.75 * u, line: DOWNLOAD.macos },
-      { key: 'windows' as const, label: 'Windows', release: RELEASE.windows, x: W * 0.5 + 7.5 * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + 108.75 * u, line: DOWNLOAD.windows },
+      { key: 'macos' as const, label: 'macOS', release: RELEASE.macos as (Release & { store?: boolean }) | null, ...at(0), line: DOWNLOAD.macos },
+      { key: 'windows' as const, label: 'Windows', release: RELEASE.windows as (Release & { store?: boolean }) | null, ...at(1), line: DOWNLOAD.windows },
+      { key: 'ipad' as const, label: 'iPad', release: ipad as (Release & { store?: boolean }) | null, ...at(2), line: DOWNLOAD.ipad },
     ];
   };
   let downloadHover = -1;
@@ -801,19 +814,20 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     App.FillColor(ctx, txt); ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtMid;
     let iy = top + 10 * u;
     for (const para of DOWNLOAD.intro) iy = wrap(ctx, para, W * 0.5 - 210 * u, iy, 16 * u, 420 * u);
-    // MACOS · WINDOWS (v1 SharePanel's SAVE / SAVE AS colours, Connect's GUIDE button type) //
+    // MACOS · WINDOWS · IPAD (v1 SharePanel's SAVE / SAVE AS colours and a third, Connect's GUIDE button type) //
+    let below = 0;
     for (const [i, b] of downloads().entries()) {
       const on = !!b.release;
-      App.FillColor(ctx, App.Palette[on ? (i === 0 ? menu[3] : menu[1]) : 1]);
+      App.FillColor(ctx, App.Palette[on ? [menu[3], menu[1], menu[2]][i] : 1]);
       ctx.fillRect(b.x, b.y, b.w, b.h);
       if (on && downloadHover === i) { ctx.beginPath(); ctx.moveTo(b.cx, b.y + b.h + 9 * u); ctx.lineTo(b.cx - 10 * u, b.y + b.h - u); ctx.lineTo(b.cx + 10 * u, b.y + b.h - u); ctx.closePath(); ctx.fill(); }
       App.FillColor(ctx, txt); ctx.textAlign = 'center'; ctx.font = App.Metrics.TxtUrl2;
       ctx.fillText(b.label.toUpperCase(), b.cx, b.y + 29 * u);
       ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtItalic2;
-      wrap(ctx, on ? b.line : DOWNLOAD.soon, b.x, b.y + b.h + 24 * u, 14 * u, b.w);
+      below = Math.max(below, wrap(ctx, on ? b.line : DOWNLOAD.soon, b.x, b.y + b.h + 24 * u, 14 * u, b.w));
     }
-    // VERSION //
-    const y = downloads()[0].y + 40 * u + 80 * u;
+    // VERSION: under the longest line (the columns are narrow) //
+    const y = Math.max(downloads()[0].y + 40 * u + 80 * u, below + 16 * u);
     ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
     if (RELEASE.version) ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - 210 * u, y);
   };
@@ -837,15 +851,17 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
 
   /** Which footer link the pointer is over (-1: none). */
   let linkHover = -1;
-  /** The usage stats switch (About tab only): its box, left of the version number, in v1's build-number type. */
+  /** The usage stats switch (About tab only): in the bottom right corner where v1 drew the build number, in its type;
+   * the build number moves up a line (owner, 2026-11-16). */
   let statsHover = false;
+  /** v1's line height for this type (About's blurbs). */
+  const FOOT_LINE = 14;
   const statsBox = () => {
     if (!host.usageStats || p._OpenTab !== 2) return null;
     const u = App.Unit, ctx = p.Ctx as CanvasRenderingContext2D;
     ctx.font = App.Metrics.TxtItalic2;
-    const right = p.DrawTo.Width - 20 * u - ctx.measureText(p._Attribution.build).width - 24 * u;
     const w = ctx.measureText(USAGE_STATS(host.usageStats.get())).width, y = p.OffsetY + p.DrawTo.Height - 20 * u;
-    return { x: right - w, y, w, u };
+    return { x: p.DrawTo.Width - 20 * u - w, y, w, u };
   };
   /** Tests: the switch's centre in CSS px, and its words (null: not shown). */
   p.usageStatsSwitch = () => { const b = statsBox(), pr = App.Metrics.PixelRatio; return b ? { x: (b.x + b.w / 2) / pr, y: (b.y - 4 * b.u) / pr, label: USAGE_STATS(host.usageStats!.get()) } : null; };
@@ -889,7 +905,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     if (!p.Open) return;
     if (linkHover >= 0) { window.open(footerLinks()[linkHover].url, '_blank'); return; }
     if (statsHover && host.usageStats) { host.usageStats.set(!host.usageStats.get()); return; }
-    if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(`${r.url}?source=download-page`, '_blank'); return; }
+    if (downloadHover >= 0) { const r = downloads()[downloadHover].release; if (r) window.open(r.store ? r.url : `${r.url}?source=download-page`, '_blank'); return; }
     if (account && p._OpenTab === 4) { account.hit(pt, accountTop()); account.press(); }
     const i = tempoRow();
     if (i >= 0 && p._OpenTab === 0 && p._OptionsRoll[i]) setTempo(pt.x);  // v1 sliders jump to the press, as Volume does
@@ -903,13 +919,20 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const draw = p.Draw.bind(p);
   p.Draw = () => {
     // The build line and the GitHub link are About's (owner review 2, 2026-11-15); v1 drew the build under every tab.
-    const about = p._OpenTab === 2, build = p._Attribution.build;
-    if (!about) p._Attribution.build = '';
+    const about = p._OpenTab === 2, build = p._Attribution.build, moved = about && !!statsBox();
+    if (!about || moved) p._Attribution.build = '';
     try { draw(); } finally { p._Attribution.build = build; }
     account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
     if (!p.Open) return;
-    drawDownload();
-    if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
+    // DOWNLOAD and ACCOUNT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
+    // below the tabs' top to the bottom (owner, 2026-11-16: they drew over the tabs while sliding).
+    const cctx = p.Ctx as CanvasRenderingContext2D;
+    cctx.save();
+    cctx.beginPath(); cctx.rect(0, p.OffsetY + 60 * App.Unit, App.Width, App.Height); cctx.clip();
+    try {
+      drawDownload();
+      if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
+    } finally { cctx.restore(); }
     if (!about) return;
     const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(ctx, txt); App.StrokeColor(ctx, txt);
@@ -920,7 +943,9 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     });
     const sb = statsBox();
     if (sb && host.usageStats) {
-      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'right';
+      ctx.fillText(build, p.DrawTo.Width - 20 * sb.u, sb.y - FOOT_LINE * sb.u);
+      ctx.textAlign = 'left';
       ctx.fillText(USAGE_STATS(host.usageStats.get()), sb.x, sb.y);
       if (statsHover) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sb.x, sb.y + 2 * sb.u); ctx.lineTo(sb.x + sb.w, sb.y + 2 * sb.u); ctx.stroke(); }
     }
