@@ -189,6 +189,14 @@ BD_EXPORT(bd_block_param) double bd_block_param(Host* h, std::uint32_t id, int p
 BD_EXPORT(bd_default_impulse) void bd_default_impulse(float* left, float* right, int frames, int sampleRate) {
   blokdust::dsp::makeDefaultImpulse(left, right, frames, sampleRate);
 }
+// source.wavetable (CHG-0031, SPEC-AUDIO-WAVETABLE R7): the frame at `position` of `table`, `n` points over `cycles`
+// table cycles, for the options panel's picture (no engine needed).
+BD_EXPORT(bd_table_picture) void bd_table_picture(float* out, int table, double position, int n, double cycles) {
+  const auto v = blokdust::dsp::TableBank::picture(table, position, n, cycles);
+  for (std::size_t i = 0; i < v.size(); ++i) out[i] = v[i];
+}
+/// A table's period (note cycles per table cycle): the panel shows two note cycles of an inharmonic table.
+BD_EXPORT(bd_table_period) int bd_table_period(int table) { return blokdust::dsp::TableBank::period(table); }
 BD_EXPORT(bd_alloc) float* bd_alloc(std::uint32_t floats) { return new (std::nothrow) float[floats]; }
 BD_EXPORT(bd_free) void bd_free(float* p) { delete[] p; }
 BD_EXPORT(bd_attach_sample) int bd_attach_sample(Host* h, std::uint32_t id, float* left, float* right, std::uint32_t frames, double sampleRate) {

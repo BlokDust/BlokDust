@@ -38,6 +38,8 @@ interface Exports {
   bd_alloc(floats: number): number;
   bd_default_impulse(left: number, right: number, frames: number, sampleRate: number): void;
   bd_free(p: number): void;
+  bd_table_picture(out: number, table: number, position: number, n: number, cycles: number): void;
+  bd_table_period(table: number): number;
   bd_attach_sample(h: number, id: number, left: number, right: number, frames: number, sampleRate: number): number;
   bd_attach_sample_stage(h: number, stage: number, id: number, left: number, right: number, frames: number, sampleRate: number): number;
   bd_right(h: number): number;
@@ -74,6 +76,21 @@ export function defaultImpulse(module: WebAssembly.Module, sampleRate: number, s
   const n = Math.round(seconds * sampleRate), pl = x.bd_alloc(n), pr = x.bd_alloc(n);
   x.bd_default_impulse(pl, pr, n, sampleRate);
   return { left: new Float32Array(x.memory.buffer, pl, n).slice(), right: new Float32Array(x.memory.buffer, pr, n).slice() };
+}
+
+/** source.wavetable (CHG-0031): one frame of a built-in table as the engine reads it, `n` points across two note
+ * cycles (one table cycle for the harmonic tables). One module instance, kept. */
+let tableInstance: { module: WebAssembly.Module; x: Exports; out: number; n: number } | null = null;
+export function tablePicture(module: WebAssembly.Module, table: number, position: number, n = 200): Float32Array {
+  if (!tableInstance || tableInstance.module !== module || tableInstance.n < n) {
+    const x = new WebAssembly.Instance(module, { env: { emscripten_notify_memory_growth: () => {} } }).exports as unknown as Exports;
+    x._initialize();
+    tableInstance = { module, x, out: x.bd_alloc(n), n };
+  }
+  const { x, out } = tableInstance;
+  const period = x.bd_table_period(table);
+  x.bd_table_picture(out, table, position, n, period > 1 ? Math.min(1, 2 / period) : 1);
+  return new Float32Array(x.memory.buffer, out, n).slice();
 }
 
 export class WasmEngine {

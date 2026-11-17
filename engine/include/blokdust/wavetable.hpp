@@ -4,10 +4,19 @@
 // tables (CHG-0002 1.4, SPEC-AUDIO-V1-PARITY). Built once per sample rate at engine construction (allocation happens
 // here, never on the audio thread) and shared read-only by every oscillator. Deterministic: the inverse FFT uses dmath
 // twiddles and IEEE basic operations only.
+#include <complex>
 #include <span>
 #include <vector>
 
 namespace blokdust::dsp {
+
+/// In-place iterative radix-2 complex FFT, inverse direction (e^{+i...}), unscaled. Twiddles from dmath (deterministic).
+/// Shared with the Wavetable block's tables (tablebank.cpp).
+void inverseFft(std::vector<std::complex<double>>& a);
+/// The same transform with its twiddles looked up instead of computed: `twiddles` holds, for every power-of-two len
+/// from 2 up to the transform size, the len/2 values e^{2πik/len} (dmath, the same expression) starting at index len/2 − 1.
+void inverseFft(std::vector<std::complex<double>>& a, const std::vector<std::complex<double>>& twiddles);
+std::vector<std::complex<double>> fftTwiddles(std::size_t maxSize);
 
 /// v1 App.Audio.WaveformTypeIndex: 0 sine, 1 square, 2 triangle, 3 sawtooth.
 enum class Waveform : int { Sine = 0, Square = 1, Triangle = 2, Saw = 3 };

@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 45;
+inline constexpr std::size_t kBlockTypeCount = 46;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -21,6 +21,7 @@ enum class BlockType : std::uint16_t {
   SourceSampleGen,  // source.sample-gen
   SourceStage,  // source.stage
   SourceTone,  // source.tone
+  SourceWavetable,  // source.wavetable
   FxArpeggiator,  // fx.arpeggiator
   FxAutoWah,  // fx.auto-wah
   FxBitCrusher,  // fx.bit-crusher
@@ -208,6 +209,16 @@ inline constexpr ParamInfo kParamsSourceTone[] = {
   {"fine", 0.0, true, UiTransform::Identity, -1.0, 1.0, 0.0},
 };
 namespace param::SourceTone { enum : std::uint8_t { waveform, transpose, fine, Count }; }
+
+// ---- source.wavetable (Wavetable)
+inline constexpr GridPoint kOutlineSourceWavetable[] = {{-1.0f, -1.0f}, {0.0f, -2.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsSourceWavetable[] = {
+  {"table", 0.0, true, UiTransform::Identity, 0.0, 8.0, 0.0},
+  {"position", 0.0, true, UiTransform::Identity, 0.0, 1.0, 0.0},
+  {"transpose", 0.0, true, UiTransform::Identity, -48.0, 48.0, 0.0},
+  {"fine", 0.0, true, UiTransform::Identity, -1.0, 1.0, 0.0},
+};
+namespace param::SourceWavetable { enum : std::uint8_t { table, position, transpose, fine, Count }; }
 
 // ---- fx.arpeggiator (Arpeggiator)
 inline constexpr GridPoint kOutlineFxArpeggiator[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
@@ -596,6 +607,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 12, true},
   {BlockType::SourceStage, "source.stage", "", BlockKind::AudioSource, 0.0f, kOutlineSourceStage, 5, kParamsSourceStage, 2, false},
   {BlockType::SourceTone, "source.tone", "ToneSource", BlockKind::AudioSource, 0.0f, kOutlineSourceTone, 5, kParamsSourceTone, 3, true},
+  {BlockType::SourceWavetable, "source.wavetable", "", BlockKind::AudioSource, 0.0f, kOutlineSourceWavetable, 5, kParamsSourceWavetable, 4, false},
   {BlockType::FxArpeggiator, "fx.arpeggiator", "", BlockKind::PreEffect, 6.0f, kOutlineFxArpeggiator, 5, kParamsFxArpeggiator, 6, false},
   {BlockType::FxAutoWah, "fx.auto-wah", "AutoWah", BlockKind::PostEffect, 6.0f, kOutlineFxAutoWah, 4, kParamsFxAutoWah, 5, true},
   {BlockType::FxBitCrusher, "fx.bit-crusher", "BitCrusher", BlockKind::PostEffect, 6.0f, kOutlineFxBitCrusher, 5, kParamsFxBitCrusher, 2, true},
