@@ -24,7 +24,7 @@ import { importV1, type V1Composition } from '../patch/importV1.ts';
 import { Stage } from '../stage/Stage.ts';
 import { drawLabels, labelAt, labelCssFont, labelRect, type Label } from '../stage/labels.ts';
 import { drawInside, frameFor, inWindow, onClose } from '../stage/insideView.ts';
-import { drawMakeStage, inBox, makeStageBox, type ButtonBox } from '../stage/makeStageButton.ts';
+import { drawMakeStage, inBox, makeStageBox, type ButtonBox, type Rect } from '../stage/makeStageButton.ts';
 import { frameBlocks } from '../stage/frameBlocks.ts';
 import { starPos } from '../stage/starPos.ts';
 import { gridToPx } from '../stage/metrics.ts';
@@ -685,9 +685,18 @@ async function main() {
     scene.draw();
     makeStageAt = null;
     if (offerMakeStage()) {
-      const m = stage.metrics, h = scene.Header as unknown as { Height: number; Rows?: number }, font = App.Metrics.TxtMid;
-      makeStageAt = makeStageBox(ctx, m.width, m.unit, h.Height * (h.Rows ?? 1) * m.unit, font, MAKE_STAGE);
-      drawMakeStage(ctx, makeStageAt, m.unit, font, MAKE_STAGE, theme.colors[4], theme.colors[theme.roles.txt], makeStageHover);
+      const m = stage.metrics, h = scene.Header as unknown as { Height: number; Rows?: number };
+      // Its top-right place is under the SIGNED IN AS line (that line's baseline is 22 units under the header).
+      const headerBottom = h.Height * (h.Rows ?? 1) * m.unit, top = headerBottom + 32 * m.unit;
+      let sel: Rect | null = stage.selectedBounds();
+      for (const l of selLabels()) {
+        const r = labelRect(measure, m, l);
+        sel = sel ? { x0: Math.min(sel.x0, r.x), y0: Math.min(sel.y0, r.y), x1: Math.max(sel.x1, r.x + r.w), y1: Math.max(sel.y1, r.y + r.h) }
+          : { x0: r.x, y0: r.y, x1: r.x + r.w, y1: r.y + r.h };
+      }
+      const avoid = [cornerBoxes.me, cornerBoxes.credit, cornerBoxes.like].filter((b): b is ButtonBox => !!b);
+      makeStageAt = makeStageBox(ctx, m.dpr, m.unit, m.width, m.height, headerBottom, top, sel, stage.selected.size >= model.size, avoid, MAKE_STAGE);
+      drawMakeStage(ctx, makeStageAt, m.dpr, m.unit, MAKE_STAGE, theme.colors[2], theme.colors[theme.roles.txt], theme.colors[theme.roles.menu[1]], makeStageHover);
     }
   };
   // ---- MAKE STAGE (owner, 2026-11-14; UI-0012): with blocks selected, a button puts them inside a new Stage block ----
@@ -1790,7 +1799,9 @@ async function main() {
     /** The Stage block a drag would go into now (tests). */
     get dropTarget() { return stage.dropTarget; },
     /** The MAKE STAGE button's centre in css px, or null when it is not offered (tests). */
-    get makeStage() { if (!makeStageAt) return null; const d = stage.metrics.dpr; return { x: (makeStageAt.x + makeStageAt.w / 2) / d, y: (makeStageAt.y + makeStageAt.h / 2) / d }; },
+    get makeStage() { if (!makeStageAt) return null; const d = stage.metrics.dpr, b = makeStageAt; return { x: (b.x + b.w / 2) / d, y: (b.y + b.h / 2) / d, box: { x: b.x / d, y: b.y / d, w: b.w / d, h: b.h / d } }; },
+    /** The selected blocks' rings together, css px (tests). */
+    get selectedBounds() { const b = stage.selectedBounds(), d = stage.metrics.dpr; return b && { x0: b.x0 / d, y0: b.y0 / d, x1: b.x1 / d, y1: b.y1 / d }; },
     /** Select blocks by engine id, as shift-clicks would (tests). */
     select(ids: number[]) { setSelection(ids); stage.redraw(); },
     /** css px of a point on block `id` that the stage's own hit test maps to it (black-box tests click there). */
@@ -1838,7 +1849,7 @@ async function main() {
       const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
       // creditAt: the title's start (right-click reports), clear of the @NAME link and the star.
       const titleAt = cornerBoxes.credit ? [(cornerBoxes.credit.x + 12 * stage.metrics.unit) / d, (cornerBoxes.credit.y + cornerBoxes.credit.h / 2) / d] : null;
-      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), likeAt: c(cornerBoxes.like), creditAt: titleAt };
+      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), meBox: cornerBoxes.me && { x: cornerBoxes.me.x / d, y: cornerBoxes.me.y / d, w: cornerBoxes.me.w / d, h: cornerBoxes.me.h / d }, likeAt: c(cornerBoxes.like), creditAt: titleAt };
     },
     /** Sample state per block (tests): loaded, or missing with its reference. */
     /** The account's running totals not yet sent (SPEC-SHARING-ACCOUNTS R16; tests). */
@@ -2583,6 +2594,13 @@ async function main() {
     });
   }
 
+  // No browser menu on a right-click (owner, 2026-11-17): it took the pointer's release, leaving a held block stuck
+  // down. Links keep theirs (open in a new tab, copy the address), and text fields theirs (paste).
+  document.addEventListener('contextmenu', e => {
+    if (e.target instanceof Element && e.target.closest('a[href], input, textarea, [contenteditable=""], [contenteditable="true"]')) return;
+    e.preventDefault();
+  });
+
   // ---- Dust 1–8 (plugin only, PLUGIN-0003): right-click an options-panel slider to map a host parameter to it ----
   app.canvas.addEventListener('contextmenu', e => {
     if (!juce && !embedId && reportCredit(e.offsetX * dpr(), e.offsetY * dpr())) { e.preventDefault(); return; }
@@ -2594,8 +2612,11 @@ async function main() {
     const menu = document.createElement('div');
     menu.id = 'dust-menu';
     const c = theme.colors;
-    menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;z-index:10;background:${c[2]};color:${c[theme.roles.txt]};` +
-      `font:400 13px Dosis, sans-serif;letter-spacing:.05em;padding:6px 0;min-width:150px;box-shadow:0 4px 16px rgb(0 0 0/.4)`;
+    // v1's panel layer (OptionsPanel, Header): palette 2 at 90%, and at 16% reaching 5 units below it. No blur: no
+    // gradients anywhere in BlokDust.
+    const alpha = (a: number) => c[2].replace(/,\s*[\d.]+\)$/, `,${a})`), u5 = 5 * stage.metrics.unit / stage.metrics.dpr;
+    menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px;z-index:10;background:${alpha(0.9)};color:${c[theme.roles.txt]};` +
+      `font:400 13px Dosis, sans-serif;letter-spacing:.05em;padding:6px 0;min-width:150px;box-shadow:0 ${u5}px 0 ${alpha(0.16)}`;
     const key = `${hit.block.Id}:${hit.setting}`, current = automation.get(key) ?? 0;
     const title = document.createElement('div');
     title.textContent = `${hit.block.BlockName} › ${hit.name}`.toUpperCase();

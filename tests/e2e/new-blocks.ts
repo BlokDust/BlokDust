@@ -221,6 +221,39 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       shown.length === 1 && shown[0].loaded && shown[0].frames > 0;
     return [pass, { none, btn, outer, inner, sounds, shown }];
   },
+  // Owner (2026-11-17, UI-0012): MAKE STAGE covered the SIGNED IN AS line. It now sits beside the selection's top: on
+  // its right, or its left with no room there. Only with every block selected and some out of view does it go top
+  // right, under the SIGNED IN AS line. Drawn on v1's panel layer (no blurred shadow: no gradients in BlokDust).
+  async 'make-stage-placement'(errors) {
+    type B = { x: number; y: number; w: number; h: number };
+    type R = { x0: number; y0: number; x1: number; y1: number };
+    const hits = (a?: B | null, b?: B | null) => !!a && !!b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const right = (b?: B, s?: R) => !!b && !!s && b.x > s.x1 && b.x - s.x1 < 20 && Math.abs(b.y - s.y0) < 2;
+    const left = (b?: B, s?: R) => !!b && !!s && b.x + b.w < s.x0 && s.x0 - (b.x + b.w) < 20 && Math.abs(b.y - s.y0) < 2;
+    const corner = (b?: B, me?: B) => !!b && !!me && b.x + b.w > 1280 - 40 && b.y >= me.y + me.h;
+    async function pick(p: Page, uids: string[], shot: string) {
+      await p.evaluate(() => { (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account = { handle: 'someone_with_a_long_name' }; });
+      await p.evaluate(list => (window as any).__bd_probe.select(list), await Promise.all(uids.map(u => idOf(p, u))));
+      await p.waitForTimeout(200);
+      await p.screenshot({ path: `${OUT}/make-stage-${shot}.png` });
+      return p.evaluate(() => { const pr = (window as any).__bd_probe; return { btn: pr.makeStage?.box as B | undefined, sel: pr.selectedBounds as R | undefined, me: pr.corners.meBox as B | undefined }; });
+    }
+    // In view: the tone and power near the middle, a filter near the right edge.
+    let p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0), blk('f', 'fx.filter', 24, 4)], errors);
+    await p.waitForTimeout(300);
+    const some = await pick(p, ['t', 'pw'], 'beside');
+    const edge = await pick(p, ['f'], 'edge');
+    const allIn = await pick(p, ['t', 'pw', 'f'], 'all-in-view');
+    await p.close();
+    // One block far out of view.
+    p = await open(browser, [blk('t', 'source.tone', 0, 0), blk('pw', 'power.power', -3, 0), blk('far', 'fx.filter', 0, 90)], errors);
+    await p.waitForTimeout(300);
+    const allOut = await pick(p, ['t', 'pw', 'far'], 'all-out-of-view');
+    await p.close();
+    const r = { some: right(some.btn, some.sel), edge: left(edge.btn, edge.sel), allIn: right(allIn.btn, allIn.sel) || left(allIn.btn, allIn.sel),
+      allOut: corner(allOut.btn, allOut.me), clear: ![some, edge, allIn, allOut].some(x => hits(x.btn, x.me)) };
+    return [Object.values(r).every(Boolean), { ...r, some, edge, allIn, allOut }];
+  },
   // Owner review 3 (2026-11-14, UI-0012): opening a Stage shows its blocks. Its blocks sit far from the centre, and the
   // view saved with it shows none of them: the view moves to centre on them, zooming out to fit them all.
   async 'stage-opens-on-blocks'(errors) {

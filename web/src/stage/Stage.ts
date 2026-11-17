@@ -158,6 +158,19 @@ export class Stage {
     return undefined;
   }
 
+  /** The selected blocks' dashed rings together (device px), or null with nothing selected. */
+  selectedBounds(): { x0: number; y0: number; x1: number; y1: number } | null {
+    const m = this.metrics;
+    let b: { x0: number; y0: number; x1: number; y1: number } | null = null;
+    for (const id of this.selected) {
+      const e = this.blocks.get(id); if (!e) continue;
+      for (const [x, y] of offsetPolygon(selectionRing(e.def).map(([gx, gy]) => gridToPx(m, e.block.x + gx, e.block.y + gy)), 4 * m.scaledUnit)) {
+        if (!b) b = { x0: x, y0: y, x1: x, y1: y };
+        else { b.x0 = Math.min(b.x0, x); b.y0 = Math.min(b.y0, y); b.x1 = Math.max(b.x1, x); b.y1 = Math.max(b.y1, y); }
+      }
+    }
+    return b;
+  }
   cssToGrid(cssX: number, cssY: number): [number, number] { return pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr); }
 
   setConnections(pairs: Uint32Array): void { this.connections = pairs; this.linesDirty = true; }

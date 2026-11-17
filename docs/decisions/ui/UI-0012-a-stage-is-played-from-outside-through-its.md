@@ -24,9 +24,13 @@ We will let notes into a Stage (SPEC-SIMULATION-POWER-AND-PARTICLES R13a):
   its Keyboards, MIDI Inputs and Touchpads, and **Stage In**, a new Interaction block offered only inside a Stage
   (a keyboard without keys: Mono/Poly, Octave, Glide; poly by default so chords stay chords). Each plays what it
   touches with its own settings; the outer controller adds its octave.
-- **Make Stage.** While blocks are selected, a MAKE STAGE button under the header's right end (v1's MessagePanel
-  button: a Palette[4] bar, its words in TxtMid) puts them inside a new Stage block where they were, as Cmd/Ctrl+G
-  does; the new Stage is then selected.
+- **Make Stage.** While blocks are selected, a MAKE STAGE button puts them inside a new Stage block where they were,
+  as Cmd/Ctrl+G does; the new Stage is then selected. It sits beside the selection's top: on its right, or its left
+  when there is no room on the right. Only with every block selected and some out of view (or no place beside the
+  selection on screen) does it sit at the stage's top right, under the SIGNED IN AS line; it never covers the corner
+  text. It looks like the plugin's Dust menu (right-click a slider): a one-item menu, 13 px Dosis, the row lit in a
+  menu colour under the mouse, both on v1's panel layer (OptionsPanel, Header: palette 2 at 90% over the same at 16%
+  reaching 5 units lower; no blurred shadow, as BlokDust has no gradients) (owner, 2026-11-17).
 - **Everything goes in, or nothing.** Samplers (with their audio), the Microphone and Audio In go inside like any
   block. A selection that holds a Stage cannot go in (one level, SCOPE-0006): no button, no drop ring.
 - **Opening a Stage shows its blocks** (owner, 2026-11-14). The view saved with the Stage is kept while every block

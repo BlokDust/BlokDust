@@ -2687,6 +2687,22 @@ Object.assign(tests, {
     return [chord === 3, { chord }];
   },
   // Owner (2026-11-14): every block menu category lists its blocks alphabetically (v1's and the new ones mixed).
+  // Owner (2026-11-17): the browser's right-click menu took the pointer's release and left a held block stuck down. The
+  // page shows none (the stage, panels, empty page); links and text fields keep theirs.
+  async 'no-browser-context-menu'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    const [bx, by] = await toCss(p, 0, 0);
+    const r = await p.evaluate(([x, y]) => {
+      const fire = (el: Element, cx = 10, cy = 10) => { const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: cx, clientY: cy }); el.dispatchEvent(e); return e.defaultPrevented; };
+      const canvas = document.querySelector('canvas')!, a = document.createElement('a'), input = document.createElement('input');
+      a.href = 'https://example.com/'; a.textContent = 'x'; document.body.append(a, input);
+      const out = { block: fire(canvas, x, y), empty: fire(canvas, 600, 600), body: fire(document.body), link: fire(a), input: fire(input) };
+      a.remove(); input.remove();
+      return out;
+    }, [bx, by] as const);
+    await p.close();
+    return [r.block && r.empty && r.body && !r.link && !r.input, r];
+  },
   async 'menus-alphabetical'(errors: string[]) {
     const p = await open(browser, [], errors);
     const cats = await p.evaluate(() => ((window as any).__bd_probe.scene.Header.MenuItems as any[]).map(c => (c.Items as any[]).map(i => String(i.Name))));
