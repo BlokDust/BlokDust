@@ -72,6 +72,9 @@ bool load(const nlohmann::json& patch, Loaded& out, std::string& err) {
       if (!m.is_object() || !m.contains("block") || !m["block"].is_string() || !m.contains("blocks") || !m["blocks"].is_array()) continue;
       const auto it = out.ids.find(m["block"].get<std::string>());
       if (it == out.ids.end()) continue;
+      // One inner world per Stage: the first entry wins. Repeats were each built into an Engine of their own
+      // (security review, PR 13: a crafted file could exhaust memory). web/src/patch/loadPatch.ts does the same.
+      if (std::any_of(out.stages.begin(), out.stages.end(), [&](const auto& s) { return s.first == it->second; })) continue;
       auto inner = std::make_shared<Loaded>();
       nlohmann::json body = {{"blocks", m["blocks"]}};
       if (m.contains("connectionOrder")) body["connectionOrder"] = m["connectionOrder"];

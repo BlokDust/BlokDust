@@ -23,6 +23,8 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R2a.** SIGN IN WITH GOOGLE uses the authorisation code flow with PKCE S256 and a state check, and keeps only
   Google's subject id. If that Google account is new here, a new account is made and the user then picks a handle
   (R6). If the user is already signed in, Google is added to their account. Shown only when Google is configured.
+  The page to return to afterwards (Google and Apple) is a path on this site only, checked as the URL parser reads it
+  (tabs and newlines dropped, `\` as `/`), so it can never send the user to another site.
 - **R2b.** SIGN IN WITH APPLE (owner review 2, 2026-11-15) is the same flow without PKCE: no scopes (no name or email),
   so Apple answers by redirect (`response_mode=query`); the client secret is an ES256 JWT signed with the Sign in with
   Apple key (`APPLE_PRIVATE_KEY`, a Worker secret; `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID` vars). Only
@@ -46,7 +48,8 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R9.** A patch saved while signed in belongs to the account. Signing in claims the patches this browser holds edit
   tokens for. The owner can save over the account's patches from any device signed in to it, without the edit token.
 - **R10.** DELETE ACCOUNT (asked first) deletes the account, its passkeys, Google link, sessions and patches. Their
-  ids stay taken, so old links never open someone else's patch.
+  ids stay taken, so old links never open someone else's patch. Their likes come off only the patches they liked.
+  Per-IP limited, like sign-in.
 - **R11.** `GET /api/patches/:id` says `mine` when the signed-in account owns the patch, and `by` (the owner's
   handle) when it has one.
 

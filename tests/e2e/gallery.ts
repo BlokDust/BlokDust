@@ -197,7 +197,7 @@ try {
   check('R11: SAVE after opening someone\'s patch makes a remix; the original counts it; the credit goes', opened.id === aliceId && remix !== aliceId && rp.json.parent === aliceId && glass?.remixes === 1
     && !(await bob.page.evaluate(() => (window as any).__bd_probe.corners.credit)), { remix, parent: rp.json?.parent, remixes: glass?.remixes });
 
-  // ---- R9, R10: right-click the credit to report; three reports hide it; the site owner reviews with bd gallery ----
+  // ---- R9, R10: right-click the credit to report; five reports hide it; the site owner reviews with bd gallery ----
   const carol = await device('carol_g'), dave = await device('dave_g');
   for (const d of [bob, carol, dave]) {
     await tab(d, GALLERY); await search(d, '');
@@ -215,10 +215,14 @@ try {
     await d.page.waitForTimeout(2200);
     if (d === bob) check('R9: after REPORT the thanks shows, then the panel closes', !(await P(d)).open);
   }
+  const atThree = await api(anon, 'GET', 'gallery?sort=new');
+  check('R9 (security review, PR 13): three reports no longer hide it', atThree.json.items.some((r: { id: string }) => r.id === aliceId), atThree.json.items.map((r: { title: string }) => r.title));
+  const fay = await device('fay_g'), gus = await device('gus_g');
+  const lastReports = [await api(fay, 'POST', `gallery/${aliceId}/report`, { reason: '' }), await api(gus, 'POST', `gallery/${aliceId}/report`, { reason: '' })];
   const after = await api(anon, 'GET', 'gallery?sort=new');
-  check('R9: reported by three people, it is hidden', !after.json.items.some((r: { id: string }) => r.id === aliceId), after.json.items.map((r: { title: string }) => r.title));
+  check('R9: reported by five people, it is hidden', lastReports.every(r => r.status === 200) && !after.json.items.some((r: { id: string }) => r.id === aliceId), after.json.items.map((r: { title: string }) => r.title));
   const listed = bd('reports');
-  check('R10: bd gallery reports lists it with its reports', listed.reported.some((r: { id: string; reports: number; hidden: number }) => r.id === aliceId && r.reports === 3 && r.hidden === 1), listed);
+  check('R10: bd gallery reports lists it with its reports', listed.reported.some((r: { id: string; reports: number; hidden: number }) => r.id === aliceId && r.reports === 5 && r.hidden === 1), listed);
   bd('keep', aliceId);
   const kept = await api(anon, 'GET', 'gallery?sort=new');
   bd('hide', aliceId);
@@ -384,10 +388,28 @@ try {
     && zedMe.user?.handle === 'blokdust' && zedNow.includes(`${zedId} @blokdust`), { taken: taken.json, merged, me: zedMe.user, zedNow });
   await zed.ctx.close();
 
+  // ---- R9 (security review, PR 13): reports never hide @blokdust's EXAMPLES and TUTORIALS; they are still recorded ----
+  const example = ex[0].id;
+  const exReports = await Promise.all([alice, bob, carol, dave, fay, gus].map(d => api(d, 'POST', `gallery/${example}/report`, { reason: '' })));
+  const exStill = (await api(anon, 'GET', 'gallery?sort=examples')).json.items as { id: string }[];
+  const exListed = bd('reports');
+  check('R9: six reports leave an @blokdust example listed; bd gallery reports still shows them', exReports.every(r => r.status === 200) && exStill.some(r => r.id === example)
+    && exListed.reported.some((r: { id: string; reports: number; hidden: number }) => r.id === example && r.reports === 6 && r.hidden === 0), { exStill: exStill.length, exListed });
+
   // ---- account deletion takes its gallery entries and likes ----
+  // Bob and Carol like one example (Alice's patch left the gallery at R6); Carol likes another one alone.
+  const [likedEx, otherEx] = [ex[1].id, ex[2].id];
+  await api(carol, 'POST', `gallery/${likedEx}/like`, { on: true }); await api(carol, 'POST', `gallery/${otherEx}/like`, { on: true });
+  const likedByBob = await api(bob, 'POST', `gallery/${likedEx}/like`, { on: true });
+  const exLikes = async () => new Map(((await api(anon, 'GET', 'gallery?sort=examples')).json.items as { id: string; likes: number }[]).map(r => [r.id, r.likes]));
+  const exBefore = await exLikes();
   const bobDel = await api(bob, 'DELETE', 'me');
   const afterDel = (await api(anon, 'GET', 'gallery?q=%40bob_g')).json.items;
   check('Deleting an account removes its gallery entries', bobDel.status === 200 && afterDel.length === 0, afterDel);
+  const exAfter = await exLikes();
+  check('Deleting an account takes its likes off what it liked, and leaves other patches\' likes alone (security review, PR 13)',
+    likedByBob.json?.likes === 2 && exAfter.get(likedEx) === 1 && exBefore.get(otherEx) === 1 && [...exBefore].every(([id, n]) => id === likedEx || exAfter.get(id) === n),
+    { before: [...exBefore], after: [...exAfter] });
   await tab(alice, 0); await alice.page.mouse.move(5, 5); await alice.page.waitForTimeout(300);
   await alice.page.screenshot({ path: `${OUT}/save-share.png` });
 } catch (e) {

@@ -196,6 +196,23 @@ const tests: Record<string, () => Promise<void>> = {
     check('R2a: the same Google account signs in to the same account, no panel in the way', (await corners(d.page)).me === 'carol_g' && !(await pp(d.page)).settings && !(await pp(d.page)).open, { c: await corners(d.page), p: await pp(d.page) });
     const r = await fetch(`${base}/api/auth/google/callback?code=x&state=wrong`, { redirect: 'manual', headers: { cookie: 'bd_oauth=right.verifier.%2F' } });
     check('R2a: a callback whose state does not match is refused', r.status === 400, r.status);
+    // Security review (PR 13): the return path must stay on this site. The URL parser drops tabs and newlines, so
+    // "/<TAB>/evil.example" used to pass the "starts with / but not //" check and then resolve to evil.example.
+    // One real start (sign-in starts are rate limited); then the callback, which does the redirect, is replayed with
+    // each return path in its cookie, as a start that let it through would have stored it.
+    const start = await fetch(`${base}/api/auth/google/start?return=${encodeURIComponent('/\t/evil.example')}`, { redirect: 'manual' });
+    const [oauthName, oauthValue] = (start.headers.getSetCookie().map(s => s.split(';')[0]).find(s => /^(__Host-)?bd_oauth=/.test(s)) ?? '=').split('=');
+    const [state, verifier] = oauthValue.split('.');
+    const consent = new URL((await fetch(start.headers.get('location')!, { redirect: 'manual' })).headers.get('location')!);
+    const landOf = async (back: string | null): Promise<string> => {
+      const cookie = back === null ? `${oauthName}=${oauthValue}` : `${oauthName}=${state}.${verifier}.${encodeURIComponent(back)}`;
+      return (await fetch(consent, { redirect: 'manual', headers: { cookie } })).headers.get('location') ?? '';
+    };
+    const here = new URL(base).host, tricks = [null, '/\t/evil.example', '/\n/evil.example', '/\r\n/evil.example', '//evil.example', '/\\evil.example', '/\t\\evil.example', 'https://evil.example/'];
+    const landed = await Promise.all(tricks.map(landOf));
+    check('R2a: the return path after sign-in never leaves this site (tab, newline, backslash and // tricks)', landed.every(l => !!l && new URL(l).host === here), landed);
+    const kept = await landOf('/?c=abcdefghij&t=Song');
+    check('… and an ordinary path on this site is kept', new URL(kept).host === here && new URL(kept).searchParams.get('c') === 'abcdefghij' && new URL(kept).searchParams.get('t') === 'Song', kept);
     await c.ctx.close(); await d.ctx.close();
   },
 

@@ -99,10 +99,12 @@ export function loadPatch(patch: Patch, script: ScriptOp[] = []): Loaded {
   for (const r of relinks(patch, out.ids)) out.commands.push({ ...r, atSample: -1 });
   // Stage blocks' inner patches (R7; the C++ loader's `stages`): their commands carry the Stage block's engine id, and
   // come after the outer patch's, so the block exists when its inner world is made (WasmEngine.push).
-  const inner: Command[] = [];
+  const inner: Command[] = [], filled = new Set<number>();
   for (const m of Array.isArray(patch.macros) ? patch.macros : []) {
     const stage = m && typeof m.block === 'string' ? out.ids.get(m.block) : undefined;
-    if (stage === undefined || !Array.isArray(m.blocks)) continue;
+    // One inner world per Stage, the first entry's (as the C++ loader; security review, PR 13).
+    if (stage === undefined || !Array.isArray(m.blocks) || filled.has(stage)) continue;
+    filled.add(stage);
     for (const c of loadPatch({ blocks: m.blocks, connectionOrder: m.connectionOrder }).commands) inner.push({ ...c, stage });
   }
   for (const s of script) {

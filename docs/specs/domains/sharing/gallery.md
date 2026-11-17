@@ -45,7 +45,9 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   /api/patches/:id` says `likes` and `liked`.
 - **R9.** Reporting is a right-click on the credit (owner review 2: harder to do by accident), asked first on the
   GALLERY tab ("For a rude name or anything that should not be here.": it doesn't say how many reports hide a
-  patch). It needs sign-in and counts once per person. At three reports the patch is hidden.
+  patch). It needs sign-in and counts once per person. At five reports the patch is hidden (three until the PR 13
+  security review: throwaway accounts are cheap). @blokdust's own patches (EXAMPLES, TUTORIALS) are never hidden by
+  reports; their reports are kept for R10.
 - **R10.** `pnpm bd gallery reports|keep|hide|remove` lists reported or hidden patches with their reasons, and keeps
   (clears reports, shows), hides or removes one.
 - **R11.** OPEN loads the patch as the current one. While it is fetched the panel stays up with v1's spinner (owner

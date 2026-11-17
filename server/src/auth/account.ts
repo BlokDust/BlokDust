@@ -57,6 +57,10 @@ export async function deleteAccount(env: Env, req: Request): Promise<Response> {
   const u = await requireUser(env, req);
   await env.DB.batch([
     env.DB.prepare('DELETE FROM gallery WHERE user_id = ? OR patch_id IN (SELECT id FROM patches WHERE owner_id = ?)').bind(u.id, u.id),
+    // Their likes go: recount only what they had liked, before the likes are deleted (one write per liked patch, not
+    // one per gallery row; security review, PR 13).
+    env.DB.prepare(`UPDATE gallery SET likes = (SELECT COUNT(*) FROM likes l WHERE l.patch_id = gallery.patch_id AND l.user_id != ?)
+      WHERE patch_id IN (SELECT patch_id FROM likes WHERE user_id = ?)`).bind(u.id, u.id),
     env.DB.prepare('DELETE FROM likes WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM reports WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM revisions WHERE patch_id IN (SELECT id FROM patches WHERE owner_id = ?)').bind(u.id),
@@ -66,8 +70,6 @@ export async function deleteAccount(env: Env, req: Request): Promise<Response> {
     env.DB.prepare('DELETE FROM credentials WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM identities WHERE user_id = ?').bind(u.id),
     env.DB.prepare('DELETE FROM users WHERE id = ?').bind(u.id),
-    // Their likes went: recount what they had liked.
-    env.DB.prepare('UPDATE gallery SET likes = (SELECT COUNT(*) FROM likes l WHERE l.patch_id = gallery.patch_id)'),
   ]);
   const headers = new Headers({ 'cache-control': 'no-store' });
   headers.append('set-cookie', await endSession(env, req, false));

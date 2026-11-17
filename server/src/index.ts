@@ -95,7 +95,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
     if (path === '/api/auth/passkey/login/options' && m === 'POST') return loginOptions(env, req);
     if (path === '/api/auth/passkey/login/verify' && m === 'POST') return loginVerify(env, req);
     if (path === '/api/auth/logout' && m === 'POST') return logout(env, req);
-    if (path === '/api/me' && m === 'DELETE') return deleteAccount(env, req);
+    if (path === '/api/me' && m === 'DELETE') { await limit(env.SAVE_LIMIT, req, 'auth'); return deleteAccount(env, req); }
     if (path === '/api/me/handle' && m === 'PUT') return setHandle(env, req);
     if (path === '/api/me/claim' && m === 'POST') return claim(env, req);
     if (path === '/api/me/patches' && m === 'GET') return myPatches(env, req);

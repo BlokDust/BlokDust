@@ -1,6 +1,6 @@
 // The public gallery (SPEC-SHARING-GALLERY, SHARING-0009): signed-in users publish with the gallery switch on SAVE; anyone browses
 // (newest, or popular: likes and remixes over age); signed-in users like (no down votes) and report. Reports hide a
-// patch at REPORTS_TO_HIDE; the site owner reviews with `pnpm bd gallery`.
+// patch at REPORTS_TO_HIDE (never @blokdust's own); the site owner reviews with `pnpm bd gallery`.
 import type { Env } from './env.ts';
 import { HttpError, json } from './http.ts';
 import { isOffensive } from './moderation.ts';
@@ -11,7 +11,8 @@ export const PAGE = 20;
 /** The site's own account (owner review 3): its patches are the EXAMPLES and TUTORIALS (R16). The name is reserved. */
 export const OFFICIAL = 'blokdust';
 export type Sort = 'popular' | 'new' | 'examples' | 'tutorials';
-export const REPORTS_TO_HIDE = 3;
+/** R9: reports that hide a patch (5, not 3: throwaway accounts are cheap; security review, PR 13). */
+export const REPORTS_TO_HIDE = 5;
 const HOUR = 3_600_000;
 
 async function body<T>(req: Request): Promise<T> {
@@ -124,7 +125,8 @@ export async function like(env: Env, req: Request, id: string): Promise<Response
   return json({ liked: on !== false, likes: g?.likes ?? 0 });
 }
 
-/** POST /api/gallery/:id/report {reason} — signed in; once per person; hidden at REPORTS_TO_HIDE (R9). */
+/** POST /api/gallery/:id/report {reason} — signed in; once per person; hidden at REPORTS_TO_HIDE (R9), except
+ * @blokdust's own patches (the EXAMPLES and TUTORIALS), whose reports are kept for `bd gallery reports` only. */
 export async function report(env: Env, req: Request, id: string): Promise<Response> {
   const u = await requireUser(env, req);
   const { reason } = await body<{ reason?: unknown }>(req);
@@ -132,7 +134,9 @@ export async function report(env: Env, req: Request, id: string): Promise<Respon
   await env.DB.batch([
     env.DB.prepare('INSERT OR IGNORE INTO reports (patch_id, user_id, reason, created) VALUES (?, ?, ?, ?)').bind(id, u.id, typeof reason === 'string' ? reason.slice(0, 200) : '', Date.now()),
     env.DB.prepare(`UPDATE gallery SET reports = (SELECT COUNT(*) FROM reports WHERE patch_id = ?),
-      hidden = CASE WHEN hidden = 2 THEN 2 WHEN (SELECT COUNT(*) FROM reports WHERE patch_id = ?) >= ${REPORTS_TO_HIDE} THEN 1 ELSE hidden END WHERE patch_id = ?`).bind(id, id, id),
+      hidden = CASE WHEN hidden = 2 THEN 2
+        WHEN (SELECT handle FROM users WHERE id = gallery.user_id) = ? THEN hidden
+        WHEN (SELECT COUNT(*) FROM reports WHERE patch_id = ?) >= ${REPORTS_TO_HIDE} THEN 1 ELSE hidden END WHERE patch_id = ?`).bind(id, OFFICIAL, id, id),
   ]);
   return json({ reported: true });
 }
