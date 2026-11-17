@@ -13,7 +13,10 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 2 });
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  // This static server has no Worker: the sharing API's start-up calls (/api/config, /api/me) answer 404, which the
+  // browser logs as "Failed to load resource" without the URL. Those are expected; any other failed request is not.
+  page.on('console', m => { if (m.type() === 'error' && !m.text().startsWith('Failed to load resource')) errors.push(m.text()); });
+  page.on('response', r => { if (r.status() >= 400 && !new URL(r.url()).pathname.startsWith('/api/')) errors.push(`${r.status()} ${r.url()}`); });
   await page.goto(`${url}/index.html`);
   await page.waitForFunction(() => (window as any).__bd_probe);
   await page.click('#start');

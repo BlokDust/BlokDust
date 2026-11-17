@@ -1065,7 +1065,8 @@ Object.assign(tests, {
     await p.screenshot({ path: `${OUT}/ipad-extension-no-links.png` });
     await p.close();
     void linkAt;
-    const ok = before.length === 1 && after.length === 0 && !r.github && !r.twitter && r.blurb && r.opened.length === 0;
+    // Two footer links on a desktop or the iPad app: the code on GitHub and Privacy (SHARING-0010); none in the extension.
+    const ok = before.length === 2 && after.length === 0 && !r.github && !r.twitter && r.blurb && r.opened.length === 0;
     return [ok, { footerBefore: before.length, footerAfter: after.length, ...r }];
   },
 

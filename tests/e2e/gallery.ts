@@ -295,8 +295,8 @@ try {
   await press(carol, 'sort_examples', 300); await idle(carol);
   const examples = await P(carol);
   await carol.page.mouse.move(5, 5); await carol.page.waitForTimeout(300); await carol.page.screenshot({ path: `${OUT}/gallery-examples.png` });
-  const want = ['Computer Keys + 2 Tones', 'MIDI Keys + 2 Tones', 'Microphone + Recorder', 'Rotating Sequencer', 'Step Sequencer'];
-  check('R16: bd gallery presets publishes the five presets as @blokdust\'s EXAMPLES, in order, once', seeded.added.length === 5 && again2.added.length === 0
+  const want = ['Computer Keys + 2 Tones', 'MIDI Keys + 2 Tones', 'Microphone + Recorder', 'Rotating Sequencer', 'Step Sequencer', 'Self Playing Scene'];
+  check('R16: bd gallery presets publishes the six presets (2.0.2 added Self Playing Scene) as @blokdust\'s EXAMPLES, in order, once', seeded.added.length === 6 && again2.added.length === 0
     && examples.sort === 'examples' && examples.items.map((r: { title: string }) => r.title).join() === want.join() && examples.items.every((r: { by: string }) => r.by === 'blokdust'),
     { seeded, again: again2, examples: examples.items.map((r: { title: string; by: string }) => `${r.title} @${r.by}`) });
   await press(carol, 'sort_tutorials', 300); await idle(carol);
