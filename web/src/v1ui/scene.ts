@@ -11,6 +11,7 @@ import { installButtonPairs } from './buttonPair.ts';
 import { drawNewSprite, drawPrismExits, followLfos, hasLiveRows, installLiveRows, installNewBlockMenu } from './newBlocks.ts';
 import { installTouchpad } from './touchpadPanel.ts';
 import { installWaveZoom, panelView } from './waveZoom.ts';
+import { installAdsr } from './adsrPanel.ts';
 import { Metrics } from './ported/Metrics';
 import { CreateNew } from './ported/UI/CreateNew';
 import { Header } from './ported/UI/Header';
@@ -185,6 +186,7 @@ export class V1Scene {
       installButtonPairs(this.OptionsPanel);
       installLiveRows(this.OptionsPanel);
       installTouchpad(this.OptionsPanel);  // it lays the Touchpad's rows out again after the others adapt them
+      installAdsr(this.OptionsPanel);  // the Envelope's graph: curved time axis, readout, fine drags (adsrPanel.ts)
       installWaveZoom(this.OptionsPanel);  // outermost: it narrows the form the others are given (waveZoom.ts)
       locateMissingFiles(this);
     }
