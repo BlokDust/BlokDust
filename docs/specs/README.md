@@ -55,3 +55,4 @@
 | [CHG-0029](changes/0029-pulse-delay/proposal.md) | Pulse delay | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES |
 | [CHG-0030](changes/0030-envelope-graph-easier-to-set/proposal.md) | Envelope graph easier to set | **proposed** | SPEC-VISUAL-V1-PARITY |
 | [CHG-0031](changes/0031-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |
+| [CHG-0033](changes/0033-quick-save-and-unsaved-marker/proposal.md) | Quick save and unsaved marker | **proposed** | SPEC-SHARING-BACKEND |

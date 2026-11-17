@@ -26,6 +26,7 @@ import { BlockSprites } from './ported/Blocks/BlockSprites';
 import { RecorderPanel } from './ported/UI/RecorderPanel';
 import { SoundcloudPanel } from './ported/UI/SoundcloudPanel';
 import { AnimationsLayer } from './ported/UI/AnimationsLayer';
+import { MessagePanel } from './ported/UI/MessagePanel';
 import { Splash } from './ported/Splash';
 import RELEASES from '../releases.json';
 import { OptionSample } from './ported/UI/Options/OptionSample';
@@ -109,7 +110,9 @@ export class V1Scene {
   readonly RecorderPanel = new RecorderPanel();
   /** v1's loading animation (a spinning diamond in a bubble beside a loading block; also the Share/search spinners). */
   readonly AnimationsLayer = new AnimationsLayer();
-  readonly Tutorial = stub; readonly MessagePanel = stub;
+  readonly Tutorial = stub;
+  /** v1's message bar (App.Message): a timed line across the stage, three quarters down (SAVED, save errors). */
+  readonly MessagePanel = new MessagePanel();
   /** v1's sample search panel, ported verbatim, searching Freesound (DATA-0005, SPEC-SHARING-BACKEND R15). */
   readonly SoundcloudPanel = new SoundcloudPanel();
   /** Patches (CHG-0005): opened from the header's Share slot, which reads PATCHES. */
@@ -175,7 +178,10 @@ export class V1Scene {
       this.initialised = true;
       installNewBlockMenu();  // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
       App.Width = 0; App.Height = 0;
-      for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Init(this);
+      for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel, this.MessagePanel]) o.Init(this);
+      // v1's MessagePanel never sets _Alpha before its first fade-in tween; this tween library then gives NaN (nothing
+      // drawn). It starts hidden, at 0.
+      (this.MessagePanel as any)._Alpha = 0;
       relabelShareButton(this.Header);
       // The header's Share slot opens Patches (CREATE SHARE LINK is in its SAVE tab, owner 2026-11-10).
       (this.SharePanel as any).OpenPanel = () => this.PatchesPanel.OpenPanel();
@@ -200,12 +206,15 @@ export class V1Scene {
     this.CreateNew.CheckState();  // v1 calls it whenever the block list changes (icon + logo margin when > 1 block)
   }
 
+  /** v1 App.Message: show `text` in the message bar (v1's defaults: three seconds, no button). */
+  message(text: string, options?: { seconds?: number }): void { if (this.initialised) this.MessagePanel.NewMessage(text, options); }
+
   /** Advance tweens; true while anything animates (the stage then redraws every frame). */
   update(nowMs: number): boolean {
     const animating = TWEEN.update(nowMs);
     // The open panel's block is loading (AnimationsLayer list): keep redrawing it so its loading square spins.
     if (this.OptionsPanel.Scale > 0 && this.AnimationsLayer.ActiveBlocks.includes(this.OptionsPanel.SelectedBlock)) this.OptionsPanel.Animating = true;
-    for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) { o.LastVisualTick = nowMs; o.Update?.(); }
+    for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel, this.MessagePanel]) { o.LastVisualTick = nowMs; o.Update?.(); }
     this.MainSceneDragger.LastVisualTick = nowMs;
     this.MainSceneDragger.Update();
     if (Math.abs(App.ZoomLevel - this.lastZoom) > 1e-9) { this.lastZoom = App.ZoomLevel; this.host.setZoom(App.ZoomLevel); }
@@ -228,7 +237,7 @@ export class V1Scene {
   drawRecorderPanel = true;
   /** v1 MainScene display list, from the ToolTip upward (blocks/lines/beams are drawn by the stage before this). */
   draw(): void {
-    for (const o of [this.ToolTip, this.AnimationsLayer, ...(this.drawRecorderPanel ? [this.RecorderPanel] : []), this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) {
+    for (const o of [this.ToolTip, this.AnimationsLayer, ...(this.drawRecorderPanel ? [this.RecorderPanel] : []), this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel, this.MessagePanel]) {
       if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);  // under the panel, over the stage
       this.Ctx.save();
       o.Draw();
@@ -291,6 +300,7 @@ export class V1Scene {
     const p = new Point(x, y);
     this.pointer = p;
     if (this.ToolTip.Open) this.toolTipClose();
+    if (this.MessagePanel.Open && this.MessagePanel.Hover) { this.MessagePanel.MouseDown(p); return true; }  // v1 MainScene
     if (this.SharePanel.Open) { this.SharePanel.MouseDown(p); return true; }
     if (this.SettingsPanel.Open) { this.SettingsPanel.MouseDown(p); return true; }
     if (this.PatchesPanel.Open) { this.PatchesPanel.MouseDown(p); return true; }
@@ -349,6 +359,7 @@ export class V1Scene {
     if (this.SettingsPanel.Open) this.SettingsPanel.MouseMove(p);
     if (this.SoundcloudPanel.Open) this.SoundcloudPanel.MouseMove(p);
     if (this.PatchesPanel.Open) this.PatchesPanel.MouseMove(p);
+    if (this.MessagePanel.Open) this.MessagePanel.MouseMove(p);
     this.Header.MouseMove(p);
     this.CreateNew.MouseMove(p);
     this.ZoomButtons.MouseMove(p);
