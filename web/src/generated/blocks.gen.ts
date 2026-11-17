@@ -5653,6 +5653,17 @@ export const BLOCKS: readonly BlockDef[] = [
           "max": 64,
           "k": 0
         }
+      },
+      {
+        "key": "restart",
+        "default": false,
+        "unit": "enum",
+        "ui": {
+          "transform": "None",
+          "min": 0,
+          "max": 0,
+          "k": 0
+        }
       }
     ]
   },

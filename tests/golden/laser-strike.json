@@ -1,0 +1,14 @@
+{
+  "description": "SIMULATION-0012: a 1/16 emitter's particles, closer than a pulse, each fire a Laser's beam again; the far Emitter fires at the Tone on every one (and on its own beat while the beam holds it).",
+  "render": { "seconds": 4, "sampleRate": 48000 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 3,
+    "blocks": [
+      { "id": "e1", "type": "power.emitter", "x": -1, "y": 1, "params": { "sync": true, "division": 0.25 } },
+      { "id": "p", "type": "power.power", "x": -5, "y": 4 },
+      { "id": "l", "type": "power.laser", "x": -1, "y": -7, "params": { "angle": 0 } },
+      { "id": "e2", "type": "power.emitter", "x": 10, "y": -8, "params": { "sync": true, "angle": -270 } },
+      { "id": "t", "type": "source.tone", "x": 10, "y": 4 }
+    ]
+  }
+}

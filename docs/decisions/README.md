@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**67 decisions** · proposed: 17 · accepted: 44 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**68 decisions** · proposed: 17 · accepted: 45 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -103,6 +103,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0009](simulation/SIMULATION-0009-a-power-block-can-be-cut-by-hits.md) | A Power block can be cut by hits | **accepted** | 2026-11-14 | power, particles, lasers, v1-deviation |
 | [SIMULATION-0010](simulation/SIMULATION-0010-a-pulse-can-wait-before-it-fires.md) | A Pulse can wait before it fires | **accepted** | 2026-11-17 | power, pulse, timing, v1-extension |
 | [SIMULATION-0011](simulation/SIMULATION-0011-gate-is-a-void-that-power-opens.md) | Gate is a Void that power opens | **proposed** | 2026-11-17 | simulation, particles, lasers, power, post-2-0 |
+| [SIMULATION-0012](simulation/SIMULATION-0012-a-particle-on-a-laser-fires-its-beam-again.md) | A particle on a Laser fires its beam again | **accepted** | 2026-11-17 | lasers, particles, power, v1-deviation |
 
 ## [ui](ui/README.md)
 

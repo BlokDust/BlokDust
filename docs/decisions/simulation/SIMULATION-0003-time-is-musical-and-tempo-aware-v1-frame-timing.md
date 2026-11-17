@@ -49,4 +49,5 @@ Owner review 2, 2026-11-08 (Ableton):
   flight and pulses end, and emitters start their timing again (synced: on the next grid slot, or at once on one;
   free: as when just added). Every take from the same position then plays the same, whatever happened before.
 - **A synced Laser is locked to the beat:** at beat 0 it points at its Angle; one turn every |`turnBeats`|. (It was a
-  per-tick step, so stops and starts shifted it.)
+  per-tick step, so stops and starts shifted it.) With Restart on, it counts from when it starts running instead
+  (SPEC-SIMULATION-POWER-AND-PARTICLES R9a, owner 2026-11-17).

@@ -1346,6 +1346,8 @@ void Engine::particleHit(Block& b) noexcept {
   // SIMULATION-0008 (owner, 2026-11-14; v1 only lengthened the note): a hit on a source that only earlier hits are
   // holding strikes it again, so fast particles play every note (a new Random Note pick each time).
   if (b.kind() == BlockKind::AudioSource && b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0) b.restrike = true;
+  // SIMULATION-0012: a Laser that only hits are holding fires its beam again, so fast particles reach past it.
+  if (b.type == BlockType::PowerLaser && b.power() > 0 && heldOnlyByHits(b)) b.restrike = true;
   pulse(b, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
 }
 
@@ -1368,6 +1370,22 @@ void Engine::restrike(int slot) noexcept {
   vo.trigTick = tick_;
   if (isSampler(b.type)) { vo.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate; vo.samplePlaying = b.sampleFrames > 0; }
   log(Event::Type::GateOn, b.id);
+}
+
+/// Only hits (particles' pulses, beams) hold this Emitter or Laser running: no Power, Toggle, press, key or Self
+/// Powered (SIMULATION-0012).
+bool Engine::heldOnlyByHits(const Block& b) noexcept {
+  if (b.staticPower != 0 || b.pressPower != 0 || b.keyPower != 0) return false;
+  if (b.type == BlockType::PowerLaser) return b.params[P::PowerLaser::selfPoweredMode] == 0.0;
+  if (b.type == BlockType::PowerEmitter) return b.params[P::PowerEmitter::selfPoweredMode] == 0.0;
+  return false;
+}
+
+/// A beam fired again reaches a block it was already on (SIMULATION-0012): a source held only by hits plays again (as
+/// SIMULATION-0008); an Emitter or Laser held only by hits fires again.
+void Engine::beamStrike(Block& b) noexcept {
+  if (b.kind() == BlockKind::AudioSource) { if (b.powerOn && b.staticPower == 0 && b.pressPower == 0) b.restrike = true; }
+  else if (heldOnlyByHits(b)) b.restrike = true;
 }
 
 /// A Power with Gap on hit (owner, 2026-11-14): a Power that hits cut, rather than pass through.
@@ -1443,15 +1461,26 @@ void Engine::runLasers() noexcept {
     const bool sound = l.type == BlockType::PowerSoundLaser;  // CHG-0016: its beam is gated by what it hears
     if (l.type != BlockType::PowerLaser && !sound) continue;
     const bool running = worldPower_ && (sound ? l.listenOn : l.params[P::PowerLaser::selfPoweredMode] != 0.0 || l.power() > 0);
-    if (!running) { if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
+    const bool again = l.restrike;  // fired again (SIMULATION-0012): what the beam is on is hit again
+    l.restrike = false;
+    if (!running) { l.laserTurning = false; if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
     // v1 rotates only while *powered* (IsPowered: PowerAmount > 0), not when merely self-powered.
     const double rotate = sound ? 0.0 : l.params[P::PowerLaser::rotate];  // the Sound Laser does not turn (owner, 2026-11-14)
     const bool synced = !sound && l.params[P::PowerLaser::sync] != 0.0;
+    // Restart (R9a): each time it starts turning (synced: running; free: powered) it starts again from its Angle.
+    const bool turning = synced || l.power() > 0;
+    if (turning && !l.laserTurning && !sound && l.params[P::PowerLaser::restart] != 0.0) {
+      l.laserBeat0 = beat_;
+      if (!synced) l.params[P::PowerLaser::angle] = l.laserAngle0;
+    }
+    l.laserTurning = turning;
     if (synced) {
       // Synced (owner): one full turn every |turnBeats| (negative: anticlockwise), locked to the beat: at beat 0 it
-      // points at the Angle set, so every take from the same position turns the same (owner review 2).
+      // points at the Angle set, so every take from the same position turns the same (owner review 2). With Restart,
+      // it points at the Angle set when it starts turning instead (R9a).
       const double tb = l.params[P::PowerLaser::turnBeats];
-      double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * beat_ / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
+      const double since = l.params[P::PowerLaser::restart] != 0.0 ? beat_ - l.laserBeat0 : beat_;
+      double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * since / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
       if (a <= 0.0) a += 360.0;
       l.params[P::PowerLaser::angle] = a - 270.0;
     } else if (l.power() > 0 && std::lround(rotate) != 0) {
@@ -1466,11 +1495,14 @@ void Engine::runLasers() noexcept {
     traceBeam(order_[k], l.params[P::PowerLaser::angle], len, hits, gates, open, stop);
     for (int i = 0; i < orderCount_; ++i) {  // newly hit, in creation order
       const int s = order_[i];
-      if (!hits[static_cast<std::size_t>(s)] || l.laserHits[static_cast<std::size_t>(s)]) continue;
+      const bool was = l.laserHits[static_cast<std::size_t>(s)];
+      if (!hits[static_cast<std::size_t>(s)] || (was && !again)) continue;
       Block& b = blocks_[s];
       log(Event::Type::Hit, b.id, l.id);
       if (gapsOnHit(b)) powerGap(b);  // once per beam arriving, as a logic block
-      else if (b.kind() == BlockKind::Logic) logicHit(b); else b.laserPower++;
+      else if (b.kind() == BlockKind::Logic) logicHit(b);
+      else if (was) beamStrike(b);
+      else b.laserPower++;
     }
     for (int i = 0; i < orderCount_; ++i) {  // no longer hit: release continuous power
       const int s = order_[i];
@@ -1593,8 +1625,8 @@ std::int64_t Engine::beatSlotAt(const Block& e, double beat) noexcept {
 
 /// The DAW's transport started at `beat` (owner review 2): nothing from before carries over, so every take from the
 /// same position plays the same. Particles in flight and pulses end; emitters start their timing again (synced ones
-/// fire on the next grid slot, or at once when `beat` is on one; free ones as when just added). Synced lasers need
-/// nothing: their angle follows the beat.
+/// fire on the next grid slot, or at once when `beat` is on one; free ones as when just added). Synced lasers follow
+/// the beat; lasers with Restart start again from their Angle.
 void Engine::resyncToTransport(double beat) noexcept {
   particleCount_ = 0;
   for (int k = 0; k < orderCount_; ++k) {
@@ -1602,6 +1634,7 @@ void Engine::resyncToTransport(double beat) noexcept {
     b.pulsePower = 0;
     b.pulseDelayCount = 0;
     b.counterStep = 0;
+    b.laserTurning = false;  // a Laser with Restart starts the take from its Angle (R9a)
     if (b.type != BlockType::PowerEmitter) continue;
     b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
     b.emitCounter = 0;  // as when added (v1 ParticleEmitter.Init)
@@ -1664,6 +1697,16 @@ void Engine::runTick() noexcept {
       if (b.keyPoly && b.keyCount > 0) for (int i = 0; i < b.keyCount; ++i) emit(b, keyAngle(b.keysHeld[static_cast<std::size_t>(i)]));
       else emit(b);
     };
+    // Struck again by a beam fired again (SIMULATION-0012): it fires now, and its timing starts over (as a key press).
+    if (e.restrike) {
+      e.restrike = false;
+      if (running) {
+        fire(e);
+        e.emitCounter = 0;
+        if (synced) e.beatSlot = beatSlotAt(e, beat_);
+        continue;
+      }
+    }
     if (synced) {
       // Synced (CHG-0004 3.5): emit when the beat crosses the next multiple of `division` (song grid in the plugin).
       const auto slot = beatSlotAt(e, beat_);

@@ -1,0 +1,13 @@
+{
+  "description": "CHG-0034 (R9a): an emitter fires a Pulse that powers a turning Laser with Restart on: every pulse sweeps the beam from its Angle across the Tone.",
+  "render": { "seconds": 6, "sampleRate": 44100 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 2,
+    "blocks": [
+      { "id": "e", "type": "power.emitter", "x": -10, "y": 0, "params": { "angle": 0, "selfPoweredMode": true, "rate": 20, "speed": 12 } },
+      { "id": "p", "type": "power.pulse", "x": -3, "y": 0 },
+      { "id": "l", "type": "power.laser", "x": 2, "y": 0, "params": { "angle": 0, "rotate": 400, "restart": true } },
+      { "id": "t", "type": "source.tone", "x": 8, "y": 1.5, "params": { "waveform": 1 } }
+    ]
+  }
+}

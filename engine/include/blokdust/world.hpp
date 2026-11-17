@@ -72,10 +72,13 @@ struct Block {
   int keyPressCount = 0;
   int emitCounter = 0;          // emitter: ticks since last emission
   std::int64_t beatSlot = -1;   // synced emitter: the beat-grid slot it last saw (CHG-0004 3.5)
-  double laserAngle0 = 0.0;     // synced laser: its Angle at beat 0 (the angle set by the user; owner review 2)
+  double laserAngle0 = 0.0;     // laser: the Angle set by the user (synced: where it points at beat 0; owner review 2)
+  bool laserTurning = false;    // laser: it had what turns it on the last tick (synced: running; free: powered; R9a)
+  double laserBeat0 = 0.0;      // synced laser with Restart: the beat it last started turning at (R9a)
   bool powerOn = false;         // audio source: power (not notes) is holding a voice (v1 NoteOn("power"))
   std::uint32_t gapUntil = 0;   // a Power cut by a hit (gapOnHit) gives no power until this tick
-  bool restrike = false;        // a particle hit it while only earlier hits' pulses held it: strike again (SIMULATION-0008)
+  bool restrike = false;        // struck again while hits held it (SIMULATION-0008): a source plays again; a laser's beam,
+                                // or an emitter, fires again (SIMULATION-0012)
 
   // ---- laser (power.laser) ----
   std::bitset<kMaxBlocks> laserHits;  // slots this laser hit on the last tick

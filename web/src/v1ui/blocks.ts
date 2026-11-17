@@ -282,6 +282,8 @@ function extendSyncForm(b: V1Block): void {
   const kind = b.def.id === 'power.emitter' ? 'emitter' : b.def.id === 'power.pulse' ? 'pulse' : b.def.id === 'fx.stereo-delay' ? 'delay' : 'laser';
   const sync = { type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
     switches: [{ name: 'Tempo Sync', setting: 'sync', value: !!b.Params.sync, lit: true, mode: 'offOn' }] };
+  // The Laser's Restart (R9a): each power-on starts again from its Angle; beside Tempo Sync, synced or not.
+  if (kind === 'laser') sync.switches.push({ name: 'Restart', setting: 'restart', value: !!b.Params.restart, lit: true, mode: 'offOn' });
   const synced: any[] = [];
   if (b.Params.sync) {
     if (kind === 'emitter') {

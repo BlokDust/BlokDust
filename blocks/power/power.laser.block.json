@@ -143,6 +143,12 @@
         64
       ],
       "description": "Synced: beats per full turn, 1/16 note \u2026 16 bars (|value| \u2265 0.25); negative = anticlockwise"
+    },
+    {
+      "key": "restart",
+      "default": false,
+      "unit": "enum",
+      "description": "Restart (owner): every time it gains power it starts again from its Angle; synced, its turn counts from then, not from beat 0"
     }
   ],
   "review": [
