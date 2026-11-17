@@ -22,7 +22,7 @@ verbatim, and must not be edited by hand.
 We will place the Envelope's time handles on a curved axis, applied around v1's panel in `web/src/v1ui/adsrPanel.ts`:
 a log axis by default (10 ms → 5 s, each tenfold step the same width), with the graph drawn by v1's own code on those
 positions. A held handle follows the pointer from where it was grabbed (Shift: a tenth as fast), a press takes only the
-nearest handle, and the held value is written on the panel's title row in the title's type. For the owner's review,
+nearest handle, and the held value is written just above the graph's top-right corner in the title's type. For the owner's review,
 `?adsr=log|square|v1` picks the axis (remembered per browser); one is kept after review and the switch removed.
 
 ## Consequences

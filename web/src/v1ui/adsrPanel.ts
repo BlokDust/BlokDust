@@ -3,7 +3,7 @@
 // sharp attack could hardly be picked. Still v1's graph and handles (ported/UI/Options/OptionADSR.ts), with:
 //  - a curved time axis: attack, decay and release handles sit on a log (default) or squared scale, so short times get
 //    the room and long ones still reach 5 s. The graph keeps v1's shape, drawn on that scale;
-//  - the value while a handle is held, on the panel's title row: "ATTACK 12 ms", "DECAY 300 ms   SUSTAIN 70%",
+//  - the value while a handle is held, above the graph's top-right corner: "ATTACK 12 ms", "DECAY 300 ms   SUSTAIN 70%",
 //    "RELEASE 1.20 s";
 //  - no jump on press: a handle follows the pointer from where it was grabbed (v1 moved it to the pointer at once);
 //  - fine control: holding Shift moves a held handle a tenth as fast;
@@ -62,18 +62,18 @@ function handlePoint(panel: any, o: any, j: number): [number, number] {
   return [x0 + panel.Range * 0.6 + h[2].Position.x, y0 + ht * 0.9];
 }
 
-/** The held handle's value, on the title row. */
+/** The held handle's value, above the graph's top-right corner. */
 function drawReadout(ctx: CanvasRenderingContext2D, o: any, panel: any, units: number): void {
   const j = o.Handles.findIndex((h: any) => h.Selected);
   if (j < 0) return;
   const h = o.Handles[j];
   const text = j === 0 ? `ATTACK ${timeText(h.XValue)}` : j === 1 ? `DECAY ${timeText(h.XValue)}   SUSTAIN ${Math.round(h.YValue * 100)}%` : `RELEASE ${timeText(h.XValue)}`;
-  // On the title row in the title's type (v1 OptionsPanel TITLE), right-aligned before the close X: it never crosses
-  // the graph, and a finger on the handle doesn't hide it.
+  // In the panel just above the graph, right-aligned to its right edge, in the title's type (v1 OptionsPanel TITLE):
+  // it never crosses the graph, and a finger on the handle doesn't hide it.
   ctx.font = App.Metrics.TxtMid;
   App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
   ctx.textAlign = 'right';
-  ctx.fillText(text, panel.Size.width - 44 * units, -panel.Size.height * 0.5);
+  ctx.fillText(text, panel.Margin + panel.Range + units, o.Position.y + o.Size.height * 0.1 - 12 * units);
 }
 
 export function installAdsr(panel: any, axis: AdsrAxis = adsrAxis()): void {

@@ -15,7 +15,7 @@ handles are grabbed together.
 
 ## What changes
 - The attack, decay and release handles sit on a log time axis (UI-0014); the graph keeps v1's drawing.
-- While a handle is held its value shows on the panel's title row: `ATTACK 12 ms`, `DECAY 300 ms   SUSTAIN 70%`,
+- While a handle is held its value shows in the panel just above the graph, right-aligned: `ATTACK 12 ms`, `DECAY 300 ms   SUSTAIN 70%`,
   `RELEASE 1.20 s`.
 - A handle follows the pointer from where it was grabbed (no jump on press); Shift moves it a tenth as fast.
 - A press where handles overlap takes the nearest one only.
