@@ -360,6 +360,7 @@ async function main() {
   const scene = new V1Scene({
     openStage: id => enterStage(id),
     loadStagePatch: id => loadStagePatch(id),
+    resetCounter: id => send([{ type: CommandType.Reset, id }]),
     createBlock: (v1Type, gx, gy) => {
       if (v1Type === LABEL_MENU_ID) { newLabel(gx, gy); return null; }
       // A Stage made while several blocks are selected takes them inside (CHG-0021).

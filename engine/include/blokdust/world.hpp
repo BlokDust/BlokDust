@@ -91,9 +91,9 @@ struct Block {
   double listenEnv = 0.0;
   std::uint32_t holdUntil = 0;
   bool listenOn = false;
-  // ---- power.counter: the step the next hit lands on; whether the last one passed (monitor) ----
-  int gateStep = 0;
-  bool gatePassed = false;
+  // ---- power.counter: the step the next hit lands on; whether the last one fired (monitor) ----
+  int counterStep = 0;
+  bool counterFired = false;
   double beamLength = 0.0;      // grid units, after Void truncation
 
   // ---- audio sources: voices (v1 Source voices; see Voice) ----

@@ -103,6 +103,7 @@ export class V1Block {
     if (key === 'generate') { App.MainScene.host.generateSample(this.Id); return; }
     if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's panel buttons (CHG-0021)
     if (key === 'loadStagePatch') { App.MainScene.host.loadStagePatch(this.Id); return; }
+    if (key === 'resetCounter') { App.MainScene.host.resetCounter(this.Id); return; }  // a Counter's Reset (R2c)
     // Samplers: reverse flips the waveform and mirrors the region at once (the app updates Params and the engine).
     if (key === 'reverse' && this.def.params.some(q => q.key === 'startPosition')) { App.MainScene.host.reverseSample(this.Id, !!value); return; }
     // MIDI Input's device slider picks an input by index (0 = all): the patch keeps its name (web only, CHG-0004).

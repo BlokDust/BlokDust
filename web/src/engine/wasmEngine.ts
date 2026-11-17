@@ -2,7 +2,7 @@
 // and an AudioWorkletGlobalScope. Compile the module once (WebAssembly.compile) and pass it around.
 
 // Plain objects, not enums: Node's type stripping (used by repo tools) cannot compile TS enums.
-export const CommandType = { AddBlock: 0, RemoveBlock: 1, MoveBlock: 2, SetParam: 3, NoteOn: 4, NoteOff: 5, SetMaster: 6, Press: 7, NoteExpression: 8, Tempo: 9, WorldPower: 10, Relink: 11 } as const;
+export const CommandType = { AddBlock: 0, RemoveBlock: 1, MoveBlock: 2, SetParam: 3, NoteOn: 4, NoteOff: 5, SetMaster: 6, Press: 7, NoteExpression: 8, Tempo: 9, WorldPower: 10, Relink: 11, Reset: 12 } as const;
 export type CommandType = (typeof CommandType)[keyof typeof CommandType];
 export const EventType = { Emit: 0, Hit: 1, Absorb: 2, Expire: 3, GateOn: 4, GateOff: 5, Connect: 6, Disconnect: 7, Logic: 8, Pass: 9, Block: 10, Split: 11 } as const;
 export type EventType = (typeof EventType)[keyof typeof EventType];

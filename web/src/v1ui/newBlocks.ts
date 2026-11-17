@@ -238,12 +238,13 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     switches({ name: 'Gap On Hit', setting: 'gapOnHit', value: !!b.Params.gapOnHit }),
     ...(b.Params.gapOnHit ? [slider('Gap', 'gapMs', Number(b.Params.gap ?? 0.05) * 1000, 10, 1000, { log: true, display: ms })] : []),
   ],
-  // CHG-0015: the pattern as a row of steps, then the three numbers that make it (Euclidean, SIMULATION-0005).
+  // CHG-0015: the pattern as a row of steps, the three numbers that make it (Euclidean, SIMULATION-0005), then Reset.
   'power.counter': b => [
     slider('Pattern', 'counterPattern', 0, 0, 1),
     slider('Steps', 'steps', Number(b.Params.steps), 1, 16, { quantised: true }),
     slider('Hits', 'hits', Math.min(Number(b.Params.hits), Number(b.Params.steps)), 0, 16, { quantised: true }),
     slider('Rotate', 'rotate', Number(b.Params.rotate), 0, 15, { quantised: true }),
+    { type: 'actionbutton', name: '', setting: 'resetCounter', props: { text: 'Reset' } },
   ],
   'power.chance': b => [slider('Chance', 'chance', Number(b.Params.chance), 0, 1, { display: v => `${Math.round(v * 100)}%` })],
   // The Laser's Angle and Rotate rows, then how many streams and how wide they fan (SIMULATION-0006).
@@ -393,7 +394,7 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   this.Shown = { level: m[0], reduction: m[1], on: m[1] > 0, thresholdX: tx - x, width: w };  // tests
 };
 
-/** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where a hit passes; the step the next
+/** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where it fires; the step the next
  * hit lands on is underlined (v1's selection bar). */
 const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;

@@ -631,7 +631,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxVibrato, "fx.vibrato", "Vibrato", BlockKind::PreEffect, 6.0f, kOutlineFxVibrato, 4, kParamsFxVibrato, 3, true},
   {BlockType::FxVolume, "fx.volume", "Volume", BlockKind::PostEffect, 6.0f, kOutlineFxVolume, 4, kParamsFxVolume, 1, true},
   {BlockType::PowerChance, "power.chance", "", BlockKind::Gate, 0.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
-  {BlockType::PowerCounter, "power.counter", "", BlockKind::Gate, 0.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
+  {BlockType::PowerCounter, "power.counter", "", BlockKind::Logic, 6.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
   {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
   {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, kParamsPowerPower, 2, true},

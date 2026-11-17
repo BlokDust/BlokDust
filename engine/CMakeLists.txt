@@ -74,6 +74,7 @@ if(BLOKDUST_BUILD_TESTS)
     tests/test_compressor.cpp
     tests/test_wavetable_block.cpp
     tests/test_gates.cpp
+    tests/test_counter.cpp
     tests/test_sound_laser.cpp
     tests/test_note_effects.cpp
     tests/test_lfo.cpp

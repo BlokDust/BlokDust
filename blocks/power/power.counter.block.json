@@ -3,13 +3,15 @@
   "id": "power.counter",
   "draft": false,
   "category": "power",
-  "kind": "gate",
+  "kind": "logic",
   "name": "Counter",
-  "description": "Counts the particles and laser beams that reach it, and lets through only the ones on its pattern's steps.",
+  "description": "Counts the particles and laser beams that hit it, and gives a short fire of energy to sources, particle emitters & lasers on its pattern's steps.",
   "v1": {
     "type": null
   },
-  "connection": null,
+  "connection": {
+    "catchment": 6
+  },
   "geometry": {
     "units": "grid",
     "unitsPerGrid": 14.999999999999998,
@@ -95,7 +97,7 @@
         0,
         16
       ],
-      "description": "How many steps let the hit through, spread as evenly as the length allows (Euclidean)"
+      "description": "How many steps fire, spread as evenly as the length allows (Euclidean)"
     },
     {
       "key": "rotate",
@@ -115,7 +117,7 @@
         -1,
         65535
       ],
-      "description": "Steps set by hand (bit k = step k lets the hit through, from the first one counted); -1 = the Euclidean pattern from steps, hits and rotate"
+      "description": "Steps set by hand (bit k = step k fires, from the first one counted); -1 = the Euclidean pattern from steps, hits and rotate"
     }
   ]
 }

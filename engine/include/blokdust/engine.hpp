@@ -28,7 +28,8 @@ struct Command {
   /// started, resync the world to x (SIMULATION-0003).
   /// Relink: blocks `id` and `value` (a block id) count as connected now, so they move to the end of each other's
   /// connection order (SPEC-CONNECTIONS-PROXIMITY R4a). Patch loaders replay a saved `connectionOrder` with it.
-  enum class Type : std::uint8_t { AddBlock, RemoveBlock, MoveBlock, SetParam, NoteOn, NoteOff, SetMaster, Press, NoteExpression, Tempo, WorldPower, Relink };
+  /// Reset: block `id` starts over (a Counter goes back to step 1, SIMULATION-0005).
+  enum class Type : std::uint8_t { AddBlock, RemoveBlock, MoveBlock, SetParam, NoteOn, NoteOff, SetMaster, Press, NoteExpression, Tempo, WorldPower, Relink, Reset };
   enum class Expression : std::uint8_t { Bend = 0, Pressure = 1, Slide = 2 };
   Type type{};
   BlockId id = kInvalidBlock;
@@ -64,6 +65,7 @@ struct Command {
   static Command worldPower(bool on, std::int64_t at = -1, bool keepParticles = false) { Command c; c.type = Type::WorldPower; c.value = on ? 1.0 : 0.0; c.atSample = at; c.x = keepParticles ? 1.0 : 0.0; return c; }
   /// v1 Source.MouseDown/MouseUp → AddPower/RemovePower: a held source (audio or power source) is powered.
   static Command relink(BlockId a, BlockId b, std::int64_t at = -1) { Command c; c.type = Type::Relink; c.id = a; c.value = static_cast<double>(b); c.atSample = at; return c; }
+  static Command reset(BlockId id, std::int64_t at = -1) { Command c; c.type = Type::Reset; c.id = id; c.atSample = at; return c; }
   static Command press(BlockId id, bool down, std::int64_t at = -1) { Command c; c.type = Type::Press; c.id = id; c.value = down ? 1.0 : 0.0; c.atSample = at; return c; }
   static Command noteOff(BlockType controllerType, std::uint8_t note, std::int64_t at = -1, int channel = 0) { Command c; c.type = Type::NoteOff; c.blockType = controllerType; c.param = note; c.atSample = at; c.x = channel; return c; }
 };
@@ -184,6 +186,8 @@ class Engine {
   static bool gapsOnHit(const Block& b) noexcept;
   void pulse(Block& b, int ticks) noexcept;
   void firePulse(Block& b) noexcept;
+  void pulseConnected(Block& b, int ticks) noexcept;
+  bool advanceCounter(Block& c) noexcept;
   void updateGates() noexcept;
   static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;
   void keyAim(Block& b, int note, bool down, bool poly) noexcept;

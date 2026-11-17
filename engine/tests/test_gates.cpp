@@ -1,4 +1,5 @@
-// CHG-0015: Counter, Chance and Prism (SPEC-SIMULATION-POWER-AND-PARTICLES R5c, R5d, R7a; SIMULATION-0005/0006).
+// CHG-0015: Chance and Prism (SPEC-SIMULATION-POWER-AND-PARTICLES R5c, R5d, R7a; SIMULATION-0005/0006).
+// The Counter is in test_counter.cpp.
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <string>
@@ -28,52 +29,6 @@ std::string pattern(const Engine& e, BlockId gate) {
 }
 }  // namespace
 
-TEST_CASE("R5c Counter: E(3,8) lets through hits 1, 4 and 7 of every 8 (x..x..x.)") {
-  auto e = emitterRight();
-  e->push(Command::add(2, BlockType::PowerCounter, 6, 0));
-  e->push(Command::add(3, BlockType::SourceTone, 12, 0));
-  render(*e, 48000 * 6);  // 17 particles
-  const auto p = pattern(*e, 2);
-  REQUIRE(p.size() >= 16);
-  CHECK(p.substr(0, 16) == "x..x..x.x..x..x.");
-  // What passed carried on to the Tone; what did not was absorbed.
-  CHECK(count(*e, Event::Type::Hit, 3) >= 5);
-  CHECK(count(*e, Event::Type::Hit, 3) <= count(*e, Event::Type::Pass, 2));
-}
-
-TEST_CASE("R5c Counter: steps, hits and rotate shape the pattern") {
-  const auto run = [](int steps, int hits, int rotate) {
-    auto e = emitterRight();
-    e->push(Command::add(2, BlockType::PowerCounter, 6, 0));
-    e->push(Command::setParam(2, P::PowerCounter::steps, steps));
-    e->push(Command::setParam(2, P::PowerCounter::hits, hits));
-    e->push(Command::setParam(2, P::PowerCounter::rotate, rotate));
-    render(*e, 48000 * 4);
-    return pattern(*e, 2).substr(0, static_cast<std::size_t>(steps));
-  };
-  CHECK(run(8, 3, 0) == "x..x..x.");
-  CHECK(run(8, 3, 3) == "x..x.x..");   // the same pattern, read from its 4th step
-  CHECK(run(8, 5, 0) == "x.x.xx.x");   // five as evenly as eight allows (a rotation of the cinquillo)
-  CHECK(run(4, 4, 0) == "xxxx");
-  CHECK(run(4, 0, 0) == "....");
-  CHECK(run(8, 1, 0) == "x.......");   // every 8th hit
-}
-
-TEST_CASE("R5c Counter: steps set by hand (pattern >= 0) play as set; -1 goes back to the Euclidean pattern") {
-  const auto run = [](double mask) {
-    auto e = emitterRight();
-    e->push(Command::add(2, BlockType::PowerCounter, 6, 0));
-    e->push(Command::setParam(2, P::PowerCounter::steps, 6));
-    e->push(Command::setParam(2, P::PowerCounter::hits, 2));
-    e->push(Command::setParam(2, P::PowerCounter::rotate, 1));
-    e->push(Command::setParam(2, P::PowerCounter::pattern, mask));
-    render(*e, 48000 * 4);
-    return pattern(*e, 2).substr(0, 6);
-  };
-  CHECK(run(0b100110) == ".xx..x");   // bit k = step k, rotate ignored
-  CHECK(run(0) == "......");
-  CHECK(run(-1) == "..x..x");         // E(2,6) read from its 2nd step
-}
 TEST_CASE("R5c Chance: 0 stops everything, 1 passes everything, 0.5 about half, the same every run") {
   const auto run = [](double chance) {
     auto e = emitterRight(8);
@@ -168,30 +123,6 @@ TEST_CASE("R7a: a Prism carries a laser's beam on, split, with the length it had
   CHECK(std::abs(far - 21.0) < 1e-6);
 }
 
-TEST_CASE("R7a: a Counter decides when a beam arrives and holds that while the beam stays") {
-  auto e = makeEngine(48000, 1, false);
-  e->push(Command::add(1, BlockType::PowerLaser, 0, 0));
-  e->push(Command::setParam(1, P::PowerLaser::angle, 0));
-  e->push(Command::add(2, BlockType::PowerCounter, 6, 0));
-  e->push(Command::setParam(2, P::PowerCounter::steps, 2));
-  e->push(Command::setParam(2, P::PowerCounter::hits, 1));    // pass, block, pass, …
-  e->push(Command::add(3, BlockType::SourceTone, 12, 0));
-  const auto beamFor = [&](std::int64_t on, std::int64_t off) {
-    e->push(Command::add(static_cast<BlockId>(100 + on), BlockType::PowerPower, 0, 3, on));
-    e->push(Command::remove(static_cast<BlockId>(100 + on), off));
-  };
-  beamFor(4800, 14400); beamFor(24000, 33600); beamFor(43200, 52800);
-  render(*e, 9600);
-  CHECK(e->block(3)->laserPower == 1);   // first arrival: through
-  CHECK(count(*e, Event::Type::Pass, 2) == 1);
-  render(*e, 19200);                     // second beam is on
-  CHECK(e->block(3)->laserPower == 0);   // blocked for as long as it stays
-  CHECK(count(*e, Event::Type::Block, 2) == 1);
-  render(*e, 19200);
-  CHECK(e->block(3)->laserPower == 1);   // third: through again
-  CHECK(pattern(*e, 2) == "x.x");
-}
-
 TEST_CASE("R7a: beams never pass the same Prism twice, and one laser casts a bounded number of beams") {
   auto e = makeEngine(48000, 1, false);
   e->push(Command::add(1, BlockType::PowerLaser, 0, 0));
@@ -212,22 +143,20 @@ TEST_CASE("R7a: beams never pass the same Prism twice, and one laser casts a bou
   CHECK(e->beams().size() >= 5);
 }
 
-TEST_CASE("CHG-0015: gates connect to nothing, and the world power switch restarts a Counter") {
+TEST_CASE("CHG-0015: Chance and Prism connect to nothing") {
   auto e = emitterRight();
-  e->push(Command::add(2, BlockType::PowerCounter, 6, 0));
+  e->push(Command::add(2, BlockType::PowerChance, 6, 0));
   e->push(Command::add(3, BlockType::SourceTone, 9, 4));
   e->push(Command::add(4, BlockType::PowerPower, 6, -4));
-  render(*e, 48000);
+  e->push(Command::add(5, BlockType::PowerPrism, 3, 4));
+  settle(*e);
   CHECK_FALSE(e->connected(2, 3));
   CHECK_FALSE(e->connected(2, 4));
-  CHECK(e->block(2)->gateStep != 0);
-  e->push(Command::worldPower(false));
-  e->push(Command::worldPower(true));
-  settle(*e);
-  CHECK(e->block(2)->gateStep == 0);
+  CHECK_FALSE(e->connected(5, 3));
+  CHECK_FALSE(e->connected(5, 4));
 }
 
-TEST_CASE("R12 (CHG-0015): gates and prisms render bit-identically whatever the buffer size") {
+TEST_CASE("R12 (CHG-0015): Counter, Chance and Prism render bit-identically whatever the buffer size") {
   const auto run = [](std::uint32_t block) {
     auto e = emitterRight(12);
     e->push(Command::add(2, BlockType::PowerChance, 5, 0));

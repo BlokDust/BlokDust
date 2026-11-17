@@ -19,7 +19,7 @@ Sequencing, randomness and redirection for particles and beams, without adding r
   sends it back to step 1.
 - **Chance** (`power.chance`): `chance` 0–100 %, seeded (SIMULATION-0005).
 - **Prism** (`power.prism`): Angle, Rotate, Streams 1–4, Spread (SIMULATION-0006); exit lines while its panel is open.
-- SPEC-SIMULATION-POWER-AND-PARTICLES: new R2b (Counter), R5c (Chance), R5d (prism particles), R7a (beams through
+- SPEC-SIMULATION-POWER-AND-PARTICLES: new R2c (Counter), R5c (Chance), R5d (prism particles), R7a (beams through
   Chance and Prism).
 - SPEC-CONNECTIONS-PROXIMITY: Counter is a power effect; Chance and Prism never connect by proximity.
 - Designs: `tools/block-designer/proposed.json` (owner, 2026-11-13); copy each into its manifest unchanged.

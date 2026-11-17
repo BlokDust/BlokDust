@@ -733,10 +733,11 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       saved.invert === 1 && saved.threshold === -3 && ['Level', 'Band', 'Beam on', 'Hold', 'Angle', 'Range'].every(n => names.includes(n)) && !names.includes('Threshold') && !names.includes('Rotate');
     return [pass, { onBeams, offBeams, invertedBeams, powered, meter, names, saved }];
   },
-  // CHG-0015: Counter, Chance and Prism are in the Power menu; the Counter's panel shows its pattern and where it is.
+  // CHG-0015: Counter, Chance and Prism are in the Power menu; the Counter's panel shows its pattern and where it is,
+  // and its Reset sends it back to step 1 (R2c). It powers the Tone beside it by proximity.
   async 'counter-panel'(errors) {
     const p = await open(browser, [blk('e', 'power.emitter', -8, 0, { angle: 0, selfPoweredMode: true, rate: 30, speed: 12 }),
-      blk('c', 'power.counter', 0, 0, { steps: 8, hits: 3 }), blk('t', 'source.tone', 6, 0)], errors);
+      blk('c', 'power.counter', 0, 0, { steps: 8, hits: 3 }), blk('t', 'source.tone', 0, 4)], errors);
     const menu = await menuItems(p, 'Power');
     await openPanel(p, 'c');
     const first = (await rows(p)).find(x => x.type === 'live')?.shown as { pattern: string; next: number } | undefined;
@@ -755,10 +756,17 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const hitsAt = await rowPoint(p, 'hits', 5 / 16);
     await p.mouse.click(...hitsAt); await p.waitForTimeout(300);
     const back = (await rows(p)).find(x => x.type === 'live')?.shown.pattern, cleared = (await state(p)).patch.blocks.find((b: any) => b.id === 'c').params.pattern;
+    // Reset: wait until the next step is 2–5, so one more hit in the meantime cannot bring it back to 0 or 1 by itself.
+    const nextStep = async () => ((await rows(p)).find(x => x.type === 'live')?.shown as { next: number } | undefined)?.next ?? -1;
+    let beforeReset = await nextStep();
+    for (let i = 0; i < 60 && (beforeReset < 2 || beforeReset > 5); i++) { await p.waitForTimeout(100); beforeReset = await nextStep(); }
+    await p.mouse.click(...await rowPoint(p, 'resetCounter', 0.5)); await p.waitForTimeout(150);
+    const afterReset = await nextStep();
     await p.close();
     const pass = ['Counter', 'Chance', 'Prism'].every(n => menu.includes(n)) && first?.pattern === 'x..x..x.' && !!later && later.next !== first.next &&
-      five?.pattern === 'x.x.xx.x' && s.hits > 0 && s.connections.length === 0 && toggled === 'xxx.xx.x' && mask === 0b10110111 && back === 'x.x.xx.x' && (cleared ?? -1) === -1;
-    return [pass, { menu, first, later, five: five?.pattern, hits: s.hits, connections: s.connections, toggled, mask, back, cleared }];
+      five?.pattern === 'x.x.xx.x' && s.hits > 0 && s.connections.length > 0 && toggled === 'xxx.xx.x' && mask === 0b10110111 && back === 'x.x.xx.x' && (cleared ?? -1) === -1 &&
+      beforeReset >= 2 && beforeReset <= 5 && afterReset >= 0 && afterReset <= 1;
+    return [pass, { menu, first, later, five: five?.pattern, hits: s.hits, connections: s.connections, toggled, mask, back, cleared, beforeReset, afterReset }];
   },
   // CHG-0031 (SPEC-AUDIO-WAVETABLE R7): the Wavetable is in the Source menu and sounds; its panel draws the frame it
   // plays, which changes with Table and follows an LFO moving Position.

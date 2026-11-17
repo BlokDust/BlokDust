@@ -416,7 +416,8 @@ void BlokDustProcessor::applyUiCommands(const nlohmann::json& commands) {
         if (c.blockType == BlockType::InputComputerKeyboard && c.param < 128) pageKeys_.set(c.param, c.type == Command::Type::NoteOn);
         break;
       case Command::Type::NoteExpression:
-      case Command::Type::Press: break;  // performance, not patch state
+      case Command::Type::Press:
+      case Command::Type::Reset: break;  // performance, not patch state
       case Command::Type::Relink: break;  // the order arrives whole (setConnectionOrder)
       case Command::Type::SetParam:
         if (auto* b = find(c.id)) {

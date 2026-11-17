@@ -484,7 +484,7 @@ void Engine::apply(const Command& c) noexcept {
       if (!on && c.x == 0.0) for (Engine* inner : stages_) if (inner) inner->applyNow(Command::worldPower(false));
       if (on == worldPower_) break;
       worldPower_ = on;
-      if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].gateStep = 0;  // Counters start over (SIMULATION-0005)
+      if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].counterStep = 0;  // Counters start over (R2c)
       if (!on) {  // everything the world was powering lets go at once
         for (int k = 0; k < orderCount_; ++k) {
           Block& b = blocks_[order_[k]];
@@ -516,6 +516,11 @@ void Engine::apply(const Command& c) noexcept {
       if (slot < 0) return;
       Block& b = blocks_[slot];
       if (b.kind() == BlockKind::AudioSource || b.kind() == BlockKind::PowerSource) b.pressPower = c.value != 0.0 ? 1 : 0;
+      break;
+    }
+    case Command::Type::Reset: {  // R2c: the Counter panel's Reset
+      const int slot = slotOf(c.id);
+      if (slot >= 0) { blocks_[slot].counterStep = 0; blocks_[slot].counterFired = false; }
       break;
     }
     case Command::Type::Relink: {  // R4a: replays a saved connection order
@@ -1392,15 +1397,24 @@ void Engine::logicHit(Block& b) noexcept {
     const long ticks = std::lround(wait * kTickRate);
     if (ticks <= 0) { firePulse(b); return; }
     if (b.pulseDelayCount < kMaxPulseDelays) b.pulseFireTick[static_cast<std::size_t>(b.pulseDelayCount++)] = tick_ + static_cast<std::uint32_t>(ticks);
+    return;
+  }
+  if (b.type == BlockType::PowerCounter) {  // R2c: a Pulse with a pattern; an active step pulses as a particle hit does
+    log(Event::Type::Logic, b.id);
+    if (advanceCounter(b)) pulseConnected(b, kPulseTicks);
   }
 }
 
 /// A Pulse fires: v1 Pulse powers the connected sources for `pulseLength` s (its slider); synced, `pulseBeats` at the
 /// current tempo (CHG-0004 3.5).
 void Engine::firePulse(Block& b) noexcept {
+  pulseConnected(b, static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
+    ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate)));
+}
+
+/// Power the blocks connected to power block `b` for `ticks`.
+void Engine::pulseConnected(Block& b, int ticks) noexcept {
   const auto& row = graph_.row(slotOf(b.id));
-  const int ticks = static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
-    ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate));
   for (int k = 0; k < orderCount_; ++k) {
     Block& s = blocks_[order_[k]];
     if (row[order_[k]] && isSourceSide(s.kind())) pulse(s, ticks);
@@ -1469,23 +1483,27 @@ void Engine::runLasers() noexcept {
   }
 }
 
-/// A Counter or Chance decides about one arriving hit (SIMULATION-0005). Counter: the Euclidean pattern E(hits, steps),
-/// read from `rotate`, one step per hit, unless its steps were set by hand (`pattern` ≥ 0, owner 2026-11-14). Chance: its own random stream (seeded by block id, as Granular's grains, so
+/// A Counter takes one hit (R2c): the Euclidean pattern E(hits, steps), read from `rotate`, one step per hit, unless
+/// its steps were set by hand (`pattern` ≥ 0). Returns whether the step was active.
+bool Engine::advanceCounter(Block& c) noexcept {
+  const int steps = std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::steps])), 1, 16);
+  const int hits = std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::hits])), 0, steps);
+  const int rotate = std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::rotate])), 0, 15);
+  const int at = (c.counterStep % steps + rotate) % steps;
+  const long mask = std::lround(c.params[P::PowerCounter::pattern]);
+  const bool active = mask >= 0 ? ((mask >> (c.counterStep % steps)) & 1) != 0 : (at * hits) % steps < hits;  // steps set by hand win
+  c.counterStep = (c.counterStep % steps + 1) % steps;
+  c.counterFired = active;
+  return active;
+}
+
+/// A Chance decides about one arriving hit (R5c): its own random stream (seeded by block id, as Granular's grains, so
 /// the patch seed stays visual-only).
 bool Engine::gateDecide(Block& g) noexcept {
   bool pass = true;
-  if (g.type == BlockType::PowerCounter) {
-    const int steps = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::steps])), 1, 16);
-    const int hits = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::hits])), 0, steps);
-    const int rotate = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::rotate])), 0, 15);
-    const int at = (g.gateStep % steps + rotate) % steps;
-    const long mask = std::lround(g.params[P::PowerCounter::pattern]);
-    pass = mask >= 0 ? ((mask >> (g.gateStep % steps)) & 1) != 0 : (at * hits) % steps < hits;  // steps set by hand win
-    g.gateStep = (g.gateStep % steps + 1) % steps;
-  } else if (g.type == BlockType::PowerChance) {
+  if (g.type == BlockType::PowerChance) {
     pass = static_cast<double>(g.grainRng.nextFloat()) < g.params[P::PowerChance::chance];
   }
-  g.gatePassed = pass;
   return pass;
 }
 
@@ -1583,7 +1601,7 @@ void Engine::resyncToTransport(double beat) noexcept {
     Block& b = blocks_[order_[k]];
     b.pulsePower = 0;
     b.pulseDelayCount = 0;
-    b.gateStep = 0;
+    b.counterStep = 0;
     if (b.type != BlockType::PowerEmitter) continue;
     b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
     b.emitCounter = 0;  // as when added (v1 ParticleEmitter.Init)
@@ -1712,7 +1730,7 @@ void Engine::runTick() noexcept {
       }
       const BlockKind kind = b.kind();
       if (kind == BlockKind::Gate) {
-        // R5c/R5d (CHG-0015): a gate acts on a particle as it enters (as an emitter catches one, R5b). A Counter or
+        // R5c/R5d (CHG-0015): a Chance or Prism acts on a particle as it enters (as an emitter catches one, R5b). A
         // Chance lets it carry on or absorbs it; a Prism turns it into its streams, sent off after this pass.
         if (p.fresh) continue;
         const auto& inf = b.info();
@@ -2198,7 +2216,7 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
     if (b.type == BlockType::FxCompressor) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
     else if (b.type == BlockType::FxLfo) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], 0.0f}};
     else if (b.type == BlockType::PowerSoundLaser) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
-    else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.gateStep), b.gatePassed ? 1.0f : 0.0f, 0.0f, 0.0f}};
+    else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.counterStep), b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};
   }
   return n;

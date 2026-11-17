@@ -5180,13 +5180,13 @@ export const BLOCKS: readonly BlockDef[] = [
   {
     "id": "power.counter",
     "category": "power",
-    "kind": "gate",
+    "kind": "logic",
     "name": "Counter",
-    "description": "Counts the particles and laser beams that reach it, and lets through only the ones on its pattern's steps.",
+    "description": "Counts the particles and laser beams that hit it, and gives a short fire of energy to sources, particle emitters & lasers on its pattern's steps.",
     "draft": false,
     "v1Type": null,
     "menuId": "Counter",
-    "catchment": 0,
+    "catchment": 6,
     "geometry": {
       "units": "grid",
       "unitsPerGrid": 14.999999999999998,
