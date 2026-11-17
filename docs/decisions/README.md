@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**63 decisions** · proposed: 15 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**64 decisions** · proposed: 16 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -118,3 +118,4 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [UI-0011](ui/UI-0011-labels-are-text-on-the-stage.md) | Labels are text on the stage | **proposed** | 2026-11-13 | ui, stage, post-2-0 |
 | [UI-0012](ui/UI-0012-a-stage-is-played-from-outside-through-its.md) | A Stage is played from outside through its controllers and Stage In | **accepted** | 2026-11-14 | stage, controllers, selection |
 | [UI-0013](ui/UI-0013-waveforms-zoom-as-a-view-window-over-v1-s-panel.md) | Waveforms zoom as a view window over v1's panel | **proposed** | 2026-11-15 | ui, options-panel, samples, post-2-0 |
+| [UI-0014](ui/UI-0014-the-envelope-graph-uses-a-curved-time-axis.md) | The Envelope graph uses a curved time axis | **proposed** | 2026-11-17 | ui, options-panel, envelope, post-2-0 |
