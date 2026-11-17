@@ -18,6 +18,8 @@ static_assert(P::SourceRecorder::playbackRate == P::SourceSample::playbackRate &
               P::SourceSampleGen::reverse == P::SourceSample::reverse, "sampler params must line up");
 namespace {
 bool isSampler(BlockType t) noexcept { return t == BlockType::SourceSample || t == BlockType::SourceRecorder || t == BlockType::SourceSampleGen; }
+/// Oscillator sources: the Tone and the Wavetable (CHG-0029) share Note and Fine, pitch and expression rules.
+bool isOscillator(BlockType t) noexcept { return t == BlockType::SourceTone || t == BlockType::SourceWavetable; }
 }  // namespace
 
 namespace {
@@ -27,6 +29,7 @@ constexpr double kDegToRad = 3.14159265358979323846 / 180.0;
 
 Engine::Engine(const EngineConfig& cfg)
     : sampleRate_(cfg.sampleRate), rng_(cfg.seed),
+      tables_(cfg.parent ? cfg.parent->tables_ : std::make_shared<const dsp::TableBank>(cfg.sampleRate)),
       wavetables_(cfg.parent ? cfg.parent->wavetables_ : std::make_shared<const dsp::WavetableBank>(cfg.sampleRate)),
       useCompressor_(cfg.masterCompressor && !cfg.child), hostInput_(cfg.hostInput), child_(cfg.child) {
   compressor_.configure(cfg.sampleRate);
@@ -268,13 +271,21 @@ void Engine::configureDsp(Block& b) noexcept {
   using T = dsp::Biquad::Type;
   switch (b.type) {
     case BlockType::SourceTone: case BlockType::SourceSample: case BlockType::SourceNoise:
-    case BlockType::SourceRecorder: case BlockType::SourceSampleGen: case BlockType::SourceGranular: {
+    case BlockType::SourceRecorder: case BlockType::SourceSampleGen: case BlockType::SourceGranular:
+    case BlockType::SourceWavetable: {
       const int slot = static_cast<int>(&b - blocks_.data());
       for (int v = 0; v < kVoices; ++v) {
         Voice& vo = b.voices[static_cast<std::size_t>(v)];
         if (first) vo.env.configure({}, sr);
         if (b.type == BlockType::SourceTone) vo.osc.setWaveform(static_cast<dsp::Waveform>(std::clamp(static_cast<int>(p[P::SourceTone::waveform]), 0, 3)));
+        if (b.type == BlockType::SourceWavetable) {  // CHG-0029: a new block starts where it is set; later moves glide
+          vo.tosc.setTable(std::clamp(static_cast<int>(std::lround(p[P::SourceWavetable::table])), 0, dsp::TableBank::kTables - 1));
+          vo.tosc.setGlide(gainGlide_);
+          vo.tosc.setPosition(p[P::SourceWavetable::position], first);
+        }
         if (b.type == BlockType::SourceNoise) vo.noise.setType(static_cast<int>(p[P::SourceNoise::waveform]));
+        // Position only moves the read point: no re-pitch, so an LFO on it never cuts a glide short.
+        if (b.type == BlockType::SourceWavetable && b.lastParam == P::SourceWavetable::position) continue;
         if (b.type != BlockType::SourceNoise) setPitch(slot, v, 0.0);  // v1 NoteUpdate: re-pitch with the new mods
       }
       break;
@@ -709,7 +720,7 @@ void Engine::applyExpression(const Command& c) noexcept {
         else if (dim == Command::Expression::Pressure) vo.exprGain = pressureOn ? vo.pressureFloor + (1.0 - vo.pressureFloor) * std::clamp(c.value, 0.0, 1.0) : vo.pressureFloor;
         else if (slideOn) {
           const double x = std::clamp(c.value, 0.0, 1.0);
-          if (b.type == BlockType::SourceTone) {
+          if (isOscillator(b.type)) {
             // Brightness: a one-pole low-pass from 78 Hz (slide 0) to 20 kHz (slide 1), 8 octaves.
             const double fc = 20000.0 * dmath::exp2((x - 1.0) * 8.0);
             vo.lpA = std::min(1.0, 1.0 - dmath::exp(-2.0 * 3.141592653589793 * fc / sampleRate_));
@@ -1161,8 +1172,10 @@ void Engine::setPitch(int slot, int v, double glide) noexcept {
   Voice& vo = b.voices[static_cast<std::size_t>(v)];
   const auto& p = b.params;
   double target = 0.0;
-  if (b.type == BlockType::SourceTone) {
-    const double semis = p[P::SourceTone::transpose] + p[P::SourceTone::fine];
+  if (isOscillator(b.type)) {
+    static_assert(P::SourceTone::transpose + 1 == P::SourceTone::fine && P::SourceWavetable::transpose + 1 == P::SourceWavetable::fine, "Note, Fine");
+    const int note = b.type == BlockType::SourceTone ? static_cast<int>(P::SourceTone::transpose) : static_cast<int>(P::SourceWavetable::transpose);
+    const double semis = p[static_cast<std::size_t>(note)] + p[static_cast<std::size_t>(note) + 1];
     // Power plays v1 Config.BaseNote; a controller key is midiToFrequency(key + controller mods + source mods).
     target = vo.key >= 0 ? 440.0 * dmath::exp2((vo.key + controllerMods(slot) + semis + vo.bend - 69.0) / 12.0) : kBaseNoteHz * dmath::exp2(semis / 12.0);
     if (vo.offset != 0.0) target *= dmath::exp2(vo.offset / 12.0);  // CHG-0017: a Chord's interval, an Arpeggiator's octave
@@ -1178,6 +1191,7 @@ void Engine::setPitch(int slot, int v, double glide) noexcept {
 
 void Engine::applyPitch(Block& b, Voice& vo) noexcept {
   if (b.type == BlockType::SourceTone) vo.osc.setFrequency(vo.pitch, *wavetables_);
+  else if (b.type == BlockType::SourceWavetable) vo.tosc.setFrequency(vo.pitch, *tables_, sampleRate_);
 }
 
 /// After the topology or a controller changes: voice count follows the connected controllers' polyphony (v1
@@ -1851,6 +1865,22 @@ void Engine::renderChain(int c, int n) noexcept {
             }
             double x = detuned ? vo.osc.next(detune_[i]) : vo.osc.next();
             if (vo.lpA < 1.0) x = vo.lpY += vo.lpA * (x - vo.lpY);  // MPE slide → brightness
+            chainL_[i] += static_cast<float>(x * vo.env.next() * kSourceGain * glideGain(vo));
+          }
+        }
+        break;
+      case BlockType::SourceWavetable:  // CHG-0029: the Tone's voice rules, reading the TableBank
+        for (int v = 0; v < kVoices; ++v) {
+          Voice& vo = b.voices[static_cast<std::size_t>(v)];
+          for (int i = 0; i < n; ++i) {
+            if (vo.glideLeft > 0) { vo.pitch = --vo.glideLeft ? vo.pitch + vo.glideStep : vo.glideTo; applyPitch(b, vo); }
+            if (!vo.env.active()) {
+              if (vo.glideLeft > 0) continue;
+              if (v == 0) vo.tosc.skip(n - i);
+              break;
+            }
+            double x = detuned ? vo.tosc.next(detune_[i]) : vo.tosc.next();
+            if (vo.lpA < 1.0) x = vo.lpY += vo.lpA * (x - vo.lpY);
             chainL_[i] += static_cast<float>(x * vo.env.next() * kSourceGain * glideGain(vo));
           }
         }

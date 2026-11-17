@@ -10,6 +10,7 @@
 | ID | Spec | Domain | Status | ADRs |
 |---|---|---|---|---|
 | [SPEC-AUDIO-V1-PARITY](domains/audio/v1-parity.md) | Audio parity with v1 | audio | **draft** | SCOPE-0004, PROCESS-0004, SIMULATION-0001, AUDIO-0001 |
+| [SPEC-AUDIO-WAVETABLE](domains/audio/wavetable.md) | The Wavetable block | audio | **draft** | AUDIO-0004, AUDIO-0001, SIMULATION-0001, DATA-0005, SCOPE-0005 |
 | [SPEC-CONNECTIONS-PROXIMITY](domains/connections/proximity.md) | Proximity connections | connections | **draft** | SIMULATION-0002, ARCHITECTURE-0002 |
 | [SPEC-PATCH-FORMAT-V2](domains/patch-format/patch-v2.md) | Patch format v2 | patch-format | **draft** | DATA-0001, DATA-0005, DATA-0004, SCOPE-0002, PLUGIN-0003 |
 | [SPEC-PROCESS-PRIVATE-OPERATIONAL-CONFIGURATION](domains/process/private-operational-configuration.md) | Private operational configuration | process | **active** | PROCESS-0005 |
@@ -51,3 +52,4 @@
 | [CHG-0026](changes/0026-usage-analytics/proposal.md) | Usage analytics | **proposed** | SPEC-SHARING-USAGE-ANALYTICS, SPEC-SHARING-BACKEND |
 | [CHG-0027](changes/0027-account-stats/proposal.md) | Account stats | **proposed** | SPEC-SHARING-ACCOUNTS |
 | [CHG-0028](changes/0028-waveform-zoom-in-the-options-panel/proposal.md) | Waveform zoom in the options panel | **proposed** | SPEC-VISUAL-V1-PARITY |
+| [CHG-0029](changes/0029-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |

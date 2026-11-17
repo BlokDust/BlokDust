@@ -1877,6 +1877,174 @@ export const BLOCKS: readonly BlockDef[] = [
     ]
   },
   {
+    "id": "source.wavetable",
+    "category": "source",
+    "kind": "audio-source",
+    "name": "Wavetable",
+    "description": "Plays built-in wavetables: bells, chimes, glass, gongs, voices and more. Position moves through the table; an LFO or Dust automation can sweep it.",
+    "draft": false,
+    "v1Type": null,
+    "menuId": "Wavetable",
+    "catchment": 0,
+    "geometry": {
+      "units": "grid",
+      "unitsPerGrid": 14.999999999999998,
+      "layers": [
+        {
+          "palette": 5,
+          "points": [
+            [
+              -2,
+              0
+            ],
+            [
+              -1,
+              -1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              -2,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "points": [
+            [
+              -2,
+              0
+            ],
+            [
+              -1,
+              -1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              -2,
+              1
+            ]
+          ]
+        },
+        {
+          "palette": 4,
+          "points": [
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "outline": [
+        [
+          -2,
+          0
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          -2,
+          1
+        ]
+      ],
+      "menuOffset": [
+        0,
+        0
+      ]
+    },
+    "params": [
+      {
+        "key": "table",
+        "default": 0,
+        "unit": "enum",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 8,
+          "k": 0
+        }
+      },
+      {
+        "key": "position",
+        "default": 0,
+        "unit": "ratio",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 1,
+          "k": 0
+        }
+      },
+      {
+        "key": "transpose",
+        "default": 0,
+        "unit": "semitones",
+        "ui": {
+          "transform": "Identity",
+          "min": -48,
+          "max": 48,
+          "k": 0
+        }
+      },
+      {
+        "key": "fine",
+        "default": 0,
+        "unit": "semitones",
+        "ui": {
+          "transform": "Identity",
+          "min": -1,
+          "max": 1,
+          "k": 0
+        }
+      }
+    ]
+  },
+  {
     "id": "fx.arpeggiator",
     "category": "effect",
     "kind": "pre-effect",
@@ -7184,6 +7352,6 @@ export const BLOCKS: readonly BlockDef[] = [
   }
 ] as const as unknown as readonly BlockDef[];
 
-export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller' | 'input.stage-in' | 'input.touchpad';
+export type BlockId = 'source.audio-in' | 'source.granular' | 'source.microphone' | 'source.noise' | 'source.recorder' | 'source.sample' | 'source.sample-gen' | 'source.stage' | 'source.tone' | 'source.wavetable' | 'fx.arpeggiator' | 'fx.auto-wah' | 'fx.bit-crusher' | 'fx.chomp' | 'fx.chopper' | 'fx.chord' | 'fx.chorus' | 'fx.compressor' | 'fx.convolver' | 'fx.distortion' | 'fx.envelope' | 'fx.eq' | 'fx.filter' | 'fx.lfo' | 'fx.phaser' | 'fx.pitch-shifter' | 'fx.random-note' | 'fx.reverb' | 'fx.scuzz' | 'fx.stereo-delay' | 'fx.vibrato' | 'fx.volume' | 'power.chance' | 'power.counter' | 'power.emitter' | 'power.laser' | 'power.power' | 'power.prism' | 'power.pulse' | 'power.sound-laser' | 'power.toggle' | 'power.void' | 'input.computer-keyboard' | 'input.midi-controller' | 'input.stage-in' | 'input.touchpad';
 
 export const BLOCKS_BY_ID: ReadonlyMap<string, BlockDef> = new Map(BLOCKS.map(b => [b.id, b]));

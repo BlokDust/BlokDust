@@ -1,0 +1,24 @@
+{
+  "description": "CHG-0029: Position swept by a synced LFO (SYNC table) and by a free one (SWEEP), FOLD moved by hand, PULSE held; Note and Fine changed while sounding.",
+  "render": { "seconds": 6, "sampleRate": 44100 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 9,
+    "blocks": [
+      { "id": "pw", "type": "power.power", "x": 0, "y": 0 },
+      { "id": "sync", "type": "source.wavetable", "x": 3, "y": 0, "params": { "table": 6, "position": 0.5, "transpose": -12 } },
+      { "id": "l1", "type": "fx.lfo", "x": 6, "y": 0, "params": { "target": "sync:position", "shape": 2, "sync": true, "division": 2, "depth": 1 } },
+      { "id": "sweep", "type": "source.wavetable", "x": -3, "y": 0, "params": { "table": 5, "position": 0.5, "transpose": -5 } },
+      { "id": "l2", "type": "fx.lfo", "x": -6, "y": 0, "params": { "target": "sweep:position", "rate": 0.4, "depth": 1 } },
+      { "id": "pw2", "type": "power.power", "x": 0, "y": 12 },
+      { "id": "fold", "type": "source.wavetable", "x": 3, "y": 12, "params": { "table": 7, "position": 0, "transpose": -24 } },
+      { "id": "pulse", "type": "source.wavetable", "x": -3, "y": 12, "params": { "table": 8, "position": 0.7, "transpose": 12 } }
+    ],
+    "tempo": 110
+  },
+  "script": [
+    { "atSample": 44100, "op": "set", "block": "fold", "param": "position", "value": 0.5 },
+    { "atSample": 88200, "op": "set", "block": "fold", "param": "position", "value": 1 },
+    { "atSample": 132300, "op": "set", "block": "pulse", "param": "transpose", "value": 7 },
+    { "atSample": 176400, "op": "set", "block": "sync", "param": "fine", "value": -0.5 }
+  ]
+}

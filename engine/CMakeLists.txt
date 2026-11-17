@@ -3,6 +3,7 @@ add_library(blokdust_engine STATIC
   src/connections.cpp
   src/convolver.cpp
   src/engine.cpp
+  src/tablebank.cpp
   src/wavetable.cpp
 )
 target_include_directories(blokdust_engine PUBLIC include)
@@ -71,6 +72,7 @@ if(BLOKDUST_BUILD_TESTS)
     tests/test_emitter_hit.cpp
     tests/test_granular.cpp
     tests/test_compressor.cpp
+    tests/test_wavetable_block.cpp
     tests/test_gates.cpp
     tests/test_sound_laser.cpp
     tests/test_note_effects.cpp

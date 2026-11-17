@@ -10,6 +10,7 @@
 #include "blokdust/effects.hpp"
 #include "blokdust/generated/blocks.gen.hpp"
 #include "blokdust/rng.hpp"
+#include "blokdust/tablebank.hpp"
 
 namespace blokdust {
 
@@ -27,6 +28,7 @@ struct Voice {
   std::uint64_t activeAt = 0;   // ActiveVoices order: the oldest is stolen
   dsp::Envelope env;
   dsp::Oscillator osc;
+  dsp::TableOscillator tosc;    // source.wavetable (CHG-0029)
   dsp::NoiseGen noise;
   double playhead = 0.0;        // source.sample: buffer frames
   bool samplePlaying = false;

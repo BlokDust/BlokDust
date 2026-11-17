@@ -6,10 +6,11 @@ import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
 import { App, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
 import { touchpadForm } from './touchpadPanel.ts';
+import { tablePicture } from '../engine/wasmEngine.ts';
 
 /** The new blocks in each v1 category (the menu then sorts each category by name). */
 const MENU: Record<string, string[]> = {
-  Source: ['source.stage'],
+  Source: ['source.stage', 'source.wavetable'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
   Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
   Interaction: ['input.touchpad', 'input.stage-in'],
@@ -138,7 +139,19 @@ export function convertSetting(key: string, value: number): { param: string; val
   return c ? { param: c.param, value: c.to(Number(value)), refresh: CONVERT_REFRESH.has(key) } : null;
 }
 
+/** The Wavetable's built-in tables, in the engine's order (TableBank::names, CHG-0029). */
+export const WAVETABLES = ['BELL', 'CHIME', 'GLASS', 'GONG', 'VOICE', 'SWEEP', 'SYNC', 'FOLD', 'PULSE'];
+
 const FORMS: Record<string, (b: FormBlock) => any[]> = {
+  // CHG-0029 (AUDIO-0004): the frame being played, drawn as v1 draws a waveform; then which table, where in it, and
+  // the Tone's Note and Fine rows.
+  'source.wavetable': b => [
+    slider('Wave', 'wavePicture', 0, 0, 1),
+    choice('Table', 'table', Number(b.Params.table), WAVETABLES),
+    slider('Position', 'position', Number(b.Params.position), 0, 1, { display: v => `${Math.round(v * 100)}%` }),
+    slider('Note', 'transpose', Number(b.Params.transpose), -48, 48, { quantised: true, centered: true, display: (b as any).DisplayNote }),
+    slider('Fine', 'fine', Number(b.Params.fine), -1, 1, { centered: true }),
+  ],
   // CHG-0014: a level meter with the threshold on it (v1's dB meter), then Web Audio's compressor settings.
   'fx.compressor': b => [
     slider('Level', 'compMeter', Number(b.Params.threshold), -60, 0, { display: dB }),  // its line is the Threshold
@@ -426,9 +439,54 @@ function counterPress(panel: any, mx: number, my: number): boolean {
   return true;
 }
 
+// ---- the Wavetable's picture (CHG-0029, SPEC-AUDIO-WAVETABLE R7) ----
+let tableModule: WebAssembly.Module | null = null;
+/** The engine module the pictures are drawn with (the app hands it over once loaded). */
+export function setTableModule(m: WebAssembly.Module): void { tableModule = m; }
+const pictures = new Map<string, Float32Array>();
+function pictureOf(table: number, position: number): Float32Array | null {
+  if (!tableModule) return null;
+  const key = `${table}:${Math.round(position * 512)}`;
+  let p = pictures.get(key);
+  if (!p) {
+    if (pictures.size > 256) pictures.clear();
+    p = tablePicture(tableModule, table, Math.round(position * 512) / 512, 200);
+    pictures.set(key, p);
+  }
+  return p;
+}
+/** v1 OptionWave's look (the Sample's waveform: divider, fill in palette 1, name on the left), but the wave itself,
+ * filled between it and the middle line: one cycle of the frame the block plays (two note cycles of a bell or gong).
+ * It reads the Position slider as shown, so it moves with an LFO or Dust automation. */
+const drawWavePicture: RowDraw = function (ctx, units, i, panel) {
+  const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;
+  const block = panel.SelectedBlock, dataType = Math.round(units * 10);
+  const posRow = (panel.Options as any[]).find(o => o.Setting === 'position');
+  const table = Math.max(0, Math.min(WAVETABLES.length - 1, Math.round(Number(block?.Params?.table ?? 0))));
+  const position = Math.max(0, Math.min(1, Number(posRow?.Value ?? block?.Params?.position ?? 0)));
+  ctx.globalAlpha = 1;
+  App.StrokeColor(ctx, App.Palette[1]);
+  if (i !== panel.Options.length - 1) { ctx.beginPath(); ctx.moveTo(x - units, y + h); ctx.lineTo(w + x + units, y + h); ctx.stroke(); }
+  const pic = pictureOf(table, position);
+  App.FillColor(ctx, App.Palette[1]);
+  if (pic) {
+    ctx.beginPath();
+    ctx.moveTo(x, mid);
+    pic.forEach((v, j) => ctx.lineTo(x + (w / (pic.length - 1)) * j, mid - v * h * 0.45));
+    ctx.lineTo(x + w, mid);
+    ctx.closePath();
+    ctx.fill();
+  } else App.AnimationsLayer.DrawSprite(ctx, 'loading', x + w * 0.5, mid, 11, true);  // v1's loading square
+  App.FillColor(ctx, App.Palette[App.ThemeManager.Txt]);
+  ctx.font = App.Metrics.TxtMid;
+  ctx.textAlign = 'right';
+  ctx.fillText(this.Name.toUpperCase(), x - 15 * units, mid + dataType * 0.4);
+  this.Shown = { table: WAVETABLES[table], position, drawn: !!pic, first: pic ? Array.from(pic.slice(0, 8)) : [] };  // tests
+};
+
 /** Live rows that are also sliders (dragged as v1 drags any slider). */
 const METER_ROWS = new Set(['compMeter', 'soundMeter']);
-const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, soundMeter: drawCompressorMeter, counterPattern: drawCounterPattern };
+const LIVE_ROWS: Record<string, RowDraw> = { compMeter: drawCompressorMeter, soundMeter: drawCompressorMeter, counterPattern: drawCounterPattern, wavePicture: drawWavePicture };
 
 /** A selected Prism's exit directions, drawn on the stage while its panel is open (as a Laser shows its beam): thin
  * dashed lines from the block, following its rotation. */

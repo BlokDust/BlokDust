@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**63 decisions** · proposed: 15 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**64 decisions** · proposed: 16 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -22,6 +22,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [AUDIO-0001](audio/AUDIO-0001-match-v1-sound-by-porting-chromium-web-audio.md) | Match v1 sound by porting Chromium Web Audio algorithms | **accepted** | 2026-11-06 | audio, parity, dsp, chromium |
 | [AUDIO-0002](audio/AUDIO-0002-note-effects-act-before-a-source-plays.md) | Note effects act before a source plays | **proposed** | 2026-11-13 | audio, notes, post-2-0 |
 | [AUDIO-0003](audio/AUDIO-0003-lfos-modulate-one-param-and-add-up.md) | LFOs modulate one param and add up | **proposed** | 2026-11-13 | audio, modulation, post-2-0 |
+| [AUDIO-0004](audio/AUDIO-0004-wavetable-block-with-built-in-tables.md) | Wavetable block with built-in tables | **proposed** | 2026-11-17 | audio, source, post-2-0 |
 
 ## [data](data/README.md)
 
