@@ -478,6 +478,7 @@ void Engine::apply(const Command& c) noexcept {
         for (int k = 0; k < orderCount_; ++k) {
           Block& b = blocks_[order_[k]];
           b.pulsePower = 0;
+          b.pulseDelayCount = 0;  // a Pulse's waiting hits go too (R2b)
           if (b.type == BlockType::PowerLaser || b.type == BlockType::PowerSoundLaser) releaseLaser(b);
         }
       }
@@ -1370,15 +1371,25 @@ void Engine::logicHit(Block& b) noexcept {
   }
   if (b.type == BlockType::PowerPulse) {
     log(Event::Type::Logic, b.id);
-    const auto& row = graph_.row(slotOf(b.id));
-    // v1 Pulse: each hit powers the connected sources for `pulseLength` s (its slider); synced, `pulseBeats` at the
-    // current tempo (CHG-0004 3.5).
-    const int ticks = static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
-      ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate));
-    for (int k = 0; k < orderCount_; ++k) {
-      Block& s = blocks_[order_[k]];
-      if (row[order_[k]] && isSourceSide(s.kind())) pulse(s, ticks);
-    }
+    // R2b (CHG-0029, SIMULATION-0010): with a Delay, the hit waits that long (`delayBeats` at the tempo when synced);
+    // each hit keeps its own wait, up to kMaxPulseDelays at once. 0 is v1: at once.
+    const bool synced = b.params[P::PowerPulse::sync] != 0.0;
+    const double wait = std::clamp(synced ? b.params[P::PowerPulse::delayBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::delay], 0.0, 60.0);
+    const long ticks = std::lround(wait * kTickRate);
+    if (ticks <= 0) { firePulse(b); return; }
+    if (b.pulseDelayCount < kMaxPulseDelays) b.pulseFireTick[static_cast<std::size_t>(b.pulseDelayCount++)] = tick_ + static_cast<std::uint32_t>(ticks);
+  }
+}
+
+/// A Pulse fires: v1 Pulse powers the connected sources for `pulseLength` s (its slider); synced, `pulseBeats` at the
+/// current tempo (CHG-0004 3.5).
+void Engine::firePulse(Block& b) noexcept {
+  const auto& row = graph_.row(slotOf(b.id));
+  const int ticks = static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
+    ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate));
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& s = blocks_[order_[k]];
+    if (row[order_[k]] && isSourceSide(s.kind())) pulse(s, ticks);
   }
 }
 
@@ -1557,6 +1568,7 @@ void Engine::resyncToTransport(double beat) noexcept {
   for (int k = 0; k < orderCount_; ++k) {
     Block& b = blocks_[order_[k]];
     b.pulsePower = 0;
+    b.pulseDelayCount = 0;
     b.gateStep = 0;
     if (b.type != BlockType::PowerEmitter) continue;
     b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
@@ -1585,6 +1597,18 @@ void Engine::runTick() noexcept {
     int n = 0;
     for (int i = 0; i < b.pulsePower; ++i) if (b.pulseEndTick[i] != tick_) b.pulseEndTick[n++] = b.pulseEndTick[i];
     b.pulsePower = n;
+  }
+  // 1a. Pulses whose waits end at this tick fire (R2b), in creation order, before the emitters and lasers they power run
+  for (int k = 0; k < orderCount_; ++k) {
+    Block& b = blocks_[order_[k]];
+    if (b.pulseDelayCount == 0) continue;
+    int n = 0, due = 0;
+    for (int i = 0; i < b.pulseDelayCount; ++i) {
+      const auto t = b.pulseFireTick[static_cast<std::size_t>(i)];
+      if (t == tick_) ++due; else b.pulseFireTick[static_cast<std::size_t>(n++)] = t;
+    }
+    b.pulseDelayCount = n;
+    for (int i = 0; i < due; ++i) firePulse(b);
   }
   // 2. emitters (v1 ParticleEmitter.Update, frame counts scaled to ticks)
   for (int k = 0; k < orderCount_; ++k) {

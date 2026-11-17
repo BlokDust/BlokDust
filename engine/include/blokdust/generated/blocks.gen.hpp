@@ -505,8 +505,10 @@ inline constexpr ParamInfo kParamsPowerPulse[] = {
   {"pulseLength", 0.15, true, UiTransform::Identity, 0.01, 2.0, 0.0},
   {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"pulseBeats", 0.25, true, UiTransform::Identity, 0.0625, 4.0, 0.0},
+  {"delay", 0.0, true, UiTransform::Identity, 0.0, 4.0, 0.0},
+  {"delayBeats", 0.0, true, UiTransform::Identity, 0.0, 4.0, 0.0},
 };
-namespace param::PowerPulse { enum : std::uint8_t { logic, pulseLength, sync, pulseBeats, Count }; }
+namespace param::PowerPulse { enum : std::uint8_t { logic, pulseLength, sync, pulseBeats, delay, delayBeats, Count }; }
 
 // ---- power.sound-laser (Sound Laser)
 inline constexpr GridPoint kOutlinePowerSoundLaser[] = {{-1.0f, 0.0f}, {0.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}};
@@ -622,7 +624,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, kParamsPowerPower, 2, true},
   {BlockType::PowerPrism, "power.prism", "", BlockKind::Gate, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
-  {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 4, true},
+  {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 6, true},
   {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 6, false},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},
   {BlockType::PowerVoid, "power.void", "Void", BlockKind::Void, 0.0f, kOutlinePowerVoid, 4, nullptr, 0, true},

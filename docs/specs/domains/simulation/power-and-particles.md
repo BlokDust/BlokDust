@@ -3,8 +3,8 @@ id: SPEC-SIMULATION-POWER-AND-PARTICLES
 title: Power, particles, lasers and logic
 status: draft
 domain: simulation
-adrs: [SIMULATION-0001, SIMULATION-0003]
-updated: 2026-11-05
+adrs: [SIMULATION-0001, SIMULATION-0003, SIMULATION-0010]
+updated: 2026-11-17
 ---
 # Power, particles, lasers and logic
 
@@ -16,6 +16,7 @@ Defines BlokDust's "physics": what powers a sound source, how particles and lase
 - **R1.** A source is *powered* while its power count > 0 (v1 `AddPower`/`RemovePower` counting). A powered audio source sounds (gate on); unpowered releases (gate off).
 - **R2.** `Power` powers every connected source while connected. `Toggle` powers connected sources only while its `on` state is true. `Pulse` powers connected sources for `pulseLength` seconds (default 0.15 s, v1 `Config.PulseLength`) each time it is triggered.
 - **R2a.** *(v2, SIMULATION-0009)* `Power` with `gapOnHit` on: a particle that hits it is consumed and a beam that arrives at it (once per arrival) cuts its power for `gap` s (≥ 1 tick; a new hit restarts it), so its sources let go and are struck again when it returns. Off (default), particles and beams pass through it as in v1.
+- **R2b.** *(v2, CHG-0029, SIMULATION-0010)* A `Pulse` with `delay` > 0 (synced: `delayBeats` > 0 at the tempo when hit) does not fire on the hit: it fires that long after it, at the start of the tick, powering the sources connected to it then for its length then. Each hit keeps its own wait (none restarts another), up to `kMaxPulseDelays` (16) per Pulse; more are dropped. The world POWER switch off and a transport start forget waiting hits. 0 (default) is R2. Tested in `test_pulse_delay.cpp` (golden `pulse-strum`).
 - **R3.** Emitters and Lasers run when powered or when `selfPowered` is true.
 
 **Particles**

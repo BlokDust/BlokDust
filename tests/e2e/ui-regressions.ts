@@ -744,7 +744,7 @@ Object.assign(tests, {
     const em = by('power.emitter'), pu = by('power.pulse'), la = by('power.laser'), de = by('fx.stereo-delay');
     const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
     const ok = eq(emitterOff, ['Angle', 'Tempo Sync', 'Fire Rate', 'Offset', 'P. Speed', 'Range']) && eq(emitterOn, ['Angle', 'Tempo Sync', 'Division', 'Swing', 'Offset', 'Range'])  // Offset: CHG-0014 &&
-      eq(pulseOff, ['Tempo Sync', 'Pulse length', 'Pulse On']) && eq(pulseOn, ['Tempo Sync', 'Length', 'Pulse On']) &&
+      eq(pulseOff, ['Tempo Sync', 'Pulse length', 'Delay', 'Pulse On']) && eq(pulseOn, ['Tempo Sync', 'Length', 'Delay', 'Pulse On'])  // Delay: CHG-0029 &&
       eq(laserOff, ['Angle', 'Tempo Sync', 'Rotate', 'Range']) && eq(laserOn, ['Angle', 'Tempo Sync', 'Turn', 'Range']) &&
       eq(delayOff, ['Tempo Sync', 'Delay Time', 'Feedback', 'Mix']) && eq(delayOn, ['Tempo Sync', 'Delay', 'Feedback', 'Mix']) &&
       de.sync === 1 && de.delayBeats === 0.75 && eq(freshDelay.slice(1), [true]) &&
