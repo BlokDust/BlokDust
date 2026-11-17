@@ -57,6 +57,8 @@ struct Block {
   int staticPower = 0;          // connected Power blocks (+ Toggle while on)
   int pulsePower = 0;           // active particle/Pulse pulses
   std::array<std::uint32_t, kMaxPulsesPerBlock> pulseEndTick{};
+  int pulseDelayCount = 0;      // power.pulse: hits waiting out its Delay (R2b, SIMULATION-0010) ...
+  std::array<std::uint32_t, kMaxPulseDelays> pulseFireTick{};  // ... and the tick each fires at
   int laserPower = 0;           // lasers currently hitting this block (continuous power while hit)
   int notePower = 0;            // 1 while a connected controller holds a note on this source (display only)
   int pressPower = 0;           // 1 while the pointer holds this source (v1 Source.MouseDown → AddPower)

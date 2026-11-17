@@ -5929,6 +5929,28 @@ export const BLOCKS: readonly BlockDef[] = [
           "max": 4,
           "k": 0
         }
+      },
+      {
+        "key": "delay",
+        "default": 0,
+        "unit": "s",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 4,
+          "k": 0
+        }
+      },
+      {
+        "key": "delayBeats",
+        "default": 0,
+        "unit": "beats",
+        "ui": {
+          "transform": "Identity",
+          "min": 0,
+          "max": 4,
+          "k": 0
+        }
       }
     ]
   },

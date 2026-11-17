@@ -76,6 +76,7 @@ if(BLOKDUST_BUILD_TESTS)
     tests/test_note_effects.cpp
     tests/test_lfo.cpp
     tests/test_stage.cpp
+    tests/test_pulse_delay.cpp
   )
   target_link_libraries(blokdust_engine_tests PRIVATE blokdust_engine Catch2::Catch2WithMain)
   # Shared MIDI/MPE streams (tests/mpe/*.json), also run by the web parser (PLUGIN-0004).

@@ -183,6 +183,7 @@ class Engine {
   void powerGap(Block& b) noexcept;
   static bool gapsOnHit(const Block& b) noexcept;
   void pulse(Block& b, int ticks) noexcept;
+  void firePulse(Block& b) noexcept;
   void updateGates() noexcept;
   static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;
   void keyAim(Block& b, int note, bool down, bool poly) noexcept;

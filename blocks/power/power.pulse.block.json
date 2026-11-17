@@ -165,6 +165,26 @@
         4
       ],
       "description": "Synced: pulse length in beats"
+    },
+    {
+      "key": "delay",
+      "default": 0,
+      "unit": "s",
+      "range": [
+        0,
+        4
+      ],
+      "description": "v2 (CHG-0029, SIMULATION-0010): each hit waits this long before it powers the sources; 0 = v1 (at once). Every hit keeps its own wait"
+    },
+    {
+      "key": "delayBeats",
+      "default": 0,
+      "unit": "beats",
+      "range": [
+        0,
+        4
+      ],
+      "description": "Synced: the wait in beats (0 = at once)"
     }
   ],
   "review": [

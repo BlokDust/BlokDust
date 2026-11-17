@@ -1,0 +1,17 @@
+{
+  "description": "CHG-0029 (R2b): a Prism splits each particle onto three Pulses waiting 0, 0.25 and 0.5 s, so one particle strums a chord.",
+  "render": { "seconds": 8, "sampleRate": 44100 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 5,
+    "blocks": [
+      { "id": "e", "type": "power.emitter", "x": -10, "y": 0, "params": { "angle": 0, "selfPoweredMode": true, "rate": 120, "speed": 6 } },
+      { "id": "pr", "type": "power.prism", "x": 0, "y": 0, "params": { "angle": 0, "streams": 3, "spread": 60 } },
+      { "id": "p1", "type": "power.pulse", "x": 17.32, "y": -10, "params": { "delay": 0, "pulseLength": 0.4 } },
+      { "id": "p2", "type": "power.pulse", "x": 20, "y": 0, "params": { "delay": 0.25, "pulseLength": 0.4 } },
+      { "id": "p3", "type": "power.pulse", "x": 17.32, "y": 10, "params": { "delay": 0.5, "pulseLength": 0.4 } },
+      { "id": "t1", "type": "source.tone", "x": 20.78, "y": -12, "params": { "waveform": 0 } },
+      { "id": "t2", "type": "source.tone", "x": 24, "y": 0, "params": { "waveform": 0, "transpose": 4 } },
+      { "id": "t3", "type": "source.tone", "x": 20.78, "y": 12, "params": { "waveform": 0, "transpose": 7 } }
+    ]
+  }
+}

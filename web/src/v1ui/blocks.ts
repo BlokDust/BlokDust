@@ -126,6 +126,12 @@ export class V1Block {
       App.MainScene.setParam(this, 'delayBeats', beats);
       return;
     }
+    if (key === 'pulseDelayIndex') {  // a synced Pulse's Delay (CHG-0029)
+      const beats = PULSE_DELAY_STEPS[Math.max(0, Math.min(PULSE_DELAY_STEPS.length - 1, Math.round(Number(value))))].beats;
+      this.Params.delayBeats = beats; this.Params.pulseDelayIndex = Math.round(Number(value));
+      App.MainScene.setParam(this, 'delayBeats', beats);
+      return;
+    }
     if (key === 'divisionIndex' || key === 'lengthIndex') {
       const beats = BEAT_STEPS[Math.max(0, Math.min(BEAT_STEPS.length - 1, Math.round(Number(value))))].beats;
       const target = key === 'divisionIndex' ? 'division' : 'pulseBeats';
@@ -257,6 +263,8 @@ const DELAY_STEPS = [
   { beats: 0.375, label: '1/16D' }, { beats: 0.5, label: '1/8' }, { beats: 2 / 3, label: '1/4T' }, { beats: 0.75, label: '1/8D' },
   { beats: 1, label: '1/4' }, { beats: 4 / 3, label: '1/2T' }, { beats: 1.5, label: '1/4D' }, { beats: 2, label: '1/2' },
 ];
+/** A synced Pulse's Delay (CHG-0029): off, then the musical lengths up to a bar. */
+const PULSE_DELAY_STEPS = [{ beats: 0, label: 'OFF' }, ...BEAT_STEPS.filter(s => s.beats <= 4)];
 /** Blocks with a Tempo Sync switch. */
 const SYNCED = new Set(['power.emitter', 'power.pulse', 'power.laser', 'fx.stereo-delay']);
 
@@ -279,7 +287,10 @@ function extendSyncForm(b: V1Block): void {
       synced.push(stepSlider('Division', 'divisionIndex', BEAT_STEPS, stepOf(Number(b.Params.division ?? 1))));
       synced.push({ type: 'slider', name: 'Swing', setting: 'swing', props: { value: Number(b.Params.swing ?? 0), min: 0, max: 1, quantised: false, centered: false,
         convertDisplay: (v: number) => `${Math.round(v * 100)}%` } });
-    } else if (kind === 'pulse') synced.push(stepSlider('Length', 'lengthIndex', BEAT_STEPS, stepOf(Number(b.Params.pulseBeats ?? 0.25))));
+    } else if (kind === 'pulse') {
+      synced.push(stepSlider('Length', 'lengthIndex', BEAT_STEPS, stepOf(Number(b.Params.pulseBeats ?? 0.25))));
+      synced.push(stepSlider('Delay', 'pulseDelayIndex', PULSE_DELAY_STEPS, nearest(PULSE_DELAY_STEPS, Number(b.Params.delayBeats ?? 0))));
+    }
     else if (kind === 'delay') synced.push(stepSlider('Delay', 'delayIndex', DELAY_STEPS, nearest(DELAY_STEPS, Number(b.Params.delayBeats ?? 0.5))));
     else synced.push(stepSlider('Turn', 'turnIndex', SIGNED_TURNS, nearest(SIGNED_TURNS, Number(b.Params.turnBeats ?? 4)), true));
   }
@@ -291,6 +302,12 @@ function extendSyncForm(b: V1Block): void {
       convertDisplay: (v: number) => `${Math.round(v * 100)}%` } };
     if (b.Params.sync) synced.push(offset);
     else kept.splice(kept.findIndex(p => p.setting === 'rate') + 1, 0, offset);
+  }
+  if (kind === 'pulse' && !b.Params.sync) {
+    // Delay (CHG-0029, SIMULATION-0010): each hit waits this long before it powers the sources; after Pulse length.
+    kept.splice(kept.findIndex(p => p.setting === 'pulseLength') + 1, 0, { type: 'slider', name: 'Delay', setting: 'delay',
+      props: { value: Number(b.Params.delay ?? 0), min: 0, max: 4, quantised: false, centered: false,
+        convertDisplay: (v: number) => (v < 0.005 ? 'OFF' : v < 1 ? `${Math.round(v * 1000)} ms` : `${v.toFixed(2)} s`) } });
   }
   // Pulse and Stereo Delay: their first row (Pulse length, Delay Time) is hidden when synced, so the sync rows go first.
   const at = kind === 'pulse' || kind === 'delay' ? 0 : 1;

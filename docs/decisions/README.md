@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**63 decisions** · proposed: 15 · accepted: 42 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**64 decisions** · proposed: 15 · accepted: 43 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -100,6 +100,7 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0007](simulation/SIMULATION-0007-sound-can-drive-the-simulation.md) | Sound can drive the simulation (Sound Laser) | **proposed** | 2026-11-13 | simulation, audio, determinism, post-2-0 |
 | [SIMULATION-0008](simulation/SIMULATION-0008-every-particle-hit-strikes-the-source-again.md) | Every particle hit strikes the source again | **accepted** | 2026-11-14 | particles, power, v1-deviation |
 | [SIMULATION-0009](simulation/SIMULATION-0009-a-power-block-can-be-cut-by-hits.md) | A Power block can be cut by hits | **accepted** | 2026-11-14 | power, particles, lasers, v1-deviation |
+| [SIMULATION-0010](simulation/SIMULATION-0010-a-pulse-can-wait-before-it-fires.md) | A Pulse can wait before it fires | **accepted** | 2026-11-17 | power, pulse, timing, v1-extension |
 
 ## [ui](ui/README.md)
 

@@ -18,6 +18,7 @@ static_assert(kPulseTicks == static_cast<int>(kPulseSeconds * kTickRate + 0.5));
 inline constexpr int kMaxBlocks = 512;
 inline constexpr int kMaxParticles = 4096;
 inline constexpr int kMaxPulsesPerBlock = 64;
+inline constexpr int kMaxPulseDelays = 16;  // a Pulse's hits waiting out its Delay (R2b); more are dropped
 inline constexpr int kCommandQueueCapacity = 1024;
 inline constexpr int kEventLogCapacity = 1 << 16;
 inline constexpr int kMaxSegment = 1024;

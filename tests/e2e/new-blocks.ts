@@ -289,6 +289,42 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
       guide?.length === 1 && guide[0][0] > 0 && Math.abs(guide[0][1]) < 1;
     return [pass, { off, on, gapSaved, snapped, fine, guide }];
   },
+  // CHG-0029 (R2b, SIMULATION-0010): the Pulse's Delay row (seconds; musical steps when synced) is saved and reaches
+  // the engine: the same patch sounds `delay` later.
+  async 'pulse-delay'(errors) {
+    const scene = (delay: number) => [blk('e', 'power.emitter', -10, 0, { angle: 0, selfPoweredMode: true, speed: 6, rate: 200 }),
+      blk('pu', 'power.pulse', 0, 0, { delay, pulseLength: 0.3 }), blk('t', 'source.tone', 0, 5)];
+    /** Seconds from START until it first sounds. */
+    const onset = async (p: Page) => {
+      const t0 = Date.now();
+      while (Date.now() - t0 < 6000) { if ((await state(p)).rms > 0.002) return (Date.now() - t0) / 1000; await p.waitForTimeout(20); }
+      return -1;
+    };
+    const p0 = await open(browser, scene(0), errors);
+    const at0 = await onset(p0);
+    await p0.close();
+    const p = await open(browser, scene(1), errors);
+    const at1 = await onset(p);
+    await openPanel(p, 'pu');
+    const free = (await rows(p)).map(x => x.type === 'switches' ? 'switches' : x.name);
+    const drag = await rowPoint(p, 'delay', 0.5);  // half of 0–4 s
+    await p.mouse.move(drag[0] - 30, drag[1]); await p.mouse.down(); await p.mouse.move(drag[0], drag[1], { steps: 4 }); await p.mouse.up();
+    await p.waitForTimeout(300);
+    const dragged = (await state(p)).patch.blocks.find((b: any) => b.id === 'pu').params.delay;
+    await p.screenshot({ path: `${OUT}/pulse-delay.png` });
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('sync', true));
+    await p.waitForTimeout(300);
+    const synced = (await rows(p)).map(x => x.type === 'switches' ? 'switches' : x.name);
+    await p.evaluate(() => (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.SetParam('pulseDelayIndex', 6));  // 1/8
+    await p.waitForTimeout(300);
+    const saved = (await state(p)).patch.blocks.find((b: any) => b.id === 'pu').params;
+    await p.close();
+    const late = at1 - at0;
+    const pass = at0 > 0 && at1 > 0 && Math.abs(late - 1) < 0.3 &&
+      free.join() === 'switches,Pulse length,Delay,switches' && synced.join() === 'switches,Length,Delay,switches' &&
+      Math.abs(dragged - 2) < 0.3 && saved.delayBeats === 0.5 && (saved.sync === 1 || saved.sync === true);
+    return [pass, { at0, at1, late, free, synced, dragged, saved: { delay: saved.delay, delayBeats: saved.delayBeats, sync: saved.sync } }];
+  },
   // Owner 2026-11-14 (R13b): a Stage's panel has Keep Particles (off by default); the switch is saved with the patch.
   async 'stage-keep-particles'(errors) {
     const p = await open(browser, [blk('st', 'source.stage', 0, 0)], errors);
