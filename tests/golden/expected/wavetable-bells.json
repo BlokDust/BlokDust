@@ -1,6 +1,6 @@
 {
-  "audioHash": "eb3933d16f6d43c0",
-  "eventHash": "c59bf40a596dc5ed",
+  "audioHash": "ccc715c39626e821",
+  "eventHash": "28ae36648fe4b9c7",
   "eventCount": 33,
   "events": {
     "connect": 4,
@@ -11,6 +11,6 @@
   },
   "frames": 288000,
   "sampleRate": 48000,
-  "rms": 0.028231,
-  "peak": 0.156324
+  "rms": 0.028357,
+  "peak": 0.153438
 }
