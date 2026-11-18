@@ -3,13 +3,15 @@
   "id": "power.chance",
   "draft": false,
   "category": "power",
-  "kind": "gate",
+  "kind": "logic",
   "name": "Chance",
-  "description": "Lets each particle or laser beam through at random, as often as its chance says.",
+  "description": "Fires at random: each particle or laser beam that hits it may give a short fire of energy to sources, particle emitters & lasers, as often as its chance says.",
   "v1": {
     "type": null
   },
-  "connection": null,
+  "connection": {
+    "catchment": 6
+  },
   "geometry": {
     "units": "grid",
     "unitsPerGrid": 14.999999999999998,
@@ -118,7 +120,7 @@
         0,
         1
       ],
-      "description": "Probability a hit passes"
+      "description": "Probability a hit fires"
     }
   ]
 }

@@ -83,9 +83,6 @@ struct Block {
   // ---- laser (power.laser) ----
   std::bitset<kMaxBlocks> laserHits;  // slots this laser hit on the last tick
   bool beamOn = false;
-  // Gates in its beams' paths (CHG-0015): the ones reached on the last tick, and whether each let the beam through
-  // (a Counter or Chance decides once, when a beam arrives, SIMULATION-0005).
-  std::bitset<kMaxBlocks> gateHits, gateOpen;
   // ---- modulation (CHG-0018, AUDIO-0003): params an LFO is moving (a bit each) and the values they are set to ----
   std::uint32_t modMask = 0;
   std::array<double, gen::kMaxParams> modBase{};
@@ -179,6 +176,8 @@ struct Particle {
 
 /// Is `kind` on the source side of a proximity connection?
 constexpr bool isSourceSide(BlockKind k) noexcept { return k == BlockKind::AudioSource || k == BlockKind::PowerSource; }
+/// Does a power block (Power, Toggle, Pulse, Counter, Chance) next to `kind` power it? Sources, and the Gate (CHG-0032).
+constexpr bool takesPower(BlockKind k) noexcept { return isSourceSide(k) || k == BlockKind::Gate; }
 /// Is `kind` on the effect side (has a catchment)?
 constexpr bool isEffectSide(BlockKind k) noexcept {
   return k == BlockKind::PreEffect || k == BlockKind::PostEffect || k == BlockKind::PowerEffect || k == BlockKind::Logic ||
@@ -191,7 +190,9 @@ constexpr bool isPowerEffectLike(BlockKind k) noexcept {
 }
 /// SPEC-CONNECTIONS-PROXIMITY R2/R3: which source/effect kind pairs may connect.
 constexpr bool kindsMayConnect(BlockKind source, BlockKind effect) noexcept {
-  if (!isSourceSide(source) || !isEffectSide(effect)) return false;
+  if (!takesPower(source) || !isEffectSide(effect)) return false;
+  // A Gate (CHG-0032, SIMULATION-0011) takes power from power blocks only.
+  if (source == BlockKind::Gate) return effect == BlockKind::PowerEffect || effect == BlockKind::Logic;
   // A listener (Sound Laser, CHG-0016) hears audio sources only.
   if (effect == BlockKind::Listener) return source == BlockKind::AudioSource;
   // Emitters and Lasers also take keyboards (owner review 2, beyond v1): a held key powers them, its note aims them.

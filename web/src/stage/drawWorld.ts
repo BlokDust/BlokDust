@@ -10,7 +10,8 @@ import { gridToPx, type Metrics } from './metrics.ts';
 export interface StageBlock { id: number; type: string; x: number; y: number; starPos?: { x: number; y: number } }
 export interface DrawnBlock { block: StageBlock; def: BlockDef }
 
-const isSourceKind = (d: BlockDef) => d.kind === 'audio-source' || d.kind === 'power-source';
+// The Gate (CHG-0032) takes power as a source does: its lines run from it, thick while it is powered.
+const isSourceKind = (d: BlockDef) => d.kind === 'audio-source' || d.kind === 'power-source' || d.kind === 'gate';
 
 /** v1 ConnectionLines: palette[15], 1 px unpowered then 2 px powered, each line routed source → effect. */
 export function drawConnections(ctx: CanvasRenderingContext2D, m: Metrics, theme: Theme, blocks: ReadonlyMap<number, DrawnBlock>, pairs: Uint32Array, powered: ReadonlySet<number>): void {

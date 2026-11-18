@@ -17,14 +17,15 @@ opens it then runs through and can never close it.
 
 ## Decision
 We will add a **Gate** (`power.gate`, Power menu): a Void that power opens.
-- It is controlled only by proximity power: it connects to Power, Toggle, Pulse and Counter, like an Emitter or Laser,
-  and to nothing else. Particles and beams that reach it never switch it.
+- It is controlled only by proximity power: it connects to Power, Toggle, Pulse, Counter and Chance, like an Emitter
+  or Laser, and to nothing else. Particles and beams that reach it never switch it.
 - Unpowered it is closed and acts as Void (absorbs particles, stops beams). Powered it is open: particles and beams
   pass as if it were not there. `invert` swaps the two.
 - Its state is read every tick: a particle is decided as it enters, a beam is cut or let through on each tick.
 
 ## Consequences
-- Signals can stop signals, so Toggles, Counters and Gates together make any on/off logic a patch needs.
+- Signals can stop signals, so Toggles, Counters and Gates together make any on/off logic a patch needs; a Chance
+  beside a Gate lets things through at random.
 - A Toggle hit by one laser can open a Gate in another laser's path: section switching without new routing.
 - Its look comes from the block designer (owner), like the other post-2.0 blocks.
 

@@ -71,7 +71,7 @@ struct Command {
 };
 
 struct Event {
-  /// Pass / Block (CHG-0015): a Counter or Chance let a particle or beam through, or stopped it (`other`: the laser).
+  /// Pass / Block (CHG-0015): a Chance's roll for a hit: it fired, or it did not.
   /// Split: a Prism turned a particle into its streams.
   enum class Type : std::uint8_t { Emit, Hit, Absorb, Expire, GateOn, GateOff, Connect, Disconnect, Logic, Pass, Block, Split };
   std::int64_t sample;   // absolute sample index (always a tick boundary)
@@ -196,8 +196,9 @@ class Engine {
   void keyAim(Block& b, int note, bool down, bool poly) noexcept;
   void resyncToTransport(double beat) noexcept;
   void runLasers() noexcept;
-  void traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, std::bitset<kMaxBlocks>& gates, std::bitset<kMaxBlocks>& open, double& firstStop) noexcept;
-  bool gateDecide(Block& g) noexcept;
+  void traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, double& firstStop) noexcept;
+  bool chanceRoll(Block& c) noexcept;
+  bool gateOpen(const Block& g) const noexcept;
   void logicHit(Block& b) noexcept;
   void applyNote(const Command& c) noexcept;
   void applyExpression(const Command& c) noexcept;

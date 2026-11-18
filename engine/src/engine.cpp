@@ -1310,7 +1310,7 @@ void Engine::recomputeStaticPower() noexcept {
     const auto& row = graph_.row(order_[k]);
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
-      if (row[s] && isSourceSide(blocks_[s].kind())) blocks_[s].staticPower++;
+      if (row[s] && takesPower(blocks_[s].kind())) blocks_[s].staticPower++;
     }
   }
 }
@@ -1394,6 +1394,12 @@ void Engine::beamStrike(Block& b) noexcept {
   else if (heldOnlyByHits(b)) b.restrike = true;
 }
 
+/// A Gate is open (R5c, SIMULATION-0011) while a power block powers it; `invert` swaps that. Never switched by hits.
+bool Engine::gateOpen(const Block& g) const noexcept {
+  const bool powered = worldPower_ && g.staticPower + g.pulsePower > 0;
+  return powered != (g.params[P::PowerGate::invert] != 0.0);
+}
+
 /// A Power with Gap on hit (owner, 2026-11-14): a Power that hits cut, rather than pass through.
 bool Engine::gapsOnHit(const Block& b) noexcept { return b.type == BlockType::PowerPower && b.params[P::PowerPower::gapOnHit] != 0.0; }
 
@@ -1426,6 +1432,13 @@ void Engine::logicHit(Block& b) noexcept {
   if (b.type == BlockType::PowerCounter) {  // R2c: a Pulse with a pattern; an active step pulses as a particle hit does
     log(Event::Type::Logic, b.id);
     if (advanceCounter(b)) pulseConnected(b, kPulseTicks);
+    return;
+  }
+  if (b.type == BlockType::PowerChance) {  // R2d: a Pulse that fires at random; a pass pulses as a particle hit does
+    log(Event::Type::Logic, b.id);
+    const bool pass = chanceRoll(b);
+    log(pass ? Event::Type::Pass : Event::Type::Block, b.id);
+    if (pass) pulseConnected(b, kPulseTicks);
   }
 }
 
@@ -1441,7 +1454,7 @@ void Engine::pulseConnected(Block& b, int ticks) noexcept {
   const auto& row = graph_.row(slotOf(b.id));
   for (int k = 0; k < orderCount_; ++k) {
     Block& s = blocks_[order_[k]];
-    if (row[order_[k]] && isSourceSide(s.kind())) { strikeAgain(s); pulse(s, ticks); }  // SIMULATION-0012
+    if (row[order_[k]] && takesPower(s.kind())) { strikeAgain(s); pulse(s, ticks); }  // SIMULATION-0012
   }
 }
 
@@ -1451,7 +1464,6 @@ void Engine::releaseLaser(Block& laser) noexcept {
     if (laser.laserHits[static_cast<std::size_t>(order_[k])] && t.kind() != BlockKind::Logic && t.laserPower > 0) t.laserPower--;
   }
   laser.laserHits.reset();
-  laser.gateHits.reset(); laser.gateOpen.reset();
   laser.beamOn = false;
 }
 
@@ -1496,9 +1508,9 @@ void Engine::runLasers() noexcept {
       l.params[P::PowerLaser::angle] = a;
     }
     const double len = l.params[P::PowerLaser::range] / kV1UnitsPerGrid;
-    std::bitset<kMaxBlocks> hits, gates, open;
+    std::bitset<kMaxBlocks> hits;
     double stop = 1.0;
-    traceBeam(order_[k], l.params[P::PowerLaser::angle], len, hits, gates, open, stop);
+    traceBeam(order_[k], l.params[P::PowerLaser::angle], len, hits, stop);
     for (int i = 0; i < orderCount_; ++i) {  // newly hit, in creation order
       const int s = order_[i];
       const bool was = l.laserHits[static_cast<std::size_t>(s)];
@@ -1515,7 +1527,6 @@ void Engine::runLasers() noexcept {
       if (l.laserHits[static_cast<std::size_t>(s)] && !hits[static_cast<std::size_t>(s)] && blocks_[s].kind() != BlockKind::Logic && blocks_[s].type != BlockType::PowerPower && blocks_[s].laserPower > 0) blocks_[s].laserPower--;
     }
     l.laserHits = hits;
-    l.gateHits = gates; l.gateOpen = open;
     l.beamOn = true;
     l.beamLength = len * stop;
   }
@@ -1535,22 +1546,16 @@ bool Engine::advanceCounter(Block& c) noexcept {
   return active;
 }
 
-/// A Chance decides about one arriving hit (R5c): its own random stream (seeded by block id, as Granular's grains, so
-/// the patch seed stays visual-only).
-bool Engine::gateDecide(Block& g) noexcept {
-  bool pass = true;
-  if (g.type == BlockType::PowerChance) {
-    pass = static_cast<double>(g.grainRng.nextFloat()) < g.params[P::PowerChance::chance];
-  }
-  return pass;
+/// A Chance rolls for one hit (R2d): its own random stream (seeded by block id, as Granular's grains, so the patch seed
+/// stays visual-only).
+bool Engine::chanceRoll(Block& c) noexcept {
+  return static_cast<double>(c.grainRng.nextFloat()) < c.params[P::PowerChance::chance];
 }
 
-/// One laser's beams (SPEC-SIMULATION R7, R7a). A beam runs to the nearest thing that stops it: a Void, a Counter or
-/// Chance that is closed to it, or a Prism, where it carries on as the Prism's streams with the length it has left
-/// (SIMULATION-0006). Every source and logic block a beam crosses before that is hit. Never through the same Prism
+/// One laser's beams (SPEC-SIMULATION R7, R7a). A beam runs to the nearest thing that stops it: a Void or a Prism,
+/// where it carries on as the Prism's streams with the length it has left (SIMULATION-0006). Every source and logic block a beam crosses before that is hit. Never through the same Prism
 /// twice on one path, nor through more than kMaxPrismDepth; at most kMaxBeamSegments beams per laser.
-void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, std::bitset<kMaxBlocks>& gates,
-                       std::bitset<kMaxBlocks>& open, double& firstStop) noexcept {
+void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, double& firstStop) noexcept {
   struct Seg { double x0, y0, angle, len; int depth; std::array<std::int16_t, kMaxPrismDepth> via; };
   std::array<Seg, kMaxBeamSegments> stack;
   int sp = 0, cast = 0;
@@ -1569,13 +1574,13 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
       for (int i = 0; i < orderCount_; ++i) {
         const int s = order_[i];
         const Block& v = blocks_[s];
-        if ((v.kind() != BlockKind::Void && v.kind() != BlockKind::Gate) || seen[static_cast<std::size_t>(s)]) continue;
+        if ((v.kind() != BlockKind::Void && v.kind() != BlockKind::Path && !(v.kind() == BlockKind::Gate && !gateOpen(v))) || seen[static_cast<std::size_t>(s)]) continue;
         if (segmentPolygonFirstHit(seg.x0, seg.y0, x1, y1, v.info().outline, v.info().outlineCount, v.x, v.y, t) && t < bestT) { best = s; bestT = t; }
       }
       if (best < 0) break;
       seen.set(static_cast<std::size_t>(best));
       Block& g = blocks_[static_cast<std::size_t>(best)];
-      if (g.kind() == BlockKind::Void) { stop = bestT; break; }
+      if (g.kind() == BlockKind::Void || g.kind() == BlockKind::Gate) { stop = bestT; break; }  // a closed Gate is a Void
       if (g.type == BlockType::PowerPrism) {
         bool been = seg.depth >= kMaxPrismDepth;
         for (int d = 0; d < seg.depth && !been; ++d) been = seg.via[static_cast<std::size_t>(d)] == best;
@@ -1583,14 +1588,6 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
         stop = bestT; prism = best;
         break;
       }
-      // Counter / Chance: decided when the beam arrives, kept while it stays (and shared by this laser's beams).
-      bool isOpen;
-      if (gates[static_cast<std::size_t>(best)]) isOpen = open[static_cast<std::size_t>(best)];
-      else if (l.gateHits[static_cast<std::size_t>(best)]) isOpen = l.gateOpen[static_cast<std::size_t>(best)];
-      else { isOpen = gateDecide(g); log(isOpen ? Event::Type::Pass : Event::Type::Block, g.id, l.id); }
-      gates.set(static_cast<std::size_t>(best));
-      open.set(static_cast<std::size_t>(best), isOpen);
-      if (!isOpen) { stop = bestT; break; }
     }
     if (first) firstStop = stop;
     const double ex = seg.x0 + (x1 - seg.x0) * stop, ey = seg.y0 + (y1 - seg.y0) * stop;
@@ -1778,24 +1775,19 @@ void Engine::runTick() noexcept {
         continue;
       }
       const BlockKind kind = b.kind();
-      if (kind == BlockKind::Gate) {
-        // R5c/R5d (CHG-0015): a Chance or Prism acts on a particle as it enters (as an emitter catches one, R5b). A
-        // Chance lets it carry on or absorbs it; a Prism turns it into its streams, sent off after this pass.
+      if (kind == BlockKind::Path) {
+        // R5d (CHG-0015): a Prism turns a particle into its streams as it enters (as an emitter catches one, R5b), sent
+        // off after this pass.
         if (p.fresh) continue;
         const auto& inf = b.info();
         if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y)) continue;
         if (pointInPolygon(p.x - p.vx, p.y - p.vy, inf.outline, inf.outlineCount, b.x, b.y)) continue;
-        if (b.type == BlockType::PowerPrism) {
-          consumed = true;
-          log(Event::Type::Split, b.id);
-          if (splitCount < static_cast<int>(splits.size())) splits[static_cast<std::size_t>(splitCount++)] = {order_[k], std::sqrt(p.vx * p.vx + p.vy * p.vy), p.life};
-        } else if (gateDecide(b)) {
-          log(Event::Type::Pass, b.id);
-          break;  // through: nothing under the gate sees it this tick
-        } else { consumed = true; log(Event::Type::Block, b.id); }
+        consumed = true;
+        log(Event::Type::Split, b.id);
+        if (splitCount < static_cast<int>(splits.size())) splits[static_cast<std::size_t>(splitCount++)] = {order_[k], std::sqrt(p.vx * p.vx + p.vy * p.vy), p.life};
         continue;
       }
-      const bool absorbs = kind == BlockKind::Void;
+      const bool absorbs = kind == BlockKind::Void || (kind == BlockKind::Gate && !gateOpen(b));  // R5c: a closed Gate
       const bool gaps = gapsOnHit(b);
       const bool reacts = isSourceSide(kind) || kind == BlockKind::Logic || gaps;
       if (!absorbs && !reacts) continue;
@@ -2266,6 +2258,7 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
     else if (b.type == BlockType::FxLfo) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], 0.0f}};
     else if (b.type == BlockType::PowerSoundLaser) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.counterStep), b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
+    else if (b.type == BlockType::PowerGate) out[n++] = {b.id, {gateOpen(b) ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};
   }
   return n;

@@ -35,7 +35,7 @@ import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene, hideLinks } from '../v1ui/scene.ts';
 import { COPY as PATCH_COPY } from '../v1ui/patches.ts';
 import { V1Block } from '../v1ui/blocks.ts';
-import { LABEL_MENU_ID, setMenuHidden, setMonitors, setTableModule } from '../v1ui/newBlocks.ts';
+import { LABEL_MENU_ID, openGateIds, setMenuHidden, setMonitors, setTableModule } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { moveWavePinch, snapshotWave, startWavePinch, waveRowAt, wheelWave, type WavePinch } from '../v1ui/waveZoom.ts';
 import { Waveform } from '../v1ui/ported/Core/Audio/Waveform';
@@ -1897,6 +1897,7 @@ async function main() {
     stage.setParticles(s.particles);
     scene.setPlayheads(s.playheads ?? new Float32Array(0));
     setMonitors(s.monitors ?? new Float32Array(0));
+    stage.setOpenGates(openGateIds(s.monitors ?? new Float32Array(0)));
   };
   if (juce) {
     overlay.remove();

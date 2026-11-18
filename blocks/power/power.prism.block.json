@@ -3,7 +3,7 @@
   "id": "power.prism",
   "draft": false,
   "category": "power",
-  "kind": "gate",
+  "kind": "path",
   "name": "Prism",
   "description": "Sends the particles and laser beams that reach it off at its angle, split into up to four streams.",
   "v1": {

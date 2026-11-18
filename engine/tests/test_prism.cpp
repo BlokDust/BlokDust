@@ -1,5 +1,5 @@
-// CHG-0015: Chance and Prism (SPEC-SIMULATION-POWER-AND-PARTICLES R5c, R5d, R7a; SIMULATION-0005/0006).
-// The Counter is in test_counter.cpp.
+// CHG-0015: the Prism (SPEC-SIMULATION-POWER-AND-PARTICLES R5d, R7a; SIMULATION-0006). The Counter is in
+// test_counter.cpp, the Chance in test_chance.cpp.
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <string>
@@ -21,43 +21,7 @@ std::unique_ptr<Engine> emitterRight(int rate = 20) {
   return e;
 }
 int count(const Engine& e, Event::Type t, BlockId b = kInvalidBlock) { return static_cast<int>(eventsOf(e, t, b).size()); }
-/// The pass/block pattern a gate produced, as "x.." (x = passed).
-std::string pattern(const Engine& e, BlockId gate) {
-  std::string s;
-  for (const auto& ev : e.events()) if (ev.block == gate && (ev.type == Event::Type::Pass || ev.type == Event::Type::Block)) s += ev.type == Event::Type::Pass ? 'x' : '.';
-  return s;
-}
 }  // namespace
-
-TEST_CASE("R5c Chance: 0 stops everything, 1 passes everything, 0.5 about half, the same every run") {
-  const auto run = [](double chance) {
-    auto e = emitterRight(8);
-    e->push(Command::add(2, BlockType::PowerChance, 6, 0));
-    e->push(Command::setParam(2, P::PowerChance::chance, chance));
-    render(*e, 48000 * 8);
-    return pattern(*e, 2);
-  };
-  const auto none = run(0.0), all = run(1.0), half = run(0.5);
-  CHECK(none.find('x') == std::string::npos);
-  CHECK(all.find('.') == std::string::npos);
-  REQUIRE(half.size() > 40);
-  const auto passed = static_cast<double>(std::count(half.begin(), half.end(), 'x')) / static_cast<double>(half.size());
-  CHECK(passed > 0.3);
-  CHECK(passed < 0.7);
-  CHECK(run(0.5) == half);  // R12: its own seeded stream
-}
-
-TEST_CASE("R5c: a gate decides once per particle, on entry, and a passed particle keeps its course") {
-  auto e = emitterRight(60);
-  e->push(Command::add(2, BlockType::PowerChance, 6, 0));
-  e->push(Command::setParam(2, P::PowerChance::chance, 1.0));
-  e->push(Command::add(3, BlockType::SourceTone, 12, 0));
-  e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 0, 48000 * 3));
-  render(*e, 48000 * 5);
-  REQUIRE(count(*e, Event::Type::Emit, 1) >= 2);
-  CHECK(count(*e, Event::Type::Pass, 2) == count(*e, Event::Type::Emit, 1));
-  CHECK(count(*e, Event::Type::Hit, 3) == count(*e, Event::Type::Emit, 1));
-}
 
 TEST_CASE("R5d Prism: a particle leaves as its streams, fanned across the spread around the angle") {
   auto e = emitterRight(600);  // one particle in this test
@@ -143,15 +107,12 @@ TEST_CASE("R7a: beams never pass the same Prism twice, and one laser casts a bou
   CHECK(e->beams().size() >= 5);
 }
 
-TEST_CASE("CHG-0015: Chance and Prism connect to nothing") {
+TEST_CASE("CHG-0015: a Prism connects to nothing") {
   auto e = emitterRight();
-  e->push(Command::add(2, BlockType::PowerChance, 6, 0));
   e->push(Command::add(3, BlockType::SourceTone, 9, 4));
   e->push(Command::add(4, BlockType::PowerPower, 6, -4));
   e->push(Command::add(5, BlockType::PowerPrism, 3, 4));
   settle(*e);
-  CHECK_FALSE(e->connected(2, 3));
-  CHECK_FALSE(e->connected(2, 4));
   CHECK_FALSE(e->connected(5, 3));
   CHECK_FALSE(e->connected(5, 4));
 }
