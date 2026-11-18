@@ -797,7 +797,8 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     return [pass, { inMenu, sounding, names, pic1: pic1 && { ...pic1, first: undefined }, moved: pic2?.position, pic3: pic3?.table, table }];
   },
   // CHG-0015: a Prism splits a laser's beam into its streams, and its panel draws the exit lines on the stage.
-  // CHG-0015 (SPEC-SIMULATION R2d): a Chance at 100% fires the Tone beside it on every particle; at 0% never.
+  // CHG-0015 (SPEC-SIMULATION R2d): a Chance at 100% switches the Tone beside it on and holds it (one note); at 0% it
+  // switches it off and it never sounds again.
   async 'chance-fires'(errors) {
     const p = await open(browser, [blk('e', 'power.emitter', -8, 0, { angle: 0, selfPoweredMode: true, rate: 30, speed: 12 }),
       blk('c', 'power.chance', 0, 0, { chance: 1 }), blk('t', 'source.tone', 0, 4)], errors);
@@ -812,7 +813,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     await p.waitForTimeout(1500);
     const never = (await state(p)).gateOns - g0;
     await p.close();
-    const pass = inMenu && s.connections.length > 0 && notes >= 2 && names.includes('Chance') && never === 0;
+    const pass = inMenu && s.connections.length > 0 && notes === 1 && names.includes('Chance') && never === 0;
     return [pass, { inMenu, connections: s.connections, notes, names, never }];
   },
   // CHG-0032 (SPEC-SIMULATION R7c, SIMULATION-0011): the Gate is in the Power menu and stops a beam until a Power

@@ -9,7 +9,7 @@
 | [SIMULATION-0002](SIMULATION-0002-preserve-v1-proximity-connections-exactly.md) | Preserve v1 proximity connections exactly, computed in the engine | **accepted** | 2026-11-05 | simulation, connections, parity |
 | [SIMULATION-0003](SIMULATION-0003-time-is-musical-and-tempo-aware-v1-frame-timing.md) | Time is musical and tempo-aware; v1 frame timing is not reproduced exactly | **accepted** | 2026-11-05 | simulation, tempo, parity |
 | [SIMULATION-0004](SIMULATION-0004-a-particle-that-enters-another-emitter-fires-it.md) | A particle that enters another emitter fires it | **accepted** | 2026-11-11 | particles, release-1, v1-deviation |
-| [SIMULATION-0005](SIMULATION-0005-counter-pulses-on-its-steps-chance-pulses-by-chance.md) | Counter pulses on its steps; Chance pulses by chance | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
+| [SIMULATION-0005](SIMULATION-0005-counter-and-chance-are-switches-that-hits-set.md) | Counter and Chance are switches that hits set | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
 | [SIMULATION-0006](SIMULATION-0006-prism-redirects-and-splits-hits.md) | Prism redirects and splits hits | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
 | [SIMULATION-0007](SIMULATION-0007-sound-can-drive-the-simulation.md) | Sound can drive the simulation (Sound Laser) | **proposed** | 2026-11-13 | simulation, audio, determinism, post-2-0 |
 | [SIMULATION-0008](SIMULATION-0008-every-particle-hit-strikes-the-source-again.md) | Every particle hit strikes the source again | **accepted** | 2026-11-14 | particles, power, v1-deviation |

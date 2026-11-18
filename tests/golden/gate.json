@@ -1,5 +1,5 @@
 {
-  "description": "CHG-0032 (R5c, R7c): particles step a Counter (E(2,4)) that opens a Gate in a laser's path; the beam reaches the Tone on the active steps only.",
+  "description": "CHG-0032 (R5c, R7c): particles step a Counter (E(2,4)) that holds a Gate in a laser's path open for each active step; the beam reaches the Tone only then.",
   "render": { "seconds": 6, "sampleRate": 44100 },
   "patch": {
     "format": "blokdust.patch", "version": 2, "seed": 4,
