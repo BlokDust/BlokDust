@@ -4,7 +4,7 @@ title: Sharing backend, embeds and sample references
 status: draft
 domain: sharing
 adrs: [SHARING-0001, SHARING-0002, SHARING-0004, DATA-0005, SCOPE-0003]
-updated: 2026-11-07
+updated: 2026-11-17
 ---
 # Sharing backend, embeds and sample references
 
@@ -85,6 +85,17 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
   waveform at once and mirrors the start, end and loop points (owner request; v1 kept the numbers, which selected
   different audio). The engine restarts sounding voices on reverse, as v1's RetriggerActiveVoices did.
 
+**Quick save** (client, CHG-0033)
+- **R18.** Cmd/Ctrl+S saves the patch over this device's own link (R7, or the account's): the same id and title, the
+  gallery left as it is, no video and no panel. v1's message bar (MessagePanel) then says SAVED; with nothing changed
+  it says SAVED without sending anything. A failed save says v1's "Save failed, please try again." and changes nothing
+  (never a `?c=p…` link). With no link of its own (never saved, someone else's patch), and in the standalone app,
+  Cmd/Ctrl+S opens Patches › SAVE. In a DAW the key is left to the DAW. It never opens the browser's "Save page".
+- **R19.** On the stage, top left (where another person's patch shows "TITLE BY @NAME"), your own saved patch shows its
+  title. Changed since it was saved, it reads `TITLE  ·  UNSAVED` (UNSAVED dimmed). Under the mouse UNSAVED reads SAVE,
+  underlined like the corner's other links; pressing it does R18. While saving it reads SAVING.
+- **R20.** Unsaved edits to your own link come back after a reload (R7) and show as UNSAVED. Nothing saves on its own.
+
 ## Scenarios
 - **S1.** Given a patch, when its creator presses Generate share link and someone else opens the link in a fresh
   browser, then they get the same blocks and an identical offline render hash (R2, R3).
@@ -111,6 +122,7 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
   - `share-and-load`: R2, R3, R4, R7, R9, R10, S1, S2.
   - `embed`: R10, R11, S3.
   - `samples`: R12–R15, S4.
+  - `quick-save`: R18–R20 (and `pnpm test:ui-regressions` `quick-save-no-link-opens-save`, `quick-save-plugin-keys`).
   - `share-new-tab`: S1 with the owner's steps (blocks added from the menus, one moved, link opened in a new tab).
 - **`pnpm test:ui-regressions`**: `sample-loop-region`, `sample-reverse-mirrors`, `sample-loading-indicator` and
   `convolver-downloads-only-what-it-uses` (R16, R17); engine `test_review_fixes.cpp` (reverse restarts voices).

@@ -383,7 +383,7 @@ async function main() {
     if (embedId || juce) return;  // the embed player never autosaves; in the plugin the DAW project keeps the patch
     clearTimeout(saveTimer);
     autosaveIsThis = true;
-    saveTimer = setTimeout(() => { saveLocal(toPatch()); if (session.id && !session.dirty) { session.dirty = true; saveSession(session); } }, 300);
+    saveTimer = setTimeout(() => { saveLocal(toPatch()); if (session.id && !session.dirty) { session.dirty = true; saveSession(session); } checkOwnDirty(); }, 300);
   };
 
   const scene = new V1Scene({
@@ -453,7 +453,7 @@ async function main() {
       history.replaceState(null, '', location.pathname);  // v1 AddressBarManager.StripURL
       session = { id: null, dirty: false }; saveSession(session);
       shareLink = null; credit = null; undoStack.length = 0; redoStack.length = 0; endPlacing(true);
-      setBaseline();
+      setBaseline(); checkOwnDirty();
       track('patch_created', { from: 'reset' });
     },
     share: async (mode, title, gallery) => {
@@ -581,6 +581,7 @@ async function main() {
     if (out) accountOwnedClear();
     App.SessionId = sessionFor(App.CompositionId);
     if (shareLink) shareLink = { ...shareLink, owned: !!App.SessionId };
+    checkOwnDirty();
   }
   // ---- video export (CHG-0022, SPEC-SHARING-VIDEO-EXPORT) ----
   const videoTitle = () => scene.PatchesPanel.Title.trim() || 'Untitled';
@@ -617,8 +618,8 @@ async function main() {
   // (signed out: Settings › SIGN IN); right-clicking the credit reports it. Top right: who is signed in
   // (SPEC-SHARING-ACCOUNTS R14); it opens Settings › ACCOUNT. v1's mid type in the text colour, under the panels.
   let credit: { id: string; title: string; by: string; published: boolean; liked: boolean; likes: number; views: number } | null = null;
-  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; like?: ButtonBox; credit?: ButtonBox } = {};
-  let byHover = false, meHover = false;
+  let cornerBoxes: { by?: ButtonBox; me?: ButtonBox; like?: ButtonBox; credit?: ButtonBox; save?: ButtonBox } = {};
+  let byHover = false, meHover = false, saveHover = false;
   const accountPage = () => (scene.SettingsPanel as any).accountPage as import('../v1ui/accountPage.ts').AccountPage | null | undefined;
   function drawCorners(ctx: CanvasRenderingContext2D): void {
     cornerBoxes = {};
@@ -646,6 +647,22 @@ async function main() {
         ctx.globalAlpha = 0.6; ctx.fillText(`   ${views}`, x + 12 * u + cw, y2); ctx.globalAlpha = 1;
         cornerBoxes.like = { x: x - 6 * u, y: y2 - 14 * u, w: cw + 24 * u, h: 22 * u };
       }
+    } else if (ownLink()) {
+      // Your own saved patch (SPEC-SHARING-BACKEND R19): its title; changed since it was saved, "· UNSAVED", dimmed like
+      // the views count. Under the mouse UNSAVED reads SAVE, underlined like the corner's other links; pressing it
+      // saves (R18). While it saves: SAVING.
+      const title = (shareLink!.title || 'Untitled').toUpperCase(), x = 20 * u, tw = ctx.measureText(title).width;
+      ctx.textAlign = 'left'; ctx.fillText(title, x, y);
+      if (ownDirty || quickSaving) {
+        const sep = '  ·  ', sw = ctx.measureText(sep).width, word = quickSaving ? 'SAVING' : saveHover ? 'SAVE' : 'UNSAVED', ww = ctx.measureText(word).width;
+        ctx.globalAlpha = 0.6; ctx.fillText(sep, x + tw, y);
+        if (!saveHover || quickSaving) ctx.fillText(word, x + tw + sw, y);
+        ctx.globalAlpha = 1;
+        if (saveHover && !quickSaving) { ctx.fillText(word, x + tw + sw, y); ctx.fillRect(x + tw + sw, y + 3 * u, ww, Math.max(1, u * 0.6)); }
+        // The box is UNSAVED's width (the wider word), so the pointer doesn't fall off it when the word changes.
+        const bw = Math.max(ww, ctx.measureText('UNSAVED').width);
+        if (!quickSaving) cornerBoxes.save = { x: x + tw + sw - 4 * u, y: y - 16 * u, w: bw + 8 * u, h: 24 * u };
+      }
     }
     const me = accountPage()?.Account;
     if (me?.handle) {
@@ -662,6 +679,7 @@ async function main() {
     if (cornerBoxes.by && credit && inBox(cornerBoxes.by, x, y)) { scene.PatchesPanel.showGallery(`@${credit.by}`); return true; }
     if (cornerBoxes.like && credit && inBox(cornerBoxes.like, x, y)) { likeCredit(); return true; }
     if (cornerBoxes.me && inBox(cornerBoxes.me, x, y)) { (scene.SettingsPanel as any).openAccount?.(); return true; }
+    if (cornerBoxes.save && inBox(cornerBoxes.save, x, y)) { saveHover = false; void quickSave(); return true; }
     return false;
   }
   /**
@@ -1167,14 +1185,60 @@ async function main() {
    * new one. The link goes in the address bar; the patch counts as saved. */
   async function makeLink(mode: 'save' | 'saveAs', title: string, gallery?: boolean): Promise<GalleryState | null> {
     const id = await scene.host.share(mode === 'save' && shareLink?.owned ? 'save' : 'saveAs', title, gallery);
+    linkSaved(id, title);
+    return lastGallery;
+  }
+  /** Saved to the link `id` (`at`: the content saved): the address bar shows it and the patch counts as saved. */
+  function linkSaved(id: string, title: string, at = contentOf(toPatch())): void {
     const url = `${location.origin}${location.pathname}?c=${id}&t=${encodeURIComponent(title)}`;
     history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
-    shareLink = { url, owned: isServerId(id) && !!App.SessionId, at: contentOf(toPatch()) };
-    setBaseline();  // a shared patch counts as saved
+    shareLink = { url, owned: isServerId(id) && !!App.SessionId, at, title };
+    setBaseline(at);  // a shared patch counts as saved
     keepMine(title);
     credit = null;  // saved: it is yours now (a remix keeps `parent`)
     track('patch_saved', { kind: 'link' }, { blocks: model.size });
-    return lastGallery;
+    checkOwnDirty();
+  }
+  /**
+   * Quick save (CHG-0033, SPEC-SHARING-BACKEND R18–R20; owner, 2026-11-17): Cmd/Ctrl+S, or the corner's SAVE, saves the
+   * patch over this device's own link: the same link and title, the gallery left as it is, no video, no panel; v1's
+   * message bar says SAVED. A patch with no link of its own (never saved, someone else's, a preset; the plugin and
+   * the standalone app, which keep no link) opens Patches › SAVE instead. It never falls back to a new self-contained
+   * link (SAVE's no-backend path): if the server can't be reached it says so and the patch stays unsaved.
+   */
+  const ownLink = () => !juce && !embedId && !credit && !!shareLink?.owned && !!App.CompositionId && isServerId(App.CompositionId);
+  /** The own link's patch has changed since it was saved (worked out when an edit settles, not every frame). */
+  let ownDirty = false, quickSaving = false;
+  function checkOwnDirty(): void {
+    const d = ownLink() && contentOf(toPatch()) !== shareLink!.at;
+    if (d !== ownDirty) { ownDirty = d; stage.redraw(); }
+  }
+  function openSaveTab(): void {
+    if ((scene.SettingsPanel as any).Open || scene.SoundcloudPanel.Open) return;
+    if (scene.PatchesPanel.Open) scene.PatchesPanel.selectTab(0); else scene.PatchesPanel.OpenPanel(0);
+  }
+  async function quickSave(): Promise<void> {
+    if (quickSaving || scene.PatchesPanel.Saving) return;
+    if (!ownLink()) { openSaveTab(); return; }
+    const link = shareLink!, patch = toPatch(), at = contentOf(patch), title = link.title || 'Untitled';
+    if (at === link.at) { checkOwnDirty(); scene.message('Saved'); return; }
+    quickSaving = true; stage.redraw();
+    try {
+      const thumb = stage.thumbnail(THUMB.width, THUMB.height, { title }).toDataURL('image/png').split(',')[1];
+      const r = await saveShared('save', App.CompositionId, { patch, title, thumb });
+      if (!r) throw new Error('no backend');
+      // Not this device's to save over any more (its right was lost, or the patch deleted): saveShared made a new link.
+      lastGallery = r.gallery ?? null;
+      App.CompositionId = r.id; App.SessionId = sessionFor(r.id);
+      const still = contentOf(toPatch()) !== at;  // edited while it saved: those edits are still unsaved
+      session = { id: r.id, dirty: still }; saveSession(session); saveLocal(toPatch());
+      linkSaved(r.id, title, at);
+      if (r.gallery) scene.PatchesPanel.galleryKnown(r.gallery.published);
+      scene.message('Saved');
+    } catch (e) {
+      console.warn('BlokDust: quick save failed', e); track('save_failed', { kind: 'quick' });
+      scene.message('Save failed, please try again.');  // v1 L10n Errors.SaveError
+    } finally { quickSaving = false; checkOwnDirty(); stage.redraw(); }
   }
   /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
    * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
@@ -1187,7 +1251,7 @@ async function main() {
     session = { id, dirty: false }; saveSession(session);
     const url = `${location.origin}${location.pathname}?c=${id}${r.title ? `&t=${encodeURIComponent(r.title)}` : ''}`;
     history.replaceState(null, '', url);
-    shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()) };
+    shareLink = { url, owned: !!App.SessionId, at: contentOf(toPatch()), title: r.title ?? '' };
     setBaseline();
     credit = r.by && !r.mine ? { id, title: r.title || 'Untitled', by: r.by, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0 } : null;
     scene.PatchesPanel.galleryKnown(r.mine ? !!r.published : null);
@@ -1294,12 +1358,12 @@ async function main() {
     ...(p.macros?.length ? [p.macros.map(m => ({ ...m, blocks: withoutLogic(m.blocks), view: undefined }))] : [])]);
   const BASELINE_KEY = 'blokdust.savedPatch';
   let baseline = '';
-  function setBaseline(): void {
-    baseline = contentOf(toPatch());
+  function setBaseline(content = contentOf(toPatch())): void {
+    baseline = content;
     if (!juce && !embedId) try { localStorage.setItem(BASELINE_KEY, baseline); } catch { /* private mode */ }
   }
   /** The share link made here (or the one this browser can update, from the start-up link). */
-  let shareLink: { url: string; owned: boolean; at: string } | null = null;
+  let shareLink: { url: string; owned: boolean; at: string; title: string } | null = null;
   /** What the last save said about the gallery (SPEC-SHARING-GALLERY R1). */
   let lastGallery: GalleryState | null = null;
 
@@ -1787,10 +1851,11 @@ async function main() {
     const title = params.get('t') ?? start.title ?? '';
     if (title) scene.PatchesPanel.setTitle(title);
     // This browser's own link (v1 App.SessionId): COPY LINK, or UPDATE LINK once the patch changes.
-    if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()) };
+    if (start.id && App.SessionId && !embedId) shareLink = { url: `${location.origin}${location.pathname}?c=${start.id}${title ? `&t=${encodeURIComponent(title)}` : ''}`, owned: true, at: loadSession().dirty ? '' : contentOf(toPatch()), title };
     // Someone else's patch: "TITLE BY @NAME" in the corner; yours: the gallery switch shows whether it is published.
     if (start.by && !start.mine && !embedId && start.id) credit = { id: start.id, title: start.title || 'Untitled', by: start.by, published: !!start.published, liked: !!start.liked, likes: start.likes ?? 0, views: start.views ?? 0 };
     if (start.mine) scene.PatchesPanel.galleryKnown(!!start.published);
+    checkOwnDirty();  // restored unsaved edits to this device's own link show as UNSAVED at once
     // Who is signed in (the corner, the Settings tab's name, the gallery switch).
     const page = accountPage();
     if (page && !juce && !embedId) { const prev = page.onChange; page.onChange = () => { prev(); stage.redraw(); }; void page.refresh(false); }
@@ -1942,7 +2007,9 @@ async function main() {
       const d = stage.metrics.dpr, c = (b?: ButtonBox) => (b ? [(b.x + b.w / 2) / d, (b.y + b.h / 2) / d] : null);
       // creditAt: the title's start (right-click reports), clear of the @NAME link and the star.
       const titleAt = cornerBoxes.credit ? [(cornerBoxes.credit.x + 12 * stage.metrics.unit) / d, (cornerBoxes.credit.y + cornerBoxes.credit.h / 2) / d] : null;
-      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), meBox: cornerBoxes.me && { x: cornerBoxes.me.x / d, y: cornerBoxes.me.y / d, w: cornerBoxes.me.w / d, h: cornerBoxes.me.h / d }, likeAt: c(cornerBoxes.like), creditAt: titleAt };
+      return { credit, me: accountPage()?.Account?.handle ?? null, byAt: c(cornerBoxes.by), meAt: c(cornerBoxes.me), meBox: cornerBoxes.me && { x: cornerBoxes.me.x / d, y: cornerBoxes.me.y / d, w: cornerBoxes.me.w / d, h: cornerBoxes.me.h / d }, likeAt: c(cornerBoxes.like), creditAt: titleAt,
+        // Quick save (CHG-0033): the own patch's line and where its UNSAVED / SAVE word is.
+        own: ownLink() ? { title: shareLink!.title, dirty: ownDirty, saving: quickSaving, hover: saveHover } : null, saveAt: c(cornerBoxes.save) };
     },
     /** Sample state per block (tests): loaded, or missing with its reference. */
     /** The account's running totals not yet sent (SPEC-SHARING-ACCOUNTS R16; tests). */
@@ -2451,7 +2518,10 @@ async function main() {
     if (overMake !== makeStageHover) { makeStageHover = overMake; stage.redraw(); }
     const overBy = !!cornerBoxes.by && e.pointerType === 'mouse' && inBox(cornerBoxes.by, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
     const overMe = !!cornerBoxes.me && e.pointerType === 'mouse' && inBox(cornerBoxes.me, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
-    if (overBy !== byHover || overMe !== meHover) { byHover = overBy; meHover = overMe; app.canvas.style.cursor = overBy || overMe ? 'pointer' : ''; stage.redraw(); }
+    const overSave = !!cornerBoxes.save && e.pointerType === 'mouse' && inBox(cornerBoxes.save, e.offsetX * dpr(), e.offsetY * dpr()) && !scene.PatchesPanel.Open;
+    if (overBy !== byHover || overMe !== meHover || overSave !== saveHover) {
+      byHover = overBy; meHover = overMe; saveHover = overSave; app.canvas.style.cursor = overBy || overMe || overSave ? 'pointer' : ''; stage.redraw();
+    }
     if (padMove(scene.OptionsPanel, e.pointerId, e.offsetX * dpr(), e.offsetY * dpr(), padHost)) { stage.redraw(); return; }
     if (labelDrag && (labelDrag.fresh || e.pointerId === labelDrag.pointer)) {
       moveLabel(e);
@@ -2803,6 +2873,14 @@ async function main() {
   // Insert out again (owner, 2026-11-10: one step).
   window.addEventListener('keydown', e => {
     const tag = (e.target as HTMLElement)?.tagName;
+    // Cmd/Ctrl+S (SPEC-SHARING-BACKEND R18): quick save, also while typing; never the browser's "Save page". In a DAW
+    // it is the DAW's Save (which keeps the plugin's patch in the project); the standalone app opens Patches › SAVE.
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 's' && !embedId) {
+      if (juce && !standalone) return;
+      e.preventDefault();
+      if (!e.repeat) void quickSave();
+      return;
+    }
     if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
       if (e.key === 'Escape' && placing) { e.preventDefault(); endPlacing(true); return; }
       if (e.key === 'Escape' && inside && !scene.PatchesPanel.Open && !scene.SettingsPanel.Open) { e.preventDefault(); exitStage(); return; }

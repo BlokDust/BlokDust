@@ -12,7 +12,7 @@ export const PORTED = [
   'Metrics.ts', 'Device.ts', 'Commands.ts', 'StringValue.ts', 'Core/Audio/Waveform.ts', 'Blocks/BlockSprites.ts',
   'UI/Header.ts', 'UI/MenuCategory.ts', 'UI/MenuItem.ts', 'UI/ToolTip.ts', 'UI/ZoomButtons.ts', 'UI/TrashCan.ts',
   'UI/CreateNew.ts', 'UI/StageDragger.ts', 'UI/OptionsPanel.ts', 'UI/SettingsPanel.ts', 'UI/SharePanel.ts', 'UI/RecorderPanel.ts',
-  'WaveVoice.ts', 'Splash.ts', 'UI/Tutorial.ts', 'UI/TutorialHotspots.ts', 'UI/AnimationsLayer.ts', 'UI/SoundcloudPanel.ts', 'Core/Audio/SoundCloud/SoundcloudTrack.ts',
+  'WaveVoice.ts', 'Splash.ts', 'UI/Tutorial.ts', 'UI/TutorialHotspots.ts', 'UI/AnimationsLayer.ts', 'UI/MessagePanel.ts', 'UI/SoundcloudPanel.ts', 'Core/Audio/SoundCloud/SoundcloudTrack.ts',
   ...['IOption', 'Option', 'OptionADSR', 'OptionActionButton', 'OptionButton', 'OptionButtonArray', 'OptionColorTheme',
     'OptionHandle', 'OptionMeter', 'OptionParametric', 'OptionSample', 'OptionSampleLocal', 'OptionSlider', 'OptionSubHandle',
     'OptionSwitch', 'OptionSwitchArray', 'OptionWave', 'OptionWaveImage', 'OptionWaveRegion', 'OptionWaveSlider'].map(f => `UI/Options/${f}.ts`),

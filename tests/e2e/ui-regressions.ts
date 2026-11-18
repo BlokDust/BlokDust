@@ -3192,6 +3192,39 @@ Object.assign(tests, {
       r.overlap.gap < 20 && held.join() === 'false,true,false' && near(r.overlap.attack, 0.01, 1e-6) && r.overlap.decay > 0.02;
     return [pass, r];
   },
+
+  // ---- Quick save (CHG-0033, owner 2026-11-17; SPEC-SHARING-BACKEND R18) ----
+  /** Cmd/Ctrl+S with no link of this browser's own (here: no backend, a v1 composition) opens Patches › SAVE, and the
+   * browser's "Save page" never opens (the key is cancelled), also while typing in a field. No corner line. */
+  async 'quick-save-no-link-opens-save'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await p.evaluate(() => { try { localStorage.setItem('blokdust.patchesTab', '1'); } catch { /* */ } });  // last tab OPEN: Cmd+S still shows SAVE
+    await p.evaluate(() => window.addEventListener('keydown', e => { (window as any).__prevented = e.defaultPrevented; }));
+    await p.keyboard.press('ControlOrMeta+s'); await p.waitForTimeout(1200);
+    const r = await p.evaluate(() => { const s = (window as any).__bd_probe, pp = s.scene.PatchesPanel; return { open: pp.Open, tab: pp.Tab, prevented: (window as any).__prevented, own: s.corners.own, saving: pp.Saving }; });
+    await p.screenshot({ path: `${OUT}/quick-save-no-link.png` });
+    // Typing in the title field: still cancelled (and the panel stays on SAVE).
+    await p.click('#patchTitleInput'); await p.evaluate(() => { (window as any).__prevented = null; });
+    await p.keyboard.press('ControlOrMeta+s'); await p.waitForTimeout(400);
+    const typing = await p.evaluate(() => ({ prevented: (window as any).__prevented, open: (window as any).__bd_probe.scene.PatchesPanel.Open, tab: (window as any).__bd_probe.scene.PatchesPanel.Tab }));
+    await p.close();
+    return [r.open && r.tab === 0 && r.prevented === true && r.own === null && !r.saving && typing.prevented === true && typing.open && typing.tab === 0, { r, typing }];
+  },
+  /** In a DAW Cmd/Ctrl+S is the DAW's (not cancelled, no panel); the standalone app keeps no link, so it opens
+   * Patches › SAVE. */
+  async 'quick-save-plugin-keys'(errors: string[]) {
+    const run = async (standalone: boolean) => {
+      const { pg, close } = await openPlugin(plugPatch([{ id: 't', type: 'source.tone', x: 0, y: 0 }]), errors, undefined, standalone);
+      await pg.evaluate(() => window.addEventListener('keydown', e => { (window as any).__prevented = e.defaultPrevented; }));
+      await pg.keyboard.press('ControlOrMeta+s'); await pg.waitForTimeout(1200);
+      const r = await pg.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { open: pp.Open, tab: pp.Tab, prevented: (window as any).__prevented, sent: ((window as any).__sent as { id: string }[]).map(x => x.id).filter(id => /share|openUrl|patchSave/.test(id)) }; });
+      if (standalone) await pg.screenshot({ path: `${OUT}/quick-save-standalone.png` });
+      await close();
+      return r;
+    };
+    const daw = await run(false), app = await run(true);
+    return [daw.prevented === false && !daw.open && app.prevented === true && app.open && app.tab === 0 && !daw.sent.length && !app.sent.length, { daw, app }];
+  },
 } as Record<string, (errors: string[]) => Promise<[boolean, unknown]>>);
 
 /** Bugs captured but not fixed yet: reported as KNOWN (not failing CI) with the reason; a pass says to remove it. */

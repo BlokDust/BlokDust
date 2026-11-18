@@ -57,6 +57,7 @@
 | [CHG-0030](changes/0030-envelope-graph-easier-to-set/proposal.md) | Envelope graph easier to set | **proposed** | SPEC-VISUAL-V1-PARITY |
 | [CHG-0031](changes/0031-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |
 | [CHG-0032](changes/0032-gate-block/proposal.md) | Gate block | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
+| [CHG-0033](changes/0033-quick-save-and-unsaved-marker/proposal.md) | Quick save and unsaved marker | **proposed** | SPEC-SHARING-BACKEND |
 | [CHG-0034](changes/0034-laser-restart/proposal.md) | Laser restart and re-strike | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES |
 | [CHG-0035](changes/0035-playtest-tweaks/proposal.md) | Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
 | [CHG-0036](changes/0036-add-in-app-feedback-and-private-support-reports/proposal.md) | Add in-app feedback and private support reports | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |
