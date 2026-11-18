@@ -957,10 +957,9 @@ Object.assign(tests, {
     return [misses.length === 0, { misses }];
   },
 
-  /** Owner (2026-11-08, CHG-0005): the Tour is hidden for Release 1 (v1's tutorial is not ported; built-in presets
-   * may replace it). Owner (2026-11-10): its row is now the patch Tempo (web), set once for every synced block:
-   * pressing where "Launch Tutorial" was sets the tempo, and the panel stays open. */
-  async 'tour-hidden'(errors: string[]) {
+  /** Owner (2026-11-10): v1's Tour row is the patch Tempo (web), set once for every synced block: pressing where
+   * "Launch Tutorial" was sets the tempo, and the panel stays open. The tour (CHG-0035) has its own row under it. */
+  async 'settings-tempo-and-tour'(errors: string[]) {
     const p = await open(browser, [], errors);
     for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
     await p.waitForTimeout(1200);
@@ -968,14 +967,18 @@ Object.assign(tests, {
     const tempo = () => p.evaluate(() => (window as any).__bd_probe.scene.host.tempo());
     const before = await tempo();
     await p.mouse.move(700, 452); await p.mouse.down(); await p.mouse.move(800, 452, { steps: 5 }); await p.waitForTimeout(200);
-    await p.screenshot({ path: `${OUT}/tour-hidden.png` });
+    await p.screenshot({ path: `${OUT}/settings-tempo-and-tour.png` });
     await p.mouse.up(); await p.waitForTimeout(600);
     const after = await tempo(), saved = (await state(p)).patch.tempo;
     const still = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open);
+    // CHG-0035: the tour has a row of its own under Tempo; LAUNCH TOUR closes Settings and asks.
+    const btn = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.tourButton()) as { x: number; y: number };
+    await p.mouse.move(btn.x, btn.y); await p.mouse.click(btn.x, btn.y); await p.waitForTimeout(1200);
+    const tour = await p.evaluate(() => ({ settings: (window as any).__bd_probe.scene.SettingsPanel.Open, asked: (window as any).__bd_probe.scene.Tutorial.SplashOpen }));
     await p.close();
-    const ok = !names.includes('Tour') && JSON.stringify(names) === JSON.stringify(['Color Theme', 'Master Volume', 'DB Meter', 'Tempo']) && still
-      && before === 120 && after > 120 && after <= 240 && Number.isInteger(after) && saved === after;
-    return [ok, { names, settingsStillOpen: still, before, after, saved }];
+    const ok = JSON.stringify(names) === JSON.stringify(['Color Theme', 'Master Volume', 'DB Meter', 'Tempo', 'Tour']) && still
+      && before === 120 && after > 120 && after <= 240 && Number.isInteger(after) && saved === after && !tour.settings && tour.asked;
+    return [ok, { names, settingsStillOpen: still, before, after, saved, tour }];
   },
 
   /** Owner (2026-11-10): Settings loses its Connect tab (dated share buttons; the guide site is lost) and the "Chrome

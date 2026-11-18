@@ -278,7 +278,7 @@ TEST_CASE("Microphone gain scales its v1 level (owner review 2)") {
 }
 
 TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R1a: the website's Microphone is silent until it is powered (CHG-0035)") {
-  std::vector<float> in(48000), outL(48000), outR(48000);
+  std::vector<float> in(48128), outL(48128), outR(48128);  // whole 128-frame blocks from 24000
   for (std::size_t i = 0; i < in.size(); ++i) in[i] = static_cast<float>(0.25 * dmath::sin(dmath::kTwoPi * 440.0 * double(i) / 48000.0));
   auto peak = [&](std::size_t from, std::size_t to) { double p = 0; for (std::size_t i = from; i < to; ++i) p = std::max(p, double(std::abs(outL[i]))); return p; };
   auto e = makeEngine(48000, 1, false);
