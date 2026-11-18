@@ -55,4 +55,4 @@
 | [CHG-0029](changes/0029-pulse-delay/proposal.md) | Pulse delay | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES |
 | [CHG-0030](changes/0030-envelope-graph-easier-to-set/proposal.md) | Envelope graph easier to set | **proposed** | SPEC-VISUAL-V1-PARITY |
 | [CHG-0031](changes/0031-wavetable-block/proposal.md) | Wavetable block | **proposed** | SPEC-AUDIO-WAVETABLE, SPEC-AUDIO-V1-PARITY |
-| [CHG-0035](changes/0035-playtest-tweaks/proposal.md) | Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY |
+| [CHG-0035](changes/0035-playtest-tweaks/proposal.md) | Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |

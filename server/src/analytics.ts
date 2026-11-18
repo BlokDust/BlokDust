@@ -20,7 +20,7 @@ export function clientConfig(env: Env): { rate: number; sentryDsn: string; sentr
 // ---- the daily salt (R4) ----
 let salt: { day: string; value: string } | null = null;
 const today = () => new Date().toISOString().slice(0, 10);
-async function dailySalt(env: Env): Promise<string> {
+export async function dailySalt(env: Env): Promise<string> {
   const day = today();
   if (salt?.day === day) return salt.value;
   const fresh = crypto.randomUUID();

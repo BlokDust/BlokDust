@@ -1812,6 +1812,11 @@ async function main() {
       // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15),
       // or back to SAVE if that is where the sign-in began (CHG-0035).
       if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
+      // No new account today from this network (R1b): Settings › SIGN IN says why.
+      else if (signInReturn === 'limit') requestAnimationFrame(() => {
+        (scene.SettingsPanel as any).openAccount?.();
+        (scene.SettingsPanel as any).accountPage?.refused(account.ACCOUNT_LIMIT_MESSAGE);
+      });
       else backToSave();
     }
   }

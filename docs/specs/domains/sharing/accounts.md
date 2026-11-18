@@ -4,7 +4,7 @@ title: Accounts
 status: draft
 domain: sharing
 adrs: [SHARING-0008, SHARING-0001, DATA-0005]
-updated: 2026-11-16
+updated: 2026-11-17
 ---
 # Accounts
 
@@ -15,10 +15,18 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 
 ## Requirements
 **Signing up and in**
-- **R1.** CREATE ACCOUNT takes a handle (R6) and a Turnstile token, then the device makes a discoverable passkey
-  (WebAuthn: resident key required, user verification preferred, no attestation). The account is created only once
-  the passkey has been verified, and is then signed in.
-- **R2.** SIGN IN WITH PASSKEY needs no name: the device offers its passkeys for this site. The server checks the
+- **R1.** CONTINUE WITH PASSKEY first signs in (R2). When no passkey is chosen (the browser does not say whether the
+  user had none or closed the dialog) or the passkey is not known here, it asks for a handle (R6) instead, with BACK;
+  CREATE WITH PASSKEY then sends it with a Turnstile token, and the device makes a discoverable passkey (WebAuthn:
+  resident key required, user verification preferred, no attestation). The account is created only once the passkey
+  has been verified, and is then signed in.
+- **R1b.** (CHG-0035) A network makes at most `ACCOUNTS_PER_DAY` new accounts a UTC day (default 10: a school class
+  shares one address), counted once an account exists, by passkey, Google or Apple. Over it, a new passkey account is
+  refused (429, saying why) before the device makes a passkey, and a new Google or Apple account is not made: the app
+  comes back with `?account=limit` and Settings › SIGN IN says why. Known accounts still sign in, and signed-in
+  accounts still add Google, Apple or passkeys. The count is kept under a hash of the address with the day's random
+  salt, and a day's counts are deleted the next day.
+- **R2.** Signing in with a passkey needs no name: the device offers its passkeys for this site. The server checks the
   challenge (one use, 5 minutes), origin, RP ID and signature counter.
 - **R2a.** SIGN IN WITH GOOGLE uses the authorisation code flow with PKCE S256 and a state check, and keeps only
   Google's subject id. If that Google account is new here, a new account is made and the user then picks a handle
@@ -42,7 +50,9 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R6.** A handle is 3–20 of `a-z 0-9 _`, unique ignoring case. It is not reserved (admin, blokdust, …) and
   contains no blocked word. The word check (server/src/moderation.ts) folds look-alike characters, and refuses short
   roots only as whole words, so names like grape or Scunthorpe stay allowed.
-- **R7.** ADD PASSKEY adds another passkey to the signed-in account.
+- **R7.** ADD PASSKEY (ADD ANOTHER PASSKEY once the account has one) adds a passkey on this device to the signed-in
+  account, beside its Google, Apple and other passkeys: "Passkey added: you can sign in with it on this device."
+
 - **R8.** `GET /api/me/patches` lists the account's patches, newest first. The OPEN tab lists them first ("Your
   account · Saved …").
 - **R9.** A patch saved while signed in belongs to the account. Signing in claims the patches this browser holds edit
@@ -58,11 +68,12 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R13.** Settings has a tab after ABOUT and DOWNLOAD (owner review 2026-11-15), named SIGN IN until someone is
   signed in, then ACCOUNT, drawn with v1 panel pieces (web/src/v1ui/accountPage.ts):
   - signed out: "Sign in to keep your patches on every device.", then one full-width button each for GOOGLE, APPLE
-    and PASSKEY, in that order (owner review 2), and a bordered CREATE ACCOUNT;
+    and CONTINUE WITH PASSKEY, in that order (owner review 2; one passkey button, R1: owner, 2026-11-17);
   - creating an account or naming one: a small heading in the tab type with no rule and no explanation (owner review
     2: the large heading over a rule read as a text field), a NAME field, the main button and BACK;
   - signed in: "SIGNED IN AS NAME" on one line in the tab type, no rule (owner review 2), DELETE ACCOUNT (asked
-    first) at the right of that line (CHG-0027), the stats (R15, R16), then ADD PASSKEY · SIGN OUT.
+    first) at the right of that line (CHG-0027), the stats (R15, R16), then ADD PASSKEY · SIGN OUT, and under them
+    "Sign-in methods: Google · Apple · 2 passkeys" (the ones it has; CHG-0035).
   Signing in with a passkey closes Settings: back to the stage.
 - **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
@@ -103,7 +114,7 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   it and presses SAVE, then the same link gets revision 2 (R2, R8, R9).
 
 ## Verification
-`pnpm test:accounts` covers R1–R10 and R13–R16: a local Worker, mocked siteverify, Google and Apple (its client secret
+`pnpm test:accounts` covers R1–R10 (R1b on a second local Worker allowing 2 a day) and R13–R16: a local Worker, mocked siteverify, Google and Apple (its client secret
 checked against the run's key), and Chrome's virtual WebAuthn
 authenticator (the passkey is copied to a second context to stand in for sync).
 

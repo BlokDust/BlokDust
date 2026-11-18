@@ -15,7 +15,7 @@ function check(name: string, ok: boolean, detail?: unknown) {
 }
 const mocks = await startMockServices();
 const STATE = 'gallery';
-const server = await startLocal({ name: STATE, vars: { TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify` } });
+const server = await startLocal({ name: STATE, vars: { TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`, ACCOUNTS_PER_DAY: '100' } });  // nine accounts from one address
 const base = server.url.replace('127.0.0.1', 'localhost');
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 
@@ -38,7 +38,9 @@ async function device(name: string | null, query = '?demo&video=1'): Promise<Dev
     await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
     await page.waitForFunction(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return s.OffsetY === 0 && s.accountPage.Account !== undefined; }, null, { timeout: 10000 });
     const at = async (n: string) => { const c = await page.evaluate(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k), n); await page.mouse.click(c[0], c[1]); await page.waitForTimeout(400); };
-    await at('create'); await page.fill('#accountHandleInput', name); await at('submit');
+    await at('passkey');  // none on this device: CONTINUE WITH PASSKEY asks for a name (CHG-0035)
+    await page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.View === 'create', null, { timeout: 10000 });
+    await page.fill('#accountHandleInput', name); await at('submit');
     await page.waitForFunction(() => !!(window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.handle, null, { timeout: 20000 });
     await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await page.waitForTimeout(800);
   }
@@ -435,7 +437,9 @@ try {
   const asked = await newbie.page.evaluate(() => { const s = (window as any).__bd_probe.scene; return { settings: s.SettingsPanel.Open, tab: s.SettingsPanel._OpenTab, patches: s.PatchesPanel.Open }; });
   const at = async (n: string) => { const c = await newbie.page.evaluate(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k), n); await newbie.page.mouse.click(c[0], c[1]); await newbie.page.waitForTimeout(400); };
   await newbie.page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account !== undefined, null, { timeout: 10000 });
-  await at('create'); await newbie.page.fill('#accountHandleInput', 'newbie_g'); await at('submit');
+  await at('passkey');
+  await newbie.page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.View === 'create', null, { timeout: 10000 });
+  await newbie.page.fill('#accountHandleInput', 'newbie_g'); await at('submit');
   await newbie.page.waitForFunction(() => { const s = (window as any).__bd_probe.scene; return s.PatchesPanel.Open && s.PatchesPanel.Tab === 0; }, null, { timeout: 20000 }).catch(() => {});
   await newbie.page.waitForTimeout(800);
   const back = await newbie.page.evaluate(() => { const s = (window as any).__bd_probe.scene; return { patches: s.PatchesPanel.Open, tab: s.PatchesPanel.Tab, settings: s.SettingsPanel.Open, gallery: s.PatchesPanel.GalleryOn, signedIn: s.host.signedIn(), title: s.PatchesPanel.Title, signIn: s.PatchesPanel.centreOf('signIn') }; });

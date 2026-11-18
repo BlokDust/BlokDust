@@ -28,3 +28,9 @@ Second round (owner, 2026-11-17):
 - [x] 21. Patches tabs slide (patches-tabs-slide).
 - [x] 22. Zoom out to 0.15 (zoom-out-to-0-15).
 - [x] 23. First visit: random theme matching light/dark (first-theme-follows-system).
+
+Account answers (owner, 2026-11-17):
+
+- [x] 24. New accounts per network per day (accounts e2e: new-account-limit).
+- [x] 25. CONTINUE WITH PASSKEY in place of SIGN IN WITH PASSKEY and CREATE ACCOUNT (accounts e2e: passkey-account; gallery e2e).
+- [x] 26. Sign-in methods line, ADD ANOTHER PASSKEY, "Passkey added" wording (accounts e2e: passkey-account, google).

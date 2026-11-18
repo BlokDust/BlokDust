@@ -3,7 +3,7 @@ id: CHG-0035
 title: "Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound"
 status: proposed
 date: 2026-11-17
-specs: [SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY]
+specs: [SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS]
 adrs: [SCOPE-0004, PLUGIN-0002]
 ---
 # CHG-0035: Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound
@@ -42,6 +42,11 @@ Owner's second round (2026-11-17, after trying staging):
 - Zoom out to 0.15 (R18).
 - A first visit gets a random theme matching the system's light or dark setting (R21).
 
+Owner's account answers (2026-11-17):
+- At most 10 new accounts per network a day (SPEC-SHARING-ACCOUNTS R1b; migration 0009, `ACCOUNTS_PER_DAY`).
+- One CONTINUE WITH PASSKEY in place of SIGN IN WITH PASSKEY and CREATE ACCOUNT (R1, R13).
+- ACCOUNT lists its sign-in methods; ADD ANOTHER PASSKEY once it has one; "Passkey added" says what it means (R7, R13).
+
 ## Out of scope
 - Choosing the microphone device on the web (owner question 7): answered, not built.
 - Renaming Volume to Gain (owner question 9): answered, not changed.
@@ -55,4 +60,5 @@ Owner's second round (2026-11-17, after trying staging):
 
 ## Risks and unknowns
 - Patches that relied on an unpowered website Microphone go quiet until powered (as in v1).
+- A school class on one network can make 10 accounts a day; `ACCOUNTS_PER_DAY` raises it without a code change.
 - The clipboard copy after a save relies on a ClipboardItem promise in the press; a browser that refuses it shows SAVED.

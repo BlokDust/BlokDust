@@ -39,6 +39,8 @@ export interface Env {
   /** "off" stops the page-close activity request (SPEC-SHARING-ACCOUNTS R16) if D1's free writes run short; saves still
    * carry activity. A var, or `wrangler secret put ACTIVITY_BEACON` to flip it without a deploy. Default on. */
   ACTIVITY_BEACON?: string;
+  /** New accounts a network may make in a UTC day (SPEC-SHARING-ACCOUNTS R1b). Unset: 10. */
+  ACCOUNTS_PER_DAY?: string;
   // ---- usage analytics (SHARING-0010, SPEC-SHARING-USAGE-ANALYTICS) ----
   /** Workers Analytics Engine dataset the events go to. Without it nothing is recorded. */
   EVENTS?: AnalyticsEngineDataset;

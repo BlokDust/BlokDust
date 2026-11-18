@@ -54,9 +54,10 @@ async function openApp(d: Device, query = ''): Promise<void> {
 /** Patches open, and Settings › ACCOUNT's state (accountPage.ts). */
 const pp = (p: Page) => p.evaluate(() => {
   const s = (window as any).__bd_probe.scene, x = s.SettingsPanel.accountPage;
-  return { open: s.PatchesPanel.Open, settings: s.SettingsPanel.Open, tabName: s.SettingsPanel.MenuItems[4]?.Name, view: x.View, account: x.Account, busy: x.Busy, message: x.Message };
+  return { open: s.PatchesPanel.Open, settings: s.SettingsPanel.Open, tabName: s.SettingsPanel.MenuItems[4]?.Name, view: x.View, account: x.Account, busy: x.Busy, message: x.Message,
+    methods: x.Account ? x.methods() as string[] : [], addLabel: x.addLabel as string };
 });
-const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'apple', 'create', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk']);
+const ACCOUNT_CONTROLS = new Set(['passkey', 'google', 'apple', 'back', 'submit', 'addPasskey', 'signOut', 'deleteAccount', 'deleteCancel', 'deleteOk']);
 async function press(p: Page, name: string, wait = 400): Promise<void> {
   const at = await p.evaluate(([n, inSettings]) => { const s = (window as any).__bd_probe.scene; return inSettings ? s.SettingsPanel.accountCentre(n) : s.PatchesPanel.centreOf(n); }, [name, ACCOUNT_CONTROLS.has(name)] as const);
   if (!at) throw new Error(`no control ${name}`);
@@ -91,8 +92,8 @@ async function addBlock(p: Page): Promise<void> {
 }
 
 const tests: Record<string, () => Promise<void>> = {
-  /** R1, R3, R6, R9, R13: a patch saved before signing up; CREATE ACCOUNT with a passkey; the account claims it; the
-   * session cookie is HttpOnly; the name rules hold. */
+  /** R1, R3, R6, R9, R13: a patch saved before signing up; CONTINUE WITH PASSKEY on a device with none asks for a
+   * name and makes the account with a passkey; the account claims it; the session cookie is HttpOnly; the name rules hold. */
   async 'passkey-account'() {
     const a = await device();
     await openApp(a, '?demo');
@@ -102,7 +103,12 @@ const tests: Record<string, () => Promise<void>> = {
     const ways = await a.page.evaluate(() => ['google', 'apple', 'passkey'].map(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k)));
     check('signed out: Settings › SIGN IN offers Google, Apple and a passkey, in that order (owner review 2)', (await pp(a.page)).account === null && (await pp(a.page)).tabName === 'SIGN IN'
       && ways.every(Boolean) && ways[0][1] < ways[1][1] && ways[1][1] < ways[2][1], { p: await pp(a.page), ways });
-    await press(a.page, 'create');
+    const noCreate = await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.accountCentre('create'));
+    await press(a.page, 'passkey'); await settled(a.page);
+    const asked = await pp(a.page);
+    check('R1, R13: one CONTINUE WITH PASSKEY, no CREATE ACCOUNT; with no passkey on the device it asks for a name (CHG-0035)',
+      noCreate === null && asked.view === 'create' && asked.account === null && asked.message.startsWith('No passkey was chosen'), { noCreate, asked });
+    await a.page.screenshot({ path: `${OUT}/continue-no-passkey.png` });
     await a.page.fill('#accountHandleInput', 'Admin');
     await press(a.page, 'submit'); await settled(a.page);
     check('R6: a reserved name is refused', (await pp(a.page)).message.includes('reserved'), (await pp(a.page)).message);
@@ -110,6 +116,7 @@ const tests: Record<string, () => Promise<void>> = {
     await press(a.page, 'submit'); await settled(a.page);
     const st = await pp(a.page);
     check('R1: CREATE WITH PASSKEY makes the account and signs in; the tab reads ACCOUNT', st.account?.handle === 'tester_1' && st.view === 'main' && st.tabName === 'ACCOUNT', st);
+    check('R7, R13: ACCOUNT lists its ways in (1 passkey) and offers ADD ANOTHER PASSKEY (CHG-0035)', st.methods.join(',') === '1 passkey' && st.addLabel === 'Add Another Passkey', st);
     await a.page.evaluate(() => { const s = (window as any).__bd_probe.scene; s.SettingsPanel.ClosePanel(); s.PatchesPanel.ClosePanel(); }); await a.page.waitForTimeout(700);
     const c1 = await corners(a.page);
     check('R14: the stage says who is signed in; pressing it opens Settings › ACCOUNT', c1.me === 'tester_1' && !!c1.meAt, c1);
@@ -188,6 +195,13 @@ const tests: Record<string, () => Promise<void>> = {
     await c.page.fill('#accountHandleInput', 'carol_g');
     await press(c.page, 'submit'); await settled(c.page);
     check('… and has it', (await pp(c.page)).account?.handle === 'carol_g' && (await pp(c.page)).account?.providers.includes('google'), await pp(c.page));
+    const g = await pp(c.page);
+    check('R13: a Google account\'s ways in read Google, and its button ADD PASSKEY (CHG-0035)', g.methods.join(',') === 'Google' && g.addLabel === 'Add Passkey', g);
+    await press(c.page, 'addPasskey'); await settled(c.page);
+    const g2 = await pp(c.page);
+    check('R7: ADD PASSKEY adds one to the Google account: "Passkey added", Google · 1 passkey, ADD ANOTHER PASSKEY (CHG-0035)',
+      g2.message.startsWith('Passkey added: you can sign in with it') && g2.methods.join(',') === 'Google,1 passkey' && g2.addLabel === 'Add Another Passkey', g2);
+    await c.page.screenshot({ path: `${OUT}/account-methods.png` });
     // The same Google account again, on another device: the same BlokDust account, straight to the stage.
     const d = await device();
     await openApp(d); await openAccount(d.page);
@@ -234,6 +248,40 @@ const tests: Record<string, () => Promise<void>> = {
     const r = await fetch(`${base}/api/auth/apple/callback?code=x&state=s`, { redirect: 'manual', headers: { cookie: 'bd_oauth=s.verifier.%2F' } });
     check('R2b: a Google sign-in\'s cookie is no good for Apple\'s callback', r.status === 400, r.status);
     await e.ctx.close();
+  },
+
+  /** R1b (CHG-0035): a network makes ACCOUNTS_PER_DAY new accounts a day (a second local Worker, 2 a day); the next
+   * is refused, by passkey and by Google; known accounts still sign in; back from Google the app says why. */
+  async 'new-account-limit'() {
+    const vars = { TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`, ACCOUNTS_PER_DAY: '2',
+      GOOGLE_CLIENT_ID: 'test-google-client', GOOGLE_CLIENT_SECRET: 'test-google-secret', GOOGLE_AUTH_URL: `${mocks.url}/google/auth`, GOOGLE_TOKEN_URL: `${mocks.url}/google/token` };
+    const lim = await startLocal({ name: 'accounts-limit', vars });
+    try {
+      // Google sign-in by hand: start (its cookie), the mock's consent, the callback; where it lands.
+      const googleAs = async (user: string): Promise<string> => {
+        await fetch(`${mocks.url}/google/next?user=${user}`);
+        const start = await fetch(`${lim.url}/api/auth/google/start?return=%2F`, { redirect: 'manual' });
+        const jar = start.headers.getSetCookie().map(x => x.split(';')[0]).join('; ');
+        const callback = (await fetch(start.headers.get('location')!, { redirect: 'manual' })).headers.get('location')!;
+        return new URL((await fetch(callback, { redirect: 'manual', headers: { cookie: jar } })).headers.get('location') ?? '', lim.url).searchParams.get('account') ?? '';
+      };
+      const landed = [await googleAs('lim_1'), await googleAs('lim_2'), await googleAs('lim_3')];
+      const known = await googleAs('lim_1');
+      const passkey = await fetch(`${lim.url}/api/auth/passkey/register/options`, { method: 'POST', headers: { origin: lim.url, 'content-type': 'application/json' },
+        body: JSON.stringify({ handle: 'lim_four', turnstile: 'ok' }) });
+      const why = await passkey.json() as { error?: string };
+      check('R1b: two new accounts, then the third is refused (Google); a known account still signs in', landed.join(',') === 'new,new,limit' && known === 'in', { landed, known });
+      check('R1b: a new passkey account is refused before the device makes a passkey, saying why', passkey.status === 429 && /Too many new accounts from this network today/.test(why.error ?? ''), { status: passkey.status, why });
+    } finally { await lim.stop(); }
+    // Back from Google refused: Settings › SIGN IN, saying why.
+    const f = await device();
+    await f.page.goto(`${base}/?account=limit`);
+    await f.page.waitForFunction(() => { const s = (window as any).__bd_probe?.scene?.SettingsPanel; return s?.Open && s.OffsetY === 0 && s.accountPage.Account !== undefined; }, null, { timeout: 20000 }).catch(() => {});
+    await f.page.waitForTimeout(400);
+    const st = await pp(f.page);
+    check('R1b: back from Google refused, Settings › SIGN IN says why', st.settings && st.account === null && st.message.startsWith('Too many new accounts'), st);
+    await f.page.screenshot({ path: `${OUT}/new-account-limit.png` });
+    await f.ctx.close();
   },
 
   /** R5: cookie-authenticated changes only from this site. */
