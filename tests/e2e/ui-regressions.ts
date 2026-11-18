@@ -2279,13 +2279,13 @@ Object.assign(tests, {
     const z4 = await zoom();
     await p.close();
     const r = { z0, z1, anchor: [g0, g1], z2, z3, z4a, z4 };
-    const ok = z1 > z0 * 1.3 && Math.abs(g0[0] - g1[0]) < 0.05 && Math.abs(g0[1] - g1[1]) < 0.05 && ![0.25, 0.5, 1, 2, 4].includes(z1)
+    const ok = z1 > z0 * 1.3 && Math.abs(g0[0] - g1[0]) < 0.05 && Math.abs(g0[1] - g1[1]) < 0.05 && ![0.15, 0.25, 0.5, 1, 2, 4].includes(z1)
       && z2 < z1 && z3 === z2 && Math.abs(z4 / z4a - 1.5) < 0.01;
     return [ok, r];
   },
 
   /** CHG-0010 (owner, 2026-11-12): the mouse wheel zooms like a pinch, smoothly about the pointer (the grid point under
-   * it stays put), within v1's 0.25×–4×. A wheel over an open panel (Settings) leaves the stage's zoom alone. Owner
+   * it stays put), within 0.15×–4× (v1 0.25×; CHG-0035). A wheel over an open panel (Settings) leaves the stage's zoom alone. Owner
    * (2026-11-12): half a pinch's sensitivity, so one notch (deltaY 100, clamped to 25) is ×e^0.125 ≈ 1.13. */
   async 'mouse-wheel-zoom'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', -6, 0), blk(2, 'Filter', 6, 0)], errors);
@@ -2299,7 +2299,7 @@ Object.assign(tests, {
     for (let i = 0; i < 2; i++) { await p.mouse.wheel(0, -100); await p.waitForTimeout(30); }
     await p.waitForTimeout(100);
     const z1 = await zoom(), g1 = await gridAt();
-    for (let i = 0; i < 40; i++) { await p.mouse.wheel(0, 100); await p.waitForTimeout(10); }  // far out: stops at 0.25
+    for (let i = 0; i < 40; i++) { await p.mouse.wheel(0, 100); await p.waitForTimeout(10); }  // far out: stops at 0.15
     await p.waitForTimeout(400);
     const z2 = await zoom();
     // Settings open: the wheel is the panel's.
@@ -2308,7 +2308,7 @@ Object.assign(tests, {
     const z3 = await zoom();
     await p.close();
     const ok = Math.abs(zNotch / z0 - Math.exp(0.125)) < 0.01 && z1 > z0 * 1.3 && Math.abs(g0[0] - g1[0]) < 0.05 && Math.abs(g0[1] - g1[1]) < 0.05
-      && Math.abs(z2 - 0.25) < 1e-6 && z3 === z2;
+      && Math.abs(z2 - 0.15) < 1e-6 && z3 === z2;
     return [ok, { z0, zNotch, z1, anchor: [g0, g1], z2, z3 }];
   },
 
@@ -2386,7 +2386,7 @@ Object.assign(tests, {
   },
 
   /** CHG-0005 task 8 (owner): multi-touch. Each finger drags its own block (powered while held, drawn pressed); two
-   * fingers on the stage pinch-zoom about their midpoint (which stays over the same spot) within v1's 0.25×–4×;
+   * fingers on the stage pinch-zoom about their midpoint (which stays over the same spot) within 0.15×–4× (v1 0.25×; CHG-0035);
    * two fingers on two sliders of the open options panel move each its own. One finger behaves as before. */
   async 'multitouch'(errors: string[]) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, hasTouch: true });
@@ -2432,10 +2432,10 @@ Object.assign(tests, {
     const v1 = await view(), mid1 = await probeAt(640, 560);
     await p.screenshot({ path: `${OUT}/multitouch-pinch.png` });
     await start(1, 440, 560); await start(2, 840, 560);
-    await move([[1, 630, 560], [2, 650, 560]], 10);  // pinch right in: stops at 0.25×
+    await move([[1, 630, 560], [2, 650, 560]], 10);  // pinch right in: stops at 0.15×
     await endAll();
     const v2 = await view();
-    const pinch = pinched.pinch && Math.abs(v1.zoom - 2 * v0.zoom) < 0.05 && (!mid0 || (Math.abs(mid0[0] - mid1[0]) < 0.2 && Math.abs(mid0[1] - mid1[1]) < 0.2)) && v2.zoom === 0.25;
+    const pinch = pinched.pinch && Math.abs(v1.zoom - 2 * v0.zoom) < 0.05 && (!mid0 || (Math.abs(mid0[0] - mid1[0]) < 0.2 && Math.abs(mid0[1] - mid1[1]) < 0.2)) && v2.zoom === 0.15;
     await p.evaluate(() => { const s = (window as any).__bd_probe.scene; s.pinchView(1, { x: 0, y: 0 }); s.host.setZoom(1); s.host.setDrag({ x: 0, y: 0 }); });
     await p.waitForTimeout(300);
 
