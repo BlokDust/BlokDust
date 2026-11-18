@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "logic",
   "name": "Chance",
-  "description": "Each particle or laser beam that hits it rolls the dice: it powers sources, particle emitters and lasers when the roll wins, until the next hit.",
+  "description": "Randomly triggers connected sources and emitters based on a set probability when hit.",
   "v1": {
     "type": null
   },

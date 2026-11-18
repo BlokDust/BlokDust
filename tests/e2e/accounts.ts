@@ -166,7 +166,7 @@ const tests: Record<string, () => Promise<void>> = {
     await press(b.page, 'tab1', 1500);
     const rows = await b.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items as { name: string; detail: string; key: string }[]);
     const row = rows.findIndex(r => r.key === `acct:${shared.firstPatch}`);
-    check('R8: OPEN lists the account\'s patches first', row === 0 && rows[0].detail.startsWith('Your account'), rows.slice(0, 3));
+    check('R8: OPEN lists the account\'s patches first, with when they were saved (no "Your account": owner, 2026-11-18)', row === 0 && rows[0].detail.startsWith('Saved'), rows.slice(0, 3));
     await press(b.page, 'open0', 2500);
     const opened = await b.page.evaluate(() => ({ id: (window as any).__bd_probe.v1App.CompositionId, url: location.search }));
     await b.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel()); await b.page.waitForTimeout(600);
@@ -199,8 +199,8 @@ const tests: Record<string, () => Promise<void>> = {
     check('R13: a Google account\'s ways in read Google, and its button ADD PASSKEY (CHG-0035)', g.methods.join(',') === 'Google' && g.addLabel === 'Add Passkey', g);
     await press(c.page, 'addPasskey'); await settled(c.page);
     const g2 = await pp(c.page);
-    check('R7: ADD PASSKEY adds one to the Google account: "Passkey added", Google · 1 passkey, ADD ANOTHER PASSKEY (CHG-0035)',
-      g2.message.startsWith('Passkey added: you can sign in with it') && g2.methods.join(',') === 'Google,1 passkey' && g2.addLabel === 'Add Another Passkey', g2);
+    check('R7: ADD PASSKEY adds one to the Google account: no message, the methods line reads Google · 1 passkey, ADD ANOTHER PASSKEY',
+      g2.message === '' && g2.methods.join(',') === 'Google,1 passkey' && g2.addLabel === 'Add Another Passkey', g2);
     await c.page.screenshot({ path: `${OUT}/account-methods.png` });
     // The same Google account again, on another device: the same BlokDust account, straight to the stage.
     const d = await device();

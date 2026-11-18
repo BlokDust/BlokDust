@@ -77,8 +77,11 @@ The single, portable representation of a BlokDust creation, used by the web app,
   - The plugin's SAVE tab has SAVE TO COMPUTER, then CREATE SHARE LINK, which opens the public site with the patch in
     the address (`?c=p…&t=<title>&share=1`); the site makes the link as it loads (as SAVE would) and the address bar
     shows it, short, to copy; START shows the scene (owner, 2026-11-13, CHG-0013; it used to open Patches on SAVE).
-  - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is the OPEN tab's main (filled) button, except in a
-    phone's browser, where it opens nothing useful (owner, 2026-11-16).
+  - Patches opens on the tab last chosen. OPEN FROM YOUR DEVICE is a bordered button like RANDOMISE TITLE at the right
+    of the row under OPEN's list (where GALLERY has its sorts; owner, 2026-11-18), except in a phone's browser, where it
+    opens nothing useful (owner, 2026-11-16). OPEN has no hint line; its list and GALLERY's start 175 units over the
+    centre (never closer than 50 units under the tabs) and their windows are the same size (owner, 2026-11-18).
+  - While SAVE saves, the button reads SAVING; there is no spinner or line under it (owner, 2026-11-18).
   - On a phone (portrait) OPEN and GALLERY run from the tabs to the foot of the screen, with taller rows in larger type,
     and the video view from the tabs down (owner, 2026-11-16: v1 centred its pages, leaving wide gaps on a tall screen).
   - The video view (after SAVE with MAKE VIDEO on) shows the player, its button and the patch's link to copy; no name

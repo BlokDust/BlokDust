@@ -20,8 +20,9 @@ private queue for staff review within a week; the dashboard, email integration a
   something isn’t right.” Message and email inputs MUST use the same text size; email MUST be a compact single line.
   Switch halves MUST be square with the same glyph clearance as a 60-unit OptionsPanel switch row, centred between
   the email rule and SEND. Provide message, EMAIL (optional), an initially enabled
-  “Share patch and diagnostics” switch and SEND. Success MUST say only “Thank you”; the API reference
-  MUST NOT be displayed. No attachment disclosure paragraph or automatic-reporting checkbox is shown.
+  “Share patch and diagnostics” switch and SEND. Success MUST say only “Message sent”, in v1's message bar (owner, 2026-11-18:
+  not a line under the form); the API reference MUST NOT be displayed. The page slides in and out under the tabs with
+  CONNECT, as the other tabs' pages do. No attachment disclosure paragraph or automatic-reporting checkbox is shown.
 - **R2.** Every report MUST include version/build and the message. When the inclusion switch is on, include the
   sanitised current patch (including unsaved changes), available system details and recent diagnostics. When off,
   both client and server MUST omit all three (`patch: null`, empty diagnostics/system). The switch MUST NOT enable
@@ -59,7 +60,7 @@ private queue for staff review within a week; the dashboard, email integration a
 
 ## Scenarios
 - **S1.** Open General → Connect, send a suggestion with an optional email; a private report and sanitised current patch are
-  saved, “Thank you” appears, and shared patch storage remains unchanged (R1, R2, R6, R8).
+  saved, “Message sent” appears, and shared patch storage remains unchanged (R1, R2, R6, R8).
 - **S2.** Disconnect and press Send; the message remains, reconnection does not send anything, and manual retry works
   (R5). A server failure also preserves the message.
 - **S3.** Turn inclusion off and send a message: no patch, diagnostics or system context is stored. Trigger errors: no

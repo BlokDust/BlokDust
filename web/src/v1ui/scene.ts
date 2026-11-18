@@ -808,7 +808,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       p.OpenPanel();
     };
   }
-  const accountTop = () => p.OffsetY + 120 * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
+  // 35 units higher than the other pages (owner, 2026-11-18: the stats left too much room under the tabs).
+  const accountTop = () => p.OffsetY + 85 * App.Unit + (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height);
   /** Tests: an account control's centre in CSS px. */
   p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
@@ -991,9 +992,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       rolls.forEach((r, i) => { p._RollOvers[i] = r; });
     }
     account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
-    host.feedback?.draw(p);
-    if (!p.Open) return;
-    // DOWNLOAD and ACCOUNT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
+    if (!p.Open) { host.feedback?.draw(p); return; }
+    // DOWNLOAD, ACCOUNT and CONNECT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
     // below the tabs' top to the bottom (owner, 2026-11-16: they drew over the tabs while sliding).
     const cctx = p.Ctx as CanvasRenderingContext2D;
     cctx.save();
@@ -1003,6 +1003,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height) p.Options[k].Draw(cctx, App.Unit, k, p, p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + TOUR_Y * App.Unit);
       drawDownload();
       if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
+      host.feedback?.draw(p);  // CONNECT's form slides in under the tabs too (owner, 2026-11-18)
     } finally { cctx.restore(); }
     if (!about) return;
     const ctx = p.Ctx as CanvasRenderingContext2D, f = footer(), txt = App.Palette[App.ThemeManager.Txt];

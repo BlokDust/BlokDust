@@ -179,6 +179,27 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     return [s.blocks.length === 0 && s.patch.blocks.length === 0 && closed, { blocks: s.blocks.length, patchBlocks: s.patch.blocks.length, ui }];
   },
 
+  /** Owner (2026-11-18): after CLEAR, or opening a preset, the old patch's particles went on flying across the new
+   * stage (SPEC-SIMULATION-POWER-AND-PARTICLES R1b). */
+  async 'clear-and-open-clear-particles'(errors) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    const fire = () => p.evaluate(() => { const h = (window as any).__bd_probe.scene.host, id = h.createBlock('ParticleEmitter', -6, 0);
+      h.setParam(id, 'selfPoweredMode', 1); h.setParam(id, 'speed', 1); });
+    const flying = () => p.waitForFunction(() => (window as any).__bd_probe.state.particles > 2, null, { timeout: 10000 }).then(() => true).catch(() => false);
+    await fire(); await p.mouse.click(5, 400);
+    const before = await flying();
+    await p.mouse.click(37, 45); await p.waitForTimeout(900);   // CLEAR (as clear-stage)
+    await p.mouse.click(195, 135); await p.waitForTimeout(600);
+    const afterClear = await p.evaluate(() => (window as any).__bd_probe.state.particles as number);
+    await fire(); await p.mouse.click(5, 400);
+    const before2 = await flying();
+    await p.evaluate(() => (window as any).__bd_probe.scene.host.openPatch({ key: 'preset:01-computer-keys-2-tones.blokdust' }, 'open'));
+    await p.waitForTimeout(150);
+    const afterOpen = await p.evaluate(() => (window as any).__bd_probe.state.particles as number);
+    await p.close();
+    return [before && afterClear === 0 && before2 && afterOpen === 0, { before, afterClear, before2, afterOpen }];
+  },
+
   /** Owner (2026-11-08, iPhone/iPad Safari): a hard press raised the magnifier, and swiping could select the whole
    * page. Ported from Funputs (#45): `-webkit-touch-callout: none` + `user-select: none` disarm the callout and
    * selection, and a non-passive `touchstart` on the stage cancels Safari's long-press / double-tap recognisers
@@ -402,6 +423,21 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const original = tones.find((b: any) => b.x === -6 && b.y === 3), copy = tones.find((b: any) => b !== original);
     return [tones.length === 2 && !!original && !!copy && copy.params.waveform === 3 && copy.params.transpose === 7 && (copy.x !== -6 || copy.y !== 3),
       { blocks: blocks.map((b: any) => [b.type, b.x, b.y, b.params]) }];
+  },
+
+  /** Owner (2026-11-18): v1's message bar said STARTED RECORDING and STOPPED RECORDING (v1 Recorder.StartRecording /
+   * StopRecording, one second each); v2 said nothing. */
+  async 'recorder-says-started-stopped'(errors) {
+    const p = await open(browser, [blk(1, 'ToneSource', -6, 0), blk(2, 'Power', -9, 0), blk(3, 'Recorder', 6, 4)], errors);
+    const [bx, by] = await toCss(p, 6, 4), [, gy1] = await toCss(p, 6, 5), grid = gy1 - by;
+    const bar = () => p.evaluate(() => { const m = (window as any).__bd_probe.scene.MessagePanel; return m.Open ? String(m._Value?.string ?? '') : ''; });
+    await p.mouse.click(bx, by - 3 * grid); await p.waitForTimeout(250);
+    const started = await bar();
+    await p.waitForTimeout(600);
+    await p.mouse.click(bx, by - 3 * grid); await p.waitForTimeout(250);
+    const stopped = await bar();
+    await p.close();
+    return [/started recording/i.test(started) && /stopped recording/i.test(stopped), { started, stopped }];
   },
 
   /** The Recorder's red record button (v1 RecorderPanel, beside the block) records the scene; the recording becomes
@@ -1759,8 +1795,10 @@ Object.assign(tests, {
     await patchesClick(p, 'tab0', 600); await patchesClick(p, 'close', 800);
     await openPatches(p, true); const back = await tab();
     await p.close();
-    const filled = fill.px.every((v: number, i: number) => Math.abs(v - fill.want[i]) <= 3);
-    const ok = first === 0 && reopened === 1 && reloaded === 1 && back === 0 && filled;
+    // OPEN FROM YOUR DEVICE is a small bordered button now (owner, 2026-11-18), not the wide filled one: 190 px left of
+    // its centre is the panel, not the button's colour.
+    const small = !fill.px.every((v: number, i: number) => Math.abs(v - fill.want[i]) <= 3);
+    const ok = first === 0 && reopened === 1 && reloaded === 1 && back === 0 && small;
     return [ok, { first, reopened, reloaded, back, fill }];
   },
 

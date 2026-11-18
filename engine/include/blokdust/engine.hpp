@@ -29,6 +29,8 @@ struct Command {
   /// Relink: blocks `id` and `value` (a block id) count as connected now, so they move to the end of each other's
   /// connection order (SPEC-CONNECTIONS-PROXIMITY R4a). Patch loaders replay a saved `connectionOrder` with it.
   /// Reset: block `id` starts over (a Counter goes back to step 1, SIMULATION-0005).
+  /// Reset with id 0 (kInvalidBlock): the world starts over: the particles in flight, in its Stages too, are gone
+  /// (SPEC-SIMULATION-POWER-AND-PARTICLES R1b: CLEAR and opening a patch).
   enum class Type : std::uint8_t { AddBlock, RemoveBlock, MoveBlock, SetParam, NoteOn, NoteOff, SetMaster, Press, NoteExpression, Tempo, WorldPower, Relink, Reset };
   enum class Expression : std::uint8_t { Bend = 0, Pressure = 1, Slide = 2 };
   Type type{};

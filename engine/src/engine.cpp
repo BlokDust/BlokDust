@@ -519,6 +519,11 @@ void Engine::apply(const Command& c) noexcept {
       break;
     }
     case Command::Type::Reset: {  // R2c: the Counter panel's Reset
+      if (c.id == kInvalidBlock) {  // R1b: the whole world starts over (CLEAR, opening a patch): no particles left flying
+        particleCount_ = 0;
+        for (Engine* inner : stages_) if (inner) inner->applyNow(Command::reset(kInvalidBlock));
+        break;
+      }
       const int slot = slotOf(c.id);
       if (slot >= 0) { blocks_[slot].counterStep = 0; blocks_[slot].counterFired = false; recomputeStaticPower(); }
       break;

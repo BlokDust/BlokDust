@@ -447,6 +447,8 @@ async function main() {
     resetScene: () => {
       for (const id of [...model.keys()]) removeBlock(id);
       if (inside) leaveStage(false);
+      // The old patch's particles go with it (SPEC-SIMULATION-POWER-AND-PARTICLES R1b; owner, 2026-11-18).
+      sendRaw([{ type: CommandType.Reset, id: 0 }]);
       labels.length = 0; selectedLabels.clear(); endLabelEdit(false);
       macros.clear(); innerIds.clear(); innerSamples.clear(); sources = [];
       stage.setView(1, { x: 0, y: 0 });
@@ -1260,7 +1262,7 @@ async function main() {
   /** Signed in: the account's patches (R8), as OPEN rows. */
   async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
     if (embedId) return [];
-    try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: `Your account \u00b7 ${savedOn(p.updated)}`, key: `acct:${p.id}` })); }
+    try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: savedOn(p.updated), key: `acct:${p.id}` })); }
     catch { return []; }  // signed out, or no backend
   }
   async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<boolean> {
@@ -1535,10 +1537,12 @@ async function main() {
   async function toggleRecording(id: number): Promise<void> {
     const v = v1Blocks.get(id);
     // Plugin: the processor records its own output and loads the take into the block (as a file the project keeps).
-    if (v && juce) { v.IsRecording = !v.IsRecording; juce.emitEvent('bd_record', { id, on: v.IsRecording }); stage.redraw(); return; }
+    // v1 Recorder.StartRecording / StopRecording: a one-second line in the message bar each way.
+    const say = (on: boolean) => scene.message(on ? 'Started Recording' : 'Stopped Recording', { seconds: 1 });
+    if (v && juce) { v.IsRecording = !v.IsRecording; juce.emitEvent('bd_record', { id, on: v.IsRecording }); say(v.IsRecording); stage.redraw(); return; }
     if (!v || !engine) return;
-    if (!v.IsRecording) { v.IsRecording = true; engine.startRecording(); stage.redraw(); return; }
-    v.IsRecording = false;
+    if (!v.IsRecording) { v.IsRecording = true; engine.startRecording(); say(true); stage.redraw(); return; }
+    v.IsRecording = false; say(false);
     const r = await engine.stopRecording();
     stage.redraw();
     if (!r.left.length) return;

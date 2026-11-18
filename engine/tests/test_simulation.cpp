@@ -202,3 +202,20 @@ TEST_CASE("Power Gap on hit (owner, 2026-11-14): a hit cuts its power for `gap`,
   CHECK(eventsOf(*off, Event::Type::GateOn, 2).size() == 1);   // v1: the Power just holds the Tone
   CHECK(eventsOf(*off, Event::Type::Hit, 3).empty());          // particles pass through it
 }
+
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R1b: Reset of the whole world (id 0) clears the particles in flight, in its Stages too") {
+  // Clearing the stage or opening another patch (owner, 2026-11-18): the old patch's particles went on flying.
+  auto e = makeEngine(48000, 1, false);
+  e->push(Command::add(1, BlockType::PowerEmitter, 0, 0));
+  e->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));
+  e->push(Command::setParam(1, P::PowerEmitter::rate, 5));
+  e->push(Command::setParam(1, P::PowerEmitter::speed, 1));
+  render(*e, 24000);
+  REQUIRE(e->particles().size() > 0);
+  e->push(Command::remove(1));
+  render(*e, 128);
+  CHECK(e->particles().size() > 0);  // trashing an emitter leaves its particles flying (v1)
+  e->push(Command::reset(kInvalidBlock));
+  render(*e, 128);
+  CHECK(e->particles().size() == 0);
+}

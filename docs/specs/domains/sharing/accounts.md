@@ -51,10 +51,10 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   contains no blocked word. The word check (server/src/moderation.ts) folds look-alike characters, and refuses short
   roots only as whole words, so names like grape or Scunthorpe stay allowed.
 - **R7.** ADD PASSKEY (ADD ANOTHER PASSKEY once the account has one) adds a passkey on this device to the signed-in
-  account, beside its Google, Apple and other passkeys: "Passkey added: you can sign in with it on this device."
+  account, beside its Google, Apple and other passkeys. No message: the "Sign-in methods" line shows it (R13).
 
-- **R8.** `GET /api/me/patches` lists the account's patches, newest first. The OPEN tab lists them first ("Your
-  account · Saved …").
+- **R8.** `GET /api/me/patches` lists the account's patches, newest first. The OPEN tab lists them first ("Saved …":
+  every patch there is the user's, so no "Your account"; owner, 2026-11-18).
 - **R9.** A patch saved while signed in belongs to the account. Signing in claims the patches this browser holds edit
   tokens for. The owner can save over the account's patches from any device signed in to it, without the edit token.
 - **R10.** DELETE ACCOUNT (asked first) deletes the account, its passkeys, Google link, sessions and patches. Their
@@ -71,16 +71,14 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
     and CONTINUE WITH PASSKEY, in that order (owner review 2; one passkey button, R1: owner, 2026-11-17);
   - creating an account or naming one: a small heading in the tab type with no rule and no explanation (owner review
     2: the large heading over a rule read as a text field), a NAME field, the main button and BACK;
-  - signed in: "SIGNED IN AS NAME" on one line in the tab type, no rule (owner review 2), DELETE ACCOUNT (asked
-    first) at the right of that line (CHG-0027), the stats (R15, R16), then ADD PASSKEY · SIGN OUT, and under them
+  - signed in: STATS in the tab type, no rule (the stage's corner already says who: owner, 2026-11-18), the page
+    35 units higher than the other tabs' pages, DELETE ACCOUNT (asked first) at the right of that line (CHG-0027), the stats (R15, R16), then ADD PASSKEY · SIGN OUT, and under them
     "Sign-in methods: Google · Apple · 2 passkeys" (the ones it has; CHG-0035).
   Signing in with a passkey closes Settings: back to the stage.
 - **R13a.** Back from Google or Apple there is no start screen and no intro: the stage takes input at once and the first press
   or key starts the sound. A new account opens Settings at the name step; a known one stays on the stage.
-- **R15.** (CHG-0027) Signed in, ACCOUNT shows the account's stats between SIGNED IN AS NAME and ADD PASSKEY · SIGN
+- **R15.** (CHG-0027) Signed in, ACCOUNT shows the account's stats between STATS and ADD PASSKEY · SIGN
   OUT, all in the one `GET /api/me?stats=1` the tab already makes (loading the page asks `/api/me` without them):
-  - "since MONTH YEAR" (the account's creation) after SIGNED IN AS NAME, in v1's italic (left out when a long name
-    leaves no room before DELETE ACCOUNT);
   - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
     LIKES (on its gallery patches) and PLAYS (its patches opened in the app, by anyone; owner, 2026-11-16: was OPENS), each a number in the Settings sliders'
     light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);

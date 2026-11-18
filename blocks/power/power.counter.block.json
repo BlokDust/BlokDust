@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "logic",
   "name": "Counter",
-  "description": "Counts particles and laser beams that hit it. Powers sources, particle emitters and lasers while its pattern is on a hit step.",
+  "description": "Steps through a sequence on every hit and triggers connected sources and emitters on enabled steps.",
   "v1": {
     "type": null
   },

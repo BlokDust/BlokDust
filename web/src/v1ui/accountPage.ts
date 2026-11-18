@@ -28,22 +28,21 @@ const COPY = {
   passkey: 'Continue With Passkey', google: 'Sign In With Google', apple: 'Sign In With Apple',
   createTitle: 'New here? Choose your name', nameTitle: 'Choose your name', name: 'Name',
   noPasskey: 'No passkey was chosen. Choose a name to make a new account with a passkey on this device, or go back to try again.',
-  createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', signedInAs: 'Signed in as',
+  createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', stats: 'Stats',
   addPasskey: 'Add Passkey', addAnother: 'Add Another Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
   deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
-  noAccounts: 'Accounts are not available here.', working: 'one moment', added: 'Passkey added: you can sign in with it on this device.',
+  noAccounts: 'Accounts are not available here.', working: 'one moment',
   methods: 'Sign-in methods', google1: 'Google', apple1: 'Apple', passkeyN: (n: number) => `${n} ${n === 1 ? 'passkey' : 'passkeys'}`,
   patches: 'Patches', remixes: 'Remixes', likes: 'Likes', opens: 'Plays', favourites: 'Favourite blocks',
-  noFavourites: 'Save a patch to see your favourite blocks here.', since: 'Since', mostRemixed: 'Most remixed',
+  noFavourites: 'Save a patch to see your favourite blocks here.', mostRemixed: 'Most remixed',
   minutesPlayed: 'Minutes played', hoursPlayed: 'Hours played', blocksAdded: 'Blocks added', particles: 'Particles', laserTurns: 'Laser turns',
 };
 /** Where each part of the stats starts (units from the page's top). Numbers: their tops are 5 units under a row's y,
  * their labels' baselines 52; FAVOURITE BLOCKS' title tops are 2 units under its y. */
-const STATS_Y = { row1: 27, row2: 96, favourites: 168, buttons: 266 } as const;
+const STATS_Y = { row1: 27, row2: 96, favourites: 168, buttons: 278 } as const;
 /** Favourite blocks (from FAVOURITE BLOCKS' y): the icons at half v1's menu size (owner, 2026-11-16), centred 31 units
  * down; their names' baselines 62 down (a second line 14 under). */
-const FAV = { scale: 0.5, icon: 31, name: 62 } as const;
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const FAV = { scale: 0.5, icon: 42, name: 73 } as const;
 /** 1234 → 1,234; 12345 → 12.3K; 1234567 → 1.2M (the numbers are for fun: short beats exact). */
 export function shortNumber(n: number): string {
   const f = (v: number, s: string) => `${v >= 100 ? Math.round(v) : Math.round(v * 10) / 10}${s}`;
@@ -193,14 +192,6 @@ export class AccountPage {
   private drawStats(top: number, L: number, R: number): void {
     const st = this.Account?.stats, c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
     if (!st) { App.AnimationsLayer.DrawSprite(c, 'loading', App.Width * 0.5, top + 25 * u, 16, true); return; }
-    // "since November 2026" after SIGNED IN AS NAME, in v1's italic.
-    const d = new Date(st.since);
-    c.font = App.Metrics.TxtMid;
-    const after = L + c.measureText(`${COPY.signedInAs} ${this.Account!.handle ?? ''}`.toUpperCase()).width + 10 * u;
-    App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left';
-    const since = `${COPY.since.toLowerCase()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-    // Left out when a long name leaves no room before DELETE ACCOUNT.
-    if (after + c.measureText(since).width < R - this.textW(COPY.deleteAccount) - 20 * u) c.fillText(since, after, top + 10 * u);
     let y = top + STATS_Y.row1 * u;
     this.numberRow([[shortNumber(st.patches), COPY.patches], [shortNumber(st.remixes), COPY.remixes], [shortNumber(st.likes), COPY.likes], [shortNumber(st.opens), COPY.opens]], y, L);
     y = top + STATS_Y.row2 * u;
@@ -256,7 +247,7 @@ export class AccountPage {
       this.filled(Lo.del.ok, App.Palette[menu[3]], busy ? COPY.working : COPY.deleteButton, !busy && !!r.deleteOk);
     } else if (this.Account) {
       App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
-      c.fillText(`${COPY.signedInAs} ${this.Account.handle ?? ''}`.toUpperCase(), Lo.L, top + 10 * u);
+      c.fillText(COPY.stats.toUpperCase(), Lo.L, top + 10 * u);  // the corner already says who (owner, 2026-11-18)
       this.drawStats(top, Lo.L, Lo.R);
       this.filled(Lo.signedIn.add, App.Palette[busy ? 1 : menu[1]], this.addLabel, !busy && !!r.addPasskey, true);
       this.filled(Lo.signedIn.out, App.Palette[busy ? 1 : menu[3]], COPY.signOut, !busy && !!r.signOut, true);
@@ -317,7 +308,7 @@ export class AccountPage {
     if (r.apple) { a.apple(); return; }
     if (r.back) { this.View = 'main'; this.Message = ''; return; }
     if (r.submit) { void this.submit(); return; }
-    if (r.addPasskey) { void this.action(() => a.addPasskey()).then(ok => { if (ok) this.Message = COPY.added; }); return; }
+    if (r.addPasskey) { void this.action(() => a.addPasskey()); return; }  // the methods line shows it (no message: owner, 2026-11-18)
     if (r.signOut) { void this.action(() => a.signOut(false)); return; }
     if (r.deleteAccount) { this.View = 'delete'; this.Message = ''; return; }
     if (r.deleteCancel) { this.View = 'main'; return; }

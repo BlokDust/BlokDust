@@ -79,6 +79,11 @@ try {
     return [p.MenuItems[1].Position.x / devicePixelRatio, (p.OffsetY + 30 * a.Unit) / devicePixelRatio];
   });
   await page.mouse.click(point[0], point[1]);
+  // Owner (2026-11-18): Connect's page popped in once its tab had arrived; it slides in under the tabs, as the others do.
+  await page.waitForTimeout(450);
+  const sliding = await page.evaluate(() => { const p = (window as any).__bd_probe.scene.SettingsPanel, m = document.querySelector<HTMLElement>('#feedback-panel');
+    return { y: p.MenuItems[1].YOffset, h: p.DrawTo.Height, shown: !!m && !m.hidden }; });
+  check('Connect slides in with its tab (shown while its page is still arriving)', sliding.y < -1 && sliding.y > -sliding.h && sliding.shown, sliding);
   await page.waitForSelector('#feedback-message');
   check('Connect shows the embedded support form', await page.getByRole('form', { name: 'Feedback & support' }).isVisible());
   check('context included by default', await page.getByRole('switch').getAttribute('aria-checked') === 'true');
@@ -102,17 +107,19 @@ try {
   await page.getByRole('status').filter({ hasText: 'couldn’t be sent' }).waitFor();
   check('server failure retains draft', await page.locator('#feedback-message').inputValue() === 'A suggestion from the panel');
   await page.click('#feedback-send');
-  await page.getByRole('status').filter({ hasText: 'Thank you' }).waitFor();
+  await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
+  const bar = await page.evaluate(() => { const m = (window as any).__bd_probe.scene.MessagePanel; return { open: m.Open, text: m._Value?.string }; });
+  check('sent: v1\'s message bar says MESSAGE SENT, not a line under the form (owner, 2026-11-18)', bar.open && /message sent/i.test(bar.text ?? ''), bar);
   check('manual feedback captures actual patch/build/system/diagnostics without storage secrets', submissions.length === 1 && submissions[0].patch.blocks.length > 0 && submissions[0].version === JSON.parse(readFileSync('package.json', 'utf8')).version && submissions[0].build && submissions[0].system.surface === 'web' && submissions[0].diagnostics.length > 0 && !JSON.stringify(submissions).includes('SECRET'));
   await page.getByRole('switch', { name: 'Share patch and diagnostics' }).click();
   await page.locator('#feedback-message').fill('Text only feedback');
   await page.click('#feedback-send');
-  await page.getByRole('status').filter({ hasText: 'Thank you' }).waitFor();
+  await page.getByRole('status').filter({ hasText: 'Message sent' }).waitFor();
   check('context switch excludes patch, diagnostics and system from the request', submissions.length === 2 && submissions[1].includeContext === false && submissions[1].patch === null && submissions[1].diagnostics.length === 0 && Object.keys(submissions[1].system).length === 0);
   await page.evaluate(() => { console.error('Unexpected test error'); });
   await page.waitForTimeout(300);
   check('attachment switch does not enable automatic reports', submissions.length === 2);
-  check('success copy contains no reference', await page.getByRole('status').textContent() === 'Thank you');
+  check('success copy contains no reference', await page.getByRole('status').textContent() === 'Message sent');
   await page.locator('#feedback-message').fill('z');
   await page.keyboard.press('q');
   check('typing does not trigger stage shortcuts', await page.locator('#feedback-message').inputValue() === 'zq');

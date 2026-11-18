@@ -40,10 +40,13 @@ export class FeedbackPanel {
       e.preventDefault(); if (this.sending) return;
       const message = get<HTMLTextAreaElement>('feedback-message'), email = get<HTMLInputElement>('feedback-email');
       if (!message.value.trim()) { message.setCustomValidity('Please enter a message.'); message.reportValidity(); return; }
-      this.sending = true; send.disabled = true; this.setStatus('Sending…');
+      this.sending = true; send.disabled = true; this.setStatus('');
       try {
         await this.client.send(this.client.report(message.value.trim(), email.value.trim(), 'feedback', this.include), this.form.querySelector<HTMLInputElement>('[name="website"]')!.value);
-        this.setStatus('Thank you'); message.value = ''; email.value = '';
+        // Sent: v1's message bar says so (owner, 2026-11-18: not a line at the foot of the page).
+        this.setStatus(''); message.value = ''; email.value = '';
+        this.form.querySelector('#feedback-status')!.textContent = 'Message sent';  // for screen readers; the bar shows it
+        (App.MainScene as { message?: (text: string) => void } | undefined)?.message?.('Message sent');
       } catch (error) { this.setStatus(error instanceof Error ? error.message : 'Your support query couldn’t be sent. Please try again.'); }
       finally { this.sending = false; send.disabled = false; this.redraw(); }
     };
@@ -52,19 +55,22 @@ export class FeedbackPanel {
   private setStatus(value: string): void {
     this.status = value; this.form.querySelector('#feedback-status')!.textContent = value; this.redraw();
   }
-  /** Called with the Settings canvas; inputs follow the actual Connect tab's slide/resize/theme. */
+  /** Called with the Settings canvas, clipped under the tabs; it slides in and out with the Connect tab as the other
+   * tabs' pages do (owner, 2026-11-18), and the inputs follow it, cut off at the tabs' foot. */
   draw(panel: any): void {
-    const tab = panel.MenuItems[1], shown = panel.Open && panel._OpenTab === 1 && tab?.YOffset > -1;
+    const tab = panel.MenuItems[1], shown = panel.Open && !!tab && tab.YOffset > -panel.DrawTo.Height;
     this.form.hidden = !shown;
     if (!shown) return;
     const ctx = panel.Ctx as CanvasRenderingContext2D, u = App.Unit, pr = App.Metrics.PixelRatio;
     const w = Math.min(420 * u, App.Width * (App.Metrics.Device === Device.mobile ? 5 : 4) / 7);
     const x = (App.Width - w) / 2, y = panel.OffsetY + 120 * u + tab.YOffset;
-    const txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder;
+    const txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder, clipTop = panel.OffsetY + 60 * u;
     const place = (id: string, px: number, py: number, width: number, height: number, font = App.Metrics.TxtMid) => {
       const el = this.form.querySelector<HTMLElement>(`#${id}`)!;
+      const hidden = Math.max(0, Math.min(height, clipTop - py));  // the part above the tabs' foot, while sliding
       Object.assign(el.style, { left: `${px / pr}px`, top: `${py / pr}px`, width: `${width / pr}px`, height: `${height / pr}px`, color: txt,
-        font: font.replace(/([\d.]+)px/, (_: string, n: string) => `${Number(n) / pr}px`) });
+        font: font.replace(/([\d.]+)px/, (_: string, n: string) => `${Number(n) / pr}px`),
+        clipPath: hidden > 0 ? `inset(${hidden / pr}px 0 0 0)` : '', visibility: hidden >= height ? 'hidden' : '' });
     };
     place('feedback-message', x, y + 46 * u, w, 80 * u);
     place('feedback-email', x, y + 174 * u, w, 18 * u);

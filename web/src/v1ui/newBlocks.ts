@@ -78,9 +78,12 @@ export function drawNewSprite(ctx: CanvasRenderingContext2D, pos: Point, name: s
   if (!def) return false;
   const grd = App.GridSize, [ox, oy] = def.geometry.menuOffset ?? [0, 0];
   for (const l of def.geometry.layers) {
-    if (l.units === 'unit') continue;
+    // Pixel layers (the stars: Gate, as v1's Void in its menu) are in v1 units, as v1 BlockSprites.DrawPixel unscaled.
+    // The Void's random star has no place in the menu (v1 put it at a fixed one), so anchored layers are left out.
+    if (l.units === 'unit' && l.anchor) continue;
+    const at = (x: number, y: number): [number, number] => l.units === 'unit' ? [pos.x + ox * grd + x * App.Unit, pos.y + oy * grd + y * App.Unit] : [pos.x + (ox + x) * grd, pos.y + (oy + y) * grd];
     ctx.beginPath();
-    l.points.forEach(([x, y], i) => { const px = pos.x + (ox + x) * grd, py = pos.y + (oy + y) * grd; if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+    l.points.forEach(([x, y], i) => { const [px, py] = at(x, y); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
     ctx.closePath();
     App.FillColor(ctx, App.Palette[l.palette]);
     ctx.fill();

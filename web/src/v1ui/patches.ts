@@ -165,8 +165,7 @@ export const COPY = {
   // link), DOWNLOAD PATCH (the .blokdust file). Clicking the link copies it.
   saveLink: 'Save', saveAs: 'Save As', download: 'Download Patch',
   linkLine: 'Share your creation with this unique URL:', linkCopied: 'Link copied.', savedCopied: 'Link Copied',
-  saving: 'saving...',
-  openLine: 'Open loads a patch. Insert adds its blocks to your patch.',
+  saving: 'saving...', savingButton: 'Saving',
   open: 'Open', insert: 'Insert', empty: 'No patches yet', file: 'Open From Your Device', back: 'Back',
   openDesc: 'Replace the current patch', insertDesc: 'Add its blocks to this patch',
   confirm: 'Replace current patch?', confirmLine: 'You have unsaved changes. Opening another patch will replace your current work.',
@@ -362,13 +361,9 @@ export class PatchesPanel extends DisplayObject {
     const open = this.bordered(COPY.open, insert.x - 10 * u, y - 19 * u);
     return { open, insert, bin: { x: this.margin + this.pageW - 20 * u, y: y - 19 * u, w: 20 * u, h: 20 * u, cx: this.margin + this.pageW - 9 * u, cy: y - 9 * u } };
   }
-  /** OPEN FROM YOUR DEVICE: the OPEN tab's main button (owner, 2026-11-10), v1's 420×40 GUIDE button (Settings ›
-   * Connect) under the list, with the upload mark. On a phone v1 puts the page number and arrows in the middle of the
-   * bottom row, so it goes beneath them. */
-  private fileButton() {
-    const u = App.Unit, y = this.mobile ? this.bottom - 60 * u : this.cy + 175 * u;
-    return { x: App.Width * 0.5 - 210 * u, y, w: 420 * u, h: 40 * u, cx: App.Width * 0.5 };
-  }
+  /** OPEN FROM YOUR DEVICE: bordered like RANDOMISE TITLE (owner, 2026-11-18), at the right of the row under the list
+   * (where GALLERY has its sorts). */
+  private fileButton() { const u = App.Unit; return this.bordered(COPY.file, this.margin + this.pageW, this.listFoot - 14 * u); }
   // ---- SAVE / SHARE (web): units from the panel centre ----
   /** ADD TO GALLERY and MAKE VIDEO: v1's OptionSwitch in an options-panel row's proportions (60 units: the icons sit 7
    * units clear of the underline; owner review 2), one under the other between the name and SAVE. */
@@ -518,17 +513,13 @@ export class PatchesPanel extends DisplayObject {
 
     // SAVE, or MAKE VIDEO when there is nothing to save (the GUIDE button, SharePanel's SAVE colour) //
     const main = this.mainAction(), m = this.mainButton();
-    this.filled(m, App.Palette[main.off ? 1 : menu[3]], this.label('share', main.label), !!this.roll.share && !main.off);
+    // While saving the button itself says so (owner, 2026-11-18): no spinner or line under it.
+    this.filled(m, App.Palette[main.off ? 1 : menu[3]], this.Saving ? COPY.savingButton : this.label('share', main.label), !!this.roll.share && !main.off);
 
     // THE LINK (v1 SharePanel's second page: its line + URL box; a click on it copies) //
     App.FillColor(ctx, txt);
     let warnY = cy + 85 * u;
-    if (this.Saving) {
-      ctx.font = App.Metrics.TxtMid; ctx.textAlign = 'center';
-      ctx.fillText(COPY.saving.toUpperCase(), W * 0.5, cy + 110 * u);
-      App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy + 88 * u, 16, true);
-      warnY = cy + 135 * u;
-    } else if (link) {
+    if (link && !this.Saving) {
       ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
       this.wordWrap(this.label('url', COPY.linkLine), W * 0.5 - 210 * u, cy + 83 * u, 14 * u, 420 * u);
       App.FillColor(ctx, App.Palette[1]);
@@ -595,14 +586,18 @@ export class PatchesPanel extends DisplayObject {
     if (note) { ctx.font = App.Metrics.TxtItalic2; this.wordWrap(note, x + w + 12 * u, cy + 12 * u, 12 * u, this.pageW * 0.5 - 10 * u - w - 12 * u); }
   }
 
-  /** OPEN: the hint and its rule, then the list in a window, scrolled (as the gallery's). */
+  /** OPEN and GALLERY's rule (OPEN's top line, GALLERY's search rule): as high as it goes, 50 units under the tabs
+   * (SEARCH above it stays clear of the tab's notch), at most 175 units over the centre (owner, 2026-11-18: the lists
+   * started too low). */
+  private get listRule() { const u = App.Unit; return this.mobile ? this.top + 60 * u : Math.max(this.cy - 175 * u, this.top + 50 * u); }
+  /** The bottom row (GALLERY's sorts; OPEN's OPEN FROM YOUR DEVICE): its baseline. */
+  private get listFoot() { const u = App.Unit; return this.mobile ? this.bottom - 30 * u : this.cy + 185 * u; }
+  /** OPEN: a rule, then the list in a window, scrolled, the same size as the gallery's (owner, 2026-11-18). */
   private openLayout() {
-    const u = App.Unit;
+    const u = App.Unit, rule = this.listRule, top = rule - 2 * u;
     // The rows start right under the rule (a row's top is 2 units above its divider) and go under it as they scroll;
     // the window shows whole rows and a half.
-    if (this.mobile) { const hint = this.top + 40 * u, rule = hint + 10 * u, top = rule - 2 * u; return { hint, rule, top, bottom: top + this.windowH((this.fileButtonShown ? this.fileButton().y - 20 * u : this.bottom - 30 * u) - top) }; }
-    const cy = this.cy, rule = cy - 110 * u, top = rule - 2 * u;
-    return { hint: cy - 120 * u, rule, top, bottom: top + this.windowH(cy + 150 * u - top) };
+    return { rule, top, bottom: top + this.windowH(this.listFoot - 35 * u - top) };
   }
   /** Row n's second line's baseline, scrolled. */
   private openRowY(n: number) { return this.openLayout().top + 30 * App.Unit + n * this.rowH - this.OpenScroll; }
@@ -611,10 +606,7 @@ export class PatchesPanel extends DisplayObject {
   scrollOpen(dy: number): void { this.OpenScroll = Math.max(0, Math.min(this.openMaxScroll(), this.OpenScroll + dy)); this.settled(); }
   private drawList(): void {
     const ctx = this.Ctx, u = App.Unit, margin = this.margin, pageW = this.pageW, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], L = this.openLayout();
-    // HINT + RULE //
-    App.FillColor(ctx, txt);
-    ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    ctx.fillText(COPY.openLine, margin, L.hint);
+    // RULE (no hint: owner, 2026-11-18) //
     App.StrokeColor(ctx, txt);
     ctx.beginPath(); ctx.moveTo(margin, L.rule); ctx.lineTo(margin + pageW, L.rule); ctx.stroke();
 
@@ -646,17 +638,8 @@ export class PatchesPanel extends DisplayObject {
     if (!n0 && this.Loading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, (L.top + L.bottom) / 2, 16, true);
     else if (!n0) { ctx.font = App.Metrics.TxtHeader; ctx.textAlign = 'center'; ctx.fillText(COPY.empty.toUpperCase(), W * 0.5, (L.top + L.bottom) / 2 + 10 * u); }
 
-    // OPEN FROM YOUR DEVICE (v1 GUIDE button: SAVE colour, URL type, hover notch) + the upload mark left of its label //
-    if (!this.fileButtonShown) return;
-    const f = this.fileButton();
-    ctx.font = App.Metrics.TxtUrl2;
-    const lw = ctx.measureText(COPY.file.toUpperCase()).width;
-    this.filled({ ...f, cx: f.cx + 11 * u }, App.Palette[App.ThemeManager.MenuOrder[3]], COPY.file, false);
-    if (this.roll.file) {  // the notch stays under the button's centre
-      App.FillColor(ctx, App.Palette[App.ThemeManager.MenuOrder[3]]);
-      ctx.beginPath(); ctx.moveTo(f.cx, f.y + f.h + 9 * u); ctx.lineTo(f.cx - 10 * u, f.y + f.h - u); ctx.lineTo(f.cx + 10 * u, f.y + f.h - u); ctx.closePath(); ctx.fill();
-    }
-    drawUploadMark(ctx, f.cx - lw / 2 - 4 * u, f.y + 15 * u);  // 8 units left of the label, centred together
+    // OPEN FROM YOUR DEVICE: bordered, as RANDOMISE TITLE (owner, 2026-11-18) //
+    if (this.fileButtonShown) this.drawBordered(this.fileButton(), txt);
   }
 
   /** The heading of the file and confirm steps: v1's header type over italic copy (SharePanel title + share line). */
@@ -795,13 +778,13 @@ export class PatchesPanel extends DisplayObject {
   /** SEARCH and its rule at the top, POPULAR · NEW · … at the bottom; on a phone, right under the tabs and at the foot of
    * the screen, the list between them (owner, 2026-11-16). */
   private galleryLayout() {
-    const u = App.Unit, right = App.Width * 0.5 + 210 * u, rule = this.mobile ? this.top + 60 * u : this.cy - 110 * u;
-    return { search: this.bordered(COPY.search, right, rule - 30 * u), rule, sortY: this.mobile ? this.bottom - 30 * u : this.cy + 160 * u, sortRight: right };
+    const u = App.Unit, right = App.Width * 0.5 + 210 * u, rule = this.listRule;
+    return { search: this.bordered(COPY.search, right, rule - 30 * u), rule, sortY: this.listFoot, sortRight: right };
   }
   /** The list's window: under the search rule, above POPULAR / NEW. */
   /** The list's window: from the search rule (rows go under it as they scroll; a row's top is 2 units above its
    * divider) to 45 units above the sorts, holding whole rows and a half (owner, 2026-11-17, CHG-0035). */
-  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(), top = L.rule - 2 * u; return { top, bottom: top + this.windowH(L.sortY - 45 * u - top), clip: L.rule + u }; }
+  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(), top = L.rule - 2 * u; return { top, bottom: top + this.windowH(L.sortY - 35 * u - top), clip: L.rule + u }; }
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
   private galleryRowY(n: number) { return this.galleryWindow().top + 30 * App.Unit + n * this.rowH - this.GalleryScroll; }
   /** Every row, the SHOW MORE row when there are more, and 10 units under the last (owner, 2026-11-17: it was cut off). */
@@ -983,7 +966,7 @@ export class PatchesPanel extends DisplayObject {
       r.saveAs = pad(sec.saveAs); r.save = !!sec.download && pad(sec.download);
       r.url = !!this.link && !this.Saving && hit(W * 0.5 - 210 * u, cy + 95 * u, 420 * u, 40 * u);
     } else if (this.View === 'list') {
-      if (this.fileButtonShown) r.file = box(this.fileButton());
+      if (this.fileButtonShown) r.file = pad(this.fileButton());
       const L = this.openLayout();
       r.list = hit(this.margin - 5 * u, L.top, this.pageW + 15 * u, L.bottom - L.top);
       if (r.list) for (let n = 0; n < this.Items.length; n++) {
