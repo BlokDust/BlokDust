@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**68 decisions** · proposed: 17 · accepted: 45 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**69 decisions** · proposed: 17 · accepted: 46 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -104,6 +104,12 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0010](simulation/SIMULATION-0010-a-pulse-can-wait-before-it-fires.md) | A Pulse can wait before it fires | **accepted** | 2026-11-17 | power, pulse, timing, v1-extension |
 | [SIMULATION-0011](simulation/SIMULATION-0011-gate-is-a-void-that-power-opens.md) | Gate is a Void that power opens | **proposed** | 2026-11-17 | simulation, particles, lasers, power, post-2-0 |
 | [SIMULATION-0012](simulation/SIMULATION-0012-every-hit-reaches-through-what-earlier-hits-hold.md) | Every hit reaches through what earlier hits hold | **accepted** | 2026-11-17 | lasers, particles, power, v1-deviation |
+
+## [support](support/README.md)
+
+| ID | Decision | Status | Date | Tags |
+|---|---|---|---|---|
+| [SUPPORT-0001](support/SUPPORT-0001-isolate-support-reports-from-shared-patches.md) | Isolate support reports from shared patches | **accepted** | 2026-11-12 | support, privacy, storage |
 
 ## [ui](ui/README.md)
 

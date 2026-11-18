@@ -957,6 +957,63 @@ Object.assign(tests, {
     return [misses.length === 0, { misses }];
   },
 
+  /** CHG-0036 owner review: Connect holds the form; existing canvas controls and typography supply its chrome. */
+  /** CHG-0036 review: intro, matching input type, square switch cells and a vertically centred attachment row. */
+  async 'support-connect-spacing'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
+    const point = await p.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return [s.MenuItems[1].Position.x / devicePixelRatio, 30]; });
+    await p.mouse.click(point[0], point[1]); await p.waitForTimeout(1000);
+    await p.evaluate(() => {
+      const proto = CanvasRenderingContext2D.prototype, original = { fillText: proto.fillText, fillRect: proto.fillRect, moveTo: proto.moveTo, lineTo: proto.lineTo };
+      let drawing: any = null, from = [0, 0], rule = 0, intro = 0, message = 0;
+      proto.fillText = function(text: string, x: number, y: number, ...rest: any[]) {
+        if (text.startsWith('Suggest a feature')) intro = y;
+        if (text === 'YOUR MESSAGE') message = y;
+        if (/PATCH AND DIAGNOSTICS$/.test(text)) drawing = { rule, intro, message };
+        else if (drawing && text === '') { (window as any).__supportDrawing = drawing; drawing = null; }
+        return (original.fillText as any).call(this, text, x, y, ...rest);
+      };
+      proto.moveTo = function(x, y) { from = [x, y]; if (drawing?.bar) drawing.glyphBottom = Math.max(drawing.glyphBottom ?? 0, y); return original.moveTo.call(this, x, y); };
+      proto.lineTo = function(x, y) {
+        const email = document.getElementById('feedback-email')!.getBoundingClientRect(), send = document.getElementById('feedback-send')!.getBoundingClientRect(), pr = devicePixelRatio;
+        if (from[1] === y && Math.abs(Math.abs(x - from[0]) - email.width * pr) < 1 && y > email.bottom * pr && y < send.top * pr) rule = y;
+        if (drawing && !drawing.separator && x === from[0]) drawing.separator = { top: from[1], height: y - from[1] };
+        if (drawing?.bar) drawing.glyphBottom = Math.max(drawing.glyphBottom ?? 0, y);
+        from = [x, y]; return original.lineTo.call(this, x, y);
+      };
+      proto.fillRect = function(x, y, w, h) { if (drawing && !drawing.bar) drawing.bar = { x, y, w, h }; return original.fillRect.call(this, x, y, w, h); };
+    });
+    await p.mouse.move(10, 120); await p.waitForTimeout(200);
+    const result = await p.evaluate(() => {
+      const email = document.getElementById('feedback-email')!, msg = document.getElementById('feedback-message')!, send = document.getElementById('feedback-send')!;
+      const d = (window as any).__supportDrawing, u = (window as any).__bd_probe.v1App.Unit;
+      return { d, sameType: getComputedStyle(email).font === getComputedStyle(msg).font, compactEmail: email.getBoundingClientRect().height < msg.getBoundingClientRect().height / 2,
+        square: !!d && Math.abs(d.bar.w / d.separator.height - 1) < .05, gap: d ? (d.bar.y - d.glyphBottom) / u : 0,
+        centred: !!d && Math.abs((d.separator.top + d.bar.y + d.bar.h) / 2 - (d.rule + send.getBoundingClientRect().top * devicePixelRatio) / 2) <= 2 * u,
+        intro: !!d && d.intro > 0 && d.intro < d.message,
+        label: document.getElementById('feedback-include')!.getAttribute('aria-label') };
+    });
+    await p.screenshot({ path: `${OUT}/support-connect-spacing.png` }); await p.close();
+    return [result.sameType && result.compactEmail && result.square && result.gap >= 6 && result.centred && result.intro && result.label === 'Share patch and diagnostics', result];
+  },
+
+  async 'support-connect'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
+    const point = await p.evaluate(() => { const s = (window as any).__bd_probe.scene.SettingsPanel, t = s.MenuItems[1]; return [t.Position.x / devicePixelRatio, (s.OffsetY + 30 * (window as any).__bd_probe.v1App.Unit) / devicePixelRatio]; });
+    await p.mouse.click(point[0], point[1]); await p.waitForTimeout(1200);
+    const visible = await p.locator('#feedback-message').isVisible();
+    const copy = await p.locator('#feedback-panel').textContent();
+    const style = await p.locator('#feedback-message').evaluate(el => ({ border: getComputedStyle(el).borderTopWidth, font: getComputedStyle(el).fontFamily }));
+    const toggle = p.getByRole('switch', { name: 'Share patch and diagnostics' });
+    const on = await toggle.getAttribute('aria-checked'); await toggle.click();
+    const off = await toggle.getAttribute('aria-checked');
+    const tabs = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.MenuItems.map((m: any) => m.Name));
+    await p.close();
+    return [visible && !copy?.includes('technical diagnostics') && on === 'true' && off === 'false' && style.border === '0px' && style.font.includes('Dosis') && tabs[1] === 'CONNECT', { visible, style, on, off, tabs }];
+  },
+
   /** Owner (2026-11-10): v1's Tour row is the patch Tempo (web), set once for every synced block: pressing where
    * "Launch Tutorial" was sets the tempo, and the panel stays open. The tour (CHG-0035) has its own row under it. */
   async 'settings-tempo-and-tour'(errors: string[]) {
@@ -1108,7 +1165,7 @@ Object.assign(tests, {
       about: t.some(x => /This rebuild was released in 2026/.test(x)), toneJs: t.some(x => /Tone\.js/.test(x)), source: t.includes('View the code on GitHub'), opened: (window as any).__opened }; });
     await p.close();
     // SIGN IN: CHG-0023 owner review 2026-11-15.
-    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && !r.connect && r.connectAway && r.about && !r.toneJs
+    const ok = JSON.stringify(tabs.names) === JSON.stringify(['SETTINGS', 'CONNECT', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && aboutTab === 2 && !r.chrome && r.connect && r.connectAway && r.about && !r.toneJs
       && r.source && !idle.equals(hover) && shipped
       // SPEC-SHARING-USAGE-ANALYTICS R12 (owner, 2026-11-16): no Privacy link until production serves the page.
       && JSON.stringify(links.map(l => l.label)) === JSON.stringify(['View the code on GitHub'])
@@ -1221,7 +1278,7 @@ Object.assign(tests, {
     for (const b of buttons) { await p.mouse.move(b.x, b.y); await p.mouse.click(b.x, b.y); await p.waitForTimeout(200); }
     const opened = await p.evaluate(() => (window as any).__opened);
     await p.close();
-    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', '', 'ABOUT', 'DOWNLOAD', 'SIGN IN'])  // SIGN IN: CHG-0023 owner review 2026-11-15 && openTab === 3
+    const ok = JSON.stringify(names) === JSON.stringify(['SETTINGS', 'CONNECT', 'ABOUT', 'DOWNLOAD', 'SIGN IN']) && openTab === 3  // SIGN IN: CHG-0023; CONNECT: CHG-0036
       && before.includes('Coming soon.') && openedBefore === 0
       && before.includes('Download the standalone app or VST3/AU plugins to use in your DAW, or get the iPad app with its AUv3 plugin.')
       && before.includes('BlokDust can be used as both an instrument and an effect.')

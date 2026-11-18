@@ -1,3 +1,5 @@
+import { SupportClient } from '../support/client.ts';
+import { FeedbackPanel } from '../support/panel.ts';
 // BlokDust 2 web app (CHG-0002): engine in an AudioWorklet, the v1-faithful stage, and v1's own UI (web/src/v1ui:
 // header menus, options panel, zoom, bin, settings, share) driving it. The engine owns behaviour (ARCHITECTURE-0002);
 // this file keeps the patch model (for autosave and share links) and mirrors it to the engine, stage and v1 UI.
@@ -369,6 +371,11 @@ async function main() {
     scene.pinchEnd();  // the zoom buttons step on from the nearest of v1's levels
     uiSync = true;
   }
+  const hostSystem: Record<string, unknown> = {};
+  juce?.addEventListener<Record<string, unknown>>('bd_supportSystem', value => { Object.assign(hostSystem, value); });
+  const supportClient = !embedId ? new SupportClient({ patch: toPatch, plugin: !!juce,
+    system: () => ({ sampleRate: App.Audio.sampleRate, ...hostSystem }) }) : null;
+  const feedbackPanel = supportClient ? new FeedbackPanel(supportClient, () => stage.redraw()) : null;
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   /** The autosave holds the patch on screen (it was restored from it, or edited since). */
   let autosaveIsThis = !params.has('c') && !params.has('v1') && !params.has('demo') && !embedId;
@@ -383,6 +390,7 @@ async function main() {
     openStage: id => enterStage(id),
     loadStagePatch: id => loadStagePatch(id),
     resetCounter: id => send([{ type: CommandType.Reset, id }]),
+    feedback: feedbackPanel ?? undefined,
     createBlock: (v1Type, gx, gy) => {
       if (v1Type === LABEL_MENU_ID) { newLabel(gx, gy); return null; }
       // A Stage made while several blocks are selected takes them inside (CHG-0021).
@@ -2003,7 +2011,7 @@ async function main() {
         if (typeof a.cc === 'number') ccBySlot.set(a.slot, a.cc);
       }
       probe.started = true;
-      juce.emitEvent('bd_ready', { blocks: stage.allBlocks().length });
+      juce.emitEvent('bd_ready', { blocks: stage.allBlocks().length, supportSystem: hostSystem });
     });
     // Plugin samples (CHG-0004 3.6): the processor loads them natively and reports what to show.
     // Dust moves (host automation, MIDI CC; owner, Ableton, 2026-11-12): the block takes the value, and its options

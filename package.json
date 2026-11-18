@@ -34,7 +34,10 @@
     "test:sharing:base": "node tests/e2e/sharing.ts --base",
     "test:analytics": "node tests/e2e/analytics.ts",
     "server:typecheck": "pnpm -C server typecheck",
-    "test:mpe": "node tests/mpe/run.ts"
+    "test:mpe": "node tests/mpe/run.ts",
+    "test:support": "node tests/e2e/support.ts",
+    "test:support:plugin": "node tests/e2e/support-plugin.ts",
+    "test:support:base": "node tests/e2e/support.ts --based"
   },
   "devDependencies": {
     "ajv": "8.20.0",

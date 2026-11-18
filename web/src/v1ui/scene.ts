@@ -39,6 +39,7 @@ import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
 import { AccountPage, pageWidth } from './accountPage.ts';
 
 export interface SceneHost extends PatchesHost {
+  feedback?: { draw(panel: SettingsPanel): void };
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
   createBlock(v1Type: string, gx: number, gy: number): number | null;
   deleteBlock(id: number): void;
@@ -760,9 +761,7 @@ export const USAGE_STATS = (on: boolean) => `Anonymous usage stats: ${on ? 'on' 
 
 /**
  * Release 1 changes to v1's Settings panel (CHG-0005), made around the ported code:
- *  - Connect is gone (owner, 2026-11-10: its Facebook / Twitter / Google+ buttons are dated and the guide site is lost).
- *    v1 addresses its tabs by index (0 Settings, 1 Connect, 2 About), so SETTINGS and ABOUT are laid out as a two-tab
- *    bar and index 1 becomes an inert, zero-width stand-in that is never drawn, hit or opened.
+ *  - Connect is restored for the support form (CHG-0036); the retired guide/social body is suppressed.
  *  - The About text is the owner's; the footer links the code on GitHub in v1's footer type, underlined on hover like
  *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts). The link and v1's build line
  *    show on About only (owner review 2, 2026-11-15).
@@ -781,14 +780,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const account: AccountPage | null = withDownload && host.account ? new AccountPage(host.account, () => p.Ctx) : null;
   p.accountPage = account;
   p.Populate = () => {
-    const open = p._OpenTab;
-    p._OpenTab = open === 2 ? 1 : open === 3 ? 2 : open === 4 ? 3 : 0;
-    populate({ categories: [{ name: 'settings' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
-    p._OpenTab = open;
-    const [settings, about, download, acct] = p.MenuItems;
-    const gone = { Position: new Point(about.Position.x - about.Size.width * 0.5, 0), Size: new Size(0, 16), Name: '', Items: [], Selected: 0,
-      Hover: false, XOffset: 0, YOffset: -p.DrawTo.Height, CurrentPage: 0, Draw() {} };
-    p.MenuItems = [settings, gone, about, ...(download ? [download] : []), ...(acct ? [acct] : [])];
+    populate({ categories: [{ name: 'settings' }, { name: 'connect' }, { name: 'about' }, ...(withDownload ? [{ name: 'download' }] : []), ...(account ? [{ name: account.tabName }] : [])] });
   };
   if (account) {
     // The tab's name follows who is signed in (SIGN IN / ACCOUNT): lay the tabs out again, keeping each tab's state.
@@ -926,6 +918,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     for (let i = 1; i <= 3; i++) { p._RollOvers[i] = !!p._RollOvers[i + 3] && !!p._Attribution[PEOPLE[i - 1]].url; p._RollOvers[i + 3] = false; }
     // No links (hideLinks): v1 hit-tests About's websites and Twitter names (rollovers 1–6) over fixed widths.
     if (App.NoLinks) for (let i = 1; i <= 6; i++) p._RollOvers[i] = false;
+    for (let i = 7; i <= 14; i++) p._RollOvers[i] = false; // Removed Connect social/guide targets.
     const f = footer();
     linkHover = p._OpenTab !== 2 ? -1 : f.links.findIndex(l => Dimensions.hitRect(l.x - 5 * f.u, f.y - 20 * f.u, l.w + 10 * f.u, 30 * f.u, pt.x, pt.y));
     const sb = statsBox();
@@ -979,12 +972,17 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       Object.assign(p._Attribution[k], { twitter: p._Attribution[k].url, url: '' });
       p._RollOvers[i + 4] = rolls[i + 1]; p._RollOvers[i + 1] = false;
     }
+    // Connect's v1 body (guide and social links, retired) is not drawn: its tab stays, and holds the feedback form (CHG-0036).
+    const connectY = p.MenuItems[1]?.YOffset;
+    if (p.MenuItems[1]) p.MenuItems[1].YOffset = -p.DrawTo.Height * 2;
     try { draw(); } finally {
+      if (p.MenuItems[1]) p.MenuItems[1].YOffset = connectY;
       p._Attribution.build = build;
       PEOPLE.forEach((k, i) => Object.assign(p._Attribution[k], kept[i]));
       rolls.forEach((r, i) => { p._RollOvers[i] = r; });
     }
     account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
+    host.feedback?.draw(p);
     if (!p.Open) return;
     // DOWNLOAD and ACCOUNT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
     // below the tabs' top to the bottom (owner, 2026-11-16: they drew over the tabs while sliding).

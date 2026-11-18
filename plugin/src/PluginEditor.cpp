@@ -64,8 +64,40 @@ BlokDustEditor::BlokDustEditor(BlokDustProcessor& p)
                  systemLog("page: ready, " + juce::String(uiReadyBlocks_) + " blocks");
                  if (auto* o = v.getDynamicObject()) o->setProperty("snapshotSeq", static_cast<juce::int64>(proc_.snapshotSeq()));
                  // Test hook: report the UI round-trip to a file when BLOKDUST_DIAG_FILE is set (host tests only).
-                 if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
+                 if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1") {
+                   // Explicit test-host mode: exercise the actual WebView form and its cross-origin HTTP submission.
+                   web_.evaluateJavascript(R"JS((() => {
+                     let reportId = '';
+                     const originalFetch = window.fetch.bind(window);
+                     window.fetch = async (...args) => {
+                       const response = await originalFetch(...args);
+                       if (String(args[0]).includes('/api/support') && response.ok) reportId = (await response.clone().json()).id;
+                       return response;
+                     };
+                     const initialise = () => {
+                     const settings = window.__bd_probe.scene.SettingsPanel;
+                     if (!settings.MenuItems[1]) { setTimeout(initialise, 50); return; }
+                     settings._OpenTab = 1; settings.OpenPanel();
+                     document.getElementById('feedback-message').value = 'CHG-0036 native plugin support smoke test';
+                     document.getElementById('feedback-panel').requestSubmit();
+                     let tries = 0;
+                     const timer = setInterval(() => {
+                       const status = document.getElementById('feedback-status').textContent;
+                       const success = status === 'Thank you';
+                       if (success || ++tries >= 120) {
+                         clearInterval(timer);
+                         window.__JUCE__.backend.emitEvent('bd_supportSmoke', { success, status, id: reportId });
+                       }
+                     }, 100);
+                     }; initialise();
+                   })())JS");
+                 } else if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
                    juce::File(path).replaceWithText(juce::JSON::toString(v, true));
+               })
+               .withEventListener("bd_supportSmoke", [](const juce::var& v) {
+                 if (juce::SystemStats::getEnvironmentVariable("BLOKDUST_SUPPORT_SMOKE", {}) == "1")
+                   if (auto path = juce::SystemStats::getEnvironmentVariable("BLOKDUST_DIAG_FILE", {}); path.isNotEmpty())
+                     juce::File(path).replaceWithText(juce::JSON::toString(v, true));
                })
                .withEventListener("bd_automation", [this](const juce::var& v) {
                  proc_.setAutomation(static_cast<int>(v.getProperty("slot", 0)), static_cast<BlockId>(static_cast<int>(v.getProperty("id", 0))),
@@ -260,6 +292,14 @@ void BlokDustEditor::reloadPatch() {
 #if JUCE_IOS
   obj->setProperty("ios", true);  // no Trash, no Finder (CHG-0025)
 #endif
+  auto* system = new juce::DynamicObject();
+  system->setProperty("surface", juce::JUCEApplicationBase::isStandaloneApp() ? "standalone" : "plugin");
+  system->setProperty("os", juce::SystemStats::getOperatingSystemName());
+  system->setProperty("host", juce::PluginHostType().getHostDescription());
+  system->setProperty("format", juce::AudioProcessor::getWrapperTypeDescription(proc_.wrapperType));
+  system->setProperty("sampleRate", proc_.getSampleRate());
+  system->setProperty("bufferSize", proc_.getBlockSize());
+  web_.emitEventIfBrowserIsVisible("bd_supportSystem", juce::var(system));
   web_.emitEventIfBrowserIsVisible("bd_patch", juce::var(obj));
 }
 

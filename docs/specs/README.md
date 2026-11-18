@@ -20,6 +20,7 @@
 | [SPEC-SHARING-USAGE-ANALYTICS](domains/sharing/usage-analytics.md) | Usage analytics | sharing | **draft** | SHARING-0010 |
 | [SPEC-SHARING-VIDEO-EXPORT](domains/sharing/video-export.md) | Video export | sharing | **draft** | SHARING-0007, SIMULATION-0001, DATA-0005, UI-0005 |
 | [SPEC-SIMULATION-POWER-AND-PARTICLES](domains/simulation/power-and-particles.md) | Power, particles, lasers and logic | simulation | **draft** | SIMULATION-0001, SIMULATION-0003, SIMULATION-0010 |
+| [SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS](domains/support/in-app-feedback-and-diagnostic-reports.md) | In-app feedback and diagnostic reports | support | **draft** | SUPPORT-0001, DATA-0005 |
 | [SPEC-VISUAL-V1-PARITY](domains/visual/v1-parity.md) | Visual parity with v1 | visual | **draft** | UI-0001, UI-0002, UI-0003, SCOPE-0004 |
 
 ## Changes
@@ -58,3 +59,4 @@
 | [CHG-0032](changes/0032-gate-block/proposal.md) | Gate block | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-CONNECTIONS-PROXIMITY |
 | [CHG-0034](changes/0034-laser-restart/proposal.md) | Laser restart and re-strike | **proposed** | SPEC-SIMULATION-POWER-AND-PARTICLES |
 | [CHG-0035](changes/0035-playtest-tweaks/proposal.md) | Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound | **proposed** | SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY, SPEC-SHARING-ACCOUNTS |
+| [CHG-0036](changes/0036-add-in-app-feedback-and-private-support-reports/proposal.md) | Add in-app feedback and private support reports | **done** | SPEC-SUPPORT-IN-APP-FEEDBACK-AND-DIAGNOSTIC-REPORTS |

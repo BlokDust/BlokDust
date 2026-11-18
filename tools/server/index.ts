@@ -57,6 +57,9 @@ async function setup(): Promise<void> {
   let db = dbs.find(d => d.name === dbName(e));
   if (!db) { db = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: dbName(e) }); console.error(`created D1 ${db.name}`); }
   saveSettings({ [envKey(e, 'DATABASE_ID')]: db.uuid });
+  let support = dbs.find(d => d.name === `blokdust-support-${e}`);
+  if (!support) support = await cf<{ uuid: string; name: string }>('POST', '/d1/database', { name: `blokdust-support-${e}` });
+  saveSettings({ [envKey(e, 'SUPPORT_DATABASE_ID')]: support.uuid });
   // Turnstile (invisible), bound to the Worker's hostname
   const hosts = hostsOf(e);
   type Widget = { sitekey: string; name: string; secret?: string; domains: string[]; mode: string };
@@ -126,6 +129,8 @@ async function deploy(): Promise<void> {
     m = await run([WRANGLER, 'd1', 'migrations', 'apply', dbName(e), '--remote', '--env', e, '--config', config]);
   }
   if (m.code) throw new Error('migrations failed');
+  const support = await run([WRANGLER, 'd1', 'migrations', 'apply', `blokdust-support-${e}`, '--remote', '--env', e, '--config', config]);
+  if (support.code) throw new Error('support migrations failed');
   const d = await run([WRANGLER, 'deploy', '--env', e, '--config', config]);
   if (d.code) throw new Error('deploy failed');
   console.log(JSON.stringify({ env: e, deployed: true }));

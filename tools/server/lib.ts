@@ -55,10 +55,12 @@ export async function startLocal(opts: { name: string; vars: Record<string, stri
   if (opts.env) buildSite();
   const mig = await run([WRANGLER, 'd1', 'migrations', 'apply', 'blokdust-dev', '--local', '--persist-to', state, ...envArgs], { quiet: true });
   if (mig.code) throw new Error(`migrations failed:\n${mig.out}`);
+  const supportMig = await run([WRANGLER, 'd1', 'migrations', 'apply', 'blokdust-support-dev', '--local', '--persist-to', state, ...envArgs], { quiet: true });
+  if (supportMig.code) throw new Error(`support migrations failed:\n${supportMig.out}`);
   const port = opts.port ?? await freePort();
   let log = '';
   const child: ChildProcess = spawn(WRANGLER, ['dev', ...envArgs, '--port', String(port), '--ip', '127.0.0.1', '--persist-to', state, '--env-file', envFile,
-    '--show-interactive-dev-session=false', '--log-level', 'warn'], { cwd: SERVER_DIR, env: { ...process.env, WRANGLER_SEND_METRICS: 'false' } });
+    '--test-scheduled', '--show-interactive-dev-session=false', '--log-level', 'warn'], { cwd: SERVER_DIR, env: { ...process.env, WRANGLER_SEND_METRICS: 'false' } });
   child.stdout?.on('data', d => (log += d));
   child.stderr?.on('data', d => (log += d));
   const url = `http://127.0.0.1:${port}`;

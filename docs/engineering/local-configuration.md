@@ -19,7 +19,8 @@ Tools fail with the missing variable's name when an operation needs an unconfigu
 - Windows tests: `BLOKDUST_VM_DIR`, `BLOKDUST_VM_USER` and optional `BLOKDUST_VM_*` resource settings. Provision a VM
   separately; the test driver does not distribute a personal VM image, login, key or provisioning instructions.
 - Cloudflare: `CLOUDFLARE_ACCOUNT_ID`, `BLOKDUST_WORKERS_SUBDOMAIN`, per-environment public URLs, database IDs and
-  Turnstile site keys. `bd server setup` saves discovered settings externally. Remote commands generate a private,
+  Turnstile site keys. Support has separate `BLOKDUST_STAGING_SUPPORT_DATABASE_ID` /
+  `BLOKDUST_PRODUCTION_SUPPORT_DATABASE_ID` settings. `bd server setup` saves discovered settings externally. Remote commands generate a private,
   per-checkout Wrangler configuration outside the checkout, with absolute build/migration paths. The committed
   Wrangler configuration contains only local test settings and remote placeholders.
 - Usage analytics (SHARING-0010), optional per environment: `BLOKDUST_<ENV>_ACCESS_TEAM_DOMAIN` and
