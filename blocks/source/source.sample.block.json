@@ -5,7 +5,7 @@
   "category": "source",
   "kind": "audio-source",
   "name": "Sample",
-  "description": "A sample player loaded with a Soundcloud track. The track must be creative commons or tagged #blokdust.",
+  "description": "A sample player loaded with a sound from freesound.org.",
   "v1": {
     "type": "Sample",
     "class": [

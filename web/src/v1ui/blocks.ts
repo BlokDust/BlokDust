@@ -42,6 +42,7 @@ export class V1Block {
     f?.call(this);
     newBlockForm(this);  // the post-2.0 blocks (SCOPE-0005)
     if (this.def.id === 'source.microphone' || this.def.id === 'source.audio-in') gainForm(this);
+    if (this.def.id === 'source.sample-gen' && this.OptionsForm) soundForm(this);
     if (this.def.id === 'input.midi-controller' && this.OptionsForm) extendMidiForm(this);
     // Keys set pitch (CHG-0017): a switch beside Mono/Poly, off by default.
     if (this.OptionsForm && this.def.params.some(p => p.key === 'keysSetPitch'))
@@ -92,6 +93,12 @@ export class V1Block {
     this.RefreshOptionsPanel();
   }
 
+  /** v1 Block.Connections (the tour asks what a block is connected to, CHG-0035): the engine's proximity connections. */
+  get Connections(): { Count: number; ToArray(): V1Block[] } {
+    const ids = new Set<number>(App.MainScene?.host?.connectedIds(this.Id) ?? []);
+    const list = (App.Blocks as V1Block[]).filter(b => ids.has(b.Id));
+    return { Count: list.length, ToArray: () => list };
+  }
   /** v1 Recorder: recording now (RecorderPanel draws the button lit). */
   IsRecording = false;
   ToggleRecording(): void { App.MainScene.host.toggleRecording(this.Id); }
@@ -101,6 +108,13 @@ export class V1Block {
     // Action buttons (v1 Recorder "download", SampleGen "generate") are commands, not params.
     if (key === 'download') { App.MainScene.host.downloadRecording(this.Id); return; }
     if (key === 'generate') { App.MainScene.host.generateSample(this.Id); return; }
+    if (key === 'sound') {  // SampleGen's SOUND (CHG-0035): a number, not a button; the wave follows it
+      const n = Math.max(1, Math.min(SOUND_MAX, Math.round(Number(value))));
+      if (n === this.Params.sound) return;
+      this.Params.sound = n;
+      App.MainScene.host.setSound(this.Id, n, false);  // the wave is made when the slider is let go (newBlocks.ts)
+      return;
+    }
     if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's panel buttons (CHG-0021)
     if (key === 'loadStagePatch') { App.MainScene.host.loadStagePatch(this.Id); return; }
     if (key === 'resetCounter') { App.MainScene.host.resetCounter(this.Id); return; }  // a Counter's Reset (R2c)
@@ -197,6 +211,37 @@ function nameKey(def: BlockDef): string {
   const byType: Record<string, string> = { ToneSource: 'Tone', ParticleEmitter: 'ParticleEmitter', ComputerKeyboard: 'ComputerKeyboard', MIDIController: 'MIDIController' };
   const k = byType[def.v1Type ?? ''] ?? def.v1Type ?? '';
   return k in cat ? k : Object.keys(cat).find(n => n.toLowerCase() === (def.v1Type ?? '').toLowerCase()) ?? k;
+}
+
+/** SampleGen's numbered sounds (CHG-0035). */
+export const SOUND_MAX = 999;
+/**
+ * Run v1's SampleGen generator (ported verbatim: it draws every choice from Math.random) on sound `n`'s own random
+ * numbers (mulberry32), so a number always makes the same wave. 0: as v1, unseeded.
+ */
+export function withSound<T>(n: number, run: () => T): T {
+  if (!(n > 0)) return run();
+  let a = (Math.imul(n, 0x9e3779b1) ^ 0x5bd1e995) >>> 0;
+  const random = Math.random;
+  Math.random = () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  try { return run(); } finally { Math.random = random; }
+}
+/**
+ * SampleGen (owner, 2026-11-17, CHG-0035): v1's GENERATE WAVE button rolled a new random wave; a SOUND slider picks one
+ * of 999 instead. Each number seeds v1's generator, so a number is always the same wave and can be found again.
+ */
+function soundForm(b: V1Block): void {
+  const params = b.OptionsForm.parameters as any[], i = params.findIndex(p => p.setting === 'generate');
+  if (i < 0) return;
+  params[i] = { type: 'slider', name: 'Sound', setting: 'sound',
+    props: { value: Math.max(1, Number(b.Params.sound) || 1), min: 1, max: SOUND_MAX, quantised: true, centered: false,
+      convertDisplay: (v: number) => `#${Math.round(v)}` } };
 }
 
 /**

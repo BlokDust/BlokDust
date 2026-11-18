@@ -5,7 +5,7 @@
   "category": "effect",
   "kind": "pre-effect",
   "name": "Random Note",
-  "description": "Gives each hit a note picked at random from a key and scale (or from the keys held, with Keys set pitch).",
+  "description": "Randomly picks a note from a key and scale.",
   "v1": {
     "type": null
   },

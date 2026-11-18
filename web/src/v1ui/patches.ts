@@ -72,9 +72,11 @@ export function drawUpArrow(ctx: CanvasRenderingContext2D, x: number, y: number,
   ctx.restore();
 }
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
-/** POPULAR · NEW · EXAMPLES · TUTORIALS (owner review 3: EXAMPLES and TUTORIALS are @blokdust's patches). */
-export type GallerySort = 'popular' | 'new' | 'examples' | 'tutorials';
-export const GALLERY_SORTS: GallerySort[] = ['popular', 'new', 'examples', 'tutorials'];
+/** POPULAR · ALL TIME TOP · NEW · EXAMPLES (owner review 3: EXAMPLES are @blokdust's patches; owner, 2026-11-17,
+ * CHG-0035: ALL TIME TOP, popular without the fade over time, in place of TUTORIALS while there are none). The server
+ * still answers `tutorials`. */
+export type GallerySort = 'popular' | 'top' | 'new' | 'examples' | 'tutorials';
+export const GALLERY_SORTS: GallerySort[] = ['popular', 'top', 'new', 'examples'];
 /** An Open or Insert: a promise while the patch is fetched (false: it couldn't be). */
 type OpenRun = () => void | Promise<boolean>;
 export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; views: number; liked: boolean; mine: boolean }
@@ -129,6 +131,8 @@ export interface PatchesHost {
   account: AccountHost | null;
   /** Someone is signed in (the gallery switch: only signed-in users can publish, SPEC-SHARING-GALLERY R2). */
   signedIn(): boolean;
+  /** SAVE / SHARE's SIGN IN (signed out): open Settings › SIGN IN, and come back to SAVE once signed in (CHG-0035). */
+  signInToSave?(title: string): void;
   /** Share links (SPEC-SHARING-BACKEND). */
   links: null | {
     /** Plugin: the link is made in the web browser (its page has the bot check); nothing is kept here. */
@@ -160,7 +164,7 @@ export const COPY = {
   // Web (owner, 2026-11-11): three buttons, no help lines: SAVE (to the link: made the first time), SAVE AS (a new
   // link), DOWNLOAD PATCH (the .blokdust file). Clicking the link copies it.
   saveLink: 'Save', saveAs: 'Save As', download: 'Download Patch',
-  linkLine: 'Share your creation with this unique URL:', linkCopied: 'Link copied.',
+  linkLine: 'Share your creation with this unique URL:', linkCopied: 'Link copied.', savedCopied: 'Link Copied',
   saving: 'saving...',
   openLine: 'Open loads a patch. Insert adds its blocks to your patch.',
   open: 'Open', insert: 'Insert', empty: 'No patches yet', file: 'Open From Your Device', back: 'Back',
@@ -168,7 +172,7 @@ export const COPY = {
   confirm: 'Replace current patch?', confirmLine: 'You have unsaved changes. Opening another patch will replace your current work.',
   cancel: 'Cancel', saveFirst: 'Save First', openAnyway: 'Open Anyway',
   remove: 'Delete', removeButton: 'Delete',
-  search: 'Search', sorts: { popular: 'Popular', new: 'New', examples: 'Examples', tutorials: 'Tutorials' }, unpublish: 'Unpublish',
+  search: 'Search', sorts: { popular: 'Popular', top: 'All Time Top', new: 'New', examples: 'Examples', tutorials: 'Tutorials' }, showMore: 'Show More', signIn: 'Sign In', unpublish: 'Unpublish',
   like: 'Like', liked: 'Liked', report: 'Report', noneYet: 'Nothing here yet', by: 'by',
   reportTitle: 'Report this patch?', reportLine: 'For a rude name or anything that should not be here.',
   reported: 'Thank you. The patch was reported.', openFailed: 'This patch couldn’t be opened. Check your connection and try again.',
@@ -286,14 +290,20 @@ export class PatchesPanel extends DisplayObject {
 
   // ---- layout ----
   private get mobile() { return App.Metrics.Device === Device.mobile; }
-  private get cy() { return this.OffsetY + App.Height * 0.5; }
+  private get cy() { return this.OffsetY + this.pageDy[this.Tab] + App.Height * 0.5; }
   private get margin() { return App.Width * 0.5 - 210 * App.Unit; }
   private get pageW() { return 420 * App.Unit; }
   /** Phones (portrait, owner 2026-11-16): OPEN, GALLERY and the video are laid out from the tabs down to the bottom of
    * the screen (v1 centred its pages, which left wide gaps above and below on a tall phone), the rows taller and their
    * type larger. `top` is the tabs' rule, `bottom` the screen's foot. */
-  private get top() { return this.OffsetY + 60 * App.Unit; }
-  private get bottom() { return this.OffsetY + App.Height; }
+  private get top() { return this.OffsetY + this.pageDy[this.Tab] + 60 * App.Unit; }
+  private get bottom() { return this.OffsetY + this.pageDy[this.Tab] + App.Height; }
+  /** Each tab's page offset (v1 SettingsPanel's category YOffset): 0 on show, −height away; a new tab's page drops
+   * in as the old one lifts out (owner, 2026-11-17, CHG-0035: as Settings' tabs do). */
+  private pageDy: number[] = [0, 0, 0];
+  private leaving: Tab | null = null;
+  /** A list window's height: whole rows and a half (owner, 2026-11-17: the half row says there is more below). */
+  private windowH(room: number) { const k = Math.max(1, Math.floor(room / this.rowH - 0.5)); return (k + 0.5) * this.rowH; }
   private get rowH() { return (this.mobile ? 48 : 40) * App.Unit; }
   private get rowFont() { return this.mobile ? App.Metrics.TxtItalic3 : App.Metrics.TxtItalic; }
   /** A row's first line sits this far above its second (v1: 10 units). */
@@ -364,6 +374,9 @@ export class PatchesPanel extends DisplayObject {
    * units clear of the underline; owner review 2), one under the other between the name and SAVE. */
   /** ADD TO GALLERY and MAKE VIDEO side by side, each in half the page (owner review 3, 2026-11-16). */
   private gallerySwitch() { const u = App.Unit; return { x: this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
+  /** SIGN IN (signed out): bordered, right of ADD TO GALLERY, under RANDOMISE TITLE (owner, 2026-11-17, CHG-0035). */
+  private signInButton() { const u = App.Unit; return this.bordered(COPY.signIn, App.Width * 0.5 + 210 * u, this.cy - 61 * u); }
+  private get signInShown() { return this.web && !!this.host.gallery && !!this.host.signInToSave && !this.host.signedIn(); }
   private videoSwitch() { const u = App.Unit; return { x: this.host.gallery ? this.margin + this.pageW * 0.5 + 10 * u : this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
   /** SAVE (or MAKE VIDEO): Connect's 420×40 GUIDE button. */
   private mainButton() { const u = App.Unit, W = App.Width; return { x: W * 0.5 - 210 * u, y: this.cy + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
@@ -439,6 +452,21 @@ export class PatchesPanel extends DisplayObject {
     ctx.moveTo(W * 0.5 + half + 27.5 * u, closeY - 7.5 * u); ctx.lineTo(W * 0.5 + half + 12.5 * u, closeY + 7.5 * u);
     ctx.stroke();
 
+    // THE PAGES, sliding under the tabs (v1 SettingsPanel's clipping box: from the tabs' rule down) //
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, tabY + 60 * u, W, App.Height); ctx.clip();
+    try {
+      const away = -App.Height + 1, leaving = this.leaving;
+      if (leaving !== null && leaving !== this.Tab && this.pageDy[leaving] > away) {
+        const keep = { Tab: this.Tab, View: this.View, GalleryView: this.GalleryView };
+        this.Tab = leaving; this.View = 'list'; this.GalleryView = 'list';
+        try { this.drawPage(); } finally { Object.assign(this, keep); }
+      }
+      if (this.pageDy[this.Tab] > away) this.drawPage();
+    } finally { ctx.restore(); }
+  }
+  private drawPage(): void {
+    const ctx = this.Ctx, u = App.Unit, W = App.Width, txt = App.Palette[App.ThemeManager.Txt];
     if (this.Opening) { App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.cy, 16, true); return; }
     if (this.OpenError) { App.FillColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left'; this.wordWrap(this.OpenError, this.margin, this.cy + 205 * u, 14 * u, this.pageW); }
     // OPEN over unsaved changes asks first, from the OPEN tab or the gallery (bug, owner review 3: the gallery's
@@ -486,6 +514,7 @@ export class PatchesPanel extends DisplayObject {
     const signedIn = this.host.signedIn();
     if (this.host.gallery) this.drawSwitch(this.gallerySwitch(), COPY.addToGallery, signedIn && this.GalleryOn, signedIn, signedIn ? '' : COPY.signInToPublish);
     if (this.host.video) this.drawSwitch(this.videoSwitch(), COPY.makeVideo, this.videoOn, true, '');
+    if (this.signInShown) this.drawBordered(this.signInButton(), this.roll.signIn ? txt : App.Palette[1]);
 
     // SAVE, or MAKE VIDEO when there is nothing to save (the GUIDE button, SharePanel's SAVE colour) //
     const main = this.mainAction(), m = this.mainButton();
@@ -569,13 +598,16 @@ export class PatchesPanel extends DisplayObject {
   /** OPEN: the hint and its rule, then the list in a window, scrolled (as the gallery's). */
   private openLayout() {
     const u = App.Unit;
-    if (this.mobile) { const hint = this.top + 40 * u; return { hint, rule: hint + 10 * u, top: hint + 20 * u, bottom: (this.fileButtonShown ? this.fileButton().y - 20 * u : this.bottom - 30 * u) }; }
-    const cy = this.cy;
-    return { hint: cy - 120 * u, rule: cy - 110 * u, top: cy - 100 * u, bottom: cy + 150 * u };
+    // The rows start right under the rule (a row's top is 2 units above its divider) and go under it as they scroll;
+    // the window shows whole rows and a half.
+    if (this.mobile) { const hint = this.top + 40 * u, rule = hint + 10 * u, top = rule - 2 * u; return { hint, rule, top, bottom: top + this.windowH((this.fileButtonShown ? this.fileButton().y - 20 * u : this.bottom - 30 * u) - top) }; }
+    const cy = this.cy, rule = cy - 110 * u, top = rule - 2 * u;
+    return { hint: cy - 120 * u, rule, top, bottom: top + this.windowH(cy + 150 * u - top) };
   }
   /** Row n's second line's baseline, scrolled. */
   private openRowY(n: number) { return this.openLayout().top + 30 * App.Unit + n * this.rowH - this.OpenScroll; }
-  private openMaxScroll() { const L = this.openLayout(), n = this.Items.length; return Math.max(0, 30 * App.Unit + (n - 1) * this.rowH + 20 * App.Unit - (L.bottom - L.top)); }
+  /** The last row ends 10 units above the window's foot (owner, 2026-11-17: it was cut off). */
+  private openMaxScroll() { const L = this.openLayout(), n = this.Items.length; return Math.max(0, n * this.rowH + 10 * App.Unit - (L.bottom - L.top)); }
   scrollOpen(dy: number): void { this.OpenScroll = Math.max(0, Math.min(this.openMaxScroll(), this.OpenScroll + dy)); this.settled(); }
   private drawList(): void {
     const ctx = this.Ctx, u = App.Unit, margin = this.margin, pageW = this.pageW, W = App.Width, txt = App.Palette[App.ThemeManager.Txt], L = this.openLayout();
@@ -589,7 +621,7 @@ export class PatchesPanel extends DisplayObject {
     // ROWS (v1 SoundcloudPanel track loop), clipped to the window and scrolled //
     const n0 = this.Items.length;
     ctx.save();
-    ctx.beginPath(); ctx.rect(margin - 5 * u, L.top, pageW + 15 * u, L.bottom - L.top); ctx.clip();
+    ctx.beginPath(); ctx.rect(margin - 5 * u, L.rule + u, pageW + 15 * u, L.bottom - L.rule - u); ctx.clip();
     for (let n = 0; n < n0; n++) {
       const y = this.openRowY(n);
       if (y + 20 * u < L.top || y - 40 * u > L.bottom) continue;
@@ -767,10 +799,15 @@ export class PatchesPanel extends DisplayObject {
     return { search: this.bordered(COPY.search, right, rule - 30 * u), rule, sortY: this.mobile ? this.bottom - 30 * u : this.cy + 160 * u, sortRight: right };
   }
   /** The list's window: under the search rule, above POPULAR / NEW. */
-  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(); return { top: L.rule + 10 * u, bottom: L.sortY - 25 * u }; }
+  /** The list's window: from the search rule (rows go under it as they scroll; a row's top is 2 units above its
+   * divider) to 45 units above the sorts, holding whole rows and a half (owner, 2026-11-17, CHG-0035). */
+  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(), top = L.rule - 2 * u; return { top, bottom: top + this.windowH(L.sortY - 45 * u - top), clip: L.rule + u }; }
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
   private galleryRowY(n: number) { return this.galleryWindow().top + 30 * App.Unit + n * this.rowH - this.GalleryScroll; }
-  private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * this.rowH + (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) - (w.bottom - w.top) - 10 * u); }
+  /** Every row, the SHOW MORE row when there are more, and 10 units under the last (owner, 2026-11-17: it was cut off). */
+  private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * this.rowH + (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) + 10 * u - (w.bottom - w.top)); }
+  /** SHOW MORE, centred in the row after the last (more to fetch; a spinner while they come). */
+  private showMoreButton() { const u = App.Unit, y = this.galleryRowY(this.GalleryItems.length), w = this.textW(COPY.showMore); return this.bordered(COPY.showMore, App.Width * 0.5 + (w + 10 * u) / 2, y - 19 * u); }
   /** OPEN and INSERT, as OPEN's rows (owner review 3: insert from the gallery too). */
   private galleryRow(n: number) {
     const u = App.Unit, y = this.galleryRowY(n), insert = this.bordered(COPY.insert, this.margin + this.pageW, y - 19 * u);
@@ -779,7 +816,7 @@ export class PatchesPanel extends DisplayObject {
   }
   /** POPULAR · NEW · EXAMPLES · TUTORIALS along the bottom (where v1 SoundcloudPanel had its count and RANDOMISE),
    * spread across the page; the chosen one underlined. */
-  private sortButtons() {
+  sortButtons() {
     const L = this.galleryLayout(), ctx = this.Ctx;
     ctx.font = App.Metrics.TxtMid;
     const names = GALLERY_SORTS.map(s => COPY.sorts[s].toUpperCase()), ws = names.map(t => ctx.measureText(t).width);
@@ -832,7 +869,7 @@ export class PatchesPanel extends DisplayObject {
     // ROWS: one list, clipped to its window and scrolled //
     const n0 = this.GalleryItems.length;
     ctx.save();
-    ctx.beginPath(); ctx.rect(margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top); ctx.clip();
+    ctx.beginPath(); ctx.rect(margin - 5 * u, win.clip, this.pageW + 15 * u, win.bottom - win.clip); ctx.clip();
     for (let n = 0; n < n0; n++) {
       const y = this.galleryRowY(n), it = this.GalleryItems[n], b = this.galleryRow(n);
       if (y + 20 * u < win.top || y - 40 * u > win.bottom) continue;
@@ -850,8 +887,10 @@ export class PatchesPanel extends DisplayObject {
       this.drawBordered(b.open, txt);
       this.drawBordered(b.insert, App.Palette[1]);
     }
-    // More on the way: v1's spinner where the next row will be.
-    if (n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.galleryRowY(n0) - 5 * u, 16, true);
+    // More on the way: v1's spinner where the next row will be; more to fetch: SHOW MORE there (the list also fetches
+    // them by itself near its end).
+    if (n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, this.galleryRowY(n0) - 9 * u, 16, true);
+    else if (n0 && this.GalleryMore) this.drawBordered(this.showMoreButton(), this.roll.showMore ? txt : App.Palette[1]);
     ctx.restore();
     App.FillColor(ctx, txt);
     if (!n0 && this.GalleryLoading) App.AnimationsLayer.DrawSprite(ctx, 'loading', W * 0.5, cy, 16, true);
@@ -915,7 +954,7 @@ export class PatchesPanel extends DisplayObject {
         r.search = pad(L.search);
         for (const b of this.sortButtons()) r[`sort_${b.sort}`] = hit(b.x - 5 * u, b.y - 20 * u, b.w + 10 * u, 30 * u);
         const win = this.galleryWindow();
-        r.list = hit(this.margin - 5 * u, win.top, this.pageW + 15 * u, win.bottom - win.top);
+        r.list = hit(this.margin - 5 * u, win.clip, this.pageW + 15 * u, win.bottom - win.clip);
         if (r.list) for (let n = 0; n < this.GalleryItems.length; n++) {
           const b = this.galleryRow(n);
           if (b.open.y > win.bottom || b.open.y + b.open.h < win.top) continue;
@@ -923,6 +962,7 @@ export class PatchesPanel extends DisplayObject {
           else if (pad(b.insert)) r[`gins${n}`] = true;
           else if (hit(this.margin - 5 * u, this.galleryRowY(n) - 30 * u, 35 * u, 40 * u)) r[`glike${n}`] = true;
         }
+        if (r.list && this.GalleryMore && !this.GalleryLoading && this.GalleryItems.length) r.showMore = pad(this.showMoreButton());
       }
     } else if (this.Tab === 0 && this.View === 'video') {
       const m = this.videoMain();
@@ -936,6 +976,7 @@ export class PatchesPanel extends DisplayObject {
       const sw = (g: { x: number; y: number; w: number; h: number }, name: string) => hit(g.x, g.y + g.h * 0.1, g.w + 12 * u + this.textW(name), g.h * 0.55);
       if (this.host.gallery) r.gallerySwitch = sw(this.gallerySwitch(), COPY.addToGallery);
       if (this.host.video) r.videoSwitch = sw(this.videoSwitch(), COPY.makeVideo);
+      if (this.signInShown) r.signIn = pad(this.signInButton());
       r.randomise = pad(this.randomise());
       r.share = box(this.mainButton());
       const sec = this.secondary();
@@ -1001,6 +1042,8 @@ export class PatchesPanel extends DisplayObject {
     switch (name) {
       case 'close': return at(App.Width * 0.5 + this.tabs().half + 20 * u, this.OffsetY + 30 * u);
       case 'randomise': return mid(this.randomise());
+      case 'signIn': return this.signInShown ? mid(this.signInButton()) : null;
+      case 'showMore': return this.GalleryMore && this.GalleryItems.length ? mid(this.showMoreButton()) : null;
       case 'save': { if (!this.web) return mid(left); const d = this.secondary().download; return d ? mid(d) : null; }
       case 'share': return this.web ? mid(this.mainButton()) : mid(right);
       case 'saveAs': return this.web ? mid(this.secondary().saveAs) : null;
@@ -1069,6 +1112,7 @@ export class PatchesPanel extends DisplayObject {
         this.GallerySort = sort; try { localStorage.setItem(SORT_KEY, sort); } catch { /* private mode */ }
         void this.browse(); return;
       }
+      if (r.showMore) { void this.browse(true); return; }
       // The list: a press may become a drag (scrolling); a row opens on release, if it didn't move.
       if (r.list) {
         let row = -1, mode: 'open' | 'insert' | 'like' = 'open';
@@ -1089,6 +1133,8 @@ export class PatchesPanel extends DisplayObject {
       return;
     }
     if (this.Tab === 0) {
+      // Signed out, SIGN IN (or the greyed switch) goes to Settings › SIGN IN and comes back here after.
+      if (r.signIn || (r.gallerySwitch && this.signInShown)) { this.GalleryOn = true; this.ClosePanel(); this.host.signInToSave?.(this.Title); return; }
       if (r.gallerySwitch) { if (this.host.signedIn()) { this.GalleryOn = !this.GalleryOn; this.GalleryNote = ''; } return; }
       if (r.videoSwitch) { this.VideoOn = !this.videoOn; return; }
       if (r.randomise) { this.setTitle(App.MainScene?.SharePanel?.GenerateLabel?.() ?? this.Title); return; }
@@ -1163,7 +1209,14 @@ export class PatchesPanel extends DisplayObject {
   }
   /** v1 SettingsPanel category select: the new tab's fill drops in, the others lift. */
   selectTab(i: Tab): void {
-    if (this.Tab !== i) { this.View = 'list'; this.Picked = null; this.pending = null; }
+    if (this.Tab !== i) {
+      this.View = 'list'; this.Picked = null; this.pending = null;
+      // v1 SettingsPanel: the old page lifts out in 250 ms; the new one drops in after 400 ms, over 400 ms.
+      this.leaving = this.Tab;
+      this.tweenPage(this.Tab, -App.Height, 250, 0);
+      this.pageDy[i] = -App.Height;
+      this.tweenPage(i, 0, 400, 400);
+    }
     this.Tab = i;
     for (const j of ALL_TABS) this.tweenSelected(j, j === i ? 1 : 0, j === i ? 400 : 250);
     if (i === 2) { this.GalleryView = 'list'; this.GalleryMessage = ''; this.reporting = null; void this.browse(); }
@@ -1188,24 +1241,51 @@ export class PatchesPanel extends DisplayObject {
       return false;
     }
     // Save over this link (v1 SAVE, "overwrite"); otherwise a new link (v1 SAVE_AS).
-    if (await this.makeLink(st.save === 'save' ? 'save' : 'saveAs')) { this.flash = { key: 'share', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); return true; }
+    if (await this.makeLink(st.save === 'save' ? 'save' : 'saveAs')) { await this.flashSaved('share'); return true; }
     return false;
   }
   /** SAVE AS: a new link; the old one keeps what it had. */
   private async saveAsLink(): Promise<boolean> {
-    if (await this.makeLink('saveAs')) { this.flash = { key: 'saveAs', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); return true; }
+    if (await this.makeLink('saveAs')) { await this.flashSaved('saveAs'); return true; }
     return false;
+  }
+  /** The button that saved reads LINK COPIED once the link is on the clipboard, else SAVED. */
+  private async flashSaved(key: string): Promise<void> {
+    const copied = await (this.copying ?? Promise.resolve(false));
+    this.copying = null;
+    this.flash = { key, label: copied ? COPY.savedCopied : COPY.saved, until: performance.now() + (copied ? 2000 : 1500) };
+    this.settled();
+  }
+  /** Saving a link copies it (owner, 2026-11-17, CHG-0035): no second click on the link. The clipboard is asked in
+   * the press itself, with the link to follow (a ClipboardItem promise), as browsers allow a copy only in a user's
+   * press; where that is refused, the link is copied as it arrives if the browser still allows it. */
+  private copying: Promise<boolean> | null = null;
+  private copyWhenSaved(): (url: string | null) => void {
+    let done: (url: string | null) => void = () => {};
+    if (!this.web || this.host.links?.external || typeof navigator === 'undefined' || !navigator.clipboard) { this.copying = null; return done; }
+    const url = new Promise<string>((res, rej) => { done = u => (u ? res(u) : rej(new Error('not saved'))); });
+    url.catch(() => {});
+    const text = () => url.then(u => navigator.clipboard.writeText(u)).then(() => true, () => false);
+    try {
+      this.copying = typeof ClipboardItem === 'function' && navigator.clipboard.write
+        ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(u => new Blob([u], { type: 'text/plain' })) })]).then(() => true, text)
+        : text();
+    } catch { this.copying = text(); }
+    return done;
   }
   private async makeLink(mode: 'saveAs' | 'save'): Promise<boolean> {
     if (this.Saving || !this.host.hasBlocks() || !this.host.links) return false;
     this.Saving = true; this.showDom();
+    const copy = this.copyWhenSaved();
     // Signed out, the gallery is left as it is (only signed-in users can publish, SPEC-SHARING-GALLERY R2).
     const gallery = this.web && this.host.gallery && this.host.signedIn() ? this.GalleryOn : undefined;
+    let url: string | null = null;
     try {
       const g = await this.host.links.make(mode, this.Title.trim() || 'Untitled', gallery);
       if (g) { this.savedGallery = g.published; this.GalleryNote = g.reason ?? ''; }
+      url = this.link?.url ?? null;
       return true;
-    } finally { this.Saving = false; this.settled(); this.showDom(); }
+    } finally { copy(url); this.Saving = false; this.settled(); this.showDom(); }
   }
   setTitle(t: string): void { this.Title = t; if (this.Input) this.Input.value = t; }
   /** Open the gallery on a search (a patch's "by @name" on the stage). */
@@ -1242,6 +1322,8 @@ export class PatchesPanel extends DisplayObject {
     if (!this.hasTab(tab)) tab = 0;  // a tab remembered from the web, in the plugin
     this.Tab = tab; this.View = 'list'; this.Picked = null; this.pending = null;
     this.selected = ALL_TABS.map(i => (i === tab ? 1 : 0));
+    for (const k of ALL_TABS) { this.tweens[`page${k}`]?.stop(); this.pageDy[k] = k === tab ? 0 : -App.Height; }
+    this.leaving = null;
     if (tab === 2) void this.browse();
     this.OffsetY = -App.Height;
     this.OpenScroll = 0;
@@ -1270,6 +1352,18 @@ export class PatchesPanel extends DisplayObject {
     tw.easing((window as any).TWEEN.Easing.Exponential.InOut);
     tw.start(this.LastVisualTick);
   }
+  private tweenPage(i: number, to: number, ms: number, delay: number): void {
+    const k = `page${i}`;
+    this.tweens[k]?.stop();
+    const self = this, tw = new (window as any).TWEEN.Tween({ x: this.pageDy[i] });
+    this.tweens[k] = tw;
+    tw.to({ x: to }, ms);
+    tw.onUpdate(function (this: { x: number }) { self.pageDy[i] = this.x; self.placeDom(); });
+    tw.onComplete(() => { if (i === this.leaving && to !== 0) this.leaving = null; this.showDom(); });
+    tw.easing((window as any).TWEEN.Easing.Exponential.InOut);
+    tw.delay(delay);
+    tw.start(this.LastVisualTick);
+  }
   private tweenSelected(i: number, to: number, ms: number): void {
     const k = `sel${i}`;
     this.tweens[k]?.stop();
@@ -1281,7 +1375,7 @@ export class PatchesPanel extends DisplayObject {
     tw.start(this.LastVisualTick);
   }
   private placeDom(): void {
-    const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.OffsetY + App.Height * 0.5;
+    const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.cy;
     this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
     this.UrlContainer.style.top = `${(this.Tab === 0 && this.View === 'video' ? this.videoLink().box : mid + u * 95) / pr}px`;
     if (this.player) this.player.style.top = `${this.playerBox().y / pr}px`;

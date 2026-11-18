@@ -1924,13 +1924,18 @@ void Engine::renderChain(int c, int n) noexcept {
     if (!b.alive) continue;
     switch (b.type) {
       case BlockType::SourceAudioIn: addHostInput(b, n); break;
-      case BlockType::SourceMicrophone: {  // always on: mic input summed to mono at v1's source level × gain
-        if (hostInput_) { addHostInput(b, n); break; }
-        if (!inLeft_ && !inRight_) break;
-        const double g = kSourceGain * b.params[P::SourceMicrophone::gain];
+      case BlockType::SourceMicrophone: {  // mic input summed to mono at v1's source level × gain
+        if (hostInput_) { addHostInput(b, n); break; }  // the plugins' Audio Input: always on (PLUGIN-0002)
+        // The website's is v1's Microphone (SPEC-SIMULATION-POWER-AND-PARTICLES R1a, CHG-0035): muted until power, a key or a hit plays it, open
+        // while any of its voices sounds. A 5 ms ramp each way keeps the cut from clicking.
+        const double g = kSourceGain * b.params[P::SourceMicrophone::gain], step = 1.0 / (0.005 * sampleRate_);
         for (int i = 0; i < n; ++i) {
+          bool open = false;
+          for (auto& vo : b.voices) if (vo.env.active()) { vo.env.next(); open = true; }
+          b.micGate = open ? std::min(1.0, b.micGate + step) : std::max(0.0, b.micGate - step);
+          if (b.micGate == 0.0 || (!inLeft_ && !inRight_)) continue;
           const double l = inLeft_ ? inLeft_[inOffset_ + i] : 0.0, rr = inRight_ ? inRight_[inOffset_ + i] : l;
-          chainL_[i] += static_cast<float>((l + rr) * 0.5 * g);
+          chainL_[i] += static_cast<float>((l + rr) * 0.5 * g * b.micGate);
         }
         break;
       }

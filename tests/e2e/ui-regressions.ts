@@ -31,7 +31,7 @@ async function openPatches(p: Page, keep = false): Promise<void> {
 /** Press a Patches panel control (by name, PatchesPanel.centreOf). */
 async function patchesClick(p: Page, name: string, wait = 700): Promise<void> { const [x, y] = await patchesAt(p, name); await p.mouse.move(x, y); await p.mouse.click(x, y); await p.waitForTimeout(wait); }
 /** The OPEN tab. */
-async function openList(p: Page): Promise<void> { await openPatches(p); await patchesClick(p, 'tab1', 600); }
+async function openList(p: Page): Promise<void> { await openPatches(p); await patchesClick(p, 'tab1', 1100); }  // the page drops in (CHG-0035)
 /** Owner review 3 (2026-11-16): the web OPEN lists only the user's own patches (the presets are @blokdust's in the
  * gallery). Tests of OPEN's rows use the presets as if this browser had saved them, in their file order. */
 async function keepPresets(p: Page): Promise<void> {
@@ -957,10 +957,9 @@ Object.assign(tests, {
     return [misses.length === 0, { misses }];
   },
 
-  /** Owner (2026-11-08, CHG-0005): the Tour is hidden for Release 1 (v1's tutorial is not ported; built-in presets
-   * may replace it). Owner (2026-11-10): its row is now the patch Tempo (web), set once for every synced block:
-   * pressing where "Launch Tutorial" was sets the tempo, and the panel stays open. */
-  async 'tour-hidden'(errors: string[]) {
+  /** Owner (2026-11-10): v1's Tour row is the patch Tempo (web), set once for every synced block: pressing where
+   * "Launch Tutorial" was sets the tempo, and the panel stays open. The tour (CHG-0035) has its own row under it. */
+  async 'settings-tempo-and-tour'(errors: string[]) {
     const p = await open(browser, [], errors);
     for (let i = 0; i < 6 && !(await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open)); i++) { await p.mouse.click(1233, 45); await p.waitForTimeout(700); }
     await p.waitForTimeout(1200);
@@ -968,14 +967,18 @@ Object.assign(tests, {
     const tempo = () => p.evaluate(() => (window as any).__bd_probe.scene.host.tempo());
     const before = await tempo();
     await p.mouse.move(700, 452); await p.mouse.down(); await p.mouse.move(800, 452, { steps: 5 }); await p.waitForTimeout(200);
-    await p.screenshot({ path: `${OUT}/tour-hidden.png` });
+    await p.screenshot({ path: `${OUT}/settings-tempo-and-tour.png` });
     await p.mouse.up(); await p.waitForTimeout(600);
     const after = await tempo(), saved = (await state(p)).patch.tempo;
     const still = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.Open);
+    // CHG-0035: the tour has a row of its own under Tempo; LAUNCH TOUR closes Settings and asks.
+    const btn = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.tourButton()) as { x: number; y: number };
+    await p.mouse.move(btn.x, btn.y); await p.mouse.click(btn.x, btn.y); await p.waitForTimeout(1200);
+    const tour = await p.evaluate(() => ({ settings: (window as any).__bd_probe.scene.SettingsPanel.Open, asked: (window as any).__bd_probe.scene.Tutorial.SplashOpen }));
     await p.close();
-    const ok = !names.includes('Tour') && JSON.stringify(names) === JSON.stringify(['Color Theme', 'Master Volume', 'DB Meter', 'Tempo']) && still
-      && before === 120 && after > 120 && after <= 240 && Number.isInteger(after) && saved === after;
-    return [ok, { names, settingsStillOpen: still, before, after, saved }];
+    const ok = JSON.stringify(names) === JSON.stringify(['Color Theme', 'Master Volume', 'DB Meter', 'Tempo', 'Tour']) && still
+      && before === 120 && after > 120 && after <= 240 && Number.isInteger(after) && saved === after && !tour.settings && tour.asked;
+    return [ok, { names, settingsStillOpen: still, before, after, saved, tour }];
   },
 
   /** Owner (2026-11-10): Settings loses its Connect tab (dated share buttons; the guide site is lost) and the "Chrome
@@ -1362,7 +1365,7 @@ Object.assign(tests, {
     const order = await pg.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return pp.centreOf('save')[0] < pp.centreOf('share')[0]; });
     await patchesClick(pg, 'share', 400);
     const opened = await pg.evaluate(() => (window as any).__sent.find((e: any) => e.id === 'bd_openUrl')?.v.url as string | undefined);
-    await patchesClick(pg, 'tab1', 600);
+    await patchesClick(pg, 'tab1', 1100);
     const panel = await pg.evaluate(() => { const s = (window as any).__bd_probe.scene; return { patches: s.PatchesPanel.Open, share: s.SharePanel.Open, items: s.PatchesPanel.Items.map((i: any) => `${i.name} | ${i.detail}`) }; });
     await pg.screenshot({ path: `${OUT}/plugin-patches.png` });
     const sent = () => pg.evaluate(() => (window as any).__sent.filter((e: any) => e.id.startsWith('bd_patch')).map((e: any) => ({ id: e.id, v: e.v })));
@@ -1465,7 +1468,7 @@ Object.assign(tests, {
     await openPatches(p);
     const tab = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
     const title = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
-    await patchesClick(p, 'tab1', 600);
+    await patchesClick(p, 'tab1', 1100);
     const items = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Items.map((i: any) => i.name));
     await p.screenshot({ path: `${OUT}/patches-web.png` });
     // INSERT: the blocks follow the pointer, drawn like a pressed block, until a click.
@@ -2276,13 +2279,13 @@ Object.assign(tests, {
     const z4 = await zoom();
     await p.close();
     const r = { z0, z1, anchor: [g0, g1], z2, z3, z4a, z4 };
-    const ok = z1 > z0 * 1.3 && Math.abs(g0[0] - g1[0]) < 0.05 && Math.abs(g0[1] - g1[1]) < 0.05 && ![0.25, 0.5, 1, 2, 4].includes(z1)
+    const ok = z1 > z0 * 1.3 && Math.abs(g0[0] - g1[0]) < 0.05 && Math.abs(g0[1] - g1[1]) < 0.05 && ![0.15, 0.25, 0.5, 1, 2, 4].includes(z1)
       && z2 < z1 && z3 === z2 && Math.abs(z4 / z4a - 1.5) < 0.01;
     return [ok, r];
   },
 
   /** CHG-0010 (owner, 2026-11-12): the mouse wheel zooms like a pinch, smoothly about the pointer (the grid point under
-   * it stays put), within v1's 0.25×–4×. A wheel over an open panel (Settings) leaves the stage's zoom alone. Owner
+   * it stays put), within 0.15×–4× (v1 0.25×; CHG-0035). A wheel over an open panel (Settings) leaves the stage's zoom alone. Owner
    * (2026-11-12): half a pinch's sensitivity, so one notch (deltaY 100, clamped to 25) is ×e^0.125 ≈ 1.13. */
   async 'mouse-wheel-zoom'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', -6, 0), blk(2, 'Filter', 6, 0)], errors);
@@ -2296,7 +2299,7 @@ Object.assign(tests, {
     for (let i = 0; i < 2; i++) { await p.mouse.wheel(0, -100); await p.waitForTimeout(30); }
     await p.waitForTimeout(100);
     const z1 = await zoom(), g1 = await gridAt();
-    for (let i = 0; i < 40; i++) { await p.mouse.wheel(0, 100); await p.waitForTimeout(10); }  // far out: stops at 0.25
+    for (let i = 0; i < 40; i++) { await p.mouse.wheel(0, 100); await p.waitForTimeout(10); }  // far out: stops at 0.15
     await p.waitForTimeout(400);
     const z2 = await zoom();
     // Settings open: the wheel is the panel's.
@@ -2305,7 +2308,7 @@ Object.assign(tests, {
     const z3 = await zoom();
     await p.close();
     const ok = Math.abs(zNotch / z0 - Math.exp(0.125)) < 0.01 && z1 > z0 * 1.3 && Math.abs(g0[0] - g1[0]) < 0.05 && Math.abs(g0[1] - g1[1]) < 0.05
-      && Math.abs(z2 - 0.25) < 1e-6 && z3 === z2;
+      && Math.abs(z2 - 0.15) < 1e-6 && z3 === z2;
     return [ok, { z0, zNotch, z1, anchor: [g0, g1], z2, z3 }];
   },
 
@@ -2383,7 +2386,7 @@ Object.assign(tests, {
   },
 
   /** CHG-0005 task 8 (owner): multi-touch. Each finger drags its own block (powered while held, drawn pressed); two
-   * fingers on the stage pinch-zoom about their midpoint (which stays over the same spot) within v1's 0.25×–4×;
+   * fingers on the stage pinch-zoom about their midpoint (which stays over the same spot) within 0.15×–4× (v1 0.25×; CHG-0035);
    * two fingers on two sliders of the open options panel move each its own. One finger behaves as before. */
   async 'multitouch'(errors: string[]) {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, hasTouch: true });
@@ -2429,10 +2432,10 @@ Object.assign(tests, {
     const v1 = await view(), mid1 = await probeAt(640, 560);
     await p.screenshot({ path: `${OUT}/multitouch-pinch.png` });
     await start(1, 440, 560); await start(2, 840, 560);
-    await move([[1, 630, 560], [2, 650, 560]], 10);  // pinch right in: stops at 0.25×
+    await move([[1, 630, 560], [2, 650, 560]], 10);  // pinch right in: stops at 0.15×
     await endAll();
     const v2 = await view();
-    const pinch = pinched.pinch && Math.abs(v1.zoom - 2 * v0.zoom) < 0.05 && (!mid0 || (Math.abs(mid0[0] - mid1[0]) < 0.2 && Math.abs(mid0[1] - mid1[1]) < 0.2)) && v2.zoom === 0.25;
+    const pinch = pinched.pinch && Math.abs(v1.zoom - 2 * v0.zoom) < 0.05 && (!mid0 || (Math.abs(mid0[0] - mid1[0]) < 0.2 && Math.abs(mid0[1] - mid1[1]) < 0.2)) && v2.zoom === 0.15;
     await p.evaluate(() => { const s = (window as any).__bd_probe.scene; s.pinchView(1, { x: 0, y: 0 }); s.host.setZoom(1); s.host.setDrag({ x: 0, y: 0 }); });
     await p.waitForTimeout(300);
 
@@ -2703,12 +2706,276 @@ Object.assign(tests, {
     await p.close();
     return [r.block && r.empty && r.body && !r.link && !r.input, r];
   },
-  async 'menus-alphabetical'(errors: string[]) {
+  // Owner (2026-11-17, CHG-0035): Sources, Powers and Interactions list the most used blocks first, in the owner's
+  // order; Effects stay alphabetical (it was every category alphabetical, 2026-11-14).
+  async 'menus-in-owner-order'(errors: string[]) {
     const p = await open(browser, [], errors);
-    const cats = await p.evaluate(() => ((window as any).__bd_probe.scene.Header.MenuItems as any[]).map(c => (c.Items as any[]).map(i => String(i.Name))));
+    const cats = await p.evaluate(() => ((window as any).__bd_probe.scene.Header.MenuItems as any[]).map(c => (c.Items as any[]).map(i => String(i.Name).toLowerCase())));
     await p.close();
-    const sorted = cats.map(c => [...c].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })));
-    return [cats.length >= 4 && cats.every((c, i) => c.length > 1 && c.join() === sorted[i].join()), { cats }];
+    const effects = [...cats[1]].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+    const want = {
+      source: ['Tone', 'Noise', 'Wavetable', 'Sample', 'Granular', 'Microphone', 'Recorder', 'SampleGen', 'Stage'],
+      power: ['Power', 'Particle Emitter', 'Laser', 'Toggle Power', 'Pulse Power', 'Counter', 'Chance', 'Sound Laser', 'Prism', 'Gate', 'Void'],
+      interaction: ['Computer Keyboard', 'MIDI Controller', 'Touchpad', 'Label'],
+    };
+    // Gate is on its own branch: the order is checked over the blocks this build has.
+    const inOrder = (got: string[], want: string[]) => { const order = want.map(n => n.toLowerCase()); return got.join() === order.filter(n => got.includes(n)).join() && got.length >= order.length - 1; };
+    return [cats.length === 4 && inOrder(cats[0], want.source) && cats[1].join() === effects.join() && inOrder(cats[2], want.power) && inOrder(cats[3], want.interaction), { cats }];
+  },
+  // Owner (2026-11-17, CHG-0035): the menu's ? hints said SoundCloud (Granular, Sample: "must be creative commons or
+  // tagged #blokdust"), "Chrome only" (MIDI); every hint is now the block's manifest description, in the owner's words.
+  async 'menu-hints-in-owner-words'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    const hints = await p.evaluate(() => Object.fromEntries(((window as any).__bd_probe.scene.Header.MenuItems as any[]).flatMap(c => (c.Items as any[]).map(i => [String(i.Name).toLowerCase(), String(i.Description)]))));
+    await p.close();
+    const all = Object.values(hints).join(' ');
+    const pass = !/soundcloud|creative commons|#blokdust|chrome only/i.test(all) && hints.granular.startsWith('It takes a sample from freesound.org')
+      && hints.sample.includes('freesound.org') && hints.label === 'A text box.' && hints['midi controller'] === 'Trigger sources using any connected USB MIDI device.'
+      && hints.prism === 'Splits and diverts laser beams and particles.' && hints.stage.startsWith('A container for groups of blocks');
+    return [pass, hints];
+  },
+  // Owner (2026-11-17, CHG-0035): a Microphone on its own played (a Distortion beside it distorted the voice) though
+  // every other source needs power; and trashing the last one left the browser showing the microphone in use.
+  async 'microphone-needs-power-and-lets-go'(errors: string[]) {
+    const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] });
+    try {
+      const p = await open(b, [blk(1, 'Microphone', 0, 0), blk(2, 'Distortion', 3, 0)], errors);
+      await p.waitForFunction(() => (window as any).__bd_probe.microphoneOpen, null, { timeout: 10000 });
+      await p.waitForTimeout(800);
+      const alone = await maxOver(p, 'rms', 1500);
+      const power = await p.evaluate(() => (window as any).__bd_probe.scene.host.createBlock('Power', -3, 0));
+      await p.waitForTimeout(800);
+      const powered = await maxOver(p, 'rms', 1500);
+      await p.mouse.click(200, 600); await p.waitForTimeout(300);  // a made block follows the pointer until a press
+      await p.evaluate(id => { const h = (window as any).__bd_probe.scene.host; h.deleteBlock(1); h.deleteBlock(id); }, power);
+      await p.waitForTimeout(500);
+      const listening = await p.evaluate(() => (window as any).__bd_probe.microphoneOpen);
+      await p.close();
+      return [alone < 1e-4 && powered > 1e-3 && !listening, { alone, powered, listening }];
+    } finally { await b.close(); }
+  },
+  // Owner (2026-11-17, CHG-0035): SampleGen's GENERATE WAVE rolled a new random wave; a SOUND slider picks one by
+  // number instead, and a number is always the same wave.
+  async 'sample-gen-sound-slider'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'SampleGen', 0, 0)], errors);
+    const [x, y] = await toCss(p, 0, 0);
+    await p.mouse.click(x + 8, y + 8); await p.waitForTimeout(1200);
+    const form = await p.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.Options as any[]).map(o => o.Setting));
+    const now = () => p.evaluate(() => { const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock; return { wave: (b.WaveForm as number[]).join(), sound: b.Params.sound as number }; });
+    const wave = async (n: number) => {  // a number set and let go (as a release does)
+      await p.evaluate(k => { const s = (window as any).__bd_probe.scene, b = s.OptionsPanel.SelectedBlock; b.SetParam('sound', k); s.host.setSound(b.Id, k, true); }, n);
+      await p.waitForFunction(k => { const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock; return b.Params.sound === k && b.WaveForm.length > 0; }, n, { timeout: 10000 });
+      await p.waitForTimeout(300);
+      return p.evaluate(() => { const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock; return { wave: (b.WaveForm as number[]).join(), sound: (window as any).__bd_probe.state.patch.blocks[0].params.sound }; });
+    };
+    const a = await wave(5), b2 = await wave(6), a2 = await wave(5);
+    // Owner (2026-11-17): the wave is made on release, not while dragging; the number stays on show.
+    const row = await p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel, pr = (window as any).__bd_probe.v1App.Metrics.PixelRatio, q = (o.Options as any[]).find(x => x.Setting === 'sound');
+      return { x0: (o.Position.x + o.Margin) / pr, w: o.Range / pr, y: (o.Position.y + q.Position.y + q.Size.height / 2) / pr, handle: (o.Position.x + o.Margin + q.Position.x) / pr }; });
+    const before = await now();
+    await p.mouse.move(row.handle, row.y); await p.mouse.down();
+    await p.mouse.move(row.x0 + row.w * 0.3, row.y, { steps: 8 }); await p.mouse.move(row.x0 + row.w * 0.5, row.y, { steps: 8 }); await p.waitForTimeout(400);
+    const during = await now();
+    await p.mouse.up();
+    await p.waitForFunction(w => { const b = (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock; return b.WaveForm.length > 0 && (b.WaveForm as number[]).join() !== w; }, before.wave, { timeout: 10000 }).catch(() => {});
+    await p.waitForTimeout(500);
+    const after = await now();
+    await p.evaluate(() => {
+      const seen: string[] = ((window as any).__texts = []), f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...q: any[]) { seen.push(t); return (f as any).call(this, t, ...q); };
+      (window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.RefreshOptionsPanel();
+    });
+    await p.mouse.move(row.x0 - 200, row.y + 200); await p.waitForTimeout(600);
+    const shown = await p.evaluate(n => ((window as any).__texts as string[]).includes(`#${n}`), after.sound);
+    await p.screenshot({ path: `${OUT}/sample-gen-sound-slider.png` });
+    await p.close();
+    const pass = form.includes('sound') && !form.includes('generate') && a.wave === a2.wave && a.wave !== b2.wave && a.sound === 5
+      && during.sound > 100 && during.wave === before.wave && after.wave !== before.wave && after.sound === during.sound && shown;
+    return [pass, { form, same: a.wave === a2.wave, differs: a.wave !== b2.wave, saved: a.sound, dragged: during.sound, waveHeldWhileDragging: during.wave === before.wave, madeOnRelease: after.wave !== before.wave, numberShown: shown }];
+  },
+  // Owner (2026-11-17, CHG-0035): saving a link copies it at once (no second click on the link): LINK COPIED.
+  async 'save-copies-link'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await p.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url });
+    await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, f = pp.flashSaved.bind(pp); (window as any).__flash = []; pp.flashSaved = async (k: string) => { await f(k); (window as any).__flash.push(pp.flash.label); }; });
+    const link = await makeLink(p);
+    await p.waitForFunction(() => (window as any).__flash.length > 0, null, { timeout: 5000 }).catch(() => {});
+    const r = await p.evaluate(async () => ({ clip: await navigator.clipboard.readText(), flash: (window as any).__flash }));
+    await p.close();
+    return [r.clip === link && r.flash[0] === 'Link Copied', { link, ...r }];
+  },
+  // Owner (2026-11-17, CHG-0035): MAKE VIDEO is hidden (and off) until the video export gets its own round of work.
+  async 'make-video-hidden'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await openPatches(p);
+    const r = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { video: !!pp.host.video, on: pp.videoOn, main: pp.mainAction().label }; });
+    await p.close();
+    return [!r.video && !r.on && r.main === 'Save', r];
+  },
+  // Owner (2026-11-17, CHG-0035): Settings › DOWNLOAD and ACCOUNT were narrower than ABOUT (420 units against v1's
+  // menu width); About's websites sat at different heights under blurbs of different lengths, with Twitter names
+  // under them (gone now: the websites take that line, all three level).
+  async 'settings-pages-as-wide-as-about'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    await p.evaluate(() => {
+      const seen: { t: string; x: number; y: number }[] = ((window as any).__texts3 = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, x: number, y: number, ...a: any[]) { seen.push({ t, x, y }); return (f as any).call(this, t, x, y, ...a); };
+    });
+    const s = await p.evaluate(() => {
+      const sp = (window as any).__bd_probe.scene.SettingsPanel, A = (window as any).__bd_probe.v1App, pr = A.Metrics.PixelRatio;
+      sp.OpenPanel(); sp._OpenTab = 2; sp.MenuItems.forEach((m: any, i: number) => { m.Selected = i === 2 ? 1 : 0; m.YOffset = i === 2 ? 0 : -sp.DrawTo.Height; });
+      const b = sp.downloadButtons(), half = 65 * A.Unit;  // unused: kept for the log
+      return { width: A.Width / pr, column: A.Width / 7 * 4 / pr, buttons: b.map((x: any) => x.x), half };
+    });
+    await p.waitForTimeout(1500);
+    const about = await p.evaluate(() => {
+      const seen = (window as any).__texts3 as { t: string; x: number; y: number }[];
+      const sites = ['whitevinyldesign.com', 'funputs.com', 'edsilv.com'].map(t => seen.filter(e => e.t === t).at(-1)?.y ?? null);
+      return { sites, twitter: seen.some(e => /^@/.test(e.t)) };
+    });
+    await p.screenshot({ path: `${OUT}/settings-about-websites.png` });
+    // DOWNLOAD's three buttons span the column: centres at 1/6, 1/2 and 5/6 of it (less the 15-unit gaps).
+    const left = (s.width - s.column) / 2, spread = s.buttons[2] - s.buttons[0];
+    await p.close();
+    const level = about.sites.every(y => y !== null && Math.abs(y - about.sites[0]!) < 0.5);
+    return [level && !about.twitter && spread > s.column * 0.6 && s.buttons[0] < left + s.column * 0.2, { about, s, left, spread }];
+  },
+  // Owner (2026-11-17, CHG-0035): a first visit gets a random theme from those matching the system's light or dark
+  // setting, and keeps it; a kept theme wins.
+  async 'first-theme-follows-system'(errors: string[]) {
+    const DARK = new Set([0, 3, 6, 10]);
+    const visit = async (scheme: 'dark' | 'light') => {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: scheme });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      const boot = async () => { await p.goto(`${url}/index.html?demo&firsttheme=1`); await p.waitForFunction(() => (window as any).__bd_probe); await p.waitForTimeout(300); };
+      await boot();
+      const first = await p.evaluate(() => ({ now: (window as any).__bd_probe.v1App.ThemeManager.CurrentThemeNo, kept: localStorage.getItem('blokdust.theme') }));
+      await boot();
+      const again = await p.evaluate(() => (window as any).__bd_probe.v1App.ThemeManager.CurrentThemeNo);
+      await ctx.close();
+      return { ...first, again };
+    };
+    const picks: { scheme: string; now: number; kept: string | null; again: number }[] = [];
+    for (let i = 0; i < 4; i++) for (const scheme of ['dark', 'light'] as const) picks.push({ scheme, ...(await visit(scheme)) });
+    const pass = picks.every(r => DARK.has(r.now) === (r.scheme === 'dark') && r.kept === String(r.now) && r.again === r.now);
+    return [pass, picks];
+  },
+  // Owner (2026-11-17, CHG-0035): Patches' tabs slide their pages as Settings' do (the old lifts out, the new drops in).
+  async 'patches-tabs-slide'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await openPatches(p);
+    const dy = () => p.evaluate(() => [...(window as any).__bd_probe.scene.PatchesPanel.pageDy] as number[]);
+    const before = await dy();
+    await patchesClick(p, 'tab1', 150);
+    const leaving = await dy();
+    await p.waitForTimeout(450);
+    const arriving = await dy();
+    await p.waitForTimeout(900);
+    const after = await dy();
+    await p.close();
+    return [before[0] === 0 && leaving[0] < 0 && arriving[1] > -800 && arriving[1] < 0 && after[1] === 0 && after[0] <= -790, { before, leaving, arriving, after }];
+  },
+  // Owner (2026-11-17, CHG-0035): OPEN and GALLERY show whole rows and a half (so more below shows); the first row is
+  // as far under the rule as each row under the one above; the last row is never cut off at the end.
+  async 'patch-lists-half-row'(errors: string[]) {
+    const p = await open(browser, [], errors);
+    await keepPresets(p);
+    await openList(p);
+    await p.waitForTimeout(800);  // the OPEN page drops in (CHG-0035)
+    const r = await p.evaluate(() => {
+      const pp = (window as any).__bd_probe.scene.PatchesPanel, u = (window as any).__bd_probe.v1App.Unit, L = pp.openLayout(), rows = (L.bottom - L.top) / pp.rowH;
+      pp.Tab = 2; const G = pp.galleryWindow(), Lg = pp.galleryLayout(), grows = (G.bottom - G.top) / pp.rowH; pp.Tab = 1;
+      const n = pp.Items.length;
+      // the first title under the rule as each title under the divider above it (divider: 28 units under a row's baseline)
+      return { rows, grows, firstGap: (pp.openRowY(0) + pp.OpenScroll - pp.rowGap - L.rule) / u, rowGap: (28 * u - pp.rowGap) / u,
+        galleryTop: (G.top - Lg.rule) / u, end: Math.max(0, n * pp.rowH + 10 * u - (L.bottom - L.top)) - pp.openMaxScroll(), n };
+    });
+    await p.screenshot({ path: `${OUT}/patch-lists-half-row.png` });
+    await p.close();
+    const half = (x: number) => Math.abs(x - Math.floor(x) - 0.5) < 1e-6;
+    return [half(r.rows) && half(r.grows) && Math.abs(r.galleryTop + 2) < 1e-6 && Math.abs(r.firstGap - r.rowGap) < 1e-6 && r.end === 0, r];
+  },
+  // Owner (2026-11-17, CHG-0035): the zoom goes out to 0.15 (v1 stopped at 0.25).
+  async 'zoom-out-to-0-15'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    for (let i = 0; i < 5; i++) { await p.evaluate(() => (window as any).__bd_probe.scene.ZoomButtons.ZoomOut()); await p.waitForTimeout(700); }
+    const zoom = await p.evaluate(() => (window as any).__bd_probe.v1App.ZoomLevel);
+    await p.screenshot({ path: `${OUT}/zoom-out-to-0-15.png` });
+    await p.close();
+    return [Math.abs(zoom - 0.15) < 1e-9, { zoom }];
+  },
+  // Owner (2026-11-17, CHG-0035): on a phone held upright the splash title BLOKDUST 2 nearly touched the edges.
+  async 'splash-title-fits-phone'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+    const p = await ctx.newPage();
+    p.on('pageerror', e => errors.push(e.message));
+    await p.addInitScript(() => {
+      const seen: number[] = ((window as any).__title = []);
+      const f = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (t: string, ...a: any[]) { if (t === 'BLOKDUST 2') seen.push(this.measureText(t).width / this.canvas.width); return (f as any).call(this, t, ...a); };
+    });
+    await p.goto(`${url}/index.html?splash=1&v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.tap('#start');
+    await p.waitForTimeout(4000);
+    const widths = await p.evaluate(() => (window as any).__title as number[]);
+    await ctx.close();
+    const widest = Math.max(0, ...widths);
+    return [widths.length > 0 && widest <= 0.81, { drawn: widths.length, widest }];
+  },
+  // Owner (2026-11-17, CHG-0035): v1's tour, back. A first visit is asked; TAKE THE TOUR clears the stage and walks
+  // through v1's steps (each passes when it is done); the last one is in the owner's words, and the answer is kept.
+  async 'tour'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+    const p = await ctx.newPage();
+    p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html?demo&tour=1`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.click('#start');
+    await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
+    await p.waitForTimeout(1800);
+    const tut = () => p.evaluate(() => { const t = (window as any).__bd_probe.scene.Tutorial; return { splash: t.SplashOpen, open: t.Open, scene: t.CurrentScene, total: t.TotalScenes, hot: (window as any).__bd_probe.scene.TutorialHotspots.Points.length, blocks: (window as any).__bd_probe.state.blocks.length }; });
+    const asked = await tut();
+    await p.screenshot({ path: `${OUT}/tour-welcome.png` });
+    await p.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));  // owner: power off before the tour
+    // TAKE THE TOUR: v1's hit box, left of the centre line under the message.
+    const take = await p.evaluate(() => { const A = (window as any).__bd_probe.v1App, u = A.Unit, pr = A.Metrics.PixelRatio; return [(A.Width / 2 - 60 * u) / pr, (A.Height / 2 + 20 * u) / pr]; });
+    await p.mouse.move(take[0], take[1]); await p.mouse.click(take[0], take[1]); await p.waitForTimeout(1500);
+    const started = await tut();
+    const host = (type: string, x: number, y: number) => p.evaluate(([t, gx, gy]) => (window as any).__bd_probe.scene.host.createBlock(t, gx, gy), [type, x, y] as const);
+    const until = async (n: number) => { await p.waitForFunction(k => (window as any).__bd_probe.scene.Tutorial.CurrentScene >= k, n, { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(600); return (await tut()).scene; };
+    const steps: number[] = [];
+    await host('ToneSource', 0, 0); steps.push(await until(2));
+    const kb = await host('ComputerKeyboard', 0, -3); steps.push(await until(3));
+    const chop = await host('Chopper', 3, 0); steps.push(await until(4));
+    // The options step: open the Chopper, use a slider, close the panel.
+    const [cx, cy] = await toCss(p, 3, 0);
+    await p.mouse.click(cx + 8, cy + 8); await p.waitForTimeout(1300);
+    const slider = await p.evaluate(() => { const o = (window as any).__bd_probe.scene.OptionsPanel, A = (window as any).__bd_probe.v1App, pr = A.Metrics.PixelRatio, s = (o.Options as any[]).findIndex(q => q.Type === 'slider');
+      const q = o.Options[s]; return [(o.Position.x + o.Margin + o.Range * 0.3) / pr, (o.Position.y + q.Position.y + q.Size.height / 2) / pr]; });
+    await p.mouse.click(slider[0], slider[1]); await p.waitForTimeout(300);
+    await p.mouse.click(200, 600); steps.push(await until(5));  // the empty stage: the panel closes
+    await p.evaluate(id => (window as any).__bd_probe.scene.host.deleteBlock(id), kb); steps.push(await until(6));
+    await host('ParticleEmitter', 0, 4); steps.push(await until(7));
+    await host('Power', -3, 4); steps.push(await until(8));
+    const last = await p.evaluate(() => { const t = (window as any).__bd_probe.scene.Tutorial; return t.Text.Scenes[t.CurrentScene - 1].Intro; });
+    await p.screenshot({ path: `${OUT}/tour-last.png` });
+    const kept = await p.evaluate(() => localStorage.getItem('bd.skipTour'));
+    const end = { power: await p.evaluate(() => (window as any).__bd_probe.scene.worldPower), particles: await maxOver(p, 'particles', 3000) };
+    // Asked once: the next visit is not asked.
+    await p.goto(`${url}/index.html?demo&tour=1`);
+    await p.waitForFunction(() => (window as any).__bd_probe);
+    await p.click('#start');
+    await p.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
+    await p.waitForTimeout(1800);
+    const again = await tut();
+    await ctx.close();
+    void chop;
+    const pass = asked.splash && !asked.open && started.open && started.blocks === 0 && started.scene === 1 && started.hot > 0
+      && steps.join() === '2,3,4,5,6,7,8' && /PATCHES/.test(last) && /ADD TO GALLERY/.test(last) && kept === '1' && !again.splash && !again.open
+      && end.power && end.particles > 0;
+    return [pass, { asked, started, steps, last, kept, end, again }];
   },
   // Owner (2026-11-14): the Freesound results show each sound's length after its author ("By User · 1:05").
   async 'freesound-results-show-length'(errors: string[]) {

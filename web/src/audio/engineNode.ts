@@ -46,13 +46,32 @@ export class EngineNode {
   }
   /** Live input for Microphone / Audio In blocks: ask for the microphone once and feed the worklet's input. */
   private input: Promise<void> | null = null;
+  private stream: MediaStream | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
   connectMicrophone(): Promise<void> {
     if (!this.input) setAudioSession('play-and-record');  // iOS: "playback" cannot open the mic
-    this.input ??= navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
-      .then(stream => { (this.node.context as AudioContext).createMediaStreamSource(stream).connect(this.node); })
-      .catch(err => { console.warn('microphone unavailable:', err); this.input = null; });
-    return this.input;
+    const asked = this.input ??= navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+      .then(stream => {
+        if (this.input !== asked) { for (const t of stream.getTracks()) t.stop(); return; }  // let go while it was asked for
+        this.stream = stream;
+        this.source = (this.node.context as AudioContext).createMediaStreamSource(stream);
+        this.source.connect(this.node);
+      })
+      .catch(err => { console.warn('microphone unavailable:', err); if (this.input === asked) this.input = null; });
+    return asked;
   }
+  /** No block listens any more (the last Microphone or Audio In is gone): stop the microphone, so the browser no
+   * longer shows it in use (owner, 2026-11-17, CHG-0035). Asked for again by the next one. */
+  disconnectMicrophone(): void {
+    if (!this.input) return;
+    this.input = null;
+    this.source?.disconnect(); this.source = null;
+    for (const t of this.stream?.getTracks() ?? []) t.stop();
+    this.stream = null;
+    setAudioSession('playback');
+  }
+  /** Tests: the microphone is open (asked for, or live). */
+  get microphoneOpen(): boolean { return !!this.input; }
   /** v1 Recorder: capture the master output; `stop` resolves with what was recorded. */
   private recordingDone: ((r: Recording) => void) | null = null;
   startRecording(): void { this.node.port.postMessage({ type: 'record', on: true } satisfies ToWorklet); }

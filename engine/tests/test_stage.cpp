@@ -230,9 +230,11 @@ TEST_CASE("Stage: the Microphone and Audio In inside a Stage hear the host input
   for (const auto t : {BlockType::SourceMicrophone, BlockType::SourceAudioIn}) {
     auto outer = makeEngine(48000, 1, false);
     outer->push(Command::add(1, BlockType::SourceStage, 0, 0));
+    outer->push(Command::add(2, BlockType::PowerPower, 3, 0));  // the website's Microphone plays only while powered (R1a)
     outer->prime();
     auto inner = makeChild(*outer);
     inner->push(Command::add(1, t, 0, 0));
+    inner->push(Command::add(2, BlockType::PowerPower, -3, 0));
     REQUIRE(outer->attachStage(1, inner.get()));
     for (std::uint32_t d = 0; d < 48000; d += 128) outer->process(inL.data() + d, inR.data() + d, outL.data() + d, outR.data() + d, 128);
     CHECK(rms(outL, 24000) > 0.01);

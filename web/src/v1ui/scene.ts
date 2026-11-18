@@ -27,12 +27,16 @@ import { RecorderPanel } from './ported/UI/RecorderPanel';
 import { SoundcloudPanel } from './ported/UI/SoundcloudPanel';
 import { AnimationsLayer } from './ported/UI/AnimationsLayer';
 import { Splash } from './ported/Splash';
+import { Tutorial } from './ported/UI/Tutorial';
+import { TutorialHotspots } from './ported/UI/TutorialHotspots';
+import { OptionActionButton } from './ported/UI/Options/OptionActionButton';
+import { checkTour, installTour, tourSkipped } from './tutorial.ts';
 import RELEASES from '../releases.json';
 import { OptionSample } from './ported/UI/Options/OptionSample';
 import { Slider } from './ported/UI/Options/OptionSlider';
 import type { FreesoundSound } from '../patch/samples.ts';
 import { PatchesPanel, drawUploadLink, type PatchesHost } from './patches.ts';
-import { AccountPage } from './accountPage.ts';
+import { AccountPage, pageWidth } from './accountPage.ts';
 
 export interface SceneHost extends PatchesHost {
   /** v1 MenuItem dragged onto the stage: create at the grid cell and start dragging it (v1 CreateBlockFromType). */
@@ -73,6 +77,8 @@ export interface SceneHost extends PatchesHost {
   toggleRecording(id: number): void;
   downloadRecording(id: number): void;
   generateSample(id: number): void;
+  /** SampleGen's SOUND slider (CHG-0035): keep the number; `make`: make its wave (the slider was let go). */
+  setSound(id: number, n: number, make: boolean): void;
   themes(): readonly Theme[];
   /** A Stage block's panel buttons (CHG-0021): look inside it; fill it from a patch file. */
   openStage(id: number): void;
@@ -91,7 +97,7 @@ export interface SceneHost extends PatchesHost {
 export const SAVE_WARNING = "Note: Recorder recordings and your own audio samples aren't saved in the link. " +
   'To share audio, download a recording from its options panel or use samples from Freesound.';  // owner, PR #1 review 2026-11-12
 
-const stub = { Open: false, SplashOpen: false, Hover: false, MouseDown() {}, MouseUp() {}, MouseMove() {}, CheckLaunch() {}, OpenSplash() {}, Jump() {} };
+const stub = { Open: false, Hover: false, MouseDown() {}, MouseUp() {}, MouseMove() {} };
 
 export class V1Scene {
   Ctx!: CanvasRenderingContext2D;
@@ -111,7 +117,10 @@ export class V1Scene {
   readonly RecorderPanel = new RecorderPanel();
   /** v1's loading animation (a spinning diamond in a bubble beside a loading block; also the Share/search spinners). */
   readonly AnimationsLayer = new AnimationsLayer();
-  readonly Tutorial = stub; readonly MessagePanel = stub;
+  /** v1's tour (CHG-0035): the welcome, the steps on the right and the pulsing markers (tutorial.ts). */
+  readonly Tutorial = new Tutorial();
+  readonly TutorialHotspots = new TutorialHotspots();
+  readonly MessagePanel = stub;
   /** v1's sample search panel, ported verbatim, searching Freesound (DATA-0005, SPEC-SHARING-BACKEND R15). */
   readonly SoundcloudPanel = new SoundcloudPanel();
   /** Patches (CHG-0005): opened from the header's Share slot, which reads PATCHES. */
@@ -177,7 +186,8 @@ export class V1Scene {
       this.initialised = true;
       installNewBlockMenu();  // the post-2.0 blocks join v1's menu before the header reads it (SCOPE-0005)
       App.Width = 0; App.Height = 0;
-      for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Init(this);
+      for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.TutorialHotspots, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Init(this);
+      installTour(this.Tutorial, this.TutorialHotspots);
       relabelShareButton(this.Header);
       // The header's Share slot opens Patches (CREATE SHARE LINK is in its SAVE tab, owner 2026-11-10).
       (this.SharePanel as any).OpenPanel = () => this.PatchesPanel.OpenPanel();
@@ -194,7 +204,7 @@ export class V1Scene {
     }
     this.Metrics.Compute();
     this.Width = App.Width; this.Height = App.Height;
-    for (const o of [this.ZoomButtons, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Resize?.();
+    for (const o of [this.ZoomButtons, this.TrashCan, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) o.Resize?.();
     // v1 MainScene.Resize
     this.OptionsPanel.Close();
     this.Header.Populate(this.Header.MenuJson);
@@ -207,7 +217,10 @@ export class V1Scene {
     const animating = TWEEN.update(nowMs);
     // The open panel's block is loading (AnimationsLayer list): keep redrawing it so its loading square spins.
     if (this.OptionsPanel.Scale > 0 && this.AnimationsLayer.ActiveBlocks.includes(this.OptionsPanel.SelectedBlock)) this.OptionsPanel.Animating = true;
-    for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) { o.LastVisualTick = nowMs; o.Update?.(); }
+    for (const o of [this.ToolTip, this.AnimationsLayer, this.RecorderPanel, this.ZoomButtons, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.TutorialHotspots, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) { o.LastVisualTick = nowMs; o.Update?.(); }
+    checkTour(this.Tutorial, nowMs, this.OptionsPanel.Scale > 0);
+    // The tour's markers pulse, and follow the menus and blocks they point at.
+    const touring = this.Tutorial.Open || this.Tutorial.SplashOpen || this.TutorialHotspots.Points.length > 0;
     this.MainSceneDragger.LastVisualTick = nowMs;
     this.MainSceneDragger.Update();
     if (Math.abs(App.ZoomLevel - this.lastZoom) > 1e-9) { this.lastZoom = App.ZoomLevel; this.host.setZoom(App.ZoomLevel); }
@@ -221,7 +234,7 @@ export class V1Scene {
     // Live rows (a Compressor's meter, …) follow the engine: the panel is redrawn every frame while one shows.
     const live = followLfos(this.OptionsPanel) || hasLiveRows(this.OptionsPanel);
     if (live) (this.OptionsPanel as any)._DrawReady = true;
-    return animating || easing || spinning || playing || live || this.splashDrawing;
+    return animating || easing || spinning || playing || live || touring || this.splashDrawing;
   }
   private lastZoom = 1;
   private lastDrag = { x: 0, y: 0 };
@@ -230,7 +243,7 @@ export class V1Scene {
   drawRecorderPanel = true;
   /** v1 MainScene display list, from the ToolTip upward (blocks/lines/beams are drawn by the stage before this). */
   draw(): void {
-    for (const o of [this.ToolTip, this.AnimationsLayer, ...(this.drawRecorderPanel ? [this.RecorderPanel] : []), this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.OptionsPanel, this.Header, this.CreateNew, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) {
+    for (const o of [this.ToolTip, this.AnimationsLayer, ...(this.drawRecorderPanel ? [this.RecorderPanel] : []), this.ZoomButtons, this.MainSceneDragger, this.TrashCan, this.Tutorial, this.OptionsPanel, this.Header, this.CreateNew, this.TutorialHotspots, this.SharePanel, this.SettingsPanel, this.SoundcloudPanel, this.PatchesPanel]) {
       if (o === this.OptionsPanel) drawPrismExits(this.Ctx, this.OptionsPanel);  // under the panel, over the stage
       this.Ctx.save();
       o.Draw();
@@ -280,6 +293,16 @@ export class V1Scene {
     s.IsTransitionFinished = true;
     this.splashDone();
   }
+  /** v1 MainScene: on a first visit (no link opened), ask whether to take the tour (CHG-0035). Its welcome reads
+   * v1's "Welcome to BlokDust." even over the demo; taking the tour clears the stage as v1's did. */
+  launchTour(): void {
+    if (App.IsPlugin || tourSkipped()) return;
+    const text = (this.Tutorial as any).Text, s2 = text.Splash2;
+    text.Splash2 = { ...text.Splash1 };
+    const close = this.Tutorial.CloseSplash.bind(this.Tutorial);
+    this.Tutorial.CloseSplash = () => { text.Splash2 = s2; this.Tutorial.CloseSplash = close; close(); };
+    this.Tutorial.CheckLaunch();
+  }
   /** v1 MainScene.Begin (Splash calls it on START: v1 faded its audio in there; v2's starts in the click). */
   Begin(): void {}
   /** True while the splash still covers the stage (input waits, as v1 MainScene._PointerDown). */
@@ -300,11 +323,14 @@ export class V1Scene {
       if (this.fileButtonHit(p)) { const b = this.OptionsPanel.SelectedBlock; this.SoundcloudPanel.ClosePanel(); if (b) this.host.loadSample(b.Id); return true; }
       this.SoundcloudPanel.MouseDown(p); return true;
     }
+    const tour = this.Tutorial;
+    if (tour.SplashOpen) { tour.SplashMouseDown(p); if (tour.Hover) return true; }  // v1 order: the welcome first
     this.CreateNew.MouseDown(p); if (this.CreateNew.Hover) return true;
     this.Header.MouseDown(p); if (this.Header.MenuOver) return true;
     this.ZoomButtons.MouseDown(p); if (this.ZoomButtons.InRoll || this.ZoomButtons.OutRoll) return true;
     if (this.powerHit(p)) { this.setWorldPower(!this.worldPower); return true; }
     if (this.OptionsPanel.Scale === 1) { this.OptionsPanel.MouseDown(p.x, p.y); if (this.OptionsPanel.Hover) return true; }
+    if (tour.Open) { tour.MouseDown(p); if (tour.Hover) return true; }  // SKIP TOUR / OKAY DONE
     this.RecorderPanel.MouseDown(p); if (this.RecorderPanel.Hover) return true;
     const hit = blockAt();
     if (hit) {
@@ -353,6 +379,7 @@ export class V1Scene {
     if (this.PatchesPanel.Open) this.PatchesPanel.MouseMove(p);
     this.Header.MouseMove(p);
     this.CreateNew.MouseMove(p);
+    if (this.Tutorial.Open || this.Tutorial.SplashOpen) this.Tutorial.MouseMove(p);
     this.ZoomButtons.MouseMove(p);
     this.TrashCan.MouseMove(p);
     this.RecorderPanel.MouseMove(p);
@@ -444,7 +471,7 @@ export class V1Scene {
   }
   /** Fingers lifted: the zoom buttons step on from the nearest of v1's levels; the readout fades as after a step. */
   pinchEnd(): void {
-    const z = this.ZoomButtons as any, slots: number[] = z._ZoomSlots ?? [0.25, 0.5, 1, 2, 4];
+    const z = this.ZoomButtons as any, slots: number[] = z._ZoomSlots ?? [0.15, 0.25, 0.5, 1, 2, 4];
     let best = 0;
     slots.forEach((s, i) => { if (Math.abs(Math.log(s / App.ZoomLevel)) < Math.abs(Math.log(slots[best] / App.ZoomLevel))) best = i; });
     z.CurrentSlot = best;
@@ -525,7 +552,7 @@ export class V1Scene {
 
   get uiBusy(): boolean {
     const z = this.ZoomButtons, o = this.OptionsPanel;
-    return this.powerHover || z.InRoll || z.OutRoll || this.RecorderPanel.Hover || this.Header.MenuOver || this.SharePanel.Open || this.SettingsPanel.Open || this.SoundcloudPanel.Open || this.PatchesPanel.Open || this.CreateNew.Hover || (o.Scale === 1 && o.Hover);
+    return this.powerHover || z.InRoll || z.OutRoll || ((this.Tutorial.Open || this.Tutorial.SplashOpen) && this.Tutorial.Hover) || this.RecorderPanel.Hover || this.Header.MenuOver || this.SharePanel.Open || this.SettingsPanel.Open || this.SoundcloudPanel.Open || this.PatchesPanel.Open || this.CreateNew.Hover || (o.Scale === 1 && o.Hover);
   }
 
   /** v1 CommandManager commands the panels issue: SAVE / SAVE_AS go to the sharing backend (CHG-0003); the Share
@@ -552,12 +579,14 @@ export class V1Scene {
   DeleteSelectedBlock(): void { if (this.SelectedBlock) this.host.deleteBlock(this.SelectedBlock.Id); this.select(null); this.OptionsPanel.Close(); }
   /** v1 MainScene.ResetScene: delete all blocks, reset zoom and drag, close the options panel, reset the session. */
   ResetScene(): void {
+    if (this.Tutorial.Open) this.Tutorial.ClosePanel();  // v1 MainScene.ResetScene
+    this.Tutorial.WatchedBlocks = [];
     this.resetting = true;
     try { this.host.resetScene(); } finally { this.resetting = false; }
     this.CreateNew.CheckState();
     this.select(null);
     App.DragOffset.x = 0; App.DragOffset.y = 0;
-    this.ZoomButtons.CurrentSlot = 2;
+    this.ZoomButtons.CurrentSlot = (this.ZoomButtons as any)._ZoomSlots.indexOf(1);
     this.MainSceneDragger.Destination = new Point(0, 0);
     App.ZoomLevel = 1;
     this.Metrics.UpdateGridScale();
@@ -737,9 +766,9 @@ export const USAGE_STATS = (on: boolean) => `Anonymous usage stats: ${on ? 'on' 
  *  - The About text is the owner's; the footer links the code on GitHub in v1's footer type, underlined on hover like
  *    v1's text links ("Chrome Recommended" is removed in the port, tools/v1/port-ui.ts). The link and v1's build line
  *    show on About only (owner review 2, 2026-11-15).
- *  - Tour (owner, 2026-11-08) is hidden until v1's tutorial is ported; on the web its row (the last) is the patch Tempo
- *    (owner, 2026-11-10: one tempo in Settings instead of a Tempo row on every synced block). In a DAW the host's tempo
- *    rules, so the row stays empty there.
+ *  - v1's Tour row is the patch Tempo on the web (owner, 2026-11-10: one tempo in Settings instead of a Tempo row on
+ *    every synced block). In a DAW the host's tempo rules, so the row stays empty there. The tour itself (CHG-0035)
+ *    is a row of its own under Tempo, on the web only (its last step is about the gallery).
  */
 function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const p = panel as any;
@@ -782,11 +811,13 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   /** Tests: an account control's centre in CSS px. */
   p.accountCentre = (name: string) => account?.centreOf(name, accountTop()) ?? null;
   /** The DOWNLOAD page's two buttons (v1 SharePanel's halves, 420u wide) and their state. */
-  /** MACOS · WINDOWS · IPAD in one row, laid out as v1 Connect's share buttons (130 units each, 15 apart, 420 across;
-   * owner, 2026-11-16). The iPad one opens the App Store page as it is; the installers carry ?source=download-page. */
+  /** MACOS · WINDOWS · IPAD in one row, laid out as v1 Connect's share buttons (15 units apart; owner, 2026-11-16),
+   * across About's text column (owner, 2026-11-17, CHG-0035). The iPad one opens the App Store page as it is; the
+   * installers carry ?source=download-page. */
   const downloads = () => {
     const u = App.Unit, W = App.Width, y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
-    const at = (i: number) => ({ x: W * 0.5 + (-210 + 145 * i) * u, y, w: 130 * u, h: 40 * u, cx: W * 0.5 + (-145 + 145 * i) * u });
+    const pw = pageWidth(), bw = (pw - 30 * u) / 3, left = W * 0.5 - pw * 0.5;
+    const at = (i: number) => ({ x: left + i * (bw + 15 * u), y, w: bw, h: 40 * u, cx: left + i * (bw + 15 * u) + bw * 0.5 });
     const ipad = IPAD_APP_STORE_URL ? { file: '', url: IPAD_APP_STORE_URL, sha256: '', bytes: 0, store: true } : null;
     return [
       { key: 'macos' as const, label: 'macOS', release: RELEASE.macos as (Release & { store?: boolean }) | null, ...at(0), line: DOWNLOAD.macos },
@@ -817,7 +848,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     // INTRO (v1 About's body type) //
     App.FillColor(ctx, txt); ctx.textAlign = 'left'; ctx.font = App.Metrics.TxtMid;
     let iy = top + 10 * u;
-    for (const para of DOWNLOAD.intro) iy = wrap(ctx, para, W * 0.5 - 210 * u, iy, 16 * u, 420 * u);
+    const pw = pageWidth();
+    for (const para of DOWNLOAD.intro) iy = wrap(ctx, para, W * 0.5 - pw * 0.5, iy, 16 * u, pw);
     // MACOS · WINDOWS · IPAD (v1 SharePanel's SAVE / SAVE AS colours and a third, Connect's GUIDE button type) //
     let below = 0;
     for (const [i, b] of downloads().entries()) {
@@ -833,7 +865,7 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     // VERSION: under the longest line (the columns are narrow) //
     const y = Math.max(downloads()[0].y + 40 * u + 80 * u, below + 16 * u);
     ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-    if (RELEASE.version) ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - 210 * u, y);
+    if (RELEASE.version) ctx.fillText(`Version ${RELEASE.version}`, W * 0.5 - pw * 0.5, y);
   };
   // Tempo (web) / nothing (plugin) in place of Tour, v1's last row (drawn at +156 units).
   const tempoRow = () => (p.Options as any[]).findIndex(o => o.Type === 'tempo');
@@ -849,7 +881,11 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     t.DisplayConversion = (v: number) => `${Math.round(v)} BPM`;
     placeTempo(t);
     opts[i] = t;
+    opts.push(new OptionActionButton(new Point(0, 0), new Size(1, 48 * App.Unit), 'Tour', 'Launch Tour', 'tutorial'));  // v1's own row
   };
+  /** The TOUR row (web): under Tempo, 48 units down, where v1 would have put a fifth row. */
+  const TOUR_Y = 204;
+  const tourRow = () => (p.Options as any[]).findIndex(o => o.Type === 'actionbutton' && o.Setting === 'tutorial');
   const openPanel = p.OpenPanel.bind(p);
   p.OpenPanel = () => { const i = tempoRow(); if (i >= 0) placeTempo(p.Options[i]); openPanel(); };
 
@@ -880,9 +916,14 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   };
   /** Tests: each footer link's centre in CSS px. */
   p.footerLinks = () => { const f = footer(), pr = App.Metrics.PixelRatio; return f.links.map((l, i) => ({ label: footerLinks()[i].label, x: (l.x + l.w / 2) / pr, y: (f.y - 5 * f.u) / pr })); };
+  // About (owner, 2026-11-17, CHG-0035): no Twitter names; each website takes its line, so the three line up under
+  // blurbs of different lengths. v1 draws and hit-tests the websites on one line and the Twitter names on the next, so
+  // the websites are shown, and pressed, in the Twitter names' places.
+  const PEOPLE = ['twyman', 'phillips', 'silverton'] as const;
   const hitTests = p.HitTests.bind(p);
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
+    for (let i = 1; i <= 3; i++) { p._RollOvers[i] = !!p._RollOvers[i + 3] && !!p._Attribution[PEOPLE[i - 1]].url; p._RollOvers[i + 3] = false; }
     // No links (hideLinks): v1 hit-tests About's websites and Twitter names (rollovers 1–6) over fixed widths.
     if (App.NoLinks) for (let i = 1; i <= 6; i++) p._RollOvers[i] = false;
     const f = footer();
@@ -893,7 +934,15 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
     if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + 156 * f.u, p.Range + 20 * f.u, 48 * App.Unit, pt.x, pt.y);
+    const k = tourRow();  // v1 hit-tests an action button at its own row (156): the tour's is lower
+    if (k >= 0) {
+      const ty = p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + TOUR_Y * f.u, o = p.Options[k];
+      p._OptionsRoll[k] = Dimensions.hitRect(p.Margin - 10 * f.u, ty, p.Range + 20 * f.u, 48 * App.Unit, pt.x, pt.y);
+      o.HandleRoll[0] = Dimensions.hitRect(p.Margin + p.Range * 0.25, ty, p.Range * 0.5, o.Size.height, pt.x, pt.y);
+    }
   };
+  /** Tests: the TOUR button's centre in CSS px (null: no row). */
+  p.tourButton = () => { const pr = App.Metrics.PixelRatio, u = App.Unit; return tourRow() < 0 ? null : { x: (p.Margin + p.Range * 0.5) / pr, y: (p.OffsetY + 120 * u + p.MenuItems[0].YOffset + TOUR_Y * u + 24 * u) / pr }; };
   const setTempo = (x: number) => {
     const o = p.Options[tempoRow()];
     o.Position.x = Math.max(0, Math.min(p.Range, x - p.Margin));
@@ -925,7 +974,16 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     // The build line and the GitHub link are About's (owner review 2, 2026-11-15); v1 drew the build under every tab.
     const about = p._OpenTab === 2, build = p._Attribution.build, moved = about && !!statsBox();
     if (!about || moved) p._Attribution.build = '';
-    try { draw(); } finally { p._Attribution.build = build; }
+    const kept = PEOPLE.map(k => ({ ...p._Attribution[k] })), rolls = (p._RollOvers as boolean[]).slice(0, 7);
+    for (const [i, k] of PEOPLE.entries()) {  // the website on the Twitter line (and its hover underline)
+      Object.assign(p._Attribution[k], { twitter: p._Attribution[k].url, url: '' });
+      p._RollOvers[i + 4] = rolls[i + 1]; p._RollOvers[i + 1] = false;
+    }
+    try { draw(); } finally {
+      p._Attribution.build = build;
+      PEOPLE.forEach((k, i) => Object.assign(p._Attribution[k], kept[i]));
+      rolls.forEach((r, i) => { p._RollOvers[i] = r; });
+    }
     account?.placeField(accountTop(), p.Open && p._OpenTab === 4 && (p.MenuItems[4]?.YOffset ?? -1) > -p.DrawTo.Height * 0.5);
     if (!p.Open) return;
     // DOWNLOAD and ACCOUNT slide in and out under the tabs, as SETTINGS and ABOUT do: v1's clipping box, from 60 units
@@ -934,6 +992,8 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     cctx.save();
     cctx.beginPath(); cctx.rect(0, p.OffsetY + 60 * App.Unit, App.Width, App.Height); cctx.clip();
     try {
+      const k = tourRow();  // SETTINGS' TOUR row, sliding with its tab as v1's rows do
+      if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height) p.Options[k].Draw(cctx, App.Unit, k, p, p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + TOUR_Y * App.Unit);
       drawDownload();
       if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
     } finally { cctx.restore(); }

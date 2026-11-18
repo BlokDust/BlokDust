@@ -269,11 +269,36 @@ TEST_CASE("Microphone gain scales its v1 level (owner review 2)") {
   auto peakFor = [&](double gain) {
     auto e = makeEngine(48000, 1, false);
     e->push(Command::add(1, BlockType::SourceMicrophone, 0, 0));
+    e->push(Command::add(2, BlockType::PowerPower, -3, 0));  // the website's Microphone plays only while powered (R1a)
     e->push(Command::setParam(1, P::SourceMicrophone::gain, gain));
     for (std::uint32_t d = 0; d < 48000; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
     double p = 0; for (std::size_t i = 24000; i < 48000; ++i) p = std::max(p, double(std::abs(outL[i]))); return p;
   };
   CHECK_THAT(peakFor(2.0) / peakFor(1.0), WithinAbs(2.0, 1e-3));
+}
+
+TEST_CASE("SPEC-SIMULATION-POWER-AND-PARTICLES R1a: the website's Microphone is silent until it is powered (CHG-0035)") {
+  std::vector<float> in(48128), outL(48128), outR(48128);  // whole 128-frame blocks from 24000
+  for (std::size_t i = 0; i < in.size(); ++i) in[i] = static_cast<float>(0.25 * dmath::sin(dmath::kTwoPi * 440.0 * double(i) / 48000.0));
+  auto peak = [&](std::size_t from, std::size_t to) { double p = 0; for (std::size_t i = from; i < to; ++i) p = std::max(p, double(std::abs(outL[i]))); return p; };
+  auto e = makeEngine(48000, 1, false);
+  e->push(Command::add(1, BlockType::SourceMicrophone, 0, 0));
+  e->push(Command::add(3, BlockType::FxDistortion, 3, 0));  // an effect on it, as the owner had: still silent
+  e->push(Command::add(2, BlockType::PowerPower, -30, 0));    // far away: not connected
+  for (std::uint32_t d = 0; d < 24000; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
+  CHECK(peak(0, 24000) == 0.0);
+  e->push(Command::move(2, -3, 0, 24000));  // the Power comes next to it
+  for (std::uint32_t d = 24000; d < 48000; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
+  CHECK(peak(36000, 48000) > 0.01);
+}
+
+TEST_CASE("Plugin Audio Input (the Microphone with host input) stays always on (PLUGIN-0002)") {
+  std::vector<float> in(9600), outL(9600), outR(9600);
+  for (std::size_t i = 0; i < in.size(); ++i) in[i] = static_cast<float>(0.5 * dmath::sin(0.01 * double(i)));
+  auto e = std::make_unique<Engine>(EngineConfig{48000, 1, true, /*hostInput=*/true});
+  e->push(Command::add(1, BlockType::SourceMicrophone, 0, 0));
+  for (std::uint32_t d = 0; d < 9600; d += 128) e->process(in.data() + d, in.data() + d, outL.data() + d, outR.data() + d, 128);
+  CHECK(outL[9000] == in[9000]);
 }
 
 TEST_CASE("v1 master compressor (Chromium DynamicsCompressor port): +2.08 dB make-up below the knee, loud input reduced") {

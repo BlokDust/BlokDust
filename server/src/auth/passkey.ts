@@ -10,6 +10,7 @@ import { HttpError, b64urlBytes, json, publicBase } from '../http.ts';
 import { handleProblem } from '../moderation.ts';
 import { cookie, currentUser, newUserId, readCookie, startSession } from './session.ts';
 import { verifyTurnstile } from '../turnstile.ts';
+import { countNewAccount, requireMayCreateAccount } from './newAccounts.ts';
 
 const RP_NAME = 'BlokDust';
 const CHALLENGE_MS = 5 * 60_000;
@@ -61,6 +62,7 @@ export async function registerOptions(env: Env, req: Request): Promise<Response>
     if (problem) throw new HttpError(400, problem);
     if (await env.DB.prepare('SELECT 1 FROM users WHERE handle = ?').bind(handle).first()) throw new HttpError(409, 'That name is taken.');
     await verifyTurnstile(env, req, body.turnstile);  // a new account: the bot check, as for saving (R1)
+    await requireMayCreateAccount(env, req);  // R1b: before the device makes a passkey
     userId = newUserId();
   }
   const r = rp(env, req);
@@ -89,7 +91,10 @@ export async function registerVerify(env: Env, req: Request): Promise<Response> 
     .bind(c.id, userId, c.publicKey, c.counter, (c.transports ?? []).join(','), now);
   try {
     if (existing) await add.run();
-    else await env.DB.batch([env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, ?, ?)').bind(userId, handle, now), add]);
+    else {
+      await requireMayCreateAccount(env, req);  // R1b: another tab may have used the day's last one meanwhile
+      await env.DB.batch([env.DB.prepare('INSERT INTO users (id, handle, created) VALUES (?, ?, ?)').bind(userId, handle, now), add, ...await countNewAccount(env, req)]);
+    }
   } catch (e) {
     if (String(e).includes('UNIQUE')) throw new HttpError(409, 'That name is taken.');
     throw e;

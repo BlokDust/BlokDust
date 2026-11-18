@@ -22,8 +22,8 @@ export class ZoomButtons extends DisplayObject {
         this.InRoll = this.OutRoll = false;
         this.Tweens = [];
 
-        this._ZoomSlots = [0.25,0.5,1,2,4];
-        this.CurrentSlot = 2;
+        this._ZoomSlots = [0.15,0.25,0.5,1,2,4];
+        this.CurrentSlot = 3;
         this.ZoomAlpha = 0;
     }
 
@@ -212,7 +212,7 @@ export class ZoomButtons extends DisplayObject {
 
     ZoomReset(display?:boolean) {
         display = display || false;
-        this.CurrentSlot = 2;
+        this.CurrentSlot = 3;
         this.StopAllTweens();
         this.DelayTo(App,this._ZoomSlots[this.CurrentSlot],500,0,"ZoomLevel");
         if (display) {

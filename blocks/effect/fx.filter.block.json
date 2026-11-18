@@ -5,7 +5,7 @@
   "category": "effect",
   "kind": "post-effect",
   "name": "Filter",
-  "description": "A 'peaking' filter used for boosting or suppressing frequencies.",
+  "description": "Shapes your tone by cutting specific frequencies across four filter modes.",
   "v1": {
     "type": "Filter",
     "class": [

@@ -5,6 +5,7 @@
 // APPLE_CLIENT_ID, APPLE_TEAM_ID, APPLE_KEY_ID (vars) with APPLE_PRIVATE_KEY turn on Sign in with Apple (R2b).
 // ACTIVITY_BEACON="off" (a var, or `wrangler secret put ACTIVITY_BEACON` to flip it without a deploy) stops the page-close
 // activity request if D1's free writes run short (SPEC-SHARING-ACCOUNTS R16). Unset = on.
+// ACCOUNTS_PER_DAY: new accounts a network may make in a UTC day (SPEC-SHARING-ACCOUNTS R1b). Unset = 10.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "blokdust-dev",

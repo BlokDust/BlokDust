@@ -31,7 +31,7 @@ async function renderFixture(input: FixtureInput) {
   if (input.chrome) {
     await loadV1Fonts();
     // The real v1 UI (ported, web/src/v1ui) in its closed state: Header, ZoomButtons, TrashCan, CreateNew…
-    const scene = new V1Scene({ createBlock: () => null, deleteBlock() {}, setParam() {}, setTheme() {}, setZoom() {}, setDrag() {}, setMasterDb() {}, setWorldPower() {}, loadSample() {}, searchSamples: async () => [], loadFreesound() {}, hasLocalFiles: () => false, reverseSample() {}, setText() {}, tempo: () => 120, setTempo() {}, resetScene() {}, toggleRecording() {}, downloadRecording() {}, generateSample() {}, share: async () => '', themes: () => THEMES,
+    const scene = new V1Scene({ createBlock: () => null, deleteBlock() {}, setParam() {}, setTheme() {}, setZoom() {}, setDrag() {}, setMasterDb() {}, setWorldPower() {}, loadSample() {}, searchSamples: async () => [], loadFreesound() {}, hasLocalFiles: () => false, reverseSample() {}, setText() {}, tempo: () => 120, setTempo() {}, resetScene() {}, toggleRecording() {}, downloadRecording() {}, generateSample() {}, setSound() {}, share: async () => '', themes: () => THEMES,
       listPatches: async () => [], savePatch: async () => false, openPatch() {}, pickPatchFile() {}, usePickedFile() {}, isDirty: () => false, removePatch: async () => {}, removeLine: '', hasBlocks: () => false, links: null, video: null, account: null, gallery: null, signedIn: () => false,
       connectedIds: () => [], targetOf: () => null, setTarget() {}, openStage() {}, loadStagePatch() {}, resetCounter() {} });
     scene.drawRecorderPanel = false;

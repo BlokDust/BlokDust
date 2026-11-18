@@ -15,12 +15,12 @@ function check(name: string, ok: boolean, detail?: unknown) {
 }
 const mocks = await startMockServices();
 const STATE = 'gallery';
-const server = await startLocal({ name: STATE, vars: { TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify` } });
+const server = await startLocal({ name: STATE, vars: { TURNSTILE_SECRET: 'test-secret', TURNSTILE_VERIFY_URL: `${mocks.url}/siteverify`, ACCOUNTS_PER_DAY: '100' } });  // nine accounts from one address
 const base = server.url.replace('127.0.0.1', 'localhost');
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 
 interface Device { ctx: BrowserContext; page: Page }
-async function device(name: string | null, query = '?demo'): Promise<Device> {
+async function device(name: string | null, query = '?demo&video=1'): Promise<Device> {  // video=1: MAKE VIDEO is hidden by default (CHG-0035)
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await ctx.route('https://cdn.freesound.org/**', r => r.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'access-control-allow-origin': '*' }, body: sineWav(440) }));
   const page = await ctx.newPage();
@@ -38,7 +38,9 @@ async function device(name: string | null, query = '?demo'): Promise<Device> {
     await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.openAccount());
     await page.waitForFunction(() => { const s = (window as any).__bd_probe.scene.SettingsPanel; return s.OffsetY === 0 && s.accountPage.Account !== undefined; }, null, { timeout: 10000 });
     const at = async (n: string) => { const c = await page.evaluate(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k), n); await page.mouse.click(c[0], c[1]); await page.waitForTimeout(400); };
-    await at('create'); await page.fill('#accountHandleInput', name); await at('submit');
+    await at('passkey');  // none on this device: CONTINUE WITH PASSKEY asks for a name (CHG-0035)
+    await page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.View === 'create', null, { timeout: 10000 });
+    await page.fill('#accountHandleInput', name); await at('submit');
     await page.waitForFunction(() => !!(window as any).__bd_probe.scene.SettingsPanel.accountPage.Account?.handle, null, { timeout: 20000 });
     await page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await page.waitForTimeout(800);
   }
@@ -62,7 +64,7 @@ async function press(d: Device, name: string, wait = 400): Promise<void> {
 async function tab(d: Device, id: number): Promise<void> {
   for (let i = 0; i < 8 && !(await P(d)).open; i++) { await d.page.mouse.move(1138, 45); await d.page.mouse.click(1138, 45); await d.page.waitForTimeout(700); }
   await d.page.waitForFunction(() => (window as any).__bd_probe.scene.PatchesPanel.OffsetY === 0, null, { timeout: 5000 }).catch(() => {});
-  await press(d, `tab${id}`, 600);
+  await press(d, `tab${id}`, 1100);  // the page drops in (CHG-0035)
 }
 const idle = (d: Device) => d.page.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.GalleryLoading, null, { timeout: 60000 });
 async function search(d: Device, q: string): Promise<{ title: string; by: string }[]> {
@@ -166,7 +168,9 @@ try {
   await bob.page.mouse.move(5, 5); await bob.page.waitForTimeout(300); await bob.page.screenshot({ path: `${OUT}/gallery-rows.png` });
   await press(bob, 'sort_new', 300); await idle(bob);
   const newest = (await P(bob)).items.map((r: { title: string }) => r.title);
-  check('R7: POPULAR puts the liked patch first; NEW the newest', popular[0] === 'Glass Rain' && newest[0] === 'Bob Lasers', { popular, newest });
+  await press(bob, 'sort_top', 300); await idle(bob);
+  const top = (await P(bob)).items.map((r: { title: string }) => r.title);
+  check('R7: POPULAR puts the liked patch first; NEW the newest; ALL TIME TOP the most liked (CHG-0035)', popular[0] === 'Glass Rain' && newest[0] === 'Bob Lasers' && top[0] === 'Glass Rain', { popular, newest, top });
 
   // ---- R11, R14, R15: OPEN from the gallery: counted, credited; SAVE makes a remix ----
   // ---- R13 (owner review 3): INSERT adds a gallery patch's blocks to yours; it doesn't open it (no credit, no remix) ----
@@ -276,7 +280,15 @@ try {
     if (r.status === 429 && tries++ < 2) { await new Promise(res => setTimeout(res, 61_000)); i--; continue; }
     if (r.status !== 201 || !r.json.gallery.published) { check('R7a: made 22 patches', false, r); break; }
   }
+  // CHG-0035 (owner, 2026-11-17): at the end of a page with more to come, SHOW MORE fetches them.
   await tab(carol, GALLERY); await carol.page.fill('#gallerySearchInput', 'pad'); await press(carol, 'search'); await idle(carol);
+  const page1 = (await P(carol)).items.length;
+  await carol.page.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; pp.GalleryScroll = pp.galleryMaxScroll(); });
+  await carol.page.mouse.move(5, 5); await carol.page.waitForTimeout(300); await carol.page.screenshot({ path: `${OUT}/gallery-show-more.png` });
+  await press(carol, 'showMore', 300); await idle(carol);
+  const shown = (await P(carol)).items.length;
+  check('R13: SHOW MORE after the 20th row fetches the next page (CHG-0035)', page1 === 20 && shown === 22, { page1, shown });
+  await press(carol, 'search'); await idle(carol);
   const first = await P(carol);
   const list = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('list'));
   for (let i = 0; i < 12; i++) { await carol.page.mouse.move(list[0], list[1]); await carol.page.mouse.wheel(0, 400); await carol.page.waitForTimeout(150); }
@@ -303,12 +315,13 @@ try {
   check('R16: bd gallery presets publishes the six presets (2.0.2 added Self Playing Scene) as @blokdust\'s EXAMPLES, in order, once', seeded.added.length === 6 && again2.added.length === 0
     && examples.sort === 'examples' && examples.items.map((r: { title: string }) => r.title).join() === want.join() && examples.items.every((r: { by: string }) => r.by === 'blokdust'),
     { seeded, again: again2, examples: examples.items.map((r: { title: string; by: string }) => `${r.title} @${r.by}`) });
-  await press(carol, 'sort_tutorials', 300); await idle(carol);
-  const tutorialsEmpty = (await P(carol)).items.length;
+  // TUTORIALS has no button while there are none (CHG-0035); the API still lists them.
+  const tutorialsEmpty = (await api(anon, 'GET', 'gallery?sort=tutorials')).json.items.length;
   bd('kind', seeded.added[4].id, 'tutorial');
-  await press(carol, 'sort_examples', 300); await press(carol, 'sort_tutorials', 300); await idle(carol);
-  const tutorials = (await P(carol)).items.map((r: { title: string }) => r.title);
-  check('R16: bd gallery kind moves one to TUTORIALS', tutorialsEmpty === 0 && tutorials.join() === 'Step Sequencer', { tutorialsEmpty, tutorials });
+  const tutorials = ((await api(anon, 'GET', 'gallery?sort=tutorials')).json.items as { title: string }[]).map(r => r.title);
+  const sorts = await carol.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.sortButtons().map((b: any) => b.label));
+  check('R16: bd gallery kind moves one to TUTORIALS (API); the sorts read POPULAR · ALL TIME TOP · NEW · EXAMPLES', tutorialsEmpty === 0 && tutorials.join() === 'Step Sequencer'
+    && sorts.join() === 'POPULAR,ALL TIME TOP,NEW,EXAMPLES', { tutorialsEmpty, tutorials, sorts });
   await press(carol, 'sort_examples', 300); await idle(carol);
   // Owner review 3: while the patch is fetched the panel stays up with the spinner (the old stage can't be touched), then
   // closes; if it can't be fetched, the panel says so.
@@ -412,6 +425,26 @@ try {
     { before: [...exBefore], after: [...exAfter] });
   await tab(alice, 0); await alice.page.mouse.move(5, 5); await alice.page.waitForTimeout(300);
   await alice.page.screenshot({ path: `${OUT}/save-share.png` });
+
+  // ---- CHG-0035 (owner, 2026-11-17): signed out, SAVE / SHARE has SIGN IN; signed in from there, SAVE opens again ----
+  const newbie = await device(null);
+  await newbie.page.evaluate(() => { (window as any).__bd_probe.scene.host.createBlock('ToneSource', 2, 2); });
+  await newbie.page.mouse.click(5, 400); await newbie.page.waitForTimeout(300);
+  await tab(newbie, 0);
+  await newbie.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Newbie Song'));
+  await newbie.page.mouse.move(5, 5); await newbie.page.waitForTimeout(300); await newbie.page.screenshot({ path: `${OUT}/save-sign-in.png` });
+  await press(newbie, 'signIn', 1200);
+  const asked = await newbie.page.evaluate(() => { const s = (window as any).__bd_probe.scene; return { settings: s.SettingsPanel.Open, tab: s.SettingsPanel._OpenTab, patches: s.PatchesPanel.Open }; });
+  const at = async (n: string) => { const c = await newbie.page.evaluate(k => (window as any).__bd_probe.scene.SettingsPanel.accountCentre(k), n); await newbie.page.mouse.click(c[0], c[1]); await newbie.page.waitForTimeout(400); };
+  await newbie.page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.Account !== undefined, null, { timeout: 10000 });
+  await at('passkey');
+  await newbie.page.waitForFunction(() => (window as any).__bd_probe.scene.SettingsPanel.accountPage.View === 'create', null, { timeout: 10000 });
+  await newbie.page.fill('#accountHandleInput', 'newbie_g'); await at('submit');
+  await newbie.page.waitForFunction(() => { const s = (window as any).__bd_probe.scene; return s.PatchesPanel.Open && s.PatchesPanel.Tab === 0; }, null, { timeout: 20000 }).catch(() => {});
+  await newbie.page.waitForTimeout(800);
+  const back = await newbie.page.evaluate(() => { const s = (window as any).__bd_probe.scene; return { patches: s.PatchesPanel.Open, tab: s.PatchesPanel.Tab, settings: s.SettingsPanel.Open, gallery: s.PatchesPanel.GalleryOn, signedIn: s.host.signedIn(), title: s.PatchesPanel.Title, signIn: s.PatchesPanel.centreOf('signIn') }; });
+  check('Signed out, SAVE / SHARE has SIGN IN; it opens Settings › SIGN IN, and once signed in SAVE opens again with ADD TO GALLERY on and the name kept (CHG-0035)',
+    !!asked.settings && asked.tab === 4 && !asked.patches && back.patches && back.tab === 0 && !back.settings && back.gallery && back.signedIn && back.title === 'Newbie Song' && back.signIn === null, { asked, back });
 } catch (e) {
   check('gallery run', false, String((e as Error).stack ?? e).slice(0, 800));
 } finally {

@@ -5,7 +5,7 @@
   "category": "interaction",
   "kind": "controller",
   "name": "Touchpad",
-  "description": "Play sources from a grid of pads, in the key and scale you choose. Slide between pads; hold several.",
+  "description": "Trigger sources using a multitouch compatible grid of pads.",
   "v1": {
     "type": null
   },

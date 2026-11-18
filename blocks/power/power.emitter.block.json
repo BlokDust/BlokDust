@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "power-source",
   "name": "Particle Emitter",
-  "description": "Fires energy particles. When a particle hits a source block, that source is momentarily triggered.",
+  "description": "Fires energy particles. When a particle hits a source or a power, that block is momentarily triggered.",
   "v1": {
     "type": "ParticleEmitter",
     "class": [

@@ -34,7 +34,7 @@ import { MpeParser } from '../input/mpe.ts';
 import { loadV1Fonts } from '../chrome/v1Chrome.ts';
 import { SAVE_WARNING, V1Scene, hideLinks } from '../v1ui/scene.ts';
 import { COPY as PATCH_COPY } from '../v1ui/patches.ts';
-import { V1Block } from '../v1ui/blocks.ts';
+import { SOUND_MAX, V1Block, withSound } from '../v1ui/blocks.ts';
 import { LABEL_MENU_ID, openGateIds, setMenuHidden, setMonitors, setTableModule } from '../v1ui/newBlocks.ts';
 import { padDown, padMove, padNotes, padUp, type PadHost } from '../v1ui/touchpadPanel.ts';
 import { moveWavePinch, snapshotWave, startWavePinch, waveRowAt, wheelWave, type WavePinch } from '../v1ui/waveZoom.ts';
@@ -47,6 +47,16 @@ import type { Credit } from '../video/frame.ts';
 import { analyticsAllowed, count, flushAnalytics, hostOf, pageRate, setAnalyticsAllowed, startAnalytics, track } from '../analytics/client.ts';
 import { startSentry } from '../analytics/sentry.ts';
 
+/** SAVE / SHARE's MAKE VIDEO (CHG-0022): hidden until the video export gets its own round of work (owner, 2026-11-17,
+ * CHG-0035). `?video=1` shows it (its tests, and that work). */
+const VIDEO_EXPORT = new URLSearchParams(location.search).get('video') === '1';
+/** A dark theme: its background (palette 0) is dark (MODE STEREO, CONSOLE, SEA CUCUMBER, VOLCANOLOGIST). */
+function isDarkTheme(t: Theme): boolean {
+  const [r, g, b] = (t.colors[0].match(/[\d.]+/g) ?? ['0', '0', '0']).map(Number);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+}
+/** sessionStorage key: a sign-in begun from SAVE / SHARE goes back there (CHG-0035). */
+const AFTER_SIGN_IN = 'bd.afterSignIn';
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
 const THUMB = { width: 1200, height: 630 } as const;
 
@@ -156,7 +166,19 @@ async function main() {
   // first on every reload). `?theme=` (embeds, tests) comes first; a v1 composition's own theme only when none is kept.
   const THEME_KEY = 'blokdust.theme';
   const keptTheme = (() => { if (embedId) return null; try { const v = localStorage.getItem(THEME_KEY); return v === null ? null : Number(v); } catch { return null; } })();
-  let theme: Theme = THEMES[Math.min(Number(params.get('theme') ?? keptTheme ?? start.view.theme ?? 0), THEMES.length - 1)] ?? THEMES[0];
+  // A first visit (no theme kept, none asked for) gets a theme at random from those that match the system's light or
+  // dark setting (owner, 2026-11-17, CHG-0035: shared patches in every colour, and the user's preference kept), and
+  // keeps it. Automated browsers keep the first theme (their screenshots expect it) unless the URL asks (`firsttheme=1`).
+  const firstTheme = (): number | null => {
+    if (juce || embedId || (navigator.webdriver && params.get('firsttheme') !== '1')) return null;
+    let dark = false;
+    try { dark = matchMedia('(prefers-color-scheme: dark)').matches; } catch { /* no media queries: light */ }
+    const pool = THEMES.filter(t => isDarkTheme(t) === dark).map(t => t.index);
+    const pick = pool[Math.floor(Math.random() * pool.length)] ?? 0;
+    try { localStorage.setItem(THEME_KEY, String(pick)); } catch { /* private mode: picked again next time */ }
+    return pick;
+  };
+  let theme: Theme = THEMES[Math.min(Number(params.get('theme') ?? keptTheme ?? start.view.theme ?? firstTheme() ?? 0), THEMES.length - 1)] ?? THEMES[0];
 
   const app = new Application();
   // Transparent: the static stage is an on-page Canvas2D layer behind Pixi (Stage 'canvas' renderer, UI-0005).
@@ -316,7 +338,7 @@ async function main() {
   }
   /** Audio to block `id` in the world on show. */
   const sendSample = (id: number, buffer: AudioBuffer) => engine?.sendSample(id, buffer, inside?.stageId ?? 0);
-  const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
+  const ZOOM_MIN = 0.15, ZOOM_MAX = 4;  // v1 ZoomButtons' range, out to 0.15 (owner, 2026-11-17, CHG-0035)
   const round3 = (v: number) => Math.round(v * 1000) / 1000;
   // The view settles (owner, 2026-11-12): the plugin's processor keeps it with the DAW project (bd_view); the website's
   // autosave keeps it (not an unsaved change). Checked twice a second, sent once it stops changing.
@@ -444,6 +466,10 @@ async function main() {
     toggleRecording: id => void toggleRecording(id),
     downloadRecording: id => downloadRecording(id),
     generateSample: id => generateSample(id, false),
+    setSound: (id, n, make) => {  // SampleGen's SOUND slider (CHG-0035): the number while it moves, the wave on release
+      if (model.get(id)?.params.sound !== n) setParams(id, { sound: n });
+      if (make && soundMade.get(id) !== n) { soundMade.set(id, n); generateSample(id, false); }
+    },
     themes: () => THEMES,
     connectedIds: id => { const out: number[] = [], c = probe.connections; for (let i = 0; i + 1 < c.length; i += 2) { if (c[i] === id) out.push(c[i + 1]); else if (c[i + 1] === id) out.push(c[i]); } return out; },
     targetOf: id => {
@@ -510,22 +536,28 @@ async function main() {
       unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
     },
     signedIn: () => !!accountPage()?.Account,
+    // SAVE / SHARE › SIGN IN (CHG-0035): Settings › SIGN IN, then back to SAVE once signed in (backToSave).
+    signInToSave: title => {
+      try { sessionStorage.setItem(AFTER_SIGN_IN, JSON.stringify({ to: 'save', title, at: Date.now() })); } catch { /* private window: no way back */ }
+      (scene.SettingsPanel as any).openAccount?.();
+    },
     // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
     account: juce || embedId ? null : {
       me: stats => account.me(stats),
-      signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
-      // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so.
-      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); },
+      signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); backToSave(); },
+      // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so. From SAVE: back to SAVE.
+      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); backToSave(); },
       google: () => account.signInWith('google'),
       apple: () => account.signInWith('apple'),
       addPasskey: () => account.addPasskey(),
-      setHandle: async h => { await account.setHandle(h); },
+      setHandle: async h => { await account.setHandle(h); backToSave(); },  // a new Google/Apple account has its name
       signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
       deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
       cancelled: e => account.cancelled(e),
     },
-    // Video export (CHG-0022): web only (R16).
-    video: juce || embedId ? null : {
+    // Video export (CHG-0022): web only (R16). Hidden for now (owner, 2026-11-17, CHG-0035: it needs work of its own);
+    // the code stays, behind VIDEO_EXPORT.
+    video: juce || embedId || !VIDEO_EXPORT ? null : {
       make: (choice, progress, signal) => makeVideoFile(choice, progress, signal),
       // The share sheet where the browser can share files (phones, Safari…); elsewhere the file is downloaded.
       share: async file => {
@@ -659,6 +691,24 @@ async function main() {
     if (!accountPage()?.Account) (scene.SettingsPanel as any).openAccount?.();
     else scene.PatchesPanel.askReport({ id: credit.id, title: credit.title });
     return true;
+  }
+  /** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on, the name kept. */
+  function backToSave(): void {
+    let want: { to?: string; title?: string; at?: number } | null = null;
+    try { want = JSON.parse(sessionStorage.getItem(AFTER_SIGN_IN) ?? 'null'); sessionStorage.removeItem(AFTER_SIGN_IN); } catch { want = null; }
+    // Only a sign-in finished soon after (10 minutes): one begun from SAVE and given up on is forgotten.
+    if (want?.to !== 'save' || !(Date.now() - (want.at ?? 0) < 10 * 60_000)) return;
+    const t0 = performance.now();
+    const go = () => {  // once the account page knows who is signed in (the switch reads it)
+      if (!accountPage()?.Account && performance.now() - t0 < 8000) { setTimeout(go, 150); return; }
+      (scene.SettingsPanel as any).ClosePanel?.();
+      const pp = scene.PatchesPanel;
+      if (want?.title) pp.setTitle(want.title);
+      pp.GalleryOn = true;
+      pp.OpenPanel(0);
+      stage.redraw();
+    };
+    go();
   }
   function shareWarning(): string | null {
     return [...model.values()].some(b => b.type === 'source.recorder' || !isPortable(b.params.track)) ? SAVE_WARNING : null;
@@ -991,6 +1041,9 @@ async function main() {
 
   function addBlock(type: string, x: number, y: number, p: Record<string, unknown>, uid?: string, quiet = false): number {
     const id = nextId++;
+    // A new SampleGen starts on a sound of its own (CHG-0035): a number, so it can be found again.
+    if (type === 'source.sample-gen' && !quiet && !Number(p.sound) && !(p.seed as { waveVoices?: unknown } | undefined)?.waveVoices)
+      p = { ...p, sound: 1 + Math.floor(Math.random() * SOUND_MAX) };
     const def = BLOCKS_BY_ID.get(type)!;
     // A new block's patch id: `b<id>`, unless a loaded block already has it (ids are renumbered when a project loads).
     if (uid === undefined) { const taken = new Set([...model.values()].map(b => b.uid)); uid = `b${id}`; for (let k = 2; taken.has(uid); k++) uid = `b${id}_${k}`; }
@@ -1433,12 +1486,18 @@ async function main() {
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
   }
   // ---- v1 SampleGen: v1's own generator (ported verbatim) renders a random arpeggio; its recipe is saved ----
+  // SOUND (CHG-0035): a SampleGen with a sound number makes its wave from that number (v1's generator on a seeded
+  // random); one without (v1 patches, and v2 ones from before) plays its saved recipe as v1 did.
+  /** The sound each SampleGen's wave was last made from (a release on the same number makes nothing new). */
+  const soundMade = new Map<number, number>();
   function generateSample(id: number, fromSeed: boolean): void {
     const v = v1Blocks.get(id);
     if (!v) return;
     v.WaveForm = []; v.RefreshOptionsPanel();
+    const sound = Number(v.Params.sound) || 0;
+    if (sound) soundMade.set(id, sound);
     const ctx = Object.assign(Object.create(SAMPLE_GEN), {
-      Params: v.Params, _LoadFromShare: fromSeed, _SeedLoad: true, _WaveVoices: [] as unknown[],
+      Params: v.Params, _LoadFromShare: fromSeed && !sound, _SeedLoad: true, _WaveVoices: [] as unknown[],
       Sources: [{ noteToFrequency: (note: string) => noteToFrequency(note) }],
       PopulateBuffer(this: { _BufferData: Float32Array<ArrayBuffer> }, sr: number) {
         const data = this._BufferData;
@@ -1449,15 +1508,16 @@ async function main() {
         useBuffer(id, buf, fromSeed ? 'keep' : 'reset');
       },
     });
-    setTimeout(() => ctx.DataToBuffer(), 16);  // v1 runs it on a timeout too
+    setTimeout(() => withSound(sound, () => ctx.DataToBuffer()), 16);  // v1 runs it on a timeout too
   }
   /** v1 SampleGen for a block that is not on show (inside a Stage): its saved recipe, or a new one kept in `params`. */
   function generateBuffer(params: Record<string, unknown>): Promise<AudioBuffer> {
     const def = BLOCKS_BY_ID.get('source.sample-gen')!;
     const Params = { ...Object.fromEntries(def.params.map(q => [q.key, q.default])), ...params };
     return new Promise(res => {
+      const sound = Number(Params.sound) || 0;
       const ctx = Object.assign(Object.create(SAMPLE_GEN), {
-        Params, _LoadFromShare: !!(params.seed as { waveVoices?: unknown } | undefined)?.waveVoices, _SeedLoad: true, _WaveVoices: [] as unknown[],
+        Params, _LoadFromShare: !sound && !!(params.seed as { waveVoices?: unknown } | undefined)?.waveVoices, _SeedLoad: true, _WaveVoices: [] as unknown[],
         Sources: [{ noteToFrequency: (note: string) => noteToFrequency(note) }],
         PopulateBuffer(this: { _BufferData: Float32Array<ArrayBuffer> }, sr: number) {
           const buf = new AudioBuffer({ numberOfChannels: 1, length: this._BufferData.length, sampleRate: sr });
@@ -1466,7 +1526,7 @@ async function main() {
           res(buf);
         },
       });
-      setTimeout(() => ctx.DataToBuffer(), 16);
+      setTimeout(() => withSound(sound, () => ctx.DataToBuffer()), 16);
     });
   }
   /** A block's audio as it was (looking into a Stage): shown in its panel, not sent (the engine has it). */
@@ -1571,6 +1631,21 @@ async function main() {
     syncTargets();
     scene.setBlocks([...v1Blocks.values()]);
     changed();
+    releaseInputIfUnused();
+  }
+  /** The last block that listens (Microphone, Audio In; a Stage with one inside) is gone: the microphone is let go,
+   * so the browser stops showing it in use (owner, 2026-11-17, CHG-0035). Not while looking into a Stage (the outer
+   * blocks are put aside then). */
+  let inputCheckQueued = false;
+  function releaseInputIfUnused(): void {
+    if (inputCheckQueued) return;
+    inputCheckQueued = true;
+    queueMicrotask(() => {
+      inputCheckQueued = false;
+      if (!engine || inside) return;
+      const listens = [...model.values()].some(b => needsInput(b.type) || (b.type === 'source.stage' && !!macros.get(b.uid)?.blocks.some(x => needsInput(x.type))));
+      if (!listens) engine.disconnectMicrophone();
+    });
   }
   /** Delete blocks as one undoable step. */
   function deleteBlocks(ids: number[], from?: Map<number, { x: number; y: number }>, labelIds: string[] = [], labelFrom?: Map<string, XY>): void {
@@ -1735,8 +1810,15 @@ async function main() {
       params.delete('account');
       history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
       void account.claimMine().then(() => refreshOwnership()).catch(() => {});
-      // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15).
+      // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15),
+      // or back to SAVE if that is where the sign-in began (CHG-0035).
       if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
+      // No new account today from this network (R1b): Settings › SIGN IN says why.
+      else if (signInReturn === 'limit') requestAnimationFrame(() => {
+        (scene.SettingsPanel as any).openAccount?.();
+        (scene.SettingsPanel as any).accountPage?.refused(account.ACCOUNT_LIMIT_MESSAGE);
+      });
+      else backToSave();
     }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });
@@ -1788,6 +1870,8 @@ async function main() {
   const probe = { started: false, snapshots: 0, rms: 0, particles: 0, connections: [] as number[], gateOns: 0, hits: 0, beams: 0, powered: [] as number[] };
   (window as unknown as { __bd_probe: unknown }).__bd_probe = {
     hideLinks,  // tests: the iPad extension's no-links view (CHG-0025)
+    /** The microphone is asked for or open (tests, CHG-0035). */
+    get microphoneOpen() { return !!engine?.microphoneOpen; },
     get state() { return { ...probe, blocks: stage.allBlocks(), patch: toPatch() }; },
     /** The Stage being looked into and its window, in css px (tests); null on the outer stage. */
     get inside() { if (!inside) return null; const f = insideFrame(), d = stage.metrics.dpr; return { stage: inside.stageId, x: f.x / d, y: f.y / d, w: f.w / d, h: f.h / d, closeX: f.closeX / d, closeY: f.closeY / d }; },
@@ -1996,7 +2080,10 @@ async function main() {
   async function begin(): Promise<void> {
     begun = true;
     let shown = !splash, ready = false;
-    const reveal = () => { if (shown && ready) overlay.remove(); };
+    // A first visit (the demo, no link) is asked whether to take v1's tour once the stage shows (CHG-0035). Automated
+    // browsers are not, unless the URL asks (`tour=1`).
+    const tour = !juce && !embedId && start.source === 'demo' && (!navigator.webdriver || params.get('tour') === '1');
+    const reveal = () => { if (shown && ready && overlay.isConnected) { overlay.remove(); if (tour) { scene.launchTour(); stage.redraw(); } } };
     if (splash) { scene.startSplash(() => { shown = true; reveal(); }); stage.redraw(); }
     if (!audio) setAudioSession('playback');  // before the context exists, or iOS's silent switch mutes it
     const ctx = startCtx = audio?.ctx ?? new AudioContext({ latencyHint: 'interactive' });
@@ -2295,6 +2382,7 @@ async function main() {
     if (primaryId !== null && e.pointerId !== primaryId) { if (e.pointerType === 'touch') extraDown(e); return; }
     primaryId = e.pointerId; primaryRole = null;
     lastPointerType = e.pointerType; lastPointer = (([x, y]) => ({ x, y }))(stage.cssToGrid(e.offsetX, e.offsetY));
+    App.PointerInputManager.TouchAssumed = e.pointerType === 'touch';  // v1: which tour (keys or touch) to give
     if (placing) {
       // Placing inserted blocks: a click puts them down; a finger drags them (from wherever it lands) and lifting it
       // puts them down. Nothing else takes this press.

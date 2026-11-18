@@ -192,8 +192,9 @@ inline constexpr ParamInfo kParamsSourceSampleGen[] = {
   {"generate", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
   {"seed", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
   {"region", 0.0, false, UiTransform::None, 0.0, 0.0, 0.0},
+  {"sound", 0.0, true, UiTransform::Identity, 0.0, 999.0, 0.0},
 };
-namespace param::SourceSampleGen { enum : std::uint8_t { playbackRate, detune, reverse, startPosition, endPosition, loop, loopStart, loopEnd, volume, generate, seed, region, Count }; }
+namespace param::SourceSampleGen { enum : std::uint8_t { playbackRate, detune, reverse, startPosition, endPosition, loop, loopStart, loopEnd, volume, generate, seed, region, sound, Count }; }
 
 // ---- source.stage (Stage)
 inline constexpr GridPoint kOutlineSourceStage[] = {{-1.0f, -2.0f}, {0.0f, -2.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {-1.0f, 2.0f}};
@@ -614,7 +615,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::SourceNoise, "source.noise", "Noise", BlockKind::AudioSource, 0.0f, kOutlineSourceNoise, 5, kParamsSourceNoise, 2, true},
   {BlockType::SourceRecorder, "source.recorder", "Recorder", BlockKind::AudioSource, 0.0f, kOutlineSourceRecorder, 6, kParamsSourceRecorder, 13, true},
   {BlockType::SourceSample, "source.sample", "Sample", BlockKind::AudioSource, 0.0f, kOutlineSourceSample, 6, kParamsSourceSample, 14, true},
-  {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 12, true},
+  {BlockType::SourceSampleGen, "source.sample-gen", "SampleGen", BlockKind::AudioSource, 0.0f, kOutlineSourceSampleGen, 6, kParamsSourceSampleGen, 13, true},
   {BlockType::SourceStage, "source.stage", "", BlockKind::AudioSource, 0.0f, kOutlineSourceStage, 5, kParamsSourceStage, 2, false},
   {BlockType::SourceTone, "source.tone", "ToneSource", BlockKind::AudioSource, 0.0f, kOutlineSourceTone, 5, kParamsSourceTone, 3, true},
   {BlockType::SourceWavetable, "source.wavetable", "", BlockKind::AudioSource, 0.0f, kOutlineSourceWavetable, 5, kParamsSourceWavetable, 4, false},

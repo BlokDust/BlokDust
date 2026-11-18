@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "path",
   "name": "Prism",
-  "description": "Sends the particles and laser beams that reach it off at its angle, split into up to four streams.",
+  "description": "Splits and diverts laser beams and particles.",
   "v1": {
     "type": null
   },

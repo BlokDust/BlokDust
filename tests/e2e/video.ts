@@ -37,7 +37,7 @@ async function open(b: Browser, blocks: Block[], errors: string[], share: 'none'
       (window as any).__shared = { name: f.name, type: f.type, size: f.size, title: d.title, text: d.text };
     };
   }, share);
-  await page.goto(`${url}/index.html?v1=${comp(blocks)}`);
+  await page.goto(`${url}/index.html?video=1&v1=${comp(blocks)}`);  // video=1: MAKE VIDEO is hidden by default (CHG-0035)
   await page.waitForFunction(() => (window as any).__bd_probe);
   await page.click('#start');
   await page.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);
@@ -51,7 +51,7 @@ async function click(p: Page, name: string, wait = 500): Promise<void> { const [
 async function openVideoTab(p: Page): Promise<void> {
   await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } });
   await p.mouse.move(1138, 45); await p.mouse.click(1138, 45); await p.waitForTimeout(1500);
-  await click(p, 'tab0', 700);
+  await click(p, 'tab0', 1100);
 }
 const startVideo = (p: Page) => p.evaluate(() => { void (window as any).__bd_probe.scene.PatchesPanel.makeVideo(); });
 const panel = (p: Page) => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, v = document.getElementById('patchVideo') as HTMLVideoElement;

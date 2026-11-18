@@ -47,8 +47,9 @@ Instagram, TikTok and other apps from the web app, without any server (SHARING-0
 - **R14.** Nothing is uploaded. The video exists only on the user's device (DATA-0005).
 
 **Panel** (`web/src/v1ui/patches.ts`)
-- **R15.** Patches › SAVE / SHARE has a MAKE VIDEO switch under ADD TO GALLERY (owner review 2, option A): on by
-  default where the browser can share files, off elsewhere. SAVE with it on saves, then makes the video: the tab's
+- **R15.** Patches › SAVE / SHARE has a MAKE VIDEO switch beside ADD TO GALLERY (owner review 2, option A): on by
+  default where the browser can share files, off elsewhere. It is hidden, and off, until the export gets its own round
+  of work (owner, 2026-11-17, CHG-0035): `?video=1` shows it. SAVE with it on saves, then makes the video: the tab's
   lower half shows the progress (CANCEL stops it at once), then the video in a small portrait player with SHARE VIDEO
   (DOWNLOAD VIDEO) under it; BACK (top right) returns. With nothing to save, the main button reads MAKE VIDEO.
 - **R16.** The plugin does not show the VIDEO tab.
