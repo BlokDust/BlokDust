@@ -3,7 +3,7 @@ id: CHG-0035
 title: "Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound"
 status: proposed
 date: 2026-11-17
-specs: [SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT]
+specs: [SPEC-VISUAL-V1-PARITY, SPEC-SIMULATION-POWER-AND-PARTICLES, SPEC-SHARING-VIDEO-EXPORT, SPEC-SHARING-GALLERY]
 adrs: [SCOPE-0004, PLUGIN-0002]
 ---
 # CHG-0035: Playtest tweaks: tour, menu order, hints, microphone power, SampleGen sound
@@ -27,8 +27,19 @@ layout fixes in the Settings and Patches panels.
   listens lets the microphone go, so the browser stops showing it in use.
 - **MAKE VIDEO** hidden and off (SPEC-SHARING-VIDEO-EXPORT R15); `?video=1` shows it.
 - **SAVE copies the link** (R16): LINK COPIED on the button, no second click.
-- **Gallery**: 20 more units between the list and POPULAR · NEW · EXAMPLES · TUTORIALS.
+- **Gallery**: room between the list and its sorts.
 - **Settings** (R15): DOWNLOAD and ACCOUNT as wide as ABOUT; About without Twitter names, the websites level.
+
+Owner's second round (2026-11-17, after trying staging):
+- SampleGen's SOUND number always shows; the wave is made on release (R17).
+- The tour turns the world's power on (R12).
+- SAVE / SHARE › SIGN IN when signed out, back to SAVE after (R20).
+- OPEN and GALLERY lists: whole rows and a half, no gap under the search rule, the last row not cut off, SHOW MORE
+  (SPEC-SHARING-GALLERY R13).
+- ALL TIME TOP in place of TUTORIALS (SPEC-SHARING-GALLERY R7, R13); the API keeps `tutorials`.
+- Arpeggiator and Chord hints in the owner's words.
+- Patches' tabs slide like Settings' (R19).
+- Zoom out to 0.15 (R18).
 
 ## Out of scope
 - Choosing the microphone device on the web (owner question 7): answered, not built.

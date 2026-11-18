@@ -51,7 +51,7 @@ async function click(p: Page, name: string, wait = 500): Promise<void> { const [
 async function openVideoTab(p: Page): Promise<void> {
   await p.evaluate(() => { try { localStorage.removeItem('blokdust.patchesTab'); } catch { /* */ } });
   await p.mouse.move(1138, 45); await p.mouse.click(1138, 45); await p.waitForTimeout(1500);
-  await click(p, 'tab0', 700);
+  await click(p, 'tab0', 1100);
 }
 const startVideo = (p: Page) => p.evaluate(() => { void (window as any).__bd_probe.scene.PatchesPanel.makeVideo(); });
 const panel = (p: Page) => p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, v = document.getElementById('patchVideo') as HTMLVideoElement;

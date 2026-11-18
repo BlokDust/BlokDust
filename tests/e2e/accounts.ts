@@ -78,7 +78,7 @@ const api = (d: Device, method: string, path: string, body?: unknown, headers: R
   }, [method, `${base}/api/${path}`, body, headers] as const);
 /** SAVE on the Patches › SAVE tab (a new link the first time, then saves over it). Returns the link's id. */
 async function saveLink(p: Page): Promise<string> {
-  await press(p, 'tab0', 500);
+  await press(p, 'tab0', 1100);
   const before = await p.evaluate(() => (window as any).__bd_probe.scene.host.links.current()?.url ?? '');
   await press(p, 'share', 200);
   await p.waitForFunction(prev => { const l = (window as any).__bd_probe.scene.host.links.current(); return !!l && !l.stale && !(window as any).__bd_probe.scene.PatchesPanel.Saving && (l.url !== prev || true); }, before, { timeout: 60000 });

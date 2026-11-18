@@ -5,7 +5,7 @@
   "category": "effect",
   "kind": "pre-effect",
   "name": "Chord",
-  "description": "Turns every note its sources play into a chord.",
+  "description": "Expands single incoming notes into full chords automatically.",
   "v1": {
     "type": null
   },

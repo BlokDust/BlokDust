@@ -60,6 +60,10 @@ const REWRITES: Record<string, [string, string, string][]> = {
     ['        var headerType = 100*units;\n',
       '        var headerType = 100*units;\n        this.Ctx.font = "200 " + headerType + "px Dosis";\n' +
       '        headerType = Math.min(headerType, headerType * App.Width * 0.8 / this.Ctx.measureText("BLOKDUST 2").width);\n', 'title fits a phone']],
+  // Owner (2026-11-17, CHG-0035): zoom out one step further, to 0.15 (v1 stopped at 0.25); 1 is then the fourth slot.
+  'UI/ZoomButtons.ts': [
+    ['this._ZoomSlots = [0.25,0.5,1,2,4];\n        this.CurrentSlot = 2;', 'this._ZoomSlots = [0.15,0.25,0.5,1,2,4];\n        this.CurrentSlot = 3;', 'zoom slots'],
+    ['display = display || false;\n        this.CurrentSlot = 2;', 'display = display || false;\n        this.CurrentSlot = 3;', 'zoom reset slot']],
   'UI/Header.ts': [
     ['this.Ctx.fillText("BLOKDUST", App.Width*0.5,', 'this.Ctx.fillText("BLOKDUST 2", App.Width*0.5,', 'title (phone)'],
     ['this.Ctx.fillText("BLOKDUST", (20 +', 'this.Ctx.fillText("BLOKDUST 2", (20 +', 'title']],

@@ -4,6 +4,7 @@
 //    finishing it is remembered, and Settings › TOUR asks again whenever you like.
 //  - v1 pointed at menu slots by their place in its own menu order; v2's menus are ordered differently (MENU_ORDER),
 //    so the hotspot over a menu item is found by the block's name.
+//  - Starting it turns the world's power on, so its emitter fires.
 //  - Its checks ran in v1's _Invalidate; v2's connections come from the engine a frame or two later, so they run a few
 //    times a second while the tour is open.
 import { App } from './shim.ts';
@@ -41,6 +42,10 @@ export function installTour(t: Tutorial, hotspots: TutorialHotspots): void {
     const slot = i >= 0 ? i % header.ItemsPerPage : n;
     return cat.Pages === 0 ? w * (slot + 0.5) + 20 * units : w * (slot + 1);
   };
+  // The tour plays what it builds: the world's power goes on when it starts (owner, 2026-11-17: with it off, the
+  // emitter of step 7 never fired, a silent ending).
+  const openPanel = tut.OpenPanel.bind(tut);
+  tut.OpenPanel = () => { openPanel(); if (!App.MainScene.worldPower) App.MainScene.setWorldPower(true); };
   // One step at a time: a check that passes again during NextScene's 0.4 s slide does not skip the next step.
   let moving = false;
   const next = tut.NextScene.bind(tut);

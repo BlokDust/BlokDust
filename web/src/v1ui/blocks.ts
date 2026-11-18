@@ -112,7 +112,7 @@ export class V1Block {
       const n = Math.max(1, Math.min(SOUND_MAX, Math.round(Number(value))));
       if (n === this.Params.sound) return;
       this.Params.sound = n;
-      App.MainScene.host.setSound(this.Id, n);
+      App.MainScene.host.setSound(this.Id, n, false);  // the wave is made when the slider is let go (newBlocks.ts)
       return;
     }
     if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's panel buttons (CHG-0021)

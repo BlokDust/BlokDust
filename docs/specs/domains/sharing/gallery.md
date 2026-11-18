@@ -27,8 +27,8 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
   be published (R3, R4), it is withdrawn.
 - **R6.** Switching ADD TO GALLERY off and saving takes the patch out (`DELETE /api/gallery/:id` too: the account, or
   the browser with the edit token). The link keeps working.
-- **R7.** `GET /api/gallery?sort=popular|new|examples|tutorials&q=&page=` returns 20 a page (EXAMPLES and
-  TUTORIALS: R16).
+- **R7.** `GET /api/gallery?sort=popular|top|new|examples|tutorials&q=&page=` returns 20 a page (EXAMPLES and
+  TUTORIALS: R16). TOP (all time, CHG-0035) orders by likes + 2·remixes with no decay, newest first among equals.
   - Each row: title, `by @handle`, remixes, likes, and whether you liked it.
   - `q` words match titles, block types and names; `@name` matches exactly one person.
   - Popular = (likes + 2 × remixes + 1) ÷ (hours since published + 2).
@@ -56,8 +56,11 @@ saving, browsed in the Patches panel's GALLERY tab (search, popular or new, like
 - **R12.** Deleting an account removes its gallery entries, likes and reports.
 - **R13.** The tab is v1 SoundcloudPanel's layout: the search field (a plain text field, no clear button) over its
   rule at −110 units, SEARCH bordered above the rule at the right, the list (R7a), and POPULAR / NEW (underlined,
-  POPULAR · NEW · EXAMPLES · TUTORIALS spread along the bottom (where v1 had its count and RANDOMISE), the chosen one
-  underlined and remembered in this browser. Rows read `by @name · N remixes · N views` and have OPEN and INSERT (owner
+  POPULAR · ALL TIME TOP · NEW · EXAMPLES spread along the bottom (where v1 had its count and RANDOMISE; no TUTORIALS
+  button while there are none, owner 2026-11-17), the chosen one underlined and remembered in this browser. The list's
+  window holds whole rows and a half (more below shows), rows go under the search rule as they scroll, the last row
+  ends 10 units above the window's foot, and with more to fetch the row after the last reads SHOW MORE (a spinner while
+  they come; scrolling near the end fetches them too). OPEN's list is laid out the same way (CHG-0035). Rows read `by @name · N remixes · N views` and have OPEN and INSERT (owner
   review 3: INSERT adds the patch's blocks to yours, as OPEN's INSERT, without asking and without a credit). The
   plugin and embeds have no GALLERY tab.
 - **R14.** Opening a patch in the app (`GET /api/patches/:id`) counts a view, roughly (pages and previews don't).

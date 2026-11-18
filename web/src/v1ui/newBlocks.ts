@@ -552,10 +552,23 @@ export function installLiveRows(panel: any): void {
   };
   const mouseDown = panel.MouseDown.bind(panel);
   panel.MouseDown = (mx: number, my: number) => { if (counterPress(panel, mx, my)) panel.Hover = true; else mouseDown(mx, my); };  // the press is the panel's
+  // SampleGen's SOUND (CHG-0035, owner 2026-11-17): its number always shows (v1 shows a slider's value only while
+  // it is held, and the panel is built again when the wave arrives), and the wave is made when the slider is let go.
+  const mouseUp = panel.MouseUp.bind(panel);
+  panel.MouseUp = () => {
+    const sound = (panel.Options as any[] | undefined)?.find(o => o.Setting === 'sound' && o.Selected);
+    const block = panel.SelectedBlock;
+    mouseUp();
+    if (sound && block) App.MainScene.host.setSound(block.Id, Number(block.Params.sound) || 1, true);
+  };
   const populate = panel.Populate.bind(panel);
   panel.Populate = (json: any, open: boolean) => {
     populate(json, open);
     for (const o of panel.Options as any[]) {
+      if (o.Type === 'slider' && o.Setting === 'sound' && panel.SelectedBlock?.def?.id === 'source.sample-gen') {
+        const draw = o.Draw.bind(o);
+        o.Draw = (...a: unknown[]) => { const held = o.Selected; o.Selected = true; try { draw(...a); } finally { o.Selected = held; } };
+      }
       const draw = o.Type === 'slider' ? LIVE_ROWS[o.Setting] : undefined;
       if (draw) { if (!METER_ROWS.has(o.Setting)) o.Type = 'live'; o.Live = true; o.Draw = draw; }
     }

@@ -77,8 +77,8 @@ export interface SceneHost extends PatchesHost {
   toggleRecording(id: number): void;
   downloadRecording(id: number): void;
   generateSample(id: number): void;
-  /** SampleGen's SOUND slider (CHG-0035): keep the number and make its wave. */
-  setSound(id: number, n: number): void;
+  /** SampleGen's SOUND slider (CHG-0035): keep the number; `make`: make its wave (the slider was let go). */
+  setSound(id: number, n: number, make: boolean): void;
   themes(): readonly Theme[];
   /** A Stage block's panel buttons (CHG-0021): look inside it; fill it from a patch file. */
   openStage(id: number): void;
@@ -469,7 +469,7 @@ export class V1Scene {
   }
   /** Fingers lifted: the zoom buttons step on from the nearest of v1's levels; the readout fades as after a step. */
   pinchEnd(): void {
-    const z = this.ZoomButtons as any, slots: number[] = z._ZoomSlots ?? [0.25, 0.5, 1, 2, 4];
+    const z = this.ZoomButtons as any, slots: number[] = z._ZoomSlots ?? [0.15, 0.25, 0.5, 1, 2, 4];
     let best = 0;
     slots.forEach((s, i) => { if (Math.abs(Math.log(s / App.ZoomLevel)) < Math.abs(Math.log(slots[best] / App.ZoomLevel))) best = i; });
     z.CurrentSlot = best;
@@ -584,7 +584,7 @@ export class V1Scene {
     this.CreateNew.CheckState();
     this.select(null);
     App.DragOffset.x = 0; App.DragOffset.y = 0;
-    this.ZoomButtons.CurrentSlot = 2;
+    this.ZoomButtons.CurrentSlot = (this.ZoomButtons as any)._ZoomSlots.indexOf(1);
     this.MainSceneDragger.Destination = new Point(0, 0);
     App.ZoomLevel = 1;
     this.Metrics.UpdateGridScale();

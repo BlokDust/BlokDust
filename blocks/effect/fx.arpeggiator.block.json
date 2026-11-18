@@ -5,7 +5,7 @@
   "category": "effect",
   "kind": "pre-effect",
   "name": "Arpeggiator",
-  "description": "Plays the notes its sources are given one after another, at its speed or one for each hit.",
+  "description": "Steps through held notes one at a time in a repeating pattern.",
   "v1": {
     "type": null
   },

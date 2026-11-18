@@ -10,7 +10,7 @@ import { currentUser, requireUser } from './auth/session.ts';
 export const PAGE = 20;
 /** The site's own account (owner review 3): its patches are the EXAMPLES and TUTORIALS (R16). The name is reserved. */
 export const OFFICIAL = 'blokdust';
-export type Sort = 'popular' | 'new' | 'examples' | 'tutorials';
+export type Sort = 'popular' | 'top' | 'new' | 'examples' | 'tutorials';
 /** R9: reports that hide a patch (5, not 3: throwaway accounts are cheap; security review, PR 13). */
 export const REPORTS_TO_HIDE = 5;
 const HOUR = 3_600_000;
@@ -80,14 +80,14 @@ export async function unpublish(env: Env, id: string, mayEdit: (id: string) => P
 }
 
 /**
- * GET /api/gallery?sort=popular|new|examples|tutorials&q=&page= (R7, R8; R16: EXAMPLES and TUTORIALS are @blokdust's,
+ * GET /api/gallery?sort=popular|top|new|examples|tutorials&q=&page= (R7, R8; R16: EXAMPLES and TUTORIALS are @blokdust's,
  * oldest first, the order they were made in). `q`: words matched in titles, block types ("laser", "tone") and
  * names; `@name` lists exactly one person's patches. Popular: (likes + 2·remixes + 1) / (hours since published + 2), a simple decay so
- * new patches get a chance.
+ * new patches get a chance. Top (all time, CHG-0035): likes + 2·remixes, with no decay; newest first among equals.
  */
 export async function list(env: Env, req: Request, url: URL): Promise<Response> {
   const me = await currentUser(env, req), now = Date.now();
-  const s = url.searchParams.get('sort'), sort: Sort = s === 'new' || s === 'examples' || s === 'tutorials' ? s : 'popular';
+  const s = url.searchParams.get('sort'), sort: Sort = s === 'top' || s === 'new' || s === 'examples' || s === 'tutorials' ? s : 'popular';
   const kind = sort === 'examples' ? 'example' : sort === 'tutorials' ? 'tutorial' : null;
   const page = Math.max(1, Math.min(500, Number(url.searchParams.get('page')) || 1));
   const q = (url.searchParams.get('q') ?? '').trim().toLowerCase().slice(0, 40);
@@ -101,7 +101,7 @@ export async function list(env: Env, req: Request, url: URL): Promise<Response> 
     binds.push(like, like, like);
   }
   const remixes = '(SELECT COUNT(*) FROM patches c WHERE c.parent = g.patch_id AND c.deleted = 0)';
-  const order = kind ? 'g.published ASC' : sort === 'new' ? 'g.published DESC' : `((g.likes + 2 * ${remixes} + 1) * ${HOUR}.0 / (? - g.published + 2 * ${HOUR})) DESC, g.published DESC`;
+  const order = kind ? 'g.published ASC' : sort === 'new' ? 'g.published DESC' : sort === 'top' ? `(g.likes + 2 * ${remixes}) DESC, g.published DESC` : `((g.likes + 2 * ${remixes} + 1) * ${HOUR}.0 / (? - g.published + 2 * ${HOUR})) DESC, g.published DESC`;
   const sql = `SELECT g.patch_id AS id, g.title, u.handle AS by, g.likes, ${remixes} AS remixes, g.published,
       (SELECT views FROM patches v WHERE v.id = g.patch_id) AS views,
       ${me ? 'EXISTS (SELECT 1 FROM likes l WHERE l.patch_id = g.patch_id AND l.user_id = ?)' : '0'} AS liked

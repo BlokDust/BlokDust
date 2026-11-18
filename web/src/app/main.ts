@@ -50,6 +50,8 @@ import { startSentry } from '../analytics/sentry.ts';
 /** SAVE / SHARE's MAKE VIDEO (CHG-0022): hidden until the video export gets its own round of work (owner, 2026-11-17,
  * CHG-0035). `?video=1` shows it (its tests, and that work). */
 const VIDEO_EXPORT = new URLSearchParams(location.search).get('video') === '1';
+/** sessionStorage key: a sign-in begun from SAVE / SHARE goes back there (CHG-0035). */
+const AFTER_SIGN_IN = 'bd.afterSignIn';
 /** Link-preview size (Open Graph's recommended 1.91:1; server/src/pages.ts THUMB). */
 const THUMB = { width: 1200, height: 630 } as const;
 
@@ -319,7 +321,7 @@ async function main() {
   }
   /** Audio to block `id` in the world on show. */
   const sendSample = (id: number, buffer: AudioBuffer) => engine?.sendSample(id, buffer, inside?.stageId ?? 0);
-  const ZOOM_MIN = 0.25, ZOOM_MAX = 4;  // v1 ZoomButtons' range
+  const ZOOM_MIN = 0.15, ZOOM_MAX = 4;  // v1 ZoomButtons' range, out to 0.15 (owner, 2026-11-17, CHG-0035)
   const round3 = (v: number) => Math.round(v * 1000) / 1000;
   // The view settles (owner, 2026-11-12): the plugin's processor keeps it with the DAW project (bd_view); the website's
   // autosave keeps it (not an unsaved change). Checked twice a second, sent once it stops changing.
@@ -446,10 +448,9 @@ async function main() {
     toggleRecording: id => void toggleRecording(id),
     downloadRecording: id => downloadRecording(id),
     generateSample: id => generateSample(id, false),
-    setSound: (id, n) => {  // SampleGen's SOUND slider (CHG-0035): the wave follows the number, once the slider rests
-      setParams(id, { sound: n });
-      clearTimeout(soundTimers.get(id));
-      soundTimers.set(id, setTimeout(() => { soundTimers.delete(id); generateSample(id, false); }, 120));
+    setSound: (id, n, make) => {  // SampleGen's SOUND slider (CHG-0035): the number while it moves, the wave on release
+      if (model.get(id)?.params.sound !== n) setParams(id, { sound: n });
+      if (make && soundMade.get(id) !== n) { soundMade.set(id, n); generateSample(id, false); }
     },
     themes: () => THEMES,
     connectedIds: id => { const out: number[] = [], c = probe.connections; for (let i = 0; i + 1 < c.length; i += 2) { if (c[i] === id) out.push(c[i + 1]); else if (c[i + 1] === id) out.push(c[i]); } return out; },
@@ -517,16 +518,21 @@ async function main() {
       unpublish: async id => { await gallery.unpublish(id, editToken(id)); if (id === App.CompositionId) scene.PatchesPanel.galleryKnown(false); },
     },
     signedIn: () => !!accountPage()?.Account,
+    // SAVE / SHARE › SIGN IN (CHG-0035): Settings › SIGN IN, then back to SAVE once signed in (backToSave).
+    signInToSave: title => {
+      try { sessionStorage.setItem(AFTER_SIGN_IN, JSON.stringify({ to: 'save', title, at: Date.now() })); } catch { /* private window: no way back */ }
+      (scene.SettingsPanel as any).openAccount?.();
+    },
     // Accounts (CHG-0023): web only. Signing in claims the patches this browser made (R9).
     account: juce || embedId ? null : {
       me: stats => account.me(stats),
-      signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); },
-      // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so.
-      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); },
+      signUp: async handle => { await account.signUpWithPasskey(handle); await account.claimMine().catch(() => {}); refreshOwnership(); backToSave(); },
+      // Signed in: back to the stage (owner, 2026-11-15); the name in the corner says so. From SAVE: back to SAVE.
+      signIn: async () => { await account.signInWithPasskey(); await account.claimMine().catch(() => {}); refreshOwnership(); (scene.SettingsPanel as any).ClosePanel(); backToSave(); },
       google: () => account.signInWith('google'),
       apple: () => account.signInWith('apple'),
       addPasskey: () => account.addPasskey(),
-      setHandle: async h => { await account.setHandle(h); },
+      setHandle: async h => { await account.setHandle(h); backToSave(); },  // a new Google/Apple account has its name
       signOut: async everywhere => { await account.signOut(everywhere); refreshOwnership(true); scene.PatchesPanel.galleryKnown(null); },
       deleteAccount: async () => { await account.deleteAccount(); refreshOwnership(true); },
       cancelled: e => account.cancelled(e),
@@ -667,6 +673,24 @@ async function main() {
     if (!accountPage()?.Account) (scene.SettingsPanel as any).openAccount?.();
     else scene.PatchesPanel.askReport({ id: credit.id, title: credit.title });
     return true;
+  }
+  /** Signed in after SAVE / SHARE › SIGN IN: Settings closes and SAVE opens again, ADD TO GALLERY on, the name kept. */
+  function backToSave(): void {
+    let want: { to?: string; title?: string; at?: number } | null = null;
+    try { want = JSON.parse(sessionStorage.getItem(AFTER_SIGN_IN) ?? 'null'); sessionStorage.removeItem(AFTER_SIGN_IN); } catch { want = null; }
+    // Only a sign-in finished soon after (10 minutes): one begun from SAVE and given up on is forgotten.
+    if (want?.to !== 'save' || !(Date.now() - (want.at ?? 0) < 10 * 60_000)) return;
+    const t0 = performance.now();
+    const go = () => {  // once the account page knows who is signed in (the switch reads it)
+      if (!accountPage()?.Account && performance.now() - t0 < 8000) { setTimeout(go, 150); return; }
+      (scene.SettingsPanel as any).ClosePanel?.();
+      const pp = scene.PatchesPanel;
+      if (want?.title) pp.setTitle(want.title);
+      pp.GalleryOn = true;
+      pp.OpenPanel(0);
+      stage.redraw();
+    };
+    go();
   }
   function shareWarning(): string | null {
     return [...model.values()].some(b => b.type === 'source.recorder' || !isPortable(b.params.track)) ? SAVE_WARNING : null;
@@ -1446,12 +1470,14 @@ async function main() {
   // ---- v1 SampleGen: v1's own generator (ported verbatim) renders a random arpeggio; its recipe is saved ----
   // SOUND (CHG-0035): a SampleGen with a sound number makes its wave from that number (v1's generator on a seeded
   // random); one without (v1 patches, and v2 ones from before) plays its saved recipe as v1 did.
-  const soundTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  /** The sound each SampleGen's wave was last made from (a release on the same number makes nothing new). */
+  const soundMade = new Map<number, number>();
   function generateSample(id: number, fromSeed: boolean): void {
     const v = v1Blocks.get(id);
     if (!v) return;
     v.WaveForm = []; v.RefreshOptionsPanel();
     const sound = Number(v.Params.sound) || 0;
+    if (sound) soundMade.set(id, sound);
     const ctx = Object.assign(Object.create(SAMPLE_GEN), {
       Params: v.Params, _LoadFromShare: fromSeed && !sound, _SeedLoad: true, _WaveVoices: [] as unknown[],
       Sources: [{ noteToFrequency: (note: string) => noteToFrequency(note) }],
@@ -1766,8 +1792,10 @@ async function main() {
       params.delete('account');
       history.replaceState(null, '', `${location.pathname}${params.size ? `?${params.toString()}` : ''}`);
       void account.claimMine().then(() => refreshOwnership()).catch(() => {});
-      // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15).
+      // A new account picks its name in Settings › ACCOUNT; a known one goes straight to the stage (owner, 2026-11-15),
+      // or back to SAVE if that is where the sign-in began (CHG-0035).
       if (signInReturn === 'new') requestAnimationFrame(() => (scene.SettingsPanel as any).openAccount?.());
+      else backToSave();
     }
   }
   app.renderer.on('resize', () => { stage.resize(); uiSync = true; });

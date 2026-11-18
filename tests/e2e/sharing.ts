@@ -61,7 +61,7 @@ async function openShare(page: Page): Promise<void> {
   }
   await page.waitForTimeout(1000);
   const tab = await page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Tab);
-  if (tab !== 0) await press(page, 'tab0');
+  if (tab !== 0) { await press(page, 'tab0'); await page.waitForTimeout(800); }  // the page drops in (CHG-0035)
 }
 async function press(page: Page, name: string): Promise<void> {
   const [x, y] = await page.evaluate(n => (window as any).__bd_probe.scene.PatchesPanel.centreOf(n), name);
