@@ -40,6 +40,7 @@ Owner's second round (2026-11-17, after trying staging):
 - Arpeggiator and Chord hints in the owner's words.
 - Patches' tabs slide like Settings' (R19).
 - Zoom out to 0.15 (R18).
+- A first visit gets a random theme matching the system's light or dark setting (R21).
 
 ## Out of scope
 - Choosing the microphone device on the web (owner question 7): answered, not built.

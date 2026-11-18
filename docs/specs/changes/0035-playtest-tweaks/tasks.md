@@ -27,3 +27,4 @@ Second round (owner, 2026-11-17):
 - [x] 20. Arpeggiator and Chord hints.
 - [x] 21. Patches tabs slide (patches-tabs-slide).
 - [x] 22. Zoom out to 0.15 (zoom-out-to-0-15).
+- [x] 23. First visit: random theme matching light/dark (first-theme-follows-system).

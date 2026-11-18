@@ -32,6 +32,7 @@ v2 must look like v1. This spec defines how "looks identical" is measured so age
 - **R18.** *(CHG-0035)* The zoom steps out to 0.15 (v1's slots plus one: 0.15, 0.25, 0.5, 1, 2, 4); pinch zoom has the same range.
 - **R19.** *(CHG-0035)* Patches' tabs move their pages as v1 Settings' do: the old page lifts out in 250 ms, the new one drops in after 400 ms over 400 ms, under the tabs.
 - **R20.** *(CHG-0035)* Signed out, Patches › SAVE / SHARE shows SIGN IN (v1's bordered button, right of ADD TO GALLERY, under RANDOMISE TITLE); it, or the greyed switch, opens Settings › SIGN IN, and once signed in (passkey, a new account, or back from Google or Apple within 10 minutes) SAVE / SHARE opens again with ADD TO GALLERY on and the name kept.
+- **R21.** *(CHG-0035, owner 2026-11-17)* A first visit to the website (no theme kept in this browser, no `?theme=`, no theme in the opened composition) gets a colour theme at random from those matching the system's light or dark setting (dark: a dark background, palette 0: MODE STEREO, CONSOLE, SEA CUCUMBER, VOLCANOLOGIST; light: the other nine), and keeps it. Automated browsers keep theme 0 unless the URL has `firsttheme=1`.
 
 ## Verification
 - `pnpm bd v1 verify`: block manifests re-rendered with Canvas2D vs v1 per-block references: 480/480 identical across all 13 themes (R4).

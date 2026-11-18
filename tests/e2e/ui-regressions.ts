@@ -2841,6 +2841,26 @@ Object.assign(tests, {
     const level = about.sites.every(y => y !== null && Math.abs(y - about.sites[0]!) < 0.5);
     return [level && !about.twitter && spread > s.column * 0.6 && s.buttons[0] < left + s.column * 0.2, { about, s, left, spread }];
   },
+  // Owner (2026-11-17, CHG-0035): a first visit gets a random theme from those matching the system's light or dark
+  // setting, and keeps it; a kept theme wins.
+  async 'first-theme-follows-system'(errors: string[]) {
+    const DARK = new Set([0, 3, 6, 10]);
+    const visit = async (scheme: 'dark' | 'light') => {
+      const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: scheme });
+      const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+      const boot = async () => { await p.goto(`${url}/index.html?demo&firsttheme=1`); await p.waitForFunction(() => (window as any).__bd_probe); await p.waitForTimeout(300); };
+      await boot();
+      const first = await p.evaluate(() => ({ now: (window as any).__bd_probe.v1App.ThemeManager.CurrentThemeNo, kept: localStorage.getItem('blokdust.theme') }));
+      await boot();
+      const again = await p.evaluate(() => (window as any).__bd_probe.v1App.ThemeManager.CurrentThemeNo);
+      await ctx.close();
+      return { ...first, again };
+    };
+    const picks: { scheme: string; now: number; kept: string | null; again: number }[] = [];
+    for (let i = 0; i < 4; i++) for (const scheme of ['dark', 'light'] as const) picks.push({ scheme, ...(await visit(scheme)) });
+    const pass = picks.every(r => DARK.has(r.now) === (r.scheme === 'dark') && r.kept === String(r.now) && r.again === r.now);
+    return [pass, picks];
+  },
   // Owner (2026-11-17, CHG-0035): Patches' tabs slide their pages as Settings' do (the old lifts out, the new drops in).
   async 'patches-tabs-slide'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
