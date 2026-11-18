@@ -1345,9 +1345,8 @@ void Engine::particleHit(Block& b) noexcept {
   if (b.kind() == BlockKind::Logic) { logicHit(b); return; }
   // SIMULATION-0008 (owner, 2026-11-14; v1 only lengthened the note): a hit on a source that only earlier hits are
   // holding strikes it again, so fast particles play every note (a new Random Note pick each time).
-  if (b.kind() == BlockKind::AudioSource && b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0) b.restrike = true;
-  // SIMULATION-0012: a Laser that only hits are holding fires its beam again, so fast particles reach past it.
-  if (b.type == BlockType::PowerLaser && b.power() > 0 && heldOnlyByHits(b)) b.restrike = true;
+  // SIMULATION-0008/0012: a hit on what earlier hits hold strikes or fires it again.
+  strikeAgain(b);
   pulse(b, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
 }
 
@@ -1379,6 +1378,13 @@ bool Engine::heldOnlyByHits(const Block& b) noexcept {
   if (b.type == BlockType::PowerLaser) return b.params[P::PowerLaser::selfPoweredMode] == 0.0;
   if (b.type == BlockType::PowerEmitter) return b.params[P::PowerEmitter::selfPoweredMode] == 0.0;
   return false;
+}
+
+/// A pulse arrives (a particle, a Pulse or a Counter firing) at a block earlier hits are holding (SIMULATION-0008,
+/// SIMULATION-0012): a source is struck again; an Emitter or Laser fires again. Call before adding the pulse.
+void Engine::strikeAgain(Block& b) noexcept {
+  if (b.kind() == BlockKind::AudioSource) { if (b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0) b.restrike = true; }
+  else if (b.power() > 0 && heldOnlyByHits(b)) b.restrike = true;
 }
 
 /// A beam fired again reaches a block it was already on (SIMULATION-0012): a source held only by hits plays again (as
@@ -1435,7 +1441,7 @@ void Engine::pulseConnected(Block& b, int ticks) noexcept {
   const auto& row = graph_.row(slotOf(b.id));
   for (int k = 0; k < orderCount_; ++k) {
     Block& s = blocks_[order_[k]];
-    if (row[order_[k]] && isSourceSide(s.kind())) pulse(s, ticks);
+    if (row[order_[k]] && isSourceSide(s.kind())) { strikeAgain(s); pulse(s, ticks); }  // SIMULATION-0012
   }
 }
 
@@ -1697,7 +1703,7 @@ void Engine::runTick() noexcept {
       if (b.keyPoly && b.keyCount > 0) for (int i = 0; i < b.keyCount; ++i) emit(b, keyAngle(b.keysHeld[static_cast<std::size_t>(i)]));
       else emit(b);
     };
-    // Struck again by a beam fired again (SIMULATION-0012): it fires now, and its timing starts over (as a key press).
+    // Struck again while hits hold it (SIMULATION-0012): it fires now, and its timing starts over (as a key press).
     if (e.restrike) {
       e.restrike = false;
       if (running) {

@@ -190,6 +190,7 @@ class Engine {
   bool advanceCounter(Block& c) noexcept;
   static bool heldOnlyByHits(const Block& b) noexcept;
   void beamStrike(Block& b) noexcept;
+  void strikeAgain(Block& b) noexcept;
   void updateGates() noexcept;
   static std::int64_t beatSlotAt(const Block& e, double beat) noexcept;
   void keyAim(Block& b, int note, bool down, bool poly) noexcept;

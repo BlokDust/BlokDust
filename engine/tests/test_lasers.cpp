@@ -219,3 +219,34 @@ TEST_CASE("SIMULATION-0012: a beam fired again strikes the source and steps the 
   CHECK(eventsOf(*e, Event::Type::GateOn, 4).size() == laserHits);   // a note per particle, as SIMULATION-0008
   CHECK(eventsOf(*e, Event::Type::Logic, 6).size() == laserHits);    // a Counter step per particle
 }
+
+TEST_CASE("SIMULATION-0012: a Counter or Pulse firing again strikes what it holds: Laser beams, Emitters and sources") {
+  // The owner's second patch: the far Emitter's particles step a Counter (every step on) that pulses a Laser, whose
+  // beam powers a third Emitter; and a Pulse fired faster than its length holds a Tone.
+  auto e = strikeRig(false, false);
+  e->push(Command::move(5, 30, 30));                                 // the Tone out of the way
+  e->push(Command::add(6, BlockType::PowerCounter, 9, 14));
+  e->push(Command::setParam(6, P::PowerCounter::steps, 2));
+  e->push(Command::setParam(6, P::PowerCounter::hits, 2));
+  addLaser(*e, 7, 10, 18, 0, false);
+  e->push(Command::add(8, BlockType::PowerEmitter, 22, 17));         // unsynced: fires only when struck
+  e->push(Command::setParam(8, P::PowerEmitter::angle, 90));
+  render(*e, 48000 * 6);
+  const auto steps = eventsOf(*e, Event::Type::Logic, 6).size();
+  REQUIRE(steps >= 20);
+  const auto fired = eventsOf(*e, Event::Type::Emit, 8).size();
+  CHECK(fired + 1 >= steps);                                          // the last step's strike may land after the render
+  CHECK(fired <= steps);
+
+  auto p = makeEngine(48000, 1, false);
+  p->push(Command::add(1, BlockType::PowerEmitter, 0, -10));
+  p->push(Command::setParam(1, P::PowerEmitter::angle, 90));
+  p->push(Command::setParam(1, P::PowerEmitter::selfPoweredMode, 1));
+  p->push(Command::setParam(1, P::PowerEmitter::rate, 3));            // 3 v1 frames: 20 a second, a Pulse is 0.15 s
+  p->push(Command::add(2, BlockType::PowerPulse, 0, 0));
+  p->push(Command::add(3, BlockType::SourceTone, 0, 5));
+  render(*p, 48000 * 3);
+  const auto pulses = eventsOf(*p, Event::Type::Logic, 2).size();
+  REQUIRE(pulses >= 20);
+  CHECK(eventsOf(*p, Event::Type::GateOn, 3).size() == pulses);       // a note per Pulse, as a particle's (SIMULATION-0008)
+}
