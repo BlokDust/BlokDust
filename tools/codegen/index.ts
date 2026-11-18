@@ -151,7 +151,7 @@ function genTs(manifests: any[]): string {
     `export type BlockKind = ${[...new Set(Object.keys(KIND_CPP))].map(k => `'${k}'`).join(' | ')};\n` +
     `export interface GeometryLayer { palette: number; points: [number, number][]; kind?: 'pixel'; units?: 'unit'; anchor?: 'randomStar'; alpha?: number }\n` +
     `export interface Overlay { name: string; scale: 'screen' | 'world'; states: Record<string, GeometryLayer[]> }\n` +
-    `export interface BlockGeometry { units: 'grid'; unitsPerGrid?: number; layers: GeometryLayer[]; outline: [number, number][]; menuOffset?: [number, number]; overlays?: Overlay[] }\n` +
+    `export interface BlockGeometry { units: 'grid'; unitsPerGrid?: number; layers: GeometryLayer[]; /** Drawn instead of layers while a Gate is open (SIMULATION-0011). */ openLayers?: GeometryLayer[]; outline: [number, number][]; menuOffset?: [number, number]; overlays?: Overlay[] }\n` +
     `export interface BlockDef { id: string; category: string; kind: BlockKind; name: string; description: string; draft: boolean; v1Type: string | null; /** The block's id in the menus: v1's type name, or the name without spaces for v2-only blocks. */ menuId: string; catchment: number; geometry: BlockGeometry; params: { key: string; default: unknown; unit: string | null; ui: { transform: 'None' | 'Identity' | 'SubtractFrom' | 'Minus' | 'Divide'; min: number; max: number; k: number } }[] }\n\n` +
     `export const BLOCKS: readonly BlockDef[] = ${JSON.stringify(data, null, 2)} as const as unknown as readonly BlockDef[];\n\n` +
     `export type BlockId = ${manifests.map(m => `'${m.id}'`).join(' | ')};\n\n` +

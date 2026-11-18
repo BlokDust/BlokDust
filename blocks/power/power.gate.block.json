@@ -15,29 +15,121 @@
     "unitsPerGrid": 14.999999999999998,
     "layers": [
       {
-        "palette": 3,
+        "palette": 5,
         "points": [
           [-1, -1],
           [1, -1],
+          [2, 0],
           [1, 1],
-          [-1, 1]
+          [-1, 1],
+          [-2, 0]
         ]
       },
       {
         "palette": 14,
         "points": [
-          [0, -1],
           [1, 0],
           [0, 1],
-          [-1, 0]
+          [-1, 0],
+          [0, -1]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [-0.5, -0.5],
+          [0.5, -0.5],
+          [0.5, 0.5],
+          [-0.5, 0.5]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [7, 0],
+          [7.5, 0],
+          [7.5, 0.5],
+          [7, 0.5]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [10.5, 1.5],
+          [11, 1.5],
+          [11, 2],
+          [10.5, 2]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [-0.5, 5.5],
+          [0, 5.5],
+          [0, 6],
+          [-0.5, 6]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [4, -6.5],
+          [4.5, -6.5],
+          [4.5, -6],
+          [4, -6]
+        ]
+      },
+      {
+        "palette": 8,
+        "kind": "pixel",
+        "units": "unit",
+        "points": [
+          [-4.5, 7],
+          [-4, 7],
+          [-4, 7.5],
+          [-4.5, 7.5]
+        ]
+      }
+    ],
+    "openLayers": [
+      {
+        "palette": 5,
+        "points": [
+          [-1, -1],
+          [1, -1],
+          [2, 0],
+          [1, 1],
+          [-1, 1],
+          [-2, 0]
+        ]
+      },
+      {
+        "palette": 7,
+        "points": [
+          [1, 0],
+          [0, 1],
+          [-1, 0],
+          [0, -1]
         ]
       }
     ],
     "outline": [
       [-1, -1],
       [1, -1],
+      [2, 0],
       [1, 1],
-      [-1, 1]
+      [-1, 1],
+      [-2, 0]
     ],
     "menuOffset": [0, 0]
   },
@@ -48,8 +140,5 @@
       "unit": "enum",
       "description": "Open when unpowered, closed when powered"
     }
-  ],
-  "review": [
-    "geometry: placeholder until the owner's block-designer design (CHG-0032 task 1)"
   ]
 }

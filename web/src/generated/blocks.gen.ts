@@ -4,7 +4,7 @@
 export type BlockKind = 'audio-source' | 'pre-effect' | 'post-effect' | 'power-source' | 'power-effect' | 'logic' | 'void' | 'controller' | 'gate' | 'path' | 'listener' | 'modulator';
 export interface GeometryLayer { palette: number; points: [number, number][]; kind?: 'pixel'; units?: 'unit'; anchor?: 'randomStar'; alpha?: number }
 export interface Overlay { name: string; scale: 'screen' | 'world'; states: Record<string, GeometryLayer[]> }
-export interface BlockGeometry { units: 'grid'; unitsPerGrid?: number; layers: GeometryLayer[]; outline: [number, number][]; menuOffset?: [number, number]; overlays?: Overlay[] }
+export interface BlockGeometry { units: 'grid'; unitsPerGrid?: number; layers: GeometryLayer[]; /** Drawn instead of layers while a Gate is open (SIMULATION-0011). */ openLayers?: GeometryLayer[]; outline: [number, number][]; menuOffset?: [number, number]; overlays?: Overlay[] }
 export interface BlockDef { id: string; category: string; kind: BlockKind; name: string; description: string; draft: boolean; v1Type: string | null; /** The block's id in the menus: v1's type name, or the name without spaces for v2-only blocks. */ menuId: string; catchment: number; geometry: BlockGeometry; params: { key: string; default: unknown; unit: string | null; ui: { transform: 'None' | 'Identity' | 'SubtractFrom' | 'Minus' | 'Divide'; min: number; max: number; k: number } }[] }
 
 export const BLOCKS: readonly BlockDef[] = [
@@ -5512,7 +5512,7 @@ export const BLOCKS: readonly BlockDef[] = [
       "unitsPerGrid": 14.999999999999998,
       "layers": [
         {
-          "palette": 3,
+          "palette": 5,
           "points": [
             [
               -1,
@@ -5523,12 +5523,20 @@ export const BLOCKS: readonly BlockDef[] = [
               -1
             ],
             [
+              2,
+              0
+            ],
+            [
               1,
               1
             ],
             [
               -1,
               1
+            ],
+            [
+              -2,
+              0
             ]
           ]
         },
@@ -5536,9 +5544,195 @@ export const BLOCKS: readonly BlockDef[] = [
           "palette": 14,
           "points": [
             [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              -1,
+              0
+            ],
+            [
               0,
               -1
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "kind": "pixel",
+          "units": "unit",
+          "points": [
+            [
+              -0.5,
+              -0.5
             ],
+            [
+              0.5,
+              -0.5
+            ],
+            [
+              0.5,
+              0.5
+            ],
+            [
+              -0.5,
+              0.5
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "kind": "pixel",
+          "units": "unit",
+          "points": [
+            [
+              7,
+              0
+            ],
+            [
+              7.5,
+              0
+            ],
+            [
+              7.5,
+              0.5
+            ],
+            [
+              7,
+              0.5
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "kind": "pixel",
+          "units": "unit",
+          "points": [
+            [
+              10.5,
+              1.5
+            ],
+            [
+              11,
+              1.5
+            ],
+            [
+              11,
+              2
+            ],
+            [
+              10.5,
+              2
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "kind": "pixel",
+          "units": "unit",
+          "points": [
+            [
+              -0.5,
+              5.5
+            ],
+            [
+              0,
+              5.5
+            ],
+            [
+              0,
+              6
+            ],
+            [
+              -0.5,
+              6
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "kind": "pixel",
+          "units": "unit",
+          "points": [
+            [
+              4,
+              -6.5
+            ],
+            [
+              4.5,
+              -6.5
+            ],
+            [
+              4.5,
+              -6
+            ],
+            [
+              4,
+              -6
+            ]
+          ]
+        },
+        {
+          "palette": 8,
+          "kind": "pixel",
+          "units": "unit",
+          "points": [
+            [
+              -4.5,
+              7
+            ],
+            [
+              -4,
+              7
+            ],
+            [
+              -4,
+              7.5
+            ],
+            [
+              -4.5,
+              7.5
+            ]
+          ]
+        }
+      ],
+      "openLayers": [
+        {
+          "palette": 5,
+          "points": [
+            [
+              -1,
+              -1
+            ],
+            [
+              1,
+              -1
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              -1,
+              1
+            ],
+            [
+              -2,
+              0
+            ]
+          ]
+        },
+        {
+          "palette": 7,
+          "points": [
             [
               1,
               0
@@ -5550,6 +5744,10 @@ export const BLOCKS: readonly BlockDef[] = [
             [
               -1,
               0
+            ],
+            [
+              0,
+              -1
             ]
           ]
         }
@@ -5564,12 +5762,20 @@ export const BLOCKS: readonly BlockDef[] = [
           -1
         ],
         [
+          2,
+          0
+        ],
+        [
           1,
           1
         ],
         [
           -1,
           1
+        ],
+        [
+          -2,
+          0
         ]
       ],
       "menuOffset": [

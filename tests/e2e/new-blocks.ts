@@ -824,6 +824,7 @@ const tests: Record<string, (errors: string[]) => Promise<[boolean, unknown]>> =
     const inMenu = (await menuItems(p, 'Power')).includes('Gate');
     await p.waitForTimeout(500);
     const closed = (await state(p)).rms;
+    await p.screenshot({ path: `${OUT}/gate-closed.png` });
     await openPanel(p, 'g');
     const names = await p.evaluate(() => ((window as any).__bd_probe.scene.OptionsPanel.SelectedBlock.OptionsForm.parameters as any[])
       .flatMap(r => r.type === 'switches' ? r.switches.map((x: any) => x.name) : [r.name]) as string[]);

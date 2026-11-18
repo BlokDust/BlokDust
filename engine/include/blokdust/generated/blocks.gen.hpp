@@ -483,7 +483,7 @@ inline constexpr ParamInfo kParamsPowerEmitter[] = {
 namespace param::PowerEmitter { enum : std::uint8_t { angle, speed, rate, range, selfPoweredMode, sync, division, swing, offset, Count }; }
 
 // ---- power.gate (Gate)
-inline constexpr GridPoint kOutlinePowerGate[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr GridPoint kOutlinePowerGate[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {2.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}, {-2.0f, 0.0f}};
 inline constexpr ParamInfo kParamsPowerGate[] = {
   {"invert", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
@@ -644,7 +644,7 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::PowerChance, "power.chance", "", BlockKind::Logic, 6.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
   {BlockType::PowerCounter, "power.counter", "", BlockKind::Logic, 6.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
   {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
-  {BlockType::PowerGate, "power.gate", "", BlockKind::Gate, 0.0f, kOutlinePowerGate, 4, kParamsPowerGate, 1, false},
+  {BlockType::PowerGate, "power.gate", "", BlockKind::Gate, 0.0f, kOutlinePowerGate, 6, kParamsPowerGate, 1, false},
   {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 7, true},
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, kParamsPowerPower, 2, true},
   {BlockType::PowerPrism, "power.prism", "", BlockKind::Path, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},

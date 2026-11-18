@@ -53,7 +53,7 @@ TEST_CASE("R7c Gate: a beam stops at a closed Gate, and is cut and restored as i
   auto e = beamRig();
   render(*e, 4800);
   REQUIRE(e->beams().size() == 1);
-  CHECK_THAT(e->beams()[0].x1, WithinAbs(-1.0, 1e-9));  // the Gate's left edge
+  CHECK_THAT(e->beams()[0].x1, WithinAbs(-2.0, 1e-9));  // the Gate's left point
   CHECK_FALSE(e->block(3)->gated());
   e->push(Command::add(4, BlockType::PowerToggle, 0, -4));  // a Toggle starts off
   e->push(Command::setParam(4, P::PowerToggle::logic, 1));
@@ -62,7 +62,7 @@ TEST_CASE("R7c Gate: a beam stops at a closed Gate, and is cut and restored as i
   CHECK(e->block(3)->gated());
   e->push(Command::setParam(4, P::PowerToggle::logic, 0));
   render(*e, 4800);
-  CHECK_THAT(e->beams()[0].x1, WithinAbs(-1.0, 1e-9));
+  CHECK_THAT(e->beams()[0].x1, WithinAbs(-2.0, 1e-9));
   CHECK_FALSE(e->block(3)->gated());
 }
 

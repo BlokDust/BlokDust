@@ -18,7 +18,8 @@ opens (SIMULATION-0011).
 - SPEC-SIMULATION-POWER-AND-PARTICLES R5c (particles), R7c (beams).
 - SPEC-CONNECTIONS-PROXIMITY R2d: the Gate connects to power effects only.
 - Manifest kind `gate` (the Prism's kind is `path`).
-- Look: a placeholder (a Void in a square frame), drawn faded while open, until the owner's block-designer design.
+- Look: the owner's design (2026-11-18). Closed, its centre diamond is the Void's colour with stars; open, it is palette 7
+  with no stars (manifest `geometry.openLayers`, drawn while open).
 
 ## Out of scope
 - Gates powered by beams or particles reaching them.
@@ -31,4 +32,4 @@ opens (SIMULATION-0011).
 - `pnpm test:new-blocks --only gate`: the menu has it; it stops a beam, and Invert opens it.
 
 ## Risks and unknowns
-- The open Gate is drawn faded for now; its look, open and closed, comes with the design.
+- None known.
