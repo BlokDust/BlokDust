@@ -41,11 +41,24 @@ const SPLASH_TRIANGLE = "        ctx.lineTo((App.Width*0.5) + (this._Scale*0.5),
 const SPLASH_TRIANGLE_START = "        ctx.lineTo((App.Width*0.5) + (this._Scale*0.5),by + (App.Height*0.5));\n        ctx.fill();\n\n        // START (owner, 2026-11-11): the word under v1's play triangle, in v1's header type //\n        App.FillColor(ctx,App.Palette[App.ThemeManager.Txt]);\n        ctx.textAlign = \"center\";\n        ctx.font = App.Metrics.TxtHeader;\n        ctx.fillText(\"START\", App.Width*0.5, by + (App.Height*0.5) + this._Scale + (50*units));\n";
 // The only text changes to ported files, each for a stated reason (applied verbatim; the port fails if one no longer
 // matches, so a v1 pin bump can't silently drop it).
-const REWRITES: Record<string, [string, string, string][]> = {
+const REWRITES: Record<string, ([string, string, string] | [string, string, string, 'all'])[]> = {
   // DATA-0005 / CHG-0003: the sample panel searches Freesound (SoundCloud's API is gone).
   'UI/SoundcloudPanel.ts': [['searchLine: "Search SoundCloud"', 'searchLine: "Search Freesound"', 'provider name']],
   // Owner (2026-11-10, CHG-0005): no "Chrome Recommended" footer (v2 runs alike in every browser and in the plugin).
-  'UI/SettingsPanel.ts': [[CHROME_FOOTER, '', 'Chrome Recommended footer']],
+  'UI/SettingsPanel.ts': [[CHROME_FOOTER, '', 'Chrome Recommended footer'],
+    // Owner (2026-11-18, CHG-0037): on a phone the page is nearly the screen's width (App.SettingsMenuWidth), the tabs
+    // share the width left of the close cross, and the rows are taller (App.SettingsRow). Desktop keeps v1's sizes.
+    ['var menuWidth = (this.DrawTo.Width/7)*5;', 'var menuWidth = App.SettingsMenuWidth(this.DrawTo.Width);', 'phone page width', 'all'],
+    ['            catWidth[i] = ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);',
+      '            catWidth[i] = App.SettingsPhone ? (this.DrawTo.Width - (40*units)) / n : ctx.measureText(json.categories[i].name.toUpperCase()).width + (gutter*units);', 'phone tabs share the width'],
+    ['        var catX = ((this.DrawTo.Width*0.5) - (menuWidth*0.5));', '        var catX = App.SettingsPhone ? 0 : ((this.DrawTo.Width*0.5) - (menuWidth*0.5));', 'phone tabs from the left edge'],
+    ['(108*units)', '((60+App.SettingsRow)*units)', 'phone rows taller', 'all'],
+    ['(156*units)', '((60+2*App.SettingsRow)*units)', 'phone rows taller', 'all'],
+    ['48*App.Unit', 'App.SettingsRow*App.Unit', 'phone rows taller', 'all'],
+    // ABOUT's three people side by side don't fit a phone: scene.ts draws them one a row there (owner, 2026-11-18).
+    ['            var xs = [x1,x2,x3];', '            if (!App.SettingsPhone) {\n            var xs = [x1,x2,x3];', 'phone: people drawn by scene.ts'],
+    ['            // END TAB 3 //', '            }\n            // END TAB 3 //', 'phone: people drawn by scene.ts']],
+  'UI/Options/OptionMeter.ts': [['        var height = 48*units;', '        var height = App.SettingsRow*units;', 'phone rows taller (Settings only)']],
   // v1 sized everything from the width alone, so a short wide view (a plugin above GarageBand's keyboard on an iPad)
   // got panels taller than the view: past App.MaxAspect (shim.ts) the unit follows the height (owner, 2026-11-16).
   'Metrics.ts': [['App.Unit = (width/this._ScreenDivision) * this.PixelRatio;',
@@ -80,9 +93,9 @@ export function portUi() {
   const written: string[] = [];
   for (const rel of PORTED) {
     let src = readFileSync(join(SRC, rel), 'utf8');
-    for (const [from, to, why] of REWRITES[rel] ?? []) {
+    for (const [from, to, why, all] of REWRITES[rel] ?? []) {
       if (!src.includes(from)) throw new Error(`${rel}: rewrite "${why}" no longer matches`);
-      src = src.replace(from, to);
+      src = all ? src.split(from).join(to) : src.replace(from, to);
     }
     const names = new Set<string>(['App', 'Utils']);
     const body = src.split('\n').filter(line => {

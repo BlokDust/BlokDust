@@ -1,5 +1,4 @@
 import { App, Point, Size } from '../v1ui/shim.ts';
-import { Device } from '../v1ui/ported/Device';
 import { OptionSwitch } from '../v1ui/ported/UI/Options/OptionSwitch';
 import { SUPPORT } from '../../../shared/support.ts';
 import type { SupportClient } from './client.ts';
@@ -62,7 +61,7 @@ export class FeedbackPanel {
     this.form.hidden = !shown;
     if (!shown) return;
     const ctx = panel.Ctx as CanvasRenderingContext2D, u = App.Unit, pr = App.Metrics.PixelRatio;
-    const w = Math.min(420 * u, App.Width * (App.Metrics.Device === Device.mobile ? 5 : 4) / 7);
+    const w = App.SettingsPhone ? App.SettingsMenuWidth(App.Width) : Math.min(420 * u, App.SettingsMenuWidth(App.Width));  // a phone: the Settings page's width (owner, 2026-11-18)
     const x = (App.Width - w) / 2, y = panel.OffsetY + 120 * u + tab.YOffset;
     const txt = App.Palette[App.ThemeManager.Txt], menu = App.ThemeManager.MenuOrder, clipTop = panel.OffsetY + 60 * u;
     const place = (id: string, px: number, py: number, width: number, height: number, font = App.Metrics.TxtMid) => {

@@ -19,9 +19,9 @@ import { activity } from '../account/activity.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
 
-/** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel, 5/7 on a phone (Settings › DOWNLOAD and ACCOUNT
- * use it too; owner, 2026-11-17, CHG-0035). */
-export function pageWidth(): number { return (App.MainScene?.Width || App.Width) / 7 * (App.Metrics.Device === Device.mobile ? 5 : 4); }
+/** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel; on a phone the width less 80 units (owner,
+ * 2026-11-18). Settings › DOWNLOAD and ACCOUNT use it too (CHG-0035). */
+export function pageWidth(): number { return App.SettingsMenuWidth(App.MainScene?.Width || App.Width); }
 
 const COPY = {
   line: 'Sign in to keep your patches on every device.',
@@ -30,7 +30,7 @@ const COPY = {
   noPasskey: 'No passkey was chosen. Choose a name to make a new account with a passkey on this device, or go back to try again.',
   createButton: 'Create With Passkey', saveName: 'Save Name', back: 'Back', stats: 'Stats',
   addPasskey: 'Add Passkey', addAnother: 'Add Another Passkey', signOut: 'Sign Out', deleteAccount: 'Delete Account', cancel: 'Cancel', deleteButton: 'Delete',
-  deleteTitle: 'Delete your account?', deleteLine: 'Your account, its passkeys and all its patches are deleted. Links to those patches stop working.',
+  deleteTitle: 'Delete your account?', deleteLine: 'This will permanently delete your account and all patches. Shared links to your patches will stop working.',
   noAccounts: 'Accounts are not available here.', working: 'one moment',
   methods: 'Sign-in methods', google1: 'Google', apple1: 'Apple', passkeyN: (n: number) => `${n} ${n === 1 ? 'passkey' : 'passkeys'}`,
   patches: 'Patches', remixes: 'Remixes', likes: 'Likes', opens: 'Plays', favourites: 'Favourite blocks',
@@ -40,6 +40,9 @@ const COPY = {
 /** Where each part of the stats starts (units from the page's top). Numbers: their tops are 5 units under a row's y,
  * their labels' baselines 52; FAVOURITE BLOCKS' title tops are 2 units under its y. */
 const STATS_Y = { row1: 27, row2: 96, favourites: 168, buttons: 278 } as const;
+/** On a phone (owner, 2026-11-18): two numbers a row (four rows, 69 units apart), then FAVOURITE BLOCKS in two rows of
+ * three (100 units apart; the most remixed patch on its own line under the title), then the buttons. */
+const PHONE = { rows: 4, rowGap: 69, favourites: 306, favRow: 100, remixed: 18, buttons: 532 } as const;
 /** Favourite blocks (from FAVOURITE BLOCKS' y): the icons at half v1's menu size (owner, 2026-11-16), centred 31 units
  * down; their names' baselines 62 down (a second line 14 under). */
 const FAV = { scale: 0.5, icon: 42, name: 73 } as const;
@@ -177,7 +180,7 @@ export class AccountPage {
   private statsHeight(): number {
     const st = this.Account?.stats;
     if (!st) return 35;
-    return STATS_Y.buttons;
+    return App.SettingsPhone ? PHONE.buttons : STATS_Y.buttons;
   }
   /** One row of numbers, four columns across the page: the number large and light, its label under it. */
   private numberRow(cells: [string, string][], y: number, L: number): void {
@@ -192,31 +195,35 @@ export class AccountPage {
   private drawStats(top: number, L: number, R: number): void {
     const st = this.Account?.stats, c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
     if (!st) { App.AnimationsLayer.DrawSprite(c, 'loading', App.Width * 0.5, top + 25 * u, 16, true); return; }
-    let y = top + STATS_Y.row1 * u;
-    this.numberRow([[shortNumber(st.patches), COPY.patches], [shortNumber(st.remixes), COPY.remixes], [shortNumber(st.likes), COPY.likes], [shortNumber(st.opens), COPY.opens]], y, L);
-    y = top + STATS_Y.row2 * u;
     // R16: the running totals, with what this browser counted and hasn't sent yet (so they move without a request).
     const p = activity.pending(), ms = st.playMs + p.playMs, hours = ms >= 3_600_000;
     const played = hours ? (ms < 36_000_000 ? (Math.floor(ms / 360_000) / 10).toString() : shortNumber(Math.floor(ms / 3_600_000))) : shortNumber(Math.floor(ms / 60_000));
-    this.numberRow([[played, hours ? COPY.hoursPlayed : COPY.minutesPlayed], [shortNumber(st.blocksAdded + p.blocks), COPY.blocksAdded],
-      [shortNumber(Math.floor(st.particles + p.particles)), COPY.particles], [shortNumber(Math.floor(st.laserTurns + p.laserTurns)), COPY.laserTurns]], y, L);
-    y = top + STATS_Y.favourites * u;
+    const cells: [string, string][] = [[shortNumber(st.patches), COPY.patches], [shortNumber(st.remixes), COPY.remixes], [shortNumber(st.likes), COPY.likes], [shortNumber(st.opens), COPY.opens],
+      [played, hours ? COPY.hoursPlayed : COPY.minutesPlayed], [shortNumber(st.blocksAdded + p.blocks), COPY.blocksAdded],
+      [shortNumber(Math.floor(st.particles + p.particles)), COPY.particles], [shortNumber(Math.floor(st.laserTurns + p.laserTurns)), COPY.laserTurns]];
+    const phone = App.SettingsPhone;
+    if (phone) for (let r = 0; r < PHONE.rows; r++) this.numberRow(cells.slice(r * 2, r * 2 + 2), top + (STATS_Y.row1 + r * PHONE.rowGap) * u, L);
+    else { this.numberRow(cells.slice(0, 4), top + STATS_Y.row1 * u, L); this.numberRow(cells.slice(4), top + STATS_Y.row2 * u, L); }
+    let y = top + (phone ? PHONE.favourites : STATS_Y.favourites) * u;
     // Favourite blocks: v1's menu icons (BlockSprites, as the blocks menu draws them) at half size over their names.
     App.FillColor(c, txt); c.font = App.Metrics.TxtMid; c.textAlign = 'left';
     c.fillText(COPY.favourites.toUpperCase(), L, y + 10 * u);
-    // The most remixed patch on the same line, at the right.
+    // The most remixed patch on the same line, at the right (a phone: on its own line under it).
     if (st.mostRemixed) {
       const n = st.mostRemixed.n, t = st.mostRemixed.title || 'Untitled';
-      c.font = App.Metrics.TxtItalic2; c.textAlign = 'right';
-      c.fillText(`${COPY.mostRemixed}: ${t.length > 24 ? `${t.slice(0, 23)}…` : t}, ${n} ${n === 1 ? 'time' : 'times'}`, R, y + 10 * u);
+      c.font = App.Metrics.TxtItalic2; c.textAlign = phone ? 'left' : 'right';
+      c.fillText(`${COPY.mostRemixed}: ${t.length > 24 ? `${t.slice(0, 23)}…` : t}, ${n} ${n === 1 ? 'time' : 'times'}`, phone ? L : R, y + (phone ? 10 + PHONE.remixed : 10) * u);
       c.textAlign = 'left';
     }
-    const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item);
+    if (phone) y += PHONE.remixed * u;
+    // Five in a row; a phone: two rows of three.
+    const favs = st.favourites.map(f => ({ ...f, item: menuItem(f.type) })).filter(f => f.item).slice(0, phone ? 6 : 5);
     if (!favs.length) { c.font = App.Metrics.TxtItalic2; c.fillText(COPY.noFavourites, L, y + FAV.icon * u); }
-    const w = 84 * u;
-    favs.forEach((f, i) => {
+    const w = phone ? this.pageW() / 3 : 84 * u;
+    favs.forEach((f, k) => {
+      const i = phone ? k % 3 : k, rowY = y + (phone ? Math.floor(k / 3) * PHONE.favRow * u : 0);
       const x = L + w * (i + 0.5);
-      const iy = y + FAV.icon * u;
+      const iy = rowY + FAV.icon * u;
       c.save(); c.translate(x, iy); c.scale(FAV.scale, FAV.scale); c.translate(-x, -iy);
       App.BlockSprites.DrawSprite({ Ctx: c }, new Point(x, iy), false, f.item!.name.toLowerCase());
       c.restore();
@@ -225,8 +232,8 @@ export class AccountPage {
       const name = f.item!.name.toUpperCase(), words = name.split(' ');
       if (words.length > 1 && c.measureText(name).width > w - 6 * u) {
         const cut = Math.ceil(words.length / 2);
-        c.fillText(words.slice(0, cut).join(' '), x, y + FAV.name * u); c.fillText(words.slice(cut).join(' '), x, y + (FAV.name + 14) * u);
-      } else c.fillText(name, x, y + FAV.name * u);
+        c.fillText(words.slice(0, cut).join(' '), x, rowY + FAV.name * u); c.fillText(words.slice(cut).join(' '), x, rowY + (FAV.name + 14) * u);
+      } else c.fillText(name, x, rowY + FAV.name * u);
     });
   }
 

@@ -321,7 +321,7 @@ const tests: Record<string, () => Promise<void>> = {
     // The demo patch (the first save, with a Tone added on device B) has Tones and an Emitter: Tone is in 3 patches only
     // if the older one was counted.
     check('R15: favourite blocks, in the most patches first, then the most of them (an older patch counted on the way)',
-      /^source\.tone:3:\d+$/.test(favs?.[0] ?? '') && favs?.[1].startsWith('power.emitter:3:') && favs.length === 5 && !favs.some((f: string) => f.startsWith('power.laser')), favs);
+      /^source\.tone:3:\d+$/.test(favs?.[0] ?? '') && favs?.[1].startsWith('power.emitter:3:') && favs.length === 6 && !favs.slice(0, 5).some((f: string) => f.startsWith('power.laser'))  /* six: a phone shows two rows of three */, favs);
     const plain = await api(a, 'GET', 'me');
     check('R15: /api/me without ?stats=1 does no stats work (loading the page)', plain.json.user && !('stats' in plain.json.user), plain.json.user);
     await a.page.screenshot({ path: `${OUT}/account-stats.png` });
@@ -424,7 +424,7 @@ const tests: Record<string, () => Promise<void>> = {
     const gone = await api(a, 'GET', `patches/${id}`);
     const after = await a.page.evaluate(() => ({ keys: ((window as any).__bd_probe.scene.PatchesPanel.Items as { key: string }[]).map(r => r.key), comp: (window as any).__bd_probe.v1App.CompositionId, url: location.search }));
     check('R8a: DELETE asks first, saying the link and gallery stop working; then the link answers 410 and the stage patch is unlinked',
-      /no longer be able to open it/.test(line) && gone.status === 410 && !after.keys.includes(`acct:${id}`) && !after.keys.some(k => k === 'mine:Doomed song') && after.comp === null && !after.url.includes(id),
+      /no longer be able to open this save\. If it.s published, it will also be removed from the gallery\./.test(line) && gone.status === 410 && !after.keys.includes(`acct:${id}`) && !after.keys.some(k => k === 'mine:Doomed song') && after.comp === null && !after.url.includes(id),
       { line, status: gone.status, after });
     await a.page.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.ClosePanel()); await a.page.waitForTimeout(700);
   },
@@ -447,7 +447,12 @@ const tests: Record<string, () => Promise<void>> = {
     await a.page.waitForTimeout(600);  // its slide away ends (v1's panel tween)
     await openAccount(a.page);  // signing in went back to the stage
     await press(a.page, 'deleteAccount', 500);
-    check('DELETE ACCOUNT asks first', (await pp(a.page)).view === 'delete', { signedIn, now: await pp(a.page) });
+    // Owner (2026-11-18): closing Settings (×) while it asks is CANCEL: it opens on the account next time.
+    await a.page.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.ClosePanel()); await a.page.waitForTimeout(700);
+    await openAccount(a.page);
+    const reopened = (await pp(a.page)).view;
+    await press(a.page, 'deleteAccount', 500);
+    check('DELETE ACCOUNT asks first; closing Settings while it asks is CANCEL', (await pp(a.page)).view === 'delete' && reopened === 'main', { signedIn, reopened, now: await pp(a.page) });
     await press(a.page, 'deleteOk'); await settled(a.page);
     const gone = await api(a, 'GET', `patches/${shared.firstPatch}`), me = await api(a, 'GET', 'me');
     const again = await api(a, 'POST', 'auth/passkey/login/options', {}, { origin: base });

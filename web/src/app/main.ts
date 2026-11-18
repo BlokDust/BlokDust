@@ -542,7 +542,7 @@ async function main() {
     },
     // Owner's wording (2026-11-10); the plugin's file really goes to the Trash, so it says so (iPad has no Trash).
     removeLine: item => {
-      if (item.key.startsWith('acct:')) return 'Anyone with its link, and the gallery if it’s published, will no longer be able to open it.';
+      if (item.key.startsWith('acct:')) return 'Anyone with the link will no longer be able to open this save. If it’s published, it will also be removed from the gallery.';
       return !juce ? 'This patch will be removed from the patches list. Your local downloaded patches and generated links remain untouched.'
         : ios ? 'This patch file will be deleted. Links you generated remain untouched.'
         : 'This patch file will be moved to the Trash. Links you generated remain untouched.';

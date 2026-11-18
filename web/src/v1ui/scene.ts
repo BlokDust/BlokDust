@@ -801,6 +801,9 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
       p.Populate();
       (p.MenuItems as any[]).forEach((m, i) => { if (keep[i]) { m.Selected = keep[i].Selected; m.YOffset = keep[i].YOffset; } });
     };
+    // Closing Settings (×) while DELETE ACCOUNT asks is CANCEL (owner, 2026-11-18: it opened on the question again).
+    const closeSettings = p.ClosePanel.bind(p);
+    p.ClosePanel = () => { if (account?.View === 'delete') account.View = 'main'; closeSettings(); };
     /** Open Settings on SIGN IN / ACCOUNT (back from Google, the signed-in mark on the stage). */
     p.openAccount = () => {
       p._OpenTab = 4;
@@ -820,7 +823,10 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   const downloads = () => {
     const u = App.Unit, W = App.Width, y = p.OffsetY + 120 * u + (p.MenuItems[3]?.YOffset ?? -p.DrawTo.Height) + 70 * u;
     const pw = pageWidth(), bw = (pw - 30 * u) / 3, left = W * 0.5 - pw * 0.5;
-    const at = (i: number) => ({ x: left + i * (bw + 15 * u), y, w: bw, h: 40 * u, cx: left + i * (bw + 15 * u) + bw * 0.5 });
+    // A phone (owner, 2026-11-18): one a row, the page's width, its line under it.
+    const at = (i: number) => App.SettingsPhone
+      ? { x: left, y: y + i * 110 * u, w: pw, h: 40 * u, cx: left + pw * 0.5 }
+      : { x: left + i * (bw + 15 * u), y, w: bw, h: 40 * u, cx: left + i * (bw + 15 * u) + bw * 0.5 };
     const ipad = IPAD_APP_STORE_URL ? { file: '', url: IPAD_APP_STORE_URL, sha256: '', bytes: 0, store: true } : null;
     return [
       { key: 'macos' as const, label: 'macOS', release: RELEASE.macos as (Release & { store?: boolean }) | null, ...at(0), line: DOWNLOAD.macos },
@@ -879,15 +885,16 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     const opts = p.Options as any[], i = opts.findIndex(o => o.Setting === 'tutorial');
     if (i < 0) return;
     if (App.IsPlugin) { opts[i] = { Type: 'hidden', Name: opts[i].Name, Selected: false, HandleRoll: [false, false], Position: opts[i].Position, Size: opts[i].Size, Draw() {} }; return; }
-    const t = new Slider(new Point(0, 0), new Size(1, 48 * App.Unit), p.Margin, 120, 40, 240, true, 'Tempo', 'tempo', false) as any;
+    const t = new Slider(new Point(0, 0), new Size(1, App.SettingsRow * App.Unit), p.Margin, 120, 40, 240, true, 'Tempo', 'tempo', false) as any;
     t.Type = 'tempo';
     t.DisplayConversion = (v: number) => `${Math.round(v)} BPM`;
     placeTempo(t);
     opts[i] = t;
-    opts.push(new OptionActionButton(new Point(0, 0), new Size(1, 48 * App.Unit), 'Tour', 'Launch Tour', 'tutorial'));  // v1's own row
+    opts.push(new OptionActionButton(new Point(0, 0), new Size(1, App.SettingsRow * App.Unit), 'Tour', 'Launch Tour', 'tutorial'));  // v1's own row
   };
   /** The TOUR row (web): under Tempo, 48 units down, where v1 would have put a fifth row. */
-  const TOUR_Y = 204;
+  /** 204 units (v1's rows: 60, then 48 each); taller rows on a phone (App.SettingsRow). */
+  const tourY = () => 60 + 3 * App.SettingsRow;
   const tourRow = () => (p.Options as any[]).findIndex(o => o.Type === 'actionbutton' && o.Setting === 'tutorial');
   const openPanel = p.OpenPanel.bind(p);
   p.OpenPanel = () => { const i = tempoRow(); if (i >= 0) placeTempo(p.Options[i]); openPanel(); };
@@ -923,10 +930,57 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
   // blurbs of different lengths. v1 draws and hit-tests the websites on one line and the Twitter names on the next, so
   // the websites are shown, and pressed, in the Twitter names' places.
   const PEOPLE = ['twyman', 'phillips', 'silverton'] as const;
+  /** ABOUT on a phone (owner, 2026-11-18): the three people one a row, each v1's icon (a third larger) at the left and
+   * the blurb and website at its right. v1 draws them side by side (skipped there by bd v1 port-ui). */
+  const ICONS: [number, [number, number][]][][] = [
+    [[4, [[0, -3], [1, -3], [2, -2], [1, -1]]], [4, [[1, 0], [2, -1], [2, 0]]], [3, [[0, 0], [0, -3], [1, -2], [1, -1]]]],
+    [[5, [[0, 0], [0, -1], [1, -2], [3, -2], [1, 0]]], [10, [[0, 0], [0, -1], [1, -2], [1, 0]]], [10, [[0, -3], [1, -3], [0, -2]]]],
+    [[7, [[0, 0], [1, -3], [2, -3], [2, -1], [1, 0]]], [9, [[0, 0], [0, -2], [1, -3], [1, -1]]], [9, [[2, 0], [3, 0], [3, -1]]]],
+  ];
+  const peoplePhone = () => {
+    const ctx = p.Ctx as CanvasRenderingContext2D, u = App.Unit, pw = pageWidth(), L = App.Width * 0.5 - pw * 0.5, g = App.GridSize * 1.35;
+    const top = p.OffsetY + 120 * u + (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height);
+    ctx.font = App.Metrics.TxtLarge;
+    let y = top, line = '';
+    for (const word of String(p._Attribution.about).split(' ')) { const t = line ? `${line} ${word}` : word; if (ctx.measureText(t).width > pw && line) { y += 16 * u; line = word; } else line = t; }
+    y += 16 * u + 40 * u;
+    const tx = L + 3 * g + 20 * u, tw = pw - (tx - L);
+    ctx.font = App.Metrics.TxtItalic2;
+    return PEOPLE.map((k, i) => {
+      const a = p._Attribution[k], lines: string[] = [];
+      line = '';
+      for (const word of String(a.blurb).split(' ')) { const t = line ? `${line} ${word}` : word; if (ctx.measureText(t).width > tw && line) { lines.push(line); line = word; } else line = t; }
+      if (line) lines.push(line);
+      const rowTop = y, urlY = rowTop + 10 * u + lines.length * 14 * u;
+      y = Math.max(rowTop + 3 * g, urlY) + 30 * u;
+      return { i, icon: ICONS[i], x: L, base: rowTop + 3 * g, tx, lines, rowTop, urlY, url: String(a.url ?? ''), urlW: ctx.measureText(String(a.url ?? '')).width, g };
+    });
+  };
+  const drawPeoplePhone = () => {
+    if (!App.SettingsPhone || (p.MenuItems[2]?.YOffset ?? -p.DrawTo.Height) <= -p.DrawTo.Height) return;
+    const ctx = p.Ctx as CanvasRenderingContext2D, u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
+    for (const r of peoplePhone()) {
+      for (const [pal, pts] of r.icon) {
+        App.FillColor(ctx, App.Palette[pal]); ctx.beginPath();
+        pts.forEach(([x, y], j) => { const px = r.x + x * r.g, py = r.base + y * r.g; if (j) ctx.lineTo(px, py); else ctx.moveTo(px, py); });
+        ctx.closePath(); ctx.fill();
+      }
+      App.FillColor(ctx, txt); App.StrokeColor(ctx, txt); ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
+      r.lines.forEach((l, j) => ctx.fillText(l, r.tx, r.rowTop + 10 * u + j * 14 * u));
+      if (r.url && !App.NoLinks) {
+        ctx.fillText(r.url, r.tx, r.urlY + 4 * u);
+        if (p._RollOvers[r.i + 1]) { ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(r.tx, r.urlY + 6 * u); ctx.lineTo(r.tx + r.urlW, r.urlY + 6 * u); ctx.stroke(); }
+      }
+    }
+  };
+  /** Tests: ABOUT's people on a phone (CSS px). */
+  p.peoplePhone = () => { const pr = App.Metrics.PixelRatio; return App.SettingsPhone ? peoplePhone().map(r => ({ icon: [r.x / pr, (r.base - 3 * r.g) / pr], text: [r.tx / pr, r.rowTop / pr], url: r.url })) : null; };
   const hitTests = p.HitTests.bind(p);
   p.HitTests = (pt: { x: number; y: number }) => {
     hitTests(pt);
     for (let i = 1; i <= 3; i++) { p._RollOvers[i] = !!p._RollOvers[i + 3] && !!p._Attribution[PEOPLE[i - 1]].url; p._RollOvers[i + 3] = false; }
+    // A phone: the websites are where drawPeoplePhone puts them.
+    if (App.SettingsPhone) for (const r of peoplePhone()) p._RollOvers[r.i + 1] = p._OpenTab === 2 && !!r.url && Dimensions.hitRect(r.tx - 4 * App.Unit, r.urlY - 10 * App.Unit, r.urlW + 8 * App.Unit, 20 * App.Unit, pt.x, pt.y);
     // No links (hideLinks): v1 hit-tests About's websites and Twitter names (rollovers 1–6) over fixed widths.
     if (App.NoLinks) for (let i = 1; i <= 6; i++) p._RollOvers[i] = false;
     for (let i = 7; i <= 14; i++) p._RollOvers[i] = false; // Removed Connect social/guide targets.
@@ -937,16 +991,16 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     downloadHover = p._OpenTab === 3 ? downloads().findIndex(b => !!b.release && Dimensions.hitRect(b.x, b.y, b.w, b.h, pt.x, pt.y)) : -1;
     if (account) { if (p._OpenTab === 4) account.hit(pt, accountTop()); else account.hit({ x: -1e9, y: -1e9 }, accountTop()); }
     const i = tempoRow();
-    if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + 156 * f.u, p.Range + 20 * f.u, 48 * App.Unit, pt.x, pt.y);
+    if (i >= 0) p._OptionsRoll[i] = Dimensions.hitRect(p.Margin - 10 * f.u, p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + (60 + 2 * App.SettingsRow) * f.u, p.Range + 20 * f.u, App.SettingsRow * App.Unit, pt.x, pt.y);
     const k = tourRow();  // v1 hit-tests an action button at its own row (156): the tour's is lower
     if (k >= 0) {
-      const ty = p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + TOUR_Y * f.u, o = p.Options[k];
-      p._OptionsRoll[k] = Dimensions.hitRect(p.Margin - 10 * f.u, ty, p.Range + 20 * f.u, 48 * App.Unit, pt.x, pt.y);
+      const ty = p.OffsetY + 120 * f.u + p.MenuItems[0].YOffset + tourY() * f.u, o = p.Options[k];
+      p._OptionsRoll[k] = Dimensions.hitRect(p.Margin - 10 * f.u, ty, p.Range + 20 * f.u, App.SettingsRow * App.Unit, pt.x, pt.y);
       o.HandleRoll[0] = Dimensions.hitRect(p.Margin + p.Range * 0.25, ty, p.Range * 0.5, o.Size.height, pt.x, pt.y);
     }
   };
   /** Tests: the TOUR button's centre in CSS px (null: no row). */
-  p.tourButton = () => { const pr = App.Metrics.PixelRatio, u = App.Unit; return tourRow() < 0 ? null : { x: (p.Margin + p.Range * 0.5) / pr, y: (p.OffsetY + 120 * u + p.MenuItems[0].YOffset + TOUR_Y * u + 24 * u) / pr }; };
+  p.tourButton = () => { const pr = App.Metrics.PixelRatio, u = App.Unit; return tourRow() < 0 ? null : { x: (p.Margin + p.Range * 0.5) / pr, y: (p.OffsetY + 120 * u + p.MenuItems[0].YOffset + tourY() * u + 24 * u) / pr }; };
   const setTempo = (x: number) => {
     const o = p.Options[tempoRow()];
     o.Position.x = Math.max(0, Math.min(p.Range, x - p.Margin));
@@ -1001,8 +1055,9 @@ function release1Settings(panel: SettingsPanel, host: SceneHost): void {
     cctx.beginPath(); cctx.rect(0, p.OffsetY + 60 * App.Unit, App.Width, App.Height); cctx.clip();
     try {
       const k = tourRow();  // SETTINGS' TOUR row, sliding with its tab as v1's rows do
-      if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height) p.Options[k].Draw(cctx, App.Unit, k, p, p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + TOUR_Y * App.Unit);
+      if (k >= 0 && p.MenuItems[0].YOffset > -p.DrawTo.Height) p.Options[k].Draw(cctx, App.Unit, k, p, p.OffsetY + 120 * App.Unit + p.MenuItems[0].YOffset + tourY() * App.Unit);
       drawDownload();
+      drawPeoplePhone();
       if (account && (p.MenuItems[4]?.YOffset ?? -p.DrawTo.Height) > -p.DrawTo.Height) account.draw(accountTop());
       host.feedback?.draw(p);  // CONNECT's form slides in under the tabs too (owner, 2026-11-18)
     } finally { cctx.restore(); }

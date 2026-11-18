@@ -27,7 +27,7 @@ export class OptionMeter  extends Option {
     Draw(ctx,units,i,panel,yoveride?) {
         super.Draw(ctx,units,i,panel);
         var width = panel.Range;
-        var height = 48*units;
+        var height = App.SettingsRow*units;
         var x = panel.Margin;
         var y = yoveride || 0;
         var dataType = Math.round(units*10);

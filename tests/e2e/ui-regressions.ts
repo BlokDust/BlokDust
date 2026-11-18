@@ -2900,6 +2900,32 @@ Object.assign(tests, {
     await p.close();
     return [r.clip === link && !!r.saved?.copied && /link copied/i.test(r.bar), { link, ...r }];
   },
+  /** Owner (2026-11-18, iPhone): Settings on a phone. The tabs share the width left of the × (SIGN IN ran under it);
+   * the rows are nearly the screen's width and taller; ABOUT's people and DOWNLOAD's buttons go one a row; and a text
+   * field no longer zooms the page in for good (viewport maximum-scale=1). */
+  async 'settings-phone-layout'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
+    await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.OpenPanel()); await p.waitForTimeout(1300);
+    const r = await p.evaluate(() => {
+      const s = (window as any).__bd_probe.scene.SettingsPanel, a = (window as any).__bd_probe.v1App, W = a.Width, u = a.Unit;
+      const last = s.MenuItems[s.MenuItems.length - 1], tabsRight = last.Position.x + last.Size.width / 2, crossLeft = W * 0.5 + s.Range * 0 + (a.SettingsMenuWidth(W) / 2) + 12.5 * u;
+      return { W, tabsRight, crossLeft, range: s.Range, oldRange: W / 7 * 5 - (a.SettingsMenuWidth(W) - s.Range), row: a.SettingsRow, viewport: document.querySelector('meta[name=viewport]')?.getAttribute('content') ?? '' };
+    });
+    const tapTab = async (i: number) => { const at = await p.evaluate(k => { const s = (window as any).__bd_probe.scene.SettingsPanel, a = (window as any).__bd_probe.v1App; return [s.MenuItems[k].Position.x / devicePixelRatio, (s.OffsetY + 30 * a.Unit) / devicePixelRatio]; }, i); await p.touchscreen.tap(at[0], at[1]); await p.waitForTimeout(1400); };
+    await tapTab(2);
+    const people = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.peoplePhone());
+    await tapTab(3);
+    const downloads = await p.evaluate(() => (window as any).__bd_probe.scene.SettingsPanel.downloadButtons());
+    await ctx.close();
+    const ok = r.tabsRight <= r.crossLeft && r.range > r.oldRange && r.row > 48 && /maximum-scale=1/.test(r.viewport)
+      && people?.length === 3 && people[1].icon[1] > people[0].icon[1] && people[0].icon[0] === people[1].icon[0] && people[0].text[0] > people[0].icon[0]
+      && downloads.length === 3 && downloads[1].y > downloads[0].y && downloads[0].x === downloads[1].x;
+    return [ok, { r, people, downloads }];
+  },
+
   /** Owner (2026-11-18): sliding SAVE / SHARE out, its name field (a page element, not the canvas) showed above the
    * tabs. Every field is cut off at the tabs' foot while its page slides. */
   async 'patches-fields-under-tabs'(errors: string[]) {

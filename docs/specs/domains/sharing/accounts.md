@@ -56,13 +56,14 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
 - **R8.** `GET /api/me/patches` lists the account's patches, newest first. The OPEN tab lists them first ("Saved …":
   every patch there is the user's, so no "Your account"; owner, 2026-11-18), once each: this browser's own copies are
   listed after them only when they aren't the account's (a copy remembers its link; older copies are matched by name).
-- **R8a.** *(CHG-0037)* Each account patch in OPEN has a bin. Deleting asks first ("Anyone with its link, and the
-  gallery if it's published, will no longer be able to open it.") and really deletes it (SPEC-SHARING-BACKEND R4,
+- **R8a.** *(CHG-0037)* Each account patch in OPEN has a bin. Deleting asks first ("Anyone with the link will no
+  longer be able to open this save. If it's published, it will also be removed from the gallery.") and really deletes it (SPEC-SHARING-BACKEND R4,
   R4b): it leaves the gallery, its link answers 410, and if it is on the stage the stage keeps it, unlinked (SAVE makes
   a new link). Unpublish is the way to leave the gallery and keep the link.
 - **R9.** A patch saved while signed in belongs to the account. Signing in claims the patches this browser holds edit
   tokens for. The owner can save over the account's patches from any device signed in to it, without the edit token.
-- **R10.** DELETE ACCOUNT (asked first) deletes the account, its passkeys, Google link, sessions and patches. Their
+- **R10.** DELETE ACCOUNT (asked first: "This will permanently delete your account and all patches. Shared links to
+  your patches will stop working."; closing Settings is CANCEL) deletes the account, its passkeys, Google link, sessions and patches. Their
   ids stay taken, so old links never open someone else's patch. Their likes come off only the patches they liked.
   Per-IP limited, like sign-in.
 - **R11.** `GET /api/patches/:id` says `mine` when the signed-in account owns the patch, and `by` (the owner's
@@ -87,7 +88,9 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   - PATCHES (the account's), REMIXES (its patches made from someone else's: `parent` owned by another or nobody),
     LIKES (on its gallery patches) and PLAYS (its patches opened in the app, by anyone; owner, 2026-11-16: was OPENS), each a number in the Settings sliders'
     light type over a mid-type label; numbers past 9,999 are short (12.3K, 1.2M);
-  - FAVOURITE BLOCKS: up to five block types, in the most of the account's patches first, then the most of them,
+  - on a phone (CHG-0037): the numbers two a row (PATCHES · REMIXES, LIKES · PLAYS, HOURS PLAYED · BLOCKS ADDED,
+    PARTICLES · LASER TURNS), FAVOURITE BLOCKS in two rows of three (six), the most remixed line under its title;
+  - FAVOURITE BLOCKS: up to five block types (the server sends six), in the most of the account's patches first, then the most of them,
     each v1's menu icon over its menu name (two lines when wider than its column); or a line saying to save a patch;
   - "Most remixed: TITLE, N times" at the right of the FAVOURITE BLOCKS line, when others have made patches from one
     of the account's.

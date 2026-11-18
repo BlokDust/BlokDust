@@ -79,6 +79,6 @@ export async function accountStats(env: Env, userId: string, since: number): Pro
     likes: first<{ n: number }>(likes)?.n ?? 0,
     playMs: t?.play_ms ?? 0, blocksAdded: t?.blocks_added ?? 0, particles: t?.particles ?? 0, laserTurns: t?.laser_turns ?? 0,
     favourites: [...fav].map(([type, f]) => ({ type, ...f }))
-      .sort((a, b) => b.patches - a.patches || b.count - a.count || a.type.localeCompare(b.type)).slice(0, 5),
+      .sort((a, b) => b.patches - a.patches || b.count - a.count || a.type.localeCompare(b.type)).slice(0, 6),  // a phone shows six (two rows of three)
   };
 }

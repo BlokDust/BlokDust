@@ -34,6 +34,11 @@ Owner's second round (2026-11-18):
 - **Own patches don't share a name** (SPEC-PATCH-FORMAT-V2): " (2)" in the name field before a new link saves.
 - **Links to no patch** (SPEC-SHARING-BACKEND R4b): 410 for deleted; the message bar says why; a blank stage.
 
+Owner's third round (2026-11-18, iPhone):
+- Delete wording for a patch and the account; × while DELETE ACCOUNT asks is CANCEL (SPEC-SHARING-ACCOUNTS R8a, R10).
+- Settings on a phone (SPEC-VISUAL-V1-PARITY R22): full-width tabs and rows, taller rows, About and Download one a row,
+  no lasting zoom into text fields; ACCOUNT two numbers a row and six favourites (SPEC-SHARING-ACCOUNTS R15).
+
 ## Out of scope
 - A "deletion pending" grace period (owner, 2026-11-18: not needed).
 

@@ -128,6 +128,11 @@ export const App: any = {
   DragOffset: new Point(), ScaledDragOffset: new Point(),
   /** Running inside the plugin's WebView (labels and options differ: CHG-0004). */
   IsPlugin: false,
+  /** Settings on a phone (owner, 2026-11-18): the page is the screen's width less 40 units each side (the close cross
+   * sits in the right one), and each row is taller (v1: 4/7 of the width, 48-unit rows). Desktop keeps v1's. */
+  get SettingsPhone(): boolean { return this.Metrics?.Device === 0; },
+  SettingsMenuWidth(w: number): number { return this.SettingsPhone ? w - 80 * this.Unit : (w / 7) * 4; },
+  get SettingsRow(): number { return this.SettingsPhone ? 62 : 48; },
   /** Links can't open here (a plugin inside another iPad app): scene.ts hideLinks. */
   NoLinks: false,
   Blocks: [] as any[], SubCanvas: [] as HTMLCanvasElement[], CompositionId: null as string | null, SessionId: null as string | null,

@@ -15,3 +15,10 @@ Second round (owner, 2026-11-18):
 - [x] 10. One OPEN list, account patches deletable (accounts e2e: open-list-delete).
 - [x] 11. Own patch names unique, " (2)" (save-names-unique).
 - [x] 12. Links to no patch: 410 for deleted, message bar, blank stage, autosave kept (sharing e2e: missing-links).
+
+Third round (owner, 2026-11-18):
+
+- [x] 13. Delete wording (patch and account); × while DELETE ACCOUNT asks is CANCEL (accounts e2e).
+- [x] 14. Phone Settings: tabs clear of ×, wider and taller rows, About people and Download buttons one a row (settings-phone-layout).
+- [x] 15. iOS text fields no longer zoom the page (viewport maximum-scale=1; settings-phone-layout).
+- [x] 16. Phone ACCOUNT: numbers two a row, favourites two rows of three.
