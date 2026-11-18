@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "gate",
   "name": "Gate",
-  "description": "A void that power opens: closed it absorbs particles and laser beams; powered by a Power, Toggle, Pulse, Counter or Chance beside it, they pass.",
+  "description": "A switch that either allows or absorbs particles and laser beams depending on its state.",
   "v1": {
     "type": null
   },
