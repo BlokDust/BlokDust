@@ -1,14 +1,14 @@
 // The post-2.0 blocks (SCOPE-0005) in v1's UI. v1 knows nothing of them, so this file gives the ported UI what it
-// needs: their menu items (each category sorted by name), their menu icons (drawn from the manifest geometry, as
+// needs: their menu items (in MENU_ORDER), their menu icons (drawn from the manifest geometry, as
 // v1's BlockSprites draws its own), their options forms (built from v1's option types) and the live rows some panels
 // show (a level meter, …), which read the engine's monitors.
-import { BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
-import { App, Point } from './shim.ts';
+import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts';
+import { App, PLUGIN_LABELS, Point } from './shim.ts';
 import { addSelector, isSelector } from './selectorOption.ts';
 import { touchpadForm } from './touchpadPanel.ts';
 import { tablePicture } from '../engine/wasmEngine.ts';
 
-/** The new blocks in each v1 category (the menu then sorts each category by name). */
+/** The new blocks in each v1 category (the menu then sorts each category: MENU_ORDER). */
 const MENU: Record<string, string[]> = {
   Source: ['source.stage', 'source.wavetable'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
@@ -17,6 +17,14 @@ const MENU: Record<string, string[]> = {
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
 const BY_NAME = new Map(NEW_DEFS.map(d => [d.name.toLowerCase(), d]));
+const BY_MENU_ID = new Map(BLOCKS.map(d => [d.menuId, d]));
+
+/** Menu order by menu id (owner, 2026-11-17, CHG-0035). Ids not on this branch (Gate) are simply skipped. */
+export const MENU_ORDER: Record<string, string[]> = {
+  Source: ['ToneSource', 'Noise', 'Wavetable', 'Sample', 'Granular', 'Microphone', 'Recorder', 'SampleGen', 'Stage'],
+  Power: ['Power', 'ParticleEmitter', 'Laser', 'Toggle', 'Pulse', 'Counter', 'Chance', 'SoundLaser', 'Prism', 'Gate', 'Void'],
+  Interaction: ['ComputerKeyboard', 'MIDIController', 'Touchpad', 'Label', 'StageIn'],
+};
 
 /** The menu id of a Label (scene.CreateBlockFromType hands it to the host like a block type). */
 export const LABEL_MENU_ID = 'Label';
@@ -31,9 +39,17 @@ export function installNewBlockMenu(): void {
     }
     // Label (CHG-0020): not a block, but it is made from the Interaction menu like one.
     if (cat.name === 'Interaction' && !cat.items.some(i => i.id === LABEL_MENU_ID))
-      cat.items.push({ name: 'Label', id: LABEL_MENU_ID, description: 'A note on the stage. Drag it by its dot; click it to change the words.' });
-    // Owner (2026-11-14): every category lists its blocks alphabetically (by the name shown, so the plugin's labels too).
-    cat.items.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+      cat.items.push({ name: 'Label', id: LABEL_MENU_ID, description: 'A text box.' });
+    // Every block's hint (the menu's ?) is its manifest's description, v1's blocks too (owner, 2026-11-17, CHG-0035:
+    // v1's named SoundCloud); the plugin keeps its own words for Audio Input and MIDI Input.
+    for (const item of cat.items) {
+      const def = BY_MENU_ID.get(item.id);
+      if (def && !(App.IsPlugin && PLUGIN_LABELS[item.id])) item.description = def.description;
+    }
+    // Owner (2026-11-17, CHG-0035): Sources, Powers and Interactions list the most used blocks first (MENU_ORDER);
+    // Effects, and any block not in the list, are alphabetical (by the name shown, so the plugin's labels too).
+    const order = MENU_ORDER[cat.name] ?? [], rank = (id: string) => { const i = order.indexOf(id); return i < 0 ? order.length : i; };
+    cat.items.sort((a, b) => rank(a.id) - rank(b.id) || a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
   }
   setMenuHidden(ONLY_INSIDE);  // the outer stage's menu
 }

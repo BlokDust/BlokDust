@@ -20,7 +20,7 @@ const base = server.url.replace('127.0.0.1', 'localhost');
 const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
 
 interface Device { ctx: BrowserContext; page: Page }
-async function device(name: string | null, query = '?demo'): Promise<Device> {
+async function device(name: string | null, query = '?demo&video=1'): Promise<Device> {  // video=1: MAKE VIDEO is hidden by default (CHG-0035)
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   await ctx.route('https://cdn.freesound.org/**', r => r.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'access-control-allow-origin': '*' }, body: sineWav(440) }));
   const page = await ctx.newPage();

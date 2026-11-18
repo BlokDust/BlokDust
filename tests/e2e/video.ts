@@ -37,7 +37,7 @@ async function open(b: Browser, blocks: Block[], errors: string[], share: 'none'
       (window as any).__shared = { name: f.name, type: f.type, size: f.size, title: d.title, text: d.text };
     };
   }, share);
-  await page.goto(`${url}/index.html?v1=${comp(blocks)}`);
+  await page.goto(`${url}/index.html?video=1&v1=${comp(blocks)}`);  // video=1: MAKE VIDEO is hidden by default (CHG-0035)
   await page.waitForFunction(() => (window as any).__bd_probe);
   await page.click('#start');
   await page.waitForFunction(() => (window as any).__bd_probe.state.snapshots > 10);

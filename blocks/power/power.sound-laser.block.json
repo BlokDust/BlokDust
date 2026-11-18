@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "listener",
   "name": "Sound Laser",
-  "description": "A laser that listens: its beam comes on while the sources connected to it are louder (or quieter) than its threshold.",
+  "description": "Connects to a source and triggers a laser beam when the sound is louder than the threshold.",
   "v1": {
     "type": null
   },

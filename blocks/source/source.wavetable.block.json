@@ -5,7 +5,7 @@
   "category": "source",
   "kind": "audio-source",
   "name": "Wavetable",
-  "description": "Plays built-in wavetables: bells, chimes, glass, gongs, voices and more. Position moves through the table; an LFO or Dust automation can sweep it.",
+  "description": "Morphs smoothly through a sequence of different wave shapes like bells, chimes and more.",
   "v1": {
     "type": null
   },

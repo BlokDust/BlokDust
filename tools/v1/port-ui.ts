@@ -12,7 +12,7 @@ export const PORTED = [
   'Metrics.ts', 'Device.ts', 'Commands.ts', 'StringValue.ts', 'Core/Audio/Waveform.ts', 'Blocks/BlockSprites.ts',
   'UI/Header.ts', 'UI/MenuCategory.ts', 'UI/MenuItem.ts', 'UI/ToolTip.ts', 'UI/ZoomButtons.ts', 'UI/TrashCan.ts',
   'UI/CreateNew.ts', 'UI/StageDragger.ts', 'UI/OptionsPanel.ts', 'UI/SettingsPanel.ts', 'UI/SharePanel.ts', 'UI/RecorderPanel.ts',
-  'WaveVoice.ts', 'Splash.ts', 'UI/AnimationsLayer.ts', 'UI/SoundcloudPanel.ts', 'Core/Audio/SoundCloud/SoundcloudTrack.ts',
+  'WaveVoice.ts', 'Splash.ts', 'UI/Tutorial.ts', 'UI/TutorialHotspots.ts', 'UI/AnimationsLayer.ts', 'UI/SoundcloudPanel.ts', 'Core/Audio/SoundCloud/SoundcloudTrack.ts',
   ...['IOption', 'Option', 'OptionADSR', 'OptionActionButton', 'OptionButton', 'OptionButtonArray', 'OptionColorTheme',
     'OptionHandle', 'OptionMeter', 'OptionParametric', 'OptionSample', 'OptionSampleLocal', 'OptionSlider', 'OptionSubHandle',
     'OptionSwitch', 'OptionSwitchArray', 'OptionWave', 'OptionWaveImage', 'OptionWaveRegion', 'OptionWaveSlider'].map(f => `UI/Options/${f}.ts`),
@@ -24,6 +24,11 @@ const BRIDGES: Record<string, string> = {
   'Blocks/IBlock.ts': "export type IBlock = any;\nexport const IBlock: any = null;\n",
   // RecorderPanel finds Recorder blocks with `instanceof Recorder`: v2's shim blocks answer by their v1 type.
   'Blocks/Sources/Recorder.ts': "export class Recorder { static [Symbol.hasInstance](b: any) { return b?.def?.v1Type === 'Recorder'; } }\n",
+  // The tour (CHG-0035) finds the blocks it asks for with `instanceof`: v2's shim blocks answer by their v1 type.
+  'Blocks/Block.ts': "export class Block { static [Symbol.hasInstance](b: any) { return !!b?.def; } }\n",
+  ...Object.fromEntries([['Sources/ToneSource', 'ToneSource'], ['Interaction/ComputerKeyboard', 'ComputerKeyboard'], ['Effects/Post/Chopper', 'Chopper'],
+    ['Power/Power', 'Power'], ['Power/ParticleEmitter', 'ParticleEmitter']].map(([path, type]) =>
+    [`Blocks/${path}.ts`, `export class ${type} { static [Symbol.hasInstance](b: any) { return b?.def?.v1Type === '${type}'; } }\n`])),
   // Settings › About's "Current Build": the release version (CHG-0005 task 12).
   '_Version.ts': "export { VERSION as Version } from '../../version.ts';\n",
   // Splash's audio unlock: v2 starts its AudioContext in the START click itself (web/src/app/main.ts), so the start
@@ -49,7 +54,12 @@ const REWRITES: Record<string, [string, string, string][]> = {
     // Owner (2026-11-11): START under the play triangle (v1's button had no word).
     [SPLASH_TRIANGLE, SPLASH_TRIANGLE_START, 'START under the button'],
     // Owner (2026-11-14): the app is called BLOKDUST 2.
-    ['this.Ctx.fillText("BLOKDUST",dx,', 'this.Ctx.fillText("BLOKDUST 2",dx,', 'title']],
+    ['this.Ctx.fillText("BLOKDUST",dx,', 'this.Ctx.fillText("BLOKDUST 2",dx,', 'title'],
+    // Owner (2026-11-17, CHG-0035): on a phone held upright the title nearly touched the edges; it is at most 80% of
+    // the screen's width (v1's size wherever that fits).
+    ['        var headerType = 100*units;\n',
+      '        var headerType = 100*units;\n        this.Ctx.font = "200 " + headerType + "px Dosis";\n' +
+      '        headerType = Math.min(headerType, headerType * App.Width * 0.8 / this.Ctx.measureText("BLOKDUST 2").width);\n', 'title fits a phone']],
   'UI/Header.ts': [
     ['this.Ctx.fillText("BLOKDUST", App.Width*0.5,', 'this.Ctx.fillText("BLOKDUST 2", App.Width*0.5,', 'title (phone)'],
     ['this.Ctx.fillText("BLOKDUST", (20 +', 'this.Ctx.fillText("BLOKDUST 2", (20 +', 'title']],

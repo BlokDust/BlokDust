@@ -5,7 +5,7 @@
   "category": "interaction",
   "kind": "controller",
   "name": "MIDI Controller",
-  "description": "Trigger sources using any connected USB MIDI device. Chrome only",
+  "description": "Trigger sources using any connected USB MIDI device.",
   "v1": {
     "type": "MIDIController",
     "class": [

@@ -135,6 +135,7 @@ struct Block {
   double sampleRate = 48000.0;
   dsp::BiquadChainFx<1> filter;   // fx.filter (Tone.Filter, rolloff −12)
   float filterLevel = 1.0f;       // fx.filter Band pass level (CHG-0010); 1 for the other types
+  double micGate = 0.0;           // web Microphone: 0 muted … 1 open, ramped (CHG-0035: it plays only while powered)
   dsp::BiquadChainFx<4> eq;       // fx.eq (Tone.EQMultiband)
   dsp::VolumeFx volume;
   dsp::DistortionFx distortion;

@@ -160,7 +160,7 @@ export const COPY = {
   // Web (owner, 2026-11-11): three buttons, no help lines: SAVE (to the link: made the first time), SAVE AS (a new
   // link), DOWNLOAD PATCH (the .blokdust file). Clicking the link copies it.
   saveLink: 'Save', saveAs: 'Save As', download: 'Download Patch',
-  linkLine: 'Share your creation with this unique URL:', linkCopied: 'Link copied.',
+  linkLine: 'Share your creation with this unique URL:', linkCopied: 'Link copied.', savedCopied: 'Link Copied',
   saving: 'saving...',
   openLine: 'Open loads a patch. Insert adds its blocks to your patch.',
   open: 'Open', insert: 'Insert', empty: 'No patches yet', file: 'Open From Your Device', back: 'Back',
@@ -767,7 +767,7 @@ export class PatchesPanel extends DisplayObject {
     return { search: this.bordered(COPY.search, right, rule - 30 * u), rule, sortY: this.mobile ? this.bottom - 30 * u : this.cy + 160 * u, sortRight: right };
   }
   /** The list's window: under the search rule, above POPULAR / NEW. */
-  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(); return { top: L.rule + 10 * u, bottom: L.sortY - 25 * u }; }
+  private galleryWindow() { const u = App.Unit, L = this.galleryLayout(); return { top: L.rule + 10 * u, bottom: L.sortY - 45 * u }; }  // 45: room above the sorts (owner, 2026-11-17)
   /** Row n's second line's baseline (v1 SoundcloudPanel's row: name 10 units above it), scrolled. */
   private galleryRowY(n: number) { return this.galleryWindow().top + 30 * App.Unit + n * this.rowH - this.GalleryScroll; }
   private galleryMaxScroll() { const u = App.Unit, w = this.galleryWindow(); return Math.max(0, this.GalleryItems.length * this.rowH + (this.GalleryMore || this.GalleryLoading ? this.rowH : 0) - (w.bottom - w.top) - 10 * u); }
@@ -1188,24 +1188,51 @@ export class PatchesPanel extends DisplayObject {
       return false;
     }
     // Save over this link (v1 SAVE, "overwrite"); otherwise a new link (v1 SAVE_AS).
-    if (await this.makeLink(st.save === 'save' ? 'save' : 'saveAs')) { this.flash = { key: 'share', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); return true; }
+    if (await this.makeLink(st.save === 'save' ? 'save' : 'saveAs')) { await this.flashSaved('share'); return true; }
     return false;
   }
   /** SAVE AS: a new link; the old one keeps what it had. */
   private async saveAsLink(): Promise<boolean> {
-    if (await this.makeLink('saveAs')) { this.flash = { key: 'saveAs', label: COPY.saved, until: performance.now() + 1500 }; this.settled(); return true; }
+    if (await this.makeLink('saveAs')) { await this.flashSaved('saveAs'); return true; }
     return false;
+  }
+  /** The button that saved reads LINK COPIED once the link is on the clipboard, else SAVED. */
+  private async flashSaved(key: string): Promise<void> {
+    const copied = await (this.copying ?? Promise.resolve(false));
+    this.copying = null;
+    this.flash = { key, label: copied ? COPY.savedCopied : COPY.saved, until: performance.now() + (copied ? 2000 : 1500) };
+    this.settled();
+  }
+  /** Saving a link copies it (owner, 2026-11-17, CHG-0035): no second click on the link. The clipboard is asked in
+   * the press itself, with the link to follow (a ClipboardItem promise), as browsers allow a copy only in a user's
+   * press; where that is refused, the link is copied as it arrives if the browser still allows it. */
+  private copying: Promise<boolean> | null = null;
+  private copyWhenSaved(): (url: string | null) => void {
+    let done: (url: string | null) => void = () => {};
+    if (!this.web || this.host.links?.external || typeof navigator === 'undefined' || !navigator.clipboard) { this.copying = null; return done; }
+    const url = new Promise<string>((res, rej) => { done = u => (u ? res(u) : rej(new Error('not saved'))); });
+    url.catch(() => {});
+    const text = () => url.then(u => navigator.clipboard.writeText(u)).then(() => true, () => false);
+    try {
+      this.copying = typeof ClipboardItem === 'function' && navigator.clipboard.write
+        ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': url.then(u => new Blob([u], { type: 'text/plain' })) })]).then(() => true, text)
+        : text();
+    } catch { this.copying = text(); }
+    return done;
   }
   private async makeLink(mode: 'saveAs' | 'save'): Promise<boolean> {
     if (this.Saving || !this.host.hasBlocks() || !this.host.links) return false;
     this.Saving = true; this.showDom();
+    const copy = this.copyWhenSaved();
     // Signed out, the gallery is left as it is (only signed-in users can publish, SPEC-SHARING-GALLERY R2).
     const gallery = this.web && this.host.gallery && this.host.signedIn() ? this.GalleryOn : undefined;
+    let url: string | null = null;
     try {
       const g = await this.host.links.make(mode, this.Title.trim() || 'Untitled', gallery);
       if (g) { this.savedGallery = g.published; this.GalleryNote = g.reason ?? ''; }
+      url = this.link?.url ?? null;
       return true;
-    } finally { this.Saving = false; this.settled(); this.showDom(); }
+    } finally { copy(url); this.Saving = false; this.settled(); this.showDom(); }
   }
   setTitle(t: string): void { this.Title = t; if (this.Input) this.Input.value = t; }
   /** Open the gallery on a search (a patch's "by @name" on the stage). */

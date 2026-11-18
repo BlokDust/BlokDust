@@ -40,7 +40,7 @@ Owner review, 2026-11-07:
 - New Emitters and Pulses from the menu start synced. Saved patches without `sync` keep v1 frame timing.
 
 Owner review, 2026-11-10 (CHG-0005):
-- The web's tempo is set once, in Settings (in Tour's row), not on every synced block.
+- The web's tempo is set once, in Settings (in v1's Tour row; the tour has a row of its own under it), not on every synced block.
 - A Stereo Delay can sync: `delayBeats` at the tempo (at most 1 s), replacing Delay Time, and following tempo changes
   with the same glide as a moved slider. New delays start synced at 1/8 (v1's 0.25 s at 120 BPM).
 

@@ -5,7 +5,7 @@
   "category": "effect",
   "kind": "modulator",
   "name": "LFO",
-  "description": "Moves one setting of a block it is connected to, back and forth: any block, power blocks too.",
+  "description": "Automatically modulates a connected block's param back and forth in a repeating pattern.",
   "v1": {
     "type": null
   },

@@ -5,7 +5,7 @@
   "category": "effect",
   "kind": "post-effect",
   "name": "Compressor",
-  "description": "Evens out the volume: sounds louder than the threshold are turned down.",
+  "description": "Automatically reduces loud peaks to keep your overall volume consistent.",
   "v1": {
     "type": null
   },

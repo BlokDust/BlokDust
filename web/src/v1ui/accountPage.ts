@@ -1,7 +1,7 @@
 // Settings › SIGN IN / ACCOUNT (CHG-0023, owner review 2026-11-15: in Settings beside ABOUT and DOWNLOAD, not in
 // Patches; the tab reads SIGN IN until you are signed in). Drawn into v1's Settings panel like the DOWNLOAD page, with v1
 // pieces only:
-//   signed out: v1 About's body type for the line, then Connect's 420×40 GUIDE buttons, one a way to sign in (owner
+//   signed out: v1 About's body type for the line, then Connect's GUIDE buttons (as wide as About's text), one a way to sign in (owner
 //               review 2: GOOGLE, APPLE, PASSKEY, in that order; Google and Apple only where the server offers them),
 //               and a bordered CREATE ACCOUNT;
 //   naming:     a small heading in the tab type (no rule: owner review 2, it read as a text field), the Patches name
@@ -15,6 +15,10 @@ import { BLOCKS_BY_ID } from '../generated/blocks.gen.ts';
 import { activity } from '../account/activity.ts';
 import { Device } from './ported/Device';
 import type { AccountHost, AccountInfo } from './patches.ts';
+
+/** v1 SettingsPanel's menuWidth, About's text column: 4/7 of the panel, 5/7 on a phone (Settings › DOWNLOAD and ACCOUNT
+ * use it too; owner, 2026-11-17, CHG-0035). */
+export function pageWidth(): number { return (App.MainScene?.Width || App.Width) / 7 * (App.Metrics.Device === Device.mobile ? 5 : 4); }
 
 const COPY = {
   line: 'Sign in to keep your patches on every device.',
@@ -100,10 +104,13 @@ export class AccountPage {
     const u = App.Unit, w = this.textW(label);
     return { label, x: right - 10 * u - w, y: top, w: w + 10 * u, h: 20 * u, textX: right - 5 * u - w, textY: top + 14 * u };
   }
+  /** The page's width: About's text column (v1 SettingsPanel menuWidth: 4/7 of the panel, 5/7 on a phone; owner,
+   * 2026-11-17, CHG-0035: it was 420 units, narrower than About's). */
+  private pageW(): number { return pageWidth(); }
   private layout(top: number) {
-    const u = App.Unit, W = App.Width, L = W * 0.5 - 210 * u, R = W * 0.5 + 210 * u;
-    const half = (dx: number, y: number): Box => ({ x: W * 0.5 + dx * u, y, w: 202.5 * u, h: 40 * u, cx: W * 0.5 + (dx + 101.25) * u });
-    const full = (y: number): Box => ({ x: L, y, w: 420 * u, h: 40 * u, cx: W * 0.5 });
+    const u = App.Unit, W = App.Width, pw = this.pageW(), L = W * 0.5 - pw * 0.5, R = W * 0.5 + pw * 0.5, hw = (pw - 15 * u) * 0.5;
+    const half = (right: boolean, y: number): Box => { const x = right ? W * 0.5 + 7.5 * u : L; return { x, y, w: hw, h: 40 * u, cx: x + hw * 0.5 }; };
+    const full = (y: number): Box => ({ x: L, y, w: pw, h: 40 * u, cx: W * 0.5 });
     // Signed out: one row per way to sign in, 15 units apart, then CREATE ACCOUNT.
     const ways = this.ways(), out: Record<string, Box> = {};
     ways.forEach((k, i) => { out[k] = full(top + (35 + i * 55) * u); });
@@ -112,8 +119,8 @@ export class AccountPage {
     // The account's buttons under its stats (R15); 35 units under the SIGNED IN line until they arrive. DELETE ACCOUNT
     // sits top right, on the SIGNED IN line (CHG-0027: the stats need its row).
     const below2 = top + this.statsHeight() * u;
-    const signedIn = { add: half(-210, below2), out: half(7.5, below2), del: this.bordered(COPY.deleteAccount, R, top - 4 * u) };
-    const del = { cancel: half(-210, top + 75 * u), ok: half(7.5, top + 75 * u) };
+    const signedIn = { add: half(false, below2), out: half(true, below2), del: this.bordered(COPY.deleteAccount, R, top - 4 * u) };
+    const del = { cancel: half(false, top + 75 * u), ok: half(true, top + 75 * u) };
     const message = this.View === 'main' && !this.Account ? below + 70 * u : this.View === 'main' ? below2 + 60 * u : top + 190 * u;
     return { L, R, out, create: this.bordered(COPY.create, R, below + 10 * u), naming, signedIn, del, message };
   }
@@ -152,7 +159,7 @@ export class AccountPage {
     const c = this.ctx(), u = App.Unit, txt = App.Palette[App.ThemeManager.Txt];
     App.FillColor(c, txt); c.textAlign = 'left'; c.font = App.Metrics.TxtMid;
     c.fillText(title.toUpperCase(), L, top + 10 * u);
-    if (line) { c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 32 * u, 14 * u, 420 * u); }
+    if (line) { c.font = App.Metrics.TxtItalic2; this.wrap(line, L, top + 32 * u, 14 * u, this.pageW()); }
   }
 
   // ---- stats (R15) ----
@@ -164,9 +171,9 @@ export class AccountPage {
     if (!st) return 35;
     return STATS_Y.buttons;
   }
-  /** One row of numbers, four columns across the page's 420 units: the number large and light, its label under it. */
+  /** One row of numbers, four columns across the page: the number large and light, its label under it. */
   private numberRow(cells: [string, string][], y: number, L: number): void {
-    const c = this.ctx(), u = App.Unit, w = 420 * u / cells.length;
+    const c = this.ctx(), u = App.Unit, w = this.pageW() / cells.length;
     App.FillColor(c, App.Palette[App.ThemeManager.Txt]); c.textAlign = 'center';
     cells.forEach(([n, label], i) => {
       const x = L + w * (i + 0.5);
@@ -256,7 +263,7 @@ export class AccountPage {
         this.drawBordered(Lo.create, txt);
       }
     }
-    if (this.Message) { App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; this.wrap(this.Message, Lo.L, Lo.message, 14 * u, 420 * u); }
+    if (this.Message) { App.FillColor(c, txt); c.font = App.Metrics.TxtItalic2; c.textAlign = 'left'; this.wrap(this.Message, Lo.L, Lo.message, 14 * u, this.pageW()); }
   }
 
   /** The name field follows the page (it slides with the tab); shown only while naming. */
@@ -266,8 +273,8 @@ export class AccountPage {
     if (!on) return;
     const u = App.Unit, pr = App.Metrics.PixelRatio;
     this.field.style.font = App.Metrics.TxtHeaderPR;
-    this.field.style.width = `${(u * 420) / pr}px`; this.field.style.height = `${(u * 42) / pr}px`; this.field.style.lineHeight = `${(u * 42) / pr}px`;
-    this.field.style.left = `${App.Width / pr * 0.5 - (u * 210) / pr}px`;
+    this.field.style.width = `${this.pageW() / pr}px`; this.field.style.height = `${(u * 42) / pr}px`; this.field.style.lineHeight = `${(u * 42) / pr}px`;
+    this.field.style.left = `${(App.Width - this.pageW()) * 0.5 / pr}px`;
     this.field.style.top = `${this.layout(top).naming.field / pr}px`;
   }
 

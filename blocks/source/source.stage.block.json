@@ -5,7 +5,7 @@
   "category": "source",
   "kind": "audio-source",
   "name": "Stage",
-  "description": "A whole patch inside one block. Power it to run what is inside; its sound comes out here.",
+  "description": "A container for groups of blocks or whole patches. Connect it to a power to turn on the powers inside.",
   "v1": {
     "type": null
   },

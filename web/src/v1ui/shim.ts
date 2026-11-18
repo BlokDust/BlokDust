@@ -146,7 +146,9 @@ export const App: any = {
   },
   FocusManager: { IsActive: true },
   /** v1's input events: the Splash subscribes in Setup; v2 calls the splash itself (scene.ts), so these never fire. */
-  PointerInputManager: { MouseDown: new NullstoneEvent(), TouchEnd: new NullstoneEvent(), TouchMove: new NullstoneEvent() },
+  PointerInputManager: { MouseDown: new NullstoneEvent(), TouchEnd: new NullstoneEvent(), TouchMove: new NullstoneEvent(),
+    /** v1: the last press was a touch (the tour gives its touch steps); set by the app's pointer handler. */
+    TouchAssumed: typeof matchMedia === 'function' && matchMedia('(hover: none)').matches },
   IsLoadingComposition: false,
   // v1 AddressBarManager.UpdateURL: show a saved composition's link in the address bar. Phase 1 patch tokens (`?c=p…`,
   // no backend) are too long to be useful there, so those stay out of it.
