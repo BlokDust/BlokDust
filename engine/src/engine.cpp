@@ -484,7 +484,7 @@ void Engine::apply(const Command& c) noexcept {
       if (!on && c.x == 0.0) for (Engine* inner : stages_) if (inner) inner->applyNow(Command::worldPower(false));
       if (on == worldPower_) break;
       worldPower_ = on;
-      if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].gateStep = 0;  // Counters start over (SIMULATION-0005)
+      if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].counterStep = 0;  // Counters start over (R2c)
       if (!on) {  // everything the world was powering lets go at once
         for (int k = 0; k < orderCount_; ++k) {
           Block& b = blocks_[order_[k]];
@@ -516,6 +516,11 @@ void Engine::apply(const Command& c) noexcept {
       if (slot < 0) return;
       Block& b = blocks_[slot];
       if (b.kind() == BlockKind::AudioSource || b.kind() == BlockKind::PowerSource) b.pressPower = c.value != 0.0 ? 1 : 0;
+      break;
+    }
+    case Command::Type::Reset: {  // R2c: the Counter panel's Reset
+      const int slot = slotOf(c.id);
+      if (slot >= 0) { blocks_[slot].counterStep = 0; blocks_[slot].counterFired = false; }
       break;
     }
     case Command::Type::Relink: {  // R4a: replays a saved connection order
@@ -1305,7 +1310,7 @@ void Engine::recomputeStaticPower() noexcept {
     const auto& row = graph_.row(order_[k]);
     for (int i = 0; i < orderCount_; ++i) {
       const int s = order_[i];
-      if (row[s] && isSourceSide(blocks_[s].kind())) blocks_[s].staticPower++;
+      if (row[s] && takesPower(blocks_[s].kind())) blocks_[s].staticPower++;
     }
   }
 }
@@ -1340,7 +1345,8 @@ void Engine::particleHit(Block& b) noexcept {
   if (b.kind() == BlockKind::Logic) { logicHit(b); return; }
   // SIMULATION-0008 (owner, 2026-11-14; v1 only lengthened the note): a hit on a source that only earlier hits are
   // holding strikes it again, so fast particles play every note (a new Random Note pick each time).
-  if (b.kind() == BlockKind::AudioSource && b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0) b.restrike = true;
+  // SIMULATION-0008/0012: a hit on what earlier hits hold strikes or fires it again.
+  strikeAgain(b);
   pulse(b, kPulseTicks);  // sources (incl. lasers) get a momentary pulse of power
 }
 
@@ -1363,6 +1369,35 @@ void Engine::restrike(int slot) noexcept {
   vo.trigTick = tick_;
   if (isSampler(b.type)) { vo.playhead = b.params[P::SourceSample::startPosition] * b.sampleRate; vo.samplePlaying = b.sampleFrames > 0; }
   log(Event::Type::GateOn, b.id);
+}
+
+/// Only hits (particles' pulses, beams) hold this Emitter or Laser running: no Power, Toggle, press, key or Self
+/// Powered (SIMULATION-0012).
+bool Engine::heldOnlyByHits(const Block& b) noexcept {
+  if (b.staticPower != 0 || b.pressPower != 0 || b.keyPower != 0) return false;
+  if (b.type == BlockType::PowerLaser) return b.params[P::PowerLaser::selfPoweredMode] == 0.0;
+  if (b.type == BlockType::PowerEmitter) return b.params[P::PowerEmitter::selfPoweredMode] == 0.0;
+  return false;
+}
+
+/// A pulse arrives (a particle, a Pulse or a Counter firing) at a block earlier hits are holding (SIMULATION-0008,
+/// SIMULATION-0012): a source is struck again; an Emitter or Laser fires again. Call before adding the pulse.
+void Engine::strikeAgain(Block& b) noexcept {
+  if (b.kind() == BlockKind::AudioSource) { if (b.powerOn && b.staticPower == 0 && b.laserPower == 0 && b.pressPower == 0) b.restrike = true; }
+  else if (b.power() > 0 && heldOnlyByHits(b)) b.restrike = true;
+}
+
+/// A beam fired again reaches a block it was already on (SIMULATION-0012): a source held only by hits plays again (as
+/// SIMULATION-0008); an Emitter or Laser held only by hits fires again.
+void Engine::beamStrike(Block& b) noexcept {
+  if (b.kind() == BlockKind::AudioSource) { if (b.powerOn && b.staticPower == 0 && b.pressPower == 0) b.restrike = true; }
+  else if (heldOnlyByHits(b)) b.restrike = true;
+}
+
+/// A Gate is open (R5c, SIMULATION-0011) while a power block powers it; `invert` swaps that. Never switched by hits.
+bool Engine::gateOpen(const Block& g) const noexcept {
+  const bool powered = worldPower_ && g.staticPower + g.pulsePower > 0;
+  return powered != (g.params[P::PowerGate::invert] != 0.0);
 }
 
 /// A Power with Gap on hit (owner, 2026-11-14): a Power that hits cut, rather than pass through.
@@ -1392,18 +1427,34 @@ void Engine::logicHit(Block& b) noexcept {
     const long ticks = std::lround(wait * kTickRate);
     if (ticks <= 0) { firePulse(b); return; }
     if (b.pulseDelayCount < kMaxPulseDelays) b.pulseFireTick[static_cast<std::size_t>(b.pulseDelayCount++)] = tick_ + static_cast<std::uint32_t>(ticks);
+    return;
+  }
+  if (b.type == BlockType::PowerCounter) {  // R2c: a Pulse with a pattern; an active step pulses as a particle hit does
+    log(Event::Type::Logic, b.id);
+    if (advanceCounter(b)) pulseConnected(b, kPulseTicks);
+    return;
+  }
+  if (b.type == BlockType::PowerChance) {  // R2d: a Pulse that fires at random; a pass pulses as a particle hit does
+    log(Event::Type::Logic, b.id);
+    const bool pass = chanceRoll(b);
+    log(pass ? Event::Type::Pass : Event::Type::Block, b.id);
+    if (pass) pulseConnected(b, kPulseTicks);
   }
 }
 
 /// A Pulse fires: v1 Pulse powers the connected sources for `pulseLength` s (its slider); synced, `pulseBeats` at the
 /// current tempo (CHG-0004 3.5).
 void Engine::firePulse(Block& b) noexcept {
+  pulseConnected(b, static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
+    ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate)));
+}
+
+/// Power the blocks connected to power block `b` for `ticks`.
+void Engine::pulseConnected(Block& b, int ticks) noexcept {
   const auto& row = graph_.row(slotOf(b.id));
-  const int ticks = static_cast<int>(std::lround((b.params[P::PowerPulse::sync] != 0.0
-    ? b.params[P::PowerPulse::pulseBeats] * 60.0 / tempo_ : b.params[P::PowerPulse::pulseLength]) * kTickRate));
   for (int k = 0; k < orderCount_; ++k) {
     Block& s = blocks_[order_[k]];
-    if (row[order_[k]] && isSourceSide(s.kind())) pulse(s, ticks);
+    if (row[order_[k]] && takesPower(s.kind())) { strikeAgain(s); pulse(s, ticks); }  // SIMULATION-0012
   }
 }
 
@@ -1413,7 +1464,6 @@ void Engine::releaseLaser(Block& laser) noexcept {
     if (laser.laserHits[static_cast<std::size_t>(order_[k])] && t.kind() != BlockKind::Logic && t.laserPower > 0) t.laserPower--;
   }
   laser.laserHits.reset();
-  laser.gateHits.reset(); laser.gateOpen.reset();
   laser.beamOn = false;
 }
 
@@ -1429,15 +1479,26 @@ void Engine::runLasers() noexcept {
     const bool sound = l.type == BlockType::PowerSoundLaser;  // CHG-0016: its beam is gated by what it hears
     if (l.type != BlockType::PowerLaser && !sound) continue;
     const bool running = worldPower_ && (sound ? l.listenOn : l.params[P::PowerLaser::selfPoweredMode] != 0.0 || l.power() > 0);
-    if (!running) { if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
+    const bool again = l.restrike;  // fired again (SIMULATION-0012): what the beam is on is hit again
+    l.restrike = false;
+    if (!running) { l.laserTurning = false; if (l.laserHits.any() || l.beamOn) releaseLaser(l); continue; }
     // v1 rotates only while *powered* (IsPowered: PowerAmount > 0), not when merely self-powered.
     const double rotate = sound ? 0.0 : l.params[P::PowerLaser::rotate];  // the Sound Laser does not turn (owner, 2026-11-14)
     const bool synced = !sound && l.params[P::PowerLaser::sync] != 0.0;
+    // Restart (R9a): each time it starts turning (synced: running; free: powered) it starts again from its Angle.
+    const bool turning = synced || l.power() > 0;
+    if (turning && !l.laserTurning && !sound && l.params[P::PowerLaser::restart] != 0.0) {
+      l.laserBeat0 = beat_;
+      if (!synced) l.params[P::PowerLaser::angle] = l.laserAngle0;
+    }
+    l.laserTurning = turning;
     if (synced) {
       // Synced (owner): one full turn every |turnBeats| (negative: anticlockwise), locked to the beat: at beat 0 it
-      // points at the Angle set, so every take from the same position turns the same (owner review 2).
+      // points at the Angle set, so every take from the same position turns the same (owner review 2). With Restart,
+      // it points at the Angle set when it starts turning instead (R9a).
       const double tb = l.params[P::PowerLaser::turnBeats];
-      double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * beat_ / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
+      const double since = l.params[P::PowerLaser::restart] != 0.0 ? beat_ - l.laserBeat0 : beat_;
+      double a = std::fmod(l.laserAngle0 + (tb < 0.0 ? -360.0 : 360.0) * since / std::max(0.25, std::abs(tb)) + 270.0, 360.0);
       if (a <= 0.0) a += 360.0;
       l.params[P::PowerLaser::angle] = a - 270.0;
     } else if (l.power() > 0 && std::lround(rotate) != 0) {
@@ -1447,54 +1508,54 @@ void Engine::runLasers() noexcept {
       l.params[P::PowerLaser::angle] = a;
     }
     const double len = l.params[P::PowerLaser::range] / kV1UnitsPerGrid;
-    std::bitset<kMaxBlocks> hits, gates, open;
+    std::bitset<kMaxBlocks> hits;
     double stop = 1.0;
-    traceBeam(order_[k], l.params[P::PowerLaser::angle], len, hits, gates, open, stop);
+    traceBeam(order_[k], l.params[P::PowerLaser::angle], len, hits, stop);
     for (int i = 0; i < orderCount_; ++i) {  // newly hit, in creation order
       const int s = order_[i];
-      if (!hits[static_cast<std::size_t>(s)] || l.laserHits[static_cast<std::size_t>(s)]) continue;
+      const bool was = l.laserHits[static_cast<std::size_t>(s)];
+      if (!hits[static_cast<std::size_t>(s)] || (was && !again)) continue;
       Block& b = blocks_[s];
       log(Event::Type::Hit, b.id, l.id);
       if (gapsOnHit(b)) powerGap(b);  // once per beam arriving, as a logic block
-      else if (b.kind() == BlockKind::Logic) logicHit(b); else b.laserPower++;
+      else if (b.kind() == BlockKind::Logic) logicHit(b);
+      else if (was) beamStrike(b);
+      else b.laserPower++;
     }
     for (int i = 0; i < orderCount_; ++i) {  // no longer hit: release continuous power
       const int s = order_[i];
       if (l.laserHits[static_cast<std::size_t>(s)] && !hits[static_cast<std::size_t>(s)] && blocks_[s].kind() != BlockKind::Logic && blocks_[s].type != BlockType::PowerPower && blocks_[s].laserPower > 0) blocks_[s].laserPower--;
     }
     l.laserHits = hits;
-    l.gateHits = gates; l.gateOpen = open;
     l.beamOn = true;
     l.beamLength = len * stop;
   }
 }
 
-/// A Counter or Chance decides about one arriving hit (SIMULATION-0005). Counter: the Euclidean pattern E(hits, steps),
-/// read from `rotate`, one step per hit, unless its steps were set by hand (`pattern` ≥ 0, owner 2026-11-14). Chance: its own random stream (seeded by block id, as Granular's grains, so
-/// the patch seed stays visual-only).
-bool Engine::gateDecide(Block& g) noexcept {
-  bool pass = true;
-  if (g.type == BlockType::PowerCounter) {
-    const int steps = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::steps])), 1, 16);
-    const int hits = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::hits])), 0, steps);
-    const int rotate = std::clamp(static_cast<int>(std::lround(g.params[P::PowerCounter::rotate])), 0, 15);
-    const int at = (g.gateStep % steps + rotate) % steps;
-    const long mask = std::lround(g.params[P::PowerCounter::pattern]);
-    pass = mask >= 0 ? ((mask >> (g.gateStep % steps)) & 1) != 0 : (at * hits) % steps < hits;  // steps set by hand win
-    g.gateStep = (g.gateStep % steps + 1) % steps;
-  } else if (g.type == BlockType::PowerChance) {
-    pass = static_cast<double>(g.grainRng.nextFloat()) < g.params[P::PowerChance::chance];
-  }
-  g.gatePassed = pass;
-  return pass;
+/// A Counter takes one hit (R2c): the Euclidean pattern E(hits, steps), read from `rotate`, one step per hit, unless
+/// its steps were set by hand (`pattern` ≥ 0). Returns whether the step was active.
+bool Engine::advanceCounter(Block& c) noexcept {
+  const int steps = std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::steps])), 1, 16);
+  const int hits = std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::hits])), 0, steps);
+  const int rotate = std::clamp(static_cast<int>(std::lround(c.params[P::PowerCounter::rotate])), 0, 15);
+  const int at = (c.counterStep % steps + rotate) % steps;
+  const long mask = std::lround(c.params[P::PowerCounter::pattern]);
+  const bool active = mask >= 0 ? ((mask >> (c.counterStep % steps)) & 1) != 0 : (at * hits) % steps < hits;  // steps set by hand win
+  c.counterStep = (c.counterStep % steps + 1) % steps;
+  c.counterFired = active;
+  return active;
 }
 
-/// One laser's beams (SPEC-SIMULATION R7, R7a). A beam runs to the nearest thing that stops it: a Void, a Counter or
-/// Chance that is closed to it, or a Prism, where it carries on as the Prism's streams with the length it has left
-/// (SIMULATION-0006). Every source and logic block a beam crosses before that is hit. Never through the same Prism
+/// A Chance rolls for one hit (R2d): its own random stream (seeded by block id, as Granular's grains, so the patch seed
+/// stays visual-only).
+bool Engine::chanceRoll(Block& c) noexcept {
+  return static_cast<double>(c.grainRng.nextFloat()) < c.params[P::PowerChance::chance];
+}
+
+/// One laser's beams (SPEC-SIMULATION R7, R7a). A beam runs to the nearest thing that stops it: a Void or a Prism,
+/// where it carries on as the Prism's streams with the length it has left (SIMULATION-0006). Every source and logic block a beam crosses before that is hit. Never through the same Prism
 /// twice on one path, nor through more than kMaxPrismDepth; at most kMaxBeamSegments beams per laser.
-void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, std::bitset<kMaxBlocks>& gates,
-                       std::bitset<kMaxBlocks>& open, double& firstStop) noexcept {
+void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<kMaxBlocks>& hits, double& firstStop) noexcept {
   struct Seg { double x0, y0, angle, len; int depth; std::array<std::int16_t, kMaxPrismDepth> via; };
   std::array<Seg, kMaxBeamSegments> stack;
   int sp = 0, cast = 0;
@@ -1513,13 +1574,13 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
       for (int i = 0; i < orderCount_; ++i) {
         const int s = order_[i];
         const Block& v = blocks_[s];
-        if ((v.kind() != BlockKind::Void && v.kind() != BlockKind::Gate) || seen[static_cast<std::size_t>(s)]) continue;
+        if ((v.kind() != BlockKind::Void && v.kind() != BlockKind::Path && !(v.kind() == BlockKind::Gate && !gateOpen(v))) || seen[static_cast<std::size_t>(s)]) continue;
         if (segmentPolygonFirstHit(seg.x0, seg.y0, x1, y1, v.info().outline, v.info().outlineCount, v.x, v.y, t) && t < bestT) { best = s; bestT = t; }
       }
       if (best < 0) break;
       seen.set(static_cast<std::size_t>(best));
       Block& g = blocks_[static_cast<std::size_t>(best)];
-      if (g.kind() == BlockKind::Void) { stop = bestT; break; }
+      if (g.kind() == BlockKind::Void || g.kind() == BlockKind::Gate) { stop = bestT; break; }  // a closed Gate is a Void
       if (g.type == BlockType::PowerPrism) {
         bool been = seg.depth >= kMaxPrismDepth;
         for (int d = 0; d < seg.depth && !been; ++d) been = seg.via[static_cast<std::size_t>(d)] == best;
@@ -1527,14 +1588,6 @@ void Engine::traceBeam(int laserSlot, double angleDeg, double len, std::bitset<k
         stop = bestT; prism = best;
         break;
       }
-      // Counter / Chance: decided when the beam arrives, kept while it stays (and shared by this laser's beams).
-      bool isOpen;
-      if (gates[static_cast<std::size_t>(best)]) isOpen = open[static_cast<std::size_t>(best)];
-      else if (l.gateHits[static_cast<std::size_t>(best)]) isOpen = l.gateOpen[static_cast<std::size_t>(best)];
-      else { isOpen = gateDecide(g); log(isOpen ? Event::Type::Pass : Event::Type::Block, g.id, l.id); }
-      gates.set(static_cast<std::size_t>(best));
-      open.set(static_cast<std::size_t>(best), isOpen);
-      if (!isOpen) { stop = bestT; break; }
     }
     if (first) firstStop = stop;
     const double ex = seg.x0 + (x1 - seg.x0) * stop, ey = seg.y0 + (y1 - seg.y0) * stop;
@@ -1575,15 +1628,16 @@ std::int64_t Engine::beatSlotAt(const Block& e, double beat) noexcept {
 
 /// The DAW's transport started at `beat` (owner review 2): nothing from before carries over, so every take from the
 /// same position plays the same. Particles in flight and pulses end; emitters start their timing again (synced ones
-/// fire on the next grid slot, or at once when `beat` is on one; free ones as when just added). Synced lasers need
-/// nothing: their angle follows the beat.
+/// fire on the next grid slot, or at once when `beat` is on one; free ones as when just added). Synced lasers follow
+/// the beat; lasers with Restart start again from their Angle.
 void Engine::resyncToTransport(double beat) noexcept {
   particleCount_ = 0;
   for (int k = 0; k < orderCount_; ++k) {
     Block& b = blocks_[order_[k]];
     b.pulsePower = 0;
     b.pulseDelayCount = 0;
-    b.gateStep = 0;
+    b.counterStep = 0;
+    b.laserTurning = false;  // a Laser with Restart starts the take from its Angle (R9a)
     if (b.type != BlockType::PowerEmitter) continue;
     b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
     b.emitCounter = 0;  // as when added (v1 ParticleEmitter.Init)
@@ -1646,6 +1700,16 @@ void Engine::runTick() noexcept {
       if (b.keyPoly && b.keyCount > 0) for (int i = 0; i < b.keyCount; ++i) emit(b, keyAngle(b.keysHeld[static_cast<std::size_t>(i)]));
       else emit(b);
     };
+    // Struck again while hits hold it (SIMULATION-0012): it fires now, and its timing starts over (as a key press).
+    if (e.restrike) {
+      e.restrike = false;
+      if (running) {
+        fire(e);
+        e.emitCounter = 0;
+        if (synced) e.beatSlot = beatSlotAt(e, beat_);
+        continue;
+      }
+    }
     if (synced) {
       // Synced (CHG-0004 3.5): emit when the beat crosses the next multiple of `division` (song grid in the plugin).
       const auto slot = beatSlotAt(e, beat_);
@@ -1711,24 +1775,19 @@ void Engine::runTick() noexcept {
         continue;
       }
       const BlockKind kind = b.kind();
-      if (kind == BlockKind::Gate) {
-        // R5c/R5d (CHG-0015): a gate acts on a particle as it enters (as an emitter catches one, R5b). A Counter or
-        // Chance lets it carry on or absorbs it; a Prism turns it into its streams, sent off after this pass.
+      if (kind == BlockKind::Path) {
+        // R5d (CHG-0015): a Prism turns a particle into its streams as it enters (as an emitter catches one, R5b), sent
+        // off after this pass.
         if (p.fresh) continue;
         const auto& inf = b.info();
         if (!pointInPolygon(p.x, p.y, inf.outline, inf.outlineCount, b.x, b.y)) continue;
         if (pointInPolygon(p.x - p.vx, p.y - p.vy, inf.outline, inf.outlineCount, b.x, b.y)) continue;
-        if (b.type == BlockType::PowerPrism) {
-          consumed = true;
-          log(Event::Type::Split, b.id);
-          if (splitCount < static_cast<int>(splits.size())) splits[static_cast<std::size_t>(splitCount++)] = {order_[k], std::sqrt(p.vx * p.vx + p.vy * p.vy), p.life};
-        } else if (gateDecide(b)) {
-          log(Event::Type::Pass, b.id);
-          break;  // through: nothing under the gate sees it this tick
-        } else { consumed = true; log(Event::Type::Block, b.id); }
+        consumed = true;
+        log(Event::Type::Split, b.id);
+        if (splitCount < static_cast<int>(splits.size())) splits[static_cast<std::size_t>(splitCount++)] = {order_[k], std::sqrt(p.vx * p.vx + p.vy * p.vy), p.life};
         continue;
       }
-      const bool absorbs = kind == BlockKind::Void;
+      const bool absorbs = kind == BlockKind::Void || (kind == BlockKind::Gate && !gateOpen(b));  // R5c: a closed Gate
       const bool gaps = gapsOnHit(b);
       const bool reacts = isSourceSide(kind) || kind == BlockKind::Logic || gaps;
       if (!absorbs && !reacts) continue;
@@ -2198,7 +2257,8 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
     if (b.type == BlockType::FxCompressor) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
     else if (b.type == BlockType::FxLfo) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], 0.0f}};
     else if (b.type == BlockType::PowerSoundLaser) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
-    else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.gateStep), b.gatePassed ? 1.0f : 0.0f, 0.0f, 0.0f}};
+    else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.counterStep), b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
+    else if (b.type == BlockType::PowerGate) out[n++] = {b.id, {gateOpen(b) ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};
   }
   return n;

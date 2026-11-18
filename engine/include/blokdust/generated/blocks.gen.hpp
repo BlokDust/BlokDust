@@ -8,7 +8,7 @@
 
 namespace blokdust::gen {
 
-inline constexpr std::size_t kBlockTypeCount = 46;
+inline constexpr std::size_t kBlockTypeCount = 47;
 inline constexpr std::size_t kMaxParams = 14;
 
 enum class BlockType : std::uint16_t {
@@ -47,6 +47,7 @@ enum class BlockType : std::uint16_t {
   PowerChance,  // power.chance
   PowerCounter,  // power.counter
   PowerEmitter,  // power.emitter
+  PowerGate,  // power.gate
   PowerLaser,  // power.laser
   PowerPower,  // power.power
   PowerPrism,  // power.prism
@@ -70,6 +71,7 @@ enum class BlockKind : std::uint8_t {
   Void,
   Controller,
   Gate,
+  Path,
   Listener,
   Modulator,
 };
@@ -479,6 +481,13 @@ inline constexpr ParamInfo kParamsPowerEmitter[] = {
 };
 namespace param::PowerEmitter { enum : std::uint8_t { angle, speed, rate, range, selfPoweredMode, sync, division, swing, offset, Count }; }
 
+// ---- power.gate (Gate)
+inline constexpr GridPoint kOutlinePowerGate[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 1.0f}, {-1.0f, 1.0f}};
+inline constexpr ParamInfo kParamsPowerGate[] = {
+  {"invert", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
+};
+namespace param::PowerGate { enum : std::uint8_t { invert, Count }; }
+
 // ---- power.laser (Laser)
 inline constexpr GridPoint kOutlinePowerLaser[] = {{-1.0f, -1.0f}, {1.0f, -1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f}};
 inline constexpr ParamInfo kParamsPowerLaser[] = {
@@ -488,8 +497,9 @@ inline constexpr ParamInfo kParamsPowerLaser[] = {
   {"selfPoweredMode", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"sync", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
   {"turnBeats", 4.0, true, UiTransform::Identity, -64.0, 64.0, 0.0},
+  {"restart", 0.0, true, UiTransform::None, 0.0, 0.0, 0.0},
 };
-namespace param::PowerLaser { enum : std::uint8_t { angle, range, rotate, selfPoweredMode, sync, turnBeats, Count }; }
+namespace param::PowerLaser { enum : std::uint8_t { angle, range, rotate, selfPoweredMode, sync, turnBeats, restart, Count }; }
 
 // ---- power.power (Power)
 inline constexpr GridPoint kOutlinePowerPower[] = {{-1.0f, 0.0f}, {1.0f, -2.0f}, {2.0f, -1.0f}, {2.0f, 0.0f}, {0.0f, 2.0f}, {-1.0f, 1.0f}};
@@ -630,12 +640,13 @@ inline constexpr std::array<BlockInfo, kBlockTypeCount> kBlocks{{
   {BlockType::FxStereoDelay, "fx.stereo-delay", "StereoDelay", BlockKind::PostEffect, 6.0f, kOutlineFxStereoDelay, 6, kParamsFxStereoDelay, 5, true},
   {BlockType::FxVibrato, "fx.vibrato", "Vibrato", BlockKind::PreEffect, 6.0f, kOutlineFxVibrato, 4, kParamsFxVibrato, 3, true},
   {BlockType::FxVolume, "fx.volume", "Volume", BlockKind::PostEffect, 6.0f, kOutlineFxVolume, 4, kParamsFxVolume, 1, true},
-  {BlockType::PowerChance, "power.chance", "", BlockKind::Gate, 0.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
-  {BlockType::PowerCounter, "power.counter", "", BlockKind::Gate, 0.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
+  {BlockType::PowerChance, "power.chance", "", BlockKind::Logic, 6.0f, kOutlinePowerChance, 5, kParamsPowerChance, 1, false},
+  {BlockType::PowerCounter, "power.counter", "", BlockKind::Logic, 6.0f, kOutlinePowerCounter, 4, kParamsPowerCounter, 4, false},
   {BlockType::PowerEmitter, "power.emitter", "ParticleEmitter", BlockKind::PowerSource, 0.0f, kOutlinePowerEmitter, 6, kParamsPowerEmitter, 9, true},
-  {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 6, true},
+  {BlockType::PowerGate, "power.gate", "", BlockKind::Gate, 0.0f, kOutlinePowerGate, 4, kParamsPowerGate, 1, false},
+  {BlockType::PowerLaser, "power.laser", "Laser", BlockKind::PowerSource, 0.0f, kOutlinePowerLaser, 5, kParamsPowerLaser, 7, true},
   {BlockType::PowerPower, "power.power", "Power", BlockKind::PowerEffect, 6.0f, kOutlinePowerPower, 6, kParamsPowerPower, 2, true},
-  {BlockType::PowerPrism, "power.prism", "", BlockKind::Gate, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
+  {BlockType::PowerPrism, "power.prism", "", BlockKind::Path, 0.0f, kOutlinePowerPrism, 5, kParamsPowerPrism, 4, false},
   {BlockType::PowerPulse, "power.pulse", "Pulse", BlockKind::Logic, 6.0f, kOutlinePowerPulse, 6, kParamsPowerPulse, 6, true},
   {BlockType::PowerSoundLaser, "power.sound-laser", "", BlockKind::Listener, 6.0f, kOutlinePowerSoundLaser, 5, kParamsPowerSoundLaser, 6, false},
   {BlockType::PowerToggle, "power.toggle", "Toggle", BlockKind::Logic, 6.0f, kOutlinePowerToggle, 6, kParamsPowerToggle, 1, true},

@@ -23,6 +23,7 @@ We will add these blocks, each designed by the owner in `pnpm bd block-designer`
 |---|---|---|
 | Compressor | Effect | CHG-0014 |
 | Counter, Chance, Prism | Power | CHG-0015 |
+| Gate | Power | CHG-0032 |
 | Sound Laser | Power | CHG-0016 |
 | Chord, Arpeggiator, Random Note | Effect | CHG-0017 |
 | LFO | Effect | CHG-0018 |

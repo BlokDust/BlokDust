@@ -73,7 +73,10 @@ if(BLOKDUST_BUILD_TESTS)
     tests/test_granular.cpp
     tests/test_compressor.cpp
     tests/test_wavetable_block.cpp
-    tests/test_gates.cpp
+    tests/test_prism.cpp
+    tests/test_chance.cpp
+    tests/test_gate.cpp
+    tests/test_counter.cpp
     tests/test_sound_laser.cpp
     tests/test_note_effects.cpp
     tests/test_lfo.cpp

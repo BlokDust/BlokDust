@@ -12,7 +12,7 @@ import { tablePicture } from '../engine/wasmEngine.ts';
 const MENU: Record<string, string[]> = {
   Source: ['source.stage', 'source.wavetable'],
   Effect: ['fx.compressor', 'fx.chord', 'fx.arpeggiator', 'fx.random-note', 'fx.lfo'],
-  Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism'],
+  Power: ['power.sound-laser', 'power.counter', 'power.chance', 'power.prism', 'power.gate'],
   Interaction: ['input.touchpad', 'input.stage-in'],
 };
 const NEW_DEFS: BlockDef[] = Object.values(MENU).flat().map(id => BLOCKS_BY_ID.get(id)).filter((d): d is BlockDef => !!d);
@@ -79,6 +79,16 @@ export function setMonitors(packed: Float32Array): void {
   for (let i = 0; i + 4 < packed.length; i += 5) monitors.set(packed[i], [packed[i + 1], packed[i + 2], packed[i + 3], packed[i + 4]]);
 }
 export const monitorOf = (id: number): number[] | undefined => monitors.get(id);
+/** The Gates the engine reports open (CHG-0032: monitor [open, …]), for the stage to draw faded. */
+export function openGateIds(packed: Float32Array): number[] {
+  const out: number[] = [];
+  for (let i = 0; i + 4 < packed.length; i += 5) {
+    if (packed[i + 1] !== 1) continue;
+    const id = packed[i];
+    if ((App.Blocks as any[] | undefined)?.find(x => x.Id === id)?.def?.id === 'power.gate') out.push(id);
+  }
+  return out;
+}
 
 // ---- options forms ----
 interface FormBlock { Id: number; BlockName: string; Params: Record<string, any>; OptionsForm: any; def: BlockDef }
@@ -238,14 +248,17 @@ const FORMS: Record<string, (b: FormBlock) => any[]> = {
     switches({ name: 'Gap On Hit', setting: 'gapOnHit', value: !!b.Params.gapOnHit }),
     ...(b.Params.gapOnHit ? [slider('Gap', 'gapMs', Number(b.Params.gap ?? 0.05) * 1000, 10, 1000, { log: true, display: ms })] : []),
   ],
-  // CHG-0015: the pattern as a row of steps, then the three numbers that make it (Euclidean, SIMULATION-0005).
+  // CHG-0015: the pattern as a row of steps, the three numbers that make it (Euclidean, SIMULATION-0005), then Reset.
   'power.counter': b => [
     slider('Pattern', 'counterPattern', 0, 0, 1),
     slider('Steps', 'steps', Number(b.Params.steps), 1, 16, { quantised: true }),
     slider('Hits', 'hits', Math.min(Number(b.Params.hits), Number(b.Params.steps)), 0, 16, { quantised: true }),
     slider('Rotate', 'rotate', Number(b.Params.rotate), 0, 15, { quantised: true }),
+    { type: 'actionbutton', name: '', setting: 'resetCounter', props: { text: 'Reset' } },
   ],
   'power.chance': b => [slider('Chance', 'chance', Number(b.Params.chance), 0, 1, { display: v => `${Math.round(v * 100)}%` })],
+  // CHG-0032: open while a power block powers it; Invert swaps that (SIMULATION-0011).
+  'power.gate': b => [switches({ name: 'Invert', setting: 'invert', value: !!b.Params.invert })],
   // The Laser's Angle and Rotate rows, then how many streams and how wide they fan (SIMULATION-0006).
   'power.prism': b => [
     slider('Angle', 'angle90', wrapAngle(Number(b.Params.angle) + 90), -180, 180, { quantised: true, centered: true }),
@@ -393,7 +406,7 @@ const drawCompressorMeter: RowDraw = function (ctx, units, i, panel) {
   this.Shown = { level: m[0], reduction: m[1], on: m[1] > 0, thresholdX: tx - x, width: w };  // tests
 };
 
-/** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where a hit passes; the step the next
+/** The Counter's pattern: a diamond per step (v1's slider grab shape), filled where it fires; the step the next
  * hit lands on is underlined (v1's selection bar). */
 const drawCounterPattern: RowDraw = function (ctx, units, i, panel) {
   const x = panel.Margin, w = panel.Range, y = this.Position.y, h = this.Size.height, mid = y + h * 0.5;

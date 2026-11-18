@@ -1,0 +1,14 @@
+{
+  "description": "CHG-0032 (R5c, R7c): particles step a Counter (E(2,4)) that opens a Gate in a laser's path; the beam reaches the Tone on the active steps only.",
+  "render": { "seconds": 6, "sampleRate": 44100 },
+  "patch": {
+    "format": "blokdust.patch", "version": 2, "seed": 4,
+    "blocks": [
+      { "id": "e", "type": "power.emitter", "x": -10, "y": 6, "params": { "angle": 0, "selfPoweredMode": true, "rate": 15, "speed": 12 } },
+      { "id": "c", "type": "power.counter", "x": 0, "y": 6, "params": { "steps": 4, "hits": 2 } },
+      { "id": "g", "type": "power.gate", "x": 0, "y": 2 },
+      { "id": "l", "type": "power.laser", "x": -8, "y": 2, "params": { "angle": 0, "selfPoweredMode": true } },
+      { "id": "t", "type": "source.tone", "x": 8, "y": 2, "params": { "waveform": 1 } }
+    ]
+  }
+}

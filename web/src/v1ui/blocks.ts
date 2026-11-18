@@ -103,6 +103,7 @@ export class V1Block {
     if (key === 'generate') { App.MainScene.host.generateSample(this.Id); return; }
     if (key === 'openStage') { App.MainScene.host.openStage(this.Id); return; }          // a Stage's panel buttons (CHG-0021)
     if (key === 'loadStagePatch') { App.MainScene.host.loadStagePatch(this.Id); return; }
+    if (key === 'resetCounter') { App.MainScene.host.resetCounter(this.Id); return; }  // a Counter's Reset (R2c)
     // Samplers: reverse flips the waveform and mirrors the region at once (the app updates Params and the engine).
     if (key === 'reverse' && this.def.params.some(q => q.key === 'startPosition')) { App.MainScene.host.reverseSample(this.Id, !!value); return; }
     // MIDI Input's device slider picks an input by index (0 = all): the patch keeps its name (web only, CHG-0004).
@@ -281,6 +282,8 @@ function extendSyncForm(b: V1Block): void {
   const kind = b.def.id === 'power.emitter' ? 'emitter' : b.def.id === 'power.pulse' ? 'pulse' : b.def.id === 'fx.stereo-delay' ? 'delay' : 'laser';
   const sync = { type: 'switches', name: '', setting: '', props: { value: 0, min: 0, max: 1, quantised: true },
     switches: [{ name: 'Tempo Sync', setting: 'sync', value: !!b.Params.sync, lit: true, mode: 'offOn' }] };
+  // The Laser's Restart (R9a): each power-on starts again from its Angle; beside Tempo Sync, synced or not.
+  if (kind === 'laser') sync.switches.push({ name: 'Restart', setting: 'restart', value: !!b.Params.restart, lit: true, mode: 'offOn' });
   const synced: any[] = [];
   if (b.Params.sync) {
     if (kind === 'emitter') {

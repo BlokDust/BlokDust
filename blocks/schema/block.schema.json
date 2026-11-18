@@ -11,7 +11,7 @@
     "id": { "type": "string", "pattern": "^(source|fx|power|input)\\.[a-z0-9]+(-[a-z0-9]+)*$" },
     "draft": { "type": "boolean" },
     "category": { "enum": ["source", "effect", "power", "interaction"] },
-    "kind": { "enum": ["audio-source", "pre-effect", "post-effect", "power-source", "power-effect", "logic", "void", "controller", "gate", "listener", "modulator"] },
+    "kind": { "enum": ["audio-source", "pre-effect", "post-effect", "power-source", "power-effect", "logic", "void", "controller", "gate", "path", "listener", "modulator"] },
     "name": { "type": "string" },
     "description": { "type": "string" },
     "v1": {

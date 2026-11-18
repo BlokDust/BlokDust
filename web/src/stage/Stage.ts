@@ -174,6 +174,11 @@ export class Stage {
   cssToGrid(cssX: number, cssY: number): [number, number] { return pxToGrid(this.metrics, cssX * this.metrics.dpr, cssY * this.metrics.dpr); }
 
   setConnections(pairs: Uint32Array): void { this.connections = pairs; this.linesDirty = true; }
+  /** Gates that are open (CHG-0032): drawn faded, so what passes shows through (placeholder look until the design). */
+  private openGates = new Set<number>();
+  setOpenGates(ids: number[]): void {
+    if (ids.length !== this.openGates.size || ids.some(id => !this.openGates.has(id))) { this.openGates = new Set(ids); this.linesDirty = true; }
+  }
   setPowered(ids: Uint32Array): void {
     const next = new Set(ids);
     if (next.size !== this.powered.size || [...next].some(id => !this.powered.has(id))) { this.powered = next; this.linesDirty = true; }
@@ -326,7 +331,7 @@ export class Stage {
   private drawBlocksAndOverlays(ctx: CanvasRenderingContext2D): void {
     const m = this.metrics;
     // v1 Block.Draw: pressed + selected → 50%
-    drawBlocks(ctx, m, this.theme, this.blocks.values(), id => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1));
+    drawBlocks(ctx, m, this.theme, this.blocks.values(), id => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1) * (this.openGates.has(id) ? 0.3 : 1));
     // Multi-select (not in v1): each selected block ringed by its outline moved out 4 units on every side, and the box,
     // dashed in the text colour at half strength (owner, 2026-11-11: quieter than a solid line).
     if (this.selected.size || this.selectBox) {

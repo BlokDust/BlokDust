@@ -77,6 +77,8 @@ export interface SceneHost extends PatchesHost {
   /** A Stage block's panel buttons (CHG-0021): look inside it; fill it from a patch file. */
   openStage(id: number): void;
   loadStagePatch(id: number): void;
+  /** A Counter's Reset button (CHG-0015): back to step 1. */
+  resetCounter(id: number): void;
   /** Ids of the blocks connected to block `id` (the engine's proximity connections). */
   connectedIds(id: number): number[];
   /** An LFO's target (AUDIO-0003): which block and param it moves, or null. */

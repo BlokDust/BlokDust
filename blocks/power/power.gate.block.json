@@ -1,0 +1,55 @@
+{
+  "$schema": "../schema/block.schema.json",
+  "id": "power.gate",
+  "draft": false,
+  "category": "power",
+  "kind": "gate",
+  "name": "Gate",
+  "description": "A switch that either allows or absorbs particles and laser beams depending on its state.",
+  "v1": {
+    "type": null
+  },
+  "connection": null,
+  "geometry": {
+    "units": "grid",
+    "unitsPerGrid": 14.999999999999998,
+    "layers": [
+      {
+        "palette": 3,
+        "points": [
+          [-1, -1],
+          [1, -1],
+          [1, 1],
+          [-1, 1]
+        ]
+      },
+      {
+        "palette": 14,
+        "points": [
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0]
+        ]
+      }
+    ],
+    "outline": [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1]
+    ],
+    "menuOffset": [0, 0]
+  },
+  "params": [
+    {
+      "key": "invert",
+      "default": false,
+      "unit": "enum",
+      "description": "Open when unpowered, closed when powered"
+    }
+  ],
+  "review": [
+    "geometry: placeholder until the owner's block-designer design (CHG-0032 task 1)"
+  ]
+}

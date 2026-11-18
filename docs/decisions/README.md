@@ -4,7 +4,7 @@
 Domain-organised ADRs. One decision per file, with explicit status in frontmatter.
 Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accepted`, `deferred`, `rejected`, `superseded`, `deprecated`.
 
-**66 decisions** · proposed: 16 · accepted: 44 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
+**68 decisions** · proposed: 17 · accepted: 45 · deferred: 2 · rejected: 1 · superseded: 3 · deprecated: 0
 
 ## [architecture](architecture/README.md)
 
@@ -96,12 +96,14 @@ Create one with `pnpm bd new adr <domain> "Title"`. Statuses: `proposed`, `accep
 | [SIMULATION-0002](simulation/SIMULATION-0002-preserve-v1-proximity-connections-exactly.md) | Preserve v1 proximity connections exactly, computed in the engine | **accepted** | 2026-11-05 | simulation, connections, parity |
 | [SIMULATION-0003](simulation/SIMULATION-0003-time-is-musical-and-tempo-aware-v1-frame-timing.md) | Time is musical and tempo-aware; v1 frame timing is not reproduced exactly | **accepted** | 2026-11-05 | simulation, tempo, parity |
 | [SIMULATION-0004](simulation/SIMULATION-0004-a-particle-that-enters-another-emitter-fires-it.md) | A particle that enters another emitter fires it | **accepted** | 2026-11-11 | particles, release-1, v1-deviation |
-| [SIMULATION-0005](simulation/SIMULATION-0005-counter-and-chance-gate-hits-in-place.md) | Counter and Chance gate hits in place | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
+| [SIMULATION-0005](simulation/SIMULATION-0005-counter-pulses-on-its-steps-chance-pulses-by-chance.md) | Counter pulses on its steps; Chance pulses by chance | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
 | [SIMULATION-0006](simulation/SIMULATION-0006-prism-redirects-and-splits-hits.md) | Prism redirects and splits hits | **proposed** | 2026-11-13 | simulation, particles, lasers, post-2-0 |
 | [SIMULATION-0007](simulation/SIMULATION-0007-sound-can-drive-the-simulation.md) | Sound can drive the simulation (Sound Laser) | **proposed** | 2026-11-13 | simulation, audio, determinism, post-2-0 |
 | [SIMULATION-0008](simulation/SIMULATION-0008-every-particle-hit-strikes-the-source-again.md) | Every particle hit strikes the source again | **accepted** | 2026-11-14 | particles, power, v1-deviation |
 | [SIMULATION-0009](simulation/SIMULATION-0009-a-power-block-can-be-cut-by-hits.md) | A Power block can be cut by hits | **accepted** | 2026-11-14 | power, particles, lasers, v1-deviation |
 | [SIMULATION-0010](simulation/SIMULATION-0010-a-pulse-can-wait-before-it-fires.md) | A Pulse can wait before it fires | **accepted** | 2026-11-17 | power, pulse, timing, v1-extension |
+| [SIMULATION-0011](simulation/SIMULATION-0011-gate-is-a-void-that-power-opens.md) | Gate is a Void that power opens | **proposed** | 2026-11-17 | simulation, particles, lasers, power, post-2-0 |
+| [SIMULATION-0012](simulation/SIMULATION-0012-every-hit-reaches-through-what-earlier-hits-hold.md) | Every hit reaches through what earlier hits hold | **accepted** | 2026-11-17 | lasers, particles, power, v1-deviation |
 
 ## [ui](ui/README.md)
 
