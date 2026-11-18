@@ -484,7 +484,7 @@ void Engine::apply(const Command& c) noexcept {
       if (!on && c.x == 0.0) for (Engine* inner : stages_) if (inner) inner->applyNow(Command::worldPower(false));
       if (on == worldPower_) break;
       worldPower_ = on;
-      if (on) for (int k = 0; k < orderCount_; ++k) blocks_[order_[k]].counterStep = 0;  // Counters start over (R2c)
+      if (on) for (int k = 0; k < orderCount_; ++k) { blocks_[order_[k]].counterStep = 0; blocks_[order_[k]].counterFired = false; }  // Counters start over, off (R2c, R2d)
       if (!on) {  // everything the world was powering lets go at once
         for (int k = 0; k < orderCount_; ++k) {
           Block& b = blocks_[order_[k]];
@@ -520,7 +520,7 @@ void Engine::apply(const Command& c) noexcept {
     }
     case Command::Type::Reset: {  // R2c: the Counter panel's Reset
       const int slot = slotOf(c.id);
-      if (slot >= 0) { blocks_[slot].counterStep = 0; blocks_[slot].counterFired = false; }
+      if (slot >= 0) { blocks_[slot].counterStep = 0; blocks_[slot].counterFired = false; recomputeStaticPower(); }
       break;
     }
     case Command::Type::Relink: {  // R4a: replays a saved connection order
@@ -1305,7 +1305,8 @@ void Engine::recomputeStaticPower() noexcept {
   for (int k = 0; k < orderCount_; ++k) {
     const Block& p = blocks_[order_[k]];
     const bool powers = (p.type == BlockType::PowerPower && p.gapUntil == 0) ||  // not while a hit cuts it
-                        (p.type == BlockType::PowerToggle && p.params[P::PowerToggle::logic] != 0.0);
+                        (p.type == BlockType::PowerToggle && p.params[P::PowerToggle::logic] != 0.0) ||
+                        ((p.type == BlockType::PowerCounter || p.type == BlockType::PowerChance) && p.counterFired);  // R2c, R2d
     if (!powers) continue;
     const auto& row = graph_.row(order_[k]);
     for (int i = 0; i < orderCount_; ++i) {
@@ -1429,16 +1430,18 @@ void Engine::logicHit(Block& b) noexcept {
     if (b.pulseDelayCount < kMaxPulseDelays) b.pulseFireTick[static_cast<std::size_t>(b.pulseDelayCount++)] = tick_ + static_cast<std::uint32_t>(ticks);
     return;
   }
-  if (b.type == BlockType::PowerCounter) {  // R2c: a Pulse with a pattern; an active step pulses as a particle hit does
+  if (b.type == BlockType::PowerCounter) {  // R2c: a switch with steps; on while its step is active
     log(Event::Type::Logic, b.id);
-    if (advanceCounter(b)) pulseConnected(b, kPulseTicks);
+    const bool was = b.counterFired;
+    if (advanceCounter(b) != was) recomputeStaticPower();
     return;
   }
-  if (b.type == BlockType::PowerChance) {  // R2d: a Pulse that fires at random; a pass pulses as a particle hit does
+  if (b.type == BlockType::PowerChance) {  // R2d: a switch set by a roll; on while the last hit's roll passed
     log(Event::Type::Logic, b.id);
-    const bool pass = chanceRoll(b);
-    log(pass ? Event::Type::Pass : Event::Type::Block, b.id);
-    if (pass) pulseConnected(b, kPulseTicks);
+    const bool was = b.counterFired;
+    b.counterFired = chanceRoll(b);
+    log(b.counterFired ? Event::Type::Pass : Event::Type::Block, b.id);
+    if (b.counterFired != was) recomputeStaticPower();
   }
 }
 
@@ -1637,11 +1640,13 @@ void Engine::resyncToTransport(double beat) noexcept {
     b.pulsePower = 0;
     b.pulseDelayCount = 0;
     b.counterStep = 0;
+    b.counterFired = false;
     b.laserTurning = false;  // a Laser with Restart starts the take from its Angle (R9a)
     if (b.type != BlockType::PowerEmitter) continue;
     b.beatSlot = beatSlotAt(b, beat - 1e-6);  // just before: a start on a grid slot fires at once
     b.emitCounter = 0;  // as when added (v1 ParticleEmitter.Init)
   }
+  recomputeStaticPower();  // Counters and Chances are off again (R2c, R2d)
   updateGates();
 }
 
@@ -2262,6 +2267,7 @@ int Engine::monitors(Monitor* out, int max) const noexcept {
     if (b.type == BlockType::FxCompressor) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], b.mon[3]}};
     else if (b.type == BlockType::FxLfo) out[n++] = {b.id, {b.mon[0], b.mon[1], b.mon[2], 0.0f}};
     else if (b.type == BlockType::PowerSoundLaser) out[n++] = {b.id, {b.mon[0], b.mon[1], 0.0f, 0.0f}};
+    else if (b.type == BlockType::PowerChance) out[n++] = {b.id, {0.0f, b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerCounter) out[n++] = {b.id, {static_cast<float>(b.counterStep), b.counterFired ? 1.0f : 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerGate) out[n++] = {b.id, {gateOpen(b) ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f}};
     else if (b.type == BlockType::PowerPrism) out[n++] = {b.id, {static_cast<float>(b.params[P::PowerPrism::angle]), 0.0f, 0.0f, 0.0f}};

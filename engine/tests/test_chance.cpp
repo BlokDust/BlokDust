@@ -1,4 +1,4 @@
-// CHG-0015: the Chance, a Pulse that fires at random (SPEC-SIMULATION-POWER-AND-PARTICLES R2d; SIMULATION-0005).
+// CHG-0015: the Chance, a switch each hit sets at random (SPEC-SIMULATION-POWER-AND-PARTICLES R2d; SIMULATION-0005).
 #include <catch2/catch_test_macros.hpp>
 #include <algorithm>
 #include <string>
@@ -47,23 +47,26 @@ TEST_CASE("R2d Chance: rolls once per hit: 0 never fires, 1 always, 0.5 about ha
   CHECK(run(0.5) == half);  // R12: its own seeded stream
 }
 
-TEST_CASE("R2d Chance: a fired roll pulses the blocks around it; the particle is used up") {
-  const auto notes = [](double chance) {
-    auto e = chanceRig(chance, 30);  // 0.5 s apart: every fired roll is a new note
+TEST_CASE("R2d Chance: a passed roll powers the blocks around it until a roll fails; the particle is used up") {
+  const auto run = [](double chance) {
+    auto e = chanceRig(chance, 30);
     e->push(Command::add(4, BlockType::SourceTone, 6, 0));  // behind it: never reached
     render(*e, 48000 * 6);
     CHECK(count(*e, Event::Type::Hit, 4) == 0);
     CHECK(count(*e, Event::Type::Logic, 2) >= count(*e, Event::Type::Emit, 1) - 1);  // the last may be in flight
     const auto r = rolls(*e, 2);
-    return std::pair{count(*e, Event::Type::GateOn, 3), static_cast<int>(std::count(r.begin(), r.end(), 'x'))};
+    int ons = 0;
+    for (std::size_t i = 0; i < r.size(); ++i) ons += r[i] == 'x' && (i == 0 || r[i - 1] == '.');
+    CHECK((e->block(3)->power() > 0) == (!r.empty() && r.back() == 'x'));  // holds the last roll
+    return std::pair{count(*e, Event::Type::GateOn, 3), ons};
   };
-  const auto [all, allFired] = notes(1.0);
-  CHECK(all >= 10);
-  CHECK(all == allFired);
-  const auto [half, halfFired] = notes(0.5);
-  CHECK(half == halfFired);
-  CHECK(half < all);
-  CHECK(notes(0.0).first == 0);
+  const auto [all, allOns] = run(1.0);
+  CHECK(all == 1);                                          // always on: one long note
+  CHECK(allOns == 1);
+  const auto [half, halfOns] = run(0.5);
+  CHECK(half == halfOns);                                   // a note each time a pass follows a fail
+  CHECK(half > 1);
+  CHECK(run(0.0).first == 0);
 }
 
 TEST_CASE("R2d Chance: connects as Counter: to sources, emitters and lasers, never to other power blocks") {

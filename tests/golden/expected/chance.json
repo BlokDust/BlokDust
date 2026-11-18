@@ -1,19 +1,19 @@
 {
-  "audioHash": "49245dc145d9b90c",
-  "eventHash": "5508857742e53c12",
-  "eventCount": 231,
+  "audioHash": "cc6dac88b2666530",
+  "eventHash": "9d1a29487fe0fbe7",
+  "eventCount": 207,
   "events": {
     "block": 20,
     "connect": 4,
     "emit": 32,
-    "gateOff": 26,
-    "gateOn": 28,
+    "gateOff": 14,
+    "gateOn": 16,
     "hit": 57,
     "logic": 42,
     "pass": 22
   },
   "frames": 352800,
   "sampleRate": 44100,
-  "rms": 0.043161,
-  "peak": 0.18002
+  "rms": 0.046069,
+  "peak": 0.172509
 }

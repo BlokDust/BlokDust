@@ -5,7 +5,7 @@
   "category": "power",
   "kind": "logic",
   "name": "Counter",
-  "description": "Counts particles and laser beams that hit it. Gives a short fire of energy to sources, particle emitters and lasers on its pattern's steps.",
+  "description": "Counts particles and laser beams that hit it. Powers sources, particle emitters and lasers while its pattern is on a hit step.",
   "v1": {
     "type": null
   },
@@ -97,7 +97,7 @@
         0,
         16
       ],
-      "description": "How many steps fire, spread as evenly as the length allows (Euclidean)"
+      "description": "How many steps are on, spread as evenly as the length allows (Euclidean)"
     },
     {
       "key": "rotate",
@@ -117,7 +117,7 @@
         -1,
         65535
       ],
-      "description": "Steps set by hand (bit k = step k fires, from the first one counted); -1 = the Euclidean pattern from steps, hits and rotate"
+      "description": "Steps set by hand (bit k = step k is on, from the first one counted); -1 = the Euclidean pattern from steps, hits and rotate"
     }
   ]
 }

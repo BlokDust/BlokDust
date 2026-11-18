@@ -1,5 +1,5 @@
 {
-  "description": "CHG-0015 (R2d): particles and a turning laser hit two Chance blocks (60% and 40%), which fire the Tones beside them at random.",
+  "description": "CHG-0015 (R2d): particles and a turning laser hit two Chance blocks (60% and 40%), which switch the Tones beside them on and off at random.",
   "render": { "seconds": 8, "sampleRate": 44100 },
   "patch": {
     "format": "blokdust.patch", "version": 2, "seed": 9,

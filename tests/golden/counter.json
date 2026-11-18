@@ -1,5 +1,5 @@
 {
-  "description": "CHG-0015 (R2c): an emitter fires at a Counter on E(3,8) that pulses the Tone beside it: the tresillo, twice round.",
+  "description": "CHG-0015 (R2c): an emitter fires at a Counter on E(3,8) that powers the Tone beside it on the active steps: the tresillo, twice round.",
   "render": { "seconds": 6, "sampleRate": 44100 },
   "patch": {
     "format": "blokdust.patch", "version": 2, "seed": 2,

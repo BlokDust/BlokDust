@@ -12,13 +12,13 @@ adrs: [SCOPE-0005, SIMULATION-0005, SIMULATION-0006]
 Sequencing, randomness and redirection for particles and beams, without adding routing.
 
 ## What changes
-- **Counter** (`power.counter`, catchment 6): a Pulse with a pattern (SIMULATION-0005). Steps 1–16, Hits 0–Steps,
-  Rotate; each hit moves it one step and an active step pulses its connected blocks. Its panel's first row draws the
-  pattern: a diamond per step, filled where it pulses, the next step underlined. A click on a step toggles it
+- **Counter** (`power.counter`, catchment 6): a switch with steps (SIMULATION-0005). Steps 1–16, Hits 0–Steps,
+  Rotate; each hit moves it one step, and it powers its connected blocks while its step is active. Its panel's first row draws the
+  pattern: a diamond per step, filled where it is on, the next step underlined. A click on a step toggles it
   (`pattern`, a bitmask; −1 = Euclidean); moving Steps, Hits or Rotate gives the Euclidean pattern back. A Reset button
   sends it back to step 1.
-- **Chance** (`power.chance`, catchment 6): a Pulse that fires at random (SIMULATION-0005). Each hit rolls once, and
-  with probability `chance` (0–100 %, seeded) pulses its connected blocks.
+- **Chance** (`power.chance`, catchment 6): a switch set at random (SIMULATION-0005). Each hit rolls once: with
+  probability `chance` (0–100 %, seeded) it powers its connected blocks until the next hit, otherwise not.
 - **Prism** (`power.prism`): Angle, Rotate, Streams 1–4, Spread (SIMULATION-0006); exit lines while its panel is open.
 - SPEC-SIMULATION-POWER-AND-PARTICLES: new R2c (Counter), R2d (Chance), R5d (prism particles), R7a (beams through
   Prisms).
@@ -26,8 +26,8 @@ Sequencing, randomness and redirection for particles and beams, without adding r
 - Designs: `tools/block-designer/proposed.json` (owner, 2026-11-13); copy each into its manifest unchanged.
 
 ## Acceptance
-- `pnpm test:engine`: Euclidean patterns (E(3,8) = x..x..x.), Counter pulses on active steps only, one step per beam
-  arrival, reset (world on, Stage power, Reset); Chance rolls and pulses; prism fan angles, remaining range, 8-prism path
+- `pnpm test:engine`: Euclidean patterns (E(3,8) = x..x..x.), Counter on for active steps only and held between hits, one step per beam
+  arrival, reset (world on, Stage power, Reset); Chance rolls and holds its roll; prism fan angles, remaining range, 8-prism path
   limit, pool-full drop; each cites its R number.
 - `pnpm bd render --check`: unchanged existing goldens; new `counter`, `chance`, `prism-split` goldens identical across
   release/dev, WASM and worklet.
