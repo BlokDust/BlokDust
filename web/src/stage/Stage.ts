@@ -331,7 +331,7 @@ export class Stage {
   private drawBlocksAndOverlays(ctx: CanvasRenderingContext2D): void {
     const m = this.metrics;
     // v1 Block.Draw: pressed + selected → 50%
-    drawBlocks(ctx, m, this.theme, this.blocks.values(), id => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1) * (this.openGates.has(id) ? 0.3 : 1));
+    drawBlocks(ctx, m, this.theme, this.blocks.values(), id => (id === this.pressed || this.placing.has(id) || this.held.has(id) ? 0.5 : 1), id => this.openGates.has(id));
     // Multi-select (not in v1): each selected block ringed by its outline moved out 4 units on every side, and the box,
     // dashed in the text colour at half strength (owner, 2026-11-11: quieter than a solid line).
     if (this.selected.size || this.selectBox) {

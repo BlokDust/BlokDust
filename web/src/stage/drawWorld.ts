@@ -40,10 +40,13 @@ function poly(ctx: CanvasRenderingContext2D, pts: [number, number][], fill: stri
 }
 
 /** Every block's layers, in the map's order (last drawn on top). `alpha`: v1 draws a pressed block at 50%. */
-export function drawBlocks(ctx: CanvasRenderingContext2D, m: Metrics, theme: Theme, blocks: Iterable<DrawnBlock>, alpha: (id: number) => number = () => 1): void {
+export function drawBlocks(ctx: CanvasRenderingContext2D, m: Metrics, theme: Theme, blocks: Iterable<DrawnBlock>, alpha: (id: number) => number = () => 1,
+  open: (id: number) => boolean = () => false): void {
   for (const { block, def } of blocks) {
     const upg = def.geometry.unitsPerGrid ?? 15, a = alpha(block.id);
-    for (const l of def.geometry.layers)
+    // An open Gate draws its open look (SIMULATION-0011): no Void colour, no stars.
+    const layers = def.geometry.openLayers && open(block.id) ? def.geometry.openLayers : def.geometry.layers;
+    for (const l of layers)
       poly(ctx, layerPoints(l, upg, block.starPos).map(([x, y]) => gridToPx(m, block.x + x, block.y + y)), theme.colors[l.palette], a);
   }
 }

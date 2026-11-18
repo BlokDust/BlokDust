@@ -49,6 +49,7 @@
             }
           }
         },
+        "openLayers": { "type": "array", "description": "Drawn instead of layers while a Gate is open (SIMULATION-0011)", "items": { "$ref": "#/properties/geometry/properties/layers/items" } },
         "outline": { "$ref": "#/$defs/polygon", "description": "Hit-test polygon in grid units" },
         "menuOffset": { "$ref": "#/$defs/point", "description": "Grid offset used when drawing the menu icon (v1 unscaled sprite)" },
         "overlays": {
