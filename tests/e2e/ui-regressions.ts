@@ -1874,9 +1874,10 @@ Object.assign(tests, {
     await patchesClick(p, 'close', 900);
     const first = await makeLink(p);
     const fresh = await link(), freshState = await state();
-    await texts(); await p.waitForTimeout(300); const withLink = await texts();
-    await p.click('#patchUrlText'); await p.waitForTimeout(300);
-    const copied = { line: (await texts()).includes('Link copied.'), clip: await p.evaluate(() => navigator.clipboard.readText()) };
+    await texts(); await p.mouse.move(5, 5); await p.mouse.move(8, 8); await p.waitForTimeout(300); const withLink = await texts();
+    await p.evaluate(() => navigator.clipboard.writeText(''));
+    await patchesClick(p, 'copyLink', 300);  // COPY LINK (owner, 2026-11-18): the message bar says so
+    const copied = { line: await p.evaluate(() => { const m = (window as any).__bd_probe.scene.MessagePanel; return m.Open && /link copied/i.test(m._Value?.string ?? ''); }), clip: await p.evaluate(() => navigator.clipboard.readText()) };
     await p.screenshot({ path: `${OUT}/share-link-inline.png` });
     await patchesClick(p, 'close', 900);
     const [x, y] = await toCss(p, 0, 0.2);
@@ -1892,7 +1893,7 @@ Object.assign(tests, {
     const labels = ['SAVE', 'SAVE AS', 'DOWNLOAD PATCH'];
     const ok = labels.every(l => before.includes(l)) && xs[1] < xs[0] && xs[0] < xs[2] && at[1][1] > at[0][1] + 50 && at[2][1] === at[1][1] && !before.some(t => /blokdust patch file|shareable link/i.test(t))
       && /[?&]c=/.test(first) && fresh?.url === first && !fresh.stale && freshState.save === null && freshState.saveAs === false
-      && withLink.includes('Share your creation with this unique URL:') && !withLink.some(t => gone.includes(t))
+      && withLink.includes('Saved. Share your creation with this unique URL:') && withLink.includes('COPY LINK') && !withLink.includes('SAVE') && !withLink.some(t => gone.includes(t))
       && copied.line && copied.clip === first
       && stale?.stale === true && staleState.save === 'new' && staleState.saveAs === true && second?.url !== first && !second?.stale;
     return [ok, { before, xs, first: first.slice(0, 60), fresh, freshState, withLink, copied, stale, staleState, second }];
@@ -2892,13 +2893,71 @@ Object.assign(tests, {
   async 'save-copies-link'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
     await p.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url });
-    await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel, f = pp.flashSaved.bind(pp); (window as any).__flash = []; pp.flashSaved = async (k: string) => { await f(k); (window as any).__flash.push(pp.flash.label); }; });
     const link = await makeLink(p);
-    await p.waitForFunction(() => (window as any).__flash.length > 0, null, { timeout: 5000 }).catch(() => {});
-    const r = await p.evaluate(async () => ({ clip: await navigator.clipboard.readText(), flash: (window as any).__flash }));
+    await p.waitForFunction(() => !!(window as any).__bd_probe.scene.PatchesPanel.lastSaved, null, { timeout: 5000 }).catch(() => {});
+    // The SAVE button goes once saved (owner, 2026-11-18): the message bar says SAVED · LINK COPIED.
+    const r = await p.evaluate(async () => { const s = (window as any).__bd_probe.scene; return { clip: await navigator.clipboard.readText(), saved: s.PatchesPanel.lastSaved, bar: String(s.MessagePanel._Value?.string ?? '') }; });
     await p.close();
-    return [r.clip === link && r.flash[0] === 'Link Copied', { link, ...r }];
+    return [r.clip === link && !!r.saved?.copied && /link copied/i.test(r.bar), { link, ...r }];
   },
+  /** Owner (2026-11-18): sliding SAVE / SHARE out, its name field (a page element, not the canvas) showed above the
+   * tabs. Every field is cut off at the tabs' foot while its page slides. */
+  async 'patches-fields-under-tabs'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await openPatches(p);
+    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.selectTab(1));
+    const seen: { top: number; tabs: number; shownAbove: boolean }[] = [];
+    for (let i = 0; i < 12; i++) {
+      seen.push(await p.evaluate(() => {
+        const pp = (window as any).__bd_probe.scene.PatchesPanel, a = (window as any).__bd_probe.v1App, pr = a.Metrics.PixelRatio;
+        const el = document.getElementById('patchTitle')!, r = el.getBoundingClientRect(), tabs = (pp.OffsetY + 60 * a.Unit) / pr, cs = getComputedStyle(el);
+        const clipped = cs.visibility === 'hidden' || cs.display === 'none' || (cs.clipPath !== 'none' && cs.clipPath !== '');
+        return { top: r.top, tabs, shownAbove: r.top < tabs - 1 && !clipped };
+      }));
+      await p.waitForTimeout(25);
+    }
+    await p.close();
+    return [seen.some(s => s.top < s.tabs) && !seen.some(s => s.shownAbove), seen.filter(s => s.top < s.tabs).slice(0, 3)];
+  },
+
+  /** Owner (2026-11-18): own patches don't share a name; a new link with a name already used gets " (2)", shown in the
+   * name field. Saving over the same link keeps its name. */
+  async 'save-names-unique'(errors: string[]) {
+    const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);
+    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.setTitle('Song'));
+    await makeLink(p);
+    const t1 = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
+    await patchesClick(p, 'close', 900);
+    await p.evaluate(() => (window as any).__bd_probe.scene.host.createBlock('ToneSource', 4, 4)); await p.waitForTimeout(300);
+    await openPatches(p); await patchesClick(p, 'saveAs', 200);
+    await p.waitForFunction(() => !(window as any).__bd_probe.scene.PatchesPanel.Saving, null, { timeout: 20000 }); await p.waitForTimeout(300);
+    const t2 = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.Title);
+    const titles = await p.evaluate(() => JSON.parse(localStorage.getItem('blokdust.myPatches') ?? '[]').map((m: { title: string }) => m.title));
+    await p.close();
+    return [t1 === 'Song' && t2 === 'Song (2)' && titles.includes('Song') && titles.includes('Song (2)'), { t1, t2, titles }];
+  },
+
+  /** Owner (2026-11-18, option 3c): on a phone, COPY LINK and SHARE (the device's share sheet) under the link. */
+  async 'share-link-phone'(errors: string[]) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+    const p = await ctx.newPage(); p.on('pageerror', e => errors.push(e.message));
+    await p.addInitScript(() => { (navigator as any).share = async (d: unknown) => { (window as any).__shared = d; }; });
+    await p.goto(`${url}/index.html?v1=${comp([blk(1, 'ToneSource', 0, 0)])}`);
+    await p.waitForFunction(() => (window as any).__bd_probe); await p.click('#start'); await p.waitForTimeout(1500);
+    await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.OpenPanel(0)); await p.waitForTimeout(1200);
+    const [sx, sy] = await p.evaluate(() => (window as any).__bd_probe.scene.PatchesPanel.centreOf('share'));
+    await p.touchscreen.tap(sx, sy);
+    await p.waitForFunction(() => !!(window as any).__bd_probe.scene.PatchesPanel.centreOf('shareLink'), null, { timeout: 20000 }).catch(() => {});
+    await p.waitForTimeout(400);
+    const at = await p.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { copy: pp.centreOf('copyLink'), share: pp.centreOf('shareLink'), url: pp.centreOf('url') }; });
+    if (at.share) { await p.touchscreen.tap(at.share[0], at.share[1]); await p.waitForTimeout(300); }
+    const shared = await p.evaluate(() => (window as any).__shared ?? null);
+    await p.screenshot({ path: `${OUT}/share-link-phone.png` });
+    await ctx.close();
+    const ok = !!at.copy && !!at.share && !!at.url && at.copy[1] > at.url[1] && Math.abs(at.share[1] - at.copy[1]) < 2 && at.share[0] > at.copy[0] && /[?&]c=/.test(shared?.url ?? '');
+    return [ok, { at, shared }];
+  },
+
   // Owner (2026-11-17, CHG-0035): MAKE VIDEO is hidden (and off) until the video export gets its own round of work.
   async 'make-video-hidden'(errors: string[]) {
     const p = await open(browser, [blk(1, 'ToneSource', 0, 0)], errors);

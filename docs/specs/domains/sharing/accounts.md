@@ -54,7 +54,12 @@ sharing keep working without an account. The Worker side is `server/src/auth/`; 
   account, beside its Google, Apple and other passkeys. No message: the "Sign-in methods" line shows it (R13).
 
 - **R8.** `GET /api/me/patches` lists the account's patches, newest first. The OPEN tab lists them first ("Saved …":
-  every patch there is the user's, so no "Your account"; owner, 2026-11-18).
+  every patch there is the user's, so no "Your account"; owner, 2026-11-18), once each: this browser's own copies are
+  listed after them only when they aren't the account's (a copy remembers its link; older copies are matched by name).
+- **R8a.** *(CHG-0037)* Each account patch in OPEN has a bin. Deleting asks first ("Anyone with its link, and the
+  gallery if it's published, will no longer be able to open it.") and really deletes it (SPEC-SHARING-BACKEND R4,
+  R4b): it leaves the gallery, its link answers 410, and if it is on the stage the stage keeps it, unlinked (SAVE makes
+  a new link). Unpublish is the way to leave the gallery and keep the link.
 - **R9.** A patch saved while signed in belongs to the account. Signing in claims the patches this browser holds edit
   tokens for. The owner can save over the account's patches from any device signed in to it, without the edit token.
 - **R10.** DELETE ACCOUNT (asked first) deletes the account, its passkeys, Google link, sessions and patches. Their

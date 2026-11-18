@@ -82,6 +82,14 @@ The single, portable representation of a BlokDust creation, used by the web app,
     opens nothing useful (owner, 2026-11-16). OPEN has no hint line; its list and GALLERY's start 175 units over the
     centre (never closer than 50 units under the tabs) and their windows are the same size (owner, 2026-11-18).
   - While SAVE saves, the button reads SAVING; there is no spinner or line under it (owner, 2026-11-18).
+  - SAVE / SHARE's link (owner, 2026-11-18, mockup options 3, 3c and 4): saved and unchanged, there is no SAVE button;
+    in its place "Saved. Share your creation with this unique URL:", the link small on a rule (a click copies it) and a
+    bordered COPY LINK at its right; on a phone COPY LINK and SHARE (the device's share sheet) go under the link.
+    Changed since, SAVE CHANGES (SAVE for a link this device can't save over) comes back and the link sits under it,
+    dimmed. Copying and saving are confirmed in v1's message bar (LINK COPIED, SAVED · LINK COPIED).
+  - The user's own patches don't share a name (owner, 2026-11-18): a save that makes a new link with a name already
+    used by another of them (OPEN's list) gets " (2)", " (3)"…, put in the name field before it saves; saving over a
+    link may keep its own name.
   - On a phone (portrait) OPEN and GALLERY run from the tabs to the foot of the screen, with taller rows in larger type,
     and the video view from the tabs down (owner, 2026-11-16: v1 centred its pages, leaving wide gaps on a tall screen).
   - The video view (after SAVE with MAKE VIDEO on) shows the player, its button and the patch's link to copy; no name

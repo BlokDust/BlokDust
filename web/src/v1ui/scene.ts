@@ -675,6 +675,7 @@ function ensureShareDom(): void {
   style.textContent = `#shareUrl, #shareTitle, #soundCloudSearch, #patchTitle, #patchUrl, #accountHandle, #gallerySearch { font-family: "Dosis", Arial, Helvetica, sans-serif; font-weight: 200; font-size: 56px;
     mix-blend-mode: normal; background-blend-mode: normal; width: 200px; height: 100px; position: absolute; left: 1000%; top: -100%; }
   #shareUrl form, #shareTitle form, #soundCloudSearch form, #patchTitle form, #patchUrl form, #accountHandle form, #gallerySearch form { width: inherit; height: inherit; }
+  #patchUrl input { text-overflow: ellipsis; }
   #shareUrl input, #shareTitle input, #soundCloudSearch input, #patchTitle input, #patchUrl input, #accountHandle input, #gallerySearch input { overflow: scroll; scrollbar-width: none; white-space: nowrap; width: inherit; height: inherit; font: inherit;
     line-height: inherit; color: inherit; outline: none; border: none; padding: 0; margin: 0; background-color: transparent; resize: none; }
   #shareUrl input::-webkit-scrollbar, #shareTitle input::-webkit-scrollbar, #soundCloudSearch input::-webkit-scrollbar, #patchTitle input::-webkit-scrollbar, #patchUrl input::-webkit-scrollbar, #accountHandle input::-webkit-scrollbar, #gallerySearch input::-webkit-scrollbar { display: none; }

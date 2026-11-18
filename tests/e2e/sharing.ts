@@ -193,13 +193,42 @@ const tests: Record<string, (browser: Browser) => Promise<void>> = {
     check('save-as records the parent', a.status === 201 && a.json?.parent === c.json.id, a.json);
     created.push({ id: a.json.id, token: a.json.editToken });
     check('delete without token → 403', (await api('DELETE', `patches/${a.json.id}`)).status === 403);
-    check('delete with token → 204, then 404', (await api('DELETE', `patches/${a.json.id}`, undefined, a.json.editToken)).status === 204 && (await api('GET', `patches/${a.json.id}`)).status === 404);
+    check('delete with token → 204, then 410 (deleted)', (await api('DELETE', `patches/${a.json.id}`, undefined, a.json.editToken)).status === 204 && (await api('GET', `patches/${a.json.id}`)).status === 410);
   },
 
   /** Acceptance: Share → open in a fresh browser → identical render hash; Overwrite / Create new as v1. */
   /** CHG-0033 (owner, 2026-11-17), R18–R20: Cmd/Ctrl+S and the corner's UNSAVED/SAVE save over your own link (same
    * id and title, no gallery field, no panel) and v1's message bar says SAVED; the corner names the patch and marks
    * unsaved changes, which survive a reload; a failed save says so and changes nothing. */
+  /** Owner (2026-11-18): a link to no patch opened this browser's last stage (a made-up id) or an empty one, with no
+   * word. Now the message bar says why and the stage starts blank; the bad link leaves the address bar; this browser's
+   * autosave is kept. Deleted patches answer 410 (SPEC-SHARING-BACKEND R4b). */
+  async 'missing-links'(browser) {
+    if (remote) return;
+    const made = await api('POST', 'patches', { patch: PATCH, turnstile: 'XXXX.DUMMY.TOKEN.XXXX', title: 'Soon gone' });
+    const del = await api('DELETE', `patches/${made.json.id}`, undefined, made.json.editToken);
+    const gone = await api('GET', `patches/${made.json.id}`);
+    check('a deleted patch answers 410; one that never was, 404', del.status === 204 && gone.status === 410 && (await api('GET', 'patches/A000000000')).status === 404, [del.status, gone.status]);
+    const page = await open(browser, `${base}/?demo`);
+    // This browser's last stage (its autosave), as a visit without a link would restore it.
+    const autosave = await page.evaluate(p => { localStorage.setItem('blokdust2.autosave', JSON.stringify(p)); return localStorage.getItem('blokdust2.autosave'); }, PATCH);
+    const cases: [string, RegExp][] = [['madeUpId', /doesn.t lead to a patch/i], ['A000000000', /doesn.t lead to a patch/i], [made.json.id, /has been deleted/i]];
+    const seen: unknown[] = [];
+    let ok = !!autosave;
+    for (const [id, want] of cases) {
+      await page.goto(`${base}/?c=${id}&t=Whatever`);
+      await page.waitForFunction(() => (window as any).__bd_probe);
+      if (await page.$('#start')) await page.click('#start');
+      await page.waitForFunction(() => (window as any).__bd_probe.state.started, null, { timeout: 20000 });
+      await page.waitForFunction(() => (window as any).__bd_probe.scene.MessagePanel.Open, null, { timeout: 8000 }).catch(() => {});
+      const r = await page.evaluate(() => { const w = window as any; return { text: String(w.__bd_probe.scene.MessagePanel._Value?.string ?? ''), blocks: w.__bd_probe.scene.host.hasBlocks(), url: location.search, autosave: localStorage.getItem('blokdust2.autosave') }; });
+      seen.push({ id, ...r, autosave: r.autosave === autosave });
+      ok &&= want.test(r.text) && !r.blocks && !r.url.includes('c=') && r.autosave === autosave;
+    }
+    await page.context().close();
+    check('a bad, unknown or deleted link: the message bar says which, a blank stage, the link leaves the address bar, the autosave is kept', ok, seen);
+  },
+
   async 'quick-save'(browser) {
     const a = await open(browser, `${base}/?demo`);
     await a.evaluate(() => (window as any).__bd_probe.scene.setWorldPower(false));

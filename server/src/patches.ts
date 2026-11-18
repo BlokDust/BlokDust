@@ -168,10 +168,15 @@ export async function loadPatch(env: Env, id: string): Promise<Loaded | null> {
   return { id, rev: r.rev, title: v.title, parent: r.parent, created: r.created, updated: r.updated, patch: JSON.parse(v.json), hasThumb: !!v.has_thumb, by };
 }
 
+/** A patch that was there and was deleted (its id stays taken): 410, so the app can say so (SPEC-SHARING-BACKEND R4b). */
+export async function wasDeleted(env: Env, id: string): Promise<boolean> {
+  return ID_RE.test(id) && !!(await env.DB.prepare('SELECT 1 FROM patches WHERE id = ? AND deleted = 1').bind(id).first());
+}
+
 /** GET /api/patches/:id: the latest revision. */
 export async function getPatch(env: Env, req: Request, id: string, ctx?: ExecutionContext): Promise<Response> {
   const p = await loadPatch(env, id);
-  if (!p) throw new HttpError(404, 'no such patch');
+  if (!p) throw (await wasDeleted(env, id)) ? new HttpError(410, 'this patch has been deleted') : new HttpError(404, 'no such patch');
   // SPEC-SHARING-GALLERY R14: roughly how often it is opened in the app (pages and previews don't count).
   const counting = env.DB.prepare('UPDATE patches SET views = views + 1 WHERE id = ?').bind(id).run().catch(() => {});
   if (ctx) ctx.waitUntil(counting); else await counting;

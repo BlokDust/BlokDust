@@ -115,11 +115,34 @@ export async function save(mode: 'save' | 'saveAs', currentId: string | null, in
   return { id: r.id, rev: r.rev, url: r.url, parent: r.parent, gallery: r.gallery };
 }
 
-/** A shared patch by id (latest revision); null if it does not exist or there is no backend. */
-export async function load(id: string): Promise<LoadedPatch | null> {
+/** Why a link opened no patch (owner, 2026-11-18): deleted by its creator, never a patch (or a malformed link), or the
+ * server couldn't be reached. Shown in the message bar. */
+export type Missing = 'deleted' | 'unknown' | 'offline';
+export const MISSING_TEXT: Record<Missing, string> = {
+  deleted: 'This patch has been deleted.',
+  unknown: 'This link doesn’t lead to a patch. Check it was copied in full.',
+  offline: 'This patch couldn’t be loaded. Check your connection and try again.',
+};
+/** A shared patch by id (latest revision), or why there is none. */
+export async function loadOrWhy(id: string): Promise<LoadedPatch | { missing: Missing }> {
   try {
     const p = await call<LoadedPatch>('GET', `patches/${id}`);
     if (p.mine) accountOwned.add(id);
     return p;
-  } catch { return null; }
+  } catch (e) {
+    const status = (e as { status?: number }).status;
+    return { missing: status === 410 ? 'deleted' : status === 404 ? 'unknown' : 'offline' };
+  }
+}
+/** Delete one of the user's saved patches (the account owns it, or this browser holds its edit token): its link stops
+ * opening it and it leaves the gallery (SPEC-SHARING-ACCOUNTS R8a). Already gone counts as done. */
+export async function remove(id: string): Promise<void> {
+  try { await call('DELETE', `patches/${id}`, undefined, editToken(id)); }
+  catch (e) { if ((e as { status?: number }).status !== 404) throw e; }
+  accountOwned.delete(id);
+}
+/** A shared patch by id (latest revision); null if it does not exist or there is no backend. */
+export async function load(id: string): Promise<LoadedPatch | null> {
+  const r = await loadOrWhy(id);
+  return 'missing' in r ? null : r;
 }

@@ -324,8 +324,8 @@ try {
     && sorts.join() === 'POPULAR,ALL TIME TOP,NEW,EXAMPLES', { tutorialsEmpty, tutorials, sorts });
   await press(carol, 'sort_examples', 300); await idle(carol);
   // Owner review 3: while the patch is fetched the panel stays up with the spinner (the old stage can't be touched), then
-  // closes; if it can't be fetched, the panel says so.
-  const opening = () => carol.page.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; return { opening: pp.Opening, open: pp.Open, error: pp.OpenError, blocks: (window as any).__bd_probe.state.patch.blocks.length }; });
+  // closes; if it can't be fetched, the message bar says so (owner, 2026-11-18: no server → check your connection).
+  const opening = () => carol.page.evaluate(() => { const pp = (window as any).__bd_probe.scene.PatchesPanel; const m = (window as any).__bd_probe.scene.MessagePanel; return { opening: pp.Opening, open: pp.Open, error: m.Open ? String(m._Value?.string ?? '') : '', blocks: (window as any).__bd_probe.state.patch.blocks.length }; });
   const blocksBefore = (await opening()).blocks;
   await carol.page.route('**/api/patches/*', r => r.request().method() === 'GET' ? r.abort() : r.continue());
   await press(carol, 'gopen3', 1200);
@@ -342,7 +342,7 @@ try {
   await carol.page.unroute('**/api/patches/*');
   const landed = await opening();
   check('Owner review 3: while a gallery patch is fetched the panel stays up with the spinner, then closes; a failed fetch says so',
-    failed.open && !failed.opening && /couldn’t be opened/.test(failed.error) && failed.blocks === blocksBefore
+    failed.open && !failed.opening && /couldn’t be loaded\. Check your connection/.test(failed.error) && failed.blocks === blocksBefore
     && during.opening && during.open && during.blocks === blocksBefore && !landed.opening && !landed.open && landed.blocks === 10, { blocksBefore, failed, during, landed });
   const rotating = await carol.page.evaluate(() => ({ n: (window as any).__bd_probe.state.patch.blocks.length, credit: (window as any).__bd_probe.corners.credit }));
   check('R16: an example opens with all its blocks, credited to @blokdust', rotating.n === 10 && rotating.credit?.by === 'blokdust' && rotating.credit?.title === 'Rotating Sequencer', rotating);

@@ -23,6 +23,12 @@ never as audio (DATA-0005). The Worker is `server/`; the client is `web/src/patc
 - **R4.** `PUT /api/patches/:id` (v1 SAVE: Overwrite) MUST require `Authorization: Bearer <edit token>` and adds a
   revision under the same id. `DELETE` needs the token too and removes every revision. Without the token: 403, unless
   the request is signed in to the account that owns the patch (SPEC-SHARING-ACCOUNTS R9).
+- **R4b.** *(CHG-0037, owner 2026-11-18)* A deleted patch's id stays taken, and `GET /api/patches/:id` answers 410 for
+  it (404: never a patch). A link that opens no patch starts a blank stage, leaves the address bar, keeps this
+  browser's autosave, and v1's message bar says why: deleted ("This patch has been deleted."), never a patch or a
+  malformed link ("This link doesn't lead to a patch. Check it was copied in full."), or no server ("This patch couldn't
+  be loaded. Check your connection and try again."). OPEN and GALLERY's OPEN and INSERT say the same, and a deleted
+  patch's row leaves the list.
 - **R5.** Every save (R3, R4) MUST carry a Turnstile token that Cloudflare's siteverify accepts. Without a configured
   secret, saving is refused (it fails closed).
 - **R5a.** Per-IP limits (Workers rate limiting): 20 saves a minute, and 60 Freesound lookups a minute (one shared API

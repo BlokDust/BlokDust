@@ -34,6 +34,7 @@
 // with the patch open: main.ts).
 import { App, Dimensions, DisplayObject } from './shim.ts';
 import { Device } from './ported/Device';
+import { MISSING_TEXT } from '../patch/server.ts';
 
 export interface PatchItem {
   /** Shown upper-case on the row's first line. */
@@ -43,6 +44,17 @@ export interface PatchItem {
   key: string;
   /** The user's own (saved here): the row has a bin. */
   removable?: boolean;
+  /** The link it was saved to, if any. */
+  link?: string;
+}
+
+/** A name not among `taken` (case ignored): "Name", else "Name (2)", "Name (3)", … (owner, 2026-11-18: your own
+ * patches don't share a name). A name already ending in " (n)" counts on from its base. */
+export function uniqueTitle(title: string, taken: Iterable<string>): string {
+  const used = new Set([...taken].map(t => t.trim().toLowerCase()));
+  if (!used.has(title.trim().toLowerCase())) return title;
+  const base = title.replace(/\s*\(\d+\)$/, '');
+  for (let n = 2; ; n++) { const t = `${base} (${n})`; if (!used.has(t.toLowerCase())) return t; }
 }
 /** Accounts (CHG-0023): what the ACCOUNT tab shows. */
 export interface AccountInfo { handle: string | null; passkeys: number; providers: string[]; stats?: import('../account/client.ts').AccountStats }
@@ -78,12 +90,13 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 export type GallerySort = 'popular' | 'top' | 'new' | 'examples' | 'tutorials';
 export const GALLERY_SORTS: GallerySort[] = ['popular', 'top', 'new', 'examples'];
 /** An Open or Insert: a promise while the patch is fetched (false: it couldn't be). */
-type OpenRun = () => void | Promise<boolean>;
+/** Open or insert; a promise ends true, or false / the message bar's words for why it couldn't. */
+type OpenRun = () => void | Promise<boolean | string>;
 export interface GalleryRow { id: string; title: string; by: string; likes: number; remixes: number; views: number; liked: boolean; mine: boolean }
 export interface GalleryHost {
   browse(sort: GallerySort, q: string, page: number): Promise<{ items: GalleryRow[]; more: boolean } | null>;
   /** Open a published patch (it replaces the current one; SAVE then makes a remix of it), or Insert its blocks. */
-  open(row: GalleryRow, mode: 'open' | 'insert'): Promise<boolean>;
+  open(row: GalleryRow, mode: 'open' | 'insert'): Promise<boolean | string>;
   /** Like or unlike (the host shows it at once on this row and the stage, and settles fast presses on the last). */
   like(row: GalleryRow): void;
   report(id: string): Promise<void>;
@@ -103,7 +116,7 @@ export interface PatchesHost {
   /** Save the scene as a file under `title`; resolves true once written (false: cancelled or failed). */
   savePatch(title: string): Promise<boolean>;
   /** Open (replace) or Insert (place by hand) a listed patch. */
-  openPatch(item: PatchItem, mode: 'open' | 'insert'): void | Promise<boolean>;
+  openPatch(item: PatchItem, mode: 'open' | 'insert'): void | Promise<boolean | string>;
   /** Show the system file picker; the host answers with `PatchesPanel.showFile`. */
   pickPatchFile(): void;
   /** Open or Insert the file last given to `showFile`. */
@@ -113,7 +126,8 @@ export interface PatchesHost {
   /** Delete one of the user's own patches (web: from this browser's list; plugin: the file goes to the Trash). */
   removePatch(item: PatchItem): Promise<void>;
   /** What deleting does, for the confirm step. */
-  removeLine: string;
+  /** The delete step's line for this patch. */
+  removeLine(item: PatchItem): string;
   hasBlocks(): boolean;
   /** Video export (SPEC-SHARING-VIDEO-EXPORT); null: no VIDEO tab (the plugin, R16). */
   video: null | {
@@ -164,7 +178,8 @@ export const COPY = {
   // Web (owner, 2026-11-11): three buttons, no help lines: SAVE (to the link: made the first time), SAVE AS (a new
   // link), DOWNLOAD PATCH (the .blokdust file). Clicking the link copies it.
   saveLink: 'Save', saveAs: 'Save As', download: 'Download Patch',
-  linkLine: 'Share your creation with this unique URL:', linkCopied: 'Link copied.', savedCopied: 'Link Copied',
+  linkLine: 'Share your creation with this unique URL:', savedLine: 'Saved. Share your creation with this unique URL:',
+  linkCopied: 'Link copied', savedCopied: 'Saved · Link copied', copyLink: 'Copy Link', shareLink: 'Share', saveChanges: 'Save Changes',
   saving: 'saving...', savingButton: 'Saving',
   open: 'Open', insert: 'Insert', empty: 'No patches yet', file: 'Open From Your Device', back: 'Back',
   openDesc: 'Replace the current patch', insertDesc: 'Add its blocks to this patch',
@@ -243,7 +258,7 @@ export class PatchesPanel extends DisplayObject {
   /** The patch the delete step asks about. */
   private removing: PatchItem | null = null;
   /** What OPEN ANYWAY / SAVE FIRST go on to do, and the view to go back to on CANCEL. */
-  private pending: { run: OpenRun; from: View } | null = null;
+  private pending: { run: OpenRun; from: View; gone?: () => void } | null = null;
   /** A patch is being fetched to open or insert: the panel stays up with v1's spinner (owner review 3, 2026-11-16: the
    * old stage showed, and could be changed, for the seconds it took), then closes. */
   Opening = false;
@@ -277,7 +292,15 @@ export class PatchesPanel extends DisplayObject {
     const link = this.link; if (!link) return;
     this.UrlInput.select();
     try { await navigator.clipboard.writeText(link.url); } catch { document.execCommand?.('copy'); }
-    this.flash = { key: 'url', label: COPY.linkCopied, until: performance.now() + 1500 }; this.settled();
+    this.say(COPY.linkCopied);
+  }
+  /** v1's message bar (App.Message): saved, copied, shared. */
+  private say(text: string, seconds = 2): void { (App.MainScene as { message?: (t: string, o?: { seconds?: number }) => void } | undefined)?.message?.(text, { seconds }); }
+  /** SHARE (phones): the device's own share sheet, which lists Instagram, Messages, WhatsApp… (owner, 2026-11-18). */
+  private get canShare(): boolean { return this.mobile && typeof navigator !== 'undefined' && typeof navigator.share === 'function'; }
+  private async shareSheet(): Promise<void> {
+    const link = this.link; if (!link) return;
+    try { await navigator.share({ title: this.Title.trim() || 'BlokDust', url: link.url }); } catch { /* closed */ }
   }
 
   flashing(key: string): boolean { return !!this.flash && this.flash.key === key && performance.now() < this.flash.until; }
@@ -373,6 +396,20 @@ export class PatchesPanel extends DisplayObject {
   private signInButton() { const u = App.Unit; return this.bordered(COPY.signIn, App.Width * 0.5 + 210 * u, this.cy - 61 * u); }
   private get signInShown() { return this.web && !!this.host.gallery && !!this.host.signInToSave && !this.host.signedIn(); }
   private videoSwitch() { const u = App.Unit; return { x: this.host.gallery ? this.margin + this.pageW * 0.5 + 10 * u : this.margin, y: this.cy - 72 * u, w: 60 * u, h: 60 * u }; }
+  /** Saved and nothing changed (owner, 2026-11-18): no SAVE button, the link takes its place. */
+  private get linkOnly(): boolean { return this.web && !!this.link && !this.Saving && this.mainAction().kind === null; }
+  /** The link's line (baseline) and its field's top: in SAVE's place when saved, else under it. */
+  private linkLineY() { return this.cy + (this.linkOnly ? 33 : 83) * App.Unit; }
+  private urlTop() { return this.linkLineY() + 12 * App.Unit; }
+  /** COPY LINK: at the right of the link on a desktop; under it on a phone, with SHARE beside it. */
+  private copyButton() {
+    const u = App.Unit;
+    if (!this.mobile) return this.bordered(COPY.copyLink, this.margin + this.pageW, this.urlTop() + 6 * u);
+    return this.bordered(COPY.copyLink, this.margin + this.textW(COPY.copyLink) + 10 * u, this.urlTop() + 42 * u);
+  }
+  private shareButton() { const u = App.Unit, c = this.copyButton(); return this.bordered(COPY.shareLink, c.x + c.w + 15 * u + this.textW(COPY.shareLink) + 10 * u, c.y); }
+  /** The link field's width: up to COPY LINK on a desktop, the page on a phone. */
+  private urlWidth() { const u = App.Unit; return this.mobile ? this.pageW : this.pageW - this.copyButton().w - 15 * u; }
   /** SAVE (or MAKE VIDEO): Connect's 420×40 GUIDE button. */
   private mainButton() { const u = App.Unit, W = App.Width; return { x: W * 0.5 - 210 * u, y: this.cy + 20 * u, w: 420 * u, h: 40 * u, cx: W * 0.5 }; }
   /** SAVE AS (left) and DOWNLOAD PATCH (right, not on phones): v1's bordered buttons at the bottom. */
@@ -511,20 +548,30 @@ export class PatchesPanel extends DisplayObject {
     if (this.host.video) this.drawSwitch(this.videoSwitch(), COPY.makeVideo, this.videoOn, true, '');
     if (this.signInShown) this.drawBordered(this.signInButton(), this.roll.signIn ? txt : App.Palette[1]);
 
-    // SAVE, or MAKE VIDEO when there is nothing to save (the GUIDE button, SharePanel's SAVE colour) //
+    // SAVE (SAVE CHANGES once there is a link), or MAKE VIDEO when there is nothing to save (the GUIDE button,
+    // SharePanel's SAVE colour). Saved with nothing changed, there is no button: the link takes its place (owner,
+    // 2026-11-18). While saving the button says so: no spinner or line under it.
     const main = this.mainAction(), m = this.mainButton();
-    // While saving the button itself says so (owner, 2026-11-18): no spinner or line under it.
-    this.filled(m, App.Palette[main.off ? 1 : menu[3]], this.Saving ? COPY.savingButton : this.label('share', main.label), !!this.roll.share && !main.off);
+    if (!this.linkOnly) {
+      const label = this.Saving ? COPY.savingButton : main.kind === 'save' && link && this.shareState().save === 'save' ? COPY.saveChanges : main.label;
+      this.filled(m, App.Palette[main.off ? 1 : menu[3]], label, !!this.roll.share && !main.off);
+    }
 
-    // THE LINK (v1 SharePanel's second page: its line + URL box; a click on it copies) //
+    // THE LINK: its line, the link small on a rule (a DOM field: a click copies it), COPY LINK (and SHARE on a phone) //
     App.FillColor(ctx, txt);
     let warnY = cy + 85 * u;
     if (link && !this.Saving) {
+      ctx.save();
+      if (!this.linkOnly) ctx.globalAlpha = 0.6;  // changed since: the link is the last save's
       ctx.font = App.Metrics.TxtItalic2; ctx.textAlign = 'left';
-      this.wordWrap(this.label('url', COPY.linkLine), W * 0.5 - 210 * u, cy + 83 * u, 14 * u, 420 * u);
-      App.FillColor(ctx, App.Palette[1]);
-      ctx.fillRect(W * 0.5 - 210 * u, cy + 95 * u, 420 * u, 40 * u);
-      warnY = cy + 160 * u;
+      this.wordWrap(this.linkOnly ? COPY.savedLine : COPY.linkLine, this.margin, this.linkLineY(), 14 * u, this.pageW);
+      App.StrokeColor(ctx, App.Palette[1]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(this.margin, this.urlTop() + 32 * u); ctx.lineTo(this.margin + this.urlWidth(), this.urlTop() + 32 * u); ctx.stroke();
+      const c = this.copyButton();
+      this.drawBordered(c, this.roll.copyLink ? txt : this.linkOnly ? txt : App.Palette[1]);
+      if (this.canShare) this.drawBordered(this.shareButton(), txt);
+      ctx.restore();
+      warnY = this.urlTop() + (this.mobile ? 85 : 60) * u;
     }
     // WARNINGS (v1 SharePanel) //
     if (!this.Saving) {
@@ -685,7 +732,7 @@ export class PatchesPanel extends DisplayObject {
   private drawRemove(): void {
     const item = this.removing, menu = App.ThemeManager.MenuOrder, u = App.Unit, { left, right } = this.halves();
     if (!item) return;
-    this.heading(`${COPY.remove} ${item.name}?`, this.host.removeLine);
+    this.heading(`${COPY.remove} ${item.name}?`, this.host.removeLine(item));
     for (const b of [left, right]) b.y = this.cy + 5 * u;
     this.filled(left, App.Palette[1], COPY.cancel, !!this.roll.removeCancel);
     this.filled(right, App.Palette[menu[3]], COPY.removeButton, !!this.roll.removeOk);
@@ -964,7 +1011,10 @@ export class PatchesPanel extends DisplayObject {
       r.share = box(this.mainButton());
       const sec = this.secondary();
       r.saveAs = pad(sec.saveAs); r.save = !!sec.download && pad(sec.download);
-      r.url = !!this.link && !this.Saving && hit(W * 0.5 - 210 * u, cy + 95 * u, 420 * u, 40 * u);
+      const live = !!this.link && !this.Saving;
+      r.copyLink = live && pad(this.copyButton());
+      r.shareLink = live && this.canShare && pad(this.shareButton());
+      if (this.linkOnly) r.share = false;  // no SAVE button here
     } else if (this.View === 'list') {
       if (this.fileButtonShown) r.file = pad(this.fileButton());
       const L = this.openLayout();
@@ -1030,7 +1080,9 @@ export class PatchesPanel extends DisplayObject {
       case 'save': { if (!this.web) return mid(left); const d = this.secondary().download; return d ? mid(d) : null; }
       case 'share': return this.web ? mid(this.mainButton()) : mid(right);
       case 'saveAs': return this.web ? mid(this.secondary().saveAs) : null;
-      case 'url': return this.View === 'video' ? at(App.Width * 0.5, this.videoLink().box + 20 * u) : at(App.Width * 0.5, this.cy + 115 * u);
+      case 'url': return this.View === 'video' ? at(App.Width * 0.5, this.videoLink().box + 20 * u) : at(this.margin + this.urlWidth() / 2, this.urlTop() + 15 * u);
+      case 'copyLink': return this.link ? mid(this.copyButton()) : null;
+      case 'shareLink': return this.link && this.canShare ? mid(this.shareButton()) : null;
       case 'file': return mid(f);
       case 'fileOpen': return at(left.cx, this.cy + 25 * u);
       case 'fileInsert': return at(right.cx, this.cy + 25 * u);
@@ -1059,8 +1111,9 @@ export class PatchesPanel extends DisplayObject {
       const item = this.Items[d.row];
       if (!item) return;
       if (d.mode === 'bin') { this.removing = item; this.View = 'remove'; return; }
-      if (d.mode === 'insert') this.runOpen(() => this.host.openPatch(item, 'insert'));
-      else this.requestOpen(() => this.host.openPatch(item, 'open'));
+      const gone = () => { this.Items = this.Items.filter(x => x !== item); };
+      if (d.mode === 'insert') this.runOpen(() => this.host.openPatch(item, 'insert'), gone);
+      else this.requestOpen(() => this.host.openPatch(item, 'open'), gone);
       return;
     }
     if (!d || d.moved || d.row < 0 || !g || this.Tab !== 2 || d.tab !== 2) return;
@@ -1069,8 +1122,10 @@ export class PatchesPanel extends DisplayObject {
     // Likes from the list too (owner review 3: changed their mind); signed out, the host asks to sign in.
     if (d.mode === 'like') { g.like(row); this.settled(); return; }
     // Insert adds to the patch: nothing is lost, so it doesn't ask first (as OPEN's INSERT).
-    if (d.mode === 'insert') this.runOpen(() => g.open(row, 'insert'));
-    else this.requestOpen(() => g.open(row, 'open'));
+    // Deleted since the list loaded: its row goes (owner, 2026-11-18).
+    const gone = () => { this.GalleryItems = this.GalleryItems.filter(x => x !== row); };
+    if (d.mode === 'insert') this.runOpen(() => g.open(row, 'insert'), gone);
+    else this.requestOpen(() => g.open(row, 'open'), gone);
   }
   MouseDown(pt: { x: number; y: number }): void {
     if (this.Opening) return;
@@ -1132,6 +1187,8 @@ export class PatchesPanel extends DisplayObject {
         return;
       }
       if (r.saveAs) { if (this.shareState().saveAs && !this.Saving) void this.saveAsLink().then(ok => { if (ok && this.videoOn) void this.makeVideo(); }); return; }
+      if (r.copyLink) { void this.copyLink(); return; }
+      if (r.shareLink) { void this.shareSheet(); return; }
       return;
     }
     if (this.View === 'list') {
@@ -1163,32 +1220,39 @@ export class PatchesPanel extends DisplayObject {
     // confirm
     if (this.Saving) return;
     if (r.cancel) { this.View = this.pending?.from ?? 'list'; this.pending = null; return; }
-    if (r.openAnyway) { const p = this.pending; this.pending = null; if (p) this.runOpen(p.run); return; }
+    if (r.openAnyway) { const p = this.pending; this.pending = null; if (p) this.runOpen(p.run, p.gone); return; }
     if (r.saveFirst) {
       void this.save().then(ok => {
         if (!ok || !this.pending) return;
-        const p = this.pending; this.pending = null; this.runOpen(p.run);
+        const p = this.pending; this.pending = null; this.runOpen(p.run, p.gone);
       });
     }
   }
   /** Open replaces the patch: with unsaved changes, ask first (owner, 2026-11-10). */
-  private requestOpen(run: OpenRun): void {
-    if (!this.host.isDirty()) { this.runOpen(run); return; }
-    this.pending = { run, from: this.View };
+  private requestOpen(run: OpenRun, gone?: () => void): void {
+    if (!this.host.isDirty()) { this.runOpen(run, gone); return; }
+    this.pending = { run, from: this.View, gone };
     this.View = 'confirm';
   }
   /** Open or Insert. A patch from the server keeps the panel up, spinning, until it is in; then the panel closes. */
-  private runOpen(run: OpenRun): void {
+  private runOpen(run: OpenRun, gone?: () => void): void {
     this.OpenError = '';
     const r = run();
     if (!(r instanceof Promise)) { this.ClosePanel(); return; }
     this.Opening = true; this.showDom();
-    const done = (ok: boolean) => {
+    // Couldn't: v1's message bar says why (owner, 2026-11-18); a deleted patch's row goes from the list.
+    const done = (ok: boolean | string) => {
       this.Opening = false;
-      if (ok) this.ClosePanel(); else { this.OpenError = COPY.openFailed; this.showDom(); }
+      if (ok === true) this.ClosePanel();
+      else {
+        const why = typeof ok === 'string' ? ok : COPY.openFailed;
+        (App.MainScene as { message?: (t: string, o?: { seconds?: number }) => void } | undefined)?.message?.(why, { seconds: 5 });
+        if (why === MISSING_TEXT.deleted) gone?.();
+        this.showDom();
+      }
       this.settled();
     };
-    r.then(ok => done(ok !== false), () => done(false));
+    r.then(ok => done(ok === undefined ? true : ok), () => done(false));
   }
   /** v1 SettingsPanel category select: the new tab's fill drops in, the others lift. */
   selectTab(i: Tab): void {
@@ -1236,13 +1300,17 @@ export class PatchesPanel extends DisplayObject {
   private async flashSaved(key: string): Promise<void> {
     const copied = await (this.copying ?? Promise.resolve(false));
     this.copying = null;
-    this.flash = { key, label: copied ? COPY.savedCopied : COPY.saved, until: performance.now() + (copied ? 2000 : 1500) };
+    // The button goes once saved (owner, 2026-11-18): the message bar says so.
+    this.lastSaved = { key, copied };
+    this.say(copied ? COPY.savedCopied : COPY.saved);
     this.settled();
   }
   /** Saving a link copies it (owner, 2026-11-17, CHG-0035): no second click on the link. The clipboard is asked in
    * the press itself, with the link to follow (a ClipboardItem promise), as browsers allow a copy only in a user's
    * press; where that is refused, the link is copied as it arrives if the browser still allows it. */
   private copying: Promise<boolean> | null = null;
+  /** Tests: the last save's button and whether its link was copied. */
+  lastSaved: { key: string; copied: boolean } | null = null;
   private copyWhenSaved(): (url: string | null) => void {
     let done: (url: string | null) => void = () => {};
     if (!this.web || this.host.links?.external || typeof navigator === 'undefined' || !navigator.clipboard) { this.copying = null; return done; }
@@ -1260,6 +1328,14 @@ export class PatchesPanel extends DisplayObject {
     if (this.Saving || !this.host.hasBlocks() || !this.host.links) return false;
     this.Saving = true; this.showDom();
     const copy = this.copyWhenSaved();
+    // Your own patches don't share a name: one already used by another of them gets " (2)", shown in the name field
+    // before it saves (owner, 2026-11-18). Saving over this link may keep its own name.
+    if (this.web) {
+      const mine = await this.host.listPatches().catch(() => [] as PatchItem[]);
+      const here = mode === 'save' ? App.CompositionId : null;
+      const title = uniqueTitle(this.Title.trim() || 'Untitled', mine.filter(i => !here || i.link !== here).map(i => i.name));
+      if (title !== (this.Title.trim() || 'Untitled')) this.setTitle(title);
+    }
     // Signed out, the gallery is left as it is (only signed-in users can publish, SPEC-SHARING-GALLERY R2).
     const gallery = this.web && this.host.gallery && this.host.signedIn() ? this.GalleryOn : undefined;
     let url: string | null = null;
@@ -1359,10 +1435,26 @@ export class PatchesPanel extends DisplayObject {
   }
   private placeDom(): void {
     const pr = App.Metrics.PixelRatio, u = App.Unit, mid = this.cy;
-    this.TitleContainer.style.top = `${(mid - u * 132) / pr}px`;
-    this.UrlContainer.style.top = `${(this.Tab === 0 && this.View === 'video' ? this.videoLink().box : mid + u * 95) / pr}px`;
-    if (this.player) this.player.style.top = `${this.playerBox().y / pr}px`;
-    if (this.SearchContainer) this.SearchContainer.style.top = `${(this.galleryLayout().rule - u * 42) / pr}px`;  // v1 StyleDom(…, 152): 42 above the rule
+    // The fields slide with their page and, like the canvas, are cut off at the tabs' foot (owner, 2026-11-18: the name
+    // showed above the tabs as SAVE / SHARE lifted out).
+    const clipTop = this.OffsetY + 60 * u;
+    const at = (el: HTMLElement, top: number, h: number) => {
+      el.style.top = `${top / pr}px`;
+      const hidden = Math.max(0, Math.min(h, clipTop - top));
+      el.style.clipPath = hidden > 0 ? `inset(${hidden / pr}px 0 0 0)` : '';
+      el.style.visibility = hidden >= h ? 'hidden' : '';
+    };
+    at(this.TitleContainer, mid - u * 132, u * 42);
+    // The link: v1's large URL box under the video; on SAVE / SHARE small, on a rule, up to COPY LINK (owner, 2026-11-18).
+    const video = this.Tab === 0 && this.View === 'video', url = this.UrlContainer.style;
+    const font = video ? App.Metrics.TxtUrl : `300 ${Math.round((u * 12) / pr)}px Dosis`, w = video ? u * 400 : this.urlWidth(), h = u * (video ? 40 : 30);
+    if (url.font !== font) url.font = font;
+    url.width = `${w / pr}px`; url.height = `${h / pr}px`; url.lineHeight = `${h / pr}px`;
+    url.left = `${(video ? App.Width * 0.5 - u * 200 : this.margin) / pr}px`;
+    url.opacity = video || this.linkOnly ? '' : '0.6';
+    at(this.UrlContainer, video ? this.videoLink().box : this.urlTop(), h);
+    if (this.player) at(this.player, this.playerBox().y, this.playerBox().h);
+    if (this.SearchContainer) at(this.SearchContainer, this.galleryLayout().rule - u * 42, u * 42);  // v1 StyleDom(…, 152): 42 above the rule
   }
   /** The name field shows on the SAVE tab; the link field when there is a link (v1 ShowDom / HideDom). */
   private showDom(): void {

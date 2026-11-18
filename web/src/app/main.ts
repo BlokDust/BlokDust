@@ -17,7 +17,7 @@ import { BLOCKS, BLOCKS_BY_ID, type BlockDef } from '../generated/blocks.gen.ts'
 import { THEMES, type Theme } from '../generated/palettes.gen.ts';
 import { loadPatch, relinks, targetCommands, type Macro, type Patch, type PatchBlock, type PatchSource } from '../patch/loadPatch.ts';
 import { decodePatch, encodePatch, loadLocal, loadSession, saveLocal, saveSession } from '../patch/share.ts';
-import { type GalleryState, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, save as saveShared } from '../patch/server.ts';
+import { type GalleryState, type Missing, MISSING_TEXT, accountOwned, canOverwrite, editToken, isServerId, load as loadShared, loadOrWhy, remove as removeShared, save as saveShared } from '../patch/server.ts';
 import * as account from '../account/client.ts';
 import { activity } from '../account/activity.ts';
 import * as gallery from '../gallery/client.ts';
@@ -89,7 +89,7 @@ function embedIdFromPage(): string | null {
   const meta = document.querySelector<HTMLMetaElement>('meta[name="blokdust-embed"]')?.content;
   return meta || (location.pathname.match(/\/embed\/([^/]+)\/?$/)?.[1] ?? null);
 }
-interface Start { patch: Patch; view: View; id: string | null; title?: string; missing?: boolean; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number;
+interface Start { patch: Patch; view: View; id: string | null; title?: string; /** The link opened no patch, and why. */ missing?: Missing; /** Its account's handle, when someone else's (SPEC-SHARING-GALLERY R15). */ by?: string | null; mine?: boolean; published?: boolean; liked?: boolean; likes?: number; views?: number;
   /** Where the patch came from (SPEC-SHARING-USAGE-ANALYTICS patch_opened). */ source?: 'link' | 'embed' | 'autosave' | 'demo' | 'v1' }
 /** Start-up patch: a `?c=` share (server id: CHG-0003; `p…` token: Phase 1), else a `?v1=` v1 composition JSON
  * (DATA-0004, with its theme/zoom/offset), else the autosave, else the demo. */
@@ -102,11 +102,16 @@ async function initialPatch(params: URLSearchParams, embedId: string | null, plu
     const session = loadSession(), local = loadLocal();
     // Unsaved edits to this same composition (autosave) win over its saved version, as before a reload.
     if (!embedId && session.id === c && session.dirty && local) return { patch: local, view: {}, id: c, source: 'autosave' };
-    const r = await loadShared(c);
-    if (r) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0, source: embedId ? 'embed' : 'link' };
-    return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: true };
+    const r = await loadOrWhy(c);
+    if (!('missing' in r)) return { patch: r.patch, view: {}, id: c, title: r.title, by: r.by ?? null, mine: !!r.mine, published: !!r.published, liked: !!r.liked, likes: r.likes ?? 0, views: r.views ?? 0, source: embedId ? 'embed' : 'link' };
+    return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: r.missing };
   }
-  if (c) { const p = await decodePatch(c); if (p) return { patch: p, view: {}, id: null, source: 'link' }; }
+  if (c) {
+    const p = await decodePatch(c);
+    if (p) return { patch: p, view: {}, id: null, source: 'link' };
+    // Not a patch link at all (a made-up or cut-off id): say so on a blank stage, not this browser's last one.
+    return { patch: { format: 'blokdust.patch', version: 2, blocks: [] }, view: {}, id: null, missing: 'unknown' };
+  }
   const v1 = params.get('v1');
   if (v1) { try { const r = importV1(JSON.parse(v1) as V1Composition); return { patch: r.patch, view: r.view, id: null, source: 'v1' }; } catch { /* fall through */ } }
   if (params.has('demo')) return { patch: demo as Patch, view: {}, id: null, source: 'demo' };
@@ -162,6 +167,10 @@ async function main() {
   // v1 App.CompositionId / App.SessionId: the open composition and (if this browser made it) the right to overwrite it.
   App.CompositionId = start.id; App.SessionId = sessionFor(start.id);
   let session = { id: start.id, dirty: false };
+  // A link that opened no patch (owner, 2026-11-18): it leaves the address bar (a reload starts as usual), and the
+  // message bar says why once the stage shows. This browser's autosave is left as it was (autosaveIsThis is off).
+  const missingNote = start.missing && !juce ? MISSING_TEXT[start.missing] : null;
+  if (missingNote && !embedId) { history.replaceState(null, '', location.pathname); params.delete('t'); }
   // v1's Share panel reads the title from `&t=` (GetTitleFromUrl): put a saved title there when the link had none.
   if (start.title && !params.has('t') && !embedId) history.replaceState(null, '', `${location.pathname}?c=${start.id}&t=${encodeURI(start.title)}`);
   // The colour theme is the user's preference, kept in this browser (owner review 3, 2026-11-16: it went back to the
@@ -501,7 +510,14 @@ async function main() {
     // @blokdust's EXAMPLES in the gallery. The plugin has no gallery, so it keeps them under its own.
     listPatches: async () => juce
       ? [...await nativePatches(), ...PRESETS.map(p => ({ name: p.name, detail: 'Preset', key: `preset:${p.file}` }))]
-      : [...await accountItems(), ...myPatches().map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true }))],
+      : await (async () => {
+        // One list (owner, 2026-11-18): the account's patches once each, then this browser's own copies that aren't
+        // among them (saves to the computer, links made signed out). A copy remembers its link; older ones without it
+        // are matched by name.
+        const acct = await accountItems(), ids = new Set(acct.map(a => a.key.slice(5))), names = new Set(acct.map(a => a.name));
+        const local = myPatches().filter(m => (m.id ? !ids.has(m.id) : !names.has(m.title)));
+        return [...acct, ...local.map(m => ({ name: m.title, detail: savedOn(m.saved), key: `mine:${m.title}`, removable: true, ...(m.id ? { link: m.id } : {}) }))];
+      })(),
     savePatch: title => savePatchFile(title),
     openPatch: (item, mode) => openPatchItem(item.key, mode),
     pickPatchFile: () => pickPatchFile(),
@@ -509,12 +525,24 @@ async function main() {
     isDirty: () => model.size > 0 && contentOf(toPatch()) !== baseline,
     hasBlocks: () => model.size > 0,
     removePatch: async item => {
-      if (item.key.startsWith('mine:')) {
+      if (item.key.startsWith('acct:')) {  // a real delete (owner, 2026-11-18): the link and the gallery entry go
+        const id = item.key.slice(5);
+        try { await removeShared(id); } catch { scene.message('That patch couldn’t be deleted. Try again.', { seconds: 4 }); return; }
+        try { localStorage.setItem(MINE_KEY, JSON.stringify(myPatches().filter(m => m.id !== id && (m.id || m.title !== item.name)))); } catch { /* private mode */ }
+        // The patch on the stage was that one: it stays on the stage, unsaved; SAVE makes a new link.
+        if (App.CompositionId === id) {
+          App.CompositionId = null; App.SessionId = null; shareLink = null; credit = null;
+          session = { id: null, dirty: false }; saveSession(session);
+          history.replaceState(null, '', location.pathname); checkOwnDirty(); stage.redraw();
+        }
+        scene.message('Patch deleted', { seconds: 2 });
+      } else if (item.key.startsWith('mine:')) {
         try { localStorage.setItem(MINE_KEY, JSON.stringify(myPatches().filter(m => m.title !== item.key.slice(5)))); } catch { /* private mode */ }
       } else if (juce && item.key.startsWith('file:')) await nativeReply(req => juce.emitEvent('bd_patchDelete', { req, path: item.key.slice(5) }));
     },
     // Owner's wording (2026-11-10); the plugin's file really goes to the Trash, so it says so (iPad has no Trash).
-    get removeLine() {
+    removeLine: item => {
+      if (item.key.startsWith('acct:')) return 'Anyone with its link, and the gallery if it’s published, will no longer be able to open it.';
       return !juce ? 'This patch will be removed from the patches list. Your local downloaded patches and generated links remain untouched.'
         : ios ? 'This patch file will be deleted. Links you generated remain untouched.'
         : 'This patch file will be moved to the Trash. Links you generated remain untouched.';
@@ -1127,13 +1155,14 @@ async function main() {
    * holds a few MB: patches are small, as audio is never in them, DATA-0005). The oldest go past MINE_MAX.
    */
   const MINE_KEY = 'blokdust.myPatches', MINE_MAX = 100;
-  type Mine = { title: string; saved: number; patch: Patch };
+  /** `id`: its link, when it was saved to one (so the account's copy of it is listed once). */
+  type Mine = { title: string; saved: number; patch: Patch; id?: string };
   function myPatches(): Mine[] {
     try { const v = JSON.parse(localStorage.getItem(MINE_KEY) ?? '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
   }
-  function keepMine(title: string): void {
+  function keepMine(title: string, id?: string): void {
     if (juce || embedId) return;
-    let list = [{ title, saved: Date.now(), patch: { ...toPatch(), meta: { title } } as Patch }, ...myPatches().filter(m => m.title !== title)].slice(0, MINE_MAX);
+    let list: Mine[] = [{ title, saved: Date.now(), patch: { ...toPatch(), meta: { title } } as Patch, ...(id ? { id } : {}) }, ...myPatches().filter(m => m.title !== title)].slice(0, MINE_MAX);
     // Full: drop the oldest until it fits (the browser's limit, not ours).
     for (;;) {
       try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); return; } catch { if (list.length <= 1) return; list = list.slice(0, -1); }
@@ -1196,7 +1225,7 @@ async function main() {
     history.replaceState(null, '', url);  // v1 AddressBarManager.UpdateURL
     shareLink = { url, owned: isServerId(id) && !!App.SessionId, at, title };
     setBaseline(at);  // a shared patch counts as saved
-    keepMine(title);
+    keepMine(title, id);
     credit = null;  // saved: it is yours now (a remix keeps `parent`)
     track('patch_saved', { kind: 'link' }, { blocks: model.size });
     checkOwnDirty();
@@ -1244,9 +1273,10 @@ async function main() {
   }
   /** Open a server patch by id as the current composition (the account's, or one from the gallery: SAVE then saves
    * over it if this device may, else makes a new link with `parent` set: a remix). Insert just adds its blocks. */
-  async function openShared(id: string, mode: 'open' | 'insert'): Promise<boolean> {
-    const r = await loadShared(id);
-    if (!r) return false;
+  /** Open or insert a saved patch; when it can't be had, the message bar's words for why (owner, 2026-11-18). */
+  async function openShared(id: string, mode: 'open' | 'insert'): Promise<true | string> {
+    const r = await loadOrWhy(id);
+    if ('missing' in r) return MISSING_TEXT[r.missing];
     usePatch(r.patch, r.title, mode, { id, rev: r.rev, ...(r.title ? { title: r.title } : {}), ...(r.by ? { by: r.by } : {}) });
     if (mode !== 'open') return true;
     App.CompositionId = id; App.SessionId = sessionFor(id);
@@ -1260,12 +1290,12 @@ async function main() {
     return true;
   }
   /** Signed in: the account's patches (R8), as OPEN rows. */
-  async function accountItems(): Promise<{ name: string; detail: string; key: string }[]> {
+  async function accountItems(): Promise<{ name: string; detail: string; key: string; removable: boolean; link: string }[]> {
     if (embedId) return [];
-    try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: savedOn(p.updated), key: `acct:${p.id}` })); }
+    try { return (await account.accountPatches()).map(p => ({ name: p.title || 'Untitled', detail: savedOn(p.updated), key: `acct:${p.id}`, removable: true, link: p.id })); }
     catch { return []; }  // signed out, or no backend
   }
-  async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<boolean> {
+  async function openPatchItem(key: string, mode: 'open' | 'insert'): Promise<boolean | string> {
     if (key.startsWith('acct:')) return openShared(key.slice(5), mode);  // saved over from this device (R9)
     if (key.startsWith('preset:')) {
       const p = PRESETS.find(x => `preset:${x.file}` === key), patch = p && parsePatchFile(p.text);
@@ -1849,7 +1879,8 @@ async function main() {
   showPatch(start.patch);
   // Unsaved changes are counted from what was opened: a link, a v1 composition or the demo. Work restored from the last
   // visit counts from where it was last saved (or, never saved, as unsaved).
-  if (start.id || params.has('c') || params.has('v1') || params.has('demo') || start.patch === demo) setBaseline();
+  if (start.missing) baseline = contentOf(toPatch());  // blank: nothing unsaved, and the kept baseline stays the autosave's
+  else if (start.id || params.has('c') || params.has('v1') || params.has('demo') || start.patch === demo) setBaseline();
   else try { baseline = localStorage.getItem(BASELINE_KEY) ?? ''; } catch { /* private mode */ }
   {
     const title = params.get('t') ?? start.title ?? '';
@@ -2162,7 +2193,12 @@ async function main() {
     // A first visit (the demo, no link) is asked whether to take v1's tour once the stage shows (CHG-0035). Automated
     // browsers are not, unless the URL asks (`tour=1`).
     const tour = !juce && !embedId && start.source === 'demo' && (!navigator.webdriver || params.get('tour') === '1');
-    const reveal = () => { if (shown && ready && overlay.isConnected) { overlay.remove(); if (tour) { scene.launchTour(); stage.redraw(); } } };
+    const reveal = () => {
+      if (!(shown && ready && overlay.isConnected)) return;
+      overlay.remove();
+      if (tour) { scene.launchTour(); stage.redraw(); }
+      if (missingNote) scene.message(missingNote, { seconds: 6 });
+    };
     if (splash) { scene.startSplash(() => { shown = true; reveal(); }); stage.redraw(); }
     if (!audio) setAudioSession('playback');  // before the context exists, or iOS's silent switch mutes it
     const ctx = startCtx = audio?.ctx ?? new AudioContext({ latencyHint: 'interactive' });
